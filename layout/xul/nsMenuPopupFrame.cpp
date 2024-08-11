@@ -768,9 +768,22 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
   mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
+  mAnchorType = aAnchorType;
+  const nscoord auPerCssPx = AppUnitsPerCSSPixel();
+  const nsPoint pos = CSSPixel::ToAppUnits(CSSIntPoint(aXPos, aYPos));
+  // When converted back to CSSIntRect it is (-1, -1, 0, 0) - as expected in
+  // nsXULPopupManager::Rollup
+  mScreenRect = nsRect(-auPerCssPx, -auPerCssPx, 0, 0);
+  mExtraMargin = pos;
+  // If we have no anchor node, anchor to the given position instead.
+  if (mAnchorType == MenuPopupAnchorType::Node && !aAnchorContent) {
+    mAnchorType = MenuPopupAnchorType::Point;
+    mScreenRect = nsRect(
+        pos + PresShell()->GetRootFrame()->GetScreenRectInAppUnits().TopLeft(),
+        nsSize());
+    mExtraMargin = {};
+  }
   mTriggerContent = aTriggerContent;
-  mXPos = aXPos;
-  mYPos = aYPos;
   mIsNativeMenu = false;
   mIsTopLevelContextMenu = false;
   mVFlip = false;
@@ -779,8 +792,6 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   mAlignmentOffset = 0;
   mPositionedOffset = 0;
   mPositionedByMoveToRect = false;
-
-  mAnchorType = aAnchorType;
 
   // if aAttributesOverride is true, then the popupanchor, popupalign and
   // position attributes on the <menupopup> override those values passed in.
@@ -796,8 +807,6 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
       // the offset is used to adjust the position from the anchor point
       if (anchor.IsEmpty() && align.IsEmpty() && position.IsEmpty())
         position.Assign(aPosition);
-      else
-        mXPos = mYPos = 0;
     } else if (!aPosition.IsEmpty()) {
       position.Assign(aPosition);
     }
@@ -855,9 +864,6 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
       InitPositionFromAnchorAlign(anchor, align);
     }
   }
-  // When converted back to CSSIntRect it is (-1, -1, 0, 0) - as expected in
-  // nsXULPopupManager::Rollup
-  mScreenRect = nsRect(-AppUnitsPerCSSPixel(), -AppUnitsPerCSSPixel(), 0, 0);
 
   if (aAttributesOverride) {
     // Use |left| and |top| dimension attributes to position the popup if
@@ -893,9 +899,8 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mAnchorContent = nullptr;
   mTriggerContent = aTriggerContent;
   mScreenRect =
-      nsRect(CSSPixel::ToAppUnits(aXPos), CSSPixel::ToAppUnits(aYPos), 0, 0);
-  mXPos = 0;
-  mYPos = 0;
+      nsRect(CSSPixel::ToAppUnits(CSSIntPoint(aXPos, aYPos)), nsSize());
+  mExtraMargin = {};
   mFlip = FlipFromAttribute(this);
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
@@ -914,9 +919,8 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
   mScreenRect =
-      nsRect(CSSPixel::ToAppUnits(aXPos), CSSPixel::ToAppUnits(aYPos), 0, 0);
-  mXPos = 0;
-  mYPos = 0;
+      nsRect(CSSPixel::ToAppUnits(CSSIntPoint(aXPos, aYPos)), nsSize());
+  mExtraMargin = {};
   mFlip = FlipType_Default;
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
@@ -1455,7 +1459,7 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
       // mAnchorContent might be a different document so its presshell must be
       // used.
       nsIFrame* anchorFrame = GetAnchorFrame();
-      if (!anchorFrame) {
+      if (NS_WARN_IF(!anchorFrame)) {
         return rootScreenRect;
       }
       return ComputeAnchorRect(rootPc, anchorFrame);
@@ -1478,20 +1482,6 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
       // With no anchor, the popup is positioned relative to the root frame.
       result.mUsedRect.MoveTo(result.mAnchorRect.TopLeft() +
                               nsPoint(margin.left, margin.top));
-    }
-
-    // mXPos and mYPos specify an additional offset passed to OpenPopup that
-    // should be added to the position.  We also add the offset to the anchor
-    // pos so a later flip/resize takes the offset into account.
-    // FIXME(emilio): Wayland doesn't seem to be accounting for this offset
-    // anywhere, and it probably should.
-    {
-      nsPoint offset(CSSPixel::ToAppUnits(mXPos), CSSPixel::ToAppUnits(mYPos));
-      if (IsDirectionRTL()) {
-        offset.x = -offset.x;
-      }
-      result.mUsedRect.MoveBy(offset);
-      result.mAnchorRect.MoveBy(offset);
     }
   } else {
     // Not anchored, use mScreenRect
@@ -2179,6 +2169,19 @@ nsMargin nsMenuPopupFrame::GetMargin() const {
     margin.top += auOffset;
     margin.bottom += auOffset;
   }
+  // TODO(emilio): We should consider make these properly mirrored (that is,
+  // changing -= to += here, and removing the rtl special case), but some tests
+  // rely on the old behavior of the anchor moving physically regardless of
+  // alignment...
+  margin.top += mExtraMargin.y;
+  margin.bottom -= mExtraMargin.y;
+  if (IsDirectionRTL()) {
+    margin.left -= mExtraMargin.x;
+    margin.right += mExtraMargin.x;
+  } else {
+    margin.left += mExtraMargin.x;
+    margin.right -= mExtraMargin.x;
+  }
   return margin;
 }
 
@@ -2218,11 +2221,9 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
     mScreenRect.height = 0;
     // But we still need to make sure that our top left position ends up in
     // appUnitsPos.
-
     mPopupAlignment = rtl ? POPUPALIGNMENT_TOPRIGHT : POPUPALIGNMENT_TOPLEFT;
     mPopupAnchor = rtl ? POPUPALIGNMENT_BOTTOMRIGHT : POPUPALIGNMENT_BOTTOMLEFT;
     mXPos = mYPos = 0;
-
   } else {
     mAnchorType = MenuPopupAnchorType::Point;
   }
