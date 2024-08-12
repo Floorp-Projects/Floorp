@@ -260,7 +260,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=3495905752a4263827f5d43737f9ca3ed0243ce0#3495905752a4263827f5d43737f9ca3ed0243ce0"
+source = "git+https://github.com/mozilla/audioipc?branch=cherry-pick-firefox-128-129#e1071472c55193032aa4c1403317844005f9d0fc"
 dependencies = [
  "arrayvec",
  "ashmem",
@@ -288,7 +288,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=3495905752a4263827f5d43737f9ca3ed0243ce0#3495905752a4263827f5d43737f9ca3ed0243ce0"
+source = "git+https://github.com/mozilla/audioipc?branch=cherry-pick-firefox-128-129#e1071472c55193032aa4c1403317844005f9d0fc"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -299,7 +299,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=3495905752a4263827f5d43737f9ca3ed0243ce0#3495905752a4263827f5d43737f9ca3ed0243ce0"
+source = "git+https://github.com/mozilla/audioipc?branch=cherry-pick-firefox-128-129#e1071472c55193032aa4c1403317844005f9d0fc"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
