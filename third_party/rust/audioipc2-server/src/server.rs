@@ -261,6 +261,11 @@ impl ServerStreamCallbacks {
             return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
         }
 
+        if nframes == 0 {
+            // Optimization: skip the RPC call when there are no frames.
+            return 0;
+        }
+
         let r = self.data_callback_rpc.call(CallbackReq::Data {
             nframes,
             input_frame_size: self.input_frame_size as usize,
