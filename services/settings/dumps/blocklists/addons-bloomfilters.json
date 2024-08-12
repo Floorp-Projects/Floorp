@@ -3,6 +3,21 @@
     {
       "stash": {
         "blocked": [
+          "{ffa75677-7066-464c-a1cc-8f94c2c213a0}:1.0.0",
+          "{ffa75677-7066-464c-a1cc-8f94c2c213a0}:1.1.0",
+          "{ffa75677-7066-464c-a1cc-8f94c2c213a0}:1.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1723139278646,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1723142105526,
+      "id": "ab96e767-191d-4a42-b45b-621cf707270f",
+      "last_modified": 1723142162321
+    },
+    {
+      "stash": {
+        "blocked": [
           "{54e58339-740f-448e-87c7-1caf19345aaf}:2.0.1",
           "jonatas@gov:4.8.2"
         ],
@@ -1261,5 +1276,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1723034162364
+  "timestamp": 1723142162321
 }
