@@ -11,10 +11,6 @@ export const [showStatusbar, setShowStatusbar] = createSignal(
 );
 
 export class StatusBarManager {
-  private get statusbarEnabled() {
-    return showStatusbar();
-  }
-
   constructor() {
     window.CustomizableUI.registerArea("statusBar", {
       type: window.CustomizableUI.TYPE_TOOLBAR,
@@ -23,8 +19,6 @@ export class StatusBarManager {
     window.CustomizableUI.registerToolbarNode(
       document.getElementById("statusBar"),
     );
-
-    Services.prefs.setBoolPref("noraneko.statusbar.enable", showStatusbar());
 
     createEffect(() => {
       Services.prefs.setBoolPref("noraneko.statusbar.enable", showStatusbar());
@@ -39,7 +33,7 @@ export class StatusBarManager {
 
   private observeStatusbar() {
     Services.prefs.addObserver("noraneko.statusbar.enable", () =>
-      setShowStatusbar(() => this.statusbarEnabled),
+      setShowStatusbar(() => Services.prefs.getBoolPref("noraneko.statusbar.enable")),
     );
   }
 }
