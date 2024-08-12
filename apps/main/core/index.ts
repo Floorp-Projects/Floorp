@@ -21,22 +21,14 @@ export default function initScripts() {
     initBrowserContextMenu();
     initTabbar();
     initDesigns();
-
     initShareMode();
     initProfileManager();
     initUndoClosedTab();
     initReverseSidebarPosition();
-
-    //createWebpanel("tmp", "https://manatoki332.net/");
-    //console.log(document.getElementById("tmp"));
-    //window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
-
     initStatusbar();
     initPrivateContainer();
     console.log("csk getinstance");
     CustomShortcutKey.getInstance();
-    //initSidebar();
-
     window.gFloorp = {
       design: {
         setInterface: setBrowserInterface,

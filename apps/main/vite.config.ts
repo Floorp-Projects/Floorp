@@ -9,6 +9,9 @@ const r = (dir: string) => {
 
 export default defineConfig({
   publicDir: r("public"),
+  server: {
+    port: 5181,
+  },
   build: {
     sourcemap: true,
     reportCompressedSize: false,

@@ -3,5 +3,8 @@
   "private": true,
   "dependencies": {
     "zod": "^3.23.8"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
   }
 }

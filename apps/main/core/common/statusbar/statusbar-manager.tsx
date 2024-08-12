@@ -28,26 +28,6 @@ export class StatusBarManager {
 
     createEffect(() => {
       Services.prefs.setBoolPref("noraneko.statusbar.enable", showStatusbar());
-      // const statuspanel_label = document.getElementById(
-      //   "statuspanel-label",
-      // ) as XULElement;
-      // const statuspanel = document.getElementById("statuspanel") as XULElement;
-      // const statusText = document.getElementById("status-text") as XULElement;
-      // const observer = new MutationObserver(() => {
-      //   if (statuspanel.getAttribute("inactive") === "true" && statusText) {
-      //     statusText.setAttribute("hidden", "true");
-      //   } else {
-      //     statusText?.removeAttribute("hidden");
-      //   }
-      // });
-
-      // if (showStatusbar()) {
-      //   statusText?.appendChild(statuspanel_label!);
-      //   observer.observe(statuspanel, { attributes: true });
-      // } else {
-      //   statuspanel?.appendChild(statuspanel_label!);
-      //   observer?.disconnect();
-      // }
     });
 
     //move elem to bottom of window

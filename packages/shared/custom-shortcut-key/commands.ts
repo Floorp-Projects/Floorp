@@ -68,23 +68,27 @@ export const commands: Commands = {
   },
   "gecko-send-with-mail": {
     command: () =>
-      window.MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser),
+      window.MailIntegration.sendLinkForBrowser(
+        window.gBrowser.selectedBrowser,
+      ),
     type: "page-action",
   },
   "gecko-save-page": {
-    command: () => window.saveBrowser(gBrowser.selectedBrowser),
+    command: () => window.saveBrowser(window.gBrowser.selectedBrowser),
     type: "page-action",
   },
   "gecko-print-page": {
     command: () =>
       window.PrintUtils.startPrintWindow(
-        gBrowser.selectedBrowser.browsingContext,
+        window.gBrowser.selectedBrowser.browsingContext,
       ),
     type: "page-action",
   },
   "gecko-mute-current-tab": {
     command: () =>
-      window.gBrowser.toggleMuteAudioOnMultiSelectedTabs(gBrowser.selectedTab),
+      window.gBrowser.toggleMuteAudioOnMultiSelectedTabs(
+        window.gBrowser.selectedTab,
+      ),
     type: "page-action",
   },
   "gecko-show-source-of-page": {
@@ -340,12 +344,18 @@ export const commands: Commands = {
   },
   "floorp-open-split-view-on-left": {
     command: () =>
-      window.gSplitView.Functions.setSplitView(gBrowser.selectedTab, "left"),
+      window.gSplitView.Functions.setSplitView(
+        window.gBrowser.selectedTab,
+        "left",
+      ),
     type: "split-view-action",
   },
   "floorp-open-split-view-on-right": {
     command: () =>
-      window.gSplitView.Functions.setSplitView(gBrowser.selectedTab, "right"),
+      window.gSplitView.Functions.setSplitView(
+        window.gBrowser.selectedTab,
+        "right",
+      ),
     type: "split-view-action",
   },
   "floorp-close-split-view": {

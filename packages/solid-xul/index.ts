@@ -1,6 +1,6 @@
 import { createRoot, type JSX } from "solid-js";
 import { createRenderer } from "solid-js/universal";
-import type { ViteHotContext } from "vite/types/hot";
+import type { ViteHotContext } from "vite/types/hot.js";
 import { z } from "zod";
 
 //TODO: test required
