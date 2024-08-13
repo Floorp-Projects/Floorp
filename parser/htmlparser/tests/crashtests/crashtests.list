@@ -66,3 +66,4 @@ load 1547895-1.html
 skip-if(Android||isDebugBuild||AddressSanitizer||ThreadSanitizer) load 1747514.html # Too slow for some configurations, see bug 1780219 for android for example.
 HTTP load 1810896-1.html
 load 1854907-1.html
+load 1910951-1.html
