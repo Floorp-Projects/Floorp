@@ -1334,7 +1334,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
   // inform the window so that the focus state is reset.
   NS_ENSURE_STATE(mDocument);
   nsPIDOMWindowOuter* window = mDocument->GetWindow();
-  if (window) window->PageHidden();
+  if (window) window->PageHidden(!aIsUnload);
 
   if (aIsUnload) {
     // if Destroy() was called during OnPageHide(), mDocument is nullptr.

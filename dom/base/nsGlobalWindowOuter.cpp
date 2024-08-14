@@ -6611,8 +6611,8 @@ void nsGlobalWindowOuter::SetReadyForFocus() {
   FORWARD_TO_INNER_VOID(SetReadyForFocus, ());
 }
 
-void nsGlobalWindowOuter::PageHidden() {
-  FORWARD_TO_INNER_VOID(PageHidden, ());
+void nsGlobalWindowOuter::PageHidden(bool aIsEnteringBFCacheInParent) {
+  FORWARD_TO_INNER_VOID(PageHidden, (aIsEnteringBFCacheInParent));
 }
 
 already_AddRefed<nsICSSDeclaration>
