@@ -107,41 +107,6 @@ jobs:
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
-  Part1-win-x86-build-with-profgen-zstd:
-    uses: ./.github/workflows/windows-build.yml
-    with:
-      profgen: true
-      aarch64: false
-      build32bit: true
-      zstd: true
-    secrets:
-      PAT: ${{ secrets.PAT }}
-
-  Part2-win-x86-gen-profdata-and-jarlog:
-    needs: Part1-win-x86-build-with-profgen-zstd
-    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
-    with:
-      browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
-      arch: x86
-    secrets:
-      PAT: ${{ secrets.PAT }}
-  
-  Part3-win-x86-build-with-profdata-and-jarlog:
-    needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
-    uses: ./.github/workflows/windows-build.yml
-    with:
-      aarch64: false
-      build32bit: true
-      beta: false
-      out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
-      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
-      release-note-url: ${{ inputs.release-note-url }}
-      release-note-url-ja: ${{ inputs.release-note-url-ja }}
-    secrets:
-      PAT: ${{ secrets.PAT }}
-
-################################################################ ↑ Windows x86 Build ####################################################################################
-
   Part1-linux-x86_64-build-with-PGO:
     uses: ./.github/workflows/linux-build.yml
     needs: [get-buildid]
@@ -223,7 +188,7 @@ jobs:
 ####################################################################### macOS Universal #######################################################################
 
   Deploy-to-installer:
-    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, Part3-win-x86-build-with-profdata-and-jarlog, get-display-version]
+    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
     steps:
     - name: Release version 📦
@@ -236,7 +201,6 @@ jobs:
         mkdir -p ~/downloads/artifacts/linux-x64
         mkdir -p ~/downloads/artifacts/linux-aarch64
         mkdir -p ~/downloads/artifacts/windows-x64
-        mkdir -p ~/downloads/artifacts/windows-x86
         mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
@@ -256,12 +220,6 @@ jobs:
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
-
-    - name: download Windows x86 build artifact📥
-      uses: actions/download-artifact@v4
-      with:
-        name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
-        path: ~/downloads/artifacts/windows-x86
 
     - name: download macOS Universal build artifact📥
       uses: actions/download-artifact@v4
@@ -301,7 +259,6 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
-          /home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
           /home/runner/downloads/artifacts/hashes.txt
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
@@ -321,7 +278,7 @@ jobs:
     steps:
     - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
-        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        echo "Preparing to run GitHub Actions for Release x86_64 Linux MAR, waiting for 30 seconds"
         sleep 60
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
@@ -409,24 +366,6 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
               "os": "WINNT",
               "arch": "x86_64",
-              "release-note-url": "${{ inputs.release-note-url }}"
-            }
-          }'
-
-    - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
-      run: |
-        echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
-        sleep 60
-        curl -X POST \
-          -H "Authorization: token ${{ secrets.PAT }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-          -d '{
-            "ref": "main",
-            "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
-              "os": "WINNT",
-              "arch": "x86",
               "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'

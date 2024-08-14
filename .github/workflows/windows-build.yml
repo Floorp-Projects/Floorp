@@ -19,10 +19,6 @@ on:
         description: generate profile for PGO.
         type: boolean
         default: false
-      build32bit:
-        description: enable 32bit build
-        type: boolean
-        default: false
       aarch64:
         description: enable aarch64 build
         type: boolean
@@ -96,15 +92,13 @@ jobs:
           )
         ) {process.exit(-1);}
 
-        // aarch64 & 32bit build is not compatible
+        // aarch64 is not compatible
         if (
           process.env.GHA_aarch64 == "true"
-          && process.env.GHA_32bit == "true"
         ) {process.exit(-1);}
       env:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_32bit: ${{inputs.build32bit}}
         GHA_zstd: ${{inputs.zstd}}
         GHA_beta: ${{inputs.beta}}
         GHA_mar: ${{inputs.mar}}
@@ -147,8 +141,6 @@ jobs:
 
         if [[ $GHA_aarch64 == 'true' ]]; then
           cp ./.github/workflows/src/windows/aarch64/mozconfig_win_aarch64_pgo_base mozconfig
-        elif [[ $GHA_32bit == 'true' ]]; then
-          cp ./.github/workflows/src/windows/x86/mozconfig_win_x86_pgo_base mozconfig
         else
           cp ./.github/workflows/src/windows/x86_64/mozconfig_win_x86_64_pgo_base mozconfig
         fi
@@ -201,7 +193,6 @@ jobs:
       env:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_32bit: ${{inputs.build32bit}}
         GHA_beta: ${{inputs.beta}}
         GHA_profdata_jarlog_artifact_name : ${{inputs.profdata_jarlog_artifact_name}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
@@ -210,8 +201,6 @@ jobs:
       run: |
         if [[ $GHA_aarch64 == 'true' ]];then
           rustup target add aarch64-pc-windows-msvc --toolchain stable
-        elif [[ $GHA_32bit == 'true' ]];then
-          rustup target add i686-pc-windows-msvc --toolchain stable
         else
           rustup target add x86_64-pc-windows-msvc --toolchain stable
         fi
@@ -220,7 +209,6 @@ jobs:
         export CARGO_INCREMENTAL=0
       env:
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_32bit: ${{inputs.build32bit}}
 
     - name: Change update url if beta
       if: inputs.beta
@@ -290,9 +278,6 @@ jobs:
         if [[ $GHA_aarch64 == 'true' ]];then
           arch="aarch64"
           arch_inst="win64-aarch64"
-        elif [[ $GHA_32bit == 'true' ]];then
-          arch="i686"
-          arch_inst="win32"
         else
           arch="x86_64"
           arch_inst="win64"
@@ -312,7 +297,6 @@ jobs:
         # cp -r obj-x86_64-pc-mingw32/dist/floorp ~/output/
       env:
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_32bit: ${{inputs.build32bit}}
         GHA_zstd: ${{inputs.zstd}}
         GHA_beta: ${{inputs.beta}}
 
@@ -322,8 +306,6 @@ jobs:
       run: |
         if [[ $GHA_aarch64 == 'true' ]];then
           arch="aarch64"
-        elif [[ $GHA_32bit == 'true' ]];then
-          arch="i686"
         else
           arch="x86_64"
         fi
@@ -338,9 +320,6 @@ jobs:
 
         echo "MAR_NAME=WINNT-${arch}.mar" >> $GITHUB_OUTPUT
         echo "MAR_SIZE=$(stat -c "%s" ~/output/WINNT-${arch}.mar)" >> $GITHUB_OUTPUT
-      env:
-        GHA_32bit: ${{inputs.build32bit}}
-
     # Publish START
     - name: make name of publish archive
       shell: node {0}
@@ -350,7 +329,7 @@ jobs:
         fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
       env:
         GHA_out_artifact_name : ${{inputs.out_artifact_name}}
-        GHA_default_name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.aarch64]}}${{fromJson('["_64",""]')[inputs.build32bit]}}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
+        GHA_default_name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.aarch64]}}_64-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
 
     - name: Publish Package🎁
       uses: actions/upload-artifact@v4
