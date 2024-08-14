@@ -58,6 +58,12 @@ interface nsIFocusManager : nsISupports
   readonly attribute BrowsingContext activeBrowsingContext;
 
   /**
+   * Parent-process only: The chrome process notion of content's active
+   * browsing context.
+   */
+  readonly attribute BrowsingContext activeContentBrowsingContext;
+
+  /**
    * The child window within the activeWindow that is focused. This will
    * always be activeWindow, a child window of activeWindow or null if no
    * child window is focused. Setting the focusedWindow changes the focused

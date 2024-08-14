@@ -4457,14 +4457,15 @@ void nsGlobalWindowInner::SetReadyForFocus() {
   }
 }
 
-void nsGlobalWindowInner::PageHidden() {
+void nsGlobalWindowInner::PageHidden(bool aIsEnteringBFCacheInParent) {
   // the window is being hidden, so tell the focus manager that the frame is
   // no longer valid. Use the persisted field to determine if the document
   // is being destroyed.
 
   if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
     nsCOMPtr<nsPIDOMWindowOuter> outerWindow = GetOuterWindow();
-    fm->WindowHidden(outerWindow, nsFocusManager::GenerateFocusActionId());
+    fm->WindowHidden(outerWindow, nsFocusManager::GenerateFocusActionId(),
+                     aIsEnteringBFCacheInParent);
   }
 
   mNeedsFocus = true;
