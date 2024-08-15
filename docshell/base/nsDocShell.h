@@ -457,7 +457,7 @@ class nsDocShell final : public nsDocLoader,
   // navigation.
   static nsresult FilterStatusForErrorPage(
       nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
-      bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
+      bool aIsTopFrame, bool aUseErrorPages,
       bool* aSkippedUnknownProtocolNavigation = nullptr);
 
   // Notify consumers of a search being loaded through the observer service:
