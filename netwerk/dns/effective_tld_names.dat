@@ -6723,7 +6723,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-08-10T15:15:39Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-08-12T15:17:09Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -11185,7 +11185,6 @@ zone
 // https://www.iana.org/domains/root/db/zuerich.html
 zuerich
 
-
 // ===END ICANN DOMAINS===
 
 // ===BEGIN PRIVATE DOMAINS===
@@ -13921,6 +13920,10 @@ ir.md
 // Submitted by William Harrison <admin@m.is-a.dev>
 is-a.dev
 
+// is-a-good.dev : https://is-a-good.dev
+// Submitted by William Harrison <webmaster@is-a-good.dev>
+is-a-good.dev
+
 // IServ GmbH : https://iserv.de
 // Submitted by Mario Hoberg <info@iserv.de>
 iservschule.de
@@ -14141,10 +14144,6 @@ ggff.net
 // Localcert : https://localcert.dev
 // Submitted by Lann Martin <security@localcert.dev>
 *.user.localcert.dev
-
-// localzone.xyz
-// Submitted by Kenny Niehage <hello@yahe.sh>
-localzone.xyz
 
 // Log'in Line : https://www.loginline.com/
 // Submitted by Rémi Mach <remi.mach@loginline.com>
