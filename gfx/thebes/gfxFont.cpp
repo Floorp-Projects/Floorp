@@ -2730,9 +2730,10 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
       RefPtr target =
           Factory::CreateDrawTarget(BackendType::SKIA, size, format);
       if (target) {
-        // Use OP_OVER to create the glyph snapshot.
+        // Use OP_OVER and opaque alpha to create the glyph snapshot.
         DrawOptions drawOptions(aFontParams.drawOptions);
         drawOptions.mCompositionOp = CompositionOp::OP_OVER;
+        drawOptions.mAlpha = 1.0f;
         bool ok = false;
         if (paintGraph) {
           ok = COLRFonts::PaintGlyphGraph(

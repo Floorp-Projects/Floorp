@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8" />
+</head>
+<body>
+
+<script>
+const canvas = document.createElement("canvas");
+canvas.width = 500;
+canvas.height = 300;
+
+document.body.appendChild(canvas);
+
+const ctx = canvas.getContext('2d');
+ctx.font = "20px Arial";
+
+function createLabel(alpha) {
+  ctx.globalAlpha = alpha;
+  ctx.fillText("Text: ABC, Clocks: \ud83d\udd52 \ud83d\udd53 \ud83d\udd54 \ud83d\udd55.", 50, 30 + 200 * alpha);
+}
+
+createLabel(0);
+createLabel(0.25);
+createLabel(0.5);
+createLabel(0.75);
+createLabel(1);
+</script>
+</body>
+</html>
