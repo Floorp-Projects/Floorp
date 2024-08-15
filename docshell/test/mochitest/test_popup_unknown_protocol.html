@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test for loading unknown protocols in a popup window</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+<body>
+
+<script>
+"use strict";
+
+add_task(async function() {
+  let consoleMessagePromise = new Promise(resolve => {
+    info("registering console listener");
+    SpecialPowers.registerConsoleListener(msg => {
+      info(`Got console message: ${msg.errorMessage}`);
+      if (msg.errorMessage && msg.errorMessage.includes("unknown-protocol")) {
+        SpecialPowers.executeSoon(() => {
+          SpecialPowers.postConsoleSentinel();
+          resolve();
+        });
+      }
+    });
+  });
+
+  info("opening pop-up");
+  let popup = window.open("unknown-protocol://example", "_blank");
+
+  info("waiting for console message error");
+  await consoleMessagePromise;
+
+  is(popup.location.href, "about:blank");
+  ok(!SpecialPowers.wrap(popup).docShell.failedChannel,
+     "no failed channel specified, as no error page is being loaded");
+});
+</script>
+</body>
+</html>
