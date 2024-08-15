@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { showStatusbar } from "./statusbar-manager";
+import { manager } from ".";
 import statusbarStyle from "./statusbar.css?inline";
 
 export function StatusBar() {
@@ -15,7 +15,7 @@ export function StatusBar() {
         customizable="true"
         style="border-top: 1px solid var(--chrome-content-separator-color)"
         class={`nora-statusbar browser-toolbar customization-target ${
-          showStatusbar() ? "" : "collapsed"
+          manager.showStatusBar() ? "" : "collapsed"
         }`}
         mode="icons"
         context="toolbar-context-menu"

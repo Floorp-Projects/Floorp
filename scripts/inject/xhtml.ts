@@ -14,7 +14,12 @@ export async function injectXHTML(binPath: string) {
     }
 
     const script = document.createElement("script");
-    script.innerHTML = `import("chrome://noraneko-startup/content/chrome_root.js");`;
+    script.setAttribute("type", "module");
+    script.setAttribute(
+      "src",
+      "chrome://noraneko-startup/content/chrome_root.js",
+    );
+    script.setAttribute("defer", "defer");
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);
@@ -34,7 +39,12 @@ export async function injectXHTML(binPath: string) {
     }
 
     const script = document.createElement("script");
-    script.innerHTML = `import("chrome://noraneko-startup/content/about-preferences.js");`;
+    script.setAttribute("type", "module");
+    script.setAttribute(
+      "src",
+      "chrome://noraneko-startup/content/about-preferences.js",
+    );
+    script.setAttribute("defer", "defer");
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);

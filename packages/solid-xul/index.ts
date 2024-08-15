@@ -150,6 +150,26 @@ const _render = (
   return disposer;
 };
 
+export function createRootHMR(
+  fn: (() => void) | (() => () => void),
+  hotCtx?: ViteHotContext,
+) {
+  createRoot((disposer) => {
+    const cleanup = fn();
+    if (hotCtx) {
+      hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), disposer]);
+      if (cleanup) {
+        hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), cleanup]);
+      }
+      console.log("register disposer to hotCtx in createRoot");
+      hotCtx.dispose(() => {
+        hotCtxMap.get(hotCtx)?.forEach((v) => v());
+        hotCtxMap.delete(hotCtx);
+      });
+    }
+  });
+}
+
 export {
   _render as render,
   effect,

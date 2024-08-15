@@ -123,6 +123,13 @@ export function setBrowserInterface(
   setGlobalDesignConfig("userInterface", value);
 }
 
+if (!window.gFloorp) {
+  window.gFloorp = {};
+}
+window.gFloorp.designs = {
+  setInterface: setBrowserInterface,
+};
+
 createEffect(() => {
   Services.prefs.setStringPref(
     "floorp.design.configs",

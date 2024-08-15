@@ -167,6 +167,8 @@ async function run(mode: "dev" | "test" = "dev") {
     args: ["-jsdebugger"],
     extraPrefsFirefox: {
       "browser.newtabpage.enabled": true,
+      //https://searchfox.org/mozilla-central/rev/02a4a649ed75ebaf3fbdf301c3d3137baf6842a1/devtools/shared/security/auth.js#170
+      "devtools.debugger.prompt-connection": false,
 
       //? Thank you for `arai` san in Mozilla!
       //? This pref allows to run import of http(s) protocol in browser-top or about: pages
@@ -177,6 +179,9 @@ async function run(mode: "dev" | "test" = "dev") {
       //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityUtils.cpp#1445-1450
       //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#14743
       "security.allow_parent_unrestricted_js_loads": true,
+
+      //https://searchfox.org/mozilla-central/rev/71aada9d4055e420f91f3d0fa107f0328763e40b/browser/app/profile/firefox.js#1249
+      "browser.preferences.moreFromMozilla": false,
     },
     defaultViewport: { height: 0, width: 0 },
     timeout: 0,
@@ -184,12 +189,26 @@ async function run(mode: "dev" | "test" = "dev") {
 
   if (mode === "dev") {
     const pages = await browser.pages();
-    await pages[0].goto("about:newtab", { timeout: 0 });
-    await pages[0].goto("about:preferences", { timeout: 0 });
+    await pages[0].goto("about:newtab", {
+      timeout: 0,
+      waitUntil: "domcontentloaded",
+    });
+    //? We should not go to about:preferences
+    //? Puppeteer cannot get the load event so when reload, this errors.
+    // await pages[0].goto("about:preferences", {
+    //   timeout: 0,
+    //   waitUntil: "domcontentloaded",
+    // });
   } else if (mode === "test") {
     browser.pages().then(async (page) => {
-      await page[0].goto("about:newtab", { timeout: 0 });
-      await page[0].goto("about:preferences#csk", { timeout: 0 });
+      await page[0].goto("about:newtab", {
+        timeout: 0,
+        waitUntil: "domcontentloaded",
+      });
+      // await page[0].goto("about:preferences#csk", {
+      //   timeout: 0,
+      //   waitUntil: "domcontentloaded",
+      // });
     });
   }
 
