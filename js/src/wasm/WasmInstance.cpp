@@ -1514,7 +1514,7 @@ static bool ArrayCopyFromData(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
   // Compute the number of bytes to copy, ensuring it's below 2^32.
   CheckedUint32 numBytesToCopy =
       CheckedUint32(numElements) *
-      CheckedUint32(typeDef->arrayType().elementType_.size());
+      CheckedUint32(typeDef->arrayType().elementType().size());
   if (!numBytesToCopy.isValid()) {
     // Because the request implies that 2^32 or more bytes are to be copied.
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
@@ -1665,7 +1665,7 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
   // Any data coming from an element segment will be an AnyRef. Writes into
   // array memory are done with raw pointers, so we must ensure here that the
   // destination size is correct.
-  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() ==
+  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType().size() ==
                      sizeof(AnyRef));
 
   Rooted<WasmArrayObject*> arrayObj(
@@ -1771,7 +1771,7 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
   // Any data coming from an element segment will be an AnyRef. Writes into
   // array memory are done with raw pointers, so we must ensure here that the
   // destination size is correct.
-  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() ==
+  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType().size() ==
                      sizeof(AnyRef));
 
   // Get hold of the array.
@@ -1969,8 +1969,8 @@ static WasmArrayObject* UncheckedCastToArrayI16(HandleAnyRef ref) {
   JSObject& object = ref.toJSObject();
   WasmArrayObject& array = object.as<WasmArrayObject>();
   DebugOnly<const ArrayType*> type(&array.typeDef().arrayType());
-  MOZ_ASSERT(type->elementType_ == StorageType::I16);
-  MOZ_ASSERT(type->isMutable_ == isMutable);
+  MOZ_ASSERT(type->elementType() == StorageType::I16);
+  MOZ_ASSERT(type->isMutable() == isMutable);
   return &array;
 }
 
@@ -2369,7 +2369,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
         // StructLayout::close ensures this is an integral number of words.
         MOZ_ASSERT((typeDefData->structTypeSize % sizeof(uintptr_t)) == 0);
       } else {
-        uint32_t arrayElemSize = typeDef.arrayType().elementType_.size();
+        uint32_t arrayElemSize = typeDef.arrayType().elementType().size();
         typeDefData->arrayElemSize = arrayElemSize;
         MOZ_ASSERT(arrayElemSize == 16 || arrayElemSize == 8 ||
                    arrayElemSize == 4 || arrayElemSize == 2 ||

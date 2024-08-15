@@ -1662,7 +1662,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     return d.fail("too many fields in struct");
   }
 
-  StructFieldVector fields;
+  FieldTypeVector fields;
   if (!fields.resize(numFields)) {
     return false;
   }

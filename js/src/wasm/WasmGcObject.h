@@ -89,8 +89,8 @@ class WasmGcObject : public JSObject {
   // single contiguous area of memory:
   //
   // * If the object in question is a WasmStructObject, it is the value of
-  //   `wasm::StructField::offset` for the relevant field, without regard to
-  //   the inline/outline split.
+  //   `wasm::StructType::fieldOffset()` for the relevant field, without regard
+  //   to the inline/outline split.
   //
   // * If the object in question is a WasmArrayObject, then
   //   - u32 == UINT32_MAX (0xFFFF'FFFF) means the "length" property
