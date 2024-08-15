@@ -3487,7 +3487,7 @@ inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex,
     return false;
   }
 
-  if (!popWithType(arrayType.elementType_.widenToValType(), argValue)) {
+  if (!popWithType(arrayType.elementType().widenToValType(), argValue)) {
     return false;
   }
 
@@ -3520,7 +3520,7 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
     return false;
   }
 
-  ValType widenedElementType = arrayType.elementType_.widenToValType();
+  ValType widenedElementType = arrayType.elementType().widenToValType();
   for (uint32_t i = 0; i < *numElements; i++) {
     Value v;
     if (!popWithType(widenedElementType, &v)) {
@@ -3548,7 +3548,7 @@ inline bool OpIter<Policy>::readArrayNewDefault(uint32_t* typeIndex,
     return false;
   }
 
-  if (!arrayType.elementType_.isDefaultable()) {
+  if (!arrayType.elementType().isDefaultable()) {
     return fail("array must be defaultable");
   }
 
@@ -3571,7 +3571,7 @@ inline bool OpIter<Policy>::readArrayNewData(uint32_t* typeIndex,
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  StorageType elemType = arrayType.elementType_;
+  StorageType elemType = arrayType.elementType();
   if (!elemType.isNumber() && !elemType.isPacked() && !elemType.isVector()) {
     return fail("element type must be i8/i16/i32/i64/f32/f64/v128");
   }
@@ -3608,7 +3608,7 @@ inline bool OpIter<Policy>::readArrayNewElem(uint32_t* typeIndex,
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  StorageType dstElemType = arrayType.elementType_;
+  StorageType dstElemType = arrayType.elementType();
   if (!dstElemType.isRefType()) {
     return fail("element type is not a reftype");
   }
@@ -3650,11 +3650,11 @@ inline bool OpIter<Policy>::readArrayInitData(uint32_t* typeIndex,
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  StorageType elemType = arrayType.elementType_;
+  StorageType elemType = arrayType.elementType();
   if (!elemType.isNumber() && !elemType.isPacked() && !elemType.isVector()) {
     return fail("element type must be i8/i16/i32/i64/f32/f64/v128");
   }
-  if (!arrayType.isMutable_) {
+  if (!arrayType.isMutable()) {
     return fail("destination array is not mutable");
   }
   if (env_.dataCount.isNothing()) {
@@ -3693,8 +3693,8 @@ inline bool OpIter<Policy>::readArrayInitElem(uint32_t* typeIndex,
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  StorageType dstElemType = arrayType.elementType_;
-  if (!arrayType.isMutable_) {
+  StorageType dstElemType = arrayType.elementType();
+  if (!arrayType.isMutable()) {
     return fail("destination array is not mutable");
   }
   if (!dstElemType.isRefType()) {
@@ -3744,7 +3744,7 @@ inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex,
     return false;
   }
 
-  StorageType elementType = arrayType.elementType_;
+  StorageType elementType = arrayType.elementType();
 
   if (elementType.isValType() && wideningOp != FieldWideningOp::None) {
     return fail("must not specify signedness for unpacked element type");
@@ -3769,11 +3769,11 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
 
-  if (!arrayType.isMutable_) {
+  if (!arrayType.isMutable()) {
     return fail("array is not mutable");
   }
 
-  if (!popWithType(arrayType.elementType_.widenToValType(), val)) {
+  if (!popWithType(arrayType.elementType().widenToValType(), val)) {
     return false;
   }
 
@@ -3821,9 +3821,9 @@ inline bool OpIter<Policy>::readArrayCopy(int32_t* elemSize,
   const ArrayType& dstArrayType = dstTypeDef.arrayType();
   const TypeDef& srcTypeDef = env_.types->type(srcTypeIndex);
   const ArrayType& srcArrayType = srcTypeDef.arrayType();
-  StorageType dstElemType = dstArrayType.elementType_;
-  StorageType srcElemType = srcArrayType.elementType_;
-  if (!dstArrayType.isMutable_) {
+  StorageType dstElemType = dstArrayType.elementType();
+  StorageType srcElemType = srcArrayType.elementType();
+  if (!dstArrayType.isMutable()) {
     return fail("destination array is not mutable");
   }
 
@@ -3866,14 +3866,14 @@ inline bool OpIter<Policy>::readArrayFill(uint32_t* typeIndex, Value* array,
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  if (!arrayType.isMutable_) {
+  if (!arrayType.isMutable()) {
     return fail("destination array is not mutable");
   }
 
   if (!popWithType(ValType::I32, length)) {
     return false;
   }
-  if (!popWithType(arrayType.elementType_.widenToValType(), val)) {
+  if (!popWithType(arrayType.elementType().widenToValType(), val)) {
     return false;
   }
   if (!popWithType(ValType::I32, index)) {

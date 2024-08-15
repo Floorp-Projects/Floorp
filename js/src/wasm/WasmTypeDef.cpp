@@ -330,19 +330,21 @@ CheckedInt32 StructLayout::close() {
 
 bool StructType::init() {
   StructLayout layout;
-  for (StructField& field : fields_) {
+  for (FieldType& field : fields_) {
     CheckedInt32 offset = layout.addField(field.type);
     if (!offset.isValid()) {
       return false;
     }
-    field.offset = offset.value();
+    if (!fieldOffsets_.append(offset.value())) {
+      return false;
+    }
     if (!field.type.isRefRepr()) {
       continue;
     }
 
     bool isOutline;
     uint32_t adjustedOffset;
-    WasmStructObject::fieldOffsetToAreaAndOffset(field.type, field.offset,
+    WasmStructObject::fieldOffsetToAreaAndOffset(field.type, offset.value(),
                                                  &isOutline, &adjustedOffset);
     if (isOutline) {
       if (!outlineTraceOffsets_.append(adjustedOffset)) {
@@ -367,7 +369,7 @@ bool StructType::init() {
 /* static */
 bool StructType::createImmutable(const ValTypeVector& types,
                                  StructType* struct_) {
-  StructFieldVector fields;
+  FieldTypeVector fields;
   if (!fields.resize(types.length())) {
     return false;
   }

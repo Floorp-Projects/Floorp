@@ -193,7 +193,7 @@ void wasm::Dump(const StructType& structType, IndentedPrinter& out) {
   out.printf("(struct\n");
   {
     IndentedPrinter::AutoIndent innerIndent(out);
-    for (const StructField& field : structType.fields_) {
+    for (const FieldType& field : structType.fields_) {
       out.printf("(field ");
       if (field.isMutable) {
         out.printf("(mut ");
@@ -216,11 +216,11 @@ void wasm::Dump(const ArrayType& arrayType) {
 
 void wasm::Dump(const ArrayType& arrayType, IndentedPrinter& out) {
   out.printf("(array ");
-  if (arrayType.isMutable_) {
+  if (arrayType.isMutable()) {
     out.printf("(mut ");
   }
-  Dump(arrayType.elementType_, out);
-  if (arrayType.isMutable_) {
+  Dump(arrayType.elementType(), out);
+  if (arrayType.isMutable()) {
     out.printf(")");
   }
   out.printf(")\n");
