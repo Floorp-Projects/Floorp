@@ -24,21 +24,17 @@ add_task(async function test_translations_actor_sync_update() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const oldModels = await modelsPromise;
 
   is(
     decoder.decode(oldModels.model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
   const newModelRecords = createRecordsForLanguagePair("en", "es");
   for (const newModelRecord of newModelRecords) {
-    newModelRecord.version = "1.1";
+    newModelRecord.version = `${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`;
   }
 
   info('Emitting a remote client "sync" event with an updated record.');
@@ -56,16 +52,12 @@ add_task(async function test_translations_actor_sync_update() {
   const updatedModelsPromise =
     TranslationsParent.getLanguageTranslationModelFiles("en", "es");
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { model: updatedModel } = await updatedModelsPromise;
 
   is(
     decoder.decode(updatedModel.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.1",
-    "The version 1.1 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 model is downloaded.`
   );
 
   return cleanup();
@@ -89,16 +81,12 @@ add_task(async function test_translations_actor_sync_delete() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { model } = await modelsPromise;
 
   is(
     decoder.decode(model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
   info('Emitting a remote client "sync" event with a deleted record.');
@@ -144,14 +132,10 @@ add_task(async function test_translations_actor_sync_create() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   is(
     decoder.decode((await modelsPromise).model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
   info('Emitting a remote client "sync" event with new records.');
@@ -166,25 +150,21 @@ add_task(async function test_translations_actor_sync_create() {
   const updatedModelsPromise =
     TranslationsParent.getLanguageTranslationModelFiles("en", "fr");
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { vocab, lex, model } = await updatedModelsPromise;
 
   is(
     decoder.decode(vocab.buffer),
-    "Mocked download: test-translation-models vocab.enfr.spm 1.0",
+    `Mocked download: test-translation-models vocab.enfr.spm ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr vocab is downloaded."
   );
   is(
     decoder.decode(lex.buffer),
-    "Mocked download: test-translation-models lex.50.50.enfr.s2t.bin 1.0",
+    `Mocked download: test-translation-models lex.50.50.enfr.s2t.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr lex is downloaded."
   );
   is(
     decoder.decode(model.buffer),
-    "Mocked download: test-translation-models model.enfr.intgemm.alphas.bin 1.0",
+    `Mocked download: test-translation-models model.enfr.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr model is downloaded."
   );
 
