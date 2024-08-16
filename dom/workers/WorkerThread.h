@@ -83,7 +83,7 @@ class WorkerThread final : public nsThread {
                                    already_AddRefed<nsIRunnable> aRunnable);
 
   nsresult DispatchAnyThread(const WorkerThreadFriendKey& aKey,
-                             already_AddRefed<WorkerRunnable> aWorkerRunnable);
+                             RefPtr<WorkerRunnable> aWorkerRunnable);
 
   uint32_t RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 

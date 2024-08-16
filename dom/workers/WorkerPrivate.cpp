@@ -1624,7 +1624,6 @@ nsresult WorkerPrivate::DispatchLockHeld(
            this, runnable.get()));
       RefPtr<WorkerThreadRunnable> workerThreadRunnable =
           static_cast<WorkerThreadRunnable*>(runnable.get());
-      workerThreadRunnable->mWorkerPrivateForPreStartCleaning = this;
       mPreStartRunnables.AppendElement(workerThreadRunnable);
       return NS_OK;
     }
@@ -1643,6 +1642,20 @@ nsresult WorkerPrivate::DispatchLockHeld(
          this, runnable.get(), aSyncLoopTarget));
     rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   } else {
+    // If mStatus is Pending, the WorkerPrivate initialization still can fail.
+    // Append this WorkerThreadRunnable to WorkerPrivate::mPreStartRunnables,
+    // such that this WorkerThreadRunnable can get the correct value of
+    // mCleanPreStartDispatching in WorkerPrivate::RunLoopNeverRan().
+    if (mStatus == Pending) {
+      LOGV(
+          ("WorkerPrivate::DispatchLockHeld [%p] runnable %p is append in "
+           "mPreStartRunnables",
+           this, runnable.get()));
+      RefPtr<WorkerThreadRunnable> workerThreadRunnable =
+          static_cast<WorkerThreadRunnable*>(runnable.get());
+      mPreStartRunnables.AppendElement(workerThreadRunnable);
+    }
+
     // WorkerDebuggeeRunnables don't need any special treatment here. True,
     // they should not be delivered to a frozen worker. But frozen workers
     // aren't drawing from the thread's main event queue anyway, only from
@@ -3216,12 +3229,14 @@ void WorkerPrivate::RunLoopNeverRan() {
   RefPtr<WorkerThread> thread;
   {
     MutexAutoLock lock(mMutex);
-    // WorkerPrivate::DoRunLoop() is never called, so CompileScriptRunnable
-    // should not execute yet. However, the Worker is going to "Dead", flip the
-    // mCancelBeforeWorkerScopeConstructed to true for the dispatched runnables
-    // to indicate runnables there is no valid WorkerGlobalScope for executing.
-    MOZ_ASSERT(!data->mCancelBeforeWorkerScopeConstructed);
-    data->mCancelBeforeWorkerScopeConstructed.Flip();
+
+    if (!mPreStartRunnables.IsEmpty()) {
+      for (const RefPtr<WorkerThreadRunnable>& runnable : mPreStartRunnables) {
+        runnable->mCleanPreStartDispatching = true;
+      }
+      mPreStartRunnables.Clear();
+    }
+
     // Switch State to Dead
     mStatus = Dead;
     thread = mThread;
@@ -3237,7 +3252,6 @@ void WorkerPrivate::RunLoopNeverRan() {
   if (!mControlQueue.IsEmpty()) {
     WorkerRunnable* runnable = nullptr;
     while (mControlQueue.Pop(runnable)) {
-      runnable->Cancel();
       runnable->Release();
     }
   }
@@ -3279,6 +3293,8 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
 
     MOZ_ASSERT(mStatus == Pending);
     mStatus = Running;
+
+    mPreStartRunnables.Clear();
   }
 
   // Now that we've done that, we can go ahead and set up our AutoJSAPI.  We
@@ -4192,7 +4208,7 @@ void WorkerPrivate::ShutdownModuleLoader() {
 }
 
 void WorkerPrivate::ClearPreStartRunnables() {
-  nsTArray<RefPtr<WorkerRunnable>> prestart;
+  nsTArray<RefPtr<WorkerThreadRunnable>> prestart;
   {
     MutexAutoLock lock(mMutex);
     mPreStartRunnables.SwapElements(prestart);
@@ -5856,9 +5872,10 @@ void WorkerPrivate::SetWorkerPrivateInWorkerThread(
   if (!mPreStartRunnables.IsEmpty()) {
     for (uint32_t index = 0; index < mPreStartRunnables.Length(); index++) {
       MOZ_ALWAYS_SUCCEEDS(mThread->DispatchAnyThread(
-          WorkerThreadFriendKey{}, mPreStartRunnables[index].forget()));
+          WorkerThreadFriendKey{}, mPreStartRunnables[index]));
     }
-    mPreStartRunnables.Clear();
+    // Don't clear mPreStartRunnables here, it will be cleared in the beginning
+    // of WorkerPrivate::DoRunLoop() or when in WorkerPrivate::RunLoopNeverRan()
   }
 }
 
