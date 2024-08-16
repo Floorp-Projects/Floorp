@@ -1153,6 +1153,119 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Handles records that were deleted in a Remote Settings "sync" event by
+   * attempting to delete any previously downloaded attachments that are
+   * associated with the deleted records.
+   *
+   * @param {RemoteSettingsClient} client
+   *  - The Remote Settings client for which to handle deleted records.
+   * @param {TranslationModelRecord[]} deletedRecords
+   *  - The list of records that were deleted from the client's database.
+   */
+  static async #handleDeletedRecords(client, deletedRecords) {
+    // Attempt to delete any downloaded attachments that are associated with deleted records.
+    const failedDeletions = [];
+    await Promise.all(
+      deletedRecords.map(async record => {
+        try {
+          if (await client.attachments.isDownloaded(record)) {
+            await client.attachments.deleteDownloaded(record);
+          }
+        } catch (error) {
+          failedDeletions.push({ record, error });
+        }
+      })
+    );
+
+    // Report deletion failures if any occurred.
+    if (failedDeletions.length) {
+      lazy.console.warn(
+        'Remote Settings "sync" event failed to delete attachments for deleted records.'
+      );
+      for (const { record, error } of failedDeletions) {
+        lazy.console.error(
+          `Failed to delete attachment for deleted record ${record.name}: ${error}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Handles records that were updated in a Remote Settings "sync" event by
+   * attempting to delete any previously downloaded attachments that are
+   * associated with the old record versions, then downloading attachments
+   * that are associated with the new record versions.
+   *
+   * @param {RemoteSettingsClient} client
+   *  - The Remote Settings client for which to handle updated records.
+   * @param {{old: TranslationModelRecord, new: TranslationModelRecord}[]} updatedRecords
+   *  - The list of records that were updated in the client's database.
+   */
+  static async #handleUpdatedRecords(client, updatedRecords) {
+    // Gather any updated records whose attachments were previously downloaded.
+    const recordsWithAttachmentsToReplace = [];
+    for (const {
+      old: recordBeforeUpdate,
+      new: recordAfterUpdate,
+    } of updatedRecords) {
+      if (await client.attachments.isDownloaded(recordBeforeUpdate)) {
+        recordsWithAttachmentsToReplace.push({
+          recordBeforeUpdate,
+          recordAfterUpdate,
+        });
+      }
+    }
+
+    // Attempt to delete all of the attachments for the old versions of the updated records.
+    const failedDeletions = [];
+    await Promise.all(
+      recordsWithAttachmentsToReplace.map(async ({ recordBeforeUpdate }) => {
+        try {
+          await client.attachments.deleteDownloaded(recordBeforeUpdate);
+        } catch (error) {
+          failedDeletions.push({ record: recordBeforeUpdate, error });
+        }
+      })
+    );
+
+    // Report deletion failures if any occurred.
+    if (failedDeletions.length) {
+      lazy.console.warn(
+        'Remote Settings "sync" event failed to delete old record attachments for updated records.'
+      );
+      for (const { record, error } of failedDeletions) {
+        lazy.console.error(
+          `Failed to delete old attachment for updated record ${record.name}: ${error.reason}`
+        );
+      }
+    }
+
+    // Attempt to download all of the attachments for the new versions of the updated records.
+    const failedDownloads = [];
+    await Promise.all(
+      recordsWithAttachmentsToReplace.map(async ({ recordAfterUpdate }) => {
+        try {
+          await client.attachments.download(recordAfterUpdate);
+        } catch (error) {
+          failedDownloads.push({ record: recordAfterUpdate, error });
+        }
+      })
+    );
+
+    // Report deletion failures if any occurred.
+    if (failedDownloads.length) {
+      lazy.console.warn(
+        'Remote Settings "sync" event failed to download new record attachments for updated records.'
+      );
+      for (const { record, error } of failedDeletions) {
+        lazy.console.error(
+          `Failed to download new attachment for updated record ${record.name}: ${error.reason}`
+        );
+      }
+    }
+  }
+
+  /**
    * Handles the "sync" event for the Translations Models Remote Settings collection.
    * This is called whenever models are created, updated, or deleted from the Remote Settings database.
    *
@@ -1171,7 +1284,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = TranslationsParent.#translationModelsRemoteClient;
     if (!client) {
       lazy.console.error(
-        "Translations client was not present when receiving a sync event."
+        "Translations models client was not present when receiving a sync event."
       );
       return;
     }
@@ -1182,7 +1295,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     // Language model attachments will only be downloaded when they are used.
     lazy.console.log(
-      `Remote Settings "sync" event for remote language models `,
+      `Remote Settings "sync" event for language-model records`,
       {
         created,
         updated,
@@ -1191,95 +1304,55 @@ export class TranslationsParent extends JSWindowActorParent {
     );
 
     if (deleted.length) {
-      // Attempt to delete any attachments that were downloaded for deleted records.
-      const failedDeletions = [];
-      await Promise.all(
-        deleted.map(async record => {
-          try {
-            if (await client.attachments.isDownloaded(record)) {
-              await client.attachments.deleteDownloaded(record);
-            }
-          } catch (error) {
-            failedDeletions.push({ record, error });
-          }
-        })
-      );
-
-      // Report deletion failures if any occurred.
-      if (failedDeletions.length) {
-        lazy.console.warn(
-          'Remote Settings "sync" event failed to delete attachments for deleted records.'
-        );
-        for (const { record, error } of failedDeletions) {
-          lazy.console.error(
-            `Failed to delete attachment for deleted record ${record.name}: ${error}`
-          );
-        }
-      }
+      await TranslationsParent.#handleDeletedRecords(client, deleted);
     }
 
     if (updated.length) {
-      // Gather any updated records whose attachments were previously downloaded.
-      const recordsWithAttachmentsToReplace = [];
-      for (const {
-        old: recordBeforeUpdate,
-        new: recordAfterUpdate,
-      } of updated) {
-        if (await client.attachments.isDownloaded(recordBeforeUpdate)) {
-          recordsWithAttachmentsToReplace.push({
-            recordBeforeUpdate,
-            recordAfterUpdate,
-          });
-        }
-      }
+      await TranslationsParent.#handleUpdatedRecords(client, updated);
+    }
 
-      // Attempt to delete all of the attachments for the old versions of the updated records.
-      const failedDeletions = [];
-      await Promise.all(
-        recordsWithAttachmentsToReplace.map(async ({ recordBeforeUpdate }) => {
-          try {
-            await client.attachments.deleteDownloaded(recordBeforeUpdate);
-          } catch (error) {
-            failedDeletions.push({ record: recordBeforeUpdate, error });
-          }
-        })
+    // There is nothing to do for created records, since they will not have any previously downloaded attachments.
+  }
+
+  /**
+   * Handles the "sync" event for the Translations WASM Remote Settings collection.
+   * This is called whenever models are created, updated, or deleted from the Remote Settings database.
+   *
+   * @param {object} event - The sync event.
+   * @param {object} event.data - The data associated with the sync event.
+   * @param {TranslationModelRecord[]} event.data.created
+   *  - The list of Remote Settings records that were created in the sync event.
+   * @param {{old: TranslationModelRecord, new: TranslationModelRecord}[]} event.data.updated
+   *  - The list of Remote Settings records that were updated in the sync event.
+   * @param {TranslationModelRecord[]} event.data.deleted
+   *  - The list of Remote Settings records that were deleted in the sync event.
+   */
+  static async #handleTranslationsWasmSync({
+    data: { created, updated, deleted },
+  }) {
+    const client = TranslationsParent.#translationsWasmRemoteClient;
+    if (!client) {
+      lazy.console.error(
+        "Translations WASM client was not present when receiving a sync event."
       );
+      return;
+    }
 
-      // Report deletion failures if any occurred.
-      if (failedDeletions.length) {
-        lazy.console.warn(
-          'Remote Settings "sync" event failed to delete old record attachments for updated records.'
-        );
-        for (const { record, error } of failedDeletions) {
-          lazy.console.error(
-            `Failed to delete old attachment for updated record ${record.name}: ${error.reason}`
-          );
-        }
-      }
+    lazy.console.log(`Remote Settings "sync" event for WASM records`, {
+      created,
+      updated,
+      deleted,
+    });
 
-      // Attempt to download all of the attachments for the new versions of the updated records.
-      const failedDownloads = [];
-      await Promise.all(
-        recordsWithAttachmentsToReplace.map(async ({ recordAfterUpdate }) => {
-          try {
-            await client.attachments.download(recordAfterUpdate);
-          } catch (error) {
-            failedDownloads.push({ record: recordAfterUpdate, error });
-          }
-        })
-      );
+    // Invalidate cached data.
+    TranslationsParent.#bergamotWasmRecord = null;
 
-      // Report deletion failures if any occurred.
-      if (failedDownloads.length) {
-        lazy.console.error(
-          'Remote Settings "sync" event failed to download new record attachments for updated records.'
-        );
-        for (const { record, error } of failedDeletions) {
-          lazy.console.error(
-            `Failed to download new attachment for updated record ${record.name}: ${error.reason}`
-          );
-        }
-      }
+    if (deleted.length) {
+      await TranslationsParent.#handleDeletedRecords(client, deleted);
+    }
+
+    if (updated.length) {
+      await TranslationsParent.#handleUpdatedRecords(client, updated);
     }
 
     // There is nothing to do for created records, since they will not have any previously downloaded attachments.
@@ -1299,6 +1372,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = lazy.RemoteSettings("translations-models");
     TranslationsParent.#translationModelsRemoteClient = client;
     client.on("sync", TranslationsParent.#handleTranslationsModelsSync);
+
     return client;
   }
 
@@ -1553,28 +1627,8 @@ export class TranslationsParent extends JSWindowActorParent {
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-wasm");
-
     TranslationsParent.#translationsWasmRemoteClient = client;
-
-    client.on("sync", async ({ data: { created, updated, deleted } }) => {
-      lazy.console.log(`"sync" event for remote bergamot wasm `, {
-        created,
-        updated,
-        deleted,
-      });
-
-      // Remove all the deleted records.
-      for (const record of deleted) {
-        await client.attachments.deleteDownloaded(record);
-      }
-
-      // Remove any updated records, and download the new ones.
-      for (const { old: oldRecord } of updated) {
-        await client.attachments.deleteDownloaded(oldRecord);
-      }
-
-      // Do nothing for the created records.
-    });
+    client.on("sync", TranslationsParent.#handleTranslationsWasmSync);
 
     return client;
   }
@@ -2092,6 +2146,10 @@ export class TranslationsParent extends JSWindowActorParent {
       "sync",
       TranslationsParent.#handleTranslationsModelsSync
     );
+    translationsWasmRemoteClient.on(
+      "sync",
+      TranslationsParent.#handleTranslationsWasmSync
+    );
   }
 
   /**
@@ -2123,6 +2181,10 @@ export class TranslationsParent extends JSWindowActorParent {
     TranslationsParent.#translationModelsRemoteClient.off(
       "sync",
       TranslationsParent.#handleTranslationsModelsSync
+    );
+    TranslationsParent.#translationsWasmRemoteClient.off(
+      "sync",
+      TranslationsParent.#handleTranslationsWasmSync
     );
 
     TranslationsParent.#isTranslationsEngineMocked = false;
