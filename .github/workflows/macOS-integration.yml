@@ -165,13 +165,8 @@ jobs:
               export APP_NAME="Floorp.app"
             fi
 
-            chmod +x ./floorp/build/codesign/mac/codesign.bash
-            ./floorp/build/codesign/mac/codesign.bash \
-              -a "./obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}" \
-              -i "${{ secrets.macOS_AppleDeveloperId }}" \
-              -b "./floorp/build/codesign/mac/browser.developer.entitlements.xml" \
-              -p "./floorp/build/codesign/mac/plugin-container.developer.entitlements.xml"
-          env: 
+            ./mach macos-sign -s ${{ secrets.macOS_AppleDeveloperId }} -a ./obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}
+          env:
             GHA_beta: ${{ inputs.beta }}
 
         - name: Create DMG 📦
