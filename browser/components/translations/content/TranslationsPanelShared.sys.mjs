@@ -49,11 +49,23 @@ export class TranslationsPanelShared {
   static #simulateLangListError = false;
 
   /**
+   * Set to true once we've initialized the observers for this static global class,
+   * to ensure that we only ever create observers once.
+   *
+   * @type {boolean}
+   */
+  static #observersInitialized = false;
+
+  /**
    * Clears cached data regarding the initialization state of the
    * FullPageTranslationsPanel and the SelectTranslationsPanel dropdown menu lists.
    *
-   * This is only needed for test runners to ensure that each test
-   * starts from a clean slate.
+   * This will cause all panels to rebuild their menulist items upon its next open event.
+   * There exists one SelectTranslationsPanel and one FullPageTranslationsPanel per open
+   * Firefox window. There are several situations in which this should be called:
+   *
+   *  1) In between test cases, which may explicitly test a different set of available languages.
+   *  2) Whenever a Remote Settings sync changes the list of available languages.
    */
   static clearLanguageListsCache() {
     TranslationsPanelShared.#langListsInitState = new WeakMap();
@@ -121,6 +133,18 @@ export class TranslationsPanelShared {
    *   - The panel for which to ensure language lists are built.
    */
   static async ensureLangListsBuilt(document, panel) {
+    if (!TranslationsPanelShared.#observersInitialized) {
+      TranslationsPanelShared.#observersInitialized = true;
+
+      // The language dropdowns must be rebuilt any time language pairs change.
+      // This is most often due to a Remote Settings sync, which could be triggered
+      // due to publishing a new language model, or by changing the Remote Settings channel.
+      Services.obs.addObserver(
+        TranslationsPanelShared.clearLanguageListsCache,
+        "translations:language-pairs-changed"
+      );
+    }
+
     const { panel: panelElement } = panel.elements;
     switch (TranslationsPanelShared.#langListsInitState.get(panel)) {
       case "initialized":
