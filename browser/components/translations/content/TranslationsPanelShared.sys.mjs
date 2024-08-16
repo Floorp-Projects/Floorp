@@ -50,13 +50,13 @@ export class TranslationsPanelShared {
 
   /**
    * Clears cached data regarding the initialization state of the
-   * FullPageTranslationsPanel or the SelectTranslationsPanel.
+   * FullPageTranslationsPanel and the SelectTranslationsPanel dropdown menu lists.
    *
    * This is only needed for test runners to ensure that each test
    * starts from a clean slate.
    */
-  static clearCache() {
-    this.#langListsInitState = new WeakMap();
+  static clearLanguageListsCache() {
+    TranslationsPanelShared.#langListsInitState = new WeakMap();
   }
 
   /**
