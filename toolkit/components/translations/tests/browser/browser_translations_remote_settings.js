@@ -267,7 +267,7 @@ add_task(async function test_get_records_with_multiple_versions() {
 
   TranslationsParent.mockTranslationsEngine(
     client,
-    await createTranslationsWasmRemoteClient()
+    (await createTranslationsWasmRemoteClient()).client
   );
 
   const retrievedRecords = await TranslationsParent.getMaxVersionRecords(

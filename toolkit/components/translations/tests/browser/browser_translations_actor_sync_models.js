@@ -9,7 +9,7 @@
  *
  * https://firefox-source-docs.mozilla.org/services/settings/index.html#unit-tests
  */
-add_task(async function test_translations_actor_sync_update() {
+add_task(async function test_translations_actor_sync_update_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -60,7 +60,7 @@ add_task(async function test_translations_actor_sync_update() {
 /**
  * An actor unit test for testing RemoteSettings delete behavior.
  */
-add_task(async function test_translations_actor_sync_delete() {
+add_task(async function test_translations_actor_sync_delete_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -110,7 +110,7 @@ add_task(async function test_translations_actor_sync_delete() {
 /**
  * An actor unit test for testing RemoteSettings creation behavior.
  */
-add_task(async function test_translations_actor_sync_create() {
+add_task(async function test_translations_actor_sync_create_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -166,7 +166,7 @@ add_task(async function test_translations_actor_sync_create() {
  * An actor unit test for testing creating a new record has a higher minor version than an existing record of the same kind.
  */
 add_task(
-  async function test_translations_actor_sync_create_higher_minor_version() {
+  async function test_translations_actor_sync_create_models_higher_minor_version() {
     const { remoteClients, cleanup } = await setupActorTest({
       autoDownloadFromRemoteSettings: true,
       languagePairs: [
@@ -226,7 +226,7 @@ add_task(
  * An actor unit test for testing creating a new record has a higher major version than an existing record of the same kind.
  */
 add_task(
-  async function test_translations_actor_sync_create_higher_major_version() {
+  async function test_translations_actor_sync_create_models_higher_major_version() {
     const { remoteClients, cleanup } = await setupActorTest({
       autoDownloadFromRemoteSettings: true,
       languagePairs: [
@@ -286,7 +286,7 @@ add_task(
  * An actor unit test for testing removing a record that has a higher minor version than another record, ensuring
  * that the models roll back to the previous version.
  */
-add_task(async function test_translations_actor_sync_rollback() {
+add_task(async function test_translations_actor_sync_rollback_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
