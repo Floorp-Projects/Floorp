@@ -864,6 +864,9 @@ HttpObserverManager = {
 
       // Figure out if this is an urgent request that shouldn't be batched.
       urgentSend: (cos.classFlags & URGENT_CLASSES) > 0,
+
+      // Floorp Injections
+      browserElement: channel.browserElement || undefined
     };
 
     if (originAttributes) {
