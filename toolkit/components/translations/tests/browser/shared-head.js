@@ -1019,6 +1019,117 @@ async function createTranslationsWasmRemoteClient(
   );
 }
 
+/**
+ * Modifies the client's Remote Settings database to create, update, and delete records, then emits
+ * a "sync" event with the relevant changes for the Remote Settings client.
+ *
+ * Asserts that the list of records to create is disjoint from the list of records to delete.
+ * If your test case needs to create a record and then delete it, do it in separate transactions.
+ *
+ * @param {RemoteSettingsClient} remoteSettingsClient - The Remote Settings client whose database will be modified.
+ * @param {object} options
+ * @param {TranslationModelRecord[]} [options.recordsToCreate]
+ *  - A list of records to newly create or update. These records are automatically partitioned into
+ *    either the created array or the updated array based on whether they exist in the database yet.
+ * @param {TranslationModelRecord[]} [options.recordsToDelete]
+ *  - A list of records to delete from the database. Asserts that all of these records exist in the
+ *    database before deleting them.
+ * @param {number} [options.expectedCreatedRecordsCount]
+ *  - The expected count of records within the recordsToCreate parameter that are new to the database.
+ * @param {number} [options.expectedUpdatedRecordsCount]
+ *  - The expected count of records within the recordsToCreate parameter that are already in the database.
+ * @param {number} [options.expectedDeletedRecordsCount]
+ *  - The expected count of records within the recordsToDelete parameter that are already in the database.
+ */
+async function modifyRemoteSettingsRecords(
+  remoteSettingsClient,
+  {
+    recordsToCreate = [],
+    recordsToDelete = [],
+    expectedCreatedRecordsCount = 0,
+    expectedUpdatedRecordsCount = 0,
+    expectedDeletedRecordsCount = 0,
+  }
+) {
+  for (const recordToCreate of recordsToCreate) {
+    for (const recordToDelete of recordsToDelete) {
+      isnot(
+        recordToCreate.id,
+        recordToDelete.id,
+        `Attempt to both create and delete the same record from Remote Settings database: '${recordToCreate.name}'`
+      );
+    }
+  }
+
+  let created = [];
+  let updated = [];
+  let deleted = [];
+
+  const existingRecords = await remoteSettingsClient.get();
+
+  for (const newRecord of recordsToCreate) {
+    const existingRecord = existingRecords.find(
+      existingRecord => existingRecord.id === newRecord.id
+    );
+    if (existingRecord) {
+      updated.push({
+        old: existingRecord,
+        new: newRecord,
+      });
+    } else {
+      created.push(newRecord);
+    }
+  }
+
+  if (recordsToCreate.length) {
+    info("Storing new and updated records in mocked Remote Settings database");
+    await remoteSettingsClient.db.importChanges(
+      /* metadata */ {},
+      Date.now(),
+      recordsToCreate
+    );
+  }
+
+  if (recordsToDelete.length) {
+    info("Storing new and updated records in mocked Remote Settings database");
+    for (const recordToDelete of recordsToDelete) {
+      ok(
+        existingRecords.find(
+          existingRecord => existingRecord.id === recordToDelete.id
+        ),
+        `The record to delete '${recordToDelete.name}' should be found in the database.`
+      );
+      await remoteSettingsClient.db.delete(recordToDelete.id);
+      deleted.push(recordToDelete);
+    }
+  }
+
+  is(
+    created.length,
+    expectedCreatedRecordsCount,
+    "Expected the correct number of created records"
+  );
+  is(
+    updated.length,
+    expectedUpdatedRecordsCount,
+    "Expected the correct number of updated records"
+  );
+  is(
+    deleted.length,
+    expectedDeletedRecordsCount,
+    "Expected the correct number of deleted records"
+  );
+
+  info('Emitting a remote client "sync" event.');
+  await remoteSettingsClient.emit("sync", {
+    data: {
+      created,
+      updated,
+      deleted,
+    },
+  });
+}
+
 async function selectAboutPreferencesElements() {
   const document = gBrowser.selectedBrowser.contentDocument;
 
@@ -1221,32 +1332,46 @@ function waitForAppLocaleChanged() {
 }
 
 async function mockLocales({ systemLocales, appLocales, webLanguages }) {
-  const appLocaleChanged1 = waitForAppLocaleChanged();
+  if (systemLocales) {
+    TranslationsParent.mockedSystemLocales = systemLocales;
+  }
 
-  TranslationsParent.mockedSystemLocales = systemLocales;
   const { availableLocales, requestedLocales } = Services.locale;
 
-  info("Mocking locales, so expect potential .ftl resource errors.");
-  Services.locale.availableLocales = appLocales;
-  Services.locale.requestedLocales = appLocales;
+  if (appLocales) {
+    const appLocaleChanged = waitForAppLocaleChanged();
 
-  await appLocaleChanged1;
+    info("Mocking locales, so expect potential .ftl resource errors.");
+    Services.locale.availableLocales = appLocales;
+    Services.locale.requestedLocales = appLocales;
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["intl.accept_languages", webLanguages.join(",")]],
-  });
+    await appLocaleChanged;
+  }
+
+  if (webLanguages) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["intl.accept_languages", webLanguages.join(",")]],
+    });
+  }
 
   return async () => {
-    const appLocaleChanged2 = waitForAppLocaleChanged();
-
     // Reset back to the originals.
-    TranslationsParent.mockedSystemLocales = null;
-    Services.locale.availableLocales = availableLocales;
-    Services.locale.requestedLocales = requestedLocales;
+    if (systemLocales) {
+      TranslationsParent.mockedSystemLocales = null;
+    }
 
-    await appLocaleChanged2;
+    if (appLocales) {
+      const appLocaleChanged = waitForAppLocaleChanged();
 
-    await SpecialPowers.popPrefEnv();
+      Services.locale.availableLocales = availableLocales;
+      Services.locale.requestedLocales = requestedLocales;
+
+      await appLocaleChanged;
+    }
+
+    if (webLanguages) {
+      await SpecialPowers.popPrefEnv();
+    }
   };
 }
 

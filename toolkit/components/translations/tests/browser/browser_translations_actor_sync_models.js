@@ -32,21 +32,15 @@ add_task(async function test_translations_actor_sync_update() {
     `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  const newModelRecords = createRecordsForLanguagePair("en", "es");
-  for (const newModelRecord of newModelRecords) {
+  const recordsToCreate = createRecordsForLanguagePair("en", "es");
+  for (const newModelRecord of recordsToCreate) {
+    newModelRecord.id = oldModels[newModelRecord.fileType].record.id;
     newModelRecord.version = `${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`;
   }
 
-  info('Emitting a remote client "sync" event with an updated record.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: [],
-      updated: newModelRecords.map(newRecord => ({
-        old: oldModels[newRecord.fileType].record,
-        new: newRecord,
-      })),
-      deleted: [],
-    },
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToCreate,
+    expectedUpdatedRecordsCount: 3,
   });
 
   const updatedModelsPromise =
@@ -89,13 +83,12 @@ add_task(async function test_translations_actor_sync_delete() {
     `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  info('Emitting a remote client "sync" event with a deleted record.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: [],
-      updated: [],
-      deleted: [model.record],
-    },
+  info(
+    `Removing record ${model.record.name} from mocked Remote Settings database.`
+  );
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToDelete: [model.record],
+    expectedDeletedRecordsCount: 1,
   });
 
   let errorMessage;
@@ -138,13 +131,11 @@ add_task(async function test_translations_actor_sync_create() {
     `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  info('Emitting a remote client "sync" event with new records.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: createRecordsForLanguagePair("en", "fr"),
-      updated: [],
-      deleted: [],
-    },
+  const recordsToCreate = createRecordsForLanguagePair("en", "fr");
+
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToCreate,
+    expectedCreatedRecordsCount: 3,
   });
 
   const updatedModelsPromise =
