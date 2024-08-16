@@ -66,6 +66,8 @@ skip-if = ["true"]
 
 ["browser_translations_full_page_panel_init_failure.js"]
 
+["browser_translations_full_page_panel_modify_available_language_models.js"]
+
 ["browser_translations_full_page_panel_never_translate_language.js"]
 
 ["browser_translations_full_page_panel_never_translate_site_auto.js"]
@@ -126,6 +128,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 ["browser_translations_select_panel_fallback_to_doc_language.js"]
 
 ["browser_translations_select_panel_init_failure.js"]
+
+["browser_translations_select_panel_modify_available_language_models.js"]
 
 ["browser_translations_select_panel_pdf.js"]
 
