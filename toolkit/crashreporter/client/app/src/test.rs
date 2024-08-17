@@ -590,7 +590,7 @@ fn no_submit() {
         "data_dir/crashreporter_settings.json",
         Settings {
             submit_report: true,
-            include_url: true,
+            include_url: false,
         }
         .to_string(),
     );
@@ -599,7 +599,7 @@ fn no_submit() {
             assert!(c.checked.get())
         });
         interact.element("include-url", |_style, c: &model::Checkbox| {
-            assert!(c.checked.get())
+            assert!(!c.checked.get())
         });
         interact.element("send", |_style, c: &model::Checkbox| c.checked.set(false));
         interact.element("include-url", |_style, c: &model::Checkbox| {
@@ -765,6 +765,7 @@ fn details_window() {
              TelemetryServerURL: https://telemetry.example.com\n\
              TelemetrySessionId: telemetry_session\n\
              Throttleable: 1\n\
+             URL: https://url.example.com\n\
              Vendor: FooCorp\n\
              Version: 100.0\n\
              This report also contains technical information about the state of the application when it crashed.\n"
