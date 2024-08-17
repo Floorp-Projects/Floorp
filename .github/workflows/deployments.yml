@@ -377,7 +377,7 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
           -d '{
-            "ref": "ESR115",
+            "ref": "ESR128",
             "inputs": {
               "ppa": "true",
               "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
@@ -391,7 +391,7 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
           -d '{
-            "ref": "ESR115",
+            "ref": "ESR128",
             "inputs": {
               "ppa": "false",
               "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
