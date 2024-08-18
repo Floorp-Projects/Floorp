@@ -750,6 +750,7 @@ main section {
 
 .top-site-outer {
   margin: 0 3px;
+  position: relative;
 }
 
 .floorp-backdrop-blur-enable .top-site-outer {
