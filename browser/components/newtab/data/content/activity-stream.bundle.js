@@ -10945,27 +10945,15 @@ class BaseContent extends (external_React_default()).PureComponent {
     })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null), wallpapersEnabled && this.renderWallpaperAttribution()), /*#__PURE__*/external_React_default().createElement("aside", null, weatherEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Weather_Weather, null)))), /*#__PURE__*/external_React_default().createElement("div", {
       id: "floorp"
     }, /*#__PURE__*/external_React_default().createElement("a", {
-      className: "releasenote",
-      href: "https://support.ablaze.one",
-      target: "_blank",
-      rel: "noreferrer"
+      className: prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote",
+      href: "https://support.ablaze.one"
     }, "Support"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("a", {
-      className: "releasenote",
-      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
-      target: "_blank",
-      rel: "noreferrer"
+      className: prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote",
+      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp"
     }, "Release Note")), /*#__PURE__*/external_React_default().createElement("a", {
+      className: prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred",
       href: "https://unsplash.com/",
-      style: {
-        position: "fixed",
-        bottom: "1em",
-        left: "1em",
-        fontSize: "16px",
-        color: "#ffffff"
-      },
-      target: "_blank",
-      id: "unsplash",
-      rel: "noreferrer"
+      id: "unsplash"
     }, "Unsplash"));
   }
 }

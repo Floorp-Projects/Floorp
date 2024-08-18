@@ -556,41 +556,11 @@ export class BaseContent extends React.PureComponent {
           </aside>
         </div>
         <div id="floorp">
-          <a
-            className="releasenote"
-            href="https://support.ablaze.one"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Support
-          </a>
-          <br />
-          <br />
-          <a
-            className="releasenote"
-            href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Release Note
-          </a>
+          {/* TODO: use css instead this br tag */}
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://support.ablaze.one">Support</a><br /><br />
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp">Release Note</a>
         </div>
-        {/* TODO: move to _Base.scss */}
-        <a
-          href="https://unsplash.com/"
-          style={{
-            position: "fixed",
-            bottom: "1em",
-            left: "1em",
-            fontSize: "16px",
-            color: "#ffffff",
-          }}
-          target="_blank"
-          id="unsplash"
-          rel="noreferrer"
-        >
-          Unsplash
-        </a>
+        <a className={prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred" } href="https://unsplash.com/" id="unsplash">Unsplash</a>
       </div>
     );
   }

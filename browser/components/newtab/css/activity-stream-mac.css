@@ -573,6 +573,20 @@ main section {
   color: #ffffff8e;
 }
 
+.imagecred {
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.floorp-releasenote-hidden,
+.floorp-imagecred-hidden {
+  visibility: hidden;
+  display: none;
+}
+
 #background {
   position: fixed;
   top: 0;
