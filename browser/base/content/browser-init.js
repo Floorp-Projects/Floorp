@@ -140,12 +140,6 @@ var gBrowserInit = {
     }
     // End Floorp Injections
 
-    // This needs setting up before we create the first remote browser.
-    window.docShell.treeOwner
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
-    window.browserDOMWindow = new nsBrowserAccess();
-
     gBrowser = window._gBrowser;
     delete window._gBrowser;
     gBrowser.init();
@@ -947,7 +941,6 @@ var gBrowserInit = {
       //                      ignored).
       let uri = window.arguments?.[0];
 
-
       /*** Floorp Injections *********************************************************************************************/
       if (uri) {
         try {
@@ -1203,9 +1196,6 @@ var gBrowserInit = {
     // Final window teardown, do this last.
     gBrowser.destroy();
     window.XULBrowserWindow = null;
-    window.docShell.treeOwner
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
 
     // Floorp Injections
     let webPanelId = new URL(window.location.href).searchParams.get(
