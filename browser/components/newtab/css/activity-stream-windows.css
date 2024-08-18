@@ -744,6 +744,10 @@ main section {
   }
 }
 
+.top-site-outer {
+  margin: 0 5px;
+}
+
 .floorp-backdrop-blur-enable .top-site-outer {
   backdrop-filter: blur(12px);
 }
