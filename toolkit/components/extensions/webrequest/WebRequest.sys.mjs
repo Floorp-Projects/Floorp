@@ -866,7 +866,8 @@ HttpObserverManager = {
       urgentSend: (cos.classFlags & URGENT_CLASSES) > 0,
 
       // Floorp Injections
-      browserElement: channel.browserElement || undefined
+      bmsUseragent:
+        channel.browserElement?.ownerGlobal?.window?.gBmsWindow?.userAgent,
     };
 
     if (originAttributes) {
