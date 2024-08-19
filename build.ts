@@ -218,6 +218,10 @@ async function run(mode: "dev" | "test" = "dev") {
 }
 
 async function build() {
+  console.log(import.meta.dirname);
+  console.log(import.meta.filename);
+  console.log(import.meta.url);
+  console.log(r("./build.ts"));
   const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
   await Promise.all([
     $({ cwd: r("./apps/startup") })`pnpm vite build`,
