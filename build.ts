@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import {URL} from "node:url";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
@@ -11,7 +12,7 @@ import puppeteer, { type Browser } from "puppeteer-core";
 const VERSION = process.platform === "win32" ? "001" : "000";
 
 const r = (dir: string) => {
-  return path.resolve(import.meta.dirname, dir);
+  return path.resolve(import.meta.dirname ?? new URL('.', import.meta.url).pathname, dir);
 };
 
 const isExists = async (path: string) => {
