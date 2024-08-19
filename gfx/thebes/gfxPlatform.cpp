@@ -745,8 +745,8 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.Report(aReport.swgl, "swgl");
         helper.Report(aReport.upload_staging_memory, "upload-stagin-memory");
 
-        WEBRENDER_FOR_EACH_INTERNER(REPORT_INTERNER);
-        WEBRENDER_FOR_EACH_INTERNER(REPORT_DATA_STORE);
+        WEBRENDER_FOR_EACH_INTERNER(REPORT_INTERNER, );
+        WEBRENDER_FOR_EACH_INTERNER(REPORT_DATA_STORE, );
 
         // GPU Memory.
         helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
