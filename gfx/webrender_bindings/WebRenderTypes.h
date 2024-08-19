@@ -22,6 +22,8 @@
 #include "Units.h"
 #include "nsIWidgetListener.h"
 
+#include <tuple>
+
 namespace mozilla {
 
 enum class StyleBorderStyle : uint8_t;
@@ -55,6 +57,8 @@ typedef Maybe<FontInstancePlatformOptions> MaybeFontInstancePlatformOptions;
 struct ExternalImageKeyPair {
   ImageKey key;
   ExternalImageId id;
+
+  auto MutTiedFields() { return std::tie(key, id); }
 };
 
 /* Generate a brand new window id and return it. */

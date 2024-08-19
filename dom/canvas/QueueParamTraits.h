@@ -275,7 +275,7 @@ struct QueueParamTraits_IsEnumCase {
   static bool Read(ConsumerView& aConsumerView, T* aArg) {
     auto shadow = std::underlying_type_t<T>{};
     aConsumerView.ReadParam(&shadow);
-    const auto e = AsValidEnum<T>(shadow);
+    const auto e = AsEnumCase<T>(shadow);
     if (!e) return false;
     *aArg = *e;
     return true;

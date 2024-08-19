@@ -123,25 +123,83 @@ struct ParamTraits<mozilla::wr::BuiltDisplayListDescriptor> {
   }
 };
 
+}  // namespace IPC
+namespace mozilla {
+template <>
+inline auto TiedFields<mozilla::wr::IdNamespace>(mozilla::wr::IdNamespace& a) {
+  return std::tie(a.mHandle);
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::ImageKey>(mozilla::wr::ImageKey& a) {
+  return std::tie(a.mNamespace, a.mHandle);
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::BlobImageKey>(
+    mozilla::wr::BlobImageKey& a) {
+  return std::tie(a._0);
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::FontKey>(mozilla::wr::FontKey& a) {
+  return std::tie(a.mNamespace, a.mHandle);
+}
+template <>
+inline auto TiedFields<mozilla::wr::FontInstanceKey>(
+    mozilla::wr::FontInstanceKey& a) {
+  return std::tie(a.mNamespace, a.mHandle);
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::ExternalImageId>(
+    mozilla::wr::ExternalImageId& a) {
+  return std::tie(a._0);
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::PipelineId>(mozilla::wr::PipelineId& a) {
+  return std::tie(a.mNamespace, a.mHandle);
+}
+
+template <>
+inline constexpr bool IsEnumCase<wr::OpacityType>(const wr::OpacityType raw) {
+  switch (raw) {
+    case wr::OpacityType::Opaque:
+    case wr::OpacityType::HasAlphaChannel:
+    case wr::OpacityType::Sentinel:
+      return true;
+  }
+  return false;
+}
+
+template <>
+inline auto TiedFields<mozilla::wr::RenderReasons>(
+    mozilla::wr::RenderReasons& a) {
+  return std::tie(a._0);
+}
+
+}  // namespace mozilla
+namespace IPC {
 template <>
 struct ParamTraits<mozilla::wr::IdNamespace>
-    : public PlainOldDataSerializer<mozilla::wr::IdNamespace> {};
+    : public ParamTraits_TiedFields<mozilla::wr::IdNamespace> {};
 
 template <>
 struct ParamTraits<mozilla::wr::ImageKey>
-    : public PlainOldDataSerializer<mozilla::wr::ImageKey> {};
+    : public ParamTraits_TiedFields<mozilla::wr::ImageKey> {};
 
 template <>
 struct ParamTraits<mozilla::wr::BlobImageKey>
-    : public PlainOldDataSerializer<mozilla::wr::BlobImageKey> {};
+    : public ParamTraits_TiedFields<mozilla::wr::BlobImageKey> {};
 
 template <>
 struct ParamTraits<mozilla::wr::FontKey>
-    : public PlainOldDataSerializer<mozilla::wr::FontKey> {};
+    : public ParamTraits_TiedFields<mozilla::wr::FontKey> {};
 
 template <>
 struct ParamTraits<mozilla::wr::FontInstanceKey>
-    : public PlainOldDataSerializer<mozilla::wr::FontInstanceKey> {};
+    : public ParamTraits_TiedFields<mozilla::wr::FontInstanceKey> {};
 
 template <>
 struct ParamTraits<mozilla::wr::FontInstanceOptions>
@@ -154,11 +212,11 @@ struct ParamTraits<mozilla::wr::FontInstancePlatformOptions>
 
 template <>
 struct ParamTraits<mozilla::wr::ExternalImageId>
-    : public PlainOldDataSerializer<mozilla::wr::ExternalImageId> {};
+    : public ParamTraits_TiedFields<mozilla::wr::ExternalImageId> {};
 
 template <>
 struct ParamTraits<mozilla::wr::PipelineId>
-    : public PlainOldDataSerializer<mozilla::wr::PipelineId> {};
+    : public ParamTraits_TiedFields<mozilla::wr::PipelineId> {};
 
 template <>
 struct ParamTraits<mozilla::wr::ImageFormat>
@@ -208,15 +266,15 @@ struct ParamTraits<mozilla::wr::MemoryReport>
 
 template <>
 struct ParamTraits<mozilla::wr::OpacityType>
-    : public PlainOldDataSerializer<mozilla::wr::OpacityType> {};
+    : public ParamTraits_IsEnumCase<mozilla::wr::OpacityType> {};
 
 template <>
 struct ParamTraits<mozilla::wr::ExternalImageKeyPair>
-    : public PlainOldDataSerializer<mozilla::wr::ExternalImageKeyPair> {};
+    : public ParamTraits_TiedFields<mozilla::wr::ExternalImageKeyPair> {};
 
 template <>
 struct ParamTraits<mozilla::wr::RenderReasons>
-    : public PlainOldDataSerializer<mozilla::wr::RenderReasons> {};
+    : public ParamTraits_TiedFields<mozilla::wr::RenderReasons> {};
 
 template <>
 struct ParamTraits<mozilla::wr::ExternalImageSource>
