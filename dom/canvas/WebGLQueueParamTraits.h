@@ -61,6 +61,8 @@ struct QueueParamTraits<avec3<T>> : QueueParamTraits_TiedFields<avec3<T>> {};
 // ---------------------------------------------------------------------
 // Enums!
 
+}  // namespace webgl
+
 inline constexpr bool IsEnumCase(const webgl::AttribBaseType raw) {
   switch (raw) {
     case webgl::AttribBaseType::Boolean:
@@ -71,10 +73,11 @@ inline constexpr bool IsEnumCase(const webgl::AttribBaseType raw) {
   }
   return false;
 }
-
 static_assert(IsEnumCase(webgl::AttribBaseType(3)));
 static_assert(!IsEnumCase(webgl::AttribBaseType(4)));
 static_assert(!IsEnumCase(webgl::AttribBaseType(5)));
+
+namespace webgl {
 
 #define USE_IS_ENUM_CASE(T) \
   template <>               \

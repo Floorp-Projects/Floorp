@@ -117,7 +117,9 @@ struct TightlyPackedFieldEndOffsetT<StructT, TupleOfFields, size_t(-1)> {
 
 template <class StructT>
 constexpr bool AssertTiedFieldsAreExhaustive() {
-  using TupleOfFields = decltype(std::declval<StructT>().MutTiedFields());
+  static_assert(AreAllBytesTiedFields<StructT>());
+
+  using TupleOfFields = decltype(TiedFields(std::declval<StructT&>()));
   constexpr auto num_fields = std::tuple_size_v<TupleOfFields>;
   constexpr auto end_offset_of_last_field =
       TightlyPackedFieldEndOffsetT<StructT, TupleOfFields,
