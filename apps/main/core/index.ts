@@ -1,15 +1,15 @@
 // import { initSidebar } from "./browser-sidebar";
 import { CustomShortcutKey } from "@nora/shared/custom-shortcut-key";
-import { initStatusbar, manager } from "./common/statusbar";
-import { initBrowserContextMenu } from "./common/context-menu";
 import { initShareMode } from "./common/browser-share-mode";
+import { initBrowserContextMenu } from "./common/context-menu";
+import { initDesigns } from "./common/designs";
+import { initDownloadbar } from "./common/downloadbar";
+import { initPrivateContainer } from "./common/private-container";
 import { initProfileManager } from "./common/profile-manager";
 import { initReverseSidebarPosition } from "./common/reverse-sidebar-position";
-import { initUndoClosedTab } from "./common/undo-closed-tab";
-import { initPrivateContainer } from "./common/private-container";
-import { setBrowserInterface } from "./common/designs/configs";
-import { initDesigns } from "./common/designs";
+import { initStatusbar } from "./common/statusbar";
 import { initTabbar } from "./common/tabbar";
+import { initUndoClosedTab } from "./common/undo-closed-tab";
 
 //console.log("run init");
 
@@ -19,7 +19,7 @@ export default function initScripts() {
   });
   console.log("load");
   initStatusbar();
-
+  initDownloadbar();
   //@ts-expect-error ii
   SessionStore.promiseInitialized.then(() => {
     console.log("testButton");

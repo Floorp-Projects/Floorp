@@ -3,23 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  createEffect,
-  For,
-  type ParentProps,
-  PropsWithChildren,
-} from "solid-js";
-import type { z } from "zod";
-import type { zFloorpDesignConfigs } from "./configs";
-import { applyUserJS } from "./userjs-parser";
-import { config } from "./configs";
+import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?url";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?url";
 import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?url";
-import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
+import {
+  For,
+  createEffect
+} from "solid-js";
+import type { z } from "zod";
 import styleBrowser from "./browser.css?inline";
+import type { zFloorpDesignConfigs } from "./configs";
+import { config } from "./configs";
+import { applyUserJS } from "./userjs-parser";
 
 interface FCSS {
   styles: string[];
@@ -50,6 +48,7 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
       };
     }
   }
+  return { styles: [null], userjs: null };
 }
 
 export function BrowserDesignElement() {
