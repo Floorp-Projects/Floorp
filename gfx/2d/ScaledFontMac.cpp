@@ -468,7 +468,7 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
     std::vector<FontVariation>* aOutVariations) {
   GetVariationsForCTFont(mCTFont, aOutVariations);
 
-  wr::FontInstanceOptions options;
+  wr::FontInstanceOptions options = {};
   options.render_mode = wr::FontRenderMode::Subpixel;
   options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
   if (mUseFontSmoothing) {
