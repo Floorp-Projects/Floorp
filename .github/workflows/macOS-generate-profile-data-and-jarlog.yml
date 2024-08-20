@@ -54,6 +54,16 @@ jobs:
           name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
           path: ~/downloads/artifacts
 
+      - name: force install python3.11
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
+        run: |
+          brew install python@3.12
+          brew link --force --overwrite python@3.12
+
+      - uses: actions/setup-python@v5
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
+        with:
+          python-version: '3.11'
       - name: setup environment 🌲
         run: |
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
@@ -75,11 +85,6 @@ jobs:
           mkdir -p ./floorp
           cp ${{ steps.download-artifacts-mac-enable-profgen.outputs.download-path }}/${ARCH_TYPE}-apple-darwin-output.tar.xz ./
           tar xf ${ARCH_TYPE}-apple-darwin-output.tar.xz
-
-      - uses: actions/setup-python@v5
-        if: ${{ env.ARCH_TYPE == 'x86_64' }}
-        with:
-          python-version: '3.11'
 
 ## ./mach python python/mozbuild/mozbuild/action/install.py $MOZ_FETCHES_DIR/target.dmg $MOZ_FETCHES_DIR
       - name: Generate Profdata 📊
