@@ -8,12 +8,6 @@
 
 :root {
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
-
-  /* On macOS, top level windows are always opaque. This gives us the right
-   * default background color, without confusing Gecko about whether the window
-   * is transparent or not. */
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-unified-toolbar-window;
 }
 
 /* stylelint-disable-next-line media-query-no-invalid */
