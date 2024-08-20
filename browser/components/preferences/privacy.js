@@ -1234,17 +1234,8 @@ var gPrivacyPane = {
         this.initOptOutStudyCheckbox();
       }
       this.initAddonRecommendationsCheckbox();
+      this.initPrivateAttributionCheckbox();
     }
-    dataCollectionCheckboxHandler({
-      checkbox: document.getElementById("privateAttribution"),
-      pref: PREF_PRIVATE_ATTRIBUTION_ENABLED,
-      matchPref() {
-        return AppConstants.MOZ_TELEMETRY_REPORTING;
-      },
-      isDisabled() {
-        return !AppConstants.MOZ_TELEMETRY_REPORTING;
-      },
-    });
 
     let signonBundle = document.getElementById("signonBundle");
     let pkiBundle = document.getElementById("pkiBundle");
@@ -3516,6 +3507,19 @@ var gPrivacyPane = {
     dataCollectionCheckboxHandler({
       checkbox: document.getElementById("addonRecommendationEnabled"),
       pref: PREF_ADDON_RECOMMENDATIONS_ENABLED,
+    });
+  },
+
+  initPrivateAttributionCheckbox() {
+    dataCollectionCheckboxHandler({
+      checkbox: document.getElementById("privateAttribution"),
+      pref: PREF_PRIVATE_ATTRIBUTION_ENABLED,
+      matchPref() {
+        return AppConstants.MOZ_TELEMETRY_REPORTING;
+      },
+      isDisabled() {
+        return !AppConstants.MOZ_TELEMETRY_REPORTING;
+      },
     });
   },
 
