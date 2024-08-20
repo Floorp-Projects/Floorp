@@ -41,24 +41,24 @@
   padding-inline-start: 4px;
   appearance: auto;
   -moz-default-appearance: toolbarbutton;
-}
 
-#placesMenu > menu:hover {
-  color: ButtonText;
-}
+  &:hover {
+    color: ButtonText;
+  }
 
-#placesMenu > menu:active,
-#placesMenu > menu[open] {
-  color: -moz-buttonactivetext;
-}
+  &:hover:active,
+  &[open] {
+    color: -moz-buttonactivetext;
+  }
 
-#placesMenu > menu::after {
-  display: flex;
-  width: 12px;
-  height: 12px;
-  content: url("chrome://global/skin/icons/arrow-down-12.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
+  &::after {
+    display: flex;
+    width: 12px;
+    height: 12px;
+    content: url("chrome://global/skin/icons/arrow-down-12.svg");
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
 }
 
 /* Root View */
@@ -66,49 +66,10 @@
   background-color: Window;
 }
 
-/* Info box */
-#infoBox:not([hidden="true"]) {
-  display: block;
-}
-
-#editBookmarkPanelContent {
-  grid-template-columns: auto 1fr;
-}
-
-#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
-  display: block;
-  grid-column: 2;
-}
-
-#editBookmarkPanelContent input,
-.expander-up,
-.expander-down {
-  margin: 4px;
-}
-
-#editBookmarkPanelContent label {
-  align-self: center;
-}
-
-#editBMPanel_itemsCountText {
-  grid-column: auto / span 2;
-  justify-self: center;
-}
-
-#editBMPanel_tagsSelectorRow {
-  grid-column: auto / span 2;
-}
-
-#detailsPane {
-  min-height: 16em;
-  padding: 5px;
-}
-
 /* Expanders */
 
 .expander-up,
 .expander-down {
-  min-width: 0;
   padding: 2px 0;
   padding-inline-start: 2px;
 }

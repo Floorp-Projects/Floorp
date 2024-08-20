@@ -17,3 +17,50 @@
   min-height: 5em;
   overflow: clip;
 }
+
+/* Info box */
+#infoBox:not([hidden="true"]) {
+  display: block;
+}
+
+#editBookmarkPanelContent {
+  grid-template-columns: auto 1fr;
+
+  .caption-label:not([hidden="true"]) {
+    display: block;
+    grid-column: 2;
+  }
+
+  label {
+    align-self: center;
+  }
+
+  input[type="text"],
+  .expander-up,
+  .expander-down {
+    margin: 4px;
+  }
+
+  .expander-up,
+  .expander-down {
+    min-width: 0;
+  }
+}
+
+#editBMPanel_itemsCountText {
+  grid-column: auto / span 2;
+  justify-self: center;
+}
+
+#editBMPanel_tagsSelectorRow {
+  grid-column: auto / span 2;
+}
+
+#editBMPanel_tagsSelector {
+  margin: 4px;
+}
+
+#detailsPane {
+  min-height: 16em;
+  padding: 5px;
+}
