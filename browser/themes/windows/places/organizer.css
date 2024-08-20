@@ -27,6 +27,10 @@
   --organizer-toolbar-field-focus-border-color: var(--organizer-outline-color);
   --organizer-toolbar-field-focus-box-shadow: unset;
   --organizer-pane-field-border-color: ThreeDShadow;
+
+  --input-border-color: var(--organizer-pane-field-border-color);
+  --input-bgcolor: var(--organizer-content-background);
+  --input-color: var(--organizer-color);
 }
 
 @media not (prefers-contrast) {
@@ -87,25 +91,25 @@
   border-bottom: 1px solid var(--organizer-border-color);
   padding: 4px;
   padding-inline-end: 6px;
-}
 
-#placesToolbar > toolbarbutton {
-  appearance: none;
-  padding: 5px;
-  border-radius: 4px;
-}
+  > toolbarbutton {
+    appearance: none;
+    padding: 5px;
+    border-radius: var(--border-radius-small);
 
-#placesToolbar > toolbarbutton[disabled] {
-  opacity: .6;
-}
+    &[disabled] {
+      opacity: var(--toolbarbutton-disabled-opacity);
+    }
 
-#placesToolbar > toolbarbutton:not([disabled]):hover {
-  background-color: var(--organizer-hover-background);
-  color: var(--organizer-hover-color);
-}
+    &:not([disabled]):hover {
+      background-color: var(--organizer-hover-background);
+      color: var(--organizer-hover-color);
 
-#placesToolbar > toolbarbutton:not([disabled]):hover:active {
-  background-color: var(--organizer-selected-background);
+      &:active {
+        background-color: var(--organizer-selected-background);
+      }
+    }
+  }
 }
 
 #placesToolbar > toolbarbutton > .toolbarbutton-icon,
@@ -117,37 +121,37 @@
 
 #placesMenu {
   margin-inline-start: 6px;
-}
 
-#placesMenu > menu {
-  appearance: none;
-  color: var(--organizer-color);
-  border-radius: 4px;
-  padding-block: 5px;
-  padding-inline-start: 5px;
-  margin-inline-end: 2px;
-}
+  > menu {
+    appearance: none;
+    color: var(--organizer-color);
+    border-radius: 4px;
+    padding-block: 5px;
+    padding-inline-start: 5px;
+    margin-inline-end: 2px;
 
-#placesMenu > menu:hover {
-  background-color: var(--organizer-hover-background);
-  color: var(--organizer-hover-color);
-}
+    &:hover {
+      background-color: var(--organizer-hover-background);
+      color: var(--organizer-hover-color);
+    }
 
-#placesMenu > menu:hover:active,
-#placesMenu > menu[open] {
-  background-color: var(--organizer-selected-background);
-  color: var(--organizer-selected-color);
-}
+    &:hover:active,
+    &[open] {
+      background-color: var(--organizer-selected-background);
+      color: var(--organizer-selected-color);
+    }
 
-#placesMenu > menu > .menubar-text {
-  margin-block: 0 !important; /* override menu.css */
-  padding-inline-end: 8px;
-  background: url(chrome://global/skin/icons/arrow-down-12.svg) right center no-repeat;
-  background-size: 6px;
-}
+    > .menubar-text {
+      margin-block: 0 !important; /* override menu.css */
+      padding-inline-end: 8px;
+      background: url(chrome://global/skin/icons/arrow-down-12.svg) right center no-repeat;
+      background-size: 6px;
 
-#placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
-  background-position-x: left;
+      &:-moz-locale-dir(rtl) {
+        background-position-x: left;
+      }
+    }
+  }
 }
 
 /* Toolbar icons */
@@ -188,14 +192,14 @@
   margin: 0;
   padding-block: 2px;
   min-height: 24px;
-}
 
-#searchFilter[focused] {
-  box-shadow: var(--organizer-toolbar-field-focus-box-shadow);
-  background-color: var(--organizer-toolbar-field-background-focused);
-  border-color: transparent;
-  outline: 2px solid var(--organizer-toolbar-field-focus-border-color);
-  outline-offset: -2px;
+  &[focused] {
+    box-shadow: var(--organizer-toolbar-field-focus-box-shadow);
+    background-color: var(--organizer-toolbar-field-background-focused);
+    border-color: transparent;
+    outline: 2px solid var(--organizer-toolbar-field-focus-border-color);
+    outline-offset: -2px;
+  }
 }
 
 /* Sidebar and splitter */
@@ -297,46 +301,16 @@ treechildren::-moz-tree-separator(selected, focus) {
 }
 
 /* Info box */
-#infoBox:not([hidden="true"]) {
-  display: block;
-}
-
-#editBookmarkPanelContent {
-  grid-template-columns: auto 1fr;
-}
-
-#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
-  display: block;
-  grid-column: 2;
-}
-
-#editBookmarkPanelContent label {
-  align-self: center;
-}
-
-#editBMPanel_itemsCountText {
-  grid-column: auto / span 2;
-  justify-self: center;
-}
-
-#editBMPanel_tagsSelectorRow {
-  grid-column: auto / span 2;
-}
-
 #detailsPane {
   background-color: var(--organizer-pane-background);
   color: var(--organizer-color);
-  min-height: 16em;
-  padding: 5px;
   border-top: 1px solid var(--organizer-border-color);
 }
 
 .expander-up,
 .expander-down {
   appearance: none;
-  min-width: 0;
   padding: 5px;
-  margin: 4px;
   border: 1px solid var(--organizer-pane-field-border-color);
   border-radius: 4px;
   color: var(--organizer-color);
@@ -344,81 +318,55 @@ treechildren::-moz-tree-separator(selected, focus) {
   list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+
+  &:hover {
+    background-color: var(--organizer-hover-background);
+    color: var(--organizer-hover-color);
+  }
+
+  &:hover:active {
+    background-color: var(--organizer-selected-background);
+    color: var(--organizer-selected-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--organizer-outline-color);
+    outline-offset: -1px;
+  }
+
+  > .button-box {
+    padding: 0;
+  }
 }
 
 .expander-up {
   list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
-.expander-up:hover,
-.expander-down:hover {
-  background-color: var(--organizer-hover-background);
-  color: var(--organizer-hover-color);
-}
-
-.expander-up:hover:active,
-.expander-down:hover:active {
-  background-color: var(--organizer-selected-background);
-  color: var(--organizer-selected-color);
-}
-
-.expander-up:focus-visible,
-.expander-down:focus-visible {
-  outline: 2px solid var(--organizer-outline-color);
-  outline-offset: -1px;
-}
-
-.expander-up > .button-box,
-.expander-down > .button-box {
-  padding: 0;
-}
-
-input {
-  border: 1px solid var(--organizer-pane-field-border-color);
-  border-radius: 4px;
-  background-color: var(--organizer-content-background);
-  color: var(--organizer-color);
-  min-height: 20px;
-  padding-inline: 4px;
-}
-
-input:focus {
-  outline: 2px solid var(--organizer-outline-color);
-  outline-offset: -1px;
-}
-
-input:not(:read-write):focus {
-  outline: none;
-}
-
-#editBookmarkPanelContent input {
-  margin: 4px;
+input:focus-visible {
+  outline-color: var(--organizer-outline-color);
 }
 
 .caption-label {
-  margin-inline-start: 8px;
   color: var(--organizer-deemphasized-color);
 }
 
 #editBMPanel_tagsSelector {
-  appearance: none;
   color: var(--organizer-color);
   background-color: var(--organizer-content-background);
-  border: 1px solid var(--organizer-border-color);
-  border-radius: 4px;
-  margin: 4px;
-}
+  border-color: var(--organizer-border-color);
 
-#editBMPanel_tagsSelector > richlistitem {
-  border: 1px solid transparent;
-}
+  > richlistitem {
+    border: 1px solid transparent;
 
-#editBMPanel_tagsSelector > richlistitem:hover {
-  background-color: var(--organizer-hover-background);
-  color: var(--organizer-hover-color);
-}
+    &:hover {
+      background-color: var(--organizer-hover-background);
+      color: var(--organizer-hover-color);
+    }
 
-#editBMPanel_tagsSelector > richlistitem[selected] {
-  background-color: var(--organizer-selected-background);
-  color: var(--organizer-selected-color);
+    &[selected] {
+      background-color: var(--organizer-selected-background);
+      color: var(--organizer-selected-color);
+    }
+  }
 }

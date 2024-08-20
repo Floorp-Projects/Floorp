@@ -108,18 +108,18 @@
 
 #back-button {
   margin-inline-end: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+
+  > .toolbarbutton-icon {
+    margin-inline: 3px 2px !important;
+  }
 }
 
 #forward-button {
   margin-inline-start: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
-}
 
-#back-button > .toolbarbutton-icon {
-  margin-inline: 3px 2px !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  margin-inline: 2px 3px !important;
+  > .toolbarbutton-icon {
+    margin-inline: 2px 3px !important;
+  }
 }
 
 /* organize button */
@@ -144,36 +144,8 @@
 }
 
 /* Info box */
-#infoBox:not([hidden="true"]) {
-  display: block;
-}
-
-#editBookmarkPanelContent {
-  grid-template-columns: auto 1fr;
-}
-
-#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
-  display: block;
-  grid-column: 2;
-}
-
-#editBookmarkPanelContent label {
-  align-self: center;
-}
-
-#editBMPanel_itemsCountText {
-  grid-column: auto / span 2;
-  justify-self: center;
-}
-
-#editBMPanel_tagsSelectorRow {
-  grid-column: auto / span 2;
-}
-
 #detailsPane {
   border-top: 1px solid color-mix(in srgb, FieldText 50%, transparent);
-  min-height: 16em;
-  padding: 10px;
 }
 
 #placeContent {
@@ -221,8 +193,6 @@
 
 .expander-up,
 .expander-down {
-  margin-block: 0 1px;
-  margin-inline: 8px 4px;
   padding: 0;
 }
 
