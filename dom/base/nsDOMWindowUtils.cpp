@@ -851,7 +851,23 @@ nsDOMWindowUtils::SendTouchEvent(
   return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
                               aRotationAngles, aForces, aTiltXs, aTiltYs,
                               aTwists, aModifiers, aIgnoreRootScrollFrame,
-                              false, aPreventDefault);
+                              /* aIsPen */ false,
+                              /* aToWindow */ false, aPreventDefault);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendTouchEventAsPen(
+    const nsAString& aType, uint32_t aIdentifier, int32_t aX, int32_t aY,
+    uint32_t aRx, uint32_t aRy, float aRotationAngle, float aForce,
+    int32_t aTiltX, int32_t aTiltY, int32_t aTwist, int32_t aModifier,
+    bool aIgnoreRootScrollFrame, bool* aPreventDefault) {
+  return SendTouchEventCommon(
+      aType, nsTArray{aIdentifier}, nsTArray{aX}, nsTArray{aY}, nsTArray{aRx},
+      nsTArray{aRy}, nsTArray{aRotationAngle}, nsTArray{aForce},
+      nsTArray{aTiltX}, nsTArray{aTiltY}, nsTArray{aTwist}, aModifier,
+      aIgnoreRootScrollFrame,
+      /* aIsPen */ true,
+      /* aToWindow */ false, aPreventDefault);
 }
 
 NS_IMETHODIMP
@@ -865,8 +881,9 @@ nsDOMWindowUtils::SendTouchEventToWindow(
     bool aIgnoreRootScrollFrame, bool* aPreventDefault) {
   return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
                               aRotationAngles, aForces, aTiltXs, aTiltYs,
-                              aTwists, aModifiers, aIgnoreRootScrollFrame, true,
-                              aPreventDefault);
+                              aTwists, aModifiers, aIgnoreRootScrollFrame,
+                              /* aIsPen */ false,
+                              /* aToWindow */ true, aPreventDefault);
 }
 
 nsresult nsDOMWindowUtils::SendTouchEventCommon(
@@ -876,7 +893,8 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
     const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
     const nsTArray<int32_t>& aTiltXs, const nsTArray<int32_t>& aTiltYs,
     const nsTArray<int32_t>& aTwists, int32_t aModifiers,
-    bool aIgnoreRootScrollFrame, bool aToWindow, bool* aPreventDefault) {
+    bool aIgnoreRootScrollFrame, bool aIsPen, bool aToWindow,
+    bool* aPreventDefault) {
   // get the widget to send the event to
   nsPoint offset;
   nsCOMPtr<nsIWidget> widget = GetWidget(&offset);
@@ -898,6 +916,9 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
   WidgetTouchEvent event(true, msg, widget);
   event.mFlags.mIsSynthesizedForTests = true;
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
+  if (aIsPen) {
+    event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_PEN;
+  }
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {

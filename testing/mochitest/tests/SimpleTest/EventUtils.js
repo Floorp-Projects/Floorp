@@ -957,51 +957,29 @@ function synthesizeTouchAtPoint(aLeft, aTop, aEvent = {}, aWindow = window) {
 
   const modifiers = _parseModifiers(aEvent, aWindow);
 
+  const args = [
+    idArray,
+    leftArray,
+    topArray,
+    rxArray,
+    ryArray,
+    angleArray,
+    forceArray,
+    tiltXArray,
+    tiltYArray,
+    twistArray,
+    modifiers,
+  ];
+
+  const sender =
+    aEvent.mozInputSource === "pen" ? "sendTouchEventAsPen" : "sendTouchEvent";
+
   if ("type" in aEvent && aEvent.type) {
-    return utils.sendTouchEvent(
-      aEvent.type,
-      idArray,
-      leftArray,
-      topArray,
-      rxArray,
-      ryArray,
-      angleArray,
-      forceArray,
-      tiltXArray,
-      tiltYArray,
-      twistArray,
-      modifiers
-    );
+    return utils[sender](aEvent.type, ...args);
   }
 
-  utils.sendTouchEvent(
-    "touchstart",
-    idArray,
-    leftArray,
-    topArray,
-    rxArray,
-    ryArray,
-    angleArray,
-    forceArray,
-    tiltXArray,
-    tiltYArray,
-    twistArray,
-    modifiers
-  );
-  utils.sendTouchEvent(
-    "touchend",
-    idArray,
-    leftArray,
-    topArray,
-    rxArray,
-    ryArray,
-    angleArray,
-    forceArray,
-    tiltXArray,
-    tiltYArray,
-    twistArray,
-    modifiers
-  );
+  utils[sender]("touchstart", ...args);
+  utils[sender]("touchend", ...args);
   return false;
 }
 
