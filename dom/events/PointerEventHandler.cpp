@@ -564,10 +564,14 @@ void PointerEventHandler::InitPointerEventFromTouch(
                         ? aTouchEvent.mButtons
                         : MouseButtonsFlag::ePrimaryFlag;
 
-  // Only the first touch would be the primary pointer.
-  aPointerEvent.mIsPrimary = aTouchEvent.mMessage == eTouchStart
-                                 ? !HasActiveTouchPointer()
-                                 : GetPointerPrimaryState(aTouch.Identifier());
+  // XXX: This doesn't support multi pen scenario (bug 1904865)
+  if (aTouchEvent.mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+    // Only the first touch would be the primary pointer.
+    aPointerEvent.mIsPrimary =
+        aTouchEvent.mMessage == eTouchStart
+            ? !HasActiveTouchPointer()
+            : GetPointerPrimaryState(aTouch.Identifier());
+  }
   aPointerEvent.pointerId = aTouch.Identifier();
   aPointerEvent.mRefPoint = aTouch.mRefPoint;
   aPointerEvent.mModifiers = aTouchEvent.mModifiers;
