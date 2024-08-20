@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>isPrimary=true for subsequent pen pointer events</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<p>body</p>
+</script>
+<script>
+  async function clickSomewhere() {
+    const promise = new Promise(resolve => {
+      const listener = ev => {
+        if (ev.pointerType === "pen") {
+          window.removeEventListener("pointerdown", listener);
+          resolve(ev);
+        }
+      };
+      window.addEventListener("pointerdown", listener)
+    });
+
+    // We use WidgetTouchEvent for pen on Windows
+    synthesizeTouchAtPoint(1, 1, { mozInputSource: "pen" });
+
+    return promise;
+  }
+
+  add_task(async function test_pointer_pen_event() {
+    const first = await clickSomewhere();
+    const second = await clickSomewhere();
+
+    ok(first.isPrimary, "first event should be primary");
+    ok(second.isPrimary, "second event should be primary");
+  }, "isPrimary should be true for subsequent pen input");
+</script>
