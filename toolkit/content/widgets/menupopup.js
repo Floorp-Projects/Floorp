@@ -19,11 +19,11 @@
       // radio/checkbox type menuitems in a menupopup when showing it.
       if (e.target.nodeName == "menupopup") {
         let haveCheckableChild = e.target.querySelector(
-          `:scope > menuitem:not([hidden]):is([type=checkbox],[type=radio]${
+          `:scope > menuitem:not([hidden]):is(${
             // On macOS, selected menuitems are checked regardless of type
             AppConstants.platform == "macosx"
-              ? ",[checked=true],[selected=true]"
-              : ""
+              ? "[checked=true],[selected=true]"
+              : "[type=checkbox],[type=radio]"
           })`
         );
         e.target.toggleAttribute("needsgutter", haveCheckableChild);
