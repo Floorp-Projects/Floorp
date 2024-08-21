@@ -17,7 +17,7 @@ include ../../dom/fetch/tests/crashtests/crashtests.list
 include ../../dom/file/tests/crashtests/crashtests.list
 include ../../dom/fs/test/crashtests/crashtests.list
 include ../../dom/html/crashtests/crashtests.list
-include ../../dom/indexedDB/crashtests/crashtests.list
+include ../../dom/indexedDB/test/crashtests/crashtests.list
 include ../../dom/jsurl/crashtests/crashtests.list
 include ../../dom/media/mediasession/test/crashtests/crashtests.list
 include ../../dom/media/mediasource/test/crashtests/crashtests.list

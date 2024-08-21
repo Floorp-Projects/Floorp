@@ -12,10 +12,11 @@
 #ifndef StickyScrollContainer_h
 #define StickyScrollContainer_h
 
+#include "mozilla/DepthOrderedFrameList.h"
+#include "nsIScrollPositionListener.h"
 #include "nsPoint.h"
 #include "nsRectAbsolute.h"
 #include "nsTArray.h"
-#include "nsIScrollPositionListener.h"
 
 struct nsRect;
 class nsIFrame;
@@ -40,14 +41,8 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
   static StickyScrollContainer* GetStickyScrollContainerForScrollFrame(
       nsIFrame* aScrollFrame);
 
-  /**
-   * aFrame may have moved into or out of a scroll frame's frame subtree.
-   */
-  static void NotifyReparentedFrameAcrossScrollFrameBoundary(
-      nsIFrame* aFrame, nsIFrame* aOldParent);
-
-  void AddFrame(nsIFrame* aFrame) { mFrames.AppendElement(aFrame); }
-  void RemoveFrame(nsIFrame* aFrame) { mFrames.RemoveElement(aFrame); }
+  void AddFrame(nsIFrame* aFrame) { mFrames.Add(aFrame); }
+  void RemoveFrame(nsIFrame* aFrame) { mFrames.Remove(aFrame); }
 
   ScrollContainerFrame* ScrollContainer() const {
     return mScrollContainerFrame;
@@ -83,12 +78,12 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
   void UpdatePositions(nsPoint aScrollPosition, nsIFrame* aSubtreeRoot);
 
   // nsIScrollPositionListener
-  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) override;
-  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) override;
+  void ScrollPositionWillChange(nscoord aX, nscoord aY) override;
+  void ScrollPositionDidChange(nscoord aX, nscoord aY) override;
 
   ~StickyScrollContainer();
 
-  const nsTArray<nsIFrame*>& GetFrames() const { return mFrames; }
+  const DepthOrderedFrameList& GetFrames() const { return mFrames; }
 
   /**
    * Returns true if the frame is "stuck" in the y direction, ie it's acting
@@ -109,7 +104,7 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
                            nsRect* aContain) const;
 
   ScrollContainerFrame* const mScrollContainerFrame;
-  nsTArray<nsIFrame*> mFrames;
+  DepthOrderedFrameList mFrames;
   nsPoint mScrollPosition;
 };
 

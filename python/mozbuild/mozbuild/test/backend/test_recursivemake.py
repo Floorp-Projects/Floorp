@@ -944,8 +944,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
 
         expected = [
-            "RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libtest_library.a"
-            % env.topobjdir,  # noqa
+            "RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libtest_library.a",
             "CARGO_FILE := $(srcdir)/Cargo.toml",
             "CARGO_TARGET_DIR := %s" % env.topobjdir,
         ]
@@ -965,8 +964,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
 
         expected = [
-            "HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a"
-            % env.topobjdir,  # noqa
+            "HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a",
             "CARGO_FILE := $(srcdir)/Cargo.toml",
             "CARGO_TARGET_DIR := %s" % env.topobjdir,
         ]
@@ -986,8 +984,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
 
         expected = [
-            "HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a"
-            % env.topobjdir,  # noqa
+            "HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a",
             "CARGO_FILE := $(srcdir)/Cargo.toml",
             "CARGO_TARGET_DIR := %s" % env.topobjdir,
             "HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout",
@@ -1008,8 +1005,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
 
         expected = [
-            "RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libfeature_library.a"
-            % env.topobjdir,  # noqa
+            "RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libfeature_library.a",
             "CARGO_FILE := $(srcdir)/Cargo.toml",
             "CARGO_TARGET_DIR := %s" % env.topobjdir,
             "RUST_LIBRARY_FEATURES := musthave cantlivewithout",
@@ -1203,23 +1199,23 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume("linkage", RecursiveMakeBackend)
         expected_linkage = {
             "prog": {
-                "SHARED_LIBS": ["../dist/bin/qux.so", "../dist/bin/baz.so"],
-                "STATIC_LIBS": ["../real/foo.a"],
+                "SHARED_LIBS": ["$(DEPTH)/dist/bin/qux.so", "$(DEPTH)/dist/bin/baz.so"],
+                "STATIC_LIBS": ["$(DEPTH)/real/foo.a"],
                 "OS_LIBS": ["-lfoo", "-lbaz", "-lbar"],
             },
             "shared": {
                 "OS_LIBS": ["-lfoo"],
-                "SHARED_LIBS": ["../dist/bin/qux.so"],
+                "SHARED_LIBS": ["$(DEPTH)/dist/bin/qux.so"],
                 "STATIC_LIBS": [],
             },
             "static": {
-                "STATIC_LIBS": ["../real/foo.a"],
+                "STATIC_LIBS": ["$(DEPTH)/real/foo.a"],
                 "OS_LIBS": ["-lbar"],
-                "SHARED_LIBS": ["../dist/bin/qux.so"],
+                "SHARED_LIBS": ["$(DEPTH)/dist/bin/qux.so"],
             },
             "real": {
                 "STATIC_LIBS": [],
-                "SHARED_LIBS": ["../dist/bin/qux.so"],
+                "SHARED_LIBS": ["$(DEPTH)/dist/bin/qux.so"],
                 "OS_LIBS": ["-lbaz"],
             },
         }
@@ -1230,7 +1226,6 @@ class TestRecursiveMakeBackend(BackendTester):
         for name in expected_linkage:
             for var in expected_linkage[name]:
                 for val in expected_linkage[name][var]:
-                    val = os.path.normpath(val)
                     line = "%s += %s" % (var, val)
                     self.assertIn(line, actual_linkage[name])
                     actual_linkage[name].remove(line)

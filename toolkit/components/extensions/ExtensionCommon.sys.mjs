@@ -1769,10 +1769,15 @@ class SchemaAPIManager extends EventEmitter {
     this._checkLoadModule(module, name);
 
     module.asyncLoaded = ChromeUtils.compileScript(module.url).then(script => {
-      this.initGlobal();
-      script.executeInGlobal(this.global);
+      // In some rare cases, loadModule() may have been called since we started
+      // the async compileScript call. In that case, return the result that we
+      // already got from loadModule.
+      if (!module.loaded) {
+        this.initGlobal();
+        script.executeInGlobal(this.global);
 
-      module.loaded = true;
+        module.loaded = true;
+      }
 
       return this.global[name];
     });
@@ -1840,9 +1845,6 @@ class SchemaAPIManager extends EventEmitter {
   _checkLoadModule(module, name) {
     if (!module) {
       throw new Error(`Module '${name}' does not exist`);
-    }
-    if (module.asyncLoaded) {
-      throw new Error(`Module '${name}' currently being lazily loaded`);
     }
     if (this.global && this.global[name]) {
       throw new Error(

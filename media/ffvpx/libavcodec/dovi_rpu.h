@@ -10,7 +10,7 @@ typedef struct AVCtx AVContext;
 
 typedef struct DOVICtx {
   int dv_profile;
-  AVContext* logctx;
+  void* logctx;
   int operating_point;
 } DOVIContext;
 

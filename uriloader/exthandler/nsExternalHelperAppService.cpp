@@ -976,13 +976,14 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aRedirectPrincipal,
                                     BrowsingContext* aBrowsingContext,
                                     bool aTriggeredExternally,
-                                    bool aHasValidUserGestureActivation) {
+                                    bool aHasValidUserGestureActivation,
+                                    bool aNewWindowTarget) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
         aURI, aTriggeringPrincipal, aRedirectPrincipal, aBrowsingContext,
-        aTriggeredExternally, aHasValidUserGestureActivation);
+        aTriggeredExternally, aHasValidUserGestureActivation, aNewWindowTarget);
     return NS_OK;
   }
 
@@ -1059,12 +1060,22 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
     WindowGlobalParent* wgp = bc->Canonical()->GetCurrentWindowGlobal();
     bool foundAccessibleFrame = false;
 
-    // Also allow this load if the target is a toplevel BC and contains a
-    // non-web-controlled about:blank document
-    if (bc->IsTop() && !bc->GetTopLevelCreatedByWebContent() && wgp) {
-      RefPtr<nsIURI> uri = wgp->GetDocumentURI();
-      foundAccessibleFrame =
-          uri && uri->GetSpecOrDefault().EqualsLiteral("about:blank");
+    // Don't block the load if it is the first load in a new window (e.g. due to
+    // a call to window.open, or a target=_blank link click).
+    if (aNewWindowTarget) {
+      MOZ_ASSERT(bc->IsTop());
+      foundAccessibleFrame = true;
+    }
+
+    // Also allow this load if the target is a toplevel BC which contains a
+    // non-web-controlled about:blank document.
+    // NOTE: This catches cases like shift-clicking a link which do not set
+    // `newWindowTarget`, but do open a link in a new window on behalf of web
+    // content.
+    if (!foundAccessibleFrame && bc->IsTop() &&
+        !bc->GetTopLevelCreatedByWebContent() && wgp) {
+      nsIURI* uri = wgp->GetDocumentURI();
+      foundAccessibleFrame = uri && NS_IsAboutBlank(uri);
     }
 
     while (!foundAccessibleFrame) {
@@ -3668,12 +3679,14 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
     outFileName.Truncate(lastNonTrimmable);
   }
 
-  nsAutoString extension;
-  int32_t dotidx = outFileName.RFind(u".");
-  if (dotidx != -1) {
-    extension = Substring(outFileName, dotidx + 1);
-    extension.StripWhitespace();
-    outFileName = Substring(outFileName, 0, dotidx + 1) + extension;
+  if (!(aFlags & VALIDATE_ALLOW_DIRECTORY_NAMES)) {
+    nsAutoString extension;
+    int32_t dotidx = outFileName.RFind(u".");
+    if (dotidx != -1) {
+      extension = Substring(outFileName, dotidx + 1);
+      extension.StripWhitespace();
+      outFileName = Substring(outFileName, 0, dotidx + 1) + extension;
+    }
   }
 
 #ifdef XP_WIN

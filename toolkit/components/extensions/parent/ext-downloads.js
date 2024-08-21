@@ -703,9 +703,10 @@ this.downloads = class extends ExtensionAPIPersistent {
             }
 
             if (
-              pathComponents.some(component => {
+              pathComponents.some((component, i) => {
                 let sanitized = DownloadPaths.sanitize(component, {
                   compressWhitespaces: false,
+                  allowDirectoryNames: i < pathComponents.length - 1,
                 });
                 return component != sanitized;
               })

@@ -230,11 +230,16 @@ bool ScrollAnchorContainer::CanMaintainAnchor() const {
     return false;
   }
 
-  // Or if the scroll frame has not been scrolled from the logical origin. This
-  // is not in the specification [1], but Blink does this.
+  // Or if the scroll frame has not been scrolled from the logical origin of the
+  // block axis. This is not in the specification [1], but Blink does this [2].
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3319
-  if (Frame()->GetLogicalScrollPosition() == nsPoint()) {
+  // [2]
+  // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/layout/scroll_anchor.cc;l=551;drc=f1eab630d343484302ee9bea91f515f1a1dd0891
+  const nsPoint pos = Frame()->GetLogicalScrollPosition();
+  const nscoord blockOffset =
+      Frame()->GetWritingMode().IsVertical() ? pos.x : pos.y;
+  if (blockOffset == 0) {
     return false;
   }
 

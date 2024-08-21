@@ -1739,7 +1739,7 @@ void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
         if (action) {
           action->ToString(aName);
         } else if (hasActionAncestor) {
-          aName.AssignLiteral("click ancestor");
+          aName.AssignLiteral("clickAncestor");
         } else if (mCachedFields->HasAttribute(CacheKey::HasLongdesc)) {
           aName.AssignLiteral("showlongdesc");
         }

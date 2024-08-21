@@ -33,7 +33,7 @@ radio {
   -moz-default-appearance: radio;
   margin: 1px 0;
 
-  radiogroup:focus-visible > radio[focused] > & {
+  radiogroup:focus-visible radio[focused] > & {
     outline-style: auto;
   }
 

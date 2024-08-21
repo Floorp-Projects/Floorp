@@ -176,6 +176,13 @@ interface nsIMIMEService : nsISupports {
     const long VALIDATE_ALLOW_INVALID_FILENAMES = 128;
 
     /**
+     * Some names are unsafe as a file name, but safe for directory names.
+     * If this is used, the validation is more permissive towards names that
+     * are valid directory names.
+     */
+    const long VALIDATE_ALLOW_DIRECTORY_NAMES = 256;
+
+    /**
      * Generate a valid filename from the channel that can be used to save
      * the content of the channel to the local disk.
      *

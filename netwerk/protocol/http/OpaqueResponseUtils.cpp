@@ -384,7 +384,7 @@ OpaqueResponseBlocker::OnDataAvailable(nsIRequest* aRequest,
   }
 
   if (mState == State::Blocked) {
-    return NS_ERROR_FAILURE;
+    return NS_BINDING_ABORTED;
   }
 
   MOZ_ASSERT(mState == State::Sniffing);
@@ -441,8 +441,8 @@ nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
   switch (httpBaseChannel->PerformOpaqueResponseSafelistCheckAfterSniff(
       mContentType, mNoSniff)) {
     case OpaqueResponse::Block:
-      BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-      return NS_ERROR_FAILURE;
+      BlockResponse(httpBaseChannel, NS_BINDING_ABORTED);
+      return NS_BINDING_ABORTED;
     case OpaqueResponse::Allow:
       AllowResponse();
       return NS_OK;
@@ -569,7 +569,7 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
             MOZ_ASSERT_UNREACHABLE(
                 "We should only ever have Allow or Block here.");
             allowed = false;
-            self->BlockResponse(channel, NS_ERROR_FAILURE);
+            self->BlockResponse(channel, NS_BINDING_ABORTED);
             break;
         }
 

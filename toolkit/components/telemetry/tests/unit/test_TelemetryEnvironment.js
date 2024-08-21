@@ -1021,6 +1021,10 @@ add_task(
     );
 
     Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    // Session restore triggers search service init asynchronously.
+    // If this completes during shutdown, it throws an exception.
+    // Await the search service init to make this deterministic (bug 1885310).
+    await Services.search.promiseInitialized;
 
     environmentData = TelemetryEnvironment.currentEnvironment;
     TelemetryEnvironmentTesting.checkEnvironmentData(environmentData);

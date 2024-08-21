@@ -9,6 +9,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIGeolocationProvider.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Logging.h"
+#include "mozilla/glean/GleanMetrics.h"
+
+extern mozilla::LazyLogModule gGeolocationLog;
 
 NS_IMPL_ISUPPORTS(MLSFallback, nsITimerCallback, nsINamed)
 
@@ -16,7 +20,21 @@ MLSFallback::MLSFallback(uint32_t delay) : mDelayMs(delay) {}
 
 MLSFallback::~MLSFallback() = default;
 
-nsresult MLSFallback::Startup(nsIGeolocationUpdate* aWatcher) {
+mozilla::glean::geolocation::FallbackLabel MapReasonToLabel(
+    MLSFallback::FallbackReason aReason) {
+  switch (aReason) {
+    case MLSFallback::FallbackReason::Error:
+      return mozilla::glean::geolocation::FallbackLabel::eOnError;
+    case MLSFallback::FallbackReason::Timeout:
+      return mozilla::glean::geolocation::FallbackLabel::eOnTimeout;
+    default:
+      MOZ_CRASH("Unexpected fallback reason");
+      return mozilla::glean::geolocation::FallbackLabel::eOnError;
+  }
+}
+
+nsresult MLSFallback::Startup(nsIGeolocationUpdate* aWatcher,
+                              FallbackReason aReason) {
   if (mHandoffTimer || mMLSFallbackProvider) {
     return NS_OK;
   }
@@ -25,6 +43,8 @@ nsresult MLSFallback::Startup(nsIGeolocationUpdate* aWatcher) {
 
   // No need to schedule a timer callback if there is no startup delay.
   if (mDelayMs == 0) {
+    mozilla::glean::geolocation::fallback.EnumGet(MapReasonToLabel(aReason))
+        .Add();
     return CreateMLSFallbackProvider();
   }
 
@@ -32,7 +52,13 @@ nsresult MLSFallback::Startup(nsIGeolocationUpdate* aWatcher) {
                                  nsITimer::TYPE_ONE_SHOT);
 }
 
-nsresult MLSFallback::Shutdown() {
+nsresult MLSFallback::Shutdown(ShutdownReason aReason) {
+  if (aReason == ShutdownReason::ProviderResponded) {
+    mozilla::glean::geolocation::fallback
+        .EnumGet(mozilla::glean::geolocation::FallbackLabel::eNone)
+        .Add();
+  }
+
   mUpdateWatcher = nullptr;
 
   if (mHandoffTimer) {
@@ -49,7 +75,12 @@ nsresult MLSFallback::Shutdown() {
 }
 
 NS_IMETHODIMP
-MLSFallback::Notify(nsITimer* aTimer) { return CreateMLSFallbackProvider(); }
+MLSFallback::Notify(nsITimer* aTimer) {
+  mozilla::glean::geolocation::fallback
+      .EnumGet(mozilla::glean::geolocation::FallbackLabel::eOnTimeout)
+      .Add();
+  return CreateMLSFallbackProvider();
+}
 
 NS_IMETHODIMP
 MLSFallback::GetName(nsACString& aName) {
@@ -62,6 +93,9 @@ nsresult MLSFallback::CreateMLSFallbackProvider() {
     return NS_OK;
   }
 
+  MOZ_LOG(gGeolocationLog, mozilla::LogLevel::Debug,
+          ("Falling back to NetworkLocationProvider"));
+
   nsresult rv;
   mMLSFallbackProvider =
       do_CreateInstance("@mozilla.org/geolocation/mls-provider;1", &rv);
@@ -70,6 +104,8 @@ nsresult MLSFallback::CreateMLSFallbackProvider() {
   if (mMLSFallbackProvider) {
     rv = mMLSFallbackProvider->Startup();
     if (NS_SUCCEEDED(rv)) {
+      MOZ_LOG(gGeolocationLog, mozilla::LogLevel::Debug,
+              ("Successfully started up NetworkLocationProvider"));
       mMLSFallbackProvider->Watch(mUpdateWatcher);
     }
   }

@@ -7,6 +7,14 @@
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+:root {
+  /* On macOS, top level windows are always opaque. This gives us the right
+   * default background color, without confusing Gecko about whether the window
+   * is transparent or not. */
+  -moz-default-appearance: -moz-mac-window;
+  appearance: auto;
+}
+
 /* ::::: Alert icons :::::*/
 
 .message-icon,

@@ -1132,7 +1132,8 @@ parent:
                           nullable nsIPrincipal redirectPrincipal,
                           MaybeDiscardedBrowsingContext browsingContext,
                           bool wasExternallyTriggered,
-                          bool hasValidUserGestureActivation);
+                          bool hasValidUserGestureActivation,
+                          bool newWindowTarget);
     async ExtProtocolChannelConnectParent(uint64_t registrarId);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData)

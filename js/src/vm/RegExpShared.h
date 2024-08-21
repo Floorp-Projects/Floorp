@@ -18,7 +18,6 @@
 
 #include "gc/Barrier.h"
 #include "gc/Policy.h"
-#include "gc/SweepingAPI.h"
 #include "gc/ZoneAllocator.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/JitCode.h"
@@ -324,7 +323,7 @@ class RegExpZone {
    * The set of all RegExpShareds in the zone. On every GC, every RegExpShared
    * that was not marked is deleted and removed from the set.
    */
-  using Set = WeakCache<
+  using Set = JS::WeakCache<
       JS::GCHashSet<WeakHeapPtr<RegExpShared*>, Key, ZoneAllocPolicy>>;
   Set set_;
 

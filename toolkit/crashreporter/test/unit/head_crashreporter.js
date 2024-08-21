@@ -156,9 +156,6 @@ async function handleMinidump(callback) {
   registerCleanupFunction(cleanup);
 
   Assert.ok(extrafile.exists());
-  let data = await IOUtils.read(extrafile.path);
-  let decoder = new TextDecoder("ascii");
-  console.log("data = " + decoder.decode(data));
   let extra = await IOUtils.readJSON(extrafile.path);
 
   if (callback) {

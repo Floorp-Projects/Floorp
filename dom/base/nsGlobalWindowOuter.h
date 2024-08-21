@@ -431,7 +431,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) override;
   virtual void SetReadyForFocus() override;
-  virtual void PageHidden() override;
+  virtual void PageHidden(bool aIsEnteringBFCacheInParent) override;
 
   /**
    * Set a arguments for this window. This will be set on the window

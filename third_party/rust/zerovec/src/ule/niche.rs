@@ -108,7 +108,7 @@ impl<U: NicheBytes<N> + ULE + Eq, const N: usize> Eq for NichedOptionULE<U, N> {
 ///    containing only ULE fields.
 ///    NichedOptionULE either contains NICHE_BIT_PATTERN or valid U byte sequences.
 ///    In both cases the data is initialized.
-/// 2. NichedOptionULE is aligned to 1 byte due to `#[repr(packed)]` on a struct containing only
+/// 2. NichedOptionULE is aligned to 1 byte due to `#[repr(C, packed)]` on a struct containing only
 ///    ULE fields.
 /// 3. validate_byte_slice impl returns an error if invalid bytes are encountered.
 /// 4. validate_byte_slice impl returns an error there are extra bytes.

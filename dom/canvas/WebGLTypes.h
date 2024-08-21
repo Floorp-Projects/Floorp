@@ -134,6 +134,19 @@ class VRefCounted : public RefCounted<VRefCounted> {
 
 // -
 
+template <class T>
+bool IsEnumCase(T);
+
+template <class E>
+inline constexpr std::optional<E> AsEnumCase(
+    const std::underlying_type_t<E> raw) {
+  const auto ret = static_cast<E>(raw);
+  if (!IsEnumCase(ret)) return {};
+  return ret;
+}
+
+// -
+
 /*
  * Implementing WebGL (or OpenGL ES 2.0) on top of desktop OpenGL requires
  * emulating the vertex attrib 0 array when it's not enabled. Indeed,
@@ -311,6 +324,20 @@ enum class AttribBaseType : uint8_t {
   Int,
   Uint,
 };
+}  // namespace webgl
+template <>
+inline constexpr bool IsEnumCase<webgl::AttribBaseType>(
+    const webgl::AttribBaseType v) {
+  switch (v) {
+    case webgl::AttribBaseType::Boolean:
+    case webgl::AttribBaseType::Float:
+    case webgl::AttribBaseType::Int:
+    case webgl::AttribBaseType::Uint:
+      return true;
+  }
+  return false;
+}
+namespace webgl {
 webgl::AttribBaseType ToAttribBaseType(GLenum);
 const char* ToString(AttribBaseType);
 
@@ -709,14 +736,18 @@ enum class OptionalRenderableFormatBits : uint8_t {
   SRGB8 = (1 << 1),
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OptionalRenderableFormatBits)
-inline constexpr bool IsEnumCase(const OptionalRenderableFormatBits raw) {
+
+}  // namespace webgl
+template <>
+inline constexpr bool IsEnumCase<webgl::OptionalRenderableFormatBits>(
+    const webgl::OptionalRenderableFormatBits raw) {
   auto rawWithoutValidBits = UnderlyingValue(raw);
   auto bit = decltype(rawWithoutValidBits){1};
   while (bit) {
-    switch (OptionalRenderableFormatBits{bit}) {
+    switch (webgl::OptionalRenderableFormatBits{bit}) {
       // -Werror=switch ensures exhaustive.
-      case OptionalRenderableFormatBits::RGB8:
-      case OptionalRenderableFormatBits::SRGB8:
+      case webgl::OptionalRenderableFormatBits::RGB8:
+      case webgl::OptionalRenderableFormatBits::SRGB8:
         rawWithoutValidBits &= ~bit;
         break;
     }
@@ -724,6 +755,7 @@ inline constexpr bool IsEnumCase(const OptionalRenderableFormatBits raw) {
   }
   return rawWithoutValidBits == 0;
 }
+namespace webgl {
 
 // -
 
@@ -1222,15 +1254,6 @@ inline bool StartsWith(const std::string_view str,
 
 // -
 
-template <class T>
-Maybe<T> AsValidEnum(const std::underlying_type_t<T> raw_val) {
-  const auto raw_enum = T{raw_val};  // This is the risk we prevent!
-  if (!IsEnumCase(raw_enum)) return {};
-  return Some(raw_enum);
-}
-
-// -
-
 namespace webgl {
 
 // In theory, this number can be unbounded based on the driver. However, no
@@ -1249,22 +1272,21 @@ enum class ProvokingVertex : GLenum {
   FirstVertex = LOCAL_GL_FIRST_VERTEX_CONVENTION,
   LastVertex = LOCAL_GL_LAST_VERTEX_CONVENTION,
 };
-inline constexpr bool IsEnumCase(const ProvokingVertex raw) {
+
+}  // namespace webgl
+
+template <>
+inline constexpr bool IsEnumCase<webgl::ProvokingVertex>(
+    const webgl::ProvokingVertex raw) {
   switch (raw) {
-    case ProvokingVertex::FirstVertex:
-    case ProvokingVertex::LastVertex:
+    case webgl::ProvokingVertex::FirstVertex:
+    case webgl::ProvokingVertex::LastVertex:
       return true;
   }
   return false;
 }
 
-template <class E>
-inline constexpr std::optional<E> AsEnumCase(
-    const std::underlying_type_t<E> raw) {
-  const auto ret = static_cast<E>(raw);
-  if (!IsEnumCase(ret)) return {};
-  return ret;
-}
+namespace webgl {
 
 // -
 

@@ -58,8 +58,15 @@ export var Sanitizer = {
    * Pref branches to fetch sanitization options from.
    */
   PREF_CPD_BRANCH: "privacy.cpd.",
-  PREF_SHUTDOWN_BRANCH: "privacy.clearOnShutdown.",
-  PREF_SHUTDOWN_V2_BRANCH: "privacy.clearOnShutdown_v2.",
+  /*
+   * We need to choose between two branches for shutdown since there are separate prefs for the new
+   * clear history dialog
+   */
+  get PREF_SHUTDOWN_BRANCH() {
+    return lazy.useOldClearHistoryDialog
+      ? "privacy.clearOnShutdown."
+      : "privacy.clearOnShutdown_v2.";
+  },
 
   /**
    * The fallback timestamp used when no argument is given to
@@ -1119,10 +1126,10 @@ async function sanitizeOnShutdown(progress) {
   if (Sanitizer.shouldSanitizeOnShutdown) {
     // Need to sanitize upon shutdown
     progress.advancement = "shutdown-cleaner";
-    let shutdownBranch = lazy.useOldClearHistoryDialog
-      ? Sanitizer.PREF_SHUTDOWN_BRANCH
-      : Sanitizer.PREF_SHUTDOWN_V2_BRANCH;
-    let itemsToClear = getItemsToClearFromPrefBranch(shutdownBranch);
+
+    let itemsToClear = getItemsToClearFromPrefBranch(
+      Sanitizer.PREF_SHUTDOWN_BRANCH
+    );
     await Sanitizer.sanitize(itemsToClear, { progress });
 
     // We didn't crash during shutdown sanitization, so annotate it to avoid

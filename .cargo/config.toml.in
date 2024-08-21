@@ -65,9 +65,9 @@ git = "https://github.com/mozilla/application-services"
 rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/audioipc?rev=3495905752a4263827f5d43737f9ca3ed0243ce0"]
+[source."git+https://github.com/mozilla/audioipc?branch=cherry-pick-firefox-128-129"]
 git = "https://github.com/mozilla/audioipc"
-rev = "3495905752a4263827f5d43737f9ca3ed0243ce0"
+branch = "cherry-pick-firefox-128-129"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=8bce3b333a920999055397a397e59c2b81a93b9a"]

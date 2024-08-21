@@ -366,11 +366,15 @@ void WorkerThreadRunnable::PostRun(JSContext* aCx,
 NS_IMETHODIMP
 WorkerThreadRunnable::Run() {
   LOG(("WorkerThreadRunnable::Run [%p]", this));
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  if (!workerPrivate && mWorkerPrivateForPreStartCleaning) {
-    workerPrivate = mWorkerPrivateForPreStartCleaning;
-    mWorkerPrivateForPreStartCleaning = nullptr;
+
+  // The Worker initialization fails, there is no valid WorkerPrivate and
+  // WorkerJSContext to run this WorkerThreadRunnable.
+  if (mCleanPreStartDispatching) {
+    LOG(("Clean the pre-start dispatched WorkerThreadRunnable [%p]", this));
+    return NS_OK;
   }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT_DEBUG_OR_FUZZING(workerPrivate);
 #ifdef DEBUG
   workerPrivate->AssertIsOnWorkerThread();

@@ -771,6 +771,10 @@ BasePrincipal::IsL10nAllowed(nsIURI* aURI, bool* aRes) {
   nsresult rv = GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
+  if (!uri) {
+    return NS_OK;
+  }
+
   bool hasFlags;
 
   // Allow access to uris that cannot be loaded by web content.

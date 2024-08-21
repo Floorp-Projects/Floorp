@@ -578,7 +578,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
    * Indicates that the page in the window has been hidden. This is used to
    * reset the focus state.
    */
-  virtual void PageHidden() = 0;
+  virtual void PageHidden(bool aIsEnteringBFCacheInParent) = 0;
 
   /**
    * Instructs this window to asynchronously dispatch a hashchange event.  This
@@ -1066,7 +1066,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * Indicates that the page in the window has been hidden. This is used to
    * reset the focus state.
    */
-  virtual void PageHidden() = 0;
+  virtual void PageHidden(bool aIsEnteringBFCacheInParent) = 0;
 
   /**
    * Return the window id of this window

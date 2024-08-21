@@ -56,6 +56,8 @@ SimpleTest.waitForFocus(function() {
   document.getElementById('b2').addEventListener("change", function(aEvent) {
     ok(false, "When cancel is received, change should not fire");
   }, {once: true});
+
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   b2.click();
 
   // Now, we can launch tests when file picker isn't canceled.
@@ -82,11 +84,13 @@ SimpleTest.waitForFocus(function() {
       a.multiple = data[2];
 
       SimpleTest.executeSoon(function() {
+        SpecialPowers.wrap(document).notifyUserGestureActivation();
         b.click();
       });
     }
   });
 
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   b.click();
 });
 

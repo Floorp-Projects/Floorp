@@ -5,11 +5,27 @@
 
 const lazy = {};
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
   DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gIsTelemetrySendingEnabled",
+  "datareporting.healthreport.uploadEnabled",
+  true
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gIsPPAEnabled",
+  "dom.private-attribution.submission.enabled",
+  true
+);
 
 const MAX_CONVERSIONS = 2;
 const DAY_IN_MILLI = 1000 * 60 * 60 * 24;
@@ -246,7 +262,11 @@ export class PrivateAttributionService {
   }
 
   isEnabled() {
-    return lazy.TelemetryUtils.isTelemetryEnabled;
+    return (
+      lazy.gIsTelemetrySendingEnabled &&
+      AppConstants.MOZ_TELEMETRY_REPORTING &&
+      lazy.gIsPPAEnabled
+    );
   }
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIPrivateAttributionService]);

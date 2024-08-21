@@ -259,7 +259,7 @@ ContiguousEnumSerializer.
 template <class T>
 struct ParamTraits_IsEnumCase {
   static bool Write(MessageWriter* const writer, const T& in) {
-    MOZ_ASSERT(IsEnumCase(in));
+    MOZ_ASSERT(mozilla::IsEnumCase(in));
     const auto shadow = static_cast<std::underlying_type_t<T>>(in);
     WriteParam(writer, shadow);
     return true;
@@ -268,7 +268,7 @@ struct ParamTraits_IsEnumCase {
   static bool Read(MessageReader* const reader, T* const out) {
     auto shadow = std::underlying_type_t<T>{};
     if (!ReadParam(reader, &shadow)) return false;
-    const auto e = mozilla::AsValidEnum<T>(shadow);
+    const auto e = mozilla::AsEnumCase<T>(shadow);
     if (!e) return false;
     *out = *e;
     return true;

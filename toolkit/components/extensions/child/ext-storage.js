@@ -142,6 +142,8 @@ this.storage = class extends ExtensionAPI {
       return new EventManager({
         context,
         name: onChangedName,
+        // Parent event already resets idle if needed, no need to do it here.
+        resetIdleOnEvent: false,
         register: fire => {
           let onChanged = (data, area) => {
             let changes = new context.cloneScope.Object();

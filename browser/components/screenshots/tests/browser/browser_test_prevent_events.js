@@ -47,6 +47,10 @@ add_task(async function test_events_prevented() {
       // pointermove/mousemove, pointerdown/mousedown, pointerup/mouseup events
       await helper.clickTestPageElement();
 
+      // pointerover/mouseover, pointerout/mouseout
+      await mouse.over(100, 100);
+      await mouse.out(100, 100);
+
       // click events and contextmenu
       await mouse.dblclick(100, 100);
       await mouse.auxclick(100, 100, { button: 1 });

@@ -36,6 +36,8 @@ input.addEventListener('cancel', event => {
 input.addEventListener('change' , () => {
   ok(false, "unexpected change event");
 })
+
+SpecialPowers.wrap(document).notifyUserGestureActivation();
 input.click();
 </script>
 </body>

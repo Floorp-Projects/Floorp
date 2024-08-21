@@ -755,14 +755,14 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       NS_ASSERTION(kidFrame->GetWritingMode() == wm,
                    "expected consistent writing-mode within table");
       LogicalSize cellDesiredSize = kidFrame->GetDesiredSize();
-      if ((availCellISize != kidFrame->GetPriorAvailISize()) ||
-          (cellDesiredSize.ISize(wm) > kidFrame->GetPriorAvailISize()) ||
+      if (availCellISize != kidFrame->GetPriorAvailISize() ||
+          cellDesiredSize.ISize(wm) > kidFrame->GetPriorAvailISize() ||
           HasAnyStateBits(NS_FRAME_IS_DIRTY) || isPaginated ||
           kidFrame->IsSubtreeDirty() ||
           // See if it needs a special reflow, or if it had one that we need to
           // undo.
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
-          HasPctBSize()) {
+          kidFrame->BCBordersChanged() || HasPctBSize()) {
         // Reflow the cell to fit the available isize, bsize
         // XXX The old IR_ChildIsDirty code used availCellISize here.
         LogicalSize kidAvailSize(wm, availCellISize,

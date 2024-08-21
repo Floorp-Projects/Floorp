@@ -43,6 +43,8 @@ support-files = [
 
 ["browser_translations_full_page_panel_cancel.js"]
 
+["browser_translations_full_page_panel_change_app_locale.js"]
+
 ["browser_translations_full_page_panel_close_panel_never_translate_language_with_translations_active.js"]
 
 ["browser_translations_full_page_panel_close_panel_never_translate_language_with_translations_inactive.js"]
@@ -65,6 +67,8 @@ skip-if = ["true"]
 ["browser_translations_full_page_panel_gear.js"]
 
 ["browser_translations_full_page_panel_init_failure.js"]
+
+["browser_translations_full_page_panel_modify_available_language_models.js"]
 
 ["browser_translations_full_page_panel_never_translate_language.js"]
 
@@ -117,6 +121,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_panel_a11y_utils.js"]
 
+["browser_translations_select_panel_change_app_locale.js"]
+
 ["browser_translations_select_panel_close_on_new_tab.js"]
 
 ["browser_translations_select_panel_copy_button.js"]
@@ -126,6 +132,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 ["browser_translations_select_panel_fallback_to_doc_language.js"]
 
 ["browser_translations_select_panel_init_failure.js"]
+
+["browser_translations_select_panel_modify_available_language_models.js"]
 
 ["browser_translations_select_panel_pdf.js"]
 

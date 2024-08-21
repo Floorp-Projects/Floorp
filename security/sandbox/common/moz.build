@@ -45,6 +45,10 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "/netwerk/base",
     ]
 
+EXTRA_JS_MODULES += [
+    "SandboxUtils.sys.mjs",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

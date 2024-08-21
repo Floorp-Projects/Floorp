@@ -1067,25 +1067,26 @@ void nsHttpConnection::HandleTunnelResponse(uint16_t responseStatus,
       *reset = true;
     }
     nsresult rv;
-    // CONNECT only flag doesn't do the tls setup. https here only
-    // ensures a proxy tunnel was used not that tls is setup.
     if (isHttps) {
-      if (!onlyConnect) {
-        if (mConnInfo->UsingHttpsProxy()) {
-          LOG(("%p new TLSFilterTransaction %s %d\n", this, mConnInfo->Origin(),
-               mConnInfo->OriginPort()));
-          SetupSecondaryTLS();
-        }
+      bool skipSSL = false;
+      if (mConnInfo->UsingHttpsProxy() ||
+          mTransactionCaps & NS_HTTP_TLS_TUNNEL) {
+        LOG(("%p SetupSecondaryTLS %s %d\n", this, mConnInfo->Origin(),
+             mConnInfo->OriginPort()));
+        SetupSecondaryTLS();
+      } else if (onlyConnect) {
+        MOZ_ASSERT(mConnInfo->UsingOnlyHttpProxy(), "Must be a HTTP proxy");
 
+        // We have CONNECT only flag and a HTTP proxy is used here, so we can
+        // just skip setting up SSL. We have to mark this as complete to finish
+        // the transaction and be upgraded.
+        mTlsHandshaker->SetNPNComplete();
+        skipSSL = true;
+      }
+
+      if (!skipSSL) {
         rv = mTlsHandshaker->InitSSLParams(false, true);
         LOG(("InitSSLParams [rv=%" PRIx32 "]\n", static_cast<uint32_t>(rv)));
-      } else {
-        // We have an https protocol but the CONNECT only flag was
-        // specified. The consumer only wants a raw socket to the
-        // proxy. We have to mark this as complete to finish the
-        // transaction and be upgraded. OnSocketReadable() uses this
-        // to detect an inactive tunnel and blocks completion.
-        mTlsHandshaker->SetNPNComplete();
       }
     }
     rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
@@ -1612,14 +1613,15 @@ nsresult nsHttpConnection::OnSocketWritable() {
       return NS_ERROR_FAILURE;
     }
 
-    if (mState == HttpConnectionState::REQUEST) {
+    if (mState == HttpConnectionState::REQUEST &&
+        mTlsHandshaker->EnsureNPNComplete()) {
       // Don't need to check this each write attempt since it is only
       // updated after OnSocketWritable completes.
       // We've already done primary tls (if needed) and sent our CONNECT.
       // If we're doing a CONNECT only request there's no need to write
-      // the http transaction or do the SSL handshake here.
-      LOG(("return ok because proxy connect successful\n"));
-      return NS_OK;
+      // the http transaction.
+      LOG(("return NS_BASE_STREAM_CLOSED to make transaction closed\n"));
+      return NS_BASE_STREAM_CLOSED;
     }
   }
 

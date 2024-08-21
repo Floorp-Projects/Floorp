@@ -8687,42 +8687,64 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
                                          // "this" frame then we go to next line
   nsIFrame* nearStoppingFrame = nullptr;  // if we are backing up from edge,
                                           // stop here
-  nsIFrame* firstFrame;
-  nsIFrame* lastFrame;
   bool isBeforeFirstFrame, isAfterLastFrame;
   bool found = false;
 
+  const bool forceInEditableRegion =
+      aPos->mOptions.contains(PeekOffsetOption::ForceEditableRegion);
   while (!found) {
-    if (aPos->mDirection == eDirPrevious)
+    if (aPos->mDirection == eDirPrevious) {
       searchingLine--;
-    else
+    } else {
       searchingLine++;
+    }
     if ((aPos->mDirection == eDirPrevious && searchingLine < 0) ||
         (aPos->mDirection == eDirNext && searchingLine >= countLines)) {
       // we need to jump to new block frame.
       return NS_ERROR_FAILURE;
     }
-    auto line = it->GetLine(searchingLine).unwrap();
-    if (!line.mNumFramesOnLine) {
-      continue;
-    }
-    lastFrame = firstFrame = line.mFirstFrameOnLine;
-    for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
-         lineFrameCount--) {
-      lastFrame = lastFrame->GetNextSibling();
+    {
+      auto line = it->GetLine(searchingLine).unwrap();
+      if (!line.mNumFramesOnLine) {
+        continue;
+      }
+      nsIFrame* firstFrame = nullptr;
+      nsIFrame* lastFrame = nullptr;
+      nsIFrame* frame = line.mFirstFrameOnLine;
+      int32_t i = line.mNumFramesOnLine;
+      do {
+        // If the caller wants a frame for a inclusive ancestor of the ancestor
+        // limiter, ignore frames for outside the limiter.
+        if (aPos->FrameContentIsInAncestorLimiter(frame)) {
+          if (!firstFrame) {
+            firstFrame = frame;
+          }
+          lastFrame = frame;
+        }
+        if (i == 1) {
+          break;
+        }
+        frame = frame->GetNextSibling();
+        if (!frame) {
+          NS_ERROR("GetLine promised more frames than could be found");
+          return NS_ERROR_FAILURE;
+        }
+      } while (--i);
       if (!lastFrame) {
-        NS_ERROR("GetLine promised more frames than could be found");
+        // If we're looking for an editable content frame, but all frames in the
+        // line are not in the specified editing host, return error because we
+        // must reach the editing host boundary.
         return NS_ERROR_FAILURE;
       }
-    }
-    nsIFrame::GetLastLeaf(&lastFrame);
+      nsIFrame::GetLastLeaf(&lastFrame);
 
-    if (aPos->mDirection == eDirNext) {
-      nearStoppingFrame = firstFrame;
-      farStoppingFrame = lastFrame;
-    } else {
-      nearStoppingFrame = lastFrame;
-      farStoppingFrame = firstFrame;
+      if (aPos->mDirection == eDirNext) {
+        nearStoppingFrame = firstFrame;
+        farStoppingFrame = lastFrame;
+      } else {
+        nearStoppingFrame = lastFrame;
+        farStoppingFrame = firstFrame;
+      }
     }
     nsPoint offset;
     nsView* view;  // used for call of get offset from view
@@ -8730,6 +8752,10 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
     nsPoint newDesiredPos =
         aPos->mDesiredCaretPos -
         offset;  // get desired position into blockframe coords
+    // TODO: nsILineIterator::FindFrameAt should take optional editing host
+    // parameter and if it's set, it should return the nearest editable frame
+    // for the editing host when the frame at the desired position is not
+    // editable.
     nsresult rv = it->FindFrameAt(searchingLine, newDesiredPos, &resultFrame,
                                   &isBeforeFirstFrame, &isAfterLastFrame);
     if (NS_FAILED(rv)) {
@@ -8737,6 +8763,11 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
     }
 
     if (resultFrame) {
+      // If ancestor limiter is specified and we reached outside content of it,
+      // return error because we reached its element boundary.
+      if (!aPos->FrameContentIsInAncestorLimiter(resultFrame)) {
+        return NS_ERROR_FAILURE;
+      }
       // check to see if this is ANOTHER blockframe inside the other one if so
       // then call into its lines
       if (resultFrame->CanProvideLineIterator()) {
@@ -8753,16 +8784,21 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           false   // aSkipPopupChecks
       );
 
-      auto FoundValidFrame = [aPos](const nsIFrame::ContentOffsets& aOffsets,
-                                    const nsIFrame* aFrame) {
+      auto FoundValidFrame = [forceInEditableRegion, aPos](
+                                 const nsIFrame::ContentOffsets& aOffsets,
+                                 const nsIFrame* aFrame) {
         if (!aOffsets.content) {
           return false;
         }
         if (!aFrame->IsSelectable(nullptr)) {
           return false;
         }
-        if (aPos->mOptions.contains(PeekOffsetOption::ForceEditableRegion) &&
-            !aOffsets.content->IsEditable()) {
+        if (aPos->mAncestorLimiter &&
+            !aOffsets.content->IsInclusiveDescendantOf(
+                aPos->mAncestorLimiter)) {
+          return false;
+        }
+        if (forceInEditableRegion && !aOffsets.content->IsEditable()) {
           return false;
         }
         return true;
@@ -8847,13 +8883,17 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           break;
         }
         if (aPos->mDirection == eDirPrevious &&
-            (resultFrame == nearStoppingFrame))
+            resultFrame == nearStoppingFrame) {
           break;
-        if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
+        }
+        if (aPos->mDirection == eDirNext && resultFrame == farStoppingFrame) {
           break;
+        }
         // previous didnt work now we try "next"
         nsIFrame* tempFrame = frameIterator->Traverse(/* aForward = */ true);
-        if (!tempFrame) break;
+        if (!tempFrame) {
+          break;
+        }
         resultFrame = tempFrame;
       }
       aPos->mResultFrame = resultFrame;
@@ -8864,8 +8904,9 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
       aPos->mAttach = aPos->mDirection == eDirNext
                           ? CaretAssociationHint::Before
                           : CaretAssociationHint::After;
-      if (aPos->mDirection == eDirPrevious)
+      if (aPos->mDirection == eDirPrevious) {
         aPos->mStartOffset = -1;  // start from end
+      }
       return aBlockFrame->PeekOffset(aPos);
     }
   }
@@ -9228,12 +9269,18 @@ nsresult nsIFrame::PeekOffsetForWord(PeekOffsetStruct* aPos, int32_t aOffset) {
 }
 
 static nsIFrame* GetFirstSelectableDescendantWithLineIterator(
-    nsIFrame* aParentFrame, bool aForceEditableRegion) {
-  auto FoundValidFrame = [aForceEditableRegion](const nsIFrame* aFrame) {
+    const PeekOffsetStruct& aPeekOffsetStruct, nsIFrame* aParentFrame) {
+  const bool forceEditableRegion = aPeekOffsetStruct.mOptions.contains(
+      PeekOffsetOption::ForceEditableRegion);
+  auto FoundValidFrame = [aPeekOffsetStruct,
+                          forceEditableRegion](const nsIFrame* aFrame) {
     if (!aFrame->IsSelectable(nullptr)) {
       return false;
     }
-    if (aForceEditableRegion && !aFrame->GetContent()->IsEditable()) {
+    if (!aPeekOffsetStruct.FrameContentIsInAncestorLimiter(aFrame)) {
+      return false;
+    }
+    if (forceEditableRegion && !aFrame->ContentIsEditable()) {
       return false;
     }
     return true;
@@ -9247,7 +9294,7 @@ static nsIFrame* GetFirstSelectableDescendantWithLineIterator(
       return child;
     }
     if (nsIFrame* nested = GetFirstSelectableDescendantWithLineIterator(
-            child, aForceEditableRegion)) {
+            aPeekOffsetStruct, child)) {
       return nested;
     }
   }
@@ -9267,6 +9314,9 @@ nsresult nsIFrame::PeekOffsetForLine(PeekOffsetStruct* aPos) {
     if (!newBlock) {
       return NS_ERROR_FAILURE;
     }
+    // FYI: If the editing host is an inline element, the block frame content
+    // may be either not editable or editable but belonging to different editing
+    // host.
     blockFrame = newBlock;
     nsILineIterator* iter = blockFrame->GetLineIterator();
     int32_t thisLine = iter->FindLineContaining(lineFrame);
@@ -9320,8 +9370,7 @@ nsresult nsIFrame::PeekOffsetForLine(PeekOffsetStruct* aPos) {
 
       if (shouldDrillIntoChildren) {
         nsIFrame* child = GetFirstSelectableDescendantWithLineIterator(
-            aPos->mResultFrame,
-            aPos->mOptions.contains(PeekOffsetOption::ForceEditableRegion));
+            *aPos, aPos->mResultFrame);
         if (child) {
           aPos->mResultFrame = child;
         }
@@ -10723,7 +10772,10 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
 }
 
 void nsIFrame::GetLastLeaf(nsIFrame** aFrame) {
-  if (!aFrame || !*aFrame) {
+  if (!aFrame || !*aFrame ||
+      // Don't enter into native anoymous subtree from the root like <input> or
+      // <textarea>.
+      (*aFrame)->ContentIsRootOfNativeAnonymousSubtree()) {
     return;
   }
   for (nsIFrame* maybeLastLeaf = (*aFrame)->PrincipalChildList().LastChild();
@@ -10731,10 +10783,9 @@ void nsIFrame::GetLastLeaf(nsIFrame** aFrame) {
     nsIFrame* lastChildNotInSubTree = nullptr;
     for (nsIFrame* child = maybeLastLeaf; child;
          child = child->GetPrevSibling()) {
-      nsIContent* content = child->GetContent();
       // ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
       // see bug 278197 comment #12 #13 for details
-      if (content && !content->IsRootOfNativeAnonymousSubtree()) {
+      if (!child->ContentIsRootOfNativeAnonymousSubtree()) {
         lastChildNotInSubTree = child;
         break;
       }

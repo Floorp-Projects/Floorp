@@ -639,7 +639,7 @@ class BaseLibrary(Linkable):
 
     @property
     def import_path(self):
-        return mozpath.join(self.objdir, self.import_name)
+        return ObjDirPath(self._context, "!" + self.import_name)
 
 
 class Library(BaseLibrary):
@@ -696,7 +696,6 @@ class BaseRustLibrary(object):
         "cargo_file",
         "crate_type",
         "dependencies",
-        "deps_path",
         "features",
         "output_category",
         "is_gkrust",
@@ -735,15 +734,21 @@ class BaseRustLibrary(object):
         # build in that case.
         if not context.config.substs.get("COMPILE_ENVIRONMENT"):
             return
-        build_dir = mozpath.join(
-            context.config.topobjdir,
-            cargo_output_directory(context, self.TARGET_SUBST_VAR),
+        self.import_name = self.lib_name
+
+    @property
+    def import_path(self):
+        return ObjDirPath(
+            self._context,
+            "!/"
+            + mozpath.join(
+                cargo_output_directory(self._context, self.TARGET_SUBST_VAR),
+                self.import_name,
+            ),
         )
-        self.import_name = mozpath.join(build_dir, self.lib_name)
-        self.deps_path = mozpath.join(build_dir, "deps")
 
 
-class RustLibrary(StaticLibrary, BaseRustLibrary):
+class RustLibrary(BaseRustLibrary, StaticLibrary):
     """Context derived container object for a rust static library"""
 
     KIND = "target"
@@ -882,10 +887,9 @@ class SharedLibrary(Library):
         if self.config.substs.get("OS_ARCH") == "WINNT":
             # We build import libs on windows in a library's objdir
             # to avoid cluttering up dist/bin.
-            return mozpath.join(self.objdir, self.import_name)
-        return mozpath.join(
-            mozpath.dirname(self.output_path.full_path), self.import_name
-        )
+            return ObjDirPath(self._context, "!" + self.import_name)
+        assert self.import_name == self.name
+        return self.output_path
 
 
 class HostSharedLibrary(HostMixin, Library):
@@ -927,7 +931,7 @@ class HostLibrary(HostMixin, BaseLibrary):
     no_expand_lib = False
 
 
-class HostRustLibrary(HostLibrary, BaseRustLibrary):
+class HostRustLibrary(BaseRustLibrary, HostLibrary):
     """Context derived container object for a host rust library"""
 
     KIND = "host"

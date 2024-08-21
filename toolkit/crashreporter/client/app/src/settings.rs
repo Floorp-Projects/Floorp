@@ -16,7 +16,7 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             submit_report: true,
-            include_url: false,
+            include_url: true,
         }
     }
 }

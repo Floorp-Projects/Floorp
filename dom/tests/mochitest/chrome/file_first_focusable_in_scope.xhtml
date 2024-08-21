@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window onload="start()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<hbox id="sidebar-search-container" align="center">
+  <search-textbox id="search-box" flex="1"
+                  data-l10n-id="places-bookmarks-search"
+                  data-l10n-attrs="placeholder"
+                  aria-controls="bookmarks-view"
+                  oncommand="searchBookmarks(this.value);"/>
+</hbox>
+
+<tree seltype="single" flex="1">
+  <treecols>
+    <treecol flex="1"/>
+    <treecol flex="1"/>
+  </treecols>
+  <treechildren>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+  </treechildren>
+</tree>
+
+<script type="application/javascript">
+<![CDATA[
+
+function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
+function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
+
+function done()
+{
+  window.close();
+  window.arguments[0].SimpleTest.finish();
+}
+
+function start()
+{
+    is(document.activeElement, document.documentElement, "initial focus is the document element");
+    synthesizeKey("KEY_F6");
+    is(document.activeElement, document.getElementById("search-box"), "F6 moves to the first focusable element");
+    done();
+}
+
+]]></script>
+
+</window>

@@ -337,6 +337,17 @@ skip-if = ["condprof"]  # Bug 1769154 - as designed
 ["test_sss_resetState.js"]
 
 ["test_sss_sanitizeOnShutdown.js"]
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=true"]
+firefox-appdir = "browser"
+# Sanitization works differently on Android - this doesn't apply.
+# browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.
+skip-if = [
+  "os == 'android'",
+  "appname == 'thunderbird'"
+]
+
+["test_sss_sanitizeOnShutdown_v2.js"]
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 firefox-appdir = "browser"
 # Sanitization works differently on Android - this doesn't apply.
 # browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.

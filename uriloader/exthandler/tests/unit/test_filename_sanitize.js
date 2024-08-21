@@ -280,6 +280,22 @@ add_task(async function validate_filename_method() {
   );
 
   Assert.equal(
+    mimeService.validateFileNameForSaving("1. First", "text/unknown", 0),
+    "1.First",
+    "1. First"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "1. First",
+      "text/unknown",
+      mimeService.VALIDATE_ALLOW_DIRECTORY_NAMES
+    ),
+    "1. First",
+    "1. First with VALIDATE_ALLOW_DIRECTORY_NAMES"
+  );
+
+  Assert.equal(
     mimeService.validateFileNameForSaving("filename.LNK", "text/unknown", 0),
     "filename.LNK.download",
     "filename.LNK"

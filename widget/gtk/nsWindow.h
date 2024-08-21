@@ -13,6 +13,7 @@
 
 #include "CompositorWidget.h"
 #include "MozContainer.h"
+#include "MozContainerSurfaceLock.h"
 #include "VsyncSource.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
@@ -421,6 +422,8 @@ class nsWindow final : public nsBaseWidget {
   static bool IsToplevelWindowTransparent();
 
   static nsWindow* GetFocusedWindow();
+
+  mozilla::UniquePtr<MozContainerSurfaceLock> LockSurface();
 
 #ifdef MOZ_WAYLAND
   // Use xdg-activation protocol to transfer focus from gFocusWindow to aWindow.

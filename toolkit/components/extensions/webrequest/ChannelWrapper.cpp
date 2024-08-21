@@ -180,7 +180,7 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::GetRegisteredChannel(
   auto& webreq = WebRequestService::GetSingleton();
 
   nsCOMPtr<nsITraceableChannel> channel =
-      webreq.GetTraceableChannel(aChannelId, aAddon.Id(), contentParent);
+      webreq.GetTraceableChannel(aChannelId, aAddon, contentParent);
   if (!channel) {
     return nullptr;
   }
@@ -530,6 +530,9 @@ bool ChannelWrapper::IsSystemLoad() const {
 }
 
 bool ChannelWrapper::CanModify() const {
+  if (!HaveChannel()) {
+    return false;
+  }
   if (WebExtensionPolicy::IsRestrictedURI(FinalURLInfo())) {
     return false;
   }
@@ -588,9 +591,10 @@ void ChannelWrapper::GetDocumentURL(nsCString& aRetVal) const {
 }
 
 const URLInfo& ChannelWrapper::FinalURLInfo() const {
+  MOZ_ASSERT(HaveChannel());
   if (mFinalURLInfo.isNothing()) {
     ErrorResult rv;
-    nsCOMPtr<nsIURI> uri = FinalURI();
+    nsCOMPtr<nsIURI> uri = GetFinalURI();
     MOZ_ASSERT(uri);
 
     // If this is a view-source scheme, get the nested uri.
@@ -802,6 +806,8 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
                                               nsIRemoteTab* aBrowserParent) {
   // We can't attach new listeners after the response has started, so don't
   // bother registering anything.
+  // NOTE: It is possible for mResponseStarted to be false despite the response
+  // having been started, when ChannelWrapper is instantiated after that point.
   if (mResponseStarted || !CanModify()) {
     return;
   }
@@ -814,9 +820,15 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
 }
 
 already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
-    nsAtom* aAddonId, dom::ContentParent* aContentParent) const {
+    const WebExtensionPolicy& aAddon,
+    dom::ContentParent* aContentParent) const {
   nsCOMPtr<nsIRemoteTab> remoteTab;
-  if (mAddonEntries.Get(aAddonId, getter_AddRefs(remoteTab))) {
+  if (mAddonEntries.Get(aAddon.Id(), getter_AddRefs(remoteTab))) {
+    if (!HaveChannel() ||
+        !aAddon.CanAccessURI(FinalURLInfo(), false, true, true)) {
+      return nullptr;
+    }
+
     ContentParent* contentParent = nullptr;
     if (remoteTab) {
       contentParent =
@@ -956,7 +968,7 @@ uint64_t ChannelWrapper::RequestSize() const {
  * ...
  *****************************************************************************/
 
-already_AddRefed<nsIURI> ChannelWrapper::FinalURI() const {
+already_AddRefed<nsIURI> ChannelWrapper::GetFinalURI() const {
   nsCOMPtr<nsIURI> uri;
   if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
     NS_GetFinalChannelURI(chan, getter_AddRefs(uri));

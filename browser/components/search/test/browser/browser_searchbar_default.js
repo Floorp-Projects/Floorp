@@ -170,6 +170,86 @@ add_task(async function test_form_history() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function test_form_history_delete() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+  await FormHistoryTestUtils.clear("searchbar-history");
+  await FormHistoryTestUtils.add("searchbar-history", ["first", "second"]);
+
+  let sb = BrowserSearch.searchBar;
+  sb.focus();
+  sb.value = "";
+  let popupshown = BrowserTestUtils.waitForEvent(
+    sb.textbox.popup,
+    "popupshown"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await popupshown;
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+
+  let initialEntriesLength = searchPopup.richlistbox.itemChildren.filter(
+    child => !child.getAttribute("collapsed")
+  ).length;
+
+  Assert.equal(initialEntriesLength, 2, "Should have two items in the popup");
+  Assert.equal(
+    searchPopup.selectedIndex,
+    0,
+    "Should have selected the first entry"
+  );
+  Assert.equal(
+    searchPopup.children[2].selectedItems[0].getAttribute("ac-value"),
+    "first",
+    "Should have selected the expected first result"
+  );
+
+  let promiseRemoved = TestUtils.topicObserved(
+    "satchel-storage-changed",
+    (_subject, data) => data == "formhistory-remove"
+  );
+
+  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+
+  await promiseRemoved;
+
+  // Give the listbox time to update.
+  await TestUtils.waitForCondition(
+    () =>
+      searchPopup.richlistbox.itemChildren.filter(
+        child => !child.getAttribute("collapsed")
+      ).length ==
+      initialEntriesLength - 1,
+    "Should reduced the entries in the listbox"
+  );
+
+  Assert.equal(
+    searchPopup.selectedIndex,
+    0,
+    "Should have the second entry selected; now in the first index"
+  );
+  Assert.equal(
+    searchPopup.children[2].selectedItems[0].getAttribute("ac-value"),
+    "second",
+    "Should have selected the second item in the list"
+  );
+  Assert.equal(
+    searchPopup.richlistbox.itemChildren.filter(
+      child => !child.getAttribute("collapsed")
+    ).length,
+    initialEntriesLength - 1,
+    "Should have reduced the number of autocomplete results by 1"
+  );
+
+  let entries = (await FormHistoryTestUtils.search("searchbar-history")).map(
+    entry => entry.value
+  );
+  Assert.deepEqual(entries, ["second"], "Should have deleted the entry");
+
+  BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function test_searchbar_revert() {
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

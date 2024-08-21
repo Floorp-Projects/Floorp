@@ -773,24 +773,10 @@ skip-if = [
 ]
 
 ["test_bug1261673.html"]
-skip-if = [
-  "os == 'android'",
-  "apple_catalina",
-  "apple_silicon",
-]
 
 ["test_bug1261674-1.html"]
-skip-if = [
-  "os == 'android'",
-  "apple_catalina",
-  "apple_silicon",
-]
 
 ["test_bug1261674-2.html"]
-skip-if = [
-  "apple_catalina",
-  "apple_silicon",
-]
 
 ["test_bug1264157.html"]
 

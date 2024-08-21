@@ -69,6 +69,12 @@ async function background() {
   );
 
   await browser.test.assertRejects(
+    browser.downloads.download({url, filename: "123. file"}),
+    /filename must not contain illegal characters/,
+    "Should fail with a space after the trailing dot in the filename"
+  );
+
+  await browser.test.assertRejects(
     browser.downloads.download({url, filename: "../file.gif"}),
     /filename must not contain back-references/,
     "Should fail with a file path that contains back-references"

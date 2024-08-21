@@ -172,13 +172,14 @@ interface ChannelWrapper : EventTarget {
   /**
    * The final URI of the channel (as returned by NS_GetFinalChannelURI) after
    * any redirects have been processed.
+   *
+   * Never null, unless the underlying channel is null.
    */
   [Cached, Pure]
-  readonly attribute URI finalURI;
+  readonly attribute URI? finalURI;
 
   /**
-   * The string version of finalURI (but cheaper to access than
-   * finalURI.spec).
+   * The string version of finalURI (but cheaper to access than finalURI.spec).
    */
   [Cached, Pure]
   readonly attribute DOMString finalURL;

@@ -63,6 +63,11 @@ namespace detail {
 // nsIChannel and nsIHttpChannel weak references, and check that the WeakPtr
 // is alive before returning it.
 //
+// Although the class is designed for use with generic nsIChannel instances,
+// the dependency on weak refs implies that we can only wrap channels that
+// implement nsISupportsWeakReference. In practice, only nsHttpChannel meets
+// that requirement.
+//
 // This holder class prevents us from accidentally touching the weak pointer
 // members directly from our ChannelWrapper class.
 struct ChannelHolder {
@@ -150,7 +155,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
                                 nsIRemoteTab* aBrowserParent);
 
   already_AddRefed<nsITraceableChannel> GetTraceableChannel(
-      nsAtom* aAddonId, dom::ContentParent* aContentParent) const;
+      const WebExtensionPolicy& aAddon,
+      dom::ContentParent* aContentParent) const;
 
   void GetMethod(nsCString& aRetVal) const;
 
@@ -172,7 +178,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(start);
   IMPL_EVENT_HANDLER(stop);
 
-  already_AddRefed<nsIURI> FinalURI() const;
+  already_AddRefed<nsIURI> GetFinalURI() const;
 
   void GetFinalURL(nsString& aRetVal) const;
 

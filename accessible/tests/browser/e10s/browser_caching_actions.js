@@ -20,7 +20,7 @@ const gActionDescrMap = {
   expand: "Expand",
   activate: "Activate",
   cycle: "Cycle",
-  "click ancestor": "Click ancestor",
+  clickAncestor: "Click ancestor",
 };
 
 async function testActions(browser, docAcc, id, expectedActions, domEvents) {
@@ -129,17 +129,17 @@ addAccessibleTask(
     await _testActions("link1", ["jump"], gClickEvents);
     await _testActions("link2", ["click"], gClickEvents);
     await _testActions("link3", ["jump"], gClickEvents);
-    await _testActions("link3img", ["click ancestor"], gClickEvents);
+    await _testActions("link3img", ["clickAncestor"], gClickEvents);
     await _testActions("link4", ["jump"], gClickEvents);
-    await _testActions("link4img", ["click ancestor"], gClickEvents);
+    await _testActions("link4img", ["clickAncestor"], gClickEvents);
     await _testActions("link5", ["click"], gClickEvents);
-    await _testActions("link5img", ["click ancestor"], gClickEvents);
+    await _testActions("link5img", ["clickAncestor"], gClickEvents);
     await _testActions("link6", ["click"], gClickEvents);
-    await _testActions("link6img", ["click ancestor"], gClickEvents);
+    await _testActions("link6img", ["clickAncestor"], gClickEvents);
     await _testActions("link7", ["click"], gClickEvents);
-    await _testActions("link7img", ["click ancestor"], gClickEvents);
+    await _testActions("link7img", ["clickAncestor"], gClickEvents);
     await _testActions("label1", ["click"], gClickEvents);
-    await _testActions("p_in_clickable_div", ["click ancestor"], gClickEvents);
+    await _testActions("p_in_clickable_div", ["clickAncestor"], gClickEvents);
 
     await invokeContentTask(browser, [], () => {
       content.document
@@ -195,8 +195,8 @@ addAccessibleTask(
     let link1Acc = findAccessibleChildByID(docAcc, "link1");
     is(
       link1Acc.firstChild.getActionName(0),
-      "click ancestor",
-      "linkable child has click ancestor action"
+      "clickAncestor",
+      "linkable child has clickAncestor action"
     );
     let onRecreation = waitForEvents({
       expected: [
@@ -218,7 +218,7 @@ addAccessibleTask(
       content.document.body.onclick = () => {};
     });
     await untilCacheIs(() => docAcc.actionCount, 1, "Doc has 1 action");
-    await _testActions("link1", ["click ancestor"]);
+    await _testActions("link1", ["clickAncestor"]);
 
     await invokeContentTask(browser, [], () => {
       content.document.body.onclick = null;
@@ -232,7 +232,7 @@ addAccessibleTask(
       content.document.documentElement.onclick = () => {};
     });
     await untilCacheIs(() => docAcc.actionCount, 1, "Doc has 1 action");
-    await _testActions("link1", ["click ancestor"]);
+    await _testActions("link1", ["clickAncestor"]);
   },
   {
     chrome: true,

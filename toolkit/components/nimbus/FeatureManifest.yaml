@@ -904,8 +904,9 @@ pocketNewtab:
         Changes the wallpaper feature highlight cta
     weatherLocationSearch:
       type: boolean
-      fallbackPref: >-
-        browser.newtabpage.activity-stream.weather.locationSearchEnabled
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.weather.locationSearchEnabled
       description: >-
         Turns on and off location search for newtab weather widget
     recsPersonalized:

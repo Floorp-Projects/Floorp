@@ -4200,11 +4200,11 @@ class FunctionCompiler {
   // WasmStructObject, a MIR pointer to a value, and a field descriptor,
   // generate MIR to write the value to the relevant field in the object.
   [[nodiscard]] bool writeValueToStructField(
-      uint32_t lineOrBytecode, const StructField& field,
-      MDefinition* structObject, MDefinition* value,
+      uint32_t lineOrBytecode, const StructType& structType,
+      uint32_t fieldIndex, MDefinition* structObject, MDefinition* value,
       WasmPreBarrierKind preBarrierKind) {
-    StorageType fieldType = field.type;
-    uint32_t fieldOffset = field.offset;
+    StorageType fieldType = structType.fields_[fieldIndex].type;
+    uint32_t fieldOffset = structType.fieldOffset(fieldIndex);
 
     bool areaIsOutline;
     uint32_t areaOffset;
@@ -4251,10 +4251,10 @@ class FunctionCompiler {
   // WasmStructObject, a field descriptor and a field widening operation,
   // generate MIR to read the value from the relevant field in the object.
   [[nodiscard]] MDefinition* readValueFromStructField(
-      const StructField& field, FieldWideningOp wideningOp,
-      MDefinition* structObject) {
-    StorageType fieldType = field.type;
-    uint32_t fieldOffset = field.offset;
+      const StructType& structType, uint32_t fieldIndex,
+      FieldWideningOp wideningOp, MDefinition* structObject) {
+    StorageType fieldType = structType.fields_[fieldIndex].type;
+    uint32_t fieldOffset = structType.fieldOffset(fieldIndex);
 
     bool areaIsOutline;
     uint32_t areaOffset;
@@ -4436,7 +4436,7 @@ class FunctionCompiler {
                                MDefinition* numElements, MDefinition* val,
                                WasmPreBarrierKind preBarrierKind) {
     mozilla::DebugOnly<MIRType> valMIRType = val->type();
-    StorageType elemType = arrayType.elementType_;
+    StorageType elemType = arrayType.elementType();
     MOZ_ASSERT(elemType.widenToValType().toMIRType() == valMIRType);
 
     uint32_t elemSize = elemType.size();
@@ -4563,7 +4563,7 @@ class FunctionCompiler {
     // Create the array object, uninitialized.
     MDefinition* arrayObject =
         createArrayObject(lineOrBytecode, typeIndex, numElements,
-                          arrayType.elementType_.size(), /*zeroFields=*/false);
+                          arrayType.elementType().size(), /*zeroFields=*/false);
     if (!arrayObject) {
       return nullptr;
     }
@@ -7329,9 +7329,8 @@ static bool EmitStructNew(FunctionCompiler& f) {
     if (!f.mirGen().ensureBallast()) {
       return false;
     }
-    const StructField& field = structType.fields_[fieldIndex];
-    if (!f.writeValueToStructField(lineOrBytecode, field, structObject,
-                                   args[fieldIndex],
+    if (!f.writeValueToStructField(lineOrBytecode, structType, fieldIndex,
+                                   structObject, args[fieldIndex],
                                    WasmPreBarrierKind::None)) {
       return false;
     }
@@ -7399,8 +7398,8 @@ static bool EmitStructSet(FunctionCompiler& f) {
 
   // And fill in the field.
   const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
-  const StructField& field = structType.fields_[fieldIndex];
-  return f.writeValueToStructField(lineOrBytecode, field, structObject, value,
+  return f.writeValueToStructField(lineOrBytecode, structType, fieldIndex,
+                                   structObject, value,
                                    WasmPreBarrierKind::Normal);
 }
 
@@ -7421,9 +7420,8 @@ static bool EmitStructGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
 
   // And fetch the data.
   const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
-  const StructField& field = structType.fields_[fieldIndex];
-  MDefinition* load =
-      f.readValueFromStructField(field, wideningOp, structObject);
+  MDefinition* load = f.readValueFromStructField(structType, fieldIndex,
+                                                 wideningOp, structObject);
   if (!load) {
     return false;
   }
@@ -7477,7 +7475,7 @@ static bool EmitArrayNewDefault(FunctionCompiler& f) {
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
   MDefinition* arrayObject =
       f.createArrayObject(lineOrBytecode, typeIndex, numElements,
-                          arrayType.elementType_.size(), /*zeroFields=*/true);
+                          arrayType.elementType().size(), /*zeroFields=*/true);
   if (!arrayObject) {
     return false;
   }
@@ -7508,7 +7506,7 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
 
   // Create the array object, uninitialized.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  StorageType elemType = arrayType.elementType_;
+  StorageType elemType = arrayType.elementType();
   uint32_t elemSize = elemType.size();
   MDefinition* arrayObject =
       f.createArrayObject(lineOrBytecode, typeIndex, numElementsDef, elemSize,
@@ -7739,7 +7737,7 @@ static bool EmitArraySet(FunctionCompiler& f) {
 
   // And do the store.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  StorageType elemType = arrayType.elementType_;
+  StorageType elemType = arrayType.elementType();
   uint32_t elemSize = elemType.size();
   MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
 
@@ -7771,7 +7769,7 @@ static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
 
   // And do the load.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  StorageType elemType = arrayType.elementType_;
+  StorageType elemType = arrayType.elementType();
 
   MDefinition* load =
       f.readGcArrayValueAtIndex(elemType, wideningOp, arrayObject,

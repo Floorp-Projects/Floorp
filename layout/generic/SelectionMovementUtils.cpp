@@ -26,6 +26,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsTextFrame.h"
+#include "WordMovementType.h"
 
 namespace mozilla {
 using namespace dom;
@@ -38,7 +39,7 @@ SelectionMovementUtils::PeekOffsetForCaretMove(
     nsIContent* aContent, uint32_t aOffset, nsDirection aDirection,
     CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel,
     const nsSelectionAmount aAmount, const nsPoint& aDesiredCaretPos,
-    PeekOffsetOptions aOptions) {
+    PeekOffsetOptions aOptions, const Element* aAncestorLimiter) {
   const PrimaryFrameData frameForFocus =
       SelectionMovementUtils::GetPrimaryFrameForCaret(
           aContent, aOffset, aOptions.contains(PeekOffsetOption::Visual), aHint,
@@ -51,7 +52,7 @@ SelectionMovementUtils::PeekOffsetForCaretMove(
   PeekOffsetStruct pos(
       aAmount, aDirection,
       static_cast<int32_t>(frameForFocus.mOffsetInFrameContent),
-      aDesiredCaretPos, aOptions);
+      aDesiredCaretPos, aOptions, eDefaultBehavior, aAncestorLimiter);
   nsresult rv = frameForFocus.mFrame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
     return Err(rv);

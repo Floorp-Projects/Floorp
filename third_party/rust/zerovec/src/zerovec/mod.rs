@@ -22,7 +22,7 @@ use core::marker::PhantomData;
 use core::mem;
 use core::num::NonZeroUsize;
 use core::ops::Deref;
-use core::ptr;
+use core::ptr::{self, NonNull};
 
 /// A zero-copy, byte-aligned vector for fixed-width types.
 ///
@@ -127,7 +127,7 @@ struct EyepatchHackVector<U> {
     /// Pointer to data
     /// This pointer is *always* valid, the reason it is represented as a raw pointer
     /// is that it may logically represent an `&[T::ULE]` or the ptr,len of a `Vec<T::ULE>`
-    buf: *mut [U],
+    buf: NonNull<[U]>,
     /// Borrowed if zero. Capacity of buffer above if not
     capacity: usize,
 }
@@ -136,12 +136,13 @@ impl<U> EyepatchHackVector<U> {
     // Return a slice to the inner data for an arbitrary caller-specified lifetime
     #[inline]
     unsafe fn as_arbitrary_slice<'a>(&self) -> &'a [U] {
-        &*self.buf
+        self.buf.as_ref()
     }
     // Return a slice to the inner data
     #[inline]
     const fn as_slice<'a>(&'a self) -> &'a [U] {
-        unsafe { &*(self.buf as *const [U]) }
+        // Note: self.buf.as_ref() is not const until 1.73
+        unsafe { &*(self.buf.as_ptr() as *const [U]) }
     }
 
     /// Return this type as a vector
@@ -158,7 +159,7 @@ impl<U> EyepatchHackVector<U> {
         let len = slice.len();
         // Safety: we are assuming owned, and in owned cases
         // this always represents a valid vector
-        Vec::from_raw_parts(self.buf as *mut U, len, self.capacity)
+        Vec::from_raw_parts(self.buf.as_ptr() as *mut U, len, self.capacity)
     }
 }
 
@@ -312,10 +313,14 @@ where
         let capacity = vec.capacity();
         let len = vec.len();
         let ptr = mem::ManuallyDrop::new(vec).as_mut_ptr();
+        // Note: starting in 1.70 we can use NonNull::slice_from_raw_parts
         let slice = ptr::slice_from_raw_parts_mut(ptr, len);
         Self {
             vector: EyepatchHackVector {
-                buf: slice,
+                // Safety: `ptr` comes from Vec::as_mut_ptr, which says:
+                // "Returns an unsafe mutable pointer to the vector’s buffer,
+                // or a dangling raw pointer valid for zero sized reads"
+                buf: unsafe { NonNull::new_unchecked(slice) },
                 capacity,
             },
             marker: PhantomData,
@@ -326,7 +331,9 @@ where
     /// backing buffer
     #[inline]
     pub const fn new_borrowed(slice: &'a [T::ULE]) -> Self {
-        let slice = slice as *const [_] as *mut [_];
+        // Safety: references in Rust cannot be null.
+        // The safe function `impl From<&T> for NonNull<T>` is not const.
+        let slice = unsafe { NonNull::new_unchecked(slice as *const [_] as *mut [_]) };
         Self {
             vector: EyepatchHackVector {
                 buf: slice,
@@ -766,7 +773,6 @@ where
     /// # Example
     ///
     /// ```
-    /// use zerovec::ule::AsULE;
     /// use zerovec::ZeroVec;
     ///
     /// let bytes: &[u8] = &[0xD3, 0x00, 0x19, 0x01, 0xA5, 0x01, 0xCD, 0x01];
@@ -792,7 +798,6 @@ where
     /// # Example
     ///
     /// ```
-    /// use zerovec::ule::AsULE;
     /// use zerovec::ZeroVec;
     ///
     /// let bytes: &[u8] = &[0xD3, 0x00, 0x19, 0x01, 0xA5, 0x01, 0xCD, 0x01];
@@ -902,11 +907,96 @@ where
             let slice = self.vector.as_slice();
             *self = ZeroVec::new_owned(slice.into());
         }
-        unsafe { &mut *self.vector.buf }
+        unsafe { self.vector.buf.as_mut() }
     }
     /// Remove all elements from this ZeroVec and reset it to an empty borrowed state.
     pub fn clear(&mut self) {
         *self = Self::new_borrowed(&[])
+    }
+
+    /// Removes the first element of the ZeroVec. The ZeroVec remains in the same
+    /// borrowed or owned state.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use crate::zerovec::ule::AsULE;
+    /// use zerovec::ZeroVec;
+    ///
+    /// let bytes: &[u8] = &[0xD3, 0x00, 0x19, 0x01, 0xA5, 0x01, 0xCD, 0x01];
+    /// let mut zerovec: ZeroVec<u16> =
+    ///     ZeroVec::parse_byte_slice(bytes).expect("infallible");
+    /// assert!(!zerovec.is_owned());
+    ///
+    /// let first = zerovec.take_first().unwrap();
+    /// assert_eq!(first, 0x00D3);
+    /// assert!(!zerovec.is_owned());
+    ///
+    /// let mut zerovec = zerovec.into_owned();
+    /// assert!(zerovec.is_owned());
+    /// let first = zerovec.take_first().unwrap();
+    /// assert_eq!(first, 0x0119);
+    /// assert!(zerovec.is_owned());
+    /// ```
+    pub fn take_first(&mut self) -> Option<T> {
+        match core::mem::take(self).into_cow() {
+            Cow::Owned(mut vec) => {
+                if vec.is_empty() {
+                    return None;
+                }
+                let ule = vec.remove(0);
+                let rv = T::from_unaligned(ule);
+                *self = ZeroVec::new_owned(vec);
+                Some(rv)
+            }
+            Cow::Borrowed(b) => {
+                let (ule, remainder) = b.split_first()?;
+                let rv = T::from_unaligned(*ule);
+                *self = ZeroVec::new_borrowed(remainder);
+                Some(rv)
+            }
+        }
+    }
+
+    /// Removes the last element of the ZeroVec. The ZeroVec remains in the same
+    /// borrowed or owned state.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use crate::zerovec::ule::AsULE;
+    /// use zerovec::ZeroVec;
+    ///
+    /// let bytes: &[u8] = &[0xD3, 0x00, 0x19, 0x01, 0xA5, 0x01, 0xCD, 0x01];
+    /// let mut zerovec: ZeroVec<u16> =
+    ///     ZeroVec::parse_byte_slice(bytes).expect("infallible");
+    /// assert!(!zerovec.is_owned());
+    ///
+    /// let last = zerovec.take_last().unwrap();
+    /// assert_eq!(last, 0x01CD);
+    /// assert!(!zerovec.is_owned());
+    ///
+    /// let mut zerovec = zerovec.into_owned();
+    /// assert!(zerovec.is_owned());
+    /// let last = zerovec.take_last().unwrap();
+    /// assert_eq!(last, 0x01A5);
+    /// assert!(zerovec.is_owned());
+    /// ```
+    pub fn take_last(&mut self) -> Option<T> {
+        match core::mem::take(self).into_cow() {
+            Cow::Owned(mut vec) => {
+                let ule = vec.pop()?;
+                let rv = T::from_unaligned(ule);
+                *self = ZeroVec::new_owned(vec);
+                Some(rv)
+            }
+            Cow::Borrowed(b) => {
+                let (ule, remainder) = b.split_last()?;
+                let rv = T::from_unaligned(*ule);
+                *self = ZeroVec::new_borrowed(remainder);
+                Some(rv)
+            }
+        }
     }
 
     /// Converts the type into a `Cow<'a, [T::ULE]>`, which is

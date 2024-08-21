@@ -43,4 +43,8 @@ run-sequentially = "very high failure rate in parallel"
 
 ["test_localization.js"]
 
+["test_prefFlips.js"]
+
+["test_policy.js"]
+
 ["test_schema_uris.js"]

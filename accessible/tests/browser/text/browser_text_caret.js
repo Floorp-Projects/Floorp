@@ -16,6 +16,7 @@ addAccessibleTask(
           style="scrollbar-width: none; font-family: 'Liberation Mono', monospace;"
           cols="6">ab cd e</textarea>
 <textarea id="empty"></textarea>
+<div id="contentEditable" contenteditable>a<span>b</span></div>
   `,
   async function (browser, docAcc) {
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
@@ -401,6 +402,48 @@ addAccessibleTask(
     is(empty.caretOffset, 0, "Caret offset in empty textarea is 0");
     evt.QueryInterface(nsIAccessibleCaretMoveEvent);
     ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+
+    const contentEditable = findAccessibleChildByID(docAcc, "contentEditable", [
+      nsIAccessibleText,
+    ]);
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, contentEditable);
+    contentEditable.takeFocus();
+    evt = await caretMoved;
+    is(
+      contentEditable.caretOffset,
+      0,
+      "Initial caret offset in contentEditable is 0"
+    );
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "a",
+      0,
+      1,
+      contentEditable,
+      kOk,
+      kOk,
+      kOk
+    );
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, contentEditable);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(contentEditable.caretOffset, 1, "Caret offset is 1 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "b",
+      1,
+      2,
+      contentEditable,
+      kOk,
+      kOk,
+      kOk
+    );
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );

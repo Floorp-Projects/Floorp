@@ -1818,6 +1818,7 @@ class BootstrapScope {
       let params = {
         id: addon.id,
         version: addon.version,
+        type: addon.type,
         resourceURI: addon.resolvedRootURI,
         signedState: addon.signedState,
         temporarilyInstalled: addon.location.isTemporary,

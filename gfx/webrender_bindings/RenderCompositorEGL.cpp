@@ -154,6 +154,16 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
     }
     gl()->SetDamage(bufferInvalid);
   }
+
+#ifdef MOZ_WIDGET_GTK
+  // Rendering on Wayland has to be atomic (buffer attach + commit) and
+  // wayland surface is also used by main thread so lock it before
+  // we paint at SwapBuffers().
+  UniquePtr<MozContainerSurfaceLock> lock;
+  if (auto* gtkWidget = mWidget->AsGTK()) {
+    lock = gtkWidget->LockSurface();
+  }
+#endif
   gl()->SwapBuffers();
   return frameId;
 }

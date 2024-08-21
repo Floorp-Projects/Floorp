@@ -5,6 +5,8 @@
 # Force pref value to true to get download tests to pass on Thunderbird.
 prefs = ["browser.download.useDownloadDir=true"]
 
+["test_ChannelWrapper.js"]
+
 ["test_QuarantinedDomains.js"]
 
 ["test_QuarantinedDomains_telemetry.js"]
@@ -585,6 +587,12 @@ skip-if = ["os == 'android'"] # Bug 1258975 on android.
 
 ["test_ext_theme_experiments.js"]
 skip-if = ["os == 'android'"] # Themes aren't supported on android.
+
+["test_ext_theme_startupData.js"]
+skip-if = [
+  "os == 'android'", # Themes aren't supported on android.
+  "os == 'win' && debug", # Bug 1905417 - Assertion failure: nsContentUtils::IsSafeToRunScript()
+]
 
 ["test_ext_trustworthy_origin.js"]
 

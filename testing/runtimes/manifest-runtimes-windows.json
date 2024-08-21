@@ -11,7 +11,7 @@
     "dom/fetch/tests/crashtests/crashtests.list": 0.34,
     "dom/file/tests/crashtests/crashtests.list": 3.23,
     "dom/html/crashtests/crashtests.list": 12.61,
-    "dom/indexedDB/crashtests/crashtests.list": 0.23,
+    "dom/indexedDB/test/crashtests/crashtests.list": 0.23,
     "dom/jsurl/crashtests/crashtests.list": 0.3,
     "dom/media/mediasource/test/crashtests/crashtests.list": 0.17,
     "dom/media/test/crashtests/crashtests.list": 32.5,

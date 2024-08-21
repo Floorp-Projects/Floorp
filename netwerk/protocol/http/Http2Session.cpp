@@ -1062,15 +1062,18 @@ void Http2Session::SendHello() {
 
   bool disableRFC7540Priorities =
       !StaticPrefs::network_http_http2_enabled_deps() ||
-      !gHttpHandler->CriticalRequestPrioritization() ||
-      StaticPrefs::network_http_priority_header_enabled();
+      !gHttpHandler->CriticalRequestPrioritization();
 
-  NetworkEndian::writeUint16(packet + kFrameHeaderBytes + (6 * numberOfEntries),
-                             SETTINGS_NO_RFC7540_PRIORITIES);
-  NetworkEndian::writeUint32(
-      packet + kFrameHeaderBytes + (6 * numberOfEntries) + 2,
-      disableRFC7540Priorities ? 1 : 0);
-  numberOfEntries++;
+  // See bug 1909666. Sending this new setting could break some websites.
+  if (disableRFC7540Priorities) {
+    NetworkEndian::writeUint16(
+        packet + kFrameHeaderBytes + (6 * numberOfEntries),
+        SETTINGS_NO_RFC7540_PRIORITIES);
+    NetworkEndian::writeUint32(
+        packet + kFrameHeaderBytes + (6 * numberOfEntries) + 2,
+        disableRFC7540Priorities ? 1 : 0);
+    numberOfEntries++;
+  }
 
   MOZ_ASSERT(numberOfEntries <= maxSettings);
   uint32_t dataLen = 6 * numberOfEntries;

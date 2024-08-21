@@ -291,6 +291,12 @@ already_AddRefed<AbortSignal> AbortSignal::Any(
     } else {
       // Step 4.2. Otherwise, make resultSignal dependent on its source signals
       for (const auto& sourceSignal : signal->mSourceSignals) {
+        if (!sourceSignal) {
+          // Bug 1908466, sourceSignal might have been garbage collected.
+          // As signal is not aborted, sourceSignal also wasn't.
+          // Thus do not depend on it, as it cannot be aborted anymore.
+          continue;
+        }
         MOZ_ASSERT(!sourceSignal->Aborted() && !sourceSignal->Dependent());
         resultSignal->MakeDependentOn(sourceSignal);
       }

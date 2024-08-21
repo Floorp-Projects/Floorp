@@ -696,7 +696,12 @@ fn add_composite_prim(
         &mut frame_state.frame_gpu_data.f32,
         rect,
         rect,
-        PremultipliedColorF::WHITE,
+        // TODO: The base color for composite prim should be opaque white
+        // (or white with some transparency to support an opacity directly
+        // in the quad primitive). However, passing opaque white
+        // here causes glitches with Adreno GPUs on Windows specifically
+        // (See bug 1897444).
+        pattern.base_color,
         segments,
         ScaleOffset::identity(),
     );

@@ -811,8 +811,19 @@ normandy:
       changedPref: >
         For preference_study or nimbus_experiment, the preference that was
         detected to change that caused the unenrollment.
-    bug_numbers: [1443560, 1843126]
-    notification_emails: ["normandy-notifications@mozilla.com"]
+      conflictingSlug: >
+        For nimbus_experiment, if reason == "prefFlips-conflict", the conflicting
+        experiment that caused the unenrollment.
+      prefName: >
+        For nimbus_experiment, if reason == "prefFlips-failed", the name of the
+        pref that failed to set.
+      prefType: >
+        For nimbus_experiment, if reason = "prefFlips-failed", the type of the
+        existing pref value (one of "bool", "string", "int", or "invalid").
+    bug_numbers: [1443560, 1843126, 1896718, 1907649]
+    notification_emails:
+      - "normandy-notifications@mozilla.com"
+      - "nimbus-team@mozilla.com"
     products:
       - "firefox"
       - "fennec"

@@ -69,7 +69,7 @@ add_task(async function test_pivot_language_behavior() {
     );
   }
 
-  return cleanup();
+  await cleanup();
 });
 
 /**
@@ -175,9 +175,9 @@ add_task(async function test_language_support_checks() {
 
 async function usingAppLocale(locale, callback) {
   info(`Mocking the locale "${locale}", expect missing resource errors.`);
-  const { availableLocales, requestedLocales } = Services.locale;
-  Services.locale.availableLocales = [locale];
-  Services.locale.requestedLocales = [locale];
+  const cleanupLocales = await mockLocales({
+    appLocales: [locale],
+  });
 
   if (Services.locale.appLocaleAsBCP47 !== locale) {
     throw new Error("Unable to change the app locale.");
@@ -185,8 +185,7 @@ async function usingAppLocale(locale, callback) {
   await callback();
 
   // Reset back to the originals.
-  Services.locale.availableLocales = availableLocales;
-  Services.locale.requestedLocales = requestedLocales;
+  await cleanupLocales();
 }
 
 add_task(async function test_translating_to_and_from_app_language() {
@@ -331,7 +330,7 @@ add_task(async function test_translating_to_and_from_app_language() {
     languagePairs: [],
   });
 
-  return cleanup();
+  await cleanup();
 });
 
 add_task(async function test_firstVisualChange() {
@@ -357,5 +356,5 @@ add_task(async function test_firstVisualChange() {
     "A change occurred."
   );
 
-  return cleanup();
+  await cleanup();
 });

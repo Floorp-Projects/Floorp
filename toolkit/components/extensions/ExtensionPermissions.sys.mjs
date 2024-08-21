@@ -632,11 +632,13 @@ export var OriginControls = {
   getAttentionState(policy, window) {
     if (policy?.manifestVersion >= 3) {
       const state = this.getState(policy, window.gBrowser.selectedTab);
-      // quarantined is always false when the feature is disabled.
+      // Request attention when the extension cannot access the current tab,
+      // but has a host permission that could be granted.
+      // Quarantined is always false when the feature is disabled.
       const quarantined = !!state.quarantined;
       const attention =
         quarantined ||
-        (!!state.whenClicked && !state.hasAccess && !state.temporaryAccess);
+        (!!state.alwaysOn && !state.hasAccess && !state.temporaryAccess);
 
       return { attention, quarantined };
     }

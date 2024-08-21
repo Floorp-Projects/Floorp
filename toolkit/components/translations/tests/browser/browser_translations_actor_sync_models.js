@@ -9,7 +9,7 @@
  *
  * https://firefox-source-docs.mozilla.org/services/settings/index.html#unit-tests
  */
-add_task(async function test_translations_actor_sync_update() {
+add_task(async function test_translations_actor_sync_update_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -24,48 +24,34 @@ add_task(async function test_translations_actor_sync_update() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const oldModels = await modelsPromise;
 
   is(
     decoder.decode(oldModels.model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  const newModelRecords = createRecordsForLanguagePair("en", "es");
-  for (const newModelRecord of newModelRecords) {
-    newModelRecord.version = "1.1";
+  const recordsToCreate = createRecordsForLanguagePair("en", "es");
+  for (const newModelRecord of recordsToCreate) {
+    newModelRecord.id = oldModels[newModelRecord.fileType].record.id;
+    newModelRecord.version = `${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`;
   }
 
-  info('Emitting a remote client "sync" event with an updated record.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: [],
-      updated: newModelRecords.map(newRecord => ({
-        old: oldModels[newRecord.fileType].record,
-        new: newRecord,
-      })),
-      deleted: [],
-    },
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToCreate,
+    expectedUpdatedRecordsCount: 3,
   });
 
   const updatedModelsPromise =
     TranslationsParent.getLanguageTranslationModelFiles("en", "es");
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { model: updatedModel } = await updatedModelsPromise;
 
   is(
     decoder.decode(updatedModel.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.1",
-    "The version 1.1 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 model is downloaded.`
   );
 
   return cleanup();
@@ -74,7 +60,7 @@ add_task(async function test_translations_actor_sync_update() {
 /**
  * An actor unit test for testing RemoteSettings delete behavior.
  */
-add_task(async function test_translations_actor_sync_delete() {
+add_task(async function test_translations_actor_sync_delete_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -89,25 +75,20 @@ add_task(async function test_translations_actor_sync_delete() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { model } = await modelsPromise;
 
   is(
     decoder.decode(model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  info('Emitting a remote client "sync" event with a deleted record.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: [],
-      updated: [],
-      deleted: [model.record],
-    },
+  info(
+    `Removing record ${model.record.name} from mocked Remote Settings database.`
+  );
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToDelete: [model.record],
+    expectedDeletedRecordsCount: 1,
   });
 
   let errorMessage;
@@ -129,7 +110,7 @@ add_task(async function test_translations_actor_sync_delete() {
 /**
  * An actor unit test for testing RemoteSettings creation behavior.
  */
-add_task(async function test_translations_actor_sync_create() {
+add_task(async function test_translations_actor_sync_create_models() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
@@ -144,48 +125,222 @@ add_task(async function test_translations_actor_sync_create() {
     "es"
   );
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   is(
     decoder.decode((await modelsPromise).model.buffer),
-    "Mocked download: test-translation-models model.enes.intgemm.alphas.bin 1.0",
-    "The version 1.0 model is downloaded."
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
-  info('Emitting a remote client "sync" event with new records.');
-  await remoteClients.translationModels.client.emit("sync", {
-    data: {
-      created: createRecordsForLanguagePair("en", "fr"),
-      updated: [],
-      deleted: [],
-    },
+  const recordsToCreate = createRecordsForLanguagePair("en", "fr");
+
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToCreate,
+    expectedCreatedRecordsCount: 3,
   });
 
   const updatedModelsPromise =
     TranslationsParent.getLanguageTranslationModelFiles("en", "fr");
 
-  await remoteClients.translationModels.resolvePendingDownloads(
-    FILES_PER_LANGUAGE_PAIR
-  );
-
   const { vocab, lex, model } = await updatedModelsPromise;
 
   is(
     decoder.decode(vocab.buffer),
-    "Mocked download: test-translation-models vocab.enfr.spm 1.0",
+    `Mocked download: test-translation-models vocab.enfr.spm ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr vocab is downloaded."
   );
   is(
     decoder.decode(lex.buffer),
-    "Mocked download: test-translation-models lex.50.50.enfr.s2t.bin 1.0",
+    `Mocked download: test-translation-models lex.50.50.enfr.s2t.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr lex is downloaded."
   );
   is(
     decoder.decode(model.buffer),
-    "Mocked download: test-translation-models model.enfr.intgemm.alphas.bin 1.0",
+    `Mocked download: test-translation-models model.enfr.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
     "The en to fr model is downloaded."
+  );
+
+  return cleanup();
+});
+
+/**
+ * An actor unit test for testing creating a new record has a higher minor version than an existing record of the same kind.
+ */
+add_task(
+  async function test_translations_actor_sync_create_models_higher_minor_version() {
+    const { remoteClients, cleanup } = await setupActorTest({
+      autoDownloadFromRemoteSettings: true,
+      languagePairs: [
+        { fromLang: "en", toLang: "es" },
+        { fromLang: "es", toLang: "en" },
+      ],
+    });
+
+    const decoder = new TextDecoder();
+    const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+      "en",
+      "es"
+    );
+
+    is(
+      decoder.decode((await modelsPromise).model.buffer),
+      `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+      `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
+    );
+
+    const recordsToCreate = createRecordsForLanguagePair("en", "es");
+    for (const newModelRecord of recordsToCreate) {
+      newModelRecord.version = `${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`;
+    }
+
+    await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+      recordsToCreate,
+      expectedCreatedRecordsCount: 3,
+    });
+
+    const updatedModelsPromise =
+      TranslationsParent.getLanguageTranslationModelFiles("en", "es");
+
+    const { vocab, lex, model } = await updatedModelsPromise;
+
+    is(
+      decoder.decode(vocab.buffer),
+      `Mocked download: test-translation-models vocab.enes.spm ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 vocab is downloaded.`
+    );
+    is(
+      decoder.decode(lex.buffer),
+      `Mocked download: test-translation-models lex.50.50.enes.s2t.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 lex is downloaded.`
+    );
+    is(
+      decoder.decode(model.buffer),
+      `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 model is downloaded.`
+    );
+
+    return cleanup();
+  }
+);
+
+/**
+ * An actor unit test for testing creating a new record has a higher major version than an existing record of the same kind.
+ */
+add_task(
+  async function test_translations_actor_sync_create_models_higher_major_version() {
+    const { remoteClients, cleanup } = await setupActorTest({
+      autoDownloadFromRemoteSettings: true,
+      languagePairs: [
+        { fromLang: "en", toLang: "es" },
+        { fromLang: "es", toLang: "en" },
+      ],
+    });
+
+    const decoder = new TextDecoder();
+    const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+      "en",
+      "es"
+    );
+
+    is(
+      decoder.decode((await modelsPromise).model.buffer),
+      `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+      `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
+    );
+
+    const recordsToCreate = createRecordsForLanguagePair("en", "es");
+    for (const newModelRecord of recordsToCreate) {
+      newModelRecord.version = "2.0";
+    }
+
+    await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+      recordsToCreate,
+      expectedCreatedRecordsCount: 3,
+    });
+
+    const updatedModelsPromise =
+      TranslationsParent.getLanguageTranslationModelFiles("en", "es");
+
+    const { vocab, lex, model } = await updatedModelsPromise;
+
+    is(
+      decoder.decode(vocab.buffer),
+      `Mocked download: test-translation-models vocab.enes.spm ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 vocab is downloaded.`
+    );
+    is(
+      decoder.decode(lex.buffer),
+      `Mocked download: test-translation-models lex.50.50.enes.s2t.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 lex is downloaded.`
+    );
+    is(
+      decoder.decode(model.buffer),
+      `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+      `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
+    );
+
+    return cleanup();
+  }
+);
+
+/**
+ * An actor unit test for testing removing a record that has a higher minor version than another record, ensuring
+ * that the models roll back to the previous version.
+ */
+add_task(async function test_translations_actor_sync_rollback_models() {
+  const { remoteClients, cleanup } = await setupActorTest({
+    autoDownloadFromRemoteSettings: true,
+    languagePairs: [
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
+    ],
+  });
+
+  const newRecords = createRecordsForLanguagePair("en", "es");
+  for (const newModelRecord of newRecords) {
+    newModelRecord.version = `${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`;
+  }
+
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToCreate: newRecords,
+    expectedCreatedRecordsCount: 3,
+  });
+
+  const decoder = new TextDecoder();
+  const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+    "en",
+    "es"
+  );
+
+  is(
+    decoder.decode((await modelsPromise).model.buffer),
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1`,
+    `The version ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.1 model is downloaded.`
+  );
+
+  await modifyRemoteSettingsRecords(remoteClients.translationModels.client, {
+    recordsToDelete: newRecords,
+    expectedDeletedRecordsCount: 3,
+  });
+
+  const rolledBackModelsPromise =
+    TranslationsParent.getLanguageTranslationModelFiles("en", "es");
+
+  const { vocab, lex, model } = await rolledBackModelsPromise;
+
+  is(
+    decoder.decode(vocab.buffer),
+    `Mocked download: test-translation-models vocab.enes.spm ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 vocab is downloaded.`
+  );
+  is(
+    decoder.decode(lex.buffer),
+    `Mocked download: test-translation-models lex.50.50.enes.s2t.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 lex is downloaded.`
+  );
+  is(
+    decoder.decode(model.buffer),
+    `Mocked download: test-translation-models model.enes.intgemm.alphas.bin ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0`,
+    `The ${TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION}.0 model is downloaded.`
   );
 
   return cleanup();

@@ -236,6 +236,9 @@ class nsHttpConnectionInfo final : public ARefBase {
   // Returns true when proxying over HTTP or HTTPS
   bool UsingHttpProxy() const { return mUsingHttpProxy || mUsingHttpsProxy; }
 
+  // Returns true when only proxying over HTTP
+  bool UsingOnlyHttpProxy() const { return mUsingHttpProxy; }
+
   // Returns true when proxying over HTTPS
   bool UsingHttpsProxy() const { return mUsingHttpsProxy; }
 

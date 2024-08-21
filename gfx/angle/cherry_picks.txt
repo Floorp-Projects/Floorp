@@ -1,3 +1,20 @@
+commit 419cd2c3213b594f8e2488bf48034fed20ace81d
+Author: Shahbaz Youssefi <syoussefi@chromium.org>
+Date:   Mon Mar 27 13:05:36 2023 -0400
+
+    Translator: Initialize out arguments too for WebGL
+    
+    Local variables were initialized for WebGL, but not `out` arguments.
+    However, `out` arguments completely overwrite the passed-in variable at
+    call site, so they should also be zeroed out.
+    
+    Bug: chromium:1425685
+    Change-Id: Ib2f61a962eea74c4933aafa4d5ad377189cec578
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/4375137
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Reviewed-by: Kenneth Russell <kbr@chromium.org>
+    Commit-Queue: Shahbaz Youssefi <syoussefi@chromium.org>
+
 commit 7918168436578718b234bfd56da152e34a85af1d
 Author: Kelsey Gilbert <kelsey.gilbert@mozilla.com>
 Date:   Tue Jun 4 15:37:29 2024 -0700

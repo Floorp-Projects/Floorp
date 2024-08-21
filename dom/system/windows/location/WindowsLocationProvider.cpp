@@ -7,6 +7,7 @@
 #include "WindowsLocationProvider.h"
 #include "WindowsLocationParent.h"
 #include "mozilla/dom/WindowsUtilsParent.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "GeolocationPosition.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
@@ -218,6 +219,13 @@ void WindowsLocationProvider::RecvUpdate(
   mCallback->Update(aGeoPosition.get());
 
   Telemetry::Accumulate(Telemetry::GEOLOCATION_WIN8_SOURCE_IS_MLS, false);
+  if (!mEverUpdated) {
+    mEverUpdated = true;
+    // Saw signal without MLS fallback
+    glean::geolocation::fallback
+        .EnumGet(glean::geolocation::FallbackLabel::eNone)
+        .Add();
+  }
 }
 
 void WindowsLocationProvider::RecvFailed(uint16_t err) {
@@ -342,7 +350,7 @@ void WindowsLocationProvider::CancelMLSProvider() {
     return;
   }
 
-  mMLSProvider->Shutdown();
+  mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderShutdown);
   mMLSProvider = nullptr;
 }
 

@@ -2171,11 +2171,13 @@ CanonicalBrowsingContext::ChangeRemoteness(
       new PendingRemotenessChange(this, promise, aPendingSwitchId, aOptions);
   mPendingRemotenessChange = change;
 
-  // If a specific BrowsingContextGroup ID was specified for this load, make
-  // sure to keep it alive until the process switch is completed.
-  if (aOptions.mSpecificGroupId) {
+  // If we're replacing BrowsingContext, determine which BrowsingContextGroup
+  // we'll switch into, taking into account load options.
+  if (aOptions.mReplaceBrowsingContext) {
     change->mSpecificGroup =
-        BrowsingContextGroup::GetOrCreate(aOptions.mSpecificGroupId);
+        aOptions.mSpecificGroupId
+            ? BrowsingContextGroup::GetOrCreate(aOptions.mSpecificGroupId)
+            : BrowsingContextGroup::Create(aOptions.mShouldCrossOriginIsolate);
     change->mSpecificGroup->AddKeepAlive();
   }
 

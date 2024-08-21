@@ -52,3 +52,10 @@ mozilla::ipc::IPCResult nsColorPickerProxy::Recv__delete__(
   }
   return IPC_OK();
 }
+
+void nsColorPickerProxy::ActorDestroy(ActorDestroyReason aWhy) {
+  if (mCallback) {
+    mCallback->Done(u""_ns);
+    mCallback = nullptr;
+  }
+}

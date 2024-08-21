@@ -1691,6 +1691,24 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     return fd;
   }
 
+#if defined(__NR_stat64) || defined(__NR_stat)
+  static intptr_t StatTrap(const sandbox::arch_seccomp_data& aArgs, void* aux) {
+    const auto* const files = static_cast<const SandboxOpenedFiles*>(aux);
+    const auto* path = reinterpret_cast<const char*>(aArgs.args[0]);
+    int fd = files->GetDesc(path);
+    if (fd < 0) {
+      // SandboxOpenedFile::GetDesc already logged about this, if appropriate.
+      return -ENOENT;
+    }
+    auto* buf = reinterpret_cast<statstruct*>(aArgs.args[1]);
+#  ifdef __NR_fstat64
+    return DoSyscall(__NR_fstat64, fd, buf);
+#  else
+    return DoSyscall(__NR_fstat, fd, buf);
+#  endif
+  }
+#endif
+
   static intptr_t UnameTrap(const sandbox::arch_seccomp_data& aArgs,
                             void* aux) {
     const auto buf = reinterpret_cast<struct utsname*>(aArgs.args[0]);
@@ -1737,6 +1755,11 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
 #endif
       case __NR_openat:
         return Trap(OpenTrap, mFiles);
+
+#if defined(__NR_stat64) || defined(__NR_stat)
+      CASES_FOR_stat:
+        return Trap(StatTrap, mFiles);
+#endif
 
       case __NR_brk:
         return Allow();

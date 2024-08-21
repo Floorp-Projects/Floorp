@@ -3013,6 +3013,14 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Does mousewheel-scrolling over a focused <input type="number"> or
+# <input type="range"> field cause the value to increase/decrease (rather
+# than scrolling the page)?
+- name: dom.input.number_and_range_modified_by_mousewheel
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to allow or disallow web apps to cancel `beforeinput` events caused
 # by MozEditableElement#setUserInput() which is used by autocomplete, autofill
 # and password manager.
@@ -10128,6 +10136,8 @@
   value: true
 #elif defined(XP_OPENBSD)
   value: true
+#elif defined(XP_SOLARIS)
+  value: true
 #else
   value: false
 #endif
@@ -10169,6 +10179,8 @@
 #elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
+  value: true
+#elif defined(XP_SOLARIS)
   value: true
 #else
   value: false
@@ -10218,6 +10230,8 @@
   value: true
 #elif defined(XP_OPENBSD)
   value: true
+#elif defined(XP_SOLARIS)
+  value: true
 #else
   value: false
 #endif
@@ -10234,6 +10248,8 @@
 #elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
+  value: true
+#elif defined(XP_SOLARIS)
   value: true
 #else
   value: false
@@ -10252,6 +10268,8 @@
   value: true
 #elif defined(XP_OPENBSD)
   value: true
+#elif defined(XP_SOLARIS)
+  value: true
 #else
   value: false
 #endif
@@ -10268,6 +10286,8 @@
 #elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
+  value: true
+#elif defined(XP_SOLARIS)
   value: true
 #else
   value: false
@@ -10297,6 +10317,8 @@
 #elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
+  value: true
+#elif defined(XP_SOLARIS)
   value: true
 #else
   value: false
@@ -11354,6 +11376,11 @@
 #endif
   mirror: always
 
+- name: media.webrtc.tls_tunnel_for_all_proxy
+  type: bool
+  value: true
+  mirror: always
+
  # If true, then we require explicit approval from the embedding app (ex. Fenix)
  # on GeckoView to know if we can allow audible, inaudible media or both kinds
  # of media to autoplay.
@@ -11691,7 +11718,7 @@
 # whether to redirect the channel for auth redirects. See Bug 1820807
 - name: network.auth.use_redirect_for_retries
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # When true, authentication challenges will be sorted even if
@@ -13130,7 +13157,7 @@
 
 - name: network.http.http2.enabled.deps
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: network.http.http2.enforce-tls-profile
@@ -14745,6 +14772,13 @@
   mirror: once
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+- name: security.sandbox.warn_unprivileged_namespaces
+  type: bool
+  value: true
+  mirror: always
+#endif
+
 # Pref to show warning when submitting from secure to insecure.
 - name: security.warn_submit_secure_to_insecure
   type: bool
@@ -15010,6 +15044,15 @@
   type: RelaxedAtomicUint32
   value: 3
   mirror: always
+
+# The CRLite filter channel to which the user is subscribed.
+# - "all" => filters that contain all revocations,
+# - "specified" => filters that contain revocations with specified reason codes,
+# - "priority" => filters that contain high priority revocations.
+- name: security.pki.crlite_channel
+  type: String
+  value: "specified"
+  mirror: never
 
 - name: security.tls.version.min
   type: RelaxedAtomicUint32

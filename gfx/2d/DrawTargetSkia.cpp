@@ -1872,14 +1872,12 @@ already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
 
 void DrawTargetSkia::ClearRect(const Rect& aRect) {
   MarkChanged();
-  mCanvas->save();
-  // Restrict clearing to the clip region if requested
-  mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kIntersect, true);
-  SkColor clearColor = (mFormat == SurfaceFormat::B8G8R8X8)
-                           ? SK_ColorBLACK
-                           : SK_ColorTRANSPARENT;
-  mCanvas->clear(clearColor);
-  mCanvas->restore();
+  SkPaint paint;
+  paint.setAntiAlias(true);
+  paint.setColor((mFormat == SurfaceFormat::B8G8R8X8) ? SK_ColorBLACK
+                                                      : SK_ColorTRANSPARENT);
+  paint.setBlendMode(SkBlendMode::kSrc);
+  mCanvas->drawRect(RectToSkRect(aRect), paint);
 }
 
 void DrawTargetSkia::PushClip(const Path* aPath) {
