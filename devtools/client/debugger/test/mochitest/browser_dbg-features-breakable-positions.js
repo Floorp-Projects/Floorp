@@ -30,7 +30,7 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakablePositions(dbg, "index.html", 78, [
+  await assertBreakablePositions(dbg, "index.html", 85, [
     { line: 16, columns: [6, 14] },
     { line: 17, columns: [] },
     { line: 21, columns: [12, 20, 48] },
@@ -38,16 +38,23 @@ add_task(async function testBreakableLinesOverReloads() {
     { line: 25, columns: [] },
     { line: 30, columns: [] },
     { line: 36, columns: [] },
+    { line: 39, columns: [] },
+    { line: 41, columns: [8, 18] },
+    { line: 42, columns: [] },
+    { line: 43, columns: [] },
   ]);
 
   info("Pretty print first html page load and assert breakable lines");
   await prettyPrint(dbg);
-  await assertBreakablePositions(dbg, "index.html:formatted", 87, [
+  await assertBreakablePositions(dbg, "index.html:formatted", 96, [
     { line: 16, columns: [0, 8] },
     { line: 22, columns: [0, 8, 35] },
     { line: 27, columns: [0, 8] },
     { line: 28, columns: [] },
     { line: 36, columns: [] },
+    { line: 48, columns: [] },
+    { line: 50, columns: [2, 12] },
+    { line: 53, columns: [] },
   ]);
   await closeTab(dbg, "index.html:formatted");
 

@@ -2,6 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
+  this
+);
+
 /* import-globals-from helper-addons.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
@@ -9,10 +14,10 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 
-add_task(async () => {
-  const EXTENSION_NAME = "temporary-web-extension";
-  const EXTENSION_ID = "test-devtools@mozilla.org";
+const EXTENSION_NAME = "temporary-web-extension";
+const EXTENSION_ID = "test-devtools@mozilla.org";
 
+add_task(async function testOpenDebuggerReload() {
   await enableExtensionDebugging();
 
   info(
@@ -79,6 +84,64 @@ add_task(async () => {
     sourceList = panelWin.document.querySelector(".sources-list");
     return sourceList?.textContent.includes("temporary-web-extension");
   }, "Wait for the source to re-appear");
+
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
+  await removeTemporaryExtension(EXTENSION_NAME, document);
+  await removeTab(tab);
+});
+
+add_task(async function testAddAndRemoveBreakpoint() {
+  await enableExtensionDebugging();
+
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+
+  await installTemporaryExtensionFromXPI(
+    {
+      background() {
+        window.invokeLogFromWebextension = () => {
+          console.log("From webextension");
+        };
+      },
+      id: EXTENSION_ID,
+      name: EXTENSION_NAME,
+    },
+    document
+  );
+
+  // Select the debugger right away to avoid any noise coming from the inspector.
+  await pushPref("devtools.toolbox.selectedTool", "jsdebugger");
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    EXTENSION_NAME
+  );
+  const toolbox = getToolbox(devtoolsWindow);
+  const dbg = createDebuggerContext(toolbox);
+
+  info("Select the source and add a breakpoint");
+  // Note: the background script filename is dynamically generated id, so we
+  // simply get the first source from the list.
+  const displayedSources = dbg.selectors.getDisplayedSourcesList();
+  const backgroundScript = displayedSources[0];
+  await selectSource(dbg, backgroundScript);
+  await addBreakpoint(dbg, backgroundScript, 3);
+
+  info("Trigger the breakpoint and wait for the debugger to pause");
+  const webconsole = await toolbox.selectTool("webconsole");
+  const { hud } = webconsole;
+  hud.ui.wrapper.dispatchEvaluateExpression("invokeLogFromWebextension()");
+  await waitForPaused(dbg);
+
+  info("Resume and remove the breakpoint");
+  await resume(dbg);
+  await removeBreakpoint(dbg, backgroundScript.id, 3);
+
+  info("Trigger the function again and check the debugger does not pause");
+  hud.ui.wrapper.dispatchEvaluateExpression("invokeLogFromWebextension()");
+  await wait(500);
+  assertNotPaused(dbg);
 
   await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(EXTENSION_NAME, document);
