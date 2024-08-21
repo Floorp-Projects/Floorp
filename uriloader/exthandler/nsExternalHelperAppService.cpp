@@ -3679,12 +3679,14 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
     outFileName.Truncate(lastNonTrimmable);
   }
 
-  nsAutoString extension;
-  int32_t dotidx = outFileName.RFind(u".");
-  if (dotidx != -1) {
-    extension = Substring(outFileName, dotidx + 1);
-    extension.StripWhitespace();
-    outFileName = Substring(outFileName, 0, dotidx + 1) + extension;
+  if (!(aFlags & VALIDATE_ALLOW_DIRECTORY_NAMES)) {
+    nsAutoString extension;
+    int32_t dotidx = outFileName.RFind(u".");
+    if (dotidx != -1) {
+      extension = Substring(outFileName, dotidx + 1);
+      extension.StripWhitespace();
+      outFileName = Substring(outFileName, 0, dotidx + 1) + extension;
+    }
   }
 
 #ifdef XP_WIN
