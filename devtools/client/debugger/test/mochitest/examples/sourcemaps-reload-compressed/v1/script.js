@@ -3,6 +3,6 @@ console.log("only one breakable line");
 
 function nonSourceMappedFunction () {
   console.log("non source mapped function");
-  // This will call a function from original-with-query.js
-  return originalWithQuery();
+  // This will call a function from removed-original.js
+  return removedOriginal();
 }
