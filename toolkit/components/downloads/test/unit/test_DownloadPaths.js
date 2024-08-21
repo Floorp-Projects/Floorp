@@ -70,6 +70,14 @@ add_task(async function test_sanitize() {
   testSanitize("\u1680\u180e\u2000\u2008\u200a . txt", "txt");
   testSanitize("\u2028\u2029\u202f\u205f\u3000\ufeff . txt", "txt");
 
+  // Whitespace around dot.
+  testSanitize("1. First", "1.First");
+  testSanitize("1 . First", "1 .First");
+  testSanitize("2. Two. 3rd", "2. Two.3rd");
+  testSanitize("1. First", "1. First", { allowDirectoryNames: true });
+  testSanitize("1 . First", "1 . First", { allowDirectoryNames: true });
+  testSanitize("2. Two. 3rd", "2. Two. 3rd", { allowDirectoryNames: true });
+
   // Strings with whitespace and dots only.
   testSanitize(".", "");
   testSanitize("..", "");

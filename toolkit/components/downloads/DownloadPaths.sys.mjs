@@ -20,10 +20,16 @@ export var DownloadPaths = {
    *        should be compressed. The default value is true.
    * @param {boolean} [allowInvalidFilenames] Allow invalid and dangerous
    *        filenames and extensions as is.
+   * @param {boolean} [allowDirectoryNames] Allow invalid or dangerous file
+   *        names if the name is a valid and safe directory name.
    */
   sanitize(
     leafName,
-    { compressWhitespaces = true, allowInvalidFilenames = false } = {}
+    {
+      compressWhitespaces = true,
+      allowInvalidFilenames = false,
+      allowDirectoryNames = false,
+    } = {}
   ) {
     const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
@@ -33,6 +39,9 @@ export var DownloadPaths = {
     }
     if (allowInvalidFilenames) {
       flags |= mimeSvc.VALIDATE_ALLOW_INVALID_FILENAMES;
+    }
+    if (allowDirectoryNames) {
+      flags |= mimeSvc.VALIDATE_ALLOW_DIRECTORY_NAMES;
     }
     return mimeSvc.validateFileNameForSaving(leafName, "", flags);
   },
