@@ -47,7 +47,7 @@ jobs:
     - name: Fetch Floorp 📥
       run: |
         cd mozilla-unified
-        git remote add floorp https://${GITHUB_ACTOR}:${{ github.token }}@github.com/${{ github.repository }}
+        git remote add floorp https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git
         git fetch floorp
 
     - name: Push 🎁
