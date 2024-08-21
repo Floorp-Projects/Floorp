@@ -136,6 +136,7 @@ const INTEGRATION_TEST_PAGE_SOURCES = [
   // But there is even more source actors (named evals and duplicated script tags).
   "same-url.sjs",
   "same-url.sjs",
+  "log-worker.js",
 ];
 // The iframe one is only available when fission is enabled, or EFT
 if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
