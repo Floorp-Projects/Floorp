@@ -300,6 +300,11 @@ nsresult BounceTrackingState::HasBounceTrackingStateForSite(
     }
 
     nsAutoCString baseDomain;
+
+    if (!contentPrincipal) {
+      continue;
+    }
+
     rv = contentPrincipal->GetBaseDomain(baseDomain);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
