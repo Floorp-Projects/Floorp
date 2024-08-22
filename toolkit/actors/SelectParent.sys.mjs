@@ -750,6 +750,7 @@ export class SelectParent extends JSWindowActorParent {
     popup.setAttribute("id", "ContentSelectDropdownPopup");
     popup.setAttribute("activateontab", "true");
     popup.setAttribute("position", "after_start");
+    popup.setAttribute("tabspecific", "true");
     popup.setAttribute("level", "parent");
     if (AppConstants.platform == "win") {
       popup.setAttribute("consumeoutsideclicks", "false");
