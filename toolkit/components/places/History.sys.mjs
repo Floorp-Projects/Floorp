@@ -580,7 +580,7 @@ export var History = Object.freeze({
     // Either it has no dots, or has multiple dots, or it's a single dot char.
     if (
       hasHost &&
-      (!/^(\.?([.a-z0-9-]+\.[a-z0-9-]+)?|[a-z0-9-]+)$/.test(filter.host) ||
+      (!/^(\.?([.a-z0-9-]+\.[a-z0-9-]+)?|[a-z0-9-]+)\.?$/.test(filter.host) ||
         filter.host.includes(".."))
     ) {
       throw new TypeError(
