@@ -34,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class FirefoxProfileMigrator extends MigratorBase {
   static get key() {
-    return "firefox";
+    return "floorp";
   }
 
   static get displayNameL10nID() {
