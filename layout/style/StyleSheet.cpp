@@ -841,15 +841,19 @@ StyleSheet::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
   if (!aSheet->GetParentSheet()) {
     return NS_OK;  // ignore if sheet has been detached already
   }
-  MOZ_ASSERT(this == aSheet->GetParentSheet(),
-             "We are being notified of a sheet load for a sheet that is not "
-             "our child!");
+  MOZ_DIAGNOSTIC_ASSERT(this == aSheet->GetParentSheet(),
+                        "We are being notified of a sheet load for a sheet "
+                        "that is not our child!");
   if (NS_FAILED(aStatus)) {
     return NS_OK;
   }
-
-  MOZ_ASSERT(aSheet->GetOwnerRule());
-  NOTIFY(ImportRuleLoaded, (*aSheet->GetOwnerRule(), *aSheet));
+  // The assert below should hold if we stop triggering import loads for invalid
+  // insertRule() calls, see bug 1914106.
+  // MOZ_ASSERT(aSheet->GetOwnerRule());
+  if (!aSheet->GetOwnerRule()) {
+    return NS_OK;
+  }
+  NOTIFY(ImportRuleLoaded, (*aSheet));
   return NS_OK;
 }
 

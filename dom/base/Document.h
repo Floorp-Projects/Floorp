@@ -2030,7 +2030,7 @@ class Document : public nsINode,
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
   void SheetCloned(StyleSheet&) {}
-  void ImportRuleLoaded(CSSImportRule&, StyleSheet&);
+  void ImportRuleLoaded(StyleSheet&);
 
   /**
    * Flush notifications for this document and its parent documents

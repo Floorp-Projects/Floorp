@@ -950,7 +950,7 @@ static OriginFlags ToOriginFlags(StyleOrigin aOrigin) {
   }
 }
 
-void ServoStyleSet::ImportRuleLoaded(dom::CSSImportRule&, StyleSheet& aSheet) {
+void ServoStyleSet::ImportRuleLoaded(StyleSheet& aSheet) {
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetAdded(aSheet);
   }
