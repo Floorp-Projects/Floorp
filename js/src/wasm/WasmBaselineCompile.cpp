@@ -5313,23 +5313,17 @@ bool BaseCompiler::emitReturnCallRef() {
 
   uint32_t numArgs = funcType->args().length() + 1;
 
-  ResultType resultType(ResultType::Vector(funcType->results()));
-  StackResultsLoc results;
-  if (!pushStackResultsForCall(resultType, RegPtr(ABINonArgReg0), &results)) {
-    return false;
-  }
-
   FunctionCall baselineCall{};
   // State and realm are restored as needed by by callRef (really by
   // MacroAssembler::wasmCallRef).
   beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
 
-  if (!emitCallArgs(funcType->args(), NormalCallResults(results), &baselineCall,
+  if (!emitCallArgs(funcType->args(), TailCallResults(*funcType), &baselineCall,
                     CalleeOnStack::True)) {
     return false;
   }
 
-  const Stk& callee = peek(results.count());
+  const Stk& callee = peek(0);
   returnCallRef(callee, baselineCall, funcType);
 
   MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
