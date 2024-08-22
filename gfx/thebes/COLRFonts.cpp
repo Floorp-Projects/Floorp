@@ -2392,8 +2392,7 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
   }
 
   if (uint16_t(colr->version) == 1) {
-    return StaticPrefs::gfx_font_rendering_colr_v1_enabled() &&
-           colrLength >= sizeof(COLRv1Header) &&
+    return colrLength >= sizeof(COLRv1Header) &&
            reinterpret_cast<const COLRv1Header*>(colr)->Validate(colrLength);
   }
 

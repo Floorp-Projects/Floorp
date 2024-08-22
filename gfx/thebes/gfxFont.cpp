@@ -2664,82 +2664,126 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
   }
 
   auto* colr = GetFontEntry()->GetCOLR();
-  if (const auto* paintGraph = COLRFonts::GetGlyphPaintGraph(colr, aGlyphId)) {
-    const auto* hbShaper = GetHarfBuzzShaper();
-    if (hbShaper && hbShaper->IsInitialized()) {
-      if (aTextDrawer) {
-        aTextDrawer->FoundUnsupportedFeature();
-        return true;
+  const auto* paintGraph = COLRFonts::GetGlyphPaintGraph(colr, aGlyphId);
+  const gfxHarfBuzzShaper* hbShaper = nullptr;
+  if (paintGraph) {
+    // We need the hbShaper to get color glyph bounds, so check that it's
+    // usable.
+    hbShaper = GetHarfBuzzShaper();
+    if (!hbShaper && !hbShaper->IsInitialized()) {
+      return false;
+    }
+    if (aTextDrawer) {
+      aTextDrawer->FoundUnsupportedFeature();
+      return true;
+    }
+  }
+  const auto* layers =
+      paintGraph ? nullptr : COLRFonts::GetGlyphLayers(colr, aGlyphId);
+
+  if (!paintGraph && !layers) {
+    return false;
+  }
+
+  // For reasonable font sizes, use a cache of rasterized glyphs.
+  bool useCache = GetAdjustedSize() <= 256.0;
+
+  // If the composition op is not OVER, rasterize to a temporary surface
+  // and then composite to the destination, even if we're not caching.
+  // But we can't do this if the target is a TextDrawTarget, as it doesn't
+  // support DrawSurface.
+  RefPtr<SourceSurface> snapshot;
+  if ((useCache ||
+       aFontParams.drawOptions.mCompositionOp != CompositionOp::OP_OVER) &&
+      aDrawTarget->GetBackendType() != BackendType::WEBRENDER_TEXT) {
+    AutoWriteLock lock(mLock);
+    if (!mColorGlyphCache && useCache) {
+      mColorGlyphCache = MakeUnique<ColorGlyphCache>();
+    }
+
+    Rect bounds;
+    if (paintGraph) {
+      bounds = COLRFonts::GetColorGlyphBounds(
+          colr, hbShaper->GetHBFont(), aGlyphId, aDrawTarget,
+          aFontParams.scaledFont, mFUnitsConvFactor);
+    } else {
+      bounds = GetFontEntry()->GetFontExtents(mFUnitsConvFactor);
+    }
+    bounds.RoundOut();
+
+    // Tell the cache what colors we're using; if they have changed, it
+    // will discard any currently-cached entries.
+    HashMap<uint32_t, RefPtr<SourceSurface>>::AddPtr cached;
+    if (useCache) {
+      mColorGlyphCache->SetColors(aFontParams.currentColor,
+                                  aFontParams.palette);
+      cached = mColorGlyphCache->mCache.lookupForAdd(aGlyphId);
+      if (cached) {
+        snapshot = cached->value();
       }
+    }
 
-      // For reasonable font sizes, use a cache of rasterized glyphs.
-      if (GetAdjustedSize() <= 256.0) {
-        AutoWriteLock lock(mLock);
-        if (!mColorGlyphCache) {
-          mColorGlyphCache = MakeUnique<ColorGlyphCache>();
-        }
-
-        // Tell the cache what colors we're using; if they have changed, it will
-        // discard any currently-cached entries.
-        mColorGlyphCache->SetColors(aFontParams.currentColor,
-                                    aFontParams.palette);
-
+    if (!snapshot) {
+      // Create a temporary DrawTarget and render the glyph to it.
+      IntSize size(int(bounds.width), int(bounds.height));
+      SurfaceFormat format = SurfaceFormat::B8G8R8A8;
+      RefPtr target =
+          Factory::CreateDrawTarget(BackendType::SKIA, size, format);
+      if (target) {
+        // Use OP_OVER to create the glyph snapshot.
+        DrawOptions drawOptions(aFontParams.drawOptions);
+        drawOptions.mCompositionOp = CompositionOp::OP_OVER;
         bool ok = false;
-        auto cached = mColorGlyphCache->mCache.lookupForAdd(aGlyphId);
-        Rect bounds = COLRFonts::GetColorGlyphBounds(
-            colr, hbShaper->GetHBFont(), aGlyphId, aDrawTarget,
-            aFontParams.scaledFont, mFUnitsConvFactor);
-        bounds.RoundOut();
-
-        if (cached) {
-          ok = true;
+        if (paintGraph) {
+          ok = COLRFonts::PaintGlyphGraph(
+              colr, hbShaper->GetHBFont(), paintGraph, target, nullptr,
+              aFontParams.scaledFont, drawOptions, -bounds.TopLeft(),
+              aFontParams.currentColor, aFontParams.palette->Colors(), aGlyphId,
+              mFUnitsConvFactor);
         } else {
-          // Create a temporary DrawTarget, render the glyph, and save a
-          // snapshot of the rendering in the cache.
-          IntSize size(int(bounds.width), int(bounds.height));
-          SurfaceFormat format = SurfaceFormat::B8G8R8A8;
-          RefPtr target =
-              Factory::CreateDrawTarget(BackendType::SKIA, size, format);
-          if (target) {
-            ok = COLRFonts::PaintGlyphGraph(
-                GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
-                target, nullptr, aFontParams.scaledFont,
-                aFontParams.drawOptions, -bounds.TopLeft(),
-                aFontParams.currentColor, aFontParams.palette->Colors(),
-                aGlyphId, mFUnitsConvFactor);
-            if (ok) {
-              RefPtr snapshot = target->Snapshot();
-              ok = mColorGlyphCache->mCache.add(cached, aGlyphId, snapshot);
-            }
-          }
+          auto face(GetFontEntry()->GetHBFace());
+          ok = COLRFonts::PaintGlyphLayers(
+              colr, face, layers, target, nullptr, aFontParams.scaledFont,
+              drawOptions, -bounds.TopLeft(), aFontParams.currentColor,
+              aFontParams.palette->Colors());
         }
         if (ok) {
-          // Paint the snapshot from cached->value(), and return.
-          aDrawTarget->DrawSurface(
-              cached->value(), Rect(aPoint + bounds.TopLeft(), bounds.Size()),
-              Rect(Point(), bounds.Size()));
-          return true;
+          snapshot = target->Snapshot();
+          if (useCache) {
+            // Save a snapshot of the rendering in the cache.
+            // (We ignore potential failure here, and just paint the snapshot
+            // without caching it.)
+            Unused << mColorGlyphCache->mCache.add(cached, aGlyphId, snapshot);
+          }
         }
       }
-
-      // If we failed to cache the glyph, or it was too large to even try,
-      // just paint directly to the target.
-      return COLRFonts::PaintGlyphGraph(
-          colr, hbShaper->GetHBFont(), paintGraph, aDrawTarget, aTextDrawer,
-          aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
-          aFontParams.currentColor, aFontParams.palette->Colors(), aGlyphId,
-          mFUnitsConvFactor);
+    }
+    if (snapshot) {
+      // Paint the snapshot using the appropriate composition op.
+      aDrawTarget->DrawSurface(snapshot,
+                               Rect(aPoint + bounds.TopLeft(), bounds.Size()),
+                               Rect(Point(), bounds.Size()),
+                               DrawSurfaceOptions(), aFontParams.drawOptions);
+      return true;
     }
   }
 
-  if (const auto* layers =
-          COLRFonts::GetGlyphLayers(GetFontEntry()->GetCOLR(), aGlyphId)) {
+  // If we didn't paint from a cached or temporary snapshot, just render
+  // directly to the destination drawTarget.
+  if (paintGraph) {
+    return COLRFonts::PaintGlyphGraph(
+        colr, hbShaper->GetHBFont(), paintGraph, aDrawTarget, aTextDrawer,
+        aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
+        aFontParams.currentColor, aFontParams.palette->Colors(), aGlyphId,
+        mFUnitsConvFactor);
+  }
+
+  if (layers) {
     auto face(GetFontEntry()->GetHBFace());
-    bool ok = COLRFonts::PaintGlyphLayers(
+    return COLRFonts::PaintGlyphLayers(
         colr, face, layers, aDrawTarget, aTextDrawer, aFontParams.scaledFont,
         aFontParams.drawOptions, aPoint, aFontParams.currentColor,
         aFontParams.palette->Colors());
-    return ok;
   }
 
   return false;

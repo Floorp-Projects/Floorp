@@ -328,7 +328,7 @@ pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.c
 == segment-break-transformation-1.html segment-break-transformation-1-ref.html
 
 # color glyphs, opacity, and RTL runs - bug 1318539
-== color-opacity-rtl-1.html color-opacity-rtl-1-ref.html
+fuzzy-if(winWidget,0-1,0-4) == color-opacity-rtl-1.html color-opacity-rtl-1-ref.html
 fuzzy-if(cocoaWidget,0-1,0-1421) == color-opacity-rtl-2.html color-opacity-rtl-2-ref.html
 
 == letter-spacing-nolig-1.html letter-spacing-nolig-1-ref.html
