@@ -3604,9 +3604,9 @@ var XULBrowserWindow = {
     };
 
     // If the location is changed due to switching tabs,
-    // ensure we close any open tabspecific panels.
+    // ensure we close any open tabspecific popups.
     if (aIsSimulated) {
-      closeOpenPanels("panel[tabspecific='true']");
+      closeOpenPanels(":is(panel, menupopup)[tabspecific='true']");
     }
 
     // Ensure we close any remaining open locationspecific panels
