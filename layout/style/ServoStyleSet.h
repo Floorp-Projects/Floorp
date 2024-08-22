@@ -136,7 +136,7 @@ class ServoStyleSet {
   void RuleRemoved(StyleSheet&, css::Rule&);
   void RuleChanged(StyleSheet&, css::Rule*, StyleRuleChangeKind);
   void SheetCloned(StyleSheet&);
-  void ImportRuleLoaded(dom::CSSImportRule&, StyleSheet&);
+  void ImportRuleLoaded(StyleSheet&);
 
   // Runs style invalidation due to document state changes.
   void InvalidateStyleForDocumentStateChanges(
