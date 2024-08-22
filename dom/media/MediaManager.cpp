@@ -3110,8 +3110,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           GetCurrentSerialEventTarget(), __func__,
           [self, windowID, c, windowListener, placeholderListener, hasAudio,
            hasVideo, askPermission, prefs, isSecure, isHandlingUserInput,
-           callID, principalInfo, aCallerType, resistFingerprinting](
-              RefPtr<LocalMediaDeviceSetRefCnt> aDevices) mutable {
+           callID, principalInfo, aCallerType, resistFingerprinting,
+           audioType](RefPtr<LocalMediaDeviceSetRefCnt> aDevices) mutable {
             LOG("GetUserMedia: starting post enumeration promise2 success "
                 "callback!");
 
@@ -3174,6 +3174,10 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             // It is time to ask for user permission, prime voice processing
             // now. Use a local lambda to enable a guard pattern.
             [&] {
+              if (audioType != MediaSourceEnum::Microphone) {
+                return;
+              }
+
               if (!StaticPrefs::
                       media_getusermedia_microphone_voice_stream_priming_enabled() ||
                   !StaticPrefs::
