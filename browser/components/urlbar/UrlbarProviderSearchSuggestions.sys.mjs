@@ -601,16 +601,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    *   Whether we should fetch trending results.
    */
   #shouldFetchTrending(queryContext) {
-    let trendingEnabled = lazy.UrlbarPrefs.get("trending.featureGate");
-    let enabledLocales = lazy.UrlbarPrefs.get("trending.enabledLocales");
-    if (trendingEnabled && enabledLocales) {
-      trendingEnabled = enabledLocales.includes(
-        Services.locale.appLocaleAsBCP47
-      );
-    }
     return !!(
       queryContext.searchString == "" &&
-      trendingEnabled &&
+      lazy.UrlbarPrefs.get("trending.featureGate") &&
       lazy.UrlbarPrefs.get("suggest.trending") &&
       (queryContext.searchMode ||
         !lazy.UrlbarPrefs.get("trending.requireSearchMode"))
