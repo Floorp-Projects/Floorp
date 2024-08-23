@@ -182,6 +182,9 @@ async function run(mode: "dev" | "test" = "dev") {
 
       //https://searchfox.org/mozilla-central/rev/71aada9d4055e420f91f3d0fa107f0328763e40b/browser/app/profile/firefox.js#1249
       "browser.preferences.moreFromMozilla": false,
+
+      //https://searchfox.org/mozilla-central/rev/e968519d806b140c402c3b3932cd5f6cd7cc42ac/testing/profiles/unittest-required/user.js#111
+      "extensions.screenshots.disabled": false,
     },
     defaultViewport: { height: 0, width: 0 },
     timeout: 0,

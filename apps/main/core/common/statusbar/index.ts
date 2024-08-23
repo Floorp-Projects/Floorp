@@ -10,18 +10,31 @@ import { StatusBar } from "./statusbar";
 
 export let manager: StatusBarManager;
 
+// function createToolbarWithPlacements(id, placements = [], properties = {}) {
+//   //gAddedToolbars.add(id);
+//   const tb = document.createXULElement("toolbar");
+//   tb.id = id;
+//   tb.setAttribute("customizable", "true");
+
+//   properties.type = CustomizableUI.TYPE_TOOLBAR;
+//   properties.defaultPlacements = placements;
+//   CustomizableUI.registerArea(id, properties);
+//   gNavToolbox.appendChild(tb);
+//   CustomizableUI.registerToolbarNode(tb);
+//   return tb;
+// }
+
 export function initStatusbar() {
+  //console.log(createToolbarWithPlacements("nora-aaaa", [], {}));
   createRootHMR(
     () => {
       manager = new StatusBarManager();
     },
     import.meta.hot,
   );
-  render(
-    StatusBar,
-    document.getElementById("navigator-toolbox")?.nextElementSibling,
-    { hotCtx: import.meta.hot },
-  );
+  render(StatusBar, window.gNavToolbox, {
+    hotCtx: import.meta.hot,
+  });
   //https://searchfox.org/mozilla-central/rev/4d851945737082fcfb12e9e7b08156f09237aa70/browser/base/content/main-popupset.js#321
   const mainPopupSet = document.getElementById("mainPopupSet");
   mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
