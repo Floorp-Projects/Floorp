@@ -162,11 +162,12 @@ nsresult BounceTrackingStorageObserver::OnInitialStorageAccess(
   dom::BrowsingContext* browsingContext = aWindowContext->GetBrowsingContext();
   NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
 
-  nsresult rv = NS_OK;
+  dom::BrowsingContextWebProgress* webProgress =
+      browsingContext->Top()->Canonical()->GetWebProgress();
+  NS_ENSURE_TRUE(webProgress, NS_ERROR_FAILURE);
+
   RefPtr<BounceTrackingState> bounceTrackingState =
-      BounceTrackingState::GetOrCreate(
-          browsingContext->Top()->Canonical()->GetWebProgress(), rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+      webProgress->GetBounceTrackingState();
 
   // We may not always get a BounceTrackingState, e.g. if the feature is
   // disabled or we don't keep track of bounce tracking for the given

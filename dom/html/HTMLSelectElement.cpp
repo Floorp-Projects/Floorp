@@ -216,6 +216,11 @@ void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
     return;
   }
 #endif
+
+  if (!IsInActiveTab(OwnerDoc())) {
+    return;
+  }
+
   if (!OpenInParentProcess()) {
     RefPtr<Document> doc = OwnerDoc();
     nsContentUtils::DispatchChromeEvent(doc, this, u"mozshowdropdown"_ns,

@@ -12223,10 +12223,6 @@ betainabox.com
 // Submitted by Nathan O'Sullivan <nathan@mammoth.com.au>
 bnr.la
 
-// Bip : https://bip.sh
-// Submitted by Joel Kennedy <joel@bip.sh>
-bip.sh
-
 // Bitbucket : http://bitbucket.org
 // Submitted by Andy Ortlieb <aortlieb@atlassian.com>
 bitbucket.io
@@ -13009,7 +13005,6 @@ freeddns.org
 mywire.org
 webredirect.org
 myddns.rocks
-blogsite.xyz
 
 // dynv6 : https://dynv6.com
 // Submitted by Dominik Menke <dom@digineo.de>
@@ -14222,6 +14217,13 @@ hb.cldmail.ru
 mayfirst.info
 mayfirst.org
 
+// MathWorks : https://www.mathworks.com/
+// Submitted by Emily Reed <psl-maintainers@groups.mathworks.com>
+matlab.cloud
+modelscape.com
+mwcloudnonprod.com
+polyspace.com
+
 // Maze Play: https://www.mazeplay.com
 // Submitted by Adam Humpherys <adam@mws.dev>
 mazeplay.com
@@ -14308,7 +14310,10 @@ servicebus.windows.net
 
 // MikroTik: https://mikrotik.com
 // Submitted by MikroTik SysAdmin Team <support@mikrotik.com>
+routingthecloud.com
 sn.mynetname.net
+routingthecloud.net
+routingthecloud.org
 
 // minion.systems : http://minion.systems
 // Submitted by Robert Böttinger <r@minion.systems>
@@ -14867,6 +14872,7 @@ ravpage.co.il
 
 // Read The Docs, Inc : https://www.readthedocs.org
 // Submitted by David Fischer <team@readthedocs.org>
+readthedocs-hosted.com
 readthedocs.io
 
 // Red Hat, Inc. OpenShift : https://openshift.redhat.com/
@@ -14927,11 +14933,6 @@ devices.resinstaging.io
 // RethinkDB : https://www.rethinkdb.com/
 // Submitted by Chris Kastorff <info@rethinkdb.com>
 hzc.io
-
-// Revitalised Limited : http://www.revitalised.co.uk
-// Submitted by Jack Price <jack@revitalised.co.uk>
-wellbeingzone.eu
-wellbeingzone.co.uk
 
 // Rico Developments Limited : https://adimo.co
 // Submitted by Colin Brown <hello@adimo.co>
@@ -15667,9 +15668,9 @@ toolforge.org
 wmcloud.org
 wmflabs.org
 
-// William Harrison : https://wdh.gg
-// Submitted by William Harrison <domains@wdh.gg>
-*.wdh.app
+// William Harrison : https://wdharrison.com
+// Submitted by William Harrison <publicsuffix@wdharrison.com>
+wdh.app
 
 // WISP : https://wisp.gg
 // Submitted by Stepan Fedotov <stepan@wisp.gg>

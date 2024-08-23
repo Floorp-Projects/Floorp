@@ -13,14 +13,13 @@
 }
 
 #type {
-  appearance: none;
+  -moz-user-focus: normal;
+  user-select: text;
   flex: 1;
-  background-color: transparent;
-  color: inherit;
-  border: 0;
   margin: 0;
-  padding: 0;
-  outline-offset: 0;
+  &:focus-visible {
+    outline: var(--focus-outline);
+  }
 }
 
 #from {

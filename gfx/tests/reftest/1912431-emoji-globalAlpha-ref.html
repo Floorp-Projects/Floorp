@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8" />
+</head>
+<body>
+<style>
+  canvas { display: block; }
+</style>
+<script>
+function createCanvas(alpha) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 500;
+  canvas.height = 50;
+  canvas.style.opacity = alpha;
+
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  ctx.font = "20px Arial";
+  ctx.fillText("Text: ABC, Clocks: \ud83d\udd52 \ud83d\udd53 \ud83d\udd54 \ud83d\udd55.", 50, 30);
+}
+
+createCanvas(0);
+createCanvas(0.25);
+createCanvas(0.5);
+createCanvas(0.75);
+createCanvas(1);
+</script>
+</body>
+</html>
