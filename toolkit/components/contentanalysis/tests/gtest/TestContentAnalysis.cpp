@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/media/MediaUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
@@ -191,6 +192,10 @@ nsCOMPtr<nsIURI> GetExampleDotComWithPathURI() {
   return uri;
 }
 
+struct BoolStruct {
+  bool mValue = false;
+};
+
 void SendRequestAndExpectResponse(
     RefPtr<ContentAnalysis> contentAnalysis,
     const nsCOMPtr<nsIContentAnalysisRequest>& request,
@@ -198,9 +203,15 @@ void SendRequestAndExpectResponse(
     Maybe<nsIContentAnalysisResponse::Action> expectedAction,
     Maybe<bool> expectedIsCached) {
   std::atomic<bool> gotResponse = false;
-  std::atomic<bool> timedOut = false;
+  // Make timedOut a RefPtr so if we get a response from content analysis
+  // after this function has finished we can safely check that (and don't
+  // start accessing stack values that don't exist anymore)
+  RefPtr timedOut = MakeRefPtr<media::Refcountable<BoolStruct>>();
   auto callback = MakeRefPtr<ContentAnalysisCallback>(
-      [&](nsIContentAnalysisResponse* response) {
+      [&, timedOut](nsIContentAnalysisResponse* response) {
+        if (timedOut->mValue) {
+          return;
+        }
         if (expectedShouldAllow.isSome()) {
           bool shouldAllow = false;
           MOZ_ALWAYS_SUCCEEDS(response->GetShouldAllowContent(&shouldAllow));
@@ -222,7 +233,10 @@ void SendRequestAndExpectResponse(
         EXPECT_EQ(originalRequestToken, requestToken);
         gotResponse = true;
       },
-      [&gotResponse](nsresult error) {
+      [&gotResponse, timedOut](nsresult error) {
+        if (timedOut->mValue) {
+          return;
+        }
         EXPECT_EQ(NS_OK, error);
         gotResponse = true;
         // Make sure that we didn't somehow get passed NS_OK
@@ -234,16 +248,16 @@ void SendRequestAndExpectResponse(
   RefPtr<CancelableRunnable> timer =
       NS_NewCancelableRunnableFunction("Content Analysis timeout", [&] {
         if (!gotResponse.load()) {
-          timedOut = true;
+          timedOut->mValue = true;
         }
       });
   NS_DelayedDispatchToCurrentThread(do_AddRef(timer), 10000);
-  mozilla::SpinEventLoopUntil("Waiting for ContentAnalysis result"_ns, [&]() {
-    return gotResponse.load() || timedOut.load();
-  });
+  mozilla::SpinEventLoopUntil(
+      "Waiting for ContentAnalysis result"_ns,
+      [&, timedOut]() { return gotResponse.load() || timedOut->mValue; });
   timer->Cancel();
   EXPECT_TRUE(gotResponse);
-  EXPECT_FALSE(timedOut);
+  EXPECT_FALSE(timedOut->mValue);
 }
 
 void YieldMainThread(uint32_t timeInMs) {
