@@ -34,22 +34,21 @@ bool gecko_profiler_thread_is_being_profiled();
 
 // IMPORTANT: Keep this synchronized with enumerate_interners in
 // gfx/wr/webrender_api
-#define WEBRENDER_FOR_EACH_INTERNER(macro,comma_like_delim) \
-  macro(clip)                                               \
-  comma_like_delim macro(prim)                              \
-  comma_like_delim macro(normal_border)                     \
-  comma_like_delim macro(image_border)                      \
-  comma_like_delim macro(image)                             \
-  comma_like_delim macro(yuv_image)                         \
-  comma_like_delim macro(line_decoration)                   \
-  comma_like_delim macro(linear_grad)                       \
-  comma_like_delim macro(radial_grad)                       \
-  comma_like_delim macro(conic_grad)                        \
-  comma_like_delim macro(picture)                           \
-  comma_like_delim macro(text_run)                          \
-  comma_like_delim macro(filterdata)                        \
-  comma_like_delim macro(backdrop_capture)                  \
-  comma_like_delim macro(backdrop_render)                   \
+#define WEBRENDER_FOR_EACH_INTERNER(macro, comma_like_delim) \
+  macro(clip) comma_like_delim macro(prim)                   \
+  comma_like_delim macro(normal_border)                      \
+  comma_like_delim macro(image_border)                       \
+  comma_like_delim macro(image)                              \
+  comma_like_delim macro(yuv_image)                          \
+  comma_like_delim macro(line_decoration)                    \
+  comma_like_delim macro(linear_grad)                        \
+  comma_like_delim macro(radial_grad)                        \
+  comma_like_delim macro(conic_grad)                         \
+  comma_like_delim macro(picture)                            \
+  comma_like_delim macro(text_run)                           \
+  comma_like_delim macro(filterdata)                         \
+  comma_like_delim macro(backdrop_capture)                   \
+  comma_like_delim macro(backdrop_render)                    \
   comma_like_delim macro(polyon)
 
 // Prelude of types necessary before including webrender_ffi_generated.h
