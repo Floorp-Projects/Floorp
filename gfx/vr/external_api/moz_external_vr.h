@@ -179,69 +179,89 @@ enum class VRControllerType : uint8_t {
   _end
 };
 
-inline constexpr bool IsEnumCase(const VRControllerType raw) {
+}  // namespace gfx
+
+template <class T>
+bool IsEnumCase(T);
+
+template <>
+inline constexpr bool IsEnumCase<gfx::VRControllerType>(
+    const gfx::VRControllerType raw) {
   switch (raw) {
-    case VRControllerType::_empty:
-    case VRControllerType::HTCVive:
-    case VRControllerType::HTCViveCosmos:
-    case VRControllerType::HTCViveFocus:
-    case VRControllerType::HTCViveFocusPlus:
-    case VRControllerType::MSMR:
-    case VRControllerType::ValveIndex:
-    case VRControllerType::OculusGo:
-    case VRControllerType::OculusTouch:
-    case VRControllerType::OculusTouch2:
-    case VRControllerType::OculusTouch3:
-    case VRControllerType::PicoGaze:
-    case VRControllerType::PicoG2:
-    case VRControllerType::PicoNeo2:
-    case VRControllerType::_end:
+    case gfx::VRControllerType::_empty:
+    case gfx::VRControllerType::HTCVive:
+    case gfx::VRControllerType::HTCViveCosmos:
+    case gfx::VRControllerType::HTCViveFocus:
+    case gfx::VRControllerType::HTCViveFocusPlus:
+    case gfx::VRControllerType::MSMR:
+    case gfx::VRControllerType::ValveIndex:
+    case gfx::VRControllerType::OculusGo:
+    case gfx::VRControllerType::OculusTouch:
+    case gfx::VRControllerType::OculusTouch2:
+    case gfx::VRControllerType::OculusTouch3:
+    case gfx::VRControllerType::PicoGaze:
+    case gfx::VRControllerType::PicoG2:
+    case gfx::VRControllerType::PicoNeo2:
+    case gfx::VRControllerType::_end:
       return true;
   }
   return false;
 }
+namespace gfx {
 
 // -
 
 enum class TargetRayMode : uint8_t { Gaze, TrackedPointer, Screen };
 
-inline constexpr bool IsEnumCase(const TargetRayMode raw) {
+}  // namespace gfx
+template <>
+inline constexpr bool IsEnumCase<gfx::TargetRayMode>(
+    const gfx::TargetRayMode raw) {
   switch (raw) {
-    case TargetRayMode::Gaze:
-    case TargetRayMode::TrackedPointer:
-    case TargetRayMode::Screen:
+    case gfx::TargetRayMode::Gaze:
+    case gfx::TargetRayMode::TrackedPointer:
+    case gfx::TargetRayMode::Screen:
       return true;
   }
   return false;
 }
+namespace gfx {
 
 // -
 
 enum class GamepadMappingType : uint8_t { _empty, Standard, XRStandard };
 
-inline constexpr bool IsEnumCase(const GamepadMappingType raw) {
+}  // namespace gfx
+template <>
+inline constexpr bool IsEnumCase<gfx::GamepadMappingType>(
+    const gfx::GamepadMappingType raw) {
   switch (raw) {
-    case GamepadMappingType::_empty:
-    case GamepadMappingType::Standard:
-    case GamepadMappingType::XRStandard:
+    case gfx::GamepadMappingType::_empty:
+    case gfx::GamepadMappingType::Standard:
+    case gfx::GamepadMappingType::XRStandard:
       return true;
   }
   return false;
 }
+namespace gfx {
 
 // -
 
 enum class VRDisplayBlendMode : uint8_t { Opaque, Additive, AlphaBlend };
 
-inline constexpr bool IsEnumCase(const VRDisplayBlendMode raw) {
+}  // namespace gfx
+template <>
+inline constexpr bool IsEnumCase<gfx::VRDisplayBlendMode>(
+    const gfx::VRDisplayBlendMode raw) {
   switch (raw) {
-    case VRDisplayBlendMode::Opaque:
-    case VRDisplayBlendMode::Additive:
-    case VRDisplayBlendMode::AlphaBlend:
+    case gfx::VRDisplayBlendMode::Opaque:
+    case gfx::VRDisplayBlendMode::Additive:
+    case gfx::VRDisplayBlendMode::AlphaBlend:
       return true;
   }
   return false;
 }
+namespace gfx {
 
 // -
 
