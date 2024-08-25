@@ -251,7 +251,7 @@ var SessionSaverInternal = {
     }
 
     stopWatchStart("COLLECT_DATA_MS");
-    let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+    let state = lazy.SessionStore.getCurrentState(true);
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
     // Floorp Injections
     state =

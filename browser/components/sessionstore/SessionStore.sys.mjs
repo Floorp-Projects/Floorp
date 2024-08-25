@@ -1066,6 +1066,25 @@ var SessionStoreInternal = {
     );
 
     if (state) {
+      // Floorp injections
+      if (!state.windows.length) {
+        console.warn("Floorp Injections: No windows found in state");
+        const lastSessionWindows = state._closedWindows;
+        let closedTime = lastSessionWindows[0].closedAt;
+        for (let i = 0; i < lastSessionWindows.length; i++) {
+          let closedWindowTime = lastSessionWindows[i].closedAt;
+          // If the last closed window is closed in +-2000, we will restore it
+          if (
+            closedWindowTime >= closedTime - 10000 &&
+            closedWindowTime <= closedTime + 10000
+          ) {
+            state.windows.push(lastSessionWindows[i]);
+            state._closedWindows.splice(i, 1);
+          }
+        }
+      }
+      // End of floorp injections
+
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored.
