@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
 
 const lazy = {};
 // Get the theme variables from the app resource directory.
@@ -737,8 +738,6 @@ LightweightThemeConsumer.prototype = {
         }
       }
     }
-
-    console.log(themeData);
 
     let hasTheme = theme.id != DEFAULT_THEME_ID || useDarkTheme;
 
