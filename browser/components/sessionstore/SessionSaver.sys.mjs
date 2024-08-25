@@ -10,6 +10,7 @@ import {
 } from "resource://gre/modules/Timer.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { FloorpServices } from "resource://floorp/FloorpServices.sys.mjs";
 
 const lazy = {};
 
@@ -252,7 +253,10 @@ var SessionSaverInternal = {
     stopWatchStart("COLLECT_DATA_MS");
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
-
+    // Floorp Injections
+    state =
+      FloorpServices.SessionStore.filterFloorpSpecificWindowAndTabs(state);
+    // End Floorp Injections
     // Make sure we only write worth saving tabs to disk.
     lazy.SessionStore.keepOnlyWorthSavingTabs(state);
 
