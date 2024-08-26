@@ -113,6 +113,8 @@ class ProcessHandlerMixin(object):
             self._ignore_children = ignore_children
             self._job = None
             self._io_port = None
+            if isWin:
+                self._cleanup_lock = threading.Lock()
 
             if not self._ignore_children and not isWin:
                 # Set the process group id for linux systems
@@ -611,6 +613,8 @@ falling back to not using job objects for managing child processes""",
                     # handling on pre-2.7 versions
                     try:
                         item = self._process_events.get(timeout=timeout)
+                        # re-emit the event in case some other thread is also calling wait()
+                        self._process_events.put(item)
                         if item[self.pid] == "FINISHED":
                             self.debug("received 'FINISHED' from _procmgrthread")
                             self._process_events.task_done()
@@ -693,6 +697,7 @@ falling back to not using job objects for managing child processes""",
                     self._procmgrthread = None
 
             def _cleanup(self):
+                self._cleanup_lock.acquire()
                 self._cleanup_job_io_port()
                 if self._thread and self._thread != winprocess.INVALID_HANDLE_VALUE:
                     self._thread.Close()
@@ -705,6 +710,7 @@ falling back to not using job objects for managing child processes""",
                     self._handle = None
                 else:
                     self._handle = None
+                self._cleanup_lock.release()
 
         else:
 
