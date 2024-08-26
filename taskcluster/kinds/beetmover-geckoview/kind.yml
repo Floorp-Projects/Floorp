@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
     - build-signing
+    - upload-symbols
 
 only-for-attributes:
     - nightly
@@ -40,7 +41,7 @@ not-for-build-platforms:
 tasks:
     beetmover-geckoview:
         from-deps:
-            group-by: single-with-filters
+            group-by: platform
         attributes:
             artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
         run-on-projects: ['mozilla-release']
