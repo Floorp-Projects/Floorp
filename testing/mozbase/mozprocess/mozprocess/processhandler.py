@@ -585,7 +585,9 @@ falling back to not using job objects for managing child processes""",
                 """
                 # First, check to see if the process is still running
                 if self._handle:
-                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
+                    returncode = winprocess.GetExitCodeProcess(self._handle)
+                    if returncode != winprocess.STILL_ACTIVE:
+                        self.returncode = returncode
                 else:
                     # Dude, the process is like totally dead!
                     return self.returncode
@@ -624,9 +626,9 @@ falling back to not using job objects for managing child processes""",
                         )
                     finally:
                         if self._handle:
-                            self.returncode = winprocess.GetExitCodeProcess(
-                                self._handle
-                            )
+                            returncode = winprocess.GetExitCodeProcess(self._handle)
+                            if returncode != winprocess.STILL_ACTIVE:
+                                self.returncode = returncode
                         self._cleanup()
 
                 else:
@@ -637,7 +639,7 @@ falling back to not using job objects for managing child processes""",
                     if not self._ignore_children:
                         self.debug("NOT USING JOB OBJECTS!!!")
                     # First, make sure we have not already ended
-                    if self.returncode != winprocess.STILL_ACTIVE:
+                    if self.returncode is not None:
                         self._cleanup()
                         return self.returncode
 
