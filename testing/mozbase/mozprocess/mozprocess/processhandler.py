@@ -170,7 +170,7 @@ class ProcessHandlerMixin(object):
             else:
                 subprocess.Popen.__del__(self)
 
-        def kill(self, sig=None, timeout=None):
+        def send_signal(self, sig=None):
             if isWin:
                 try:
                     if not self._ignore_children and self._handle and self._job:
@@ -237,6 +237,8 @@ class ProcessHandlerMixin(object):
                     # a signal was explicitly set or not posix
                     send_sig(sig or signal.SIGKILL)
 
+        def kill(self, sig=None, timeout=None):
+            self.send_signal(sig)
             self.returncode = self.wait(timeout)
             self._cleanup()
             return self.returncode
@@ -506,7 +508,7 @@ falling back to not using job objects for managing child processes""",
                                 file=sys.stderr,
                             )
 
-                            self.kill()
+                            self.send_signal()
                             self._process_events.put({self.pid: "FINISHED"})
                             break
 
@@ -597,7 +599,7 @@ falling back to not using job objects for managing child processes""",
                     # Dude, the process is like totally dead!
                     return self.returncode
 
-                if self._job and threading.current_thread() != self._procmgrthread:
+                if self._job:
                     self.debug("waiting with IO completion port")
                     if timeout is None:
                         timeout = (
