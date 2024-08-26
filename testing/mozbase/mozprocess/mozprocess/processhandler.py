@@ -453,6 +453,11 @@ falling back to not using job objects for managing child processes""",
 
                 try:
                     self._poll_iocompletion_port()
+                except Exception:
+                    traceback.print_exc()
+                    # If _poll_iocompletion_port threw an exception for some unexpected reason,
+                    # send an event that will make _custom_wait throw an Exception.
+                    self._process_events.put({})
                 except KeyboardInterrupt:
                     raise KeyboardInterrupt
 
@@ -592,14 +597,7 @@ falling back to not using job objects for managing child processes""",
                     # Dude, the process is like totally dead!
                     return self.returncode
 
-                threadalive = False
-                if hasattr(self, "_procmgrthread"):
-                    threadalive = self._procmgrthread.is_alive()
-                if (
-                    self._job
-                    and threadalive
-                    and threading.current_thread() != self._procmgrthread
-                ):
+                if self._job and threading.current_thread() != self._procmgrthread:
                     self.debug("waiting with IO completion port")
                     if timeout is None:
                         timeout = (
