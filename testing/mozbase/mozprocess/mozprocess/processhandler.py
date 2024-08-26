@@ -878,7 +878,7 @@ falling back to not using job objects for managing child processes""",
         # When we kill the the managed process we also have to wait for the
         # reader thread to be finished. Otherwise consumers would have to assume
         # that it still has not completely shutdown.
-        rc = self.wait(timeout)
+        rc = self.wait(0)
         if rc is None:
             self.debug("kill: wait failed -- process is still alive")
         return rc
