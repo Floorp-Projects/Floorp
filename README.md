@@ -84,7 +84,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 #### macOS
 
-- macOS 10.12 or later.
+- macOS 10.15 or later.
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
@@ -101,7 +101,7 @@ brew install --cask floorp
 
 - x86_64 & AArch64 CPU architecture.
 
-- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/115.0beta/system-requirements/#gnulinux)
+- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/128.0esr/system-requirements/#gnulinux)
 
 - List of supported package managers:
 
