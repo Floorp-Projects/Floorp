@@ -246,11 +246,13 @@ class ProcessHandlerMixin(object):
             """Popen.poll
             Check if child process has terminated. Set and return returncode attribute.
             """
-            # If we have a handle, the process is alive
-            if isWin and getattr(self, "_handle", None):
-                return None
-
-            return subprocess.Popen.poll(self)
+            if isWin:
+                returncode = self._custom_wait(timeout=0)
+            else:
+                returncode = subprocess.Popen.poll(self)
+            if returncode is not None:
+                self._cleanup()
+            return returncode
 
         def wait(self, timeout=None):
             """Popen.wait
@@ -260,7 +262,8 @@ class ProcessHandlerMixin(object):
             """
             # This call will be different for each OS
             self.returncode = self._custom_wait(timeout=timeout)
-            self._cleanup()
+            if self.returncode is not None:
+                self._cleanup()
             return self.returncode
 
         """ Private Members of Process class """
@@ -624,7 +627,6 @@ falling back to not using job objects for managing child processes""",
                             returncode = winprocess.GetExitCodeProcess(self._handle)
                             if returncode != winprocess.STILL_ACTIVE:
                                 self.returncode = returncode
-                        self._cleanup()
 
                 else:
                     # Not managing with job objects, so all we can reasonably do
@@ -635,7 +637,6 @@ falling back to not using job objects for managing child processes""",
                         self.debug("NOT USING JOB OBJECTS!!!")
                     # First, make sure we have not already ended
                     if self.returncode is not None:
-                        self._cleanup()
                         return self.returncode
 
                     rc = None
@@ -660,8 +661,6 @@ falling back to not using job objects for managing child processes""",
                         rc = winprocess.GetLastError()
                         if rc:
                             raise WinError(rc)
-
-                    self._cleanup()
 
                 return self.returncode
 
