@@ -837,17 +837,6 @@
 
 /* Translations button */
 
-@keyframes translationsRotate {
-  from { transform: rotate(0); }
-  to { transform: rotate(360deg); }
-}
-
-@media not (prefers-reduced-motion) {
-  #translations-button-circle-arrows {
-    animation: translationsRotate 1.2s linear infinite;
-  }
-}
-
 #translations-button-icon {
   list-style-image: url(chrome://browser/skin/translations.svg);
   /* The translation icon's right letter is 1px too long, so account for that here.
@@ -863,7 +852,7 @@
 #translations-button-circle-arrows {
   height: 16px;
   width: 16px;
-  list-style-image: url("chrome://browser/skin/sync.svg");
+  list-style-image: url("chrome://global/skin/icons/loading.svg");
   fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
   margin-inline: 1px;
