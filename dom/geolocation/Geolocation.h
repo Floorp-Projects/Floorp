@@ -10,7 +10,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
@@ -28,6 +27,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/CallbackObject.h"
+#include "GeolocationSystem.h"
 
 #include "nsIGeolocationProvider.h"
 #include "mozilla/Attributes.h"
@@ -41,6 +41,9 @@ using GeoPositionCallback =
     CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback>;
 using GeoPositionErrorCallback =
     CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback>;
+namespace geolocation {
+enum class LocationOSPermission;
+}
 }  // namespace mozilla::dom
 
 struct CachedPositionAndAccuracy {
@@ -179,6 +182,13 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
   // null.
   static already_AddRefed<Geolocation> NonWindowSingleton();
 
+  static geolocation::SystemGeolocationPermissionBehavior
+  GetLocationOSPermission();
+
+  static MOZ_CAN_RUN_SCRIPT void ReallowWithSystemPermissionOrCancel(
+      BrowsingContext* aBrowsingContext,
+      geolocation::ParentRequestResolver&& aResolver);
+
  private:
   ~Geolocation();
 
@@ -194,7 +204,7 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
                         UniquePtr<PositionOptions>&& aOptions,
                         CallerType aCallerType, ErrorResult& aRv);
 
-  bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
+  static bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
   // Check if clearWatch is already called
   bool IsAlreadyCleared(nsGeolocationRequest* aRequest);
@@ -206,6 +216,9 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
   // Checks if the request is in a content window that is fully active, or the
   // request is coming from a chrome window.
   bool IsFullyActiveOrChrome();
+
+  // Initates the asynchronous process of filling the request.
+  static void RequestIfPermitted(nsGeolocationRequest* request);
 
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second

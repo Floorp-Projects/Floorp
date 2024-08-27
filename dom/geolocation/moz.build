@@ -14,8 +14,10 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     "Geolocation.h",
     "GeolocationCoordinates.h",
+    "GeolocationIPCUtils.h",
     "GeolocationPosition.h",
     "GeolocationPositionError.h",
+    "GeolocationSystem.h",
 ]
 
 SOURCES += [
@@ -26,6 +28,7 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    "GeolocationSystem.cpp",
     "MLSFallback.cpp",
 ]
 
