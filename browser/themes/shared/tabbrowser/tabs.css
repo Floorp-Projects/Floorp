@@ -255,7 +255,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    background-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    background-image: url("chrome://global/skin/icons/loading.svg");
     background-position: center;
     background-repeat: no-repeat;
     -moz-context-properties: fill;
@@ -930,7 +930,7 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
 
   @media (prefers-reduced-motion: reduce) {
     &[busy] {
-      list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+      list-style-image: url("chrome://global/skin/icons/loading.svg");
       -moz-context-properties: fill;
       fill: currentColor;
       opacity: 0.4;
