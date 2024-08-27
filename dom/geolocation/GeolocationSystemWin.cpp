@@ -8,6 +8,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ScopeExit.h"
 #include "nsIGeolocationUIUtilsWin.h"
+#include "nsIWifiMonitor.h"
 
 #include <windows.system.h>
 #include <windows.security.authorization.appcapabilityaccess.h>
@@ -60,9 +61,21 @@ Maybe<AppCapabilityAccessStatus> GetWifiControlAccess() {
 
 bool SystemWillPromptForPermissionHint() {
   auto wifiAccess = GetWifiControlAccess();
-  return wifiAccess ==
-         mozilla::Some(AppCapabilityAccessStatus::
-                           AppCapabilityAccessStatus_UserPromptRequired);
+  if (wifiAccess !=
+      mozilla::Some(AppCapabilityAccessStatus::
+                        AppCapabilityAccessStatus_UserPromptRequired)) {
+    return false;
+  }
+
+  // If wifi is not available (e.g. because there is no wifi device present)
+  // then the API may report that Windows will request geolocation permission
+  // but it can't without the wifi scanner.  Check for that case.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIWifiMonitor> wifiMonitor =
+      do_GetService("@mozilla.org/wifi/monitor;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(wifiMonitor, false);
+  return wifiMonitor->GetHasWifiAdapter();
 }
 
 bool LocationIsPermittedHint() {
