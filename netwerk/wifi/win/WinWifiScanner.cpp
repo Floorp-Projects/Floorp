@@ -9,6 +9,10 @@
 
 namespace mozilla {
 
+LazyLogModule gWifiScannerLog("WifiScanner");
+#define WIFISCAN_LOG(args) \
+  MOZ_LOG(mozilla::gWifiScannerLog, mozilla::LogLevel::Debug, args)
+
 class InterfaceScanCallbackData {
  public:
   explicit InterfaceScanCallbackData(uint32_t numInterfaces)
@@ -42,6 +46,7 @@ class InterfaceScanCallbackData {
 };
 
 static void WINAPI OnScanComplete(PWLAN_NOTIFICATION_DATA data, PVOID context) {
+  WIFISCAN_LOG(("WinWifiScanner OnScanComplete"));
   if (WLAN_NOTIFICATION_SOURCE_ACM != data->NotificationSource) {
     return;
   }
@@ -65,19 +70,29 @@ WifiScannerImpl::WifiScannerImpl() {
   // WLAN API in the edge case.
   mWlanLibrary.reset(WinWLANLibrary::Load());
   if (!mWlanLibrary) {
-    NS_WARNING("Could not initialize Windows Wi-Fi scanner");
+    WIFISCAN_LOG(
+        ("[%p] WinWifiScanner could not initialize Windows Wi-Fi scanner",
+         this));
   }
+  WIFISCAN_LOG(("[%p] WinWifiScanner created WifiScannerImpl", this));
 }
 
-WifiScannerImpl::~WifiScannerImpl() {}
+WifiScannerImpl::~WifiScannerImpl() {
+  WIFISCAN_LOG(("[%p] WinWifiScanner destroyed WifiScannerImpl", this));
+}
 
 nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
     nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
+  WIFISCAN_LOG(("[%p] WinWifiScanner::GetAccessPointsFromWLAN", this));
   accessPoints.Clear();
 
   // NOTE: We do not try to load the WLAN library if we previously failed
   // to load it. See the note in WifiScannerImpl constructor
   if (!mWlanLibrary) {
+    WIFISCAN_LOG(
+        ("[%p] WinWifiScanner::GetAccessPointsFromWLAN WLAN library is not "
+         "available",
+         this));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -86,11 +101,18 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
   if (ERROR_SUCCESS !=
       (*mWlanLibrary->GetWlanEnumInterfacesPtr())(mWlanLibrary->GetWLANHandle(),
                                                   nullptr, &interface_list)) {
+    WIFISCAN_LOG(
+        ("[%p] WinWifiScanner::GetAccessPointsFromWLAN WlanEnumInterfaces "
+         "failed",
+         this));
     return NS_ERROR_FAILURE;
   }
 
   // This ensures we call WlanFreeMemory on interface_list
   ScopedWLANObject scopedInterfaceList(*mWlanLibrary, interface_list);
+  WIFISCAN_LOG(
+      ("[%p] WinWifiScanner::GetAccessPointsFromWLAN found %lu interfaces",
+       this, interface_list->dwNumberOfItems));
 
   if (!interface_list->dwNumberOfItems) {
     return NS_OK;
@@ -104,6 +126,10 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
                            WLAN_NOTIFICATION_SOURCE_ACM, TRUE,
                            (WLAN_NOTIFICATION_CALLBACK)OnScanComplete, &cbData,
                            NULL, &wlanNotifySource)) {
+    WIFISCAN_LOG(
+        ("[%p] WinWifiScanner::GetAccessPointsFromWLAN "
+         "WlanRegisterNotification failed",
+         this));
     return NS_ERROR_FAILURE;
   }
 
@@ -113,6 +139,9 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
                              mWlanLibrary->GetWLANHandle(),
                              &interface_list->InterfaceInfo[i].InterfaceGuid,
                              NULL, NULL, NULL)) {
+      WIFISCAN_LOG(
+          ("[%p] WinWifiScanner::GetAccessPointsFromWLAN WlanScan failed.",
+           this));
       cbData.OnInterfaceScanComplete();
     }
   }
@@ -141,8 +170,17 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
                                        // unused
                              nullptr,  // reserved
                              &bss_list)) {
+      WIFISCAN_LOG(
+          ("[%p] WinWifiScanner::GetAccessPointsFromWLAN unable to get BSS "
+           "list from interface %u",
+           this, i));
       continue;
     }
+
+    WIFISCAN_LOG(
+        ("[%p] WinWifiScanner::GetAccessPointsFromWLAN BSS list has %lu access "
+         "points",
+         this, bss_list->dwNumberOfItems));
 
     // This ensures we call WlanFreeMemory on bss_list
     ScopedWLANObject scopedBssList(*mWlanLibrary, bss_list);
@@ -168,3 +206,5 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
 }
 
 }  // namespace mozilla
+
+#undef WIFISCAN_LOG
