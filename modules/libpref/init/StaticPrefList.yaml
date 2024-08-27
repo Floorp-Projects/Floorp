@@ -5648,6 +5648,13 @@
   mirror: always
 #endif
 
+# If true, open system preferences for the user when geolocation is requested
+# by the user but OS geolocation permission is not available.
+- name: geo.prompt.open_system_prefs
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "gfx."
 #---------------------------------------------------------------------------

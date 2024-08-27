@@ -1446,7 +1446,14 @@ void Geolocation::NotifyAllowedRequest(nsGeolocationRequest* aRequest) {
 
 /* static */ geolocation::SystemGeolocationPermissionBehavior
 Geolocation::GetLocationOSPermission() {
-  return geolocation::GetGeolocationPermissionBehavior();
+  auto permission = geolocation::GetGeolocationPermissionBehavior();
+
+  if (!StaticPrefs::geo_prompt_open_system_prefs() &&
+      permission == geolocation::SystemGeolocationPermissionBehavior::
+                        GeckoWillPromptUser) {
+    return geolocation::SystemGeolocationPermissionBehavior::NoPrompt;
+  }
+  return permission;
 }
 
 void Geolocation::RequestIfPermitted(nsGeolocationRequest* request) {
