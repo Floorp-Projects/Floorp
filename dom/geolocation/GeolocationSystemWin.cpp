@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GeolocationSystem.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ScopeExit.h"
 #include "nsIGeolocationUIUtilsWin.h"
+#include "nsIWifiListener.h"
 #include "nsIWifiMonitor.h"
 
 #include <windows.system.h>
@@ -70,10 +72,7 @@ bool SystemWillPromptForPermissionHint() {
   // If wifi is not available (e.g. because there is no wifi device present)
   // then the API may report that Windows will request geolocation permission
   // but it can't without the wifi scanner.  Check for that case.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIWifiMonitor> wifiMonitor =
-      do_GetService("@mozilla.org/wifi/monitor;1", &rv);
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIWifiMonitor> wifiMonitor = components::WifiMonitor::Service();
   NS_ENSURE_TRUE(wifiMonitor, false);
   return wifiMonitor->GetHasWifiAdapter();
 }
@@ -268,6 +267,46 @@ void OpenWindowsLocationSettings(
   cancelRequest.release();
 }
 
+class LocationPermissionWifiScanListener final : public nsIWifiListener {
+ public:
+  NS_DECL_ISUPPORTS
+
+  explicit LocationPermissionWifiScanListener(
+      SystemGeolocationPermissionRequest* aRequest)
+      : mRequest(aRequest) {}
+
+  NS_IMETHOD OnChange(const nsTArray<RefPtr<nsIWifiAccessPoint>>&) override {
+    // We will remove ourselves from the nsIWifiMonitor, which is our owner.
+    // Hold a strong reference to ourselves until we complete the callback.
+    RefPtr<LocationPermissionWifiScanListener> self = this;
+    return PermissionWasDecided();
+  }
+
+  NS_IMETHOD OnError(nsresult) override {
+    // We will remove ourselves from the nsIWifiMonitor, which is our owner.
+    // Hold a strong reference to ourselves until we complete the callback.
+    RefPtr<LocationPermissionWifiScanListener> self = this;
+    return PermissionWasDecided();
+  }
+
+ private:
+  virtual ~LocationPermissionWifiScanListener() = default;
+  RefPtr<SystemGeolocationPermissionRequest> mRequest;
+
+  // Any response to our wifi scan request means that the user has selected
+  // either to grant or deny permission in the Windows dialog.  Either way, we
+  // are done asking for permission, so Stop the permission request.
+  nsresult PermissionWasDecided() {
+    nsCOMPtr<nsIWifiMonitor> wifiMonitor = components::WifiMonitor::Service();
+    NS_ENSURE_TRUE(wifiMonitor, NS_ERROR_FAILURE);
+    wifiMonitor->StopWatching(this);
+    mRequest->Stop();
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(LocationPermissionWifiScanListener, nsIWifiListener)
+
 }  // namespace
 
 //-----------------------------------------------------------------------------
@@ -282,8 +321,9 @@ SystemGeolocationPermissionBehavior GetGeolocationPermissionBehavior() {
   return SystemGeolocationPermissionBehavior::NoPrompt;
 }
 
-already_AddRefed<SystemGeolocationPermissionRequest> PresentSystemSettings(
-    BrowsingContext* aBrowsingContext, ParentRequestResolver&& aResolver) {
+already_AddRefed<SystemGeolocationPermissionRequest>
+RequestLocationPermissionFromUser(BrowsingContext* aBrowsingContext,
+                                  ParentRequestResolver&& aResolver) {
   RefPtr<WindowsGeolocationPermissionRequest> permissionRequest =
       new WindowsGeolocationPermissionRequest(aBrowsingContext,
                                               std::move(aResolver));
@@ -291,7 +331,20 @@ already_AddRefed<SystemGeolocationPermissionRequest> PresentSystemSettings(
   if (permissionRequest->IsStopped()) {
     return nullptr;
   }
-  OpenWindowsLocationSettings(permissionRequest);
+  if (SystemWillPromptForPermissionHint()) {
+    // To tell the system to prompt for permission, run one wifi scan (no need
+    // to poll). We won't use the result -- either the user will grant
+    // geolocation permission, meaning we will not need wifi scanning, or the
+    // user will deny permission, in which case no scan can be done.  We just
+    // want the prompt.
+    nsCOMPtr<nsIWifiMonitor> wifiMonitor = components::WifiMonitor::Service();
+    NS_ENSURE_TRUE(wifiMonitor, nullptr);
+    auto listener =
+        MakeRefPtr<LocationPermissionWifiScanListener>(permissionRequest);
+    wifiMonitor->StartWatching(listener, false);
+  } else {
+    OpenWindowsLocationSettings(permissionRequest);
+  }
   return permissionRequest.forget();
 }
 
