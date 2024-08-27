@@ -12,8 +12,9 @@ SystemGeolocationPermissionBehavior GetGeolocationPermissionBehavior() {
   return SystemGeolocationPermissionBehavior::NoPrompt;
 }
 
-already_AddRefed<SystemGeolocationPermissionRequest> PresentSystemSettings(
-    BrowsingContext* aBrowsingContext, ParentRequestResolver&& aResolver) {
+already_AddRefed<SystemGeolocationPermissionRequest>
+RequestLocationPermissionFromUser(BrowsingContext* aBrowsingContext,
+                                  ParentRequestResolver&& aResolver) {
   MOZ_ASSERT_UNREACHABLE(
       "Should not warn user of need for system location permission "
       "since we cannot open system settings on this platform.");

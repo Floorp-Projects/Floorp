@@ -41,12 +41,13 @@ using ParentRequestResolver =
     PContentParent::RequestGeolocationPermissionFromUserResolver;
 
 /**
- * Opens the relevant (system or Gecko) window to request permission from the
- * user. Resolves aResolver when permission is granted, an error occurs, or Stop
- * has been called on the SystemGeolocationPermissionRequest.
+ * Opens the relevant system dialog to request permission from the user.
+ * Resolves aResolver when permission is granted, an error occurs, or Stop has
+ * been called on the SystemGeolocationPermissionRequest.
  */
-already_AddRefed<SystemGeolocationPermissionRequest> PresentSystemSettings(
-    BrowsingContext* aBrowsingContext, ParentRequestResolver&& aResolver);
+already_AddRefed<SystemGeolocationPermissionRequest>
+RequestLocationPermissionFromUser(BrowsingContext* aBrowsingContext,
+                                  ParentRequestResolver&& aResolver);
 
 }  // namespace geolocation
 }  // namespace mozilla::dom
