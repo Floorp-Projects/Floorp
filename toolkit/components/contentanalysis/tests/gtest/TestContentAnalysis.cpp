@@ -251,7 +251,13 @@ void SendRequestAndExpectResponse(
           timedOut->mValue = true;
         }
       });
-  NS_DelayedDispatchToCurrentThread(do_AddRef(timer), 10000);
+#if defined(MOZ_ASAN)
+  // This can be pretty slow on ASAN builds (bug 1895256)
+  constexpr uint32_t kCATimeout = 25000;
+#else
+  constexpr uint32_t kCATimeout = 10000;
+#endif
+  NS_DelayedDispatchToCurrentThread(do_AddRef(timer), kCATimeout);
   mozilla::SpinEventLoopUntil(
       "Waiting for ContentAnalysis result"_ns,
       [&, timedOut]() { return gotResponse.load() || timedOut->mValue; });
