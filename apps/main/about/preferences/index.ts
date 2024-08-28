@@ -9,20 +9,15 @@ export default function initScripts() {
       marker: document.getElementById("category-more-from-mozilla")!,
       hotCtx: import.meta.hot,
     });
-    render(csk, document.querySelector(".pane-container"), {
+    render(csk, document.querySelector("#mainPrefPane"), {
       hotCtx: import.meta.hot,
     });
 
     initHashChange();
-    switch (location.hash) {
-      case "#csk": {
-        document.getElementById("category-csk")?.click();
-        break;
-      }
-    }
+
   };
 
-  document.addEventListener("DOMContentLoaded", init);
+  init();
 }
 
 if (import.meta.hot) {

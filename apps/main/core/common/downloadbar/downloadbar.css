@@ -1,0 +1,93 @@
+:root[inFullscreen]:not([macOSNativeFullscreen]) :is(#downloadsPanel) {
+  display: none !important;
+}
+#downloadsPanel:not([hasdownloads]) {
+  display: none;
+}
+#downloadsListBox {
+  min-width: 0 !important;
+  flex-flow: row nowrap;
+  overflow-x: scroll;
+  scrollbar-width: none;
+  flex-grow: 1;
+}
+.downloadDetails {
+  width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#downloadsListBox > richlistitem {
+  margin: 3px 6px 3px 6px !important;
+  max-width: min-content !important;
+  min-height: 48px;
+}
+
+#downloadsListBox > richlistitem:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+
+#emptyDownloads {
+  display: none !important;
+}
+
+#downloadsFooterButtons {
+  display: none !important;
+}
+
+#downloadsPanel-mainView {
+  padding: 0px !important;
+}
+
+#downloadsPanel-list {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+#downloadsPanel-button {
+  min-width: 0 !important;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-end !important;
+  background-color: rgba(var(--toolbar-bgcolor),70%) !important;
+  flex-grow: 0;
+}
+
+#downloadsPanel-button toolbarbutton {
+  min-width: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1px 5px 1px !important;
+  background-color: rgba(var(--toolbar-bgcolor),70%) !important;
+  fill: var(--toolbarbutton-icon-fill);
+  background-size: 25px;
+  flex-direction: row-reverse;
+}
+
+#downloadsPanel-button toolbarbutton:hover {
+  background-color: var(--toolbarbutton-hover-background) !important;
+}
+
+#downloadIcon {
+  list-style-image: url('chrome://browser/skin/downloads/downloads.svg');
+}
+
+#closeIcon {
+  list-style-image: url('chrome://global/skin/icons/close.svg');
+
+}
+
+.downloadProgress {
+  height: 2px;
+}
+
+.downloadBlockedBadge {
+  margin-inline: 0 !important;
+}
+
+.downloadMainArea {
+  padding-block: 0 !important;
+}

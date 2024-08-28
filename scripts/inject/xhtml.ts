@@ -1,5 +1,5 @@
-import * as fs from "node:fs/promises";
 import { DOMParser } from "linkedom";
+import * as fs from "node:fs/promises";
 
 export async function injectXHTML(binPath: string) {
   const path_browserxhtml = `${binPath}/browser/chrome/browser/content/browser/browser.xhtml`;

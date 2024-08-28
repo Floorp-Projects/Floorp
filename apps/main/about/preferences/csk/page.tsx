@@ -1,3 +1,7 @@
+import {
+  commands,
+  csk_category,
+} from "@nora/shared/custom-shortcut-key/commands";
 import { For } from "solid-js";
 import {
   cskData,
@@ -7,16 +11,16 @@ import {
   setCurrentFocus,
   setEditingStatus,
 } from "./setkey";
-import {
-  commands,
-  csk_category,
-} from "@nora/shared/custom-shortcut-key/commands";
 
 export function CustomShortcutKeyPage() {
   return (
     <>
-      <div>
-        <h1>カスタムショートカットキー</h1>
+    <xul:hbox id="cskCategory"
+       class=""
+       hidden="true"
+       style="flex-direction: column"
+       data-category="paneCSK">
+       <h1>カスタムショートカットキー</h1>
         <xul:description class="indent tip-caption">
           Floorp Daylight のキーボードショートカットをカスタマイズしましょう。
           Floorp Daylight には、80
@@ -24,7 +28,6 @@ export function CustomShortcutKeyPage() {
           Floorp Daylight を再起動してください。
         </xul:description>
         <xul:checkbox label="Firefox のキーボードショートカットを無効にする" />
-      </div>
       <For each={csk_category}>
         {(category) => (
           <>
@@ -39,7 +42,7 @@ export function CustomShortcutKeyPage() {
             <For each={Object.entries(commands)}>
               {([key, value]) =>
                 value.type === category ? (
-                  <div style={{ display: "flex" }}>
+                  <div style={{ "display": "flex", "padding-top":"5px" }}>
                     <label
                       style={{ "flex-grow": "1" }}
                       data-l10n-id={
@@ -79,6 +82,7 @@ export function CustomShortcutKeyPage() {
           </>
         )}
       </For>
+      </xul:hbox>
     </>
   );
 }
