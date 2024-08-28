@@ -18,22 +18,15 @@ export class DownloadBarManager {
   setShowDownloadBar = this._showDownloadBar[1];
   constructor() {
     //? this effect will not called when pref is changed to same value.
-    createEffect(() => {
-      console.log("solid to pref");
-      Services.prefs.setBoolPref(
-        "noraneko.downloadbar.enable",
-        this.showDownloadBar(),
-      );
-      Services.prefs.addObserver(
+    Services.prefs.addObserver(
+      "noraneko.downloadbar.enable",
+      this.observerDownloadbarPref,
+    );
+    onCleanup(() => {
+      Services.prefs.removeObserver(
         "noraneko.downloadbar.enable",
         this.observerDownloadbarPref,
       );
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          "noraneko.downloadbar.enable",
-          this.observerDownloadbarPref,
-        );
-      });
     });
     if (!window.gFloorp) {
       window.gFloorp = {};
@@ -44,6 +37,13 @@ export class DownloadBarManager {
   }
 
   init() {
+    createEffect(() => {
+      console.log("solid to pref");
+      Services.prefs.setBoolPref(
+        "noraneko.downloadbar.enable",
+        this.showDownloadBar(),
+      );
+    });
     //move elem to bottom of window
     document
       .querySelector("#appcontent")
