@@ -48,7 +48,6 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
       };
     }
   }
-  return { styles: [null], userjs: null };
 }
 
 export function BrowserDesignElement() {
