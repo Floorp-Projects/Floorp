@@ -378,7 +378,15 @@ browser[type="content"] > html {
 
 #statusBar {
   background-color: var(--toolbar-bgcolor);
+  > #status-text {
+    justify-content: center !important;
+    > * {
+      border: none !important;
+    }
+  }
 }
+
+
 
 #private-browsing-indicator-with-label {
   display: none !important;

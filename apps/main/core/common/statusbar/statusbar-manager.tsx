@@ -3,13 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import type {} from "solid-styled-jsx";
 
 export class StatusBarManager {
@@ -45,23 +39,45 @@ export class StatusBarManager {
       setShow: this.setShowStatusBar,
     };
     onCleanup(() => {
-      window.CustomizableUI.unregisterArea("statusBar", true);
+      window.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
   }
 
   init() {
-    window.CustomizableUI.registerArea("statusBar", {
+    window.CustomizableUI.registerArea("nora-statusbar", {
       type: window.CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: ["screenshot-button", "fullscreen-button"],
     });
+
     window.CustomizableUI.registerToolbarNode(
-      document.getElementById("statusBar"),
+      document.getElementById("nora-statusbar"),
     );
+    window.CustomizableUI.addWidgetToArea("zoom-controls", "nora-statusbar", 1);
 
     //move elem to bottom of window
     document
       .querySelector("#appcontent")
-      ?.appendChild(document.getElementById("statusBar")!);
+      ?.appendChild(document.getElementById("nora-statusbar")!);
+
+    createEffect(() => {
+      const statuspanel_label = document?.querySelector("#statuspanel-label");
+      const statuspanel = document?.querySelector<XULElement>("#statuspanel");
+      const statusText = document.querySelector<XULElement>("#status-text");
+      const observer = new MutationObserver(() => {
+        if (statuspanel.getAttribute("inactive") === "true" && statusText) {
+          statusText.setAttribute("hidden", "true");
+        } else {
+          statusText?.removeAttribute("hidden");
+        }
+      });
+      if (this.showStatusBar()) {
+        statusText?.appendChild(statuspanel_label!);
+        observer.observe(statuspanel, { attributes: true });
+      } else {
+        statuspanel?.appendChild(statuspanel_label!);
+        observer?.disconnect();
+      }
+    });
   }
 
   //if we use just method, `this` will be broken

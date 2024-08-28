@@ -10,11 +10,11 @@ export function StatusBar() {
   return (
     <>
       <xul:toolbar
-        id="statusBar"
+        id="nora-statusbar"
         toolbarname="Status bar"
         customizable="true"
         style="border-top: 1px solid var(--chrome-content-separator-color)"
-        class={`nora-statusbar browser-toolbar customization-target ${
+        class={`nora-statusbar browser-toolbar ${
           manager.showStatusBar() ? "" : "collapsed"
         }`}
         mode="icons"
