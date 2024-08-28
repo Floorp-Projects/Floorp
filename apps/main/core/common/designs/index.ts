@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { BrowserDesignElement, BrowserStyle } from "./browser-design-element";
+import { BrowserDesignElement } from "./browser-design-element";
 
 export function initDesigns() {
   render(BrowserStyle, document.head);

@@ -8,6 +8,7 @@ import {
   For,
   type ParentProps,
   PropsWithChildren,
+  Show,
 } from "solid-js";
 import type { z } from "zod";
 import type { zFloorpDesignConfigs } from "./configs";
@@ -22,7 +23,7 @@ import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import styleBrowser from "./browser.css?inline";
 
 interface FCSS {
-  styles: string[];
+  styles: string[] | null;
   userjs: string | null;
 }
 
@@ -50,6 +51,7 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
       };
     }
   }
+  return { styles: null, userjs: null };
 }
 
 export function BrowserDesignElement() {
@@ -68,19 +70,19 @@ export function BrowserDesignElement() {
 
   return (
     <>
-      <For each={getCSS().styles}>
-        {(style) => (
-          <link
-            class="nora-designs"
-            rel="stylesheet"
-            href={`chrome://noraneko${style}`}
-          />
-        )}
-      </For>
+      <Show when={getCSS()}>
+        <For each={getCSS().styles}>
+          {(style) => (
+            <link
+              class="nora-designs"
+              rel="stylesheet"
+              href={`chrome://noraneko${style}`}
+            />
+          )}
+        </For>
+      </Show>
+      <style>{styleBrowser}</style>
     </>
   );
 }
 
-export function BrowserStyle() {
-  return <style>{styleBrowser}</style>;
-}
