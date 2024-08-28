@@ -16,7 +16,11 @@ export function initDownloadbar() {
     },
     import.meta.hot,
   );
-
+  manager.init();
+  console.log(manager.showDownloadBar());
+  if (!manager.showDownloadBar()) {
+    return;
+  }
   document.getElementById("downloadsPanel")?.remove();
   render(
     DonwloadBar,
@@ -24,7 +28,7 @@ export function initDownloadbar() {
     { hotCtx: import.meta.hot },
   );
   console.log("init download bar");
-  window.DownloadsPanel.hidePanel = () => {return;}
+  window.DownloadsPanel.hidePanel = () => { return; }
   delete window.DownloadsView.contextMenu
   delete window.DownloadsPanel.panel
   delete window.DownloadsPanel.richListBox
@@ -46,10 +50,8 @@ export function initDownloadbar() {
     e.preventDefault();
     scrollElem.scrollLeft += e.deltaY * 10;
   });
-  manager.init();
-  console.log(manager.showDownloadBar());
 
   import.meta.hot?.accept((m) => {
-    m?.initStatusbar();
+    m?.initDownloadbar();
   });
 }
