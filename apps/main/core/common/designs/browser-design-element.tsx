@@ -3,24 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
+import {
+  createEffect,
+  For,
+  type ParentProps,
+  PropsWithChildren,
+  Show,
+} from "solid-js";
+import type { z } from "zod";
+import type { zFloorpDesignConfigs } from "./configs";
+import { applyUserJS } from "./userjs-parser";
+import { config } from "./configs";
 import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?url";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?url";
 import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?url";
-import {
-  For,
-  createEffect
-} from "solid-js";
-import type { z } from "zod";
+import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import styleBrowser from "./browser.css?inline";
-import type { zFloorpDesignConfigs } from "./configs";
-import { config } from "./configs";
-import { applyUserJS } from "./userjs-parser";
 
 interface FCSS {
-  styles: string[];
+  styles: string[] | null;
   userjs: string | null;
 }
 
@@ -48,6 +51,7 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
       };
     }
   }
+  return { styles: null, userjs: null };
 }
 
 export function BrowserDesignElement() {
@@ -66,19 +70,19 @@ export function BrowserDesignElement() {
 
   return (
     <>
-      <For each={getCSS().styles}>
-        {(style) => (
-          <link
-            class="nora-designs"
-            rel="stylesheet"
-            href={`chrome://noraneko${style}`}
-          />
-        )}
-      </For>
+      <Show when={getCSS()}>
+        <For each={getCSS().styles}>
+          {(style) => (
+            <link
+              class="nora-designs"
+              rel="stylesheet"
+              href={`chrome://noraneko${style}`}
+            />
+          )}
+        </For>
+      </Show>
+      <style>{styleBrowser}</style>
     </>
   );
 }
 
-export function BrowserStyle() {
-  return <style>{styleBrowser}</style>;
-}
