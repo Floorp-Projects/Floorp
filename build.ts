@@ -231,7 +231,7 @@ async function build() {
 
     injectXHTML(binPath),
 
-    applyMixin(binPath),
+    //applyMixin(binPath),
   ]);
   await injectManifest(binPath);
 }

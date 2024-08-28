@@ -28,7 +28,7 @@ export default defineConfig({
       input: {
         core: "./core/index.ts",
         "about-preferences": "./about/preferences/index.ts",
-        env: "./experiment/env.ts",
+        //env: "./experiment/env.ts",
       },
       output: {
         esModule: true,
