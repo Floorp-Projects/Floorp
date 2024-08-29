@@ -13,6 +13,7 @@
 # before you make any changes to this file.
 
 import codecs
+import io
 import json
 import os
 import sys
@@ -369,8 +370,15 @@ class GeckoInstance(object):
         }
 
         if self.gecko_log == "-":
-            if hasattr(sys.stdout, "buffer"):
+            if getattr(sys.stdout, "encoding") == "utf-8":
+                process_args["stream"] = sys.stdout
+            elif hasattr(sys.stdout, "buffer"):
                 process_args["stream"] = codecs.getwriter("utf-8")(sys.stdout.buffer)
+            elif isinstance(sys.stdout, io.TextIOBase):
+                # If sys.stdout expects unicode strings, we can't wrap it because the
+                # wrapper will write byte strings. This can happen when e.g. tests
+                # replace sys.stdout with a io.StringIO().
+                process_args["stream"] = sys.stdout
             else:
                 process_args["stream"] = codecs.getwriter("utf-8")(sys.stdout)
         else:
