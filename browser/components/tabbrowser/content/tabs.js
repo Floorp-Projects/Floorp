@@ -1,7 +1,7 @@
 // This is loaded into all browser windows. Wrap in a block to prevent
 // leaking to window scope.
 
-const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") === 2;
+const verticalTabbarEnabled = () => Services.prefs.getIntPref("floorp.tabbar.style") === 2;
 
 {
 	const TAB_PREVIEW_PREF = "browser.tabs.hoverPreview.enabled";
@@ -552,7 +552,7 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 			// dragend such that the mouse appears to have the same position
 			// relative to the corner of the dragged tab.
 			function getClientElementPosition(ele) {
-        if (verticalTabbarEnabled) {
+        if (verticalTabbarEnabled()) {
           return ele.getBoundingClientRect().top;
         }
 
@@ -680,14 +680,14 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 				const children = this.allTabs;
 				if (newIndex == children.length) {
 					const tabRect = this._getVisibleTabs().at(-1).getBoundingClientRect();
-					if (RTL_UI && !verticalTabbarEnabled) {
+					if (RTL_UI && !verticalTabbarEnabled()) {
 						newMargin = rect.right - tabRect.left;
 					} else {
 						newMargin = tabRect.right - rect.left;
 					}
 				} else {
 					const tabRect = children[newIndex].getBoundingClientRect();
-					if (RTL_UI && !verticalTabbarEnabled) {
+					if (RTL_UI && !verticalTabbarEnabled()) {
 						newMargin = rect.right - tabRect.right;
 					} else {
 						newMargin = tabRect.left - rect.left;
@@ -1453,7 +1453,6 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 			const tabs = this._getVisibleTabs();
 			const numPinned = gBrowser._numPinnedTabs;
 			const doPosition =
-        !Services.prefs.getIntPref("floorp.tabbar.style") === 2 &&
 				this.hasAttribute("overflow") &&
 				tabs.length > numPinned &&
 				numPinned > 0;
@@ -1461,7 +1460,7 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 			this.toggleAttribute("haspinnedtabs", !!numPinned);
 			this.toggleAttribute("positionpinnedtabs", doPosition);
 
-			if (doPosition) {
+			if (doPosition && !verticalTabbarEnabled()) {
 				let layoutData = this._pinnedTabsLayoutCache;
 				const uiDensity = document.documentElement.getAttribute("uidensity");
 				if (!layoutData || layoutData.uiDensity != uiDensity) {
@@ -1522,10 +1521,10 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 			}
 
       // horizontal tabs & vertical tabs have different animation properties
-      const animLastScreen = verticalTabbarEnabled ? "animLastScreenY" : "animLastScreenX";
-      const screen = verticalTabbarEnabled ? "screenY" : "screenX";
-      const screenOrientation = verticalTabbarEnabled ? "height" : "width";
-      const translate = verticalTabbarEnabled ? "translateY" : "translateX";
+      const animLastScreen = verticalTabbarEnabled() ? "animLastScreenY" : "animLastScreenX";
+      const screen = verticalTabbarEnabled() ? "screenY" : "screenX";
+      const screenOrientation = verticalTabbarEnabled() ? "height" : "width";
+      const translate = verticalTabbarEnabled() ? "translateY" : "translateX";
 
 			if (!("animLastScreenX" in draggedTab._dragData)) {
 				draggedTab._dragData[animLastScreen] = draggedTab._dragData[screen];
@@ -1547,7 +1546,7 @@ const verticalTabbarEnabled = Services.prefs.getIntPref("floorp.tabbar.style") =
 				pinned ? numPinned : undefined,
 			);
 
-			if (RTL_UI && !verticalTabbarEnabled) {
+			if (RTL_UI && !verticalTabbarEnabled()) {
 				tabs.reverse();
 				// Copy moving tabs array to avoid infinite reversing.
 				movingTabs = [...movingTabs].reverse();
