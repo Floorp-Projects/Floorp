@@ -1,4 +1,4 @@
-#statusBar {
+#nora-statusbar {
   visibility: visible !important;
 
   :root[inFullscreen]:not([macOSNativeFullscreen]) &:not([fullscreentoolbar="true"]) {
