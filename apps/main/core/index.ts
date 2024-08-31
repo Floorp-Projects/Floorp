@@ -10,6 +10,7 @@ import { initReverseSidebarPosition } from "./common/reverse-sidebar-position";
 import { initStatusbar } from "./common/statusbar";
 import { initTabbar } from "./common/tabbar";
 import { initUndoClosedTab } from "./common/undo-closed-tab";
+import { initWorkspaces } from "./common/workspaces";
 
 //console.log("run init");
 
@@ -33,6 +34,7 @@ export default function initScripts() {
     initReverseSidebarPosition();
 
     initPrivateContainer();
+    initWorkspaces();
     console.log("csk getinstance");
     CustomShortcutKey.getInstance();
   });

@@ -35,7 +35,8 @@ declare module "solid-js" {
       accesskey?: string;
       type?: "checkbox";
       checked?: boolean;
-      onCommand?: () => void;
+      disabled?: boolean;
+      oncommand?: string | (() => void);
     }
 
     interface XULRichListItem extends XULElementBase {
@@ -43,18 +44,59 @@ declare module "solid-js" {
       helpTopic?: string;
     }
 
+    interface XULPopupSetElement extends XULElementBase {
+      onpopupshowing?: string | (() => void);
+    }
+
+    interface XULMenuPopupElement extends XULElementBase {
+      position?:
+        | "after_start"
+        | "end_before"
+        | "bottomleft topleft"
+        | "overlap";
+      onpopupshowing?: string | ((event: Event) => void);
+    }
+
+    interface XULPanelElement extends XULElementBase {
+      type?: "arrow";
+      position?:
+        | "after_start"
+        | "end_before"
+        | "bottomleft topleft"
+        | "overlap";
+    }
+
+    interface XULMenuElement extends XULElementBase {
+      label?: string;
+      accesskey?: string;
+      onpopupshowing?: string | ((event: Event) => void);
+    }
+
+    interface XULBoxElement extends XULElementBase {
+      pack?: string;
+      orient?: "horizontal" | "vertical";
+      clicktoscroll?: boolean;
+    }
+
+    interface XULToolbarButtonElement extends XULElementBase {
+      label?: string;
+      accesskey?: string;
+      oncommand?: string | (() => void);
+      context?: string;
+    }
+
     interface IntrinsicElements {
+      "xul:arrowscrollbox": XULElementBase;
       "xul:browser": XULBrowserElement;
       "xul:menuitem": XULMenuitemElement;
       "xul:window": XULElementBase;
       "xul:linkset": XULElementBase;
-
-      "xul:popupset": XULElementBase;
+      "xul:popupset": XULPopupSetElement;
       "xul:tooltip": XULElementBase;
-      "xul:panel": XULElementBase;
-      "xul:menupopup": XULElementBase;
-      "xul:vbox": XULElementBase;
-      "xul:hbox": XULElementBase;
+      "xul:panel": XULPanelElement;
+      "xul:menupopup": XULMenuPopupElement;
+      "xul:vbox": XULBoxElement;
+      "xul:hbox": XULBoxElement;
       "xul:box": XULElementBase;
       "xul:toolbar": {
         id?: string;
@@ -67,11 +109,12 @@ declare module "solid-js" {
         class?: string;
         children: Element;
       };
-      "xul:toolbarbutton": XULElementBase;
+      "xul:toolbarbutton": XULToolbarButtonElement;
+      "xul:toolbarseparator": XULElementBase;
       "xul:spacer": XULElementBase;
       "xul:splitter": XULElementBase;
       "xul:menuseparator": XULElementBase;
-      "xul:menu": XULElementBase;
+      "xul:menu": XULMenuElement;
       "xul:keyset": {
         id?: string;
         children: Element;
