@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal, onCleanup } from "solid-js";
-import type {} from "solid-styled-jsx";
+import type { } from "solid-styled-jsx";
 
 export class StatusBarManager {
   _showStatusBar = createSignal(
@@ -14,15 +14,15 @@ export class StatusBarManager {
   setShowStatusBar = this._showStatusBar[1];
   constructor() {
     //? this effect will not called when pref is changed to same value.
+    Services.prefs.addObserver(
+      "noraneko.statusbar.enable",
+      this.observerStatusbarPref,
+    );
     createEffect(() => {
       console.log("solid to pref");
       Services.prefs.setBoolPref(
         "noraneko.statusbar.enable",
         this.showStatusBar(),
-      );
-      Services.prefs.addObserver(
-        "noraneko.statusbar.enable",
-        this.observerStatusbarPref,
       );
       onCleanup(() => {
         Services.prefs.removeObserver(
