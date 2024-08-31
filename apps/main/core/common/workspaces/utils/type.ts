@@ -19,6 +19,7 @@ export const zWorkspaces = z.object({
   currentWorkspaceId: z.string(),
 });
 
+export const zWorkspacesStoreData = z.array(zWorkspace);
 export const zWorkspaceBackupTab = z.object({
   title: z.string(),
   url: z.string(),
@@ -52,6 +53,7 @@ export const zWorkspacesConfigs = z.object({
 /* Export as types */
 export type workspace = z.infer<typeof zWorkspace>;
 export type workspaces = z.infer<typeof zWorkspaces>;
+export type workspacesStoreData = z.infer<typeof zWorkspacesStoreData>;
 export type workspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
 export type workspaceBackup = z.infer<typeof zWorkspaceBackup>;
 export type workspacesBackup = z.infer<typeof zWorkspacesBackup>;

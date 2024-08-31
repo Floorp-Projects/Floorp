@@ -14,6 +14,6 @@ export class Workspaces {
     }
 
     constructor() {
-        console.log("Workspaces constructor");
+        console.log("init workspaces");
     }
 }

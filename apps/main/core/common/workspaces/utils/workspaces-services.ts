@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { setWorkspaces } from "../workspaces-data";
 import type { workspace } from "./type";
 
 class WorkspacesServiceClass {
@@ -12,6 +13,15 @@ class WorkspacesServiceClass {
       WorkspacesServiceClass.instance = new WorkspacesServiceClass();
     }
     return WorkspacesServiceClass.instance;
+  }
+
+  /**
+   * Returns the workspace data preference name.
+   *
+   * @returns {string} The workspace data preference name.
+   */
+  get workspaceDataPrefName(): string {
+    return "floorp.workspaces.v3.data";
   }
 
   /**
@@ -59,13 +69,21 @@ class WorkspacesServiceClass {
    * @returns {workspace} The new workspace object.
    */
   public createWorkspace(name: string): workspace {
-    return {
+    const workspace: workspace = {
       id: this.getGeneratedUuid(),
       name,
       icon: null,
       emoji: null,
       color: this.getWorkspacesColor,
     };
+
+    setWorkspaces((prev) => {
+      const workspaces = prev.workspaces;
+      workspaces.push(workspace);
+      return { ...prev, workspaces };
+    });
+
+    return workspace;
   }
 }
 
