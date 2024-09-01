@@ -93,14 +93,17 @@ export class workspacesServices {
    * @param workspaceId The workspace id.
    */
   public changeWorkspace(workspaceId: string) {
+    const selectedWorkspace = window.floorpWorkspaeId;
     window.floorpWorkspaeId = workspaceId;
-    // useEffect will be call for re-rendering PopupElement.
     setworkspacesServices((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, isSelected: true };
         }
-        return { ...workspace, isSelected: false };
+        if (workspace.id === selectedWorkspace) {
+          return { ...workspace, isSelected: false };
+        }
+        return workspace;
       });
     });
   }

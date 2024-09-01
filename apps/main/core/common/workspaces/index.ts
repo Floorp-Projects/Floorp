@@ -6,7 +6,7 @@
 import { workspacesServices } from "./workspaces";
 import { workspacesToolbarButton } from "./toolbar-element";
 
-export function initworkspacesServices() {
+export function initWorkspaces() {
   workspacesToolbarButton.getInstance();
   workspacesServices.getInstance();
 }
