@@ -3,6 +3,8 @@ import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
 
+import { generateJarManifest} from "../common/scripts/gen_jarmanifest"
+
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
@@ -32,12 +34,11 @@ export default defineConfig({
       },
       output: {
         esModule: true,
-        entryFileNames: "content/[name].js",
+        entryFileNames: "[name].js",
       },
     },
 
     outDir: r("_dist"),
-    assetsDir: "content/assets",
   },
 
   //? https://github.com/parcel-bundler/lightningcss/issues/685
@@ -64,6 +65,24 @@ export default defineConfig({
       },
       hot: false,
     }),
+    {
+      name: "gen_jarmn",
+      enforce: "post",
+      async generateBundle(options, bundle, isWrite) {
+        this.emitFile({
+          type: "asset",
+          fileName: "jar.mn",
+          needsCodeReference: false,
+          source: await generateJarManifest(bundle,{"prefix":"content","namespace":"noraneko","register_type":"content"}),
+        });
+        this.emitFile({
+          type: "asset",
+          "fileName": "moz.build",
+          needsCodeReference: false,
+          source: `JAR_MANIFESTS += ["jar.mn"]`
+        })
+      },
+    },
   ],
   optimizeDeps: {
     include: ["./node_modules/@nora"],
