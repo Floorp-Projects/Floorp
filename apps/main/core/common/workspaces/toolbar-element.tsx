@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { BrowserActionUtils } from "@core/utils/browser-action";
-import { PopupElement } from "./workspaces-popup-element";
-import workspacesStyles from "./workspacesStyles.css?inline";
+import { PopupElement } from "./popup-element";
+import workspacesStyles from "./styles.css?inline";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -31,7 +31,7 @@ export class workspacesToolbarButton {
       <PopupElement />,
       async () => {
         const panel = document?.getElementById(
-          "workspaces-toolbar-button-panel",
+          "workspacesToolbarButtonPanel",
         ) as XULPopupElement;
         panel.openPopup(
           document?.getElementById("workspaces-toolbar-button"),

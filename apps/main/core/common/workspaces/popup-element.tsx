@@ -5,8 +5,8 @@
 
 import { For } from "solid-js";
 import { Workspaces } from "./workspaces";
-import { workspaces } from "./workspaces-data";
-import { PopupToolbarElement } from "./workspaces-popup-block-element";
+import { workspaces } from "./data";
+import { PopupToolbarElement } from "./popup-block-element";
 import { config } from "./config";
 
 export function PopupElement() {

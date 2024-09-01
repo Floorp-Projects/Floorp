@@ -6,7 +6,7 @@
 import { ContextMenuUtils } from "@core/utils/context-menu";
 import { Workspaces } from "./workspaces";
 import { ContextMenu } from "./contextMenu";
-import { insert } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 
 export class workspacesToolbarButton {
   private static instance: workspacesToolbarButton;
@@ -58,15 +58,9 @@ export class workspacesToolbarButton {
     const parentElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
     );
-    insert(
-      parentElem,
-      <ContextMenu
-        disableBefore={needDisableBefore}
-        disableAfter={needDisableAfter}
-        contextWorkspaceId={contextWorkspaceId}
-      />,
-      parentElem?.lastChild,
-    );
+    render(() => ContextMenu({ disableBefore: needDisableBefore, disableAfter: needDisableAfter, contextWorkspaceId }), parentElem, {
+      hotCtx: import.meta.hot,
+    });
   }
 
   private PopupSet() {

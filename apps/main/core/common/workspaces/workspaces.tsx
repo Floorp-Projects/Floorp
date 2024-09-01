@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { workspace } from "./utils/type";
-import { setWorkspaces, workspaces } from "./workspaces-data";
+import { setWorkspaces, workspaces } from "./data";
 
 export class Workspaces {
   private static instance: Workspaces;
@@ -74,7 +74,7 @@ export class Workspaces {
   public createNoNameWorkspace = (): string => {
     return this.createWorkspace(
       this.l10n?.formatValueSync("workspace-new-default-name") ??
-        ("新しいワークスペース" as string),
+      ("新しいワークスペース" as string),
     );
   };
 
