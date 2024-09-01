@@ -5,7 +5,7 @@
 
 import { For } from "solid-js";
 import { workspacesServices } from "./workspaces";
-import { workspaces } from "./data";
+import { workspacesData } from "./data";
 import { PopupToolbarElement } from "./popup-block-element";
 import { config } from "./config";
 
@@ -27,7 +27,7 @@ export function PopupElement() {
             clicktoscroll={true}
             class="statusbar-padding"
           >
-            <For each={workspaces()}>
+            <For each={workspacesData()}>
               {(workspace) => (
                 <PopupToolbarElement
                   workspaceId={workspace.id}

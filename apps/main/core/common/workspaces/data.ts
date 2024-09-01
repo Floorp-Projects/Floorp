@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { zworkspacesServicesStoreData } from "./utils/type";
+import { type workspaces, zworkspacesServicesStoreData } from "./utils/type";
 import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
 /** workspacesServices data */
-export const [workspaces, setworkspacesServices] = createSignal(
+export const [workspacesData, setworkspacesServices] = createSignal<workspaces>(
   zworkspacesServicesStoreData.parse(
     getworkspacesServicesArrayData(
       Services.prefs.getStringPref(
@@ -22,7 +22,7 @@ export const [workspaces, setworkspacesServices] = createSignal(
 createEffect(() => {
   Services.prefs.setStringPref(
     workspacesServicesStaticNames.workspaceDataPrefName,
-    JSON.stringify({ workspaces: workspaces() }),
+    JSON.stringify({ workspaces: workspacesData() }),
   );
 });
 

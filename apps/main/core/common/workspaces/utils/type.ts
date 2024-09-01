@@ -16,10 +16,7 @@ export const zWorkspace = z.object({
   isDefault: z.boolean().nullish(),
 });
 
-export const zworkspacesServices = z.object({
-  workspaces: z.array(zWorkspace),
-  currentWorkspaceId: z.string(),
-});
+export const zworkspacesServices = z.array(zWorkspace);
 
 export const zworkspacesServicesStoreData = z.array(zWorkspace);
 export const zWorkspaceBackupTab = z.object({

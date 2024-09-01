@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { workspace } from "./utils/type";
-import { setworkspacesServices, workspaces } from "./data";
+import { setworkspacesServices, workspacesData } from "./data";
 
 export class workspacesServices {
   private static instance: workspacesServices;
@@ -36,7 +36,7 @@ export class workspacesServices {
   }
 
   get getAllworkspacesServicesId() {
-    return workspaces().map((workspace) => workspace.id);
+    return workspacesData().map((workspace) => workspace.id);
   }
 
   /**
@@ -113,7 +113,7 @@ export class workspacesServices {
    * @returns The selected workspace id.
    */
   public getWorkspaceById(workspaceId: string): workspace {
-    const workspace = workspaces().find(
+    const workspace = workspacesData().find(
       (workspace) => workspace.id === workspaceId,
     );
     if (!workspace) {
@@ -127,7 +127,7 @@ export class workspacesServices {
    * @returns The default workspace id.
    */
   getDefaultWorkspaceId() {
-    return workspaces().find((workspace) => workspace.isDefault)?.id;
+    return workspacesData().find((workspace) => workspace.isDefault)?.id;
   }
 
   /**
@@ -223,20 +223,17 @@ export class workspacesServices {
     return "";
   }
 
-  public contextMenu = {
-    /**
-     * Create context menu items for tabs in workspaces.
-     * @param event The event.
-     * @returns The context menu items.
-     */
-    createTabworkspacesServicesContextMenuItems: (event: Event) => {
-      console.log("createTabworkspacesServicesContextMenuItems");
-    },
-  };
+  /**
+   * Move tabs to workspace from tab context menu.
+   * @param workspaceId The workspace id.
+   */
+  public moveTabsToWorkspaceFromTabContextMenu(workspaceId: string) {
+    console.log("moveTabsToWorkspaceFromTabContextMenu");
+  }
 
   constructor() {
     // Check if workspaces data is empty, if so, create default workspace.
-    if (!workspaces().length) {
+    if (!workspacesData().length) {
       this.createNoNameWorkspace();
     }
   }

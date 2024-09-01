@@ -5,8 +5,10 @@
 
 import { workspacesServices } from "./workspaces";
 import { workspacesToolbarButton } from "./toolbar-element";
+import { workspacesTabContextMenu } from "./tabContextMenu";
 
 export function initWorkspaces() {
+  workspacesTabContextMenu.getInstance();
   workspacesToolbarButton.getInstance();
   workspacesServices.getInstance();
 }
