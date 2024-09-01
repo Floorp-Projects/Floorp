@@ -40,8 +40,8 @@ export const workspaceIcons = new Set([
   "user",
 ]);
 
-export function getWorkspaceIconUrl(icon: string) {
-  if (!workspaceIcons.has(icon) || !icon) {
+export function getWorkspaceIconUrl(icon: string | null | undefined): string {
+  if (!icon || !workspaceIcons.has(icon)) {
     return "chrome://floorp/skin/workspace-icons/fingerprint.svg";
   }
   return `chrome://floorp/skin/workspace-icons/${icon}.svg`;

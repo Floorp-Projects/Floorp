@@ -9,9 +9,11 @@ import { z } from "zod";
 export const zWorkspace = z.object({
   id: z.string(),
   name: z.string(),
+  color: z.string(),
   icon: z.string().nullish(),
   emoji: z.string().nullish(),
-  color: z.string(),
+  isSelected: z.boolean().nullish(),
+  isDefault: z.boolean().nullish(),
 });
 
 export const zWorkspaces = z.object({

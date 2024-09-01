@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Workspaces } from "./workspaces";
+import { workspacesToolbarButton } from "./workspaces-toolbar-element";
 
 export function initWorkspaces() {
+  workspacesToolbarButton.getInstance();
   Workspaces.getInstance();
 }

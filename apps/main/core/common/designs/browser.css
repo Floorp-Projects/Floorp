@@ -277,10 +277,19 @@
 }
 
 .sidepanel-icon {
-  list-style-image: var(--BMSIcon, url("chrome://devtools/skin/images/globe.svg"));
+  list-style-image: var(
+    --BMSIcon,
+    url("chrome://devtools/skin/images/globe.svg")
+  );
 }
 
-:is(:root[inDOMFullscreen], :root[inFullscreen]:not([macOSNativeFullscreen]), *|*:root[chromehidden~="toolbar"], :root[invisibleBMS]) #sidebar-select-box {
+:is(
+    :root[inDOMFullscreen],
+    :root[inFullscreen]:not([macOSNativeFullscreen]),
+    *|*:root[chromehidden~="toolbar"],
+    :root[invisibleBMS]
+  )
+  #sidebar-select-box {
   display: none;
 }
 
@@ -304,7 +313,8 @@
 }
 
 :root[lwt-default-theme-in-dark-mode="true"] #tabbrowser-tabpanels,
-:root[style*="--lwt-accent-color: rgb(28, 27, 34)"] #tabbrowser-tabpanels[flex] {
+:root[style*="--lwt-accent-color: rgb(28, 27, 34)"]
+  #tabbrowser-tabpanels[flex] {
   background: var(--toolbar-bgcolor) !important;
   background-color: var(--toolbar-bgcolor) !important;
 }
@@ -366,8 +376,16 @@ browser[type="content"] > html {
   filter: brightness(50%);
 }
 
-:root[privatebrowsingmode] #fxa-toolbar-menu-button:hover > .toolbarbutton-badge-stack,
-:root[privatebrowsingmode] #fxa-toolbar-menu-button:not([disabled="true"]):is([open], [checked], :hover:active) > .toolbarbutton-badge-stack {
+:root[privatebrowsingmode]
+  #fxa-toolbar-menu-button:hover
+  > .toolbarbutton-badge-stack,
+:root[privatebrowsingmode]
+  #fxa-toolbar-menu-button:not([disabled="true"]):is(
+    [open],
+    [checked],
+    :hover:active
+  )
+  > .toolbarbutton-badge-stack {
   background-color: inherit !important;
   filter: brightness(50%);
 }
@@ -386,8 +404,6 @@ browser[type="content"] > html {
   }
 }
 
-
-
 #private-browsing-indicator-with-label {
   display: none !important;
 }
@@ -400,7 +416,10 @@ browser[type="content"] > html {
 }
 
 :root[inDOMFullscreen] :is(.browserContainer) > .browserStack > *,
-:root[inFullscreen]:not([macOSNativeFullscreen]) :is(.browserContainer) > .browserStack > * {
+:root[inFullscreen]:not([macOSNativeFullscreen])
+  :is(.browserContainer)
+  > .browserStack
+  > * {
   border: none !important;
   border-radius: 0 !important;
 }
@@ -444,7 +463,10 @@ browser[type="content"] > html {
 
 @media (min-resolution: 1.1dppx) {
   toolbar[brighttext] .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x-light, inherit) !important;
+    list-style-image: var(
+      --webextension-toolbar-image-2x-light,
+      inherit
+    ) !important;
   }
 }
 
@@ -500,7 +522,10 @@ browser[type="content"] > html {
   border: 0;
   border-radius: 4px;
   color: var(--button-color, inherit);
-  background-color: var(--button-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
+  background-color: var(
+    --button-bgcolor,
+    color-mix(in srgb, currentColor 13%, transparent)
+  );
   padding: 8px 16px;
   font-weight: 600;
   min-width: 0;
@@ -508,11 +533,17 @@ browser[type="content"] > html {
 }
 
 #ssb-app-cancel-button:hover {
-  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
+  background-color: var(
+    --button-hover-bgcolor,
+    color-mix(in srgb, currentColor 17%, transparent)
+  );
 }
 
 #ssb-app-cancel-button:active {
-  background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
+  background-color: var(
+    --button-active-bgcolor,
+    color-mix(in srgb, currentColor 30%, transparent)
+  );
 }
 
 #ssb-button-hbox {
@@ -552,116 +583,4 @@ browser[type="content"] > html {
 
 #uninstall-ssb-contextmenu {
   --menuitem-image: url("chrome://floorp/skin/designs/lepton/pwa-remove.svg");
-}
-
-#workspacesToolbar {
-  width: 100% !important;
-}
-
-#workspacesPopupContent {
-  background: inherit !important;
-  overflow: scroll;
-  max-height: 300px;
-  width: 300px;
-  padding: 0px 5px;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-}
-
-#workspacesToolbar {
-  background: inherit !important;
-}
-
-.workspaceButton label,
-.workspaceButton image {
-  margin: auto !important;
-  display: inherit !important;
-  background-color: unset !important;
-  color: var(--tab-text-color) !important;
-}
-
-.workspaceButton[selected="true"] {
-  background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-}
-
-.workspaceButton {
-  list-style-image: url("chrome://branding/content/icon32.png");
-  border-radius: var(--tab-border-radius);
-  margin-right: 5px !important;
-  width: -moz-available;
-  min-height: 40px;
-}
-
-#workspacesManageWorkspacesButton {
-  list-style-image: url("chrome://floorp/skin/settings.svg");
-}
-
-#workspacesManageWorkspacesButton > .toolbarbutton-text[flex] {
-  display: none !important;
-}
-
-#workspaces-toolbar-button {
-  list-style-image: url("chrome://floorp/skin/icons/workspace-floorp.png");
-  border-radius: 0px !important;
-}
-
-#workspaces-toolbar-button:hover {
-  background-color: var(--toolbarbutton-hover-background) !important;
-}
-
-#workspaces-toolbar-button[open="true"],
-#workspaces-toolbar-button:hover:active {
-  background-color: var(--toolbarbutton-active-background) !important;
-}
-
-#workspaces-toolbar-button[showlabel="true"] > label {
-  display: inherit !important;
-}
-
-toolbarpaletteitem #workspaces-toolbar-button[showlabel="true"] > label {
-  display: none !important;
-}
-
-toolbarpaletteitem #workspaces-toolbar-button > label {
-  display: none !important;
-}
-
-#workspaces-toolbar-button > * {
-  background: unset !important;
-  background-color: unset !important;
-  background-image: unset !important;
-}
-
-.workspaceSeparator {
-  margin: 5px 0px !important;
-  width: -moz-available;
-}
-
-#workspacesCreateNewWorkspaceButton {
-  list-style-image: url(chrome://global/skin/icons/plus.svg);
-  width: -moz-available;
-  border-radius: var(--tab-border-radius);
-}
-
-#workspacesCreateNewWorkspaceButton:hover {
-  background-color: var(--toolbarbutton-hover-background) !important;
-}
-
-#workspacesCreateNewWorkspaceButton:hover:active {
-  background-color: var(--toolbarbutton-active-background) !important;
-}
-
-#workspacesCreateNewWorkspaceButton > * {
-  background: unset !important;
-  background-color: unset !important;
-  background-image: unset !important;
-}
-
-#workspacesCreateNewWorkspaceButton > label {
-  display: inherit;
-}
-
-#workspacesPopupSeparator {
-  margin: 10px 0px !important;
 }

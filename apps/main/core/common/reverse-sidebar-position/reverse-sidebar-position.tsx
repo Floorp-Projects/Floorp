@@ -22,7 +22,7 @@ export class ReverseSidebarPosition {
       "sidebar-reverse-position-toolbar",
       "sidebar-reverse-position-toolbar",
       () => {
-        window.SidebarUI.reversePosition();
+        window.SidebarController.reversePosition();
       },
       this.StyleElement(),
       CustomizableUI.AREA_NAVBAR,

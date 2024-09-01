@@ -74,6 +74,7 @@ export namespace BrowserActionUtils {
     if (widget && widget.type !== "custom") {
       return;
     }
+
     (async () => {
       CustomizableUI.createWidget({
         id: widgetId,
