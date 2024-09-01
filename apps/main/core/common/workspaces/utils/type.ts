@@ -16,12 +16,12 @@ export const zWorkspace = z.object({
   isDefault: z.boolean().nullish(),
 });
 
-export const zWorkspaces = z.object({
+export const zworkspacesServices = z.object({
   workspaces: z.array(zWorkspace),
   currentWorkspaceId: z.string(),
 });
 
-export const zWorkspacesStoreData = z.array(zWorkspace);
+export const zworkspacesServicesStoreData = z.array(zWorkspace);
 export const zWorkspaceBackupTab = z.object({
   title: z.string(),
   url: z.string(),
@@ -40,13 +40,13 @@ export const zWorkspaceBackup = z.object({
   ),
 });
 
-export const zWorkspacesBackup = z.object({
+export const zworkspacesServicesBackup = z.object({
   workspaces: z.array(zWorkspaceBackup),
   currentWorkspaceId: z.string(),
   timestamp: z.number(),
 });
 
-export const zWorkspacesConfigs = z.object({
+export const zworkspacesServicesConfigs = z.object({
   manageOnBms: z.boolean(),
   showWorkspaceNameOnToolbar: z.boolean(),
   closePopupAfterClick: z.boolean(),
@@ -54,9 +54,11 @@ export const zWorkspacesConfigs = z.object({
 
 /* Export as types */
 export type workspace = z.infer<typeof zWorkspace>;
-export type workspaces = z.infer<typeof zWorkspaces>;
-export type workspacesStoreData = z.infer<typeof zWorkspacesStoreData>;
+export type workspaces = z.infer<typeof zworkspacesServices>;
+export type workspacesStoreData = z.infer<typeof zworkspacesServicesStoreData>;
 export type workspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
 export type workspaceBackup = z.infer<typeof zWorkspaceBackup>;
-export type workspacesBackup = z.infer<typeof zWorkspacesBackup>;
-export type zWorkspacesConfigsType = z.infer<typeof zWorkspacesConfigs>;
+export type workspacesBackup = z.infer<typeof zworkspacesServicesBackup>;
+export type zworkspacesServicesConfigsType = z.infer<
+  typeof zworkspacesServicesConfigs
+>;

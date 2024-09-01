@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { workspace } from "./utils/type";
-import { setWorkspaces, workspaces } from "./data";
+import { setworkspacesServices, workspaces } from "./data";
 
-export class Workspaces {
-  private static instance: Workspaces;
+export class workspacesServices {
+  private static instance: workspacesServices;
   static getInstance() {
-    if (!Workspaces.instance) {
-      Workspaces.instance = new Workspaces();
+    if (!workspacesServices.instance) {
+      workspacesServices.instance = new workspacesServices();
     }
-    return Workspaces.instance;
+    return workspacesServices.instance;
   }
 
   /**
@@ -35,7 +35,7 @@ export class Workspaces {
     return Services.uuid.generateUUID().toString();
   }
 
-  get getAllWorkspacesId() {
+  get getAllworkspacesServicesId() {
     return workspaces().map((workspace) => workspace.id);
   }
 
@@ -43,7 +43,7 @@ export class Workspaces {
    * Returns new workspace color.
    * @returns The new workspace color.
    */
-  private get getNewWorkspacesColor(): string {
+  private get getNewworkspacesServicesColor(): string {
     return "blue";
   }
 
@@ -58,10 +58,10 @@ export class Workspaces {
       name,
       icon: null,
       emoji: null,
-      color: this.getNewWorkspacesColor,
+      color: this.getNewworkspacesServicesColor,
       isDefault: false,
     };
-    setWorkspaces((prev) => {
+    setworkspacesServices((prev) => {
       return [...prev, workspace];
     });
     return workspace.id;
@@ -83,7 +83,7 @@ export class Workspaces {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(workspaceId: string): void {
-    setWorkspaces((prev) => {
+    setworkspacesServices((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
   }
@@ -95,7 +95,7 @@ export class Workspaces {
   public changeWorkspace(workspaceId: string) {
     window.floorpWorkspaeId = workspaceId;
     // useEffect will be call for re-rendering PopupElement.
-    setWorkspaces((prev) => {
+    setworkspacesServices((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, isSelected: true };
@@ -184,7 +184,7 @@ export class Workspaces {
    * @param newName The new name.
    */
   public renameWorkspace(workspaceId: string, newName: string) {
-    setWorkspaces((prev) => {
+    setworkspacesServices((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, name: newName };
@@ -195,7 +195,7 @@ export class Workspaces {
   }
 
   /**
-   * Modify Workspaces() array to reorder workspace up 1 index.
+   * Modify workspacesServices() array to reorder workspace up 1 index.
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceUp(workspaceId: string) {
@@ -203,7 +203,7 @@ export class Workspaces {
   }
 
   /**
-   * Modify Workspaces() array to reorder workspace down 1 index.
+   * Modify workspacesServices() array to reorder workspace down 1 index.
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceDown(workspaceId: string) {
@@ -226,8 +226,8 @@ export class Workspaces {
      * @param event The event.
      * @returns The context menu items.
      */
-    createTabWorkspacesContextMenuItems: (event: Event) => {
-      console.log("createTabWorkspacesContextMenuItems");
+    createTabworkspacesServicesContextMenuItems: (event: Event) => {
+      console.log("createTabworkspacesServicesContextMenuItems");
     },
   };
 

@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { Workspaces } from "./workspaces";
+import { workspacesServices } from "./workspaces";
 import { workspaces } from "./data";
 import { PopupToolbarElement } from "./popup-block-element";
 import { config } from "./config";
 
 export function PopupElement() {
-  const gWorkspaces = Workspaces.getInstance();
+  const gWorkspacesServices = workspacesServices.getInstance();
   return (
     <xul:panel
       id="workspacesToolbarButtonPanel"
@@ -49,15 +49,15 @@ export function PopupElement() {
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-create-new-workspace-button"
             context="tab-stacks-toolbar-item-context-menu"
-            oncommand={gWorkspaces.createNoNameWorkspace}
+            oncommand={gWorkspacesServices.createNoNameWorkspace}
           />
           <xul:toolbarbutton
-            id="workspacesManageWorkspacesButton"
+            id="workspacesManageworkspacesServicesButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-manage-workspaces-button"
             context="tab-stacks-toolbar-item-context-menu"
             oncommand={() =>
-              gWorkspaces.manageWorkspaceFromDialog("workspacesId")
+              gWorkspacesServices.manageWorkspaceFromDialog("workspacesId")
             }
           />
         </xul:hbox>

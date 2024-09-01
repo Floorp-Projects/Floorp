@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { getWorkspaceIconUrl } from "./utils/workspace-icons";
-import { Workspaces } from "./workspaces";
+import { workspacesServices } from "./workspaces";
 
 const ContextMenu = (props: {
   disableBefore: boolean;
   disableAfter: boolean;
   contextWorkspaceId: string;
 }) => {
-  const gWorkspaces = Workspaces.getInstance();
+  const gWorkspacesServices = workspacesServices.getInstance();
   const { disableBefore, disableAfter, contextWorkspaceId } = props;
   return (
     <xul:menu
@@ -21,14 +21,14 @@ const ContextMenu = (props: {
     >
       <xul:menupopup
         id="workspacesTabContextMenu"
-        onpopupshowing={createTabWorkspacesContextMenuItems}
+        onpopupshowing={createTabworkspacesServicesContextMenuItems}
       />
     </xul:menu>
   );
 };
 
-function createTabWorkspacesContextMenuItems() {
-  const gWorkspaces = Workspaces.getInstance();
+function createTabworkspacesServicesContextMenuItems() {
+  const gWorkspacesServices = workspacesServices.getInstance();
   const menuElem = document?.getElementById("workspacesTabContextMenu");
   while (menuElem?.firstChild) {
     const child = menuElem.firstChild as XULElement;
@@ -36,9 +36,9 @@ function createTabWorkspacesContextMenuItems() {
   }
 
   //create context menu
-  const allWorkspacesId = gWorkspaces.getAllWorkspacesId;
-  for (const workspaceId of allWorkspacesId) {
-    const tabWorkspaceId = gWorkspaces.getWorkspaceIdFromAttribute(
+  const allworkspacesServicesId = gWorkspacesServices.getAllworkspacesServicesId;
+  for (const workspaceId of allworkspacesServicesId) {
+    const tabWorkspaceId = gWorkspacesServices.getWorkspaceIdFromAttribute(
       window.TabContextMenu.contextTab,
     );
 
@@ -46,16 +46,16 @@ function createTabWorkspacesContextMenuItems() {
       continue;
     }
 
-    const workspaceData = gWorkspaces.getWorkspaceById(workspaceId);
+    const workspaceData = gWorkspacesServices.getWorkspaceById(workspaceId);
     const workspaceName = workspaceData.name;
     const workspaceIcon = workspaceData.icon;
     const menuItem = window.MozXULElement.parseXULToFragment(`
         <menuitem id="context_MoveTabToOtherWorkspace"
                   class="menuitem-iconic"
                   style="list-style-image: url(${getWorkspaceIconUrl(
-                    workspaceIcon,
-                  )})"
-                  oncommand="gWorkspaces.moveTabsToWorkspaceFromTabContextMenu('${workspaceId}')"
+      workspaceIcon,
+    )})"
+                  oncommand="gWorkspacesServices.moveTabsToWorkspaceFromTabContextMenu('${workspaceId}')"
       />`);
 
     menuItem.firstChild.setAttribute("label", workspaceName);
@@ -73,7 +73,7 @@ export class workspacesTabContextMenu {
     return workspacesTabContextMenu.instance;
   }
 
-  public createTabWorkspacesContextMenuItems(event: Event) {
-    console.log("createTabWorkspacesContextMenuItems");
+  public createTabworkspacesServicesContextMenuItems(event: Event) {
+    console.log("createTabworkspacesServicesContextMenuItems");
   }
 }

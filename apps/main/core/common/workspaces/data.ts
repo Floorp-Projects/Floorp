@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { zWorkspacesStoreData } from "./utils/type";
-import { WorkspacesStaticNames } from "./utils/workspaces-static-names";
+import { zworkspacesServicesStoreData } from "./utils/type";
+import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
-/** Workspaces data */
-export const [workspaces, setWorkspaces] = createSignal(
-  zWorkspacesStoreData.parse(
-    getWorkspacesArrayData(
+/** workspacesServices data */
+export const [workspaces, setworkspacesServices] = createSignal(
+  zworkspacesServicesStoreData.parse(
+    getworkspacesServicesArrayData(
       Services.prefs.getStringPref(
-        WorkspacesStaticNames.workspaceDataPrefName,
+        workspacesServicesStaticNames.workspaceDataPrefName,
         "{}",
       ),
     ),
@@ -21,17 +21,17 @@ export const [workspaces, setWorkspaces] = createSignal(
 
 createEffect(() => {
   Services.prefs.setStringPref(
-    WorkspacesStaticNames.workspaceDataPrefName,
+    workspacesServicesStaticNames.workspaceDataPrefName,
     JSON.stringify({ workspaces: workspaces() }),
   );
 });
 
 Services.prefs.addObserver("floorp.workspaces.v3.data", () =>
-  setWorkspaces(
-    zWorkspacesStoreData.parse(
-      getWorkspacesArrayData(
+  setworkspacesServices(
+    zworkspacesServicesStoreData.parse(
+      getworkspacesServicesArrayData(
         Services.prefs.getStringPref(
-          WorkspacesStaticNames.workspaceDataPrefName,
+          workspacesServicesStaticNames.workspaceDataPrefName,
           "{}",
         ),
       ),
@@ -39,6 +39,6 @@ Services.prefs.addObserver("floorp.workspaces.v3.data", () =>
   ),
 );
 
-function getWorkspacesArrayData(stringData: string) {
+function getworkspacesServicesArrayData(stringData: string) {
   return JSON.parse(stringData).workspaces || [];
 }

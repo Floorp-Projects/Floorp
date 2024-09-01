@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Workspaces } from "./workspaces";
+import { workspacesServices } from "./workspaces";
 
 export function ContextMenu(props: {
   disableBefore: boolean;
@@ -11,35 +11,35 @@ export function ContextMenu(props: {
   contextWorkspaceId: string;
 }) {
   const { disableBefore, disableAfter, contextWorkspaceId } = props;
-  const gWorkspaces = Workspaces.getInstance();
+  const gWorkspacesServices = workspacesServices.getInstance();
 
   return (
     <>
       <xul:menuitem
         data-l10n-id="reorder-this-workspace-to-up"
         disabled={disableBefore}
-        oncommand={() => gWorkspaces.reorderWorkspaceUp(contextWorkspaceId)}
+        oncommand={() => gWorkspacesServices.reorderWorkspaceUp(contextWorkspaceId)}
       />
       <xul:menuitem
         data-l10n-id="reorder-this-workspace-to-down"
         disabled={disableAfter}
-        oncommand={() => gWorkspaces.reorderWorkspaceDown(contextWorkspaceId)}
+        oncommand={() => gWorkspacesServices.reorderWorkspaceDown(contextWorkspaceId)}
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
         data-l10n-id="rename-this-workspace"
         oncommand={() =>
-          gWorkspaces.renameWorkspaceWithCreatePrompt(contextWorkspaceId)
+          gWorkspacesServices.renameWorkspaceWithCreatePrompt(contextWorkspaceId)
         }
       />
       <xul:menuitem
         data-l10n-id="delete-this-workspace"
-        oncommand={() => gWorkspaces.deleteWorkspace(contextWorkspaceId)}
+        oncommand={() => gWorkspacesServices.deleteWorkspace(contextWorkspaceId)}
       />
       <xul:menuitem
         data-l10n-id="manage-this-workspaces"
         oncommand={() =>
-          gWorkspaces.manageWorkspaceFromDialog(contextWorkspaceId)
+          gWorkspacesServices.manageWorkspaceFromDialog(contextWorkspaceId)
         }
       />
     </>

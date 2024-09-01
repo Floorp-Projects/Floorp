@@ -5,12 +5,12 @@
 
 /**
  *
- * Workspaces static names. Pref names, attribute names, etc.
+ * workspacesServices static names. Pref names, attribute names, etc.
  * @workspaceDataPrefName is the name of the preference that stores the workspaces data.
  * @workspaceLastShowId is the attribute name of tabs that stores the workspace id.
  * @workspaceLastShowId is the attribute name of the workspace that stores the last shown workspace id.
  */
-export namespace WorkspacesStaticNames {
+export namespace workspacesServicesStaticNames {
   /*
    * workspaceDataPrefName is the name of the preference that stores the workspaces data.
    * workspaceLastShowId is the attribute name of tabs that stores the workspace id.

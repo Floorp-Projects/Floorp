@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Workspaces } from "./workspaces";
+import { workspacesServices } from "./workspaces";
 
 export function PopupToolbarElement(props: {
   workspaceId: string;
@@ -11,7 +11,7 @@ export function PopupToolbarElement(props: {
   label: string;
   bmsMode: boolean;
 }) {
-  const gWorkspaces = Workspaces.getInstance();
+  const gWorkspacesServices = workspacesServices.getInstance();
   const { workspaceId, isSelected, bmsMode } = props;
   return (
     <xul:toolbarbutton
@@ -22,7 +22,7 @@ export function PopupToolbarElement(props: {
       data-selected={isSelected}
       data-workspaceId={workspaceId}
       oncommand={() => {
-        gWorkspaces.changeWorkspace(workspaceId);
+        gWorkspacesServices.changeWorkspace(workspaceId);
       }}
     />
   );

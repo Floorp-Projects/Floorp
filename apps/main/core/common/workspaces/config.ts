@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { zWorkspacesConfigs } from "./utils/type";
+import { zworkspacesServicesConfigs } from "./utils/type";
 import { getOldConfigs } from "./old-config";
 
 /** enable/disable workspaces */
@@ -17,7 +17,7 @@ Services.prefs.addObserver("floorp.browser.workspaces.enabled", () =>
 
 /** Configs */
 export const [config, setConfig] = createSignal(
-  zWorkspacesConfigs.parse(
+  zworkspacesServicesConfigs.parse(
     JSON.parse(
       Services.prefs.getStringPref("floorp.workspaces.configs", getOldConfigs),
     ),
@@ -33,7 +33,7 @@ createEffect(() => {
 
 Services.prefs.addObserver("floorp.workspaces.configs", () =>
   setConfig(
-    zWorkspacesConfigs.parse(
+    zworkspacesServicesConfigs.parse(
       JSON.parse(Services.prefs.getStringPref("floorp.workspaces.configs")),
     ),
   ),

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
-import { Workspaces } from "./workspaces";
+import { workspacesServices } from "./workspaces";
 import { ContextMenu } from "./contextMenu";
 import { render } from "@nora/solid-xul";
 
@@ -22,8 +22,8 @@ export class workspacesToolbarButton {
    * @param event The event.
    * @returns The context menu items.
    */
-  private createWorkspacesContextMenuItems(event: Event) {
-    const gWorkspaces = Workspaces.getInstance();
+  private createworkspacesServicesContextMenuItems(event: Event) {
+    const gWorkspacesServices = workspacesServices.getInstance();
     //delete already exsist items
     const menuElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
@@ -37,7 +37,7 @@ export class workspacesToolbarButton {
       "workspace-",
       "",
     );
-    const defaultWorkspaceId = gWorkspaces.getDefaultWorkspaceId();
+    const defaultWorkspaceId = gWorkspacesServices.getDefaultWorkspaceId();
     const beforeSiblingElem =
       event.explicitOriginalTarget?.previousElementSibling?.getAttribute(
         "workspaceId",
@@ -69,7 +69,7 @@ export class workspacesToolbarButton {
         <xul:menupopup
           id="workspaces-toolbar-item-context-menu"
           onpopupshowing={(event) =>
-            this.createWorkspacesContextMenuItems(event)
+            this.createworkspacesServicesContextMenuItems(event)
           }
         />
       </xul:popupset>
