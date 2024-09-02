@@ -19,7 +19,7 @@ const { CustomizableUI } = ChromeUtils.importESModule(
 export namespace BrowserActionUtils {
   export function createToolbarClickActionButton(
     widgetId: string,
-    l10nId: string,
+    l10nId: string | null,
     onCommandFunc: () => void,
     styleElement: JSXElement | null = null,
     area: TCustomizableUIArea = CustomizableUI.AREA_NAVBAR,
@@ -42,8 +42,8 @@ export namespace BrowserActionUtils {
       CustomizableUI.createWidget({
         id: widgetId,
         type: "button",
-        tooltiptext: await document.l10n?.formatValue(l10nId),
-        label: await document.l10n?.formatValue(l10nId),
+        tooltiptext: l10nId ? await document.l10n?.formatValue(l10nId) : null,
+        label: l10nId ? await document.l10n?.formatValue(l10nId) : null,
         removable: true,
         onCommand: () => {
           onCommandFunc?.();

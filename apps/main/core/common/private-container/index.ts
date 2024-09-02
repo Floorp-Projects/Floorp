@@ -7,7 +7,7 @@ import { render } from "@nora/solid-xul";
 import { gFloorpPrivateContainer } from "./browser-private-container";
 import { ContextMenu } from "./context-menu";
 
-export function initPrivateContainer() {
+export function init() {
   render(ContextMenu, document.querySelector("#tabContextMenu"), {
     marker: document.querySelector("#context_selectAllTabs")!,
   });

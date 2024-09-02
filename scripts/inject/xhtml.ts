@@ -69,4 +69,18 @@ export async function injectXHTMLDev(binPath: string) {
 
     await fs.writeFile(path_preferencesxhtml, document.toString());
   }
+
+  const path_page_html_template = `${binPath}/browser/chrome/browser/res/activity-stream/data/content/abouthomecache/page.html.template`;
+  {
+    const document = new DOMParser().parseFromString(
+      (await fs.readFile(path_page_html_template)).toString(),
+      "text/html",
+    );
+
+    const div = document.createElement("div", {}) as unknown as HTMLDivElement;
+    div.textContent = "hello";
+    (document.querySelector("body") as HTMLBodyElement).appendChild(div);
+
+    await fs.writeFile(path_page_html_template, document.toString());
+  }
 }

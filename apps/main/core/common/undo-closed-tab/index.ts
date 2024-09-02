@@ -5,6 +5,6 @@
 
 import { UndoClosedTab } from "./undo-closed-tab";
 
-export function initUndoClosedTab() {
+export function init() {
   new UndoClosedTab();
 }
