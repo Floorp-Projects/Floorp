@@ -27,30 +27,32 @@ export async function injectXHTML(binPath: string) {
     await fs.writeFile(path_browserxhtml, document.toString());
   }
 
-  const path_preferencesxhtml = `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.xhtml`;
-  {
-    const document = new DOMParser().parseFromString(
-      (await fs.readFile(path_preferencesxhtml)).toString(),
-      "text/xml",
-    );
+  // const path_preferencesxhtml = `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.xhtml`;
+  // {
+  //   const document = new DOMParser().parseFromString(
+  //     (await fs.readFile(path_preferencesxhtml)).toString(),
+  //     "text/xml",
+  //   );
 
-    for (const elem of document.querySelectorAll("[data-geckomixin]")) {
-      elem.remove();
-    }
+  //   for (const elem of document.querySelectorAll("[data-geckomixin]")) {
+  //     elem.remove();
+  //   }
 
-    const script = document.createElement("script");
-    script.setAttribute("type", "module");
-    script.setAttribute(
-      "src",
-      "chrome://noraneko-startup/content/about-preferences.js",
-    );
-    script.setAttribute("defer", "defer");
-    script.dataset.geckomixin = "";
+  //   const script = document.createElement("script");
+  //   script.setAttribute("type", "module");
+  //   script.setAttribute(
+  //     "src",
+  //     "chrome://noraneko-startup/content/about-preferences.js",
+  //   );
+  //   script.setAttribute("defer", "defer");
+  //   script.dataset.geckomixin = "";
 
-    document.querySelector("head").appendChild(script);
+  //   console.log("hi3");
+  //   document.querySelector("head").appendChild(script);
 
-    await fs.writeFile(path_preferencesxhtml, document.toString());
-  }
+  //   await fs.writeFile(path_preferencesxhtml, document.toString());
+  // }
+  // console.log("hi2");
 }
 
 export async function injectXHTMLDev(binPath: string) {
