@@ -6,7 +6,7 @@
 import { createEffect } from "solid-js";
 import { config, setConfig } from "../../designs/configs";
 import type { zFloorpDesignConfigsType } from "../../designs/configs";
-import { insert } from "@nora/solid-xul";
+import { render, insert } from "@nora/solid-xul";
 import { VerticalTabbarStyle } from "./vertical-tabbar-style";
 import { VerticalTabbarSplitter } from "./vertical-tabbar-splitter";
 
@@ -23,28 +23,36 @@ export class gVerticalTabbarClass {
     this.mutationObserverCallback,
   );
   private get tabsToolbar(): XULElement | null {
-    return document.querySelector("#TabsToolbar");
+    return document?.querySelector("#TabsToolbar") as XULElement | null;
   }
   private get titlebarContainer(): XULElement | null {
-    return document.querySelector("#titlebar");
+    return document?.querySelector("#titlebar") as XULElement | null;
   }
   private get browserBox(): XULElement | null {
-    return document.querySelector("#browser");
+    return document?.querySelector("#browser") as XULElement | null;
   }
   private get arrowscrollbox(): XULElement | null {
-    return document.querySelector("#tabbrowser-arrowscrollbox");
+    return document?.querySelector(
+      "#tabbrowser-arrowscrollbox",
+    ) as XULElement | null;
   }
   private get tabbrowserTabs(): XULElement | null {
-    return document.querySelector("#tabbrowser-tabs");
+    return document?.querySelector("#tabbrowser-tabs") as XULElement | null;
   }
   private get splitter(): XULElement | null {
-    return document.querySelector("#verticaltab-splitter");
+    return document?.querySelector(
+      "#verticaltab-splitter",
+    ) as XULElement | null;
   }
   private get tabContextCloseTabsToTheStart(): XULElement | null {
-    return document.querySelector("#context_closeTabsToTheStart");
+    return document?.querySelector(
+      "#context_closeTabsToTheStart",
+    ) as XULElement | null;
   }
   private get tabContextCloseTabsToTheEnd(): XULElement | null {
-    return document.querySelector("#context_closeTabsToTheEnd");
+    return document?.querySelector(
+      "#context_closeTabsToTheEnd",
+    ) as XULElement | null;
   }
 
   private enableVerticalTabbar() {
@@ -53,14 +61,14 @@ export class gVerticalTabbarClass {
     this.tabsToolbar?.setAttribute("multibar", "true");
 
     document
-      .querySelector("#TabsToolbar .toolbar-items")
+      ?.querySelector("#TabsToolbar .toolbar-items")
       ?.setAttribute("align", "start");
 
     this.tabsToolbar?.removeAttribute("flex");
     this.splitter?.removeAttribute("hidden");
     this.tabsToolbar?.removeAttribute("hidden");
     document
-      .getElementById("TabsToolbar")
+      ?.getElementById("TabsToolbar")
       ?.setAttribute("width", config().tabbar.verticalTabBar.width.toString());
 
     this.tabContextCloseTabsToTheStart?.setAttribute(
@@ -97,7 +105,7 @@ export class gVerticalTabbarClass {
     this.tabbrowserTabs?.setAttribute("orient", "horizontal");
 
     document
-      .querySelector("#TabsToolbar .toolbar-items")
+      ?.querySelector("#TabsToolbar .toolbar-items")
       ?.setAttribute("align", "end");
 
     this.tabsToolbar?.setAttribute("flex", "1");
@@ -113,7 +121,7 @@ export class gVerticalTabbarClass {
   }
 
   private disableVerticalTabbar() {
-    document.documentElement?.removeAttribute("g-vertical-tabbar");
+    document?.documentElement?.removeAttribute("g-vertical-tabbar");
   }
 
   private mouseMiddleClickEventListener(event: MouseEvent) {
@@ -156,15 +164,14 @@ export class gVerticalTabbarClass {
   };
 
   constructor() {
+    render(() => VerticalTabbarSplitter(), this.browserBox, {
+      hotCtx: import.meta.hot,
+    });
+
     insert(
-      this.browserBox,
-      <VerticalTabbarSplitter />,
-      this.browserBox?.firstElementChild,
-    );
-    insert(
-      document.head,
+      document?.head,
       <VerticalTabbarStyle />,
-      document.head?.lastElementChild,
+      document?.head?.lastElementChild,
     );
 
     // listen to config changes

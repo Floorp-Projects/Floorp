@@ -6,29 +6,29 @@
 import { checkPaddingEnabled } from "./titilebar-padding";
 import { config } from "../../designs/configs";
 import { TabbarStyleModifyCSSElement } from "./tabbar-style-element";
-import { insert } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 
 export namespace gTabbarStyleFunctions {
   function getPanelUIMenuButton(): XULElement | null {
-    return document.querySelector("#PanelUI-menu-button");
+    return document?.querySelector("#PanelUI-menu-button") as XULElement | null;
   }
   function getTabbarElement(): XULElement | null {
-    return document.querySelector("#TabsToolbar");
+    return document?.querySelector("#TabsToolbar") as XULElement | null;
   }
   function getTitleBarElement(): XULElement | null {
-    return document.querySelector("#titlebar");
+    return document?.querySelector("#titlebar") as XULElement | null;
   }
   function getNavbarElement(): XULElement | null {
-    return document.querySelector("#nav-bar");
+    return document?.querySelector("#nav-bar") as XULElement | null;
   }
   function getNavigatorToolboxtabbarElement(): XULElement | null {
-    return document.querySelector("#navigator-toolbox");
+    return document?.querySelector("#navigator-toolbox") as XULElement | null;
   }
   function getBrowserElement(): XULElement | null {
-    return document.querySelector("#browser");
+    return document?.querySelector("#browser") as XULElement | null;
   }
   function getUrlbarContainer(): XULElement | null {
-    return document.querySelector(".urlbar-container");
+    return document?.querySelector(".urlbar-container") as XULElement | null;
   }
   function isVerticalTabbar() {
     return config().tabbar.tabbarStyle === "vertical";
@@ -38,11 +38,11 @@ export namespace gTabbarStyleFunctions {
     getTabbarElement()?.removeAttribute("floorp-tabbar-display-style");
     getTabbarElement()?.removeAttribute("hidden");
     getTabbarElement()?.appendChild(
-      document.querySelector("#floorp-tabbar-window-manage-container") as Node,
+      document?.querySelector("#floorp-tabbar-window-manage-container") as Node,
     );
     getTitleBarElement()?.appendChild(getTabbarElement() as Node);
     getNavigatorToolboxtabbarElement()?.prepend(getTitleBarElement() as Node);
-    document.querySelector("#floorp-tabbar-modify-css")?.remove();
+    document?.querySelector("#floorp-tabbar-modify-css")?.remove();
     getTabbarElement()?.removeAttribute("floorp-tabbar-display-style");
     getUrlbarContainer()?.style.removeProperty("margin-top");
   }
@@ -66,7 +66,7 @@ export namespace gTabbarStyleFunctions {
     //optimize vertical tabbar
     getTabbarElement()?.setAttribute("hidden", "true");
     getNavbarElement()?.appendChild(
-      document.querySelector("#floorp-tabbar-window-manage-container") as Node,
+      document?.querySelector("#floorp-tabbar-window-manage-container") as Node,
     );
     checkPaddingEnabled();
   }
@@ -77,7 +77,7 @@ export namespace gTabbarStyleFunctions {
     }
     getNavigatorToolboxtabbarElement()?.appendChild(getTabbarElement() as Node);
     getPanelUIMenuButton()?.after(
-      document.querySelector("#floorp-tabbar-window-manage-container") as Node,
+      document?.querySelector("#floorp-tabbar-window-manage-container") as Node,
     );
     getTabbarElement()?.setAttribute("floorp-tabbar-display-style", "2");
   }
@@ -89,7 +89,7 @@ export namespace gTabbarStyleFunctions {
 
     getBrowserElement()?.after(getTitleBarElement() as Node);
     getPanelUIMenuButton()?.after(
-      document.querySelector("#floorp-tabbar-window-manage-container") as Node,
+      document?.querySelector("#floorp-tabbar-window-manage-container") as Node,
     );
     getTabbarElement()?.setAttribute("floorp-tabbar-display-style", "3");
     // set margin to the top of urlbar container & allow moving the window
@@ -98,11 +98,15 @@ export namespace gTabbarStyleFunctions {
 
   export function applyTabbarStyle() {
     // revertToDefaultStyle();
-    insert(
-      document.head,
-      <TabbarStyleModifyCSSElement style={config().tabbar.tabbarPosition} />,
-      document.head?.lastChild,
+    render(
+      () =>
+        TabbarStyleModifyCSSElement({ style: config().tabbar.tabbarPosition }),
+      document?.head,
+      {
+        hotCtx: import.meta.hot,
+      },
     );
+
     switch (config().tabbar.tabbarPosition) {
       case "hide-horizontal-tabbar":
         hideHorizontalTabbar();

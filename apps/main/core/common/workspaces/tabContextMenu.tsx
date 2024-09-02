@@ -63,9 +63,14 @@ export class workspacesTabContextMenu {
     ) as workspaces;
 
     const parentElem = document?.getElementById("workspacesTabContextMenu");
-    render(() => workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces), parentElem, {
-      hotCtx: import.meta.hot,
-    });
+    render(
+      () => workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+      parentElem,
+      {
+        marker: parentElem!,
+        hotCtx: import.meta.hot,
+      },
+    );
   }
 
   constructor() {
