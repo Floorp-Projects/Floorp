@@ -6,7 +6,7 @@
 import { createEffect } from "solid-js";
 import { config, setConfig } from "../../designs/configs";
 import type { zFloorpDesignConfigsType } from "../../designs/configs";
-import { render, insert } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 import { VerticalTabbarStyle } from "./vertical-tabbar-style";
 import { VerticalTabbarSplitter } from "./vertical-tabbar-splitter";
 
@@ -168,11 +168,9 @@ export class gVerticalTabbarClass {
       hotCtx: import.meta.hot,
     });
 
-    insert(
-      document?.head,
-      <VerticalTabbarStyle />,
-      document?.head?.lastElementChild,
-    );
+    render(() => VerticalTabbarStyle(), document?.head, {
+      hotCtx: import.meta.hot,
+    });
 
     // listen to config changes
     createEffect(() => {
