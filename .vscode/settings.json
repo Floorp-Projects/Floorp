@@ -4,7 +4,9 @@
   },
   "editor.defaultFormatter": "biomejs.biome",
   "files.associations": {
-    "*.xhtml": "xml"
+    "*.xhtml": "xml",
+    "*.html.template": "html",
+    "*.js.template": "javascript"
   },
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

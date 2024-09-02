@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsx ./build.js",
-    "dev": "tsx ./build.js --run"
+    "build": "node --import @swc-node/register/esm-register ./build.ts",
+    "dev": "node --import @swc-node/register/esm-register ./build.ts --run"
   },
   "keywords": [],
   "workspaces": [
@@ -20,32 +20,33 @@
     "@babel/plugin-proposal-decorators": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
     "@biomejs/biome": "^1.8.3",
-    "@bytecodealliance/preview2-shim": "^0.16.4",
+    "@bytecodealliance/preview2-shim": "^0.16.7",
+    "@swc-node/register": "^1.10.9",
     "@types/babel__core": "^7.20.5",
     "@types/decompress": "^4.2.7",
-    "@types/node": "^22.2.0",
+    "@types/node": "^22.5.4",
     "@types/postcss-sorting": "^8.0.2",
     "@typescript/lib-dom": "link:@types\\gecko\\dom",
     "chokidar": "^3.6.0",
     "decompress": "^4.2.1",
-    "dom-expressions": "^0.38.3",
-    "esbuild": "^0.23.0",
+    "dom-expressions": "^0.38.5",
+    "esbuild": "^0.23.1",
     "esbuild-plugin-solid": "^0.6.0",
-    "execa": "^9.3.0",
+    "execa": "^9.3.1",
     "fast-glob": "^3.3.2",
     "lightningcss": "^1.26.0",
     "linkedom": "0.18.4",
-    "puppeteer-core": "^23.0.2",
-    "tsx": "^4.17.0",
+    "puppeteer-core": "^23.3.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.5.4",
-    "vite": "5.4.0",
+    "vite": "5.4.3",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^5.0.1"
   },
   "dependencies": {
     "solid-element": "^1.8.1",
     "solid-styled-jsx": "^0.27.1",
-    "sortablejs": "^1.15.2",
+    "sortablejs": "^1.15.3",
     "zod": "^3.23.8"
   },
   "packageManager": "pnpm@9.2.0"

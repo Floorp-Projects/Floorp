@@ -6,7 +6,8 @@
 import { render } from "@nora/solid-xul";
 import { BrowserDesignElement } from "./browser-design-element";
 
-export function initDesigns() {
+export function init() {
+  //render(BrowserStyle, document.head);
   render(BrowserDesignElement, document.head, { hotCtx: import.meta.hot });
   window.gURLBar._updateLayoutBreakoutDimensions();
 }

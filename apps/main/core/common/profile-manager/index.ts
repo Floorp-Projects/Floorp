@@ -5,6 +5,6 @@
 
 import { gFloorpProfileManager } from "./profile-manager";
 
-export function initProfileManager() {
+export function init() {
   gFloorpProfileManager.getInstance();
 }

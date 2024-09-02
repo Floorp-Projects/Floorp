@@ -180,6 +180,7 @@ export {
   insertNode,
   /**
    * insertBefore
+   * @deprecated please use render with marker
    */
   insert,
   spread,

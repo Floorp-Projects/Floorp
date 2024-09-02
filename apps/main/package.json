@@ -9,6 +9,7 @@
     "@nora/test": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
+    "i18next": "^23.14.0",
     "solid-js": "^1.8.18",
     "ws": "^8.18.0"
   },

@@ -13,6 +13,7 @@ Noraneko Browser is currently testbed of modern JS environment for Floorp.
 Star me!
 
 ## Noraneko Docs available!
+
 Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
 
 ## How to Start Development
@@ -23,7 +24,7 @@ You can run `pnpm build` and `pnpm dev`.
 `pnpm build` outputs files, while `pnpm dev` is used for debugging the code with file watch.
 Refer to "How to Debug" for instructions on using `pnpm dev`.
 
-# How to Debug
+## How to Debug
 
 ### Windows
 
@@ -64,4 +65,5 @@ Thank you [@CutterKnife](https://github.com/CutterKnife) for the logo!
 Thank you!
 
 ## LICENSE
+
 Mozilla Public License 2.0

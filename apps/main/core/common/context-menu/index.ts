@@ -5,7 +5,7 @@
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
 
-export function initBrowserContextMenu() {
+export function init() {
   ContextMenuUtils.contentAreaContextMenu()?.addEventListener(
     "popupshowing",
     ContextMenuUtils.onPopupShowing,
