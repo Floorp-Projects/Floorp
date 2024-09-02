@@ -35,19 +35,15 @@ export class workspacesToolbarButton {
       firstChild.remove();
     }
 
-    const contextWorkspaceId = event.explicitOriginalTarget?.id.replace(
-      "workspace-",
-      "",
-    );
+    const eventTargetElement = event.explicitOriginalTarget as XULElement;
+    const contextWorkspaceId = eventTargetElement.id.replace("workspace-", "");
     const defaultWorkspaceId = gWorkspacesServices.getDefaultWorkspaceId();
     const beforeSiblingElem =
-      event.explicitOriginalTarget?.previousElementSibling?.getAttribute(
-        "workspaceId",
-      ) || null;
+      eventTargetElement.previousElementSibling?.getAttribute("workspaceId") ||
+      null;
     const afterSiblingElem =
-      event.explicitOriginalTarget?.nextElementSibling?.getAttribute(
-        "workspaceId",
-      ) || null;
+      eventTargetElement.nextElementSibling?.getAttribute("workspaceId") ||
+      null;
     const isDefaultWorkspace = contextWorkspaceId === defaultWorkspaceId;
     const isBeforeSiblingDefaultWorkspace =
       beforeSiblingElem === defaultWorkspaceId;
@@ -60,9 +56,18 @@ export class workspacesToolbarButton {
     const parentElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
     );
-    render(() => ContextMenu({ disableBefore: needDisableBefore, disableAfter: needDisableAfter, contextWorkspaceId }), parentElem, {
-      hotCtx: import.meta.hot,
-    });
+    render(
+      () =>
+        ContextMenu({
+          disableBefore: needDisableBefore,
+          disableAfter: needDisableAfter,
+          contextWorkspaceId,
+        }),
+      parentElem,
+      {
+        hotCtx: import.meta.hot,
+      },
+    );
   }
 
   private PopupSet() {
