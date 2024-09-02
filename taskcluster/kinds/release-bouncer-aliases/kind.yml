@@ -63,7 +63,7 @@ tasks:
                     firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
                     firefox-langpack-latest-ssl: langpack
-                esr115:
+                esr128:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
                     # ... these always point to the older branch
@@ -73,7 +73,6 @@ tasks:
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
                     firefox-esr-langpack-latest-ssl: langpack
-                esr128:
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
