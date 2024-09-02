@@ -22,7 +22,9 @@ export class workspacesToolbarButton {
    * @param event The event.
    * @returns The context menu items.
    */
-  private createworkspacesServicesContextMenuItems(event: Event) {
+  private createworkspacesContextMenuItems(event: Event) {
+    console.log("createworkspacesContextMenuItems");
+
     const gWorkspacesServices = workspacesServices.getInstance();
     //delete already exsist items
     const menuElem = document?.getElementById(
@@ -69,7 +71,7 @@ export class workspacesToolbarButton {
         <xul:menupopup
           id="workspaces-toolbar-item-context-menu"
           onpopupshowing={(event) =>
-            this.createworkspacesServicesContextMenuItems(event)
+            this.createworkspacesContextMenuItems(event)
           }
         />
       </xul:popupset>

@@ -11,4 +11,5 @@ export function initWorkspaces() {
   workspacesTabContextMenu.getInstance();
   workspacesToolbarButton.getInstance();
   workspacesServices.getInstance();
+  import.meta.hot?.accept();
 }

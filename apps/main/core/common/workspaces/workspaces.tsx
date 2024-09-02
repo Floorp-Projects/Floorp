@@ -198,19 +198,39 @@ export class workspacesServices {
   }
 
   /**
-   * Modify workspacesServices() array to reorder workspace up 1 index.
+   * Reorders a workspace to before one
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceUp(workspaceId: string) {
-    console.log("reorderWorkspaceUp");
+    const workspaces = workspacesData();
+    const workspaceIndex = workspaces.findIndex(
+      (workspace) => workspace.id === workspaceId,
+    );
+    if (workspaceIndex === 0) {
+      throw new Error(`Workspace with id ${workspaceId} is already first`);
+    }
+    const workspace = workspaces[workspaceIndex];
+    workspaces[workspaceIndex] = workspaces[workspaceIndex - 1];
+    workspaces[workspaceIndex - 1] = workspace;
+    setworkspacesServices(workspaces);
   }
 
   /**
-   * Modify workspacesServices() array to reorder workspace down 1 index.
+   * Reorders a workspace to after one
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceDown(workspaceId: string) {
-    console.log("reorderWorkspaceDown");
+    const workspaces = workspacesData();
+    const workspaceIndex = workspaces.findIndex(
+      (workspace) => workspace.id === workspaceId,
+    );
+    if (workspaceIndex === workspaces.length - 1) {
+      throw new Error(`Workspace with id ${workspaceId} is already last`);
+    }
+    const workspace = workspaces[workspaceIndex];
+    workspaces[workspaceIndex] = workspaces[workspaceIndex + 1];
+    workspaces[workspaceIndex + 1] = workspace;
+    setworkspacesServices(workspaces);
   }
 
   /**

@@ -19,12 +19,14 @@ export class workspacesTabContextMenu {
     return workspacesTabContextMenu.instance;
   }
 
-  private menuItem(workspaces: workspaces) {
+  // static is Against "this.menuItem is not a function" error.
+  private static menuItem(workspaces: workspaces) {
     const gWorkspaces = workspacesServices.getInstance();
     return (
       <For each={workspaces}>
         {(workspace) => (
           <xul:menuitem id="context_MoveTabToOtherWorkspace"
+            label={workspace.name}
             class="menuitem-iconic"
             style={`list-style-image: url(${getWorkspaceIconUrl(workspace.icon)})`}
             oncommand={() => gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)}
@@ -51,8 +53,6 @@ export class workspacesTabContextMenu {
       child.remove();
     }
 
-    console.log("contextTab", window.TabContextMenu.contextTab);
-
     //create context menu
     const tabWorkspaceId = gWorkspacesServices.getWorkspaceIdFromAttribute(
       window.TabContextMenu.contextTab,
@@ -63,7 +63,7 @@ export class workspacesTabContextMenu {
     ) as workspaces;
 
     const parentElem = document?.getElementById("workspacesTabContextMenu");
-    render(() => this.menuItem(excludeHasTabWorkspaceIdWorkspaces), parentElem, {
+    render(() => workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces), parentElem, {
       hotCtx: import.meta.hot,
     });
   }

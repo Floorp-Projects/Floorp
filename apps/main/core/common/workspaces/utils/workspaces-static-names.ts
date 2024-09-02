@@ -11,11 +11,6 @@
  * @workspaceLastShowId is the attribute name of the workspace that stores the last shown workspace id.
  */
 export namespace workspacesServicesStaticNames {
-  /*
-   * workspaceDataPrefName is the name of the preference that stores the workspaces data.
-   * workspaceLastShowId is the attribute name of tabs that stores the workspace id.
-   * workspaceLastShowId is the attribute name of the workspace that stores the last shown workspace id.
-   */
   export const workspaceDataPrefName = "floorp.workspaces.v3.data";
   export const workspacesTabAttributionId = "floorpWorkspaceId";
   export const workspaceLastShowId = "floorpWorkspaceLastShowId";
