@@ -4,6 +4,7 @@
 
 <!-- General panel -->
 
+<script src="chrome://floorp/content/preferences/floorp-main.js"/>
 <script src="chrome://browser/content/preferences/main.js"/>
 
 #ifdef MOZ_UPDATER
@@ -118,6 +119,42 @@
               preference="browser.taskbar.previews.enable"/>
 #endif
 
+    <hbox align="center">
+      <checkbox data-l10n-id="enable-tab-sleep"
+               id="tab-sleep" preference="floorp.tabsleep.enabled"/>
+      <spacer flex="1"/>
+      <button id="TabSleepSettings"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="tab-sleep-settings-button"
+              />
+    </hbox>
+
+    <checkbox  data-l10n-id="enable-tab-scroll-change"
+               id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
+
+    <checkbox  data-l10n-id="enable-tab-scroll-reverse"
+               id="tabscrollReverse" preference="floorp.tabscroll.reverse"/>
+
+    <checkbox  data-l10n-id="enable-tab-scroll-wrap"
+               id="tabscrollWrap" preference="floorp.tabscroll.wrap"/>
+
+    <checkbox  data-l10n-id="enable-double-click-block"
+               id="doubleClickClose" preference="browser.tabs.closeTabByDblclick"/>
+
+    <checkbox  data-l10n-id="enable-show-pinned-tabs-title"
+               id="showPinnedTabsTitle" preference="floorp.tabs.showPinnedTabsTitle"/>
+
+    <hbox>
+      <description flex="1" data-l10n-id="tab-width"/>
+      <html:input type="number" min="50" value="0" id="tabWidthValue"/>
+    </hbox>
+
+    <hbox>
+      <description flex="1" data-l10n-id="tab-height"/>
+      <html:input type="number" min="30" value="0" id="tabHeightValue"/>
+    </hbox>
+
     <checkbox id="tabPreviewShowThumbnails" data-l10n-id="settings-tabs-show-image-in-preview"
               preference="browser.tabs.hoverPreview.showThumbnails" hidden="true"/>
 
@@ -155,74 +192,39 @@
     </vbox>
 </groupbox>
 
-<hbox id="languageAndAppearanceCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <html:h1 data-l10n-id="language-and-appearance-header"/>
-</hbox>
-
-<!-- Website appearance -->
-<groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
-  <html:h2 data-l10n-id="preferences-web-appearance-header"/>
-  <html:div id="webAppearanceSettings">
-    <description class="description-deemphasized" data-l10n-id="preferences-web-appearance-description"/>
-    <html:moz-message-bar id="web-appearance-override-warning" data-l10n-id="preferences-web-appearance-override-warning2"
-        data-l10n-attrs="message">
-        <button slot="actions" class="accessory-button" data-l10n-id="preferences-colors-manage-button" id="web-appearance-manage-colors-button"/>
-    </html:moz-message-bar>
-    <form xmlns="http://www.w3.org/1999/xhtml" id="web-appearance-chooser" autocomplete="off">
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-auto">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="auto" data-l10n-id="preferences-web-appearance-choice-input-auto"
-          /><span data-l10n-id="preferences-web-appearance-choice-auto" />
-        </div>
-      </label>
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-light">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="light" data-l10n-id="preferences-web-appearance-choice-input-light"
-          /><span data-l10n-id="preferences-web-appearance-choice-light" />
-        </div>
-      </label>
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-dark">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="dark" data-l10n-id="preferences-web-appearance-choice-input-dark"
-          /><span data-l10n-id="preferences-web-appearance-choice-dark" />
-        </div>
-      </label>
-    </form>
-    <html:div data-l10n-id="preferences-web-appearance-footer">
-      <html:a id="web-appearance-manage-themes-link" class="text-link" data-l10n-name="themes-link" href="about:addons" target="_blank" />
-    </html:div>
-  </html:div>
+<groupbox data-category="paneGeneral" hidden="true">
+    <html:h2 data-l10n-id="preferences-tabs-newtab-position"/>
+    <radiogroup id="openNewTabPosition" preference="floorp.browser.tabs.openNewTabPosition">
+    <radio  value="-1"  data-l10n-id="open-new-tab-use-default"/>
+     <radio value="0" data-l10n-id="open-new-tab-at-the-end"/>
+     <radio value="1" data-l10n-id="open-new-tab-next-to-current"/>
+    </radiogroup>
 </groupbox>
 
-<!-- Colors -->
-<groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
+<groupbox id="aboutMouseGesture" data-category="paneGeneral" hidden="true">
+  <html:h2 id="mouse-gesture-header" data-l10n-id="mouse-gesture"/>
+  <description id="mouse-gesture-description" data-l10n-id="mouse-gesture-description"/>
+  <vbox class="Gesturefy ContentBlockBox">
+    <html:h3 class="Gesturefy addonRecommend-header" data-l10n-id="Gesturefy"/>
+    <hbox class="addonRecommend-box">
+      <image id="GesturefyImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/819/819184-64.png');"/>
+      <vbox class="addonRecommend-label-box">
+       <description id="AddonRecommend" data-l10n-id="about-Gesturefy"/>
+       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/gesturefy/" data-l10n-id="view-at-AMO"></label>
+      </vbox>
+     </hbox>
+   </vbox>
+</groupbox>
 
-  <hbox id="colorsSettings" align="center" flex="1">
-    <description flex="1" control="colors" data-l10n-id="preferences-colors-description"/>
-    <button id="colors"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="preferences-colors-manage-button"
-            search-l10n-ids="
-              colors-page-override,
-              colors-page-override-option-always.label,
-              colors-page-override-option-auto.label,
-              colors-page-override-option-never.label,
-              colors-text-and-background,
-              colors-text-header,
-              colors-background,
-              colors-use-system,
-              colors-links-header,
-              colors-unvisited-links,
-              colors-visited-links
-            "/>
+<groupbox data-category="paneGeneral" hidden="true">
+  <html:h2 id="notes-preferences" data-l10n-id="floorp-notes"/>
+  <checkbox preference="services.sync.prefs.sync.floorp.browser.note.memos"
+            id="enable-notes-sync" data-l10n-id="enable-notes-sync" class="needreboot"/>
+  <description flex="1" class="indent tip-caption" data-l10n-id="notes-sync-description"/>
+  <hbox>
+    <description flex="1" data-l10n-id="notes-backup-option"/>
+    <button  data-l10n-id="backup-option-button" is="highlightable-button"
+             class="accessory-button" id="backUpNotesOption"/>
   </hbox>
 </groupbox>
 
@@ -412,69 +414,18 @@
       <description id="translations-manage-error" hidden="true"></description>
     </vbox>
   </vbox>
+
+  <vbox id="TWS-box" class="TWS ContentBlockBox">
+    <html:h3 class="TWS addonRecommend-header" data-l10n-id="TWS"/>
+    <hbox class="addonRecommend-box">
+      <image id="TWSImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/2623/2623538-64.png');"/>
+      <vbox class="addonRecommend-label-box">
+       <description id="AddonRecommend" data-l10n-id="about-TWS"/>
+       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/traduzir-paginas-web" data-l10n-id="view-at-AMO"></label>
+      </vbox>
+    </hbox>
+  </vbox>
 </groupbox>
-
-<!-- Files and Applications -->
-<hbox id="filesAndApplicationsCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <html:h1 data-l10n-id="files-and-applications-title"/>
-</hbox>
-
-<!--Downloads-->
-<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="download-header"/></label>
-
-  <hbox id="saveWhere">
-    <label id="saveTo"
-           control="downloadFolder"
-           data-l10n-id="download-save-where"/>
-    <html:input id="downloadFolder"
-                type="text"
-                readonly="readonly"
-                aria-labelledby="saveTo"/>
-    <button id="chooseFolder"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="download-choose-folder"/>
-  </hbox>
-  <checkbox id="alwaysAsk"
-            data-l10n-id="download-always-ask-where"
-            preference="browser.download.useDownloadDir"/>
-</groupbox>
-
-<groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="applications-header"/></label>
-  <description class="description-deemphasized" data-l10n-id="applications-description"/>
-  <search-textbox id="filter" flex="1"
-                  data-l10n-id="applications-filter"
-                  data-l10n-attrs="placeholder"
-                  aria-controls="handlersView"/>
-
-  <listheader id="handlersViewHeader">
-    <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
-             persist="sortDirection"
-             style="flex: 1 50%" sortDirection="ascending"/>
-    <treecol id="actionColumn" data-l10n-id="applications-action-column" value="action"
-             persist="sortDirection"
-             style="flex: 1 50%"/>
-  </listheader>
-  <richlistbox id="handlersView"
-               preference="pref.downloads.disable_button.edit_actions"/>
-  <label id="handleNewFileTypesDesc"
-         data-l10n-id="applications-handle-new-file-types-description"/>
-  <radiogroup id="handleNewFileTypes"
-              preference="browser.download.always_ask_before_handling_new_types">
-    <radio id="saveForNewTypes"
-           value="false"
-           data-l10n-id="applications-save-for-new-types"/>
-    <radio id="askBeforeHandling"
-           value="true"
-           data-l10n-id="applications-ask-before-handling"/>
-  </radiogroup>
-</groupbox>
-
 
 <!-- DRM Content -->
 <groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
@@ -626,6 +577,11 @@
 
 #ifdef MOZ_UPDATER
   <label id="updateAllowDescription" data-l10n-id="update-application-allow-description"></label>
+
+  <html:h2 id="floorpPortableUpdateHeader" hidden="true" data-l10n-id="floorp-portable-update-application-allow"/>
+  <checkbox id="floorpPortableUpdateAuto" preference="floorp.portable.isUpdate" hidden="true"
+            data-l10n-id="floorp-update-application-auto-enabled-option"/>
+            
   <vbox id="updateSettingsContainer" class="info-box-container">
     <radiogroup id="updateRadioGroup">
       <radio id="autoDesktop"
@@ -670,6 +626,23 @@
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="performance-title"/></label>
 
+  <hbox>
+   <label id="processCount" data-l10n-id="memory-and-performance"/>
+       <menulist id="dom-ipc-processCount" preference="dom.ipc.processCount">
+           <menupopup>
+             <menuitem data-l10n-id="min-memory" value="1"/>
+             <menuitem data-l10n-id="balance-memory" value="4"/>
+             <menuitem data-l10n-id="max-memory" value="8"/>
+          </menupopup>
+      </menulist>
+  </hbox>
+
+  <hbox>
+    <description flex="1" data-l10n-id="userjs-select-option"/>
+    <button data-l10n-id="userjs-button" is="highlightable-button"
+            class="accessory-button" id="userjsOptionsButton"/>
+  </hbox>
+
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
               class="tail-with-learn-more"
@@ -707,6 +680,29 @@
     </description>
   </vbox>
 </groupbox>
+
+#if defined(XP_WIN) || defined(XP_LINUX)
+ <hbox id="openInExternalCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+   <html:h1 data-l10n-id="openInExternal-title"/>
+ </hbox>
+
+ <groupbox id="openInExternalGroup" data-category="paneGeneral" hidden="true">
+    <checkbox preference="floorp.openLinkInExternal.enabled" data-l10n-id="open-link-in-external-enabled-option" class="needreboot"/>
+    <hbox>
+      <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
+      <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
+        <menupopup>
+          <menuitem value="" data-l10n-id="open-link-in-external-select-browser-option-default"/>
+          <menuseparator/>
+        </menupopup>
+      </menulist>
+    </hbox>
+ </groupbox>
+#endif
+
 
 <hbox id="browsingCategory"
       class="subcategory"
@@ -769,6 +765,17 @@
           support-page="media-keyboard-control"
     />
   </hbox>
+
+    <checkbox preference="floorp.search.top.mode"
+              id="searchbartop" data-l10n-id="search-positon-top"/>
+
+  <checkbox preference="floorp.enable.auto.restart"
+              id="autorestart" data-l10n-id="allow-auto-restart" />
+
+  <checkbox id="disableExtensionCheckCompatibility" data-l10n-id="disable-extension-check-compatibility-option"/>
+  <checkbox preference="floorp.disable.fullscreen.notification"
+             id="disable-fullscreen-notify" data-l10n-id="disable-fullscreen-notification"/>
+
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
             class="tail-with-learn-more"

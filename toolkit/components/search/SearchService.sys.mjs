@@ -2614,10 +2614,193 @@ export class SearchService {
       this._settings.setMetaDataAttribute(key, value);
     }
 
-    let { engines, privateDefault } =
-      await this.#engineSelector.fetchEngineConfiguration(
-        searchEngineSelectorProperties
-      );
+		const engines = [
+			{
+				aliases: ["google"],
+				classification: "general",
+				name: "Google",
+				partnerCode: "firefox-b-e",
+				urls: {
+					search: {
+						base: "https://www.google.com/search",
+						params: [
+							{
+								name: "client",
+								value: "{partnerCode}",
+							},
+							{
+								experimentConfig: "google_channel_row",
+								name: "channel",
+							},
+						],
+						searchTermParamName: "q",
+					},
+					suggestions: {
+						base: "https://www.google.com/complete/search",
+						params: [
+							{
+								name: "client",
+								value: "firefox",
+							},
+							{
+								experimentConfig: "search_rich_suggestions",
+								name: "channel",
+							},
+						],
+						searchTermParamName: "q",
+					},
+					trending: {
+						base: "https://www.google.com/complete/search",
+						method: "GET",
+						params: [
+							{
+								name: "client",
+								value: "firefox",
+							},
+							{
+								name: "channel",
+								value: "ftr",
+							},
+						],
+						searchTermParamName: "q",
+					},
+				},
+				identifier: "google",
+				webExtension: {
+					locale: "default",
+					id: "google@search.mozilla.org",
+				},
+			},
+      {
+				aliases: ["Bing"],
+				classification: "general",
+				name: "Bing",
+				urls: {
+					search: {
+						base: "https://www.bing.com/search",
+						searchTermParamName: "pc=MOZI&q",
+            "params": [
+              {
+                "name": "form",
+                "condition": "purpose",
+                "purpose": "contextmenu",
+                "value": "MOZCON"
+              },
+              {
+                "name": "form",
+                "condition": "purpose",
+                "purpose": "searchbar",
+                "value": "MOZSBR"
+              },
+              {
+                "name": "form",
+                "condition": "purpose",
+                "purpose": "homepage",
+                "value": "MOZSPG"
+              },
+              {
+                "name": "form",
+                "condition": "purpose",
+                "purpose": "keyword",
+                "value": "MOZLBR"
+              },
+              {
+                "name": "form",
+                "condition": "purpose",
+                "purpose": "newtab",
+                "value": "MOZTSB"
+              }
+            ],
+					},
+          suggestions: {
+						base: "https://www.bing.com/osjson.aspx",
+						params: [
+							{
+								name: "form",
+								value: "OSDJAS",
+							},
+						],
+						searchTermParamName: "query",
+					},
+				},
+				identifier: "bing",
+				webExtension: {
+					locale: "default",
+					id: "bing@search.mozilla.org"
+				},
+			},
+			{
+				aliases: ["duckduckgo", "ddg"],
+				classification: "general",
+				name: "DuckDuckGo",
+				partnerCode: "ftsa",
+				urls: {
+					search: {
+						base: "https://duckduckgo.com/",
+						params: [
+							{
+								name: "t",
+								value: "{partnerCode}",
+							},
+						],
+						searchTermParamName: "q",
+					},
+					suggestions: {
+						base: "https://ac.duckduckgo.com/ac/",
+						params: [
+							{
+								name: "type",
+								value: "list",
+							},
+						],
+						searchTermParamName: "q",
+					},
+				},
+				identifier: "ddg",
+				telemetrySuffix: "esr",
+				webExtension: {
+					locale: "default",
+					id: "ddg@search.mozilla.org",
+				},
+			},
+			{
+				aliases: ["Startpage", "st"],
+				classification: "general",
+				name: "Startpage",
+				urls: {
+					search: {
+						base: "https://www.startpage.com/do/dsearch",
+						searchTermParamName: "query",
+					},
+				},
+				identifier: "startpage",
+				webExtension: {
+					locale: "default",
+					id: "startpage@search.mozilla.org",
+				},
+			},
+      {
+				aliases: ["You.com", "yc"],
+				classification: "general",
+				name: "You.com",
+				urls: {
+					search: {
+						base: "https://you.com/search",
+						searchTermParamName: "q",
+					},
+				},
+				identifier: "you.com",
+				webExtension: {
+					locale: "default",
+					id: "you.com@search.mozilla.org"
+				},
+			},
+		];
+
+		const privateDefault = {
+			webExtension: { id: "ddg@search.mozilla.org", locale: "default" },
+			defaultPrivate: "yes",
+		};
 
     for (let e of engines) {
       if (!e.webExtension) {

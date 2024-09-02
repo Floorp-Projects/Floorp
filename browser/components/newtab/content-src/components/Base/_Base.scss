@@ -24,6 +24,7 @@
 }
 
 main {
+  position:relative;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -163,4 +164,32 @@ main {
       text-decoration: none;
     }
   }
+}
+
+#floorp {
+  position: fixed;
+  bottom: 2.5em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.releasenote {
+  position: fixed;
+  font-size: 1.2em;
+  right: 1.5em;
+  color: #ffffff8e;
+}
+
+
+.imagecred {
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+  font-size: 16px;
+  color: #ffffff
+}
+
+.floorp-releasenote-hidden,
+.floorp-imagecred-hidden {
+  visibility: hidden;
+  display: none;
 }

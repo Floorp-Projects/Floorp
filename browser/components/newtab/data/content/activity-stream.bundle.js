@@ -204,6 +204,7 @@ for (const type of [
   "SETTINGS_CLOSE",
   "SETTINGS_OPEN",
   "SET_PREF",
+  "GET_IMAGE",
   "SHOW_DOWNLOAD_FILE",
   "SHOW_FIREFOX_ACCOUNTS",
   "SHOW_PERSONALIZE",
@@ -463,6 +464,11 @@ function DiscoveryStreamLoadedContent(
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
+function GetImageSend(path, importContext = globalImportContext) {
+  const action = { type: actionTypes.GET_IMAGE, data: { path } };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
 function SetPref(prefName, value, importContext = globalImportContext) {
   const action = {
     type: actionTypes.SET_PREF,
@@ -493,6 +499,7 @@ const actionCreators = {
   OnlyToMain,
   AlsoToPreloaded,
   SetPref,
+  GetImageSend,
   WebExtEvent,
   DiscoveryStreamImpressionStats,
   DiscoveryStreamLoadedContent,
@@ -7003,6 +7010,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       onDragEnter: this.onDragEvent,
       onDragLeave: this.onDragEvent
     }, draggableProps), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "background"
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-inner"
     }, /*#__PURE__*/external_React_default().createElement("a", {
       className: "top-site-button",
@@ -10367,11 +10376,134 @@ function WallpaperFeatureHighlight({
     outsideClickCallback: onOutsideClickCallback
   }));
 }
+;// CONCATENATED MODULE: ./content-src/components/Background/Background.jsx
+
+const imgLength = 100;
+async function setImgData(data, url, type, result) {
+  const blobURL = URL.createObjectURL(new Blob([data], {
+    type
+  }));
+  result({
+    url,
+    data: blobURL
+  });
+}
+function Background(props) {
+  if (props.className === "random_image") {
+    const [imgSrc, setImgSrc] = (0,external_React_namespaceObject.useState)({
+      url: `chrome://floorp/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+    });
+    if (!imgSrc.url.startsWith("chrome://floorp/skin/newtabbg/newtabbg-")) {
+      setImgSrc({
+        url: `chrome://floorp/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+      });
+    }
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background_back",
+      className: props.className
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background",
+      style: {
+        "--background-url": `url(${imgSrc.url})`
+      }
+    }));
+  }
+  if (props.className === "selected_folder" && props.pref?.backgroundPaths) {
+    const imageList = props.pref.backgroundPaths;
+    const [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
+      url: imageList.urls.length !== 0 ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : ""
+    });
+    if (imageList.urls.length !== 0) {
+      if (imageList.urls.indexOf(fileImgSrc.url) === -1 || props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`]?.data === null) {
+        fileImgSrc.url = imageList.urls.length ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : "";
+        setFileImgSrc({
+          url: fileImgSrc.url
+        });
+      }
+      if ("data" in fileImgSrc) {
+        return /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background_back",
+          className: props.className
+        }, /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background",
+          style: {
+            "--background-url": `url(${fileImgSrc.data})`
+          }
+        }));
+      }
+      if (props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`]?.data) {
+        setImgData(props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`].data, fileImgSrc.url, props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`].type, setFileImgSrc);
+      } else {
+        props.getImg(fileImgSrc.url);
+      }
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background_back",
+        className: props.className
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background",
+        style: {
+          "--background-url": `url(${fileImgSrc.data})`
+        }
+      }));
+    }
+    if (fileImgSrc.url !== "") {
+      setFileImgSrc({
+        url: ""
+      });
+    }
+  } else if (props.className === "selected_image" && props.pref.oneImageData) {
+    const imgData = props.pref.oneImageData;
+    const [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
+      url: imgData.url ?? ""
+    });
+    if (imgData.url) {
+      if (imgData.url !== fileImgSrc.url) {
+        fileImgSrc.url = imgData.url;
+        setFileImgSrc({
+          url: imgData.url
+        });
+      } else if (fileImgSrc.data) {
+        return /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background_back",
+          className: props.className
+        }, /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background",
+          style: {
+            "--background-url": `url(${fileImgSrc.data ?? ""})`
+          }
+        }));
+      } else if (imgData.data) {
+        setImgData(imgData.data, imgData.url, imgData.extension, setFileImgSrc);
+      }
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background_back",
+        className: props.className
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background",
+        style: {
+          "--background-url": `url(${fileImgSrc.data})`
+        }
+      }));
+    }
+    if (fileImgSrc.url !== "") {
+      setFileImgSrc({
+        url: ""
+      });
+    }
+  }
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background_back",
+    className: props.className
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background"
+  }));
+}
 ;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
 function Base_extends() { Base_extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Base_extends.apply(this, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -10407,7 +10539,7 @@ function debounce(func, wait) {
     if (timer) {
       return;
     }
-    let wakeUp = () => {
+    const wakeUp = () => {
       timer = null;
     };
     timer = setTimeout(wakeUp, wait);
@@ -10466,6 +10598,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.setPref = this.setPref.bind(this);
     this.setPref = this.setPref.bind(this);
     this.shouldShowWallpapersHighlight = this.shouldShowWallpapersHighlight.bind(this);
     this.updateWallpaper = this.updateWallpaper.bind(this);
@@ -10690,13 +10823,16 @@ class BaseContent extends (external_React_default()).PureComponent {
     if (input.length !== 7) {
       return [];
     }
-    const r = parseInt(input.substr(1, 2), 16);
-    const g = parseInt(input.substr(3, 2), 16);
-    const b = parseInt(input.substr(5, 2), 16);
+    const r = Number.parseInt(input.substr(1, 2), 16);
+    const g = Number.parseInt(input.substr(3, 2), 16);
+    const b = Number.parseInt(input.substr(5, 2), 16);
     return [r, g, b];
   }
   isWallpaperColorDark([r, g, b]) {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
+  }
+  getImageSend(path) {
+    this.props.dispatch(actionCreators.GetImageSend(path));
   }
   render() {
     const {
@@ -10718,7 +10854,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       pocketConfig
     } = prefs;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
-    let filteredSections = props.Sections.filter(section => section.id !== "topstories");
+    const filteredSections = props.Sections.filter(section => section.id !== "topstories");
     let spocMessageVariant = "";
     if (props.App.locale?.startsWith("en-") && pocketConfig?.spocMessageVariant === "variant-c") {
       spocMessageVariant = pocketConfig.spocMessageVariant;
@@ -10746,7 +10882,31 @@ class BaseContent extends (external_React_default()).PureComponent {
     if (wallpapersEnabled || wallpapersV2Enabled) {
       this.updateWallpaper();
     }
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("menu", {
+    let Background_ClassName = "";
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+      case 4:
+        Background_ClassName = "selected_image";
+        break;
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"
+    }, this.getImageSend.bind(this), /*#__PURE__*/external_React_default().createElement(Background, {
+      className: Background_ClassName,
+      getImg: this.getImageSend.bind(this),
+      pref: prefs
+    }), /*#__PURE__*/external_React_default().createElement("menu", {
       className: "personalizeButtonWrapper"
     }, /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
       onClose: this.closeCustomizationMenu,
@@ -10782,7 +10942,19 @@ class BaseContent extends (external_React_default()).PureComponent {
       locale: props.App.locale,
       mayHaveSponsoredStories: mayHaveSponsoredStories,
       firstVisibleTimestamp: this.state.firstVisibleTimestamp
-    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null), wallpapersEnabled && this.renderWallpaperAttribution()), /*#__PURE__*/external_React_default().createElement("aside", null, weatherEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Weather_Weather, null)))));
+    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null), wallpapersEnabled && this.renderWallpaperAttribution()), /*#__PURE__*/external_React_default().createElement("aside", null, weatherEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Weather_Weather, null)))), /*#__PURE__*/external_React_default().createElement("div", {
+      id: "floorp"
+    }, /*#__PURE__*/external_React_default().createElement("a", {
+      className: prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote",
+      href: "https://support.ablaze.one"
+    }, "Support"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("a", {
+      className: prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote",
+      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp"
+    }, "Release Note")), /*#__PURE__*/external_React_default().createElement("a", {
+      className: prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred",
+      href: "https://unsplash.com/",
+      id: "unsplash"
+    }, "Unsplash"));
   }
 }
 BaseContent.defaultProps = {

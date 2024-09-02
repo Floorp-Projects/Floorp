@@ -34,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class FirefoxProfileMigrator extends MigratorBase {
   static get key() {
-    return "firefox";
+    return "floorp";
   }
 
   static get displayNameL10nID() {
@@ -121,6 +121,19 @@ export class FirefoxProfileMigrator extends MigratorBase {
     let getFileResource = (aMigrationType, aFileNames) => {
       let files = [];
       for (let fileName of aFileNames) {
+
+        if (fileName === "Workspaces.json") {
+          // Floorp Workspaces json is a special case, it is in Workspaces folder
+          const workspacesDir = sourceProfileDir.clone();
+          workspacesDir.append("Workspaces");
+          let file = this._getFileObject(workspacesDir, fileName);
+          if (file) {
+            console.log("Found Workspaces.json");
+            files.push(file);
+          }
+          continue;
+        }
+
         let file = this._getFileObject(sourceProfileDir, fileName);
         if (file) {
           files.push(file);
@@ -167,6 +180,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
     let places = getFileResource(types.HISTORY, [
       "places.sqlite",
       "places.sqlite-wal",
+      "Workspaces.json",
     ]);
     let favicons = getFileResource(types.HISTORY, [
       "favicons.sqlite",

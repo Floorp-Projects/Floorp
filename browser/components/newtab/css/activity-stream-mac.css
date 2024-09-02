@@ -439,6 +439,7 @@ input[type=text], input[type=search] {
 }
 
 main {
+  position: relative;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -559,6 +560,81 @@ main section {
   text-decoration: none;
 }
 
+#floorp {
+  position: fixed;
+  bottom: 2.5em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.releasenote {
+  position: fixed;
+  font-size: 1.2em;
+  right: 1.5em;
+  color: #ffffff8e;
+}
+
+.imagecred {
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.floorp-releasenote-hidden,
+.floorp-imagecred-hidden {
+  visibility: hidden;
+  display: none;
+}
+
+#background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  z-index: -1 !important;
+  animation: fadeIn 3.7s ease 0s 1 normal !important;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0.1 !important;
+  }
+  100% {
+    opacity: 0.8 !important;
+  }
+}
+.not_background,
+:is(.not_background, .gradation, .selected_folder, .selected_image) ~ #unsplash {
+  display: none !important;
+}
+
+.random_image,
+.selected_folder,
+.selected_image {
+  background-color: black;
+}
+
+:is(.random_image, .selected_folder, .selected_image) > #background {
+  background-image: var(--background-url);
+  opacity: 0.8 !important;
+}
+
+.gradation > #background {
+  background: linear-gradient(to right, #d76f3d 0%, #56009c 100%) !important;
+}
+
+#background_back {
+  position: fixed;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
 .as-error-fallback {
   align-items: center;
   border-radius: 3px;
@@ -582,7 +658,7 @@ main section {
 /* stylelint-disable max-nesting-depth */
 .top-sites-list {
   list-style: none;
-  margin: 0 -16px;
+  margin: 0 -40px !important;
   padding: 0;
 }
 .top-sites-list a {
@@ -673,10 +749,22 @@ main section {
 }
 
 .top-site-outer {
+  margin: 0 3px;
+  position: relative;
+}
+
+.floorp-backdrop-blur-enable .top-site-outer {
+  backdrop-filter: blur(12px);
+}
+
+.top-site-outer {
   width: 120px;
   border-radius: 8px;
   display: inline-block;
   margin-block-end: 16px;
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
+  z-index: 1;
 }
 .top-site-outer .top-site-inner {
   position: relative;
@@ -699,6 +787,9 @@ main section {
 .top-site-outer.active .context-menu-button {
   opacity: 1;
   background-color: var(--newtab-button-active-background);
+}
+.top-site-outer:is(.active) {
+  z-index: 2;
 }
 .top-site-outer .context-menu-button {
   background-image: url("chrome://global/skin/icons/more.svg");
@@ -1270,6 +1361,14 @@ main section {
   content: none;
 }
 
+@supports -moz-bool-pref("browser.disable.nt.image.gb") {
+  @media (prefers-color-scheme: light) {
+    .search-wrapper .logo-and-wordmark .wordmark {
+      background: url("chrome://branding/content/firefox-wordmark-white.svg") no-repeat center center !important;
+      width: 306px !important;
+    }
+  }
+}
 .search-wrapper {
   padding: 34px 0 38px;
 }
@@ -1291,13 +1390,13 @@ main section {
 }
 .search-wrapper .logo-and-wordmark .wordmark {
   background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
-  background-size: 134px;
+  background-size: 300px;
   -moz-context-properties: fill;
   display: inline-block;
   fill: var(--newtab-wordmark-color);
-  height: 82px;
-  margin-inline-start: 16px;
-  width: 134px;
+  height: 100px;
+  margin-inline-start: 25px;
+  width: 300px;
 }
 .lightWallpaper .search-wrapper .logo-and-wordmark .wordmark {
   color-scheme: light;
@@ -1715,6 +1814,10 @@ main section {
   }
 }
 
+.floorp-backdrop-blur-enable .personalize-button {
+  backdrop-filter: blur(12px);
+}
+
 .personalize-button {
   border: 0;
   border-radius: 4px;
@@ -1723,6 +1826,8 @@ main section {
   position: relative;
   background-size: var(--icon-size-default);
   background-position: center;
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
 }
 .lightWallpaper .personalize-button:not(:hover, :active) {
   color-scheme: light;

@@ -502,7 +502,7 @@ class MigrationUtils {
       "Internet Explorer": "ie",
       "Microsoft Edge": "edge",
       Safari: "safari",
-      Firefox: "firefox",
+      Firefox: "floorp",
       Nightly: "firefox",
       Opera: "opera",
       Vivaldi: "vivaldi",
@@ -523,8 +523,8 @@ class MigrationUtils {
         .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
       // Handle devedition, as well as "FirefoxNightly" on OS X.
-      if (!key && browserDesc.startsWith("Firefox")) {
-        key = "firefox";
+      if (!key && browserDesc.startsWith("Floorp")) {
+        key = "floorp";
       }
     } catch (ex) {
       console.error("Could not detect default browser: ", ex);
@@ -1150,7 +1150,7 @@ class MigrationUtils {
    */
   #SOURCE_NAME_TO_ID_MAPPING_ENUM = Object.freeze({
     nothing: 1,
-    firefox: 2,
+    floorp: 2,
     edge: 3,
     ie: 4,
     chrome: 5,

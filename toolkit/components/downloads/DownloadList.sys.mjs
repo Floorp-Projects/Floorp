@@ -50,6 +50,7 @@ const FILE_EXTENSIONS = [
   "jpg",
   "jpeg",
   "json",
+  "jxl",
   "m4a",
   "mdb",
   "mid",

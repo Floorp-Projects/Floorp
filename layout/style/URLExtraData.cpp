@@ -34,7 +34,7 @@ bool URLExtraData::ChromeRulesEnabled(nsIURI* aURI) {
   if (!aURI) {
     return false;
   }
-  return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource") ||
+  return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource") || (Preferences::GetBool("floorp.enable.dualtheme", false) && aURI->SchemeIs("moz-extension"));
          (aURI->SchemeIs("about") && !NS_IsContentAccessibleAboutURI(aURI));
 }
 

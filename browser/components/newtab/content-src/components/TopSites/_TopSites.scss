@@ -15,7 +15,7 @@ $letter-fallback-color: $white;
 
 .top-sites-list {
   list-style: none;
-  margin: 0 (-$half-base-gutter);
+  margin: 0 -40px !important;
   padding: 0;
 
   a {
@@ -101,12 +101,23 @@ $letter-fallback-color: $white;
   }
 }
 
+.top-site-outer {
+  margin: 0 3px;
+}
+.floorp-backdrop-blur-enable .top-site-outer{
+  backdrop-filter: blur(12px);
+}
+
 // container for drop zone
 .top-site-outer {
   width: 120px;
   border-radius: 8px;
   display: inline-block;
   margin-block-end: 16px;
+
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
+  z-index: 1;
 
   // container for context menu
   .top-site-inner {
@@ -139,6 +150,10 @@ $letter-fallback-color: $white;
       opacity: 1;
       background-color: var(--newtab-button-active-background);
     }
+  }
+
+  &:is(.active) {
+    z-index: 2;
   }
 
   .context-menu-button {

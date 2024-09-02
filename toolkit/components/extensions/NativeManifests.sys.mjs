@@ -147,6 +147,11 @@ export var NativeManifests = {
 
   async _tryPaths(type, name, dirs, context) {
     for (let dir of dirs) {
+
+      // Replace "Floorp" with "Mozilla" in the path.
+      dir = dir.replace("Floorp", "Mozilla");
+      dir = dir.replace("floorp", "mozilla");
+
       let path = PathUtils.join(dir, TYPES[type], `${name}.json`);
       let manifest = await this._tryPath(type, path, name, context, false);
       if (manifest) {
