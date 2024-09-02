@@ -184,10 +184,11 @@ add_task(async function test_open_settings_with_enter() {
   const searchButton = searchBar.querySelector(".searchbar-search-button");
 
   let shownPromise = promiseEvent(searchPopup, "popupshown");
-  info("Clicking icon");
+  let builtPromise = promiseEvent(searchPopup.oneOffButtons, "rebuild");
+  info("Opening search panel");
   EventUtils.synthesizeMouseAtCenter(searchButton, {}, win);
-  await shownPromise;
-  info("Popup shown");
+  await Promise.all([shownPromise, builtPromise]);
+  info("Search panel ready");
 
   EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
 
