@@ -526,7 +526,8 @@ void VRShMem::PushSystemState(const mozilla::gfx::VRSystemState& aState) {
 #if defined(MOZ_WIDGET_ANDROID)
 void VRShMem::PullSystemState(
     VRDisplayState& aDisplayState, VRHMDSensorState& aSensorState,
-    VRControllerState (&aControllerState)[kVRControllerMaxCount],
+    std::array<VRControllerState, kVRControllerMaxCount>* const
+        aControllerState,
     bool& aEnumerationCompleted,
     const std::function<bool()>& aWaitCondition /* = nullptr */) {
   if (!mExternalShmem) {
@@ -541,9 +542,9 @@ void VRShMem::PullSystemState(
                sizeof(VRDisplayState));
         memcpy(&aSensorState, (void*)&(mExternalShmem->state.sensorState),
                sizeof(VRHMDSensorState));
-        memcpy(aControllerState,
+        memcpy(aControllerState->data(),
                (void*)&(mExternalShmem->state.controllerState),
-               sizeof(VRControllerState) * kVRControllerMaxCount);
+               sizeof(aControllerState->at(0)) * aControllerState->size());
         aEnumerationCompleted = mExternalShmem->state.enumerationCompleted;
         if (!aWaitCondition || aWaitCondition()) {
           done = true;
@@ -565,7 +566,8 @@ void VRShMem::PullSystemState(
 #else
 void VRShMem::PullSystemState(
     VRDisplayState& aDisplayState, VRHMDSensorState& aSensorState,
-    VRControllerState (&aControllerState)[kVRControllerMaxCount],
+    std::array<VRControllerState, kVRControllerMaxCount>* const
+        aControllerState,
     bool& aEnumerationCompleted,
     const std::function<bool()>& aWaitCondition /* = nullptr */) {
   MOZ_ASSERT(mExternalShmem);
@@ -589,10 +591,8 @@ void VRShMem::PullSystemState(
                  sizeof(VRDisplayState));
           memcpy(&aSensorState, &tmp.state.sensorState,
                  sizeof(VRHMDSensorState));
-          memcpy(aControllerState,
-                 (void*)&(mExternalShmem->state.controllerState),
-                 sizeof(VRControllerState) * kVRControllerMaxCount);
-          aEnumerationCompleted = mExternalShmem->state.enumerationCompleted;
+          *aControllerState = tmp.state.controllerState;
+          aEnumerationCompleted = tmp.state.enumerationCompleted;
           // Check for wait condition
           if (!aWaitCondition || aWaitCondition()) {
             return;

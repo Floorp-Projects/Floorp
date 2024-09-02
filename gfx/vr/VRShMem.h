@@ -37,11 +37,11 @@ class VRShMem final {
   void PullBrowserState(mozilla::gfx::VRBrowserState& aState);
 
   void PushSystemState(const mozilla::gfx::VRSystemState& aState);
-  void PullSystemState(
-      VRDisplayState& aDisplayState, VRHMDSensorState& aSensorState,
-      VRControllerState (&aControllerState)[kVRControllerMaxCount],
-      bool& aEnumerationCompleted,
-      const std::function<bool()>& aWaitCondition = nullptr);
+  void PullSystemState(VRDisplayState& aDisplayState,
+                       VRHMDSensorState& aSensorState,
+                       std::array<VRControllerState, kVRControllerMaxCount>*,
+                       bool& aEnumerationCompleted,
+                       const std::function<bool()>& aWaitCondition = nullptr);
 
   void PushWindowState(VRWindowState& aState);
   void PullWindowState(VRWindowState& aState);

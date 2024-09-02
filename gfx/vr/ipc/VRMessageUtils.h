@@ -12,30 +12,56 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/dom/GamepadMessageUtils.h"
+#include "mozilla/dom/WebGLIpdl.h"
 
 #include "gfxVR.h"
 
 namespace IPC {
 
 template <>
+struct ParamTraits<mozilla::gfx::VRHMDSensorState> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRHMDSensorState> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRDisplayInfo> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRDisplayInfo> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRDisplayState> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRDisplayState> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRControllerState> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRControllerState> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRFieldOfView> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRFieldOfView> {};
+template <>
+struct ParamTraits<mozilla::gfx::Point3D_POD> final
+    : public ParamTraits_TiedFields<mozilla::gfx::Point3D_POD> {};
+template <>
+struct ParamTraits<mozilla::gfx::IntSize_POD> final
+    : public ParamTraits_TiedFields<mozilla::gfx::IntSize_POD> {};
+template <>
+struct ParamTraits<mozilla::gfx::FloatSize_POD> final
+    : public ParamTraits_TiedFields<mozilla::gfx::FloatSize_POD> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRPose> final
+    : public ParamTraits_TiedFields<mozilla::gfx::VRPose> {};
+
+// -
+
+template <>
 struct ParamTraits<mozilla::gfx::VRControllerType>
-    : public ContiguousEnumSerializer<mozilla::gfx::VRControllerType,
-                                      mozilla::gfx::VRControllerType::_empty,
-                                      mozilla::gfx::VRControllerType::_end> {};
-
-// VRHMDSensorState is POD, we can use PlainOldDataSerializer
-static_assert(std::is_pod<mozilla::gfx::VRHMDSensorState>::value,
-              "mozilla::gfx::VRHMDSensorState must be a POD type.");
+    : ParamTraits_IsEnumCase<mozilla::gfx::VRControllerType> {};
 template <>
-struct ParamTraits<mozilla::gfx::VRHMDSensorState>
-    : public PlainOldDataSerializer<mozilla::gfx::VRHMDSensorState> {};
-
-// VRDisplayInfo is POD, we can use PlainOldDataSerializer
-static_assert(std::is_pod<mozilla::gfx::VRDisplayInfo>::value,
-              "mozilla::gfx::VRDisplayInfo must be a POD type.");
+struct ParamTraits<mozilla::gfx::TargetRayMode>
+    : ParamTraits_IsEnumCase<mozilla::gfx::TargetRayMode> {};
 template <>
-struct ParamTraits<mozilla::gfx::VRDisplayInfo>
-    : public PlainOldDataSerializer<mozilla::gfx::VRDisplayInfo> {};
+struct ParamTraits<mozilla::gfx::GamepadMappingType>
+    : ParamTraits_IsEnumCase<mozilla::gfx::GamepadMappingType> {};
+template <>
+struct ParamTraits<mozilla::gfx::VRDisplayBlendMode>
+    : ParamTraits_IsEnumCase<mozilla::gfx::VRDisplayBlendMode> {};
+
+// -
 
 template <>
 struct ParamTraits<mozilla::gfx::VRSubmitFrameResultInfo> {

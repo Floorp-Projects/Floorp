@@ -96,6 +96,7 @@ void PickleIterator::CopyInto(T* dest) {
          (MOZ_ALIGNOF(T) <=
           sizeof(Pickle::memberAlignmentType))>::Copy(dest, iter_.Data());
 }
+template void PickleIterator::CopyInto<char>(char*);
 
 bool Pickle::IteratorHasRoomFor(const PickleIterator& iter,
                                 uint32_t len) const {

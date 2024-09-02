@@ -48,36 +48,6 @@ struct VariantTag;
 namespace IPC {
 
 /**
- * A helper class for serializing plain-old data (POD) structures.
- * The memory representation of the structure is written to and read from
- * the serialized stream directly, without individual processing of the
- * structure's members.
- *
- * Derive ParamTraits<T> from PlainOldDataSerializer<T> if T is POD.
- *
- * Note: For POD structures with enumeration fields, this will not do
- *   validation of the enum values the way serializing the fields
- *   individually would. Prefer serializing the fields individually
- *   in such cases.
- */
-template <typename T>
-struct PlainOldDataSerializer {
-  static_assert(
-      std::is_trivially_copyable<T>::value,
-      "PlainOldDataSerializer can only be used with trivially copyable types!");
-
-  typedef T paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    aWriter->WriteBytes(&aParam, sizeof(aParam));
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return aReader->ReadBytesInto(aResult, sizeof(paramType));
-  }
-};
-
-/**
  * A helper class for serializing empty structs. Since the struct is empty there
  * is nothing to write, and a priori we know the result of the read.
  */

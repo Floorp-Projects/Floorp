@@ -548,14 +548,33 @@ class SystemCallerGuarantee {
   operator CallerType() const { return CallerType::System; }
 };
 
+enum class DefineInterfaceProperty {
+  No,
+  CheckExposure,
+  Always,
+};
+
 class ProtoAndIfaceCache;
-typedef void (*CreateInterfaceObjectsMethod)(JSContext* aCx,
-                                             JS::Handle<JSObject*> aGlobal,
-                                             ProtoAndIfaceCache& aCache,
-                                             bool aDefineOnGlobal);
+using CreateInterfaceObjectsMethod =
+    void (*)(JSContext*, JS::Handle<JSObject*>, ProtoAndIfaceCache&,
+             DefineInterfaceProperty aDefineOnGlobal);
+
+// GetPerInterfaceObjectHandle has 3 possible behaviours for defining the named
+// properties on the global for an interface or namespace when it creates an
+// interface or namespace object. aDefineOnGlobal can be used to pick the
+// behaviour. GetPerInterfaceObjectHandle either:
+//
+//  * does not define any properties on the global object
+//    (for DefineInterfaceProperty::No),
+//  * checks whether the interface is exposed in the global object before
+//    defining properties (for DefineInterfaceProperty::CheckExposure),
+//  * always defines properties (for DefineInterfaceProperty::Always).
+//
+// Callers should be careful when passing DefineInterfaceProperty::Always and
+// make sure to check exposure themselves if needed.
 JS::Handle<JSObject*> GetPerInterfaceObjectHandle(
     JSContext* aCx, size_t aSlotId, CreateInterfaceObjectsMethod aCreator,
-    bool aDefineOnGlobal);
+    DefineInterfaceProperty aDefineOnGlobal);
 
 namespace binding_detail {
 

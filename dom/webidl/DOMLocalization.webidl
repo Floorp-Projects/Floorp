@@ -24,7 +24,7 @@
  *
  */
 
-[Func="IsChromeOrUAWidget", Exposed=Window]
+[Func="mozilla::intl::Localization::IsAPIEnabled", Exposed=Window]
 interface DOMLocalization : Localization {
   /**
    * Constructor arguments:

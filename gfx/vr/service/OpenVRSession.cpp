@@ -697,7 +697,7 @@ void OpenVRSession::Shutdown() {
 
 bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.displayName, "OpenVR HMD", kVRDisplayNameMaxLen);
+  strncpy(state.displayName.data(), "OpenVR HMD", kVRDisplayNameMaxLen);
   state.eightCC = GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ');
   state.isConnected =
       mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
@@ -987,8 +987,8 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
         MOZ_ASSERT(controllerType == contrlType ||
                    controllerType == VRControllerType::_empty);
         controllerType = contrlType;
-        strncpy(controllerState.controllerName, deviceId.BeginReading(),
-                kVRControllerNameMaxLen);
+        strncpy(controllerState.controllerName.data(), deviceId.BeginReading(),
+                controllerState.controllerName.size());
         controllerState.numHaptics = kNumOpenVRHaptics;
         controllerState.targetRayMode = gfx::TargetRayMode::TrackedPointer;
         controllerState.type = controllerType;

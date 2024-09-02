@@ -475,6 +475,25 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
         std::forward<Calculator>(aCalculator)...);
   }
 
+  template <typename T, size_t N, typename... Calculator>
+  [[nodiscard]] bool CopyDataTo(std::array<T, N>* const aResult,
+                                Calculator&&... aCalculator) const {
+    static_assert(sizeof...(aCalculator) <= 1,
+                  "CopyDataTo takes at most one aCalculator");
+
+    return ProcessDataHelper(
+        [&](const Span<const element_type>& aData, JS::AutoCheckCannotGC&&) {
+          if (aData.Length() != N) {
+            return false;
+          }
+          for (size_t i = 0; i < N; ++i) {
+            (*aResult).at(i) = aData[i];
+          }
+          return true;
+        },
+        std::forward<Calculator>(aCalculator)...);
+  }
+
   /**
    * Helper functions to copy this typed array's data to a newly created
    * container. Returns Nothing() if creating the container with the right size
