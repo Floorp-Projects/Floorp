@@ -25,11 +25,14 @@ export class workspacesTabContextMenu {
     return (
       <For each={workspaces}>
         {(workspace) => (
-          <xul:menuitem id="context_MoveTabToOtherWorkspace"
+          <xul:menuitem
+            id="context_MoveTabToOtherWorkspace"
             label={workspace.name}
             class="menuitem-iconic"
             style={`list-style-image: url(${getWorkspaceIconUrl(workspace.icon)})`}
-            oncommand={() => gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)}
+            oncommand={() =>
+              gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)
+            }
           />
         )}
       </For>
@@ -38,9 +41,15 @@ export class workspacesTabContextMenu {
 
   public contextMenu() {
     return (
-      <xul:menu id="context_MoveTabToOtherWorkspace" data-l10n-id="move-tab-another-workspace" accesskey="D">
-        <xul:menupopup id="workspacesTabContextMenu"
-          onpopupshowing={this.createTabworkspacesContextMenuItems} />
+      <xul:menu
+        id="context_MoveTabToOtherWorkspace"
+        data-l10n-id="move-tab-another-workspace"
+        accesskey="D"
+      >
+        <xul:menupopup
+          id="workspacesTabContextMenu"
+          onpopupshowing={this.createTabworkspacesContextMenuItems}
+        />
       </xul:menu>
     );
   }
@@ -64,10 +73,10 @@ export class workspacesTabContextMenu {
 
     const parentElem = document?.getElementById("workspacesTabContextMenu");
     render(
-      () => workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+      () =>
+        workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
       parentElem,
       {
-        marker: parentElem!,
         hotCtx: import.meta.hot,
       },
     );
@@ -76,6 +85,7 @@ export class workspacesTabContextMenu {
   constructor() {
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
+      marker: document?.getElementById("context_moveTabOptions") as XULElement,
       hotCtx: import.meta.hot,
     });
   }
