@@ -1,6 +1,330 @@
 {
   "data": [
     {
+      "schema": 1725048172600,
+      "derHash": "Aa8jJNCYCY9eDN9vqrraQwshzOd39H6ssmJIsv2j5TE=",
+      "subject": "CN=TWCA SSL Certification Authority,OU=SSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MGExCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExEzARBgNVBAsTClNTTCBTdWItQ0ExKTAnBgNVBAMTIFRXQ0EgU1NMIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e9a8d64f91e635d0ebafcc912e1abf3ac632f6f68bc39aa71fa288cb7c61fbcb",
+        "size": 2426,
+        "filename": "BxOmElsPeD54MBOb5h-TPNJnBlsAk6spRc_wLnko0cc=.pem",
+        "location": "security-state-staging/intermediates/eb99a1e8-dca6-446b-9071-444eb33992f0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "BxOmElsPeD54MBOb5h+TPNJnBlsAk6spRc/wLnko0cc=",
+      "crlite_enrolled": false,
+      "id": "b9983591-f34a-43d7-9dbe-c5bf1db761b8",
+      "last_modified": 1725051428120
+    },
+    {
+      "schema": 1725048172938,
+      "derHash": "924zOaZ3PcWSLaFUYoyNIrXJFe3LFScNuPs9jSSVnpg=",
+      "subject": "CN=TWCA EVSSL Certification Authority,OU=EVSSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MGUxCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExFTATBgNVBAsTDEVWU1NMIFN1Yi1DQTErMCkGA1UEAxMiVFdDQSBFVlNTTCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1e14535a3b341d3cddf066bd7148846f9178b018d3bf5b00b088034f4503bdae",
+        "size": 2434,
+        "filename": "btGJwhfTwVHtIsstjUFcqKRC-ieluyFA3aG6ukVYLZA=.pem",
+        "location": "security-state-staging/intermediates/3cb07149-7007-466d-a970-529e4718719a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "btGJwhfTwVHtIsstjUFcqKRC+ieluyFA3aG6ukVYLZA=",
+      "crlite_enrolled": false,
+      "id": "2d3be941-80f3-4b0f-9f09-685eedf07a64",
+      "last_modified": 1725051428116
+    },
+    {
+      "schema": 1724961272052,
+      "derHash": "NFwM9wNwpW1GW45u1TG1XMjrHaWyaIB3XFiaL0M1jYM=",
+      "subject": "CN=Entrust OV TLS Issuing RSA CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgT1YgVExTIElzc3VpbmcgUlNBIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5000395f1add260155b6ef30cc6edd70f3520829ae79f714d7a07b75a1c40a0e",
+        "size": 2255,
+        "filename": "is90oRxeSdIXXA9yOB8wwzMJklFxPyY-FfgB0tz7qvw=.pem",
+        "location": "security-state-staging/intermediates/a79837c0-94ae-4a70-8a66-bd468700315e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "is90oRxeSdIXXA9yOB8wwzMJklFxPyY+FfgB0tz7qvw=",
+      "crlite_enrolled": false,
+      "id": "8bd33644-2fbd-4313-9b7e-91302caab483",
+      "last_modified": 1724961422735
+    },
+    {
+      "schema": 1724961271743,
+      "derHash": "cMQALg3y/1HmkWVJA750LQnVp0qEsVto+82jIPvz3Gs=",
+      "subject": "CN=Cybertrust Japan SureServer EV CA G8,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEtMCsGA1UEAxMkQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIEVWIENBIEc4",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5af8d7bb2c972596cfa795d1d792c8898ad26adf8a1e88c3cf5537914b073d76",
+        "size": 1362,
+        "filename": "l7yMKD07dQ44rLQdC_ncYTyCTB6CTsttT5V6jYnfUdE=.pem",
+        "location": "security-state-staging/intermediates/183215fc-ceda-4ff3-b4d3-d847e9ac4b7b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "l7yMKD07dQ44rLQdC/ncYTyCTB6CTsttT5V6jYnfUdE=",
+      "crlite_enrolled": false,
+      "id": "d57f97c4-975a-4ba3-8b16-40e923fb3a1a",
+      "last_modified": 1724961422732
+    },
+    {
+      "schema": 1724961271386,
+      "derHash": "qgxLeAGwn7d+QjyRMx77YqWiqLI6nXyZfmqb7qQ10r8=",
+      "subject": "CN=nazwaSSL DV TLS G2 R29 CA,O=nazwa.pl Sp. z o.o.,C=PL",
+      "subjectDN": "ME8xCzAJBgNVBAYTAlBMMRwwGgYDVQQKDBNuYXp3YS5wbCBTcC4geiBvLm8uMSIwIAYDVQQDDBluYXp3YVNTTCBEViBUTFMgRzIgUjI5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bffa2574b000777aea2cec31b45311adc3152737abaef176721a25441f8819f2",
+        "size": 2349,
+        "filename": "9l-CarzBXKwMR5znRGc7uB2GfX0baQcGt6NRF6L-__E=.pem",
+        "location": "security-state-staging/intermediates/5d4894c0-00f2-4d37-8f30-a080f1212583.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9l+CarzBXKwMR5znRGc7uB2GfX0baQcGt6NRF6L+//E=",
+      "crlite_enrolled": false,
+      "id": "4138f836-28c2-4836-b662-2170cc7238b9",
+      "last_modified": 1724961422729
+    },
+    {
+      "schema": 1724961270418,
+      "derHash": "hwJqBbw60IWo5EfC0oZOLr7H0BfcSI3iVc9OXrBXYnE=",
+      "subject": "CN=Entrust OV TLS Issuing ECC CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgT1YgVExTIElzc3VpbmcgRUNDIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "881d5a5b28df0467294510974d98f1904850ba2b7a5446fd2fcca80901125399",
+        "size": 1110,
+        "filename": "RqnrFMJcpF5K3Rp4AFdL4LQQNfohCVS0RXjj_YcXmJ4=.pem",
+        "location": "security-state-staging/intermediates/57f443eb-4dee-45f1-8d15-a987617b53ab.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "RqnrFMJcpF5K3Rp4AFdL4LQQNfohCVS0RXjj/YcXmJ4=",
+      "crlite_enrolled": false,
+      "id": "7cdfa15d-6ea8-40e9-84a9-1982ddc6c740",
+      "last_modified": 1724961422726
+    },
+    {
+      "schema": 1724961269386,
+      "derHash": "dmSPvEDMQWTOoCQioJ606tKcZ/Xn3XT2kbf6CAQ0csU=",
+      "subject": "CN=Cybertrust Japan SureServer EV CA G7,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEtMCsGA1UEAxMkQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIEVWIENBIEc3",
+      "whitelist": false,
+      "attachment": {
+        "hash": "12fc99f5e18987fb201d247a0fda72e4e7e08896bb2b16e1e30d5e457b2d03a5",
+        "size": 1813,
+        "filename": "Bekokq6EwIpsyTyJ50IieKghEvQMGshpgl0JvfRvAKk=.pem",
+        "location": "security-state-staging/intermediates/e4de1ad0-4251-4114-b708-ca93a6b456eb.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Bekokq6EwIpsyTyJ50IieKghEvQMGshpgl0JvfRvAKk=",
+      "crlite_enrolled": false,
+      "id": "92430544-1da3-4486-ab34-b2f4193677b9",
+      "last_modified": 1724961422723
+    },
+    {
+      "schema": 1724961270741,
+      "derHash": "kEh9+doRhIsEyZk7kup779Lrc8V2Wjybuu7Dqy4NFEA=",
+      "subject": "CN=Entrust EV TLS Issuing ECC CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgRVYgVExTIElzc3VpbmcgRUNDIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a88aa862c56492b71a6714193b2c068ebb0d3933a3885c2a1d431f6da5568714",
+        "size": 1154,
+        "filename": "UQ86Bn_5hRerSw_KlRPbjgCBkFATPj7uEsM1DSmVzrI=.pem",
+        "location": "security-state-staging/intermediates/7d1aa99e-494a-457f-9387-69ba2e01b499.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UQ86Bn/5hRerSw/KlRPbjgCBkFATPj7uEsM1DSmVzrI=",
+      "crlite_enrolled": false,
+      "id": "d75e8eac-8dfc-4e56-b3aa-bbcf428756ac",
+      "last_modified": 1724961422720
+    },
+    {
+      "schema": 1724961267964,
+      "derHash": "kzl+GCSSp+fFgrrf4ENI5vqYXLoZr94W/XQP8DhXNnw=",
+      "subject": "CN=Cybertrust Japan SureServer EV CA G9,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEtMCsGA1UEAxMkQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIEVWIENBIEc5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "794c97caad3e30319699f6ebcb46d89e0cbf619305c46f1bffc13aec713d0ee7",
+        "size": 2507,
+        "filename": "jcHihh0zwLGetfRujpin09yJVm8ow8P4p_1c77PzCY0=.pem",
+        "location": "security-state-staging/intermediates/21bd8ebd-6550-4bb1-872e-ba9a5e2f3243.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "jcHihh0zwLGetfRujpin09yJVm8ow8P4p/1c77PzCY0=",
+      "crlite_enrolled": false,
+      "id": "687b0d18-12fd-460c-8b4e-8d0aea09e1b2",
+      "last_modified": 1724961422717
+    },
+    {
+      "schema": 1724961272372,
+      "derHash": "7zZTrFBWqkxu9yqpIvQ9r3UMqQGtEZj+obgeDRC1Hgo=",
+      "subject": "CN=JoySSL OV TLS G2 R33 CA,O=JoySSL Limited,C=CN",
+      "subjectDN": "MEgxCzAJBgNVBAYTAkNOMRcwFQYDVQQKDA5Kb3lTU0wgTGltaXRlZDEgMB4GA1UEAwwXSm95U1NMIE9WIFRMUyBHMiBSMzMgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "21c90cf01cd578e17fcbe79941955e1a922df015fe42ec70ad7546b078a6bff3",
+        "size": 2341,
+        "filename": "2BCdJpTJEXLS880MjY8-DHJNpe_W41xVcbm5LBA4L4o=.pem",
+        "location": "security-state-staging/intermediates/16b0109e-117c-4641-bfda-fd8142bd5019.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "2BCdJpTJEXLS880MjY8+DHJNpe/W41xVcbm5LBA4L4o=",
+      "crlite_enrolled": false,
+      "id": "e9bb8f98-ced4-4a66-97c3-488696103be0",
+      "last_modified": 1724961422714
+    },
+    {
+      "schema": 1724961269735,
+      "derHash": "ouLD1zz/lkUTJXEuIS+hXED9Tyw/FDwbthk4U2UwTAI=",
+      "subject": "CN=Cybertrust Japan SureServer CA G7,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MF4xCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEqMCgGA1UEAxMhQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIENBIEc3",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc8c6a3d6952bc1a1e7b91c7c30c787884c9c52be30a3bd46367c4960599c4d4",
+        "size": 1808,
+        "filename": "wJ6i0OjnkiyWT6GV4UTm3jA-PI4MEfFbjEKiTnFoxKo=.pem",
+        "location": "security-state-staging/intermediates/70604f10-773b-4f8e-bb79-fc1e94f1d5b7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "wJ6i0OjnkiyWT6GV4UTm3jA+PI4MEfFbjEKiTnFoxKo=",
+      "crlite_enrolled": false,
+      "id": "18af32e1-afd8-40ae-b779-e1d98dc3f8f3",
+      "last_modified": 1724961422711
+    },
+    {
+      "schema": 1724961269041,
+      "derHash": "1WEsftdDtkzY20Ms7f6lgmCNQiPxGe+s56Z1NTQ5Ksg=",
+      "subject": "CN=Entrust EV TLS Issuing RSA CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgRVYgVExTIElzc3VpbmcgUlNBIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6a2a990416ec1f15010ea2ae13f0f06d2ced9bd952f0e9c96d6746e28127a60b",
+        "size": 2304,
+        "filename": "-sqpzPQASkXVwqzPcLphpVrYOYHCoqgL6_qBojxyAXk=.pem",
+        "location": "security-state-staging/intermediates/7458978a-7d42-4325-a1b7-54dddc57c950.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+sqpzPQASkXVwqzPcLphpVrYOYHCoqgL6/qBojxyAXk=",
+      "crlite_enrolled": false,
+      "id": "ef4e7e36-b9ba-4c1d-9e23-b2138acc4cf0",
+      "last_modified": 1724961422708
+    },
+    {
+      "schema": 1724961268310,
+      "derHash": "GnvRPHegJQHhmxLW48oXvgsJtdGvdxHDMajAltNU1wU=",
+      "subject": "CN=Entrust DV TLS Issuing ECC CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgRFYgVExTIElzc3VpbmcgRUNDIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6d6eb8ebf4cbf251c84dc25cbdb6bc00c1063902f00b0819be3636f39eeca31e",
+        "size": 1110,
+        "filename": "FZtffRvAq55MraeX48RR_iPDOX445CgU793l2ij8E1s=.pem",
+        "location": "security-state-staging/intermediates/c961ce47-78e6-42c5-9c07-32808d4e0e69.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "FZtffRvAq55MraeX48RR/iPDOX445CgU793l2ij8E1s=",
+      "crlite_enrolled": false,
+      "id": "42e65582-bc47-411f-8a83-18f6157fd458",
+      "last_modified": 1724961422704
+    },
+    {
+      "schema": 1724961272729,
+      "derHash": "lLlJaZt0Nosn+tFNHu8fKqKtasJDmaJDmTmLAT/7lgE=",
+      "subject": "CN=VikingCloud TWG TLS DV CA\\, Level 1,O=Viking Cloud\\, Inc.,C=US",
+      "subjectDN": "MFcxCzAJBgNVBAYTAlVTMRswGQYDVQQKExJWaWtpbmcgQ2xvdWQsIEluYy4xKzApBgNVBAMTIlZpa2luZ0Nsb3VkIFRXRyBUTFMgRFYgQ0EsIExldmVsIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cedcb40a8be3992992b074e838425a2fda9bed4b7f8e6594ce2b0487e990cedb",
+        "size": 2438,
+        "filename": "9Am3q5dmFVqFOADU-ARAtYsn186LNjSE0aQ6FCm6v3E=.pem",
+        "location": "security-state-staging/intermediates/9e24dc77-f6e4-4d6c-a609-1f41c7c37c2b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9Am3q5dmFVqFOADU+ARAtYsn186LNjSE0aQ6FCm6v3E=",
+      "crlite_enrolled": false,
+      "id": "cc4a41d8-3987-460a-ae26-55f0b28d2dcb",
+      "last_modified": 1724961422702
+    },
+    {
+      "schema": 1724961268625,
+      "derHash": "Q+37LHyT5j1lZtJA65xpz/XA1cmWxKybzJznWCjDub4=",
+      "subject": "CN=JoySSL DV TLS G2 R33 CA,O=JoySSL Limited,C=CN",
+      "subjectDN": "MEgxCzAJBgNVBAYTAkNOMRcwFQYDVQQKDA5Kb3lTU0wgTGltaXRlZDEgMB4GA1UEAwwXSm95U1NMIERWIFRMUyBHMiBSMzMgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0fd7c724a557938cb493f0a15347e8396122521d1d960f50d8bb05c075c95a22",
+        "size": 2337,
+        "filename": "6HbMS-mjJJ74wIhJJSVfIK9zNKFueXEM86s1dtFz6Yc=.pem",
+        "location": "security-state-staging/intermediates/9e0c5a2a-b99f-4650-8661-a5092e46e3d9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "6HbMS+mjJJ74wIhJJSVfIK9zNKFueXEM86s1dtFz6Yc=",
+      "crlite_enrolled": false,
+      "id": "b2480382-2c47-4fd8-ab5e-4e0bfc639dfe",
+      "last_modified": 1724961422699
+    },
+    {
+      "schema": 1724961271073,
+      "derHash": "k9kx1flUEZmHBbFIUy9OFvvPAPMxjf+bagdl7XScj9A=",
+      "subject": "CN=Cybertrust Japan SureServer CA G8,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MF4xCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEqMCgGA1UEAxMhQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIENBIEc4",
+      "whitelist": false,
+      "attachment": {
+        "hash": "71466c83e0578b44975f470bae8e9e5a4eed6dbeb97e12c492b94da346d28bc3",
+        "size": 1358,
+        "filename": "ol5yfrpXnWtPE-clgA2vsDkTm3eRTsOxXECzzr5x6o0=.pem",
+        "location": "security-state-staging/intermediates/31eebce6-4a79-46b9-9d06-58d8ad1be9af.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ol5yfrpXnWtPE+clgA2vsDkTm3eRTsOxXECzzr5x6o0=",
+      "crlite_enrolled": false,
+      "id": "1ef2f927-aa5c-4c9a-8c4d-614815fc1a67",
+      "last_modified": 1724961422696
+    },
+    {
+      "schema": 1724961273063,
+      "derHash": "t2E2853kxb8P31Ux07EW0rPl3Twet6aeydsg6TG0xSg=",
+      "subject": "CN=Entrust DV TLS Issuing RSA CA 1,O=SSL Corporation,C=US",
+      "subjectDN": "MFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xKDAmBgNVBAMMH0VudHJ1c3QgRFYgVExTIElzc3VpbmcgUlNBIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9a0712ee93950e1e419db02f79c3d9c9ad3dfa8f5913376de642e241a94fa138",
+        "size": 2255,
+        "filename": "gRtXtBPsnz8f7VTjASrByjZb0V9rdWpsc0IkTg5JghU=.pem",
+        "location": "security-state-staging/intermediates/78d61ee3-5729-4f60-af62-0395374d3279.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "gRtXtBPsnz8f7VTjASrByjZb0V9rdWpsc0IkTg5JghU=",
+      "crlite_enrolled": false,
+      "id": "10581a85-689d-4eca-a603-7661d37ec4bb",
+      "last_modified": 1724961422693
+    },
+    {
+      "schema": 1724961270070,
+      "derHash": "fwLjUfibEZdBsB0TccobnBTtizTWQLpE78Oruf6758g=",
+      "subject": "CN=nazwaSSL DV TLS G2 E29 CA,O=nazwa.pl Sp. z o.o.,C=PL",
+      "subjectDN": "ME8xCzAJBgNVBAYTAlBMMRwwGgYDVQQKDBNuYXp3YS5wbCBTcC4geiBvLm8uMSIwIAYDVQQDDBluYXp3YVNTTCBEViBUTFMgRzIgRTI5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "06b9769c251e8ee096254a0854cc5dd80907eec361f2f7d036040ee1d4744041",
+        "size": 1203,
+        "filename": "mwJgvE0PssQdGDrMJ_pNvSrGMTMmV8EaGrjU0BnR_Zc=.pem",
+        "location": "security-state-staging/intermediates/7d171002-45e0-4756-9c17-b5b0691a109c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "mwJgvE0PssQdGDrMJ/pNvSrGMTMmV8EaGrjU0BnR/Zc=",
+      "crlite_enrolled": false,
+      "id": "88b8eeb5-fd8f-4dca-82a8-465056b57c67",
+      "last_modified": 1724961422689
+    },
+    {
       "schema": 1722433969124,
       "derHash": "W8ekZqKsyileYhnx7SgqcsBfV5yRDChqBuNJCu6siUM=",
       "subject": "CN=SSL2BUY EMEA ECC Organization Validation Secure Server CA,O=SSL2BUY EMEA LLC,C=AE",
@@ -6949,24 +7273,6 @@
       "last_modified": 1683687423832
     },
     {
-      "schema": 1683686879698,
-      "derHash": "GdD+Zg28D6lIz0WRjkje+4OWxAJpA7wZ/k+RVS3/Tck=",
-      "subject": "CN=BJCA Generic CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
-      "subjectDN": "MFAxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEZMBcGA1UEAwwQQkpDQSBHZW5lcmljIENBMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3adf773fce633198e611293a20e90991037ea4e69c8194041bda5d7113d367b4",
-        "size": 1991,
-        "filename": "q4LhFN_r1c3dNt9NyxWwOwKS1S9Dv2gJVKxNa57YdPI=.pem",
-        "location": "security-state-staging/intermediates/55e65fbf-a90b-4e4c-b9ce-7bd8ca55f86b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "q4LhFN/r1c3dNt9NyxWwOwKS1S9Dv2gJVKxNa57YdPI=",
-      "crlite_enrolled": false,
-      "id": "1afda35e-956c-46f3-85f2-2e84242c2017",
-      "last_modified": 1683687423830
-    },
-    {
       "schema": 1683686877217,
       "derHash": "P1yxUxyxIjqr+3CHLcQ9LdbMPSgj6WtFip+KfsAmWUY=",
       "subject": "CN=BJCA DV SSL CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
@@ -9701,24 +10007,6 @@
       "crlite_enrolled": false,
       "id": "5db685fc-9b69-480f-8fc6-f5e4386636ad",
       "last_modified": 1666727874516
-    },
-    {
-      "schema": 1666727351122,
-      "derHash": "OwzCA4StfyTrQ48rgMY+vgA/fyFbiHfkGOuwSEAo21c=",
-      "subject": "CN=Entrust Certification Authority - L1K,OU=See www.entrust.net/legal-terms+OU=(c) 2012 Entrust\\, Inc. - for authorized use only,O=Entrust\\, Inc.,C=US",
-      "subjectDN": "MIG6MQswCQYDVQQGEwJVUzEWMBQGA1UEChMNRW50cnVzdCwgSW5jLjEoMCYGA1UECxMfU2VlIHd3dy5lbnRydXN0Lm5ldC9sZWdhbC10ZXJtczE5MDcGA1UECxMwKGMpIDIwMTIgRW50cnVzdCwgSW5jLiAtIGZvciBhdXRob3JpemVkIHVzZSBvbmx5MS4wLAYDVQQDEyVFbnRydXN0IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gTDFL",
-      "whitelist": false,
-      "attachment": {
-        "hash": "87d3147517902aed8e819b14b1dacf02ee1294c4c3b31b4bb42a0369c1435b9f",
-        "size": 1711,
-        "filename": "980Ionqp3wkYtN9SZVgMzuWQzJta1nfxNPwTem1X0uc=.pem",
-        "location": "security-state-staging/intermediates/5cc18fd8-15e6-494b-a189-5e1a98f43e77.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "980Ionqp3wkYtN9SZVgMzuWQzJta1nfxNPwTem1X0uc=",
-      "crlite_enrolled": false,
-      "id": "ca408a50-c8da-4bfe-967d-1c1fd0bb946c",
-      "last_modified": 1666727874488
     },
     {
       "schema": 1666727347154,
@@ -31195,5 +31483,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1722628622999
+  "timestamp": 1725267422555
 }
