@@ -427,12 +427,11 @@
  <groupbox id="fingerprint" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="fingerprint-header"/></label>
   <description class="indent tip-caption" data-l10n-id="block-fingerprint"/>
-  <hbox>
-    <description data-l10n-id="enable-firefox-fingerprint-protections"></description>
-    <checkbox preference="privacy.resistFingerprinting"/>
-    <label class="learnMore" is="text-link" href="https://support.mozilla.org/kb/firefox-protection-against-fingerprinting" data-l10n-id="do-not-track-learn-more"></label>
-  </hbox>
-  <description class="indent tip-caption" data-l10n-id="about-firefox-fingerprint-protection"/>
+  <checkbox preference="privacy.resistFingerprinting" data-l10n-id="enable-firefox-fingerprint-protections"/>
+  <description class="indent tip-caption">
+    <html:span data-l10n-id="about-firefox-fingerprint-protection"></html:span>
+    <html:a is="text-link" href="https://support.mozilla.org/kb/firefox-protection-against-fingerprinting" data-l10n-id="do-not-track-learn-more"/>
+  </description>
   <checkbox preference="privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts"
             id="fingerprintProtection" data-l10n-id="html5-canvas-prompt-settings"/>
       <description class="indent tip-caption"
