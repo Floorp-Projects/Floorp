@@ -54,23 +54,17 @@ support-files = [
 ]
 
 ["browser_animationapi_iframes.js"]
-lineno = "48"
 
 ["browser_block_mozAddonManager.js"]
-lineno = "51"
 
 ["browser_bug1369357_site_specific_zoom_level.js"]
 https_first_disabled = true
-lineno = "54"
 
 ["browser_canvas_iframes.js"]
-lineno = "58"
 
 ["browser_canvas_popups.js"]
-lineno = "61"
 
 ["browser_canvascompare_iframes.js"]
-lineno = "64"
 
 ["browser_canvascompare_iframes_aboutblank.js"]
 
@@ -79,23 +73,18 @@ lineno = "64"
 ["browser_canvascompare_iframes_data.js"]
 
 ["browser_canvascompare_popups.js"]
-lineno = "66"
 
 ["browser_canvascompare_popups_aboutblank.js"]
-lineno = "68"
 
 ["browser_canvascompare_popups_blob.js"]
 
 ["browser_canvascompare_popups_data.js"]
 
 ["browser_cross_origin_isolated_animation_api.js"]
-lineno = "70"
 
 ["browser_cross_origin_isolated_performance_api.js"]
-lineno = "73"
 
 ["browser_cross_origin_isolated_reduce_time_precision.js"]
-lineno = "76"
 
 ["browser_dynamical_window_rounding.js"]
 https_first_disabled = true
@@ -103,96 +92,66 @@ skip-if = [
   "os == 'mac'", # Bug 1570812
   "os == 'linux'", # Bug 1570812, Bug 1775698
 ]
-lineno = "79"
 
 ["browser_hwconcurrency_etp_iframes.js"]
-lineno = "87"
 
 ["browser_hwconcurrency_iframes.js"]
-lineno = "90"
 
 ["browser_hwconcurrency_iframes_aboutblank.js"]
-lineno = "93"
 
 ["browser_hwconcurrency_iframes_aboutsrcdoc.js"]
-lineno = "96"
 
 ["browser_hwconcurrency_iframes_blob.js"]
-lineno = "99"
 
 ["browser_hwconcurrency_iframes_blobcrossorigin.js"]
-lineno = "102"
 
 ["browser_hwconcurrency_iframes_data.js"]
-lineno = "105"
 
 ["browser_hwconcurrency_iframes_sandboxediframe.js"]
-lineno = "108"
 
 ["browser_hwconcurrency_popups.js"]
-lineno = "111"
 
 ["browser_hwconcurrency_popups_aboutblank.js"]
-lineno = "114"
 
 ["browser_hwconcurrency_popups_blob.js"]
-lineno = "117"
 
 ["browser_hwconcurrency_popups_blob_noopener.js"]
-lineno = "120"
 
 ["browser_hwconcurrency_popups_data.js"]
-lineno = "123"
 
 ["browser_hwconcurrency_popups_data_noopener.js"]
-lineno = "126"
 
 ["browser_hwconcurrency_popups_noopener.js"]
-lineno = "129"
 
 ["browser_math.js"]
-lineno = "132"
 
 ["browser_navigator.js"]
 https_first_disabled = true
-lineno = "135"
 
 ["browser_navigator_iframes.js"]
 https_first_disabled = true
-lineno = "139"
 
 ["browser_netInfo.js"]
 https_first_disabled = true
-lineno = "143"
 
 ["browser_performanceAPI.js"]
-lineno = "147"
 
 ["browser_performanceAPIWorkers.js"]
-lineno = "150"
 
 ["browser_reduceTimePrecision_iframes.js"]
 https_first_disabled = true
-lineno = "153"
 
 ["browser_roundedWindow_dialogWindow.js"]
-lineno = "157"
 
 ["browser_roundedWindow_newWindow.js"]
-lineno = "160"
 
 ["browser_roundedWindow_open_max_inner.js"]
-lineno = "163"
 
 ["browser_roundedWindow_open_mid_inner.js"]
-lineno = "166"
 
 ["browser_roundedWindow_open_min_inner.js"]
-lineno = "169"
 
 ["browser_spoofing_keyboard_event.js"]
 skip-if = ["(debug || asan) && os == 'linux' && bits == 64"] #Bug 1518179
-lineno = "172"
 
 ["browser_timezone.js"]
-lineno = "176"
