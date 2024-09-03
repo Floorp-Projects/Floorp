@@ -1,8 +1,23 @@
 {
   "data": [
     {
-      "schema": 1717765743694,
+      "schema": 1724630408117,
       "components": [
+        {
+          "type": "ad_popover",
+          "included": {
+            "parent": {
+              "selector": "#plahover"
+            },
+            "children": [
+              {
+                "selector": ".pla-hovercard-container",
+                "skipCount": true,
+                "countChildren": true
+              }
+            ]
+          }
+        },
         {
           "type": "ad_carousel",
           "included": {
@@ -272,7 +287,7 @@
         "url"
       ],
       "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
-      "last_modified": 1718041017650
+      "last_modified": 1724867833754
     },
     {
       "isSPA": true,
@@ -792,5 +807,5 @@
       "last_modified": 1698666532324
     }
   ],
-  "timestamp": 1718041017650
+  "timestamp": 1724867833754
 }
