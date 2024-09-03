@@ -90,6 +90,33 @@ bool GMPVideoi420FrameImpl::CheckFrameData(
 bool GMPVideoi420FrameImpl::CheckDimensions(int32_t aWidth, int32_t aHeight,
                                             int32_t aStride_y,
                                             int32_t aStride_u,
+                                            int32_t aStride_v, int32_t aSize_y,
+                                            int32_t aSize_u, int32_t aSize_v) {
+  if (aWidth < 1 || aHeight < 1 || aStride_y < aWidth || aSize_y < 1 ||
+      aSize_u < 1 || aSize_v < 1) {
+    return false;
+  }
+  auto halfWidth = (CheckedInt<int32_t>(aWidth) + 1) / 2;
+  if (!halfWidth.isValid() || aStride_u < halfWidth.value() ||
+      aStride_v < halfWidth.value()) {
+    return false;
+  }
+  auto height = CheckedInt<int32_t>(aHeight);
+  auto halfHeight = (height + 1) / 2;
+  auto minSizeY = height * aStride_y;
+  auto minSizeU = halfHeight * aStride_u;
+  auto minSizeV = halfHeight * aStride_v;
+  if (!minSizeY.isValid() || !minSizeU.isValid() || !minSizeV.isValid() ||
+      minSizeY.value() > aSize_y || minSizeU.value() > aSize_u ||
+      minSizeV.value() > aSize_v) {
+    return false;
+  }
+  return true;
+}
+
+bool GMPVideoi420FrameImpl::CheckDimensions(int32_t aWidth, int32_t aHeight,
+                                            int32_t aStride_y,
+                                            int32_t aStride_u,
                                             int32_t aStride_v) {
   int32_t half_width = (aWidth + 1) / 2;
   if (aWidth < 1 || aHeight < 1 || aStride_y < aWidth ||
@@ -175,11 +202,8 @@ GMPErr GMPVideoi420FrameImpl::CreateFrame(
   MOZ_ASSERT(aBuffer_u);
   MOZ_ASSERT(aBuffer_v);
 
-  if (aSize_y < 1 || aSize_u < 1 || aSize_v < 1) {
-    return GMPGenericErr;
-  }
-
-  if (!CheckDimensions(aWidth, aHeight, aStride_y, aStride_u, aStride_v)) {
+  if (!CheckDimensions(aWidth, aHeight, aStride_y, aStride_u, aStride_v,
+                       aSize_y, aSize_u, aSize_v)) {
     return GMPGenericErr;
   }
 
