@@ -580,20 +580,14 @@ void nsCocoaWindow::Destroy() {
   // (Bug 891424)
   Show(false);
 
-  if (mPopupContentView) mPopupContentView->Destroy();
+  if (mPopupContentView) {
+    mPopupContentView->Destroy();
+  }
 
   if (mFullscreenTransitionAnimation) {
     [mFullscreenTransitionAnimation stopAnimation];
     ReleaseFullscreenTransitionAnimation();
   }
-
-  nsBaseWidget::Destroy();
-  // nsBaseWidget::Destroy() calls GetParent()->RemoveChild(this). But we
-  // don't implement GetParent(), so we need to do the equivalent here.
-  if (mParent) {
-    mParent->RemoveChild(this);
-  }
-  nsBaseWidget::OnDestroy();
 
   if (mInFullScreenMode && !mInNativeFullScreenMode) {
     // Keep these calls balanced for emulated fullscreen.
@@ -607,6 +601,17 @@ void nsCocoaWindow::Destroy() {
   if (mWindow && mWindowMadeHere) {
     CancelAllTransitions();
     DestroyNativeWindow();
+  }
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  nsBaseWidget::OnDestroy();
+  nsBaseWidget::Destroy();
+
+  // nsBaseWidget::Destroy() calls GetParent()->RemoveChild(this). But we
+  // don't implement GetParent(), so we need to do the equivalent here.
+  if (mParent) {
+    mParent->RemoveChild(this);
   }
 }
 
