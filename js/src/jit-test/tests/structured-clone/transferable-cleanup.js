@@ -160,6 +160,15 @@ function testMultiWithDeserializeReadTransferErrorHelper(g, BASE, desc) {
     } catch (e) {
         assertEq(e.message.includes("invalid transferable"), true);
     }
+
+    try {
+        // This fails without logging anything, since the re-transfer will be caught
+        // by looking at its header before calling any callbacks.
+        let clone = deserialize(s);
+    } catch (e) {
+        assertEq(e.message.includes("cannot transfer twice"), true);
+    }
+
     s = null;
     gc();
     printTrace(arguments.callee.name, g, BASE, obj.log, "deserialize");
@@ -170,6 +179,7 @@ function testMultiWithDeserializeReadTransferErrorHelper(g, BASE, desc) {
         // which comes before the main reading. obj transfer data is now owned by its
         // clone. obj3 transfer data was not successfully handed over to a new object,
         // so it is still owned by the clone buffer and must be discarded with freeTransfer.
+        // 'F' means the data is freed.
         BASE + 3, "F",
     ], "deserialize " + desc);
     obj.log = null;
