@@ -604,6 +604,10 @@ falling back to not using job objects for managing child processes""",
                     # Dude, the process is like totally dead!
                     return self.returncode
 
+                # On Windows, an unlimited timeout prevents KeyboardInterrupt from
+                # being caught.
+                the_timeout = 0.1 if timeout is None else timeout
+
                 if self._job:
                     self.debug("waiting with IO completion port")
                     # Then we are managing with IO Completion Ports
@@ -613,7 +617,18 @@ falling back to not using job objects for managing child processes""",
                     # function because events just didn't have robust enough error
                     # handling on pre-2.7 versions
                     try:
-                        item = self._process_events.get(timeout=timeout)
+                        while True:
+                            try:
+                                item = self._process_events.get(timeout=the_timeout)
+                            except Empty:
+                                # The timeout was not given by the user, we just have a
+                                # timeout to allow KeyboardInterrupt, so retry.
+                                if timeout is None:
+                                    continue
+                                else:
+                                    raise
+                            break
+
                         # re-emit the event in case some other thread is also calling wait()
                         self._process_events.put(item)
                         if item[self.pid] == "FINISHED":
@@ -646,13 +661,17 @@ falling back to not using job objects for managing child processes""",
 
                     rc = None
                     if self._handle:
-                        if timeout is None:
-                            timeout = -1
-                        else:
-                            # timeout for WaitForSingleObject is in ms
-                            timeout = timeout * 1000
-
-                        rc = winprocess.WaitForSingleObject(self._handle, timeout)
+                        # timeout for WaitForSingleObject is in ms
+                        the_timeout = int(the_timeout * 1000)
+                        while True:
+                            rc = winprocess.WaitForSingleObject(
+                                self._handle, the_timeout
+                            )
+                            # The timeout was not given by the user, we just have a
+                            # timeout to allow KeyboardInterrupt, so retry.
+                            if timeout is None and rc == winprocess.WAIT_TIMEOUT:
+                                continue
+                            break
 
                     if rc == winprocess.WAIT_TIMEOUT:
                         # Timeout happened as asked.
