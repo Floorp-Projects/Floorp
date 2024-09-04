@@ -946,12 +946,17 @@ falling back to not using job objects for managing child processes""",
             self.returncode is not None
             and self.reader.thread
             and self.reader.thread is not threading.current_thread()
+        ):
             # If children are ignored and a child is still running because it's
             # been daemonized or something, the reader might still be attached
             # to that child'd output... and joining will deadlock.
-            and not self._ignore_children
-        ):
-            self.reader.join()
+            # So instead, we wait for there to be no more active reading still
+            # happening.
+            if self._ignore_children:
+                while self.reader.is_still_reading(timeout=0.1):
+                    time.sleep(0.1)
+            else:
+                self.reader.join()
         return self.returncode
 
     @property
@@ -1056,6 +1061,7 @@ class ProcessReader(object):
         self.timeout = timeout
         self.output_timeout = output_timeout
         self.thread = None
+        self.got_data = threading.Event()
         self.didOutputTimeout = False
 
     def debug(self, msg):
@@ -1124,6 +1130,7 @@ class ProcessReader(object):
             # reader threads setup in start.
             for n in range(readers):
                 for line, callback in iter(get_line, (b"", None)):
+                    self.got_data.set()
                     try:
                         callback(line.rstrip())
                     except Exception:
@@ -1145,6 +1152,10 @@ class ProcessReader(object):
         if self.thread:
             return self.thread.is_alive()
         return False
+
+    def is_still_reading(self, timeout):
+        self.got_data.clear()
+        return self.got_data.wait(timeout)
 
     def join(self, timeout=None):
         if self.thread:
