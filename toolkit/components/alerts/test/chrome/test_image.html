@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test for Bug 1233086</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 
 <body>
@@ -16,7 +16,7 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 const Services = SpecialPowers.Services;
 
-const imageServerURL = "http://mochi.test:8888/tests/toolkit/components/alerts/test/image_server.sjs";
+const imageServerURL = "http://mochi.test:8888/chrome/toolkit/components/alerts/test/chrome/image_server.sjs";
 
 function makeAlert(...params) {
   var alert = Cc["@mozilla.org/alert-notification;1"]

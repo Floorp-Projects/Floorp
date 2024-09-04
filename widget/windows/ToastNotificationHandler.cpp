@@ -625,10 +625,20 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     nsString title;
     ns = action->GetTitle(title);
     NS_ENSURE_SUCCESS(ns, nullptr);
+    if (!EnsureUTF16Validity(title)) {
+      MOZ_LOG(sWASLog, LogLevel::Warning,
+              ("Notification text was invalid UTF16, unpaired surrogates have "
+               "been replaced."));
+    }
 
     nsString actionString;
     ns = action->GetAction(actionString);
     NS_ENSURE_SUCCESS(ns, nullptr);
+    if (!EnsureUTF16Validity(actionString)) {
+      MOZ_LOG(sWASLog, LogLevel::Warning,
+              ("Notification text was invalid UTF16, unpaired surrogates have "
+               "been replaced."));
+    }
 
     nsString opaqueRelaunchData;
     ns = action->GetOpaqueRelaunchData(opaqueRelaunchData);

@@ -4,8 +4,8 @@
 <html>
 <head>
   <title>Test for Alerts Service</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 
 <body>
@@ -73,7 +73,6 @@ function runTest() {
     notifier.showAlertNotification(null, "Notification test",
                                    "Surprise! I'm here to test notifications!",
                                    false, "foobarcookie", observer, alertName);
-    ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
   } catch (ex) {
     todo(false, "showAlertNotification() failed.", ex);
     SimpleTest.finish();

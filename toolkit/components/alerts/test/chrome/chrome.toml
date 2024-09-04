@@ -1,6 +1,7 @@
 [DEFAULT]
 skip-if = ["os == 'android'"] # We don't use XUL alerts on Android
 support-files = [
+  "empty.html",
   "image.gif",
   "image.png",
   "image_server.sjs",
