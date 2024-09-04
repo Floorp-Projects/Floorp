@@ -555,6 +555,7 @@ MSG_DEF(JSMSG_SC_BAD_CLONE_VERSION,    0, JSEXN_ERR, "unsupported structured clo
 MSG_DEF(JSMSG_SC_BAD_SERIALIZED_DATA,  1, JSEXN_INTERNALERR, "bad serialized structured data ({0})")
 MSG_DEF(JSMSG_SC_DUP_TRANSFERABLE,     0, JSEXN_TYPEERR, "duplicate transferable for structured clone")
 MSG_DEF(JSMSG_SC_NOT_TRANSFERABLE,     0, JSEXN_TYPEERR, "invalid transferable array for structured clone")
+MSG_DEF(JSMSG_SC_TRANSFERABLE_TWICE,   0, JSEXN_TYPEERR, "structured clone cannot transfer twice")
 MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,     0, JSEXN_TYPEERR, "unsupported type for structured data")
 MSG_DEF(JSMSG_SC_NOT_CLONABLE,         1, JSEXN_TYPEERR, "The {0} object cannot be serialized. The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers will enable this in the future.")
 MSG_DEF(JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP, 1, JSEXN_TYPEERR, "The {0} object cannot be serialized. The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers can be used to enable this.")
