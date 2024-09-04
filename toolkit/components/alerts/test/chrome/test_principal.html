@@ -2,11 +2,12 @@
 <html>
 <head>
   <title>Test for Bug 1202933</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 
 <body>
+<iframe id="iframe" src="http://mochi.test:8888/chrome/toolkit/components/alerts/test/chrome/empty.html"></iframe>
 <p id="display"></p>
 
 <pre id="test">
@@ -77,7 +78,12 @@ async function testNullPrincipal() {
 }
 
 async function testNodePrincipal() {
-  var principal = SpecialPowers.wrap(document).nodePrincipal;
+  const { iframe } = document.all;
+  if (iframe.contentDocument.readyState !== "complete") {
+    await new Promise(r => iframe.onload = r);
+  }
+
+  var principal = iframe.contentDocument.nodePrincipal;
   var source = await notify("nodePrincipal", principal);
 
   var stringBundle = Services.strings.createBundle(
