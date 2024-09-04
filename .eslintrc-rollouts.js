@@ -1882,7 +1882,7 @@ const rollouts = [
       "testing/talos/talos/webextensions/dummy/background.js",
       "testing/xpcshell/moz-http2/moz-http2.js",
       "toolkit/components/aboutprocesses/tests/browser/head.js",
-      "toolkit/components/alerts/test/browser_bug1682866.js",
+      "toolkit/components/alerts/test/browser/browser_bug1682866.js",
       "toolkit/components/antitracking/test/browser/browser_contentBlockingAllowListPrincipal.js",
       "toolkit/components/antitracking/test/browser/browser_partitionedServiceWorkers.js",
       "toolkit/components/antitracking/test/browser/browser_permissionInNormalWindows.js",
