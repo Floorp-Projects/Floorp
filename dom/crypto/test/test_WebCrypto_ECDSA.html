@@ -91,7 +91,7 @@ TestArray.addTest(
   "ECDSA JWK import and reject a known-bad signature",
   function() {
     var that = this;
-    var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
 
     function doVerify(x) {
       return crypto.subtle.verify(alg, x, tv.ecdsa_verify.sig_tampered,
@@ -137,6 +137,18 @@ TestArray.addTest(
     var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
 
     crypto.subtle.importKey("jwk", tv.ecdsa_jwk_alg_mismatch.pub_jwk, alg, true, ["verify"])
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Verify that ECDSA import fails with a key with a mismatched 'crv' field",
+  function() {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
+
+    crypto.subtle.importKey("jwk", tv.ecdsa_jwk_crv_mismatch.pub_jwk, alg, true, ["verify"])
       .then(error(that), complete(that));
   }
 );
