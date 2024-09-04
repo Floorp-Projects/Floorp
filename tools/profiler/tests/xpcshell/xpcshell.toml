@@ -22,6 +22,7 @@ skip-if = ["!debug"]
 skip-if = ["!debug"]
 
 ["test_feature_cpufreq.js"]
+skip-if = ["tsan"] # Times out, intermittently before (bug 1879744), perma after bug 1915433.
 
 ["test_feature_fileioall.js"]
 skip-if = ["release_or_beta"]
