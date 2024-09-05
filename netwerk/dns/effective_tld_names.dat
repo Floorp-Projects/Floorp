@@ -12100,7 +12100,7 @@ eero-stage.online
 // Submitted by Apigee Security Team <security@apigee.com>
 apigee.io
 
-// Apis Networks: https://apisnetworks.com
+// Apis Networks : https://apisnetworks.com
 // Submitted by Matt Saladna <matt@apisnetworks.com>
 panel.dev
 
@@ -12172,7 +12172,7 @@ onavstack.net
 *.awdev.ca
 *.advisor.ws
 
-// AZ.pl sp. z.o.o: https://az.pl
+// AZ.pl sp. z.o.o : https://az.pl
 // Submitted by Krzysztof Wolski <krzysztof.wolski@home.eu>
 ecommerce-shop.pl
 
@@ -12520,7 +12520,7 @@ on.crisp.email
 // Submitted by Marvin Wiesner <Marvin@curv-labs.de>
 curv.dev
 
-// Customer OCI - Oracle Dyn https://cloud.oracle.com/home https://dyn.com/dns/
+// Customer OCI - Oracle Dyn : https://cloud.oracle.com/home https://dyn.com/dns/
 // Submitted by Gregory Drake <support@dyn.com>
 // Note: This is intended to also include customer-oci.com due to wildcards implicitly including the current label
 *.customer-oci.com
@@ -12647,8 +12647,8 @@ us.kg
 
 // Diher Solutions : https://diher.solutions
 // Submitted by Didi Hermawan <mail@diher.solutions>
-*.rss.my.id
-*.diher.solutions
+rss.my.id
+diher.solutions
 
 // Discord Inc : https://discord.com
 // Submitted by Sahn Lam <slam@discordapp.com>
@@ -13023,7 +13023,7 @@ easypanel.host
 // Submitted by <infracloudteam@namecheap.com>
 *.ewp.live
 
-// ECG Robotics, Inc: https://ecgrobotics.org
+// ECG Robotics, Inc : https://ecgrobotics.org
 // Submitted by <frc1533@ecgrobotics.org>
 onred.one
 staging.onred.one
@@ -13293,10 +13293,6 @@ filegear.me
 // Submitted by Chris Raynor <chris@firebase.com>
 firebaseapp.com
 
-// Firewebkit : https://www.firewebkit.com
-// Submitted by Majid Qureshi <mqureshi@amrayn.com>
-fireweb.app
-
 // FLAP : https://www.flap.cloud
 // Submitted by Louis Chemineau <louis@chmn.me>
 flap.id
@@ -13330,7 +13326,7 @@ framer.photos
 framer.website
 framer.wiki
 
-// Frederik Braun https://frederik-braun.com
+// Frederik Braun : https://frederik-braun.com
 // Submitted by Frederik Braun <fb@frederik-braun.com>
 0e.vc
 
@@ -13602,7 +13598,6 @@ codespot.com
 googleapis.com
 googlecode.com
 pagespeedmobilizer.com
-publishproxy.com
 withgoogle.com
 withyoutube.com
 blogspot.cv
@@ -13790,7 +13785,7 @@ sch.so
 // Submitted by Bohdan Dub <support@hostfly.com.ua>
 ie.ua
 
-// HostyHosting (https://hostyhosting.com)
+// HostyHosting : https://hostyhosting.com
 hostyhosting.io
 
 // Hypernode B.V. : https://www.hypernode.com/
@@ -13818,12 +13813,12 @@ gr.com
 // Submitted by Hannu Aronsson <haa@iki.fi>
 iki.fi
 
-// iliad italia: https://www.iliad.it
+// iliad italia : https://www.iliad.it
 // Submitted by Marios Makassikis <mmakassikis@freebox.fr>
 ibxos.it
 iliadboxos.it
 
-// Incsub, LLC: https://incsub.com/
+// Incsub, LLC : https://incsub.com/
 // Submitted by Aaron Edwards <sysadmins@incsub.com>
 smushcdn.com
 wphostedmail.com
@@ -13886,7 +13881,7 @@ to.leg.br
 // Submitted by Wolfgang Schwarz <admin@intermetrics.de>
 pixolino.com
 
-// Internet-Pro, LLP: https://netangels.ru/
+// Internet-Pro, LLP : https://netangels.ru/
 // Submitted by Vasiliy Sheredeko <piphon@gmail.com>
 na4u.ru
 
@@ -14562,8 +14557,8 @@ zapto.xyz
 nsupdate.info
 nerdpol.ovh
 
-// NYC.mn : http://www.information.nyc.mn
-// Submitted by Matthew Brown <mattbrown@nyc.mn>
+// NYC.mn : https://dot.nyc.mn/
+// Submitted by NYC.mn Subdomain Service <nyc.mn@mailfence.com>
 nyc.mn
 
 // O3O.Foundation : https://o3o.foundation/
@@ -14579,7 +14574,7 @@ obl.ong
 observablehq.cloud
 static.observableusercontent.com
 
-// OMG.LOL : <https://omg.lol>
+// OMG.LOL : https://omg.lol
 // Submitted by Adam Newbold <adam@omg.lol>
 omg.lol
 
@@ -14825,7 +14820,7 @@ qoto.io
 // Submitted by Xavier De Cock <xdecock@gmail.com>
 qualifioapp.com
 
-// Quality Unit: https://qualityunit.com
+// Quality Unit : https://qualityunit.com
 // Submitted by Vasyl Tsalko <vtsalko@qualityunit.com>
 ladesk.com
 
@@ -14974,6 +14969,10 @@ rocky.page
 // Russian Academy of Sciences
 // Submitted by Tech Support <support@rasnet.ru>
 ras.ru
+
+// Sakura Frp : https://www.natfrp.com
+// Submitted by Bobo Liu <support@natfrp.cloud>
+nyat.app
 
 // SAKURA Internet Inc. : https://www.sakura.ad.jp/
 // Submitted by Internet Service Department <rs-vendor-ml@sakura.ad.jp>
@@ -15629,11 +15628,11 @@ wafflecell.com
 webflow.io
 webflowtest.io
 
-// WebHare bv: https://www.webhare.com/
+// WebHare bv : https://www.webhare.com/
 // Submitted by Arnold Hendriks <info@webhare.com>
 *.webhare.dev
 
-// WebHotelier Technologies Ltd: https://www.webhotelier.net/
+// WebHotelier Technologies Ltd : https://www.webhotelier.net/
 // Submitted by Apostolos Tsakpinis <apostolos.tsakpinis@gmail.com>
 bookonline.app
 hotelwithflight.com
@@ -15649,7 +15648,7 @@ pdns.page
 plesk.page
 wpsquared.site
 
-// WebWaddle Ltd: https://webwaddle.com/
+// WebWaddle Ltd : https://webwaddle.com/
 // Submitted by Merlin Glander <hostmaster@webwaddle.com>
 *.wadl.top
 
@@ -15731,7 +15730,7 @@ cistron.nl
 demon.nl
 xs4all.space
 
-// Yandex.Cloud LLC: https://cloud.yandex.com
+// Yandex.Cloud LLC : https://cloud.yandex.com
 // Submitted by Alexander Lodin <security+psl@yandex-team.ru>
 yandexcloud.net
 storage.yandexcloud.net
