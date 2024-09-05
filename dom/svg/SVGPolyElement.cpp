@@ -6,6 +6,7 @@
 
 #include "SVGPolyElement.h"
 #include "DOMSVGPointList.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/gfx/2D.h"
 #include "SVGContentUtils.h"
 
@@ -48,13 +49,15 @@ void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
 
   if (!points.Length()) return;
 
-  float px = points[0].mX, py = points[0].mY, prevAngle = 0.0;
+  float zoom = UserSpaceMetrics::GetZoom(this);
+
+  float px = points[0].mX * zoom, py = points[0].mY * zoom, prevAngle = 0.0;
 
   aMarks->AppendElement(SVGMark(px, py, 0, SVGMark::eStart));
 
   for (uint32_t i = 1; i < points.Length(); ++i) {
-    float x = points[i].mX;
-    float y = points[i].mY;
+    float x = points[i].mX * zoom;
+    float y = points[i].mY * zoom;
     float angle = std::atan2(y - py, x - px);
 
     // Vertex marker.
@@ -93,18 +96,20 @@ bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,
     return false;
   }
 
+  float zoom = UserSpaceMetrics::GetZoom(this);
+
   if (aToBoundsSpace.IsRectilinear()) {
     // We can avoid transforming each point and just transform the result.
     // Important for large point lists.
-    Rect bounds(points[0], Size());
+    Rect bounds(points[0] * zoom, Size());
     for (uint32_t i = 1; i < points.Length(); ++i) {
-      bounds.ExpandToEnclose(points[i]);
+      bounds.ExpandToEnclose(points[i] * zoom);
     }
     *aBounds = aToBoundsSpace.TransformBounds(bounds);
   } else {
-    *aBounds = Rect(aToBoundsSpace.TransformPoint(points[0]), Size());
+    *aBounds = Rect(aToBoundsSpace.TransformPoint(points[0] * zoom), Size());
     for (uint32_t i = 1; i < points.Length(); ++i) {
-      aBounds->ExpandToEnclose(aToBoundsSpace.TransformPoint(points[i]));
+      aBounds->ExpandToEnclose(aToBoundsSpace.TransformPoint(points[i] * zoom));
     }
   }
   return true;
