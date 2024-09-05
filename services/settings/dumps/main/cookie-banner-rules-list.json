@@ -1,6 +1,59 @@
 {
   "data": [
     {
+      "schema": 1724976010804,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookie_dismiss",
+            "value": "true"
+          }
+        ]
+      },
+      "domains": [
+        "duh.de"
+      ],
+      "id": "3b73c6b4-b746-462b-8f5e-054ffcd5f2b3",
+      "last_modified": 1725526980846
+    },
+    {
+      "click": {
+        "optOut": "button.rejectAll",
+        "presence": "div.cookiebanner"
+      },
+      "schema": 1724976010804,
+      "domains": [
+        "destatis.de"
+      ],
+      "id": "b337aaa7-683f-4c8c-8a22-75ab6ae301ff",
+      "last_modified": 1725526980843
+    },
+    {
+      "click": {
+        "optOut": "button.cn-decline",
+        "presence": "div.cookie-notice"
+      },
+      "schema": 1724976010804,
+      "domains": [
+        "gls.de"
+      ],
+      "id": "727d6577-ae04-4dc0-8ae3-c0af3f3787d5",
+      "last_modified": 1725526980839
+    },
+    {
+      "click": {
+        "optIn": "button.fides-accept-all-button",
+        "optOut": "button.fides-reject-all-button",
+        "presence": "div#fides-banner"
+      },
+      "schema": 1724976010804,
+      "domains": [
+        "nytimes.com"
+      ],
+      "id": "488f07f9-0a01-4118-aab3-2b817e9fe6dc",
+      "last_modified": 1725526980835
+    },
+    {
       "click": {
         "optIn": "custom-button#consentAccept",
         "presence": "main[data-consent-main]"
@@ -8667,27 +8720,6 @@
     },
     {
       "click": {
-        "optIn": "div.gdpr div > button:not([aria-label]",
-        "optOut": "div.gdpr div > button + button:not([aria-label])",
-        "presence": "div.gdpr"
-      },
-      "schema": 1670460527205,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "purr-pref-agent",
-            "value": "<Go"
-          }
-        ]
-      },
-      "domains": [
-        "nytimes.com"
-      ],
-      "id": "488f07f9-0a01-4118-aab3-2b817e9fe6dc",
-      "last_modified": 1670498157312
-    },
-    {
-      "click": {
         "hide": "div#onetrust-consent-sdk",
         "optIn": "button#onetrust-accept-btn-handler",
         "optOut": "button.ot-pc-refuse-all-handler",
@@ -10151,5 +10183,5 @@
       "last_modified": 1670498155651
     }
   ],
-  "timestamp": 1717071078321
+  "timestamp": 1725526980846
 }
