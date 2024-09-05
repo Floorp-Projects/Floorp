@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGPolylineElement.h"
 #include "mozilla/dom/SVGPolylineElementBinding.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/gfx/2D.h"
 
 using namespace mozilla::gfx;
@@ -41,9 +42,11 @@ already_AddRefed<Path> SVGPolylineElement::BuildPath(PathBuilder* aBuilder) {
     return nullptr;
   }
 
-  aBuilder->MoveTo(points[0]);
+  float zoom = UserSpaceMetrics::GetZoom(this);
+
+  aBuilder->MoveTo(points[0] * zoom);
   for (uint32_t i = 1; i < points.Length(); ++i) {
-    aBuilder->LineTo(points[i]);
+    aBuilder->LineTo(points[i] * zoom);
   }
 
   return aBuilder->Finish();

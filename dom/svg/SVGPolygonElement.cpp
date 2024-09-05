@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGPolygonElement.h"
 #include "mozilla/dom/SVGPolygonElementBinding.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/gfx/2D.h"
 #include "SVGContentUtils.h"
 
@@ -64,9 +65,11 @@ already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder* aBuilder) {
     return nullptr;
   }
 
-  aBuilder->MoveTo(points[0]);
+  float zoom = UserSpaceMetrics::GetZoom(this);
+
+  aBuilder->MoveTo(points[0] * zoom);
   for (uint32_t i = 1; i < points.Length(); ++i) {
-    aBuilder->LineTo(points[i]);
+    aBuilder->LineTo(points[i] * zoom);
   }
 
   aBuilder->Close();
