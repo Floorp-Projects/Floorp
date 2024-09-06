@@ -759,31 +759,41 @@ export const ContentAnalysis = {
         timeoutMs = this._RESULT_NOTIFICATION_FAST_TIMEOUT_MS;
         break;
       case Ci.nsIContentAnalysisResponse.eWarn: {
-        const result = await Services.prompt.asyncConfirmEx(
-          aBrowsingContext,
-          Ci.nsIPromptService.MODAL_TYPE_TAB,
-          await this.l10n.formatValue("contentanalysis-warndialogtitle"),
-          await this.l10n.formatValue("contentanalysis-warndialogtext", {
-            content: this._getResourceNameFromNameOrOperationType(
-              aResourceNameOrOperationType
-            ),
-          }),
-          Ci.nsIPromptService.BUTTON_POS_0 *
-            Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
-            Ci.nsIPromptService.BUTTON_POS_1 *
+        let allow = false;
+        try {
+          const result = await Services.prompt.asyncConfirmEx(
+            aBrowsingContext,
+            Ci.nsIPromptService.MODAL_TYPE_TAB,
+            await this.l10n.formatValue("contentanalysis-warndialogtitle"),
+            await this.l10n.formatValue("contentanalysis-warndialogtext", {
+              content: this._getResourceNameFromNameOrOperationType(
+                aResourceNameOrOperationType
+              ),
+            }),
+            Ci.nsIPromptService.BUTTON_POS_0 *
               Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
-            Ci.nsIPromptService.BUTTON_POS_2_DEFAULT,
-          await this.l10n.formatValue(
-            "contentanalysis-warndialog-response-allow"
-          ),
-          await this.l10n.formatValue(
-            "contentanalysis-warndialog-response-deny"
-          ),
-          null,
-          null,
-          {}
-        );
-        const allow = result.get("buttonNumClicked") === 0;
+              Ci.nsIPromptService.BUTTON_POS_1 *
+                Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
+              Ci.nsIPromptService.BUTTON_POS_2_DEFAULT,
+            await this.l10n.formatValue(
+              "contentanalysis-warndialog-response-allow"
+            ),
+            await this.l10n.formatValue(
+              "contentanalysis-warndialog-response-deny"
+            ),
+            null,
+            null,
+            {}
+          );
+          allow = result.get("buttonNumClicked") === 0;
+        } catch {
+          // This can happen if the dialog is closed programmatically, for
+          // example if the tab is moved to a new window.
+          // In this case just pretend the user clicked deny, as this
+          // emulates the behavior of cancelling when
+          // the request is still active.
+          allow = false;
+        }
         lazy.gContentAnalysis.respondToWarnDialog(aRequestToken, allow);
         return null;
       }
