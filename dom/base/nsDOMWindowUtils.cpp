@@ -4911,3 +4911,10 @@ nsDOMWindowUtils::RestoreHiDPIMode() {
   return NS_ERROR_NOT_AVAILABLE;
 #endif
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDragSession(nsIDragSession** aSession) {
+  RefPtr<nsIDragSession> session = nsContentUtils::GetDragSession(GetWidget());
+  session.forget(aSession);
+  return NS_OK;
+}

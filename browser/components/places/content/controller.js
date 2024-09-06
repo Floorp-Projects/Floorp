@@ -1503,10 +1503,11 @@ var PlacesControllerDragHelper = {
   },
 
   /**
-   * @returns {object|null} The current active drag session. Returns null if there is none.
+   * @returns {object|null} The current active drag session for the window.
+   * Returns null if there is none.
    */
   getSession: function PCDH__getSession() {
-    return this.dragService.getCurrentSession();
+    return this.dragService.getCurrentSession(window);
   },
 
   /**
