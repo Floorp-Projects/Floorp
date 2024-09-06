@@ -36,6 +36,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Document.h"
@@ -44,7 +46,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFrameLoader.h"
-#include "BrowserParent.h"
 #include "nsIMutableArray.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -626,14 +627,19 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
     dropEffect = mDataTransfer->DropEffectInt();
   }
 
-  for (uint32_t i = 0; i < mChildProcesses.Length(); ++i) {
-    mozilla::Unused << mChildProcesses[i]->SendEndDragSession(
-        aDoneDrag, mUserCancelled, mEndDragPoint, aKeyModifiers, dropEffect);
+  for (nsWeakPtr& browser : mBrowsers) {
+    nsCOMPtr<BrowserParent> bp = do_QueryReferent(browser);
+    if (NS_WARN_IF(!bp)) {
+      continue;
+    }
+    mozilla::Unused << bp->SendEndDragSession(aDoneDrag, mUserCancelled,
+                                              mEndDragPoint, aKeyModifiers,
+                                              dropEffect);
     // Continue sending input events with input priority when stopping the dnd
     // session.
-    mChildProcesses[i]->SetInputPriorityEventEnabled(true);
+    bp->Manager()->SetInputPriorityEventEnabled(true);
   }
-  mChildProcesses.Clear();
+  mBrowsers.Clear();
 
   // mDataTransfer and the items it owns are going to die anyway, but we
   // explicitly deref the contained data here so that we don't have to wait for
@@ -1026,22 +1032,31 @@ nsBaseDragSession::DragEventDispatchedToChildProcess() {
   return NS_OK;
 }
 
-bool nsBaseDragService::MaybeAddChildProcess(
-    mozilla::dom::ContentParent* aChild) {
-  if (!mChildProcesses.Contains(aChild)) {
-    mChildProcesses.AppendElement(aChild);
+bool nsBaseDragService::MaybeAddBrowser(BrowserParent* aBP) {
+  nsWeakPtr browser = do_GetWeakReference(aBP);
+
+  // Equivalent to `InsertElementSorted`, avoiding inserting a duplicate
+  // element. See bug 1896166.
+  size_t index = mBrowsers.IndexOfFirstElementGt(browser);
+  if (index == 0 || mBrowsers[index - 1] != browser) {
+    mBrowsers.InsertElementAt(index, browser);
     return true;
   }
   return false;
 }
 
-bool nsBaseDragService::RemoveAllChildProcesses() {
-  for (uint32_t c = 0; c < mChildProcesses.Length(); c++) {
-    mozilla::Unused << mChildProcesses[c]->SendEndDragSession(
+bool nsBaseDragService::RemoveAllBrowsers() {
+  for (auto& weakBrowser : mBrowsers) {
+    nsCOMPtr<BrowserParent> browser = do_QueryReferent(weakBrowser);
+    if (!browser) {
+      continue;
+    }
+    mozilla::Unused << browser->SendEndDragSession(
         true, false, LayoutDeviceIntPoint(), 0,
         nsIDragService::DRAGDROP_ACTION_NONE);
   }
-  mChildProcesses.Clear();
+
+  mBrowsers.Clear();
   return true;
 }
 

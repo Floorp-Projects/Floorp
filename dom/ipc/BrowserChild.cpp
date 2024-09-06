@@ -112,6 +112,7 @@
 #include "nsRefreshDriver.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
+#include "nsVariant.h"
 #include "nsViewManager.h"
 #include "nsWebBrowser.h"
 #include "nsWindowWatcher.h"
@@ -1898,6 +1899,103 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   }
 
   DispatchWidgetEventViaAPZ(localEvent);
+  return IPC_OK();
+}
+
+static already_AddRefed<DataTransfer> ConvertToDataTransfer(
+    nsTArray<IPCTransferableData>&& aTransferables, EventMessage aMessage) {
+  // Check if we are receiving any file objects. If we are we will want
+  // to hide any of the other objects coming in from content.
+  bool hasFiles = false;
+  for (uint32_t i = 0; i < aTransferables.Length() && !hasFiles; ++i) {
+    auto& items = aTransferables[i].items();
+    for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
+      if (items[j].data().type() ==
+          IPCTransferableDataType::TIPCTransferableDataBlob) {
+        hasFiles = true;
+      }
+    }
+  }
+  // Add the entries from the IPC to the new DataTransfer
+  RefPtr<DataTransfer> dataTransfer =
+      new DataTransfer(nullptr, aMessage, false, -1);
+  for (uint32_t i = 0; i < aTransferables.Length(); ++i) {
+    auto& items = aTransferables[i].items();
+    for (uint32_t j = 0; j < items.Length(); ++j) {
+      const IPCTransferableDataItem& item = items[j];
+      RefPtr<nsVariantCC> variant = new nsVariantCC();
+      nsresult rv =
+          nsContentUtils::IPCTransferableDataItemToVariant(item, variant);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      // We should hide this data from content if we have a file, and we
+      // aren't a file.
+      bool hidden =
+          hasFiles && item.data().type() !=
+                          IPCTransferableDataType::TIPCTransferableDataBlob;
+      dataTransfer->SetDataWithPrincipalFromOtherProcess(
+          NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
+          nsContentUtils::GetSystemPrincipal(), hidden);
+    }
+  }
+  return dataTransfer.forget();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
+    const MaybeDiscarded<WindowContext>& aSourceWindowContext,
+    const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
+    nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction) {
+  if (nsCOMPtr<nsIDragService> dragService =
+          do_GetService("@mozilla.org/widget/dragservice;1")) {
+    dragService->StartDragSession();
+    if (RefPtr<nsIDragSession> session = GetDragSession()) {
+      session->SetSourceWindowContext(aSourceWindowContext.GetMaybeDiscarded());
+      session->SetSourceTopWindowContext(
+          aSourceTopWindowContext.GetMaybeDiscarded());
+      session->SetDragAction(aAction);
+
+      RefPtr<DataTransfer> dataTransfer =
+          ConvertToDataTransfer(std::move(aTransferables), eDragStart);
+      session->SetDataTransfer(dataTransfer);
+    }
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvUpdateDragSession(
+    nsTArray<IPCTransferableData>&& aTransferables,
+    EventMessage aEventMessage) {
+  if (RefPtr<nsIDragSession> session = GetDragSession()) {
+    nsCOMPtr<DataTransfer> dataTransfer =
+        ConvertToDataTransfer(std::move(aTransferables), aEventMessage);
+    session->SetDataTransfer(dataTransfer);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvEndDragSession(
+    const bool& aDoneDrag, const bool& aUserCancelled,
+    const LayoutDeviceIntPoint& aDragEndPoint, const uint32_t& aKeyModifiers,
+    const uint32_t& aDropEffect) {
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  if (dragService) {
+    RefPtr<nsIDragSession> dragSession = GetDragSession();
+    if (dragSession) {
+      if (aUserCancelled) {
+        dragSession->UserCancelled();
+      }
+
+      RefPtr<DataTransfer> dataTransfer = dragSession->GetDataTransfer();
+      if (dataTransfer) {
+        dataTransfer->SetDropEffectInt(aDropEffect);
+      }
+      dragSession->SetDragEndPoint(aDragEndPoint.x, aDragEndPoint.y);
+    }
+    dragService->EndDragSession(aDoneDrag, aKeyModifiers);
+  }
   return IPC_OK();
 }
 

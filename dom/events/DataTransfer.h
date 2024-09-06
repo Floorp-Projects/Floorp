@@ -463,7 +463,7 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   nsresult SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
                              uint32_t aIndex, nsIPrincipal* aSubjectPrincipal);
 
-  friend class ContentParent;
+  friend class BrowserParent;
   friend class Clipboard;
 
   void FillAllExternalData();

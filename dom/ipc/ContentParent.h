@@ -477,8 +477,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvNotifyShutdownSuccess();
 
-  void MaybeInvokeDragSession(BrowserParent* aParent, EventMessage aMessage);
-
   PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
       const nsTArray<PermissionRequest>& aRequests, nsIPrincipal* aPrincipal,
       nsIPrincipal* aTopLevelPrincipal, const bool& aIsHandlingUserInput,
@@ -1128,9 +1126,6 @@ class ContentParent final : public PContentParent,
   bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor);
 #endif
 
-  mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
-                                               const uint32_t& aDropEffect);
-
   mozilla::ipc::IPCResult RecvShutdownProfile(const nsACString& aProfile);
 
   mozilla::ipc::IPCResult RecvShutdownPerfStats(const nsACString& aPerfStats);
@@ -1443,9 +1438,6 @@ class ContentParent final : public PContentParent,
   ThreadsafeContentParentHandle* ThreadsafeHandle() const {
     return mThreadsafeHandle;
   }
-
-  void GetIPCTransferableData(nsIDragSession* aSession, BrowserParent* aParent,
-                              nsTArray<IPCTransferableData>& aIPCTransferables);
 
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.

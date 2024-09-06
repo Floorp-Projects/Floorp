@@ -2024,8 +2024,7 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     }
     case eDragEventClass: {
       RefPtr<BrowserParent> browserParent = remote;
-      browserParent->Manager()->MaybeInvokeDragSession(browserParent,
-                                                       aEvent->mMessage);
+      browserParent->MaybeInvokeDragSession(aEvent->mMessage);
 
       RefPtr<nsIWidget> widget = browserParent->GetTopLevelWidget();
       nsCOMPtr<nsIDragSession> dragSession =
@@ -2420,7 +2419,7 @@ void EventStateManager::StopTrackingDragGesture(bool aClearInChildProcesses) {
           dragService->GetCurrentSession(mPresContext->GetRootWidget());
       if (!dragSession) {
         // Only notify if there isn't a drag session active.
-        dragService->RemoveAllChildProcesses();
+        dragService->RemoveAllBrowsers();
       }
     }
   }
@@ -4328,8 +4327,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // No one called preventDefault(), so handle drop only in chrome.
         dragSession->SetOnlyChromeDrop(true);
       }
-      if (ContentChild* child = ContentChild::GetSingleton()) {
-        child->SendUpdateDropEffect(action, dropEffect);
+      if (auto* bc = BrowserChild::GetFrom(presContext->GetDocShell())) {
+        bc->SendUpdateDropEffect(action, dropEffect);
       }
       if (aEvent->HasBeenPostedToRemoteProcess()) {
         dragSession->SetCanDrop(true);
@@ -4375,18 +4374,18 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ClearGlobalActiveContent(this);
       break;
     }
-    case eDragExit:
+    case eDragExit: {
       // make sure to fire the enter and exit_synth events after the
       // eDragExit event, otherwise we'll clean up too early
       GenerateDragDropEnterExit(presContext, aEvent->AsDragEvent());
-      if (ContentChild* child = ContentChild::GetSingleton()) {
+      if (auto* bc = BrowserChild::GetFrom(presContext->GetDocShell())) {
         // SendUpdateDropEffect to prevent nsIDragService from waiting for
         // response of forwarded dragexit event.
-        child->SendUpdateDropEffect(nsIDragService::DRAGDROP_ACTION_NONE,
-                                    nsIDragService::DRAGDROP_ACTION_NONE);
+        bc->SendUpdateDropEffect(nsIDragService::DRAGDROP_ACTION_NONE,
+                                 nsIDragService::DRAGDROP_ACTION_NONE);
       }
       break;
-
+    }
     case eKeyUp:
       // If space key is released, we need to inactivate the element which was
       // activated by preceding space key down.

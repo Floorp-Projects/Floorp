@@ -22,14 +22,14 @@ interface nsIMockDragServiceController;
 
 namespace mozilla {
 namespace dom {
-class ContentParent;
+class BrowserParent;
 class DataTransfer;
 class RemoteDragStartData;
 } // namespace dom
 } // namespace mozilla
 %}
 
-[ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+[ptr] native BrowserParentPtr(mozilla::dom::BrowserParent);
 [ptr] native DataTransferPtr(mozilla::dom::DataTransfer);
 [ptr] native RemoteDragStartDataPtr(mozilla::dom::RemoteDragStartData);
 native EventMessage(mozilla::EventMessage);
@@ -184,8 +184,8 @@ interface nsIDragService : nsISupports
   void suppress();
   void unsuppress();
 
-  [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
-  [notxpcom, nostdcall] boolean removeAllChildProcesses();
+  [notxpcom, nostdcall] boolean maybeAddBrowser(in BrowserParentPtr aBP);
+  [notxpcom, nostdcall] boolean removeAllBrowsers();
 
   /**
    * Retrun true if nsIDragSession's data is updated.

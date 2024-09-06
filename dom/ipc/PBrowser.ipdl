@@ -994,6 +994,19 @@ child:
 
     async WillChangeProcess();
 
+    async InvokeChildDragSession(
+        MaybeDiscardedWindowContext aSourceWindowContext,
+        MaybeDiscardedWindowContext aSourceTopWindowContext,
+        IPCTransferableData[] transfers, uint32_t action);
+
+    async UpdateDragSession(IPCTransferableData[] transfers,
+                            EventMessage message);
+
+    async EndDragSession(bool aDoneDrag, bool aUserCancelled,
+                         LayoutDeviceIntPoint aDragEndPoint,
+                         uint32_t aKeyModifiers,
+                         uint32_t aDropEffect);
+
 parent:
     /**
      * Fetches whether this window supports protected media, which is sent back in response.
@@ -1019,6 +1032,8 @@ parent:
      */
     async NewWindowGlobal(ManagedEndpoint<PWindowGlobalParent> aEndpoint,
                           WindowGlobalInit aInit);
+
+    async UpdateDropEffect(uint32_t aDragAction, uint32_t aDropEffect);
 
 /*
  * FIXME: write protocol!

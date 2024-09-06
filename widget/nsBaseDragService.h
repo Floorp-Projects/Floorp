@@ -13,7 +13,6 @@
 #include "nsPoint.h"
 #include "nsString.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/RemoteDragStartData.h"
@@ -253,7 +252,8 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
 
   uint32_t mSuppressLevel;
 
-  nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildProcesses;
+  // Weak references to PBrowsers that are currently engaged in drags
+  nsTArray<nsWeakPtr> mBrowsers;
 
   // Sub-region for tree-selections.
   mozilla::Maybe<mozilla::CSSIntRegion> mRegion;
