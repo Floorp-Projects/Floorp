@@ -3876,6 +3876,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
       ->EventStateManager()
       ->BeginTrackingRemoteDragGesture(mFrameElement, dragStartData);
 
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  os->NotifyObservers(nullptr, "content-invoked-drag", nullptr);
+
   return IPC_OK();
 }
 
