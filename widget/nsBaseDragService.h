@@ -45,6 +45,10 @@ namespace dom {
 class DataTransfer;
 class Selection;
 }  // namespace dom
+
+namespace test {
+class MockDragServiceController;
+}  // namespace test
 }  // namespace mozilla
 
 /**
@@ -146,10 +150,13 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
     return retval;
   }
 
+  virtual bool IsMockService() { return false; }
+
   bool mCanDrop;
   bool mOnlyChromeDrop;
   bool mDoingDrag;
   bool mSessionIsSynthesizedForTests;
+
   bool mIsDraggingTextInTextControl;
 
   // true if in EndDragSession
@@ -216,6 +223,13 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   // Sub-region for tree-selections.
   mozilla::Maybe<mozilla::CSSIntRegion> mRegion;
+
+  RefPtr<mozilla::test::MockDragServiceController> mMockController;
+
+  // If this is set, mSessionIsSynthesizedForTests should not become true.
+  // This hack is used to bypass the "old" drag-drop test behavior.
+  // See nsIDragService.idl for details.
+  bool mNeverAllowSessionIsSynthesizedForTests = false;
 };
 
 #endif  // nsBaseDragService_h__

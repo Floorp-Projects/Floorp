@@ -15,6 +15,7 @@ webidl Node;
 webidl Selection;
 
 interface nsICookieJarSettings;
+interface nsIMockDragServiceController;
 
 %{C++
 #include "mozilla/EventForwards.h"
@@ -205,6 +206,30 @@ interface nsIDragService : nsISupports
    * @param aEditingHost    The editing host when the editor deletes selection.
    */
   [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
+
+  /**
+   * The controller is used to issue events that would normally come from
+   * the system (when it is not mocked for testing).  This allows us to test
+   * without engaging any native DND behavior.
+   *
+   * In order for the controller to be effective, the existing nsIDragService
+   * needs to be replaced with the one in the controller.  See
+   * nsIMockDragServiceController for details.
+   */
+  nsIMockDragServiceController getMockDragController();
+
+  /**
+   * If this is true, mSessionIsSynthesizedForTests should not become true.
+   * This hack is used to bypass the "old" drag-drop test behavior, which needed
+   * special behavior to pass.  The new framework requires the actual browser
+   * behavior.  The test for whether we are using the new framework or not can
+   * only be done in the main process with nsBaseDragService::IsMockService.
+   * Unfortunately, mSessionIsSynthesizedForTests is inherited from
+   * synthetic mouse events in content processes (when dragging content) so we
+   * set this early in the relevant tests.  Once the old tests are replaced,
+   * this can be removed along with mSessionIsSynthesizedForTests.
+   */
+  [infallible] attribute boolean neverAllowSessionIsSynthesizedForTests;
 };
 
 
