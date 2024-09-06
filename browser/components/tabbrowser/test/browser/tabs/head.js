@@ -268,7 +268,7 @@ async function dragAndDrop(
   let event = {
     ctrlKey: copy,
     altKey: copy,
-    clientX: rect.left + rect.width / 2 + 10 * (afterTab ? 1 : -1),
+    clientX: rect.left + rect.width / 2 + (afterTab ? 1 : -1),
     clientY: rect.top + rect.height / 2,
   };
 

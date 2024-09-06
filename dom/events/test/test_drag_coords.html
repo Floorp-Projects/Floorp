@@ -45,8 +45,13 @@ add_task(async function test_drag_coords() {
   await Promise.all(promises);
   info(JSON.stringify(coords));
   for (let coordType of ["screen", "client"]) {
-    is(coords.dragend[coordType].x, coords.dragstart[coordType].x + 12, `x ${coordType} is correct`);
-    is(coords.dragend[coordType].y, coords.dragstart[coordType].y + 12, `y ${coordType} is correct`);
+    // Let (tx,ty) = (target.x, target.y).  Then synthesizePlainDragAndDrop
+    // sends mousedown/dragstart at (tx + srcX, ty + srcY), or (tx + 2, ty + 2).
+    // It later sends dragend at (tx + srcX + 2*stepX, ty + srcY + 2*stepY),
+    // or (tx + 22, ty + 22).  In other words, the position at dragend should
+    // be the position at dragstart, but offset by (20, 20).  
+    is(coords.dragend[coordType].x, coords.dragstart[coordType].x + 20, `x ${coordType} is correct`);
+    is(coords.dragend[coordType].y, coords.dragstart[coordType].y + 20, `y ${coordType} is correct`);
   }
 });
 </script>

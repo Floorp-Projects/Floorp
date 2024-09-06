@@ -388,10 +388,10 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
     cancelableArg,
     viewArg,
     detailArg,
-    screenXArg,
-    screenYArg,
-    clientXArg,
-    clientYArg,
+    Math.round(screenXArg),
+    Math.round(screenYArg),
+    Math.round(clientXArg),
+    Math.round(clientYArg),
     ctrlKeyArg,
     altKeyArg,
     shiftKeyArg,
@@ -3061,10 +3061,10 @@ function createDragEventObject(
   var destScreenX = aDestWindow.mozInnerScreenX + destClientX;
   var destScreenY = aDestWindow.mozInnerScreenY + destClientY;
   if ("clientX" in aDragEvent && !("screenX" in aDragEvent)) {
-    aDragEvent.screenX = aDestWindow.mozInnerScreenX + aDragEvent.clientX;
+    destScreenX = aDestWindow.mozInnerScreenX + aDragEvent.clientX;
   }
   if ("clientY" in aDragEvent && !("screenY" in aDragEvent)) {
-    aDragEvent.screenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
+    destScreenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
   }
 
   // Wrap only in plain mochitests
@@ -3833,12 +3833,12 @@ async function synthesizePlainDragAndDrop(aParams) {
     // Since we don't synthesize drop event, we need to set drag end point
     // explicitly for "dragEnd" event which will be fired by
     // endDragSession().
-    dragEvent.clientX = finalX;
-    dragEvent.clientY = finalY;
+    dragEvent.clientX = srcElement.getBoundingClientRect().x + finalX;
+    dragEvent.clientY = srcElement.getBoundingClientRect().y + finalY;
     let event = createDragEventObject(
       "dragend",
-      destElement || srcElement,
-      destElement ? srcWindow : destWindow,
+      srcElement,
+      srcWindow,
       null,
       dragEvent
     );

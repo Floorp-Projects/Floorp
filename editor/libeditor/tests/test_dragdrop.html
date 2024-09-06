@@ -18,6 +18,10 @@
 
 <script type="application/javascript">
 
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 SimpleTest.waitForExplicitFinish();
 
 function checkInputEvent(aEvent, aExpectedTarget, aInputType, aData, aDataTransfer, aTargetRanges, aDescription) {
@@ -935,6 +939,10 @@ async function doTest() {
   })();
 
   // -------- Test dragging contenteditable to same contenteditable
+  // Bug 1904272: Android Non-XOrigin incorrectly inserts after the 3rd M
+  // instead of after the 2nd M in some of the following tests.
+  const isAndroidException = AppConstants.platform === "android" && !isXOrigin;
+
   await (async function test_dragging_from_contenteditable_to_itself() {
     const description = "dragging text in contenteditable to same contenteditable";
     container.innerHTML = "<div contenteditable><b>bold</b> <span>MMMM</span></div>";
@@ -964,10 +972,16 @@ async function doTest() {
         }
       )
     ) {
-      todo_is(contenteditable.innerHTML, "<b>bd</b> <span>MM<b>ol</b>MM</span>",
-        `${description}: dragged range should be removed from contenteditable`);
-      todo_isnot(contenteditable.innerHTML, "<b>bd</b> <span>MMMM</span><b>ol</b>",
-        `${description}: dragged range should be removed from contenteditable`);
+      const kExpectedOffsets = isAndroidException ? [3,3] : [2,2];
+      if (isAndroidException) {
+        todo_is(contenteditable.innerHTML, "<b>bd</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range should be removed from contenteditable`);
+        isnot(contenteditable.innerHTML, "<b>bd</b> <span>MMMM</span><b>ol</b>",
+          `${description}: dragged range should be removed from contenteditable`);
+      } else {
+        is(contenteditable.innerHTML, "<b>bd</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range should be removed from contenteditable`);
+      }
       is(beforeinputEvents.length, 2,
         `${description}: 2 "beforeinput" events should be fired on contenteditable`);
       checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
@@ -977,8 +991,8 @@ async function doTest() {
       checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                       [{type: "text/html", data: "<b>ol</b>"},
                       {type: "text/plain", data: "ol"}],
-                      [{startContainer: lastTextNode, startOffset: 4,
-                        endContainer: lastTextNode, endOffset: 4}], // XXX unexpected
+                      [{startContainer: lastTextNode, startOffset: kExpectedOffsets[0],
+                        endContainer: lastTextNode, endOffset: kExpectedOffsets[1]}],
                       description);
       is(inputEvents.length, 2,
         `${description}: 2 "input" events should be fired on contenteditable`);
@@ -1025,10 +1039,16 @@ async function doTest() {
         }
       )
     ) {
-      todo_is(contenteditable.innerHTML, "<b>bold</b> <span>MM<b>ol</b>MM</span>",
-        `${description}: dragged range shouldn't be removed from contenteditable`);
-      todo_isnot(contenteditable.innerHTML, "<b>bold</b> <span>MMMM</span><b>ol</b>",
-        `${description}: dragged range shouldn't be removed from contenteditable`);
+      const kExpectedOffsets = isAndroidException ? [3,3] : [2,2];
+      if (isAndroidException) {
+        todo_is(contenteditable.innerHTML, "<b>bold</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+        isnot(contenteditable.innerHTML, "<b>bold</b> <span>MMMM</span><b>ol</b>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+      } else {
+        is(contenteditable.innerHTML, "<b>bold</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+      }
       is(beforeinputEvents.length, 2,
         `${description}: 2 "beforeinput" events should be fired on contenteditable`);
       checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
@@ -1038,8 +1058,8 @@ async function doTest() {
       checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                       [{type: "text/html", data: "<b>ol</b>"},
                       {type: "text/plain", data: "ol"}],
-                      [{startContainer: lastTextNode, startOffset: 4,
-                        endContainer: lastTextNode, endOffset: 4}], // XXX unexpected
+                      [{startContainer: lastTextNode, startOffset: kExpectedOffsets[0],
+                        endContainer: lastTextNode, endOffset: kExpectedOffsets[1]}],
                       description);
       is(inputEvents.length, 1,
         `${description}: only one "input" event should be fired on contenteditable`);
@@ -1094,11 +1114,12 @@ async function doTest() {
                       [{startContainer: selectionContainers[0], startOffset: 1,
                         endContainer: selectionContainers[1], endOffset: 3}],
                       description);
+      const kExpectedOffsets = isAndroidException ? [3,3] : [2,2];
       checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                       [{type: "text/html", data: "<b>ol</b>"},
                       {type: "text/plain", data: "ol"}],
-                      [{startContainer: lastTextNode, startOffset: 4,
-                        endContainer: lastTextNode, endOffset: 4}],
+                      [{startContainer: lastTextNode, startOffset: kExpectedOffsets[0],
+                        endContainer: lastTextNode, endOffset: kExpectedOffsets[1]}],
                       description);
       is(inputEvents.length, 1,
         `${description}: only one "input" event should be fired on contenteditable`);
@@ -1141,17 +1162,23 @@ async function doTest() {
         }
       )
     ) {
-      todo_is(contenteditable.innerHTML, "<b>bold</b> <span>MM<b>ol</b>MM</span>",
-        `${description}: dragged range shouldn't be removed from contenteditable`);
-      todo_isnot(contenteditable.innerHTML, "<b>bold</b> <span>MMMM</span><b>ol</b>",
-        `${description}: dragged range shouldn't be removed from contenteditable`);
+      const kExpectedOffsets = isAndroidException ? [3,3] : [2,2];
+      if (isAndroidException) {
+        todo_is(contenteditable.innerHTML, "<b>bold</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+        isnot(contenteditable.innerHTML, "<b>bold</b> <span>MMMM</span><b>ol</b>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+      } else {
+        is(contenteditable.innerHTML, "<b>bold</b> <span>MM</span><b>ol</b><span>MM</span>",
+          `${description}: dragged range shouldn't be removed from contenteditable`);
+      }
       is(beforeinputEvents.length, 1,
         `${description}: only 1 "beforeinput" events should be fired on contenteditable`);
       checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
                       [{type: "text/html", data: "<b>ol</b>"},
                       {type: "text/plain", data: "ol"}],
-                      [{startContainer: lastTextNode, startOffset: 4,
-                        endContainer: lastTextNode, endOffset: 4}],  // XXX unexpected
+                      [{startContainer: lastTextNode, startOffset: kExpectedOffsets[0],
+                        endContainer: lastTextNode, endOffset: kExpectedOffsets[1]}],
                       description);
       is(inputEvents.length, 1,
         `${description}: only 1 "input" events should be fired on contenteditable`);
@@ -2084,9 +2111,7 @@ async function doTest() {
     ) {
       is(textarea.value, "Linne2",
         `${description}: dragged range should be removed from <textarea>`);
-      todo_is(contenteditable.innerHTML, "<div>e1</div><div>Li</div>",
-        `${description}: dragged content should be inserted into contenteditable`);
-      todo_isnot(contenteditable.innerHTML, "e1<br>Li<br>",
+      is(contenteditable.innerHTML, "e1<br>Li<br>",
         `${description}: dragged content should be inserted into contenteditable`);
       is(beforeinputEvents.length, 2,
         `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
@@ -2140,9 +2165,7 @@ async function doTest() {
     ) {
       is(textarea.value, "Line1\nLine2",
         `${description}: dragged range should be removed from <textarea>`);
-      todo_is(contenteditable.innerHTML, "<div>e1</div><div>Li</div>",
-        `${description}: dragged content should be inserted into contenteditable`);
-      todo_isnot(contenteditable.innerHTML, "e1<br>Li<br>",
+      is(contenteditable.innerHTML, "e1<br>Li<br>",
         `${description}: dragged content should be inserted into contenteditable`);
       is(beforeinputEvents.length, 1,
         `${description}: only one "beforeinput" events should be fired on contenteditable`);
