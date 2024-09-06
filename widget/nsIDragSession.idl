@@ -17,6 +17,7 @@ interface nsIContentSecurityPolicy;
 native nsSize(nsSize);
 
 webidl DataTransfer;
+webidl Element;
 webidl WindowContext;
 webidl Node;
 webidl Selection;
@@ -148,4 +149,11 @@ interface nsIDragSession : nsISupports
    * element.
    */
   [notxpcom, nostdcall] boolean isDraggingTextInTextControl();
+
+  /**
+   * Called when HTMLEditor maybe deleted the source node from the document.
+   *
+   * @param aEditingHost    The editing host when the editor deletes selection.
+   */
+  [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
 };

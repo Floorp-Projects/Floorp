@@ -1031,7 +1031,7 @@ bool nsBaseDragService::MustUpdateDataTransfer(EventMessage aMessage) {
 }
 
 NS_IMETHODIMP
-nsBaseDragService::MaybeEditorDeletedSourceNode(Element* aEditingHost) {
+nsBaseDragSession::MaybeEditorDeletedSourceNode(Element* aEditingHost) {
   // If builtin editor of Blink and WebKit deletes the source node,they retarget
   // the source node to the editing host.
   // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/page/drag_controller.cc;l=724;drc=d9ba13b8cd8ac0faed7afc3d1f7e4b67ebac2a0b
