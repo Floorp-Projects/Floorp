@@ -8841,6 +8841,10 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
   nsDragSession* dragSession =
       static_cast<nsDragSession*>(dragService->GetCurrentSession(window));
+  if (!dragSession) {
+    LOGDRAG("    Received dragdrop after drag end.\n");
+    return FALSE;
+  }
   nsDragSession::AutoEventLoop loop(dragSession);
   return dragSession->ScheduleDropEvent(
       window, aDragContext, GetWindowDropPosition(window, aX, aY), aTime);
