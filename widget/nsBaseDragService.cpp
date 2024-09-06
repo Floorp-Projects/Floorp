@@ -732,7 +732,7 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
  * the drag popup itself.
  */
 NS_IMETHODIMP
-nsBaseDragService::DragMoved(int32_t aX, int32_t aY) {
+nsBaseDragSession::DragMoved(int32_t aX, int32_t aY) {
   if (mDragPopup) {
     nsIFrame* frame = mDragPopup->GetPrimaryFrame();
     if (frame && frame->IsMenuPopupFrame()) {

@@ -44,11 +44,11 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
-nsDragService::nsDragService() : mNativeDragView(nil), mNativeDragEvent(nil) {}
+nsDragService::nsDragService() : mNativeDragEvent(nil) {}
 
 nsDragService::~nsDragService() {}
 
-NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode,
+NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
                                            const Maybe<CSSIntRegion>& aRegion,
                                            NSPoint* aDragPoint) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -89,7 +89,7 @@ NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode,
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode,
+NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
                                            const Maybe<CSSIntRegion>& aRegion,
                                            CSSIntPoint aPoint,
                                            LayoutDeviceIntRect* aDragRect) {
@@ -253,12 +253,13 @@ nsresult nsDragService::InvokeDragSessionImpl(
   nsBaseDragService::StartDragSession();
   OpenDragPopup();
 
-  NSDraggingSession* draggingSession = [mNativeDragView
+  mNSDraggingSession = [mNativeDragView
       beginDraggingSessionWithItems:[NSArray
                                         arrayWithObject:[dragItem autorelease]]
                               event:mNativeDragEvent
                              source:mNativeDragView];
-  draggingSession.animatesToStartingPositionsOnCancelOrFail =
+
+  mNSDraggingSession.animatesToStartingPositionsOnCancelOrFail =
       !mDataTransfer || mDataTransfer->MozShowFailAnimation();
 
   return NS_OK;
@@ -422,15 +423,16 @@ nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
   return NS_OK;
 }
 
-void nsDragService::DragMovedWithView(NSDraggingSession* aSession,
-                                      NSPoint aPoint) {
-  aPoint.y = nsCocoaUtils::FlippedScreenY(aPoint.y);
+NS_IMETHODIMP
+nsDragSession::DragMoved(int32_t aX, int32_t aY) {
+  NSPoint point = NSMakePoint(aX, aY);
+  point.y = nsCocoaUtils::FlippedScreenY(point.y);
 
   // XXX It feels like we should be using the backing scale factor at aPoint
   // rather than the initial drag view, but I've seen no ill effects of this.
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
   LayoutDeviceIntPoint devPoint =
-      nsCocoaUtils::CocoaPointsToDevPixels(aPoint, scaleFactor);
+      nsCocoaUtils::CocoaPointsToDevPixels(point, scaleFactor);
 
   // If the image has changed, call enumerateDraggingItemsWithOptions to get
   // the item being dragged and update its image.
@@ -469,7 +471,7 @@ void nsDragService::DragMovedWithView(NSDraggingSession* aSession,
         }
       };
 
-      [aSession
+      [mNSDraggingSession
           enumerateDraggingItemsWithOptions:NSDraggingItemEnumerationConcurrent
                                     forView:nil
                                     classes:[NSArray
@@ -480,12 +482,14 @@ void nsDragService::DragMovedWithView(NSDraggingSession* aSession,
     }
   }
 
-  DragMoved(devPoint.x, devPoint.y);
+  return nsBaseDragSession::DragMoved(devPoint.x, devPoint.y);
 }
 
 NS_IMETHODIMP
 nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  mNSDraggingSession = nil;
 
   if (mNativeDragView) {
     [mNativeDragView release];
