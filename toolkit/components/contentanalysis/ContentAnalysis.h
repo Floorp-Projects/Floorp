@@ -157,6 +157,8 @@ class ContentAnalysis final : public nsIContentAnalysis {
   ContentAnalysis();
   nsCString GetUserActionId();
   void SetLastResult(nsresult aLastResult) { mLastResult = aLastResult; }
+  void SetCachedDataTimeoutForTesting(uint32_t aNewTimeout);
+  void ResetCachedDataTimeoutForTesting();
 
 #if defined(XP_WIN)
   struct PrintAllowedResult final {
@@ -222,6 +224,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
       nsITransferable* aTransferable, int32_t aClipboardType,
       SafeContentAnalysisResultCallback* aResolver);
 
+  // Duration the cache holds requests for. This holds strong references
+  // to the elements of the request, such as the WindowGlobalParent,
+  // for that period.
+  static constexpr uint32_t kDefaultCachedDataTimeoutInMs = 5000;
+
  private:
   ~ContentAnalysis();
   // Remove unneeded copy constructor/assignment
@@ -247,6 +254,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   static void DoAnalyzeRequest(
       nsCString aRequestToken,
       content_analysis::sdk::ContentAnalysisRequest&& aRequest,
+      nsCOMPtr<nsIContentAnalysisRequest> aRequestToCache,
       const std::shared_ptr<content_analysis::sdk::Client>& aClient);
   void IssueResponse(RefPtr<ContentAnalysisResponse>& response);
   bool LastRequestSucceeded();
@@ -289,6 +297,51 @@ class ContentAnalysis final : public nsIContentAnalysis {
     bool mAutoAcknowledge;
   };
   DataMutex<nsTHashMap<nsCString, CallbackData>> mCallbackMap;
+
+  class CachedData final {
+   public:
+    nsCOMPtr<nsIContentAnalysisRequest> Request() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mRequest;
+    }
+    void SetData(nsCOMPtr<nsIContentAnalysisRequest> aRequest,
+                 nsIContentAnalysisResponse::Action aResultAction) {
+      MOZ_ASSERT(NS_IsMainThread());
+      mRequest = aRequest;
+      mResultAction = Some(aResultAction);
+      SetExpirationTimer();
+    }
+    Maybe<nsIContentAnalysisResponse::Action> ResultAction() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mResultAction;
+    }
+    void SetExpirationTimer();
+    void Clear() {
+      MOZ_ASSERT(NS_IsMainThread());
+      mRequest = nullptr;
+      mResultAction = Nothing();
+      if (mExpirationTimer) {
+        mExpirationTimer->Cancel();
+      }
+    }
+    enum class CacheResult : uint8_t {
+      CannotBeCached = 0,
+      DoesNotMatchExisting = 1,
+      Matches = 2
+    };
+    CacheResult CompareWithRequest(
+        const RefPtr<nsIContentAnalysisRequest>& aRequest);
+
+   private:
+    nsCOMPtr<nsIContentAnalysisRequest> mRequest;
+    Maybe<nsIContentAnalysisResponse::Action> mResultAction;
+    nsCOMPtr<nsITimer> mExpirationTimer;
+    uint32_t mClearTimeout = kDefaultCachedDataTimeoutInMs;
+
+    friend class ContentAnalysis;
+  };
+  // Must only be accessed from the main thread
+  CachedData mCachedData;
 
   struct WarnResponseData {
     WarnResponseData(CallbackData&& aCallbackData,
