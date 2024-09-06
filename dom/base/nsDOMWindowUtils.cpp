@@ -2299,7 +2299,18 @@ NS_IMETHODIMP nsDOMWindowUtils::DispatchDOMEventViaPresShellForTesting(
   WidgetGUIEvent* guiEvent = internalEvent->AsGUIEvent();
   if (guiEvent && !guiEvent->mWidget) {
     auto* pc = GetPresContext();
-    guiEvent->mWidget = pc ? pc->GetRootWidget() : nullptr;
+    auto* widget = pc ? pc->GetRootWidget() : nullptr;
+    // In content, screen coordinates would have been
+    // transformed by BrowserParent::TransformParentToChild
+    // so we do that here.
+    if (widget) {
+      guiEvent->mWidget = widget;
+
+      // Setting the widget makes the event's mRefPoint coordinates
+      // widget-relative, so we transform them from being
+      // screen-relative here.
+      guiEvent->mRefPoint -= widget->WidgetToScreenOffset();
+    }
   }
 
   targetDoc->FlushPendingNotifications(FlushType::Layout);
