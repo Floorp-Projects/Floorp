@@ -525,7 +525,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::GetCurrentSession(nsIDragSession** aSession) {
+nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
+                                     nsIDragSession** aSession) {
   if (!aSession) return NS_ERROR_INVALID_ARG;
 
   // "this" also implements a drag session, so say we are one but only
