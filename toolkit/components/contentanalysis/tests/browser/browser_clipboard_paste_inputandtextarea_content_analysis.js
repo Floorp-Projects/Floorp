@@ -13,7 +13,7 @@ const CLIPBOARD_TEXT_STRING = "Just some text";
 async function testClipboardPaste(allowPaste) {
   mockCA.setupForTest(allowPaste);
 
-  setClipboardData();
+  setClipboardData(CLIPBOARD_TEXT_STRING);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
   let browser = tab.linkedBrowser;
@@ -27,7 +27,46 @@ async function testClipboardPaste(allowPaste) {
   BrowserTestUtils.removeTab(tab);
 }
 
-function setClipboardData() {
+async function testEmptyClipboardPaste() {
+  mockCA.setupForTest(true);
+
+  setClipboardData("");
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
+  let browser = tab.linkedBrowser;
+
+  let resultPromise = SpecialPowers.spawn(browser, [], () => {
+    return new Promise(resolve => {
+      content.document.addEventListener(
+        "testresult",
+        event => {
+          resolve(event.detail.result);
+        },
+        { once: true }
+      );
+    });
+  });
+
+  // Paste into content
+  await SpecialPowers.spawn(browser, [], async () => {
+    content.document.getElementById("testInput").focus();
+  });
+  await BrowserTestUtils.synthesizeKey("v", { accelKey: true }, browser);
+  let result = await resultPromise;
+  is(result, undefined, "Got unexpected result from page");
+
+  is(
+    mockCA.calls.length,
+    0,
+    "Expect no calls to Content Analysis since it's an empty string"
+  );
+  let value = await getElementValue(browser, "testInput");
+  is(value, "", "element has correct empty value");
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+function setClipboardData(clipboardString) {
   const trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
     Ci.nsITransferable
   );
@@ -36,7 +75,7 @@ function setClipboardData() {
   const str = Cc["@mozilla.org/supports-string;1"].createInstance(
     Ci.nsISupportsString
   );
-  str.data = CLIPBOARD_TEXT_STRING;
+  str.data = clipboardString;
   trans.setTransferData("text/plain", str);
 
   // Write to clipboard.
@@ -109,4 +148,8 @@ add_task(async function testClipboardPasteWithContentAnalysisAllow() {
 
 add_task(async function testClipboardPasteWithContentAnalysisBlock() {
   await testClipboardPaste(false);
+});
+
+add_task(async function testClipboardEmptyPasteWithContentAnalysis() {
+  await testEmptyClipboardPaste();
 });

@@ -1826,7 +1826,8 @@ ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
   if (text.IsEmpty()) {
     // Content Analysis doesn't expect to analyze an empty string.
     // Just approve it.
-    return true;
+    return mozilla::Err(NoContentAnalysisResult::
+                            ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS);
   }
   RefPtr<mozilla::dom::WindowGlobalParent> window =
       mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
