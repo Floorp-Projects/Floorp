@@ -1815,13 +1815,22 @@ ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
           aTextTrans->GetTransferData(aFlavor, getter_AddRefs(transferData)))) {
     return false;
   }
-  nsCOMPtr<nsISupportsString> textData = do_QueryInterface(transferData);
-  if (MOZ_UNLIKELY(!textData)) {
-    return false;
-  }
   nsString text;
-  if (NS_FAILED(textData->GetData(text))) {
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  nsCOMPtr<nsISupportsString> textData = do_QueryInterface(transferData);
+  if (MOZ_LIKELY(textData)) {
+    if (NS_FAILED(textData->GetData(text))) {
+      return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+    }
+  }
+  if (text.IsEmpty()) {
+    nsCOMPtr<nsISupportsCString> cStringData = do_QueryInterface(transferData);
+    if (cStringData) {
+      nsCString cText;
+      if (NS_FAILED(cStringData->GetData(cText))) {
+        return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+      }
+      text = NS_ConvertUTF8toUTF16(cText);
+    }
   }
   if (text.IsEmpty()) {
     // Content Analysis doesn't expect to analyze an empty string.
@@ -1961,34 +1970,33 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
     }
     keepChecking = !fileResult.unwrap();
   }
-  if (keepChecking) {
-    // Failed to get the clipboard data as a file, so try as text
+  if (!keepChecking) {
+    return;
+  }
+  // Note that on Windows, kNativeHTMLMime will return the text in the native
+  // Windows clipboard CF_HTML format - see
+  // https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format
+  auto textFormats = {kTextMime, kHTMLMime, kNativeHTMLMime};
+  for (const auto& textFormat : textFormats) {
     auto textResult = CheckClipboardContentAnalysisAsText(
         innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
-        kTextMime);
+        textFormat);
     if (textResult.isErr()) {
       aResolver->Callback(
           ContentAnalysisResult::FromNoResult(textResult.unwrapErr()));
       return;
     }
     keepChecking = !textResult.unwrap();
+    if (!keepChecking) {
+      break;
+    }
   }
+
   if (keepChecking) {
-    // Failed to get the clipboard data as a file or text, so try as html
-    auto htmlResult = CheckClipboardContentAnalysisAsText(
-        innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
-        kHTMLMime);
-    if (htmlResult.isErr()) {
-      aResolver->Callback(
-          ContentAnalysisResult::FromNoResult(htmlResult.unwrapErr()));
-      return;
-    }
-    if (!htmlResult.unwrap()) {
-      // Couldn't get file or text or html data from this
-      aResolver->Callback(ContentAnalysisResult::FromNoResult(
-          NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
-      return;
-    }
+    // Couldn't get any data from this
+    aResolver->Callback(ContentAnalysisResult::FromNoResult(
+        NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
+    return;
   }
 }
 
