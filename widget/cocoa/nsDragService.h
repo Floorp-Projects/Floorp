@@ -26,8 +26,30 @@ class nsDragSession : public nsBaseDragService {
   NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX,
                              int32_t aImageY) override;
 
+  NS_IMETHOD DragMoved(int32_t aX, int32_t aY) override;
+
+  NSDraggingSession* GetNSDraggingSession() { return mNSDraggingSession; }
+
  protected:
+  // Creates and returns the drag image for a drag. aImagePoint will be set to
+  // the origin of the drag relative to mNativeDragView.
+  NSImage* ConstructDragImage(
+      nsINode* aDOMNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      NSPoint* aImagePoint);
+
+  // Creates and returns the drag image for a drag. aPoint should be the origin
+  // of the drag, for example the mouse coordinate of the mousedown event.
+  // aDragRect will be set the area of the drag relative to this.
+  NSImage* ConstructDragImage(
+      nsINode* aDOMNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      mozilla::CSSIntPoint aPoint, mozilla::LayoutDeviceIntRect* aDragRect);
+
   nsCOMPtr<nsIArray> mDataItems;  // only valid for a drag started within gecko
+
+  // Native widget object that this drag is over.
+  ChildView* mNativeDragView = nil;
+  // The native drag session object for this drag.
+  NSDraggingSession* mNSDraggingSession = nil;
 
   bool mDragImageChanged = false;
 };
@@ -49,26 +71,10 @@ class nsDragService final : public nsDragSession {
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;
 
-  void DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint);
-
  protected:
   virtual ~nsDragService();
 
  private:
-  // Creates and returns the drag image for a drag. aImagePoint will be set to
-  // the origin of the drag relative to mNativeDragView.
-  NSImage* ConstructDragImage(
-      nsINode* aDOMNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-      NSPoint* aImagePoint);
-
-  // Creates and returns the drag image for a drag. aPoint should be the origin
-  // of the drag, for example the mouse coordinate of the mousedown event.
-  // aDragRect will be set the area of the drag relative to this.
-  NSImage* ConstructDragImage(
-      nsINode* aDOMNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-      mozilla::CSSIntPoint aPoint, mozilla::LayoutDeviceIntRect* aDragRect);
-
-  ChildView* mNativeDragView;
   NSEvent* mNativeDragEvent;
 };
 

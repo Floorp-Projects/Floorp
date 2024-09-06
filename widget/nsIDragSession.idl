@@ -156,4 +156,9 @@ interface nsIDragSession : nsISupports
    * @param aEditingHost    The editing host when the editor deletes selection.
    */
   [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
+
+  /**
+    * aX and aY are in LayoutDevice pixels.
+    */
+  [noscript] void dragMoved(in long aX, in long aY);
 };

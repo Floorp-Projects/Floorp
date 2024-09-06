@@ -4337,16 +4337,20 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
            movedToPoint:(NSPoint)aPoint {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  // Get the drag service if it isn't already cached. The drag service
-  // isn't cached when dragging over a different application.
   nsCOMPtr<nsIDragService> dragService = mDragService;
   if (!dragService) {
     dragService = do_GetService(kDragServiceContractID);
   }
-
   if (dragService) {
-    nsDragService* ds = static_cast<nsDragService*>(dragService.get());
-    ds->DragMovedWithView(aSession, aPoint);
+    RefPtr<nsIDragSession> dragSession;
+    nsIWidget* widget = mGeckoChild;
+    dragService->GetCurrentSession(widget,
+                                    getter_AddRefs(dragSession));
+    if (dragSession) {
+      MOZ_ASSERT(aSession == static_cast<nsDragSession*>(dragSession.get())
+                                ->GetNSDraggingSession());
+      dragSession->DragMoved(aPoint.x, aPoint.y);
+    }
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;

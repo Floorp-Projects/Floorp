@@ -60,8 +60,12 @@ nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
-    DWORD pos = ::GetMessagePos();
-    dragService->DragMoved(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
+    nsCOMPtr<nsIDragSession> session;
+    dragService->GetCurrentSession(nullptr, getter_AddRefs(session));
+    if (session) {
+      DWORD pos = ::GetMessagePos();
+      session->DragMoved(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
+    }
   }
 
   if (fEsc) {
