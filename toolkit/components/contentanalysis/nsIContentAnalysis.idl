@@ -68,6 +68,11 @@ interface nsIContentAnalysisResponse : nsISupports
   // Identifier for the corresponding nsIContentAnalysisRequest
   readonly attribute ACString requestToken;
 
+  // Whether this is a cached result that wasn't actually sent to the DLP agent.
+  // This indicates that the request was a duplicate of a previously sent one,
+  // so any dialogs (for block/warn) should not be shown.
+  readonly attribute boolean isCachedResponse;
+
   /**
    * Acknowledge receipt of an analysis response.
    * If false is passed for aAutoAcknowledge to AnalyzeContentRequest,

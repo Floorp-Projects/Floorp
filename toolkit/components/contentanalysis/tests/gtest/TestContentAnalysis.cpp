@@ -195,7 +195,8 @@ void SendRequestAndExpectResponse(
     RefPtr<ContentAnalysis> contentAnalysis,
     const nsCOMPtr<nsIContentAnalysisRequest>& request,
     Maybe<bool> expectedShouldAllow,
-    Maybe<nsIContentAnalysisResponse::Action> expectedAction) {
+    Maybe<nsIContentAnalysisResponse::Action> expectedAction,
+    Maybe<bool> expectedIsCached) {
   std::atomic<bool> gotResponse = false;
   std::atomic<bool> timedOut = false;
   auto callback = MakeRefPtr<ContentAnalysisCallback>(
@@ -209,6 +210,11 @@ void SendRequestAndExpectResponse(
           nsIContentAnalysisResponse::Action action;
           MOZ_ALWAYS_SUCCEEDS(response->GetAction(&action));
           EXPECT_EQ(*expectedAction, action);
+        }
+        if (expectedIsCached.isSome()) {
+          bool isCached;
+          MOZ_ALWAYS_SUCCEEDS(response->GetIsCachedResponse(&isCached));
+          EXPECT_EQ(*expectedIsCached, isCached);
         }
         nsCString requestToken, originalRequestToken;
         MOZ_ALWAYS_SUCCEEDS(response->GetRequestToken(requestToken));
@@ -262,7 +268,8 @@ TEST_F(ContentAnalysisTest, SendAllowedTextToAgent_GetAllowedResponse) {
       nsIContentAnalysisRequest::OperationType::eClipboard, nullptr);
 
   SendRequestAndExpectResponse(mContentAnalysis, request, Some(true),
-                               Some(nsIContentAnalysisResponse::eAllow));
+                               Some(nsIContentAnalysisResponse::eAllow),
+                               Some(false));
 }
 
 TEST_F(ContentAnalysisTest, SendBlockedTextToAgent_GetBlockResponse) {
@@ -274,7 +281,8 @@ TEST_F(ContentAnalysisTest, SendBlockedTextToAgent_GetBlockResponse) {
       nsIContentAnalysisRequest::OperationType::eClipboard, nullptr);
 
   SendRequestAndExpectResponse(mContentAnalysis, request, Some(false),
-                               Some(nsIContentAnalysisResponse::eBlock));
+                               Some(nsIContentAnalysisResponse::eBlock),
+                               Some(false));
 }
 
 class RawRequestObserver final : public nsIObserver {
@@ -326,7 +334,8 @@ TEST_F(ContentAnalysisTest, CheckRawRequestWithText) {
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
   time_t now = time(nullptr);
 
-  SendRequestAndExpectResponse(mContentAnalysis, request, Nothing(), Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(1), requests.size());
   time_t t = requests[0].expires_at();
@@ -371,7 +380,8 @@ TEST_F(ContentAnalysisTest, CheckRawRequestWithFile) {
   MOZ_ALWAYS_SUCCEEDS(
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
-  SendRequestAndExpectResponse(mContentAnalysis, request, Nothing(), Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(1), requests.size());
   const auto& request_url = requests[0].request_data().url();
@@ -411,10 +421,10 @@ TEST_F(ContentAnalysisTest, CheckTwoRequestsHaveSameUserActionId) {
   MOZ_ALWAYS_SUCCEEDS(
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
-  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(),
-                               Nothing());
-  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(),
-                               Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(), Nothing(),
+                               Some(false));
+  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(2), requests.size());
   EXPECT_EQ(requests[0].user_action_id(), requests[1].user_action_id());
@@ -443,10 +453,10 @@ TEST_F(ContentAnalysisTest, CheckNoCachedResultWhenDifferentText) {
   MOZ_ALWAYS_SUCCEEDS(
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
-  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(),
-                               Nothing());
-  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(),
-                               Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(), Nothing(),
+                               Some(false));
+  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(2), requests.size());
 
@@ -472,10 +482,10 @@ TEST_F(ContentAnalysisTest, CheckNoCachedResultWhenDifferentUrl) {
   MOZ_ALWAYS_SUCCEEDS(
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
-  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(),
-                               Nothing());
-  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(),
-                               Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(), Nothing(),
+                               Some(false));
+  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(2), requests.size());
 
@@ -507,10 +517,10 @@ TEST_F(ContentAnalysisTest, CheckNoCachedResultWhenFilePath) {
   MOZ_ALWAYS_SUCCEEDS(
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
-  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(),
-                               Nothing());
-  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(),
-                               Nothing());
+  SendRequestAndExpectResponse(mContentAnalysis, request1, Nothing(), Nothing(),
+                               Some(false));
+  SendRequestAndExpectResponse(mContentAnalysis, request2, Nothing(), Nothing(),
+                               Some(false));
   auto requests = rawRequestObserver->GetRequests();
   EXPECT_EQ(static_cast<size_t>(2), requests.size());
 
@@ -536,12 +546,14 @@ TEST_F(ContentAnalysisTest, CheckCachedResultForAllow) {
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
   SendRequestAndExpectResponse(mContentAnalysis, request1, Some(true),
-                               Some(nsIContentAnalysisResponse::eAllow));
+                               Some(nsIContentAnalysisResponse::eAllow),
+                               Some(false));
   // The timer gets cleared on the main thread, so yield for a short time
   // to make sure it doesn't get cleared
   YieldMainThread(50);
   SendRequestAndExpectResponse(mContentAnalysis, request2, Some(true),
-                               Some(nsIContentAnalysisResponse::eAllow));
+                               Some(nsIContentAnalysisResponse::eAllow),
+                               Some(true));
   auto requests = rawRequestObserver->GetRequests();
   // Only the first request should be analyzed since the second would match the
   // cache.
@@ -569,12 +581,14 @@ TEST_F(ContentAnalysisTest, CheckCachedResultForBlock) {
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
   SendRequestAndExpectResponse(mContentAnalysis, request1, Some(false),
-                               Some(nsIContentAnalysisResponse::eBlock));
+                               Some(nsIContentAnalysisResponse::eBlock),
+                               Some(false));
   // The timer gets cleared on the main thread, so yield for a short time
   // to make sure it doesn't get cleared
   YieldMainThread(50);
   SendRequestAndExpectResponse(mContentAnalysis, request2, Some(false),
-                               Some(nsIContentAnalysisResponse::eBlock));
+                               Some(nsIContentAnalysisResponse::eBlock),
+                               Some(true));
   auto requests = rawRequestObserver->GetRequests();
   // Only the first request should be analyzed since the second would match the
   // cache.
@@ -605,12 +619,14 @@ TEST_F(ContentAnalysisTest, CheckCachedExpiration) {
       obsServ->AddObserver(rawRequestObserver, "dlp-request-sent-raw", false));
 
   SendRequestAndExpectResponse(mContentAnalysis, request1, Some(true),
-                               Some(nsIContentAnalysisResponse::eAllow));
+                               Some(nsIContentAnalysisResponse::eAllow),
+                               Some(false));
   // The timer gets cleared on the main thread, so we need to yield the main
   // thread for this to work
   YieldMainThread(kShortCacheTimeout * 2);
   SendRequestAndExpectResponse(mContentAnalysis, request2, Some(true),
-                               Some(nsIContentAnalysisResponse::eAllow));
+                               Some(nsIContentAnalysisResponse::eAllow),
+                               Some(false));
   mContentAnalysis->ResetCachedDataTimeoutForTesting();
   auto requests = rawRequestObserver->GetRequests();
   // Both requests should be analyzed since the second arrived after the

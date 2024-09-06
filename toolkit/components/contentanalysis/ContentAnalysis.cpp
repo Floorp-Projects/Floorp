@@ -731,6 +731,12 @@ ContentAnalysisResponse::GetCancelError(CancelError* aCancelError) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ContentAnalysisResponse::GetIsCachedResponse(bool* aIsCachedResponse) {
+  *aIsCachedResponse = mIsCachedResponse;
+  return NS_OK;
+}
+
 static void LogAcknowledgement(
     content_analysis::sdk::ContentAnalysisAcknowledgement* aPbAck) {
   if (!static_cast<LogModule*>(gContentAnalysisLog)
@@ -1239,6 +1245,7 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
     mCachedData.SetExpirationTimer();
     auto response = ContentAnalysisResponse::FromAction(*action, requestToken);
     response->DoNotAcknowledge();
+    response->SetIsCachedResponse();
     IssueResponse(response);
     return NS_OK;
   }
