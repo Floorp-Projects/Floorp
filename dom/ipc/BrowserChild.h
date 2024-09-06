@@ -652,6 +652,22 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   already_AddRefed<nsIDragSession> GetDragSession();
 
+  mozilla::ipc::IPCResult RecvInvokeChildDragSession(
+      const MaybeDiscarded<WindowContext>& aSourceWindowContext,
+      const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
+      nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction);
+
+  mozilla::ipc::IPCResult RecvUpdateDragSession(
+      nsTArray<IPCTransferableData>&& aTransferables,
+      EventMessage aEventMessage);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvEndDragSession(
+      const bool& aDoneDrag,
+      const bool& aUserCancelled,
+      const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
+      const uint32_t& aKeyModifiers, const uint32_t& aDropEffect);
+
  protected:
   virtual ~BrowserChild();
 
