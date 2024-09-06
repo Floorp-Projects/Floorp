@@ -75,9 +75,7 @@ uint32_t GetSuppressLevel() {
 nsBaseDragService::nsBaseDragService() = default;
 nsBaseDragService::~nsBaseDragService() = default;
 
-nsBaseDragSession::nsBaseDragSession() {
-  TakeSessionBrowserListFromService();
-}
+nsBaseDragSession::nsBaseDragSession() { TakeSessionBrowserListFromService(); }
 nsBaseDragSession::~nsBaseDragSession() = default;
 
 NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService)
@@ -614,7 +612,8 @@ nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
 }
 
 //-------------------------------------------------------------------------
-nsIDragSession* nsBaseDragService::StartDragSession(nsISupports* aWidgetProvider) {
+nsIDragSession* nsBaseDragService::StartDragSession(
+    nsISupports* aWidgetProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!aWidgetProvider) {
     return nullptr;
@@ -706,9 +705,8 @@ nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
     if (NS_WARN_IF(!bp)) {
       continue;
     }
-    mozilla::Unused << bp->SendEndDragSession(aDoneDrag, mUserCancelled,
-                                              mEndDragPoint, aKeyModifiers,
-                                              dropEffect);
+    mozilla::Unused << bp->SendEndDragSession(
+        aDoneDrag, mUserCancelled, mEndDragPoint, aKeyModifiers, dropEffect);
     // Continue sending input events with input priority when stopping the dnd
     // session.
     bp->Manager()->SetInputPriorityEventEnabled(true);
@@ -723,7 +721,8 @@ nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
     nsCOMPtr<nsIDragService> svc =
         do_GetService("@mozilla.org/widget/dragservice;1");
     if (svc) {
-      static_cast<nsBaseDragService*>(svc.get())->ClearCurrentParentDragSession();
+      static_cast<nsBaseDragService*>(svc.get())
+          ->ClearCurrentParentDragSession();
     }
   }
 
@@ -1114,7 +1113,8 @@ nsBaseDragSession::DragEventDispatchedToChildProcess() {
   return NS_OK;
 }
 
-static bool MaybeAddBrowser(nsTArray<nsWeakPtr>& aBrowsers, BrowserParent* aBP) {
+static bool MaybeAddBrowser(nsTArray<nsWeakPtr>& aBrowsers,
+                            BrowserParent* aBP) {
   nsWeakPtr browser = do_GetWeakReference(aBP);
 
   // Equivalent to `InsertElementSorted`, avoiding inserting a duplicate
@@ -1230,11 +1230,13 @@ void nsBaseDragSession::TakeSessionBrowserListFromService() {
   nsCOMPtr<nsIDragService> svc =
       do_GetService("@mozilla.org/widget/dragservice;1");
   NS_ENSURE_TRUE_VOID(svc);
-  mBrowsers = static_cast<nsBaseDragService*>(svc.get())->TakeSessionBrowserList();
+  mBrowsers =
+      static_cast<nsBaseDragService*>(svc.get())->TakeSessionBrowserList();
 }
 
 /* static */
-nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(nsISupports* aWidgetProvider) {
+nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(
+    nsISupports* aWidgetProvider) {
   nsCOMPtr<nsIWidget> widget = do_QueryObject(aWidgetProvider);
   if (widget) {
     return widget;

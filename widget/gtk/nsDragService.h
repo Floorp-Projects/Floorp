@@ -110,8 +110,8 @@ class nsDragSession : public nsBaseDragSession, public nsIObserver {
   // mTargetDragContextForRemote context.
   NS_IMETHOD UpdateDragEffect() override;
 
-  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
-      bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
   class AutoEventLoop {
     RefPtr<nsDragSession> mSession;

@@ -502,8 +502,7 @@ nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
 
   mUserCancelled = gUserCancelledDrag;
 
-  nsresult rv =
-      nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
+  nsresult rv = nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mDataItems = nullptr;
   return rv;
 

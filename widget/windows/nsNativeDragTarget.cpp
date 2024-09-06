@@ -384,8 +384,7 @@ void nsNativeDragTarget::DragCancel() {
     }
     if (mDragService) {
       ModifierKeyState modifierKeyState;
-      RefPtr<nsIDragSession> session =
-          mDragService->GetCurrentSession(mWidget);
+      RefPtr<nsIDragSession> session = mDragService->GetCurrentSession(mWidget);
       if (session) {
         session->EndDragSession(false, modifierKeyState.GetModifiers());
       }

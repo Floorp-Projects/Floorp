@@ -170,8 +170,7 @@ nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
                                            uint32_t aKeyModifiers) {
   java::GeckoDragAndDrop::EndDragSession();
 
-  nsresult rv =
-      nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
+  nsresult rv = nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mTransferable = nullptr;
   return rv;
 }

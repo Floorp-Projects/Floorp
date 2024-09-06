@@ -1600,8 +1600,7 @@ bool BrowserParent::QueryDropLinksForVerification() {
   // Before sending the dragEvent, we query the links being dragged and
   // store them on the parent, to make sure the child can not modify links.
   RefPtr<nsIWidget> widget = GetTopLevelWidget();
-  nsCOMPtr<nsIDragSession> dragSession =
-      nsContentUtils::GetDragSession(widget);
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession(widget);
   if (!dragSession) {
     NS_WARNING("No dragSession to query links for verification");
     return false;
@@ -3842,9 +3841,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     const MaybeDiscarded<WindowContext>& aSourceTopWindowContext) {
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
-    Unused << SendEndDragSession(
-        true, true, LayoutDeviceIntPoint(), 0,
-        nsIDragService::DRAGDROP_ACTION_NONE);
+    Unused << SendEndDragSession(true, true, LayoutDeviceIntPoint(), 0,
+                                 nsIDragService::DRAGDROP_ACTION_NONE);
     // Continue sending input events with input priority when stopping the dnd
     // session.
     Manager()->SetInputPriorityEventEnabled(true);
@@ -3946,8 +3944,8 @@ void BrowserParent::MaybeInvokeDragSession(EventMessage aMessage) {
     // We need to send transferable data to child process.
     nsTArray<IPCTransferableData> ipcTransferables;
     GetIPCTransferableData(session, ipcTransferables);
-    mozilla::Unused << SendUpdateDragSession(
-        std::move(ipcTransferables), aMessage);
+    mozilla::Unused << SendUpdateDragSession(std::move(ipcTransferables),
+                                             aMessage);
   }
 }
 
