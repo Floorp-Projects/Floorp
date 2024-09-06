@@ -20,9 +20,6 @@
 #include "nsViewManager.h"
 #include "nsWindow.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsDragSession, nsBaseDragService)
-NS_IMPL_ISUPPORTS_INHERITED0(nsDragService, nsDragSession)
-
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -37,6 +34,11 @@ already_AddRefed<nsDragService> nsDragService::GetInstance() {
 
   RefPtr<nsDragService> service = sDragServiceInstance.get();
   return service.forget();
+}
+
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsDragSession> session = new nsDragSession();
+  return session.forget();
 }
 
 static nsWindow* GetWindow(dom::Document* aDocument) {
@@ -63,7 +65,7 @@ static nsWindow* GetWindow(dom::Document* aDocument) {
   return window.get();
 }
 
-nsresult nsDragService::InvokeDragSessionImpl(
+nsresult nsDragSession::InvokeDragSessionImpl(
     nsIWidget* aWidget, nsIArray* aTransferableArray,
     const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   if (jni::GetAPIVersion() < 24) {
@@ -90,7 +92,6 @@ nsresult nsDragService::InvokeDragSessionImpl(
   if (nsWindow* window = GetWindow(mSourceDocument)) {
     mTransferable = transferable;
 
-    nsBaseDragService::StartDragSession(aWidget);
     OpenDragPopup();
 
     auto bitmap = CreateDragImage(mSourceNode, aRegion);
@@ -230,18 +231,12 @@ void nsDragSession::SetData(nsITransferable* aTransferable) {
   mDataTransfer = nullptr;
 }
 
-// static
-void nsDragService::SetDropData(
+void nsDragSession::SetDropData(
     mozilla::java::GeckoDragAndDrop::DropData::Param aDropData) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (!dragService) {
-    return;
-  }
-
   if (!aDropData) {
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
 
@@ -254,7 +249,7 @@ void nsDragService::SetDropData(
 
   if (!mime.EqualsLiteral("text/plain") && !mime.EqualsLiteral("text/html")) {
     // Not supported data.
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
 
@@ -263,12 +258,12 @@ void nsDragService::SetDropData(
   nsPrimitiveHelpers::CreatePrimitiveForData(
       mime, buffer.get(), buffer.Length() * 2, getter_AddRefs(wrapper));
   if (!wrapper) {
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
   nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1");
   transferable->Init(nullptr);
   transferable->SetTransferData(mime.get(), wrapper);
-  dragService->SetData(transferable);
+  SetData(transferable);
 }

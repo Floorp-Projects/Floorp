@@ -46,12 +46,12 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-//-------------------------------------------------------------------------
-//
-// DragService destructor
-//
-//-------------------------------------------------------------------------
 nsDragSession::~nsDragSession() { NS_IF_RELEASE(mDataObject); }
+
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsIDragSession> session = new nsDragSession();
+  return session.forget();
+}
 
 bool nsDragSession::CreateDragImage(nsINode* aDOMNode,
                                     const Maybe<CSSIntRegion>& aRegion,
@@ -140,7 +140,7 @@ bool nsDragSession::CreateDragImage(nsINode* aDOMNode,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsDragService::InvokeDragSessionImpl(
+nsresult nsDragSession::InvokeDragSessionImpl(
     nsIWidget* aWidget, nsIArray* anArrayTransferables,
     const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   // Try and get source URI of the items that are being dragged
@@ -229,7 +229,7 @@ static HWND GetSourceWindow(dom::Document* aSourceDocument) {
 }
 
 //-------------------------------------------------------------------------
-nsresult nsDragService::StartInvokingDragSession(nsIWidget* aWidget,
+nsresult nsDragSession::StartInvokingDragSession(nsIWidget* aWidget,
                                                  IDataObject* aDataObj,
                                                  uint32_t aActionType) {
   // To do the drag we need to create an object that
@@ -240,13 +240,13 @@ nsresult nsDragService::StartInvokingDragSession(nsIWidget* aWidget,
   // Now figure out what the native drag effect should be
   DWORD winDropRes;
   DWORD effects = DROPEFFECT_SCROLL;
-  if (aActionType & DRAGDROP_ACTION_COPY) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_COPY) {
     effects |= DROPEFFECT_COPY;
   }
-  if (aActionType & DRAGDROP_ACTION_MOVE) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_MOVE) {
     effects |= DROPEFFECT_MOVE;
   }
-  if (aActionType & DRAGDROP_ACTION_LINK) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_LINK) {
     effects |= DROPEFFECT_LINK;
   }
 
@@ -256,7 +256,6 @@ nsresult nsDragService::StartInvokingDragSession(nsIWidget* aWidget,
   mSentLocalDropEvent = false;
 
   // Start dragging
-  StartDragSession(aWidget);
   OpenDragPopup();
 
   RefPtr<IDataObjectAsyncCapability> pAsyncOp;
@@ -277,19 +276,19 @@ nsresult nsDragService::StartInvokingDragSession(nsIWidget* aWidget,
     uint32_t dropResult;
     // Order is important, since multiple flags can be returned.
     if (winDropRes & DROPEFFECT_COPY)
-      dropResult = DRAGDROP_ACTION_COPY;
+      dropResult = nsIDragService::DRAGDROP_ACTION_COPY;
     else if (winDropRes & DROPEFFECT_LINK)
-      dropResult = DRAGDROP_ACTION_LINK;
+      dropResult = nsIDragService::DRAGDROP_ACTION_LINK;
     else if (winDropRes & DROPEFFECT_MOVE)
-      dropResult = DRAGDROP_ACTION_MOVE;
+      dropResult = nsIDragService::DRAGDROP_ACTION_MOVE;
     else
-      dropResult = DRAGDROP_ACTION_NONE;
+      dropResult = nsIDragService::DRAGDROP_ACTION_NONE;
 
     if (mDataTransfer) {
       if (res == DRAGDROP_S_DROP)  // Success
         mDataTransfer->SetDropEffectInt(dropResult);
       else
-        mDataTransfer->SetDropEffectInt(DRAGDROP_ACTION_NONE);
+        mDataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
     }
   }
 
@@ -310,11 +309,8 @@ nsresult nsDragService::StartInvokingDragSession(nsIWidget* aWidget,
   }
   SetDragEndPoint(LayoutDeviceIntPoint(cpos.x, cpos.y));
 
-  RefPtr<nsIDragSession> session = GetCurrentSession(aWidget);
-  if (session) {
-    ModifierKeyState modifierKeyState;
-    session->EndDragSession(true, modifierKeyState.GetModifiers());
-  }
+  ModifierKeyState modifierKeyState;
+  EndDragSession(true, modifierKeyState.GetModifiers());
 
   mDoingDrag = false;
 
@@ -471,7 +467,7 @@ void nsDragSession::SetIDataObject(IDataObject* aDataObj) {
 }
 
 //---------------------------------------------------------
-void nsDragService::SetDroppedLocal() {
+void nsDragSession::SetDroppedLocal() {
   // Sent from the native drag handler, letting us know
   // a drop occurred within the application vs. outside of it.
   mSentLocalDropEvent = true;

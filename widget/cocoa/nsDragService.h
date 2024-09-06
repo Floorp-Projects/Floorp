@@ -11,10 +11,10 @@
 
 #include <Cocoa/Cocoa.h>
 
-// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
-// (which nsBaseDragService temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragSession : public nsBaseDragService {
+/**
+ * Cocoa native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession {
  public:
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable* aTransferable,
@@ -34,6 +34,12 @@ class nsDragSession : public nsBaseDragService {
       bool aDoneDrag, uint32_t aKeyModifiers) override;
 
  protected:
+  // nsBaseDragSession
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
+      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      uint32_t aActionType) override;
+
   // Creates and returns the drag image for a drag. aImagePoint will be set to
   // the origin of the drag relative to mNativeDragView.
   NSImage* ConstructDragImage(
@@ -59,21 +65,12 @@ class nsDragSession : public nsBaseDragService {
   bool mDragImageChanged = false;
 };
 
-// Temporary inheritance from nsDragSession instead of nsBaseDragService
-// (which nsDragSession temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragService final : public nsDragSession {
+/**
+ * Cocoa native nsIDragService implementation
+ */
+class nsDragService final : public nsBaseDragService {
  public:
-  nsDragService();
-
-  // nsBaseDragService
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIWidget* aWidget, nsIArray* anArrayTransferables,
-      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-      uint32_t aActionType) override;
-
- protected:
-  virtual ~nsDragService();
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 };
 
 #endif  // nsDragService_h_

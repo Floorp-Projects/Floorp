@@ -128,15 +128,7 @@ interface nsIDragService : nsISupports
     */
   nsIDragSession getCurrentSession([optional] in nsISupports aWidgetProvider);
 
-  /**
-   * TODO: Temporary proxy for old C++ callers, for whom [optional] is
-   * insufficient.  This method is removed at the end of this patch series.
-   */
 %{ C++
-  nsresult GetCurrentSession(nsIDragSession** aSession) {
-    return GetCurrentSession(nullptr, aSession);
-  }
-
   nsIDragSession* GetCurrentSession(nsIWidget* aWidget) {
   	nsCOMPtr<nsIDragSession> session;
     GetCurrentSession(aWidget, getter_AddRefs(session));
@@ -194,6 +186,20 @@ interface nsIDragService : nsISupports
    * nsIMockDragServiceController for details.
    */
   nsIMockDragServiceController getMockDragController();
+
+  /**
+   * True if this is a mock nsIDragService, created with
+   * createMockDragController().
+   */
+  readonly attribute boolean isMockService;
+
+%{ C++
+  bool IsMockService() {
+    bool ret = false;
+    MOZ_ALWAYS_SUCCEEDS(GetIsMockService(&ret));
+    return ret;
+  }
+%}
 
   /**
    * If this is true, mSessionIsSynthesizedForTests should not become true.

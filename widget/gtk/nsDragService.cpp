@@ -31,6 +31,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/WidgetUtils.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "GRefPtr.h"
 #include "nsAppShell.h"
@@ -519,7 +520,7 @@ void DragData::Print() const {
 
 /* static */ int nsDragSession::sEventLoopDepth = 0;
 
-nsDragService::nsDragService() {
+nsDragSession::nsDragSession() {
   // We have to destroy the hidden widget before the event loop stops
   // running.
   nsCOMPtr<nsIObserverService> obsServ =
@@ -580,8 +581,8 @@ nsDragService::nsDragService() {
   LOGDRAGSERVICE("nsDragService::nsDragService");
 }
 
-nsDragService::~nsDragService() {
-  LOGDRAGSERVICE("nsDragService::~nsDragService");
+nsDragSession::~nsDragSession() {
+  LOGDRAGSERVICE("nsDragSession::~nsDragSession");
   if (mTaskSource) g_source_remove(mTaskSource);
   if (mTempFileTimerID) {
     g_source_remove(mTempFileTimerID);
@@ -589,7 +590,7 @@ nsDragService::~nsDragService() {
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsDragService, nsBaseDragService, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsDragSession, nsBaseDragSession, nsIObserver)
 
 mozilla::StaticRefPtr<nsDragService> sDragServiceInstance;
 /* static */
@@ -606,13 +607,18 @@ already_AddRefed<nsDragService> nsDragService::GetInstance() {
   return service.forget();
 }
 
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsIDragSession> session = new nsDragSession();
+  return session.forget();
+}
+
 // nsIObserver
 
 NS_IMETHODIMP
-nsDragService::Observe(nsISupports* aSubject, const char* aTopic,
+nsDragSession::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) {
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
-    LOGDRAGSERVICE("nsDragService::Observe(\"quit-application\")");
+    LOGDRAGSERVICE("nsDragSession::Observe(\"quit-application\")");
     if (mHiddenWidget) {
       gtk_widget_destroy(mHiddenWidget);
       mHiddenWidget = 0;
@@ -725,15 +731,13 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
   return GTK_WINDOW(toplevel);
 }
 
-// nsIDragService
-
 NS_IMETHODIMP
-nsDragService::InvokeDragSession(
+nsDragSession::InvokeDragSession(
     nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
     nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
     nsIArray* aArrayTransferables, uint32_t aActionType,
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
-  LOGDRAGSERVICE("nsDragService::InvokeDragSession");
+  LOGDRAGSERVICE("nsDragSession::InvokeDragSession");
 
   // If the previous source drag has not yet completed, signal handlers need
   // to be removed from sGrabWidget and dragend needs to be dispatched to
@@ -741,13 +745,13 @@ nsDragService::InvokeDragSession(
   // know whether or not the drag succeeded.
   if (mSourceNode) return NS_ERROR_NOT_AVAILABLE;
 
-  return nsBaseDragService::InvokeDragSession(
+  return nsBaseDragSession::InvokeDragSession(
       aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
       aArrayTransferables, aActionType, aContentPolicyType);
 }
 
-// nsBaseDragService
-nsresult nsDragService::InvokeDragSessionImpl(
+// nsBaseDragSession
+nsresult nsDragSession::InvokeDragSessionImpl(
     nsIWidget* aWidget, nsIArray* aArrayTransferables,
     const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   // make sure that we have an array of transferables to use
@@ -757,7 +761,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   // length of this call
   mSourceDataItems = aArrayTransferables;
 
-  LOGDRAGSERVICE("nsDragService::InvokeDragSessionImpl");
+  LOGDRAGSERVICE("nsDragSession::InvokeDragSessionImpl");
 
   GdkDevice* device = widget::GdkGetPointer();
   GdkWindow* originGdkWindow = nullptr;
@@ -768,7 +772,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
     // Check we have GdkWindow drag source.
     if (!originGdkWindow) {
       NS_WARNING(
-          "nsDragService::InvokeDragSessionImpl(): Missing origin GdkWindow!");
+          "nsDragSession::InvokeDragSessionImpl(): Missing origin GdkWindow!");
       return NS_ERROR_FAILURE;
     }
   }
@@ -781,11 +785,11 @@ nsresult nsDragService::InvokeDragSessionImpl(
   // save our action type
   GdkDragAction action = GDK_ACTION_DEFAULT;
 
-  if (aActionType & DRAGDROP_ACTION_COPY)
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_COPY)
     action = (GdkDragAction)(action | GDK_ACTION_COPY);
-  if (aActionType & DRAGDROP_ACTION_MOVE)
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_MOVE)
     action = (GdkDragAction)(action | GDK_ACTION_MOVE);
-  if (aActionType & DRAGDROP_ACTION_LINK)
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_LINK)
     action = (GdkDragAction)(action | GDK_ACTION_LINK);
 
   GdkEvent* existingEvent = widget::GetLastMousePressEvent();
@@ -826,8 +830,6 @@ nsresult nsDragService::InvokeDragSessionImpl(
 
   nsresult rv;
   if (context) {
-    StartDragSession(aWidget);
-
     // GTK uses another hidden window for receiving mouse events.
     sGrabWidget = gtk_window_group_get_current_grab(window_group);
     if (sGrabWidget) {
@@ -849,7 +851,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   return rv;
 }
 
-bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
+bool nsDragSession::SetAlphaPixmap(SourceSurface* aSurface,
                                    GdkDragContext* aContext, int32_t aXOffset,
                                    int32_t aYOffset,
                                    const LayoutDeviceIntRect& dragRect) {
@@ -902,7 +904,6 @@ bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
 NS_IMETHODIMP
 nsDragService::StartDragSession(nsISupports* aWidgetProvider) {
   LOGDRAGSERVICE("nsDragService::StartDragSession");
-  mTempFileUrls.Clear();
   return nsBaseDragService::StartDragSession(aWidgetProvider);
 }
 
@@ -943,7 +944,6 @@ gboolean nsDragSession::TaskRemoveTempFiles(gpointer data) {
   // We manually deref it here.
   RefPtr<nsDragSession> session = static_cast<nsDragSession*>(data);
   session.get()->Release();
-  RefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
   return session->RemoveTempFiles();
 }
 
@@ -968,7 +968,7 @@ nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
   }
 
   // unset our drag action
-  SetDragAction(DRAGDROP_ACTION_NONE);
+  SetDragAction(nsIDragService::DRAGDROP_ACTION_NONE);
 
   // start timer to remove temporary files
   if (mTemporaryFiles.Count() > 0 && !mTempFileTimerID) {
@@ -1297,15 +1297,15 @@ void nsDragSession::ReplyToDragMotion(GdkDragContext* aDragContext,
   if (mCanDrop) {
     // notify the dragger if we can drop
     switch (mDragAction) {
-      case DRAGDROP_ACTION_COPY:
+      case nsIDragService::DRAGDROP_ACTION_COPY:
         LOGDRAGSERVICE("  set explicit action copy");
         action = GDK_ACTION_COPY;
         break;
-      case DRAGDROP_ACTION_LINK:
+      case nsIDragService::DRAGDROP_ACTION_LINK:
         LOGDRAGSERVICE("  set explicit action link");
         action = GDK_ACTION_LINK;
         break;
-      case DRAGDROP_ACTION_NONE:
+      case nsIDragService::DRAGDROP_ACTION_NONE:
         LOGDRAGSERVICE("  set explicit action none");
         action = (GdkDragAction)0;
         break;
@@ -1345,7 +1345,7 @@ void nsDragSession::ReplyToDragMotion(GdkDragContext* aDragContext,
   gdk_drag_status(aDragContext, action, aTime);
 }
 
-void nsDragService::SetCachedDragContext(GdkDragContext* aDragContext) {
+void nsDragSession::SetCachedDragContext(GdkDragContext* aDragContext) {
   LOGDRAGSERVICE("nsDragService::SetCachedDragContext(): [drag %p / cached %p]",
                  aDragContext, (void*)mCachedDragContext);
   // Clear cache data if we're going to D&D with different drag context.
@@ -1371,7 +1371,7 @@ bool nsDragSession::IsTargetContextList(void) {
   return IsDragFlavorAvailable(sMimeListTypeAtom);
 }
 
-bool nsDragService::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
+bool nsDragSession::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
   if (mCachedDragFlavors.IsEmpty()) {
     for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
          tmp = tmp->next) {
@@ -1388,7 +1388,7 @@ bool nsDragService::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
 // Spins event loop, called from eDragTaskMotion handler by
 // DispatchMotionEvents().
 // Can lead to another round of drag_motion events.
-RefPtr<DragData> nsDragService::GetDragData(GdkAtom aRequestedFlavor) {
+RefPtr<DragData> nsDragSession::GetDragData(GdkAtom aRequestedFlavor) {
   LOGDRAGSERVICE("nsDragService::GetDragData(%p) requested '%s'\n",
                  mTargetDragContext.get(),
                  GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
@@ -1455,7 +1455,7 @@ RefPtr<DragData> nsDragService::GetDragData(GdkAtom aRequestedFlavor) {
   return nullptr;
 }
 
-void nsDragService::TargetDataReceived(GtkWidget* aWidget,
+void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
                                        GdkDragContext* aContext, gint aX,
                                        gint aY,
                                        GtkSelectionData* aSelectionData,
@@ -1558,7 +1558,7 @@ static bool CanExportAsURLTarget(const char16_t* aURLData, uint32_t aURLLen) {
   return true;
 }
 
-GtkTargetList* nsDragService::GetSourceList(void) {
+GtkTargetList* nsDragSession::GetSourceList(void) {
   if (!mSourceDataItems) {
     return nullptr;
   }
@@ -1691,7 +1691,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
   return targetList;
 }
 
-void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
+void nsDragSession::SourceEndDragSession(GdkDragContext* aContext,
                                          gint aResult) {
   LOGDRAGSERVICE("SourceEndDragSession(%p) result %s\n", aContext,
                  kGtkDragResults[aResult]);
@@ -1722,10 +1722,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     gdk_window_get_device_position(
         gdkWindow, gdk_drag_context_get_device(aContext), &x, &y, nullptr);
     gint scale = gdk_window_get_scale_factor(gdkWindow);
-    nsCOMPtr<nsIDragSession> session = GetCurrentSession(mSourceWindow);
-    if (session) {
-      session->SetDragEndPoint(x * scale, y * scale);
-    }
+    SetDragEndPoint(x * scale, y * scale);
     LOGDRAGSERVICE("  guess drag end point %d %d\n", x * scale, y * scale);
   }
 
@@ -1750,23 +1747,23 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     // unusual action combinations as NONE.
     if (!action) {
       LOGDRAGSERVICE("  drop action is none");
-      dropEffect = DRAGDROP_ACTION_NONE;
+      dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
     } else if (action & GDK_ACTION_COPY) {
       LOGDRAGSERVICE("  drop action is copy");
-      dropEffect = DRAGDROP_ACTION_COPY;
+      dropEffect = nsIDragService::DRAGDROP_ACTION_COPY;
     } else if (action & GDK_ACTION_LINK) {
       LOGDRAGSERVICE("  drop action is link");
-      dropEffect = DRAGDROP_ACTION_LINK;
+      dropEffect = nsIDragService::DRAGDROP_ACTION_LINK;
     } else if (action & GDK_ACTION_MOVE) {
       LOGDRAGSERVICE("  drop action is move");
-      dropEffect = DRAGDROP_ACTION_MOVE;
+      dropEffect = nsIDragService::DRAGDROP_ACTION_MOVE;
     } else {
       LOGDRAGSERVICE("  drop action is copy");
-      dropEffect = DRAGDROP_ACTION_COPY;
+      dropEffect = nsIDragService::DRAGDROP_ACTION_COPY;
     }
   } else {
     LOGDRAGSERVICE("  drop action is none");
-    dropEffect = DRAGDROP_ACTION_NONE;
+    dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
     if (aResult != GTK_DRAG_RESULT_NO_TARGET) {
       LOGDRAGSERVICE("  drop is user chancelled\n");
       mUserCancelled = true;
@@ -1778,7 +1775,8 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   }
 
   // Schedule the appropriate drag end dom events.
-  Schedule(eDragTaskSourceEnd, nullptr, nullptr, LayoutDeviceIntPoint(), 0);
+  Schedule(eDragTaskSourceEnd, mTargetWindow, nullptr, LayoutDeviceIntPoint(),
+           0);
 }
 
 static nsresult GetDownloadDetails(nsITransferable* aTransferable,
@@ -1837,9 +1835,9 @@ static nsresult GetDownloadDetails(nsITransferable* aTransferable,
 }
 
 // See nsContentAreaDragDropDataProvider::GetFlavorData() for reference.
-nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
+nsresult nsDragSession::CreateTempFile(nsITransferable* aItem,
                                        nsACString& aURI) {
-  LOGDRAGSERVICE("nsDragService::CreateTempFile()");
+  LOGDRAGSERVICE("nsDragSession::CreateTempFile()");
 
   nsCOMPtr<nsIFile> tmpDir;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
@@ -1973,7 +1971,7 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   return NS_OK;
 }
 
-bool nsDragService::SourceDataAppendURLFileItem(nsACString& aURI,
+bool nsDragSession::SourceDataAppendURLFileItem(nsACString& aURI,
                                                 nsITransferable* aItem) {
   // If there is a file available, create a URI from the file.
   nsCOMPtr<nsISupports> data;
@@ -1990,7 +1988,7 @@ bool nsDragService::SourceDataAppendURLFileItem(nsACString& aURI,
   return false;
 }
 
-bool nsDragService::SourceDataAppendURLItem(nsITransferable* aItem,
+bool nsDragSession::SourceDataAppendURLItem(nsITransferable* aItem,
                                             bool aExternalDrop,
                                             nsACString& aURI) {
   nsCOMPtr<nsISupports> data;
@@ -2035,7 +2033,7 @@ bool nsDragService::SourceDataAppendURLItem(nsITransferable* aItem,
   return NS_SUCCEEDED(CreateTempFile(aItem, aURI));
 }
 
-void nsDragService::SourceDataGetUriList(GdkDragContext* aContext,
+void nsDragSession::SourceDataGetUriList(GdkDragContext* aContext,
                                          GtkSelectionData* aSelectionData,
                                          uint32_t aDragItems) {
   // Check if we're transfering data to another application.
@@ -2047,7 +2045,7 @@ void nsDragService::SourceDataGetUriList(GdkDragContext* aContext,
           ? !nsWindow::GetWindow(gdk_drag_context_get_dest_window(aContext))
           : !gdk_drag_context_get_dest_window(aContext);
 
-  LOGDRAGSERVICE("nsDragService::SourceDataGetUriLists() len %d external %d",
+  LOGDRAGSERVICE("nsDragSession::SourceDataGetUriLists() len %d external %d",
                  aDragItems, isExternalDrop);
 
   // Disable processing of native events until we store all files to /tmp.
@@ -2081,9 +2079,9 @@ void nsDragService::SourceDataGetUriList(GdkDragContext* aContext,
                          uriList.Length());
 }
 
-void nsDragService::SourceDataGetImage(nsITransferable* aItem,
+void nsDragSession::SourceDataGetImage(nsITransferable* aItem,
                                        GtkSelectionData* aSelectionData) {
-  LOGDRAGSERVICE("nsDragService::SourceDataGetImage()");
+  LOGDRAGSERVICE("nsDragSession::SourceDataGetImage()");
 
   nsresult rv;
   nsCOMPtr<nsISupports> data;
@@ -2106,10 +2104,10 @@ void nsDragService::SourceDataGetImage(nsITransferable* aItem,
   return;
 }
 
-void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
+void nsDragSession::SourceDataGetXDND(nsITransferable* aItem,
                                       GdkDragContext* aContext,
                                       GtkSelectionData* aSelectionData) {
-  LOGDRAGSERVICE("nsDragService::SourceDataGetXDND");
+  LOGDRAGSERVICE("nsDragSession::SourceDataGetXDND");
 
   // Indicate failure by default.
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
@@ -2200,11 +2198,11 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   return;
 }
 
-bool nsDragService::SourceDataGetText(nsITransferable* aItem,
+bool nsDragSession::SourceDataGetText(nsITransferable* aItem,
                                       const nsACString& aMIMEType,
                                       bool aNeedToDoConversionToPlainText,
                                       GtkSelectionData* aSelectionData) {
-  LOGDRAGSERVICE("nsDragService::SourceDataGetPlain()");
+  LOGDRAGSERVICE("nsDragSession::SourceDataGetPlain()");
 
   nsresult rv;
   nsCOMPtr<nsISupports> data;
@@ -2248,11 +2246,11 @@ bool nsDragService::SourceDataGetText(nsITransferable* aItem,
 // GtkSelectionData (Gtk D&D interface).
 // We need to check mSourceDataItems data type and try to convert it
 // to data type accepted by Gtk.
-void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
+void nsDragSession::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                                   GtkSelectionData* aSelectionData,
                                   guint32 aTime) {
   GdkAtom requestedFlavor = gtk_selection_data_get_target(aSelectionData);
-  LOGDRAGSERVICE("nsDragService::SourceDataGet(%p) MIME %s", aContext,
+  LOGDRAGSERVICE("nsDragSession::SourceDataGet(%p) MIME %s", aContext,
                  GUniquePtr<gchar>(gdk_atom_name(requestedFlavor)).get());
 
   // check to make sure that we have data items to return.
@@ -2321,8 +2319,8 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                     /* aNeedToDoConversionToPlainText */ false, aSelectionData);
 }
 
-void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
-  LOGDRAGSERVICE("nsDragService::SourceBeginDrag(%p)\n", aContext);
+void nsDragSession::SourceBeginDrag(GdkDragContext* aContext) {
+  LOGDRAGSERVICE("nsDragSession::SourceBeginDrag(%p)\n", aContext);
 
   nsCOMPtr<nsITransferable> transferable =
       do_QueryElementAt(mSourceDataItems, 0);
@@ -2364,10 +2362,10 @@ void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
   }
 }
 
-void nsDragService::SetDragIcon(GdkDragContext* aContext) {
+void nsDragSession::SetDragIcon(GdkDragContext* aContext) {
   if (!mHasImage && !mSelection) return;
 
-  LOGDRAGSERVICE("nsDragService::SetDragIcon(%p)", aContext);
+  LOGDRAGSERVICE("nsDragSession::SetDragIcon(%p)", aContext);
 
   LayoutDeviceIntRect dragRect;
   nsPresContext* pc;
@@ -2445,10 +2443,10 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
 static void invisibleSourceDragBegin(GtkWidget* aWidget,
                                      GdkDragContext* aContext, gpointer aData) {
   LOGDRAGSERVICESTATIC("invisibleSourceDragBegin (%p)", aContext);
-  nsDragService* dragService = (nsDragService*)aData;
+  nsDragSession* dragSession = (nsDragSession*)aData;
 
-  dragService->SourceBeginDrag(aContext);
-  dragService->SetDragIcon(aContext);
+  dragSession->SourceBeginDrag(aContext);
+  dragSession->SetDragIcon(aContext);
 }
 
 static void invisibleSourceDragDataGet(GtkWidget* aWidget,
@@ -2457,15 +2455,13 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
                                        guint aInfo, guint32 aTime,
                                        gpointer aData) {
   LOGDRAGSERVICESTATIC("invisibleSourceDragDataGet (%p)", aContext);
-  nsDragService* dragService = (nsDragService*)aData;
-  dragService->SourceDataGet(aWidget, aContext, aSelectionData, aTime);
+  nsDragSession* dragSession = (nsDragSession*)aData;
+  dragSession->SourceDataGet(aWidget, aContext, aSelectionData, aTime);
 }
 
 static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
                                           GdkDragContext* aContext,
                                           gint aResult, gpointer aData) {
-  nsDragService* dragService = (nsDragService*)aData;
-
   // Wayland and X11 uses different drag results here. When drag target is
   // missing X11 passes GDK_DRAG_CANCEL_NO_TARGET
   // (from gdk_dnd_handle_button_event()/gdkdnd-x11.c)
@@ -2482,10 +2478,11 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
 
   LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %s", aContext,
                        kGtkDragResults[aResult]);
+  nsDragSession* dragSession = (nsDragSession*)aData;
   // End the drag session now (rather than waiting for the drag-end signal)
   // so that operations performed on dropEffect == none can start immediately
   // rather than waiting for the drag-failed animation to finish.
-  dragService->SourceEndDragSession(aContext, aResult);
+  dragSession->SourceEndDragSession(aContext, aResult);
 
   // We should return TRUE to disable the drag-failed animation iff the
   // source performed an operation when dropEffect was none, but the handler
@@ -2496,10 +2493,10 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
 static void invisibleSourceDragEnd(GtkWidget* aWidget, GdkDragContext* aContext,
                                    gpointer aData) {
   LOGDRAGSERVICESTATIC("invisibleSourceDragEnd(%p)", aContext);
-  nsDragService* dragService = (nsDragService*)aData;
+  nsDragSession* dragSession = (nsDragSession*)aData;
 
   // The drag has ended.  Release the hostages!
-  dragService->SourceEndDragSession(aContext, GTK_DRAG_RESULT_SUCCESS);
+  dragSession->SourceEndDragSession(aContext, GTK_DRAG_RESULT_SUCCESS);
 }
 
 // The following methods handle responding to GTK drag signals and
@@ -2543,7 +2540,7 @@ static void invisibleSourceDragEnd(GtkWidget* aWidget, GdkDragContext* aContext,
 // Gecko drag events are in flight.  This helps event handlers that may not
 // expect nested events, while accessing an event's dataTransfer for example.
 
-gboolean nsDragService::ScheduleMotionEvent(nsWindow* aWindow,
+gboolean nsDragSession::ScheduleMotionEvent(nsWindow* aWindow,
                                             GdkDragContext* aDragContext,
                                             LayoutDeviceIntPoint aWindowPoint,
                                             guint aTime) {
@@ -2561,7 +2558,7 @@ gboolean nsDragService::ScheduleMotionEvent(nsWindow* aWindow,
   return Schedule(eDragTaskMotion, aWindow, aDragContext, aWindowPoint, aTime);
 }
 
-void nsDragService::ScheduleLeaveEvent() {
+void nsDragSession::ScheduleLeaveEvent() {
   // We don't know at this stage whether a drop signal will immediately
   // follow.  If the drop signal gets sent it will happen before we return
   // to the main loop and the scheduled leave task will be replaced.
@@ -2570,7 +2567,7 @@ void nsDragService::ScheduleLeaveEvent() {
   }
 }
 
-gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
+gboolean nsDragSession::ScheduleDropEvent(nsWindow* aWindow,
                                           GdkDragContext* aDragContext,
                                           LayoutDeviceIntPoint aWindowPoint,
                                           guint aTime) {
@@ -2579,17 +2576,14 @@ gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
     return FALSE;
   }
 
-  nsCOMPtr<nsIDragSession> session = GetCurrentSession(aWindow);
-  if (session) {
-    session->SetDragEndPoint(aWindowPoint.x, aWindowPoint.y);
-  }
+  SetDragEndPoint(aWindowPoint.x, aWindowPoint.y);
 
   // We'll reply with gtk_drag_finish().
   return TRUE;
 }
 
 #ifdef MOZ_LOGGING
-const char* nsDragService::GetDragServiceTaskName(DragTask aTask) {
+const char* nsDragSession::GetDragServiceTaskName(DragTask aTask) {
   static const char* taskNames[] = {"eDragTaskNone", "eDragTaskMotion",
                                     "eDragTaskLeave", "eDragTaskDrop",
                                     "eDragTaskSourceEnd"};
@@ -2598,7 +2592,7 @@ const char* nsDragService::GetDragServiceTaskName(DragTask aTask) {
 }
 #endif
 
-gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
+gboolean nsDragSession::Schedule(DragTask aTask, nsWindow* aWindow,
                                  GdkDragContext* aDragContext,
                                  LayoutDeviceIntPoint aWindowPoint,
                                  guint aTime) {
@@ -2611,7 +2605,7 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   // within the allowed time).  Otherwise, if we haven't yet run a scheduled
   // drop or end task, just say that we are not ready to receive another
   // drop.
-  LOGDRAGSERVICE("nsDragService::Schedule(%p) task %s window %p\n",
+  LOGDRAGSERVICE("nsDragSession::Schedule(%p) task %s window %p\n",
                  aDragContext, GetDragServiceTaskName(aTask), aWindow);
 
   if (mScheduledTask == eDragTaskSourceEnd ||
@@ -2632,7 +2626,7 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
     // right after drag_motion event handler which is called by Gtk.
     // An ideal scenario is to call TaskDispatchCallback() directly here
     // but we can't do that. TaskDispatchCallback() spins gtk event loop
-    // while nsDragService::Schedule() is already called from event loop
+    // while nsDragSession::Schedule() is already called from event loop
     // (by drag_motion* gtk_widget events) so that direct call will cause
     // nested recursion.
     mTaskSource = g_timeout_add_full(G_PRIORITY_HIGH, 0, TaskDispatchCallback,
@@ -2649,15 +2643,17 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   return TRUE;
 }
 
-gboolean nsDragService::TaskDispatchCallback(gpointer data) {
-  RefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
-  AutoEventLoop loop(dragService);
-  return dragService->RunScheduledTask();
+gboolean nsDragSession::TaskDispatchCallback(gpointer data) {
+  // Make sure we hold a strong reference to the session while we process
+  // the task.
+  RefPtr<nsDragSession> dragSession = static_cast<nsDragSession*>(data);
+  AutoEventLoop loop(dragSession);
+  return dragSession->RunScheduledTask();
 }
 
-gboolean nsDragService::RunScheduledTask() {
+gboolean nsDragSession::RunScheduledTask() {
   LOGDRAGSERVICE(
-      "nsDragService::RunScheduledTask() task %s mTargetWindow %p "
+      "nsDragSession::RunScheduledTask() task %s mTargetWindow %p "
       "mPendingWindow %p\n",
       GetDragServiceTaskName(mScheduledTask), mTargetWindow.get(),
       mPendingWindow.get());
@@ -2679,10 +2675,7 @@ gboolean nsDragService::RunScheduledTask() {
       // The drag that was initiated in a different app. End the drag
       // session, since we're done with it for now (until the user drags
       // back into this app).
-      RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
-      if (session) {
-        session->EndDragSession(false, GetCurrentModifiers());
-      }
+      EndDragSession(false, GetCurrentModifiers());
     }
   }
 
@@ -2704,10 +2697,7 @@ gboolean nsDragService::RunScheduledTask() {
     LOGDRAGSERVICE("  quit, selected task %s\n", GetDragServiceTaskName(task));
     if (task == eDragTaskSourceEnd) {
       // Dispatch drag end events.
-      RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
-      if (session) {
-        session->EndDragSession(true, GetCurrentModifiers());
-      }
+      EndDragSession(true, GetCurrentModifiers());
     }
 
     // Nothing more to do
@@ -2715,10 +2705,6 @@ gboolean nsDragService::RunScheduledTask() {
     mTaskSource = 0;
     return FALSE;
   }
-
-  // This may be the start of a destination drag session.
-  nsIWidget* targetWidget = mTargetWindow;
-  StartDragSession(targetWidget);
 
   // mTargetWidget may be nullptr if the window has been destroyed.
   // (The leave event is not scheduled if a drop task is still scheduled.)
@@ -2786,10 +2772,7 @@ gboolean nsDragService::RunScheduledTask() {
     }
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
-    RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
-    if (session) {
-      session->EndDragSession(true, GetCurrentModifiers());
-    }
+    EndDragSession(true, GetCurrentModifiers());
   }
 
   // We're done with the drag context.
@@ -2813,14 +2796,14 @@ gboolean nsDragService::RunScheduledTask() {
 // drag context.  Gtk gets this from a combination of the key settings
 // and what the source is offering.
 
-void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
+void nsDragSession::UpdateDragAction(GdkDragContext* aDragContext) {
   // This doesn't look right.  dragSession.dragAction is used by
   // nsContentUtils::SetDataTransferInEvent() to set the initial
   // dataTransfer.dropEffect, so GdkDragContext::suggested_action would be
   // more appropriate.  GdkDragContext::actions should be used to set
   // dataTransfer.effectAllowed, which doesn't currently happen with
   // external sources.
-  LOGDRAGSERVICE("nsDragService::UpdateDragAction(%p)", aDragContext);
+  LOGDRAGSERVICE("nsDragSession::UpdateDragAction(%p)", aDragContext);
 
   // default is to do nothing
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
@@ -2836,7 +2819,7 @@ void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
     // So we need to call gdk_drag_context_get_selected_action() on Wayland
     // to get potential D&D modifier.
     // gdk_drag_context_get_selected_action() is also affected by
-    // gdk_drag_status(), see nsDragService::ReplyToDragMotion().
+    // gdk_drag_status(), see nsDragSession::ReplyToDragMotion().
     if (widget::GdkIsWaylandDisplay()) {
       GdkDragAction gdkActionSelected =
           gdk_drag_context_get_selected_action(aDragContext);
@@ -2871,7 +2854,7 @@ void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
   SetDragAction(action);
 }
 
-void nsDragService::UpdateDragAction() { UpdateDragAction(mTargetDragContext); }
+void nsDragSession::UpdateDragAction() { UpdateDragAction(mTargetDragContext); }
 
 NS_IMETHODIMP
 nsDragSession::UpdateDragEffect() {
@@ -2889,12 +2872,9 @@ void nsDragSession::ReplyToDragMotion() {
   }
 }
 
-void nsDragService::DispatchMotionEvents() {
+void nsDragSession::DispatchMotionEvents() {
   if (mSourceWindow) {
-    RefPtr<nsIDragSession> session = GetCurrentSession(mSourceWindow);
-    if (session) {
-      session->FireDragEventAtSource(eDrag, GetCurrentModifiers());
-    }
+    FireDragEventAtSource(eDrag, GetCurrentModifiers());
   }
   if (mTargetWindow) {
     mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
@@ -2903,7 +2883,7 @@ void nsDragService::DispatchMotionEvents() {
 }
 
 // Returns true if the drop was successful
-gboolean nsDragService::DispatchDropEvent() {
+gboolean nsDragSession::DispatchDropEvent() {
   // We need to check IsDestroyed here because the nsRefPtr
   // only protects this from being deleted, it does NOT protect
   // against nsView::~nsView() calling Destroy() on it, bug 378273.
@@ -2919,7 +2899,7 @@ gboolean nsDragService::DispatchDropEvent() {
 }
 
 /* static */
-uint32_t nsDragService::GetCurrentModifiers() {
+uint32_t nsDragSession::GetCurrentModifiers() {
   return mozilla::widget::KeymapWrapper::ComputeCurrentKeyModifiers();
 }
 

@@ -13,10 +13,10 @@
 struct IDataObject;
 class nsDataObjCollection;
 
-// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
-// (which nsBaseDragService temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragSession : public nsBaseDragService {
+/**
+ *  Windows native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession {
  public:
   virtual ~nsDragSession();
 
@@ -30,8 +30,20 @@ class nsDragSession : public nsBaseDragService {
   void SetIDataObject(IDataObject* aDataObj);
   IDataObject* GetDataObject() { return mDataObject; }
 
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
+      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      uint32_t aActionType);
+
   MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
       bool aDoneDrag, uint32_t aKeyModifiers) override;
+
+  MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(nsIWidget* aWidget,
+                                                       IDataObject* aDataObj,
+                                                       uint32_t aActionType);
+
+  // A drop occurred within the application vs. outside of it.
+  void SetDroppedLocal();
 
  protected:
   // determine if we have a single data object or one of our private
@@ -45,29 +57,16 @@ class nsDragSession : public nsBaseDragService {
                        SHDRAGIMAGE* psdi);
 
   IDataObject* mDataObject = nullptr;
+  bool mSentLocalDropEvent = false;
 };
 
-// Temporary inheritance from nsDragSession instead of nsBaseDragService
-// (which nsDragSession temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragService final : public nsDragSession {
+/**
+ *  Windows native nsIDragService implementation
+ */
+class nsDragService final : public nsBaseDragService {
  public:
-  // nsBaseDragService
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIWidget* aWidget, nsIArray* anArrayTransferables,
-      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-      uint32_t aActionType);
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 
-  // native impl.
-  MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(nsIWidget* aWidget,
-                                                       IDataObject* aDataObj,
-                                                       uint32_t aActionType);
-
-  // A drop occurred within the application vs. outside of it.
-  void SetDroppedLocal();
-
- protected:
-  bool mSentLocalDropEvent = false;
 };
 
 #endif  // nsDragService_h__

@@ -84,6 +84,7 @@
 #include "nsDeviceContext.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
+#include "nsDragServiceProxy.h"
 #include "nsExceptionHandler.h"
 #include "nsFilePickerProxy.h"
 #include "nsFocusManager.h"
@@ -502,6 +503,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(BrowserChild)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserChild)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(BrowserChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
@@ -1899,6 +1901,15 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   }
 
   DispatchWidgetEventViaAPZ(localEvent);
+
+  if (aEvent.mMessage == eDragLeave ||
+      aEvent.mMessage == eDragExit) {
+    // If session is still active, remove its target.
+    dragSession = GetDragSession();
+    if (dragSession) {
+      static_cast<nsDragSessionProxy*>(dragSession.get())->SetDragTarget(nullptr);
+    }
+  }
   return IPC_OK();
 }
 
@@ -1951,7 +1962,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
           do_GetService("@mozilla.org/widget/dragservice;1")) {
     nsIWidget* widget = WebWidget();
     dragService->StartDragSession(widget);
-    if (RefPtr<nsIDragSession> session = nsContentUtils::GetDragSession(widget)) {
+    if (RefPtr<nsIDragSession> session = GetDragSession()) {
       session->SetSourceWindowContext(aSourceWindowContext.GetMaybeDiscarded());
       session->SetSourceTopWindowContext(
           aSourceTopWindowContext.GetMaybeDiscarded());
@@ -3869,9 +3880,11 @@ BrowserChild::ContentTransformsReceived(JSContext* aCx,
 }
 
 already_AddRefed<nsIDragSession> BrowserChild::GetDragSession() {
-  RefPtr<nsIDragSession> session =
-      nsContentUtils::GetDragSession(mPuppetWidget);
-  return session.forget();
+  return RefPtr(mDragSession).forget();
+}
+
+void BrowserChild::SetDragSession(nsIDragSession* aSession) {
+  mDragSession = aSession;
 }
 
 BrowserChildMessageManager::BrowserChildMessageManager(

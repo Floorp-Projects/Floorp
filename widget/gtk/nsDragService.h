@@ -87,11 +87,14 @@ class DragData final {
   nsTArray<nsString> mUris;
 };
 
-// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
-// (which nsBaseDragService temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragSession : public nsBaseDragService {
+/**
+ * GTK native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession, public nsIObserver {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOBSERVER
+
   // nsIDragSession
   NS_IMETHOD SetCanDrop(bool aCanDrop) override;
   NS_IMETHOD GetCanDrop(bool* aCanDrop) override;
@@ -109,6 +112,7 @@ class nsDragSession : public nsBaseDragService {
 
   MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
       bool aDoneDrag, uint32_t aKeyModifiers) override;
+
   class AutoEventLoop {
     RefPtr<nsDragSession> mSession;
 
@@ -123,8 +127,6 @@ class nsDragSession : public nsBaseDragService {
   static int GetLoopDepth() { return sEventLoopDepth; };
 
  protected:
-  virtual ~nsDragSession() = default;
-
   // mScheduledTask indicates what signal has been received from GTK and
   // so what needs to be dispatched when the scheduled task is run.  It is
   // eDragTaskNone when there is no task scheduled (but the
@@ -259,36 +261,24 @@ class nsDragSession : public nsBaseDragService {
   static GdkAtom sFilePromiseURLMimeAtom;
   static GdkAtom sFilePromiseMimeAtom;
   static GdkAtom sNativeImageMimeAtom;
-};
 
-// Temporary inheritance from nsDragSession instead of nsBaseDragService
-// (which nsDragSession temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragService final : public nsDragSession, public nsIObserver {
- public:
-  nsDragService();
+  nsDragSession();
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOBSERVER
-
-  // nsBaseDragService
+  // nsBaseDragSession
   MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
       nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
-  // nsIDragService
+
+  // nsIDragSession
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InvokeDragSession(
       nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
       nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
       nsIArray* anArrayTransferables, uint32_t aActionType,
       nsContentPolicyType aContentPolicyType) override;
 
-  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
-
   // Methods called from nsWindow to handle responding to GTK drag
   // destination signals
-
-  static already_AddRefed<nsDragService> GetInstance();
 
   void TargetDataReceived(GtkWidget* aWidget, GdkDragContext* aContext, gint aX,
                           gint aY, GtkSelectionData* aSelection_data,
@@ -334,7 +324,7 @@ class nsDragService final : public nsDragSession, public nsIObserver {
   void SetDragIcon(GdkDragContext* aContext);
 
  protected:
-  virtual ~nsDragService();
+  virtual ~nsDragSession();
 
  private:
   // target/destination side vars
@@ -370,8 +360,9 @@ class nsDragService final : public nsDragSession, public nsIObserver {
 
   // attempts to create a semi-transparent drag image. Returns TRUE if
   // successful, FALSE if not
-  bool SetAlphaPixmap(SourceSurface* aPixbuf, GdkDragContext* aContext,
-                      int32_t aXOffset, int32_t aYOffset,
+  bool SetAlphaPixmap(mozilla::gfx::SourceSurface* aPixbuf,
+                      GdkDragContext* aContext, int32_t aXOffset,
+                      int32_t aYOffset,
                       const mozilla::LayoutDeviceIntRect& dragRect);
 
   gboolean Schedule(DragTask aTask, nsWindow* aWindow,
@@ -386,12 +377,24 @@ class nsDragService final : public nsDragSession, public nsIObserver {
   void UpdateDragAction();
 
 #ifdef MOZ_LOGGING
-  const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
+  const char* GetDragServiceTaskName(DragTask aTask);
 #endif
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 
   nsresult CreateTempFile(nsITransferable* aItem, nsACString& aURI);
+};
+
+/**
+ * Native GTK nsIDragService implementation
+ */
+class nsDragService : public nsBaseDragService {
+ public:
+  static already_AddRefed<nsDragService> GetInstance();
+  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
+
+ protected:
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 };
 
 #endif  // nsDragService_h__

@@ -8,25 +8,47 @@
 
 #include "nsBaseDragService.h"
 
-// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
-// (which nsBaseDragService temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragSessionProxy : public nsBaseDragService {};
-
-// Temporary inheritance from nsDragSessionProxy instead of nsBaseDragService
-// (which nsDragSession temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragServiceProxy final : public nsDragSessionProxy {
+class nsDragSessionProxy : public nsBaseDragSession {
  public:
-  nsDragServiceProxy();
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsDragSessionProxy, nsBaseDragSession)
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsDragServiceProxy, nsDragSessionProxy)
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSession(
+      nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+      nsIArray* aTransferableArray, uint32_t aActionType,
+      nsContentPolicyType aContentPolicyType) override;
 
-  // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(
+  nsresult InvokeDragSessionImpl(
       nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
+
+  void SetDragTarget(mozilla::dom::BrowserChild* aTarget);
+
+  MOZ_CAN_RUN_SCRIPT
+  nsresult EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
+
+ private:
+  ~nsDragSessionProxy();
+
+  // The source for this drag.  This is null if the source is a different
+  // application or drag session.
+  nsWeakPtr mSourceBrowser;
+  // The target for this drag.  This is null if the target is a different
+  // application or drag session.
+  nsWeakPtr mTargetBrowser;
+};
+
+class nsDragServiceProxy : public nsBaseDragService {
+ public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsDragServiceProxy, nsBaseDragService)
+
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
+
+  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
+
+  NS_IMETHOD GetCurrentSession(nsISupports* aWidgetProvider,
+                               nsIDragSession** aSession) override;
 
  private:
   virtual ~nsDragServiceProxy();

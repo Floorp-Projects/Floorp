@@ -13,15 +13,11 @@
 
 class nsITransferable;
 
-// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
-// (which nsBaseDragService temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragSession : public nsBaseDragService {
+/**
+ * Android native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession {
  public:
-  nsDragSession() = default;
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable* aTransferable, uint32_t anItem) override;
   NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
@@ -32,6 +28,8 @@ class nsDragSession : public nsBaseDragService {
 
   void SetData(nsITransferable* aTransferable);
 
+  void SetDropData(mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
+
   virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
   MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
@@ -40,6 +38,12 @@ class nsDragSession : public nsBaseDragService {
  protected:
   virtual ~nsDragSession() = default;
 
+  // nsBaseDragSession
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InvokeDragSessionImpl(nsIWidget* aWidget, nsIArray* anArrayTransferables,
+                        const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+                        uint32_t aActionType) override;
+
   mozilla::java::sdk::Bitmap::LocalRef CreateDragImage(
       nsINode* aNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion);
 
@@ -47,26 +51,15 @@ class nsDragSession : public nsBaseDragService {
   nsCOMPtr<nsITransferable> mTransferable;
 };
 
-// Temporary inheritance from nsDragSession instead of nsBaseDragService
-// (which nsDragSession temporarily inherits).
-// This will be undone at the end of this patch series.
-class nsDragService final : public nsDragSession {
+/**
+ * Android native nsIDragService implementation
+ */
+class nsDragService final : public nsBaseDragService {
  public:
   static already_AddRefed<nsDragService> GetInstance();
 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  static void SetDropData(
-      mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
-
  protected:
-  virtual ~nsDragService() = default;
-
-  // nsBaseDragService
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InvokeDragSessionImpl(nsIWidget* aWidget, nsIArray* anArrayTransferables,
-                        const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-                        uint32_t aActionType) override;
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 };
 
 #endif  // nsDragService_h__
