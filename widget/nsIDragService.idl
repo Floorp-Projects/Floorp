@@ -172,13 +172,6 @@ interface nsIDragService : nsISupports
                       [optional] in unsigned long aKeyModifiers);
 
   /**
-   * Fire a drag event at the source of the drag
-   */
-  [noscript, can_run_script]
-  void fireDragEventAtSource(in EventMessage aEventMessage,
-                             in unsigned long aKeyModifiers);
-
-  /**
    * Increase/decrease dragging suppress level by one.
    * If level is greater than one, dragging is disabled.
    */

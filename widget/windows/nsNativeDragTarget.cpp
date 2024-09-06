@@ -318,8 +318,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
   }
 
   ModifierKeyState modifierKeyState;
-  nsCOMPtr<nsIDragService> dragService = mDragService;
-  dragService->FireDragEventAtSource(eDrag, modifierKeyState.GetModifiers());
+  currentDragSession->FireDragEventAtSource(eDrag,
+                                            modifierKeyState.GetModifiers());
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDragOver, grfKeyState, ptl, pdwEffect);
 

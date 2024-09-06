@@ -10,10 +10,12 @@
 
 
 %{ C++
+#include "mozilla/EventForwards.h"
 #include "nsSize.h"
 %}
 interface nsIContentSecurityPolicy;
 
+native EventMessage(mozilla::EventMessage);
 native nsSize(nsSize);
 
 webidl DataTransfer;
@@ -161,4 +163,11 @@ interface nsIDragSession : nsISupports
     * aX and aY are in LayoutDevice pixels.
     */
   [noscript] void dragMoved(in long aX, in long aY);
+
+  /**
+   * Fire a drag event at the source of the drag
+   */
+  [noscript, can_run_script]
+  void fireDragEventAtSource(in EventMessage aEventMessage,
+                             in unsigned long aKeyModifiers);
 };
