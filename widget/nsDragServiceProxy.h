@@ -45,7 +45,7 @@ class nsDragServiceProxy : public nsBaseDragService {
 
   already_AddRefed<nsIDragSession> CreateDragSession() override;
 
-  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
+  nsIDragSession* StartDragSession(nsISupports* aWidgetProvider) override;
 
   NS_IMETHOD GetCurrentSession(nsISupports* aWidgetProvider,
                                nsIDragSession** aSession) override;

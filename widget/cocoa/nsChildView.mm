@@ -4108,13 +4108,14 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     if (!mDragService) return NSDragOperationNone;
   }
 
+  nsCOMPtr<nsIDragSession> dragSession;
   if (aMessage == eDragEnter) {
     nsIWidget* widget = mGeckoChild;
-    mDragService->StartDragSession(widget);
+    dragSession = mDragService->StartDragSession(widget);
+  } else {
+    dragSession = mDragService->GetCurrentSession(mGeckoChild);
   }
 
-  nsCOMPtr<nsIDragSession> dragSession =
-      mDragService->GetCurrentSession(mGeckoChild);
   if (dragSession) {
     if (aMessage == eDragOver) {
       // fire the drag event at the source. Just ignore whether it was

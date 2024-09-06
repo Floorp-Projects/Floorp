@@ -614,21 +614,18 @@ nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsBaseDragService::StartDragSession(nsISupports* aWidgetProvider) {
+nsIDragSession* nsBaseDragService::StartDragSession(nsISupports* aWidgetProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!aWidgetProvider) {
-    return NS_ERROR_NULL_POINTER;
+    return nullptr;
   }
   if (mCurrentParentDragSession) {
-    return NS_ERROR_ALREADY_INITIALIZED;
+    return mCurrentParentDragSession;
   }
 
   RefPtr<nsIDragSession> session = CreateDragSession();
-  if (XRE_IsParentProcess()) {
-    mCurrentParentDragSession = session;
-  }
-  return NS_OK;
+  mCurrentParentDragSession = session;
+  return session;
 }
 
 NS_IMETHODIMP
@@ -644,11 +641,7 @@ NS_IMETHODIMP nsBaseDragService::StartDragSessionForTests(
   // This method must set mSessionIsSynthesizedForTests
   MOZ_ASSERT(!mNeverAllowSessionIsSynthesizedForTests);
 
-  nsresult rv = StartDragSession(aWidgetProvider);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDragSession> session;
-  GetCurrentSession(aWidgetProvider, getter_AddRefs(session));
+  RefPtr<nsIDragSession> session = StartDragSession(aWidgetProvider);
   MOZ_ASSERT(session);
   session->InitForTests(aAllowedEffect);
   return NS_OK;

@@ -8752,9 +8752,8 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
   if (!dragSession) {
     // This may be the start of an external drag session.
     nsIWidget* widget = window;
-    static_cast<nsDragSession*>(dragService->StartDragSession(widget));
     dragSession =
-      static_cast<nsDragSession*>(dragService->GetCurrentSession(window));
+        static_cast<nsDragSession*>(dragService->StartDragSession(widget));
   }
   NS_ENSURE_TRUE(dragSession, FALSE);
 

@@ -143,9 +143,10 @@ interface nsIDragService : nsISupports
     * @param aWidgetProvider Either the nsIWidget that will be the target of
     *                        the drag, or an nsIDOMWindowProxy for a
     *                        window that is on that widget.
+    * @returns the new (or pre-existing) session
     */
-  [noscript]
-  void startDragSession(in nsISupports aWidgetProvider);
+  [notxpcom, nostdcall]
+  nsIDragSession startDragSession(in nsISupports aWidgetProvider);
 
   /**
    * Similar to startDragSession(), automated tests may want to start

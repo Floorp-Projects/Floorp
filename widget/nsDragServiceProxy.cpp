@@ -118,23 +118,23 @@ nsresult nsDragSessionProxy::InvokeDragSessionImpl(
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsIDragSession*
 nsDragServiceProxy::StartDragSession(nsISupports* aWidgetProvider) {
   nsIWidget* widget = GetWidgetFromWidgetProvider(aWidgetProvider);
-  NS_ENSURE_TRUE(widget, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(widget, nullptr);
   BrowserChild* targetBrowser = widget->GetOwningBrowserChild();
-  NS_ENSURE_TRUE(targetBrowser, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(targetBrowser, nullptr);
   RefPtr<nsIDragSession> session = targetBrowser->GetDragSession();
   if (session) {
     // session already exists on the browser
-    return NS_OK;
+    return session;
   }
 
   session = CreateDragSession();
   MOZ_ASSERT(session);
   static_cast<nsDragSessionProxy*>(session.get())->SetDragTarget(targetBrowser);
   targetBrowser->SetDragSession(session);
-  return NS_OK;
+  return session;
 }
 
 NS_IMETHODIMP
