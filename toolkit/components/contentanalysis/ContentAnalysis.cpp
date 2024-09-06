@@ -1772,7 +1772,15 @@ ContentAnalysis::PrintToPDFToDetermineIfPrintAllowed(
                       __func__);
                   return;
                 }
-                nsCOMPtr<nsIURI> uri = windowParent->GetDocumentURI();
+                nsCOMPtr<nsIURI> uri = GetURIForBrowsingContext(
+                    windowParent->Canonical()->GetBrowsingContext());
+                if (!uri) {
+                  promise->Reject(
+                      PrintAllowedError(NS_ERROR_FAILURE,
+                                        cachedStaticBrowsingContext),
+                      __func__);
+                  return;
+                }
                 nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
                     new contentanalysis::ContentAnalysisRequest(
                         std::move(printData), std::move(uri),
@@ -2039,7 +2047,13 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
     }
   }
 
-  nsCOMPtr<nsIURI> currentURI = aWindow->Canonical()->GetDocumentURI();
+  nsCOMPtr<nsIURI> currentURI =
+      GetURIForBrowsingContext(aWindow->Canonical()->GetBrowsingContext());
+  if (!currentURI) {
+    aResolver->Callback(ContentAnalysisResult::FromNoResult(
+        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
+    return;
+  }
   nsTArray<nsCString> flavors;
   rv = aTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2223,6 +2237,46 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
         promise->MaybeResolve(info);
       });
   promise.forget(aPromise);
+  return NS_OK;
+}
+
+/* static */ nsCOMPtr<nsIURI> ContentAnalysis::GetURIForBrowsingContext(
+    dom::CanonicalBrowsingContext* aBrowsingContext) {
+  dom::WindowGlobalParent* windowGlobal =
+      aBrowsingContext->GetCurrentWindowGlobal();
+  if (!windowGlobal) {
+    return nullptr;
+  }
+  nsIPrincipal* principal = windowGlobal->DocumentPrincipal();
+  dom::CanonicalBrowsingContext* curBrowsingContext =
+      aBrowsingContext->GetParent();
+  while (curBrowsingContext) {
+    dom::WindowGlobalParent* newWindowGlobal =
+        curBrowsingContext->GetCurrentWindowGlobal();
+    if (!newWindowGlobal) {
+      break;
+    }
+    nsIPrincipal* newPrincipal = newWindowGlobal->DocumentPrincipal();
+    if (!(newPrincipal->Subsumes(principal))) {
+      break;
+    }
+    principal = newPrincipal;
+    curBrowsingContext = curBrowsingContext->GetParent();
+  }
+  return principal->GetURI();
+}
+
+// IDL implementation
+NS_IMETHODIMP ContentAnalysis::GetURIForBrowsingContext(
+    dom::BrowsingContext* aBrowsingContext, nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aBrowsingContext);
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsCOMPtr<nsIURI> uri =
+      GetURIForBrowsingContext(aBrowsingContext->Canonical());
+  if (!uri) {
+    return NS_ERROR_FAILURE;
+  }
+  uri.forget(aURI);
   return NS_OK;
 }
 

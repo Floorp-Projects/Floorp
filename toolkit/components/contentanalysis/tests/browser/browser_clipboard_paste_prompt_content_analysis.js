@@ -60,6 +60,11 @@ async function testClipboardPaste(allowPaste) {
   );
   is(mockCA.calls.length, 1, "Correct number of calls to Content Analysis");
   assertContentAnalysisRequest(mockCA.calls[0], CLIPBOARD_TEXT_STRING);
+  is(
+    mockCA.browsingContextsForURIs.length,
+    1,
+    "Correct number of calls to getURIForBrowsingContext()"
+  );
 
   BrowserTestUtils.removeTab(tab);
 }

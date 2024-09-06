@@ -216,6 +216,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
         mResolver;
   };
   static bool MightBeActive();
+  // Find the outermost browsing context that has same-origin access to
+  // aBrowsingContext, and this is the URL we will pass to the Content Analysis
+  // agent.
+  static nsCOMPtr<nsIURI> GetURIForBrowsingContext(
+      dom::CanonicalBrowsingContext* aBrowsingContext);
   static bool CheckClipboardContentAnalysisSync(
       nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
       const nsCOMPtr<nsITransferable>& trans, int32_t aClipboardType);
