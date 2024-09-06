@@ -47,6 +47,7 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ClipboardContentAnalysisParent.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/Casting.h"
@@ -1216,6 +1217,65 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {
   }
 
   return docShell;
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvCreateClipboardContentAnalysis() {
+  Endpoint<PClipboardContentAnalysisParent> parentEndpoint;
+  Endpoint<PClipboardContentAnalysisChild> childEndpoint;
+
+  if (mClipboardContentAnalysisCreated) {
+    return IPC_FAIL(this, "ClipboardContentAnalysisParent already created");
+  }
+
+  nsresult rv;
+  rv = PClipboardContentAnalysis::CreateEndpoints(
+      base::GetCurrentProcId(), OtherPid(), &parentEndpoint, &childEndpoint);
+  if (NS_FAILED(rv)) {
+    return IPC_FAIL(this, "CreateEndpoints failed");
+  }
+
+  if (!mClipboardContentAnalysisThread) {
+    rv = NS_NewNamedThread("BkgrndClipboard",
+                           getter_AddRefs(mClipboardContentAnalysisThread));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return IPC_FAIL(this, "NS_NewNamedThread failed");
+    }
+  }
+
+  RefPtr<ContentParent> contentParent = this;
+  // Bind the new endpoint to the backgroundClipboardContentAnalysis thread,
+  // then send them from the main thread.
+  rv = NS_DispatchToThreadQueue(
+      NS_NewRunnableFunction(
+          "Create ClipboardContentAnalysisParent",
+          [contentParent = std::move(contentParent),
+           parentEndpoint = std::move(parentEndpoint),
+           childEndpoint = std::move(childEndpoint)]() mutable {
+            RefPtr<ClipboardContentAnalysisParent> parentActor =
+                new ClipboardContentAnalysisParent();
+            parentEndpoint.Bind(parentActor, nullptr);
+            DebugOnly<nsresult> rv = NS_DispatchToMainThread(
+                NS_NewRunnableFunction(
+                    "SendInitClipboardContentAnalysis",
+                    [contentParent = std::move(contentParent),
+                     childEndpoint = std::move(childEndpoint)]() mutable {
+                      DebugOnly<bool> success =
+                          contentParent->SendInitClipboardContentAnalysis(
+                              std::move(childEndpoint));
+                      MOZ_ASSERT(success,
+                                 "SendInitClipboardContentAnalysis failed");
+                    }),
+                0);
+            MOZ_ASSERT(NS_SUCCEEDED(rv),
+                       "Failed to dispatch "
+                       "SendInitClipboardContentAnalysis");
+          }),
+      mClipboardContentAnalysisThread, EventQueuePriority::Normal);
+  if (NS_FAILED(rv)) {
+    return IPC_FAIL(this, "NS_DispatchToThreadQueue failed");
+  }
+  mClipboardContentAnalysisCreated = true;
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateGMPService() {
@@ -2877,6 +2937,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType)
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
       mGMPCreated(false),
+      mClipboardContentAnalysisCreated(false),
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mBlockShutdownCalled(false),
 #endif
@@ -3468,10 +3529,8 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
   return IPC_OK();
 }
 
-namespace {
-
-static Result<nsCOMPtr<nsITransferable>, nsresult> CreateTransferable(
-    const nsTArray<nsCString>& aTypes) {
+/* static */ Result<nsCOMPtr<nsITransferable>, nsresult>
+ContentParent::CreateClipboardTransferable(const nsTArray<nsCString>& aTypes) {
   nsresult rv;
   nsCOMPtr<nsITransferable> trans =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
@@ -3493,8 +3552,6 @@ static Result<nsCOMPtr<nsITransferable>, nsresult> CreateTransferable(
 
   return std::move(trans);
 }
-
-}  // anonymous namespace
 
 mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
@@ -3524,7 +3581,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
   }
 
   // Create transferable
-  auto result = CreateTransferable(aTypes);
+  auto result = CreateClipboardTransferable(aTypes);
   if (result.isErr()) {
     *aTransferableDataOrError = result.unwrapErr();
     return IPC_OK();

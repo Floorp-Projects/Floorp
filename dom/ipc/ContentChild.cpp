@@ -24,6 +24,7 @@
 #include "imgLoader.h"
 #include "ScrollingMetrics.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ClipboardContentAnalysisChild.h"
 #include "mozilla/ClipboardReadRequestChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/HangDetails.h"
@@ -1516,6 +1517,14 @@ bool ContentChild::DeallocPCycleCollectWithLogsChild(
 mozilla::ipc::IPCResult ContentChild::RecvInitGMPService(
     Endpoint<PGMPServiceChild>&& aGMPService) {
   if (!GMPServiceChild::Create(std::move(aGMPService))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvInitClipboardContentAnalysis(
+    Endpoint<PClipboardContentAnalysisChild>&& aEndpoint) {
+  if (!ClipboardContentAnalysisChild::Create(std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

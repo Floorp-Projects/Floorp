@@ -7,15 +7,19 @@
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include "mozilla/ClipboardContentAnalysisChild.h"
 #include "mozilla/ClipboardReadRequestChild.h"
 #include "mozilla/ClipboardWriteRequestChild.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Unused.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsArrayUtils.h"
 #include "nsBaseClipboard.h"
+#include "nsIContentAnalysis.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -73,8 +77,29 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   aTransferable->FlavorsTransferableCanImport(types);
 
   IPCTransferableDataOrError transferableOrError;
-  ContentChild::GetSingleton()->SendGetClipboard(
-      types, aWhichClipboard, aWindowContext, &transferableOrError);
+  nsCOMPtr<nsIContentAnalysis> contentAnalysis =
+      mozilla::components::nsIContentAnalysis::Service();
+  Unused << NS_WARN_IF(!contentAnalysis);
+  bool contentAnalysisMightBeActive = false;
+  if (contentAnalysis) {
+    contentAnalysis->GetMightBeActive(&contentAnalysisMightBeActive);
+  }
+  if (MOZ_UNLIKELY(contentAnalysisMightBeActive)) {
+    if (!ClipboardContentAnalysisChild::GetSingleton()) {
+      if (!ContentChild::GetSingleton()->SendCreateClipboardContentAnalysis()) {
+        return NS_ERROR_FAILURE;
+      }
+      mozilla::SpinEventLoopUntil(
+          "Wait for ClipboardContentAnalysisChild creation"_ns,
+          [] { return ClipboardContentAnalysisChild::GetSingleton(); });
+    }
+    ClipboardContentAnalysisChild::GetSingleton()->SendGetClipboard(
+        types, aWhichClipboard, aWindowContext->InnerWindowId(),
+        &transferableOrError);
+  } else {
+    ContentChild::GetSingleton()->SendGetClipboard(
+        types, aWhichClipboard, aWindowContext, &transferableOrError);
+  }
 
   if (transferableOrError.type() == IPCTransferableDataOrError::Tnsresult) {
     MOZ_ASSERT(NS_FAILED(transferableOrError.get_nsresult()));
