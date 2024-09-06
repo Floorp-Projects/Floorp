@@ -160,9 +160,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvInitClipboardContentAnalysis(
-      Endpoint<PClipboardContentAnalysisChild>&& aEndpoint);
-
   mozilla::ipc::IPCResult RecvGMPsChanged(
       nsTArray<GMPCapabilityData>&& capabilities);
 

@@ -213,6 +213,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
     mozilla::MoveOnlyFunction<void(RefPtr<nsIContentAnalysisResult>&&)>
         mResolver;
   };
+  static bool MightBeActive();
   static bool CheckClipboardContentAnalysisSync(
       nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
       const nsCOMPtr<nsITransferable>& trans, int32_t aClipboardType);

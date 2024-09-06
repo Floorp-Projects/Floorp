@@ -578,7 +578,6 @@ child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
     async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
-    async InitClipboardContentAnalysis(Endpoint<PClipboardContentAnalysisChild> aEndpoint);
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
@@ -1084,7 +1083,7 @@ parent:
 
     async CreateGMPService();
 
-    async CreateClipboardContentAnalysis();
+    async CreateClipboardContentAnalysis(Endpoint<PClipboardContentAnalysisParent> aParentEndpoint);
 
     async InitStreamFilter(uint64_t channelId, nsString addonId)
         returns (Endpoint<PStreamFilterChild> aEndpoint);

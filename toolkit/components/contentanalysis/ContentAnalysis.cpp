@@ -1048,6 +1048,16 @@ ContentAnalysis::GetMightBeActive(bool* aMightBeActive) {
   return NS_OK;
 }
 
+/* static */ bool ContentAnalysis::MightBeActive() {
+  nsCOMPtr<nsIContentAnalysis> contentAnalysis =
+      mozilla::components::nsIContentAnalysis::Service();
+  NS_ENSURE_TRUE(contentAnalysis, false);
+
+  bool maybeActive = false;
+  return NS_SUCCEEDED(contentAnalysis->GetMightBeActive(&maybeActive)) &&
+         maybeActive;
+}
+
 NS_IMETHODIMP
 ContentAnalysis::GetIsSetByEnterprisePolicy(bool* aSetByEnterprise) {
   *aSetByEnterprise = mSetByEnterprise;

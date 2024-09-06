@@ -13,16 +13,10 @@ namespace mozilla {
 class ClipboardContentAnalysisChild final
     : public PClipboardContentAnalysisChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ClipboardContentAnalysisChild, override)
+  NS_INLINE_DECL_REFCOUNTING(ClipboardContentAnalysisChild, override)
 
-  static bool Create(Endpoint<PClipboardContentAnalysisChild>&& aEndpoint) {
-    MOZ_ASSERT(!sSingleton);
-    sSingleton = new ClipboardContentAnalysisChild();
-    DebugOnly<bool> success = aEndpoint.Bind(sSingleton);
-    MOZ_ASSERT(success);
-    return true;
-  }
-  static ClipboardContentAnalysisChild* GetSingleton() { return sSingleton; }
+  static ClipboardContentAnalysisChild* GetOrCreate();
+
   void ActorDestroy(ActorDestroyReason aReason) override final {
     // There's only one singleton, so remove our reference to it.
     sSingleton = nullptr;

@@ -1522,14 +1522,6 @@ mozilla::ipc::IPCResult ContentChild::RecvInitGMPService(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvInitClipboardContentAnalysis(
-    Endpoint<PClipboardContentAnalysisChild>&& aEndpoint) {
-  if (!ClipboardContentAnalysisChild::Create(std::move(aEndpoint))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
   mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
