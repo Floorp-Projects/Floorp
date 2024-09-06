@@ -58,6 +58,8 @@ class nsBaseDragSession : public nsIDragSession {
  public:
   NS_DECL_NSIDRAGSESSION
 
+  int32_t TakeChildProcessDragAction();
+
   void SetDragEndPoint(nsIntPoint aEndDragPoint) {
     mEndDragPoint =
         mozilla::LayoutDeviceIntPoint::FromUnknownPoint(aEndDragPoint);
@@ -67,7 +69,25 @@ class nsBaseDragSession : public nsIDragSession {
   }
 
  protected:
-  ~nsBaseDragSession() = default;
+  ~nsBaseDragSession();
+
+  // Returns true if a drag event was dispatched to a child process after
+  // the previous TakeDragEventDispatchedToChildProcess() call.
+  bool TakeDragEventDispatchedToChildProcess() {
+    bool retval = mDragEventDispatchedToChildProcess;
+    mDragEventDispatchedToChildProcess = false;
+    return retval;
+  }
+
+  /**
+   * Free resources contained in DataTransferItems that aren't needed by JS.
+   */
+  void DiscardInternalTransferData();
+
+  /**
+   * If the drag image is a popup, open the popup when the drag begins.
+   */
+  void OpenDragPopup();
 
   RefPtr<mozilla::dom::WindowContext> mSourceWindowContext;
   RefPtr<mozilla::dom::WindowContext> mSourceTopWindowContext;
@@ -89,6 +109,10 @@ class nsBaseDragSession : public nsIDragSession {
   // set if the image in mImage is a popup. If this case, the popup will be
   // opened and moved instead of using a drag image.
   nsCOMPtr<mozilla::dom::Element> mDragPopup;
+
+  // the screen position where drag gesture occurred, used for positioning the
+  // drag image.
+  mozilla::CSSIntPoint mScreenPosition;
 
   // The position relative to the top level widget where the drag ended.
   mozilla::LayoutDeviceIntPoint mEndDragPoint;
@@ -134,8 +158,6 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
   NS_DECL_NSIDRAGSERVICE
 
   uint16_t GetInputSource() { return mInputSource; }
-
-  int32_t TakeChildProcessDragAction();
 
   using nsIDragService::GetCurrentSession;
 
@@ -191,24 +213,6 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
                             mozilla::LayoutDeviceIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface);
 
-  /**
-   * If the drag image is a popup, open the popup when the drag begins.
-   */
-  void OpenDragPopup();
-
-  /**
-   * Free resources contained in DataTransferItems that aren't needed by JS.
-   */
-  void DiscardInternalTransferData();
-
-  // Returns true if a drag event was dispatched to a child process after
-  // the previous TakeDragEventDispatchedToChildProcess() call.
-  bool TakeDragEventDispatchedToChildProcess() {
-    bool retval = mDragEventDispatchedToChildProcess;
-    mDragEventDispatchedToChildProcess = false;
-    return retval;
-  }
-
   virtual bool IsMockService() { return false; }
 
   // true if in EndDragSession
@@ -222,10 +226,6 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
 
   // remote drag data
   RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
-
-  // the screen position where drag gesture occurred, used for positioning the
-  // drag image.
-  mozilla::CSSIntPoint mScreenPosition;
 
   uint32_t mSuppressLevel;
 
