@@ -79,7 +79,7 @@ add_task(async function () {
     await new Promise(resolve => setTimeout(resolve, 100));
   } finally {
     removeEventListener("popupshown", tooltipNotExpected, true);
-    dragService.endDragSession(true);
+    dragService.getCurrentSession().endDragSession(true);
   }
 
   await BrowserTestUtils.synthesizeMouse(

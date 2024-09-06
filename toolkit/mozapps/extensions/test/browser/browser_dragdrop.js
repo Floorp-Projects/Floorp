@@ -160,7 +160,7 @@ async function simulateDragAndDrop(win, dragData) {
     { _domDispatchOnly: true }
   );
 
-  dragService.endDragSession(true);
+  dragService.getDragSession(win).endDragSession(true);
 }
 
 // Simulates dropping a URL onto the manager

@@ -165,11 +165,12 @@ nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                           uint32_t aKeyModifiers) {
   java::GeckoDragAndDrop::EndDragSession();
 
-  nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
+  nsresult rv =
+      nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mTransferable = nullptr;
   return rv;
 }

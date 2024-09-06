@@ -685,7 +685,6 @@ function getDragService() {
  *                      synthesize DOM events basically.
  */
 function _maybeEndDragSession(left, top, aEvent, aWindow) {
-  const dragService = getDragService();
   let utils = _getDOMWindowUtils(aWindow);
   const dragSession = utils.dragSession;
   if (!dragSession) {
@@ -696,7 +695,7 @@ function _maybeEndDragSession(left, top, aEvent, aWindow) {
   // need to synthesize a "drop" event or call setDragEndPointForTests here to
   // set proper left/top to `dragend` event.
   try {
-    dragService.endDragSession(false, _parseModifiers(aEvent, aWindow));
+    dragSession.endDragSession(false, _parseModifiers(aEvent, aWindow));
   } catch (e) {}
   return true;
 }
@@ -3154,7 +3153,7 @@ function synthesizeDragOver(
   const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(
     _EU_Ci.nsIObserverService
   );
-  let utils = _getDOMWindowUtils(aDestWindow);
+  let utils = _getDOMWindowUtils(aWindow);
   var sess = utils.dragSession;
 
   // This method runs before other callbacks, and acts as a way to inject the
@@ -3363,7 +3362,9 @@ function synthesizeDrop(
       aDragEvent
     );
   } finally {
-    ds.endDragSession(true, _parseModifiers(aDragEvent));
+    let srcWindowUtils = _getDOMWindowUtils(aWindow);
+    const srcDragSession = srcWindowUtils.dragSession;
+    srcDragSession.endDragSession(true, _parseModifiers(aDragEvent));
   }
 }
 
@@ -3532,10 +3533,6 @@ async function synthesizePlainDragAndDrop(aParams) {
       )}`
     );
   }
-
-  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
-    _EU_Ci.nsIDragService
-  );
 
   const editingHost = (() => {
     if (!srcElement.matches(":read-write")) {
@@ -3884,7 +3881,10 @@ async function synthesizePlainDragAndDrop(aParams) {
       }
       srcWindow.addEventListener("dragend", onDragEnd, { capture: true });
       try {
-        ds.endDragSession(true, _parseModifiers(dragEvent));
+        srcWindowUtils.dragSession.endDragSession(
+          true,
+          _parseModifiers(dragEvent)
+        );
         if (!expectSrcElementDisconnected && !dragEndEvent) {
           // eslint-disable-next-line no-unsafe-finally
           throw new Error(
@@ -4427,8 +4427,7 @@ async function synthesizeMockDragAndDrop(aParams) {
           !expectNoDragTargetEvents
             ? `received as a ${expectedMessage} event`
             : "ignored"
-        }` +
-        `, followed by a dragend event`
+        }, followed by a dragend event`
     );
 
     currentTargetScreenPos = [

@@ -71,7 +71,7 @@ function fireDrop(element) {
     event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
     fireEvent(element, event);
   } finally {
-    ds.endDragSession(false);
+    ds.getCurrentSession().endDragSession(false);
     ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
   }
 }

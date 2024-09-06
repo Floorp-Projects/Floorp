@@ -30,6 +30,9 @@ class nsDragSession : public nsBaseDragService {
   void SetIDataObject(IDataObject* aDataObj);
   IDataObject* GetDataObject() { return mDataObject; }
 
+  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
+      bool aDoneDrag, uint32_t aKeyModifiers) override;
+
  protected:
   // determine if we have a single data object or one of our private
   // collections
@@ -54,9 +57,6 @@ class nsDragService final : public nsDragSession {
       nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType);
-
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
-                                               uint32_t aKeyModifiers) override;
 
   // native impl.
   MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(nsIWidget* aWidget,

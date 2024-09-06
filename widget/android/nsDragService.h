@@ -34,6 +34,9 @@ class nsDragSession : public nsBaseDragService {
 
   virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
+  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
+      bool aDoneDrag, uint32_t aKeyModifiers) override;
+
  protected:
   virtual ~nsDragSession() = default;
 
@@ -52,9 +55,6 @@ class nsDragService final : public nsDragSession {
   static already_AddRefed<nsDragService> GetInstance();
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
-                                               uint32_t aKeyModifiers) override;
 
   static void SetDropData(
       mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
