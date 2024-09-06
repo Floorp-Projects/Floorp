@@ -34,7 +34,7 @@ ipc::IPCResult ClipboardContentAnalysisParent::RecvGetClipboard(
   // to use in this case.
   mozilla::Maybe<mozilla::Variant<IPCTransferableData, nsresult>>
       maybeTransferableResult;
-  std::atomic<bool> transferableResultSet = false;
+  bool transferableResultSet = false;
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [actorThread, aTypes = std::move(aTypes), aWhichClipboard,
@@ -44,21 +44,21 @@ ipc::IPCResult ClipboardContentAnalysisParent::RecvGetClipboard(
         // Make sure we reply to the actor thread on error.
         auto sendRv = MakeScopeExit([&]() {
           maybeTransferableResult = Some(AsVariant(rv));
-          transferableResultSet = true;
-          // Wake up the actor thread so SpinEventLoopUntil() can check its
-          // condition again.
-          NS_DispatchToThreadQueue(NS_NewRunnableFunction(__func__, []() {}),
-                                   actorThread, EventQueuePriority::Normal);
+          // Stop the actor thread's SpinEventLoopUntil().
+          NS_DispatchToThreadQueue(
+              NS_NewRunnableFunction(
+                  __func__,
+                  [&transferableResultSet]() { transferableResultSet = true; }),
+              actorThread, EventQueuePriority::Normal);
         });
         nsCOMPtr<nsIClipboard> clipboard;
         RefPtr<dom::WindowGlobalParent> window =
             dom::WindowGlobalParent::GetByInnerWindowId(
                 aRequestingWindowContextId);
         // We expect content processes to always pass a non-null window so
-        // Content Analysis can analyze it. (if Content Analysis is
-        // active) There may be some cases when a window is closing, etc.,
-        // in which case returning no clipboard content should not be a
-        // problem.
+        // Content Analysis can analyze it (if Content Analysis is active).
+        // There may be some cases when a window is closing, etc., in which case
+        // returning no clipboard content should not be a problem.
         if (!window) {
           rv = NS_ERROR_FAILURE;
           return;
@@ -97,6 +97,10 @@ ipc::IPCResult ClipboardContentAnalysisParent::RecvGetClipboard(
                 [actorThread, transferable, aRequestingWindowContextId,
                  &maybeTransferableResult, &transferableResultSet](
                     RefPtr<nsIContentAnalysisResult>&& aResult) {
+                  // We need to set maybeTransferableResult on the main thread
+                  // instead of the actor thread because some of the objects
+                  // that can be inside a maybeTransferableResult are not
+                  // thread-safe.
                   bool shouldAllow = aResult->GetShouldAllowContent();
                   if (!shouldAllow) {
                     maybeTransferableResult =
@@ -120,17 +124,14 @@ ipc::IPCResult ClipboardContentAnalysisParent::RecvGetClipboard(
                           window->BrowsingContext()->GetContentParent());
                     }
                   }
-                  transferableResultSet = true;
 
-                  // Setting maybeTransferableResult is done on the main thread
-                  // instead of inside the runnable function here because some
-                  // of the objects that can be inside a maybeTransferableResult
-                  // are not thread-safe.
-                  // Wake up the actor thread so SpinEventLoopUntil() can check
-                  // its condition again.
+                  // Stop the actor thread's SpinEventLoopUntil().
                   NS_DispatchToThreadQueue(
-                      NS_NewRunnableFunction(__func__, []() {}), actorThread,
-                      EventQueuePriority::Normal);
+                      NS_NewRunnableFunction(__func__,
+                                             [&transferableResultSet]() {
+                                               transferableResultSet = true;
+                                             }),
+                      actorThread, EventQueuePriority::Normal);
                 });
 
         contentanalysis::ContentAnalysis::CheckClipboardContentAnalysis(
@@ -142,7 +143,7 @@ ipc::IPCResult ClipboardContentAnalysisParent::RecvGetClipboard(
 
   mozilla::SpinEventLoopUntil(
       "Waiting for clipboard and content analysis"_ns,
-      [&transferableResultSet] { return transferableResultSet.load(); });
+      [&transferableResultSet] { return transferableResultSet; });
 
   NS_ASSERTION(maybeTransferableResult.isSome(),
                "maybeTransferableResult should be set when "
