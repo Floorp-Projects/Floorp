@@ -181,10 +181,9 @@ void nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
   // DRAGDROP_ACTION_UNINITIALIZED, it means that the last event was sent
   // to the child process and this event is also being sent to the child
   // process. In this case, use the last event's action instead.
-  nsDragService* dragService = static_cast<nsDragService*>(mDragService.get());
   currSession->GetDragAction(&geckoAction);
 
-  int32_t childDragAction = dragService->TakeChildProcessDragAction();
+  int32_t childDragAction = currSession->TakeChildProcessDragAction();
   if (childDragAction != nsIDragService::DRAGDROP_ACTION_UNINITIALIZED) {
     geckoAction = childDragAction;
   }

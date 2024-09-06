@@ -91,7 +91,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
     mTransferable = transferable;
 
     nsBaseDragService::StartDragSession();
-    nsBaseDragService::OpenDragPopup();
+    OpenDragPopup();
 
     auto bitmap = CreateDragImage(mSourceNode, aRegion);
     window->StartDragAndDrop(bitmap);

@@ -251,7 +251,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   [dragItem setDraggingFrame:localDragRect contents:image];
 
   nsBaseDragService::StartDragSession();
-  nsBaseDragService::OpenDragPopup();
+  OpenDragPopup();
 
   NSDraggingSession* draggingSession = [mNativeDragView
       beginDraggingSessionWithItems:[NSArray
