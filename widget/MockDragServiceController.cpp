@@ -142,10 +142,9 @@ MockDragServiceController::SendEvent(
     ds->StartDragSession();
   }
 
-  nsCOMPtr<nsIDragSession> currentDragSession;
-  nsresult rv = ds->GetCurrentSession(getter_AddRefs(currentDragSession));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDragSession> currentDragSession = ds->GetCurrentSession(widget);
 
+  nsresult rv;
   switch (aEventType) {
     case EventType::eMouseDown:
     case EventType::eMouseMove:
