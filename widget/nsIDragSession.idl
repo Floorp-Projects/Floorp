@@ -138,6 +138,12 @@ interface nsIDragSession : nsISupports
   void updateDragImage(in Node aImage, in long aImageX, in long aImageY);
 
   /**
+   * Tell Gecko that this session is generated for automated testing.
+   * This should be called immediately after StartDragSession when testing.
+   */
+  [noscript] void InitForTests(in uint32_t aAllowedEffect);
+
+  /**
    * Returns effects allowed at starting the session for tests.
    */
   [notxpcom, nostdcall] unsigned long getEffectAllowedForTests();

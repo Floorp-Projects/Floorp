@@ -44,9 +44,10 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
-nsDragService::nsDragService() {}
-
-nsDragService::~nsDragService() {}
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsIDragSession> sess = new nsDragSession();
+  return sess.forget();
+}
 
 NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
                                            const Maybe<CSSIntRegion>& aRegion,
@@ -177,7 +178,7 @@ NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-nsresult nsDragService::InvokeDragSessionImpl(
+nsresult nsDragSession::InvokeDragSessionImpl(
     nsIWidget* aWidget, nsIArray* aTransferableArray,
     const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -250,7 +251,6 @@ nsresult nsDragService::InvokeDragSessionImpl(
   [pbItem release];
   [dragItem setDraggingFrame:localDragRect contents:image];
 
-  nsBaseDragService::StartDragSession(aWidget);
   OpenDragPopup();
 
   mNSDraggingSession = [mNativeDragView

@@ -72,19 +72,21 @@ uint32_t GetSuppressLevel() {
   return static_cast<nsBaseDragService*>(svc.get())->GetSuppressLevel();
 }
 
-nsBaseDragService::nsBaseDragService()
-    : mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-      mSuppressLevel(0) {}
-
+nsBaseDragService::nsBaseDragService() = default;
 nsBaseDragService::~nsBaseDragService() = default;
-
-NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService, nsIDragSession)
 
 nsBaseDragSession::nsBaseDragSession() {
   TakeSessionBrowserListFromService();
 }
-
 nsBaseDragSession::~nsBaseDragSession() = default;
+
+NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService)
+NS_IMPL_ISUPPORTS(nsBaseDragSession, nsIDragSession)
+
+NS_IMETHODIMP nsBaseDragService::GetIsMockService(bool* aRet) {
+  *aRet = false;
+  return NS_OK;
+}
 
 //---------------------------------------------------------
 NS_IMETHODIMP
@@ -309,7 +311,7 @@ NS_IMETHODIMP nsBaseDragSession::SetDragEndPointForTests(int32_t aScreenX,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsBaseDragService::InvokeDragSession(
+nsresult nsBaseDragSession::InvokeDragSession(
     nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
     nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
     nsIArray* aTransferableArray, uint32_t aActionType,
@@ -317,7 +319,6 @@ nsresult nsBaseDragService::InvokeDragSession(
   AUTO_PROFILER_LABEL("nsBaseDragService::InvokeDragSession", OTHER);
 
   NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   // stash the document of the dom node
   mSourceDocument = aDOMNode->OwnerDoc();
@@ -353,8 +354,11 @@ nsresult nsBaseDragService::InvokeDragSession(
     //
     // The best way to avoid this is to use the mock service in tests.  See
     // synthesizeMockDragAndDrop.
+    nsCOMPtr<nsIDragService> dragService =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    MOZ_ASSERT(dragService);
     MOZ_ASSERT(
-        !xpc::IsInAutomation() || IsMockService(),
+        !xpc::IsInAutomation() || dragService->IsMockService(),
         "About to start drag-drop native loop on which will prevent later "
         "tests from running properly.");
   }
@@ -395,10 +399,7 @@ nsresult nsBaseDragService::InvokeDragSession(
     // Set mDoingDrag so that EndDragSession cleans up and sends the dragend
     // event after the aborted drag.
     mDoingDrag = true;
-    RefPtr<nsIDragSession> session = GetCurrentSession(aWidget);
-    if (session) {
-      session->EndDragSession(true, 0);
-    }
+    EndDragSession(true, 0);
   }
 
   return rv;
@@ -418,9 +419,27 @@ nsBaseDragService::InvokeDragSessionWithImage(
   NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mSessionIsSynthesizedForTests =
+  RefPtr<nsBaseDragSession> session =
+      CreateDragSession().downcast<nsBaseDragSession>();
+  if (XRE_IsParentProcess()) {
+    mCurrentParentDragSession = session;
+  }
+  bool isSynthesized =
       aDragEvent->WidgetEventPtr()->mFlags.mIsSynthesizedForTests &&
       !GetNeverAllowSessionIsSynthesizedForTests();
+  return session->InitWithImage(widget, aDOMNode, aPrincipal, aCsp,
+                                aCookieJarSettings, aTransferableArray,
+                                aActionType, aImage, aImageX, aImageY,
+                                aDragEvent, aDataTransfer, isSynthesized);
+}
+
+nsresult nsBaseDragSession::InitWithImage(
+    nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+    nsIArray* aTransferableArray, uint32_t aActionType, nsINode* aImage,
+    int32_t aImageX, int32_t aImageY, DragEvent* aDragEvent,
+    DataTransfer* aDataTransfer, bool aIsSynthesizedForTests) {
+  mSessionIsSynthesizedForTests = aIsSynthesizedForTests;
   mDataTransfer = aDataTransfer;
   mSelection = nullptr;
   mHasImage = true;
@@ -454,7 +473,7 @@ nsBaseDragService::InvokeDragSessionWithImage(
   }
 
   nsresult rv = InvokeDragSession(
-      widget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
+      aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
       aTransferableArray, aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   mRegion = Nothing();
   return rv;
@@ -474,9 +493,27 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
   NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mSessionIsSynthesizedForTests =
+  RefPtr<nsBaseDragSession> session =
+      CreateDragSession().downcast<nsBaseDragSession>();
+  if (XRE_IsParentProcess()) {
+    mCurrentParentDragSession = session;
+  }
+  bool isSynthesized =
       aDragEvent->WidgetEventPtr()->mFlags.mIsSynthesizedForTests &&
       !GetNeverAllowSessionIsSynthesizedForTests();
+  return session->InitWithRemoteImage(widget, aDOMNode, aPrincipal, aCsp,
+                                      aCookieJarSettings, aTransferableArray,
+                                      aActionType, aDragStartData, aDragEvent,
+                                      aDataTransfer, isSynthesized);
+}
+
+nsresult nsBaseDragSession::InitWithRemoteImage(
+    nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+    nsIArray* aTransferableArray, uint32_t aActionType,
+    RemoteDragStartData* aDragStartData, DragEvent* aDragEvent,
+    DataTransfer* aDataTransfer, bool aIsSynthesizedForTests) {
+  mSessionIsSynthesizedForTests = aIsSynthesizedForTests;
   mDataTransfer = aDataTransfer;
   mSelection = nullptr;
   mHasImage = true;
@@ -491,7 +528,7 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
   mInputSource = aDragEvent->InputSource(CallerType::System);
 
   nsresult rv = InvokeDragSession(
-      widget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
+      aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
       aTransferableArray, aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   mRegion = Nothing();
   return rv;
@@ -511,9 +548,26 @@ nsBaseDragService::InvokeDragSessionWithSelection(
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mSessionIsSynthesizedForTests =
+  RefPtr<nsBaseDragSession> session =
+      CreateDragSession().downcast<nsBaseDragSession>();
+  if (XRE_IsParentProcess()) {
+    mCurrentParentDragSession = session;
+  }
+  bool isSynthesized =
       aDragEvent->WidgetEventPtr()->mFlags.mIsSynthesizedForTests &&
       !GetNeverAllowSessionIsSynthesizedForTests();
+  return session->InitWithSelection(widget, aSelection, aPrincipal, aCsp,
+                                    aCookieJarSettings, aTransferableArray,
+                                    aActionType, aDragEvent, aDataTransfer,
+                                    isSynthesized);
+}
+
+nsresult nsBaseDragSession::InitWithSelection(
+    nsIWidget* aWidget, Selection* aSelection, nsIPrincipal* aPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+    nsIArray* aTransferableArray, uint32_t aActionType, DragEvent* aDragEvent,
+    DataTransfer* aDataTransfer, bool aIsSynthesizedForTests) {
+  mSessionIsSynthesizedForTests = aIsSynthesizedForTests;
   mDataTransfer = aDataTransfer;
   mSelection = aSelection;
   mHasImage = true;
@@ -535,7 +589,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(
   mSourceTopWindowContext =
       mSourceWindowContext ? mSourceWindowContext->TopWindowContext() : nullptr;
 
-  return InvokeDragSession(widget, node, aPrincipal, aCsp, aCookieJarSettings,
+  return InvokeDragSession(aWidget, node, aPrincipal, aCsp, aCookieJarSettings,
                            aTransferableArray, aActionType,
                            nsIContentPolicy::TYPE_OTHER);
 }
@@ -544,15 +598,17 @@ nsBaseDragService::InvokeDragSessionWithSelection(
 NS_IMETHODIMP
 nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
                                      nsIDragSession** aSession) {
-  if (!aSession) return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!aSession) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  // "this" also implements a drag session, so say we are one but only
-  // if there is currently a drag going on.
-  if (!mSuppressLevel && mDoingDrag) {
-    *aSession = this;
-    NS_ADDREF(*aSession);  // addRef because we're a "getter"
-  } else
+  if (!mSuppressLevel && mCurrentParentDragSession) {
+    RefPtr<nsIDragSession> session = mCurrentParentDragSession;
+    session.forget(aSession);
+  } else {
     *aSession = nullptr;
+  }
 
   return NS_OK;
 }
@@ -560,16 +616,26 @@ nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::StartDragSession(nsISupports* aWidgetProvider) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   if (!aWidgetProvider) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (mDoingDrag) {
-    return NS_ERROR_FAILURE;
+  if (mCurrentParentDragSession) {
+    return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  mDoingDrag = true;
-  // By default dispatch drop also to content.
-  mOnlyChromeDrop = false;
+  RefPtr<nsIDragSession> session = CreateDragSession();
+  if (XRE_IsParentProcess()) {
+    mCurrentParentDragSession = session;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseDragSession::InitForTests(uint32_t aAllowedEffect) {
+  mDragAction = aAllowedEffect;
+  mEffectAllowedForTests = aAllowedEffect;
+  mSessionIsSynthesizedForTests = true;
   return NS_OK;
 }
 
@@ -578,12 +644,13 @@ NS_IMETHODIMP nsBaseDragService::StartDragSessionForTests(
   // This method must set mSessionIsSynthesizedForTests
   MOZ_ASSERT(!mNeverAllowSessionIsSynthesizedForTests);
 
-  if (NS_WARN_IF(NS_FAILED(StartDragSession(aWidgetProvider)))) {
-    return NS_ERROR_FAILURE;
-  }
-  mDragAction = aAllowedEffect;
-  mEffectAllowedForTests = aAllowedEffect;
-  mSessionIsSynthesizedForTests = true;
+  nsresult rv = StartDragSession(aWidgetProvider);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDragSession> session;
+  GetCurrentSession(aWidgetProvider, getter_AddRefs(session));
+  MOZ_ASSERT(session);
+  session->InitForTests(aAllowedEffect);
   return NS_OK;
 }
 
@@ -660,6 +727,11 @@ nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
   // CC to reclaim the memory.
   if (XRE_IsParentProcess()) {
     DiscardInternalTransferData();
+    nsCOMPtr<nsIDragService> svc =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    if (svc) {
+      static_cast<nsBaseDragService*>(svc.get())->ClearCurrentParentDragSession();
+    }
   }
 
   mDoingDrag = false;
@@ -788,7 +860,7 @@ static PresShell* GetPresShellForContent(nsINode* aDOMNode) {
   return nullptr;
 }
 
-nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
+nsresult nsBaseDragSession::DrawDrag(nsINode* aDOMNode,
                                      const Maybe<CSSIntRegion>& aRegion,
                                      CSSIntPoint aScreenPosition,
                                      LayoutDeviceIntRect* aScreenDragRect,
@@ -940,7 +1012,7 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
   return NS_OK;
 }
 
-nsresult nsBaseDragService::DrawDragForImage(
+nsresult nsBaseDragSession::DrawDragForImage(
     nsPresContext* aPresContext, nsIImageLoadingContent* aImageLoader,
     HTMLCanvasElement* aCanvas, LayoutDeviceIntRect* aScreenDragRect,
     RefPtr<SourceSurface>* aSurface) {
@@ -1005,7 +1077,10 @@ nsresult nsBaseDragService::DrawDragForImage(
 
 NS_IMETHODIMP
 nsBaseDragService::Suppress() {
-  EndDragSession(false, 0);
+  RefPtr<nsIDragSession> session = mCurrentParentDragSession;
+  if (session) {
+    session->EndDragSession(false, 0);
+  }
   ++mSuppressLevel;
   return NS_OK;
 }
@@ -1075,28 +1150,20 @@ static bool RemoveAllBrowsers(nsTArray<nsWeakPtr>& aBrowsers) {
 }
 
 bool nsBaseDragService::MaybeAddBrowser(BrowserParent* aBP) {
-/*
-  // TODO: until nsBaseDragService and nsBaseDragSession separate
-  // (part 21), they automatically share mBrowsers, so skip this.
   nsCOMPtr<nsIDragSession> session;
   GetCurrentSession(nullptr, getter_AddRefs(session));
   if (session) {
     return session->MaybeAddBrowser(aBP);
   }
-*/
   return ::MaybeAddBrowser(mBrowsers, aBP);
 }
 
 bool nsBaseDragService::RemoveAllBrowsers() {
-/*
-  // TODO: until nsBaseDragService and nsBaseDragSession separate
-  // (part 21), they automatically share mBrowsers, so skip this.
   nsCOMPtr<nsIDragSession> session;
   GetCurrentSession(nullptr, getter_AddRefs(session));
   if (session) {
     return session->RemoveAllBrowsers();
   }
-*/
   return ::RemoveAllBrowsers(mBrowsers);
 }
 
@@ -1171,4 +1238,34 @@ void nsBaseDragSession::TakeSessionBrowserListFromService() {
       do_GetService("@mozilla.org/widget/dragservice;1");
   NS_ENSURE_TRUE_VOID(svc);
   mBrowsers = static_cast<nsBaseDragService*>(svc.get())->TakeSessionBrowserList();
+}
+
+/* static */
+nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(nsISupports* aWidgetProvider) {
+  nsCOMPtr<nsIWidget> widget = do_QueryObject(aWidgetProvider);
+  if (widget) {
+    return widget;
+  }
+
+  nsPIDOMWindowOuter* outer;
+  if (aWidgetProvider) {
+    nsCOMPtr<mozIDOMWindow> window = do_GetInterface(aWidgetProvider);
+    NS_ENSURE_TRUE(window, nullptr);
+    RefPtr<nsPIDOMWindowInner> innerWin = nsGlobalWindowInner::Cast(window);
+    NS_ENSURE_TRUE(innerWin, nullptr);
+    outer = innerWin->GetOuterWindow();
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> winInner;
+    winInner = do_QueryInterface(GetEntryGlobal());
+    NS_ENSURE_TRUE(winInner, nullptr);
+    outer = winInner->GetOuterWindow();
+  }
+  NS_ENSURE_TRUE(outer, nullptr);
+  nsIDocShell* docShell = outer->GetDocShell();
+  NS_ENSURE_TRUE(docShell, nullptr);
+  PresShell* presShell = docShell->GetPresShell();
+  NS_ENSURE_TRUE(presShell, nullptr);
+  nsViewManager* vm = presShell->GetViewManager();
+  NS_ENSURE_TRUE(vm, nullptr);
+  return vm->GetRootWidget();
 }

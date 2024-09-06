@@ -16,6 +16,7 @@
 #include "nsClipboard.h"
 #include "KeyboardLayout.h"
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
@@ -152,8 +153,13 @@ void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
 
-  event.mInputSource =
-      static_cast<nsBaseDragService*>(mDragService.get())->GetInputSource();
+  nsDragSession* currSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
+  if (currSession) {
+    event.mInputSource = currSession->GetInputSource();
+  } else {
+    event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE;
+  }
 
   mWidget->DispatchInputEvent(&event);
 }
@@ -426,14 +432,12 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
     return S_OK;  // DragCancel() was called.
   }
 
-  // Let the win drag service know whether this session experienced
+  // Let the win drag session know whether it experienced
   // a drop event within the application. Drop will not oocur if the
   // drop landed outside the app. (used in tab tear off, bug 455884)
-  RefPtr<nsDragService> winDragService =
-      static_cast<nsDragService*>(mDragService.get());
-  winDragService->SetDroppedLocal();
+  currentDragSession->SetDroppedLocal();
 
-  // tell the drag service we're done with the session
+  // Tell the drag session we're done with it.
   // Use GetMessagePos to get the position of the mouse at the last message
   // seen by the event loop. (Bug 489729)
   DWORD pos = ::GetMessagePos();

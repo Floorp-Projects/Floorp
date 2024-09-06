@@ -17,8 +17,8 @@ namespace mozilla::test {
 
 NS_IMPL_ISUPPORTS(MockDragServiceController, nsIMockDragServiceController)
 
-class MockDragService : public nsBaseDragService {
- public:
+class MockDragSession : public nsBaseDragSession {
+ protected:
   MOZ_CAN_RUN_SCRIPT nsresult
   InvokeDragSessionImpl(nsIWidget* aWidget, nsIArray* aTransferableArray,
                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
@@ -50,12 +50,24 @@ class MockDragService : public nsBaseDragService {
     // Note that, like in non-mocked DND, we do this regardless of whether
     // the source and target were the same widget -- in that case,
     // EndDragSession is just called twice.
-    mDragAction = DRAGDROP_ACTION_MOVE;
-    StartDragSession(aWidget);
+    mDragAction = nsIDragService::DRAGDROP_ACTION_MOVE;
     return NS_OK;
   }
+};
 
-  bool IsMockService() override { return true; }
+class MockDragService : public nsBaseDragService {
+ public:
+  NS_IMETHOD GetIsMockService(bool* aRet) override {
+    *aRet = true;
+    return NS_OK;
+  }
+  uint32_t mLastModifierKeyState = 0;
+
+ protected:
+  already_AddRefed<nsIDragSession> CreateDragSession() override {
+    RefPtr<nsIDragSession> session = new MockDragSession();
+    return session.forget();
+  }
 };
 
 static void SetDragEndPointFromScreenPoint(
