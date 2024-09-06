@@ -1980,22 +1980,18 @@ mozilla::ipc::IPCResult BrowserChild::RecvEndDragSession(
     const bool& aDoneDrag, const bool& aUserCancelled,
     const LayoutDeviceIntPoint& aDragEndPoint, const uint32_t& aKeyModifiers,
     const uint32_t& aDropEffect) {
-  nsCOMPtr<nsIDragService> dragService =
-      do_GetService("@mozilla.org/widget/dragservice;1");
-  if (dragService) {
-    RefPtr<nsIDragSession> dragSession = GetDragSession();
-    if (dragSession) {
-      if (aUserCancelled) {
-        dragSession->UserCancelled();
-      }
-
-      RefPtr<DataTransfer> dataTransfer = dragSession->GetDataTransfer();
-      if (dataTransfer) {
-        dataTransfer->SetDropEffectInt(aDropEffect);
-      }
-      dragSession->SetDragEndPoint(aDragEndPoint.x, aDragEndPoint.y);
+  RefPtr<nsIDragSession> dragSession = GetDragSession();
+  if (dragSession) {
+    if (aUserCancelled) {
+      dragSession->UserCancelled();
     }
-    dragService->EndDragSession(aDoneDrag, aKeyModifiers);
+
+    RefPtr<DataTransfer> dataTransfer = dragSession->GetDataTransfer();
+    if (dataTransfer) {
+      dataTransfer->SetDropEffectInt(aDropEffect);
+    }
+    dragSession->SetDragEndPoint(aDragEndPoint.x, aDragEndPoint.y);
+    dragSession->EndDragSession(aDoneDrag, aKeyModifiers);
   }
   return IPC_OK();
 }

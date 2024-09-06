@@ -2678,8 +2678,8 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
     return;
   }
 
-  if (aAction == java::sdk::DragEvent::ACTION_DRAG_ENDED) {
-    dragService->EndDragSession(false, 0);
+  if (dragSession && aAction == java::sdk::DragEvent::ACTION_DRAG_ENDED) {
+    dragSession->EndDragSession(false, 0);
     return;
   }
 
@@ -2708,7 +2708,7 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
           nsCOMPtr<nsINode> sourceNode;
           dragSession->GetSourceNode(getter_AddRefs(sourceNode));
           if (!sourceNode) {
-            dragService->EndDragSession(false, 0);
+            dragSession->EndDragSession(false, 0);
           }
           return;
         }
@@ -2744,12 +2744,12 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
         // initiated in a different app. End the drag session,
         // since we're done with it for now (until the user
         // drags back into mozilla).
-        dragService->EndDragSession(false, 0);
+        dragSession->EndDragSession(false, 0);
       }
       break;
     }
     case eDrop:
-      dragService->EndDragSession(true, 0);
+      dragSession->EndDragSession(true, 0);
       break;
     default:
       break;

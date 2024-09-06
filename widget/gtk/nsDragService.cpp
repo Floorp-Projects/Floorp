@@ -519,10 +519,7 @@ void DragData::Print() const {
 
 /* static */ int nsDragSession::sEventLoopDepth = 0;
 
-nsDragService::nsDragService()
-    : mScheduledTask(eDragTaskNone),
-      mTaskSource(0),
-      mScheduledTaskIsRunning(false) {
+nsDragService::nsDragService() {
   // We have to destroy the hidden widget before the event loop stops
   // running.
   nsCOMPtr<nsIObserverService> obsServ =
@@ -909,8 +906,8 @@ nsDragService::StartDragSession(nsISupports* aWidgetProvider) {
   return nsBaseDragService::StartDragSession(aWidgetProvider);
 }
 
-bool nsDragService::RemoveTempFiles() {
-  LOGDRAGSERVICE("nsDragService::RemoveTempFiles");
+bool nsDragSession::RemoveTempFiles() {
+  LOGDRAGSERVICE("nsDragSession::RemoveTempFiles");
 
   // We can not delete the temporary files immediately after the
   // drag has finished, because the target application might have not
@@ -940,14 +937,19 @@ bool nsDragService::RemoveTempFiles() {
   return false;
 }
 
-gboolean nsDragService::TaskRemoveTempFiles(gpointer data) {
+/* static */
+gboolean nsDragSession::TaskRemoveTempFiles(gpointer data) {
+  // data is a manually addrefed drag session from EndDragSession.
+  // We manually deref it here.
+  RefPtr<nsDragSession> session = static_cast<nsDragSession*>(data);
+  session.get()->Release();
   RefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
-  return dragService->RemoveTempFiles();
+  return session->RemoveTempFiles();
 }
 
-NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
-  LOGDRAGSERVICE("nsDragService::EndDragSession(%p) %d",
+nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                           uint32_t aKeyModifiers) {
+  LOGDRAGSERVICE("nsDragSession::EndDragSessionImpl(%p) %d",
                  mTargetDragContext.get(), aDoneDrag);
 
   if (sGrabWidget) {
@@ -971,10 +973,13 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   // start timer to remove temporary files
   if (mTemporaryFiles.Count() > 0 && !mTempFileTimerID) {
     LOGDRAGSERVICE("  queue removing of temporary files");
-    // |this| won't be used after nsDragService delete because the timer is
-    // removed in the nsDragService destructor.
-    mTempFileTimerID =
-        g_timeout_add(NS_DND_TMP_CLEANUP_TIMEOUT, TaskRemoveTempFiles, this);
+    // |this| won't be used after nsDragSession delete because the timer is
+    // removed in the nsDragSession destructor.
+    // Manually addref this and pass to TaskRemoveTempFiles where it is
+    // derefed.
+    AddRef();
+    mTempFileTimerID = g_timeout_add(NS_DND_TMP_CLEANUP_TIMEOUT,
+                                     TaskRemoveTempFiles, this);
     mTempFileUrls.Clear();
   }
 
@@ -988,7 +993,7 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   mPendingWindow = nullptr;
   mCachedDragContext = 0;
 
-  return nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
+  return nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
 }
 
 // nsIDragSession
@@ -2674,7 +2679,10 @@ gboolean nsDragService::RunScheduledTask() {
       // The drag that was initiated in a different app. End the drag
       // session, since we're done with it for now (until the user drags
       // back into this app).
-      EndDragSession(false, GetCurrentModifiers());
+      RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
+      if (session) {
+        session->EndDragSession(false, GetCurrentModifiers());
+      }
     }
   }
 
@@ -2696,7 +2704,10 @@ gboolean nsDragService::RunScheduledTask() {
     LOGDRAGSERVICE("  quit, selected task %s\n", GetDragServiceTaskName(task));
     if (task == eDragTaskSourceEnd) {
       // Dispatch drag end events.
-      EndDragSession(true, GetCurrentModifiers());
+      RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
+      if (session) {
+        session->EndDragSession(true, GetCurrentModifiers());
+      }
     }
 
     // Nothing more to do
@@ -2775,7 +2786,10 @@ gboolean nsDragService::RunScheduledTask() {
     }
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
-    EndDragSession(true, GetCurrentModifiers());
+    RefPtr<nsIDragSession> session = GetCurrentSession(mTargetWindow);
+    if (session) {
+      session->EndDragSession(true, GetCurrentModifiers());
+    }
   }
 
   // We're done with the drag context.

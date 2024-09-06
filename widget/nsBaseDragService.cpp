@@ -73,9 +73,7 @@ uint32_t GetSuppressLevel() {
 }
 
 nsBaseDragService::nsBaseDragService()
-    : mEndingSession(false),
-      mHasImage(false),
-      mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
+    : mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
       mSuppressLevel(0) {}
 
 nsBaseDragService::~nsBaseDragService() = default;
@@ -397,7 +395,10 @@ nsresult nsBaseDragService::InvokeDragSession(
     // Set mDoingDrag so that EndDragSession cleans up and sends the dragend
     // event after the aborted drag.
     mDoingDrag = true;
-    EndDragSession(true, 0);
+    RefPtr<nsIDragSession> session = GetCurrentSession(aWidget);
+    if (session) {
+      session->EndDragSession(true, 0);
+    }
   }
 
   return rv;
@@ -612,14 +613,19 @@ int32_t nsBaseDragSession::TakeChildProcessDragAction() {
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+nsBaseDragSession::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+  return EndDragSessionImpl(aDoneDrag, aKeyModifiers);
+}
+
+nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                               uint32_t aKeyModifiers) {
   if (!mDoingDrag || mEndingSession) {
     return NS_ERROR_FAILURE;
   }
 
   mEndingSession = true;
 
-  if (aDoneDrag && !mSuppressLevel) {
+  if (aDoneDrag && !GetSuppressLevel()) {
     FireDragEventAtSource(eDragEnd, aKeyModifiers);
   }
 

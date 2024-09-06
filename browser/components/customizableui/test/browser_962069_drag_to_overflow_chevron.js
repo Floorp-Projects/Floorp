@@ -60,7 +60,7 @@ add_task(async function () {
       overflowChevron
     );
   } finally {
-    ds.endDragSession(true);
+    ds.getCurrentSession().endDragSession(true);
   }
 
   info("Overflow panel is shown.");

@@ -72,6 +72,9 @@ class nsBaseDragSession : public nsIDragSession {
   nsBaseDragSession();
   ~nsBaseDragSession();
 
+  MOZ_CAN_RUN_SCRIPT virtual nsresult EndDragSessionImpl(
+      bool aDoneDrag, uint32_t aKeyModifiers);
+
   // Returns true if a drag event was dispatched to a child process after
   // the previous TakeDragEventDispatchedToChildProcess() call.
   bool TakeDragEventDispatchedToChildProcess() {
@@ -117,6 +120,11 @@ class nsBaseDragSession : public nsIDragSession {
 
   // Weak references to PBrowsers that are currently engaged in drags
   nsTArray<nsWeakPtr> mBrowsers;
+  // remote drag data
+  RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
+
+  // Sub-region for tree-selections.
+  mozilla::Maybe<mozilla::CSSIntRegion> mRegion;
 
   // the screen position where drag gesture occurred, used for positioning the
   // drag image.
@@ -149,6 +157,11 @@ class nsBaseDragSession : public nsIDragSession {
 
   bool mIsDraggingTextInTextControl = false;
   bool mSessionIsSynthesizedForTests = false;
+
+  // true if in EndDragSession
+  bool mEndingSession = false;
+  // true if mImage should be used to set a drag image
+  bool mHasImage = false;
 };
 
 /**
@@ -250,17 +263,9 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
 
   virtual bool IsMockService() { return false; }
 
-  // true if in EndDragSession
-  bool mEndingSession;
-  // true if mImage should be used to set a drag image
-  bool mHasImage;
-
   // the contentpolicy type passed to the channel when initiating the drag
   // session
   nsContentPolicyType mContentPolicyType;
-
-  // remote drag data
-  RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
 
   uint32_t mSuppressLevel;
 

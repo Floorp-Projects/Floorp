@@ -26,7 +26,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
       aToDrag.parentNode
     );
   } finally {
-    ds.endDragSession(true);
+    ds.getCurrentSession().endDragSession(true);
   }
 }
 

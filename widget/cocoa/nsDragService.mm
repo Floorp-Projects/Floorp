@@ -44,7 +44,7 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
-nsDragService::nsDragService() : mNativeDragEvent(nil) {}
+nsDragService::nsDragService() {}
 
 nsDragService::~nsDragService() {}
 
@@ -485,8 +485,8 @@ nsDragSession::DragMoved(int32_t aX, int32_t aY) {
   return nsBaseDragSession::DragMoved(devPoint.x, devPoint.y);
 }
 
-NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                           uint32_t aKeyModifiers) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   mNSDraggingSession = nil;
@@ -502,7 +502,8 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 
   mUserCancelled = gUserCancelledDrag;
 
-  nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
+  nsresult rv =
+      nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mDataItems = nullptr;
   return rv;
 

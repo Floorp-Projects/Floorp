@@ -187,6 +187,19 @@ interface nsIDragSession : nsISupports
   [notxpcom, nostdcall] boolean removeAllBrowsers();
 
   /**
+    * Tells the Drag Service to end a drag session.
+    *
+    * If aDoneDrag is true, the drag has finished, otherwise the drag has
+    * just left the window.
+    *
+    * @param aDoneDrag       If true, reports the drag as complete.
+    * @param aKeyModifiers   Key state to assume while ending the session.
+    */
+  [can_run_script]
+  void endDragSession(in boolean aDoneDrag,
+                      [optional] in unsigned long aKeyModifiers);
+
+  /**
    * Retrun true if nsIDragSession's data is updated.
    */
   [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);

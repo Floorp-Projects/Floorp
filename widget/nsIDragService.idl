@@ -174,17 +174,6 @@ interface nsIDragService : nsISupports
                                 in unsigned long aAllowedEffect);
 
   /**
-    * Tells the Drag Service to end a drag session. This is called when
-    * an external drag occurs
-    *
-    * If aDoneDrag is true, the drag has finished, otherwise the drag has
-    * just left the window.
-    */
-  [can_run_script]
-  void endDragSession(in boolean aDoneDrag,
-                      [optional] in unsigned long aKeyModifiers);
-
-  /**
    * Increase/decrease dragging suppress level by one.
    * If level is greater than one, dragging is disabled.
    */
