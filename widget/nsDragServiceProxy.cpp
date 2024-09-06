@@ -43,14 +43,12 @@ nsresult nsDragSessionProxy::InvokeDragSession(
   [[maybe_unused]] RefPtr<nsIDragSession> sourceSession =
       sourceBrowser->GetDragSession();
   MOZ_ASSERT(!sourceSession);
+  MOZ_ALWAYS_SUCCEEDS(
+      sourceBrowser->GetWeakReference(getter_AddRefs(mSourceBrowser)));
+  sourceBrowser->SetDragSession(this);
   nsresult rv = nsBaseDragSession::InvokeDragSession(
       aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
       aTransferableArray, aActionType, aContentPolicyType);
-  if (NS_SUCCEEDED(rv)) {
-    MOZ_ALWAYS_SUCCEEDS(
-        sourceBrowser->GetWeakReference(getter_AddRefs(mSourceBrowser)));
-    sourceBrowser->SetDragSession(this);
-  }
   return rv;
 }
 
@@ -179,6 +177,10 @@ void nsDragSessionProxy::SetDragTarget(BrowserChild* aTarget) {
 
 nsresult nsDragSessionProxy::EndDragSessionImpl(bool aDoneDrag,
                                                 uint32_t aKeyModifiers) {
+  // End the drag session before removing it from its BrowserChild(s).  This
+  // leaves the drag session in place while EndDragSessionImpl sends dragend.
+  nsresult rv = nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
+
   if (mSourceBrowser) {
     nsCOMPtr<BrowserChild> sourceBC = do_QueryReferent(mSourceBrowser);
     MOZ_ASSERT(sourceBC);
@@ -199,5 +201,5 @@ nsresult nsDragSessionProxy::EndDragSessionImpl(bool aDoneDrag,
     mTargetBrowser = nullptr;
   }
 
-  return nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
+  return rv;
 }
