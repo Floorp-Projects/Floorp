@@ -901,8 +901,7 @@ bool nsDragSession::SetAlphaPixmap(SourceSurface* aSurface,
   return true;
 }
 
-NS_IMETHODIMP
-nsDragService::StartDragSession(nsISupports* aWidgetProvider) {
+nsIDragSession* nsDragService::StartDragSession(nsISupports* aWidgetProvider) {
   LOGDRAGSERVICE("nsDragService::StartDragSession");
   return nsBaseDragService::StartDragSession(aWidgetProvider);
 }

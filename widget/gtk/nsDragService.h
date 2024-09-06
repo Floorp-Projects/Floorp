@@ -391,7 +391,7 @@ class nsDragSession : public nsBaseDragSession, public nsIObserver {
 class nsDragService : public nsBaseDragService {
  public:
   static already_AddRefed<nsDragService> GetInstance();
-  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
+  nsIDragSession* StartDragSession(nsISupports* aWidgetProvider) override;
 
  protected:
   already_AddRefed<nsIDragSession> CreateDragSession() override;

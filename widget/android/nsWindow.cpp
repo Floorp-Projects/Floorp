@@ -2688,12 +2688,9 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
 
   if (message == eDragEnter) {
     nsIWidget* widget = this;
-    dragService->StartDragSession(widget);
-    // For compatibility, we have to set temporary data.
     dragSession =
-      static_cast<nsDragSession*>(dragService->GetCurrentSession(this));
-    MOZ_ASSERT(dragSession);
-
+        static_cast<nsDragSession*>(dragService->StartDragSession(widget));
+    // For compatibility, we have to set temporary data.
     auto dropData =
         mozilla::java::GeckoDragAndDrop::DropData::Ref::From(aDropData);
     dragSession->SetDropData(dropData);
