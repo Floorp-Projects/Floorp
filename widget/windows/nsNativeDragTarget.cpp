@@ -260,13 +260,9 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
   }
 
   // Set the native data object into drag service
-  //
-  // This cast is ok because in the constructor we created a
-  // the actual implementation we wanted, so we know this is
-  // a nsDragService. It should be a private interface, though.
-  nsDragService* winDragService =
-      static_cast<nsDragService*>(mDragService.get());
-  winDragService->SetIDataObject(pIDataSource);
+  RefPtr<nsDragSession> session =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
+  session->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDragEnter, grfKeyState, ptl, pdwEffect);
@@ -298,8 +294,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
   // then we should include it as an allowed effect.
   mEffectsAllowed = (*pdwEffect) | (mEffectsAllowed & DROPEFFECT_LINK);
 
-  nsCOMPtr<nsIDragSession> currentDragSession =
-      mDragService->GetCurrentSession(mWidget);
+  RefPtr<nsDragSession> currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
   if (!currentDragSession) {
     return S_OK;  // Drag was canceled.
   }
@@ -315,10 +311,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
       // The drop helper only updates the image during DragEnter, so emulate
       // a DragEnter if the image was changed.
       POINT pt = {ptl.x, ptl.y};
-      nsDragService* dragService =
-          static_cast<nsDragService*>(mDragService.get());
-      GetDropTargetHelper()->DragEnter(mHWnd, dragService->GetDataObject(), &pt,
-                                       *pdwEffect);
+      GetDropTargetHelper()->DragEnter(
+          mHWnd, currentDragSession->GetDataObject(), &pt, *pdwEffect);
     }
     POINT pt = {ptl.x, ptl.y};
     GetDropTargetHelper()->DragOver(&pt, *pdwEffect);
@@ -410,13 +404,12 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   }
 
   // Set the native data object into the drag service
-  //
-  // This cast is ok because in the constructor we created a
-  // the actual implementation we wanted, so we know this is
-  // a nsDragService (but it should still be a private interface)
-  nsDragService* winDragService =
-      static_cast<nsDragService*>(mDragService.get());
-  winDragService->SetIDataObject(pData);
+  RefPtr<nsDragSession> currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
+  if (!currentDragSession) {
+    return S_OK;
+  }
+  currentDragSession->SetIDataObject(pData);
 
   // NOTE: ProcessDrag spins the event loop which may destroy arbitrary objects.
   // We use strong refs to prevent it from destroying these:
@@ -426,8 +419,8 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDrop, grfKeyState, aPT, pdwEffect);
 
-  nsCOMPtr<nsIDragSession> currentDragSession =
-      serv->GetCurrentSession(mWidget);
+  currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
   if (!currentDragSession) {
     return S_OK;  // DragCancel() was called.
   }
@@ -435,6 +428,8 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   // Let the win drag service know whether this session experienced
   // a drop event within the application. Drop will not oocur if the
   // drop landed outside the app. (used in tab tear off, bug 455884)
+  RefPtr<nsDragService> winDragService =
+      static_cast<nsDragService*>(mDragService.get());
   winDragService->SetDroppedLocal();
 
   // tell the drag service we're done with the session

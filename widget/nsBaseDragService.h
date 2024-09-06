@@ -52,20 +52,10 @@ class MockDragServiceController;
 }  // namespace mozilla
 
 /**
- * XP DragService wrapper base class
+ * Platform-agnostic base for nsIDragSession.
  */
-
-class nsBaseDragService : public nsIDragService, public nsIDragSession {
+class nsBaseDragSession : public nsIDragSession {
  public:
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-
-  nsBaseDragService();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIDragSession and nsIDragService
-  NS_DECL_NSIDRAGSERVICE
   NS_DECL_NSIDRAGSESSION
 
   void SetDragEndPoint(nsIntPoint aEndDragPoint) {
@@ -75,6 +65,73 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
   void SetDragEndPoint(mozilla::LayoutDeviceIntPoint aEndDragPoint) {
     mEndDragPoint = aEndDragPoint;
   }
+
+ protected:
+  ~nsBaseDragSession() = default;
+
+  RefPtr<mozilla::dom::WindowContext> mSourceWindowContext;
+  RefPtr<mozilla::dom::WindowContext> mSourceTopWindowContext;
+  nsCOMPtr<nsINode> mSourceNode;
+  // the document at the drag source. will be null if it came from outside the
+  // app.
+  RefPtr<mozilla::dom::Document> mSourceDocument;
+  // set if a selection is being dragged
+  RefPtr<mozilla::dom::Selection> mSelection;
+
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
+  RefPtr<mozilla::dom::DataTransfer> mDataTransfer;
+
+  // used to determine the image to appear on the cursor while dragging
+  nsCOMPtr<nsINode> mImage;
+  // offset of cursor within the image
+  mozilla::CSSIntPoint mImageOffset;
+  // set if the image in mImage is a popup. If this case, the popup will be
+  // opened and moved instead of using a drag image.
+  nsCOMPtr<mozilla::dom::Element> mDragPopup;
+
+  // The position relative to the top level widget where the drag ended.
+  mozilla::LayoutDeviceIntPoint mEndDragPoint;
+
+  uint32_t mDragAction = nsIDragService::DRAGDROP_ACTION_NONE;
+  uint32_t mDragActionFromChildProcess =
+      nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
+
+  // mEffectAllowedForTests stores allowed effects at invoking the drag
+  // for tests.
+  uint32_t mEffectAllowedForTests =
+      nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
+
+  bool mDoingDrag = false;
+
+  bool mCanDrop = false;
+  bool mOnlyChromeDrop = false;
+
+  // true if the user cancelled the drag operation
+  bool mUserCancelled = false;
+
+  bool mDragEventDispatchedToChildProcess = false;
+
+  bool mIsDraggingTextInTextControl = false;
+  bool mSessionIsSynthesizedForTests = false;
+};
+
+/**
+ * Platform-agnostic base for nsIDragService.
+ * NB: This class temporarily subclasses nsBaseDragSession while we move
+ * methods from it to nsBaseDragSession.  The inheritance relationship
+ * will be severed by the end of this patch series.
+ */
+class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
+ public:
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+
+  nsBaseDragService();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDRAGSERVICE
 
   uint16_t GetInputSource() { return mInputSource; }
 
@@ -154,67 +211,21 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   virtual bool IsMockService() { return false; }
 
-  bool mCanDrop;
-  bool mOnlyChromeDrop;
-  bool mDoingDrag;
-  bool mSessionIsSynthesizedForTests;
-
-  bool mIsDraggingTextInTextControl;
-
   // true if in EndDragSession
   bool mEndingSession;
   // true if mImage should be used to set a drag image
   bool mHasImage;
-  // true if the user cancelled the drag operation
-  bool mUserCancelled;
-
-  bool mDragEventDispatchedToChildProcess;
-
-  uint32_t mDragAction;
-  uint32_t mDragActionFromChildProcess;
-
-  // mEffectAllowedForTests stores allowed effects at invoking the drag
-  // for tests.
-  uint32_t mEffectAllowedForTests;
-
-  nsCOMPtr<nsINode> mSourceNode;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
-
-  // the document at the drag source. will be null if it came from outside the
-  // app.
-  RefPtr<mozilla::dom::Document> mSourceDocument;
-
-  RefPtr<mozilla::dom::WindowContext> mSourceWindowContext;
-  RefPtr<mozilla::dom::WindowContext> mSourceTopWindowContext;
 
   // the contentpolicy type passed to the channel when initiating the drag
   // session
   nsContentPolicyType mContentPolicyType;
 
-  RefPtr<mozilla::dom::DataTransfer> mDataTransfer;
-
-  // used to determine the image to appear on the cursor while dragging
-  nsCOMPtr<nsINode> mImage;
-  // offset of cursor within the image
-  mozilla::CSSIntPoint mImageOffset;
-
-  // set if a selection is being dragged
-  RefPtr<mozilla::dom::Selection> mSelection;
-
   // remote drag data
   RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
-
-  // set if the image in mImage is a popup. If this case, the popup will be
-  // opened and moved instead of using a drag image.
-  nsCOMPtr<mozilla::dom::Element> mDragPopup;
 
   // the screen position where drag gesture occurred, used for positioning the
   // drag image.
   mozilla::CSSIntPoint mScreenPosition;
-
-  // The position relative to the top level widget where the drag ended.
-  mozilla::LayoutDeviceIntPoint mEndDragPoint;
 
   uint32_t mSuppressLevel;
 

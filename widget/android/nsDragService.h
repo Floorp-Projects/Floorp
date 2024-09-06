@@ -13,26 +13,48 @@
 
 class nsITransferable;
 
-class nsDragService final : public nsBaseDragService {
+// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
+// (which nsBaseDragService temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragSession : public nsBaseDragService {
  public:
-  nsDragService() = default;
+  nsDragSession() = default;
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  static already_AddRefed<nsDragService> GetInstance();
 
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable* aTransferable, uint32_t anItem) override;
   NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
   NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
                                    bool* _retval) override;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
-                                               uint32_t aKeyModifiers) override;
   NS_IMETHOD
   UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
-  virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
   void SetData(nsITransferable* aTransferable);
+
+ protected:
+  virtual ~nsDragSession() = default;
+
+  mozilla::java::sdk::Bitmap::LocalRef CreateDragImage(
+      nsINode* aNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion);
+
+  // our source data items
+  nsCOMPtr<nsITransferable> mTransferable;
+};
+
+// Temporary inheritance from nsDragSession instead of nsBaseDragService
+// (which nsDragSession temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragService final : public nsDragSession {
+ public:
+  static already_AddRefed<nsDragService> GetInstance();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
+                                               uint32_t aKeyModifiers) override;
+
+  virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
   static void SetDropData(
       mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
@@ -45,13 +67,6 @@ class nsDragService final : public nsBaseDragService {
   InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                         uint32_t aActionType) override;
-
- private:
-  mozilla::java::sdk::Bitmap::LocalRef CreateDragImage(
-      nsINode* aNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion);
-
-  // our source data items
-  nsCOMPtr<nsITransferable> mTransferable;
 };
 
 #endif  // nsDragService_h__
