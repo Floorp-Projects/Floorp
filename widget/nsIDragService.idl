@@ -19,6 +19,7 @@ interface nsIMockDragServiceController;
 
 %{C++
 #include "mozilla/EventForwards.h"
+#include "nsIWidget.h"
 
 namespace mozilla {
 namespace dom {
@@ -138,9 +139,31 @@ interface nsIDragService : nsISupports
                                       in DataTransferPtr aDataTransfer);
 
   /**
-    * Returns the current Drag Session
+    * In the parent process, returns the current drag session.  In content,
+    * returns the current drag session for the widget containing the given
+    * window, or the current JS context if aWindow is not specified.
+    *
+    * @param aWidgetProvider Either the nsIWidget that is the source or current
+    *                        target of the drag, or an nsIDOMWindowProxy for a
+    *                        window that is on the widget.
     */
-  nsIDragSession getCurrentSession();
+  nsIDragSession getCurrentSession([optional] in nsISupports aWidgetProvider);
+
+  /**
+   * TODO: Temporary proxy for old C++ callers, for whom [optional] is
+   * insufficient.  This method is removed at the end of this patch series.
+   */
+%{ C++
+  nsresult GetCurrentSession(nsIDragSession** aSession) {
+    return GetCurrentSession(nullptr, aSession);
+  }
+
+  nsIDragSession* GetCurrentSession(nsIWidget* aWidget) {
+  	nsCOMPtr<nsIDragSession> session;
+    GetCurrentSession(aWidget, getter_AddRefs(session));
+    return session;
+  }
+%}
 
   /**
     * Tells the Drag Service to start a drag session. This is called when

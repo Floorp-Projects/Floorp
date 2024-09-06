@@ -80,6 +80,8 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   int32_t TakeChildProcessDragAction();
 
+  using nsIDragService::GetCurrentSession;
+
  protected:
   virtual ~nsBaseDragService();
 
