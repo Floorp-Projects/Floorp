@@ -77,12 +77,11 @@ namespace ipc {
 class StructuredCloneData;
 }  // namespace ipc
 
-
-#define DOM_BROWSERPARENT_IID                         \
-  {                                                   \
-    0x58b47b52, 0x77dc, 0x44cf, {                     \
-      0x8b, 0xe5, 0x8e, 0x78, 0x24, 0xd9, 0xae, 0xc5  \
-    }                                                 \
+#define DOM_BROWSERPARENT_IID                        \
+  {                                                  \
+    0x58b47b52, 0x77dc, 0x44cf, {                    \
+      0x8b, 0xe5, 0x8e, 0x78, 0x24, 0xd9, 0xae, 0xc5 \
+    }                                                \
   }
 
 /**

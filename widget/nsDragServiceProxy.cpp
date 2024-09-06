@@ -43,11 +43,12 @@ nsresult nsDragSessionProxy::InvokeDragSession(
   [[maybe_unused]] RefPtr<nsIDragSession> sourceSession =
       sourceBrowser->GetDragSession();
   MOZ_ASSERT(!sourceSession);
-  nsresult rv = nsBaseDragSession::InvokeDragSession(aWidget, aDOMNode,
-      aPrincipal, aCsp, aCookieJarSettings, aTransferableArray, aActionType,
-      aContentPolicyType);
+  nsresult rv = nsBaseDragSession::InvokeDragSession(
+      aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
+      aTransferableArray, aActionType, aContentPolicyType);
   if (NS_SUCCEEDED(rv)) {
-    MOZ_ALWAYS_SUCCEEDS(sourceBrowser->GetWeakReference(getter_AddRefs(mSourceBrowser)));
+    MOZ_ALWAYS_SUCCEEDS(
+        sourceBrowser->GetWeakReference(getter_AddRefs(mSourceBrowser)));
     sourceBrowser->SetDragSession(this);
   }
   return rv;
@@ -118,8 +119,8 @@ nsresult nsDragSessionProxy::InvokeDragSessionImpl(
   return NS_OK;
 }
 
-nsIDragSession*
-nsDragServiceProxy::StartDragSession(nsISupports* aWidgetProvider) {
+nsIDragSession* nsDragServiceProxy::StartDragSession(
+    nsISupports* aWidgetProvider) {
   nsIWidget* widget = GetWidgetFromWidgetProvider(aWidgetProvider);
   NS_ENSURE_TRUE(widget, nullptr);
   BrowserChild* targetBrowser = widget->GetOwningBrowserChild();
@@ -170,10 +171,10 @@ void nsDragSessionProxy::SetDragTarget(BrowserChild* aTarget) {
     }
     return;
   }
-  [[maybe_unused]] RefPtr<nsIDragSession> session =
-      aTarget->GetDragSession();
+  [[maybe_unused]] RefPtr<nsIDragSession> session = aTarget->GetDragSession();
   MOZ_ASSERT(!session);
-  MOZ_ALWAYS_SUCCEEDS(aTarget->GetWeakReference(getter_AddRefs(mTargetBrowser)));
+  MOZ_ALWAYS_SUCCEEDS(
+      aTarget->GetWeakReference(getter_AddRefs(mTargetBrowser)));
 }
 
 nsresult nsDragSessionProxy::EndDragSessionImpl(bool aDoneDrag,

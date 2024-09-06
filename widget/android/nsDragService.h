@@ -32,8 +32,8 @@ class nsDragSession : public nsBaseDragSession {
 
   virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
-  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
-      bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
  protected:
   virtual ~nsDragSession() = default;

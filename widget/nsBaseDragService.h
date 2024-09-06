@@ -283,13 +283,9 @@ class nsBaseDragService : public nsIDragService {
 
   uint32_t GetSuppressLevel() { return mSuppressLevel; };
 
-  nsTArray<nsWeakPtr> TakeSessionBrowserList() {
-    return std::move(mBrowsers);
-  }
+  nsTArray<nsWeakPtr> TakeSessionBrowserList() { return std::move(mBrowsers); }
 
-  void ClearCurrentParentDragSession() {
-    mCurrentParentDragSession = nullptr;
-  }
+  void ClearCurrentParentDragSession() { mCurrentParentDragSession = nullptr; }
 
   static nsIWidget* GetWidgetFromWidgetProvider(nsISupports* aWidgetProvider);
 

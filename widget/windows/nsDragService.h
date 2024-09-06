@@ -35,8 +35,8 @@ class nsDragSession : public nsBaseDragSession {
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType);
 
-  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
-      bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
   MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(nsIWidget* aWidget,
                                                        IDataObject* aDataObj,
@@ -66,7 +66,6 @@ class nsDragSession : public nsBaseDragSession {
 class nsDragService final : public nsBaseDragService {
  public:
   already_AddRefed<nsIDragSession> CreateDragSession() override;
-
 };
 
 #endif  // nsDragService_h__

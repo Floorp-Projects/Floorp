@@ -1902,12 +1902,12 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
 
   DispatchWidgetEventViaAPZ(localEvent);
 
-  if (aEvent.mMessage == eDragLeave ||
-      aEvent.mMessage == eDragExit) {
+  if (aEvent.mMessage == eDragLeave || aEvent.mMessage == eDragExit) {
     // If session is still active, remove its target.
     dragSession = GetDragSession();
     if (dragSession) {
-      static_cast<nsDragSessionProxy*>(dragSession.get())->SetDragTarget(nullptr);
+      static_cast<nsDragSessionProxy*>(dragSession.get())
+          ->SetDragTarget(nullptr);
     }
   }
   return IPC_OK();

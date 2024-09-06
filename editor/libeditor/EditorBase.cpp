@@ -4621,8 +4621,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   }
 
   RefPtr<nsIWidget> widget = GetWidget();
-  nsCOMPtr<nsIDragSession> dragSession =
-      nsContentUtils::GetDragSession(widget);
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession(widget);
   if (NS_WARN_IF(!dragSession)) {
     return NS_ERROR_FAILURE;
   }
@@ -4933,7 +4932,6 @@ nsresult EditorBase::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
     RefPtr<nsIWidget> widget = GetWidget();
     if (nsCOMPtr<nsIDragSession> dragSession =
             nsContentUtils::GetDragSession(widget)) {
-
       dragSession->MaybeEditorDeletedSourceNode(editingHost);
     }
   }

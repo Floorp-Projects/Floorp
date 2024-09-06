@@ -85,11 +85,11 @@ class SessionStoreChild;
 class RequestData;
 class WebProgressData;
 
-#define DOM_BROWSERCHILD_IID                          \
-  {                                                   \
-    0x58a5775d, 0xba05, 0x45bf, {                     \
-      0xbd, 0xb8, 0xd7, 0x61, 0xf9, 0x01, 0x01, 0x31  \
-    }                                                 \
+#define DOM_BROWSERCHILD_IID                         \
+  {                                                  \
+    0x58a5775d, 0xba05, 0x45bf, {                    \
+      0xbd, 0xb8, 0xd7, 0x61, 0xf9, 0x01, 0x01, 0x31 \
+    }                                                \
   }
 
 class BrowserChildMessageManager : public ContentFrameMessageManager,
@@ -672,8 +672,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvEndDragSession(
-      const bool& aDoneDrag,
-      const bool& aUserCancelled,
+      const bool& aDoneDrag, const bool& aUserCancelled,
       const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
       const uint32_t& aKeyModifiers, const uint32_t& aDropEffect);
 

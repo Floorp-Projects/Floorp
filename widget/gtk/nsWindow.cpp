@@ -5507,8 +5507,8 @@ void nsWindow::OnDragDataReceivedEvent(GtkWidget* aWidget,
       static_cast<nsDragSession*>(dragService->GetCurrentSession(this));
   if (dragSession) {
     nsDragSession::AutoEventLoop loop(dragSession);
-    dragSession->TargetDataReceived(aWidget, aDragContext, aX, aY, aSelectionData,
-                                    aInfo, aTime);
+    dragSession->TargetDataReceived(aWidget, aDragContext, aX, aY,
+                                    aSelectionData, aInfo, aTime);
   }
 }
 

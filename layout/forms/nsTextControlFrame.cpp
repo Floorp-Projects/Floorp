@@ -144,7 +144,7 @@ void nsTextControlFrame::Destroy(DestroyContext& aContext) {
   // text control because another text node may be recreated soon if the text
   // control is just reframed.
   if (nsCOMPtr<nsIDragSession> dragSession =
-        nsContentUtils::GetDragSession(PresContext())) {
+          nsContentUtils::GetDragSession(PresContext())) {
     if (dragSession->IsDraggingTextInTextControl() && mRootNode &&
         mRootNode->GetFirstChild()) {
       nsCOMPtr<nsINode> sourceNode;
@@ -483,7 +483,7 @@ bool nsTextControlFrame::ShouldInitializeEagerly() const {
   // new source node for the drag session (TextEditor creates the text node
   // in the anonymous <div> element.
   if (nsCOMPtr<nsIDragSession> dragSession =
-        nsContentUtils::GetDragSession(PresContext())) {
+          nsContentUtils::GetDragSession(PresContext())) {
     if (dragSession->IsDraggingTextInTextControl()) {
       nsCOMPtr<nsINode> sourceNode;
       if (NS_SUCCEEDED(
@@ -1219,7 +1219,7 @@ nsTextControlFrame::EditorInitializer::Run() {
   // In this case we should restore the source node of the drag session to
   // new text node because it's required for dispatching `dragend` event.
   if (nsCOMPtr<nsIDragSession> dragSession =
-        nsContentUtils::GetDragSession(mFrame->PresContext())) {
+          nsContentUtils::GetDragSession(mFrame->PresContext())) {
     if (dragSession->IsDraggingTextInTextControl()) {
       nsCOMPtr<nsINode> sourceNode;
       if (NS_SUCCEEDED(

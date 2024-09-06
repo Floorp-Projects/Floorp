@@ -30,8 +30,8 @@ class nsDragSession : public nsBaseDragSession {
 
   NSDraggingSession* GetNSDraggingSession() { return mNSDraggingSession; }
 
-  MOZ_CAN_RUN_SCRIPT nsresult EndDragSessionImpl(
-      bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
  protected:
   // nsBaseDragSession
