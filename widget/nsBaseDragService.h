@@ -165,6 +165,24 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
   virtual ~nsBaseDragService();
 
   /**
+   * Starts a modal drag session with an array of transaferables.
+   *
+   * @param  aPrincipal - the triggering principal of the drag, or null if
+   *                      it's from browser chrome or OS
+   * @param aCsp - The csp of the triggering Document
+   * @param  aTransferables - an array of transferables to be dragged
+   * @param  aActionType - specified which of copy/move/link are allowed
+   * @param  aContentPolicyType - the contentPolicyType that will be
+   *           passed to the loadInfo when creating a new channel
+   *           (defaults to TYPE_OTHER)
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSession(
+      nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+      nsIArray* aTransferableArray, uint32_t aActionType,
+      nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER);
+
+   /**
    * Called from nsBaseDragService to initiate a platform drag from a source
    * in this process.  This is expected to ensure that StartDragSession() and
    * EndDragSession() get called if the platform drag is successfully invoked.
