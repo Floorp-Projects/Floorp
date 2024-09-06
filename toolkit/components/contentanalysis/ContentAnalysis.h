@@ -376,6 +376,7 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
   void DoNotAcknowledge() { mDoNotAcknowledge = true; }
   void SetCancelError(CancelError aCancelError);
+  void SetIsCachedResponse() { mIsCachedResponse = true; }
 
  private:
   ~ContentAnalysisResponse() = default;
@@ -410,6 +411,11 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   // If true, the request was completely handled by URL filter lists, so it
   // was not sent to the agent and should not send an Acknowledge.
   bool mDoNotAcknowledge = false;
+
+  // Whether this is a cached result that wasn't actually sent to the DLP agent.
+  // This indicates that the request was a duplicate of a previously sent one,
+  // so any dialogs (for block/warn) should not be shown.
+  bool mIsCachedResponse = false;
 
   friend class ContentAnalysis;
 };
