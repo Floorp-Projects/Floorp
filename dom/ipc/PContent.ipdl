@@ -6,6 +6,7 @@
 
 include protocol PBackgroundStarter;
 include protocol PBrowser;
+include protocol PClipboardContentAnalysis;
 include protocol PClipboardReadRequest;
 include protocol PClipboardWriteRequest;
 include protocol PCompositorManager;
@@ -577,6 +578,7 @@ child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
     async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
+    async InitClipboardContentAnalysis(Endpoint<PClipboardContentAnalysisChild> aEndpoint);
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
@@ -1081,6 +1083,8 @@ parent:
     async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
 
     async CreateGMPService();
+
+    async CreateClipboardContentAnalysis();
 
     async InitStreamFilter(uint64_t channelId, nsString addonId)
         returns (Endpoint<PStreamFilterChild> aEndpoint);

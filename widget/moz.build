@@ -167,6 +167,8 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     "BasicEvents.h",
+    "ClipboardContentAnalysisChild.h",
+    "ClipboardContentAnalysisParent.h",
     "ClipboardReadRequestChild.h",
     "ClipboardReadRequestParent.h",
     "ClipboardWriteRequestChild.h",
@@ -218,6 +220,8 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "ClipboardContentAnalysisChild.cpp",
+    "ClipboardContentAnalysisParent.cpp",
     "ClipboardReadRequestParent.cpp",
     "ClipboardWriteRequestChild.cpp",
     "ClipboardWriteRequestParent.cpp",
@@ -378,6 +382,7 @@ else:
 
 IPDL_SOURCES += [
     "LookAndFeelTypes.ipdlh",
+    "PClipboardContentAnalysis.ipdl",
     "PClipboardReadRequest.ipdl",
     "PClipboardWriteRequest.ipdl",
 ]
