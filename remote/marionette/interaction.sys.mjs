@@ -202,7 +202,7 @@ async function webdriverClickElement(el, a11y) {
       win
     );
 
-    if (lazy.dragService?.getCurrentSession()) {
+    if (lazy.dragService?.getCurrentSession(win)) {
       // Special handling is required if the mousemove started a drag session.
       // In this case, mousedown event shouldn't be fired, and the mouseup should
       // end the session.  Therefore, we should synthesize only mouseup.

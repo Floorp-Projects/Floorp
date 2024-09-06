@@ -82,8 +82,8 @@ export class DragChildContextBase {
       `${this.subtypeName} had pre-existing drag: ${this.alreadyHadSession}`
     );
     this.ok(
-      !!this.dragService.getCurrentSession() == aShouldHaveDrag ||
-        this.alreadyHadSession,
+      !!this.dragService.getCurrentSession(this.dragWindow) ==
+        aShouldHaveDrag || this.alreadyHadSession,
       `Has ${!aShouldHaveDrag ? "no " : ""}drag session`
     );
   }
@@ -94,7 +94,7 @@ export class DragChildContextBase {
       return;
     }
     this.ok(
-      this.dragService.getCurrentSession().dragAction !==
+      this.dragService.getCurrentSession(this.dragWindow).dragAction !==
         Ci.nsIDragService.DRAGDROP_ACTION_NONE,
       "Drag session has valid action"
     );
@@ -144,7 +144,9 @@ export class DragChildContextBase {
       aParams.is(v1, v2, `[${this.contextLabel}|${this.subtypeName}]| ${msg}`);
     };
 
-    this.alreadyHadSession = !!this.dragService.getCurrentSession();
+    this.alreadyHadSession = !!this.dragService.getCurrentSession(
+      this.dragWindow
+    );
 
     this.initializeElementInfo(this.dragElementId);
 

@@ -141,7 +141,7 @@ interface nsIDragService : nsISupports
   /**
     * In the parent process, returns the current drag session.  In content,
     * returns the current drag session for the widget containing the given
-    * window, or the current JS context if aWindow is not specified.
+    * window, or the entry global JS context if aWindow is not specified.
     *
     * @param aWidgetProvider Either the nsIWidget that is the source or current
     *                        target of the drag, or an nsIDOMWindowProxy for a

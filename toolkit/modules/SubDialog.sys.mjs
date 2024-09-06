@@ -184,7 +184,7 @@ SubDialog.prototype = {
       // The drag service getService call fails in puppeteer tests on Linux,
       // so this is in a try...catch as it shouldn't stop us from opening the
       // dialog. Bug 1806870 tracks fixing this.
-      if (lazy.dragService.getCurrentSession()) {
+      if (lazy.dragService.getCurrentSession(this._window)) {
         lazy.dragService.endDragSession(true);
       }
     } catch (ex) {

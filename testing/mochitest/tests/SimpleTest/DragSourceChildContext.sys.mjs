@@ -59,12 +59,13 @@ export class DragSourceChildContext extends DragChildContextBase {
     if (this.expectNoDragEvents || this.expectCancelDragStart) {
       this.info(`Drag was pre-existing: ${this.alreadyHadSession}`);
       this.ok(
-        !this.dragService.getCurrentSession() || this.alreadyHadSession,
+        !this.dragService.getCurrentSession(this.dragWindow) ||
+          this.alreadyHadSession,
         `no drag session in src process unless one was pre-existing`
       );
     } else {
       this.ok(
-        !!this.dragService.getCurrentSession(),
+        !!this.dragService.getCurrentSession(this.dragWindow),
         `drag session was started in src process`
       );
       this.ok(!!this.events.dragstart[0], "dragstart existed");

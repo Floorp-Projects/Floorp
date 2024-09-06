@@ -89,7 +89,7 @@ function withTestPage(fn) {
   );
 }
 
-function initDragSession({ dragData, dropEffect }) {
+function initDragSession(win, { dragData, dropEffect }) {
   let dropAction;
   switch (dropEffect) {
     case null:
@@ -118,7 +118,7 @@ function initDragSession({ dragData, dropEffect }) {
   }
 
   dragService.startDragSessionForTests(dropAction);
-  const session = dragService.getCurrentSession();
+  const session = dragService.getCurrentSession(win);
   session.dataTransfer = dataTransfer;
 
   return session;
@@ -129,7 +129,7 @@ async function simulateDragAndDrop(win, dragData) {
   const dragOverTarget = getDragOverTarget(win);
   const dropEffect = "move";
 
-  const session = initDragSession({ dragData, dropEffect });
+  const session = initDragSession(win, { dragData, dropEffect });
 
   info("Simulate drag over and wait for the drop target to be visible");
 
