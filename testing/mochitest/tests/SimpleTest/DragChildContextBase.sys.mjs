@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const kTestDataTransferType = "x-moz-datatransfer-test";
+const kTestDataTransferData = "Dragged Test Data";
+
 // Common base of DragSourceChildContext and DragTargetChildContext
 export class DragChildContextBase {
   // The name of the subtype of this object.
@@ -52,6 +55,15 @@ export class DragChildContextBase {
   // Should an exception be thrown when an incorrect event is received.
   // Useful for debugging.  Set as parameter to initialize.
   throwOnExtraMessage = false;
+
+  // Should events other than dragstart and drop have access to the
+  // dataTransfer?  Set as parameter to initialize.
+  expectProtectedDataTransferAccess = false;
+
+  // Should events dragend events have access to the dataTransfer?  dragend
+  // access is also subject to expectProtectedDataTransferAccess.  Set as
+  // parameter to initialize.
+  expectProtectedDataTransferAccessDragendOnly = false;
 
   window = null;
 
@@ -179,6 +191,92 @@ export class DragChildContextBase {
   eventHandlerFn(aEv) {
     this.events[aEv.type].push(aEv);
     this.info(`Element received ${aEv.type}`);
+
+    // In order to properly test the dataTransfer, we need to try to access the
+    // dataTransfer under the principal of the web page.  Otherwise, we will run
+    // under the system principal and dataTransfer access will always be given.
+    let sandbox = this.dragWindow.SpecialPowers.unwrap(
+      Cu.Sandbox(this.dragWindow.document.nodePrincipal)
+    );
+
+    sandbox.is = this.is;
+    sandbox.kTestDataTransferType = kTestDataTransferType;
+    sandbox.kTestDataTransferData = kTestDataTransferData;
+    sandbox.aEv = aEv;
+
+    let getFromDataTransfer = Cu.evalInSandbox(
+      "(" +
+        function () {
+          return aEv.dataTransfer.getData(kTestDataTransferType);
+        } +
+        ")",
+      sandbox
+    );
+    let setInDataTransfer = Cu.evalInSandbox(
+      "(" +
+        function () {
+          return aEv.dataTransfer.setData(
+            kTestDataTransferType,
+            kTestDataTransferData
+          );
+        } +
+        ")",
+      sandbox
+    );
+    let clearDataTransfer = Cu.evalInSandbox(
+      "(" +
+        function () {
+          return aEv.dataTransfer.setData(kTestDataTransferType, "");
+        } +
+        ")",
+      sandbox
+    );
+
+    if (aEv.type == "dragstart") {
+      // Add some additional data to the DataTransfer so we can look for it
+      // as we get later events.
+      this.is(
+        getFromDataTransfer(),
+        "",
+        `[${aEv.type}]| DataTransfer didn't have kTestDataTransferType`
+      );
+      setInDataTransfer();
+      this.is(
+        getFromDataTransfer(),
+        kTestDataTransferData,
+        `[${aEv.type}]| Successfully added kTestDataTransferType to DataTransfer`
+      );
+    } else if (aEv.type == "drop") {
+      this.is(
+        getFromDataTransfer(),
+        kTestDataTransferData,
+        `[${aEv.type}]| Successfully read from DataTransfer`
+      );
+      clearDataTransfer();
+      this.is(
+        getFromDataTransfer(),
+        kTestDataTransferData,
+        `[${aEv.type}]| Properly failed to write to DataTransfer`
+      );
+    } else if (
+      aEv.type == "dragenter" ||
+      aEv.type == "dragover" ||
+      aEv.type == "dragleave" ||
+      aEv.type == "dragend"
+    ) {
+      let expectProtectedDataTransferAccess =
+        this.expectProtectedDataTransferAccess ||
+        (aEv.type == "dragend" &&
+          this.expectProtectedDataTransferAccessDragendOnly);
+      this.is(
+        getFromDataTransfer(),
+        expectProtectedDataTransferAccess ? kTestDataTransferData : "",
+        `[${aEv.type}]| ${
+          expectProtectedDataTransferAccess ? "Successfully" : "Unsuccessfully"
+        } read from DataTransfer`
+      );
+    }
+
     if (
       this.throwOnExtraMessage &&
       this.events[aEv.type].length > this.expected[aEv.type]

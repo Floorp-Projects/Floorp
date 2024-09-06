@@ -4128,6 +4128,67 @@ async function synthesizeMockDragAndDrop(aParams) {
   // no drag implies no drag target
   expectNoDragTargetEvents |= expectNoDragEvents;
 
+  // Returns true if one browsing context is an ancestor of the other.
+  let browsingContextsAreRelated = function (cxt1, cxt2) {
+    let cxt = cxt1;
+    while (cxt) {
+      if (cxt2 == cxt) {
+        return true;
+      }
+      cxt = cxt.parent;
+    }
+    cxt = cxt2.parent;
+    while (cxt) {
+      if (cxt1 == cxt) {
+        return true;
+      }
+      cxt = cxt.parent;
+    }
+    return false;
+  };
+
+  // The rules for accessing the dataTransfer from internal drags in Gecko
+  // during drag event handlers are as follows:
+  //
+  // dragstart:
+  //   Always grants read-write access
+  // dragenter/dragover/dragleave:
+  //   If dom.events.dataTransfer.protected.enabled is set:
+  //     Read-only permission is granted if any of these holds:
+  //       * The drag target's browsing context is the same as the drag
+  //         source's (e.g. dragging inside of one frame on a web page).
+  //       * The drag source and target are the same domain/principal and
+  //         one has a browsing context that is an ancestor of the other
+  //         (e.g. one is an iframe nested inside of the other).
+  //       * The principal of the drag target element is privileged (not
+  //         a content principal).
+  //   Otherwise:
+  //     Permission is never granted
+  // drop:
+  //   Always grants read-only permission
+  // dragend:
+  //   Read-only permission is granted if
+  //   dom.events.dataTransfer.protected.enabled is set.
+  //
+  // dragstart and dragend are special because they target the drag-source,
+  // not the drag-target.
+  let expectProtectedDataTransferAccess =
+    !SpecialPowers.getBoolPref("dom.events.dataTransfer.protected.enabled") &&
+    browsingContextsAreRelated(targetBrowsingCxt, sourceBrowsingCxt);
+
+  // expectProtectedDataTransferAccessDragendOnly overrides
+  // expectProtectedDataTransferAccess when it is true
+  let expectProtectedDataTransferAccessDragendOnly = !SpecialPowers.getBoolPref(
+    "dom.events.dataTransfer.protected.enabled"
+  );
+
+  info(
+    `expectProtectedDataTransferAccess: ${expectProtectedDataTransferAccess}`
+  );
+  info(
+    `expectProtectedDataTransferAccessDragendOnly: ${expectProtectedDataTransferAccessDragendOnly}`
+  );
+
   // Essentially the entire function is in a try block so that we can make sure
   // that the mock drag service is removed and non-test mouse events are
   // restored.
@@ -4173,6 +4234,7 @@ async function synthesizeMockDragAndDrop(aParams) {
       expectCancelDragStart,
       expectSrcElementDisconnected,
       expectNoDragEvents,
+      expectProtectedDataTransferAccessDragendOnly,
       dragElementId: srcElement,
     };
     const targetVars = {
@@ -4183,6 +4245,7 @@ async function synthesizeMockDragAndDrop(aParams) {
     const bothVars = {
       contextLabel,
       throwOnExtraMessage,
+      expectProtectedDataTransferAccess,
       relevantEvents: [
         "mousedown",
         "mouseup",
