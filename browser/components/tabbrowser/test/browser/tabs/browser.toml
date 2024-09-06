@@ -291,6 +291,9 @@ skip-if = [
 
 ["browser_replacewithwindow_commands.js"]
 
+["browser_replacewithwindow_dialog.js"]
+support-files = ["tab_that_opens_dialog.html"]
+
 ["browser_switch_by_scrolling.js"]
 
 ["browser_tabCloseProbes.js"]
