@@ -40,6 +40,7 @@ async function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
   window.removeEventListener("dragstart", trapDrag, true);
 
   ds.startDragSessionForTests(
+    window,
     SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
       SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
       SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK

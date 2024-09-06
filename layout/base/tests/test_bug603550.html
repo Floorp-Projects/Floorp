@@ -57,6 +57,7 @@ function fireDrop(element) {
     getService(SpecialPowers.Ci.nsIDragService);
 
   ds.startDragSessionForTests(
+    window,
     SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
       SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
       SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK

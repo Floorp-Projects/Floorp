@@ -117,7 +117,7 @@ function initDragSession(win, { dragData, dropEffect }) {
     }
   }
 
-  dragService.startDragSessionForTests(dropAction);
+  dragService.startDragSessionForTests(win, dropAction);
   const session = dragService.getCurrentSession(win);
   session.dataTransfer = dataTransfer;
 

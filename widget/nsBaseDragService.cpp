@@ -564,9 +564,10 @@ nsBaseDragService::StartDragSession() {
 }
 
 NS_IMETHODIMP nsBaseDragService::StartDragSessionForTests(
-    uint32_t aAllowedEffect) {
+    nsISupports* aWidgetProvider, uint32_t aAllowedEffect) {
   // This method must set mSessionIsSynthesizedForTests
   MOZ_ASSERT(!mNeverAllowSessionIsSynthesizedForTests);
+
   if (NS_WARN_IF(NS_FAILED(StartDragSession()))) {
     return NS_ERROR_FAILURE;
   }
