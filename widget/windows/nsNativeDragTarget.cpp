@@ -243,7 +243,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
 
   // tell the drag service about this drag (it may have come from an
   // outside app).
-  mDragService->StartDragSession();
+  mDragService->StartDragSession(mWidget);
 
   void* tempOutData = nullptr;
   uint32_t tempDataLen = 0;

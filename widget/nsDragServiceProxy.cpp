@@ -29,8 +29,8 @@ nsDragServiceProxy::nsDragServiceProxy() = default;
 nsDragServiceProxy::~nsDragServiceProxy() = default;
 
 nsresult nsDragServiceProxy::InvokeDragSessionImpl(
-    nsIArray* aArrayTransferables, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+    nsIWidget* aWidget, nsIArray* aArrayTransferables,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   NS_ENSURE_STATE(mSourceDocument->GetDocShell());
   BrowserChild* child = BrowserChild::GetFrom(mSourceDocument->GetDocShell());
   NS_ENSURE_STATE(child);
@@ -81,7 +81,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
             std::move(transferables), aActionType, std::move(surfaceData),
             stride, dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
             mSourceWindowContext, mSourceTopWindowContext);
-        StartDragSession();
+        StartDragSession(aWidget);
         return NS_OK;
       }
     }
@@ -91,6 +91,6 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
       std::move(transferables), aActionType, Nothing(), 0,
       static_cast<SurfaceFormat>(0), dragRect, principal, csp, csArgs,
       mSourceWindowContext, mSourceTopWindowContext);
-  StartDragSession();
+  StartDragSession(aWidget);
   return NS_OK;
 }

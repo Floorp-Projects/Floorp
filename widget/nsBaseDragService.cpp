@@ -386,7 +386,8 @@ nsresult nsBaseDragService::InvokeDragSession(
     }
   }
 
-  nsresult rv = InvokeDragSessionImpl(aTransferableArray, mRegion, aActionType);
+  nsresult rv =
+      InvokeDragSessionImpl(aWidget, aTransferableArray, mRegion, aActionType);
 
   if (NS_FAILED(rv)) {
     // Set mDoingDrag so that EndDragSession cleans up and sends the dragend
@@ -553,14 +554,17 @@ nsBaseDragService::GetCurrentSession(nsISupports* aWidgetProvider,
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::StartDragSession() {
+nsBaseDragService::StartDragSession(nsISupports* aWidgetProvider) {
+  if (!aWidgetProvider) {
+    return NS_ERROR_NULL_POINTER;
+  }
   if (mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
+
   mDoingDrag = true;
   // By default dispatch drop also to content.
   mOnlyChromeDrop = false;
-
   return NS_OK;
 }
 
@@ -569,7 +573,7 @@ NS_IMETHODIMP nsBaseDragService::StartDragSessionForTests(
   // This method must set mSessionIsSynthesizedForTests
   MOZ_ASSERT(!mNeverAllowSessionIsSynthesizedForTests);
 
-  if (NS_WARN_IF(NS_FAILED(StartDragSession()))) {
+  if (NS_WARN_IF(NS_FAILED(StartDragSession(aWidgetProvider)))) {
     return NS_ERROR_FAILURE;
   }
   mDragAction = aAllowedEffect;

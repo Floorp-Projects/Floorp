@@ -193,7 +193,7 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
    * EndDragSession() get called if the platform drag is successfully invoked.
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIArray* aTransferableArray,
+      nsIWidget* aWidget, nsIArray* aTransferableArray,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) = 0;
 
