@@ -6,6 +6,7 @@
 #ifndef MOZILLA_WIDGET_CLIPBOARDCONTENTANALYSISPARENT_H_
 #define MOZILLA_WIDGET_CLIPBOARDCONTENTANALYSISPARENT_H_
 
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/PClipboardContentAnalysisParent.h"
 
 namespace mozilla {
@@ -14,9 +15,15 @@ class ClipboardContentAnalysisParent final
     : public PClipboardContentAnalysisParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(ClipboardContentAnalysisParent, override)
+  explicit ClipboardContentAnalysisParent(
+      RefPtr<dom::ThreadsafeContentParentHandle>&&
+          aThreadsafeContentParentHandle)
+      : mThreadsafeContentParentHandle(
+            std::move(aThreadsafeContentParentHandle)) {}
 
  private:
   ~ClipboardContentAnalysisParent() = default;
+  RefPtr<dom::ThreadsafeContentParentHandle> mThreadsafeContentParentHandle;
 
  public:
   ipc::IPCResult RecvGetClipboard(

@@ -317,7 +317,8 @@ class ContentParent final : public PContentParent,
   // been updated and so full reflows are in order.
   static void NotifyUpdatedFonts(bool aFullRebuild);
 
-  mozilla::ipc::IPCResult RecvCreateClipboardContentAnalysis();
+  mozilla::ipc::IPCResult RecvCreateClipboardContentAnalysis(
+      Endpoint<PClipboardContentAnalysisParent>&& aParentEndpoint);
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)

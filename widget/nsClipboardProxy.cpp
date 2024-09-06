@@ -4,6 +4,7 @@
 
 #include "nsClipboardProxy.h"
 
+#include "ContentAnalysis.h"
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
@@ -77,28 +78,22 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   aTransferable->FlavorsTransferableCanImport(types);
 
   IPCTransferableDataOrError transferableOrError;
-  nsCOMPtr<nsIContentAnalysis> contentAnalysis =
-      mozilla::components::nsIContentAnalysis::Service();
-  Unused << NS_WARN_IF(!contentAnalysis);
-  bool contentAnalysisMightBeActive = false;
-  if (contentAnalysis) {
-    contentAnalysis->GetMightBeActive(&contentAnalysisMightBeActive);
-  }
-  if (MOZ_UNLIKELY(contentAnalysisMightBeActive)) {
-    if (!ClipboardContentAnalysisChild::GetSingleton()) {
-      if (!ContentChild::GetSingleton()->SendCreateClipboardContentAnalysis()) {
-        return NS_ERROR_FAILURE;
-      }
-      mozilla::SpinEventLoopUntil(
-          "Wait for ClipboardContentAnalysisChild creation"_ns,
-          [] { return ClipboardContentAnalysisChild::GetSingleton(); });
+  if (MOZ_UNLIKELY(contentanalysis::ContentAnalysis::MightBeActive())) {
+    RefPtr<ClipboardContentAnalysisChild> contentAnalysis =
+        ClipboardContentAnalysisChild::GetOrCreate();
+    if (!contentAnalysis) {
+      return NS_ERROR_FAILURE;
     }
-    ClipboardContentAnalysisChild::GetSingleton()->SendGetClipboard(
-        types, aWhichClipboard, aWindowContext->InnerWindowId(),
-        &transferableOrError);
+    if (!contentAnalysis->SendGetClipboard(types, aWhichClipboard,
+                                           aWindowContext->InnerWindowId(),
+                                           &transferableOrError)) {
+      return NS_ERROR_FAILURE;
+    }
   } else {
-    ContentChild::GetSingleton()->SendGetClipboard(
-        types, aWhichClipboard, aWindowContext, &transferableOrError);
+    if (!ContentChild::GetSingleton()->SendGetClipboard(
+            types, aWhichClipboard, aWindowContext, &transferableOrError)) {
+      return NS_ERROR_FAILURE;
+    };
   }
 
   if (transferableOrError.type() == IPCTransferableDataOrError::Tnsresult) {

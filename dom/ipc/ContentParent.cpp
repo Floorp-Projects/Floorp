@@ -1219,62 +1219,35 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {
   return docShell;
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvCreateClipboardContentAnalysis() {
-  Endpoint<PClipboardContentAnalysisParent> parentEndpoint;
-  Endpoint<PClipboardContentAnalysisChild> childEndpoint;
-
+mozilla::ipc::IPCResult ContentParent::RecvCreateClipboardContentAnalysis(
+    Endpoint<PClipboardContentAnalysisParent>&& aParentEndpoint) {
   if (mClipboardContentAnalysisCreated) {
     return IPC_FAIL(this, "ClipboardContentAnalysisParent already created");
   }
-
-  nsresult rv;
-  rv = PClipboardContentAnalysis::CreateEndpoints(
-      base::GetCurrentProcId(), OtherPid(), &parentEndpoint, &childEndpoint);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL(this, "CreateEndpoints failed");
-  }
+  mClipboardContentAnalysisCreated = true;
 
   if (!mClipboardContentAnalysisThread) {
-    rv = NS_NewNamedThread("BkgrndClipboard",
-                           getter_AddRefs(mClipboardContentAnalysisThread));
+    nsresult rv = NS_NewNamedThread(
+        "BkgrndClipboard", getter_AddRefs(mClipboardContentAnalysisThread));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return IPC_FAIL(this, "NS_NewNamedThread failed");
     }
   }
 
-  RefPtr<ContentParent> contentParent = this;
-  // Bind the new endpoint to the backgroundClipboardContentAnalysis thread,
-  // then send them from the main thread.
-  rv = NS_DispatchToThreadQueue(
+  // Bind the new endpoint to the backgroundClipboardContentAnalysis thread.
+  mClipboardContentAnalysisThread->Dispatch(
       NS_NewRunnableFunction(
           "Create ClipboardContentAnalysisParent",
-          [contentParent = std::move(contentParent),
-           parentEndpoint = std::move(parentEndpoint),
-           childEndpoint = std::move(childEndpoint)]() mutable {
-            RefPtr<ClipboardContentAnalysisParent> parentActor =
-                new ClipboardContentAnalysisParent();
-            parentEndpoint.Bind(parentActor, nullptr);
-            DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-                NS_NewRunnableFunction(
-                    "SendInitClipboardContentAnalysis",
-                    [contentParent = std::move(contentParent),
-                     childEndpoint = std::move(childEndpoint)]() mutable {
-                      DebugOnly<bool> success =
-                          contentParent->SendInitClipboardContentAnalysis(
-                              std::move(childEndpoint));
-                      MOZ_ASSERT(success,
-                                 "SendInitClipboardContentAnalysis failed");
-                    }),
-                0);
-            MOZ_ASSERT(NS_SUCCEEDED(rv),
-                       "Failed to dispatch "
-                       "SendInitClipboardContentAnalysis");
+          [threadsafeHandle = RefPtr{ThreadsafeHandle()},
+           parentEndpoint = std::move(aParentEndpoint)]() mutable {
+            // Use a threadsafe handle here, so that it can
+            // be used to validate that the WindowContext comes from the
+            // correct content process.
+            RefPtr<ClipboardContentAnalysisParent> actor =
+                new ClipboardContentAnalysisParent(std::move(threadsafeHandle));
+            parentEndpoint.Bind(actor);
           }),
-      mClipboardContentAnalysisThread, EventQueuePriority::Normal);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL(this, "NS_DispatchToThreadQueue failed");
-  }
-  mClipboardContentAnalysisCreated = true;
+      NS_DISPATCH_NORMAL);
   return IPC_OK();
 }
 
