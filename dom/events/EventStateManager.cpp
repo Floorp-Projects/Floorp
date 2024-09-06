@@ -2027,7 +2027,9 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       browserParent->Manager()->MaybeInvokeDragSession(browserParent,
                                                        aEvent->mMessage);
 
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+      RefPtr<nsIWidget> widget = browserParent->GetTopLevelWidget();
+      nsCOMPtr<nsIDragSession> dragSession =
+          nsContentUtils::GetDragSession(widget);
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
       uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       nsCOMPtr<nsIPrincipal> principal;
@@ -4226,7 +4228,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
       }
 
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+      nsCOMPtr<nsIDragSession> dragSession =
+          nsContentUtils::GetDragSession(mPresContext);
       if (!dragSession) break;
 
       // Reset the flag.
@@ -4343,7 +4346,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (aEvent->mFlags.mIsSynthesizedForTests) {
         nsCOMPtr<nsIDragService> dragService =
             do_GetService("@mozilla.org/widget/dragservice;1");
-        nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+        nsCOMPtr<nsIDragSession> dragSession =
+            nsContentUtils::GetDragSession(mPresContext);
         if (dragSession && dragService &&
             !dragService->GetNeverAllowSessionIsSynthesizedForTests()) {
           MOZ_ASSERT(dragSession->IsSynthesizedForTests());
@@ -5794,7 +5798,8 @@ void EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent) {
     return;
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  nsCOMPtr<nsIDragSession> dragSession =
+      nsContentUtils::GetDragSession(mPresContext);
 
   if (dragSession) {
     // the initial dataTransfer is the one from the dragstart event that

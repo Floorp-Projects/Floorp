@@ -3246,7 +3246,8 @@ mozilla::ipc::IPCResult ContentChild::RecvEndDragSession(
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
-    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+    nsCOMPtr<nsIDragSession> dragSession;
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
     if (dragSession) {
       if (aUserCancelled) {
         dragSession->UserCancelled();

@@ -706,8 +706,9 @@ void WidgetMouseEvent::AssertContextMenuEventButtonConsistency() const {
 
 void WidgetDragEvent::InitDropEffectForTests() {
   MOZ_ASSERT(mFlags.mIsSynthesizedForTests);
+  MOZ_ASSERT(mWidget);
 
-  nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
+  nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession(mWidget);
   if (NS_WARN_IF(!session)) {
     return;
   }

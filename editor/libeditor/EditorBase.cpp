@@ -4620,7 +4620,9 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  RefPtr<nsIWidget> widget = GetWidget();
+  nsCOMPtr<nsIDragSession> dragSession =
+      nsContentUtils::GetDragSession(widget);
   if (NS_WARN_IF(!dragSession)) {
     return NS_ERROR_FAILURE;
   }
