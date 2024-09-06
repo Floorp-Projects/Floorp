@@ -438,7 +438,7 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   POINT cpos;
   cpos.x = GET_X_LPARAM(pos);
   cpos.y = GET_Y_LPARAM(pos);
-  winDragService->SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
+  currentDragSession->SetDragEndPoint(cpos.x, cpos.y);
   ModifierKeyState modifierKeyState;
   serv->EndDragSession(true, modifierKeyState.GetModifiers());
 

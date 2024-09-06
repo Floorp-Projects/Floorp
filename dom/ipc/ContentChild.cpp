@@ -3257,10 +3257,8 @@ mozilla::ipc::IPCResult ContentChild::RecvEndDragSession(
       if (dataTransfer) {
         dataTransfer->SetDropEffectInt(aDropEffect);
       }
+      dragSession->SetDragEndPoint(aDragEndPoint.x, aDragEndPoint.y);
     }
-
-    static_cast<nsBaseDragService*>(dragService.get())
-        ->SetDragEndPoint(aDragEndPoint);
     dragService->EndDragSession(aDoneDrag, aKeyModifiers);
   }
   return IPC_OK();

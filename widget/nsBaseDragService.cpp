@@ -1095,3 +1095,9 @@ nsBaseDragService::SetNeverAllowSessionIsSynthesizedForTests(bool aNeverAllow) {
   mNeverAllowSessionIsSynthesizedForTests = aNeverAllow;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBaseDragSession::SetDragEndPoint(int32_t aScreenX, int32_t aScreenY) {
+  SetDragEndPoint(LayoutDeviceIntPoint(aScreenX, aScreenY));
+  return NS_OK;
+}

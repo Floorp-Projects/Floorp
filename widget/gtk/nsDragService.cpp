@@ -674,10 +674,14 @@ static void OnSourceGrabEventAfter(GtkWidget* widget, GdkEvent* event,
     // Update the cursor position.  The last of these recorded gets used for
     // the eDragEnd event.
     nsDragService* dragService = static_cast<nsDragService*>(user_data);
-    gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
-    auto p = LayoutDeviceIntPoint::Round(event->motion.x_root * scale,
-                                         event->motion.y_root * scale);
-    dragService->SetDragEndPoint(p);
+    nsCOMPtr<nsIDragSession> session;
+    dragService->GetCurrentSession(nullptr, getter_AddRefs(session));
+    if (session) {
+      gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
+      auto p = LayoutDeviceIntPoint::Round(event->motion.x_root * scale,
+                                           event->motion.y_root * scale);
+      session->SetDragEndPoint(p.x, p.y);
+    }
   } else if (sMotionEvent &&
              (event->type == GDK_KEY_PRESS || event->type == GDK_KEY_RELEASE)) {
     // Update modifier state from key events.
@@ -1713,7 +1717,10 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     gdk_window_get_device_position(
         gdkWindow, gdk_drag_context_get_device(aContext), &x, &y, nullptr);
     gint scale = gdk_window_get_scale_factor(gdkWindow);
-    SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
+    nsCOMPtr<nsIDragSession> session = GetCurrentSession(mSourceWindow);
+    if (session) {
+      session->SetDragEndPoint(x * scale, y * scale);
+    }
     LOGDRAGSERVICE("  guess drag end point %d %d\n", x * scale, y * scale);
   }
 
@@ -2567,7 +2574,10 @@ gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
     return FALSE;
   }
 
-  SetDragEndPoint(aWindowPoint);
+  nsCOMPtr<nsIDragSession> session = GetCurrentSession(aWindow);
+  if (session) {
+    session->SetDragEndPoint(aWindowPoint.x, aWindowPoint.y);
+  }
 
   // We'll reply with gtk_drag_finish().
   return TRUE;
