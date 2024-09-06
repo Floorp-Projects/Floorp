@@ -1597,7 +1597,9 @@ LayoutDeviceToCSSScale BrowserParent::GetLayoutDeviceToCSSScale() {
 bool BrowserParent::QueryDropLinksForVerification() {
   // Before sending the dragEvent, we query the links being dragged and
   // store them on the parent, to make sure the child can not modify links.
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  RefPtr<nsIWidget> widget = GetTopLevelWidget();
+  nsCOMPtr<nsIDragSession> dragSession =
+      nsContentUtils::GetDragSession(widget);
   if (!dragSession) {
     NS_WARNING("No dragSession to query links for verification");
     return false;

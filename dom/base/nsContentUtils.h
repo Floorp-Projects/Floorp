@@ -2211,7 +2211,9 @@ class nsContentUtils {
   /**
    * Retrieve the current drag session, or null if no drag is currently occuring
    */
-  static already_AddRefed<nsIDragSession> GetDragSession();
+  static already_AddRefed<nsIDragSession> GetDragSession(nsIWidget* aWidget);
+
+  static already_AddRefed<nsIDragSession> GetDragSession(nsPresContext* aPC);
 
   /*
    * Initialize and set the dataTransfer field of an WidgetDragEvent.

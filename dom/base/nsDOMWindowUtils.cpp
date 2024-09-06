@@ -2296,6 +2296,12 @@ NS_IMETHODIMP nsDOMWindowUtils::DispatchDOMEventViaPresShellForTesting(
   RefPtr<PresShell> targetPresShell = targetDoc->GetPresShell();
   NS_ENSURE_STATE(targetPresShell);
 
+  WidgetGUIEvent* guiEvent = internalEvent->AsGUIEvent();
+  if (guiEvent && !guiEvent->mWidget) {
+    auto* pc = GetPresContext();
+    guiEvent->mWidget = pc ? pc->GetRootWidget() : nullptr;
+  }
+
   targetDoc->FlushPendingNotifications(FlushType::Layout);
 
   nsEventStatus status = nsEventStatus_eIgnore;

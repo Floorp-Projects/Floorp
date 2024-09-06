@@ -5571,7 +5571,13 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent,
 
 mozilla::ipc::IPCResult ContentParent::RecvUpdateDropEffect(
     const uint32_t& aDragAction, const uint32_t& aDropEffect) {
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  if (!dragService) {
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
     RefPtr<DataTransfer> dt = dragSession->GetDataTransfer();

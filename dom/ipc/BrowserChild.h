@@ -650,6 +650,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
           aCanvasFingerprinter,
       const Maybe<bool> aCanvasFingerprinterKnownText);
 
+  already_AddRefed<nsIDragSession> GetDragSession();
+
  protected:
   virtual ~BrowserChild();
 
