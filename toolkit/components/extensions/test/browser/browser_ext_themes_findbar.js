@@ -78,7 +78,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
 
   const TOOLBAR_FIELD_COLOR = "#ff00ff";
   const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
-  const TOOLBAR_FIELD_BORDER_COLOR = "#ffffff";
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu early in the test.
   gBrowser.selectedTab.focus();
@@ -90,7 +89,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
           tab_background_text: TEXT_COLOR,
           toolbar_field: TOOLBAR_FIELD_COLOR,
           toolbar_field_text: TOOLBAR_FIELD_TEXT_COLOR,
-          toolbar_field_border: TOOLBAR_FIELD_BORDER_COLOR,
         },
       },
     },
@@ -116,7 +114,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
     hexToCSS(TOOLBAR_FIELD_TEXT_COLOR),
     "Findbar textbox text color should be the same as toolbar field text color."
   );
-  testBorderColor(findbar_textbox, TOOLBAR_FIELD_BORDER_COLOR);
 
   assertHasNoBorders(findbar_prev_button);
   assertHasNoBorders(findbar_next_button);
@@ -181,7 +178,6 @@ add_task(
   async function test_toolbar_field_properties_on_findbar_with_theme_frame() {
     const TOOLBAR_FIELD_COLOR = "#ff00ff";
     const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
-    const TOOLBAR_FIELD_BORDER_COLOR = "#ffffff";
     // The TabContextMenu initializes its strings only on a focus or mouseover event.
     // Calls focus event on the TabContextMenu early in the test.
     gBrowser.selectedTab.focus();
@@ -196,7 +192,6 @@ add_task(
             tab_background_text: TEXT_COLOR,
             toolbar_field: TOOLBAR_FIELD_COLOR,
             toolbar_field_text: TOOLBAR_FIELD_TEXT_COLOR,
-            toolbar_field_border: TOOLBAR_FIELD_BORDER_COLOR,
           },
         },
       },
