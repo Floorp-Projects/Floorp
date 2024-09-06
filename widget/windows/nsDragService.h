@@ -51,7 +51,7 @@ class nsDragService final : public nsDragSession {
  public:
   // nsBaseDragService
   MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIArray* anArrayTransferables,
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType);
 
@@ -59,7 +59,8 @@ class nsDragService final : public nsDragSession {
                                                uint32_t aKeyModifiers) override;
 
   // native impl.
-  MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(IDataObject* aDataObj,
+  MOZ_CAN_RUN_SCRIPT nsresult StartInvokingDragSession(nsIWidget* aWidget,
+                                                       IDataObject* aDataObj,
                                                        uint32_t aActionType);
 
   // A drop occurred within the application vs. outside of it.

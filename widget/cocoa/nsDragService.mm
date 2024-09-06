@@ -178,8 +178,8 @@ NSImage* nsDragSession::ConstructDragImage(nsINode* aDOMNode,
 }
 
 nsresult nsDragService::InvokeDragSessionImpl(
-    nsIArray* aTransferableArray, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+    nsIWidget* aWidget, nsIArray* aTransferableArray,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
 #ifdef NIGHTLY_BUILD
@@ -250,7 +250,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   [pbItem release];
   [dragItem setDraggingFrame:localDragRect contents:image];
 
-  nsBaseDragService::StartDragSession();
+  nsBaseDragService::StartDragSession(aWidget);
   OpenDragPopup();
 
   mNSDraggingSession = [mNativeDragView

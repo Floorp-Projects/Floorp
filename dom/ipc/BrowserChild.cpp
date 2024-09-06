@@ -1949,8 +1949,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
     nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction) {
   if (nsCOMPtr<nsIDragService> dragService =
           do_GetService("@mozilla.org/widget/dragservice;1")) {
-    dragService->StartDragSession();
-    if (RefPtr<nsIDragSession> session = GetDragSession()) {
+    nsIWidget* widget = WebWidget();
+    dragService->StartDragSession(widget);
+    if (RefPtr<nsIDragSession> session = nsContentUtils::GetDragSession(widget)) {
       session->SetSourceWindowContext(aSourceWindowContext.GetMaybeDiscarded());
       session->SetSourceTopWindowContext(
           aSourceTopWindowContext.GetMaybeDiscarded());

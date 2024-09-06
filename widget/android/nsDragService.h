@@ -64,7 +64,7 @@ class nsDragService final : public nsDragSession {
 
   // nsBaseDragService
   MOZ_CAN_RUN_SCRIPT nsresult
-  InvokeDragSessionImpl(nsIArray* anArrayTransferables,
+  InvokeDragSessionImpl(nsIWidget* aWidget, nsIArray* anArrayTransferables,
                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                         uint32_t aActionType) override;
 };

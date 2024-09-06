@@ -751,8 +751,8 @@ nsDragService::InvokeDragSession(
 
 // nsBaseDragService
 nsresult nsDragService::InvokeDragSessionImpl(
-    nsIArray* aArrayTransferables, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+    nsIWidget* aWidget, nsIArray* aArrayTransferables,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   // make sure that we have an array of transferables to use
   if (!aArrayTransferables) return NS_ERROR_INVALID_ARG;
   // set our reference to the transferables.  this will also addref
@@ -829,7 +829,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
 
   nsresult rv;
   if (context) {
-    StartDragSession();
+    StartDragSession(aWidget);
 
     // GTK uses another hidden window for receiving mouse events.
     sGrabWidget = gtk_window_group_get_current_grab(window_group);
@@ -903,10 +903,10 @@ bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
 }
 
 NS_IMETHODIMP
-nsDragService::StartDragSession() {
+nsDragService::StartDragSession(nsISupports* aWidgetProvider) {
   LOGDRAGSERVICE("nsDragService::StartDragSession");
   mTempFileUrls.Clear();
-  return nsBaseDragService::StartDragSession();
+  return nsBaseDragService::StartDragSession(aWidgetProvider);
 }
 
 bool nsDragService::RemoveTempFiles() {
@@ -2706,7 +2706,8 @@ gboolean nsDragService::RunScheduledTask() {
   }
 
   // This may be the start of a destination drag session.
-  StartDragSession();
+  nsIWidget* targetWidget = mTargetWindow;
+  StartDragSession(targetWidget);
 
   // mTargetWidget may be nullptr if the window has been destroyed.
   // (The leave event is not scheduled if a drop task is still scheduled.)

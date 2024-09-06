@@ -24,7 +24,7 @@ class nsDragServiceProxy final : public nsDragSessionProxy {
 
   // nsBaseDragService
   virtual nsresult InvokeDragSessionImpl(
-      nsIArray* anArrayTransferables,
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
 

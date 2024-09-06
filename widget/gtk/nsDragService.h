@@ -222,7 +222,7 @@ class nsDragService final : public nsDragSession, public nsIObserver {
 
   // nsBaseDragService
   MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIArray* anArrayTransferables,
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
   // nsIDragService
@@ -231,7 +231,7 @@ class nsDragService final : public nsDragSession, public nsIObserver {
       nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
       nsIArray* anArrayTransferables, uint32_t aActionType,
       nsContentPolicyType aContentPolicyType) override;
-  NS_IMETHOD StartDragSession() override;
+  NS_IMETHOD StartDragSession(nsISupports* aWidgetProvider) override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;
 

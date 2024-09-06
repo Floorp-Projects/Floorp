@@ -64,8 +64,8 @@ static nsWindow* GetWindow(dom::Document* aDocument) {
 }
 
 nsresult nsDragService::InvokeDragSessionImpl(
-    nsIArray* aTransferableArray, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+    nsIWidget* aWidget, nsIArray* aTransferableArray,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   if (jni::GetAPIVersion() < 24) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -90,7 +90,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   if (nsWindow* window = GetWindow(mSourceDocument)) {
     mTransferable = transferable;
 
-    nsBaseDragService::StartDragSession();
+    nsBaseDragService::StartDragSession(aWidget);
     OpenDragPopup();
 
     auto bitmap = CreateDragImage(mSourceNode, aRegion);
