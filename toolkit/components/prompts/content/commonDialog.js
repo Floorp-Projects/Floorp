@@ -158,7 +158,9 @@ function commonDialogOnLoad() {
               resources: [],
               analysisType: Ci.nsIContentAnalysisRequest.eBulkDataEntry,
               operationTypeForDisplay: Ci.nsIContentAnalysisRequest.eClipboard,
-              url: args.owningBrowsingContext.currentURI,
+              url: lazy.gContentAnalysis.getURIForBrowsingContext(
+                args.owningBrowsingContext
+              ),
               textContent: data,
               windowGlobalParent:
                 args.owningBrowsingContext.currentWindowContext,

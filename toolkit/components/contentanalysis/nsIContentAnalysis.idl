@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+webidl BrowsingContext;
 webidl WindowGlobalParent;
 
 [scriptable, uuid(06e6a60f-3a2b-41fa-a63b-fea7a7f71649)]
@@ -295,4 +296,10 @@ interface nsIContentAnalysis : nsISupports
    */
   [implicit_jscontext]
   Promise getDiagnosticInfo();
+
+  /**
+   * Gets the URI to use for the passed-in browsing context. This correctly
+   * handles iframes.
+   */
+  nsIURI getURIForBrowsingContext(in BrowsingContext aBrowsingContext);
 };

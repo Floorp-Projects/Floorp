@@ -21,6 +21,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ProfilerLabels.h"
@@ -793,7 +794,13 @@ nsFilePicker::CheckContentAnalysisService() {
                                                                    __func__);
   }
 
-  nsCOMPtr<nsIURI> uri = mBrowsingContext->Canonical()->GetCurrentURI();
+  nsCOMPtr<nsIURI> uri =
+      mozilla::contentanalysis::ContentAnalysis::GetURIForBrowsingContext(
+          mBrowsingContext->Canonical());
+  if (!uri) {
+    return nsFilePicker::ContentAnalysisResponse::CreateAndReject(
+        NS_ERROR_FAILURE, __func__);
+  }
 
   auto processOneItem = [self = RefPtr{this},
                          contentAnalysis = std::move(contentAnalysis),

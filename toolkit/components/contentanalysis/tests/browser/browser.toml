@@ -16,6 +16,12 @@ support-files = [
   "clipboard_paste_inputandtextarea.html",
 ]
 
+["browser_clipboard_paste_inputandtextarea_iframe_content_analysis.js"]
+support-files = [
+  "clipboard_paste_inputandtextarea.html",
+  "clipboard_paste_inputandtextarea_containing_frame.html",
+]
+
 ["browser_clipboard_paste_noformatting_content_analysis.js"]
 support-files = [
   "clipboard_paste_noformatting.html",
@@ -44,4 +50,11 @@ support-files = [
   "!/toolkit/components/printing/tests/head.js",
   "!/toolkit/components/printing/tests/longerArticle.html",
   "!/toolkit/components/printing/tests/simplifyArticleSample.html",
+]
+
+["browser_print_iframe_content_analysis.js"]
+support-files = [
+  "!/toolkit/components/printing/tests/head.js",
+  "!/toolkit/components/printing/tests/simplifyArticleSample.html",
+  "clipboard_print_iframe.html",
 ]
