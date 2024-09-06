@@ -12,7 +12,7 @@ import { config } from "./config";
 export function PopupElement() {
   const gWorkspacesServices = workspacesServices.getInstance();
   return (
-    <xul:panel
+    <xul:panelview
       id="workspacesToolbarButtonPanel"
       type="arrow"
       position={"bottomleft topleft"}
@@ -62,6 +62,6 @@ export function PopupElement() {
           />
         </xul:hbox>
       </xul:vbox>
-    </xul:panel>
+    </xul:panelview>
   );
 }

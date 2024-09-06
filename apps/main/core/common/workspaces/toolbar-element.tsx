@@ -6,6 +6,7 @@
 import { BrowserActionUtils } from "@core/utils/browser-action";
 import { PopupElement } from "./popup-element";
 import workspacesStyles from "./styles.css?inline";
+import type { JSX } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -28,22 +29,12 @@ export class workspacesToolbarButton {
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
       "workspaces-toolbar-button",
+      "workspacesToolbarButtonPanel",
       <PopupElement />,
-      async () => {
-        const panel = document?.getElementById(
-          "workspacesToolbarButtonPanel",
-        ) as XULPopupElement;
-        panel.openPopup(
-          document?.getElementById("workspaces-toolbar-button"),
-          "bottomright topright",
-          0,
-          0,
-          false,
-          false,
-        );
-      },
+      null,
+      null,
       CustomizableUI.AREA_TABSTRIP,
-      this.StyleElement(),
+      this.StyleElement() as JSX.Element,
       -1,
     );
   }

@@ -28,20 +28,10 @@ export class gFloorpProfileManager {
     BrowserActionUtils.createMenuToolbarButton(
       "profile-manager",
       "profile-manager",
+      "profile-manager-popup",
       <MenuPopup />,
-      async () => {
-        const popup = document.getElementById(
-          "profile-manager-popup",
-        ) as XULPopupElement;
-        popup?.openPopup(
-          document.getElementById("profile-manager-popup"),
-          "after_start",
-          0,
-          0,
-          false,
-          false,
-        );
-      },
+      null,
+      null,
       CustomizableUI.AREA_NAVBAR,
       this.StyleElement(),
       15,

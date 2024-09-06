@@ -8,8 +8,8 @@ import { workspacesToolbarButton } from "./toolbar-element";
 import { workspacesTabContextMenu } from "./tabContextMenu";
 
 export function initWorkspaces() {
-  workspacesTabContextMenu.getInstance();
-  workspacesToolbarButton.getInstance();
+  new workspacesTabContextMenu();
+  new workspacesToolbarButton();
   workspacesServices.getInstance();
   import.meta.hot?.accept();
 }

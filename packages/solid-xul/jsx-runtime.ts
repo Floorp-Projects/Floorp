@@ -94,6 +94,7 @@ declare module "solid-js" {
       "xul:popupset": XULPopupSetElement;
       "xul:tooltip": XULElementBase;
       "xul:panel": XULPanelElement;
+      "xul:panelview": XULPanelElement;
       "xul:menupopup": XULMenuPopupElement;
       "xul:vbox": XULBoxElement;
       "xul:hbox": XULBoxElement;

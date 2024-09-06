@@ -62,17 +62,25 @@ export namespace BrowserActionUtils {
   export function createMenuToolbarButton(
     widgetId: string,
     l10nId: string,
-    popupElem: JSXElement,
-    onCommandFunc: () => void,
+    targetViewId: string,
+    popupElement: JSXElement,
+    onViewShowingFunc?: ((event: Event) => void) | null,
+    onCreatedFunc?: ((aNode: XULElement) => void) | null,
     area: string = CustomizableUI.AREA_NAVBAR,
     styleElement: JSXElement | null = null,
     position: number | null = 0,
-    onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
     if (styleElement) {
       render(() => styleElement, document?.head, {
         hotCtx: import.meta.hot,
         marker: document?.head?.lastChild as Element,
+      });
+    }
+
+    if (popupElement) {
+      render(() => popupElement, document?.getElementById("mainPopupSet"), {
+        hotCtx: import.meta.hot,
+        marker: document?.getElementById("mainPopupSet")?.lastChild as Element,
       });
     }
 
@@ -84,20 +92,16 @@ export namespace BrowserActionUtils {
     (async () => {
       CustomizableUI.createWidget({
         id: widgetId,
-        type: "button",
+        type: "view",
+        viewId: targetViewId,
         tooltiptext: (await document?.l10n?.formatValue(l10nId)) ?? "",
         label: (await document?.l10n?.formatValue(l10nId)) ?? "",
         removable: true,
-        onCommand: () => {
-          onCommandFunc?.();
-        },
         onCreated: (aNode: XULElement) => {
-          aNode.setAttribute("type", "menu");
-          render(() => popupElem, aNode, {
-            hotCtx: import.meta.hot,
-            marker: aNode.lastChild as Element,
-          });
           onCreatedFunc?.(aNode);
+        },
+        onViewShowing: (event: Event) => {
+          onViewShowingFunc?.(event);
         },
       });
       CustomizableUI.addWidgetToArea(
