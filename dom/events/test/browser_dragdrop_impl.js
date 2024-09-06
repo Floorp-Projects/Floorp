@@ -117,7 +117,7 @@ async function openWindow(tabIdx) {
   return tab.linkedBrowser.browsingContext;
 }
 
-add_setup(async function () {
+async function setup() {
   const oldDragService = SpecialPowers.Cc[
     "@mozilla.org/widget/dragservice;1"
   ].getService(SpecialPowers.Ci.nsIDragService);
@@ -140,7 +140,7 @@ add_setup(async function () {
   tab1Cxt = await openWindow(0);
   tab2Cxt = await openWindow(1);
   tab3Cxt = await openWindow(2);
-});
+}
 
 // ----------------------------------------------------------------------------
 // Test dragging between different frames and different domains

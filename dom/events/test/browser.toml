@@ -11,8 +11,16 @@ support-files = [
 
 ["browser_bug1539497.js"]
 
-["browser_dragdrop.js"]
+["browser_dragdrop_protected.js"]
 support-files = [
+  "browser_dragdrop_impl.js",
+  "browser_dragdrop_inner.html",
+  "browser_dragdrop_outer.html",
+]
+
+["browser_dragdrop_unprotected.js"]
+support-files = [
+  "browser_dragdrop_impl.js",
   "browser_dragdrop_inner.html",
   "browser_dragdrop_outer.html",
 ]
