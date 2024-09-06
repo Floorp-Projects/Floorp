@@ -69,6 +69,7 @@ class nsBaseDragSession : public nsIDragSession {
   }
 
  protected:
+  nsBaseDragSession();
   ~nsBaseDragSession();
 
   // Returns true if a drag event was dispatched to a child process after
@@ -78,6 +79,10 @@ class nsBaseDragSession : public nsIDragSession {
     mDragEventDispatchedToChildProcess = false;
     return retval;
   }
+
+  // Takes the list of PBrowsers that are engaged in the current drag session
+  // from the drag service and stores them here.
+  void TakeSessionBrowserListFromService();
 
   /**
    * Free resources contained in DataTransferItems that aren't needed by JS.
@@ -109,6 +114,9 @@ class nsBaseDragSession : public nsIDragSession {
   // set if the image in mImage is a popup. If this case, the popup will be
   // opened and moved instead of using a drag image.
   nsCOMPtr<mozilla::dom::Element> mDragPopup;
+
+  // Weak references to PBrowsers that are currently engaged in drags
+  nsTArray<nsWeakPtr> mBrowsers;
 
   // the screen position where drag gesture occurred, used for positioning the
   // drag image.
@@ -165,6 +173,10 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
   using nsIDragService::GetCurrentSession;
 
   uint32_t GetSuppressLevel() { return mSuppressLevel; };
+
+  nsTArray<nsWeakPtr> TakeSessionBrowserList() {
+    return std::move(mBrowsers);
+  }
 
  protected:
   virtual ~nsBaseDragService();
@@ -251,9 +263,6 @@ class nsBaseDragService : public nsIDragService, public nsBaseDragSession {
   RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
 
   uint32_t mSuppressLevel;
-
-  // Weak references to PBrowsers that are currently engaged in drags
-  nsTArray<nsWeakPtr> mBrowsers;
 
   // Sub-region for tree-selections.
   mozilla::Maybe<mozilla::CSSIntRegion> mRegion;

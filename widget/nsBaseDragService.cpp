@@ -82,6 +82,10 @@ nsBaseDragService::~nsBaseDragService() = default;
 
 NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService, nsIDragSession)
 
+nsBaseDragSession::nsBaseDragSession() {
+  TakeSessionBrowserListFromService();
+}
+
 nsBaseDragSession::~nsBaseDragSession() = default;
 
 //---------------------------------------------------------
@@ -1036,23 +1040,23 @@ nsBaseDragSession::DragEventDispatchedToChildProcess() {
   return NS_OK;
 }
 
-bool nsBaseDragService::MaybeAddBrowser(BrowserParent* aBP) {
+static bool MaybeAddBrowser(nsTArray<nsWeakPtr>& aBrowsers, BrowserParent* aBP) {
   nsWeakPtr browser = do_GetWeakReference(aBP);
 
   // Equivalent to `InsertElementSorted`, avoiding inserting a duplicate
   // element. See bug 1896166.
-  size_t index = mBrowsers.IndexOfFirstElementGt(browser);
-  if (index == 0 || mBrowsers[index - 1] != browser) {
-    mBrowsers.InsertElementAt(index, browser);
+  size_t index = aBrowsers.IndexOfFirstElementGt(browser);
+  if (index == 0 || aBrowsers[index - 1] != browser) {
+    aBrowsers.InsertElementAt(index, browser);
     return true;
   }
   return false;
 }
 
-bool nsBaseDragService::RemoveAllBrowsers() {
-  for (auto& weakBrowser : mBrowsers) {
+static bool RemoveAllBrowsers(nsTArray<nsWeakPtr>& aBrowsers) {
+  for (auto& weakBrowser : aBrowsers) {
     nsCOMPtr<BrowserParent> browser = do_QueryReferent(weakBrowser);
-    if (!browser) {
+    if (NS_WARN_IF(!browser)) {
       continue;
     }
     mozilla::Unused << browser->SendEndDragSession(
@@ -1060,11 +1064,45 @@ bool nsBaseDragService::RemoveAllBrowsers() {
         nsIDragService::DRAGDROP_ACTION_NONE);
   }
 
-  mBrowsers.Clear();
+  aBrowsers.Clear();
   return true;
 }
 
-bool nsBaseDragService::MustUpdateDataTransfer(EventMessage aMessage) {
+bool nsBaseDragService::MaybeAddBrowser(BrowserParent* aBP) {
+/*
+  // TODO: until nsBaseDragService and nsBaseDragSession separate
+  // (part 21), they automatically share mBrowsers, so skip this.
+  nsCOMPtr<nsIDragSession> session;
+  GetCurrentSession(nullptr, getter_AddRefs(session));
+  if (session) {
+    return session->MaybeAddBrowser(aBP);
+  }
+*/
+  return ::MaybeAddBrowser(mBrowsers, aBP);
+}
+
+bool nsBaseDragService::RemoveAllBrowsers() {
+/*
+  // TODO: until nsBaseDragService and nsBaseDragSession separate
+  // (part 21), they automatically share mBrowsers, so skip this.
+  nsCOMPtr<nsIDragSession> session;
+  GetCurrentSession(nullptr, getter_AddRefs(session));
+  if (session) {
+    return session->RemoveAllBrowsers();
+  }
+*/
+  return ::RemoveAllBrowsers(mBrowsers);
+}
+
+bool nsBaseDragSession::MaybeAddBrowser(BrowserParent* aBP) {
+  return ::MaybeAddBrowser(mBrowsers, aBP);
+}
+
+bool nsBaseDragSession::RemoveAllBrowsers() {
+  return ::RemoveAllBrowsers(mBrowsers);
+}
+
+bool nsBaseDragSession::MustUpdateDataTransfer(EventMessage aMessage) {
   return false;
 }
 
@@ -1120,4 +1158,11 @@ NS_IMETHODIMP
 nsBaseDragSession::SetDragEndPoint(int32_t aScreenX, int32_t aScreenY) {
   SetDragEndPoint(LayoutDeviceIntPoint(aScreenX, aScreenY));
   return NS_OK;
+}
+
+void nsBaseDragSession::TakeSessionBrowserListFromService() {
+  nsCOMPtr<nsIDragService> svc =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  NS_ENSURE_TRUE_VOID(svc);
+  mBrowsers = static_cast<nsBaseDragService*>(svc.get())->TakeSessionBrowserList();
 }
