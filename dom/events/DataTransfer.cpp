@@ -37,6 +37,7 @@
 #include "mozilla/dom/DataTransferBinding.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileList.h"
@@ -49,6 +50,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsPresContext.h"
 
 namespace mozilla::dom {
 
@@ -292,7 +294,7 @@ void DataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed) {
 
 void DataTransfer::GetMozTriggeringPrincipalURISpec(
     nsAString& aPrincipalURISpec) {
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (!dragSession) {
     aPrincipalURISpec.Truncate(0);
     return;
@@ -311,7 +313,7 @@ void DataTransfer::GetMozTriggeringPrincipalURISpec(
 }
 
 nsIContentSecurityPolicy* DataTransfer::GetMozCSP() {
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (!dragSession) {
     return nullptr;
   }
@@ -426,7 +428,7 @@ void DataTransfer::SetMozCursor(const nsAString& aCursorState) {
 }
 
 already_AddRefed<nsINode> DataTransfer::GetMozSourceNode() {
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (!dragSession) {
     return nullptr;
   }
@@ -442,7 +444,7 @@ already_AddRefed<nsINode> DataTransfer::GetMozSourceNode() {
 }
 
 already_AddRefed<WindowContext> DataTransfer::GetSourceTopWindowContext() {
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (!dragSession) {
     return nullptr;
   }
@@ -825,7 +827,7 @@ void DataTransfer::UpdateDragImage(Element& aImage, int32_t aX, int32_t aY) {
     return;
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (dragSession) {
     dragSession->UpdateDragImage(&aImage, aX, aY);
   }
@@ -1333,8 +1335,7 @@ void DataTransfer::CacheExternalDragFormats() {
   // This data will instead only be retrieved in FillInExternalDragData when
   // asked for, as it may be time consuming for the source application to
   // generate it.
-
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  auto* dragSession = GetOwnerDragSession();
   if (!dragSession) {
     return;
   }
@@ -1533,6 +1534,22 @@ void DataTransfer::SetMode(DataTransfer::Mode aMode) {
   } else {
     mMode = aMode;
   }
+}
+
+nsIWidget* DataTransfer::GetOwnerWidget() {
+  RefPtr<WindowContext> wc = GetWindowContext();
+  NS_ENSURE_TRUE(wc, nullptr);
+  auto* doc = wc->GetDocument();
+  NS_ENSURE_TRUE(doc, nullptr);
+  auto* pc = doc->GetPresContext();
+  NS_ENSURE_TRUE(pc, nullptr);
+  return pc->GetRootWidget();
+}
+
+nsIDragSession* DataTransfer::GetOwnerDragSession() {
+  auto* widget = GetOwnerWidget();
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession(widget);
+  return dragSession;
 }
 
 }  // namespace mozilla::dom
