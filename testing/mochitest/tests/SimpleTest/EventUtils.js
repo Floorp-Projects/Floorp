@@ -3343,7 +3343,7 @@ function synthesizeDrop(
       throw new Error(`${aDropEffect} is an invalid drop effect value`);
   }
 
-  ds.startDragSessionForTests(dropAction);
+  ds.startDragSessionForTests(aWindow, dropAction);
 
   try {
     var [result, dataTransfer] = synthesizeDragOver(

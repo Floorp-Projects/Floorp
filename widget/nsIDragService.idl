@@ -152,13 +152,18 @@ interface nsIDragService : nsISupports
    * session for emulating an external drag.  At that time, this should
    * be used instead of startDragSession().
    *
+   * @param aWidgetProvider Either the nsIWidget that is the source or current
+   *                        target of the drag, or an nsIDOMWindowProxy for a
+   *                        window that is on the widget.
+   *
    * @param aAllowedEffect Set default drag action which means allowed effects
    *                       in the session and every DnD events are initialized
    *                       with one of specified value.  So, the value can be
    *                       DRAGDROP_ACTION_NONE, or one or more values of
    *                       DRAGDROP_ACTION_(MOVE|COPY|LINK).
    */
-  void startDragSessionForTests(in unsigned long aAllowedEffect);
+  void startDragSessionForTests(in nsISupports aWidgetProvider,
+                                in unsigned long aAllowedEffect);
 
   /**
     * Tells the Drag Service to end a drag session. This is called when
