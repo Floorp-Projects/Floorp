@@ -1913,8 +1913,17 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   return IPC_OK();
 }
 
-static already_AddRefed<DataTransfer> ConvertToDataTransfer(
-    nsTArray<IPCTransferableData>&& aTransferables, EventMessage aMessage) {
+already_AddRefed<DataTransfer> BrowserChild::ConvertToDataTransfer(
+    nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
+    EventMessage aMessage) {
+  // The extension process should grant access to a protected DataTransfer if
+  // the principal permits it (and dom.events.datatransfer.protected.enabled is
+  // false).  Otherwise, protected DataTransfer access should only be given to
+  // the system.
+  if (!aPrincipal || Manager()->GetRemoteType() != EXTENSION_REMOTE_TYPE) {
+    aPrincipal = nsContentUtils::GetSystemPrincipal();
+  }
+
   // Check if we are receiving any file objects. If we are we will want
   // to hide any of the other objects coming in from content.
   bool hasFiles = false;
@@ -1947,8 +1956,7 @@ static already_AddRefed<DataTransfer> ConvertToDataTransfer(
           hasFiles && item.data().type() !=
                           IPCTransferableDataType::TIPCTransferableDataBlob;
       dataTransfer->SetDataWithPrincipalFromOtherProcess(
-          NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
-          nsContentUtils::GetSystemPrincipal(), hidden);
+          NS_ConvertUTF8toUTF16(item.flavor()), variant, i, aPrincipal, hidden);
     }
   }
   return dataTransfer.forget();
@@ -1957,7 +1965,8 @@ static already_AddRefed<DataTransfer> ConvertToDataTransfer(
 mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
     const MaybeDiscarded<WindowContext>& aSourceWindowContext,
     const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
-    nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction) {
+    nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
+    const uint32_t& aAction) {
   if (nsCOMPtr<nsIDragService> dragService =
           do_GetService("@mozilla.org/widget/dragservice;1")) {
     nsIWidget* widget = WebWidget();
@@ -1967,9 +1976,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
       session->SetSourceTopWindowContext(
           aSourceTopWindowContext.GetMaybeDiscarded());
       session->SetDragAction(aAction);
-
-      RefPtr<DataTransfer> dataTransfer =
-          ConvertToDataTransfer(std::move(aTransferables), eDragStart);
+      RefPtr<DataTransfer> dataTransfer = ConvertToDataTransfer(
+          aPrincipal, std::move(aTransferables), eDragStart);
       session->SetDataTransfer(dataTransfer);
     }
   }
@@ -1977,11 +1985,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvInvokeChildDragSession(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateDragSession(
-    nsTArray<IPCTransferableData>&& aTransferables,
+    nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
     EventMessage aEventMessage) {
   if (RefPtr<nsIDragSession> session = GetDragSession()) {
-    nsCOMPtr<DataTransfer> dataTransfer =
-        ConvertToDataTransfer(std::move(aTransferables), aEventMessage);
+    nsCOMPtr<DataTransfer> dataTransfer = ConvertToDataTransfer(
+        aPrincipal, std::move(aTransferables), aEventMessage);
     session->SetDataTransfer(dataTransfer);
   }
   return IPC_OK();

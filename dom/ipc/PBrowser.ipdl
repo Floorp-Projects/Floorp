@@ -997,9 +997,12 @@ child:
     async InvokeChildDragSession(
         MaybeDiscardedWindowContext aSourceWindowContext,
         MaybeDiscardedWindowContext aSourceTopWindowContext,
+        nullable nsIPrincipal aPrincipal,
         IPCTransferableData[] transfers, uint32_t action);
 
-    async UpdateDragSession(IPCTransferableData[] transfers,
+    async UpdateDragSession(
+        nullable nsIPrincipal aPrincipal,
+        IPCTransferableData[] transfers,
                             EventMessage message);
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,

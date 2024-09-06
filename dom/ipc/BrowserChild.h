@@ -664,10 +664,11 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvInvokeChildDragSession(
       const MaybeDiscarded<WindowContext>& aSourceWindowContext,
       const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
-      nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction);
+      nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
+      const uint32_t& aAction);
 
   mozilla::ipc::IPCResult RecvUpdateDragSession(
-      nsTArray<IPCTransferableData>&& aTransferables,
+      nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
       EventMessage aEventMessage);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -766,6 +767,10 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   nsresult CloneDocumentTreeIntoSelf(
       const MaybeDiscarded<BrowsingContext>& aSourceBC,
       const embedding::PrintData& aPrintData);
+
+  already_AddRefed<DataTransfer> ConvertToDataTransfer(
+      nsIPrincipal* aPrincipal, nsTArray<IPCTransferableData>&& aTransferables,
+      EventMessage aMessage);
 
   class DelayedDeleteRunnable;
 
