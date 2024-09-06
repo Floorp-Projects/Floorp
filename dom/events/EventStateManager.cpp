@@ -982,6 +982,13 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     mMouseEnterLeaveHelper->TryToRestorePendingRemovedOverTarget(aEvent);
   }
 
+  static constexpr auto const allowSynthesisForTests = []() -> bool {
+    nsCOMPtr<nsIDragService> dragService =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    return dragService &&
+           !dragService->GetNeverAllowSessionIsSynthesizedForTests();
+  };
+
   switch (aEvent->mMessage) {
     case eContextMenu:
       if (PointerLockManager::IsLocked()) {
@@ -1141,20 +1148,21 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case eDragOver: {
       WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
       MOZ_ASSERT(dragEvent);
-      if (dragEvent->mFlags.mIsSynthesizedForTests) {
+      if (dragEvent->mFlags.mIsSynthesizedForTests &&
+          allowSynthesisForTests()) {
         dragEvent->InitDropEffectForTests();
       }
       // Send the enter/exit events before eDrop.
       GenerateDragDropEnterExit(aPresContext, dragEvent);
       break;
     }
-    case eDrop:
-      if (aEvent->mFlags.mIsSynthesizedForTests) {
+    case eDrop: {
+      if (aEvent->mFlags.mIsSynthesizedForTests && allowSynthesisForTests()) {
         MOZ_ASSERT(aEvent->AsDragEvent());
         aEvent->AsDragEvent()->InitDropEffectForTests();
       }
       break;
-
+    }
     case eKeyPress: {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eChrome) ||
@@ -4330,8 +4338,11 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
     case eDrop: {
       if (aEvent->mFlags.mIsSynthesizedForTests) {
-        if (nsCOMPtr<nsIDragSession> dragSession =
-                nsContentUtils::GetDragSession()) {
+        nsCOMPtr<nsIDragService> dragService =
+            do_GetService("@mozilla.org/widget/dragservice;1");
+        nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+        if (dragSession && dragService &&
+            !dragService->GetNeverAllowSessionIsSynthesizedForTests()) {
           MOZ_ASSERT(dragSession->IsSynthesizedForTests());
           RefPtr<WindowContext> sourceWC;
           DebugOnly<nsresult> rvIgnored =

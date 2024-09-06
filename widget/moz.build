@@ -126,6 +126,7 @@ XPIDL_SOURCES += [
     "nsIFormatConverter.idl",
     "nsIGfxInfo.idl",
     "nsIGfxInfoDebug.idl",
+    "nsIMockDragServiceController.idl",
     "nsIPaper.idl",
     "nsIPaperMargin.idl",
     "nsIPrinter.idl",
@@ -390,6 +391,12 @@ IPDL_SOURCES += [
 LOCAL_INCLUDES += [
     "/widget/%s" % toolkit,
 ]
+
+if CONFIG["ENABLE_TESTS"]:
+    UNIFIED_SOURCES += [
+        "MockDragServiceController.cpp",
+    ]
+
 FINAL_LIBRARY = "xul"
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
