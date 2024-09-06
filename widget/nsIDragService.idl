@@ -44,29 +44,6 @@ interface nsIDragService : nsISupports
   const long DRAGDROP_ACTION_UNINITIALIZED = 64;
 
   /**
-    * Starts a modal drag session with an array of transaferables.
-    *
-    * Note: This method is deprecated for non-native code.
-    *
-    * @param  aPrincipal - the triggering principal of the drag, or null if
-    *                      it's from browser chrome or OS
-    * @param aCsp - The csp of the triggering Document
-    * @param  aTransferables - an array of transferables to be dragged
-    * @param  aActionType - specified which of copy/move/link are allowed
-    * @param  aContentPolicyType - the contentPolicyType that will be
-    *           passed to the loadInfo when creating a new channel
-    *           (defaults to TYPE_OTHER)
-    */
-  [can_run_script]
-  void invokeDragSession (in Node aDOMNode,
-                          in nsIPrincipal aPrincipal,
-                          in nsIContentSecurityPolicy aCsp,
-                          in nsICookieJarSettings aCookieJarSettings,
-                          in nsIArray aTransferables,
-                          in unsigned long aActionType,
-                          [optional] in nsContentPolicyType aContentPolicyType);
-
-  /**
    * Starts a modal drag session using an image. The first four arguments are
    * the same as invokeDragSession.
    *

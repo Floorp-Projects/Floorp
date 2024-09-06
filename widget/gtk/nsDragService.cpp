@@ -728,9 +728,9 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
 
 NS_IMETHODIMP
 nsDragService::InvokeDragSession(
-    nsINode* aDOMNode, nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsICookieJarSettings* aCookieJarSettings, nsIArray* aArrayTransferables,
-    uint32_t aActionType,
+    nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+    nsIArray* aArrayTransferables, uint32_t aActionType,
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
   LOGDRAGSERVICE("nsDragService::InvokeDragSession");
 
@@ -741,8 +741,8 @@ nsDragService::InvokeDragSession(
   if (mSourceNode) return NS_ERROR_NOT_AVAILABLE;
 
   return nsBaseDragService::InvokeDragSession(
-      aDOMNode, aPrincipal, aCsp, aCookieJarSettings, aArrayTransferables,
-      aActionType, aContentPolicyType);
+      aWidget, aDOMNode, aPrincipal, aCsp, aCookieJarSettings,
+      aArrayTransferables, aActionType, aContentPolicyType);
 }
 
 // nsBaseDragService

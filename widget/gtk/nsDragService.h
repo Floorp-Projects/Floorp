@@ -227,7 +227,7 @@ class nsDragService final : public nsDragSession, public nsIObserver {
       uint32_t aActionType) override;
   // nsIDragService
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InvokeDragSession(
-      nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+      nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
       nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
       nsIArray* anArrayTransferables, uint32_t aActionType,
       nsContentPolicyType aContentPolicyType) override;
