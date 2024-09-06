@@ -12,6 +12,7 @@
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
@@ -1852,6 +1853,62 @@ NS_IMETHODIMP ContentAnalysis::SafeContentAnalysisResultCallback::Error(
   return NS_OK;
 }
 
+ClipboardContentAnalysisResult AnalyzeText(
+    uint64_t aInnerWindowId,
+    ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
+    nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
+    nsString aText) {
+  RefPtr<mozilla::dom::WindowGlobalParent> window =
+      mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
+  if (!window) {
+    // The window has gone away in the meantime
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  }
+  nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
+      new ContentAnalysisRequest(
+          nsIContentAnalysisRequest::AnalysisType::eBulkDataEntry,
+          std::move(aText), false, EmptyCString(), aDocumentURI,
+          nsIContentAnalysisRequest::OperationType::eClipboard, window);
+  nsresult rv = aContentAnalysis->AnalyzeContentRequestCallback(
+      contentAnalysisRequest, /* aAutoAcknowledge */ true, aResolver);
+  if (NS_FAILED(rv)) {
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  }
+  return true;
+}
+
+ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsCustomData(
+    uint64_t aInnerWindowId,
+    ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
+    nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
+    nsITransferable* aTrans) {
+  nsCOMPtr<nsISupports> transferData;
+  if (NS_FAILED(aTrans->GetTransferData(kCustomTypesMime,
+                                        getter_AddRefs(transferData)))) {
+    return false;
+  }
+  nsCOMPtr<nsISupportsCString> cStringData = do_QueryInterface(transferData);
+  if (!cStringData) {
+    return false;
+  }
+  nsCString str;
+  nsresult rv = cStringData->GetData(str);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsString text;
+  dom::DataTransfer::ParseExternalCustomTypesString(
+      mozilla::Span(str.Data(), str.Length()),
+      [&](dom::DataTransfer::ParseExternalCustomTypesStringData&& aData) {
+        text = std::move(std::move(aData).second);
+      });
+  if (text.IsEmpty()) {
+    return false;
+  }
+  return AnalyzeText(aInnerWindowId, aResolver, aDocumentURI, aContentAnalysis,
+                     std::move(text));
+}
+
 ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
     uint64_t aInnerWindowId,
     ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
@@ -1885,23 +1942,8 @@ ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
     return mozilla::Err(NoContentAnalysisResult::
                             ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS);
   }
-  RefPtr<mozilla::dom::WindowGlobalParent> window =
-      mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
-  if (!window) {
-    // The window has gone away in the meantime
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
-  }
-  nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
-      new ContentAnalysisRequest(
-          nsIContentAnalysisRequest::AnalysisType::eBulkDataEntry,
-          std::move(text), false, EmptyCString(), aDocumentURI,
-          nsIContentAnalysisRequest::OperationType::eClipboard, window);
-  nsresult rv = aContentAnalysis->AnalyzeContentRequestCallback(
-      contentAnalysisRequest, /* aAutoAcknowledge */ true, aResolver);
-  if (NS_FAILED(rv)) {
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
-  }
-  return true;
+  return AnalyzeText(aInnerWindowId, aResolver, aDocumentURI, aContentAnalysis,
+                     std::move(text));
 }
 
 ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsFile(
@@ -2020,6 +2062,19 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
   if (!keepChecking) {
     return;
   }
+
+  auto customResult = CheckClipboardContentAnalysisAsCustomData(
+      innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable);
+  if (customResult.isErr()) {
+    aResolver->Callback(
+        ContentAnalysisResult::FromNoResult(customResult.unwrapErr()));
+    return;
+  }
+  keepChecking = !customResult.unwrap();
+  if (!keepChecking) {
+    return;
+  }
+
   // Note that on Windows, kNativeHTMLMime will return the text in the native
   // Windows clipboard CF_HTML format - see
   // https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format
