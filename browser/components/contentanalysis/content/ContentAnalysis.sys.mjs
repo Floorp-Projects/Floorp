@@ -827,25 +827,33 @@ export const ContentAnalysis = {
           }
           body = this.l10n.formatValueSync(bodyId);
         }
+        let alertBrowsingContext = aBrowsingContext;
         if (aBrowsingContext.embedderElement?.getAttribute("printpreview")) {
-          // If we're in a print preview window, the window itself is about to close
-          // (because of the thrown NS_ERROR_CONTENT_BLOCKED), so using an async
-          // call would just immediately make the dialog disappear. Instead, use
-          // a blocking version. (see bug 1899714)
-          Services.prompt.alertBC(
-            aBrowsingContext,
-            Ci.nsIPromptService.MODAL_TYPE_TAB,
-            this.l10n.formatValueSync(titleId),
-            body
-          );
-        } else {
-          await Services.prompt.asyncAlert(
-            aBrowsingContext,
-            Ci.nsIPromptService.MODAL_TYPE_TAB,
-            this.l10n.formatValueSync(titleId),
-            body
-          );
+          // If we're in a print preview dialog, things are tricky.
+          // The window itself is about to close (because of the thrown NS_ERROR_CONTENT_BLOCKED),
+          // so using an async call would just immediately make the dialog disappear. (bug 1899714)
+          // Using a blocking version can cause a hang if the window is resizing while
+          // we show the dialog. (bug 1900798)
+          // So instead, try to find the browser that this print preview dialog is on top of
+          // and show the dialog there.
+          let printPreviewBrowser = aBrowsingContext.embedderElement;
+          let win = printPreviewBrowser.ownerGlobal;
+          for (let browser of win.gBrowser.browsers) {
+            if (
+              win.PrintUtils.getPreviewBrowser(browser)?.browserId ===
+              printPreviewBrowser.browserId
+            ) {
+              alertBrowsingContext = browser.browsingContext;
+              break;
+            }
+          }
         }
+        await Services.prompt.asyncAlert(
+          alertBrowsingContext,
+          Ci.nsIPromptService.MODAL_TYPE_TAB,
+          this.l10n.formatValueSync(titleId),
+          body
+        );
         return null;
       }
       case Ci.nsIContentAnalysisResponse.eUnspecified:
