@@ -12,6 +12,8 @@
 // 1. window/tab #1 iframe in same domain
 // 2. ".com" domain, window/tab #2
 // 3. window/tab #2 iframe in same domain
+// 4. same ".org" domain as 0 but in window/tab #3
+// 3. window/tab #3 iframe in same domain
 //
 // To avoid symmetric tests, the drag source must be in the first window.
 
@@ -30,13 +32,17 @@ const OUTER_BASE_2 = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
 );
+const OUTER_BASE_3 = OUTER_BASE_1;
+
 // iframe domains
 const INNER_BASE_1 = OUTER_BASE_1;
 const INNER_BASE_2 = OUTER_BASE_2;
+const INNER_BASE_3 = OUTER_BASE_3;
 
 // The tabs, each in their own widget.
 let tab1Cxt;
 let tab2Cxt;
+let tab3Cxt;
 
 let dragServiceCid;
 
@@ -67,8 +73,8 @@ async function runDnd(
 async function openWindow(tabIdx) {
   let win =
     tabIdx == 0 ? window : await BrowserTestUtils.openNewBrowserWindow();
-  let url =
-    (tabIdx == 0 ? OUTER_BASE_1 : OUTER_BASE_2) + "browser_dragdrop_outer.html";
+  const OUTER_BASE_ARRAY = [OUTER_BASE_1, OUTER_BASE_2, OUTER_BASE_3];
+  let url = OUTER_BASE_ARRAY[tabIdx] + "browser_dragdrop_outer.html";
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser: win.gBrowser,
     url,
@@ -83,9 +89,10 @@ async function openWindow(tabIdx) {
   // Set the URL for the iframe.  Also set
   // neverAllowSessionIsSynthesizedForTests for both frames
   // (the second is redundant if they are in the same process).
+  const INNER_BASE_ARRAY = [INNER_BASE_1, INNER_BASE_2, INNER_BASE_3];
   await SpecialPowers.spawn(
     tab.linkedBrowser.browsingContext,
-    [tabIdx == 0 ? INNER_BASE_1 : INNER_BASE_2],
+    [INNER_BASE_ARRAY[tabIdx]],
     iframeUrl => {
       content.document.getElementById("iframe").src =
         iframeUrl + "browser_dragdrop_inner.html";
@@ -132,7 +139,12 @@ add_setup(async function () {
 
   tab1Cxt = await openWindow(0);
   tab2Cxt = await openWindow(1);
+  tab3Cxt = await openWindow(2);
 });
+
+// ----------------------------------------------------------------------------
+// Test dragging between different frames and different domains
+// ----------------------------------------------------------------------------
 
 add_task(async function test_dnd_tab1_to_tab1() {
   await runDnd("tab1->tab1", tab1Cxt, tab1Cxt);
@@ -164,4 +176,16 @@ add_task(async function test_dnd_iframe1_to_tab2() {
 
 add_task(async function test_dnd_iframe1_to_iframe2() {
   await runDnd("iframe1->iframe2", tab1Cxt.children[0], tab2Cxt.children[0]);
+});
+
+// ----------------------------------------------------------------------------
+// Test dragging between different frames at the same domain
+// ----------------------------------------------------------------------------
+
+add_task(async function test_dnd_tab1_to_tab3() {
+  await runDnd("tab1->tab3", tab1Cxt, tab3Cxt);
+});
+
+add_task(async function test_dnd_iframe1_to_iframe3() {
+  await runDnd("iframe1->iframe3", tab1Cxt.children[0], tab3Cxt.children[0]);
 });
