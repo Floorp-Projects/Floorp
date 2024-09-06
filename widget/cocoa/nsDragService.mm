@@ -44,8 +44,7 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
-nsDragService::nsDragService()
-    : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false) {}
+nsDragService::nsDragService() : mNativeDragView(nil), mNativeDragEvent(nil) {}
 
 nsDragService::~nsDragService() {}
 
@@ -268,7 +267,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
 }
 
 NS_IMETHODIMP
-nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
+nsDragSession::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!aTransferable) {
@@ -330,7 +329,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
 }
 
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
+nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   *_retval = false;
@@ -394,7 +393,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsDragService::GetNumDropItems(uint32_t* aNumItems) {
+nsDragSession::GetNumDropItems(uint32_t* aNumItems) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   *aNumItems = 0;
@@ -416,9 +415,9 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 }
 
 NS_IMETHODIMP
-nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX,
+nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
                                int32_t aImageY) {
-  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+  nsBaseDragSession::UpdateDragImage(aImage, aImageX, aImageY);
   mDragImageChanged = true;
   return NS_OK;
 }

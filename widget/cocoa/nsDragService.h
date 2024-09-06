@@ -11,7 +11,31 @@
 
 #include <Cocoa/Cocoa.h>
 
-class nsDragService : public nsBaseDragService {
+// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
+// (which nsBaseDragService temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragSession : public nsBaseDragService {
+ public:
+  // nsIDragSession
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     uint32_t aItemIndex) override;
+  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
+                                   bool* _retval) override;
+  NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
+
+  NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX,
+                             int32_t aImageY) override;
+
+ protected:
+  nsCOMPtr<nsIArray> mDataItems;  // only valid for a drag started within gecko
+
+  bool mDragImageChanged = false;
+};
+
+// Temporary inheritance from nsDragSession instead of nsBaseDragService
+// (which nsDragSession temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragService final : public nsDragSession {
  public:
   nsDragService();
 
@@ -20,18 +44,10 @@ class nsDragService : public nsBaseDragService {
       nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
+
   // nsIDragService
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;
-  NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX,
-                             int32_t aImageY) override;
-
-  // nsIDragSession
-  NS_IMETHOD GetData(nsITransferable* aTransferable,
-                     uint32_t aItemIndex) override;
-  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
-                                   bool* _retval) override;
-  NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
 
   void DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint);
 
@@ -52,11 +68,8 @@ class nsDragService : public nsBaseDragService {
       nsINode* aDOMNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       mozilla::CSSIntPoint aPoint, mozilla::LayoutDeviceIntRect* aDragRect);
 
-  nsCOMPtr<nsIArray> mDataItems;  // only valid for a drag started within gecko
   ChildView* mNativeDragView;
   NSEvent* mNativeDragEvent;
-
-  bool mDragImageChanged;
 };
 
 #endif  // nsDragService_h_

@@ -8,11 +8,19 @@
 
 #include "nsBaseDragService.h"
 
-class nsDragServiceProxy : public nsBaseDragService {
+// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
+// (which nsBaseDragService temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragSessionProxy : public nsBaseDragService {};
+
+// Temporary inheritance from nsDragSessionProxy instead of nsBaseDragService
+// (which nsDragSession temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragServiceProxy final : public nsDragSessionProxy {
  public:
   nsDragServiceProxy();
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsDragServiceProxy, nsBaseDragService)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsDragServiceProxy, nsDragSessionProxy)
 
   // nsBaseDragService
   virtual nsresult InvokeDragSessionImpl(

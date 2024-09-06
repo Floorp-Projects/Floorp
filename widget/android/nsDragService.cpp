@@ -20,7 +20,8 @@
 #include "nsViewManager.h"
 #include "nsWindow.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsDragService, nsBaseDragService)
+NS_IMPL_ISUPPORTS_INHERITED0(nsDragSession, nsBaseDragService)
+NS_IMPL_ISUPPORTS_INHERITED0(nsDragService, nsDragSession)
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -102,7 +103,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
 }
 
 NS_IMETHODIMP
-nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItem) {
+nsDragSession::GetData(nsITransferable* aTransferable, uint32_t aItem) {
   if (!aTransferable) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -129,7 +130,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItem) {
 }
 
 NS_IMETHODIMP
-nsDragService::GetNumDropItems(uint32_t* aNumItems) {
+nsDragSession::GetNumDropItems(uint32_t* aNumItems) {
   if (mTransferable) {
     *aNumItems = 1;
     return NS_OK;
@@ -139,7 +140,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 }
 
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
+nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   *_retval = false;
 
   nsDependentCString dataFlavor(aDataFlavor);
@@ -174,9 +175,9 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 }
 
 NS_IMETHODIMP
-nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX,
+nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
                                int32_t aImageY) {
-  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+  nsBaseDragSession::UpdateDragImage(aImage, aImageX, aImageY);
   auto bitmap = CreateDragImage(mSourceNode, Nothing());
 
   if (nsWindow* window = GetWindow(mSourceDocument)) {
@@ -192,7 +193,7 @@ bool nsDragService::MustUpdateDataTransfer(EventMessage aMessage) {
   return aMessage == eDrop;
 }
 
-java::sdk::Bitmap::LocalRef nsDragService::CreateDragImage(
+java::sdk::Bitmap::LocalRef nsDragSession::CreateDragImage(
     nsINode* aNode, const Maybe<CSSIntRegion>& aRegion) {
   LayoutDeviceIntRect dragRect;
   RefPtr<SourceSurface> surface;
@@ -222,7 +223,7 @@ java::sdk::Bitmap::LocalRef nsDragService::CreateDragImage(
   return bitmap;
 }
 
-void nsDragService::SetData(nsITransferable* aTransferable) {
+void nsDragSession::SetData(nsITransferable* aTransferable) {
   mTransferable = aTransferable;
   // Reset DataTransfer
   mDataTransfer = nullptr;

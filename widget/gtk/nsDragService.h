@@ -23,7 +23,6 @@ namespace gfx {
 class SourceSurface;
 }
 }  // namespace mozilla
-
 class DragData final {
  public:
   NS_INLINE_DECL_REFCOUNTING(DragData)
@@ -88,11 +87,133 @@ class DragData final {
   nsTArray<nsString> mUris;
 };
 
-/**
- * Native GTK DragService wrapper
- */
+// Temporary inheritance from nsBaseDragService instead of nsBaseDragSession
+// (which nsBaseDragService temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragSession : public nsBaseDragService {
+ public:
+  // nsIDragSession
+  NS_IMETHOD SetCanDrop(bool aCanDrop) override;
+  NS_IMETHOD GetCanDrop(bool* aCanDrop) override;
+  NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     uint32_t aItemIndex) override;
+  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
+                                   bool* _retval) override;
 
-class nsDragService final : public nsBaseDragService, public nsIObserver {
+  // Update Drag&Drop state according child process state.
+  // UpdateDragEffect() is called by IPC bridge when child process
+  // accepts/denies D&D operation and uses stored
+  // mTargetDragContextForRemote context.
+  NS_IMETHOD UpdateDragEffect() override;
+
+  class AutoEventLoop {
+    RefPtr<nsDragSession> mSession;
+
+   public:
+    explicit AutoEventLoop(RefPtr<nsDragSession> aSession)
+        : mSession(std::move(aSession)) {
+      nsDragSession::sEventLoopDepth++;
+    }
+    ~AutoEventLoop() { nsDragSession::sEventLoopDepth--; }
+  };
+
+  static int GetLoopDepth() { return sEventLoopDepth; };
+
+ protected:
+  virtual ~nsDragSession() = default;
+
+  void ReplyToDragMotion(GdkDragContext* aDragContext, guint aTime);
+  void ReplyToDragMotion();
+
+  void GetDragFlavors(nsTArray<nsCString>& aFlavors);
+  // this will get the native data from the last target given a
+  // specific flavor
+  void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors,
+                         bool aResetTargetData = true);
+  // this will reset all of the target vars
+  void TargetResetData(void);
+
+  // is the current target drag context contain a list?
+  bool IsTargetContextList(void);
+
+  // Ensure our data cache belongs to aDragContext and clear the cache if
+  // aDragContext is different than mCachedDragContext.
+  void EnsureCachedDataValidForContext(GdkDragContext* aDragContext);
+
+  // our source data items
+  nsCOMPtr<nsIArray> mSourceDataItems;
+
+  // mTargetWidget and mTargetDragContext are set only while dispatching
+  // motion or drop events.  mTime records the corresponding timestamp.
+  RefPtr<GtkWidget> mTargetWidget;
+  RefPtr<GdkDragContext> mTargetDragContext;
+
+  // last data received and its length
+  void* mTargetDragData = nullptr;
+  uint32_t mTargetDragDataLen = 0;
+
+  // have we received our drag data?
+  bool mTargetDragDataReceived = false;
+
+  // When we route D'n'D request to child process
+  // (by EventStateManager::DispatchCrossProcessEvent)
+  // we save GdkDragContext to mTargetDragContextForRemote.
+  // When we get a reply from child process we use
+  // the stored GdkDragContext to send reply to OS.
+  //
+  // We need to store GdkDragContext because mTargetDragContext is cleared
+  // after every D'n'D event.
+  RefPtr<GdkDragContext> mTargetDragContextForRemote;
+  guint mTargetTime;
+
+  mozilla::GUniquePtr<gchar*> mTargetDragUris = nullptr;
+
+  nsTHashMap<nsCStringHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
+
+  // We cache all data for the current drag context,
+  // because waiting for the data in GetTargetDragData can be very slow.
+  nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
+
+  // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
+  // ref counted and may be already deleted on Gtk side.
+  // We used it for mCachedData invalidation only and can't be used for
+  // any D&D operation.
+  uintptr_t mCachedDragContext = 0;
+
+  // How deep we're nested in event loops
+  static int sEventLoopDepth;
+
+  // is it OK to drop on us?
+  bool mCanDrop = false;
+
+ public:
+  static GdkAtom sJPEGImageMimeAtom;
+  static GdkAtom sJPGImageMimeAtom;
+  static GdkAtom sPNGImageMimeAtom;
+  static GdkAtom sGIFImageMimeAtom;
+  static GdkAtom sCustomTypesMimeAtom;
+  static GdkAtom sURLMimeAtom;
+  static GdkAtom sRTFMimeAtom;
+  static GdkAtom sTextMimeAtom;
+  static GdkAtom sMozUrlTypeAtom;
+  static GdkAtom sMimeListTypeAtom;
+  static GdkAtom sTextUriListTypeAtom;
+  static GdkAtom sTextPlainUTF8TypeAtom;
+  static GdkAtom sXdndDirectSaveTypeAtom;
+  static GdkAtom sTabDropTypeAtom;
+  static GdkAtom sFileMimeAtom;
+  static GdkAtom sPortalFileAtom;
+  static GdkAtom sPortalFileTransferAtom;
+  static GdkAtom sFilePromiseURLMimeAtom;
+  static GdkAtom sFilePromiseMimeAtom;
+  static GdkAtom sNativeImageMimeAtom;
+};
+
+// Temporary inheritance from nsDragSession instead of nsBaseDragService
+// (which nsDragSession temporarily inherits).
+// This will be undone at the end of this patch series.
+class nsDragService final : public nsDragSession, public nsIObserver {
  public:
   nsDragService();
 
@@ -113,21 +234,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   NS_IMETHOD StartDragSession() override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;
-
-  // nsIDragSession
-  NS_IMETHOD SetCanDrop(bool aCanDrop) override;
-  NS_IMETHOD GetCanDrop(bool* aCanDrop) override;
-  NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
-  NS_IMETHOD GetData(nsITransferable* aTransferable,
-                     uint32_t aItemIndex) override;
-  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
-                                   bool* _retval) override;
-
-  // Update Drag&Drop state according child process state.
-  // UpdateDragEffect() is called by IPC bridge when child process
-  // accepts/denies D&D operation and uses stored
-  // mTargetDragContextForRemote context.
-  NS_IMETHOD UpdateDragEffect() override;
 
   // Methods called from nsWindow to handle responding to GTK drag
   // destination signals
@@ -177,18 +283,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // set the drag icon during drag-begin
   void SetDragIcon(GdkDragContext* aContext);
 
-  class AutoEventLoop {
-    RefPtr<nsDragService> mService;
-
-   public:
-    explicit AutoEventLoop(RefPtr<nsDragService> aService)
-        : mService(std::move(aService)) {
-      mService->mEventLoopDepth++;
-    }
-    ~AutoEventLoop() { mService->mEventLoopDepth--; }
-  };
-  int GetLoopDepth() const { return mEventLoopDepth; };
-
  protected:
   virtual ~nsDragService();
 
@@ -229,13 +323,10 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // on Gtk side.
   // We used it for mCachedDragData/mCachedDragFlavors invalidation
   // only and can't be used for any D&D operation.
-  uintptr_t mCachedDragContext;
   nsTHashMap<void*, RefPtr<DragData>> mCachedDragData;
   nsTArray<GdkAtom> mCachedDragFlavors;
 
   void SetCachedDragContext(GdkDragContext* aDragContext);
-
-  nsTHashMap<nsCStringHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
 
   guint mPendingTime;
 
@@ -244,28 +335,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // mTargetWindow is cleared once the drag has completed or left.
   RefPtr<nsWindow> mTargetWindow;
   mozilla::LayoutDeviceIntPoint mTargetWindowPoint;
-  // mTargetWidget and mTargetDragContext are set only while dispatching
-  // motion or drop events.  mTime records the corresponding timestamp.
-  RefPtr<GtkWidget> mTargetWidget;
-  RefPtr<GdkDragContext> mTargetDragContext;
 
-  // When we route D'n'D request to child process
-  // (by EventStateManager::DispatchCrossProcessEvent)
-  // we save GdkDragContext to mTargetDragContextForRemote.
-  // When we get a reply from child process we use
-  // the stored GdkDragContext to send reply to OS.
-  //
-  // We need to store GdkDragContext because mTargetDragContext is cleared
-  // after every D'n'D event.
-  RefPtr<GdkDragContext> mTargetDragContextForRemote;
-  guint mTargetTime;
-
-  // is it OK to drop on us?
-  bool mCanDrop;
   int mWaitingForDragDataRequests = 0;
 
-  // is the current target drag context contain a list?
-  bool IsTargetContextList(void);
   bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
 
   // this will get the native data from the last target given a
@@ -276,8 +348,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // the source of our drags
   GtkWidget* mHiddenWidget;
-  // our source data items
-  nsCOMPtr<nsIArray> mSourceDataItems;
 
   // get a list of the sources in gtk's format
   GtkTargetList* GetSourceList(void);
@@ -296,8 +366,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   MOZ_CAN_RUN_SCRIPT static gboolean TaskDispatchCallback(gpointer data);
   MOZ_CAN_RUN_SCRIPT gboolean RunScheduledTask();
   MOZ_CAN_RUN_SCRIPT void DispatchMotionEvents();
-  void ReplyToDragMotion(GdkDragContext* aDragContext, guint aTime);
-  void ReplyToDragMotion();
   void UpdateDragAction(GdkDragContext* aDragContext);
   void UpdateDragAction();
 
@@ -318,30 +386,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   nsCOMArray<nsIFile> mTemporaryFiles;
   // timer to trigger deletion of temporary files
   guint mTempFileTimerID;
-  // How deep we're nested in event loops
-  int mEventLoopDepth;
-
- public:
-  static GdkAtom sJPEGImageMimeAtom;
-  static GdkAtom sJPGImageMimeAtom;
-  static GdkAtom sPNGImageMimeAtom;
-  static GdkAtom sGIFImageMimeAtom;
-  static GdkAtom sCustomTypesMimeAtom;
-  static GdkAtom sURLMimeAtom;
-  static GdkAtom sRTFMimeAtom;
-  static GdkAtom sTextMimeAtom;
-  static GdkAtom sMozUrlTypeAtom;
-  static GdkAtom sMimeListTypeAtom;
-  static GdkAtom sTextUriListTypeAtom;
-  static GdkAtom sTextPlainUTF8TypeAtom;
-  static GdkAtom sXdndDirectSaveTypeAtom;
-  static GdkAtom sTabDropTypeAtom;
-  static GdkAtom sFileMimeAtom;
-  static GdkAtom sPortalFileAtom;
-  static GdkAtom sPortalFileTransferAtom;
-  static GdkAtom sFilePromiseURLMimeAtom;
-  static GdkAtom sFilePromiseMimeAtom;
-  static GdkAtom sNativeImageMimeAtom;
 };
 
 #endif  // nsDragService_h__
