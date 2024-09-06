@@ -141,6 +141,11 @@ interface nsIDragSession : nsISupports
   [notxpcom, nostdcall] boolean isSynthesizedForTests();
 
   /**
+   * Sets the drag end point.  Position is relative to screen in device coords.
+   */
+  void setDragEndPoint(in long aScreenX, in long aScreenY);
+
+  /**
    * Sets drag end point of synthesized session when the test does not dispatch
    * "drop" event.
    */

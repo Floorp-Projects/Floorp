@@ -4285,9 +4285,12 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
   }
 
-  if (mDragService) {
+  nsCOMPtr<nsIDragSession> session =
+      mDragService->GetCurrentSession(mGeckoChild);
+  if (session) {
     RefPtr<nsDragService> dragService =
         static_cast<nsDragService*>(mDragService);
+    MOZ_ASSERT(dragService);
 
     // Set the dragend point from the current mouse location
     // FIXME(emilio): Weird that we wouldn't use aPoint instead? Seems to work
@@ -4297,8 +4300,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     NSPoint locationInWindow =
         nsCocoaUtils::ConvertPointFromScreen([self window], pnt);
     FlipCocoaScreenCoordinate(pnt);
-    dragService->SetDragEndPoint(
-        [self convertWindowCoordinates:locationInWindow]);
+    LayoutDeviceIntPoint pt = [self convertWindowCoordinates:locationInWindow];
+    session->SetDragEndPoint(pt.x, pt.y);
 
     // XXX: dropEffect should be updated per |aOperation|.
     // As things stand though, |aOperation| isn't well handled within "our"
@@ -4309,18 +4312,17 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     // value for NSDragOperationGeneric that is passed by other applications.
     // All that said, NSDragOperationNone is still reliable.
     if (aOperation == NSDragOperationNone) {
-      RefPtr<nsIDragSession> session = dragService->GetDragSession(mGeckoChild);
-      RefPtr<dom::DataTransfer> dataTransfer =
-          session ? session->GetDataTransfer() : nullptr;
-      if (dataTransfer) {
+      if (RefPtr dataTransfer = session->GetDataTransfer()) {
         dataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
       }
     }
 
     dragService->EndDragSession(true,
                                 nsCocoaUtils::ModifiersForEvent(currentEvent));
-    NS_RELEASE(mDragService);
   }
+
+  session = nullptr;
+  NS_IF_RELEASE(mDragService);
 
   [globalDragPboard release];
   globalDragPboard = nil;

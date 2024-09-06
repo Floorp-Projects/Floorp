@@ -42,14 +42,14 @@ class MockDragService : public nsBaseDragService {
 };
 
 static void SetDragEndPointFromScreenPoint(
-    MockDragService* aService, nsPresContext* aPc,
+    nsIDragSession* aSession, nsPresContext* aPc,
     const LayoutDeviceIntPoint& aScreenPt) {
   // aScreenPt is screen-relative, and we want to be
   // top-level-widget-relative.
   auto* widget = aPc->GetRootWidget();
   auto pt = aScreenPt - widget->WidgetToScreenOffset();
   pt += widget->WidgetToTopLevelWidgetOffset();
-  aService->SetDragEndPoint(pt);
+  aSession->SetDragEndPoint(pt.x, pt.y);
 }
 
 static bool IsMouseEvent(nsIMockDragServiceController::EventType aEventType) {
@@ -160,7 +160,7 @@ MockDragServiceController::SendEvent(
       NS_ENSURE_TRUE(currentDragSession, NS_ERROR_UNEXPECTED);
       currentDragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
       widget->DispatchInputEvent(widgetEvent.get());
-      SetDragEndPointFromScreenPoint(ds, presCxt,
+      SetDragEndPointFromScreenPoint(currentDragSession, presCxt,
                                      LayoutDeviceIntPoint(aScreenX, aScreenY));
       nsCOMPtr<nsINode> sourceNode;
       rv = currentDragSession->GetSourceNode(getter_AddRefs(sourceNode));
@@ -182,7 +182,7 @@ MockDragServiceController::SendEvent(
       NS_ENSURE_TRUE(currentDragSession, NS_ERROR_UNEXPECTED);
       currentDragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
       widget->DispatchInputEvent(widgetEvent.get());
-      SetDragEndPointFromScreenPoint(ds, presCxt,
+      SetDragEndPointFromScreenPoint(currentDragSession, presCxt,
                                      LayoutDeviceIntPoint(aScreenX, aScreenY));
       rv = ds->EndDragSession(true /* doneDrag */, aKeyModifiers);
       NS_ENSURE_SUCCESS(rv, rv);

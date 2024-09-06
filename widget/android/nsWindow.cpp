@@ -2672,8 +2672,9 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
   LayoutDeviceIntPoint point =
       LayoutDeviceIntPoint(int32_t(floorf(aX)), int32_t(floorf(aY)));
 
-  if (aAction == java::sdk::DragEvent::ACTION_DRAG_STARTED) {
-    dragService->SetDragEndPoint(point);
+  nsCOMPtr<nsIDragSession> dragSession = dragService->GetCurrentSession(this);
+  if (dragSession && aAction == java::sdk::DragEvent::ACTION_DRAG_STARTED) {
+    dragSession->SetDragEndPoint(point.x, point.y);
     return;
   }
 
@@ -2690,13 +2691,13 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
     auto dropData =
         mozilla::java::GeckoDragAndDrop::DropData::Ref::From(aDropData);
     nsDragService::SetDropData(dropData);
+    dragSession = dragService->GetCurrentSession(this);
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = dragService->GetCurrentSession(this);
   if (dragSession) {
     switch (message) {
       case eDragOver:
-        dragService->SetDragEndPoint(point);
+        dragSession->SetDragEndPoint(point.x, point.y);
         dragSession->FireDragEventAtSource(eDrag, 0);
         break;
       case eDrop: {
@@ -2713,7 +2714,7 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
         auto dropData =
             mozilla::java::GeckoDragAndDrop::DropData::Ref::From(aDropData);
         nsDragService::SetDropData(dropData);
-        dragService->SetDragEndPoint(point);
+        dragSession->SetDragEndPoint(point.x, point.y);
         break;
       }
       default:
