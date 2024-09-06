@@ -12,9 +12,16 @@
 %{ C++
 #include "mozilla/EventForwards.h"
 #include "nsSize.h"
+
+namespace mozilla {
+namespace dom {
+class BrowserParent;
+} // namespace dom
+} // namespace mozilla
 %}
 interface nsIContentSecurityPolicy;
 
+[ptr] native BrowserParentPtr(mozilla::dom::BrowserParent);
 native EventMessage(mozilla::EventMessage);
 native nsSize(nsSize);
 
@@ -175,4 +182,12 @@ interface nsIDragSession : nsISupports
   [noscript, can_run_script]
   void fireDragEventAtSource(in EventMessage aEventMessage,
                              in unsigned long aKeyModifiers);
+
+  [notxpcom, nostdcall] boolean maybeAddBrowser(in BrowserParentPtr aBP);
+  [notxpcom, nostdcall] boolean removeAllBrowsers();
+
+  /**
+   * Retrun true if nsIDragSession's data is updated.
+   */
+  [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);
 };

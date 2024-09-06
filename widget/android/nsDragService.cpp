@@ -187,7 +187,7 @@ nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
   return NS_OK;
 }
 
-bool nsDragService::MustUpdateDataTransfer(EventMessage aMessage) {
+bool nsDragSession::MustUpdateDataTransfer(EventMessage aMessage) {
   // Android's drag and drop API sets drop item in drop event.
   // So we have to invalidate data transfer cache on drop event.
   return aMessage == eDrop;

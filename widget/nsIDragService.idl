@@ -196,11 +196,6 @@ interface nsIDragService : nsISupports
   [notxpcom, nostdcall] boolean removeAllBrowsers();
 
   /**
-   * Retrun true if nsIDragSession's data is updated.
-   */
-  [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);
-
-  /**
    * The controller is used to issue events that would normally come from
    * the system (when it is not mocked for testing).  This allows us to test
    * without engaging any native DND behavior.
