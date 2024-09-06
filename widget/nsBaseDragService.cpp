@@ -41,7 +41,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DragEvent.h"
-#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFrameLoader.h"
@@ -63,12 +62,20 @@ LazyLogModule sWidgetDragServiceLog("WidgetDragService");
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
+// TODO: Temporary hack to share drag session suppression level.
+// Removed later in this patch series.
+uint32_t GetSuppressLevel() {
+  nsCOMPtr<nsIDragService> svc =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  NS_ENSURE_TRUE(svc, 0);
+  return static_cast<nsBaseDragService*>(svc.get())->GetSuppressLevel();
+}
+
 nsBaseDragService::nsBaseDragService()
     : mEndingSession(false),
       mHasImage(false),
       mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-      mSuppressLevel(0),
-      mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE) {}
+      mSuppressLevel(0) {}
 
 nsBaseDragService::~nsBaseDragService() = default;
 
@@ -689,9 +696,9 @@ void nsBaseDragSession::DiscardInternalTransferData() {
 }
 
 NS_IMETHODIMP
-nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
+nsBaseDragSession::FireDragEventAtSource(EventMessage aEventMessage,
                                          uint32_t aKeyModifiers) {
-  if (!mSourceNode || !mSourceDocument || mSuppressLevel) {
+  if (!mSourceNode || !mSourceDocument || GetSuppressLevel()) {
     return NS_OK;
   }
   RefPtr<PresShell> presShell = mSourceDocument->GetPresShell();

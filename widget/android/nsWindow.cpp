@@ -2697,7 +2697,7 @@ void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
     switch (message) {
       case eDragOver:
         dragService->SetDragEndPoint(point);
-        dragService->FireDragEventAtSource(eDrag, 0);
+        dragSession->FireDragEventAtSource(eDrag, 0);
         break;
       case eDrop: {
         bool canDrop = false;

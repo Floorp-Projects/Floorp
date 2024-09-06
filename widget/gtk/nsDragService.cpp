@@ -2865,7 +2865,12 @@ void nsDragSession::ReplyToDragMotion() {
 }
 
 void nsDragService::DispatchMotionEvents() {
-  FireDragEventAtSource(eDrag, GetCurrentModifiers());
+  if (mSourceWindow) {
+    RefPtr<nsIDragSession> session = GetCurrentSession(mSourceWindow);
+    if (session) {
+      session->FireDragEventAtSource(eDrag, GetCurrentModifiers());
+    }
+  }
   if (mTargetWindow) {
     mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
                                      mTargetTime);
