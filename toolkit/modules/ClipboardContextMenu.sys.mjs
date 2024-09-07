@@ -135,11 +135,13 @@ export var ClipboardContextMenu = {
       // on the same `_menupopup` object. If the popup is already open,
       // `openPopup` is a no-op. When the popup is clicked or dismissed both
       // actor parents will receive the corresponding event.
-      this._menupopup.openPopup(null, {
-        isContextMenu: true,
-        x: mouseXInCSSPixels.value,
-        y: mouseYInCSSPixels.value,
-      });
+      this._menupopup.openPopup(
+        null,
+        "overlap" /* options */,
+        mouseXInCSSPixels.value,
+        mouseYInCSSPixels.value,
+        true /* isContextMenu */
+      );
 
       this._refreshDelayTimer(document);
     });
