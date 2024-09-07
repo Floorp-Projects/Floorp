@@ -66,20 +66,20 @@ void XULPopupElement::OpenPopup(Element* aAnchorElement,
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (!pm) {
-    return;
-  }
-  // As a special case for popups that are menus when no anchor or position
-  // are specified, open the popup with ShowMenu instead of ShowPopup so that
-  // the popup is aligned with the menu.
-  if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
-    if (auto* menu = GetContainingMenu()) {
-      pm->ShowMenu(menu, false);
-      return;
+  if (pm) {
+    // As a special case for popups that are menus when no anchor or position
+    // are specified, open the popup with ShowMenu instead of ShowPopup so that
+    // the popup is aligned with the menu.
+    if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
+      if (auto* menu = GetContainingMenu()) {
+        pm->ShowMenu(menu, false);
+        return;
+      }
     }
+
+    pm->ShowPopup(this, aAnchorElement, position, aXPos, aYPos, aIsContextMenu,
+                  aAttributesOverride, false, aTriggerEvent);
   }
-  pm->ShowPopup(this, aAnchorElement, position, aXPos, aYPos, aIsContextMenu,
-                aAttributesOverride, false, aTriggerEvent);
 }
 
 void XULPopupElement::OpenPopupAtScreen(int32_t aXPos, int32_t aYPos,
