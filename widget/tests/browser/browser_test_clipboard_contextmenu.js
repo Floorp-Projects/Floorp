@@ -45,8 +45,8 @@ async function waitForPasteContextMenu() {
 function promiseClickPasteButton() {
   info("Wait for clicking paste contextmenu");
   const pasteButton = document.getElementById(kPasteMenuItemId);
-  let promise = BrowserTestUtils.waitForEvent(pasteButton, "command");
-  document.getElementById(kPasteMenuPopupId).activateItem(pasteButton);
+  let promise = BrowserTestUtils.waitForEvent(pasteButton, "click");
+  EventUtils.synthesizeMouseAtCenter(pasteButton, {});
   return promise;
 }
 
