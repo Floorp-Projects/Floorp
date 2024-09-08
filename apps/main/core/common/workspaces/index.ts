@@ -6,10 +6,12 @@
 import { workspacesServices } from "./workspaces";
 import { workspacesToolbarButton } from "./toolbar-element";
 import { workspacesTabContextMenu } from "./tabContextMenu";
+import { workspacesPopupContxtMenu } from "./popupSet";
 
 export function initWorkspaces() {
-  new workspacesTabContextMenu();
-  new workspacesToolbarButton();
+  workspacesTabContextMenu.getInstance();
+  workspacesToolbarButton.getInstance();
+  workspacesPopupContxtMenu.getInstance();
   workspacesServices.getInstance();
   import.meta.hot?.accept();
 }

@@ -74,7 +74,7 @@ export class workspacesServices {
   public createNoNameWorkspace = (): string => {
     return this.createWorkspace(
       this.l10n?.formatValueSync("workspace-new-default-name") ??
-      ("新しいワークスペース" as string),
+        (`New Workspaces (${workspacesData().length})` as string),
     );
   };
 

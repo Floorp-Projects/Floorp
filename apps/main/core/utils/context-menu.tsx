@@ -66,6 +66,7 @@ export namespace ContextMenuUtils {
     JSXElem: () => JSXElement,
     hotCtx?: ViteHotContext,
   ) {
+    console.log("addToolbarContentMenuPopupSet", windowModalDialogElem());
     render(JSXElem, document?.body, {
       marker: windowModalDialogElem() ?? undefined,
       hotCtx,

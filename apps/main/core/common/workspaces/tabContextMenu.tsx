@@ -11,6 +11,14 @@ import { workspacesData } from "./data";
 import type { workspaces } from "./utils/type";
 
 export class workspacesTabContextMenu {
+  private static instance: workspacesTabContextMenu;
+  public static getInstance() {
+    if (!workspacesTabContextMenu.instance) {
+      workspacesTabContextMenu.instance = new workspacesTabContextMenu();
+    }
+    return workspacesTabContextMenu.instance;
+  }
+
   // static is Against "this.menuItem is not a function" error.
   private static menuItem(workspaces: workspaces) {
     const gWorkspaces = workspacesServices.getInstance();

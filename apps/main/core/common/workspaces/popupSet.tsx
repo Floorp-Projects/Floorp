@@ -8,13 +8,13 @@ import { workspacesServices } from "./workspaces";
 import { ContextMenu } from "./contextMenu";
 import { render } from "@nora/solid-xul";
 
-export class workspacesToolbarButton {
-  private static instance: workspacesToolbarButton;
+export class workspacesPopupContxtMenu {
+  private static instance: workspacesPopupContxtMenu;
   public static getInstance() {
-    if (!workspacesToolbarButton.instance) {
-      workspacesToolbarButton.instance = new workspacesToolbarButton();
+    if (!workspacesPopupContxtMenu.instance) {
+      workspacesPopupContxtMenu.instance = new workspacesPopupContxtMenu();
     }
-    return workspacesToolbarButton.instance;
+    return workspacesPopupContxtMenu.instance;
   }
 
   /**
@@ -23,8 +23,6 @@ export class workspacesToolbarButton {
    * @returns The context menu items.
    */
   private createworkspacesContextMenuItems(event: Event) {
-    console.log("createworkspacesContextMenuItems");
-
     const gWorkspacesServices = workspacesServices.getInstance();
     //delete already exsist items
     const menuElem = document?.getElementById(
