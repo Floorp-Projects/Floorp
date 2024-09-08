@@ -13,5 +13,8 @@ export function initWorkspaces() {
   workspacesToolbarButton.getInstance();
   workspacesPopupContxtMenu.getInstance();
   workspacesServices.getInstance();
-  import.meta.hot?.accept();
+
+  import.meta.hot?.accept((m) => {
+    m?.initWorkspaces();
+  });
 }

@@ -17,27 +17,40 @@ export function ContextMenu(props: {
     <>
       <xul:menuitem
         data-l10n-id="reorder-this-workspace-to-up"
+        label="Move this Workspace Up"
         disabled={disableBefore}
-        oncommand={() => gWorkspacesServices.reorderWorkspaceUp(contextWorkspaceId)}
+        oncommand={() =>
+          gWorkspacesServices.reorderWorkspaceUp(contextWorkspaceId)
+        }
       />
       <xul:menuitem
         data-l10n-id="reorder-this-workspace-to-down"
+        label="Move this Workspace Down"
         disabled={disableAfter}
-        oncommand={() => gWorkspacesServices.reorderWorkspaceDown(contextWorkspaceId)}
+        oncommand={() =>
+          gWorkspacesServices.reorderWorkspaceDown(contextWorkspaceId)
+        }
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
         data-l10n-id="rename-this-workspace"
+        label="Rename Workspace"
         oncommand={() =>
-          gWorkspacesServices.renameWorkspaceWithCreatePrompt(contextWorkspaceId)
+          gWorkspacesServices.renameWorkspaceWithCreatePrompt(
+            contextWorkspaceId,
+          )
         }
       />
       <xul:menuitem
         data-l10n-id="delete-this-workspace"
-        oncommand={() => gWorkspacesServices.deleteWorkspace(contextWorkspaceId)}
+        label="Delete Workspace"
+        oncommand={() =>
+          gWorkspacesServices.deleteWorkspace(contextWorkspaceId)
+        }
       />
       <xul:menuitem
         data-l10n-id="manage-this-workspaces"
+        label="Manage Workspace"
         oncommand={() =>
           gWorkspacesServices.manageWorkspaceFromDialog(contextWorkspaceId)
         }
