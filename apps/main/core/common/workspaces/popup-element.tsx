@@ -39,15 +39,13 @@ export function PopupElement() {
             </For>
           </xul:vbox>
         </xul:arrowscrollbox>
-        <xul:toolbarseparator
-          class="toolbarbutton-1 chromeclass-toolbar-additional"
-          id="workspacesPopupSeparator"
-        />
+        <xul:toolbarseparator id="workspacesPopupSeparator" />
         <xul:hbox id="workspacesPopupFooter" align="center" pack="center">
           <xul:toolbarbutton
             id="workspacesCreateNewWorkspaceButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-create-new-workspace-button"
+            label="Create New Workspace..."
             context="tab-stacks-toolbar-item-context-menu"
             oncommand={gWorkspacesServices.createNoNameWorkspace}
           />
