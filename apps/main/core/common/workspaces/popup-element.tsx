@@ -47,7 +47,7 @@ export function PopupElement() {
             data-l10n-id="workspaces-create-new-workspace-button"
             label="Create New Workspace..."
             context="tab-stacks-toolbar-item-context-menu"
-            oncommand={gWorkspacesServices.createNoNameWorkspace}
+            oncommand={() => gWorkspacesServices.createNoNameWorkspace()}
           />
           <xul:toolbarbutton
             id="workspacesManageworkspacesServicesButton"
