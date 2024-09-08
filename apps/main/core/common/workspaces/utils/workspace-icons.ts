@@ -3,7 +3,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export const workspaceIcons = new Set([
+type ModuleStrings = {
+  [key: string]: () => Promise<string>;
+};
+
+const moduleStrings = import.meta.glob("../icons/*.svg", {
+  query: "?url",
+  import: "default",
+}) as ModuleStrings;
+
+const resolvedIcons: { [key: string]: string } = {};
+let iconsResolved = false;
+
+async function initializeIcons(): Promise<void> {
+  if (iconsResolved) return;
+  for (const path in moduleStrings) {
+    const iconUrl = await moduleStrings[path]();
+    const iconName = path.split("/").pop()?.replace(".svg", "") || "";
+    resolvedIcons[iconName] = iconUrl;
+  }
+  iconsResolved = true;
+}
+
+export const workspaceIcons: Set<string> = new Set([
   "article",
   "book",
   "briefcase",
@@ -40,9 +62,17 @@ export const workspaceIcons = new Set([
   "user",
 ]);
 
+function getUrlBase(): string {
+  return import.meta.env.PROD
+    ? "chrome://noraneko/content"
+    : "http://localhost:5181";
+}
+
 export function getWorkspaceIconUrl(icon: string | null | undefined): string {
   if (!icon || !workspaceIcons.has(icon)) {
-    return "chrome://floorp/skin/workspace-icons/fingerprint.svg";
+    return `${getUrlBase()}${resolvedIcons.fingerprint}`;
   }
-  return `chrome://floorp/skin/workspace-icons/${icon}.svg`;
+  return `${getUrlBase()}${resolvedIcons[icon]}`;
 }
+
+initializeIcons();

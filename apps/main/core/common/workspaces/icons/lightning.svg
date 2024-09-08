@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<linearGradient gradientTransform="matrix(1 0 0 1 0 0)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="523.185" x2="514.879" y1="78.2613" y2="947.615">
+<stop offset="0" stop-color="#ffcb00"/>
+<stop offset="1" stop-color="#bf4c00"/>
+</linearGradient>
+</defs>
+<g id="レイヤー-1">
+<path d="M330.889 68.0128L693.109 68.0128C734.656 68.0128 785.175 97.1802 805.948 133.16L987.058 446.852C1007.83 482.832 1007.83 541.168 987.058 577.147L805.948 890.84C785.175 926.819 734.656 955.987 693.109 955.987L330.889 955.987C289.342 955.987 238.823 926.819 218.05 890.84L36.9397 577.147C16.1668 541.168 16.1668 482.832 36.9397 446.852L218.05 133.16C238.823 97.1801 289.342 68.0128 330.889 68.0128Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M500.33 154.172C487.847 154.172 476.837 160.461 470.303 170.055C470.125 170.316 262.988 529.168 262.988 529.168C240.602 567.943 258.755 599.357 303.529 599.357L511.978 599.357C511.978 599.357 487.359 832.171 487.358 833.522C487.359 853.572 503.613 869.827 523.663 869.826C536.146 869.826 547.156 863.537 553.69 853.943C553.868 853.683 761.004 494.83 761.004 494.83C783.391 456.055 765.238 424.641 720.464 424.641L512.015 424.641C512.015 424.641 536.634 191.827 536.634 190.476C536.634 170.426 520.38 154.172 500.33 154.172Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+</svg>
