@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { workspace } from "./utils/type";
-import { setworkspacesServices, workspacesData } from "./data";
+import { setworkspacesData, workspacesData } from "./data";
+import { createEffect } from "solid-js";
+import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
 export class workspacesServices {
   private static instance: workspacesServices;
@@ -52,16 +54,16 @@ export class workspacesServices {
    * @param name The name of the workspace.
    * @returns The new workspace id.
    */
-  public createWorkspace(name: string): string {
+  public createWorkspace(name: string, isDefault = false): string {
     const workspace: workspace = {
       id: this.getGeneratedUuid(),
       name,
       icon: null,
       emoji: null,
       color: this.getNewworkspacesServicesColor,
-      isDefault: false,
+      isDefault,
     };
-    setworkspacesServices((prev) => {
+    setworkspacesData((prev) => {
       return [...prev, workspace];
     });
     return workspace.id;
@@ -71,10 +73,11 @@ export class workspacesServices {
    * Returns new workspace object with default name.
    * @returns The new workspace id.
    */
-  public createNoNameWorkspace = (): string => {
+  public createNoNameWorkspace = (isDefault = false): string => {
     return this.createWorkspace(
       this.l10n?.formatValueSync("workspace-new-default-name") ??
         (`New Workspaces (${workspacesData().length})` as string),
+      isDefault,
     );
   };
 
@@ -83,7 +86,7 @@ export class workspacesServices {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(workspaceId: string): void {
-    setworkspacesServices((prev) => {
+    setworkspacesData((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
   }
@@ -95,7 +98,7 @@ export class workspacesServices {
   public changeWorkspace(workspaceId: string) {
     const selectedWorkspace = window.floorpWorkspaeId;
     window.floorpWorkspaeId = workspaceId;
-    setworkspacesServices((prev) => {
+    setworkspacesData((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, isSelected: true };
@@ -187,7 +190,7 @@ export class workspacesServices {
    * @param newName The new name.
    */
   public renameWorkspace(workspaceId: string, newName: string) {
-    setworkspacesServices((prev) => {
+    setworkspacesData((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, name: newName };
@@ -212,7 +215,7 @@ export class workspacesServices {
     const workspace = workspaces[workspaceIndex];
     workspaces[workspaceIndex] = workspaces[workspaceIndex - 1];
     workspaces[workspaceIndex - 1] = workspace;
-    setworkspacesServices(workspaces);
+    setworkspacesData(workspaces);
   }
 
   /**
@@ -230,17 +233,7 @@ export class workspacesServices {
     const workspace = workspaces[workspaceIndex];
     workspaces[workspaceIndex] = workspaces[workspaceIndex + 1];
     workspaces[workspaceIndex + 1] = workspace;
-    setworkspacesServices(workspaces);
-  }
-
-  /**
-   * Get Workspace id from tab attribute.
-   * @param tab The tab element.
-   * @returns The workspace id.
-   */
-  public getWorkspaceIdFromAttribute(tab: XULElement): string {
-    console.log("getWorkspaceIdFromAttribute");
-    return "";
+    setworkspacesData(workspaces);
   }
 
   /**
@@ -251,10 +244,105 @@ export class workspacesServices {
     console.log("moveTabsToWorkspaceFromTabContextMenu");
   }
 
+  /* tab attribute */
+  /**
+   * Get workspaceId from tab attribute.
+   * @param tab The tab.
+   * @returns The workspace id.
+   */
+  getWorkspaceIdFromAttribute(tab: XULElement) {
+    const workspaceId = tab.getAttribute(
+      workspacesServicesStaticNames.workspacesTabAttributionId,
+    );
+    return workspaceId;
+  }
+
+  /**
+   * Set workspaceId to tab attribute.
+   * @param tab The tab.
+   * @param workspaceId The workspace id.
+   */
+  setWorkspaceIdToAttribute(tab: XULElement, workspaceId: string) {
+    tab.setAttribute(
+      workspacesServicesStaticNames.workspacesTabAttributionId,
+      workspaceId,
+    );
+  }
+
+  /**
+   * Check Tabs visibility.
+   */
+  public checkTabsVisibility() {
+    console.log("checkTabsVisibility");
+    // Get Current Workspace & Workspace Id
+    const currentWorkspaceId = window.floorpWorkspaeId;
+
+    // Last Show Workspace Attribute
+    const selectedTab = window.gBrowser.selectedTab;
+    if (
+      selectedTab &&
+      !selectedTab.hasAttribute(
+        workspacesServicesStaticNames.workspaceLastShowId,
+      ) &&
+      selectedTab.getAttribute(
+        workspacesServicesStaticNames.workspacesTabAttributionId,
+      ) === currentWorkspaceId
+    ) {
+      const lastShowWorkspaceTabs = document?.querySelectorAll(
+        `[${workspacesServicesStaticNames.workspaceLastShowId}="${currentWorkspaceId}"]`,
+      );
+
+      if (lastShowWorkspaceTabs) {
+        for (const lastShowWorkspaceTab of lastShowWorkspaceTabs) {
+          lastShowWorkspaceTab.removeAttribute(
+            workspacesServicesStaticNames.workspaceLastShowId,
+          );
+        }
+      }
+
+      selectedTab.setAttribute(
+        workspacesServicesStaticNames.workspaceLastShowId,
+        currentWorkspaceId,
+      );
+    }
+
+    // Check Tabs visibility
+    const tabs = window.gBrowser.tabs;
+    for (const tab of tabs) {
+      // Set workspaceId if workspaceId is null
+      const workspaceId = this.getWorkspaceIdFromAttribute(tab);
+      if (
+        !(
+          workspaceId !== "" &&
+          workspaceId !== null &&
+          workspaceId !== undefined
+        )
+      ) {
+        this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
+      }
+
+      const chackedWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
+      if (chackedWorkspaceId === currentWorkspaceId) {
+        window.gBrowser.showTab(tab);
+      } else {
+        window.gBrowser.hideTab(tab);
+      }
+    }
+  }
+
   constructor() {
     // Check if workspaces data is empty, if so, create default workspace.
     if (!workspacesData().length) {
-      this.createNoNameWorkspace();
+      this.createNoNameWorkspace(true);
     }
+
+    createEffect(() => {
+      if (!window.floorpWorkspaeId) {
+        window.floorpWorkspaeId = workspacesData()[0].id;
+      }
+
+      // Check Tabs visibility
+      this.checkTabsVisibility();
+    });
   }
 }

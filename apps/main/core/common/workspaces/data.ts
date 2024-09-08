@@ -8,7 +8,7 @@ import { type workspaces, zworkspacesServicesStoreData } from "./utils/type";
 import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
 /** workspacesServices data */
-export const [workspacesData, setworkspacesServices] = createSignal<workspaces>(
+export const [workspacesData, setworkspacesData] = createSignal<workspaces>(
   zworkspacesServicesStoreData.parse(
     getworkspacesServicesArrayData(
       Services.prefs.getStringPref(
@@ -27,7 +27,7 @@ createEffect(() => {
 });
 
 Services.prefs.addObserver("floorp.workspaces.v3.data", () =>
-  setworkspacesServices(
+  setworkspacesData(
     zworkspacesServicesStoreData.parse(
       getworkspacesServicesArrayData(
         Services.prefs.getStringPref(
