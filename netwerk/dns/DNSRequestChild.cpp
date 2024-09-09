@@ -391,29 +391,27 @@ void DNSRequestSender::OnRecvCancelDNSRequest(
 
 NS_IMETHODIMP
 DNSRequestSender::Cancel(nsresult reason) {
-  if (!mIPCActor) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (!mIPCActor || !mIPCActor->CanSend()) {
+    // Really a failure, but we won't be able to tell anyone about it anyways
+    return NS_OK;
   }
 
-  // We can only do IPC on the MainThread
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-      "net::CancelDNSRequestEvent",
-      [actor(mIPCActor), host(mHost), trrServer(mTrrServer), port(mPort),
-       type(mType), originAttributes(mOriginAttributes), flags(mFlags),
-       reason]() {
-        if (!actor->CanSend()) {
-          return;
-        }
+  // we can only do IPC on the MainThread
+  if (!NS_IsMainThread()) {
+    SchedulerGroup::Dispatch(
+        NewRunnableMethod<nsresult>("net::DNSRequestSender::Cancel", this,
+                                    &DNSRequestSender::Cancel, reason));
+    return NS_OK;
+  }
 
-        if (DNSRequestChild* child = actor->AsDNSRequestChild()) {
-          Unused << child->SendCancelDNSRequest(
-              host, trrServer, port, type, originAttributes, flags, reason);
-        } else if (DNSRequestParent* parent = actor->AsDNSRequestParent()) {
-          Unused << parent->SendCancelDNSRequest(
-              host, trrServer, port, type, originAttributes, flags, reason);
-        }
-      });
-  SchedulerGroup::Dispatch(runnable.forget());
+  if (DNSRequestChild* child = mIPCActor->AsDNSRequestChild()) {
+    Unused << child->SendCancelDNSRequest(mHost, mTrrServer, mPort, mType,
+                                          mOriginAttributes, mFlags, reason);
+  } else if (DNSRequestParent* parent = mIPCActor->AsDNSRequestParent()) {
+    Unused << parent->SendCancelDNSRequest(mHost, mTrrServer, mPort, mType,
+                                           mOriginAttributes, mFlags, reason);
+  }
+
   return NS_OK;
 }
 
