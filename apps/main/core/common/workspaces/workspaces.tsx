@@ -109,6 +109,7 @@ export class workspacesServices {
         return workspace;
       });
     });
+    this.checkTabsVisibility();
   }
 
   /**
