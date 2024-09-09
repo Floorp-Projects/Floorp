@@ -4411,13 +4411,15 @@ class SizeOfHandlesRunnable : public Runnable {
  public:
   SizeOfHandlesRunnable(mozilla::MallocSizeOf mallocSizeOf,
                         CacheFileHandles const& handles,
-                        nsTArray<CacheFileHandle*> const& specialHandles)
+                        nsTArray<CacheFileHandle*> const& specialHandles,
+                        nsCOMPtr<nsITimer> const& metadataWritesTimer)
       : Runnable("net::SizeOfHandlesRunnable"),
         mMonitor("SizeOfHandlesRunnable.mMonitor"),
         mMonitorNotified(false),
         mMallocSizeOf(mallocSizeOf),
         mHandles(handles),
         mSpecialHandles(specialHandles),
+        mMetadataWritesTimer(metadataWritesTimer),
         mSize(0) {}
 
   size_t Get(CacheIOThread* thread) {
@@ -4449,6 +4451,10 @@ class SizeOfHandlesRunnable : public Runnable {
     for (uint32_t i = 0; i < mSpecialHandles.Length(); ++i) {
       mSize += mSpecialHandles[i]->SizeOfIncludingThis(mMallocSizeOf);
     }
+    nsCOMPtr<nsISizeOf> sizeOf = do_QueryInterface(mMetadataWritesTimer);
+    if (sizeOf) {
+      mSize += sizeOf->SizeOfIncludingThis(mMallocSizeOf);
+    }
 
     mMonitorNotified = true;
     mon.Notify();
@@ -4456,11 +4462,12 @@ class SizeOfHandlesRunnable : public Runnable {
   }
 
  private:
-  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mMonitor;
   bool mMonitorNotified;
   mozilla::MallocSizeOf mMallocSizeOf;
   CacheFileHandles const& mHandles;
   nsTArray<CacheFileHandle*> const& mSpecialHandles;
+  nsCOMPtr<nsITimer> const& mMetadataWritesTimer;
   size_t mSize;
 };
 
@@ -4474,19 +4481,17 @@ size_t CacheFileIOManager::SizeOfExcludingThisInternal(
   if (mIOThread) {
     n += mIOThread->SizeOfIncludingThis(mallocSizeOf);
 
-    // mHandles and mSpecialHandles must be accessed only on the I/O thread,
-    // must sync dispatch.
+    // mHandles, mSpecialHandles and mMetadataWritesTimer must be accessed
+    // only on the I/O thread, must sync dispatch.
     RefPtr<SizeOfHandlesRunnable> sizeOfHandlesRunnable =
-        new SizeOfHandlesRunnable(mallocSizeOf, mHandles, mSpecialHandles);
+        new SizeOfHandlesRunnable(mallocSizeOf, mHandles, mSpecialHandles,
+                                  mMetadataWritesTimer);
     n += sizeOfHandlesRunnable->Get(mIOThread);
   }
 
   // mHandlesByLastUsed just refers handles reported by mHandles.
 
   sizeOf = do_QueryInterface(mCacheDirectory);
-  if (sizeOf) n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
-
-  sizeOf = do_QueryInterface(mMetadataWritesTimer);
   if (sizeOf) n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
 
   sizeOf = do_QueryInterface(mTrashTimer);
