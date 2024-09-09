@@ -1,18 +1,19 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import {URL} from "node:url";
+import { URL } from "node:url";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
-import { $, type ResultPromise, type Result } from "execa";
+import { $ } from "execa";
 import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
+import { createServer, type ViteDevServer, build as buildVite } from "vite";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
 
 const r = (dir: string) => {
-  return path.resolve(import.meta.dirname ?? new URL('.', import.meta.url).pathname, dir);
+  return path.resolve(import.meta.dirname, dir);
 };
 
 const isExists = async (path: string) => {
@@ -96,11 +97,7 @@ async function initBin() {
   }
 }
 
-let devProcesses: ResultPromise<{
-  cwd: string;
-  stdout: "inherit";
-  stdin: "ignore";
-}>[];
+let devProcesses: ViteDevServer[];
 let devInit = false;
 
 async function run(mode: "dev" | "test" = "dev") {
@@ -108,30 +105,35 @@ async function run(mode: "dev" | "test" = "dev") {
   if (!devInit) {
     console.log("run dev servers");
     devProcesses = [
-      $({
-        cwd: r("./apps/main"),
-        stdin: "ignore",
-        stdout: "inherit",
-      })`pnpm vite dev`,
-      $({
-        cwd: r("./apps/designs"),
-        stdin: "ignore",
-        stdout: "inherit",
-      })`pnpm vite dev`,
+      await createServer({
+        configFile: r("./apps/main/vite.config.ts"),
+        root: r("./apps/main"),
+      }),
+      await createServer({
+        configFile: r("./apps/designs/vite.config.ts"),
+        root: r("./apps/designs"),
+      }),
     ];
+
     if (mode === "test") {
       devProcesses.push(
-        $({
-          cwd: r("./apps/test"),
-          stdin: "ignore",
-          stdout: "inherit",
-        })`pnpm run run`,
+        await createServer({
+          configFile: r("./apps/test/vite.config.ts"),
+          root: r("./apps/test"),
+        }),
       );
     }
     devInit = true;
   }
+  devProcesses.forEach((p) => {
+    p.listen();
+  });
   await Promise.all([
-    $({ cwd: r("./apps/startup") })`pnpm vite build --mode ${mode}`,
+    buildVite({
+      mode,
+      root: r("./apps/startup"),
+      configFile: r("./apps/startup/vite.config.ts"),
+    }),
 
     injectManifest("_dist/bin"),
     (async () => {
@@ -143,20 +145,20 @@ async function run(mode: "dev" | "test" = "dev") {
 
   //await injectUserJS(`noraneko${VERSION}`);
 
-  try {
-    await fs.access("./profile/test");
+  // try {
+  //   await fs.access("./profile/test");
 
-    try {
-      await fs.access("_dist/profile/test");
-      await fs.rm("_dist/profile/test");
-    } catch {}
-    // https://searchfox.org/mozilla-central/rev/b4a96f411074560c4f9479765835fa81938d341c/toolkit/xre/nsAppRunner.cpp#1514
-    // 可能性はある、まだ必要はない
-  } catch {}
+  //   try {
+  //     await fs.access("_dist/profile/test");
+  //     await fs.rm("_dist/profile/test");
+  //   } catch {}
+  //   // https://searchfox.org/mozilla-central/rev/b4a96f411074560c4f9479765835fa81938d341c/toolkit/xre/nsAppRunner.cpp#1514
+  //   // 可能性はある、まだ必要はない
+  // } catch {}
 
   let browser: Browser | null = null;
-  //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
-  await fs.mkdir("./_dist/profile/test", { recursive: true });
+  // //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
+  // await fs.mkdir("./_dist/profile/test", { recursive: true });
 
   browser = await puppeteer.launch({
     headless: false,
@@ -165,7 +167,7 @@ async function run(mode: "dev" | "test" = "dev") {
     browser: "firefox",
     executablePath: binPathExe,
     userDataDir: "./_dist/profile/test",
-    args: ["-jsdebugger"],
+    args: ["-jsdebugger", "-url", "about:home"],
     extraPrefsFirefox: {
       "browser.newtabpage.enabled": true,
       //https://searchfox.org/mozilla-central/rev/02a4a649ed75ebaf3fbdf301c3d3137baf6842a1/devtools/shared/security/auth.js#170
@@ -186,23 +188,30 @@ async function run(mode: "dev" | "test" = "dev") {
 
       //https://searchfox.org/mozilla-central/rev/e968519d806b140c402c3b3932cd5f6cd7cc42ac/testing/profiles/unittest-required/user.js#111
       "extensions.screenshots.disabled": false,
+
+      //https://searchfox.org/mozilla-central/rev/cc01f11adfacca9cd44a75fd140d2fdd8f9a48d4/browser/app/profile/firefox.js#307
+      "browser.startup.page": 1,
+
+      //* puppeteer seems to set homepage as about:blank
+      //https://searchfox.org/mozilla-central/rev/aee7c3a0dbf33af0c4f6648f391db62b35895e50/browser/components/preferences/tests/browser_homepage_default.js#28
+      "browser.startup.homepage": "about:home",
     },
     defaultViewport: { height: 0, width: 0 },
     timeout: 0,
   });
 
-  if (mode === "dev") {
-    const pages = await browser.pages();
-    await pages[0].goto("about:newtab", {
-      timeout: 0,
-      waitUntil: "domcontentloaded",
-    });
-    //? We should not go to about:preferences
-    //? Puppeteer cannot get the load event so when reload, this errors.
-    // await pages[0].goto("about:preferences", {
+  if (mode === "dev" && false) {
+    // const pages = await browser.pages();
+    // await pages[0].goto("about:newtab", {
     //   timeout: 0,
     //   waitUntil: "domcontentloaded",
     // });
+    // //? We should not go to about:preferences
+    // //? Puppeteer cannot get the load event so when reload, this errors.
+    // // await pages[0].goto("about:preferences", {
+    // //   timeout: 0,
+    // //   waitUntil: "domcontentloaded",
+    // // });
   } else if (mode === "test") {
     browser.pages().then(async (page) => {
       await page[0].goto("about:newtab", {
@@ -222,16 +231,20 @@ async function run(mode: "dev" | "test" = "dev") {
 }
 
 async function build() {
-  console.log(import.meta.dirname);
-  console.log(import.meta.filename);
-  console.log(import.meta.url);
-  console.log(r("./build.ts"));
   const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
   await Promise.all([
-    $({ cwd: r("./apps/startup") })`pnpm vite build`,
-    $({ cwd: r("./apps/main") })`pnpm vite build`,
-    $({ cwd: r("./apps/designs") })`pnpm vite build`,
-
+    buildVite({
+      configFile: r("./apps/startup/vite.config.ts"),
+      root: r("./apps/startup"),
+    }),
+    buildVite({
+      configFile: r("./apps/main/vite.config.ts"),
+      root: r("./apps/main"),
+    }),
+    buildVite({
+      configFile: r("./apps/designs/vite.config.ts"),
+      root: r("./apps/designs"),
+    }),
     injectXHTML(binPath),
 
     //applyMixin(binPath),

@@ -7,8 +7,8 @@ import { gMultirowTabbarClass } from "./multirow-tabbar/multirow-tabbar";
 import { gVerticalTabbarClass } from "./vertical-tabbar/vertical-tabbar";
 import { gTabbarStyleClass } from "./tabbbar-style/tabbar-style";
 
-export function initTabbar() {
-    gTabbarStyleClass.getInstance();
-    gMultirowTabbarClass.getInstance();
-    gVerticalTabbarClass.getInstance();
+export function init() {
+  gTabbarStyleClass.getInstance();
+  gMultirowTabbarClass.getInstance();
+  gVerticalTabbarClass.getInstance();
 }

@@ -23,7 +23,9 @@
     "resolvePackageJsonExports": false,
     "isolatedModules": true,
     "jsxImportSource": "solid-js",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "resolveJsonModule": true,
+    "typeRoots": ["./@types"]
   },
   "exclude": ["_dist"]
 }

@@ -1,4 +1,5 @@
 {
   "name": "@nora/designs",
-  "private":true
+  "private":true,
+  "type": "module"
 }

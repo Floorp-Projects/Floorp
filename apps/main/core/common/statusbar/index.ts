@@ -24,7 +24,7 @@ export let manager: StatusBarManager;
 //   return tb;
 // }
 
-export function initStatusbar() {
+export function init() {
   //console.log(createToolbarWithPlacements("nora-aaaa", [], {}));
   createRootHMR(
     () => {
