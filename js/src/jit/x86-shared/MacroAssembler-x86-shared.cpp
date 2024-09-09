@@ -2151,4 +2151,13 @@ void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
   addPtr(indexTemp32, pointer);
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+CodeOffset MacroAssembler::wasmMarkedSlowCall(const wasm::CallSiteDesc& desc,
+                                              const Register reg) {
+  CodeOffset offset = call(desc, reg);
+  wasmMarkCallAsSlow();
+  return offset;
+}
+#endif  // ENABLE_WASM_TAIL_CALLS
+
 //}}} check_macroassembler_style

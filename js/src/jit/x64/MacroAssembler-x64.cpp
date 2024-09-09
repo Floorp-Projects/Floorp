@@ -1654,7 +1654,7 @@ void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
 }
 
 #ifdef ENABLE_WASM_TAIL_CALLS
-void MacroAssembler::wasmMarkSlowCall() {
+void MacroAssembler::wasmMarkCallAsSlow() {
   static_assert(InstanceReg == r14);
   orPtr(Imm32(0), r14);
 }
