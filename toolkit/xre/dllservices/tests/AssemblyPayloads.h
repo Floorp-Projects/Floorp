@@ -117,6 +117,32 @@ __declspec(dllexport) MOZ_NAKED void MovImm64() {
       "nop;nop;nop");
 }
 
+static unsigned char __attribute__((used)) gGlobalValue = 0;
+
+__declspec(dllexport) MOZ_NAKED void RexCmpRipRelativeBytePtr() {
+  asm volatile(
+      "cmpb %sil, gGlobalValue(%rip);"
+      "nop;nop;nop;nop;nop;nop;nop;nop;");
+}
+
+// A valid function that uses "cmp byte ptr [rip + offset], sil". It returns
+// true if and only if gGlobalValue is equal to aValue.
+__declspec(dllexport) MOZ_NAKED bool IsEqualToGlobalValue(
+    unsigned char aValue) {
+  asm volatile(
+      "xorl %eax, %eax;"
+      "pushq %rsi;"
+      "pushq %rcx;"
+      "popq %rsi;"
+      "cmpb %sil, gGlobalValue(%rip);"
+      "nop;"
+      // end of 13 first bytes
+      "movq $1, %rsi;"
+      "cmoveq %rsi, %rax;"
+      "popq %rsi;"
+      "retq;");
+}
+
 #    if !defined(MOZ_CODE_COVERAGE)
 // This code reproduces bug 1798787: it uses the same prologue, the same unwind
 // info, and it has a call instruction that starts within the 13 first bytes.
