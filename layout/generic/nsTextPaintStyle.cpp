@@ -96,14 +96,15 @@ nscolor nsTextPaintStyle::GetTextColor() {
       case StyleSVGPaintKind::Tag::None:
         return NS_RGBA(0, 0, 0, 0);
       case StyleSVGPaintKind::Tag::Color:
-        return nsLayoutUtils::GetColor(mFrame, &nsStyleSVG::mFill);
+        return nsLayoutUtils::GetTextColor(mFrame, &nsStyleSVG::mFill);
       default:
         NS_ERROR("cannot resolve SVG paint to nscolor");
         return NS_RGBA(0, 0, 0, 255);
     }
   }
 
-  return nsLayoutUtils::GetColor(mFrame, &nsStyleText::mWebkitTextFillColor);
+  return nsLayoutUtils::GetTextColor(mFrame,
+                                     &nsStyleText::mWebkitTextFillColor);
 }
 
 bool nsTextPaintStyle::GetSelectionColors(nscolor* aForeColor,
