@@ -5395,7 +5395,7 @@ static ReturnCallTrampolineData MakeReturnCallTrampoline(MacroAssembler& masm) {
         wasm::FrameWithInstances::sizeOfInstanceFieldsAndShadowStack(),
         WasmStackAlignment));
 
-    masm.wasmMarkSlowCall();
+    masm.wasmMarkCallAsSlow();
   }
 
   masm.loadPtr(
@@ -5743,9 +5743,10 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
            Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
   loadWasmPinnedRegsFromInstance();
 
-  CodeOffset res = call(desc, ABINonArgReg0);
 #ifdef ENABLE_WASM_TAIL_CALLS
-  wasmMarkSlowCall();
+  CodeOffset res = wasmMarkedSlowCall(desc, ABINonArgReg0);
+#else
+  CodeOffset res = call(desc, ABINonArgReg0);
 #endif
   return res;
 }
@@ -6009,9 +6010,10 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
           calleeScratch);
 
-  *slowCallOffset = call(desc, calleeScratch);
 #ifdef ENABLE_WASM_TAIL_CALLS
-  wasmMarkSlowCall();
+  *slowCallOffset = wasmMarkedSlowCall(desc, calleeScratch);
+#else
+  *slowCallOffset = call(desc, calleeScratch);
 #endif
 
   // Restore registers and realm and join up with the fast path.
@@ -6202,9 +6204,10 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
       FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT);
   loadPtr(Address(calleeFnObj, uncheckedEntrySlotOffset), calleeScratch);
 
-  *slowCallOffset = call(desc, calleeScratch);
 #ifdef ENABLE_WASM_TAIL_CALLS
-  wasmMarkSlowCall();
+  *slowCallOffset = wasmMarkedSlowCall(desc, calleeScratch);
+#else
+  *slowCallOffset = call(desc, calleeScratch);
 #endif
 
   // Restore registers and realm and back to this caller's.
