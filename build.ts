@@ -249,7 +249,7 @@ async function build() {
 
     //applyMixin(binPath),
   ]);
-  await injectManifest(binPath);
+  await injectManifest("./_dist");
 }
 
 if (process.argv[2]) {
