@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1725631374210,
+      "derHash": "gVxUnGl2vxY+tUcQ/8eAax51QcaIMTMStgaDd2cWQJQ=",
+      "subject": "CN=TWCA SSL Certification Authority,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MEwxCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExKTAnBgNVBAMTIFRXQ0EgU1NMIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e3d995c3e412d737a6fee20fea1b031fe795278abe5cf6eee75a665e72cc1126",
+        "size": 2357,
+        "filename": "xPRJphP5qQlt-LTpAWkbMOtFBWFEHI68IIDXQF_xh8I=.pem",
+        "location": "security-state-staging/intermediates/398ca4a8-0fac-40d2-8d0f-84fd5cf895b8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "xPRJphP5qQlt+LTpAWkbMOtFBWFEHI68IIDXQF/xh8I=",
+      "crlite_enrolled": false,
+      "id": "6303e7e9-286c-426f-bd8a-1fa3e4ac48c5",
+      "last_modified": 1725634622473
+    },
+    {
+      "schema": 1725631373803,
+      "derHash": "ysn9DNNapcSAzQP91u3wyhpB/QKsKQ7IPYPO7fjsJFw=",
+      "subject": "CN=TWCA EVSSL Certification Authority,O=TAIWAN-CA,C=TW",
+      "subjectDN": "ME4xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExKzApBgNVBAMTIlRXQ0EgRVZTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "80bc914fe0e1efca32a95219ebd457ff70ff44f5d585948671274907f27cb1a9",
+        "size": 2361,
+        "filename": "9lH2N8SB1xoQwByUCCXdDqCZBN8I-xjjS3WAxOeT_8E=.pem",
+        "location": "security-state-staging/intermediates/b209b257-a31a-47c6-b511-740e7fd2b291.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9lH2N8SB1xoQwByUCCXdDqCZBN8I+xjjS3WAxOeT/8E=",
+      "crlite_enrolled": false,
+      "id": "6eceafde-d990-4a98-a201-b3c25d76f58a",
+      "last_modified": 1725634622470
+    },
+    {
       "schema": 1725048172600,
       "derHash": "Aa8jJNCYCY9eDN9vqrraQwshzOd39H6ssmJIsv2j5TE=",
       "subject": "CN=TWCA SSL Certification Authority,OU=SSL Sub-CA,O=TAIWAN-CA,C=TW",
@@ -16885,24 +16921,6 @@
       "last_modified": 1666727867800
     },
     {
-      "schema": 1666727360661,
-      "derHash": "djFLQcutTTf+2gYd//UKywPsgAfmXTYsZSPOGcQaaho=",
-      "subject": "CN=SSL Blindado 2,OU=Certificação Digital,O=Site Blindado S.A.,L=São Paulo,ST=SP,C=BR",
-      "subjectDN": "MIGGMQswCQYDVQQGEwJCUjELMAkGA1UECBMCU1AxEzARBgNVBAcMClPDo28gUGF1bG8xGzAZBgNVBAoTElNpdGUgQmxpbmRhZG8gUy5BLjEfMB0GA1UECwwWQ2VydGlmaWNhw6fDo28gRGlnaXRhbDEXMBUGA1UEAxMOU1NMIEJsaW5kYWRvIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8265e0c7c71b80596278eaec5de11412ebd4eb175ac8016100097ae63f55b6b0",
-        "size": 2162,
-        "filename": "4-iqNnPo4Sq4xWzqc2uPKOdxlIAOrvZz-berOkTMMI4=.pem",
-        "location": "security-state-staging/intermediates/b756ba62-666b-45a3-a3b3-ba512a2f204e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4+iqNnPo4Sq4xWzqc2uPKOdxlIAOrvZz+berOkTMMI4=",
-      "crlite_enrolled": false,
-      "id": "f3fc4411-4a42-4afc-8717-54748cd4e378",
-      "last_modified": 1666727867785
-    },
-    {
       "schema": 1666727427317,
       "derHash": "ICi1Ih3id+8elh9OMYKjxQDuWqZ79bVE06bVil6md30=",
       "subject": "CN=RU-CENTER High Assurance Services CA 2,O=RU-Center (ЗАО Региональный Сетевой Информационный Центр),L=Moscow,ST=Moscow,C=RU",
@@ -16955,24 +16973,6 @@
       "crlite_enrolled": false,
       "id": "77c97703-dc62-4b47-bca7-fddc98cdf791",
       "last_modified": 1666727867743
-    },
-    {
-      "schema": 1666727415130,
-      "derHash": "fOza/GvmGKQPG6wmRiRjhHQS1nalxtI4mVUO6Xa+Mv4=",
-      "subject": "CN=SSL Blindado EV 2,OU=Controlled by COMODO exclusively for Site Blindado S.A.+OU=Certificação Digital,O=Site Blindado S.A.,L=São Paulo,ST=SP,C=BR",
-      "subjectDN": "MIHLMQswCQYDVQQGEwJCUjELMAkGA1UECBMCU1AxEzARBgNVBAcMClPDo28gUGF1bG8xGzAZBgNVBAoTElNpdGUgQmxpbmRhZG8gUy5BLjFAMD4GA1UECxM3Q29udHJvbGxlZCBieSBDT01PRE8gZXhjbHVzaXZlbHkgZm9yIFNpdGUgQmxpbmRhZG8gUy5BLjEfMB0GA1UECwwWQ2VydGlmaWNhw6fDo28gRGlnaXRhbDEaMBgGA1UEAxMRU1NMIEJsaW5kYWRvIEVWIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c82e01c724aae6a07109b4450194dba5f55bf0863041fccc2eceee36d9f3bf2e",
-        "size": 2280,
-        "filename": "oomAz8Bc3vA9i8i7dKzYpXEAA9hSHc_4c1uNOVpwL_s=.pem",
-        "location": "security-state-staging/intermediates/85592446-86f1-44d9-851f-857096e59694.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "oomAz8Bc3vA9i8i7dKzYpXEAA9hSHc/4c1uNOVpwL/s=",
-      "crlite_enrolled": false,
-      "id": "7b4ae1e6-74d3-413e-b1f3-e04a0e541aa5",
-      "last_modified": 1666727867730
     },
     {
       "schema": 1666727378589,
@@ -26101,24 +26101,6 @@
       "last_modified": 1650920239287
     },
     {
-      "schema": 1650919769437,
-      "derHash": "PyJb2814jOkkhwyvkvgUt8b/Ttq6utk/HTqRdyUs8dE=",
-      "subject": "CN=QuoVadis Qualified Web ICA G3,O=QuoVadis Trustlink B.V.,C=NL",
-      "subjectDN": "MFcxCzAJBgNVBAYTAk5MMSAwHgYDVQQKDBdRdW9WYWRpcyBUcnVzdGxpbmsgQi5WLjEmMCQGA1UEAwwdUXVvVmFkaXMgUXVhbGlmaWVkIFdlYiBJQ0EgRzM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8eb4cfbfd4e31a971f563f4a974c582ecd679cc8c15604af9f0f24fb1daf720e",
-        "size": 2385,
-        "filename": "e7hbHQSuhSDkhjhlY1CGhoHNKcgJCpQxSU_inT417rc=.pem",
-        "location": "security-state-staging/intermediates/848eef45-4d07-4d85-b898-032a76b2a75b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "e7hbHQSuhSDkhjhlY1CGhoHNKcgJCpQxSU/inT417rc=",
-      "crlite_enrolled": false,
-      "id": "7d41a0d3-fa4f-45f9-bec4-6c38cd62e11c",
-      "last_modified": 1650920239278
-    },
-    {
       "schema": 1650919766509,
       "derHash": "gmV1bdXNijfuYeQDUSiOSxaondJIwexOuiWq8WGr9Jg=",
       "subject": "CN=AC Sector Público,OU=Ceres,O=FNMT-RCM,C=ES",
@@ -31375,5 +31357,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1725483422267
+  "timestamp": 1725807422586
 }
