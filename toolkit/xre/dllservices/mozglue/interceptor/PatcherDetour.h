@@ -1186,6 +1186,35 @@ class WindowsDllDetourPatcher final
           return;
         }
         COPY_CODES(len);
+      } else if (*origBytes == 0x40 && origBytes[1] == 0x38 &&
+                 (origBytes[2] & (kMaskMod | kMaskRm)) ==
+                     (kModNoRegDisp | kRmNoRegDispDisp32)) {
+        int reg = origBytes[2] & kMaskReg;
+        origBytes += 3;
+
+        // rex cmp byte ptr [rip-relative address], reg
+        // We'll compute the absolute address and do the cmp in r11
+
+        // push r11 (to save the old value)
+        tramp.WriteByte(0x49);
+        tramp.WriteByte(0x53);
+
+        uintptr_t absAddr = origBytes.ReadDisp32AsAbsolute();
+
+        // mov r11, absolute address
+        tramp.WriteByte(0x49);
+        tramp.WriteByte(0xbb);
+        tramp.WritePointer(absAddr);
+
+        // rex.b cmp byte ptr [r11], reg (.b is to get r11 instead of rbx -
+        // doesn't affect reg)
+        tramp.WriteByte(0x41);
+        tramp.WriteByte(0x38);
+        tramp.WriteByte(kModNoRegDisp | reg | kRegBx);
+
+        // pop r11 (doesn't affect the flags from the cmp)
+        tramp.WriteByte(0x49);
+        tramp.WriteByte(0x5b);
       } else if (*origBytes == 0x40 || *origBytes == 0x41) {
         // Plain REX or REX.B
         COPY_CODES(1);
@@ -1451,7 +1480,8 @@ class WindowsDllDetourPatcher final
       } else if ((*origBytes & 0xf8) == 0xb8) {
         // MOV r32, imm32
         COPY_CODES(5);
-      } else if (*origBytes == 0x33) {
+      } else if (*origBytes == 0x31 || *origBytes == 0x33) {
+        // xor r/m32, r32
         // xor r32, r/m32
         COPY_CODES(2);
       } else if (*origBytes == 0xf6) {
