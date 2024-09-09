@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { workspace } from "./utils/type";
+import type { workspace, workspaces } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
@@ -138,28 +138,7 @@ export class workspacesServices {
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
   public manageWorkspaceFromDialog(workspaceId: string) {
-    let parentWindow = window as WindowProxy | null;
-    const object = { workspaceId };
-    if (
-      parentWindow?.document?.documentURI ===
-      "chrome://floorp/content/hiddenWindowMac.xhtml"
-    ) {
-      parentWindow = null;
-    }
-    if (parentWindow?.gDialogBox) {
-      parentWindow.gDialogBox.open(
-        "chrome://floorp/content/preferences/dialogs/manageWorkspace.xhtml",
-        object,
-      );
-    } else {
-      Services.ww.openWindow(
-        parentWindow as mozIDOMWindowProxy,
-        "chrome://floorp/content/preferences/dialogs/manageWorkspace.xhtml",
-        "",
-        "chrome,titlebar,dialog,centerscreen,modal",
-        object as nsISupports,
-      );
-    }
+    console.log("manageWorkspaceFromDialog");
   }
 
   /**
@@ -273,7 +252,6 @@ export class workspacesServices {
    * Check Tabs visibility.
    */
   public checkTabsVisibility() {
-    console.log("checkTabsVisibility");
     // Get Current Workspace & Workspace Id
     const currentWorkspaceId = window.floorpWorkspaeId;
 
@@ -331,12 +309,13 @@ export class workspacesServices {
   }
 
   constructor() {
-    // Check if workspaces data is empty, if so, create default workspace.
-    if (!workspacesData().length) {
-      this.createNoNameWorkspace(true);
-    }
-
     createEffect(() => {
+      // Check if workspaces data is empty, if so, create default workspace.
+      if (!workspacesData().length) {
+        this.createNoNameWorkspace(true);
+      }
+
+      // Set default workspace id
       if (!window.floorpWorkspaeId) {
         window.floorpWorkspaeId = workspacesData()[0].id;
       }
