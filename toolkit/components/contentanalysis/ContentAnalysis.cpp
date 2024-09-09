@@ -1101,21 +1101,27 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
         owner->SetLastResult(aResult);
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
-        DefaultResult defaultResponse = GetDefaultResultFromPref();
-        nsIContentAnalysisResponse::Action action;
-        switch (defaultResponse) {
-          case DefaultResult::eAllow:
-            action = nsIContentAnalysisResponse::Action::eAllow;
-            break;
-          case DefaultResult::eWarn:
-            action = nsIContentAnalysisResponse::Action::eWarn;
-            break;
-          case DefaultResult::eBlock:
-            action = nsIContentAnalysisResponse::Action::eCanceled;
-            break;
-          default:
-            MOZ_ASSERT(false);
-            action = nsIContentAnalysisResponse::Action::eCanceled;
+        nsIContentAnalysisResponse::Action action =
+            nsIContentAnalysisResponse::Action::eCanceled;
+        // If we're shutting down, ignore the default result and just leave the
+        // action as canceled. This fixes a hang if the default result is warn
+        // and we shutdown during a request (bug 1912245)
+        if (aResult != NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+          DefaultResult defaultResponse = GetDefaultResultFromPref();
+          switch (defaultResponse) {
+            case DefaultResult::eAllow:
+              action = nsIContentAnalysisResponse::Action::eAllow;
+              break;
+            case DefaultResult::eWarn:
+              action = nsIContentAnalysisResponse::Action::eWarn;
+              break;
+            case DefaultResult::eBlock:
+              action = nsIContentAnalysisResponse::Action::eCanceled;
+              break;
+            default:
+              MOZ_ASSERT(false);
+              action = nsIContentAnalysisResponse::Action::eCanceled;
+          }
         }
         RefPtr<ContentAnalysisResponse> response =
             ContentAnalysisResponse::FromAction(action, aRequestToken);
