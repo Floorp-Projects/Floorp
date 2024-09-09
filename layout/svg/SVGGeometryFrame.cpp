@@ -783,11 +783,9 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
     float fillOpacity = SVGUtils::GetOpacity(style->mFillOpacity, contextPaint);
     float opacity = elemOpacity * fillOpacity;
 
-    auto c = nsLayoutUtils::GetColor(this, &nsStyleSVG::mFill);
-    wr::ColorF color{
-        ((float)NS_GET_R(c)) / 255.0f, ((float)NS_GET_G(c)) / 255.0f,
-        ((float)NS_GET_B(c)) / 255.0f, ((float)NS_GET_A(c)) / 255.0f * opacity};
-
+    auto color = wr::ToColorF(
+        ToDeviceColor(StyleSVG()->mFill.kind.AsColor().CalcColor(this)));
+    color.a *= opacity;
     aBuilder.PushRect(wrRect, wrRect, !aItem->BackfaceIsHidden(), true, false,
                       color);
   }
