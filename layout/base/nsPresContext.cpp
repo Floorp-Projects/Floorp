@@ -1459,6 +1459,32 @@ void nsPresContext::SetOverrideDPPX(float aDPPX) {
                             MediaFeatureChangePropagation::JustThisDocument);
 }
 
+void nsPresContext::UpdateTopInnerSizeForRFP() {
+  if (!mDocument->ShouldResistFingerprinting(RFPTarget::WindowOuterSize) ||
+      !mDocument->GetBrowsingContext() ||
+      !mDocument->GetBrowsingContext()->IsTop()) {
+    return;
+  }
+
+  CSSSize size = CSSPixel::FromAppUnits(GetVisibleArea().Size());
+
+  switch (StaticPrefs::dom_innerSize_rounding()) {
+    case 1:
+      size.width = std::roundf(size.width);
+      size.height = std::roundf(size.height);
+      break;
+    case 2:
+      size.width = std::truncf(size.width);
+      size.height = std::truncf(size.height);
+      break;
+    default:
+      break;
+  }
+
+  Unused << mDocument->GetBrowsingContext()->SetTopInnerSizeForRFP(
+      CSSIntSize{(int)size.width, (int)size.height});
+}
+
 gfxSize nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged) {
   if (aChanged) {
     *aChanged = false;
@@ -2972,6 +2998,8 @@ void nsPresContext::SetVisibleArea(const nsRect& r) {
           {mozilla::MediaFeatureChangeReason::ViewportChange},
           MediaFeatureChangePropagation::JustThisDocument);
     }
+
+    UpdateTopInnerSizeForRFP();
   }
 }
 

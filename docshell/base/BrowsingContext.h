@@ -272,7 +272,10 @@ struct EmbedderColorSchemes {
   /* If true, this browsing context is within a hidden embedded document. */  \
   FIELD(IsUnderHiddenEmbedderElement, bool)                                   \
   /* If true, this browsing context is offline */                             \
-  FIELD(ForceOffline, bool)
+  FIELD(ForceOffline, bool)                                                   \
+  /* Used to propagate window.top's inner size for RFPTarget::Window*         \
+   * protections */                                                           \
+  FIELD(TopInnerSizeForRFP, CSSIntSize)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -1252,6 +1255,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_TopInnerSizeForRFP>, bool, ContentParent*) {
+    return IsTop();
+  }
 
   bool CanSet(FieldIndex<IDX_EmbeddedInContentDocument>, bool,
               ContentParent* aSource) {

@@ -34,12 +34,12 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "*",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: true,
         firstParty: true,
         thirdParty: true,
@@ -57,12 +57,12 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.com",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: true,
         firstParty: true,
         thirdParty: false,
@@ -80,13 +80,13 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.com",
         thirdPartyDomain: "*",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: true,
         firstParty: true,
         thirdParty: true,
@@ -104,13 +104,13 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.com",
         thirdPartyDomain: "example.org",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: false,
         firstParty: false,
         thirdParty: true,
@@ -128,13 +128,13 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "*",
         thirdPartyDomain: "example.org",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: false,
         firstParty: false,
         thirdParty: true,
@@ -153,12 +153,12 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.net",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: false,
         firstParty: false,
         thirdParty: false,
@@ -177,13 +177,13 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.net",
         thirdPartyDomain: "*",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: false,
         firstParty: false,
         thirdParty: false,
@@ -202,13 +202,13 @@ const TEST_CASES = [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.net",
         thirdPartyDomain: "example.com",
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: false,
         firstParty: false,
         thirdParty: false,
@@ -221,13 +221,13 @@ const TEST_CASES = [
     },
   },
   // Test multiple entries that enable HW concurrency in the first-party context
-  // and WindowOuter in the third-party context.
+  // and ScreenAvailRect in the third-party context.
   {
     entires: [
       {
         id: "1",
         last_modified: 1000000000000001,
-        overrides: "+WindowOuterSize",
+        overrides: "+ScreenRect,+ScreenAvailRect",
         firstPartyDomain: "example.com",
       },
       {
@@ -239,7 +239,7 @@ const TEST_CASES = [
       },
     ],
     expects: {
-      windowOuter: {
+      screenAvailRect: {
         top: true,
         firstParty: true,
         thirdParty: false,
@@ -335,22 +335,22 @@ async function openAndSetupTestPageForPopup() {
 }
 
 async function verifyResultInTab(tab, firstPartyBC, thirdPartyBC, expected) {
-  let testWindowOuter = enabled => {
+  let testScreenAvailRect = enabled => {
     if (enabled) {
       ok(
-        content.wrappedJSObject.outerHeight ==
-          content.wrappedJSObject.innerHeight &&
-          content.wrappedJSObject.outerWidth ==
-            content.wrappedJSObject.innerWidth,
-        "Fingerprinting target WindowOuterSize is enabled for WindowOuterSize."
+        content.wrappedJSObject.screen.availHeight ==
+          content.wrappedJSObject.screen.height &&
+          content.wrappedJSObject.screen.availWidth ==
+            content.wrappedJSObject.screen.width,
+        "Fingerprinting target ScreenAvailRect is enabled for ScreenAvailRect."
       );
     } else {
       ok(
-        content.wrappedJSObject.outerHeight !=
-          content.wrappedJSObject.innerHeight ||
-          content.wrappedJSObject.outerWidth !=
-            content.wrappedJSObject.innerWidth,
-        "Fingerprinting target WindowOuterSize is not enabled for WindowOuterSize."
+        content.wrappedJSObject.screen.availHeight !=
+          content.wrappedJSObject.screen.height ||
+          content.wrappedJSObject.screen.availWidth !=
+            content.wrappedJSObject.screen.width,
+        "Fingerprinting target ScreenAvailRect is not enabled for ScreenAvailRect."
       );
     }
   };
@@ -370,8 +370,8 @@ async function verifyResultInTab(tab, firstPartyBC, thirdPartyBC, expected) {
   );
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [expected.windowOuter.top],
-    testWindowOuter
+    [expected.screenAvailRect.top],
+    testScreenAvailRect
   );
   let expectHWConcurrencyTop = expected.hwConcurrency.top
     ? SPOOFED_HW_CONCURRENCY
@@ -401,8 +401,8 @@ async function verifyResultInTab(tab, firstPartyBC, thirdPartyBC, expected) {
   );
   await SpecialPowers.spawn(
     firstPartyBC,
-    [expected.windowOuter.firstParty],
-    testWindowOuter
+    [expected.screenAvailRect.firstParty],
+    testScreenAvailRect
   );
   let expectHWConcurrencyFirstParty = expected.hwConcurrency.firstParty
     ? SPOOFED_HW_CONCURRENCY
@@ -432,8 +432,8 @@ async function verifyResultInTab(tab, firstPartyBC, thirdPartyBC, expected) {
   );
   await SpecialPowers.spawn(
     thirdPartyBC,
-    [expected.windowOuter.thirdParty],
-    testWindowOuter
+    [expected.screenAvailRect.thirdParty],
+    testScreenAvailRect
   );
   let expectHWConcurrencyThirdParty = expected.hwConcurrency.thirdParty
     ? SPOOFED_HW_CONCURRENCY
@@ -517,7 +517,7 @@ add_task(async function test_popup_inheritance() {
         {
           id: "1",
           last_modified: 1000000000000001,
-          overrides: "+WindowOuterSize",
+          overrides: "+ScreenRect,+ScreenAvailRect",
           firstPartyDomain: "example.com",
           thirdPartyDomain: "example.org",
         },
@@ -532,22 +532,22 @@ add_task(async function test_popup_inheritance() {
   // Ensure the third-party iframe has the correct overrides.
   await SpecialPowers.spawn(thirdPartyFrameBC, [], _ => {
     ok(
-      content.wrappedJSObject.outerHeight ==
-        content.wrappedJSObject.innerHeight &&
-        content.wrappedJSObject.outerWidth ==
-          content.wrappedJSObject.innerWidth,
-      "Fingerprinting target WindowOuterSize is enabled for third-party iframe."
+      content.wrappedJSObject.screen.availHeight ==
+        content.wrappedJSObject.screen.height &&
+        content.wrappedJSObject.screen.availWidth ==
+          content.wrappedJSObject.screen.width,
+      "Fingerprinting target ScreenAvailRect is enabled for third-party iframe."
     );
   });
 
   // Verify the popup inherits overrides from the opener.
   await SpecialPowers.spawn(popupBC, [], _ => {
     ok(
-      content.wrappedJSObject.outerHeight ==
-        content.wrappedJSObject.innerHeight &&
-        content.wrappedJSObject.outerWidth ==
-          content.wrappedJSObject.innerWidth,
-      "Fingerprinting target WindowOuterSize is enabled for the pop-up."
+      content.wrappedJSObject.screen.availHeight ==
+        content.wrappedJSObject.screen.height &&
+        content.wrappedJSObject.screen.availWidth ==
+          content.wrappedJSObject.screen.width,
+      "Fingerprinting target ScreenAvailRect is enabled for the pop-up."
     );
 
     content.close();
