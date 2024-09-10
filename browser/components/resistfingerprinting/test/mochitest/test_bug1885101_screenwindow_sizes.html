@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tests if +WindowOuterSizeExceptIFrame works properly</title>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+
+  <body>
+    <iframe id="mainFrame"></iframe>
+
+    <template id="mainFrameContents">
+      <script>
+        window.parent.postMessage(
+          {
+            screen: {
+              height: window.screen.height,
+              width: window.screen.width,
+              availHeight: window.screen.availHeight,
+              availWidth: window.screen.availWidth,
+            },
+            outerHeight,
+            outerWidth,
+          },
+          "*"
+        );
+      </script>
+    </template>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        SimpleTest.waitForExplicitFinish();
+
+        window.addEventListener("message", e => {
+          const data = e.data;
+
+          // Check for outer size
+          SimpleTest.is(
+            data.outerHeight,
+            window.outerHeight,
+            "iframe's window.outerHeight should be equal to window.top.outerHeight"
+          );
+
+          SimpleTest.is(
+            data.outerWidth,
+            window.outerWidth,
+            "iframe's window.outerWidth should be equal to window.top.outerWidth"
+          );
+
+          // Check for screen size
+          SimpleTest.is(
+            data.screen.height,
+            window.screen.height,
+            "iframe's window.screen.height should be equal to window.top.screen.height"
+          );
+
+          SimpleTest.is(
+            data.screen.width,
+            window.screen.width,
+            "iframe's window.screen.width should be equal to window.top.screen.width"
+          );
+
+          // Check for avail size
+          SimpleTest.is(
+            data.screen.availHeight,
+            window.screen.availHeight,
+            "iframe's window.screen.availHeight should be equal to window.top.screen.availHeight"
+          );
+
+          SimpleTest.is(
+            data.screen.availWidth,
+            window.screen.availWidth,
+            "iframe's window.screen.availWidth should be equal to window.top.screen.availWidth"
+          );
+
+          SimpleTest.finish();
+        });
+
+        function setFrameSource() {
+          const frame = document.getElementById("mainFrame");
+          const template = document.getElementById("mainFrameContents");
+          frame.srcdoc = template.innerHTML;
+        }
+
+        SpecialPowers.pushPrefEnv(
+          {
+            set: [
+              ["privacy.fingerprintingProtection", true],
+              [
+                "privacy.fingerprintingProtection.overrides",
+                "+WindowOuterSize,+ScreenRect,+ScreenAvailRect",
+              ],
+            ],
+          },
+          () => setFrameSource()
+        );
+      });
+    </script>
+  </body>
+</html>

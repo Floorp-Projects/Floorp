@@ -3513,9 +3513,10 @@ CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
                                              ErrorResult& aError) {
   if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
                                                   RFPTarget::WindowOuterSize)) {
-    CSSSize size;
-    aError = GetInnerSize(size);
-    return RoundedToInt(size);
+    if (BrowsingContext* bc = GetBrowsingContext()) {
+      return bc->Top()->GetTopInnerSizeForRFP();
+    }
+    return {};
   }
 
   // Windows showing documents in RDM panes and any subframes within them

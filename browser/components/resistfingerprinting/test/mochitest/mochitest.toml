@@ -27,8 +27,6 @@ scheme = "https"
 scheme = "https"
 support-files = ["test_hide_gamepad_info_iframe.html"]
 
-["test_iframe.html"]
-
 ["test_keyboard_event.html"]
 
 ["test_pointer_event.html"]
@@ -36,3 +34,5 @@ support-files = ["../../../../../dom/events/test/pointerevents/mochitest_support
 
 ["test_speech_synthesis.html"]
 skip-if = ["verify"]
+
+["test_bug1885101_screenwindow_sizes.html"]

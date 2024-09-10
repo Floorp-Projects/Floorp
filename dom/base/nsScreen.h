@@ -88,7 +88,7 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
   nsDeviceContext* GetDeviceContext() const;
   mozilla::CSSIntRect GetRect();
   mozilla::CSSIntRect GetAvailRect();
-  mozilla::CSSIntRect GetWindowInnerRect();
+  mozilla::CSSIntRect GetTopWindowInnerRectForRFP();
 
  private:
   virtual ~nsScreen();
