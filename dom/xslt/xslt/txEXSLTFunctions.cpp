@@ -590,15 +590,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
       // http://exslt.org/date/functions/date-time/
 
       PRExplodedTime prtime;
-      Document* sourceDoc = getSourceDocument(aContext);
-      NS_ENSURE_STATE(sourceDoc);
-
-      PR_ExplodeTime(
-          PR_Now(),
-          sourceDoc->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC)
-              ? PR_GMTParameters
-              : PR_LocalTimeParameters,
-          &prtime);
+      PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &prtime);
 
       int32_t offset =
           (prtime.tm_params.tp_gmt_offset + prtime.tm_params.tp_dst_offset) /
@@ -642,7 +634,7 @@ Expr::ResultType txEXSLTFunctionCall::getReturnType() {
 
 bool txEXSLTFunctionCall::isSensitiveTo(ContextSensitivity aContext) {
   if (mType == txEXSLTType::NODE_SET || mType == txEXSLTType::SPLIT ||
-      mType == txEXSLTType::TOKENIZE || mType == txEXSLTType::DATE_TIME) {
+      mType == txEXSLTType::TOKENIZE) {
     return (aContext & PRIVATE_CONTEXT) || argsSensitiveTo(aContext);
   }
   return argsSensitiveTo(aContext);
