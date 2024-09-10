@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { workspace, workspaces } from "./utils/type";
+import type { workspace } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
@@ -33,10 +33,22 @@ export class workspacesServices {
    * Returns new workspace UUID (id).
    * @returns The new workspace UUID (id).
    */
-  private getGeneratedUuid(): string {
+  private get getGeneratedUuid(): string {
     return Services.uuid.generateUUID().toString();
   }
 
+  /**
+   * Returns current workspace UUID (id).
+   * @returns The current workspace UUID (id).
+   */
+  private getCurrentWorkspaceId(): string {
+    return window.floorpSelectedWorkspace;
+  }
+
+  /**
+   * Returns all workspaces id.
+   * @returns The all workspaces id.
+   */
   get getAllworkspacesServicesId() {
     return workspacesData().map((workspace) => workspace.id);
   }
@@ -56,7 +68,7 @@ export class workspacesServices {
    */
   public createWorkspace(name: string, isDefault = false): string {
     const workspace: workspace = {
-      id: this.getGeneratedUuid(),
+      id: this.getGeneratedUuid,
       name,
       icon: null,
       emoji: null,
@@ -96,8 +108,8 @@ export class workspacesServices {
    * @param workspaceId The workspace id.
    */
   public changeWorkspace(workspaceId: string) {
-    const selectedWorkspace = window.floorpWorkspaeId;
-    window.floorpWorkspaeId = workspaceId;
+    const selectedWorkspace = window.floorpSelectedWorkspace;
+    window.floorpSelectedWorkspace = workspaceId;
     setworkspacesData((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
@@ -254,7 +266,7 @@ export class workspacesServices {
    */
   public checkTabsVisibility() {
     // Get Current Workspace & Workspace Id
-    const currentWorkspaceId = window.floorpWorkspaeId;
+    const currentWorkspaceId = window.floorpSelectedWorkspace;
 
     // Last Show Workspace Attribute
     const selectedTab = window.gBrowser.selectedTab;
@@ -317,8 +329,8 @@ export class workspacesServices {
       }
 
       // Set default workspace id
-      if (!window.floorpWorkspaeId) {
-        window.floorpWorkspaeId = workspacesData()[0].id;
+      if (!window.floorpSelectedWorkspace) {
+        window.floorpSelectedWorkspace = workspacesData()[0].id;
       }
 
       // Check Tabs visibility

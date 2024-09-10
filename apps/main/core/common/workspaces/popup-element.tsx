@@ -32,7 +32,7 @@ export function PopupElement() {
                 <PopupToolbarElement
                   workspaceId={workspace.id}
                   label={workspace.name}
-                  isSelected={workspace.id === window.floorpWorkspaeId}
+                  isSelected={workspace.id === window.floorpSelectedWorkspace}
                   bmsMode={config().manageOnBms}
                 />
               )}
