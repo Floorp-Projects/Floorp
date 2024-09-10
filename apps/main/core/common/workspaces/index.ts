@@ -8,13 +8,13 @@ import { workspacesToolbarButton } from "./toolbar-element";
 import { workspacesTabContextMenu } from "./tabContextMenu";
 import { workspacesPopupContxtMenu } from "./popupSet";
 
-export function initWorkspaces() {
+export function init() {
   workspacesTabContextMenu.getInstance();
   workspacesToolbarButton.getInstance();
   workspacesPopupContxtMenu.getInstance();
   workspacesServices.getInstance();
 
   import.meta.hot?.accept((m) => {
-    m?.initWorkspaces();
+    m?.init();
   });
 }
