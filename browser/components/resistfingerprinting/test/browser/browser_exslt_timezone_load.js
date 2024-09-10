@@ -37,26 +37,31 @@ function getTimeZone(tab) {
   );
 }
 
-add_task(async function test_new_window() {
+async function run_test(enabled) {
+  const overrides = enabled ? "+JSDateTimeUTC" : "-JSDateTimeUTC";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.fingerprintingProtection", true],
-      ["privacy.fingerprintingProtection.overrides", "+JSDateTimeUTC"],
+      ["privacy.fingerprintingProtection.overrides", overrides],
     ],
   });
+
+  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
 
   // Open a tab for extracting the time zone from XSLT.
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_PATH + "file_dummy.html",
-    forceNewProcess: true,
   });
 
-  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("America/Toronto");
   const timeZone = await getTimeZone(tab);
 
-  ok(timeZone.endsWith("+00:00"), "Timezone was spoofed.");
+  const expected = enabled ? "+00:00" : "-07:00";
+  ok(timeZone.endsWith(expected), `Timezone is ${expected}.`);
 
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
-});
+}
+
+add_task(() => run_test(true));
+add_task(() => run_test(false));
