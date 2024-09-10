@@ -5,9 +5,16 @@
 import "./panel-list.js";
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 
+let accesskeyOptions = ["n", "w", "e", "c", "b"];
+
 export default {
   title: "UI Widgets/Panel List",
   component: "panel-list",
+  argTypes: {
+    accesskeys: {
+      if: { arg: "showAccesskeys", truthy: true },
+    },
+  },
   parameters: {
     status: "in-development",
     actions: {
@@ -15,7 +22,7 @@ export default {
     },
     fluent: `
 panel-list-item-one = Item One
-panel-list-item-two = Item Two (accesskey w)
+panel-list-item-two = Item Two
 panel-list-item-three = Item Three
 panel-list-checked = Checked
 panel-list-badged = Badged, look at me
@@ -38,7 +45,14 @@ function openMenu(event) {
   }
 }
 
-const Template = ({ isOpen, items, wideAnchor, hasSubMenu }) =>
+const Template = ({
+  isOpen,
+  items,
+  wideAnchor,
+  hasSubMenu,
+  showAccesskeys,
+  accesskeys,
+}) =>
   html`
     <style>
       panel-item[icon="passwords"]::part(button) {
@@ -105,10 +119,11 @@ const Template = ({ isOpen, items, wideAnchor, hasSubMenu }) =>
               <panel-item
                 icon=${item.icon ?? ""}
                 ?checked=${item.checked}
+                type=${ifDefined(item.checked ? "checkbox" : undefined)}
                 ?badged=${item.badged}
-                accesskey=${ifDefined(item.accesskey)}
                 data-l10n-id=${item.l10nId ?? item}
                 submenu=${ifDefined(subMenuId)}
+                accesskey=${ifDefined(showAccesskeys ? accesskeys[index] : "")}
               >
                 ${showSubMenu ? subMenuTemplate() : ""}
               </panel-item>
@@ -131,12 +146,13 @@ Simple.args = {
   wideAnchor: false,
   items: [
     "panel-list-item-one",
-    { l10nId: "panel-list-item-two", accesskey: "w" },
+    { l10nId: "panel-list-item-two" },
     "panel-list-item-three",
     "<hr>",
     { l10nId: "panel-list-checked", checked: true },
     { l10nId: "panel-list-badged", badged: true, icon: "settings" },
   ],
+  showAccesskeys: false,
 };
 
 export const Icons = Template.bind({});
@@ -166,4 +182,11 @@ export const SubMenu = Template.bind({});
 SubMenu.args = {
   ...Simple.args,
   hasSubMenu: true,
+};
+
+export const WithAccesskeys = Template.bind({});
+WithAccesskeys.args = {
+  ...Simple.args,
+  showAccesskeys: true,
+  accesskeys: accesskeyOptions,
 };

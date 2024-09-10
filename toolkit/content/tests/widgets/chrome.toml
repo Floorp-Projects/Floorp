@@ -48,6 +48,8 @@ skip-if = ["os == 'mac'"]
 
 ["test_panel_item_accesskey.html"]
 
+["test_panel_item_checkbox.html"]
+
 ["test_panel_list_accessibility.html"]
 
 ["test_panel_list_anchoring.html"]
