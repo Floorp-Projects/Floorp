@@ -454,9 +454,8 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
       // Make sure that the document channel is null at this point...
       // (unless its been redirected)
       //
-      NS_ASSERTION(
-          (loadFlags & nsIChannel::LOAD_REPLACE) || !(mDocumentRequest.get()),
-          "Overwriting an existing document channel!");
+      NS_ASSERTION((loadFlags & nsIChannel::LOAD_REPLACE) || !mDocumentRequest,
+                   "Overwriting an existing document channel!");
 
       // This request is associated with the entire document...
       mDocumentRequest = request;
@@ -480,7 +479,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
                "mDocumentRequest MUST be set for the duration of a page load!");
 
   // This is the only way to catch document request start event after a redirect
-  // has occured without changing inherited Firefox behaviour significantly.
+  // has occurred without changing inherited Firefox behaviour significantly.
   // Problem description:
   // The combination of |STATE_START + STATE_IS_DOCUMENT| is only sent for
   // initial request (see |doStartDocumentLoad| call above).
