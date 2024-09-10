@@ -1078,15 +1078,6 @@ void WebTransportSessionProxy::NotifyDatagramReceived(
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
-    if (!mStopRequestCalled) {
-      CopyableTArray<uint8_t> copied(aData);
-      mPendingEvents.AppendElement(
-          [self = RefPtr{this}, data = std::move(copied)]() mutable {
-            self->NotifyDatagramReceived(std::move(data));
-          });
-      return;
-    }
-
     if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
       return;
     }
@@ -1102,6 +1093,15 @@ NS_IMETHODIMP WebTransportSessionProxy::OnDatagramReceivedInternal(
 
   {
     MutexAutoLock lock(mMutex);
+    if (!mStopRequestCalled) {
+      CopyableTArray<uint8_t> copied(aData);
+      mPendingEvents.AppendElement(
+          [self = RefPtr{this}, data = std::move(copied)]() mutable {
+            self->OnDatagramReceivedInternal(std::move(data));
+          });
+      return NS_OK;
+    }
+
     if (!mTarget->IsOnCurrentThread()) {
       return mTarget->Dispatch(NS_NewRunnableFunction(
           "WebTransportSessionProxy::OnDatagramReceived",
