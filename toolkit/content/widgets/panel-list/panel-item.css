@@ -16,7 +16,7 @@
   fill: currentColor;
 }
 
-:host([checked]) button {
+:host([type="checkbox"][checked]) button {
   background-image: url("chrome://global/skin/icons/check.svg");
 }
 
