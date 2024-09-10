@@ -639,3 +639,5 @@ pref(svg.use-element.recursive-clone-limit.enabled,1) != about:blank explosive-u
 # do not increase fuzz significantly, test was designed to be within 1 color unit
 fuzzy(0-1,0-230400) == 1630900-1.html 1630900-1-ref.html
 # do not increase fuzz significantly, test was designed to be within 1 color unit
+
+== rect-no-backgrounds-print.html rect-no-backgrounds-print-ref.html
