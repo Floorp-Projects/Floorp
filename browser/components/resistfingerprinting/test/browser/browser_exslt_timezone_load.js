@@ -17,6 +17,8 @@ function getTimeZone(tab) {
       </xsl:template>
     </xsl:stylesheet>`;
 
+    SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
+
     const parser = new DOMParser();
     const xsltProcessor = new XSLTProcessor();
     const xslStylesheet = parser.parseFromString(xslText, "application/xml");
@@ -25,6 +27,7 @@ function getTimeZone(tab) {
     const styledDoc = xsltProcessor.transformToDocument(xmlDoc);
     const time = styledDoc.firstChild.textContent;
 
+    SpecialPowers.Cu.getJSTestingFunctions().setTimeZone(undefined);
     return time;
   };
 
