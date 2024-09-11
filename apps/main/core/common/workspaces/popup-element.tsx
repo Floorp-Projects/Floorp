@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { workspacesServices } from "./workspaces";
+import { WorkspacesServices } from "./workspaces";
 import { workspacesData } from "./data";
 import { PopupToolbarElement } from "./popup-block-element";
 import { config } from "./config";
 
 export function PopupElement() {
-  const gWorkspacesServices = workspacesServices.getInstance();
+  const gWorkspacesServices = WorkspacesServices.getInstance();
   return (
     <xul:panelview
       id="workspacesToolbarButtonPanel"

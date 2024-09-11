@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { workspacesServices } from "./workspaces";
+import { WorkspacesServices } from "./workspaces";
 
 export function ContextMenu(props: {
   disableBefore: boolean;
@@ -11,7 +11,7 @@ export function ContextMenu(props: {
   contextWorkspaceId: string;
 }) {
   const { disableBefore, disableAfter, contextWorkspaceId } = props;
-  const gWorkspacesServices = workspacesServices.getInstance();
+  const gWorkspacesServices = WorkspacesServices.getInstance();
 
   return (
     <>

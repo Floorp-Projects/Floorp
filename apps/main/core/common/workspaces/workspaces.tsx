@@ -6,15 +6,15 @@
 import type { workspace } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
-import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
-export class workspacesServices {
-  private static instance: workspacesServices;
+export class WorkspacesServices {
+  private static instance: WorkspacesServices;
   static getInstance() {
-    if (!workspacesServices.instance) {
-      workspacesServices.instance = new workspacesServices();
+    if (!WorkspacesServices.instance) {
+      WorkspacesServices.instance = new WorkspacesServices();
     }
-    return workspacesServices.instance;
+    return WorkspacesServices.instance;
   }
 
   /**
@@ -244,7 +244,7 @@ export class workspacesServices {
    */
   getWorkspaceIdFromAttribute(tab: XULElement) {
     const workspaceId = tab.getAttribute(
-      workspacesServicesStaticNames.workspacesTabAttributionId,
+      WorkspacesServicesStaticNames.workspacesTabAttributionId,
     );
     return workspaceId;
   }
@@ -256,7 +256,7 @@ export class workspacesServices {
    */
   setWorkspaceIdToAttribute(tab: XULElement, workspaceId: string) {
     tab.setAttribute(
-      workspacesServicesStaticNames.workspacesTabAttributionId,
+      WorkspacesServicesStaticNames.workspacesTabAttributionId,
       workspaceId,
     );
   }
@@ -273,26 +273,26 @@ export class workspacesServices {
     if (
       selectedTab &&
       !selectedTab.hasAttribute(
-        workspacesServicesStaticNames.workspaceLastShowId,
+        WorkspacesServicesStaticNames.workspaceLastShowId,
       ) &&
       selectedTab.getAttribute(
-        workspacesServicesStaticNames.workspacesTabAttributionId,
+        WorkspacesServicesStaticNames.workspacesTabAttributionId,
       ) === currentWorkspaceId
     ) {
       const lastShowWorkspaceTabs = document?.querySelectorAll(
-        `[${workspacesServicesStaticNames.workspaceLastShowId}="${currentWorkspaceId}"]`,
+        `[${WorkspacesServicesStaticNames.workspaceLastShowId}="${currentWorkspaceId}"]`,
       );
 
       if (lastShowWorkspaceTabs) {
         for (const lastShowWorkspaceTab of lastShowWorkspaceTabs) {
           lastShowWorkspaceTab.removeAttribute(
-            workspacesServicesStaticNames.workspaceLastShowId,
+            WorkspacesServicesStaticNames.workspaceLastShowId,
           );
         }
       }
 
       selectedTab.setAttribute(
-        workspacesServicesStaticNames.workspaceLastShowId,
+        WorkspacesServicesStaticNames.workspaceLastShowId,
         currentWorkspaceId,
       );
     }

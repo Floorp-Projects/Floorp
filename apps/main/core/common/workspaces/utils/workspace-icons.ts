@@ -7,72 +7,83 @@ type ModuleStrings = {
   [key: string]: () => Promise<string>;
 };
 
-const moduleStrings = import.meta.glob("../icons/*.svg", {
-  query: "?url",
-  import: "default",
-}) as ModuleStrings;
-
-const resolvedIcons: { [key: string]: string } = {};
-let iconsResolved = false;
-
-async function initializeIcons(): Promise<void> {
-  if (iconsResolved) return;
-  for (const path in moduleStrings) {
-    const iconUrl = await moduleStrings[path]();
-    const iconName = path.split("/").pop()?.replace(".svg", "") || "";
-    resolvedIcons[iconName] = iconUrl;
+export class WorkspaceIcons {
+  private static instance: WorkspaceIcons;
+  static getInstance(): WorkspaceIcons {
+    if (!WorkspaceIcons.instance) {
+      WorkspaceIcons.instance = new WorkspaceIcons();
+    }
+    return WorkspaceIcons.instance;
   }
-  iconsResolved = true;
-}
 
-export const workspaceIcons: Set<string> = new Set([
-  "article",
-  "book",
-  "briefcase",
-  "cart",
-  "chat",
-  "chill",
-  "circle",
-  "compass",
-  "code",
-  "dollar",
-  "fence",
-  "fingerprint",
-  "food",
-  "fruit",
-  "game",
-  "gear",
-  "gift",
-  "key",
-  "lightning",
-  "network",
-  "notes",
-  "paint",
-  "photo",
-  "pin",
-  "pet",
-  "question",
-  "smartphone",
-  "star",
-  "tree",
-  "vacation",
-  "love",
-  "moon",
-  "music",
-  "user",
-]);
+  private moduleStrings: ModuleStrings;
+  private resolvedIcons: { [key: string]: string } = {};
+  private iconsResolved = false;
+  public workspaceIcons = new Set([
+    "article",
+    "book",
+    "briefcase",
+    "cart",
+    "chat",
+    "chill",
+    "circle",
+    "compass",
+    "code",
+    "dollar",
+    "fence",
+    "fingerprint",
+    "food",
+    "fruit",
+    "game",
+    "gear",
+    "gift",
+    "key",
+    "lightning",
+    "network",
+    "notes",
+    "paint",
+    "photo",
+    "pin",
+    "pet",
+    "question",
+    "smartphone",
+    "star",
+    "tree",
+    "vacation",
+    "love",
+    "moon",
+    "music",
+    "user",
+  ]);
 
-function getUrlBase(): string {
-  return import.meta.env.PROD
-    ? "chrome://noraneko/content"
-    : "http://localhost:5181";
-}
-
-export function getWorkspaceIconUrl(icon: string | null | undefined): string {
-  if (!icon || !workspaceIcons.has(icon)) {
-    return `${getUrlBase()}${resolvedIcons.fingerprint}`;
+  constructor() {
+    this.moduleStrings = import.meta.glob("../icons/*.svg", {
+      query: "?url",
+      import: "default",
+    }) as ModuleStrings;
   }
-  return `${getUrlBase()}${resolvedIcons[icon]}`;
-}
 
-initializeIcons();
+  public async initializeIcons(): Promise<void> {
+    if (this.iconsResolved) return;
+    for (const path in this.moduleStrings) {
+      const iconUrl = await this.moduleStrings[path]();
+      const iconName = path.split("/").pop()?.replace(".svg", "") || "";
+      this.resolvedIcons[iconName] = iconUrl;
+    }
+    console.log("Resolved icons", this.resolvedIcons);
+    this.iconsResolved = true;
+  }
+
+  private getUrlBase(): string {
+    return import.meta.env.PROD
+      ? "chrome://noraneko/content"
+      : "http://localhost:5181";
+  }
+
+  public getWorkspaceIconUrl(icon: string | null | undefined): string {
+    if (!icon || !this.workspaceIcons.has(icon)) {
+      return `${this.getUrlBase()}${this.resolvedIcons.fingerprint}`;
+    }
+    return `${this.getUrlBase()}${this.resolvedIcons[icon]}`;
+  }
+}

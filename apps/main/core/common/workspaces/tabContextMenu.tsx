@@ -4,24 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { getWorkspaceIconUrl } from "./utils/workspace-icons";
-import { workspacesServices } from "./workspaces";
+import { WorkspaceIcons } from "./utils/workspace-icons";
+import { WorkspacesServices } from "./workspaces";
 import { For } from "solid-js";
 import { workspacesData } from "./data";
 import type { workspaces } from "./utils/type";
 
-export class workspacesTabContextMenu {
-  private static instance: workspacesTabContextMenu;
+export class WorkspacesTabContextMenu {
+  private static instance: WorkspacesTabContextMenu;
   public static getInstance() {
-    if (!workspacesTabContextMenu.instance) {
-      workspacesTabContextMenu.instance = new workspacesTabContextMenu();
+    if (!WorkspacesTabContextMenu.instance) {
+      WorkspacesTabContextMenu.instance = new WorkspacesTabContextMenu();
     }
-    return workspacesTabContextMenu.instance;
+    return WorkspacesTabContextMenu.instance;
   }
 
   // static is Against "this.menuItem is not a function" error.
   private static menuItem(workspaces: workspaces) {
-    const gWorkspaces = workspacesServices.getInstance();
+    const gWorkspaces = WorkspacesServices.getInstance();
+    const gWorkspaceIcons = WorkspaceIcons.getInstance();
     return (
       <For each={workspaces}>
         {(workspace) => (
@@ -29,7 +30,7 @@ export class workspacesTabContextMenu {
             id="context_MoveTabToOtherWorkspace"
             label={workspace.name}
             class="menuitem-iconic"
-            style={`list-style-image: url(${getWorkspaceIconUrl(workspace.icon)})`}
+            style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
             oncommand={() =>
               gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)
             }
@@ -47,16 +48,16 @@ export class workspacesTabContextMenu {
         accesskey="D"
       >
         <xul:menupopup
-          id="workspacesTabContextMenu"
+          id="WorkspacesTabContextMenu"
           onpopupshowing={this.createTabworkspacesContextMenuItems}
         />
       </xul:menu>
     );
   }
 
-  public createTabworkspacesContextMenuItems(this: workspacesTabContextMenu) {
-    const gWorkspacesServices = workspacesServices.getInstance();
-    const menuElem = document?.getElementById("workspacesTabContextMenu");
+  public createTabworkspacesContextMenuItems(this: WorkspacesTabContextMenu) {
+    const gWorkspacesServices = WorkspacesServices.getInstance();
+    const menuElem = document?.getElementById("WorkspacesTabContextMenu");
     while (menuElem?.firstChild) {
       const child = menuElem.firstChild as XULElement;
       child.remove();
@@ -71,10 +72,10 @@ export class workspacesTabContextMenu {
       (workspace) => workspace.id !== tabWorkspaceId,
     ) as workspaces;
 
-    const parentElem = document?.getElementById("workspacesTabContextMenu");
+    const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(
       () =>
-        workspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+        WorkspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
       parentElem,
       {
         hotCtx: import.meta.hot,

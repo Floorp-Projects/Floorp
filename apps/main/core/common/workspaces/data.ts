@@ -5,14 +5,14 @@
 
 import { createEffect, createSignal } from "solid-js";
 import { type workspaces, zworkspacesServicesStoreData } from "./utils/type";
-import { workspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
 
-/** workspacesServices data */
+/** WorkspacesServices data */
 export const [workspacesData, setworkspacesData] = createSignal<workspaces>(
   zworkspacesServicesStoreData.parse(
     getworkspacesServicesArrayData(
       Services.prefs.getStringPref(
-        workspacesServicesStaticNames.workspaceDataPrefName,
+        WorkspacesServicesStaticNames.workspaceDataPrefName,
         "{}",
       ),
     ),
@@ -21,7 +21,7 @@ export const [workspacesData, setworkspacesData] = createSignal<workspaces>(
 
 createEffect(() => {
   Services.prefs.setStringPref(
-    workspacesServicesStaticNames.workspaceDataPrefName,
+    WorkspacesServicesStaticNames.workspaceDataPrefName,
     JSON.stringify({ workspaces: workspacesData() }),
   );
 });
@@ -31,7 +31,7 @@ Services.prefs.addObserver("floorp.workspaces.v3.data", () =>
     zworkspacesServicesStoreData.parse(
       getworkspacesServicesArrayData(
         Services.prefs.getStringPref(
-          workspacesServicesStaticNames.workspaceDataPrefName,
+          WorkspacesServicesStaticNames.workspaceDataPrefName,
           "{}",
         ),
       ),

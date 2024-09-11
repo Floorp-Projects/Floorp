@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getWorkspaceIconUrl } from "./utils/workspace-icons";
-import { workspacesServices } from "./workspaces";
+import { WorkspaceIcons } from "./utils/workspace-icons";
+import { WorkspacesServices } from "./workspaces";
 
 export function PopupToolbarElement(props: {
   workspaceId: string;
@@ -12,7 +12,8 @@ export function PopupToolbarElement(props: {
   label: string;
   bmsMode: boolean;
 }) {
-  const gWorkspacesServices = workspacesServices.getInstance();
+  const gWorkspacesServices = WorkspacesServices.getInstance();
+  const gWorkspaceIcons = WorkspaceIcons.getInstance();
   const { workspaceId, isSelected, bmsMode } = props;
   return (
     <xul:toolbarbutton
@@ -21,7 +22,7 @@ export function PopupToolbarElement(props: {
       context="workspaces-toolbar-item-context-menu"
       class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
       style={{
-        "list-style-image": `url(${getWorkspaceIconUrl(workspaceId)})`,
+        "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspaceId)})`,
       }}
       data-selected={isSelected}
       data-workspaceId={workspaceId}

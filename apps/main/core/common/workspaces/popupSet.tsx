@@ -4,17 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
-import { workspacesServices } from "./workspaces";
+import { WorkspacesServices } from "./workspaces";
 import { ContextMenu } from "./contextMenu";
 import { render } from "@nora/solid-xul";
 
-export class workspacesPopupContxtMenu {
-  private static instance: workspacesPopupContxtMenu;
+export class WorkspacesPopupContxtMenu {
+  private static instance: WorkspacesPopupContxtMenu;
   public static getInstance() {
-    if (!workspacesPopupContxtMenu.instance) {
-      workspacesPopupContxtMenu.instance = new workspacesPopupContxtMenu();
+    if (!WorkspacesPopupContxtMenu.instance) {
+      WorkspacesPopupContxtMenu.instance = new WorkspacesPopupContxtMenu();
     }
-    return workspacesPopupContxtMenu.instance;
+    return WorkspacesPopupContxtMenu.instance;
   }
 
   /**
@@ -23,7 +23,7 @@ export class workspacesPopupContxtMenu {
    * @returns The context menu items.
    */
   private createworkspacesContextMenuItems(event: Event) {
-    const gWorkspacesServices = workspacesServices.getInstance();
+    const gWorkspacesServices = WorkspacesServices.getInstance();
     //delete already exsist items
     const menuElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
