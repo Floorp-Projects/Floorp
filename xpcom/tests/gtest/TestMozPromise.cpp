@@ -817,7 +817,7 @@ TEST(MozPromise, MapErr)
   EXPECT_EQ(ran_ok, false);
 }
 
-TEST(MozPromise, DISABLED_ObjectDestructionOrder)
+TEST(MozPromise, ObjectDestructionOrder)
 {
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
