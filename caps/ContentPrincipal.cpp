@@ -99,7 +99,7 @@ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_ASSERT(!NS_IsAboutBlankAllowQueryAndFragment(origin),
+  MOZ_ASSERT(!NS_IsAboutBlank(origin),
              "The inner URI for about:blank must be moz-safe-about:blank");
 
   // Handle non-strict file:// uris.

@@ -10053,7 +10053,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
 
 bool nsDocShell::IsAboutBlankLoadOntoInitialAboutBlank(
     nsIURI* aURI, bool aInheritPrincipal, nsIPrincipal* aPrincipalToInherit) {
-  return NS_IsAboutBlankAllowQueryAndFragment(aURI) && aInheritPrincipal &&
+  return NS_IsAboutBlank(aURI) && aInheritPrincipal &&
          (aPrincipalToInherit == GetInheritedPrincipal(false)) &&
          (!mDocumentViewer || !mDocumentViewer->GetDocument() ||
           mDocumentViewer->GetDocument()->IsInitialDocument());
