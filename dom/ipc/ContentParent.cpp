@@ -4809,8 +4809,7 @@ ContentParent::AllocPExternalHelperAppParent(
     const uint32_t& aContentDispositionHint,
     const nsAString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
-    const bool& aShouldCloseWindow) {
+    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext) {
   RefPtr<ExternalHelperAppParent> parent = new ExternalHelperAppParent(
       uri, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
@@ -4824,12 +4823,10 @@ mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
     const uint32_t& aContentDispositionHint,
     const nsAString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
-    const bool& aShouldCloseWindow) {
+    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext) {
   BrowsingContext* context = aContext.IsDiscarded() ? nullptr : aContext.get();
   if (!static_cast<ExternalHelperAppParent*>(actor)->Init(
-          loadInfoArgs, aMimeContentType, aForceSave, aReferrer, context,
-          aShouldCloseWindow)) {
+          loadInfoArgs, aMimeContentType, aForceSave, aReferrer, context)) {
     return IPC_FAIL(this, "Init failed.");
   }
   return IPC_OK();

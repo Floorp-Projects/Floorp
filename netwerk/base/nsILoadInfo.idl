@@ -1544,4 +1544,10 @@ interface nsILoadInfo : nsISupports
    * Whether the load has gone through the URL bar, where the fixup had to add * the protocol scheme.
    */
    [infallible] attribute boolean wasSchemelessInput;
+
+  /**
+   * Is this the first load in a new pop-up window/tab?
+   */
+  [infallible] attribute boolean isNewWindowTarget;
+
 };

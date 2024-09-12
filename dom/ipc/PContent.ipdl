@@ -1173,8 +1173,6 @@ parent:
     //
     // Pass true for aForceSave to always save this content to disk, regardless of
     // nsIMIMEInfo and other such influences.
-    // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
-    // for this load, and should be closed once we've handled it.
     async PExternalHelperApp(nullable nsIURI uri,
                              LoadInfoArgs loadInfoArgs,
                              nsCString aMimeContentType,
@@ -1185,8 +1183,7 @@ parent:
                              int64_t aContentLength,
                              bool aWasFileChannel,
                              nullable nsIURI aReferrer,
-                             MaybeDiscardedBrowsingContext aContext,
-                             bool aShouldCloseWindow);
+                             MaybeDiscardedBrowsingContext aContext);
 
     async PHandlerService();
 

@@ -691,7 +691,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mInterceptionInfo(rhs.mInterceptionInfo),
       mHasInjectedCookieForCookieBannerHandling(
           rhs.mHasInjectedCookieForCookieBannerHandling),
-      mWasSchemelessInput(rhs.mWasSchemelessInput) {
+      mWasSchemelessInput(rhs.mWasSchemelessInput),
+      mIsNewWindowTarget(rhs.mIsNewWindowTarget) {
 }
 
 LoadInfo::LoadInfo(
@@ -738,7 +739,8 @@ LoadInfo::LoadInfo(
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
-    bool aHasInjectedCookieForCookieBannerHandling, bool aWasSchemelessInput)
+    bool aHasInjectedCookieForCookieBannerHandling, bool aWasSchemelessInput,
+    bool aIsNewWindowTarget)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -816,7 +818,8 @@ LoadInfo::LoadInfo(
       mInterceptionInfo(aInterceptionInfo),
       mHasInjectedCookieForCookieBannerHandling(
           aHasInjectedCookieForCookieBannerHandling),
-      mWasSchemelessInput(aWasSchemelessInput) {
+      mWasSchemelessInput(aWasSchemelessInput),
+      mIsNewWindowTarget(aIsNewWindowTarget) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -2413,6 +2416,18 @@ LoadInfo::GetWasSchemelessInput(bool* aWasSchemelessInput) {
 NS_IMETHODIMP
 LoadInfo::SetWasSchemelessInput(bool aWasSchemelessInput) {
   mWasSchemelessInput = aWasSchemelessInput;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsNewWindowTarget(bool* aIsNewWindowTarget) {
+  *aIsNewWindowTarget = mIsNewWindowTarget;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsNewWindowTarget(bool aIsNewWindowTarget) {
+  mIsNewWindowTarget = aIsNewWindowTarget;
   return NS_OK;
 }
 

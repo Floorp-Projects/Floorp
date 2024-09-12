@@ -528,3 +528,68 @@ add_task(async function iframe_popup_tab() {
   gBrowser.removeTab(tab);
   gBrowser.removeTab(newTab);
 });
+
+/**
+ * Check that when navigating to a http channel which redirects to a external
+ * protocol in a noopener pop-up window, we show the dialog in the correct tab.
+ */
+add_task(async function redirect_popup_tab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/"
+  );
+
+  // Wait for the chooser dialog to open in the background tab. It should not
+  // open in the foreground tab which is unrelated to the external protocol
+  // navigation.
+  let dialogWindowPromise = waitForProtocolAppChooserDialog(gBrowser, true);
+
+  // Wait for the new tab to appear. The URI in this tab will never change from
+  // `about:blank` as we're going to just end up opening a dialog, so we can't
+  // use `waitForNewTab`, as that will wait for the tab to actually load
+  // something.
+  let newTabPromise = new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      openEvent => resolve(openEvent.target),
+      { once: true }
+    );
+  });
+
+  info("Navigating to redirect to external proto in pop-up");
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [TEST_PATH + "redirect_helper.sjs?uri=mailto:example@example.com"],
+    async function (popupUri) {
+      content.eval("window.open('" + popupUri + "', '_blank', 'noopener');");
+    }
+  );
+
+  // Wait for the new tab to be opened.
+  info("Waiting for new tab to appear");
+  let newTab = await newTabPromise;
+
+  // Wait for dialog to open in one of the tabs.
+  info("Waiting for dialog to appear");
+  let dialog = await dialogWindowPromise;
+
+  is(
+    gBrowser.getTabDialogBox(newTab.linkedBrowser)._tabDialogManager._topDialog,
+    dialog,
+    "Dialog opened in the background tab"
+  );
+
+  is(
+    dialog._frame.contentDocument.location.href,
+    CONTENT_HANDLING_URL,
+    "Opened dialog is appChooser dialog."
+  );
+
+  // Close the dialog:
+  let dialogClosedPromise = waitForProtocolAppChooserDialog(gBrowser, false);
+  dialog.close();
+  await dialogClosedPromise;
+
+  gBrowser.removeTab(tab);
+  gBrowser.removeTab(newTab);
+});

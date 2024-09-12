@@ -21,7 +21,6 @@
 #include "nsNetUtil.h"
 #include "nsContentSecurityManager.h"
 #include "nsExternalHelperAppService.h"
-#include "nsHashPropertyBag.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
@@ -36,12 +35,11 @@ class nsILoadInfo;
 // OpenInputStream to calls in the OS for loading the url.
 ////////////////////////////////////////////////////////////////////////
 
-class nsExtProtocolChannel : public nsHashPropertyBag,
-                             public nsIChannel,
+class nsExtProtocolChannel : public nsIChannel,
                              public nsIChildChannel,
                              public nsIParentChannel {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -75,17 +73,18 @@ class nsExtProtocolChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
-NS_IMPL_ADDREF_INHERITED(nsExtProtocolChannel, nsHashPropertyBag)
-NS_IMPL_RELEASE_INHERITED(nsExtProtocolChannel, nsHashPropertyBag)
+NS_IMPL_ADDREF(nsExtProtocolChannel)
+NS_IMPL_RELEASE(nsExtProtocolChannel)
 
 NS_INTERFACE_MAP_BEGIN(nsExtProtocolChannel)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChildChannel)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
+NS_INTERFACE_MAP_END
 
 nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     : mUrl(aURI),
@@ -177,13 +176,10 @@ nsresult nsExtProtocolChannel::OpenURL() {
       mLoadInfo->RedirectChain().LastElement()->GetPrincipal(
           getter_AddRefs(redirectPrincipal));
     }
-    bool newWindowTarget = false;
-    GetPropertyAsBool(u"docshell.newWindowTarget"_ns, &newWindowTarget);
-
     rv = extProtService->LoadURI(mUrl, triggeringPrincipal, redirectPrincipal,
                                  ctx, mLoadInfo->GetLoadTriggeredFromExternal(),
                                  mLoadInfo->GetHasValidUserGestureActivation(),
-                                 newWindowTarget);
+                                 mLoadInfo->GetIsNewWindowTarget());
 
     if (NS_SUCCEEDED(rv) && mListener) {
       mStatus = NS_ERROR_NO_CONTENT;
