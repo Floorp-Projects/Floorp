@@ -15787,24 +15787,6 @@
       "last_modified": 1666727868717
     },
     {
-      "schema": 1666727431197,
-      "derHash": "HyAocW4zWE8z+pIKgCR77s3D18smUZVUxkTOTExgd6k=",
-      "subject": "CN=Gandi Pro SSL CA 2,O=Gandi,L=Paris,ST=Paris,C=FR",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkZSMQ4wDAYDVQQIEwVQYXJpczEOMAwGA1UEBxMFUGFyaXMxDjAMBgNVBAoTBUdhbmRpMRswGQYDVQQDExJHYW5kaSBQcm8gU1NMIENBIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6faf7f5ba7f16f7491ead642e0cfbaa35440f2c653b8dbb5a087ac9ec163a530",
-        "size": 2101,
-        "filename": "XQpYwYiHpVLml4eYccUVEZJpEOh5QrryTkXbWPum2FM=.pem",
-        "location": "security-state-staging/intermediates/89bc78dd-9df5-4eef-8388-f9c0404389b7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "XQpYwYiHpVLml4eYccUVEZJpEOh5QrryTkXbWPum2FM=",
-      "crlite_enrolled": false,
-      "id": "73046dfc-cf19-4186-82ef-495957df2484",
-      "last_modified": 1666727868704
-    },
-    {
       "schema": 1666727351625,
       "derHash": "TKCAJjzkvCTxgRzvP/rKWl7zmPk+vQxbz1t70LrmfUo=",
       "subject": "CN=BitCert RSA Business Secure Site CA,O=BitCert,L=Chengdu,ST=Sichuan,C=CN",
@@ -16705,24 +16687,6 @@
       "last_modified": 1666727867973
     },
     {
-      "schema": 1666727364475,
-      "derHash": "FDY4IlF+KYmwh9DJpC7vE0p3S9CyoGZNRVr3hLwI9NA=",
-      "subject": "CN=Trusted Secure Certificate Authority 5,O=Corporation Service Company,L=Wilmington,ST=DE,C=US",
-      "subjectDN": "MIGGMQswCQYDVQQGEwJVUzELMAkGA1UECBMCREUxEzARBgNVBAcTCldpbG1pbmd0b24xJDAiBgNVBAoTG0NvcnBvcmF0aW9uIFNlcnZpY2UgQ29tcGFueTEvMC0GA1UEAxMmVHJ1c3RlZCBTZWN1cmUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5IDU=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7458f386d39757872b85e956d2d7a16cb8599948efbd795f94e276b54fc5bed2",
-        "size": 2166,
-        "filename": "PzYLl5g5RZkQsPcG4YUX6vzXQf86rOUEcSAhn7JxzNo=.pem",
-        "location": "security-state-staging/intermediates/16cc4ad6-fd0a-4bd1-b425-0ed7e348bd1f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "PzYLl5g5RZkQsPcG4YUX6vzXQf86rOUEcSAhn7JxzNo=",
-      "crlite_enrolled": false,
-      "id": "8d63c955-d419-4e2a-8ca5-c4a11735a8f7",
-      "last_modified": 1666727867960
-    },
-    {
       "schema": 1666727420826,
       "derHash": "G095TXcNxuBdx6QVhFD4JZVy621Z3mZ6PD++CNoBJIE=",
       "subject": "CN=Global Trust CA - OV (RSA),O=Global Digital Inc.,C=TW",
@@ -17495,24 +17459,6 @@
       "crlite_enrolled": false,
       "id": "6c442ac4-66c1-432d-bf78-80ce046badd7",
       "last_modified": 1666727867316
-    },
-    {
-      "schema": 1666727390556,
-      "derHash": "ufIWQyNjjc4LkiGLQ8QcGysmljiTKdsZ9c961Jtcs3I=",
-      "subject": "CN=Gandi Standard SSL CA 2,O=Gandi,L=Paris,ST=Paris,C=FR",
-      "subjectDN": "MF8xCzAJBgNVBAYTAkZSMQ4wDAYDVQQIEwVQYXJpczEOMAwGA1UEBxMFUGFyaXMxDjAMBgNVBAoTBUdhbmRpMSAwHgYDVQQDExdHYW5kaSBTdGFuZGFyZCBTU0wgQ0EgMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8b1ceb14d5c25356214a73586739ce33690e5f47c00a76ed94647903e85e7611",
-        "size": 2109,
-        "filename": "WGJkyYjx1QMdMe0UqlyOKXtydPDVrk7sl2fV-nNm1r4=.pem",
-        "location": "security-state-staging/intermediates/4f8220db-8fc8-4d4e-b9ee-ac020e050d5d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "WGJkyYjx1QMdMe0UqlyOKXtydPDVrk7sl2fV+nNm1r4=",
-      "crlite_enrolled": false,
-      "id": "e9f19529-c655-4693-b307-095080dcd0a7",
-      "last_modified": 1666727867303
     },
     {
       "schema": 1666727403214,
@@ -22393,24 +22339,6 @@
       "last_modified": 1663786626267
     },
     {
-      "schema": 1663786351283,
-      "derHash": "zx+PmJ+XXQUabw2VI65XMqOn4jRObFQPu2Q94pVRnmc=",
-      "subject": "CN=CSP SSL Service CA 4,O=CENTRAL SECURITY PATROLS CO.\\, LTD.,L=Shinjuku-ku,ST=Tokyo,C=JP",
-      "subjectDN": "MH8xCzAJBgNVBAYTAkpQMQ4wDAYDVQQIEwVUb2t5bzEUMBIGA1UEBxMLU2hpbmp1a3Uta3UxKzApBgNVBAoTIkNFTlRSQUwgU0VDVVJJVFkgUEFUUk9MUyBDTy4sIExURC4xHTAbBgNVBAMTFENTUCBTU0wgU2VydmljZSBDQSA0",
-      "whitelist": false,
-      "attachment": {
-        "hash": "109d1f5cb034f92419a9a77b50ff079b19b72ad8400fcb071f3b8b22792477ab",
-        "size": 2154,
-        "filename": "6cmFGKSet-uN9lExNlA28Wy9f_epSW1jDhpODTW1QyI=.pem",
-        "location": "security-state-staging/intermediates/c3019c3d-b69f-4835-afcf-5b1aa9e4150c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "6cmFGKSet+uN9lExNlA28Wy9f/epSW1jDhpODTW1QyI=",
-      "crlite_enrolled": false,
-      "id": "10512fab-e974-42a5-8402-9a01fd00122c",
-      "last_modified": 1663786626246
-    },
-    {
       "schema": 1663786349594,
       "derHash": "iF6OHcrQdxTzuiysmtv2hxH7LlY2g/xOM0z5JNl8wkU=",
       "subject": "CN=DNEncrypt SHA2 EV SSL/TLS  [Run by the Issuer],O=DNEncrypt\\, Inc,C=US",
@@ -22663,24 +22591,6 @@
       "last_modified": 1663786626080
     },
     {
-      "schema": 1663786330779,
-      "derHash": "O/fPS2GSO651p8JX9VBwAD7Pcn4c2mufy4VR/GSdb+s=",
-      "subject": "CN=GlobeSSL DV Certification Authority 2,O=Globe Hosting\\, Inc.,L=Wilmington,ST=DE,C=US",
-      "subjectDN": "MH0xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJERTETMBEGA1UEBxMKV2lsbWluZ3RvbjEcMBoGA1UEChMTR2xvYmUgSG9zdGluZywgSW5jLjEuMCwGA1UEAxMlR2xvYmVTU0wgRFYgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2a7d89cbf6797cab18a6def1a2d2bf34df20c56b6bbcf3455fee150d6914598d",
-        "size": 2150,
-        "filename": "lQ_FKBR5nsUo6XzQqIOg6_wickZMgocia2x_uINY_uw=.pem",
-        "location": "security-state-staging/intermediates/c0fc7db3-2be8-492d-a2dc-cca6f8a62b09.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "lQ/FKBR5nsUo6XzQqIOg6/wickZMgocia2x/uINY/uw=",
-      "crlite_enrolled": false,
-      "id": "8a0d8253-3697-441a-b920-4a6a9f602da5",
-      "last_modified": 1663786626073
-    },
-    {
       "schema": 1663786329097,
       "derHash": "kMZx4I5oI7hkbC7BgCN2msD8NDijPBAfZoO5XeMYBSQ=",
       "subject": "CN=COMODO ECC Extended Validation Secure Server CA 2,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
@@ -22877,24 +22787,6 @@
       "crlite_enrolled": false,
       "id": "d9d01fba-b934-48cf-9906-8eacf630d825",
       "last_modified": 1663786625832
-    },
-    {
-      "schema": 1663786300107,
-      "derHash": "n6n8tQDxqYNVCZ9wA0zw0u50Orpj9utn1VaF6pBlMos=",
-      "subject": "CN=GlobeSSL OV Certification Authority 2,O=Globe Hosting\\, Inc.,L=Wilmington,ST=DE,C=US",
-      "subjectDN": "MH0xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJERTETMBEGA1UEBxMKV2lsbWluZ3RvbjEcMBoGA1UEChMTR2xvYmUgSG9zdGluZywgSW5jLjEuMCwGA1UEAxMlR2xvYmVTU0wgT1YgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fdefe5ef43df12d4bd1335d174b6f41e641b22c6567a16702be003ef652c472f",
-        "size": 2150,
-        "filename": "iaAN4YIvVl4idrHfqCHBL-dZTUISZ2ANiVmgZiYqSUY=.pem",
-        "location": "security-state-staging/intermediates/f1647464-5e0e-498c-bb82-47efb78d1a12.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "iaAN4YIvVl4idrHfqCHBL+dZTUISZ2ANiVmgZiYqSUY=",
-      "crlite_enrolled": false,
-      "id": "e8ebfc10-dc4f-4b6f-bde6-b9aaa7e3ece4",
-      "last_modified": 1663786625825
     },
     {
       "schema": 1663786297584,
@@ -23399,24 +23291,6 @@
       "crlite_enrolled": false,
       "id": "937cf717-f122-4278-833c-a2aa0da62c8a",
       "last_modified": 1663786625460
-    },
-    {
-      "schema": 1663786249318,
-      "derHash": "wWnWndPSbTbLgt8TXFf+M27P9+fqQB6Z484ZF6j7gYA=",
-      "subject": "CN=CSP SSL Service CA 5,O=CENTRAL SECURITY PATROLS CO.\\, LTD.,L=Shinjuku-ku,ST=Tokyo,C=JP",
-      "subjectDN": "MH8xCzAJBgNVBAYTAkpQMQ4wDAYDVQQIEwVUb2t5bzEUMBIGA1UEBxMLU2hpbmp1a3Uta3UxKzApBgNVBAoTIkNFTlRSQUwgU0VDVVJJVFkgUEFUUk9MUyBDTy4sIExURC4xHTAbBgNVBAMTFENTUCBTU0wgU2VydmljZSBDQSA1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b53bbabfdb6bc860b29381d741f151ba37e4505a6e59c7748435e5ad8b141f24",
-        "size": 2154,
-        "filename": "feELO37IL4l2CJfivsLI0VTQkKQc7sskntJ5vxPVVW8=.pem",
-        "location": "security-state-staging/intermediates/1c8e31b4-e999-4a9c-8ba3-128b9c701303.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "feELO37IL4l2CJfivsLI0VTQkKQc7sskntJ5vxPVVW8=",
-      "crlite_enrolled": false,
-      "id": "03b13f89-3801-4577-bc0e-a2997dfd8ae2",
-      "last_modified": 1663786625446
     },
     {
       "schema": 1663786240629,
@@ -31357,5 +31231,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1725807422586
+  "timestamp": 1726066622606
 }

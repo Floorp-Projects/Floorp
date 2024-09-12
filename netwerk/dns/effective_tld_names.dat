@@ -13758,18 +13758,17 @@ hoplix.shop
 orx.biz
 biz.gl
 biz.ng
+co.biz.ng
+dl.biz.ng
+go.biz.ng
+lg.biz.ng
+on.biz.ng
 col.ng
 firm.ng
 gen.ng
 ltd.ng
 ngo.ng
 plc.ng
-// Reserved Third Level Subdomains for BIZ.NG
-co.biz.ng
-dl.biz.ng
-go.biz.ng
-lg.biz.ng
-on.biz.ng
 
 // HostFly : https://www.ie.ua
 // Submitted by Bohdan Dub <support@hostfly.com.ua>
@@ -13887,6 +13886,10 @@ app-ionos.space
 // iopsys software solutions AB : https://iopsys.eu/
 // Submitted by Roman Azarenko <roman.azarenko@iopsys.eu>
 iopsys.se
+
+// IPFS Project : https://ipfs.tech/
+// Submitted by Interplanetary Shipyard <domains@ipshipyard.com>
+*.dweb.link
 
 // IPiFony Systems, Inc. : https://www.ipifony.com/
 // Submitted by Matthew Hardeman <mhardeman@ipifony.com>
@@ -14073,7 +14076,7 @@ lpusercontent.com
 lelux.site
 
 // libp2p project : https://libp2p.io
-// Submitted by Interplanetary Shipyard <psl@ipshipyard.com>
+// Submitted by Interplanetary Shipyard <domains@ipshipyard.com>
 libp2p.direct
 
 // Libre IT Ltd : https://libre.nz
@@ -14504,7 +14507,6 @@ dnsking.ch
 mypi.co
 n4t.co
 001www.com
-ddnslive.com
 myiphost.com
 forumz.info
 soundcast.me
@@ -14520,8 +14522,6 @@ x443.pw
 now-dns.top
 ntdll.top
 freeddns.us
-crafting.xyz
-zapto.xyz
 
 // nsupdate.info : https://www.nsupdate.info/
 // Submitted by Thomas Waldmann <info@nsupdate.info>
@@ -14753,10 +14753,6 @@ xen.prgmr.com
 // priv.at : http://www.nic.priv.at/
 // Submitted by registry <lendl@nic.at>
 priv.at
-
-// Protocol Labs : https://protocol.ai/
-// Submitted by Michael Burns <noc@protocol.ai>
-*.dweb.link
 
 // Protonet GmbH : http://protonet.io
 // Submitted by Martin Meier <admin@protonet.io>
@@ -15572,9 +15568,11 @@ express.val.run
 web.val.run
 
 // Vercel, Inc : https://vercel.com/
-// Submitted by Connor Davis <security@vercel.com>
+// Submitted by Max Leiter <security@vercel.com>
 vercel.app
+v0.build
 vercel.dev
+vusercontent.net
 now.sh
 
 // VeryPositive SIA : http://very.lv
