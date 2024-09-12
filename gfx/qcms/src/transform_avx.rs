@@ -116,7 +116,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         }
         /* crunch, crunch, crunch */
         vec_r = _mm256_add_ps(vec_r, _mm256_add_ps(vec_g, vec_b));
-        vec_r = _mm256_max_ps(min, vec_r);
+        vec_r = _mm256_max_ps(vec_r, min);
         vec_r = _mm256_min_ps(max, vec_r);
         result = _mm256_mul_ps(vec_r, scale);
         /* store calc'd output tables indices */
@@ -158,7 +158,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
             *dest.add(F::kAIndex + components as usize) = alpha2
         }
         vec_r = _mm256_add_ps(vec_r, _mm256_add_ps(vec_g, vec_b));
-        vec_r = _mm256_max_ps(min, vec_r);
+        vec_r = _mm256_max_ps(vec_r, min);
         vec_r = _mm256_min_ps(max, vec_r);
         result = _mm256_mul_ps(vec_r, scale);
         _mm256_store_si256(output as *mut __m256i, _mm256_cvtps_epi32(result));
@@ -187,7 +187,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
             *dest.add(F::kAIndex) = *src.add(F::kAIndex)
         }
         vec_r0 = _mm_add_ps(vec_r0, _mm_add_ps(vec_g0, vec_b0));
-        vec_r0 = _mm_max_ps(_mm256_castps256_ps128(min), vec_r0);
+        vec_r0 = _mm_max_ps(vec_r0, _mm256_castps256_ps128(min));
         vec_r0 = _mm_min_ps(_mm256_castps256_ps128(max), vec_r0);
         vec_r0 = _mm_mul_ps(vec_r0, _mm256_castps256_ps128(scale));
         _mm_store_si128(output as *mut __m128i, _mm_cvtps_epi32(vec_r0));
