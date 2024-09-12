@@ -678,14 +678,6 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   mozilla::net::LoadInfoArgs loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
-  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
-  // Determine whether a new window was opened specifically for this request
-  bool shouldCloseWindow = false;
-  if (props) {
-    props->GetPropertyAsBool(u"docshell.newWindowTarget"_ns,
-                             &shouldCloseWindow);
-  }
-
   // Now we build a protocol for forwarding our data to the parent.  The
   // protocol will act as a listener on the child-side and create a "real"
   // helperAppService listener on the parent-side, via another call to
@@ -694,7 +686,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   MOZ_ALWAYS_TRUE(child->SendPExternalHelperAppConstructor(
       childListener, uri, loadInfoArgs, nsCString(aMimeContentType), disp,
       contentDisposition, fileName, aForceSave, contentLength, wasFileChannel,
-      referrer, aContentContext, shouldCloseWindow));
+      referrer, aContentContext));
 
   NS_ADDREF(*aStreamListener = childListener);
 
@@ -1287,7 +1279,6 @@ nsExternalAppHandler::nsExternalAppHandler(
       mCanceled(false),
       mStopRequestIssued(false),
       mIsFileChannel(false),
-      mShouldCloseWindow(false),
       mHandleInternally(false),
       mDialogShowing(false),
       mReason(aReason),
@@ -1603,15 +1594,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
   if (mBrowsingContext) {
     mMaybeCloseWindowHelper = new MaybeCloseWindowHelper(mBrowsingContext);
-    mMaybeCloseWindowHelper->SetShouldCloseWindow(mShouldCloseWindow);
-    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
+
     // Determine whether a new window was opened specifically for this request
-    if (props) {
-      bool tmp = false;
-      if (NS_SUCCEEDED(
-              props->GetPropertyAsBool(u"docshell.newWindowTarget"_ns, &tmp))) {
-        mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
-      }
+    if (aChannel) {
+      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+      mMaybeCloseWindowHelper->SetShouldCloseWindow(
+          loadInfo->GetIsNewWindowTarget());
     }
   }
 

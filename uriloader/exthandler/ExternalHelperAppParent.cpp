@@ -62,8 +62,7 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 bool ExternalHelperAppParent::Init(
     const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
     const nsACString& aMimeContentType, const bool& aForceSave,
-    nsIURI* aReferrer, BrowsingContext* aContext,
-    const bool& aShouldCloseWindow) {
+    nsIURI* aReferrer, BrowsingContext* aContext) {
   nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(
       aLoadInfoArgs, ContentParent::Cast(Manager())->GetRemoteType(),
       getter_AddRefs(mLoadInfo));
@@ -95,18 +94,7 @@ bool ExternalHelperAppParent::Init(
 
   helperAppService->CreateListener(aMimeContentType, this, aContext, aForceSave,
                                    nullptr, getter_AddRefs(mListener));
-  if (!mListener) {
-    return false;
-  }
-
-  if (aShouldCloseWindow) {
-    RefPtr<nsExternalAppHandler> handler = do_QueryObject(mListener);
-    if (handler) {
-      handler->SetShouldCloseWindow();
-    }
-  }
-
-  return true;
+  return mListener != nullptr;
 }
 
 void ExternalHelperAppParent::ActorDestroy(ActorDestroyReason why) {
