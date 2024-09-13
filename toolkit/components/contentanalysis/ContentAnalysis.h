@@ -215,7 +215,6 @@ class ContentAnalysis final : public nsIContentAnalysis {
     mozilla::MoveOnlyFunction<void(RefPtr<nsIContentAnalysisResult>&&)>
         mResolver;
   };
-  static bool MightBeActive();
   // Find the outermost browsing context that has same-origin access to
   // aBrowsingContext, and this is the URL we will pass to the Content Analysis
   // agent.
