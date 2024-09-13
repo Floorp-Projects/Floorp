@@ -219,6 +219,13 @@ interface nsIContentAnalysis : nsISupports
    */
   readonly attribute boolean mightBeActive;
 
+  %{C++
+  /**
+   * Static way to get the mightBeActive property.
+   */
+  static bool MightBeActive();
+  %}
+
   /**
    * True if content-analysis activation was determined by enterprise policy,
    * as opposed to enabled with the `allow-content-analysis` command-line

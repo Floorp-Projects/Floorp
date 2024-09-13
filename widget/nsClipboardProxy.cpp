@@ -4,7 +4,6 @@
 
 #include "nsClipboardProxy.h"
 
-#include "ContentAnalysis.h"
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
@@ -78,7 +77,7 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   aTransferable->FlavorsTransferableCanImport(types);
 
   IPCTransferableDataOrError transferableOrError;
-  if (MOZ_UNLIKELY(contentanalysis::ContentAnalysis::MightBeActive())) {
+  if (MOZ_UNLIKELY(nsIContentAnalysis::MightBeActive())) {
     RefPtr<ClipboardContentAnalysisChild> contentAnalysis =
         ClipboardContentAnalysisChild::GetOrCreate();
     if (!contentAnalysis) {
