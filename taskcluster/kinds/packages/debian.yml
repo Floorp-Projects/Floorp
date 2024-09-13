@@ -32,6 +32,10 @@ deb12-valgrind:
         dsc:
             url: http://snapshot.debian.org/archive/debian/20230111T213757Z/pool/main/v/valgrind/valgrind_3.20.0-1.dsc
             sha256: e32d373bf2d4f0bd0e9673c711d0e4a8eed43c22ca81714ae3e2d85b2f315493
+        pre-build-command: >-
+            sed -i /ehdr_m.e_type/d coregrind/m_debuginfo/readelf.c &&
+            EDITOR=/bin/true dpkg-source --commit . fix &&
+            debchange -v 1:3.20.0-1.1 --distribution stable "Fix for https://bugs.kde.org/show_bug.cgi?id=492663"
 
 deb12-python-zstandard:
     description: "python-zstandard for Debian bookworm"
