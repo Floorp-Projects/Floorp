@@ -3,10 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#workspacesToolbar {
-  width: 100% !important;
+/* Toolbar button */
+#workspaces-toolbar-button {
+  list-style-image: url("chrome://branding/content/icon32.png");
+  border-radius: 0px !important;
+
+  &:hover {
+    background-color: var(--toolbarbutton-hover-background) !important;
+  }
+
+  &[open="true"],
+  &:hover:active {
+    background-color: var(--toolbarbutton-active-background) !important;
+  }
+
+  & > * {
+    background: unset !important;
+    background-color: unset !important;
+    background-image: unset !important;
+  }
+
+  & > label {
+    display: inherit !important;
+  }
 }
 
+/* Toolbar button's Popup */
 #workspacesPopupContent {
   background: inherit !important;
   overflow: scroll;
@@ -17,26 +39,23 @@
   scrollbar-width: thin;
 }
 
-#workspacesToolbar {
-  background: inherit !important;
+/* Content */
+#workspacesToolbarButtonPanelBox {
+  margin: 10px;
 }
 
-.workspaceButton label,
-.workspaceButton image {
-  display: inherit !important;
-  background-color: unset !important;
-  color: var(--tab-text-color) !important;
+/* Footer */
+#workspacesPopupFooter {
+  width: 85% !important;
+  margin: auto;
 }
 
-.workspaceButton[data-selected="true"] {
-  background-color: color-mix(
-    in srgb,
-    currentColor 20%,
-    transparent
-  ) !important;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+/* Separator */
+#workspacesPopupSeparator {
+  margin: 10px 0px !important;
 }
 
+/* Select Workspace buttons */
 .workspaceButton {
   list-style-image: url("chrome://branding/content/icon32.png");
   border-radius: var(--tab-border-radius);
@@ -47,93 +66,65 @@
   margin: 0 !important;
   margin-right: 5px !important;
   margin-bottom: 5px !important;
+
+  &:hover {
+    background-color: unset !important;
+  }
+
+  &[data-selected="true"] {
+    background-color: color-mix(
+      in srgb,
+      currentColor 20%,
+      transparent
+    ) !important;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  }
+
+  & label,
+  & image {
+    display: inherit !important;
+    background-color: unset !important;
+    color: var(--tab-text-color) !important;
+  }
 }
 
+/* open workspace manager button */
 #workspacesManageworkspacesServicesButton {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
   height: 35px;
   width: 35px;
+
+  & > .toolbarbutton-icon {
+    background-color: unset !important;
+  }
+
+  & > .toolbarbutton-text {
+    display: none !important;
+  }
 }
 
-#workspacesManageworkspacesServicesButton > .toolbarbutton-icon {
-  background-color: unset !important;
-}
-
-#workspacesManageworkspacesServicesButton > .toolbarbutton-text {
-  display: none !important;
-}
-
-#workspacesPopupFooter {
-  width: 85% !important;
-  margin: auto;
-}
-
-#workspaces-toolbar-button {
-  list-style-image: url("chrome://branding/content/icon32.png");
-  border-radius: 0px !important;
-}
-
-#workspaces-toolbar-button:hover {
-  background-color: var(--toolbarbutton-hover-background) !important;
-}
-
-#workspaces-toolbar-button[open="true"],
-#workspaces-toolbar-button:hover:active {
-  background-color: var(--toolbarbutton-active-background) !important;
-}
-
-#workspaces-toolbar-button[showlabel="true"] > label {
-  display: inherit !important;
-}
-
-#workspaces-toolbar-button[showlabel="true"] > label {
-  display: none !important;
-}
-
-#workspaces-toolbar-button > label {
-  display: none !important;
-}
-
-#workspaces-toolbar-button > * {
-  background: unset !important;
-  background-color: unset !important;
-  background-image: unset !important;
-}
-
-.workspaceSeparator {
-  margin: 5px 0px !important;
-  width: -moz-available;
-}
-
+/* create new workspace button */
 #workspacesCreateNewWorkspaceButton {
   list-style-image: url(chrome://global/skin/icons/plus.svg);
   width: -moz-available;
   border-radius: var(--tab-border-radius);
   height: 35px;
-}
 
-#workspacesCreateNewWorkspaceButton:hover {
-  background-color: var(--toolbarbutton-hover-background) !important;
-}
+  &:hover {
+    background-color: var(--toolbarbutton-hover-background) !important;
+  }
 
-#workspacesCreateNewWorkspaceButton:hover:active {
-  background-color: var(--toolbarbutton-active-background) !important;
-}
+  &:hover:active {
+    background-color: var(--toolbarbutton-active-background) !important;
+  }
 
-#workspacesCreateNewWorkspaceButton > * {
-  background: unset !important;
-  background-color: unset !important;
-  background-image: unset !important;
-}
+  & > * {
+    background: unset !important;
+    background-color: unset !important;
+    background-image: unset !important;
+  }
 
-#workspacesCreateNewWorkspaceButton > label {
-  display: inherit;
-}
-
-#workspacesPopupSeparator {
-  margin: 10px 0px !important;
-}
-
-#workspacesToolbarButtonPanelBox {
-  margin: 10px;
+  & > label {
+    display: inherit !important;
+  }
 }
