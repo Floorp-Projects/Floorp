@@ -7,6 +7,7 @@ import type { workspace } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { WorkspaceIcons } from "./utils/workspace-icons";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;
@@ -41,8 +42,24 @@ export class WorkspacesServices {
    * Returns current workspace UUID (id).
    * @returns The current workspace UUID (id).
    */
-  private getCurrentWorkspaceId(): string {
+  public get getCurrentWorkspaceId(): string {
     return window.floorpSelectedWorkspace;
+  }
+
+  /**
+   * Returns current workspace object.
+   * @returns The current workspace object.
+   */
+  public get getCurrentWorkspace() {
+    return this.getWorkspaceById(this.getCurrentWorkspaceId);
+  }
+
+  /**
+   * set current workspace UUID (id).
+   * @param workspaceId The workspace id.
+   */
+  public setCurrentWorkspaceId(workspaceId: string): void {
+    window.floorpSelectedWorkspace = workspaceId;
   }
 
   /**
@@ -78,6 +95,7 @@ export class WorkspacesServices {
     setworkspacesData((prev) => {
       return [...prev, workspace];
     });
+    this.changeWorkspace(workspace.id);
     return workspace.id;
   }
 
@@ -108,8 +126,11 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public changeWorkspace(workspaceId: string) {
-    const selectedWorkspace = window.floorpSelectedWorkspace;
-    window.floorpSelectedWorkspace = workspaceId;
+    if (!workspaceId) {
+      throw new Error("Workspace id is required to change workspace");
+    }
+    const selectedWorkspace = this.getCurrentWorkspaceId;
+    this.setCurrentWorkspaceId(workspaceId);
     setworkspacesData((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
@@ -121,7 +142,26 @@ export class WorkspacesServices {
         return workspace;
       });
     });
+    this.changeWorkspaceToolbarState(workspaceId);
     this.checkTabsVisibility();
+  }
+
+  /**
+   * Change workspace. Selected workspace id will be stored in window object.
+   * @param workspaceId The workspace id.
+   */
+  public changeWorkspaceToolbarState(workspaceId = this.getCurrentWorkspaceId) {
+    const gWorkspaceIcons = WorkspaceIcons.getInstance();
+    const targetToolbarItem = document?.querySelector(
+      "#workspaces-toolbar-button",
+    ) as XULElement;
+
+    const workspace = this.getWorkspaceById(workspaceId);
+    targetToolbarItem?.setAttribute("label", workspace.name);
+    (document?.documentElement as XULElement).style.setProperty(
+      "--workspaces-toolbar-button-icon",
+      `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
+    );
   }
 
   /**
@@ -142,7 +182,7 @@ export class WorkspacesServices {
    * Get default workspace id.
    * @returns The default workspace id.
    */
-  getDefaultWorkspaceId() {
+  public getDefaultWorkspaceId() {
     return workspacesData().find((workspace) => workspace.isDefault)?.id;
   }
 
@@ -329,12 +369,15 @@ export class WorkspacesServices {
       }
 
       // Set default workspace id
-      if (!window.floorpSelectedWorkspace) {
-        window.floorpSelectedWorkspace = workspacesData()[0].id;
+      if (!this.getCurrentWorkspaceId) {
+        console.log("Set default workspace id");
+        this.setCurrentWorkspaceId(workspacesData()[0].id);
+        this.changeWorkspace(this.getCurrentWorkspaceId);
       }
 
       // Check Tabs visibility
       this.checkTabsVisibility();
     });
+    this.changeWorkspace(this.getCurrentWorkspaceId);
   }
 }

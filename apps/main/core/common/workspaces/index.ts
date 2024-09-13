@@ -10,11 +10,13 @@ import { WorkspacesPopupContxtMenu } from "./popupSet";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 
 export function init() {
-  WorkspaceIcons.getInstance();
-  WorkspacesTabContextMenu.getInstance();
-  WorkspacesToolbarButton.getInstance();
-  WorkspacesPopupContxtMenu.getInstance();
-  WorkspacesServices.getInstance();
+  const gWorkspaceIcons = WorkspaceIcons.getInstance();
+  gWorkspaceIcons.initializeIcons().then(() => {
+    WorkspacesServices.getInstance();
+    WorkspacesTabContextMenu.getInstance();
+    WorkspacesToolbarButton.getInstance();
+    WorkspacesPopupContxtMenu.getInstance();
+  });
 
   import.meta.hot?.accept((m) => {
     m?.init();

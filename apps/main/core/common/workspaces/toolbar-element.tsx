@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspaceIcons } from "./utils/workspace-icons";
 import { BrowserActionUtils } from "@core/utils/browser-action";
 import { PopupElement } from "./popup-element";
 import workspacesStyles from "./styles.css?inline";
 import type { JSX } from "solid-js";
+import { WorkspacesServices } from "./workspaces";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -27,19 +27,22 @@ export class WorkspacesToolbarButton {
   };
 
   constructor() {
-    const gWorkspaceIcons = WorkspaceIcons.getInstance();
-    gWorkspaceIcons.initializeIcons().then(() => {
-      BrowserActionUtils.createMenuToolbarButton(
-        "workspaces-toolbar-button",
-        "workspaces-toolbar-button",
-        "workspacesToolbarButtonPanel",
-        <PopupElement />,
-        null,
-        null,
-        CustomizableUI.AREA_TABSTRIP,
-        this.StyleElement() as JSX.Element,
-        -1,
-      );
-    });
+    const gWorkspacesServices = WorkspacesServices.getInstance();
+    BrowserActionUtils.createMenuToolbarButton(
+      "workspaces-toolbar-button",
+      "workspaces-toolbar-button",
+      "workspacesToolbarButtonPanel",
+      <PopupElement />,
+      null,
+      (aNode) => {
+        // On Startup, the workspace is not yet loaded, so we need to set the label after the workspace is loaded.
+        // We cannot get Element from WorkspacesServices, so we need to get it from CustomizableUI directly.
+        const workspace = gWorkspacesServices.getCurrentWorkspace;
+        aNode?.setAttribute("label", workspace.name);
+      },
+      CustomizableUI.AREA_TABSTRIP,
+      this.StyleElement() as JSX.Element,
+      -1,
+    );
   }
 }
