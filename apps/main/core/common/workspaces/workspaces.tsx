@@ -303,11 +303,11 @@ export class WorkspacesServices {
 
   /**
    * Check Tabs visibility.
+   * @returns void
    */
   public checkTabsVisibility() {
     // Get Current Workspace & Workspace Id
-    const currentWorkspaceId = window.floorpSelectedWorkspace;
-
+    const currentWorkspaceId = this.getCurrentWorkspaceId;
     // Last Show Workspace Attribute
     const selectedTab = window.gBrowser.selectedTab;
     if (
@@ -342,13 +342,8 @@ export class WorkspacesServices {
     for (const tab of tabs) {
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
-      if (
-        !(
-          workspaceId !== "" &&
-          workspaceId !== null &&
-          workspaceId !== undefined
-        )
-      ) {
+      if (!workspaceId) {
+        console.log("Set workspaceId to tab attribute");
         this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
       }
 
@@ -360,6 +355,16 @@ export class WorkspacesServices {
       }
     }
   }
+
+  /**
+   * Location Change Listener.
+   */
+  private listener = {
+    onLocationChange: () => {
+      this.checkTabsVisibility();
+      console.log("onLocationChange");
+    },
+  };
 
   constructor() {
     createEffect(() => {
@@ -379,5 +384,6 @@ export class WorkspacesServices {
       this.checkTabsVisibility();
     });
     this.changeWorkspace(this.getCurrentWorkspaceId);
+    window.gBrowser.addProgressListener(this.listener);
   }
 }

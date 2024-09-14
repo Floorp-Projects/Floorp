@@ -70,7 +70,6 @@ export class WorkspaceIcons {
       const iconName = path.split("/").pop()?.replace(".svg", "") || "";
       this.resolvedIcons[iconName] = iconUrl;
     }
-    console.log("Resolved icons", this.resolvedIcons);
     this.iconsResolved = true;
   }
 

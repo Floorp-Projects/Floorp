@@ -1,5 +1,4 @@
 // import { initSidebar } from "./browser-sidebar";
-import { CustomShortcutKey } from "@nora/shared/custom-shortcut-key";
 import { initI18N } from "../i18n/config";
 //console.log("run init");
 
@@ -10,7 +9,8 @@ const modules = {
 };
 
 Object.entries(modules_common).map((v) => {
-  modules.common[v[0].replace("./common/", "").replace("/index.ts", "")] = v[1];
+  modules.common[v[0].replace("./common/", "").replace("/index.ts", "")] =
+    v[1] as () => Promise<unknown>;
 });
 console.log(modules);
 
@@ -23,7 +23,7 @@ export default async function initScripts() {
   SessionStore.promiseInitialized.then(async () => {
     initI18N();
     Services.prefs
-      .getDefaultBranch(null as any)
+      .getDefaultBranch(null as unknown as string)
       .setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
     Services.prefs.lockPref("noraneko.features.all");
 
@@ -46,7 +46,9 @@ export default async function initScripts() {
               ].includes(moduleName)
             )
               (
-                (await categoryValue[moduleName]()) as { init?: Function }
+                (await categoryValue[moduleName]()) as {
+                  init?: typeof Function;
+                }
               ).init?.();
           } catch (e) {
             console.error(e);

@@ -190,7 +190,7 @@ async function run(mode: "dev" | "test" = "dev") {
       "extensions.screenshots.disabled": false,
 
       //https://searchfox.org/mozilla-central/rev/cc01f11adfacca9cd44a75fd140d2fdd8f9a48d4/browser/app/profile/firefox.js#307
-      "browser.startup.page": 1,
+      "browser.startup.page": 3,
 
       //* puppeteer seems to set homepage as about:blank
       //https://searchfox.org/mozilla-central/rev/aee7c3a0dbf33af0c4f6648f391db62b35895e50/browser/components/preferences/tests/browser_homepage_default.js#28
