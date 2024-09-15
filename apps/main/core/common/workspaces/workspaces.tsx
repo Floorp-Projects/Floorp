@@ -422,7 +422,6 @@ export class WorkspacesServices {
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
       if (!workspaceId) {
-        console.log("Set workspaceId to tab attribute");
         this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
       }
 
@@ -457,7 +456,6 @@ export class WorkspacesServices {
 
       // Set default workspace id
       if (!this.getCurrentWorkspaceId) {
-        console.log("Set default workspace id");
         this.setCurrentWorkspaceId(workspacesData()[0].id);
         this.changeWorkspace(this.getCurrentWorkspaceId);
       }
