@@ -129,6 +129,17 @@ export class WorkspacesServices {
     if (!workspaceId) {
       throw new Error("Workspace id is required to change workspace");
     }
+
+    const willChangeWorkspaceLastShowTab = document?.querySelector(
+      `[${WorkspacesServicesStaticNames.workspaceLastShowId}="${workspaceId}"]`,
+    );
+
+    if (willChangeWorkspaceLastShowTab) {
+      window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+    } else {
+      this.createTabForWorkspace(workspaceId, true);
+    }
+
     const selectedWorkspace = this.getCurrentWorkspaceId;
     this.setCurrentWorkspaceId(workspaceId);
     setworkspacesData((prev) => {
@@ -269,14 +280,40 @@ export class WorkspacesServices {
   }
 
   /**
+   * Move tabs to workspace.
+   * @param workspaceId The workspace id.
+   */
+  async moveTabToWorkspace(workspaceId: string, tab: XULElement) {
+    const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
+    this.setWorkspaceIdToAttribute(tab, workspaceId);
+    if (tab === window.gBrowser.selectedTab) {
+      this.switchToAnotherWorkspaceTab(
+        oldWorkspaceId ?? this.getCurrentWorkspaceId,
+      );
+    } else {
+      this.checkTabsVisibility();
+    }
+  }
+
+  /**
    * Move tabs to workspace from tab context menu.
    * @param workspaceId The workspace id.
    */
   public moveTabsToWorkspaceFromTabContextMenu(workspaceId: string) {
-    console.log("moveTabsToWorkspaceFromTabContextMenu");
+    const reopenedTabs = window.TabContextMenu.contextTab.multiselected
+      ? window.gBrowser.selectedTabs
+      : [window.TabContextMenu.contextTab];
+
+    for (const tab of reopenedTabs) {
+      this.moveTabToWorkspace(workspaceId, tab);
+      if (tab === window.gBrowser.selectedTab) {
+        this.switchToAnotherWorkspaceTab(workspaceId);
+      }
+    }
+
+    this.checkTabsVisibility();
   }
 
-  /* tab attribute */
   /**
    * Get workspaceId from tab attribute.
    * @param tab The tab.
@@ -299,6 +336,48 @@ export class WorkspacesServices {
       WorkspacesServicesStaticNames.workspacesTabAttributionId,
       workspaceId,
     );
+  }
+
+  /**
+   * Create tab for workspace.
+   * @param workspaceId The workspace id.
+   * @param url The url will be opened in the tab.
+   * @param select will select tab if true.
+   * @returns The created tab.
+   */
+  createTabForWorkspace(workspaceId: string, select = false, url?: string) {
+    const targetURL =
+      url ?? Services.prefs.getStringPref("browser.startup.homepage");
+    const tab = window.gBrowser.addTab(targetURL, {
+      skipAnimation: true,
+      inBackground: false,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    this.setWorkspaceIdToAttribute(tab, workspaceId);
+
+    if (select) {
+      window.gBrowser.selectedTab = tab;
+    }
+    return tab;
+  }
+
+  /**
+   * Switch to another workspace tab.
+   * @param workspaceId The workspace id.
+   * @returns void
+   */
+  switchToAnotherWorkspaceTab(workspaceId: string) {
+    const workspaceTabs = document?.querySelectorAll(
+      `[${WorkspacesServicesStaticNames.workspacesTabAttributionId}="${workspaceId}"]`,
+    ) as XULElement[];
+
+    if (!workspaceTabs?.length) {
+      const tab = this.createTabForWorkspace(workspaceId);
+      this.moveTabToWorkspace(workspaceId, tab);
+      window.gBrowser.selectedTab = tab;
+    } else {
+      window.gBrowser.selectedTab = workspaceTabs[0];
+    }
   }
 
   /**
@@ -360,9 +439,12 @@ export class WorkspacesServices {
    * Location Change Listener.
    */
   private listener = {
+    /**
+     * Listener for location change. This function will monitor the location change and check the tabs visibility.
+     * @returns void
+     */
     onLocationChange: () => {
       this.checkTabsVisibility();
-      console.log("onLocationChange");
     },
   };
 

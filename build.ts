@@ -141,6 +141,10 @@ async function run(mode: "dev" | "test" = "dev") {
       await injectXHTMLDev("_dist/bin");
     })(),
     applyMixin("_dist/bin"),
+    (async () => {
+      await fs.access("_dist/profile");
+      await fs.rm("_dist/profile", { recursive: true });
+    })(),
   ]);
 
   //await injectUserJS(`noraneko${VERSION}`);
