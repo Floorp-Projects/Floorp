@@ -3,6 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --background-color: #fff;
+  --text-color: rgba(0, 0, 0, 0.87);
+  --modal-background-color: #fff;
+  --modal-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+  --close-button-color: rgba(0, 0, 0, 0.54);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #121212;
+    --text-color: rgba(255, 255, 255, 0.87);
+    --modal-background-color: #333;
+    --modal-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.25);
+    --close-button-color: rgba(255, 255, 255, 0.54);
+  }
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -17,10 +37,14 @@
 }
 
 .modal-content {
-  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--modal-background-color);
+  color: var(--text-color);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--modal-box-shadow);
   width: 90%;
+  bottom: 20%;
   max-width: 500px;
   padding: 24px;
   position: relative;
@@ -30,13 +54,11 @@
 .modal-header {
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: 16px;
-  color: rgba(0, 0, 0, 0.87);
+  margin: 0 auto 30px;
 }
 
 .modal-body {
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.87);
 }
 
 .modal-close {
@@ -47,12 +69,12 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--close-button-color);
   transition: color 0.2s;
 }
 
 .modal-close:hover {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--text-color);
 }
 
 @keyframes modalShow {
@@ -64,4 +86,10 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/*** Forms ********************************************************************/
+
+menulist {
+  height: 40px;
 }

@@ -37,6 +37,7 @@ declare module "solid-js" {
       checked?: boolean;
       disabled?: boolean;
       oncommand?: string | (() => void);
+      value?: string;
     }
 
     interface XULRichListItem extends XULElementBase {
@@ -96,6 +97,7 @@ declare module "solid-js" {
       "xul:panel": XULPanelElement;
       "xul:panelview": XULPanelElement;
       "xul:menupopup": XULMenuPopupElement;
+      "xul:menulist": XULElementBase;
       "xul:vbox": XULBoxElement;
       "xul:hbox": XULBoxElement;
       "xul:box": XULElementBase;

@@ -56,6 +56,10 @@ export class WorkspaceIcons {
     "user",
   ]);
 
+  get workspaceIconsArray(): string[] {
+    return Array.from(this.workspaceIcons);
+  }
+
   constructor() {
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
       query: "?url",

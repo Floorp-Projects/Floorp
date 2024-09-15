@@ -7,7 +7,7 @@ import { WorkspacesServices } from "./workspaces";
 import { WorkspacesToolbarButton } from "./toolbar-element";
 import { WorkspacesTabContextMenu } from "./tabContextMenu";
 import { WorkspacesPopupContxtMenu } from "./popupSet";
-import { WorkspaceRenameModal } from "./rename-workspace-modal";
+import { WorkspaceManageModal } from "./workspace-modal";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 
 export function init() {
@@ -17,7 +17,7 @@ export function init() {
     WorkspacesTabContextMenu.getInstance();
     WorkspacesToolbarButton.getInstance();
     WorkspacesPopupContxtMenu.getInstance();
-    WorkspaceRenameModal.getInstance();
+    WorkspaceManageModal.getInstance();
   });
 
   import.meta.hot?.accept((m) => {
