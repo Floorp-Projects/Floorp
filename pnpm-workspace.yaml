@@ -1,6 +1,6 @@
 packages:
-- 'apps/*'
-- 'packages/*'
+- 'src/apps/*'
+- 'src/packages/*'
 - 'crates/*'
 options:
  prefer-workspace-packages: true

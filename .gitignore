@@ -4,6 +4,7 @@
 **/.turbo
 
 *.tar.zst
+*.zip
 
 .idea/
 

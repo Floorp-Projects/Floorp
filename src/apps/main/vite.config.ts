@@ -3,7 +3,7 @@ import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
 
-import { generateJarManifest} from "../common/scripts/gen_jarmanifest"
+import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -28,8 +28,8 @@ export default defineConfig({
       //https://github.com/vitejs/vite/discussions/14454
       preserveEntrySignatures: "allow-extension",
       input: {
-        core: "./core/index.ts",
-        "about-preferences": "./about/preferences/index.ts",
+        core: r("./core/index.ts"),
+        "about-preferences": r("./about/preferences/index.ts"),
         //env: "./experiment/env.ts",
       },
       output: {
@@ -73,14 +73,18 @@ export default defineConfig({
           type: "asset",
           fileName: "jar.mn",
           needsCodeReference: false,
-          source: await generateJarManifest(bundle,{"prefix":"content","namespace":"noraneko","register_type":"content"}),
+          source: await generateJarManifest(bundle, {
+            prefix: "content",
+            namespace: "noraneko",
+            register_type: "content",
+          }),
         });
         this.emitFile({
           type: "asset",
-          "fileName": "moz.build",
+          fileName: "moz.build",
           needsCodeReference: false,
-          source: `JAR_MANIFESTS += ["jar.mn"]`
-        })
+          source: `JAR_MANIFESTS += ["jar.mn"]`,
+        });
       },
     },
   ],

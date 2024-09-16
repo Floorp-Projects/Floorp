@@ -6,5 +6,5 @@
 import { ReverseSidebarPosition } from "./reverse-sidebar-position";
 
 export function init() {
-  new ReverseSidebarPosition();
+  //new ReverseSidebarPosition();
 }
