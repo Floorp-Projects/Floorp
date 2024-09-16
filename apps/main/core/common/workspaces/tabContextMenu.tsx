@@ -8,7 +8,7 @@ import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspacesServices } from "./workspaces";
 import { For } from "solid-js";
 import { workspacesData } from "./data";
-import type { workspaces } from "./utils/type";
+import type { Workspaces } from "./utils/type";
 
 export class WorkspacesTabContextMenu {
   private static instance: WorkspacesTabContextMenu;
@@ -20,7 +20,7 @@ export class WorkspacesTabContextMenu {
   }
 
   // static is Against "this.menuItem is not a function" error.
-  private static menuItem(workspaces: workspaces) {
+  private static menuItem(workspaces: Workspaces) {
     const gWorkspaces = WorkspacesServices.getInstance();
     const gWorkspaceIcons = WorkspaceIcons.getInstance();
     return (
@@ -70,7 +70,7 @@ export class WorkspacesTabContextMenu {
 
     const excludeHasTabWorkspaceIdWorkspaces = workspacesData().filter(
       (workspace) => workspace.id !== tabWorkspaceId,
-    ) as workspaces;
+    ) as Workspaces;
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(

@@ -7,11 +7,21 @@ import { createSignal, For, Show } from "solid-js";
 import { render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons";
-import type { workspace } from "./utils/type";
+import type { Workspace } from "./utils/type";
+
+const { ContextualIdentityService } = ChromeUtils.importESModule(
+  "resource://gre/modules/ContextualIdentityService.sys.mjs",
+);
+
+type Container = {
+  name: string;
+  userContextId: number;
+  l10nId?: string;
+};
 
 export const [workspaceModalState, setWorkspaceModalState] = createSignal<{
   show: boolean;
-  targetWokspace: workspace | null;
+  targetWokspace: Workspace | null;
 }>({ show: true, targetWokspace: null });
 
 export class WorkspaceManageModal {
@@ -23,7 +33,21 @@ export class WorkspaceManageModal {
     return WorkspaceManageModal.instance;
   }
 
-  private ContentElement(workspace: workspace | null) {
+  private get containers(): Container[] {
+    return ContextualIdentityService.getPublicIdentities();
+  }
+
+  private getContainerName(container: Container) {
+    if (container.l10nId) {
+      return ContextualIdentityService.getUserContextLabel(
+        container.userContextId,
+      );
+    }
+
+    return container.name;
+  }
+
+  private ContentElement(workspace: Workspace | null) {
     const gWorkspaceIcons = WorkspaceIcons.getInstance();
     return (
       <>
@@ -35,18 +59,23 @@ export class WorkspaceManageModal {
           placeholder="名前を入力"
         />
         <label>アイコン</label>
-        <select id="containerName">
+        <select id="iconName">
           <For each={gWorkspaceIcons.workspaceIconsArray}>
             {(icon) => <option label={icon} value={icon} />}
           </For>
         </select>
-        <label>メッセージ</label>
-        <textarea
-          id="message"
-          class="form-control"
-          rows="3"
-          placeholder="メッセージを入力"
-        />
+
+        <label>コンテナー</label>
+        <select id="containerName">
+          <For each={this.containers}>
+            {(container) => (
+              <option
+                label={this.getContainerName(container)}
+                value={container.userContextId}
+              />
+            )}
+          </For>
+        </select>
       </>
     );
   }

@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { zworkspacesServicesConfigsType } from "./utils/type";
+import type { zWorkspacesServicesConfigsType } from "./utils/type";
 
-export const oldObjectConfigs: zworkspacesServicesConfigsType = {
+export const oldObjectConfigs: zWorkspacesServicesConfigsType = {
   manageOnBms: Services.prefs.getBoolPref(
     "floorp.browser.workspace.manageOnBMS",
     false,

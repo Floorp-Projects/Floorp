@@ -82,7 +82,6 @@
   border: none;
   color: var(--modal-text-color);
   font-size: 15px;
-  font-size: 15px;
   font-weight: bold;
   padding: 8px 16px;
   margin-left: 8px;
@@ -116,7 +115,8 @@
 .modal label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: bold;
 }
 
 .modal input,

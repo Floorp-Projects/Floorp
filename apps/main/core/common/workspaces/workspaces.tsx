@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { workspace } from "./utils/type";
+import type { Workspace } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
@@ -85,7 +85,7 @@ export class WorkspacesServices {
    * @returns The new workspace id.
    */
   public createWorkspace(name: string, isDefault = false): string {
-    const workspace: workspace = {
+    const workspace: Workspace = {
       id: this.getGeneratedUuid,
       name,
       icon: null,
@@ -180,7 +180,7 @@ export class WorkspacesServices {
    * Get selected workspace id.
    * @returns The selected workspace id.
    */
-  public getWorkspaceById(workspaceId: string): workspace {
+  public getWorkspaceById(workspaceId: string): Workspace {
     const workspace = workspacesData().find(
       (workspace) => workspace.id === workspaceId,
     );
