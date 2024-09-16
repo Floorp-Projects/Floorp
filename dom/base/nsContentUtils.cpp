@@ -8909,9 +8909,9 @@ void nsContentUtils::FirePageHideEventForFrameLoaderSwap(
   MOZ_DIAGNOSTIC_ASSERT(aItem);
   MOZ_DIAGNOSTIC_ASSERT(aChromeEventHandler);
 
-  RefPtr<Document> doc = aItem->GetDocument();
-  NS_ASSERTION(doc, "What happened here?");
-  doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
+  if (RefPtr<Document> doc = aItem->GetDocument()) {
+    doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
+  }
 
   int32_t childCount = 0;
   aItem->GetInProcessChildCount(&childCount);
