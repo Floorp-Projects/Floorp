@@ -4,22 +4,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --background-color: #fff;
-  --text-color: rgba(0, 0, 0, 0.87);
-  --modal-background-color: #fff;
-  --modal-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
-    0 2px 4px rgba(0, 0, 0, 0.06);
-  --close-button-color: rgba(0, 0, 0, 0.54);
+  --modal-background-color: #f3f3f3;
+  --modal-text-color: #000000;
+  --modal-background-gray: rgba(255, 255, 255, 0.7);
+  --modal-button-bgcolor: #e1e1e1;
+  --modal-button-hover-bgcolor: #d1d1d1;
+  --modal-button-active-bgcolor: #c1c1c1;
+  --modal-input-bgcolor: #ffffff;
+  --modal-input-border-color: #cccccc;
+  --modal-select-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+
+  --accent-blue: #0078d4;
+  --accent-blue-hover: #106ebe;
+  --accent-blue-active: #005a9e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background-color: #121212;
-    --text-color: rgba(255, 255, 255, 0.87);
-    --modal-background-color: #333;
-    --modal-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3),
-      0 2px 4px rgba(0, 0, 0, 0.25);
-    --close-button-color: rgba(255, 255, 255, 0.54);
+    --modal-background-color: #202020;
+    --modal-text-color: #ffffff;
+    --modal-background-gray: rgba(32, 32, 32, 0.7);
+    --modal-button-bgcolor: #323232;
+    --modal-button-hover-bgcolor: #424242;
+    --modal-button-active-bgcolor: #525252;
+    --modal-input-bgcolor: #2a2a2a;
+    --modal-input-border-color: #444444;
+    --modal-select-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
   }
 }
 
@@ -33,63 +43,113 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+}
+
+.modal {
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", "Noto Sans", Meiryo, sans-serif;
+  text-rendering: optimizeLegibility;
+  transform: rotate(0.03deg);
+  background-color: var(--modal-background-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-header {
+  padding: 16px 24px;
+  margin-bottom: 15px;
+  font-size: 25px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .modal-content {
   display: flex;
   flex-direction: column;
-  background-color: var(--modal-background-color);
-  color: var(--text-color);
-  border-radius: 8px;
-  box-shadow: var(--modal-box-shadow);
-  width: 90%;
-  bottom: 20%;
-  max-width: 500px;
-  padding: 24px;
-  position: relative;
-  animation: modalShow 0.3s ease-out;
+  padding: 0 24px 16px;
 }
 
-.modal-header {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 auto 30px;
+.modal-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.modal-body {
-  font-size: 16px;
-}
-
-.modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
+.modal button {
+  background-color: var(--modal-button-bgcolor);
   border: none;
-  font-size: 24px;
+  color: var(--modal-text-color);
+  font-size: 15px;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 8px 16px;
+  margin-left: 8px;
   cursor: pointer;
-  color: var(--close-button-color);
-  transition: color 0.2s;
+  transition: background-color 0.3s ease;
+  border-radius: 4px;
 }
 
-.modal-close:hover {
-  color: var(--text-color);
+.modal button:hover {
+  background-color: var(--modal-button-hover-bgcolor);
 }
 
-@keyframes modalShow {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.modal button:active {
+  background-color: var(--modal-button-active-bgcolor);
 }
 
-/*** Forms ********************************************************************/
+.modal button.primary {
+  background-color: var(--accent-blue);
+  color: white;
+}
 
-menulist {
-  height: 40px;
+.modal button.primary:hover {
+  background-color: var(--accent-blue-hover);
+}
+
+.modal button.primary:active {
+  border: none;
+  background-color: var(--accent-blue-active);
+}
+
+.modal label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.modal input,
+.modal select,
+.modal textarea {
+  outline: none;
+  border: solid 1px var(--modal-input-border-color);
+  background-color: var(--modal-input-bgcolor);
+  padding: 8px;
+  padding-right: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  color: var(--modal-text-color);
+}
+
+.modal-actions button,
+.modal-actions input,
+.modal-actions select,
+.modal-actions textarea {
+  margin-bottom: 0;
+}
+
+.modal select {
+  appearance: none;
+  background-image: var(--modal-select-background-image);
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 30px;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+  border-color: var(--accent-blue);
 }

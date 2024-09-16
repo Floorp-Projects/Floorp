@@ -17,18 +17,34 @@ render(() => <style>{modalStyle}</style>, document?.head, {
 
 export function ShareModal(props: {
   onClose: () => void;
+  onSave: () => void;
   name?: string;
   ContentElement: () => JSX.Element;
 }) {
   return (
     <Portal mount={targetParent}>
-      <div class="modal-overlay">
-        <div class="modal-content">
-          <button type="button" class="modal-close" onClick={props.onClose}>
-            ×
-          </button>
-          <div class="modal-header">{props.name ?? "Modal Name"}</div>
-          <div class="modal-body">{props.ContentElement()}</div>
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">{props.name}</div>
+          <div class="modal-content">{props.ContentElement()}</div>
+          <div class="modal-actions">
+            <button
+              class="modal-button"
+              type="button"
+              id="close-modal"
+              onClick={props.onClose}
+            >
+              キャンセル
+            </button>
+            <button
+              class="modal-button primary"
+              type="button"
+              id="save-modal"
+              onClick={props.onSave}
+            >
+              保存
+            </button>
+          </div>
         </div>
       </div>
     </Portal>

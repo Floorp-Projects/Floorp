@@ -19,7 +19,7 @@ export function ContextMenu(props: {
         data-l10n-id="reorder-this-workspace-to-up"
         label="Move this Workspace Up"
         disabled={disableBefore}
-        oncommand={() =>
+        onCommand={() =>
           gWorkspacesServices.reorderWorkspaceUp(contextWorkspaceId)
         }
       />
@@ -27,7 +27,7 @@ export function ContextMenu(props: {
         data-l10n-id="reorder-this-workspace-to-down"
         label="Move this Workspace Down"
         disabled={disableAfter}
-        oncommand={() =>
+        onCommand={() =>
           gWorkspacesServices.reorderWorkspaceDown(contextWorkspaceId)
         }
       />
@@ -35,7 +35,7 @@ export function ContextMenu(props: {
       <xul:menuitem
         data-l10n-id="rename-this-workspace"
         label="Rename Workspace"
-        oncommand={() =>
+        onCommand={() =>
           gWorkspacesServices.renameWorkspaceWithCreatePrompt(
             contextWorkspaceId,
           )
@@ -44,14 +44,14 @@ export function ContextMenu(props: {
       <xul:menuitem
         data-l10n-id="delete-this-workspace"
         label="Delete Workspace"
-        oncommand={() =>
+        onCommand={() =>
           gWorkspacesServices.deleteWorkspace(contextWorkspaceId)
         }
       />
       <xul:menuitem
         data-l10n-id="manage-this-workspaces"
         label="Manage Workspace"
-        oncommand={() =>
+        onCommand={() =>
           gWorkspacesServices.manageWorkspaceFromDialog(contextWorkspaceId)
         }
       />

@@ -47,16 +47,14 @@ export function PopupElement() {
             data-l10n-id="workspaces-create-new-workspace-button"
             label="Create New Workspace..."
             context="tab-stacks-toolbar-item-context-menu"
-            oncommand={() => gWorkspacesServices.createNoNameWorkspace()}
+            onCommand={() => gWorkspacesServices.createNoNameWorkspace()}
           />
           <xul:toolbarbutton
             id="workspacesManageworkspacesServicesButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-manage-workspaces-button"
             context="tab-stacks-toolbar-item-context-menu"
-            oncommand={() =>
-              gWorkspacesServices.manageWorkspaceFromDialog("workspacesId")
-            }
+            onCommand={() => gWorkspacesServices.manageWorkspaceFromDialog()}
           />
         </xul:hbox>
       </xul:vbox>

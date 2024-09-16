@@ -36,7 +36,8 @@ declare module "solid-js" {
       type?: "checkbox";
       checked?: boolean;
       disabled?: boolean;
-      oncommand?: string | (() => void);
+      oncommand?: string;
+      onCommand?: () => void;
       value?: string;
     }
 
@@ -82,7 +83,8 @@ declare module "solid-js" {
     interface XULToolbarButtonElement extends XULElementBase {
       label?: string;
       accesskey?: string;
-      oncommand?: string | (() => void);
+      oncommand?: string;
+      onCommand?: () => void;
       context?: string;
     }
 

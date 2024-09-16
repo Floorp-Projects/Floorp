@@ -26,7 +26,7 @@ export function PopupToolbarElement(props: {
       }}
       data-selected={isSelected}
       data-workspaceId={workspaceId}
-      oncommand={() => {
+      onCommand={() => {
         gWorkspacesServices.changeWorkspace(workspaceId);
       }}
     />

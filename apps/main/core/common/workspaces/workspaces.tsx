@@ -8,6 +8,7 @@ import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
 import { WorkspaceIcons } from "./utils/workspace-icons";
+import { setWorkspaceModalState } from "./workspace-modal";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;
@@ -201,8 +202,12 @@ export class WorkspacesServices {
    * Open manage workspace dialog. This function should not be called directly on Preferences page.
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
-  public manageWorkspaceFromDialog(workspaceId: string) {
+  public manageWorkspaceFromDialog(workspaceId?: string) {
     console.log("manageWorkspaceFromDialog");
+    const targetWokspace = this.getWorkspaceById(
+      workspaceId ?? this.getCurrentWorkspaceId,
+    );
+    setWorkspaceModalState({ show: true, targetWokspace });
   }
 
   /**

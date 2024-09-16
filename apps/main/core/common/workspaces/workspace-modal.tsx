@@ -26,16 +26,28 @@ export class WorkspaceManageModal {
   private ContentElement(workspace: workspace | null) {
     const gWorkspaceIcons = WorkspaceIcons.getInstance();
     return (
-      <div>
-        <h2>Workspace Icons </h2>
-        <xul:menulist class="useDocumentColors" flex="1" id="containerName">
-          <xul:menupopup id="workspacesIconsSelectPopup">
-            <For each={gWorkspaceIcons.workspaceIconsArray}>
-              {(icon) => <xul:menuitem label={icon} value={icon} />}
-            </For>
-          </xul:menupopup>
-        </xul:menulist>
-      </div>
+      <>
+        <label>名前</label>
+        <input
+          type="text"
+          id="name"
+          class="form-control"
+          placeholder="名前を入力"
+        />
+        <label>アイコン</label>
+        <select id="containerName">
+          <For each={gWorkspaceIcons.workspaceIconsArray}>
+            {(icon) => <option label={icon} value={icon} />}
+          </For>
+        </select>
+        <label>メッセージ</label>
+        <textarea
+          id="message"
+          class="form-control"
+          rows="3"
+          placeholder="メッセージを入力"
+        />
+      </>
     );
   }
 
@@ -49,6 +61,7 @@ export class WorkspaceManageModal {
         onClose={() =>
           setWorkspaceModalState({ show: false, targetWokspace: null })
         }
+        onSave={() => {}}
       />
     );
   }

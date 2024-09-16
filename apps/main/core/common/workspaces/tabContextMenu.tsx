@@ -31,7 +31,7 @@ export class WorkspacesTabContextMenu {
             label={workspace.name}
             class="menuitem-iconic"
             style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
-            oncommand={() =>
+            onCommand={() =>
               gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)
             }
           />
