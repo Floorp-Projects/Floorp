@@ -177,7 +177,6 @@ enum class NativeKeyBindingsType : uint8_t;
   NSRect mWindowButtonsRect;
 }
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
-- (void)setTitlebarAppearsTransparent:(BOOL)aState;
 - (void)placeWindowButtons:(NSRect)aRect;
 - (NSRect)windowButtonsRect;
 - (void)windowMainStateChanged;
