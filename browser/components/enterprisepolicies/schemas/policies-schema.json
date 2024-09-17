@@ -1234,6 +1234,11 @@
       "type": "boolean"
     },
 
+    "PrivateBrowsingModeAvailability": {
+      "type": "number",
+      "enum": [0, 1, 2]
+    },
+
     "PromptForDownloadLocation": {
       "type": "boolean"
     },
