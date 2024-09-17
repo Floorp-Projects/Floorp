@@ -2042,6 +2042,26 @@ export var Policies = {
     },
   },
 
+  PrivateBrowsingModeAvailability: {
+    onBeforeAddons(manager, param) {
+      switch (param) {
+        // Private Browsing mode disabled
+        case 1:
+          manager.disallowFeature("privatebrowsing");
+          blockAboutPage(manager, "about:privatebrowsing", true);
+          setAndLockPref("browser.privatebrowsing.autostart", false);
+          break;
+        // Private Browsing mode forced
+        case 2:
+          setAndLockPref("browser.privatebrowsing.autostart", true);
+          break;
+        // Private Browsing mode available
+        case 0:
+          break;
+      }
+    },
+  },
+
   PromptForDownloadLocation: {
     onBeforeAddons(manager, param) {
       setAndLockPref("browser.download.useDownloadDir", !param);
