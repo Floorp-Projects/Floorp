@@ -2839,11 +2839,13 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   }
 
   if (@available(macOS 11.0, *)) {
-    // In order to work around a drawing bug with titlebarAppearsTransparent
-    // windows in full screen mode, disable titlebar separators for full
-    // screen windows. The drawing bug was filed as FB9056136. See bug 1700211
-    // and bug 1912338 for more details.
-    window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
+    if ([window isKindOfClass:[ToolbarWindow class]]) {
+      // In order to work around a drawing bug with windows in full screen
+      // mode, disable titlebar separators for full screen windows of the
+      // ToolbarWindow class. The drawing bug was filed as FB9056136. See bug
+      // 1700211 and bug 1912338 for more details.
+      window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
+    }
   }
 
   if (!mGeckoWindow) {
@@ -3527,15 +3529,16 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   if (aWindow) {
     // When entering full screen mode, titlebar accessory views are inserted
     // into a floating NSWindow which houses the window titlebar and toolbars.
-    // In order to work around a drawing bug with titlebarAppearsTransparent
-    // windows in full screen mode, disable titlebar separators for all
-    // NSWindows that this view is used in, including the floating full screen
-    // toolbar window. The drawing bug was filed as FB9056136. See bug 1700211
-    // for more details.
+    // In order to work around a drawing bug with windows in full screen mode,
+    // disable titlebar separators for all NSWindows that this view is used in
+    // that are not of the ToolbarWindow class, such as the floating full
+    // screen toolbar window. The drawing bug was filed as FB9056136. See bug
+    // 1700211 and bug 1912338 for more details.
     if (@available(macOS 11.0, *)) {
-      aWindow.titlebarSeparatorStyle = aWindow.titlebarAppearsTransparent
-                                           ? NSTitlebarSeparatorStyleNone
-                                           : NSTitlebarSeparatorStyleAutomatic;
+      aWindow.titlebarSeparatorStyle =
+          [aWindow isKindOfClass:[ToolbarWindow class]]
+              ? NSTitlebarSeparatorStyleAutomatic
+              : NSTitlebarSeparatorStyleNone;
     }
   }
 }
@@ -3773,26 +3776,6 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
     // content area, so that event would have wrong position information. So
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
-  }
-}
-
-// When entering full screen mode, titlebar accessory views are inserted
-// into a floating NSWindow which houses the window titlebar and toolbars.
-// In order to work around a drawing bug with titlebarAppearsTransparent
-// windows in full screen mode, disable titlebar separators for all
-// NSWindows that this view is used in, including the floating full screen
-// toolbar window. The drawing bug was filed as FB9056136. See bug 1700211
-// for more details.
-- (void)setTitlebarAppearsTransparent:(BOOL)aState {
-  BOOL stateChanged = self.titlebarAppearsTransparent != aState;
-  [super setTitlebarAppearsTransparent:aState];
-
-  if (stateChanged) {
-    if (@available(macOS 11.0, *)) {
-      self.titlebarSeparatorStyle = self.titlebarAppearsTransparent
-                                        ? NSTitlebarSeparatorStyleNone
-                                        : NSTitlebarSeparatorStyleAutomatic;
-    }
   }
 }
 
