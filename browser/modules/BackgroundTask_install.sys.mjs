@@ -20,7 +20,7 @@ export async function runBackgroundTask() {
 
   console.log("Cleaning up update files.");
   try {
-    Cc["@mozilla.org/updates/update-manager;1"]
+    await Cc["@mozilla.org/updates/update-manager;1"]
       .getService(Ci.nsIUpdateManager)
       .doInstallCleanup();
   } catch (ex) {
