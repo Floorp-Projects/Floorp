@@ -1,12 +1,8 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 import type { JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import modalStyle from "./styles.css?inline";
 import { render } from "@nora/solid-xul";
+import { setWorkspaceModalState } from "@core/common/workspaces/workspace-modal";
 
 const targetParent = document?.body as HTMLElement;
 
@@ -15,9 +11,13 @@ render(() => <style>{modalStyle}</style>, document?.head, {
   marker: document?.head?.lastChild as Element,
 });
 
+type FormData = {
+  name: string;
+};
+
 export function ShareModal(props: {
   onClose: () => void;
-  onSave: () => void;
+  onSave: (formControls: { id: string; value: string }[]) => void;
   name?: string;
   ContentElement: () => JSX.Element;
 }) {
@@ -40,7 +40,24 @@ export function ShareModal(props: {
               class="modal-button primary"
               type="button"
               id="save-modal"
-              onClick={props.onSave}
+              onClick={() => {
+                console.log("save-modal");
+                const forms =
+                  document?.getElementsByClassName("form-control") || [];
+                const result = Array.from(forms).map((e) => {
+                  const element = e as HTMLInputElement;
+                  if (!element.id || !element.value) {
+                    throw new Error(
+                      `Invalid Modal Form Control: "Id" and "Value" are required for all form elements!`,
+                    );
+                  }
+                  return {
+                    id: element.id as string,
+                    value: element.value as string,
+                  };
+                });
+                props.onSave(result);
+              }}
             >
               保存
             </button>

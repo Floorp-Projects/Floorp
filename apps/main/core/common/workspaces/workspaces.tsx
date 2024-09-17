@@ -90,6 +90,7 @@ export class WorkspacesServices {
       name,
       icon: null,
       emoji: null,
+      userContextId: 0,
       color: this.getNewworkspacesServicesColor,
       isDefault,
     };
@@ -203,11 +204,28 @@ export class WorkspacesServices {
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
   public manageWorkspaceFromDialog(workspaceId?: string) {
-    console.log("manageWorkspaceFromDialog");
     const targetWokspace = this.getWorkspaceById(
       workspaceId ?? this.getCurrentWorkspaceId,
     );
     setWorkspaceModalState({ show: true, targetWokspace });
+  }
+
+  /**
+   * Save Workspace by id.
+   * @param workspaceId The workspace id.
+   * @param workspace The changed workspace object.
+   * @returns void
+   * @throws Error if workspace with id not found.
+   */
+  public saveWorkspaceById(workspaceId: string, workspace: Workspace) {
+    setworkspacesData((prev) => {
+      return prev.map((prevWorkspace) => {
+        if (prevWorkspace.id === workspaceId) {
+          return workspace;
+        }
+        return prevWorkspace;
+      });
+    });
   }
 
   /**

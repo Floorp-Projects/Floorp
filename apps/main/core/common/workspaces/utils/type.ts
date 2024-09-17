@@ -12,6 +12,7 @@ export const zWorkspace = z.object({
   color: z.string(),
   icon: z.string().nullish(),
   emoji: z.string().nullish(),
+  userContextId: z.number(),
   isSelected: z.boolean().nullish(),
   isDefault: z.boolean().nullish(),
 });

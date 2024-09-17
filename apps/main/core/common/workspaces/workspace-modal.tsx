@@ -8,6 +8,7 @@ import { render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import type { Workspace } from "./utils/type";
+import { WorkspacesServices } from "./workspaces";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
@@ -21,8 +22,8 @@ type Container = {
 
 export const [workspaceModalState, setWorkspaceModalState] = createSignal<{
   show: boolean;
-  targetWokspace: Workspace | null;
-}>({ show: true, targetWokspace: null });
+  targetWorkspace: Workspace | null;
+}>({ show: true, targetWorkspace: null });
 
 export class WorkspaceManageModal {
   private static instance: WorkspaceManageModal;
@@ -48,7 +49,11 @@ export class WorkspaceManageModal {
   }
 
   private ContentElement(workspace: Workspace | null) {
+    const gWorkspacesServices = WorkspacesServices.getInstance();
     const gWorkspaceIcons = WorkspaceIcons.getInstance();
+    const targetWorkspace =
+      workspace ?? gWorkspacesServices.getCurrentWorkspace;
+
     return (
       <>
         <label>名前</label>
@@ -56,23 +61,46 @@ export class WorkspaceManageModal {
           type="text"
           id="name"
           class="form-control"
-          placeholder="名前を入力"
+          value={targetWorkspace.name}
         />
+
         <label>アイコン</label>
-        <select id="iconName">
+        <select
+          id="iconName"
+          class="form-control"
+          value={targetWorkspace.icon ?? "fingerprint"}
+        >
           <For each={gWorkspaceIcons.workspaceIconsArray}>
-            {(icon) => <option label={icon} value={icon} />}
+            {(icon) => (
+              <option
+                selected={targetWorkspace.icon === icon ? true : undefined}
+                value={icon}
+              >
+                {icon}
+              </option>
+            )}
           </For>
         </select>
 
         <label>コンテナー</label>
-        <select id="containerName">
+        <select
+          id="containerName"
+          class="form-control"
+          value={targetWorkspace?.userContextId ?? 0}
+        >
+          <option value={0}>No Container</option>
           <For each={this.containers}>
             {(container) => (
               <option
-                label={this.getContainerName(container)}
                 value={container.userContextId}
-              />
+                selected={
+                  targetWorkspace.userContextId === container.userContextId
+                    ? true
+                    : undefined
+                }
+              >
+                {this.getContainerName(container)}
+              </option>
             )}
           </For>
         </select>
@@ -81,16 +109,29 @@ export class WorkspaceManageModal {
   }
 
   private Modal() {
+    const gWorkspacesServices = WorkspacesServices.getInstance();
     return (
       <ShareModal
         name="Manage Workspace"
         ContentElement={() =>
-          this.ContentElement(workspaceModalState().targetWokspace)
+          this.ContentElement(workspaceModalState().targetWorkspace)
         }
         onClose={() =>
-          setWorkspaceModalState({ show: false, targetWokspace: null })
+          setWorkspaceModalState({ show: false, targetWorkspace: null })
         }
-        onSave={() => {}}
+        onSave={(formControls) => {
+          const targetWorkspace =
+            workspaceModalState().targetWorkspace ??
+            gWorkspacesServices.getCurrentWorkspace;
+          const newData = {
+            ...targetWorkspace,
+            name: formControls[0].value,
+            icon: formControls[1].value,
+            userContextId: Number(formControls[2].value),
+          };
+          gWorkspacesServices.saveWorkspaceById(targetWorkspace.id, newData);
+          setWorkspaceModalState({ show: false, targetWorkspace: null });
+        }}
       />
     );
   }
