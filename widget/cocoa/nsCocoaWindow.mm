@@ -2838,6 +2838,14 @@ void nsCocoaWindow::CocoaWindowDidResize() {
     [titlebarContainerView setTransparent:NO];
   }
 
+  if (@available(macOS 11.0, *)) {
+    // In order to work around a drawing bug with titlebarAppearsTransparent
+    // windows in full screen mode, disable titlebar separators for full
+    // screen windows. The drawing bug was filed as FB9056136. See bug 1700211
+    // and bug 1912338 for more details.
+    window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
+  }
+
   if (!mGeckoWindow) {
     return;
   }
