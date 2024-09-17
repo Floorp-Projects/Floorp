@@ -1,19 +1,19 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import type { JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import modalStyle from "./styles.css?inline";
 import { render } from "@nora/solid-xul";
-import { setWorkspaceModalState } from "@core/common/workspaces/workspace-modal";
 
-const targetParent = document?.body as HTMLElement;
+const targetParent = document?.getElementById("appcontent") as HTMLElement;
 
 render(() => <style>{modalStyle}</style>, document?.head, {
   hotCtx: import.meta.hot,
   marker: document?.head?.lastChild as Element,
 });
-
-type FormData = {
-  name: string;
-};
 
 export function ShareModal(props: {
   onClose: () => void;
@@ -41,7 +41,6 @@ export function ShareModal(props: {
               type="button"
               id="save-modal"
               onClick={() => {
-                console.log("save-modal");
                 const forms =
                   document?.getElementsByClassName("form-control") || [];
                 const result = Array.from(forms).map((e) => {

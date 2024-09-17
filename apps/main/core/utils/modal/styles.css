@@ -21,15 +21,35 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --modal-background-color: #202020;
+    --modal-background-color: #252627;
     --modal-text-color: #ffffff;
     --modal-background-gray: rgba(32, 32, 32, 0.7);
     --modal-button-bgcolor: #323232;
     --modal-button-hover-bgcolor: #424242;
     --modal-button-active-bgcolor: #525252;
-    --modal-input-bgcolor: #2a2a2a;
+    --modal-input-bgcolor: rgba(255, 255, 255, 0.1);
     --modal-input-border-color: #444444;
     --modal-select-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -39,27 +59,29 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(28, 39, 48, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal {
   font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
     "Hiragino Sans", "Noto Sans", Meiryo, sans-serif;
   text-rendering: optimizeLegibility;
-  transform: rotate(0.03deg);
+  transform: rotate(0.03deg) !important;
   background-color: var(--modal-background-color);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0px 0px 0px 1px #3b3c3d, 0px 12px 40px -8px rgba(0, 0, 0, 0.45);
   width: 90%;
   max-width: 600px;
+  animation: slideIn 0.3s ease-out;
+  bottom: 20%;
 }
 
 .modal-header {
-  padding: 16px 24px;
-  margin-bottom: 15px;
+  padding: 36px 24px;
   font-size: 25px;
   font-weight: 600;
   text-align: center;
@@ -79,7 +101,7 @@
 
 .modal button {
   background-color: var(--modal-button-bgcolor);
-  border: none;
+  border: 1px solid hsla(0, 0%, 100%, 0.2);
   color: var(--modal-text-color);
   font-size: 15px;
   font-weight: bold;
@@ -114,23 +136,24 @@
 
 .modal label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 15px;
-  font-weight: bold;
+  margin: 8px 0;
+  margin-inline-start: 5px;
+  margin-top: 24px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--modal-text-color);
 }
 
 .modal input,
 .modal select,
 .modal textarea {
-  outline: none;
-  border: solid 1px var(--modal-input-border-color);
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--modal-input-border-color);
   background-color: var(--modal-input-bgcolor);
-  padding: 8px;
-  padding-right: 8px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  border-radius: 4px;
   color: var(--modal-text-color);
+  margin: 0 !important; /* Override browser default */
 }
 
 .modal-actions button,
@@ -144,8 +167,8 @@
   appearance: none;
   background-image: var(--modal-select-background-image);
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  padding-right: 30px;
+  background-position: right 12px center;
+  padding-right: 40px;
 }
 
 .modal input:focus,
