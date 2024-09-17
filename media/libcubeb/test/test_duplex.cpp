@@ -206,6 +206,11 @@ TEST(cubeb, duplex_collection_change)
   ASSERT_EQ(r, CUBEB_OK);
 }
 
+void CauseDeath(cubeb * p) {
+  mozilla::gtest::DisableCrashReporter();
+  cubeb_destroy(p);
+}
+
 #ifdef GTEST_HAS_DEATH_TEST
 TEST(cubeb, duplex_collection_change_no_unregister)
 {
@@ -225,7 +230,9 @@ TEST(cubeb, duplex_collection_change_no_unregister)
   }
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
-      ctx, [](cubeb * p) noexcept { EXPECT_DEATH(cubeb_destroy(p), ""); });
+      ctx, [](cubeb* p) noexcept {
+        EXPECT_DEATH(CauseDeath(p), "");
+      });
 
   duplex_collection_change_impl(ctx);
 }
