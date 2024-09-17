@@ -208,10 +208,6 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
       return static_cast<size_t>(bytes);
     }
 
-    if (gl->IsMesa()) {
-      return 4 * 4 * 1024;  // 4K words
-    }
-
     if (kIsMacOS) {
       return 128 * 1024;  // 8k vec4s
     }
