@@ -118,10 +118,13 @@ let ShellServiceInternal = {
    * is possible.
    */
   _userChoiceImpossibleTelemetryResult() {
-    if (!ShellService.checkAllProgIDsExist()) {
+    let winShellService = this.shellService.QueryInterface(
+      Ci.nsIWindowsShellService
+    );
+    if (!winShellService.checkAllProgIDsExist()) {
       return "ErrProgID";
     }
-    if (!ShellService.checkBrowserUserChoiceHashes()) {
+    if (!winShellService.checkBrowserUserChoiceHashes()) {
       return "ErrHash";
     }
     return null;
