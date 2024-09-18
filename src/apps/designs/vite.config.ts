@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
+import path from "node:path";
+
+const r = (subpath: string): string =>
+  path.resolve(import.meta.dirname, subpath);
 
 export default defineConfig({
   server: {
@@ -12,7 +16,7 @@ export default defineConfig({
     reportCompressedSize: false,
     rollupOptions: {
       input: {
-        designs: "./src/index.ts",
+        designs: r("./src/index.ts"),
       },
     },
   },
