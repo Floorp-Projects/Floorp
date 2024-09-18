@@ -24,7 +24,7 @@ type Container = {
 export const [workspaceModalState, setWorkspaceModalState] = createSignal<{
   show: boolean;
   targetWorkspace: Workspace | null;
-}>({ show: true, targetWorkspace: null });
+}>({ show: false, targetWorkspace: null });
 
 export class WorkspaceManageModal {
   private static instance: WorkspaceManageModal;

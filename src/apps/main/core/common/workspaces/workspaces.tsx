@@ -273,17 +273,19 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceUp(workspaceId: string) {
-    const workspaces = workspacesData();
-    const workspaceIndex = workspaces.findIndex(
-      (workspace) => workspace.id === workspaceId,
-    );
-    if (workspaceIndex === 0) {
-      throw new Error(`Workspace with id ${workspaceId} is already first`);
-    }
-    const workspace = workspaces[workspaceIndex];
-    workspaces[workspaceIndex] = workspaces[workspaceIndex - 1];
-    workspaces[workspaceIndex - 1] = workspace;
-    setworkspacesData(workspaces);
+    setworkspacesData((prev) => {
+      const workspaces = [...prev];
+      const workspaceIndex = workspaces.findIndex(
+        (workspace) => workspace.id === workspaceId,
+      );
+      if (workspaceIndex === -1 || workspaceIndex === 0) {
+        throw new Error(`Workspace with id ${workspaceId} is invalid`);
+      }
+      const [workspace] = workspaces.splice(workspaceIndex, 1);
+      workspaces.splice(workspaceIndex - 1, 0, workspace);
+
+      return workspaces;
+    });
   }
 
   /**
@@ -291,17 +293,19 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceDown(workspaceId: string) {
-    const workspaces = workspacesData();
-    const workspaceIndex = workspaces.findIndex(
-      (workspace) => workspace.id === workspaceId,
-    );
-    if (workspaceIndex === workspaces.length - 1) {
-      throw new Error(`Workspace with id ${workspaceId} is already last`);
-    }
-    const workspace = workspaces[workspaceIndex];
-    workspaces[workspaceIndex] = workspaces[workspaceIndex + 1];
-    workspaces[workspaceIndex + 1] = workspace;
-    setworkspacesData(workspaces);
+    setworkspacesData((prev) => {
+      const workspaces = [...prev];
+      const workspaceIndex = workspaces.findIndex(
+        (workspace) => workspace.id === workspaceId,
+      );
+      if (workspaceIndex === -1 || workspaceIndex === workspaces.length - 1) {
+        throw new Error(`Workspace with id ${workspaceId} is invalid`);
+      }
+      const [workspace] = workspaces.splice(workspaceIndex, 1);
+      workspaces.splice(workspaceIndex + 1, 0, workspace);
+
+      return workspaces;
+    });
   }
 
   /**

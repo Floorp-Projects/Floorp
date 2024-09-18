@@ -36,12 +36,15 @@ export class WorkspacesPopupContxtMenu {
     const eventTargetElement = event.explicitOriginalTarget as XULElement;
     const contextWorkspaceId = eventTargetElement.id.replace("workspace-", "");
     const defaultWorkspaceId = gWorkspacesServices.getDefaultWorkspaceId();
+
     const beforeSiblingElem =
-      eventTargetElement.previousElementSibling?.getAttribute("workspaceId") ||
-      null;
+      eventTargetElement.previousElementSibling?.getAttribute(
+        "data-workspaceId",
+      ) || null;
     const afterSiblingElem =
-      eventTargetElement.nextElementSibling?.getAttribute("workspaceId") ||
+      eventTargetElement.nextElementSibling?.getAttribute("data-workspaceId") ||
       null;
+
     const isDefaultWorkspace = contextWorkspaceId === defaultWorkspaceId;
     const isBeforeSiblingDefaultWorkspace =
       beforeSiblingElem === defaultWorkspaceId;
