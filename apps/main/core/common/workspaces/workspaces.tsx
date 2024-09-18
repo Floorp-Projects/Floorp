@@ -72,14 +72,6 @@ export class WorkspacesServices {
   }
 
   /**
-   * Returns new workspace color.
-   * @returns The new workspace color.
-   */
-  private get getNewworkspacesServicesColor(): string {
-    return "blue";
-  }
-
-  /**
    * Returns new workspace object.
    * @param name The name of the workspace.
    * @returns The new workspace id.
@@ -89,9 +81,7 @@ export class WorkspacesServices {
       id: this.getGeneratedUuid,
       name,
       icon: null,
-      emoji: null,
       userContextId: 0,
-      color: this.getNewworkspacesServicesColor,
       isDefault,
     };
     setworkspacesData((prev) => {
@@ -207,7 +197,7 @@ export class WorkspacesServices {
     const targetWokspace = this.getWorkspaceById(
       workspaceId ?? this.getCurrentWorkspaceId,
     );
-    setWorkspaceModalState({ show: true, targetWokspace });
+    setWorkspaceModalState({ show: true, targetWorkspace: targetWokspace });
   }
 
   /**
@@ -485,6 +475,7 @@ export class WorkspacesServices {
 
       // Check Tabs visibility
       this.checkTabsVisibility();
+      this.changeWorkspaceToolbarState();
     });
     this.changeWorkspace(this.getCurrentWorkspaceId);
     window.gBrowser.addProgressListener(this.listener);

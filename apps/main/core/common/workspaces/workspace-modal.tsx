@@ -60,7 +60,7 @@ export class WorkspaceManageModal {
 
     return (
       <>
-        <label>名前</label>
+        <label>Name</label>
         <input
           type="text"
           id="name"
@@ -68,7 +68,7 @@ export class WorkspaceManageModal {
           value={targetWorkspace.name}
         />
 
-        <label>アイコン</label>
+        <label>Icon</label>
         <xul:menulist
           class="form-control"
           flex="1"
@@ -90,7 +90,7 @@ export class WorkspaceManageModal {
           </xul:menupopup>
         </xul:menulist>
 
-        <label>コンテナー</label>
+        <label>Container</label>
         <select
           id="containerName"
           class="form-control"
@@ -129,6 +129,7 @@ export class WorkspaceManageModal {
           setWorkspaceModalState({ show: false, targetWorkspace: null })
         }
         onSave={(formControls) => {
+          console.log(formControls);
           const targetWorkspace =
             workspaceModalState().targetWorkspace ??
             gWorkspacesServices.getCurrentWorkspace;

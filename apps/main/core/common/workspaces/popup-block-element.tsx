@@ -15,6 +15,7 @@ export function PopupToolbarElement(props: {
   const gWorkspacesServices = WorkspacesServices.getInstance();
   const gWorkspaceIcons = WorkspaceIcons.getInstance();
   const { workspaceId, isSelected, bmsMode } = props;
+  const workspace = gWorkspacesServices.getWorkspaceById(workspaceId);
   return (
     <xul:toolbarbutton
       id={`workspace-${workspaceId}`}
@@ -22,7 +23,7 @@ export function PopupToolbarElement(props: {
       context="workspaces-toolbar-item-context-menu"
       class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
       style={{
-        "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspaceId)})`,
+        "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
       }}
       data-selected={isSelected}
       data-workspaceId={workspaceId}
