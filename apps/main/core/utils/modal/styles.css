@@ -77,7 +77,8 @@
   width: 90%;
   max-width: 600px;
   animation: slideIn 0.3s ease-out;
-  bottom: 20%;
+  bottom: 35%;
+  position: fixed;
 }
 
 .modal-header {
@@ -139,7 +140,6 @@
   margin: 8px 0;
   margin-inline-start: 5px;
   margin-top: 24px;
-  font-weight: 600;
   font-size: 16px;
   color: var(--modal-text-color);
 }
