@@ -231,44 +231,6 @@ export class WorkspacesServices {
   }
 
   /**
-   * Open rename workspace dialog.
-   * @param workspaceId Rename target workspace id.
-   */
-  public renameWorkspaceWithCreatePrompt(workspaceId: string) {
-    const prompts = Services.prompt;
-    const workspace = this.getWorkspaceById(workspaceId);
-    const input = { value: workspace.name };
-    const result = prompts.prompt(
-      window as mozIDOMWindow,
-      this.l10n.formatValueSync("rename-workspace-prompt-title") ?? "Rename",
-      this.l10n.formatValueSync("rename-workspace-prompt-text") ?? "Name",
-      input,
-      "",
-      { value: true },
-    );
-
-    if (result) {
-      this.renameWorkspace(workspaceId, input.value);
-    }
-  }
-
-  /**
-   * Rename workspace.
-   * @param workspaceId The workspace id.
-   * @param newName The new name.
-   */
-  public renameWorkspace(workspaceId: string, newName: string) {
-    setworkspacesData((prev) => {
-      return prev.map((workspace) => {
-        if (workspace.id === workspaceId) {
-          return { ...workspace, name: newName };
-        }
-        return workspace;
-      });
-    });
-  }
-
-  /**
    * Reorders a workspace to before one
    * @param workspaceId The workspace id.
    */

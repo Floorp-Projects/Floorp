@@ -33,15 +33,6 @@ export function ContextMenu(props: {
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
-        data-l10n-id="rename-this-workspace"
-        label="Rename Workspace"
-        onCommand={() =>
-          gWorkspacesServices.renameWorkspaceWithCreatePrompt(
-            contextWorkspaceId,
-          )
-        }
-      />
-      <xul:menuitem
         data-l10n-id="delete-this-workspace"
         label="Delete Workspace"
         onCommand={() =>
