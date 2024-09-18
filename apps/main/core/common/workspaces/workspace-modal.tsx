@@ -9,6 +9,7 @@ import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import type { Workspace } from "./utils/type";
 import { WorkspacesServices } from "./workspaces";
+import modalStyle from "./modal-style.css?inline";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
@@ -38,13 +39,16 @@ export class WorkspaceManageModal {
     return ContextualIdentityService.getPublicIdentities();
   }
 
+  private get StyleElement() {
+    return <style>{modalStyle}</style>;
+  }
+
   private getContainerName(container: Container) {
     if (container.l10nId) {
       return ContextualIdentityService.getUserContextLabel(
         container.userContextId,
       );
     }
-
     return container.name;
   }
 
@@ -65,22 +69,26 @@ export class WorkspaceManageModal {
         />
 
         <label>アイコン</label>
-        <select
-          id="iconName"
+        <xul:menulist
           class="form-control"
+          flex="1"
+          id="iconName"
           value={targetWorkspace.icon ?? "fingerprint"}
         >
-          <For each={gWorkspaceIcons.workspaceIconsArray}>
-            {(icon) => (
-              <option
-                selected={targetWorkspace.icon === icon ? true : undefined}
-                value={icon}
-              >
-                {icon}
-              </option>
-            )}
-          </For>
-        </select>
+          <xul:menupopup id="workspacesIconSelectPopup">
+            <For each={gWorkspaceIcons.workspaceIconsArray}>
+              {(icon) => (
+                <xul:menuitem
+                  value={icon}
+                  label={icon}
+                  style={{
+                    "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(icon)})`,
+                  }}
+                />
+              )}
+            </For>
+          </xul:menupopup>
+        </xul:menulist>
 
         <label>コンテナー</label>
         <select
@@ -116,6 +124,7 @@ export class WorkspaceManageModal {
         ContentElement={() =>
           this.ContentElement(workspaceModalState().targetWorkspace)
         }
+        StyleElement={() => this.StyleElement}
         onClose={() =>
           setWorkspaceModalState({ show: false, targetWorkspace: null })
         }
@@ -148,5 +157,9 @@ export class WorkspaceManageModal {
         hotCtx: import.meta.hot,
       },
     );
+
+    render(() => this.StyleElement, document?.head, {
+      hotCtx: import.meta.hot,
+    });
   }
 }

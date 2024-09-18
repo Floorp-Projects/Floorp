@@ -18,8 +18,9 @@ render(() => <style>{modalStyle}</style>, document?.head, {
 export function ShareModal(props: {
   onClose: () => void;
   onSave: (formControls: { id: string; value: string }[]) => void;
-  name?: string;
   ContentElement: () => JSX.Element;
+  StyleElement?: () => JSX.Element;
+  name?: string;
 }) {
   return (
     <Portal mount={targetParent}>

@@ -30,6 +30,15 @@ declare module "solid-js" {
       changeuseragent?: `${boolean}`;
       context?: string;
     }
+
+    interface XULMenuListElement extends XULElementBase {
+      label?: string;
+      accesskey?: string;
+      oncommand?: string;
+      onCommand?: () => void;
+      value?: string;
+    }
+
     interface XULMenuitemElement extends XULElementBase {
       label?: string;
       accesskey?: string;
@@ -99,7 +108,7 @@ declare module "solid-js" {
       "xul:panel": XULPanelElement;
       "xul:panelview": XULPanelElement;
       "xul:menupopup": XULMenuPopupElement;
-      "xul:menulist": XULElementBase;
+      "xul:menulist": XULMenuListElement;
       "xul:vbox": XULBoxElement;
       "xul:hbox": XULBoxElement;
       "xul:box": XULElementBase;
