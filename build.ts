@@ -1,6 +1,5 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { URL } from "node:url";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
@@ -8,6 +7,7 @@ import { $ } from "execa";
 import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { createServer, type ViteDevServer, build as buildVite } from "vite";
+import AdmZip from "adm-zip";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -23,8 +23,8 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const binTar =
-  process.platform === "win32" ? "nora-win_x64-bin.tar.zst" : "bin.tar.zst";
+const binArchive =
+  process.platform === "win32" ? "noraneko-win-amd64-dev.zip" : "bin.tar.zst";
 const binDir = "_dist/bin";
 
 try {
@@ -42,23 +42,23 @@ const binVersion = path.join(binDir, "nora.version.txt");
 
 async function decompressBin() {
   try {
-    console.log(`decompressing ${binTar}`);
-    if (!(await isExists(binTar))) {
-      console.error(`${binTar} not found`);
+    console.log(`decompressing ${binArchive}`);
+    if (!(await isExists(binArchive))) {
+      console.error(`${binArchive} not found`);
       process.exit(1);
     }
-    if (
-      !(await $({ stdin: "ignore" })`zstd -v`).stderr.includes("Zstandard CLI")
-    ) {
-      //zstd not installed
-      console.error(`Please install zstd for decompressing ${binTar}`);
-      process.exit();
-    } else {
-      await $`zstd -d nora-win_x64-bin.tar.zst -o nora-bin-tmp.tar`;
-    }
-
-    await decompress("nora-bin-tmp.tar", "./_dist/bin");
-    await fs.rm("nora-bin-tmp.tar");
+    // if (
+    //   !(await $({ stdin: "ignore" })`zstd -v`).stderr.includes("Zstandard CLI")
+    // ) {
+    //   //zstd not installed
+    //   console.error(`Please install zstd for decompressing ${binTar}`);
+    //   process.exit();
+    // } else {
+    //   await $`zstd -d nora-win_x64-bin.tar.zst -o nora-bin-tmp.tar`;
+    // }
+    new AdmZip(binArchive).extractAllTo(binDir);
+    // await decompress("nora-bin-tmp.tar", "./_dist/bin");
+    // await fs.rm("nora-bin-tmp.tar");
     //fs.readFile(binTar);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
@@ -106,20 +106,22 @@ async function run(mode: "dev" | "test" = "dev") {
     console.log("run dev servers");
     devProcesses = [
       await createServer({
-        configFile: r("./apps/main/vite.config.ts"),
-        root: r("./apps/main"),
+        mode,
+        configFile: r("./src/apps/main/vite.config.ts"),
+        root: r("./src/apps/main"),
       }),
       await createServer({
-        configFile: r("./apps/designs/vite.config.ts"),
-        root: r("./apps/designs"),
+        mode,
+        configFile: r("./src/apps/designs/vite.config.ts"),
+        root: r("./src/apps/designs"),
       }),
     ];
 
     if (mode === "test") {
       devProcesses.push(
         await createServer({
-          configFile: r("./apps/test/vite.config.ts"),
-          root: r("./apps/test"),
+          configFile: r("./src/apps/test/vite.config.ts"),
+          root: r("./src/apps/test"),
         }),
       );
     }
@@ -131,11 +133,11 @@ async function run(mode: "dev" | "test" = "dev") {
   await Promise.all([
     buildVite({
       mode,
-      root: r("./apps/startup"),
-      configFile: r("./apps/startup/vite.config.ts"),
+      root: r("./src/apps/startup"),
+      configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest("_dist/bin"),
+    injectManifest("_dist/bin", true),
     (async () => {
       await injectXHTML("_dist/bin");
       await injectXHTMLDev("_dist/bin");
@@ -234,26 +236,33 @@ async function run(mode: "dev" | "test" = "dev") {
   });
 }
 
-async function build() {
-  const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
-  await Promise.all([
-    buildVite({
-      configFile: r("./apps/startup/vite.config.ts"),
-      root: r("./apps/startup"),
-    }),
-    buildVite({
-      configFile: r("./apps/main/vite.config.ts"),
-      root: r("./apps/main"),
-    }),
-    buildVite({
-      configFile: r("./apps/designs/vite.config.ts"),
-      root: r("./apps/designs"),
-    }),
-    injectXHTML(binPath),
+/**
+ * * Please run with NODE_ENV='production'
+ * @param mode
+ */
+async function release(mode: "before" | "after") {
+  if (mode === "before") {
+    await Promise.all([
+      buildVite({
+        configFile: r("./src/apps/startup/vite.config.ts"),
+        root: r("./src/apps/startup"),
+      }),
+      buildVite({
+        configFile: r("./src/apps/main/vite.config.ts"),
+        root: r("./src/apps/main"),
+      }),
+      buildVite({
+        configFile: r("./src/apps/designs/vite.config.ts"),
+        root: r("./src/apps/designs"),
+      }),
 
-    //applyMixin(binPath),
-  ]);
-  await injectManifest("./_dist");
+      //applyMixin(binPath),
+    ]);
+    await injectManifest("./_dist", false);
+  } else if (mode === "after") {
+    const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
+    injectXHTML(binPath);
+  }
 }
 
 if (process.argv[2]) {
@@ -264,8 +273,11 @@ if (process.argv[2]) {
     case "--test":
       run("test");
       break;
-    case "--build":
-      build();
+    case "--release-build-before":
+      release("before");
+      break;
+    case "--release-build-after":
+      release("after");
       break;
   }
 }

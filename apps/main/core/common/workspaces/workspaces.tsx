@@ -56,6 +56,15 @@ export class WorkspacesServices {
   }
 
   /**
+   * Returns current workspace user context id.
+   * @returns The current workspace user context id.
+   */
+  public get getCurrentWorkspaceUserContextId() {
+    console.log(this.getCurrentWorkspace);
+    return this.getCurrentWorkspace.userContextId ?? 0;
+  }
+
+  /**
    * set current workspace UUID (id).
    * @param workspaceId The workspace id.
    */

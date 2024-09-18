@@ -22,6 +22,7 @@
     "@biomejs/biome": "^1.8.3",
     "@bytecodealliance/preview2-shim": "^0.16.7",
     "@swc-node/register": "^1.10.9",
+    "@types/adm-zip": "^0.5.5",
     "@types/babel__core": "^7.20.5",
     "@types/decompress": "^4.2.7",
     "@types/node": "^22.5.4",
@@ -44,6 +45,7 @@
     "vite-tsconfig-paths": "^5.0.1"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "solid-element": "^1.8.1",
     "solid-styled-jsx": "^0.27.1",
     "sortablejs": "^1.15.3",
