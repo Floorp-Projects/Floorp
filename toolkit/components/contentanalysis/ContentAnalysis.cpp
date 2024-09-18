@@ -1247,7 +1247,8 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   if (cacheMatchResult == CachedData::CacheResult::Matches) {
     auto action = mCachedData.ResultAction();
     MOZ_ASSERT(action.isSome());
-    LOGD("Found existing request in cache for token %s", requestToken.get());
+    LOGD("Found existing request in cache for token %s with action %d",
+         requestToken.get(), *action);
     mCachedData.SetExpirationTimer();
     auto response = ContentAnalysisResponse::FromAction(*action, requestToken);
     response->DoNotAcknowledge();
@@ -1582,8 +1583,10 @@ ContentAnalysis::CancelAllRequests() {
           auto warnResponseDataMap = owner->mWarnResponseDataMap.Lock();
           auto keys = warnResponseDataMap->Keys();
           for (const auto& key : keys) {
-            LOGD("Responding to warn dialog for request %s",
-                 nsCString(key).get());
+            LOGD(
+                "Responding to warn dialog (from CancelAllRequests) for "
+                "request %s",
+                nsCString(key).get());
             owner->RespondToWarnDialog(key, false);
           }
         }
@@ -1635,6 +1638,18 @@ ContentAnalysis::RespondToWarnDialog(const nsACString& aRequestToken,
         nsIContentAnalysisResponse::Action action;
         DebugOnly<nsresult> rv = entry->mResponse->GetAction(&action);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
+        {
+          auto request = self->mCachedData.Request();
+          if (request) {
+            nsCString cachedRequestToken;
+            DebugOnly<nsresult> tokenRv =
+                request->GetRequestToken(cachedRequestToken);
+            MOZ_ASSERT(NS_SUCCEEDED(tokenRv));
+            if (cachedRequestToken.Equals(requestToken)) {
+              self->mCachedData.UpdateWarnAction(action);
+            }
+          }
+        }
         if (entry->mCallbackData.AutoAcknowledge()) {
           RefPtr<ContentAnalysisAcknowledgement> acknowledgement =
               new ContentAnalysisAcknowledgement(
@@ -2391,6 +2406,7 @@ void ContentAnalysis::CachedData::SetExpirationTimer() {
   }
   mExpirationTimer->InitWithNamedFuncCallback(
       [](nsITimer* func, void* closure) {
+        LOGD("Clearing content analysis cache (dispatching to main thread)");
         NS_DispatchToMainThread(
             NS_NewCancelableRunnableFunction("Clear ContentAnalysis cache", [] {
               LOGD("Clearing content analysis cache");
