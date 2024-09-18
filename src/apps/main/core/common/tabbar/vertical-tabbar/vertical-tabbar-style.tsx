@@ -5,7 +5,7 @@
 
 import type { z } from "zod";
 import { config, type zFloorpDesignConfigs } from "../../designs/configs";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import verticalTabarStyle from "./vertical-tabbar.css?inline";
 import verticalTabarHoverStyle from "./vertical-tabbar-hover.css?inline";
 import verticalTabarPaddingStyle from "./vertical-tabbar-padding.css?inline";
@@ -31,8 +31,10 @@ function getVerticalTabbarCSSFromConfig(
 
 export function VerticalTabbarStyle() {
   return (
-    <For each={getVerticalTabbarCSSFromConfig(config())}>
-      {(style) => <style>{style}</style>}
-    </For>
+    <Show when={getVerticalTabbarCSSFromConfig(config()).length}>
+      <For each={getVerticalTabbarCSSFromConfig(config())}>
+        {(style) => <style>{style}</style>}
+      </For>
+    </Show>
   );
 }

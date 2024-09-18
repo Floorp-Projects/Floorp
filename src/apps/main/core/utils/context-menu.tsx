@@ -1,4 +1,4 @@
-import { insert, render } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 import type { JSXElement } from "solid-js";
 import type { ViteHotContext } from "vite/types/hot";
 
@@ -9,38 +9,46 @@ export namespace ContextMenuUtils {
   });
 
   function windowModalDialogElem(): XULElement | null {
-    return document.querySelector("#window-modal-dialog");
+    return document?.querySelector("#window-modal-dialog") as XULElement | null;
   }
   function screenShotContextMenuItems(): XULElement | null {
-    return document.querySelector("#context-take-screenshot");
+    return document?.querySelector(
+      "#context-take-screenshot",
+    ) as XULElement | null;
   }
   export function contentAreaContextMenu(): XULElement | null {
-    return document.querySelector("#contentAreaContextMenu");
+    return document?.querySelector(
+      "#contentAreaContextMenu",
+    ) as XULElement | null;
   }
   function pdfjsContextMenuSeparator(): XULElement | null {
-    return document.querySelector("#context-sep-pdfjs-selectall");
+    return document?.querySelector(
+      "#context-sep-pdfjs-selectall",
+    ) as XULElement | null;
   }
   function contextMenuSeparators(): NodeListOf<XULElement> {
-    return document.querySelectorAll("#contentAreaContextMenu > menuseparator");
+    return document?.querySelectorAll(
+      "#contentAreaContextMenu > menuseparator",
+    ) as NodeListOf<XULElement>;
   }
 
   export function addContextBox(
     id: string,
     l10n: string,
-    insertElementId: string,
+    renderElementId: string,
     runFunction: () => void,
     checkID: string,
     checkedFunction: () => void,
     hotCtx?: ViteHotContext,
   ) {
     const contextMenu = ContextMenu(id, l10n, runFunction);
-    const targetNode = document.getElementById(checkID) as XULElement;
-    const insertElement = document.getElementById(
-      insertElementId,
+    const targetNode = document?.getElementById(checkID) as XULElement;
+    const renderElement = document?.getElementById(
+      renderElementId,
     ) as XULElement;
 
     render(() => contextMenu, contentAreaContextMenu(), {
-      marker: insertElement,
+      marker: renderElement,
       hotCtx: hotCtx,
     });
     contextMenuObserver.observe(targetNode, { attributes: true });
@@ -58,7 +66,7 @@ export namespace ContextMenuUtils {
     JSXElem: () => JSXElement,
     hotCtx?: ViteHotContext,
   ) {
-    render(JSXElem, document.body, {
+    render(JSXElem, document?.body, {
       marker: windowModalDialogElem() ?? undefined,
       hotCtx,
     });
@@ -77,9 +85,12 @@ export namespace ContextMenuUtils {
 
     (async () => {
       for (const contextMenuSeparator of contextMenuSeparators()) {
+        const nextSibling = contextMenuSeparator.nextSibling as XULElement;
+        const previousSibling =
+          contextMenuSeparator.previousSibling as XULElement;
         if (
-          contextMenuSeparator.nextSibling.hidden &&
-          contextMenuSeparator.previousSibling.hidden &&
+          nextSibling?.hidden &&
+          nextSibling?.hidden &&
           contextMenuSeparator.id !== "context-sep-navigation" &&
           contextMenuSeparator.id !== "context-sep-pdfjs-selectall"
         ) {
@@ -96,7 +107,7 @@ export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
       data-l10n-id={l10n}
       label={l10n}
       id={id}
-      onCommand={runFunction}
+      oncommand={runFunction}
     />
   );
 }

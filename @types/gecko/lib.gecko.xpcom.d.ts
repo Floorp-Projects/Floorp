@@ -17072,6 +17072,7 @@ declare global {
 
   interface nsISupports {
     QueryInterface?<T extends nsIID>(aIID: T): nsQIResult<T>;
+    wrappedJSObject?: {};
   }
 
   // https://searchfox.org/mozilla-central/source/xpcom/base/nsIUUIDGenerator.idl
@@ -20301,17 +20302,17 @@ declare global {
 }
 
 // Non-scriptable interfaces referenced from scriptable ones.
-interface nsIAsyncVerifyRedirectReadyCallback {}
-interface nsICRLiteTimestamp {}
-interface nsIInputAvailableCallback {}
-interface nsIScriptElement {}
-interface nsIThreadObserver {}
-interface nsIUDPSocketSyncListener {}
-interface nsIWebAuthnRegisterArgs {}
-interface nsIWebAuthnRegisterPromise {}
-interface nsIWebAuthnSignArgs {}
-interface nsIWebAuthnSignPromise {}
-interface nsIXPCScriptable {}
+type nsIAsyncVerifyRedirectReadyCallback = {};
+type nsICRLiteTimestamp = {};
+type nsIInputAvailableCallback = {};
+type nsIScriptElement = {};
+type nsIThreadObserver = {};
+type nsIUDPSocketSyncListener = {};
+type nsIWebAuthnRegisterArgs = {};
+type nsIWebAuthnRegisterPromise = {};
+type nsIWebAuthnSignArgs = {};
+type nsIWebAuthnSignPromise = {};
+type nsIXPCScriptable = {};
 
 // Typedefs useful as a quick reference in method signatures.
 type double = number;

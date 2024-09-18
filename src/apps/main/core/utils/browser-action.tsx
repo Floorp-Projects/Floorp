@@ -5,7 +5,7 @@
 
 // NOTICE: Do not add toolbar buttons code here. Create new folder or file for new toolbar buttons.
 
-import { insert } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 import type {
   TCustomizableUI,
   TCustomizableUIArea,
@@ -23,13 +23,16 @@ export namespace BrowserActionUtils {
     onCommandFunc: () => void,
     styleElement: JSXElement | null = null,
     area: TCustomizableUIArea = CustomizableUI.AREA_NAVBAR,
-    position: number | null = null,
+    position: number | null = 0,
     onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
     // Add style Element for toolbar button icon.
-    // This insert is runnning every open browser window.
+    // This render is runnning every open browser window.
     if (styleElement) {
-      insert(document.head, () => styleElement, document.head?.lastChild);
+      render(() => styleElement, document?.head, {
+        hotCtx: import.meta.hot,
+        marker: document?.head?.lastChild as Element,
+      });
     }
 
     // Create toolbar button. If widget already exists, return.
@@ -52,45 +55,60 @@ export namespace BrowserActionUtils {
           onCreatedFunc?.(aNode);
         },
       });
-      CustomizableUI.addWidgetToArea(widgetId, area, position);
+      CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
     })();
   }
 
   export function createMenuToolbarButton(
     widgetId: string,
     l10nId: string,
-    popupElem: JSXElement,
-    onCommandFunc: () => void,
+    targetViewId: string,
+    popupElement: JSXElement,
+    onViewShowingFunc?: ((event: Event) => void) | null,
+    onCreatedFunc?: ((aNode: XULElement) => void) | null,
     area: string = CustomizableUI.AREA_NAVBAR,
     styleElement: JSXElement | null = null,
-    position: number | null = null,
-    onCreatedFunc: null | ((aNode: XULElement) => void) = null,
+    position: number | null = 0,
   ) {
     if (styleElement) {
-      insert(document.head, () => styleElement, document.head?.lastChild);
+      render(() => styleElement, document?.head, {
+        hotCtx: import.meta.hot,
+        marker: document?.head?.lastChild as Element,
+      });
+    }
+
+    if (popupElement) {
+      render(() => popupElement, document?.getElementById("mainPopupSet"), {
+        hotCtx: import.meta.hot,
+        marker: document?.getElementById("mainPopupSet")?.lastChild as Element,
+      });
     }
 
     const widget = CustomizableUI.getWidget(widgetId);
     if (widget && widget.type !== "custom") {
       return;
     }
+
     (async () => {
       CustomizableUI.createWidget({
         id: widgetId,
-        type: "button",
-        tooltiptext: await document.l10n?.formatValue(l10nId),
-        label: await document.l10n?.formatValue(l10nId),
+        type: "view",
+        viewId: targetViewId,
+        tooltiptext: (await document?.l10n?.formatValue(l10nId)) ?? "",
+        label: (await document?.l10n?.formatValue(l10nId)) ?? "",
         removable: true,
-        onCommand: () => {
-          onCommandFunc?.();
-        },
         onCreated: (aNode: XULElement) => {
-          aNode.setAttribute("type", "menu");
-          insert(aNode, () => popupElem, aNode.lastChild);
           onCreatedFunc?.(aNode);
         },
+        onViewShowing: (event: Event) => {
+          onViewShowingFunc?.(event);
+        },
       });
-      CustomizableUI.addWidgetToArea(widgetId, area, position);
+      CustomizableUI.addWidgetToArea(
+        widgetId,
+        area as TCustomizableUIArea,
+        position ?? 0,
+      );
     })();
   }
 }

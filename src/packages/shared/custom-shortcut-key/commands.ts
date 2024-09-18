@@ -196,7 +196,7 @@ export const commands: Commands = {
     type: "bookmark-action",
   },
   "gecko-open-bookmarks-manager": {
-    command: () => window.SidebarUI.toggle("viewBookmarksSidebar"),
+    command: () => window.SidebarController.toggle("viewBookmarksSidebar"),
     type: "bookmark-action",
   },
   "gecko-toggle-bookmark-toolbar": {
@@ -265,27 +265,27 @@ export const commands: Commands = {
     type: "downloads-action",
   },
   "gecko-show-bookmark-sidebar": {
-    command: () => window.SidebarUI.show("viewBookmarksSidebar"),
+    command: () => window.SidebarController.show("viewBookmarksSidebar"),
     type: "sidebar-action",
   },
   "gecko-show-history-sidebar": {
-    command: () => window.SidebarUI.show("viewHistorySidebar"),
+    command: () => window.SidebarController.show("viewHistorySidebar"),
     type: "sidebar-action",
   },
   "gecko-show-synced-tabs-sidebar": {
-    command: () => window.SidebarUI.show("viewTabsSidebar"),
+    command: () => window.SidebarController.show("viewTabsSidebar"),
     type: "sidebar-action",
   },
   "gecko-reverse-sidebar": {
-    command: () => window.SidebarUI.reversePosition(),
+    command: () => window.SidebarController.reversePosition(),
     type: "sidebar-action",
   },
   "gecko-hide-sidebar": {
-    command: () => window.SidebarUI.hide(),
+    command: () => window.SidebarController.hide(),
     type: "sidebar-action",
   },
   "gecko-toggle-sidebar": {
-    command: () => window.SidebarUI.toggle(),
+    command: () => window.SidebarController.toggle(),
     type: "sidebar-action",
   },
   "floorp-open-previous-workspace": {

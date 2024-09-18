@@ -5,7 +5,7 @@
 
 export function MenuPopup() {
   return (
-    <xul:menupopup id="profile-manager-popup">
+    <xul:panelview id="profile-manager-popup">
       <xul:browser
         id="profile-switcher-browser"
         src="chrome://floorp/content/profile-manager/profile-switcher.xhtml"
@@ -15,6 +15,6 @@ export function MenuPopup() {
         disableglobalhistory="true"
         context="profile-popup-contextmenu"
       />
-    </xul:menupopup>
+    </xul:panelview>
   );
 }
