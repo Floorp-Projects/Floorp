@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { type Workspaces, zWorkspacesServicesStoreData } from "./utils/type";
-import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { type Workspaces, zWorkspacesServicesStoreData } from "./utils/type.js";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names.js";
 
 /** WorkspacesServices data */
 export const [workspacesData, setworkspacesData] = createSignal<Workspaces>(

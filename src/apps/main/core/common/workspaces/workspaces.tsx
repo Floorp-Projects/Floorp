@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Workspace } from "./utils/type";
-import { setworkspacesData, workspacesData } from "./data";
+import type { Workspace } from "./utils/type.js";
+import { setworkspacesData, workspacesData } from "./data.js";
 import { createEffect } from "solid-js";
-import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
-import { WorkspaceIcons } from "./utils/workspace-icons";
-import { setWorkspaceModalState } from "./workspace-modal";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names.js";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import { setWorkspaceModalState } from "./workspace-modal.js";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;

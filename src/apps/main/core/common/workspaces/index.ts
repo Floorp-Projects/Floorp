@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspacesServices } from "./workspaces";
-import { WorkspacesToolbarButton } from "./toolbar-element";
-import { WorkspacesTabContextMenu } from "./tabContextMenu";
-import { WorkspacesPopupContxtMenu } from "./popupSet";
-import { WorkspaceManageModal } from "./workspace-modal";
-import { WorkspaceIcons } from "./utils/workspace-icons";
+import { WorkspacesServices } from "./workspaces.js";
+import { WorkspacesToolbarButton } from "./toolbar-element.js";
+import { WorkspacesTabContextMenu } from "./tabContextMenu.js";
+import { WorkspacesPopupContxtMenu } from "./popupSet.js";
+import { WorkspaceManageModal } from "./workspace-modal.js";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
 
 export function init() {
   const gWorkspaceIcons = WorkspaceIcons.getInstance();

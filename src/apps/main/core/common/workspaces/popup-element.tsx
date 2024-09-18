@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { WorkspacesServices } from "./workspaces";
-import { workspacesData } from "./data";
-import { PopupToolbarElement } from "./popup-block-element";
-import { config } from "./config";
+import { WorkspacesServices } from "./workspaces.js";
+import { workspacesData } from "./data.js";
+import { PopupToolbarElement } from "./popup-block-element.js";
+import { config } from "./config.js";
 
 export function PopupElement() {
   const gWorkspacesServices = WorkspacesServices.getInstance();

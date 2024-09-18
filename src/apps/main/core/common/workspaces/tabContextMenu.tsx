@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { WorkspaceIcons } from "./utils/workspace-icons";
-import { WorkspacesServices } from "./workspaces";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import { WorkspacesServices } from "./workspaces.js";
 import { For } from "solid-js";
-import { workspacesData } from "./data";
-import type { Workspaces } from "./utils/type";
+import { workspacesData } from "./data.js";
+import type { Workspaces } from "./utils/type.js";
 
 export class WorkspacesTabContextMenu {
   private static instance: WorkspacesTabContextMenu;

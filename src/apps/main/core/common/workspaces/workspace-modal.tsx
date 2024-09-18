@@ -6,9 +6,9 @@
 import { createSignal, For, Show } from "solid-js";
 import { render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
-import { WorkspaceIcons } from "./utils/workspace-icons";
-import type { Workspace } from "./utils/type";
-import { WorkspacesServices } from "./workspaces";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import type { Workspace } from "./utils/type.js";
+import { WorkspacesServices } from "./workspaces.js";
 import modalStyle from "./modal-style.css?inline";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(

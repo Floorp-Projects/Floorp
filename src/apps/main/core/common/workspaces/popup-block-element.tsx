@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspaceIcons } from "./utils/workspace-icons";
-import { WorkspacesServices } from "./workspaces";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import { WorkspacesServices } from "./workspaces.js";
 
 export function PopupToolbarElement(props: {
   workspaceId: string;

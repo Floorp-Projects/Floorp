@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { zWorkspacesServicesConfigs } from "./utils/type";
-import { getOldConfigs } from "./old-config";
+import { zWorkspacesServicesConfigs } from "./utils/type.js";
+import { getOldConfigs } from "./old-config.js";
 
 /** enable/disable workspaces */
 export const [enabled, setEnabled] = createSignal(

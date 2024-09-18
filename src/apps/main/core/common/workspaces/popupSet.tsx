@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
-import { WorkspacesServices } from "./workspaces";
-import { ContextMenu } from "./contextMenu";
+import { WorkspacesServices } from "./workspaces.js";
+import { ContextMenu } from "./contextMenu.js";
 import { render } from "@nora/solid-xul";
 
 export class WorkspacesPopupContxtMenu {

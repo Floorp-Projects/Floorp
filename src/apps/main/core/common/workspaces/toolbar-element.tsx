@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { BrowserActionUtils } from "@core/utils/browser-action";
-import { PopupElement } from "./popup-element";
+import { PopupElement } from "./popup-element.js";
 import workspacesStyles from "./styles.css?inline";
 import type { JSX } from "solid-js";
-import { WorkspacesServices } from "./workspaces";
+import { WorkspacesServices } from "./workspaces.js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
