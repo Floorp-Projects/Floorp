@@ -60,7 +60,6 @@ export class WorkspacesServices {
    * @returns The current workspace user context id.
    */
   public get getCurrentWorkspaceUserContextId() {
-    console.log(this.getCurrentWorkspace);
     return this.getCurrentWorkspace.userContextId ?? 0;
   }
 
@@ -137,6 +136,10 @@ export class WorkspacesServices {
 
     if (willChangeWorkspaceLastShowTab) {
       window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+    } else if (this.workspaceHasTabs(workspaceId)) {
+      window.gBrowser.selectedTab = this.workspaceHasTabs(workspaceId);
+    } else if (this.isThereNoWorkspaceTabs() !== true) {
+      window.gBrowser.selectedTab = this.isThereNoWorkspaceTabs();
     } else {
       this.createTabForWorkspace(workspaceId, true);
     }
@@ -400,6 +403,35 @@ export class WorkspacesServices {
     } else {
       window.gBrowser.selectedTab = workspaceTabs[0];
     }
+  }
+
+  /**
+   * Check if workspace has tabs.
+   * @param workspaceId The workspace id.
+   * @returns true if workspace has tabs.
+   */
+  public workspaceHasTabs(workspaceId: string) {
+    const workspaceTabs = document?.querySelectorAll(
+      `[${WorkspacesServicesStaticNames.workspacesTabAttributionId}="${workspaceId}"]`,
+    ) as XULElement[];
+    return workspaceTabs?.length > 0 ? workspaceTabs[0] : false;
+  }
+
+  /**
+   * Check if there is no workspace tabs.
+   * @returns true if there is no workspace tabs if false, return tab.
+   */
+  public isThereNoWorkspaceTabs() {
+    for (const tab of window.gBrowser.tabs as XULElement[]) {
+      if (
+        !tab.hasAttribute(
+          WorkspacesServicesStaticNames.workspacesTabAttributionId,
+        )
+      ) {
+        return tab;
+      }
+    }
+    return true;
   }
 
   /**
