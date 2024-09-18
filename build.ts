@@ -3,8 +3,6 @@ import * as path from "node:path";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
-import { $ } from "execa";
-import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { createServer, type ViteDevServer, build as buildVite } from "vite";
 import AdmZip from "adm-zip";
@@ -144,8 +142,10 @@ async function run(mode: "dev" | "test" = "dev") {
     })(),
     applyMixin("_dist/bin"),
     (async () => {
-      await fs.access("_dist/profile");
-      await fs.rm("_dist/profile", { recursive: true });
+      try {
+        await fs.access("_dist/profile");
+        await fs.rm("_dist/profile", { recursive: true });
+      } catch {}
     })(),
   ]);
 
@@ -201,6 +201,9 @@ async function run(mode: "dev" | "test" = "dev") {
       //* puppeteer seems to set homepage as about:blank
       //https://searchfox.org/mozilla-central/rev/aee7c3a0dbf33af0c4f6648f391db62b35895e50/browser/components/preferences/tests/browser_homepage_default.js#28
       "browser.startup.homepage": "about:home",
+
+      "general.useragent.override":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0",
     },
     defaultViewport: { height: 0, width: 0 },
     timeout: 0,

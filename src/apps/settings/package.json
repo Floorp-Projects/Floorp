@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo -p 5183",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -13,7 +13,10 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
     "framer-motion": "^11.5.4",
+    "@nora/middleware-settings": "workspace:*",
     "next": "14.2.11",
     "react": "^18",
     "react-dom": "^18"

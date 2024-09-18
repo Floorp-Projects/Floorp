@@ -243,8 +243,12 @@ export class WorkspacesServices {
       if (workspaceIndex === -1 || workspaceIndex === 0) {
         throw new Error(`Workspace with id ${workspaceId} is invalid`);
       }
-      const [workspace] = workspaces.splice(workspaceIndex, 1);
-      workspaces.splice(workspaceIndex - 1, 0, workspace);
+      workspaces.splice(
+        workspaceIndex - 1,
+        2,
+        workspaces[workspaceIndex],
+        workspaces[workspaceIndex - 1],
+      );
 
       return workspaces;
     });
@@ -263,8 +267,12 @@ export class WorkspacesServices {
       if (workspaceIndex === -1 || workspaceIndex === workspaces.length - 1) {
         throw new Error(`Workspace with id ${workspaceId} is invalid`);
       }
-      const [workspace] = workspaces.splice(workspaceIndex, 1);
-      workspaces.splice(workspaceIndex + 1, 0, workspace);
+      workspaces.splice(
+        workspaceIndex,
+        2,
+        workspaces[workspaceIndex + 1],
+        workspaces[workspaceIndex],
+      );
 
       return workspaces;
     });
