@@ -3,6 +3,33 @@
     {
       "stash": {
         "blocked": [
+          "8ade8c6e85a7d5e8a14f8205bf6caff769133161@temporary-addon.com:0.3.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726511760904,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726684505466,
+      "id": "9dbd4d36-c5db-4719-acbd-551ad608e115",
+      "last_modified": 1726684562205
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{8e76190e-b557-4cf6-ba4c-c4f27a253eb0}:0.3.1",
+          "{8e76190e-b557-4cf6-ba4c-c4f27a253eb0}:1.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726238016295,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726511705251,
+      "id": "dd112766-4283-4b19-95e1-572e1ed6f69f",
+      "last_modified": 1726511760789
+    },
+    {
+      "stash": {
+        "blocked": [
           "{76f1650e-e563-46a9-be26-685214b972fb}:8"
         ],
         "unblocked": []
@@ -59,5 +86,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1726230952838
+  "timestamp": 1726684562205
 }
