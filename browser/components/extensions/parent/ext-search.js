@@ -41,14 +41,18 @@ this.search = class extends ExtensionAPI {
           return Promise.all(
             visibleEngines.map(async engine => {
               let favIconUrl = await engine.getIconURL();
-              // Convert moz-extension:-URLs to data:-URLs to make sure that
+              // Convert blob:-URLs to data:-URLs since they can't be shared
+              // across processes. blob:-URLs originate from application provided
+              // search engines.
+              // Also convert moz-extension:-URLs to data:-URLs to make sure that
               // extensions can see icons from other extensions, even if they
               // are not web-accessible.
               // Also prevents leakage of extension UUIDs to other extensions..
               if (
                 favIconUrl &&
-                favIconUrl.startsWith("moz-extension:") &&
-                !favIconUrl.startsWith(context.extension.baseURL)
+                (favIconUrl.startsWith("blob:") ||
+                  (favIconUrl.startsWith("moz-extension:") &&
+                    !favIconUrl.startsWith(context.extension.baseURL)))
               ) {
                 favIconUrl = await ExtensionUtils.makeDataURI(favIconUrl);
               }

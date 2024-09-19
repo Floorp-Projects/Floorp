@@ -8,9 +8,19 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { XPCShellContentUtils } = ChromeUtils.importESModule(
   "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
+const { SearchTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SearchTestUtils.sys.mjs"
+);
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+const { AppProvidedSearchEngine } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppProvidedSearchEngine.sys.mjs"
+);
 
 AddonTestUtils.initMochitest(this);
 XPCShellContentUtils.initMochitest(this);
+SearchTestUtils.init(this);
 
 // Base64-encoded "Fake icon data".
 const FAKE_ICON_DATA = "RmFrZSBpY29uIGRhdGE=";
@@ -18,11 +28,40 @@ const FAKE_ICON_DATA = "RmFrZSBpY29uIGRhdGE=";
 // Base64-encoded "HTTP icon data".
 const HTTP_ICON_DATA = "SFRUUCBpY29uIGRhdGE=";
 const HTTP_ICON_URL = "http://example.org/ico.png";
-const server = XPCShellContentUtils.createHttpServer({
-  hosts: ["example.org"],
-});
-server.registerPathHandler("/ico.png", (request, response) => {
-  response.write(atob(HTTP_ICON_DATA));
+
+const IMAGE_DATA_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
+
+add_setup(async () => {
+  const server = XPCShellContentUtils.createHttpServer({
+    hosts: ["example.org"],
+  });
+  server.registerPathHandler("/ico.png", (request, response) => {
+    response.write(atob(HTTP_ICON_DATA));
+  });
+
+  await SearchTestUtils.updateRemoteSettingsConfig([
+    { identifier: "appEngineWithIcon" },
+  ]);
+
+  let createdBlobURLs = [];
+
+  sinon
+    .stub(AppProvidedSearchEngine.prototype, "getIconURL")
+    .callsFake(async () => {
+      let response = await fetch(IMAGE_DATA_URI);
+
+      let blobURL = URL.createObjectURL(await response.blob());
+      createdBlobURLs.push(blobURL);
+      return blobURL;
+    });
+
+  registerCleanupFunction(async () => {
+    sinon.restore();
+    for (let blobURL of createdBlobURLs) {
+      URL.revokeObjectURL(blobURL);
+    }
+  });
 });
 
 async function promiseEngineIconLoaded(engineName) {
@@ -181,4 +220,39 @@ add_task(async function test_search_favicon() {
   await searchExt.unload();
   await searchExtWithBadIcon.unload();
   await searchExtWithHttpIcon.unload();
+});
+
+add_task(async function test_app_provided_return_data_uris() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["search"],
+    },
+    files: {
+      "myFavicon.png": imageBuffer,
+    },
+    useAddonManager: "temporary",
+    async background() {
+      let engines = await browser.search.get();
+      browser.test.sendMessage(
+        "appEngine",
+        engines.find(engine => engine.name == "appEngineWithIcon")
+      );
+    },
+  });
+
+  await extension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
+
+  Assert.deepEqual(
+    await extension.awaitMessage("appEngine"),
+    {
+      name: "appEngineWithIcon",
+      isDefault: true,
+      alias: undefined,
+      favIconUrl: IMAGE_DATA_URI,
+    },
+    "browser.search.get result for app provided engine should have a data URL for the icon"
+  );
+
+  await extension.unload();
 });
