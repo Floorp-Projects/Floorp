@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <iframe srcdoc="<body></body>"></iframe>
+  <button>Navigate to site B</button>
+  <script>
+    document.querySelector("button").addEventListener("click", function() {
+      window.location.href = "https://example.org/browser/dom/base/test/file_set_focus_after_reuse_bcg_2.html";
+    });
+  </script>
+</body>
+</html>
