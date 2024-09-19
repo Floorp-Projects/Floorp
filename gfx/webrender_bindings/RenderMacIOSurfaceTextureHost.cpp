@@ -147,7 +147,9 @@ bool RenderMacIOSurfaceTextureHost::MapPlane(RenderCompositor* aCompositor,
                                              uint8_t aChannelIndex,
                                              PlaneInfo& aPlaneInfo) {
   if (!aChannelIndex) {
-    mSurface->Lock();
+    if (NS_WARN_IF(!mSurface->Lock())) {
+      return false;
+    }
   }
   aPlaneInfo.mData = mSurface->GetBaseAddressOfPlane(aChannelIndex);
   aPlaneInfo.mStride = mSurface->GetBytesPerRow(aChannelIndex);

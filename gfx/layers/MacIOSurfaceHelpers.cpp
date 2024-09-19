@@ -150,7 +150,10 @@ static nsresult CopyFromLockedMacIOSurface(MacIOSurface* aSurface,
 
 already_AddRefed<SourceSurface> CreateSourceSurfaceFromMacIOSurface(
     MacIOSurface* aSurface, gfx::DataSourceSurface* aDataSurface) {
-  aSurface->Lock();
+  if (NS_WARN_IF(!aSurface->Lock())) {
+    return nullptr;
+  }
+
   auto scopeExit = MakeScopeExit([&]() { aSurface->Unlock(); });
 
   size_t ioWidth = aSurface->GetDevicePixelWidth();
@@ -198,7 +201,10 @@ nsresult CreateSurfaceDescriptorBufferFromMacIOSurface(
     MacIOSurface* aSurface, SurfaceDescriptorBuffer& aSdBuffer,
     Image::BuildSdbFlags aFlags,
     const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
-  aSurface->Lock();
+  if (NS_WARN_IF(!aSurface->Lock())) {
+    return NS_ERROR_FAILURE;
+  }
+
   auto scopeExit = MakeScopeExit([&]() { aSurface->Unlock(); });
 
   size_t ioWidth = aSurface->GetDevicePixelWidth();

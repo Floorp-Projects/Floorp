@@ -390,11 +390,16 @@ void MacIOSurface::DecrementUseCount() {
   ::IOSurfaceDecrementUseCount(mIOSurfaceRef.get());
 }
 
-void MacIOSurface::Lock(bool aReadOnly) {
+bool MacIOSurface::Lock(bool aReadOnly) {
   MOZ_RELEASE_ASSERT(!mIsLocked, "double MacIOSurface lock");
-  ::IOSurfaceLock(mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0,
-                  nullptr);
+  kern_return_t rv = ::IOSurfaceLock(
+      mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0, nullptr);
+  if (NS_WARN_IF(rv != KERN_SUCCESS)) {
+    gfxCriticalNoteOnce << "MacIOSurface::Lock failed " << gfx::hexa(rv);
+    return false;
+  }
   mIsLocked = true;
+  return true;
 }
 
 void MacIOSurface::Unlock(bool aReadOnly) {
@@ -416,14 +421,22 @@ static void MacIOSurfaceBufferDeallocator(void* aClosure) {
 }
 
 already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
-  Lock();
+  if (NS_WARN_IF(!Lock())) {
+    return nullptr;
+  }
+
   size_t bytesPerRow = GetBytesPerRow();
   size_t ioWidth = GetDevicePixelWidth();
   size_t ioHeight = GetDevicePixelHeight();
 
   unsigned char* ioData = (unsigned char*)GetBaseAddress();
-  auto* dataCpy =
-      new unsigned char[bytesPerRow * ioHeight / sizeof(unsigned char)];
+  auto* dataCpy = new (
+      fallible) unsigned char[bytesPerRow * ioHeight / sizeof(unsigned char)];
+  if (NS_WARN_IF(!dataCpy)) {
+    Unlock();
+    return nullptr;
+  }
+
   for (size_t i = 0; i < ioHeight; i++) {
     memcpy(dataCpy + i * bytesPerRow, ioData + i * bytesPerRow, ioWidth * 4);
   }
