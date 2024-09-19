@@ -96,7 +96,7 @@ class MacIOSurface final
   size_t GetDevicePixelHeight(size_t plane = 0) const;
   size_t GetBytesPerRow(size_t plane = 0) const;
   size_t GetAllocSize() const;
-  void Lock(bool aReadOnly = true);
+  bool Lock(bool aReadOnly = true);
   void Unlock(bool aReadOnly = true);
   bool IsLocked() const { return mIsLocked; }
   void IncrementUseCount();
