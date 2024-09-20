@@ -72,7 +72,13 @@ Converter.prototype = {
   asyncConvertData(fromType, toType, listener) {
     this.listener = listener;
   },
-  getConvertedType() {
+  getConvertedType(_fromType, channel) {
+    if (channel instanceof Ci.nsIMultiPartChannel) {
+      throw new Components.Exception(
+        "JSONViewer doesn't support multipart responses.",
+        Cr.NS_ERROR_FAILURE
+      );
+    }
     return "text/html";
   },
 
