@@ -44,15 +44,15 @@ class BaseSSLServerCertVerificationResult {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
-                        nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-                        uint16_t aCertificateTransparencyStatus,
-                        EVStatus aEVStatus, bool aSucceeded,
-                        PRErrorCode aFinalError,
-                        nsITransportSecurityInfo::OverridableErrorCategory
-                            aOverridableErrorCategory,
-                        bool aIsBuiltCertChainRootBuiltInRoot,
-                        uint32_t aProviderFlags, bool aMadeOCSPRequests) = 0;
+  [[nodiscard]] virtual nsresult Dispatch(
+      nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+      nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
+      uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
+      bool aSucceeded, PRErrorCode aFinalError,
+      nsITransportSecurityInfo::OverridableErrorCategory
+          aOverridableErrorCategory,
+      bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
+      bool aMadeOCSPRequests) = 0;
 };
 
 // Dispatched to the STS thread to notify the infoObject of the verification
@@ -70,14 +70,15 @@ class SSLServerCertVerificationResult final
 
   explicit SSLServerCertVerificationResult(CommonSocketControl* socketControl);
 
-  void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
-                nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-                uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
-                bool aSucceeded, PRErrorCode aFinalError,
-                nsITransportSecurityInfo::OverridableErrorCategory
-                    aOverridableErrorCategory,
-                bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
-                bool aMadeOCSPRequests) override;
+  [[nodiscard]] nsresult Dispatch(
+      nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+      nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
+      uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
+      bool aSucceeded, PRErrorCode aFinalError,
+      nsITransportSecurityInfo::OverridableErrorCategory
+          aOverridableErrorCategory,
+      bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
+      bool aMadeOCSPRequests) override;
 
  private:
   ~SSLServerCertVerificationResult() = default;

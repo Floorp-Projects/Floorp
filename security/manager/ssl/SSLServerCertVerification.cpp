@@ -759,17 +759,15 @@ SSLServerCertVerificationJob::Run() {
   // Runs on a cert verification thread and only on parent process.
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  MOZ_LOG(
-      gPIPNSSLog, LogLevel::Debug,
-      ("[%" PRIx64 "] SSLServerCertVerificationJob::Run\n", mAddrForLogging));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("[%" PRIx64 "] SSLServerCertVerificationJob::Run", mAddrForLogging));
 
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   if (!certVerifier) {
-    PR_SetError(SEC_ERROR_NOT_INITIALIZED, 0);
     // We can't release this off the STS thread because some parts of it
-    // are not threadsafe. Just leak the mResultTask
+    // are not threadsafe. Just leak mResultTask.
     Unused << mResultTask.forget();
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   TimeStamp jobStartTime = TimeStamp::Now();
@@ -779,34 +777,39 @@ SSLServerCertVerificationJob::Run() {
   bool madeOCSPRequests = false;
   nsTArray<nsTArray<uint8_t>> builtChainBytesArray;
   nsTArray<uint8_t> certBytes(mPeerCertChain.ElementAt(0).Clone());
-  Result rv = AuthCertificate(
+  Result result = AuthCertificate(
       *certVerifier, mPinArg, certBytes, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
       mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot,
       madeOCSPRequests);
 
-  if (rv == Success) {
+  if (result == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
         TimeStamp::Now());
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
 
-    mResultTask->Dispatch(
+    nsresult rv = mResultTask->Dispatch(
         std::move(builtChainBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
         evStatus, true, 0,
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
         isCertChainRootBuiltInRoot, mProviderFlags, madeOCSPRequests);
-    return NS_OK;
+    if (NS_FAILED(rv)) {
+      // We can't release this off the STS thread because some parts of it
+      // are not threadsafe. Just leak mResultTask.
+      Unused << mResultTask.forget();
+    }
+    return rv;
   }
 
   Telemetry::AccumulateTimeDelta(
       Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX,
       jobStartTime, TimeStamp::Now());
 
-  PRErrorCode error = MapResultToPRErrorCode(rv);
+  PRErrorCode error = MapResultToPRErrorCode(result);
   nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory =
       nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET;
   nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
@@ -815,16 +818,22 @@ SSLServerCertVerificationJob::Run() {
       overridableErrorCategory);
 
   // NB: finalError may be 0 here, in which the connection will continue.
-  mResultTask->Dispatch(
+  nsresult rv = mResultTask->Dispatch(
       std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, finalError, overridableErrorCategory,
       // If the certificate verifier returned Result::ERROR_BAD_CERT_DOMAIN, a
       // chain was built, so isCertChainRootBuiltInRoot is valid and
       // potentially useful. Otherwise, assume no chain was built.
-      rv == Result::ERROR_BAD_CERT_DOMAIN ? isCertChainRootBuiltInRoot : false,
+      result == Result::ERROR_BAD_CERT_DOMAIN ? isCertChainRootBuiltInRoot
+                                              : false,
       mProviderFlags, madeOCSPRequests);
-  return NS_OK;
+  if (NS_FAILED(rv)) {
+    // We can't release this off the STS thread because some parts of it
+    // are not threadsafe. Just leak mResultTask.
+    Unused << mResultTask.forget();
+  }
+  return rv;
 }
 
 // Takes information needed for cert verification, does some consistency
@@ -1047,7 +1056,7 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
           nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET),
       mProviderFlags(0) {}
 
-void SSLServerCertVerificationResult::Dispatch(
+nsresult SSLServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
@@ -1093,11 +1102,12 @@ void SSLServerCertVerificationResult::Dispatch(
   if (!stsTarget) {
     // This has to be released on STS; just leak it
     Unused << mSocketControl.forget();
-    return;
+    return NS_ERROR_FAILURE;
   }
   rv = stsTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to dispatch SSLServerCertVerificationResult");
+  return rv;
 }
 
 NS_IMETHODIMP
