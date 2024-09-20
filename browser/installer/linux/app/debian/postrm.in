@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+if [ ${DEB_PKG_NAME} = firefox-esr ]; then
+    if [ "$$1" = "remove" ]; then
+        dpkg-divert --package firefox-esr --rename --remove /usr/bin/firefox
+    fi
+fi
