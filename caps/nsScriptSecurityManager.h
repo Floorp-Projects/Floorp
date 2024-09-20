@@ -81,8 +81,6 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
                               bool aFromPrivateWindow,
                               uint64_t aInnerWindowID = 0);
 
-  static uint32_t HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
-
   static bool GetStrictFileOriginPolicy() { return sStrictFileOriginPolicy; }
 
   void DeactivateDomainPolicy();
