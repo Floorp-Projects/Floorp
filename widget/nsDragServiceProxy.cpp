@@ -191,15 +191,6 @@ nsresult nsDragSessionProxy::EndDragSessionImpl(bool aDoneDrag,
     mSourceBrowser = nullptr;
   }
 
-  if (mTargetBrowser) {
-    nsCOMPtr<BrowserChild> targetBC = do_QueryReferent(mTargetBrowser);
-    MOZ_ASSERT(targetBC);
-    [[maybe_unused]] RefPtr<nsIDragSession> session =
-        targetBC->GetDragSession();
-    MOZ_ASSERT(session == this);
-    targetBC->SetDragSession(nullptr);
-    mTargetBrowser = nullptr;
-  }
-
+  SetDragTarget(nullptr);
   return rv;
 }
