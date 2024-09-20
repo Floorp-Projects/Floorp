@@ -883,6 +883,13 @@ PdfStreamConverter.prototype = {
   },
 
   getConvertedType(aFromType, aChannel) {
+    if (aChannel instanceof Ci.nsIMultiPartChannel) {
+      throw new Components.Exception(
+        "PDF.js doesn't support multipart responses.",
+        Cr.NS_ERROR_NOT_IMPLEMENTED
+      );
+    }
+
     const HTML = "text/html";
     let channelURI = aChannel?.URI;
     // We can be invoked for application/octet-stream; check if we want the
