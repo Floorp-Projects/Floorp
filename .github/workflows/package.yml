@@ -1,0 +1,107 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+name: "(A) 📦️ Package"
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options:
+          - win-x64
+          - linux-x64
+      artifact_workflow_run_id:
+        type: string
+        required: true
+
+run-name: 📦️ Package ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - name: Configure sccache
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      - name: setup Rust 🦀
+        run: |
+          rustup default nightly
+          rustup target add x86_64-pc-windows-msvc
+
+          #? https://github.com/mozilla/sccache#known-caveats
+          export CARGO_INCREMENTAL=0
+      - name: Setup 🪛
+        run: |
+          cd $GITHUB_WORKSPACE
+
+          # update noraneko to latest
+          git submodule update --remote
+
+          cp ./.github/workflows/mozconfigs/win64.mozconfig mozconfig
+
+          # Copy Noraneko Branding
+          cp -r ./noraneko/gecko/branding/* ./browser/branding/
+
+          sudo apt install msitools -y
+
+          #if [[ $GHA_debug == 'true' ]]; then
+          #  echo "ac_add_options --enable-debug" >> mozconfig
+          #fi
+
+          ./mach --no-interactive bootstrap --application-choice browser
+      - name: Mach configure
+        run: |
+          echo "ac_add_options --enable-artifact-builds" >> mozconfig
+          ./mach configure
+          git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{inputs.platform == 'win-x64' && 'noraneko-win-amd64-moz-artifact'}}
+          run-id: ${{inputs.artifact_workflow_run_id}}
+          github-token: ${{github.token}}
+          repository: "nyanrus/noraneko-runtime"
+          path: ~/
+          
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build noraneko
+        run: |
+          cd ./noraneko
+          pnpm install
+          NODE_ENV='production' pnpm build --release-build-before
+          cd ..
+
+      - name: build
+        run: |
+          MOZ_ARTIFACT_FILE=$(echo ~/noraneko-*.win64.zip) ./mach build
+      - name: Inject noraneko
+        run: |
+          cd ./noraneko
+          pnpm build --release-build-after
+          cd ..
+      - name: Package noraneko
+        run: |
+          ./mach package
+      - name: Publish Package 🎁
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-win-amd64-moz-artifact
+          path: obj-x86_64-pc-windows-msvc/dist/noraneko-*.zip
+      - name: Publish Installer 🎁
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-win-amd64-installer
+          path: obj-x86_64-pc-windows-msvc/dist/install/sea/*
