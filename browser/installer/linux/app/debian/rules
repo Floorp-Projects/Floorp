@@ -5,3 +5,9 @@
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xxpi
+
+override_dh_install:
+	dh_install
+ifeq ($(shell dpkg-parsechangelog -S Source), firefox-esr)
+	install -m 0755 debian/firefox.sh debian/firefox-esr/usr/bin/firefox
+endif
