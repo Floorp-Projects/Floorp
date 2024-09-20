@@ -112,7 +112,7 @@ export var ProxyPolicies = {
       // network code. That pref only controls if the checkbox is checked, and
       // then we must manually set the other values.
       if (param.UseHTTPProxyForAllProtocols) {
-        param.SSLProxy = param.SOCKSProxy = param.HTTPProxy;
+        param.SSLProxy = param.HTTPProxy;
       }
     }
 
