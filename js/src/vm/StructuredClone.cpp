@@ -195,7 +195,9 @@ enum StructuredDataType : uint32_t {
 enum TransferableMapHeader {
   SCTAG_TM_UNREAD = 0,
   SCTAG_TM_TRANSFERRING,
-  SCTAG_TM_TRANSFERRED
+  SCTAG_TM_TRANSFERRED,
+
+  SCTAG_TM_END
 };
 
 static inline uint64_t PairToUInt64(uint32_t tag, uint32_t data) {
@@ -3362,10 +3364,20 @@ bool JSStructuredCloneReader::readTransferMap() {
     return in.reportTruncated();
   }
 
+  if (tag != SCTAG_TRANSFER_MAP_HEADER) {
+    // No transfer map header found.
+    return true;
+  }
+
+  if (data >= SCTAG_TM_END) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid transfer map header");
+    return false;
+  }
   auto transferState = static_cast<TransferableMapHeader>(data);
 
-  if (tag != SCTAG_TRANSFER_MAP_HEADER ||
-      transferState == SCTAG_TM_TRANSFERRED) {
+  if (transferState == SCTAG_TM_TRANSFERRED) {
     return true;
   }
 

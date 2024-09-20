@@ -157,6 +157,7 @@ function testMultiWithDeserializeReadTransferErrorHelper(g, BASE, desc) {
 
     try {
         let clone = deserialize(s);
+        assertEq(true, false, "should throw");
     } catch (e) {
         assertEq(e.message.includes("invalid transferable"), true);
     }
@@ -240,6 +241,28 @@ function testMultiWithDeserializeReadErrorCrossRealm() {
     testMultiWithDeserializeReadErrorHelper(newGlobal({ newCompartment: true }), 1100, desc);
 }
 
+function testCorruptedTransferMapHeader() {
+    const ab = new ArrayBuffer(100);
+    const s = serialize({ ab, seven: 7 }, [ab], { scope: "DifferentProcess" });
+    const ia = new Int32Array(s.arraybuffer);
+    ia[2] = 4; // Invalid, out of range TransferableMapHeader
+    s.arraybuffer = ia.buffer;
+    try {
+        deserialize(s);
+        assertEq(true, false, "should throw for invalid TM header");
+    } catch (e) {
+        assertEq(e.message.includes("invalid transfer map header"), true);
+    }
+    ia[2] = -1; // This should be using unsigned comparison, so this will be caught.
+    s.arraybuffer = ia.buffer;
+    try {
+        deserialize(s);
+        assertEq(true, false, "should throw for invalid TM header");
+    } catch (e) {
+        assertEq(e.message.includes("invalid transfer map header"), true);
+    }
+}
+
 testBasic();
 testErrorDuringWrite();
 testErrorDuringTransfer();
@@ -251,3 +274,4 @@ testMultiWithDeserializeReadTransferError();
 testMultiWithDeserializeReadTransferErrorCrossRealm();
 testMultiWithDeserializeReadError();
 testMultiWithDeserializeReadErrorCrossRealm();
+testCorruptedTransferMapHeader();
