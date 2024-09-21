@@ -155,7 +155,7 @@ export class PromptCollection {
         Services.prompt.MODAL_TYPE_TAB,
         title,
         message,
-        buttonFlags,
+        buttonFlags | Ci.nsIPrompt.BUTTON_DELAY_ENABLE,
         acceptLabel,
         null,
         null,
