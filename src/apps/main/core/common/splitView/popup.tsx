@@ -12,12 +12,14 @@ export function Popup() {
       <xul:vbox id="splitView-box">
         <xul:vbox class="panel-header">
           <h1>
+            Split View
             <span data-l10n-id="split-view-title" />
           </h1>
         </xul:vbox>
         <xul:toolbarseparator />
         <xul:vbox id="splitView-vbox">
           <h3 class="splitView-title">
+            Position
             <span data-l10n-id="split-view-position" />
           </h3>
           <xul:hbox id="splitView-position-selector">
@@ -31,7 +33,9 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-position-left"
                 class="splitView-select-label"
-              />
+              >
+                Left
+              </label>
               <xul:hbox
                 id="splitView-position-selector-content-left"
                 class="splitView-select-content-box"
@@ -50,7 +54,9 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-position-right"
                 class="splitView-select-label"
-              />
+              >
+                Right
+              </label>
               <xul:hbox
                 id="splitView-position-selector-content-right"
                 class="splitView-select-content-box"
@@ -73,7 +79,9 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-flex-row"
                 class="splitView-select-label"
-              />
+              >
+                Row
+              </label>
               <xul:hbox
                 id="splitView-flex-selector-content-row"
                 class="splitView-select-content-box"
@@ -92,7 +100,9 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-flex-column"
                 class="splitView-select-label"
-              />
+              >
+                Column
+              </label>
               <xul:vbox
                 id="splitView-flex-selector-content-column"
                 class="splitView-select-content-box"
@@ -108,7 +118,9 @@ export function Popup() {
             class="footer-button"
             type="button"
             onClick={() => gSplitView.unsplitCurrentView()}
-          />
+          >
+            Remove Curret View
+          </button>
         </xul:vbox>
       </xul:vbox>
     </xul:panel>

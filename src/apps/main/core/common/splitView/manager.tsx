@@ -3,8 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "solid-js/web";
+import { Show } from "solid-js/web";
 import { Popup } from "./popup";
+import { currentSplitView } from "./utils/data";
+import { render } from "@nora/solid-xul";
 
 export class SplitViewManager {
   private static instance: SplitViewManager;
@@ -16,26 +18,36 @@ export class SplitViewManager {
   }
 
   private constructor() {
-    render(() => this.ToolbarElement(), this.targetParent);
+    render(() => this.ToolbarElement(), this.targetParent, {
+      marker: this.markerElement,
+    });
   }
 
   private get targetParent() {
-    return document?.getElementById("identity-box") as XULElement;
+    return document?.querySelector(
+      ".urlbar-input-container[flex='1']",
+    ) as XULElement;
+  }
+
+  private get markerElement() {
+    return document?.getElementById("urlbar-searchmode-switcher") as XULElement;
   }
 
   private ToolbarElement() {
     return (
-      <xul:hbox
-        data-l10n-id="splitView-action"
-        class="urlbar-page-action"
-        role="button"
-        popup="splitView-panel"
-        id="splitView-action"
-        hidden={true}
-      >
-        <xul:image id="splitView-image" class="urlbar-icon" />
-        <Popup />
-      </xul:hbox>
+      <Show when={currentSplitView() !== -1}>
+        <xul:hbox
+          data-l10n-id="splitView-action"
+          class="urlbar-page-action"
+          role="button"
+          popup="splitView-panel"
+          id="splitView-action"
+          hidden={false}
+        >
+          <xul:image id="splitView-image" class="urlbar-icon" />
+          <Popup />
+        </xul:hbox>
+      </Show>
     );
   }
 }

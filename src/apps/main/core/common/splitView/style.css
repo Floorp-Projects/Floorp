@@ -43,7 +43,8 @@ tabpanels > [split="true"] {
 #splitView-action {
   border-radius: 100px;
   background: var(--button-active-bgcolor);
-  margin-left: 3px;
+  margin-left: -3px;
+  margin-right: 6px;
 }
 
 #splitView-image {
