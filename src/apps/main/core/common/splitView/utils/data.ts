@@ -4,89 +4,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { SplitViewStaticNames } from "./static-names";
-import {
-  zSplitViewConfigData,
-  type SyncDataGroup,
-  type SplitViewDatas,
-} from "./type";
+import type { SyncDataGroup, SplitViewDatas } from "./type";
 
 /** SplitView data */
 export const [splitViewData, setSplitViewData] = createSignal<SplitViewDatas>(
-  zSplitViewConfigData.parse(
-    getSplitViewData(
-      Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-    ),
-  ).splitViewData,
+  [],
 );
 
 /* Current split view */
-export const [currentSplitView, setCurrentSplitView] = createSignal<number>(
-  getSplitViewData(
-    Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-  ).currentViewIndex,
-);
+export const [currentSplitView, setCurrentSplitView] = createSignal<number>(-1);
 
 /** Sync data */
-export const [syncData, setSyncData] = createSignal(
-  zSplitViewConfigData.parse(
-    getSplitViewData(
-      Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-    ),
-  ).syncData,
-);
+export const [syncData, setSyncData] = createSignal<SyncDataGroup>({
+  sync: false,
+  options: {
+    reverse: false,
+    method: "row",
+    syncMode: false,
+  },
+  syncTabId: null,
+});
 
 createEffect(() => {
-  Services.prefs.setStringPref(
-    SplitViewStaticNames.DataPrefName,
-    JSON.stringify({
-      splitViewData: splitViewData(),
-      syncData: syncData(),
-      currentViewIndex: currentSplitView(),
-    }),
+  console.error(
+    "splitViewData",
+    splitViewData(),
+    "syncData",
+    syncData(),
+    "currentSplitView",
+    currentSplitView(),
   );
 });
-
-Services.prefs.addObserver(SplitViewStaticNames.DataPrefName, () => {
-  setSplitViewData(
-    zSplitViewConfigData.parse(
-      getSplitViewData(
-        Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-      ),
-    ).splitViewData,
-  );
-  setCurrentSplitView(
-    getSplitViewData(
-      Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-    ).currentViewIndex,
-  );
-  setSyncData(
-    zSplitViewConfigData.parse(
-      getSplitViewData(
-        Services.prefs.getStringPref(SplitViewStaticNames.DataPrefName, "{}"),
-      ),
-    ).syncData,
-  );
-});
-
-function getSplitViewData(stringData: string) {
-  const splitViewData: SplitViewDatas =
-    JSON.parse(stringData).splitViewData || [];
-  const syncData: SyncDataGroup = JSON.parse(stringData).syncData || {
-    sync: false,
-    options: {
-      flexType: "flex",
-      reverse: false,
-      method: "row",
-      syncMode: false,
-    },
-    syncTabId: null,
-  };
-  const currentViewIndex: number =
-    JSON.parse(stringData).currentViewIndex || -1;
-  return {
-    currentViewIndex,
-    syncData,
-    splitViewData,
-  };
-}

@@ -4,10 +4,8 @@
 
 import { z } from "zod";
 
-// Zod schemas
 export const zSplitViewData = z.object({
   tabIds: z.array(z.string()),
-  flexType: z.enum(["flex"]),
   reverse: z.boolean(),
   method: z.enum(["row", "column"]),
   syncMode: z.boolean().optional(),
@@ -18,7 +16,6 @@ export const zSplitViewDatas = z.array(zSplitViewData);
 export const zSyncDataGroup = z.object({
   sync: z.boolean(),
   options: z.object({
-    flexType: z.enum(["flex"]),
     reverse: z.boolean(),
     method: z.enum(["row", "column"]),
     syncMode: z.boolean(),

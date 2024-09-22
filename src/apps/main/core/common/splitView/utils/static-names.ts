@@ -4,6 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export namespace SplitViewStaticNames {
-  export const DataPrefName = "floorp.splitView.v2.data";
   export const TabAttributionId = "floorpSplitViewId";
+  export const windowObjectId = "floorpSplitViewObjectId";
 }

@@ -44,10 +44,11 @@ export class SplitView {
   private listener = {
     onLocationChange: (browser: Browser) => {
       this.checkAllTabHaveSplitViewAttribute();
-      const tab = window.gBrowser.getTabForBrowser(browser);
+      const tab = window.gBrowser.selectedTab;
       if (tab) {
         this.updateSplitView(tab);
         tab.linkedBrowser.docShellIsActive = true;
+        browser.docShellIsActive = true;
       }
     },
   };
@@ -78,6 +79,11 @@ export class SplitView {
   }
 
   private setTabId(tab: Tab, id: string) {
+    const currentId = tab.getAttribute(SplitViewStaticNames.TabAttributionId);
+    if (currentId) {
+      return currentId;
+    }
+
     tab.setAttribute(SplitViewStaticNames.TabAttributionId, id);
     return id;
   }
@@ -181,11 +187,11 @@ export class SplitView {
     Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
   }
 
-  private handleSplitViewPanelRevseOptionClick(reverse: boolean) {
+  public handleSplitViewPanelRevseOptionClick(reverse: boolean) {
     this.updateSplitView(window.gBrowser.selectedTab, reverse === true, null);
   }
 
-  private handleSplitViewPanelTypeOptionClick(method: "row" | "column") {
+  public handleSplitViewPanelTypeOptionClick(method: "row" | "column") {
     this.updateSplitView(window.gBrowser.selectedTab, null, method);
   }
 
@@ -279,7 +285,6 @@ export class SplitView {
     setSplitViewData((prev) => {
       prev.push({
         tabIds: tabs.map((tab) => this.setTabId(tab, this.getGeneratedUuid)),
-        flexType: "flex",
         reverse: false,
         method: "row",
       });
@@ -375,13 +380,10 @@ export class SplitView {
     this.tabBrowserPanel.setAttribute("split-view", "true");
     Services.prefs.setBoolPref("floorp.browser.splitView.working", true);
 
-    console.log("splitData", splitViewData().indexOf(splitData));
     setCurrentSplitView(splitViewData().indexOf(splitData));
 
-    const flexType = splitData.flexType || "flex";
     this.applyFlexBoxLayout(
       splitData.tabIds.map((id) => this.getTabById(id)),
-      flexType,
       activeTab,
       splitData.reverse,
       splitData.method,
@@ -395,7 +397,6 @@ export class SplitView {
 
   private applyFlexBoxLayout(
     tabs: Tab[],
-    flexType: "flex",
     activeTab: Tab,
     reverse = true,
     method: "row" | "column" = "column",
@@ -409,7 +410,7 @@ export class SplitView {
       const container = tab.linkedBrowser.closest(
         ".browserSidebarContainer",
       ) as XULElement;
-      this.styleContainer(container, tab === activeTab, index, flexType);
+      this.styleContainer(container, tab === activeTab, index);
     });
   }
 
@@ -424,7 +425,6 @@ export class SplitView {
     container: XULElement,
     isActive: boolean,
     index: number,
-    flexType: "flex",
   ) {
     container.removeAttribute("split-active");
     if (isActive) {
@@ -433,10 +433,8 @@ export class SplitView {
     container.setAttribute("split-anim", "true");
     container.addEventListener("click", this.handleTabClick);
 
-    if (flexType === "flex") {
-      container.style.flex = "1";
-      container.style.order = String(index);
-    }
+    container.style.flex = "1";
+    container.style.order = String(index);
   }
 
   private handleTabClick = (event: Event) => {
@@ -483,7 +481,7 @@ export class SplitView {
     container.style.order = "";
   }
 
-  private unsplitCurrentView() {
+  public unsplitCurrentView() {
     const currentTab = window.gBrowser.selectedTab;
     let tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
       this.getTabById(id),

@@ -12,7 +12,8 @@ export function init() {
   SplitViewContextMenu.getInstance();
   SplitView.getInstance();
 
-  import.meta.hot?.accept((m) => {
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  (import.meta as any).hot?.accept((m: { init: () => void }) => {
     m?.init();
   });
 }
