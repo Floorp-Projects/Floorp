@@ -3505,78 +3505,6 @@
       "last_modified": 1701186751741
     },
     {
-      "name": "trgvocab.uken.spm",
-      "schema": 1700619877879,
-      "toLang": "en",
-      "version": "1.0a1",
-      "fileType": "trgvocab",
-      "fromLang": "uk",
-      "attachment": {
-        "hash": "d933cbf156c925ef42c064cbd6f85f18516f3ccac49bee7025b19a4a5c0ef711",
-        "size": 803064,
-        "filename": "trgvocab.uken.spm",
-        "location": "main-workspace/translations-models/8c7de6ad-2bd8-42e2-ab3f-4053648fe3e4.spm",
-        "mimetype": "text/plain"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "43645308-b36a-48e9-89b2-2f754ba51e83",
-      "last_modified": 1701186751738
-    },
-    {
-      "name": "lex.uken.s2t.bin",
-      "schema": 1700619881473,
-      "toLang": "en",
-      "version": "1.0a1",
-      "fileType": "lex",
-      "fromLang": "uk",
-      "attachment": {
-        "hash": "763b9e0add9fd712305bc031ab86a58fb15f719dcad296046742176937b86841",
-        "size": 9761460,
-        "filename": "lex.uken.s2t.bin",
-        "location": "main-workspace/translations-models/80e4921c-4cb1-4bd9-b917-de7f3dee86ae.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "4d6cd1b7-6318-49b1-8668-28c511fe4402",
-      "last_modified": 1701186751735
-    },
-    {
-      "name": "model.uken.intgemm8.bin",
-      "schema": 1700619886535,
-      "toLang": "en",
-      "version": "1.0a1",
-      "fileType": "model",
-      "fromLang": "uk",
-      "attachment": {
-        "hash": "90b6e21644af5bf5ce26442c724f55848a005d75e8bf688a51d2e64d6bc6b249",
-        "size": 25315747,
-        "filename": "model.uken.intgemm8.bin",
-        "location": "main-workspace/translations-models/d7731f28-bf8d-454b-9c44-c62b059cb3bf.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "195d4e3d-a509-4ab9-8c7d-5fbf1ade990b",
-      "last_modified": 1701186751732
-    },
-    {
-      "name": "srcvocab.uken.spm",
-      "schema": 1700619894276,
-      "toLang": "en",
-      "version": "1.0a1",
-      "fileType": "srcvocab",
-      "fromLang": "uk",
-      "attachment": {
-        "hash": "797de9759ff722c124c64663f3b75538516a059cfce3e6cf9446f39d1063cb6d",
-        "size": 984214,
-        "filename": "srcvocab.uken.spm",
-        "location": "main-workspace/translations-models/6b41203e-2c43-4655-9f38-ca1c8bec8967.spm",
-        "mimetype": "text/plain"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "084c113f-7eed-4acf-afe0-00f99671cc6d",
-      "last_modified": 1701186751729
-    },
-    {
       "name": "model.encs.intgemm.alphas.bin",
       "schema": 1700619898096,
       "toLang": "cs",
@@ -5143,5 +5071,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1726165133287
+  "timestamp": 1726841594653
 }
