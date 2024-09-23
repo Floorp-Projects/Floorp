@@ -3,6 +3,35 @@
     {
       "stash": {
         "blocked": [
+          "dev@serpclix.com:3.4.0",
+          "dev@serpclix.com:3.4.7",
+          "dev@serpclix.com:3.1.0",
+          "dev@serpclix.com:3.3.0",
+          "dev@serpclix.com:3.0.1",
+          "phishjail@gmail.com:1.0.0",
+          "dev@serpclix.com:3.4.8",
+          "vdhcustom@hubbux:9.1.0.42",
+          "phishjail@gmail.com:1.1.1",
+          "dev@serpclix.com:3.4.1",
+          "dev@serpclix.com:3.4.2",
+          "dev@serpclix.com:3.0.3dev",
+          "dev@serpclix.com:3.4.5dev",
+          "dev@serpclix.com:3.0.0",
+          "{9718529d-634a-4bf3-9c6d-e8463e8fe9c5}:3.2.1",
+          "dev@serpclix.com:3.2.0dev",
+          "dev@serpclix.com:3.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726684562326,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726857305113,
+      "id": "c1ab0cc8-b942-41ec-a68a-93ee59701bdb",
+      "last_modified": 1726857360155
+    },
+    {
+      "stash": {
+        "blocked": [
           "8ade8c6e85a7d5e8a14f8205bf6caff769133161@temporary-addon.com:0.3.2"
         ],
         "unblocked": []
@@ -86,5 +115,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1726684562205
+  "timestamp": 1726857360155
 }
