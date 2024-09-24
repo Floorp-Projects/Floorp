@@ -887,9 +887,10 @@ bool TRRService::ConfirmationContext::HandleEvent(
 
       NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mRetryInterval,
                               nsITimer::TYPE_ONE_SHOT);
-      if (mRetryInterval < 64000) {
-        // double the interval up to this point
-        mRetryInterval *= 2;
+      // double the interval up to this point
+      mRetryInterval *= 2;
+      if (mRetryInterval > StaticPrefs::network_trr_max_retry_timeout_ms()) {
+        mRetryInterval = StaticPrefs::network_trr_max_retry_timeout_ms();
       }
       break;
     default:

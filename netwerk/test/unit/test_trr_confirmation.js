@@ -225,6 +225,7 @@ add_task(async function multiple_failures() {
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
+  Services.prefs.setIntPref("network.trr.max-retry-timeout-ms", 8000);
   equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
 
   await registerNS(100);
@@ -246,7 +247,7 @@ add_task(async function multiple_failures() {
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
-  await waitForConfirmationState(CONFIRM_OK, 6000);
+  await waitForConfirmationState(CONFIRM_OK, 8500);
 });
 
 add_task(async function test_connectivity_change() {
