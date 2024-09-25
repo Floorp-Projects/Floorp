@@ -20,3 +20,7 @@ declare var Cu: nsIXPCComponents_Utils;
 declare var Ci: nsIXPCComponents_Interfaces;
 declare var Services: JSServices;
 /* NORA END */
+
+// interface CSSStyleDeclaration {
+//   display: string;
+// }

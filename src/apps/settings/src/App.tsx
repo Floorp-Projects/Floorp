@@ -1,23 +1,22 @@
-"use client";
-
-import styles from "./page.module.css";
-
 import {
   Card,
   CardHeader,
   CardBody,
   CardFooter,
-  SimpleGrid,
   Heading,
   Button,
   Box,
   Text,
 } from "@chakra-ui/react";
 import SimpleSidebar from "./modules/sidebar";
-import { setBoolPref } from "./dev";
+import { getBoolPref, getIntPref, setBoolPref } from "./dev";
 
 export default function Home() {
   setBoolPref("noraneko.settings.dev", true);
+  getBoolPref("bidi.browser.ui").then((v) => {
+    console.log(v);
+  });
+
   return (
     <>
       <div style={{ display: "flex", height: "100vh" }}>
@@ -30,7 +29,10 @@ export default function Home() {
           <Box display={"flex"}>
             <Card width={"200px"} height={"300px"}>
               <CardHeader>
-                <Heading size="md"> Customer dashboard</Heading>
+                <Heading size="md">
+                  {" "}
+                  Customer dashboard {process.env.NODE_ENV}
+                </Heading>
               </CardHeader>
               <CardBody>
                 View a summary of all your customers over the last month.

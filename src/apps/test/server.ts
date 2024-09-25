@@ -18,3 +18,5 @@ applyWSSHandler<AppRouter>({
 });
 
 listen(5191);
+
+console.log("Initialized Test Server for Dev | http:localhost:5191");

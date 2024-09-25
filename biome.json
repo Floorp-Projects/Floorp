@@ -15,6 +15,6 @@
     "ignore": ["@types/gecko/**"]
   },
   "files": {
-    "ignore": ["bin/**", "dist/**", "node_modules/**"]
+    "ignore": ["bin/**", "dist/**", "node_modules/**", "@types/gecko/**"]
   }
 }

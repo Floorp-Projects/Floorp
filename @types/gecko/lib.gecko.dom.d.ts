@@ -5067,7 +5067,7 @@ interface BrowsingContext extends LoadContextMixin {
     watchedByDevTools: boolean;
     readonly window: WindowProxy | null;
     getAllBrowsingContextsInSubtree(): BrowsingContext[];
-    resetLocationChangeRateLimit(): void;
+    resetNavigationRateLimit(): void;
     setRDMPaneMaxTouchPoints(maxTouchPoints: number): void;
     setRDMPaneOrientation(type: OrientationType, rotationAngle: number): void;
 }
@@ -10395,7 +10395,6 @@ interface HTMLMediaElement extends HTMLElement {
     readonly totalAudioPlayTime: number;
     readonly totalVideoHDRPlayTime: number;
     readonly totalVideoPlayTime: number;
-    readonly videoDecodeSuspendedTime: number;
     readonly videoTracks: VideoTrackList;
     readonly visiblePlayTime: number;
     volume: number;
@@ -18807,6 +18806,7 @@ declare var StreamFilterDataEvent: {
 };
 
 interface StructuredCloneHolder {
+    readonly dataSize: number;
     deserialize(global: any, keepData?: boolean): any;
 }
 
@@ -25321,7 +25321,7 @@ type ImageOrientation = "flipY" | "from-image" | "none";
 type ImportESModuleTargetGlobal = "contextual" | "current" | "devtools" | "shared";
 type InspectorPropertyType = "color" | "gradient" | "timing-function";
 type IterationCompositeOperation = "accumulate" | "replace";
-type JSRFPTarget = "RoundWindowSize" | "SiteSpecificZoom";
+type JSRFPTarget = "RoundWindowSize" | "SiteSpecificZoom" | "CSSPrefersColorScheme";
 type L10nFileSourceHasFileStatus = "missing" | "present" | "unknown";
 type LatencyMode = "quality" | "realtime";
 type LineAlignSetting = "center" | "end" | "start";

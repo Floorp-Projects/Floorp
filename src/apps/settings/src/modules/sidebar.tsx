@@ -1,6 +1,4 @@
-"use client";
-
-import React, { ReactNode } from "react";
+import React from "react";
 import {
   IconButton,
   Box,
@@ -14,11 +12,10 @@ import {
   useDisclosure,
   type BoxProps,
   type FlexProps,
+  Link,
+  Image,
 } from "@chakra-ui/react";
-import Image from "next/image";
-import noranekoIcon from "../icon_c_aq.svg";
-import { Link } from "@chakra-ui/react";
-import NextLink from "next/link";
+import noranekoIcon from "../icon_c_aq.svg?url";
 
 interface LinkItemProps {
   name: string;
@@ -52,11 +49,10 @@ const SidebarContent = ({ ...rest }: SidebarProps) => {
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
         <Image
-          priority
           src={noranekoIcon}
           alt="noraneko"
-          width={60}
-          height={60}
+          width={"60px"}
+          height={"60px"}
         />
         <Text fontSize="2xl" fontWeight="bold">
           Settings

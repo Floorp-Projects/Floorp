@@ -41,6 +41,53 @@ trpc.post.onBroadcast.subscribe(undefined, {
             break;
           }
         }
+        break;
+      }
+      case "settings-parent:getPref": {
+        const data = zPrefType.parse(JSON.parse(value.data));
+
+        switch (data.prefType) {
+          case "boolean": {
+            trpc.post.broadcast.mutate({
+              topic: "settings-child:getPref",
+              data: JSON.stringify(
+                zPrefType.parse({
+                  prefType: "boolean",
+                  prefName: data.prefName,
+                  value: Services.prefs.getBoolPref(data.prefName),
+                }),
+              ),
+            });
+            break;
+          }
+          case "integer": {
+            trpc.post.broadcast.mutate({
+              topic: "settings-child:getPref",
+              data: JSON.stringify(
+                zPrefType.parse({
+                  prefType: "integer",
+                  prefName: data.prefName,
+                  value: Services.prefs.getIntPref(data.prefName),
+                }),
+              ),
+            });
+            break;
+          }
+          case "string": {
+            trpc.post.broadcast.mutate({
+              topic: "settings-child:getPref",
+              data: JSON.stringify(
+                zPrefType.parse({
+                  prefType: "string",
+                  prefName: data.prefName,
+                  value: Services.prefs.getStringPref(data.prefName),
+                }),
+              ),
+            });
+            break;
+          }
+        }
+        break;
       }
     }
   },
