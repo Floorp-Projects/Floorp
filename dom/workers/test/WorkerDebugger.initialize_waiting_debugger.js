@@ -2,4 +2,6 @@
 
 dump(" Evaluated debugger script\n");
 
-postMessage("debugger script ran");
+setImmediate(function () {
+  postMessage("debugger script ran");
+});
