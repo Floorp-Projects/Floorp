@@ -143,7 +143,6 @@ __declspec(dllexport) MOZ_NAKED bool IsEqualToGlobalValue(
       "retq;");
 }
 
-#    if !defined(MOZ_CODE_COVERAGE)
 // This code reproduces bug 1798787: it uses the same prologue, the same unwind
 // info, and it has a call instruction that starts within the 13 first bytes.
 MOZ_NAKED void DetouredCallCode(uintptr_t aCallee) {
@@ -183,7 +182,6 @@ MOZ_NAKED __declspec(dllexport noinline) void DetouredCallJumper(
   // use a zero offset and patch it before the test.
   asm volatile("jmpq *0(%rip)");
 }
-#    endif  // !defined(MOZ_CODE_COVERAGE)
 
 #  elif defined(_M_IX86)
 constexpr uintptr_t JumpDestination = 0x7fff0000;
