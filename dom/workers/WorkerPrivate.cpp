@@ -626,16 +626,18 @@ class DebuggerImmediateRunnable final : public WorkerThreadRunnable {
     // Silence bad assertions.
   }
 
+  // Make as MOZ_CAN_RUN_SCRIPT_BOUNDARY for calling mHandler->Call();
+  // Since WorkerRunnable::WorkerRun has not to be MOZ_CAN_RUN_SCRIPT, but
+  // DebuggerImmediateRunnable is a special case that must to call the function
+  // defined in the debugger script.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override {
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    JS::Rooted<JS::Value> callable(
-        aCx, JS::ObjectOrNullValue(mHandler->CallableOrNull()));
-    JS::HandleValueArray args = JS::HandleValueArray::empty();
     JS::Rooted<JS::Value> rval(aCx);
+    IgnoredErrorResult rv;
+    MOZ_KnownLive(mHandler)->Call({}, &rval, rv);
 
-    // WorkerRunnable::Run will report the exception if it happens.
-    return JS_CallFunctionValue(aCx, global, callable, args, &rval);
+    return !rv.Failed();
   }
 };
 
