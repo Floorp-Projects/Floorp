@@ -48,7 +48,10 @@ export class SplitView {
       if (tab) {
         this.updateSplitView(tab);
         tab.linkedBrowser.docShellIsActive = true;
-        browser.docShellIsActive = true;
+        tab.linkedBrowser.renderLayers = true;
+        document
+          ?.getElementById(tab.linkedPanel)
+          ?.classList.add("deck-selected");
       }
     },
   };
@@ -75,6 +78,9 @@ export class SplitView {
   }
 
   private getTabId(tab: Tab) {
+    if (!tab) {
+      throw new Error("Tab is not defined");
+    }
     return tab.getAttribute(SplitViewStaticNames.TabAttributionId) ?? "";
   }
 
@@ -198,6 +204,10 @@ export class SplitView {
   private addMainPopupShowingListener() {
     const mainPopup = document?.getElementById("mainPopupSet");
     mainPopup?.addEventListener("popupshowing", () => {
+      if (!window.TabContextMenu.contextTab) {
+        return;
+      }
+
       const elem = document?.getElementById("context_splittabs") as XULElement;
       const excludeSyncedDataList = splitViewData().filter(
         (group) => group.syncMode !== true,
