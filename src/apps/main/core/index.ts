@@ -19,6 +19,7 @@ const modules_keys = {
 };
 
 export default async function initScripts() {
+  import("./dev/settings/index");
   //@ts-expect-error ii
   SessionStore.promiseInitialized.then(async () => {
     initI18N();

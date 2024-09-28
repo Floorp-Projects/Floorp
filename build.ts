@@ -3,11 +3,11 @@ import * as path from "node:path";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
-import { $ } from "execa";
-import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { createServer, type ViteDevServer, build as buildVite } from "vite";
 import AdmZip from "adm-zip";
+import { execa } from "execa";
+import { cwd } from "node:process";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -97,14 +97,15 @@ async function initBin() {
   }
 }
 
-let devProcesses: ViteDevServer[];
+let devViteProcesses: ViteDevServer[];
+const devExecaProcesses: unknown[] = [];
 let devInit = false;
 
 async function run(mode: "dev" | "test" = "dev") {
   await initBin();
   if (!devInit) {
     console.log("run dev servers");
-    devProcesses = [
+    devViteProcesses = [
       await createServer({
         mode,
         configFile: r("./src/apps/main/vite.config.ts"),
@@ -116,18 +117,32 @@ async function run(mode: "dev" | "test" = "dev") {
         root: r("./src/apps/designs"),
       }),
     ];
+    devExecaProcesses.push(
+      execa({
+        preferLocal: true,
+        stdout: "inherit",
+        cwd: r("./src/apps/middleware-settings"),
+      })`node --import @swc-node/register/esm-register server.ts`,
+    );
+    devExecaProcesses.push(
+      execa({
+        preferLocal: true,
+        stdout: "inherit",
+        cwd: r("./src/apps/settings"),
+      })`pnpm dev`,
+    );
 
     if (mode === "test") {
-      devProcesses.push(
-        await createServer({
-          configFile: r("./src/apps/test/vite.config.ts"),
-          root: r("./src/apps/test"),
-        }),
+      devExecaProcesses.push(
+        execa({
+          preferLocal: true,
+          cwd: r("./src/apps/test"),
+        })`node --import @swc-node/register/esm-register server.ts`,
       );
     }
     devInit = true;
   }
-  devProcesses.forEach((p) => {
+  devViteProcesses.forEach((p) => {
     p.listen();
   });
   await Promise.all([
@@ -144,8 +159,10 @@ async function run(mode: "dev" | "test" = "dev") {
     })(),
     applyMixin("_dist/bin"),
     (async () => {
-      await fs.access("_dist/profile");
-      await fs.rm("_dist/profile", { recursive: true });
+      try {
+        await fs.access("_dist/profile");
+        await fs.rm("_dist/profile", { recursive: true });
+      } catch {}
     })(),
   ]);
 
@@ -201,6 +218,9 @@ async function run(mode: "dev" | "test" = "dev") {
       //* puppeteer seems to set homepage as about:blank
       //https://searchfox.org/mozilla-central/rev/aee7c3a0dbf33af0c4f6648f391db62b35895e50/browser/components/preferences/tests/browser_homepage_default.js#28
       "browser.startup.homepage": "about:home",
+
+      "general.useragent.override":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0",
     },
     defaultViewport: { height: 0, width: 0 },
     timeout: 0,

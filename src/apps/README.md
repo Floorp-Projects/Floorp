@@ -6,10 +6,17 @@
   not using
 
 - main
-  5181
+  port: 5181
 
 - designs
-  5182
+  port: 5182
+
+- settings
+  port: 5183
 
 - tests
-  5191
+  port: 5191
+
+- middleware-settings
+  port:
+  - 5192
