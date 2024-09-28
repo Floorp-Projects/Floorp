@@ -578,9 +578,7 @@
       const isForegroundWindow =
         this.ownerGlobal ==
         BrowserWindowTracker.getTopWindow({ allowPopups: true });
-      if (isForegroundWindow) {
-        this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
-      }
+      this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
     }
 
     _mouseleave() {
