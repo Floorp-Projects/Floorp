@@ -67,6 +67,15 @@
         }
         new MyClass();
       });
+
+      // Add properties on Array prototype to reproduce issue with Moo + jQuery listeners
+      // (see Bug 1916881)
+      // eslint-disable-next-line no-extend-native
+      Array.prototype.override_func = function() {
+        return "don't do this";
+      }
+      // eslint-disable-next-line no-extend-native
+      Array.prototype.override_obj = "don't do this";
     </script>
   </head>
   <body>

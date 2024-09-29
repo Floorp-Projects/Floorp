@@ -4620,7 +4620,8 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  RefPtr<nsIWidget> widget = GetWidget();
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession(widget);
   if (NS_WARN_IF(!dragSession)) {
     return NS_ERROR_FAILURE;
   }
@@ -4928,9 +4929,10 @@ nsresult EditorBase::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   // they retarget the source node to the editing host.
   // https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/page/drag_controller.cc;l=724;drc=d9ba13b8cd8ac0faed7afc3d1f7e4b67ebac2a0b
   if (editingHost) {
-    if (nsCOMPtr<nsIDragService> dragService =
-            do_GetService("@mozilla.org/widget/dragservice;1")) {
-      dragService->MaybeEditorDeletedSourceNode(editingHost);
+    RefPtr<nsIWidget> widget = GetWidget();
+    if (nsCOMPtr<nsIDragSession> dragSession =
+            nsContentUtils::GetDragSession(widget)) {
+      dragSession->MaybeEditorDeletedSourceNode(editingHost);
     }
   }
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;

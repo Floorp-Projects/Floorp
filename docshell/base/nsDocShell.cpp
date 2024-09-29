@@ -6111,7 +6111,7 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
 
 nsresult nsDocShell::FilterStatusForErrorPage(
     nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
-    bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
+    bool aIsTopFrame, bool aUseErrorPages,
     bool* aSkippedUnknownProtocolNavigation) {
   // Errors to be shown only on top-level frames
   if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
@@ -6155,17 +6155,10 @@ nsresult nsDocShell::FilterStatusForErrorPage(
 
   if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
     // For unknown protocols we only display an error if the load is triggered
-    // by the browser itself, or we're replacing the initial document (and
-    // nothing else). Showing the error for page-triggered navigations causes
-    // annoying behavior for users, see bug 1528305.
-    //
-    // We could, maybe, try to detect if this is in response to some user
-    // interaction (like clicking a link, or something else) and maybe show
-    // the error page in that case. But this allows for ctrl+clicking and such
-    // to see the error page.
+    // by the browser itself. Showing the error for page-triggered navigations
+    // causes annoying behavior for users, see bug 1528305.
     nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-    if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-        !aIsInitialDocument) {
+    if (!info->TriggeringPrincipal()->IsSystemPrincipal()) {
       if (aSkippedUnknownProtocolNavigation) {
         *aSkippedUnknownProtocolNavigation = true;
       }
@@ -6315,12 +6308,9 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                 aStatus == NS_ERROR_CONTENT_BLOCKED);
     UnblockEmbedderLoadEventForFailure(fireFrameErrorEvent);
 
-    bool isInitialDocument =
-        !GetExtantDocument() || GetExtantDocument()->IsInitialDocument();
     bool skippedUnknownProtocolNavigation = false;
     aStatus = FilterStatusForErrorPage(aStatus, aChannel, mLoadType, isTopFrame,
                                        mBrowsingContext->GetUseErrorPages(),
-                                       isInitialDocument,
                                        &skippedUnknownProtocolNavigation);
     hadErrorStatus = true;
     if (NS_FAILED(aStatus)) {
@@ -9746,6 +9736,8 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
       INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
   aLoadInfo->SetOriginalFrameSrcLoad(
       aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC));
+  aLoadInfo->SetIsNewWindowTarget(
+      aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD));
 
   bool inheritAttrs = false;
   if (aLoadState->PrincipalToInherit()) {
@@ -9886,10 +9878,6 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
     // save true referrer for those who need it (e.g. xpinstall whitelisting)
     // Currently only http and ftp channels support this.
     props->SetPropertyAsInterface(u"docshell.internalReferrer"_ns, referrer);
-
-    if (aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
-      props->SetPropertyAsBool(u"docshell.newWindowTarget"_ns, true);
-    }
   }
 
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
@@ -10053,7 +10041,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
 
 bool nsDocShell::IsAboutBlankLoadOntoInitialAboutBlank(
     nsIURI* aURI, bool aInheritPrincipal, nsIPrincipal* aPrincipalToInherit) {
-  return NS_IsAboutBlank(aURI) && aInheritPrincipal &&
+  return NS_IsAboutBlankAllowQueryAndFragment(aURI) && aInheritPrincipal &&
          (aPrincipalToInherit == GetInheritedPrincipal(false)) &&
          (!mDocumentViewer || !mDocumentViewer->GetDocument() ||
           mDocumentViewer->GetDocument()->IsInitialDocument());

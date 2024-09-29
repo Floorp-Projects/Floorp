@@ -3900,8 +3900,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Register temp2)
       DEFINED_ON(x86, x64, arm, arm64, loong64, mips64, riscv64);
 
-  void wasmMarkSlowCall()
+  // Places slow class marker for tail calls.
+  void wasmMarkCallAsSlow()
       DEFINED_ON(x86, x64, arm, arm64, loong64, mips64, riscv64);
+
+  // Combines slow class marker with actual assembler call.
+  CodeOffset wasmMarkedSlowCall(const wasm::CallSiteDesc& desc,
+                                const Register reg)
+      DEFINED_ON(x86_shared, arm, arm64, loong64, mips64, riscv64);
 #endif
 
   // WasmTableCallIndexReg must contain the index of the indirect call.  This is

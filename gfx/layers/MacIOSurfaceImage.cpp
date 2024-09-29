@@ -88,10 +88,12 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
   auto ySize = aData.YDataSize();
   auto cbcrSize = aData.CbCrDataSize();
   RefPtr<MacIOSurface> surf = allocator->Allocate(
-      ySize, cbcrSize, aData.mYUVColorSpace, aData.mTransferFunction,
-      aData.mColorRange, aData.mColorDepth);
+      ySize, cbcrSize, aData.mChromaSubsampling, aData.mYUVColorSpace,
+      aData.mTransferFunction, aData.mColorRange, aData.mColorDepth);
 
-  surf->Lock(false);
+  if (NS_WARN_IF(!surf) || NS_WARN_IF(!surf->Lock(false))) {
+    return false;
+  }
 
   if (surf->GetFormat() == SurfaceFormat::YUV422) {
     // If the CbCrSize's height is half of the YSize's height, then we'll
@@ -216,41 +218,56 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
 
 already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
     const gfx::IntSize aYSize, const gfx::IntSize& aCbCrSize,
+    gfx::ChromaSubsampling aChromaSubsampling,
     gfx::YUVColorSpace aYUVColorSpace, gfx::TransferFunction aTransferFunction,
     gfx::ColorRange aColorRange, gfx::ColorDepth aColorDepth) {
-  nsTArray<CFTypeRefPtr<IOSurfaceRef>> surfaces = std::move(mSurfaces);
-  RefPtr<MacIOSurface> result;
-  for (auto& surf : surfaces) {
-    // If the surface size has changed, then discard any surfaces of the old
-    // size.
-    if (::IOSurfaceGetWidthOfPlane(surf.get(), 0) != (size_t)aYSize.width ||
-        ::IOSurfaceGetHeightOfPlane(surf.get(), 0) != (size_t)aYSize.height) {
+  // To avoid checking every property of every surface, we just cache the
+  // parameters used during the last allocation. If any of these have changed,
+  // dump the cached surfaces and update our cached parameters.
+  if (mYSize != aYSize || mCbCrSize != aCbCrSize ||
+      mChromaSubsampling != aChromaSubsampling ||
+      mYUVColorSpace != aYUVColorSpace ||
+      mTransferFunction != aTransferFunction || mColorRange != aColorRange ||
+      mColorDepth != aColorDepth) {
+    mSurfaces.Clear();
+    mYSize = aYSize;
+    mCbCrSize = aCbCrSize;
+    mChromaSubsampling = aChromaSubsampling;
+    mYUVColorSpace = aYUVColorSpace;
+    mTransferFunction = aTransferFunction;
+    mColorRange = aColorRange;
+    mColorDepth = aColorDepth;
+  }
+
+  // Scan for an unused surface, and reuse that if one is available.
+  for (auto& surf : mSurfaces) {
+    if (::IOSurfaceIsInUse(surf.get())) {
       continue;
     }
 
-    // Only construct a MacIOSurface object when we find one that isn't
-    // in-use, since the constructor adds a usage ref.
-    if (!result && !::IOSurfaceIsInUse(surf.get())) {
-      result = new MacIOSurface(surf, false, aYUVColorSpace);
-    }
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(::IOSurfaceGetWidthOfPlane(surf.get(), 0) ==
+                          (size_t)aYSize.width);
+    MOZ_DIAGNOSTIC_ASSERT(::IOSurfaceGetHeightOfPlane(surf.get(), 0) ==
+                          (size_t)aYSize.height);
+#endif
 
-    mSurfaces.AppendElement(surf);
+    return MakeAndAddRef<MacIOSurface>(surf, false, aYUVColorSpace);
   }
 
-  if (!result) {
-    if (StaticPrefs::layers_iosurfaceimage_use_nv12_AtStartup()) {
-      result = MacIOSurface::CreateNV12OrP010Surface(
-          aYSize, aCbCrSize, aYUVColorSpace, aTransferFunction, aColorRange,
-          aColorDepth);
-    } else {
-      result = MacIOSurface::CreateYUV422Surface(aYSize, aYUVColorSpace,
-                                                 aColorRange);
-    }
+  RefPtr<MacIOSurface> result;
+  if (StaticPrefs::layers_iosurfaceimage_use_nv12_AtStartup()) {
+    result = MacIOSurface::CreateNV12OrP010Surface(
+        aYSize, aCbCrSize, aYUVColorSpace, aTransferFunction, aColorRange,
+        aColorDepth);
+  } else {
+    result = MacIOSurface::CreateYUV422Surface(aYSize, aYUVColorSpace,
+                                               aColorRange);
+  }
 
-    if (mSurfaces.Length() <
-        StaticPrefs::layers_iosurfaceimage_recycle_limit()) {
-      mSurfaces.AppendElement(result->GetIOSurfaceRef());
-    }
+  if (result &&
+      mSurfaces.Length() < StaticPrefs::layers_iosurfaceimage_recycle_limit()) {
+    mSurfaces.AppendElement(result->GetIOSurfaceRef());
   }
 
   return result.forget();

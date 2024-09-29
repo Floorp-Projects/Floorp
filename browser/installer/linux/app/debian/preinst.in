@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+if [ ${DEB_PKG_NAME} = firefox-esr ]; then
+    if [ "$$1" = "upgrade" ] || [ "$$1" = "install" ] ; then
+        dpkg-divert --package firefox-esr --divert /usr/bin/firefox.real --rename /usr/bin/firefox
+    fi
+fi

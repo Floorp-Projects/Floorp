@@ -395,13 +395,16 @@ export const ContentAnalysis = {
         }
         const responseResult =
           request?.action ?? Ci.nsIContentAnalysisResponse.eUnspecified;
-        await this._showCAResult(
-          windowAndResourceNameOrOperationType.resourceNameOrOperationType,
-          windowAndResourceNameOrOperationType.browsingContext,
-          request.requestToken,
-          responseResult,
-          request.cancelError
-        );
+        // Don't show dialog if this is a cached response
+        if (!request?.isCachedResponse) {
+          await this._showCAResult(
+            windowAndResourceNameOrOperationType.resourceNameOrOperationType,
+            windowAndResourceNameOrOperationType.browsingContext,
+            request.requestToken,
+            responseResult,
+            request.cancelError
+          );
+        }
         this._showAnotherPendingDialog(
           windowAndResourceNameOrOperationType.browsingContext
         );
@@ -759,31 +762,41 @@ export const ContentAnalysis = {
         timeoutMs = this._RESULT_NOTIFICATION_FAST_TIMEOUT_MS;
         break;
       case Ci.nsIContentAnalysisResponse.eWarn: {
-        const result = await Services.prompt.asyncConfirmEx(
-          aBrowsingContext,
-          Ci.nsIPromptService.MODAL_TYPE_TAB,
-          await this.l10n.formatValue("contentanalysis-warndialogtitle"),
-          await this.l10n.formatValue("contentanalysis-warndialogtext", {
-            content: this._getResourceNameFromNameOrOperationType(
-              aResourceNameOrOperationType
-            ),
-          }),
-          Ci.nsIPromptService.BUTTON_POS_0 *
-            Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
-            Ci.nsIPromptService.BUTTON_POS_1 *
+        let allow = false;
+        try {
+          const result = await Services.prompt.asyncConfirmEx(
+            aBrowsingContext,
+            Ci.nsIPromptService.MODAL_TYPE_TAB,
+            await this.l10n.formatValue("contentanalysis-warndialogtitle"),
+            await this.l10n.formatValue("contentanalysis-warndialogtext", {
+              content: this._getResourceNameFromNameOrOperationType(
+                aResourceNameOrOperationType
+              ),
+            }),
+            Ci.nsIPromptService.BUTTON_POS_0 *
               Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
-            Ci.nsIPromptService.BUTTON_POS_2_DEFAULT,
-          await this.l10n.formatValue(
-            "contentanalysis-warndialog-response-allow"
-          ),
-          await this.l10n.formatValue(
-            "contentanalysis-warndialog-response-deny"
-          ),
-          null,
-          null,
-          {}
-        );
-        const allow = result.get("buttonNumClicked") === 0;
+              Ci.nsIPromptService.BUTTON_POS_1 *
+                Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
+              Ci.nsIPromptService.BUTTON_POS_2_DEFAULT,
+            await this.l10n.formatValue(
+              "contentanalysis-warndialog-response-allow"
+            ),
+            await this.l10n.formatValue(
+              "contentanalysis-warndialog-response-deny"
+            ),
+            null,
+            null,
+            {}
+          );
+          allow = result.get("buttonNumClicked") === 0;
+        } catch {
+          // This can happen if the dialog is closed programmatically, for
+          // example if the tab is moved to a new window.
+          // In this case just pretend the user clicked deny, as this
+          // emulates the behavior of cancelling when
+          // the request is still active.
+          allow = false;
+        }
         lazy.gContentAnalysis.respondToWarnDialog(aRequestToken, allow);
         return null;
       }
@@ -827,25 +840,33 @@ export const ContentAnalysis = {
           }
           body = this.l10n.formatValueSync(bodyId);
         }
+        let alertBrowsingContext = aBrowsingContext;
         if (aBrowsingContext.embedderElement?.getAttribute("printpreview")) {
-          // If we're in a print preview window, the window itself is about to close
-          // (because of the thrown NS_ERROR_CONTENT_BLOCKED), so using an async
-          // call would just immediately make the dialog disappear. Instead, use
-          // a blocking version. (see bug 1899714)
-          Services.prompt.alertBC(
-            aBrowsingContext,
-            Ci.nsIPromptService.MODAL_TYPE_TAB,
-            this.l10n.formatValueSync(titleId),
-            body
-          );
-        } else {
-          await Services.prompt.asyncAlert(
-            aBrowsingContext,
-            Ci.nsIPromptService.MODAL_TYPE_TAB,
-            this.l10n.formatValueSync(titleId),
-            body
-          );
+          // If we're in a print preview dialog, things are tricky.
+          // The window itself is about to close (because of the thrown NS_ERROR_CONTENT_BLOCKED),
+          // so using an async call would just immediately make the dialog disappear. (bug 1899714)
+          // Using a blocking version can cause a hang if the window is resizing while
+          // we show the dialog. (bug 1900798)
+          // So instead, try to find the browser that this print preview dialog is on top of
+          // and show the dialog there.
+          let printPreviewBrowser = aBrowsingContext.embedderElement;
+          let win = printPreviewBrowser.ownerGlobal;
+          for (let browser of win.gBrowser.browsers) {
+            if (
+              win.PrintUtils.getPreviewBrowser(browser)?.browserId ===
+              printPreviewBrowser.browserId
+            ) {
+              alertBrowsingContext = browser.browsingContext;
+              break;
+            }
+          }
         }
+        await Services.prompt.asyncAlert(
+          alertBrowsingContext,
+          Ci.nsIPromptService.MODAL_TYPE_TAB,
+          this.l10n.formatValueSync(titleId),
+          body
+        );
         return null;
       }
       case Ci.nsIContentAnalysisResponse.eUnspecified:

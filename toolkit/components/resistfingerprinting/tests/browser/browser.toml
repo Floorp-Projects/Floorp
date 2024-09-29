@@ -35,3 +35,5 @@ support-files = ["file_pdf.pdf"]
 ["browser_usercharacteristics_gamepads.js"]
 
 ["browser_usercharacteristics.js"]
+
+["browser_canvas_randomization_permission.js"]

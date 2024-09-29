@@ -13,45 +13,53 @@
 
 class nsITransferable;
 
-class nsDragService final : public nsBaseDragService {
+/**
+ * Android native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession {
  public:
-  nsDragService() = default;
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  static already_AddRefed<nsDragService> GetInstance();
-
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable* aTransferable, uint32_t anItem) override;
   NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
   NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor,
                                    bool* _retval) override;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
-                                               uint32_t aKeyModifiers) override;
   NS_IMETHOD
   UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
-  virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
   void SetData(nsITransferable* aTransferable);
 
-  static void SetDropData(
-      mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
+  void SetDropData(mozilla::java::GeckoDragAndDrop::DropData::Param aDropData);
+
+  virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
  protected:
-  virtual ~nsDragService() = default;
+  virtual ~nsDragSession() = default;
 
-  // nsBaseDragService
+  // nsBaseDragSession
   MOZ_CAN_RUN_SCRIPT nsresult
-  InvokeDragSessionImpl(nsIArray* anArrayTransferables,
+  InvokeDragSessionImpl(nsIWidget* aWidget, nsIArray* anArrayTransferables,
                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                         uint32_t aActionType) override;
 
- private:
   mozilla::java::sdk::Bitmap::LocalRef CreateDragImage(
       nsINode* aNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion);
 
   // our source data items
   nsCOMPtr<nsITransferable> mTransferable;
+};
+
+/**
+ * Android native nsIDragService implementation
+ */
+class nsDragService final : public nsBaseDragService {
+ public:
+  static already_AddRefed<nsDragService> GetInstance();
+
+ protected:
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 };
 
 #endif  // nsDragService_h__

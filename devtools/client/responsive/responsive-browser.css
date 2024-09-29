@@ -14,20 +14,40 @@
 
 .browserContainer.responsive-mode {
   background-color: var(--rdm-browser-container-background);
+  --rdm-toolbar-height: 30px;
+  --rdm-toolbar-accomodate-ua-height: 60px;
 }
 
 .browserContainer.responsive-mode > .rdm-toolbar {
   border: none;
   position: absolute;
   z-index: var(--browser-stack-z-index-rdm-toolbar);
-  height: 30px;
+  height: var(--rdm-toolbar-height);
   top: 0;
   left: 0;
   width: 100%;
+
+  /**
+   * The .rdm-toolbar will be above the .dialogBox in RDM so we shift the
+   * .dialogBox down by the height of the .rdm-toolbar so both are visible
+   */
+  + .browserStack > .dialogStack > .dialogTemplate > .dialogBox {
+    margin-top: var(--rdm-toolbar-height);
+  }
 }
 
 .browserContainer.responsive-mode > .rdm-toolbar.accomodate-ua {
-  height: 60px;
+  height: var(--rdm-toolbar-accomodate-ua-height);
+
+  /**
+   * When the browser window is less than 520 pixels wide, the RDM toolbar
+   * needs extra space to accomdate for the UA input so the .rdm-toolbar is
+   * set to a larger height of --rdm-toolbar-accomodate-ua-height. We also need
+   * to shift the .dialogBox down by the same height so both are visible.
+   */
+  + .browserStack > .dialogStack > .dialogTemplate > .dialogBox {
+    margin-top: var(--rdm-toolbar-accomodate-ua-height);
+  }
 }
 
 .browserContainer.responsive-mode > .rdm-toolbar.device-modal-opened {

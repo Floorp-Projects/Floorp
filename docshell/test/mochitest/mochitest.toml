@@ -286,6 +286,13 @@ skip-if = [
   "http2",
 ]
 
+["test_popup_unknown_protocol.html"]
+skip-if = [
+  # Android handles external protocols and error pages differently, so this test
+  # doesn't make sense to run on that platform.
+  "os == 'android'",
+]
+
 ["test_pushState_after_document_open.html"]
 
 ["test_redirect_history.html"]

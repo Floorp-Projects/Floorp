@@ -388,10 +388,10 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
     cancelableArg,
     viewArg,
     detailArg,
-    screenXArg,
-    screenYArg,
-    clientXArg,
-    clientYArg,
+    Math.round(screenXArg),
+    Math.round(screenYArg),
+    Math.round(clientXArg),
+    Math.round(clientYArg),
     ctrlKeyArg,
     altKeyArg,
     shiftKeyArg,
@@ -685,8 +685,8 @@ function getDragService() {
  *                      synthesize DOM events basically.
  */
 function _maybeEndDragSession(left, top, aEvent, aWindow) {
-  const dragService = getDragService();
-  const dragSession = dragService?.getCurrentSession();
+  let utils = _getDOMWindowUtils(aWindow);
+  const dragSession = utils.dragSession;
   if (!dragSession) {
     return false;
   }
@@ -695,13 +695,14 @@ function _maybeEndDragSession(left, top, aEvent, aWindow) {
   // need to synthesize a "drop" event or call setDragEndPointForTests here to
   // set proper left/top to `dragend` event.
   try {
-    dragService.endDragSession(false, _parseModifiers(aEvent, aWindow));
+    dragSession.endDragSession(false, _parseModifiers(aEvent, aWindow));
   } catch (e) {}
   return true;
 }
 
 function _maybeSynthesizeDragOver(left, top, aEvent, aWindow) {
-  const dragSession = getDragService()?.getCurrentSession();
+  let utils = _getDOMWindowUtils(aWindow);
+  const dragSession = utils.dragSession;
   if (!dragSession) {
     return false;
   }
@@ -2158,7 +2159,7 @@ function _getDOMWindowUtils(aWindow = window) {
 
   // If documentURIObject exists or `window` is a stub object, we're in
   // a chrome scope, so don't bother trying to go through SpecialPowers.
-  if (!window.document || window.document.documentURIObject) {
+  if (!aWindow.document || aWindow.document.documentURIObject) {
     return aWindow.windowUtils;
   }
 
@@ -2166,11 +2167,14 @@ function _getDOMWindowUtils(aWindow = window) {
   //  layout/base/tests/test_reftests_with_caret.html
   //  chrome: toolkit/content/tests/chrome/test_findbar.xul
   //  chrome: toolkit/content/tests/chrome/test_popup_anchor.xul
-  if ("SpecialPowers" in window && window.SpecialPowers != undefined) {
-    return SpecialPowers.getDOMWindowUtils(aWindow);
+  if ("SpecialPowers" in aWindow && aWindow.SpecialPowers != undefined) {
+    return aWindow.SpecialPowers.getDOMWindowUtils(aWindow);
   }
-  if ("SpecialPowers" in parent && parent.SpecialPowers != undefined) {
-    return parent.SpecialPowers.getDOMWindowUtils(aWindow);
+  if (
+    "SpecialPowers" in aWindow.parent &&
+    aWindow.parent.SpecialPowers != undefined
+  ) {
+    return aWindow.parent.SpecialPowers.getDOMWindowUtils(aWindow);
   }
 
   // TODO: this is assuming we are in chrome space
@@ -3061,10 +3065,10 @@ function createDragEventObject(
   var destScreenX = aDestWindow.mozInnerScreenX + destClientX;
   var destScreenY = aDestWindow.mozInnerScreenY + destClientY;
   if ("clientX" in aDragEvent && !("screenX" in aDragEvent)) {
-    aDragEvent.screenX = aDestWindow.mozInnerScreenX + aDragEvent.clientX;
+    destScreenX = aDestWindow.mozInnerScreenX + aDragEvent.clientX;
   }
   if ("clientY" in aDragEvent && !("screenY" in aDragEvent)) {
-    aDragEvent.screenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
+    destScreenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
   }
 
   // Wrap only in plain mochitests
@@ -3149,10 +3153,8 @@ function synthesizeDragOver(
   const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(
     _EU_Ci.nsIObserverService
   );
-  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
-    _EU_Ci.nsIDragService
-  );
-  var sess = ds.getCurrentSession();
+  let utils = _getDOMWindowUtils(aWindow);
+  var sess = utils.dragSession;
 
   // This method runs before other callbacks, and acts as a way to inject the
   // initial drag data into the DataTransfer.
@@ -3340,7 +3342,7 @@ function synthesizeDrop(
       throw new Error(`${aDropEffect} is an invalid drop effect value`);
   }
 
-  ds.startDragSessionForTests(dropAction);
+  ds.startDragSessionForTests(aWindow, dropAction);
 
   try {
     var [result, dataTransfer] = synthesizeDragOver(
@@ -3360,7 +3362,9 @@ function synthesizeDrop(
       aDragEvent
     );
   } finally {
-    ds.endDragSession(true, _parseModifiers(aDragEvent));
+    let srcWindowUtils = _getDOMWindowUtils(aWindow);
+    const srcDragSession = srcWindowUtils.dragSession;
+    srcDragSession.endDragSession(true, _parseModifiers(aDragEvent));
   }
 }
 
@@ -3480,6 +3484,9 @@ async function synthesizePlainDragAndDrop(aParams) {
     return `left: ${aRect.left}, top: ${aRect.top}, right: ${aRect.right}, bottom: ${aRect.bottom}`;
   }
 
+  let srcWindowUtils = _getDOMWindowUtils(srcWindow);
+  let destWindowUtils = _getDOMWindowUtils(destWindow);
+
   if (logFunc) {
     logFunc("synthesizePlainDragAndDrop() -- START");
   }
@@ -3527,10 +3534,6 @@ async function synthesizePlainDragAndDrop(aParams) {
     );
   }
 
-  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
-    _EU_Ci.nsIDragService
-  );
-
   const editingHost = (() => {
     if (!srcElement.matches(":read-write")) {
       return null;
@@ -3554,7 +3557,7 @@ async function synthesizePlainDragAndDrop(aParams) {
     return lastEditableElement;
   })();
   try {
-    _getDOMWindowUtils(srcWindow).disableNonTestMouseEvents(true);
+    srcWindowUtils.disableNonTestMouseEvents(true);
 
     await new Promise(r => setTimeout(r, 0));
 
@@ -3682,8 +3685,8 @@ async function synthesizePlainDragAndDrop(aParams) {
       });
     }
 
-    let session = ds.getCurrentSession();
-    if (!session) {
+    let srcSession = srcWindowUtils.dragSession;
+    if (!srcSession) {
       if (expectCancelDragStart) {
         synthesizeMouse(
           srcElement,
@@ -3792,7 +3795,10 @@ async function synthesizePlainDragAndDrop(aParams) {
       // XXX nsIDragSession.canDrop is different only on Linux.  It must be
       //     a bug of gtk/nsDragService since it manages `mCanDrop` by itself.
       //     Thus, we should use nsIDragSession.dragAction instead.
-      if (session.dragAction != _EU_Ci.nsIDragService.DRAGDROP_ACTION_NONE) {
+      let destSession = destWindowUtils.dragSession;
+      if (
+        destSession.dragAction != _EU_Ci.nsIDragService.DRAGDROP_ACTION_NONE
+      ) {
         let dropEvent;
         function onDrop(aEvent) {
           dropEvent = aEvent;
@@ -3820,7 +3826,7 @@ async function synthesizePlainDragAndDrop(aParams) {
             dragEvent
           );
           sendDragEvent(event, destElement, destWindow);
-          if (!dropEvent && session.canDrop) {
+          if (!dropEvent && destSession.canDrop) {
             throw new Error('"drop" event is not fired');
           }
         } finally {
@@ -3833,21 +3839,21 @@ async function synthesizePlainDragAndDrop(aParams) {
     // Since we don't synthesize drop event, we need to set drag end point
     // explicitly for "dragEnd" event which will be fired by
     // endDragSession().
-    dragEvent.clientX = finalX;
-    dragEvent.clientY = finalY;
+    dragEvent.clientX = srcElement.getBoundingClientRect().x + finalX;
+    dragEvent.clientY = srcElement.getBoundingClientRect().y + finalY;
     let event = createDragEventObject(
       "dragend",
-      destElement || srcElement,
-      destElement ? srcWindow : destWindow,
+      srcElement,
+      srcWindow,
       null,
       dragEvent
     );
-    session.setDragEndPointForTests(event.screenX, event.screenY);
+    srcSession.setDragEndPointForTests(event.screenX, event.screenY);
   } finally {
     await new Promise(r => setTimeout(r, 0));
 
-    if (ds.getCurrentSession()) {
-      const sourceNode = ds.sourceNode;
+    if (srcWindowUtils.dragSession) {
+      const sourceNode = srcWindowUtils.dragSession.sourceNode;
       let dragEndEvent;
       function onDragEnd(aEvent) {
         dragEndEvent = aEvent;
@@ -3875,12 +3881,16 @@ async function synthesizePlainDragAndDrop(aParams) {
       }
       srcWindow.addEventListener("dragend", onDragEnd, { capture: true });
       try {
-        ds.endDragSession(true, _parseModifiers(dragEvent));
+        srcWindowUtils.dragSession.endDragSession(
+          true,
+          _parseModifiers(dragEvent)
+        );
         if (!expectSrcElementDisconnected && !dragEndEvent) {
           // eslint-disable-next-line no-unsafe-finally
           throw new Error(
-            `"dragend" event is not fired by nsIDragService.endDragSession()${
-              ds.sourceNode && !ds.sourceNode.isConnected
+            `"dragend" event is not fired by nsIDragSession.endDragSession()${
+              srcWindowUtils.dragSession.sourceNode &&
+              !srcWindowUtils.dragSession.sourceNode.isConnected
                 ? "(sourceNode was disconnected)"
                 : ""
             }`
@@ -3890,7 +3900,7 @@ async function synthesizePlainDragAndDrop(aParams) {
         srcWindow.removeEventListener("dragend", onDragEnd, { capture: true });
       }
     }
-    _getDOMWindowUtils(srcWindow).disableNonTestMouseEvents(false);
+    srcWindowUtils.disableNonTestMouseEvents(false);
     if (logFunc) {
       logFunc("synthesizePlainDragAndDrop() -- END");
     }
@@ -4013,6 +4023,532 @@ async function synthesizePlainDragAndCancel(
     );
   }
   return result;
+}
+
+/**
+ * Emulate a drag and drop by generating a dragstart from mousedown and mousemove,
+ * then firing events dragover and drop (or dragleave if expectDragLeave is set).
+ * This does not modify dataTransfer and tries to emulate the plain drag and
+ * drop as much as possible, compared to synthesizeDrop and
+ * synthesizePlainDragAndDrop.  MockDragService is used in place of the native
+ * nsIDragService implementation.  All coordinates are in client space.
+ *
+ * @param {Object} aParams
+ * @param {Window} aParams.sourceBrowsingCxt
+ *                The BrowsingContext (possibly remote) that contains
+ *                srcElement.
+ * @param {Window} aParams.targetBrowsingCxt
+ *                The BrowsingContext (possibly remote) that contains
+ *                targetElement.  Default is sourceBrowsingCxt.
+ * @param {Element} aParams.srcElement
+ *                The element to drag.
+ * @param {Element|nil} aParams.targetElement
+ *                The element to drop on.
+ * @param {Number} aParams.step
+ *                The 2D step for mousemoves
+ * @param {Boolean} aParams.expectCancelDragStart
+ *                Set to true if srcElement is set up to cancel "dragstart"
+ * @param {Number} aParams.cancel
+ *                The 2D coord the mouse is moved to as the last step if
+ *                expectCancelDragStart is set
+ * @param {Boolean} aParams.expectSrcElementDisconnected
+ *                Set to true if srcElement will be disconnected and
+ *                "dragend" event won't be fired.
+ * @param {Boolean} aParams.expectDragLeave
+ *                Set to true if the drop event will be converted to a
+ *                dragleave before it is sent (e.g. it was rejected by a
+ *                content analysis check).
+ * @param {Boolean} aParams.expectNoDragEvents
+ *                Set to true if no mouse or drag events should be received
+ *                on the source or target.
+ * @param {Boolean} aParams.expectNoDragTargetEvents
+ *                Set to true if the drag should be blocked from sending
+ *                events to the target.
+ * @param {Boolean} aParams.dropPromise
+ *                A promise that the caller will resolve before we check
+ *                that the drop has happened.  Default is a pre-resolved
+ *                promise.
+ * @param {String} aParms.contextLabel
+ *                Label that will appear in each output message.  Useful to
+ *                distinguish between concurrent calls.  Default is none.
+ * @param {Boolean} aParams.throwOnExtraMessage
+ *                Throw an exception in child process when an unexpected
+ *                event is received.  Used for debugging.  Default is false.
+ * @param {Function} aParams.record
+ *                Four-parameter function that logs the results of a remote
+ *                assertion.  The parameters are (condition, message, ignored,
+ *                stack).  This is the type of the mochitest report function.
+ * @param {Function} aParams.info
+ *                One-parameter info logging function.  Default is console.log.
+ *                This is the type of the mochitest info function.
+ * @param {Object} aParams.dragController
+ *                MockDragController that the function should use.  This
+ *                function will automatically generate one if none is given.
+ */
+async function synthesizeMockDragAndDrop(aParams) {
+  const {
+    srcElement,
+    targetElement,
+    step = [5, 5],
+    cancel = [0, 0],
+    sourceBrowsingCxt,
+    targetBrowsingCxt = sourceBrowsingCxt,
+    expectCancelDragStart = false,
+    expectSrcElementDisconnected = false,
+    expectDragLeave = false,
+    expectNoDragEvents = false,
+    dropPromise = Promise.resolve(undefined),
+    contextLabel = "",
+    throwOnExtraMessage = false,
+  } = aParams;
+
+  let { dragController = null, expectNoDragTargetEvents = false } = aParams;
+
+  // Configure test reporting functions
+  const prefix = contextLabel ? `[${contextLabel}]| ` : "";
+  const info = msg => {
+    aParams.info(`${prefix}${msg}`);
+  };
+  const record = (cond, msg, _, stack) => {
+    aParams.record(cond, `${prefix}${msg}`, null, stack);
+  };
+  const ok = (cond, msg) => {
+    record(cond, msg, null, Components.stack.caller);
+  };
+
+  info("synthesizeMockDragAndDrop() -- START");
+
+  // Validate parameters
+  ok(sourceBrowsingCxt, "sourceBrowsingCxt was given");
+  ok(
+    sourceBrowsingCxt != targetBrowsingCxt || srcElement != targetElement,
+    "sourceBrowsingCxt+Element cannot be the same as targetBrowsingCxt+Element"
+  );
+
+  // no drag implies no drag target
+  expectNoDragTargetEvents |= expectNoDragEvents;
+
+  // Returns true if one browsing context is an ancestor of the other.
+  let browsingContextsAreRelated = function (cxt1, cxt2) {
+    let cxt = cxt1;
+    while (cxt) {
+      if (cxt2 == cxt) {
+        return true;
+      }
+      cxt = cxt.parent;
+    }
+    cxt = cxt2.parent;
+    while (cxt) {
+      if (cxt1 == cxt) {
+        return true;
+      }
+      cxt = cxt.parent;
+    }
+    return false;
+  };
+
+  // The rules for accessing the dataTransfer from internal drags in Gecko
+  // during drag event handlers are as follows:
+  //
+  // dragstart:
+  //   Always grants read-write access
+  // dragenter/dragover/dragleave:
+  //   If dom.events.dataTransfer.protected.enabled is set:
+  //     Read-only permission is granted if any of these holds:
+  //       * The drag target's browsing context is the same as the drag
+  //         source's (e.g. dragging inside of one frame on a web page).
+  //       * The drag source and target are the same domain/principal and
+  //         one has a browsing context that is an ancestor of the other
+  //         (e.g. one is an iframe nested inside of the other).
+  //       * The principal of the drag target element is privileged (not
+  //         a content principal).
+  //   Otherwise:
+  //     Permission is never granted
+  // drop:
+  //   Always grants read-only permission
+  // dragend:
+  //   Read-only permission is granted if
+  //   dom.events.dataTransfer.protected.enabled is set.
+  //
+  // dragstart and dragend are special because they target the drag-source,
+  // not the drag-target.
+  let expectProtectedDataTransferAccess =
+    !SpecialPowers.getBoolPref("dom.events.dataTransfer.protected.enabled") &&
+    browsingContextsAreRelated(targetBrowsingCxt, sourceBrowsingCxt);
+
+  // expectProtectedDataTransferAccessDragendOnly overrides
+  // expectProtectedDataTransferAccess when it is true
+  let expectProtectedDataTransferAccessDragendOnly = !SpecialPowers.getBoolPref(
+    "dom.events.dataTransfer.protected.enabled"
+  );
+
+  info(
+    `expectProtectedDataTransferAccess: ${expectProtectedDataTransferAccess}`
+  );
+  info(
+    `expectProtectedDataTransferAccessDragendOnly: ${expectProtectedDataTransferAccessDragendOnly}`
+  );
+
+  // Essentially the entire function is in a try block so that we can make sure
+  // that the mock drag service is removed and non-test mouse events are
+  // restored.
+  const { MockRegistrar } = ChromeUtils.importESModule(
+    "resource://testing-common/MockRegistrar.sys.mjs"
+  );
+  let dragServiceCid;
+  let sourceCxt;
+  let targetCxt;
+  try {
+    // Disable native mouse events to avoid external interference while the test
+    // runs.  One call disables for all windows.
+    _getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).disableNonTestMouseEvents(
+      true
+    );
+
+    // Install mock drag service in main process.
+    ok(
+      Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT,
+      "synthesizeMockDragAndDrop is only available in the main process"
+    );
+
+    if (!dragController) {
+      info("No dragController was given so creating mock drag service");
+      const oldDragService = SpecialPowers.Cc[
+        "@mozilla.org/widget/dragservice;1"
+      ].getService(SpecialPowers.Ci.nsIDragService);
+      dragController = oldDragService.getMockDragController();
+      dragServiceCid = MockRegistrar.register(
+        "@mozilla.org/widget/dragservice;1",
+        dragController.mockDragService
+      );
+      ok(dragServiceCid, "MockDragService was registered");
+      // If the mock failed then don't continue or else we will trigger native
+      // DND behavior.
+      if (!dragServiceCid) {
+        throw new Error("MockDragService failed to register");
+      }
+    }
+
+    // Variables that are added to the child actor objects.
+    const srcVars = {
+      expectCancelDragStart,
+      expectSrcElementDisconnected,
+      expectNoDragEvents,
+      expectProtectedDataTransferAccessDragendOnly,
+      dragElementId: srcElement,
+    };
+    const targetVars = {
+      expectDragLeave,
+      expectNoDragTargetEvents,
+      dragElementId: targetElement,
+    };
+    const bothVars = {
+      contextLabel,
+      throwOnExtraMessage,
+      expectProtectedDataTransferAccess,
+      relevantEvents: [
+        "mousedown",
+        "mouseup",
+        "dragstart",
+        "dragenter",
+        "dragover",
+        "drop",
+        "dragleave",
+        "dragend",
+      ],
+    };
+
+    const makeDragSourceContext = async (aBC, aRemoteVars) => {
+      let { DragSourceParentContext } = _EU_ChromeUtils.importESModule(
+        "chrome://mochikit/content/tests/SimpleTest/DragSourceParentContext.sys.mjs"
+      );
+
+      let ret = new DragSourceParentContext(aBC, aRemoteVars, SpecialPowers);
+      await ret.initialize();
+      return ret;
+    };
+
+    const makeDragTargetContext = async (aBC, aRemoteVars) => {
+      let { DragTargetParentContext } = _EU_ChromeUtils.importESModule(
+        "chrome://mochikit/content/tests/SimpleTest/DragTargetParentContext.sys.mjs"
+      );
+
+      let ret = new DragTargetParentContext(aBC, aRemoteVars, SpecialPowers);
+      await ret.initialize();
+      return ret;
+    };
+
+    [sourceCxt, targetCxt] = await Promise.all([
+      makeDragSourceContext(sourceBrowsingCxt, { ...srcVars, ...bothVars }),
+      makeDragTargetContext(targetBrowsingCxt, {
+        ...targetVars,
+        ...bothVars,
+      }),
+    ]);
+
+    // Get element positions in screen and client coords
+    let srcPos = await sourceCxt.getElementPositions();
+    let targetPos = await targetCxt.getElementPositions();
+    info(
+      `screenSrcPos: ${srcPos.screenPos} | screenTargetPos: ${targetPos.screenPos}`
+    );
+
+    // Send and verify the mousedown on src.
+    if (!expectNoDragEvents) {
+      sourceCxt.expect("mousedown");
+    }
+
+    // Take ceiling of ccoordinates to make sure that the integer coordinates
+    // are over the element.
+    let currentSrcScreenPos = [
+      Math.ceil(srcPos.screenPos[0]),
+      Math.ceil(srcPos.screenPos[1]),
+    ];
+    info(
+      `sending mousedown at ${currentSrcScreenPos[0]}, ${currentSrcScreenPos[1]}`
+    );
+    dragController.sendEvent(
+      sourceBrowsingCxt,
+      Ci.nsIMockDragServiceController.eMouseDown,
+      currentSrcScreenPos[0],
+      currentSrcScreenPos[1]
+    );
+    info(`mousedown sent`);
+
+    await sourceCxt.synchronize();
+
+    await sourceCxt.checkMouseDown();
+
+    let contentInvokedDragPromise;
+
+    info("setting up content-invoked-drag observer and expecting dragstart");
+    if (!expectNoDragEvents) {
+      sourceCxt.expect("dragstart");
+      // Set up observable for content-invoked-drag, which is sent when the
+      // parent learns that content has begun a drag session.
+      contentInvokedDragPromise = new Promise(cb => {
+        Services.obs.addObserver(function observe() {
+          info("content-invoked-drag observer received message");
+          Services.obs.removeObserver(observe, "content-invoked-drag");
+          cb();
+        }, "content-invoked-drag");
+      });
+    }
+
+    // It takes two mouse-moves to initiate a drag session.
+    currentSrcScreenPos = [
+      currentSrcScreenPos[0] + step[0],
+      currentSrcScreenPos[1] + step[1],
+    ];
+    info(
+      `first mousemove at ${currentSrcScreenPos[0]}, ${currentSrcScreenPos[1]}`
+    );
+    dragController.sendEvent(
+      sourceBrowsingCxt,
+      Ci.nsIMockDragServiceController.eMouseMove,
+      currentSrcScreenPos[0],
+      currentSrcScreenPos[1]
+    );
+    info(`first mousemove sent`);
+
+    currentSrcScreenPos = [
+      currentSrcScreenPos[0] + step[0],
+      currentSrcScreenPos[1] + step[1],
+    ];
+    info(
+      `second mousemove at ${currentSrcScreenPos[0]}, ${currentSrcScreenPos[1]}`
+    );
+    dragController.sendEvent(
+      sourceBrowsingCxt,
+      Ci.nsIMockDragServiceController.eMouseMove,
+      currentSrcScreenPos[0],
+      currentSrcScreenPos[1]
+    );
+    info(`second mousemove sent`);
+
+    if (!expectNoDragEvents) {
+      info("waiting for content-invoked-drag observable");
+      await contentInvokedDragPromise;
+      ok(true, "content-invoked-drag was received");
+    }
+
+    info("checking dragstart");
+    await sourceCxt.checkDragStart();
+
+    if (expectNoDragEvents) {
+      ok(
+        !_getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).dragSession,
+        "Drag was properly blocked from starting."
+      );
+      return;
+    }
+
+    // Another move creates the drag session in the parent process (but we need
+    // to wait for the src process to get there).
+    info(`Moving to target element.`);
+    let currentTargetScreenPos = [
+      Math.ceil(targetPos.screenPos[0]),
+      Math.ceil(targetPos.screenPos[1]),
+    ];
+
+    dragController.sendEvent(
+      sourceBrowsingCxt,
+      Ci.nsIMockDragServiceController.eMouseMove,
+      currentTargetScreenPos[0],
+      currentTargetScreenPos[1]
+    );
+
+    await sourceCxt.checkExpected();
+
+    ok(
+      _getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).dragSession,
+      `Parent process source widget has drag session.`
+    );
+
+    if (expectCancelDragStart) {
+      dragController.sendEvent(
+        sourceBrowsingCxt,
+        Ci.nsIMockDragServiceController.eMouseUp,
+        cancel[0],
+        cancel[1]
+      );
+      return;
+    }
+
+    currentTargetScreenPos = [
+      currentTargetScreenPos[0] + step[0],
+      currentTargetScreenPos[1] + step[1],
+    ];
+
+    // Send dragleave and dragenter only if we moved to another widget.
+    // If we moved in the same widget then dragenter does not involve
+    // the parent process.  This mirrors the native behavior.  Note that
+    // these events are not forwarded to the content process -- they
+    // are generated there by the EventStateManager when appropriate.
+    if (
+      sourceBrowsingCxt.top.embedderElement !==
+      targetBrowsingCxt.top.embedderElement
+    ) {
+      // Dragging from widget to widget
+      info("synthesizing dragleave and dragenter to enter new widget");
+
+      dragController.sendEvent(
+        sourceBrowsingCxt,
+        Ci.nsIMockDragServiceController.eDragLeave,
+        currentTargetScreenPos[0],
+        currentTargetScreenPos[1]
+      );
+
+      dragController.sendEvent(
+        targetBrowsingCxt,
+        Ci.nsIMockDragServiceController.eDragEnter,
+        currentTargetScreenPos[0],
+        currentTargetScreenPos[1]
+      );
+
+      await sourceCxt.checkExpected();
+      await targetCxt.checkExpected();
+    }
+
+    info("synthesizing dragover to generate dragenter in DOM");
+
+    if (!expectNoDragTargetEvents) {
+      targetCxt.expect("dragenter");
+      targetCxt.expect("dragover");
+    }
+
+    currentTargetScreenPos = [
+      currentTargetScreenPos[0] + step[0],
+      currentTargetScreenPos[1] + step[1],
+    ];
+    dragController.sendEvent(
+      targetBrowsingCxt,
+      Ci.nsIMockDragServiceController.eDragOver,
+      currentTargetScreenPos[0],
+      currentTargetScreenPos[1]
+    );
+
+    await targetCxt.checkExpected();
+
+    let expectedMessage = expectDragLeave ? "dragleave" : "drop";
+
+    if (expectNoDragTargetEvents) {
+      await targetCxt.checkHasDrag(false);
+    } else {
+      await targetCxt.checkSessionHasAction();
+      targetCxt.expect(expectedMessage);
+    }
+
+    if (!expectSrcElementDisconnected) {
+      await sourceCxt.checkHasDrag(true);
+      sourceCxt.expect("dragend");
+    }
+
+    info(
+      `issuing drop event that should be ` +
+        `${
+          !expectNoDragTargetEvents
+            ? `received as a ${expectedMessage} event`
+            : "ignored"
+        }, followed by a dragend event`
+    );
+
+    currentTargetScreenPos = [
+      currentTargetScreenPos[0] + step[0],
+      currentTargetScreenPos[1] + step[1],
+    ];
+    dragController.sendEvent(
+      targetBrowsingCxt,
+      Ci.nsIMockDragServiceController.eDrop,
+      currentTargetScreenPos[0],
+      currentTargetScreenPos[1]
+    );
+
+    // Wait for any caller-supplied dropPromise before continuing.
+    await dropPromise;
+
+    if (!expectNoDragTargetEvents) {
+      await targetCxt.checkDropOrDragLeave();
+    } else {
+      await targetCxt.checkExpected();
+    }
+
+    if (!expectSrcElementDisconnected) {
+      await sourceCxt.checkDragEnd();
+    } else {
+      await sourceCxt.checkExpected();
+    }
+
+    ok(
+      !_getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).dragSession,
+      `Parent process source widget does not have a drag session.`
+    );
+
+    ok(
+      !_getDOMWindowUtils(targetBrowsingCxt.ownerGlobal).dragSession,
+      `Parent process target widget does not have a drag session.`
+    );
+  } catch (e) {
+    // Any exception is a test failure.
+    record(false, e.toString(), null, e.stack);
+  } finally {
+    if (sourceCxt) {
+      await sourceCxt.cleanup();
+    }
+    if (targetCxt) {
+      await targetCxt.cleanup();
+    }
+
+    if (dragServiceCid) {
+      MockRegistrar.unregister(dragServiceCid);
+    }
+
+    _getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).disableNonTestMouseEvents(
+      false
+    );
+
+    info("synthesizeMockDragAndDrop() -- END");
+  }
 }
 
 class EventCounter {

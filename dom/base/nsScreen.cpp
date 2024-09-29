@@ -62,7 +62,7 @@ nsDeviceContext* nsScreen::GetDeviceContext() const {
 CSSIntRect nsScreen::GetRect() {
   // Return window inner rect to prevent fingerprinting.
   if (ShouldResistFingerprinting(RFPTarget::ScreenRect)) {
-    return GetWindowInnerRect();
+    return GetTopWindowInnerRectForRFP();
   }
 
   // Here we manipulate the value of aRect to represent the screen size,
@@ -91,7 +91,7 @@ CSSIntRect nsScreen::GetRect() {
 CSSIntRect nsScreen::GetAvailRect() {
   // Return window inner rect to prevent fingerprinting.
   if (ShouldResistFingerprinting(RFPTarget::ScreenAvailRect)) {
-    return GetWindowInnerRect();
+    return GetTopWindowInnerRectForRFP();
   }
 
   // Here we manipulate the value of aRect to represent the screen size,
@@ -165,18 +165,14 @@ JSObject* nsScreen::WrapObject(JSContext* aCx,
   return Screen_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-CSSIntRect nsScreen::GetWindowInnerRect() {
-  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
-  if (!win) {
-    return {};
+CSSIntRect nsScreen::GetTopWindowInnerRectForRFP() {
+  if (nsPIDOMWindowInner* inner = GetOwner()) {
+    if (BrowsingContext* bc = inner->GetBrowsingContext()) {
+      CSSIntSize size = bc->Top()->GetTopInnerSizeForRFP();
+      return {0, 0, size.width, size.height};
+    }
   }
-  double width;
-  double height;
-  if (NS_FAILED(win->GetInnerWidth(&width)) ||
-      NS_FAILED(win->GetInnerHeight(&height))) {
-    return {};
-  }
-  return {0, 0, int32_t(std::round(width)), int32_t(std::round(height))};
+  return {};
 }
 
 bool nsScreen::ShouldResistFingerprinting(RFPTarget aTarget) const {

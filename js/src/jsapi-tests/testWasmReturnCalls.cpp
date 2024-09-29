@@ -17,7 +17,7 @@ using namespace js::jit;
 
 #if defined(ENABLE_WASM_TAIL_CALLS) && !defined(JS_CODEGEN_NONE)
 
-// Check if wasmMarkSlowCall produces the byte sequence that can
+// Check if wasmMarkCallAsSlow produces the byte sequence that can
 // wasmCheckSlowCallsite detect.
 BEGIN_TEST(testWasmCheckSlowCallMarkerHit) {
   js::LifoAlloc lifo(4096);
@@ -30,7 +30,7 @@ BEGIN_TEST(testWasmCheckSlowCallMarkerHit) {
 
   Label check, fail, end;
   masm.call(&check);
-  masm.wasmMarkSlowCall();
+  masm.wasmMarkCallAsSlow();
   masm.jump(&end);
 
   masm.bind(&check);

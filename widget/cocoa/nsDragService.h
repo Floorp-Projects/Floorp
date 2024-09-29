@@ -11,21 +11,11 @@
 
 #include <Cocoa/Cocoa.h>
 
-class nsDragService : public nsBaseDragService {
+/**
+ * Cocoa native nsIDragSession implementation
+ */
+class nsDragSession : public nsBaseDragSession {
  public:
-  nsDragService();
-
-  // nsBaseDragService
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
-      nsIArray* anArrayTransferables,
-      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-      uint32_t aActionType) override;
-  // nsIDragService
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
-                                               uint32_t aKeyModifiers) override;
-  NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX,
-                             int32_t aImageY) override;
-
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable* aTransferable,
                      uint32_t aItemIndex) override;
@@ -33,12 +23,23 @@ class nsDragService : public nsBaseDragService {
                                    bool* _retval) override;
   NS_IMETHOD GetNumDropItems(uint32_t* aNumItems) override;
 
-  void DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint);
+  NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX,
+                             int32_t aImageY) override;
+
+  NS_IMETHOD DragMoved(int32_t aX, int32_t aY) override;
+
+  NSDraggingSession* GetNSDraggingSession() { return mNSDraggingSession; }
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  EndDragSessionImpl(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
  protected:
-  virtual ~nsDragService();
+  // nsBaseDragSession
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
+      nsIWidget* aWidget, nsIArray* anArrayTransferables,
+      const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      uint32_t aActionType) override;
 
- private:
   // Creates and returns the drag image for a drag. aImagePoint will be set to
   // the origin of the drag relative to mNativeDragView.
   NSImage* ConstructDragImage(
@@ -53,10 +54,23 @@ class nsDragService : public nsBaseDragService {
       mozilla::CSSIntPoint aPoint, mozilla::LayoutDeviceIntRect* aDragRect);
 
   nsCOMPtr<nsIArray> mDataItems;  // only valid for a drag started within gecko
-  ChildView* mNativeDragView;
-  NSEvent* mNativeDragEvent;
 
-  bool mDragImageChanged;
+  // Native widget object that this drag is over.
+  ChildView* mNativeDragView = nil;
+  // The native drag session object for this drag.
+  NSDraggingSession* mNSDraggingSession = nil;
+
+  NSEvent* mNativeDragEvent = nil;
+
+  bool mDragImageChanged = false;
+};
+
+/**
+ * Cocoa native nsIDragService implementation
+ */
+class nsDragService final : public nsBaseDragService {
+ public:
+  already_AddRefed<nsIDragSession> CreateDragSession() override;
 };
 
 #endif  // nsDragService_h_

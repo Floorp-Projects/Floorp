@@ -2715,6 +2715,10 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
   rv = xpcom.SetWindowCreator(aNative);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+#ifdef XP_MACOSX
+  InitializeMacApp();
+#endif
+
   {  // extra scoping is needed so we release these components before xpcom
      // shutdown
     nsCOMPtr<nsIStringBundleService> sbs =

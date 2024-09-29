@@ -1,0 +1,68 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+interface nsIDragService;
+
+/**
+ * A driver for MockDragService, so that tests can mock system DND behavior.
+ * (System DND is not permitted in tests.)
+ */
+[scriptable, builtinclass, uuid(32037ab0-bfc7-11ee-9f4b-09901bed55fa)]
+interface nsIMockDragServiceController : nsISupports
+{
+  // Types of event that can be sent by this controller.
+  cenum EventType : 8 {
+    eDragEnter = 0,
+    eDragOver = 1,
+    eDragLeave = 2,
+    eDrop = 3,
+    eMouseDown = 4,
+    eMouseMove = 5,
+    eMouseUp = 6,
+  };
+
+  /**
+   * The nsIDragService that this controller targets.  It is a mock version
+   * of the normal nsIDragService.  The caller must replace the drag
+   * service in the service manager with this object before sending
+   * drag events to it.  This can be done with MockRegistrar or by calling
+   * the nsComponentManager directly.
+   */
+  readonly attribute nsIDragService mockDragService;
+
+  /**
+   * Issue the given event from our mock drag service, as if that type
+   * of event came from the system.  The mock object attempts to mimic the
+   * essential behavior of the native drag classes for this.
+   *
+   * @param aBC            A BrowsingContext in the widget the event is
+   *                       targetted at
+   * @param aEventType     Type of event to send
+   * @param aScreenX       Screen X coordinate of event
+   * @param aScreenY       Screen Y coordinate of event
+   * @param aKeyModifiers  Keys that are pressed during event.
+   *                       NOTE: Keys should be interpreted as selecting
+   *                       the drag action, but that logic is very
+   *                       platform-dependent and is not yet mocked.
+   *                       Drops will be processed as "moves".
+   */
+  [can_run_script]
+  void sendEvent(in BrowsingContext aBC,
+                 in nsIMockDragServiceController_EventType aEventType,
+                 in long aScreenX, in long aScreenY,
+                 [optional] in uint32_t aKeyModifiers);
+
+  /**
+   * Windows' IDropTarget has the ability to "Cancel" a drag that is
+   * different than dragleave.  This emulates that behavior for testing.
+   */
+  [can_run_script]
+  void cancelDrag([optional] in uint32_t aKeyModifiers);
+};

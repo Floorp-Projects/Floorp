@@ -178,6 +178,9 @@ def make_task_description(config, jobs):
             dependencies[attribution_name] = upstream_deps[attribution_name]
         if repackage_deb_name in upstream_deps:
             dependencies[repackage_deb_name] = upstream_deps[repackage_deb_name]
+        for kind in ("upload-symbols", "upload-symbols-dummy"):
+            if kind in upstream_deps:
+                dependencies[kind] = upstream_deps[kind]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes.update(job.get("attributes", {}))

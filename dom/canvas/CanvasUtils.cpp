@@ -65,6 +65,24 @@ static bool IsUnrestrictedPrincipal(nsIPrincipal& aPrincipal) {
 
 namespace mozilla::CanvasUtils {
 
+uint32_t GetCanvasExtractDataPermission(nsIPrincipal& aPrincipal) {
+  if (IsUnrestrictedPrincipal(aPrincipal)) {
+    return true;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  uint32_t permission;
+  rv = permissionManager->TestPermissionFromPrincipal(
+      &aPrincipal, PERMISSION_CANVAS_EXTRACT_DATA, &permission);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return permission;
+}
+
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal) {
   if (NS_WARN_IF(!aDocument)) {
@@ -169,17 +187,7 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
 
   // If the user has previously granted or not granted permission, we can return
   // immediately. Load Permission Manager service.
-  nsresult rv;
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // Check if the site has permission to extract canvas data.
-  // Either permit or block extraction if a stored permission setting exists.
-  uint32_t permission;
-  rv = permissionManager->TestPermissionFromPrincipal(
-      &aPrincipal, PERMISSION_CANVAS_EXTRACT_DATA, &permission);
-  NS_ENSURE_SUCCESS(rv, false);
+  uint64_t permission = GetCanvasExtractDataPermission(aPrincipal);
   switch (permission) {
     case nsIPermissionManager::ALLOW_ACTION:
       return true;
@@ -240,7 +248,7 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   // maybe not
   nsPIDOMWindowOuter* win = aDocument->GetWindow();
   nsAutoCString origin;
-  rv = aPrincipal.GetOrigin(origin);
+  nsresult rv = aPrincipal.GetOrigin(origin);
   NS_ENSURE_SUCCESS(rv, false);
 
   if (XRE_IsContentProcess()) {
@@ -277,6 +285,10 @@ ImageExtraction ImageExtractionResult(dom::HTMLCanvasElement* aCanvasElement,
   }
 
   if (ownerDoc->ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    if (GetCanvasExtractDataPermission(aPrincipal) ==
+        nsIPermissionManager::ALLOW_ACTION) {
+      return ImageExtraction::Unrestricted;
+    }
     return ImageExtraction::Randomize;
   }
 

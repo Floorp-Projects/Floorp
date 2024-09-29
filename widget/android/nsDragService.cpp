@@ -20,8 +20,6 @@
 #include "nsViewManager.h"
 #include "nsWindow.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsDragService, nsBaseDragService)
-
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -36,6 +34,11 @@ already_AddRefed<nsDragService> nsDragService::GetInstance() {
 
   RefPtr<nsDragService> service = sDragServiceInstance.get();
   return service.forget();
+}
+
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsDragSession> session = new nsDragSession();
+  return session.forget();
 }
 
 static nsWindow* GetWindow(dom::Document* aDocument) {
@@ -62,9 +65,9 @@ static nsWindow* GetWindow(dom::Document* aDocument) {
   return window.get();
 }
 
-nsresult nsDragService::InvokeDragSessionImpl(
-    nsIArray* aTransferableArray, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+nsresult nsDragSession::InvokeDragSessionImpl(
+    nsIWidget* aWidget, nsIArray* aTransferableArray,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   if (jni::GetAPIVersion() < 24) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -89,8 +92,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   if (nsWindow* window = GetWindow(mSourceDocument)) {
     mTransferable = transferable;
 
-    nsBaseDragService::StartDragSession();
-    nsBaseDragService::OpenDragPopup();
+    OpenDragPopup();
 
     auto bitmap = CreateDragImage(mSourceNode, aRegion);
     window->StartDragAndDrop(bitmap);
@@ -102,7 +104,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
 }
 
 NS_IMETHODIMP
-nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItem) {
+nsDragSession::GetData(nsITransferable* aTransferable, uint32_t aItem) {
   if (!aTransferable) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -129,7 +131,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItem) {
 }
 
 NS_IMETHODIMP
-nsDragService::GetNumDropItems(uint32_t* aNumItems) {
+nsDragSession::GetNumDropItems(uint32_t* aNumItems) {
   if (mTransferable) {
     *aNumItems = 1;
     return NS_OK;
@@ -139,7 +141,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 }
 
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
+nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   *_retval = false;
 
   nsDependentCString dataFlavor(aDataFlavor);
@@ -164,19 +166,19 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                           uint32_t aKeyModifiers) {
   java::GeckoDragAndDrop::EndDragSession();
 
-  nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
+  nsresult rv = nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   mTransferable = nullptr;
   return rv;
 }
 
 NS_IMETHODIMP
-nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX,
+nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
                                int32_t aImageY) {
-  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+  nsBaseDragSession::UpdateDragImage(aImage, aImageX, aImageY);
   auto bitmap = CreateDragImage(mSourceNode, Nothing());
 
   if (nsWindow* window = GetWindow(mSourceDocument)) {
@@ -186,13 +188,13 @@ nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX,
   return NS_OK;
 }
 
-bool nsDragService::MustUpdateDataTransfer(EventMessage aMessage) {
+bool nsDragSession::MustUpdateDataTransfer(EventMessage aMessage) {
   // Android's drag and drop API sets drop item in drop event.
   // So we have to invalidate data transfer cache on drop event.
   return aMessage == eDrop;
 }
 
-java::sdk::Bitmap::LocalRef nsDragService::CreateDragImage(
+java::sdk::Bitmap::LocalRef nsDragSession::CreateDragImage(
     nsINode* aNode, const Maybe<CSSIntRegion>& aRegion) {
   LayoutDeviceIntRect dragRect;
   RefPtr<SourceSurface> surface;
@@ -222,24 +224,18 @@ java::sdk::Bitmap::LocalRef nsDragService::CreateDragImage(
   return bitmap;
 }
 
-void nsDragService::SetData(nsITransferable* aTransferable) {
+void nsDragSession::SetData(nsITransferable* aTransferable) {
   mTransferable = aTransferable;
   // Reset DataTransfer
   mDataTransfer = nullptr;
 }
 
-// static
-void nsDragService::SetDropData(
+void nsDragSession::SetDropData(
     mozilla::java::GeckoDragAndDrop::DropData::Param aDropData) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (!dragService) {
-    return;
-  }
-
   if (!aDropData) {
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
 
@@ -252,7 +248,7 @@ void nsDragService::SetDropData(
 
   if (!mime.EqualsLiteral("text/plain") && !mime.EqualsLiteral("text/html")) {
     // Not supported data.
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
 
@@ -261,12 +257,12 @@ void nsDragService::SetDropData(
   nsPrimitiveHelpers::CreatePrimitiveForData(
       mime, buffer.get(), buffer.Length() * 2, getter_AddRefs(wrapper));
   if (!wrapper) {
-    dragService->SetData(nullptr);
+    SetData(nullptr);
     return;
   }
   nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1");
   transferable->Init(nullptr);
   transferable->SetTransferData(mime.get(), wrapper);
-  dragService->SetData(transferable);
+  SetData(transferable);
 }

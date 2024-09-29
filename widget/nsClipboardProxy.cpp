@@ -7,15 +7,19 @@
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include "mozilla/ClipboardContentAnalysisChild.h"
 #include "mozilla/ClipboardReadRequestChild.h"
 #include "mozilla/ClipboardWriteRequestChild.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Unused.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsArrayUtils.h"
 #include "nsBaseClipboard.h"
+#include "nsIContentAnalysis.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -73,8 +77,23 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   aTransferable->FlavorsTransferableCanImport(types);
 
   IPCTransferableDataOrError transferableOrError;
-  ContentChild::GetSingleton()->SendGetClipboard(
-      types, aWhichClipboard, aWindowContext, &transferableOrError);
+  if (MOZ_UNLIKELY(nsIContentAnalysis::MightBeActive())) {
+    RefPtr<ClipboardContentAnalysisChild> contentAnalysis =
+        ClipboardContentAnalysisChild::GetOrCreate();
+    if (!contentAnalysis) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!contentAnalysis->SendGetClipboard(types, aWhichClipboard,
+                                           aWindowContext->InnerWindowId(),
+                                           &transferableOrError)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    if (!ContentChild::GetSingleton()->SendGetClipboard(
+            types, aWhichClipboard, aWindowContext, &transferableOrError)) {
+      return NS_ERROR_FAILURE;
+    };
+  }
 
   if (transferableOrError.type() == IPCTransferableDataOrError::Tnsresult) {
     MOZ_ASSERT(NS_FAILED(transferableOrError.get_nsresult()));

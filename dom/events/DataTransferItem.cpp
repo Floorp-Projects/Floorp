@@ -192,7 +192,8 @@ void DataTransferItem::FillInExternalData() {
         return;
       }
     } else {
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+      nsCOMPtr<nsIDragSession> dragSession =
+          mDataTransfer->GetOwnerDragSession();
       if (!dragSession) {
         return;
       }

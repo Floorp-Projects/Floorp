@@ -901,6 +901,13 @@ let tv = {
       y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8",
     },
 
+    jwk_different_crv: {
+      kty: "EC",
+      crv: "P-521",
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8",
+    },
+
     // The crv parameter is missing.
     jwk_missing_crv: {
       kty: "EC",
@@ -1014,6 +1021,18 @@ let tv = {
       y:
         "AOfQx1w4Ym6JXKIVJrn5_fhNzsuT8rIzOQVQ0rFGO37j" +
         "9Y33NGQ1_wQ0GZWDyXxmWpfxL3BvI1faS0Aoje-Ijlnm",
+    },
+  },
+
+  // An ECDSA key in JWK format, which an "crv" field doesn't match the alg's crv.
+  ecdsa_jwk_crv_mismatch: {
+    pub_jwk: {
+      kty: "EC",
+      crv: "P-256",
+      alg: "ECDSA",
+
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8",
     },
   },
 

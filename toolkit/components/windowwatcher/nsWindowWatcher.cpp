@@ -430,7 +430,11 @@ nsresult nsWindowWatcher::CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
     nsCOMPtr<nsIDragService> ds =
         do_GetService("@mozilla.org/widget/dragservice;1");
     if (ds) {
-      ds->EndDragSession(true, 0);
+      nsCOMPtr<nsIDragSession> session;
+      ds->GetCurrentSession(nullptr, getter_AddRefs(session));
+      if (session) {
+        session->EndDragSession(true, 0);
+      }
     }
   }
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;

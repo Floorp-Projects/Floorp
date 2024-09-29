@@ -338,13 +338,9 @@ nsresult nsHTMLDocument::StartDocumentLoad(
   if (loadAsHtml5 && view) {
     // mDocumentURI hasn't been set, yet, so get the URI from the channel
     nsCOMPtr<nsIURI> uri;
-    aChannel->GetOriginalURI(getter_AddRefs(uri));
-    // Adapted from nsDocShell:
-    // GetSpec can be expensive for some URIs, so check the scheme first.
-    if (uri && uri->SchemeIs("about")) {
-      if (uri->GetSpecOrDefault().EqualsLiteral("about:blank")) {
-        loadAsHtml5 = false;
-      }
+    aChannel->GetURI(getter_AddRefs(uri));
+    if (NS_IsAboutBlankAllowQueryAndFragment(uri)) {
+      loadAsHtml5 = false;
     }
   }
 

@@ -61,6 +61,7 @@ add_task(async function () {
     Ci.nsIDragService
   );
   dragService.startDragSessionForTests(
+    window,
     Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
       Ci.nsIDragService.DRAGDROP_ACTION_COPY |
       Ci.nsIDragService.DRAGDROP_ACTION_LINK
@@ -78,7 +79,7 @@ add_task(async function () {
     await new Promise(resolve => setTimeout(resolve, 100));
   } finally {
     removeEventListener("popupshown", tooltipNotExpected, true);
-    dragService.endDragSession(true);
+    dragService.getCurrentSession().endDragSession(true);
   }
 
   await BrowserTestUtils.synthesizeMouse(

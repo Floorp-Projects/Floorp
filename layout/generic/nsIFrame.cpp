@@ -2611,7 +2611,7 @@ void nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 }
 
 nscolor nsIFrame::GetCaretColorAt(int32_t aOffset) {
-  return nsLayoutUtils::GetColor(this, &nsStyleUI::mCaretColor);
+  return nsLayoutUtils::GetTextColor(this, &nsStyleUI::mCaretColor);
 }
 
 auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {

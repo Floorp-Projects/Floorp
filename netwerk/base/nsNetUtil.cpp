@@ -23,6 +23,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
+#include "nsAboutProtocolUtils.h"
 #include "nsBufferedStreams.h"
 #include "nsCategoryCache.h"
 #include "nsComponentManagerUtils.h"
@@ -2801,6 +2802,20 @@ bool NS_IsAboutBlank(nsIURI* uri) {
   }
 
   return spec.EqualsLiteral("about:blank");
+}
+
+bool NS_IsAboutBlankAllowQueryAndFragment(nsIURI* uri) {
+  // GetSpec can be expensive for some URIs, so check the scheme first.
+  if (!uri->SchemeIs("about")) {
+    return false;
+  }
+
+  nsAutoCString name;
+  if (NS_FAILED(NS_GetAboutModuleName(uri, name))) {
+    return false;
+  }
+
+  return name.EqualsLiteral("blank");
 }
 
 bool NS_IsAboutSrcdoc(nsIURI* uri) {

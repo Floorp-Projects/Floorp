@@ -2296,6 +2296,23 @@ NS_IMETHODIMP nsDOMWindowUtils::DispatchDOMEventViaPresShellForTesting(
   RefPtr<PresShell> targetPresShell = targetDoc->GetPresShell();
   NS_ENSURE_STATE(targetPresShell);
 
+  WidgetGUIEvent* guiEvent = internalEvent->AsGUIEvent();
+  if (guiEvent && !guiEvent->mWidget) {
+    auto* pc = GetPresContext();
+    auto* widget = pc ? pc->GetRootWidget() : nullptr;
+    // In content, screen coordinates would have been
+    // transformed by BrowserParent::TransformParentToChild
+    // so we do that here.
+    if (widget) {
+      guiEvent->mWidget = widget;
+
+      // Setting the widget makes the event's mRefPoint coordinates
+      // widget-relative, so we transform them from being
+      // screen-relative here.
+      guiEvent->mRefPoint -= widget->WidgetToScreenOffset();
+    }
+  }
+
   targetDoc->FlushPendingNotifications(FlushType::Layout);
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -4893,4 +4910,11 @@ nsDOMWindowUtils::RestoreHiDPIMode() {
 #else
   return NS_ERROR_NOT_AVAILABLE;
 #endif
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDragSession(nsIDragSession** aSession) {
+  RefPtr<nsIDragSession> session = nsContentUtils::GetDragSession(GetWidget());
+  session.forget(aSession);
+  return NS_OK;
 }

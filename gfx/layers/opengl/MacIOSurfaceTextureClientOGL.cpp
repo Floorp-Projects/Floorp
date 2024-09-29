@@ -73,10 +73,7 @@ void MacIOSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.canExposeMappedData = false;
 }
 
-bool MacIOSurfaceTextureData::Lock(OpenMode) {
-  mSurface->Lock(false);
-  return true;
-}
+bool MacIOSurfaceTextureData::Lock(OpenMode) { return mSurface->Lock(false); }
 
 void MacIOSurfaceTextureData::Unlock() { mSurface->Unlock(false); }
 

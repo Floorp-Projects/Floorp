@@ -126,6 +126,7 @@ XPIDL_SOURCES += [
     "nsIFormatConverter.idl",
     "nsIGfxInfo.idl",
     "nsIGfxInfoDebug.idl",
+    "nsIMockDragServiceController.idl",
     "nsIPaper.idl",
     "nsIPaperMargin.idl",
     "nsIPrinter.idl",
@@ -154,6 +155,7 @@ EXPORTS += [
     "nsBaseDragService.h",
     "nsBaseFilePicker.h",
     "nsBaseWidget.h",
+    "nsDragServiceProxy.h",
     "nsIDeviceContextSpec.h",
     "nsIRollupListener.h",
     "nsIWidget.h",
@@ -167,6 +169,8 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     "BasicEvents.h",
+    "ClipboardContentAnalysisChild.h",
+    "ClipboardContentAnalysisParent.h",
     "ClipboardReadRequestChild.h",
     "ClipboardReadRequestParent.h",
     "ClipboardWriteRequestChild.h",
@@ -218,6 +222,8 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "ClipboardContentAnalysisChild.cpp",
+    "ClipboardContentAnalysisParent.cpp",
     "ClipboardReadRequestParent.cpp",
     "ClipboardWriteRequestChild.cpp",
     "ClipboardWriteRequestParent.cpp",
@@ -378,6 +384,7 @@ else:
 
 IPDL_SOURCES += [
     "LookAndFeelTypes.ipdlh",
+    "PClipboardContentAnalysis.ipdl",
     "PClipboardReadRequest.ipdl",
     "PClipboardWriteRequest.ipdl",
 ]
@@ -385,6 +392,12 @@ IPDL_SOURCES += [
 LOCAL_INCLUDES += [
     "/widget/%s" % toolkit,
 ]
+
+if CONFIG["ENABLE_TESTS"]:
+    UNIFIED_SOURCES += [
+        "MockDragServiceController.cpp",
+    ]
+
 FINAL_LIBRARY = "xul"
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":

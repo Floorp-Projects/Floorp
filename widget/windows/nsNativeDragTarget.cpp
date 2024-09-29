@@ -16,6 +16,7 @@
 #include "nsClipboard.h"
 #include "KeyboardLayout.h"
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
@@ -152,8 +153,13 @@ void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
 
-  event.mInputSource =
-      static_cast<nsBaseDragService*>(mDragService.get())->GetInputSource();
+  nsDragSession* currSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
+  if (currSession) {
+    event.mInputSource = currSession->GetInputSource();
+  } else {
+    event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE;
+  }
 
   mWidget->DispatchInputEvent(&event);
 }
@@ -166,8 +172,8 @@ void nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
   GetGeckoDragAction(grfKeyState, pdwEffect, &geckoAction);
 
   // Set the current action into the Gecko specific type
-  nsCOMPtr<nsIDragSession> currSession;
-  mDragService->GetCurrentSession(getter_AddRefs(currSession));
+  RefPtr<nsDragSession> currSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
   if (!currSession) {
     return;
   }
@@ -181,10 +187,9 @@ void nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
   // DRAGDROP_ACTION_UNINITIALIZED, it means that the last event was sent
   // to the child process and this event is also being sent to the child
   // process. In this case, use the last event's action instead.
-  nsDragService* dragService = static_cast<nsDragService*>(mDragService.get());
   currSession->GetDragAction(&geckoAction);
 
-  int32_t childDragAction = dragService->TakeChildProcessDragAction();
+  int32_t childDragAction = currSession->TakeChildProcessDragAction();
   if (childDragAction != nsIDragService::DRAGDROP_ACTION_UNINITIALIZED) {
     geckoAction = childDragAction;
   }
@@ -244,7 +249,9 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
 
   // tell the drag service about this drag (it may have come from an
   // outside app).
-  mDragService->StartDragSession();
+  RefPtr<nsDragSession> session =
+      static_cast<nsDragSession*>(mDragService->StartDragSession(mWidget));
+  MOZ_ASSERT(session);
 
   void* tempOutData = nullptr;
   uint32_t tempDataLen = 0;
@@ -259,14 +266,8 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
     mEffectsPreferred = DROPEFFECT_NONE;
   }
 
-  // Set the native data object into drag service
-  //
-  // This cast is ok because in the constructor we created a
-  // the actual implementation we wanted, so we know this is
-  // a nsDragService. It should be a private interface, though.
-  nsDragService* winDragService =
-      static_cast<nsDragService*>(mDragService.get());
-  winDragService->SetIDataObject(pIDataSource);
+  // Set the native data object into drag session
+  session->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDragEnter, grfKeyState, ptl, pdwEffect);
@@ -298,8 +299,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
   // then we should include it as an allowed effect.
   mEffectsAllowed = (*pdwEffect) | (mEffectsAllowed & DROPEFFECT_LINK);
 
-  nsCOMPtr<nsIDragSession> currentDragSession;
-  mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+  RefPtr<nsDragSession> currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
   if (!currentDragSession) {
     return S_OK;  // Drag was canceled.
   }
@@ -315,18 +316,16 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
       // The drop helper only updates the image during DragEnter, so emulate
       // a DragEnter if the image was changed.
       POINT pt = {ptl.x, ptl.y};
-      nsDragService* dragService =
-          static_cast<nsDragService*>(mDragService.get());
-      GetDropTargetHelper()->DragEnter(mHWnd, dragService->GetDataObject(), &pt,
-                                       *pdwEffect);
+      GetDropTargetHelper()->DragEnter(
+          mHWnd, currentDragSession->GetDataObject(), &pt, *pdwEffect);
     }
     POINT pt = {ptl.x, ptl.y};
     GetDropTargetHelper()->DragOver(&pt, *pdwEffect);
   }
 
   ModifierKeyState modifierKeyState;
-  nsCOMPtr<nsIDragService> dragService = mDragService;
-  dragService->FireDragEventAtSource(eDrag, modifierKeyState.GetModifiers());
+  currentDragSession->FireDragEventAtSource(eDrag,
+                                            modifierKeyState.GetModifiers());
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDragOver, grfKeyState, ptl, pdwEffect);
 
@@ -349,8 +348,8 @@ nsNativeDragTarget::DragLeave() {
   // dispatch the event into Gecko
   DispatchDragDropEvent(eDragExit, gDragLastPoint);
 
-  nsCOMPtr<nsIDragSession> currentDragSession;
-  mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+  nsCOMPtr<nsIDragSession> currentDragSession =
+      mDragService->GetCurrentSession(mWidget);
 
   if (currentDragSession) {
     nsCOMPtr<nsINode> sourceNode;
@@ -362,8 +361,8 @@ nsNativeDragTarget::DragLeave() {
       // we're done with it for now (until the user drags back into
       // mozilla).
       ModifierKeyState modifierKeyState;
-      nsCOMPtr<nsIDragService> dragService = mDragService;
-      dragService->EndDragSession(false, modifierKeyState.GetModifiers());
+      currentDragSession->EndDragSession(false,
+                                         modifierKeyState.GetModifiers());
     }
   }
 
@@ -385,8 +384,10 @@ void nsNativeDragTarget::DragCancel() {
     }
     if (mDragService) {
       ModifierKeyState modifierKeyState;
-      nsCOMPtr<nsIDragService> dragService = mDragService;
-      dragService->EndDragSession(false, modifierKeyState.GetModifiers());
+      RefPtr<nsIDragSession> session = mDragService->GetCurrentSession(mWidget);
+      if (session) {
+        session->EndDragSession(false, modifierKeyState.GetModifiers());
+      }
     }
     this->Release();  // matching the AddRef in DragEnter
     mTookOwnRef = false;
@@ -410,43 +411,41 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   }
 
   // Set the native data object into the drag service
-  //
-  // This cast is ok because in the constructor we created a
-  // the actual implementation we wanted, so we know this is
-  // a nsDragService (but it should still be a private interface)
-  nsDragService* winDragService =
-      static_cast<nsDragService*>(mDragService.get());
-  winDragService->SetIDataObject(pData);
+  RefPtr<nsDragSession> currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
+  if (!currentDragSession) {
+    return S_OK;
+  }
+  currentDragSession->SetIDataObject(pData);
 
   // NOTE: ProcessDrag spins the event loop which may destroy arbitrary objects.
   // We use strong refs to prevent it from destroying these:
   RefPtr<nsNativeDragTarget> kungFuDeathGrip = this;
-  nsCOMPtr<nsIDragService> serv = mDragService;
 
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDrop, grfKeyState, aPT, pdwEffect);
 
-  nsCOMPtr<nsIDragSession> currentDragSession;
-  serv->GetCurrentSession(getter_AddRefs(currentDragSession));
+  currentDragSession =
+      static_cast<nsDragSession*>(mDragService->GetCurrentSession(mWidget));
   if (!currentDragSession) {
     return S_OK;  // DragCancel() was called.
   }
 
-  // Let the win drag service know whether this session experienced
+  // Let the win drag session know whether it experienced
   // a drop event within the application. Drop will not oocur if the
   // drop landed outside the app. (used in tab tear off, bug 455884)
-  winDragService->SetDroppedLocal();
+  currentDragSession->SetDroppedLocal();
 
-  // tell the drag service we're done with the session
+  // Tell the drag session we're done with it.
   // Use GetMessagePos to get the position of the mouse at the last message
   // seen by the event loop. (Bug 489729)
   DWORD pos = ::GetMessagePos();
   POINT cpos;
   cpos.x = GET_X_LPARAM(pos);
   cpos.y = GET_Y_LPARAM(pos);
-  winDragService->SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
+  currentDragSession->SetDragEndPoint(cpos.x, cpos.y);
   ModifierKeyState modifierKeyState;
-  serv->EndDragSession(true, modifierKeyState.GetModifiers());
+  currentDragSession->EndDragSession(true, modifierKeyState.GetModifiers());
 
   // release the ref that was taken in DragEnter
   NS_ASSERTION(mTookOwnRef, "want to release own ref, but not taken!");

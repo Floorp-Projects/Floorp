@@ -6,6 +6,7 @@
 
 include protocol PBackgroundStarter;
 include protocol PBrowser;
+include protocol PClipboardContentAnalysis;
 include protocol PClipboardReadRequest;
 include protocol PClipboardWriteRequest;
 include protocol PCompositorManager;
@@ -818,17 +819,6 @@ child:
      */
     async NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 
-    async InvokeDragSession(MaybeDiscardedWindowContext aSourceWindowContext,
-                            MaybeDiscardedWindowContext aSourceTopWindowContext,
-                            IPCTransferableData[] transfers, uint32_t action);
-
-    async UpdateDragSession(IPCTransferableData[] transfers, EventMessage message);
-
-    async EndDragSession(bool aDoneDrag, bool aUserCancelled,
-                         LayoutDeviceIntPoint aDragEndPoint,
-                         uint32_t aKeyModifiers,
-                         uint32_t aDropEffect);
-
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nullable nsIURI aDomain);
 
     /**
@@ -1082,6 +1072,8 @@ parent:
 
     async CreateGMPService();
 
+    async CreateClipboardContentAnalysis(Endpoint<PClipboardContentAnalysisParent> aParentEndpoint);
+
     async InitStreamFilter(uint64_t channelId, nsString addonId)
         returns (Endpoint<PStreamFilterChild> aEndpoint);
 
@@ -1181,8 +1173,6 @@ parent:
     //
     // Pass true for aForceSave to always save this content to disk, regardless of
     // nsIMIMEInfo and other such influences.
-    // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
-    // for this load, and should be closed once we've handled it.
     async PExternalHelperApp(nullable nsIURI uri,
                              LoadInfoArgs loadInfoArgs,
                              nsCString aMimeContentType,
@@ -1193,8 +1183,7 @@ parent:
                              int64_t aContentLength,
                              bool aWasFileChannel,
                              nullable nsIURI aReferrer,
-                             MaybeDiscardedBrowsingContext aContext,
-                             bool aShouldCloseWindow);
+                             MaybeDiscardedBrowsingContext aContext);
 
     async PHandlerService();
 
@@ -1296,8 +1285,6 @@ parent:
      * its shutdown tasks.
      */
     async FinishShutdown();
-
-    async UpdateDropEffect(uint32_t aDragAction, uint32_t aDropEffect);
 
     /**
      * Initiates an asynchronous request for permission for the

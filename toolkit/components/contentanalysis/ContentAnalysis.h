@@ -157,6 +157,8 @@ class ContentAnalysis final : public nsIContentAnalysis {
   ContentAnalysis();
   nsCString GetUserActionId();
   void SetLastResult(nsresult aLastResult) { mLastResult = aLastResult; }
+  void SetCachedDataTimeoutForTesting(uint32_t aNewTimeout);
+  void ResetCachedDataTimeoutForTesting();
 
 #if defined(XP_WIN)
   struct PrintAllowedResult final {
@@ -213,6 +215,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
     mozilla::MoveOnlyFunction<void(RefPtr<nsIContentAnalysisResult>&&)>
         mResolver;
   };
+  // Find the outermost browsing context that has same-origin access to
+  // aBrowsingContext, and this is the URL we will pass to the Content Analysis
+  // agent.
+  static nsCOMPtr<nsIURI> GetURIForBrowsingContext(
+      dom::CanonicalBrowsingContext* aBrowsingContext);
   static bool CheckClipboardContentAnalysisSync(
       nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
       const nsCOMPtr<nsITransferable>& trans, int32_t aClipboardType);
@@ -220,6 +227,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
       nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
       nsITransferable* aTransferable, int32_t aClipboardType,
       SafeContentAnalysisResultCallback* aResolver);
+
+  // Duration the cache holds requests for. This holds strong references
+  // to the elements of the request, such as the WindowGlobalParent,
+  // for that period.
+  static constexpr uint32_t kDefaultCachedDataTimeoutInMs = 5000;
 
  private:
   ~ContentAnalysis();
@@ -246,6 +258,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   static void DoAnalyzeRequest(
       nsCString aRequestToken,
       content_analysis::sdk::ContentAnalysisRequest&& aRequest,
+      nsCOMPtr<nsIContentAnalysisRequest> aRequestToCache,
       const std::shared_ptr<content_analysis::sdk::Client>& aClient);
   void IssueResponse(RefPtr<ContentAnalysisResponse>& response);
   bool LastRequestSucceeded();
@@ -289,6 +302,65 @@ class ContentAnalysis final : public nsIContentAnalysis {
   };
   DataMutex<nsTHashMap<nsCString, CallbackData>> mCallbackMap;
 
+  class CachedData final {
+   public:
+    nsCOMPtr<nsIContentAnalysisRequest> Request() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mRequest;
+    }
+    void SetData(nsCOMPtr<nsIContentAnalysisRequest> aRequest,
+                 nsIContentAnalysisResponse::Action aResultAction) {
+      MOZ_ASSERT(NS_IsMainThread());
+      mRequest = aRequest;
+      mResultAction = Some(aResultAction);
+      // For warn responses, don't set the expiration timer until
+      // we get the updated action in UpdateWarnAction()
+      if (aResultAction != nsIContentAnalysisResponse::Action::eWarn) {
+        SetExpirationTimer();
+      }
+    }
+    Maybe<nsIContentAnalysisResponse::Action> ResultAction() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mResultAction;
+    }
+    void SetExpirationTimer();
+    void Clear() {
+      MOZ_ASSERT(NS_IsMainThread());
+      mRequest = nullptr;
+      mResultAction = Nothing();
+      if (mExpirationTimer) {
+        mExpirationTimer->Cancel();
+      }
+    }
+    void UpdateWarnAction(nsIContentAnalysisResponse::Action aAction) {
+      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_ASSERT(mRequest);
+      MOZ_ASSERT(mResultAction ==
+                 Some(nsIContentAnalysisResponse::Action::eWarn));
+      mResultAction = Some(aAction);
+      // We don't set the expiration timer for warn responses until we get the
+      // updated response, so set it here
+      SetExpirationTimer();
+    }
+    enum class CacheResult : uint8_t {
+      CannotBeCached = 0,
+      DoesNotMatchExisting = 1,
+      Matches = 2
+    };
+    CacheResult CompareWithRequest(
+        const RefPtr<nsIContentAnalysisRequest>& aRequest);
+
+   private:
+    nsCOMPtr<nsIContentAnalysisRequest> mRequest;
+    Maybe<nsIContentAnalysisResponse::Action> mResultAction;
+    nsCOMPtr<nsITimer> mExpirationTimer;
+    uint32_t mClearTimeout = kDefaultCachedDataTimeoutInMs;
+
+    friend class ContentAnalysis;
+  };
+  // Must only be accessed from the main thread
+  CachedData mCachedData;
+
   struct WarnResponseData {
     WarnResponseData(CallbackData&& aCallbackData,
                      RefPtr<ContentAnalysisResponse> aResponse)
@@ -322,6 +394,7 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
   void DoNotAcknowledge() { mDoNotAcknowledge = true; }
   void SetCancelError(CancelError aCancelError);
+  void SetIsCachedResponse() { mIsCachedResponse = true; }
 
  private:
   ~ContentAnalysisResponse() = default;
@@ -356,6 +429,11 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   // If true, the request was completely handled by URL filter lists, so it
   // was not sent to the agent and should not send an Acknowledge.
   bool mDoNotAcknowledge = false;
+
+  // Whether this is a cached result that wasn't actually sent to the DLP agent.
+  // This indicates that the request was a duplicate of a previously sent one,
+  // so any dialogs (for block/warn) should not be shown.
+  bool mIsCachedResponse = false;
 
   friend class ContentAnalysis;
 };

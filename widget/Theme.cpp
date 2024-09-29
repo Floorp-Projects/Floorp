@@ -804,7 +804,7 @@ void Theme::PaintMenulistArrow(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   }();
 
   const auto arrowColor = sRGBColor::FromABGR(
-      nsLayoutUtils::GetColor(aFrame, &nsStyleText::mWebkitTextFillColor));
+      nsLayoutUtils::GetTextColor(aFrame, &nsStyleText::mWebkitTextFillColor));
   ThemeDrawing::PaintArrow(aDrawTarget, aRect, xs, ys, kPolygonSize,
                            ArrayLength(polygonX), arrowColor);
 }

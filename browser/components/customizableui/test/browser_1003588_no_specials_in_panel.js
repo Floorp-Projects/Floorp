@@ -9,6 +9,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
   );
 
   ds.startDragSessionForTests(
+    window,
     Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
       Ci.nsIDragService.DRAGDROP_ACTION_COPY |
       Ci.nsIDragService.DRAGDROP_ACTION_LINK
@@ -25,7 +26,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
       aToDrag.parentNode
     );
   } finally {
-    ds.endDragSession(true);
+    ds.getCurrentSession().endDragSession(true);
   }
 }
 

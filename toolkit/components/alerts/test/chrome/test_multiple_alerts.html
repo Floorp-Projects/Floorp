@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test for multiple alerts</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <pre id="test">
@@ -85,12 +85,15 @@ add_task(async function test_multiple_alerts() {
   var firstAlertPosition = await promiseAlertPosition(alertService);
   if (!firstAlertPosition) {
     ok(true, "Platform does not use XUL alerts.");
+    alertService.closeAlert();
     return;
   }
 
   var secondAlertPosition = await promiseAlertPosition(alertService);
   is(secondAlertPosition.x, firstAlertPosition.x, "Second alert should be opened in the same position.");
   is(secondAlertPosition.y, firstAlertPosition.y, "Second alert should be opened in the same position.");
+
+  alertService.closeAlert();
 });
 
 </script>

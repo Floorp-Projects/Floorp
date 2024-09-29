@@ -46,22 +46,14 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-//-------------------------------------------------------------------------
-//
-// DragService constructor
-//
-//-------------------------------------------------------------------------
-nsDragService::nsDragService()
-    : mDataObject(nullptr), mSentLocalDropEvent(false) {}
+nsDragSession::~nsDragSession() { NS_IF_RELEASE(mDataObject); }
 
-//-------------------------------------------------------------------------
-//
-// DragService destructor
-//
-//-------------------------------------------------------------------------
-nsDragService::~nsDragService() { NS_IF_RELEASE(mDataObject); }
+already_AddRefed<nsIDragSession> nsDragService::CreateDragSession() {
+  RefPtr<nsIDragSession> session = new nsDragSession();
+  return session.forget();
+}
 
-bool nsDragService::CreateDragImage(nsINode* aDOMNode,
+bool nsDragSession::CreateDragImage(nsINode* aDOMNode,
                                     const Maybe<CSSIntRegion>& aRegion,
                                     SHDRAGIMAGE* psdi) {
   if (!psdi) return false;
@@ -148,9 +140,9 @@ bool nsDragService::CreateDragImage(nsINode* aDOMNode,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsDragService::InvokeDragSessionImpl(
-    nsIArray* anArrayTransferables, const Maybe<CSSIntRegion>& aRegion,
-    uint32_t aActionType) {
+nsresult nsDragSession::InvokeDragSessionImpl(
+    nsIWidget* aWidget, nsIArray* anArrayTransferables,
+    const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
   // Try and get source URI of the items that are being dragged
   nsIURI* uri = nullptr;
 
@@ -215,7 +207,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   }
 
   // Kick off the native drag session
-  return StartInvokingDragSession(itemToDrag, aActionType);
+  return StartInvokingDragSession(aWidget, itemToDrag, aActionType);
 }
 
 static HWND GetSourceWindow(dom::Document* aSourceDocument) {
@@ -237,7 +229,8 @@ static HWND GetSourceWindow(dom::Document* aSourceDocument) {
 }
 
 //-------------------------------------------------------------------------
-nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
+nsresult nsDragSession::StartInvokingDragSession(nsIWidget* aWidget,
+                                                 IDataObject* aDataObj,
                                                  uint32_t aActionType) {
   // To do the drag we need to create an object that
   // implements the IDataObject interface (for OLE)
@@ -247,13 +240,13 @@ nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
   // Now figure out what the native drag effect should be
   DWORD winDropRes;
   DWORD effects = DROPEFFECT_SCROLL;
-  if (aActionType & DRAGDROP_ACTION_COPY) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_COPY) {
     effects |= DROPEFFECT_COPY;
   }
-  if (aActionType & DRAGDROP_ACTION_MOVE) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_MOVE) {
     effects |= DROPEFFECT_MOVE;
   }
-  if (aActionType & DRAGDROP_ACTION_LINK) {
+  if (aActionType & nsIDragService::DRAGDROP_ACTION_LINK) {
     effects |= DROPEFFECT_LINK;
   }
 
@@ -263,7 +256,6 @@ nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
   mSentLocalDropEvent = false;
 
   // Start dragging
-  StartDragSession();
   OpenDragPopup();
 
   RefPtr<IDataObjectAsyncCapability> pAsyncOp;
@@ -284,19 +276,19 @@ nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
     uint32_t dropResult;
     // Order is important, since multiple flags can be returned.
     if (winDropRes & DROPEFFECT_COPY)
-      dropResult = DRAGDROP_ACTION_COPY;
+      dropResult = nsIDragService::DRAGDROP_ACTION_COPY;
     else if (winDropRes & DROPEFFECT_LINK)
-      dropResult = DRAGDROP_ACTION_LINK;
+      dropResult = nsIDragService::DRAGDROP_ACTION_LINK;
     else if (winDropRes & DROPEFFECT_MOVE)
-      dropResult = DRAGDROP_ACTION_MOVE;
+      dropResult = nsIDragService::DRAGDROP_ACTION_MOVE;
     else
-      dropResult = DRAGDROP_ACTION_NONE;
+      dropResult = nsIDragService::DRAGDROP_ACTION_NONE;
 
     if (mDataTransfer) {
       if (res == DRAGDROP_S_DROP)  // Success
         mDataTransfer->SetDropEffectInt(dropResult);
       else
-        mDataTransfer->SetDropEffectInt(DRAGDROP_ACTION_NONE);
+        mDataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
     }
   }
 
@@ -327,7 +319,8 @@ nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
 
 //-------------------------------------------------------------------------
 // Make Sure we have the right kind of object
-nsDataObjCollection* nsDragService::GetDataObjCollection(
+/* static */
+nsDataObjCollection* nsDragSession::GetDataObjCollection(
     IDataObject* aDataObj) {
   nsDataObjCollection* dataObjCol = nullptr;
   if (aDataObj) {
@@ -344,7 +337,7 @@ nsDataObjCollection* nsDragService::GetDataObjCollection(
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsDragService::GetNumDropItems(uint32_t* aNumItems) {
+nsDragSession::GetNumDropItems(uint32_t* aNumItems) {
   if (!mDataObject) {
     *aNumItems = 0;
     return NS_OK;
@@ -403,7 +396,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsDragService::GetData(nsITransferable* aTransferable, uint32_t anItem) {
+nsDragSession::GetData(nsITransferable* aTransferable, uint32_t anItem) {
   // This typcially happens on a drop, the target would be asking
   // for it's transferable to be filled in
   // Use a static clipboard utility method for this
@@ -447,8 +440,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t anItem) {
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP
-nsDragService::SetIDataObject(IDataObject* aDataObj) {
+void nsDragSession::SetIDataObject(IDataObject* aDataObj) {
   // When the native drag starts the DragService gets
   // the IDataObject that is being dragged
   NS_IF_RELEASE(mDataObject);
@@ -456,7 +448,7 @@ nsDragService::SetIDataObject(IDataObject* aDataObj) {
   NS_IF_ADDREF(mDataObject);
 
   if (MOZ_DRAGSERVICE_LOG_ENABLED()) {
-    MOZ_DRAGSERVICE_LOG("nsDragService::SetIDataObject (%p)", mDataObject);
+    MOZ_DRAGSERVICE_LOG("nsDragSession::SetIDataObject (%p)", mDataObject);
     IEnumFORMATETC* pEnum = nullptr;
     if (mDataObject &&
         S_OK == mDataObject->EnumFormatEtc(DATADIR_GET, &pEnum)) {
@@ -472,12 +464,10 @@ nsDragService::SetIDataObject(IDataObject* aDataObj) {
       pEnum->Release();
     }
   }
-
-  return NS_OK;
 }
 
 //---------------------------------------------------------
-void nsDragService::SetDroppedLocal() {
+void nsDragSession::SetDroppedLocal() {
   // Sent from the native drag handler, letting us know
   // a drop occurred within the application vs. outside of it.
   mSentLocalDropEvent = true;
@@ -486,7 +476,7 @@ void nsDragService::SetDroppedLocal() {
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
+nsDragSession::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   if (!aDataFlavor || !mDataObject || !_retval) {
     MOZ_DRAGSERVICE_LOG("%s: error", __PRETTY_FUNCTION__);
     return NS_ERROR_FAILURE;
@@ -596,7 +586,8 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 // collection objects. We know the difference because our collection
 // object will respond to supporting the private |MULTI_MIME| format.
 //
-bool nsDragService::IsCollectionObject(IDataObject* inDataObj) {
+/* static */
+bool nsDragSession::IsCollectionObject(IDataObject* inDataObj) {
   bool isCollection = false;
 
   // setup the format object to ask for the MULTI_MIME format. We only
@@ -623,8 +614,8 @@ bool nsDragService::IsCollectionObject(IDataObject* inDataObj) {
 // when the drag ends. It seems that OLE doesn't like to let apps quit
 // w/out crashing when we're still holding onto their data
 //
-NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
+nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
+                                           uint32_t aKeyModifiers) {
   // Bug 100180: If we've got mouse events captured, make sure we release it -
   // that way, if we happen to call EndDragSession before diving into a nested
   // event loop, we can still respond to mouse events.
@@ -632,20 +623,20 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
     ::ReleaseCapture();
   }
 
-  nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
+  nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
   NS_IF_RELEASE(mDataObject);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX,
+nsDragSession::UpdateDragImage(nsINode* aImage, int32_t aImageX,
                                int32_t aImageY) {
   if (!mDataObject) {
     return NS_OK;
   }
 
-  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+  nsBaseDragSession::UpdateDragImage(aImage, aImageX, aImageY);
 
   IDragSourceHelper* pdsh;
   if (SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, nullptr,

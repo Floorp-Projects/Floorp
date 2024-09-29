@@ -181,8 +181,7 @@ add_task(async function search() {
     healthReportKey: "ContentSearchTest",
     searchPurpose: "ContentSearchTest",
   };
-  let submissionURL = engine.getSubmission(data.searchString, "", data.whence)
-    .uri.spec;
+  let submissionURL = engine.getSubmission(data.searchString, "").uri.spec;
 
   await performSearch(browser, data, submissionURL);
 });
@@ -200,15 +199,14 @@ add_task(async function searchInBackgroundTab() {
     healthReportKey: "ContentSearchTest",
     searchPurpose: "ContentSearchTest",
   };
-  let submissionURL = engine.getSubmission(data.searchString, "", data.whence)
-    .uri.spec;
+  let submissionURL = engine.getSubmission(data.searchString, "").uri.spec;
 
   let searchPromise = performSearch(browser, data, submissionURL);
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
-  registerCleanupFunction(() => gBrowser.removeTab(newTab));
 
   await searchPromise;
+  gBrowser.removeTab(newTab);
 });
 
 add_task(async function badImage() {

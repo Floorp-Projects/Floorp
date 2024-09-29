@@ -93,7 +93,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         }
         /* crunch, crunch, crunch */
         vec_r = _mm_add_ps(vec_r, _mm_add_ps(vec_g, vec_b));
-        vec_r = _mm_max_ps(min, vec_r);
+        vec_r = _mm_max_ps(vec_r, min);
         vec_r = _mm_min_ps(max, vec_r);
         result = _mm_mul_ps(vec_r, scale);
         /* store calc'd output tables indices */
@@ -121,7 +121,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         *dest.add(F::kAIndex) = alpha
     }
     vec_r = _mm_add_ps(vec_r, _mm_add_ps(vec_g, vec_b));
-    vec_r = _mm_max_ps(min, vec_r);
+    vec_r = _mm_max_ps(vec_r, min);
     vec_r = _mm_min_ps(max, vec_r);
     result = _mm_mul_ps(vec_r, scale);
     _mm_store_si128(output as *mut __m128i, _mm_cvtps_epi32(result));

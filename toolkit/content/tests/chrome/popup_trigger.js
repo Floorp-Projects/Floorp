@@ -259,7 +259,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
       "topleft topleft",
       "topcenter topleft",
@@ -301,7 +300,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
       "topleft topleft",
       "topcenter topleft",
@@ -359,7 +357,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
     ],
     test(testname, step) {
@@ -401,7 +398,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
     ],
     test(testname, step) {
@@ -447,7 +443,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
     ],
     test(testname, step) {
@@ -512,7 +507,6 @@ var popupTests = [
       "start_after",
       "end_before",
       "end_after",
-      "after_pointer",
       "overlap",
       "topcenter topleft",
       "topright bottomright",

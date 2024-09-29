@@ -261,8 +261,10 @@ BrowserParent::LayerToBrowserParentTable*
     BrowserParent::sLayerToBrowserParentTable = nullptr;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserParent)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(BrowserParent)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
 NS_INTERFACE_MAP_END
 
@@ -1597,7 +1599,8 @@ LayoutDeviceToCSSScale BrowserParent::GetLayoutDeviceToCSSScale() {
 bool BrowserParent::QueryDropLinksForVerification() {
   // Before sending the dragEvent, we query the links being dragged and
   // store them on the parent, to make sure the child can not modify links.
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  RefPtr<nsIWidget> widget = GetTopLevelWidget();
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession(widget);
   if (!dragSession) {
     NS_WARNING("No dragSession to query links for verification");
     return false;
@@ -3838,9 +3841,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     const MaybeDiscarded<WindowContext>& aSourceTopWindowContext) {
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
-    Unused << Manager()->SendEndDragSession(
-        true, true, LayoutDeviceIntPoint(), 0,
-        nsIDragService::DRAGDROP_ACTION_NONE);
+    Unused << SendEndDragSession(true, true, LayoutDeviceIntPoint(), 0,
+                                 nsIDragService::DRAGDROP_ACTION_NONE);
     // Continue sending input events with input priority when stopping the dnd
     // session.
     Manager()->SetInputPriorityEventEnabled(true);
@@ -3869,13 +3871,108 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
-    dragService->MaybeAddChildProcess(Manager());
+    dragService->MaybeAddBrowser(this);
   }
 
   presShell->GetPresContext()
       ->EventStateManager()
       ->BeginTrackingRemoteDragGesture(mFrameElement, dragStartData);
 
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  os->NotifyObservers(nullptr, "content-invoked-drag", nullptr);
+
+  return IPC_OK();
+}
+
+void BrowserParent::GetIPCTransferableData(
+    nsIDragSession* aSession,
+    nsTArray<IPCTransferableData>& aIPCTransferables) {
+  MOZ_ASSERT(aSession);
+  RefPtr<DataTransfer> transfer = aSession->GetDataTransfer();
+  if (!transfer) {
+    // Pass eDrop to get DataTransfer with external
+    // drag formats cached.
+    transfer = new DataTransfer(nullptr, eDrop, true, -1);
+    aSession->SetDataTransfer(transfer);
+  }
+  // Note, even though this fills the DataTransfer object with
+  // external data, the data is usually transfered over IPC lazily when
+  // needed.
+  transfer->FillAllExternalData();
+  nsCOMPtr<nsILoadContext> lc = GetLoadContext();
+  nsCOMPtr<nsIArray> transferables = transfer->GetTransferables(lc);
+  nsContentUtils::TransferablesToIPCTransferableDatas(
+      transferables, aIPCTransferables, false, Manager());
+}
+
+void BrowserParent::MaybeInvokeDragSession(EventMessage aMessage) {
+  // dnd uses IPCBlob to transfer data to the content process and the IPC
+  // message is sent as normal priority. When sending input events with input
+  // priority, the message may be preempted by the later dnd events. To make
+  // sure the input events and the blob message are processed in time order
+  // on the content process, we temporarily send the input events with normal
+  // priority when there is an active dnd session.
+  Manager()->SetInputPriorityEventEnabled(false);
+
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  RefPtr<nsIWidget> widget = GetTopLevelWidget();
+  if (!dragService || !widget || !GetBrowsingContext()) {
+    return;
+  }
+
+  RefPtr<nsIDragSession> session = dragService->GetCurrentSession(widget);
+  if (dragService->MaybeAddBrowser(this)) {
+    if (session) {
+      // We need to send transferable data to child process.
+      nsTArray<IPCTransferableData> ipcTransferables;
+      GetIPCTransferableData(session, ipcTransferables);
+      uint32_t action;
+      session->GetDragAction(&action);
+
+      RefPtr<WindowContext> sourceWC;
+      session->GetSourceWindowContext(getter_AddRefs(sourceWC));
+      RefPtr<WindowContext> sourceTopWC;
+      session->GetSourceTopWindowContext(getter_AddRefs(sourceTopWC));
+      RefPtr<nsIPrincipal> principal;
+      session->GetTriggeringPrincipal(getter_AddRefs(principal));
+      mozilla::Unused << SendInvokeChildDragSession(
+          sourceWC, sourceTopWC, principal, std::move(ipcTransferables),
+          action);
+    }
+    return;
+  }
+
+  if (session && session->MustUpdateDataTransfer(aMessage)) {
+    // We need to send transferable data to child process.
+    nsTArray<IPCTransferableData> ipcTransferables;
+    GetIPCTransferableData(session, ipcTransferables);
+
+    RefPtr<nsIPrincipal> principal;
+    session->GetTriggeringPrincipal(getter_AddRefs(principal));
+    mozilla::Unused << SendUpdateDragSession(
+        principal, std::move(ipcTransferables), aMessage);
+  }
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvUpdateDropEffect(
+    const uint32_t& aDragAction, const uint32_t& aDropEffect) {
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  if (!dragService) {
+    return IPC_OK();
+  }
+
+  RefPtr<nsIWidget> widget = GetTopLevelWidget();
+  NS_ENSURE_TRUE(widget, IPC_OK());
+  RefPtr<nsIDragSession> dragSession = dragService->GetCurrentSession(widget);
+  NS_ENSURE_TRUE(dragSession, IPC_OK());
+  dragSession->SetDragAction(aDragAction);
+  RefPtr<DataTransfer> dt = dragSession->GetDataTransfer();
+  if (dt) {
+    dt->SetDropEffectInt(aDropEffect);
+  }
+  dragSession->UpdateDragEffect();
   return IPC_OK();
 }
 

@@ -1802,7 +1802,8 @@ class ImportEcKeyTask : public ImportKeyTask {
       return;
     }
 
-    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
+        mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       RootedDictionary<EcKeyImportParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv) || !params.mNamedCurve.WasPassed()) {
@@ -1907,10 +1908,20 @@ class ImportEcKeyTask : public ImportKeyTask {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    // Extract 'crv' parameter from JWKs.
+    // Checking the 'crv' consistency
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-      if (!NormalizeToken(mJwk.mCrv.Value(), mNamedCurve)) {
+      // the curve stated in 'crv field'
+      nsString namedCurveFromCrv;
+      if (!NormalizeToken(mJwk.mCrv.Value(), namedCurveFromCrv)) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      }
+
+      // https://w3c.github.io/webcrypto/#ecdh-operations
+      // https://w3c.github.io/webcrypto/#ecdsa-operations
+      // If namedCurve is not equal to the namedCurve member of
+      // normalizedAlgorithm (mNamedCurve in our case), throw a DataError.
+      if (!mNamedCurve.Equals(namedCurveFromCrv)) {
+        return NS_ERROR_DOM_DATA_ERR;
       }
     }
     return NS_OK;

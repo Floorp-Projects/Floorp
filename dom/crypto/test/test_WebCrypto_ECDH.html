@@ -154,10 +154,22 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Verify that ECDH import fails with a key with a mismatched 'crv' field",
+  function() {
+    var that = this;
+    var alg = { name: "ECDH", namedCurve: "P-521"};
+
+    crypto.subtle.importKey("jwk", tv.ecdsa_jwk_crv_mismatch.pub_jwk, alg, true, ["verify"])
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "JWK import an ECDH public and private key and derive bits (P-256)",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve: "P-256" };
 
     var pubKey, privKey;
     function setPub(x) { pubKey = x; }
@@ -182,7 +194,7 @@ TestArray.addTest(
   "JWK import an ECDH public and private key and derive bits (P-384)",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve: "P-384"};
 
     var pubKey, privKey;
     function setPub(x) { pubKey = x; }
@@ -207,7 +219,7 @@ TestArray.addTest(
   "JWK import an ECDH public and private key and derive bits (P-521)",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve : "P-521" };
 
     var pubKey, privKey;
     function setPub(x) { pubKey = x; }
@@ -232,7 +244,7 @@ TestArray.addTest(
   "JWK import/export roundtrip with ECDH (P-256)",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve : "P-256" };
 
     var pubKey, privKey;
     function setPub(x) { pubKey = x; }
@@ -277,7 +289,7 @@ TestArray.addTest(
   "PKCS8 import/export roundtrip with ECDH (P-256)",
   function() {
     var that = this;
-    var alg = { name: "ECDH",  namedCurve: "P-256" };
+    var alg = { name: "ECDH", namedCurve: "P-256" };
 
     function doExportPriv(x) {
       return crypto.subtle.exportKey("pkcs8", x);
@@ -296,7 +308,7 @@ TestArray.addTest(
   "Test that importing bad JWKs fails",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve: "P-256" };
     var tvs = tv.ecdh_p256_negative;
 
     function doTryImport(jwk) {
@@ -306,6 +318,7 @@ TestArray.addTest(
     }
 
     doTryImport(tvs.jwk_bad_crv)()
+      .then(error(that), doTryImport(tvs.jwk_different_crv))
       .then(error(that), doTryImport(tvs.jwk_missing_crv))
       .then(error(that), doTryImport(tvs.jwk_missing_x))
       .then(error(that), doTryImport(tvs.jwk_missing_y))
@@ -349,7 +362,7 @@ TestArray.addTest(
   "Derive an HMAC key from two ECDH keys and test sign/verify",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve: "P-521" };
     var algDerived = { name: "HMAC", hash: {name: "SHA-1"} };
 
     var pubKey, privKey;
@@ -396,10 +409,11 @@ TestArray.addTest(
   "Derive an HKDF key from two ECDH keys and derive an HMAC key from that",
   function() {
     var that = this;
+    var alg = { name: "ECDH", namedCurve: "P-256" };
 
     async function doTest() {
-      let privKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, "ECDH", false, ["deriveKey"]);
-      let pubKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_pub, "ECDH", false, []);
+      let privKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, alg, false, ["deriveKey"]);
+      let pubKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_pub, alg, false, []);
       let ecdhAlg = { name: "ECDH", public: pubKey };
       let hkdfAlg = { name: "HKDF", hash: "SHA-256", salt: new Uint8Array(), info: new Uint8Array() };
       let hkdfKey = await crypto.subtle.deriveKey(ecdhAlg, privKey, hkdfAlg, false, ["deriveKey"]);
@@ -454,7 +468,7 @@ TestArray.addTest(
   "SPKI/JWK import ECDH keys (P-256) and derive a known secret",
   function() {
     var that = this;
-    var alg = { name: "ECDH" };
+    var alg = { name: "ECDH", namedCurve: "P-256" };
 
     var pubKey, privKey;
     function setPub(x) { pubKey = x; }

@@ -37143,7 +37143,7 @@ function isValidExplicitDest(dest) {
     case "FitBH":
     case "FitV":
     case "FitBV":
-      if (args.length !== 1) {
+      if (args.length > 1) {
         return false;
       }
       break;

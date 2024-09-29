@@ -40,6 +40,7 @@ add_task(async function () {
   );
 
   ds.startDragSessionForTests(
+    window,
     Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
       Ci.nsIDragService.DRAGDROP_ACTION_COPY |
       Ci.nsIDragService.DRAGDROP_ACTION_LINK
@@ -59,7 +60,7 @@ add_task(async function () {
       overflowChevron
     );
   } finally {
-    ds.endDragSession(true);
+    ds.getCurrentSession().endDragSession(true);
   }
 
   info("Overflow panel is shown.");

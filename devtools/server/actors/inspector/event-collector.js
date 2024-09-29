@@ -467,9 +467,13 @@ class JQueryEventCollector extends MainEventCollector {
 
     if (eventsObj) {
       for (const type in eventsObj) {
-        const events = eventsObj[type];
-        for (const key in events) {
-          const event = events[key];
+        let events = eventsObj[type];
+        // We can get arrays or objects. When we get the latter,
+        // the events are the object values.
+        if (!Array.isArray(events)) {
+          events = Object.values(events);
+        }
+        for (const event of events) {
           // Skip events that are part of jQueries internals.
           if (node.nodeType == node.DOCUMENT_NODE && event.selector) {
             continue;

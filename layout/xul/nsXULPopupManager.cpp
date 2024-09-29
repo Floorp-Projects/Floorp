@@ -855,7 +855,7 @@ void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem) {
 
   // there is no trigger event for menus
   popupFrame->InitializePopup(aMenu, nullptr, position, 0, 0,
-                              MenuPopupAnchorType_Node, true);
+                              MenuPopupAnchorType::Node, true);
   PendingPopup pendingPopup(&popupFrame->PopupElement(), nullptr);
   BeginShowingPopup(pendingPopup, parentIsContextMenu, aSelectFirstItem);
 }
@@ -897,7 +897,7 @@ void nsXULPopupManager::ShowPopup(Element* aPopup, nsIContent* aAnchorContent,
   nsCOMPtr<nsIContent> triggerContent = pendingPopup.GetTriggerContent();
 
   popupFrame->InitializePopup(aAnchorContent, triggerContent, aPosition, aXPos,
-                              aYPos, MenuPopupAnchorType_Node,
+                              aYPos, MenuPopupAnchorType::Node,
                               aAttributesOverride);
 
   BeginShowingPopup(pendingPopup, aIsContextMenu, aSelectFirstItem);

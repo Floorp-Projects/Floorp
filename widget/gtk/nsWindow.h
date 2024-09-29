@@ -802,7 +802,7 @@ class nsWindow final : public nsBaseWidget {
 
   InputRegion mInputRegion;
 
-  static bool DragInProgress(void);
+  bool DragInProgress(void);
 
   void DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent);
 

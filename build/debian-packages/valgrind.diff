@@ -1,0 +1,121 @@
+diff -Nru valgrind-3.20.0/debian/changelog valgrind-3.20.0/debian/changelog
+--- valgrind-3.20.0/debian/changelog	2023-01-11 00:51:40.000000000 +0900
++++ valgrind-3.20.0/debian/changelog	2024-09-10 08:52:50.000000000 +0900
+@@ -1,3 +1,9 @@
++valgrind (1:3.20.0-1moz1) UNRELEASED; urgency=medium
++
++  * Apply fix for https://bugs.kde.org/show_bug.cgi?id=492663
++
++ -- Mike Hommey <mhommey@mozilla.com>  Tue, 10 Sep 2024 08:52:50 +0900
++
+ valgrind (1:3.20.0-1) experimental; urgency=medium
+ 
+   * New upstream release.
+diff -Nru valgrind-3.20.0/debian/patches/fix-upstream-bug492663 valgrind-3.20.0/debian/patches/fix-upstream-bug492663
+--- valgrind-3.20.0/debian/patches/fix-upstream-bug492663	1970-01-01 09:00:00.000000000 +0900
++++ valgrind-3.20.0/debian/patches/fix-upstream-bug492663	2024-09-10 08:52:39.000000000 +0900
+@@ -0,0 +1,96 @@
++--- valgrind-3.20.0.orig/coregrind/m_debuginfo/debuginfo.c
+++++ valgrind-3.20.0/coregrind/m_debuginfo/debuginfo.c
++@@ -1073,7 +1073,8 @@ static ULong di_notify_ACHIEVE_ACCEPT_ST
++           load_client -> VG_(do_exec) -> VG_(do_exec_inner) ->
++           exe_handlers->load_fn ( == VG_(load_ELF) ).
++ 
++-       This does the mmap'ing and creats the associated NSegments.
+++       This does the mmap'ing with VG_(am_do_mmap_NO_NOTIFY)
+++       and creates the associated NSegments.
++ 
++        The NSegments may get merged, (see maybe_merge_nsegments)
++        so there could be more PT_LOADs than there are NSegments.
++@@ -1124,7 +1125,7 @@ static ULong di_notify_ACHIEVE_ACCEPT_ST
++ ULong VG_(di_notify_mmap)( Addr a, Bool allow_SkFileV, Int use_fd )
++ {
++    NSegment const * seg;
++-   Int rw_load_count;
+++   Int expected_rw_load_count;
++    const HChar* filename;
++    Bool       is_rx_map, is_rw_map, is_ro_map;
++ 
++@@ -1348,9 +1349,9 @@ ULong VG_(di_notify_mmap)( Addr a, Bool
++    /* We're only interested in mappings of object files. */
++ #  if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
++ 
++-   rw_load_count = 0;
+++   expected_rw_load_count = 0;
++ 
++-   elf_ok = ML_(check_elf_and_get_rw_loads) ( actual_fd, filename, &rw_load_count );
+++   elf_ok = ML_(check_elf_and_get_rw_loads) ( actual_fd, filename, &expected_rw_load_count, use_fd == -1 );
++ 
++    if (use_fd == -1) {
++       VG_(close)( actual_fd );
++@@ -1363,7 +1364,7 @@ ULong VG_(di_notify_mmap)( Addr a, Bool
++ #  elif defined(VGO_darwin)
++    if (!ML_(is_macho_object_file)( buf1k, (SizeT)sr_Res(preadres) ))
++       return 0;
++-   rw_load_count = 1;
+++   expected_rw_load_count = 1;
++ #  else
++ #    error "unknown OS"
++ #  endif
++@@ -1423,8 +1424,8 @@ ULong VG_(di_notify_mmap)( Addr a, Bool
++    /* So, finally, are we in an accept state? */
++    vg_assert(!di->have_dinfo);
++    if (di->fsm.have_rx_map &&
++-       rw_load_count >= 1 &&
++-       di->fsm.rw_map_count == rw_load_count) {
+++       expected_rw_load_count >= 1 &&
+++       di->fsm.rw_map_count == expected_rw_load_count) {
++       /* Ok, so, finally, we found what we need, and we haven't
++          already read debuginfo for this object.  So let's do so now.
++          Yee-ha! */
++@@ -1437,7 +1438,8 @@ ULong VG_(di_notify_mmap)( Addr a, Bool
++       /* If we don't have an rx and rw mapping, go no further. */
++       if (debug)
++          VG_(dmsg)("di_notify_mmap-6: "
++-                   "no dinfo loaded %s (no rx or no rw mapping)\n", filename);
+++                   "no dinfo loaded %s (no rx or rw mappings (%d) not reached expected count (%d))\n",
+++                   filename, di->fsm.rw_map_count, expected_rw_load_count);
++       return 0;
++    }
++ }
++--- valgrind-3.20.0.orig/coregrind/m_debuginfo/priv_readelf.h
+++++ valgrind-3.20.0/coregrind/m_debuginfo/priv_readelf.h
++@@ -52,7 +52,8 @@ extern Bool ML_(is_elf_object_file)( con
++ */
++ extern Bool ML_(read_elf_debug_info) ( DebugInfo* di );
++ 
++-extern Bool ML_(check_elf_and_get_rw_loads) ( Int fd, const HChar* filename, Int * rw_load_count );
+++extern Bool ML_(check_elf_and_get_rw_loads) ( Int fd, const HChar* filename,
+++                                            Int * rw_load_count, Bool from_nsegments );
++ 
++ 
++ #endif /* ndef __PRIV_READELF_H */
++--- valgrind-3.20.0.orig/coregrind/m_debuginfo/readelf.c
+++++ valgrind-3.20.0/coregrind/m_debuginfo/readelf.c
++@@ -3650,7 +3650,8 @@ Bool ML_(read_elf_debug_info) ( struct _
++    /* NOTREACHED */
++ }
++ 
++-Bool ML_(check_elf_and_get_rw_loads) ( Int fd, const HChar* filename, Int * rw_load_count )
+++Bool ML_(check_elf_and_get_rw_loads) ( Int fd, const HChar* filename,
+++                                       Int * rw_load_count, Bool from_nsegments )
++ {
++    Bool     res, ok;
++    UWord    i;
++@@ -3719,7 +3720,7 @@ Bool ML_(check_elf_and_get_rw_loads) ( I
++              * second PT_LOAD falls exactly on 0x1000) then the NSegements
++              * will get merged and VG_(di_notify_mmap) only gets called once. */
++             if (*rw_load_count == 2 &&
++-                ehdr_m.e_type == ET_EXEC &&
+++                from_nsegments &&
++                 a_phdr.p_offset == VG_PGROUNDDN(a_phdr.p_offset) )
++             {
++                *rw_load_count = 1;
+diff -Nru valgrind-3.20.0/debian/patches/series valgrind-3.20.0/debian/patches/series
+--- valgrind-3.20.0/debian/patches/series	2022-11-11 00:49:21.000000000 +0900
++++ valgrind-3.20.0/debian/patches/series	2024-09-10 08:52:21.000000000 +0900
+@@ -7,3 +7,4 @@
+ 11_arm64-cache-flush.patch
+ 13_fix-path-to-vgdb.patch
+ armhf_neon.patch
++fix-upstream-bug492663

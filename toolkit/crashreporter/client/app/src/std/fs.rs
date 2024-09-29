@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::std::mock::{mock_key, MockKey};
+use crate::std::mock::{mock_key, try_hook, MockKey};
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::io::{ErrorKind, Read, Result, Seek, SeekFrom, Write};
@@ -25,6 +25,10 @@ impl MockFileContent {
 
     pub fn new_bytes(data: Vec<u8>) -> Self {
         MockFileContent(Arc::new(Mutex::new(data)))
+    }
+
+    pub fn make_copy(&self) -> Self {
+        Self::new_bytes(self.0.lock().unwrap().clone())
     }
 }
 
@@ -444,6 +448,11 @@ pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
 }
 
 pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
+    if try_hook(false, "rename_fail") {
+        log::debug!("intentionally failing std::fs::rename");
+        return Err(ErrorKind::Unsupported.into());
+    }
+
     MockFS.get(move |files| {
         let from_name = from.as_ref().file_name().expect("invalid path");
         let item = files
@@ -462,6 +471,36 @@ pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
                     d.insert(to_name.to_owned(), item);
                     Ok(())
                 }
+            })
+            .and_then(|r| r)
+    })
+}
+
+pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
+    MockFS.get(move |files| {
+        let from_name = from.as_ref().file_name().expect("invalid path");
+        let item = files
+            .parent_dir(from.as_ref(), move |d| {
+                d.get(from_name)
+                    .ok_or(ErrorKind::NotFound.into())
+                    .and_then(|e| match &e.content {
+                        MockFSContent::Dir(_) => Err(ErrorKind::NotFound.into()),
+                        MockFSContent::File(f) => f
+                            .as_ref()
+                            .map(|f| MockFSItem {
+                                content: MockFSContent::File(Ok(f.make_copy())),
+                                modified: e.modified.clone(),
+                            })
+                            .map_err(|e| e.kind().into()),
+                    })
+            })
+            .and_then(|r| r)?;
+
+        let to_name = to.as_ref().file_name().expect("invalid path");
+        files
+            .parent_dir(to.as_ref(), move |d| {
+                d.insert(to_name.to_owned(), item);
+                Ok(())
             })
             .and_then(|r| r)
     })

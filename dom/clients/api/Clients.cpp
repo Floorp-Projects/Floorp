@@ -21,6 +21,7 @@
 #include "mozilla/StorageAccess.h"
 #include "nsIGlobalObject.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla::dom {
 
@@ -212,7 +213,9 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
     return outerPromise.forget();
   }
 
-  if (aURL.EqualsLiteral("about:blank")) {
+  if (aURL.EqualsLiteral(u"about:blank") ||
+      StringBeginsWith(aURL, u"about:blank?"_ns) ||
+      StringBeginsWith(aURL, u"about:blank#"_ns)) {
     CopyableErrorResult rv;
     rv.ThrowTypeError(
         "Passing \"about:blank\" to Clients.openWindow is not allowed");

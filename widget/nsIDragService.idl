@@ -10,28 +10,32 @@
 #include "nsIContentPolicy.idl"
 
 webidl DragEvent;
-webidl Element;
 webidl Node;
 webidl Selection;
 
 interface nsICookieJarSettings;
+interface nsIMockDragServiceController;
 
 %{C++
 #include "mozilla/EventForwards.h"
+#include "nsIWidget.h"
+
+class nsIWidget;
 
 namespace mozilla {
 namespace dom {
-class ContentParent;
+class BrowserParent;
 class DataTransfer;
 class RemoteDragStartData;
 } // namespace dom
 } // namespace mozilla
 %}
 
-[ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+[ptr] native BrowserParentPtr(mozilla::dom::BrowserParent);
 [ptr] native DataTransferPtr(mozilla::dom::DataTransfer);
 [ptr] native RemoteDragStartDataPtr(mozilla::dom::RemoteDragStartData);
 native EventMessage(mozilla::EventMessage);
+[ptr] native nsIWidgetPtr(nsIWidget);
 
 [scriptable, uuid(ebd6b3a2-af16-43af-a698-3091a087dd62), builtinclass]
 interface nsIDragService : nsISupports
@@ -41,29 +45,6 @@ interface nsIDragService : nsISupports
   const long DRAGDROP_ACTION_MOVE = 2;
   const long DRAGDROP_ACTION_LINK = 4;
   const long DRAGDROP_ACTION_UNINITIALIZED = 64;
-
-  /**
-    * Starts a modal drag session with an array of transaferables.
-    *
-    * Note: This method is deprecated for non-native code.
-    *
-    * @param  aPrincipal - the triggering principal of the drag, or null if
-    *                      it's from browser chrome or OS
-    * @param aCsp - The csp of the triggering Document
-    * @param  aTransferables - an array of transferables to be dragged
-    * @param  aActionType - specified which of copy/move/link are allowed
-    * @param  aContentPolicyType - the contentPolicyType that will be
-    *           passed to the loadInfo when creating a new channel
-    *           (defaults to TYPE_OTHER)
-    */
-  [can_run_script]
-  void invokeDragSession (in Node aDOMNode,
-                          in nsIPrincipal aPrincipal,
-                          in nsIContentSecurityPolicy aCsp,
-                          in nsICookieJarSettings aCookieJarSettings,
-                          in nsIArray aTransferables,
-                          in unsigned long aActionType,
-                          [optional] in nsContentPolicyType aContentPolicyType);
 
   /**
    * Starts a modal drag session using an image. The first four arguments are
@@ -137,20 +118,44 @@ interface nsIDragService : nsISupports
                                       in DataTransferPtr aDataTransfer);
 
   /**
-    * Returns the current Drag Session
+    * In the parent process, returns the current drag session.  In content,
+    * returns the current drag session for the widget containing the given
+    * window, or the entry global JS context if aWindow is not specified.
+    *
+    * @param aWidgetProvider Either the nsIWidget that is the source or current
+    *                        target of the drag, or an nsIDOMWindowProxy for a
+    *                        window that is on the widget.
     */
-  nsIDragSession getCurrentSession();
+  nsIDragSession getCurrentSession([optional] in nsISupports aWidgetProvider);
+
+%{ C++
+  nsIDragSession* GetCurrentSession(nsIWidget* aWidget) {
+  	nsCOMPtr<nsIDragSession> session;
+    GetCurrentSession(aWidget, getter_AddRefs(session));
+    return session;
+  }
+%}
 
   /**
     * Tells the Drag Service to start a drag session. This is called when
-    * an external drag occurs
+    * an external drag occurs.
+    *
+    * @param aWidgetProvider Either the nsIWidget that will be the target of
+    *                        the drag, or an nsIDOMWindowProxy for a
+    *                        window that is on that widget.
+    * @returns the new (or pre-existing) session
     */
-  void startDragSession() ;
+  [notxpcom, nostdcall]
+  nsIDragSession startDragSession(in nsISupports aWidgetProvider);
 
   /**
    * Similar to startDragSession(), automated tests may want to start
    * session for emulating an external drag.  At that time, this should
    * be used instead of startDragSession().
+   *
+   * @param aWidgetProvider Either the nsIWidget that is the source or current
+   *                        target of the drag, or an nsIDOMWindowProxy for a
+   *                        window that is on the widget.
    *
    * @param aAllowedEffect Set default drag action which means allowed effects
    *                       in the session and every DnD events are initialized
@@ -158,25 +163,8 @@ interface nsIDragService : nsISupports
    *                       DRAGDROP_ACTION_NONE, or one or more values of
    *                       DRAGDROP_ACTION_(MOVE|COPY|LINK).
    */
-  void startDragSessionForTests(in unsigned long aAllowedEffect);
-
-  /**
-    * Tells the Drag Service to end a drag session. This is called when
-    * an external drag occurs
-    *
-    * If aDoneDrag is true, the drag has finished, otherwise the drag has
-    * just left the window.
-    */
-  [can_run_script]
-  void endDragSession(in boolean aDoneDrag,
-                      [optional] in unsigned long aKeyModifiers);
-
-  /**
-   * Fire a drag event at the source of the drag
-   */
-  [noscript, can_run_script]
-  void fireDragEventAtSource(in EventMessage aEventMessage,
-                             in unsigned long aKeyModifiers);
+  void startDragSessionForTests(in nsISupports aWidgetProvider,
+                                in unsigned long aAllowedEffect);
 
   /**
    * Increase/decrease dragging suppress level by one.
@@ -186,25 +174,46 @@ interface nsIDragService : nsISupports
   void suppress();
   void unsuppress();
 
-  /**
-    * aX and aY are in LayoutDevice pixels.
-    */
-  [noscript] void dragMoved(in long aX, in long aY);
-
-  [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
-  [notxpcom, nostdcall] boolean removeAllChildProcesses();
+  [notxpcom, nostdcall] boolean maybeAddBrowser(in BrowserParentPtr aBP);
+  [notxpcom, nostdcall] boolean removeAllBrowsers();
 
   /**
-   * Retrun true if nsIDragSession's data is updated.
-   */
-  [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);
-
-  /**
-   * Called when HTMLEditor maybe deleted the source node from the document.
+   * The controller is used to issue events that would normally come from
+   * the system (when it is not mocked for testing).  This allows us to test
+   * without engaging any native DND behavior.
    *
-   * @param aEditingHost    The editing host when the editor deletes selection.
+   * In order for the controller to be effective, the existing nsIDragService
+   * needs to be replaced with the one in the controller.  See
+   * nsIMockDragServiceController for details.
    */
-  [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
+  nsIMockDragServiceController getMockDragController();
+
+  /**
+   * True if this is a mock nsIDragService, created with
+   * createMockDragController().
+   */
+  readonly attribute boolean isMockService;
+
+%{ C++
+  bool IsMockService() {
+    bool ret = false;
+    MOZ_ALWAYS_SUCCEEDS(GetIsMockService(&ret));
+    return ret;
+  }
+%}
+
+  /**
+   * If this is true, mSessionIsSynthesizedForTests should not become true.
+   * This hack is used to bypass the "old" drag-drop test behavior, which needed
+   * special behavior to pass.  The new framework requires the actual browser
+   * behavior.  The test for whether we are using the new framework or not can
+   * only be done in the main process with nsBaseDragService::IsMockService.
+   * Unfortunately, mSessionIsSynthesizedForTests is inherited from
+   * synthetic mouse events in content processes (when dragging content) so we
+   * set this early in the relevant tests.  Once the old tests are replaced,
+   * this can be removed along with mSessionIsSynthesizedForTests.
+   */
+  [infallible] attribute boolean neverAllowSessionIsSynthesizedForTests;
 };
 
 

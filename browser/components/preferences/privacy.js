@@ -1251,6 +1251,22 @@ var gPrivacyPane = {
       document.querySelector("menuitem[value='dontremember']").hidden = true;
     }
 
+    let privateBrowsingPref = Preferences.get(
+      "browser.privatebrowsing.autostart"
+    );
+
+    if (privateBrowsingPref.locked) {
+      // If permanent private browsing mode is locked to off,
+      // disable the "Never Remember History" option
+      document.querySelector("menuitem[value='dontremember']").disabled =
+        !privateBrowsingPref.value;
+
+      // If we're locked in permanent private browsing mode,
+      // disable the dropdown menu completely
+      document.getElementById("historyMode").disabled =
+        privateBrowsingPref.value;
+    }
+
     /* init HTTPS-Only mode */
     this.initHttpsOnly();
 

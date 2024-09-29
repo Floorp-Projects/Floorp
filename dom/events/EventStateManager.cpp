@@ -982,6 +982,13 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     mMouseEnterLeaveHelper->TryToRestorePendingRemovedOverTarget(aEvent);
   }
 
+  static constexpr auto const allowSynthesisForTests = []() -> bool {
+    nsCOMPtr<nsIDragService> dragService =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    return dragService &&
+           !dragService->GetNeverAllowSessionIsSynthesizedForTests();
+  };
+
   switch (aEvent->mMessage) {
     case eContextMenu:
       if (PointerLockManager::IsLocked()) {
@@ -1141,20 +1148,21 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case eDragOver: {
       WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
       MOZ_ASSERT(dragEvent);
-      if (dragEvent->mFlags.mIsSynthesizedForTests) {
+      if (dragEvent->mFlags.mIsSynthesizedForTests &&
+          allowSynthesisForTests()) {
         dragEvent->InitDropEffectForTests();
       }
       // Send the enter/exit events before eDrop.
       GenerateDragDropEnterExit(aPresContext, dragEvent);
       break;
     }
-    case eDrop:
-      if (aEvent->mFlags.mIsSynthesizedForTests) {
+    case eDrop: {
+      if (aEvent->mFlags.mIsSynthesizedForTests && allowSynthesisForTests()) {
         MOZ_ASSERT(aEvent->AsDragEvent());
         aEvent->AsDragEvent()->InitDropEffectForTests();
       }
       break;
-
+    }
     case eKeyPress: {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eChrome) ||
@@ -2016,10 +2024,11 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     }
     case eDragEventClass: {
       RefPtr<BrowserParent> browserParent = remote;
-      browserParent->Manager()->MaybeInvokeDragSession(browserParent,
-                                                       aEvent->mMessage);
+      browserParent->MaybeInvokeDragSession(aEvent->mMessage);
 
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+      RefPtr<nsIWidget> widget = browserParent->GetTopLevelWidget();
+      nsCOMPtr<nsIDragSession> dragSession =
+          nsContentUtils::GetDragSession(widget);
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
       uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       nsCOMPtr<nsIPrincipal> principal;
@@ -2406,11 +2415,11 @@ void EventStateManager::StopTrackingDragGesture(bool aClearInChildProcesses) {
     nsCOMPtr<nsIDragService> dragService =
         do_GetService("@mozilla.org/widget/dragservice;1");
     if (dragService) {
-      nsCOMPtr<nsIDragSession> dragSession;
-      dragService->GetCurrentSession(getter_AddRefs(dragSession));
+      RefPtr<nsIDragSession> dragSession =
+          dragService->GetCurrentSession(mPresContext->GetRootWidget());
       if (!dragSession) {
         // Only notify if there isn't a drag session active.
-        dragService->RemoveAllChildProcesses();
+        dragService->RemoveAllBrowsers();
       }
     }
   }
@@ -2799,8 +2808,11 @@ bool EventStateManager::DoDefaultDragStart(
   // began.  However, if we're handling drag session for synthesized events,
   // we need to initialize some information of the session.  Therefore, we
   // need to keep going for synthesized case.
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (MOZ_UNLIKELY(!mPresContext)) {
+    return true;
+  }
+  nsCOMPtr<nsIDragSession> dragSession =
+      dragService->GetCurrentSession(mPresContext->GetRootWidget());
   if (dragSession && !dragSession->IsSynthesizedForTests()) {
     return true;
   }
@@ -4215,7 +4227,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
       }
 
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+      nsCOMPtr<nsIDragSession> dragSession =
+          nsContentUtils::GetDragSession(mPresContext);
       if (!dragSession) break;
 
       // Reset the flag.
@@ -4314,8 +4327,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // No one called preventDefault(), so handle drop only in chrome.
         dragSession->SetOnlyChromeDrop(true);
       }
-      if (ContentChild* child = ContentChild::GetSingleton()) {
-        child->SendUpdateDropEffect(action, dropEffect);
+      if (auto* bc = BrowserChild::GetFrom(presContext->GetDocShell())) {
+        bc->SendUpdateDropEffect(action, dropEffect);
       }
       if (aEvent->HasBeenPostedToRemoteProcess()) {
         dragSession->SetCanDrop(true);
@@ -4330,8 +4343,12 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
     case eDrop: {
       if (aEvent->mFlags.mIsSynthesizedForTests) {
-        if (nsCOMPtr<nsIDragSession> dragSession =
-                nsContentUtils::GetDragSession()) {
+        nsCOMPtr<nsIDragService> dragService =
+            do_GetService("@mozilla.org/widget/dragservice;1");
+        nsCOMPtr<nsIDragSession> dragSession =
+            nsContentUtils::GetDragSession(mPresContext);
+        if (dragSession && dragService &&
+            !dragService->GetNeverAllowSessionIsSynthesizedForTests()) {
           MOZ_ASSERT(dragSession->IsSynthesizedForTests());
           RefPtr<WindowContext> sourceWC;
           DebugOnly<nsresult> rvIgnored =
@@ -4357,18 +4374,18 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ClearGlobalActiveContent(this);
       break;
     }
-    case eDragExit:
+    case eDragExit: {
       // make sure to fire the enter and exit_synth events after the
       // eDragExit event, otherwise we'll clean up too early
       GenerateDragDropEnterExit(presContext, aEvent->AsDragEvent());
-      if (ContentChild* child = ContentChild::GetSingleton()) {
+      if (auto* bc = BrowserChild::GetFrom(presContext->GetDocShell())) {
         // SendUpdateDropEffect to prevent nsIDragService from waiting for
         // response of forwarded dragexit event.
-        child->SendUpdateDropEffect(nsIDragService::DRAGDROP_ACTION_NONE,
-                                    nsIDragService::DRAGDROP_ACTION_NONE);
+        bc->SendUpdateDropEffect(nsIDragService::DRAGDROP_ACTION_NONE,
+                                 nsIDragService::DRAGDROP_ACTION_NONE);
       }
       break;
-
+    }
     case eKeyUp:
       // If space key is released, we need to inactivate the element which was
       // activated by preceding space key down.
@@ -5780,7 +5797,8 @@ void EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent) {
     return;
   }
 
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  nsCOMPtr<nsIDragSession> dragSession =
+      nsContentUtils::GetDragSession(mPresContext);
 
   if (dragSession) {
     // the initial dataTransfer is the one from the dragstart event that

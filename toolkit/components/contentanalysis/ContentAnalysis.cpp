@@ -12,6 +12,7 @@
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
@@ -118,6 +119,20 @@ nsIContentAnalysisAcknowledgement::FinalAction ConvertResult(
 }
 
 }  // anonymous namespace
+
+/* static */ bool nsIContentAnalysis::MightBeActive() {
+  // A DLP connection is not permitted to be added/removed while the
+  // browser is running, so we can cache this.
+  // Furthermore, if this is set via enterprise policy the pref will be locked
+  // so users won't be able to change it.
+  // Ideally we would make this a mirror: once pref, but this interacts in
+  // some weird ways with the enterprise policy for testing purposes.
+  static bool sIsEnabled =
+      mozilla::StaticPrefs::browser_contentanalysis_enabled();
+  // Note that we can't check gAllowContentAnalysis here because it
+  // only gets set in the parent process.
+  return sIsEnabled;
+}
 
 namespace mozilla::contentanalysis {
 ContentAnalysisRequest::~ContentAnalysisRequest() {
@@ -731,6 +746,12 @@ ContentAnalysisResponse::GetCancelError(CancelError* aCancelError) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ContentAnalysisResponse::GetIsCachedResponse(bool* aIsCachedResponse) {
+  *aIsCachedResponse = mIsCachedResponse;
+  return NS_OK;
+}
+
 static void LogAcknowledgement(
     content_analysis::sdk::ContentAnalysisAcknowledgement* aPbAck) {
   if (!static_cast<LogModule*>(gContentAnalysisLog)
@@ -1039,12 +1060,7 @@ ContentAnalysis::GetIsActive(bool* aIsActive) {
 
 NS_IMETHODIMP
 ContentAnalysis::GetMightBeActive(bool* aMightBeActive) {
-  // A DLP connection is not permitted to be added/removed while the
-  // browser is running, so we can cache this.
-  static bool sIsEnabled = StaticPrefs::browser_contentanalysis_enabled();
-  // Note that we can't check gAllowContentAnalysis here because it
-  // only gets set in the parent process.
-  *aMightBeActive = sIsEnabled;
+  *aMightBeActive = nsIContentAnalysis::MightBeActive();
   return NS_OK;
 }
 
@@ -1073,9 +1089,15 @@ ContentAnalysis::TestOnlySetCACmdLineArg(bool aVal) {
 
 nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
                                           nsresult aResult) {
+  LOGD(
+      "ContentAnalysis::CancelWithError dispatching to main thread for "
+      "request %s",
+      aRequestToken.get());
   return NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
       "ContentAnalysis::CancelWithError",
       [aResult, aRequestToken = std::move(aRequestToken)]() mutable {
+        LOGD("ContentAnalysis::CancelWithError on main thread for request %s",
+             aRequestToken.get());
         RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
         if (!owner) {
           // May be shutting down
@@ -1084,21 +1106,27 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
         owner->SetLastResult(aResult);
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
-        DefaultResult defaultResponse = GetDefaultResultFromPref();
-        nsIContentAnalysisResponse::Action action;
-        switch (defaultResponse) {
-          case DefaultResult::eAllow:
-            action = nsIContentAnalysisResponse::Action::eAllow;
-            break;
-          case DefaultResult::eWarn:
-            action = nsIContentAnalysisResponse::Action::eWarn;
-            break;
-          case DefaultResult::eBlock:
-            action = nsIContentAnalysisResponse::Action::eCanceled;
-            break;
-          default:
-            MOZ_ASSERT(false);
-            action = nsIContentAnalysisResponse::Action::eCanceled;
+        nsIContentAnalysisResponse::Action action =
+            nsIContentAnalysisResponse::Action::eCanceled;
+        // If we're shutting down, ignore the default result and just leave the
+        // action as canceled. This fixes a hang if the default result is warn
+        // and we shutdown during a request (bug 1912245)
+        if (aResult != NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+          DefaultResult defaultResponse = GetDefaultResultFromPref();
+          switch (defaultResponse) {
+            case DefaultResult::eAllow:
+              action = nsIContentAnalysisResponse::Action::eAllow;
+              break;
+            case DefaultResult::eWarn:
+              action = nsIContentAnalysisResponse::Action::eWarn;
+              break;
+            case DefaultResult::eBlock:
+              action = nsIContentAnalysisResponse::Action::eCanceled;
+              break;
+            default:
+              MOZ_ASSERT(false);
+              action = nsIContentAnalysisResponse::Action::eCanceled;
+          }
         }
         RefPtr<ContentAnalysisResponse> response =
             ContentAnalysisResponse::FromAction(action, aRequestToken);
@@ -1211,12 +1239,34 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
     return NS_OK;
   }
 
-  LOGD("Issuing ContentAnalysisRequest for token %s", requestToken.get());
-
   content_analysis::sdk::ContentAnalysisRequest pbRequest;
   rv =
       ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // This is a very simple cache to avoid the case of making multiple
+  // consecutive DLP requests to the agent for the same text data. This has
+  // been an issue on Google Docs and OneDrive (bug 1912384)
+  nsCOMPtr<nsIContentAnalysisRequest> requestToCache;
+  CachedData::CacheResult cacheMatchResult =
+      mCachedData.CompareWithRequest(aRequest);
+  if (cacheMatchResult == CachedData::CacheResult::Matches) {
+    auto action = mCachedData.ResultAction();
+    MOZ_ASSERT(action.isSome());
+    LOGD("Found existing request in cache for token %s with action %d",
+         requestToken.get(), *action);
+    mCachedData.SetExpirationTimer();
+    auto response = ContentAnalysisResponse::FromAction(*action, requestToken);
+    response->DoNotAcknowledge();
+    response->SetIsCachedResponse();
+    IssueResponse(response);
+    return NS_OK;
+  }
+  if (cacheMatchResult != CachedData::CacheResult::CannotBeCached) {
+    // We will use the cache
+    requestToCache = aRequest;
+  }
+  LOGD("Issuing ContentAnalysisRequest for token %s", requestToken.get());
   LogRequest(&pbRequest);
   nsCOMPtr<nsIObserverService> obsServ =
       mozilla::services::GetObserverService();
@@ -1237,15 +1287,18 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
 
   mCaClientPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [requestToken, pbRequest = std::move(pbRequest)](
+      [requestToken, pbRequest = std::move(pbRequest),
+       requestToCache = std::move(requestToCache)](
           std::shared_ptr<content_analysis::sdk::Client> client) mutable {
         // The content analysis call is synchronous so run in the background.
         NS_DispatchBackgroundTask(
             NS_NewCancelableRunnableFunction(
                 __func__,
                 [requestToken, pbRequest = std::move(pbRequest),
+                 requestToCache = std::move(requestToCache),
                  client = std::move(client)]() mutable {
-                  DoAnalyzeRequest(requestToken, std::move(pbRequest), client);
+                  DoAnalyzeRequest(requestToken, std::move(pbRequest),
+                                   std::move(requestToCache), client);
                 }),
             NS_DISPATCH_EVENT_MAY_BLOCK);
       },
@@ -1265,6 +1318,7 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
 void ContentAnalysis::DoAnalyzeRequest(
     nsCString aRequestToken,
     content_analysis::sdk::ContentAnalysisRequest&& aRequest,
+    nsCOMPtr<nsIContentAnalysisRequest> aRequestToCache,
     const std::shared_ptr<content_analysis::sdk::Client>& aClient) {
   MOZ_ASSERT(!NS_IsMainThread());
   RefPtr<ContentAnalysis> owner =
@@ -1321,7 +1375,9 @@ void ContentAnalysis::DoAnalyzeRequest(
   LogResponse(&pbResponse);
   NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
       "ContentAnalysis::RunAnalyzeRequestTask::HandleResponse",
-      [pbResponse = std::move(pbResponse)]() mutable {
+      [pbResponse = std::move(pbResponse),
+       aRequestToCache = std::move(aRequestToCache)]() mutable {
+        LOGD("RunAnalyzeRequestTask on main thread about to send response");
         RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
         if (!owner) {
           // May be shutting down
@@ -1334,7 +1390,34 @@ void ContentAnalysis::DoAnalyzeRequest(
           LOGE("Content analysis got invalid response!");
           return;
         }
-
+        if (aRequestToCache) {
+          [&]() {
+            nsIContentAnalysisResponse::Action action;
+            if (NS_FAILED(response->GetAction(&action))) {
+              LOGE("Content analysis couldn't get action from response!");
+              return;
+            }
+            nsCString responseRequestToken;
+            nsresult requestRv =
+                response->GetRequestToken(responseRequestToken);
+            if (NS_FAILED(requestRv)) {
+              LOGE(
+                  "Content analysis couldn't get request token from response!");
+              return;
+            }
+            {
+              auto callbackMap = owner->mCallbackMap.Lock();
+              auto maybeCallbackData =
+                  callbackMap->MaybeGet(responseRequestToken);
+              // This prevents caching cancelled results to avoid issues like
+              // bug 1918028.
+              if (maybeCallbackData.isSome() &&
+                  !maybeCallbackData->Canceled()) {
+                owner->mCachedData.SetData(std::move(aRequestToCache), action);
+              }
+            }
+          }();
+        }
         owner->IssueResponse(response);
       }));
 }
@@ -1529,8 +1612,10 @@ ContentAnalysis::CancelAllRequests() {
           auto warnResponseDataMap = owner->mWarnResponseDataMap.Lock();
           auto keys = warnResponseDataMap->Keys();
           for (const auto& key : keys) {
-            LOGD("Responding to warn dialog for request %s",
-                 nsCString(key).get());
+            LOGD(
+                "Responding to warn dialog (from CancelAllRequests) for "
+                "request %s",
+                nsCString(key).get());
             owner->RespondToWarnDialog(key, false);
           }
         }
@@ -1555,6 +1640,10 @@ NS_IMETHODIMP
 ContentAnalysis::RespondToWarnDialog(const nsACString& aRequestToken,
                                      bool aAllowContent) {
   nsCString requestToken(aRequestToken);
+  LOGD(
+      "ContentAnalysis::RespondToWarnDialog dispatching to main thread for "
+      "request %s",
+      requestToken.get());
   NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
       "RespondToWarnDialog",
       [aAllowContent, requestToken = std::move(requestToken)]() {
@@ -1582,6 +1671,18 @@ ContentAnalysis::RespondToWarnDialog(const nsACString& aRequestToken,
         nsIContentAnalysisResponse::Action action;
         DebugOnly<nsresult> rv = entry->mResponse->GetAction(&action);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
+        {
+          auto request = self->mCachedData.Request();
+          if (request) {
+            nsCString cachedRequestToken;
+            DebugOnly<nsresult> tokenRv =
+                request->GetRequestToken(cachedRequestToken);
+            MOZ_ASSERT(NS_SUCCEEDED(tokenRv));
+            if (cachedRequestToken.Equals(requestToken)) {
+              self->mCachedData.UpdateWarnAction(action);
+            }
+          }
+        }
         if (entry->mCallbackData.AutoAcknowledge()) {
           RefPtr<ContentAnalysisAcknowledgement> acknowledgement =
               new ContentAnalysisAcknowledgement(
@@ -1724,7 +1825,15 @@ ContentAnalysis::PrintToPDFToDetermineIfPrintAllowed(
                       __func__);
                   return;
                 }
-                nsCOMPtr<nsIURI> uri = windowParent->GetDocumentURI();
+                nsCOMPtr<nsIURI> uri = GetURIForBrowsingContext(
+                    windowParent->Canonical()->GetBrowsingContext());
+                if (!uri) {
+                  promise->Reject(
+                      PrintAllowedError(NS_ERROR_FAILURE,
+                                        cachedStaticBrowsingContext),
+                      __func__);
+                  return;
+                }
                 nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
                     new contentanalysis::ContentAnalysisRequest(
                         std::move(printData), std::move(uri),
@@ -1805,6 +1914,62 @@ NS_IMETHODIMP ContentAnalysis::SafeContentAnalysisResultCallback::Error(
   return NS_OK;
 }
 
+ClipboardContentAnalysisResult AnalyzeText(
+    uint64_t aInnerWindowId,
+    ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
+    nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
+    nsString aText) {
+  RefPtr<mozilla::dom::WindowGlobalParent> window =
+      mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
+  if (!window) {
+    // The window has gone away in the meantime
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  }
+  nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
+      new ContentAnalysisRequest(
+          nsIContentAnalysisRequest::AnalysisType::eBulkDataEntry,
+          std::move(aText), false, EmptyCString(), aDocumentURI,
+          nsIContentAnalysisRequest::OperationType::eClipboard, window);
+  nsresult rv = aContentAnalysis->AnalyzeContentRequestCallback(
+      contentAnalysisRequest, /* aAutoAcknowledge */ true, aResolver);
+  if (NS_FAILED(rv)) {
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  }
+  return true;
+}
+
+ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsCustomData(
+    uint64_t aInnerWindowId,
+    ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
+    nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
+    nsITransferable* aTrans) {
+  nsCOMPtr<nsISupports> transferData;
+  if (NS_FAILED(aTrans->GetTransferData(kCustomTypesMime,
+                                        getter_AddRefs(transferData)))) {
+    return false;
+  }
+  nsCOMPtr<nsISupportsCString> cStringData = do_QueryInterface(transferData);
+  if (!cStringData) {
+    return false;
+  }
+  nsCString str;
+  nsresult rv = cStringData->GetData(str);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsString text;
+  dom::DataTransfer::ParseExternalCustomTypesString(
+      mozilla::Span(str.Data(), str.Length()),
+      [&](dom::DataTransfer::ParseExternalCustomTypesStringData&& aData) {
+        text = std::move(std::move(aData).second);
+      });
+  if (text.IsEmpty()) {
+    return false;
+  }
+  return AnalyzeText(aInnerWindowId, aResolver, aDocumentURI, aContentAnalysis,
+                     std::move(text));
+}
+
 ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
     uint64_t aInnerWindowId,
     ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
@@ -1815,36 +1980,31 @@ ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
           aTextTrans->GetTransferData(aFlavor, getter_AddRefs(transferData)))) {
     return false;
   }
-  nsCOMPtr<nsISupportsString> textData = do_QueryInterface(transferData);
-  if (MOZ_UNLIKELY(!textData)) {
-    return false;
-  }
   nsString text;
-  if (NS_FAILED(textData->GetData(text))) {
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  nsCOMPtr<nsISupportsString> textData = do_QueryInterface(transferData);
+  if (MOZ_LIKELY(textData)) {
+    if (NS_FAILED(textData->GetData(text))) {
+      return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+    }
+  }
+  if (text.IsEmpty()) {
+    nsCOMPtr<nsISupportsCString> cStringData = do_QueryInterface(transferData);
+    if (cStringData) {
+      nsCString cText;
+      if (NS_FAILED(cStringData->GetData(cText))) {
+        return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+      }
+      text = NS_ConvertUTF8toUTF16(cText);
+    }
   }
   if (text.IsEmpty()) {
     // Content Analysis doesn't expect to analyze an empty string.
     // Just approve it.
-    return true;
+    return mozilla::Err(NoContentAnalysisResult::
+                            ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS);
   }
-  RefPtr<mozilla::dom::WindowGlobalParent> window =
-      mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
-  if (!window) {
-    // The window has gone away in the meantime
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
-  }
-  nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
-      new ContentAnalysisRequest(
-          nsIContentAnalysisRequest::AnalysisType::eBulkDataEntry,
-          std::move(text), false, EmptyCString(), aDocumentURI,
-          nsIContentAnalysisRequest::OperationType::eClipboard, window);
-  nsresult rv = aContentAnalysis->AnalyzeContentRequestCallback(
-      contentAnalysisRequest, /* aAutoAcknowledge */ true, aResolver);
-  if (NS_FAILED(rv)) {
-    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
-  }
-  return true;
+  return AnalyzeText(aInnerWindowId, aResolver, aDocumentURI, aContentAnalysis,
+                     std::move(text));
 }
 
 ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsFile(
@@ -1940,7 +2100,13 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
     }
   }
 
-  nsCOMPtr<nsIURI> currentURI = aWindow->Canonical()->GetDocumentURI();
+  nsCOMPtr<nsIURI> currentURI =
+      GetURIForBrowsingContext(aWindow->Canonical()->GetBrowsingContext());
+  if (!currentURI) {
+    aResolver->Callback(ContentAnalysisResult::FromNoResult(
+        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
+    return;
+  }
   nsTArray<nsCString> flavors;
   rv = aTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1960,34 +2126,46 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
     }
     keepChecking = !fileResult.unwrap();
   }
-  if (keepChecking) {
-    // Failed to get the clipboard data as a file, so try as text
+  if (!keepChecking) {
+    return;
+  }
+
+  auto customResult = CheckClipboardContentAnalysisAsCustomData(
+      innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable);
+  if (customResult.isErr()) {
+    aResolver->Callback(
+        ContentAnalysisResult::FromNoResult(customResult.unwrapErr()));
+    return;
+  }
+  keepChecking = !customResult.unwrap();
+  if (!keepChecking) {
+    return;
+  }
+
+  // Note that on Windows, kNativeHTMLMime will return the text in the native
+  // Windows clipboard CF_HTML format - see
+  // https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format
+  auto textFormats = {kTextMime, kHTMLMime, kNativeHTMLMime};
+  for (const auto& textFormat : textFormats) {
     auto textResult = CheckClipboardContentAnalysisAsText(
         innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
-        kTextMime);
+        textFormat);
     if (textResult.isErr()) {
       aResolver->Callback(
           ContentAnalysisResult::FromNoResult(textResult.unwrapErr()));
       return;
     }
     keepChecking = !textResult.unwrap();
+    if (!keepChecking) {
+      break;
+    }
   }
+
   if (keepChecking) {
-    // Failed to get the clipboard data as a file or text, so try as html
-    auto htmlResult = CheckClipboardContentAnalysisAsText(
-        innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
-        kHTMLMime);
-    if (htmlResult.isErr()) {
-      aResolver->Callback(
-          ContentAnalysisResult::FromNoResult(htmlResult.unwrapErr()));
-      return;
-    }
-    if (!htmlResult.unwrap()) {
-      // Couldn't get file or text or html data from this
-      aResolver->Callback(ContentAnalysisResult::FromNoResult(
-          NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
-      return;
-    }
+    // Couldn't get any data from this
+    aResolver->Callback(ContentAnalysisResult::FromNoResult(
+        NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
+    return;
   }
 }
 
@@ -2115,6 +2293,46 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
   return NS_OK;
 }
 
+/* static */ nsCOMPtr<nsIURI> ContentAnalysis::GetURIForBrowsingContext(
+    dom::CanonicalBrowsingContext* aBrowsingContext) {
+  dom::WindowGlobalParent* windowGlobal =
+      aBrowsingContext->GetCurrentWindowGlobal();
+  if (!windowGlobal) {
+    return nullptr;
+  }
+  nsIPrincipal* principal = windowGlobal->DocumentPrincipal();
+  dom::CanonicalBrowsingContext* curBrowsingContext =
+      aBrowsingContext->GetParent();
+  while (curBrowsingContext) {
+    dom::WindowGlobalParent* newWindowGlobal =
+        curBrowsingContext->GetCurrentWindowGlobal();
+    if (!newWindowGlobal) {
+      break;
+    }
+    nsIPrincipal* newPrincipal = newWindowGlobal->DocumentPrincipal();
+    if (!(newPrincipal->Subsumes(principal))) {
+      break;
+    }
+    principal = newPrincipal;
+    curBrowsingContext = curBrowsingContext->GetParent();
+  }
+  return principal->GetURI();
+}
+
+// IDL implementation
+NS_IMETHODIMP ContentAnalysis::GetURIForBrowsingContext(
+    dom::BrowsingContext* aBrowsingContext, nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aBrowsingContext);
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsCOMPtr<nsIURI> uri =
+      GetURIForBrowsingContext(aBrowsingContext->Canonical());
+  if (!uri) {
+    return NS_ERROR_FAILURE;
+  }
+  uri.forget(aURI);
+  return NS_OK;
+}
+
 NS_IMETHODIMP ContentAnalysisCallback::ContentResult(
     nsIContentAnalysisResponse* aResponse) {
   if (mPromise.isSome()) {
@@ -2158,6 +2376,91 @@ NS_IMETHODIMP ContentAnalysisDiagnosticInfo::GetRequestCount(
     int64_t* aRequestCount) {
   *aRequestCount = mRequestCount;
   return NS_OK;
+}
+
+ContentAnalysis::CachedData::CacheResult
+ContentAnalysis::CachedData::CompareWithRequest(
+    const RefPtr<nsIContentAnalysisRequest>& aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIContentAnalysisRequest::AnalysisType analysisType;
+  if (NS_FAILED(aRequest->GetAnalysisType(&analysisType)) ||
+      analysisType != nsIContentAnalysisRequest::AnalysisType::eBulkDataEntry) {
+    return CacheResult::CannotBeCached;
+  }
+  nsString requestTextContent;
+  if (NS_FAILED(aRequest->GetTextContent(requestTextContent)) ||
+      requestTextContent.IsEmpty()) {
+    return CacheResult::CannotBeCached;
+  }
+  nsCOMPtr<nsIURI> requestUri;
+  if (NS_FAILED(aRequest->GetUrl(getter_AddRefs(requestUri)))) {
+    return CacheResult::CannotBeCached;
+  }
+  RefPtr<dom::WindowGlobalParent> windowGlobalParent;
+  if (NS_FAILED(aRequest->GetWindowGlobalParent(
+          getter_AddRefs(windowGlobalParent)))) {
+    return CacheResult::CannotBeCached;
+  }
+
+  nsCOMPtr<nsIContentAnalysisRequest> cachedRequest = Request();
+  if (!cachedRequest) {
+    return CacheResult::DoesNotMatchExisting;
+  }
+  nsCOMPtr<nsIURI> cachedUri;
+  bool uriEquals = false;
+  if (NS_FAILED(cachedRequest->GetUrl(getter_AddRefs(cachedUri))) ||
+      NS_FAILED(cachedUri->Equals(requestUri, &uriEquals)) || !uriEquals) {
+    return CacheResult::DoesNotMatchExisting;
+  }
+  nsString cachedTextContent;
+  if (NS_FAILED(cachedRequest->GetTextContent(cachedTextContent)) ||
+      !cachedTextContent.Equals(requestTextContent)) {
+    return CacheResult::DoesNotMatchExisting;
+  }
+  RefPtr<dom::WindowGlobalParent> cachedWindowGlobalParent;
+  if (NS_FAILED(cachedRequest->GetWindowGlobalParent(
+          getter_AddRefs(cachedWindowGlobalParent)))) {
+    return CacheResult::DoesNotMatchExisting;
+  }
+  if (cachedWindowGlobalParent && windowGlobalParent &&
+      cachedWindowGlobalParent->InnerWindowId() !=
+          windowGlobalParent->InnerWindowId()) {
+    return CacheResult::DoesNotMatchExisting;
+  }
+  return CacheResult::Matches;
+}
+
+void ContentAnalysis::CachedData::SetExpirationTimer() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mExpirationTimer) {
+    mExpirationTimer->Cancel();
+  } else {
+    mExpirationTimer = NS_NewTimer();
+  }
+  mExpirationTimer->InitWithNamedFuncCallback(
+      [](nsITimer* func, void* closure) {
+        LOGD("Clearing content analysis cache (dispatching to main thread)");
+        NS_DispatchToMainThread(
+            NS_NewCancelableRunnableFunction("Clear ContentAnalysis cache", [] {
+              LOGD("Clearing content analysis cache");
+              RefPtr<ContentAnalysis> contentAnalysis =
+                  ContentAnalysis::GetContentAnalysisFromService();
+              if (contentAnalysis) {
+                contentAnalysis->mCachedData.Clear();
+              }
+            }));
+      },
+      nullptr, mClearTimeout, nsITimer::TYPE_ONE_SHOT,
+      "ContentAnalysis::CachedData::SetExpirationTimer");
+  LOGD("Set content analysis cached data clear timer with timeout %d",
+       mClearTimeout);
+}
+
+void ContentAnalysis::SetCachedDataTimeoutForTesting(uint32_t aNewTimeout) {
+  mCachedData.mClearTimeout = aNewTimeout;
+}
+void ContentAnalysis::ResetCachedDataTimeoutForTesting() {
+  mCachedData.mClearTimeout = kDefaultCachedDataTimeoutInMs;
 }
 
 #undef LOGD

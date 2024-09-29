@@ -192,6 +192,7 @@ struct LoadInfoArgs
   bool                        originTrialCoepCredentiallessEnabledForTopLevel;
   nullable nsIURI             unstrippedURI;
   InterceptionInfoArg?        interceptionInfo;
+  bool                        isNewWindowTarget;
 };
 
 /**

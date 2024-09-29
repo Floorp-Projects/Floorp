@@ -1,6 +1,105 @@
 {
   "data": [
     {
+      "stash": {
+        "blocked": [
+          "dev@serpclix.com:3.4.0",
+          "dev@serpclix.com:3.4.7",
+          "dev@serpclix.com:3.1.0",
+          "dev@serpclix.com:3.3.0",
+          "dev@serpclix.com:3.0.1",
+          "phishjail@gmail.com:1.0.0",
+          "dev@serpclix.com:3.4.8",
+          "vdhcustom@hubbux:9.1.0.42",
+          "phishjail@gmail.com:1.1.1",
+          "dev@serpclix.com:3.4.1",
+          "dev@serpclix.com:3.4.2",
+          "dev@serpclix.com:3.0.3dev",
+          "dev@serpclix.com:3.4.5dev",
+          "dev@serpclix.com:3.0.0",
+          "{9718529d-634a-4bf3-9c6d-e8463e8fe9c5}:3.2.1",
+          "dev@serpclix.com:3.2.0dev",
+          "dev@serpclix.com:3.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726684562326,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726857305113,
+      "id": "c1ab0cc8-b942-41ec-a68a-93ee59701bdb",
+      "last_modified": 1726857360155
+    },
+    {
+      "stash": {
+        "blocked": [
+          "8ade8c6e85a7d5e8a14f8205bf6caff769133161@temporary-addon.com:0.3.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726511760904,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726684505466,
+      "id": "9dbd4d36-c5db-4719-acbd-551ad608e115",
+      "last_modified": 1726684562205
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{8e76190e-b557-4cf6-ba4c-c4f27a253eb0}:0.3.1",
+          "{8e76190e-b557-4cf6-ba4c-c4f27a253eb0}:1.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726238016295,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726511705251,
+      "id": "dd112766-4283-4b19-95e1-572e1ed6f69f",
+      "last_modified": 1726511760789
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{76f1650e-e563-46a9-be26-685214b972fb}:8"
+        ],
+        "unblocked": []
+      },
+      "schema": 1726212413974,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726230904346,
+      "id": "1aa909ac-3cfe-4e3a-955d-847f1fe328d8",
+      "last_modified": 1726230952838
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{56748cdc-1510-4374-949f-fb2908c781c5}:4",
+          "{56748cdc-1510-4374-949f-fb2908c781c5}:2",
+          "{56748cdc-1510-4374-949f-fb2908c781c5}:1.1",
+          "{56748cdc-1510-4374-949f-fb2908c781c5}:1.0",
+          "{56748cdc-1510-4374-949f-fb2908c781c5}:3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1725926403972,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1726079705449,
+      "id": "89f940c9-31a9-4122-9672-1334cc7dddb5",
+      "last_modified": 1726079761529
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{7fb02271-f9d0-49dd-b1fb-d9a0e976e690}:1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1724976005661,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1725302105688,
+      "id": "75411c34-302b-4a7d-b026-be02723c0466",
+      "last_modified": 1725302159982
+    },
+    {
       "schema": 1724351845855,
       "attachment": {
         "hash": "ee70e50e8c808399c10883d9ea525638dccf93570b6d855c7586cd15142eddec",
@@ -16,5 +115,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1724351846412
+  "timestamp": 1726857360155
 }

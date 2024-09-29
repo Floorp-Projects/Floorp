@@ -29,6 +29,7 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RecursiveMutex.h"
+#include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -43,6 +44,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIRemoteTab.h"
+#include "nsITransferable.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
 #include "nsRefPtrHashtable.h"
@@ -193,6 +195,12 @@ class ContentParent final : public PContentParent,
       bool aPreferUsed = false);
 
   /**
+   * Create an nsITransferable with the specified data flavor types.
+   */
+  static mozilla::Result<nsCOMPtr<nsITransferable>, nsresult>
+  CreateClipboardTransferable(const nsTArray<nsCString>& aTypes);
+
+  /**
    * Get or create a content process, but without waiting for the process
    * launch to have completed. The returned `ContentParent` may still be in the
    * "Launching" state.
@@ -309,6 +317,8 @@ class ContentParent final : public PContentParent,
   // been updated and so full reflows are in order.
   static void NotifyUpdatedFonts(bool aFullRebuild);
 
+  mozilla::ipc::IPCResult RecvCreateClipboardContentAnalysis(
+      Endpoint<PClipboardContentAnalysisParent>&& aParentEndpoint);
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
@@ -466,8 +476,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvFinishShutdown();
 
   mozilla::ipc::IPCResult RecvNotifyShutdownSuccess();
-
-  void MaybeInvokeDragSession(BrowserParent* aParent, EventMessage aMessage);
 
   PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
       const nsTArray<PermissionRequest>& aRequests, nsIPrincipal* aPrincipal,
@@ -921,8 +929,7 @@ class ContentParent final : public PContentParent,
       const uint32_t& aContentDispositionHint,
       const nsAString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
-      const bool& aShouldCloseWindow);
+      nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
       PExternalHelperAppParent* actor, nsIURI* uri,
@@ -931,8 +938,8 @@ class ContentParent final : public PContentParent,
       const uint32_t& aContentDispositionHint,
       const nsAString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
-      const bool& aShouldCloseWindow) override;
+      nsIURI* aReferrer,
+      const MaybeDiscarded<BrowsingContext>& aContext) override;
 
   already_AddRefed<PHandlerServiceParent> AllocPHandlerServiceParent();
 
@@ -1117,9 +1124,6 @@ class ContentParent final : public PContentParent,
   PWebrtcGlobalParent* AllocPWebrtcGlobalParent();
   bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor);
 #endif
-
-  mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
-                                               const uint32_t& aDropEffect);
 
   mozilla::ipc::IPCResult RecvShutdownProfile(const nsACString& aProfile);
 
@@ -1434,9 +1438,6 @@ class ContentParent final : public PContentParent,
     return mThreadsafeHandle;
   }
 
-  void GetIPCTransferableData(nsIDragSession* aSession, BrowserParent* aParent,
-                              nsTArray<IPCTransferableData>& aIPCTransferables);
-
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
@@ -1532,6 +1533,9 @@ class ContentParent final : public PContentParent,
 
   // True if we already created a GMP service.
   uint8_t mGMPCreated : 1;
+  // True if we already created the
+  // ClipboardContentAnalysis actor
+  uint8_t mClipboardContentAnalysisCreated : 1;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mNotifiedImpendingShutdownOnTabWillDestroy = false;
@@ -1613,6 +1617,8 @@ class ContentParent final : public PContentParent,
 
   bool mIsSignaledImpendingShutdown = false;
   bool mIsNotifiedShutdownSuccess = false;
+
+  nsCOMPtr<nsIThread> mClipboardContentAnalysisThread;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)

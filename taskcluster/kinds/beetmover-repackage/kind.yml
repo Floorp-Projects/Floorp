@@ -36,6 +36,8 @@ kind-dependencies:
     - attribution-l10n
     - repackage-deb
     - repackage-deb-l10n
+    - upload-symbols
+    - upload-symbols-dummy
 
 only-for-build-platforms:
     - linux-shippable/opt

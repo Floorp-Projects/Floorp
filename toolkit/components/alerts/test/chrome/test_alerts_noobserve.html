@@ -4,8 +4,8 @@
 <html>
 <head>
   <title>Test for Alerts Service</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 
 <body>
@@ -74,6 +74,7 @@ async function runTest() {
       try {
         notifier.showAlertNotification(null, "Notification test",
                                        "This notification has no observer");
+        notifier.closeAlert();
         ok(true, "showAlertNotification() succeeded");
       } catch (ex) {
         todo(false, "showAlertNotification() failed.", ex);

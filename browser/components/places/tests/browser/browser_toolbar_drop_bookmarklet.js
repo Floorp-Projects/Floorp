@@ -142,9 +142,63 @@ add_task(async function test() {
       )
   );
 
+  // synthesizeDrop will reference the center of the elements we pass.  Since
+  // dragging to anything from the center and below is considered _after_ an
+  // element, and we are dragging up, we need to drag _just past_ the center
+  // (1 pixel) to drop before the target element.
+  let nodebound = placesItems.childNodes[0].getBoundingClientRect();
+  let [centerX, centerY] = [
+    nodebound.left + nodebound.width / 2,
+    nodebound.top + nodebound.height / 2,
+  ];
   EventUtils.synthesizeDrop(
-    placesItems,
+    placesItems.childNodes[1],
     placesItems.childNodes[0],
+    [
+      [
+        {
+          type: "text/x-moz-place",
+          data: PlacesUtils.wrapNode(
+            placesItems.childNodes[0]._placesNode,
+            "text/x-moz-place"
+          ),
+        },
+      ],
+    ],
+    "move",
+    window,
+    window,
+    {
+      clientX: centerX - 1,
+      clientY: centerY - 1,
+    }
+  );
+
+  await urlMoveNotification;
+  Assert.ok(spy.notCalled, "ShowBookmarksDialog not called on move for url");
+
+  info("Moving existing Bookmarklet from position [2] to [1] on Toolbar");
+  let bookmarkletMoveNotification = PlacesTestUtils.waitForNotification(
+    "bookmark-moved",
+    events =>
+      events.some(
+        e =>
+          e.parentGuid === PlacesUtils.bookmarks.toolbarGuid &&
+          e.oldParentGuid === PlacesUtils.bookmarks.toolbarGuid &&
+          e.oldIndex == 2 &&
+          e.index == 1
+      )
+  );
+
+  nodebound = placesItems.childNodes[1].getBoundingClientRect();
+  [centerX, centerY] = [
+    nodebound.left + nodebound.width / 2,
+    nodebound.top + nodebound.height / 2,
+  ];
+
+  EventUtils.synthesizeDrop(
+    placesItems.childNodes[2],
+    placesItems.childNodes[1],
     [
       [
         {
@@ -157,44 +211,15 @@ add_task(async function test() {
       ],
     ],
     "move",
-    window
+    window,
+    window,
+    {
+      clientX: centerX - 1,
+      clientY: centerY - 1,
+    }
   );
 
-  await urlMoveNotification;
-  Assert.ok(spy.notCalled, "ShowBookmarksDialog not called on move for url");
-
-  info("Moving existing Bookmarklet from position [2] to [1] on Toolbar");
-  let bookmarkletMoveNotificatio = PlacesTestUtils.waitForNotification(
-    "bookmark-moved",
-    events =>
-      events.some(
-        e =>
-          e.parentGuid === PlacesUtils.bookmarks.toolbarGuid &&
-          e.oldParentGuid === PlacesUtils.bookmarks.toolbarGuid &&
-          e.oldIndex == 2 &&
-          e.index == 1
-      )
-  );
-
-  EventUtils.synthesizeDrop(
-    toolbar,
-    placesItems.childNodes[1],
-    [
-      [
-        {
-          type: "text/x-moz-place",
-          data: PlacesUtils.wrapNode(
-            placesItems.childNodes[2]._placesNode,
-            "text/x-moz-place"
-          ),
-        },
-      ],
-    ],
-    "move",
-    window
-  );
-
-  await bookmarkletMoveNotificatio;
+  await bookmarkletMoveNotification;
   Assert.ok(spy.notCalled, "ShowBookmarksDialog not called on move for url");
   sandbox.restore();
 });

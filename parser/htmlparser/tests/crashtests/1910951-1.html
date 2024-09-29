@@ -1,0 +1,13 @@
+<html class="reftest-wait">
+  <iframe></iframe>
+  <script>
+    onmessage = function() {
+        document.documentElement.className = "";
+    }
+    const iframe = document.querySelector("iframe");
+    const meta = iframe.contentDocument.createElement('meta');
+    meta.httpEquiv = 'Refresh';
+    meta.content = '0; url=file_1910951-1.html';
+    iframe.contentDocument.head.append(meta);
+  </script>
+</html>

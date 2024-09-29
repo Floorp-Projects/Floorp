@@ -6347,12 +6347,21 @@ void nsContentUtils::HidePopupsInDocument(Document* aDocument) {
 }
 
 /* static */
-already_AddRefed<nsIDragSession> nsContentUtils::GetDragSession() {
+already_AddRefed<nsIDragSession> nsContentUtils::GetDragSession(
+    nsIWidget* aWidget) {
   nsCOMPtr<nsIDragSession> dragSession;
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
-  if (dragService) dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragService) {
+    dragSession = dragService->GetCurrentSession(aWidget);
+  }
   return dragSession.forget();
+}
+
+/* static */
+already_AddRefed<nsIDragSession> nsContentUtils::GetDragSession(
+    nsPresContext* aPC) {
+  return GetDragSession(aPC->GetRootWidget());
 }
 
 /* static */
@@ -6367,7 +6376,7 @@ nsresult nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent) {
   NS_ASSERTION(aDragEvent->mMessage != eDragStart,
                "draggesture event created without a dataTransfer");
 
-  nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
+  nsCOMPtr<nsIDragSession> dragSession = GetDragSession(aDragEvent->mWidget);
   NS_ENSURE_TRUE(dragSession, NS_OK);  // no drag in progress
 
   RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
@@ -7403,7 +7412,8 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
     // we're checking for things that will use the owner.
     inherit =
         (NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &uriInherits)) &&
-         (uriInherits || (aInheritForAboutBlank && NS_IsAboutBlank(aURI)))) ||
+         (uriInherits || (aInheritForAboutBlank &&
+                          NS_IsAboutBlankAllowQueryAndFragment(aURI)))) ||
         //
         // file: uri special-casing
         //
@@ -8899,9 +8909,9 @@ void nsContentUtils::FirePageHideEventForFrameLoaderSwap(
   MOZ_DIAGNOSTIC_ASSERT(aItem);
   MOZ_DIAGNOSTIC_ASSERT(aChromeEventHandler);
 
-  RefPtr<Document> doc = aItem->GetDocument();
-  NS_ASSERTION(doc, "What happened here?");
-  doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
+  if (RefPtr<Document> doc = aItem->GetDocument()) {
+    doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
+  }
 
   int32_t childCount = 0;
   aItem->GetInProcessChildCount(&childCount);

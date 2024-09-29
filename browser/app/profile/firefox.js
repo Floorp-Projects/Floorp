@@ -281,7 +281,7 @@ pref("browser.shell.defaultBrowserCheckCount", 0);
 pref("browser.shell.setDefaultBrowserUserChoice", true);
 // When setting default via UserChoice, temporarily rename an ancestor registry key to
 // prevent kernel drivers from locking the UserChoice subkeys.
-pref("browser.shell.setDefaultBrowserUserChoice.regRename", false);
+pref("browser.shell.setDefaultBrowserUserChoice.regRename", true);
 // When setting the default browser on Windows 10 using the UserChoice
 // registry keys, also try to set Firefox as the default PDF handler.
 pref("browser.shell.setDefaultPDFHandler", true);

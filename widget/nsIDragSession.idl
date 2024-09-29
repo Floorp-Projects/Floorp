@@ -10,13 +10,23 @@
 
 
 %{ C++
+#include "mozilla/EventForwards.h"
 #include "nsSize.h"
+
+namespace mozilla {
+namespace dom {
+class BrowserParent;
+} // namespace dom
+} // namespace mozilla
 %}
 interface nsIContentSecurityPolicy;
 
+[ptr] native BrowserParentPtr(mozilla::dom::BrowserParent);
+native EventMessage(mozilla::EventMessage);
 native nsSize(nsSize);
 
 webidl DataTransfer;
+webidl Element;
 webidl WindowContext;
 webidl Node;
 webidl Selection;
@@ -128,6 +138,12 @@ interface nsIDragSession : nsISupports
   void updateDragImage(in Node aImage, in long aImageX, in long aImageY);
 
   /**
+   * Tell Gecko that this session is generated for automated testing.
+   * This should be called immediately after StartDragSession when testing.
+   */
+  [noscript] void InitForTests(in uint32_t aAllowedEffect);
+
+  /**
    * Returns effects allowed at starting the session for tests.
    */
   [notxpcom, nostdcall] unsigned long getEffectAllowedForTests();
@@ -136,6 +152,11 @@ interface nsIDragSession : nsISupports
    * Returns true if current session was started with synthesized drag start.
    */
   [notxpcom, nostdcall] boolean isSynthesizedForTests();
+
+  /**
+   * Sets the drag end point.  Position is relative to screen in device coords.
+   */
+  void setDragEndPoint(in long aScreenX, in long aScreenY);
 
   /**
    * Sets drag end point of synthesized session when the test does not dispatch
@@ -148,4 +169,44 @@ interface nsIDragSession : nsISupports
    * element.
    */
   [notxpcom, nostdcall] boolean isDraggingTextInTextControl();
+
+  /**
+   * Called when HTMLEditor maybe deleted the source node from the document.
+   *
+   * @param aEditingHost    The editing host when the editor deletes selection.
+   */
+  [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
+
+  /**
+    * aX and aY are in LayoutDevice pixels.
+    */
+  [noscript] void dragMoved(in long aX, in long aY);
+
+  /**
+   * Fire a drag event at the source of the drag
+   */
+  [noscript, can_run_script]
+  void fireDragEventAtSource(in EventMessage aEventMessage,
+                             in unsigned long aKeyModifiers);
+
+  [notxpcom, nostdcall] boolean maybeAddBrowser(in BrowserParentPtr aBP);
+  [notxpcom, nostdcall] boolean removeAllBrowsers();
+
+  /**
+    * Tells the Drag Service to end a drag session.
+    *
+    * If aDoneDrag is true, the drag has finished, otherwise the drag has
+    * just left the window.
+    *
+    * @param aDoneDrag       If true, reports the drag as complete.
+    * @param aKeyModifiers   Key state to assume while ending the session.
+    */
+  [can_run_script]
+  void endDragSession(in boolean aDoneDrag,
+                      [optional] in unsigned long aKeyModifiers);
+
+  /**
+   * Retrun true if nsIDragSession's data is updated.
+   */
+  [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);
 };

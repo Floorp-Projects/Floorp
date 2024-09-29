@@ -122,16 +122,17 @@ function makeMockContentAnalysis() {
     setupForTest(shouldAllowRequest) {
       this.shouldAllowRequest = shouldAllowRequest;
       this.errorValue = undefined;
-      this.calls = [];
+      this.clearCalls();
     },
 
     setupForTestWithError(errorValue) {
       this.errorValue = errorValue;
-      this.calls = [];
+      this.clearCalls();
     },
 
     clearCalls() {
       this.calls = [];
+      this.browsingContextsForURIs = [];
     },
 
     getAction() {
@@ -186,6 +187,14 @@ function makeMockContentAnalysis() {
 
     cancelAllRequests() {
       // This is called on exit, no need to do anything
+    },
+
+    getURIForBrowsingContext(aBrowsingContext) {
+      // The real implementation walks up the parent chain as long
+      // as the parent principal subsumes the child one. For testing
+      // purposes, just return the browsing context's URI.
+      this.browsingContextsForURIs.push(aBrowsingContext);
+      return aBrowsingContext.currentURI;
     },
   };
 }

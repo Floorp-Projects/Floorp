@@ -61,6 +61,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsBaseDragService.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"

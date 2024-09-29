@@ -46,11 +46,16 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifySSLServerCertFinished(
     certBytesArray.AppendElement(std::move(cert.data()));
   }
 
-  mResultTask->Dispatch(std::move(certBytesArray), std::move(mPeerCertChain),
-                        aCertTransparencyStatus, aEVStatus, aSucceeded,
-                        aFinalError, aOverridableErrorCategory,
-                        aIsBuiltCertChainRootBuiltInRoot, mProviderFlags,
-                        aMadeOCSPRequests);
+  nsresult rv = mResultTask->Dispatch(
+      std::move(certBytesArray), std::move(mPeerCertChain),
+      aCertTransparencyStatus, aEVStatus, aSucceeded, aFinalError,
+      aOverridableErrorCategory, aIsBuiltCertChainRootBuiltInRoot,
+      mProviderFlags, aMadeOCSPRequests);
+  if (NS_FAILED(rv)) {
+    // We can't release this off the STS thread because some parts of it are
+    // not threadsafe. Just leak mResultTask.
+    Unused << mResultTask.forget();
+  }
   return IPC_OK();
 }
 
