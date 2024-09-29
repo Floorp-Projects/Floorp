@@ -37,10 +37,12 @@ export type TabEvent = {
 
 export type Browser = XULElement & {
   docShellIsActive: boolean;
+  renderLayers: boolean;
   spliting: boolean;
 };
 
 export type Tab = XULElement & {
+  linkedPanel: string;
   linkedBrowser: Browser;
   splitView: boolean;
 };

@@ -10,9 +10,7 @@ import {
   currentSplitView,
   setCurrentSplitView,
   setSplitViewData,
-  setSyncData,
   splitViewData,
-  syncData,
 } from "./utils/data";
 import type { Browser, SplitViewData, Tab, TabEvent } from "./utils/type";
 
@@ -110,15 +108,6 @@ export class SplitView {
 
   private handleTabClose(event: TabEvent) {
     const tab = event.target;
-
-    if (syncData().syncTabId === this.getTabId(tab)) {
-      setSyncData((prev) => ({
-        ...prev,
-        syncTabId: null,
-        sync: false,
-      }));
-    }
-
     const groupIndex = splitViewData().findIndex((group) =>
       group.tabIds.includes(this.getTabId(tab)),
     );
@@ -209,19 +198,15 @@ export class SplitView {
       }
 
       const elem = document?.getElementById("context_splittabs") as XULElement;
-      const excludeSyncedDataList = splitViewData().filter(
-        (group) => group.syncMode !== true,
-      );
-
       if (elem) {
         const isDisabled =
           window.gBrowser.selectedTab === window.TabContextMenu.contextTab ||
-          excludeSyncedDataList.some((group) =>
+          splitViewData().some((group) =>
             group.tabIds.includes(
               this.getTabId(window.TabContextMenu.contextTab),
             ),
           ) ||
-          excludeSyncedDataList.some((group) =>
+          splitViewData().some((group) =>
             group.tabIds.includes(this.getTabId(window.gBrowser.selectedTab)),
           );
 
@@ -244,16 +229,6 @@ export class SplitView {
     }
     const tab = [window.TabContextMenu.contextTab, window.gBrowser.selectedTab];
     this.splitTabs(tab);
-  }
-
-  public splitToFixedTab() {
-    const tab = window.TabContextMenu.contextTab;
-    setSyncData((prev) => ({
-      ...prev,
-      syncTabId: this.getTabId(tab),
-      sync: true,
-    }));
-    this.updateSplitView(window.gBrowser.selectedTab);
   }
 
   public splitFromCsk() {
@@ -281,10 +256,8 @@ export class SplitView {
     }
     const existingSplitTab = tabs.find((tab) => tab.splitView);
     if (existingSplitTab) {
-      const groupIndex = splitViewData().findIndex(
-        (group) =>
-          group.tabIds.includes(this.getTabId(existingSplitTab)) &&
-          group.syncMode !== true,
+      const groupIndex = splitViewData().findIndex((group) =>
+        group.tabIds.includes(this.getTabId(existingSplitTab)),
       );
       if (groupIndex >= 0) {
         this.updateSplitView(existingSplitTab);
@@ -310,62 +283,61 @@ export class SplitView {
     reverse: boolean | null = null,
     method: "row" | "column" | null = null,
   ) {
-    // If current view is sync's view, before update view, we should remove the sync view.
-    const syncIndex = splitViewData().findIndex(
-      (group) => group.syncMode === true,
-    );
-    if (syncIndex >= 0) {
-      setSyncData((prev) => ({
-        ...prev,
-        options: {
-          ...splitViewData()[syncIndex],
-          reverse:
-            reverse === null ? splitViewData()[syncIndex].reverse : reverse,
-          method: method === null ? splitViewData()[syncIndex].method : method,
-          syncMode: true,
-        },
-      }));
-
-      this.removeGroup(syncIndex);
+    const splitData = this.findSplitDataForTab(tab);
+    if (!splitData) {
+      this.handleNoSplitData();
+      return;
     }
 
-    const splitData = splitViewData().find((group) =>
+    const newSplitData = this.createNewSplitData(splitData, reverse, method);
+    this.updateSplitDataIfNeeded(splitData, newSplitData);
+
+    if (this.shouldDeactivateSplitView(tab)) {
+      this.deactivateSplitView();
+    }
+
+    this.activateSplitView(newSplitData, tab);
+  }
+
+  private findSplitDataForTab(tab: Tab): SplitViewData | undefined {
+    return splitViewData().find((group) =>
       group.tabIds.includes(this.getTabId(tab)),
-    ) as SplitViewData;
-    const index = splitViewData().indexOf(splitData);
-    let newSplitData = {
+    );
+  }
+
+  private handleNoSplitData() {
+    if (currentSplitView() >= 0) {
+      this.deactivateSplitView();
+    }
+  }
+
+  private createNewSplitData(
+    splitData: SplitViewData,
+    reverse: boolean | null,
+    method: "row" | "column" | null,
+  ): SplitViewData {
+    return {
       ...splitData,
-      // Default configuration
       method: method === null ? splitData?.method ?? "row" : method,
       reverse: reverse === null ? splitData?.reverse ?? false : reverse,
     };
+  }
 
-    if (
-      !splitData ||
-      (currentSplitView() >= 0 &&
-        !splitViewData()[currentSplitView()].tabIds.includes(
-          this.getTabId(tab),
-        ))
-    ) {
-      if (currentSplitView() >= 0) {
-        this.deactivateSplitView();
-      }
-      if (!splitData || !syncData().sync) {
-        return;
-      }
-
-      // Sync split view
-      newSplitData = {
-        ...syncData().options,
-        tabIds: [syncData().syncTabId as string, this.getTabId(tab)],
-      };
-      // Push temporarily sync view data.
-      splitViewData().push(newSplitData);
-    }
+  private updateSplitDataIfNeeded(
+    oldSplitData: SplitViewData,
+    newSplitData: SplitViewData,
+  ) {
+    const index = splitViewData().indexOf(oldSplitData);
     if (index >= 0) {
       splitViewData()[index] = newSplitData;
     }
-    this.activateSplitView(newSplitData, tab);
+  }
+
+  private shouldDeactivateSplitView(tab: Tab): boolean {
+    return (
+      currentSplitView() >= 0 &&
+      !splitViewData()[currentSplitView()].tabIds.includes(this.getTabId(tab))
+    );
   }
 
   private deactivateSplitView() {
@@ -453,7 +425,7 @@ export class SplitView {
       (t: Tab) =>
         t.linkedBrowser.closest(".browserSidebarContainer") === container,
     );
-    if (tab && this.getTabId(tab) !== syncData().syncTabId) {
+    if (tab) {
       window.gBrowser.selectedTab = tab;
     }
   };
@@ -493,18 +465,9 @@ export class SplitView {
 
   public unsplitCurrentView() {
     const currentTab = window.gBrowser.selectedTab;
-    let tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
+    const tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
       this.getTabById(id),
     );
-
-    if (splitViewData()[currentSplitView()].syncMode) {
-      setSyncData((prev) => ({
-        ...prev,
-        syncTabId: null,
-        sync: false,
-      }));
-      tabs = [currentTab];
-    }
     for (const tab of tabs) {
       this.handleTabClose({ target: tab, forUnsplit: true } as TabEvent);
     }

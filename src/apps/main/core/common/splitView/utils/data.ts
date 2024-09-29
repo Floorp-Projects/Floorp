@@ -14,23 +14,10 @@ export const [splitViewData, setSplitViewData] = createSignal<SplitViewDatas>(
 /* Current split view */
 export const [currentSplitView, setCurrentSplitView] = createSignal<number>(-1);
 
-/** Sync data */
-export const [syncData, setSyncData] = createSignal<SyncDataGroup>({
-  sync: false,
-  options: {
-    reverse: false,
-    method: "row",
-    syncMode: false,
-  },
-  syncTabId: null,
-});
-
 createEffect(() => {
   console.error(
     "splitViewData",
     splitViewData(),
-    "syncData",
-    syncData(),
     "currentSplitView",
     currentSplitView(),
   );
