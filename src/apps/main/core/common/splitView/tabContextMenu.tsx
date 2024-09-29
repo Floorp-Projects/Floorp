@@ -26,14 +26,12 @@ export class SplitViewContextMenu {
           label="Split Tabs"
           onCommand={() => gSplitView.contextSplitTabs()}
         />
-        {/*
         <xul:menuitem
           id="context_split_fixedtab"
           data-l10n-id="floorp-split-view-fixed-menu"
           label="Split to Fixed Tab"
-          onCommand={() => gSplitView.splitToFixedTab()}
+          onCommand={() => gSplitView.splitContextFixedTab()}
         />
-        */}
         <xul:menuseparator />
       </>
     );

@@ -5,14 +5,17 @@
 
 import { SplitViewStaticNames } from "./utils/static-names";
 import { render } from "@nora/solid-xul";
+import type { SplitViewData, Tab, TabEvent } from "./utils/type";
 import splitViewStyles from "./style.css?inline";
 import {
   currentSplitView,
   setCurrentSplitView,
   setSplitViewData,
   splitViewData,
+  fixedSplitViewData,
+  setFixedSplitViewData,
 } from "./utils/data";
-import type { SplitViewData, Tab, TabEvent } from "./utils/type";
+import { FixedTabUtils } from "./fixedTabUtils";
 
 export class SplitView {
   private static instance: SplitView;
@@ -120,7 +123,7 @@ export class SplitView {
    * @param {string} id - The tab ID.
    * @returns {Tab} The tab element.
    */
-  private getTabById(id: string): Tab {
+  public getTabById(id: string): Tab {
     return document?.querySelector(
       `[${SplitViewStaticNames.TabAttributionId}="${id}"]`,
     ) as Tab;
@@ -260,18 +263,7 @@ export class SplitView {
 
       const elem = document?.getElementById("context_splittabs") as XULElement;
       if (elem) {
-        const isDisabled =
-          window.gBrowser.selectedTab === window.TabContextMenu.contextTab ||
-          splitViewData().some((group) =>
-            group.tabIds.includes(
-              this.getTabId(window.TabContextMenu.contextTab),
-            ),
-          ) ||
-          splitViewData().some((group) =>
-            group.tabIds.includes(this.getTabId(window.gBrowser.selectedTab)),
-          );
-
-        elem.setAttribute("disabled", String(isDisabled));
+        elem.setAttribute("disabled", String(this.contextMenuShouldBeDisabled));
         if (elem.getAttribute("disabled") === "true") {
           document?.l10n?.setAttributes(
             elem,
@@ -285,6 +277,26 @@ export class SplitView {
   }
 
   /**
+   * @description: Check if the context menu should be disabled.
+   * @returns {boolean} Whether the context menu should be disabled.
+   */
+  private get contextMenuShouldBeDisabled() {
+    const excludeFixedTabDataList = splitViewData().filter(
+      (group) => group.fixedMode !== true,
+    );
+
+    return (
+      window.TabContextMenu.contextTab === window.gBrowser.selectedTab ||
+      excludeFixedTabDataList.some((group) =>
+        group.tabIds.includes(this.getTabId(window.TabContextMenu.contextTab)),
+      ) ||
+      excludeFixedTabDataList.some((group) =>
+        group.tabIds.includes(this.getTabId(window.gBrowser.selectedTab)),
+      )
+    );
+  }
+
+  /**
    * @description: Split the tabs. it should be called from the context menu.
    */
   public contextSplitTabs() {
@@ -293,6 +305,16 @@ export class SplitView {
     }
     const tab = [window.TabContextMenu.contextTab, window.gBrowser.selectedTab];
     this.splitTabs(tab);
+  }
+
+  /**
+   * @description: If a tab does not have a SplitView, This selected tab will be used as a fixed tab.
+   */
+  public splitContextFixedTab() {
+    if (window.TabContextMenu.contextTab === window.gBrowser.selectedTab) {
+      return;
+    }
+    this.splitFixedTab(window.TabContextMenu.contextTab);
   }
 
   /**
@@ -347,6 +369,23 @@ export class SplitView {
 
     window.gBrowser.selectedTab = tabs[0];
     this.updateSplitView(tabs[0]);
+  }
+
+  /**
+   * @description: Add default SplitView. This tab will be used as a fixed tab.
+   * @param {Tab} tab - The tab element.
+   */
+  private splitFixedTab(tab: Tab) {
+    if (FixedTabUtils.isWorking()) {
+      return;
+    }
+    setFixedSplitViewData({
+      fixedTabId: this.getTabId(tab),
+      options: {
+        reverse: false,
+        method: "row",
+      },
+    });
   }
 
   /**

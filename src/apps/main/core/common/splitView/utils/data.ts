@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
-import type { SyncDataGroup, SplitViewDatas } from "./type";
+import { createSignal } from "solid-js";
+import type { FixedSplitViewDataGroup, SplitViewDatas } from "./type";
 
 /** SplitView data */
 export const [splitViewData, setSplitViewData] = createSignal<SplitViewDatas>(
@@ -15,11 +15,11 @@ export const [splitViewData, setSplitViewData] = createSignal<SplitViewDatas>(
 export const [currentSplitView, setCurrentSplitView] = createSignal<number>(-1);
 
 /* Sync data */
-export const [syncData, setSyncData] = createSignal<SyncDataGroup>({
-  syncTabId: null,
-  options: {
-    reverse: false,
-    method: "row",
-    syncMode: false,
-  },
-});
+export const [fixedSplitViewData, setFixedSplitViewData] =
+  createSignal<FixedSplitViewDataGroup>({
+    fixedTabId: null,
+    options: {
+      reverse: false,
+      method: "row",
+    },
+  });

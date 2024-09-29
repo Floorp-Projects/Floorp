@@ -8,23 +8,22 @@ export const zSplitViewData = z.object({
   tabIds: z.array(z.string()),
   reverse: z.boolean(),
   method: z.enum(["row", "column"]),
-  syncMode: z.boolean().optional(),
+  fixedMode: z.boolean().optional(),
 });
 
 export const zSplitViewDatas = z.array(zSplitViewData);
 
-export const zSyncDataGroup = z.object({
-  syncTabId: z.string().nullable(),
+export const zFixedSplitViewDataGroup = z.object({
+  fixedTabId: z.string().nullable(),
   options: z.object({
     reverse: z.boolean(),
     method: z.enum(["row", "column"]),
-    syncMode: z.boolean(),
   }),
 });
 
 export const zSplitViewConfigData = z.object({
   currentViewIndex: z.number(),
-  syncData: zSyncDataGroup,
+  fixedSplitViewData: zFixedSplitViewDataGroup,
   splitViewData: zSplitViewDatas,
 });
 
@@ -47,5 +46,5 @@ export type Tab = XULElement & {
 };
 
 export type SplitViewData = z.infer<typeof zSplitViewData>;
-export type SyncDataGroup = z.infer<typeof zSyncDataGroup>;
+export type FixedSplitViewDataGroup = z.infer<typeof zFixedSplitViewDataGroup>;
 export type SplitViewDatas = z.infer<typeof zSplitViewDatas>;
