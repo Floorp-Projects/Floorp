@@ -14,13 +14,12 @@ export const zSplitViewData = z.object({
 export const zSplitViewDatas = z.array(zSplitViewData);
 
 export const zSyncDataGroup = z.object({
-  sync: z.boolean(),
+  syncTabId: z.string().nullable(),
   options: z.object({
     reverse: z.boolean(),
     method: z.enum(["row", "column"]),
     syncMode: z.boolean(),
   }),
-  syncTabId: z.string().nullable(),
 });
 
 export const zSplitViewConfigData = z.object({
