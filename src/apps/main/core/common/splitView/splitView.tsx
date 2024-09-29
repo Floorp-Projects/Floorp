@@ -350,7 +350,7 @@ export class SplitView {
       if (currentSplitView() >= 0) {
         this.deactivateSplitView();
       }
-      if (!splitData && !syncData().sync) {
+      if (!splitData || !syncData().sync) {
         return;
       }
 
