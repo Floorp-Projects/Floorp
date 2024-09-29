@@ -40,7 +40,7 @@ export class SplitView {
   }
 
   private listener = {
-    onLocationChange: (browser: Browser) => {
+    onLocationChange: () => {
       this.checkAllTabHaveSplitViewAttribute();
       const tab = window.gBrowser.selectedTab;
       if (tab) {
@@ -60,15 +60,6 @@ export class SplitView {
 
   get tabBrowserPanel() {
     return document?.getElementById("tabbrowser-tabpanels") as XULElement;
-  }
-
-  get modifierElement() {
-    const wrapper = document?.getElementById(
-      "template-split-view-modifier",
-    ) as XULElement & { content: XULElement };
-    const panel = (wrapper?.content as XULElement).firstElementChild;
-    wrapper?.replaceWith(wrapper.content);
-    return panel as XULElement;
   }
 
   private get getGeneratedUuid(): string {
@@ -329,7 +320,10 @@ export class SplitView {
   ) {
     const index = splitViewData().indexOf(oldSplitData);
     if (index >= 0) {
-      splitViewData()[index] = newSplitData;
+      setSplitViewData((prev) => {
+        prev[index] = newSplitData;
+        return prev;
+      });
     }
   }
 
