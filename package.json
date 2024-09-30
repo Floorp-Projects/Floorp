@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
+    "react-router-dom": "^6.26.2",
     "solid-element": "^1.8.1",
     "solid-styled-jsx": "^0.27.1",
     "sortablejs": "^1.15.3",
