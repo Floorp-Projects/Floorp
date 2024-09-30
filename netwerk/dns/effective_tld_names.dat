@@ -6725,7 +6725,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-09-13T15:16:52Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-09-26T15:17:07Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7670,10 +7670,6 @@ cymru
 // cyou : ShortDot SA
 // https://www.iana.org/domains/root/db/cyou.html
 cyou
-
-// dabur : Dabur India Limited
-// https://www.iana.org/domains/root/db/dabur.html
-dabur
 
 // dad : Charleston Road Registry Inc.
 // https://www.iana.org/domains/root/db/dad.html
@@ -12342,10 +12338,6 @@ uk.net
 ae.org
 com.se
 
-// certmgr.org : https://certmgr.org
-// Submitted by B. Blechschmidt <hostmaster@certmgr.org>
-certmgr.org
-
 // Cityhost LLC  : https://cityhost.ua
 // Submitted by Maksym Rivtin <support@cityhost.net.ua>
 cx.ua
@@ -12544,11 +12536,6 @@ co.dk
 firm.dk
 reg.dk
 store.dk
-
-// Daplie, Inc : https://daplie.com
-// Submitted by AJ ONeal <aj@daplie.com>
-daplie.me
-localhost.daplie.me
 
 // dappnode.io : https://dappnode.io/
 // Submitted by Abel Boldu / DAppNode Team <community@dappnode.io>
@@ -13785,6 +13772,11 @@ ie.ua
 // HostyHosting : https://hostyhosting.com
 hostyhosting.io
 
+// Hugging Face: https://huggingface.co
+// Submitted by Eliott Coyac <website@huggingface.co>
+hf.space
+static.hf.space
+
 // Hypernode B.V. : https://www.hypernode.com/
 // Submitted by Cipriano Groenendal <security@nl.team.blue>
 hypernode.io
@@ -14245,12 +14237,9 @@ atmeta.com
 apps.fbsbx.com
 
 // MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
-// Submitted by Zdeněk Šustr <zdenek.sustr@cesnet.cz>
+// Submitted by Zdeněk Šustr <zdenek.sustr@cesnet.cz> and Radim Janča <janca@cesnet.cz>
 *.cloud.metacentrum.cz
 custom.metacentrum.cz
-
-// MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
-// Submitted by Radim Janča <janca@cesnet.cz>
 flt.cloud.muni.cz
 usr.cloud.muni.cz
 
@@ -14301,9 +14290,14 @@ routingthecloud.org
 // Submitted by Robert Böttinger <r@minion.systems>
 csx.cc
 
-// MobileEducation, LLC : https://joinforte.com
-// Submitted by Grayson Martin <grayson.martin@mobileeducation.us>
-forte.id
+// Mittwald CM Service GmbH & Co. KG : https://mittwald.de
+// Submitted by Marco Rieger <security@mittwald.de>
+mydbserver.com
+webspaceconfig.de
+mittwald.info
+mittwaldserver.info
+typo3server.info
+project.space
 
 // MODX Systems LLC : https://modx.com
 // Submitted by Elizabeth Southwell <elizabeth@modx.com>
@@ -14537,7 +14531,7 @@ nerdpol.ovh
 nyc.mn
 
 // O3O.Foundation : https://o3o.foundation/
-// Submitted by the prvcy.page Registry Team <psl@registry.prvcy.page>
+// Submitted by the prvcy.page Registry Team <info@o3o.foundation>
 prvcy.page
 
 // Obl.ong : <https://obl.ong>
@@ -14726,10 +14720,6 @@ platterp.us
 // Pley AB : https://www.pley.com/
 // Submitted by Henning Pohl <infra@pley.com>
 pley.games
-
-// Port53 : https://port53.io/
-// Submitted by Maximilian Schieder <maxi@zeug.co>
-dyn53.io
 
 // Porter : https://porter.run/
 // Submitted by Rudraksh MK <rudi@porter.run>
@@ -15143,6 +15133,7 @@ shopitsite.com
 
 // shopware AG : https://shopware.com
 // Submitted by Jens Küper <cloud@shopware.com>
+shopware.shop
 shopware.store
 
 // Siemens Mobility GmbH
@@ -15464,14 +15455,11 @@ webspace.rocks
 lima.zone
 
 // TransIP : https://www.transip.nl
-// Submitted by Rory Breuk <rbreuk@transip.nl>
+// Submitted by Rory Breuk <rbreuk@transip.nl> and Cedric Dubois <cedric.dubois@team.blue>
 *.transurl.be
 *.transurl.eu
-*.transurl.nl
-
-// TransIP: https://www.transip.nl
-// Submitted by Cedric Dubois <cedric.dubois@team.blue>
 site.transip.me
+*.transurl.nl
 
 // TuxFamily : http://tuxfamily.org
 // Submitted by TuxFamily administrators <adm@staff.tuxfamily.org>
