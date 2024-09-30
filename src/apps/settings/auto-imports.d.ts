@@ -10,9 +10,11 @@ declare global {
   const IconCodiconExtensions: typeof import('~icons/codicon/extensions.jsx')['default']
   const IconIcRoundViewSidebar: typeof import('~icons/ic/round-view-sidebar.jsx')['default']
   const IconIcSharpPrivacyTip: typeof import('~icons/ic/sharp-privacy-tip.jsx')['default']
+  const IconLineMdLightDark: typeof import('~icons/line-md/light-dark.jsx')['default']
   const IconLucideSidebar: typeof import('~icons/lucide/sidebar.jsx')['default']
   const IconMaterialSymbolsAccountBox: typeof import('~icons/material-symbols/account-box.jsx')['default']
   const IconMaterialSymbolsLightAccountCircle: typeof import('~icons/material-symbols-light/account-circle.jsx')['default']
+  const IconMaterialSymbolsLightSelectWindow: typeof import('~icons/material-symbols-light/select-window.jsx')['default']
   const IconMdiAccount: typeof import('~icons/mdi/account.jsx')['default']
   const IconMdiAccountBox: typeof import('~icons/mdi/account-box.jsx')['default']
   const IconMdiAppBadgeOutline: typeof import('~icons/mdi/app-badge-outline.jsx')['default']
@@ -20,4 +22,5 @@ declare global {
   const IconMdiHide: typeof import('~icons/mdi/hide.jsx')['default']
   const IconMdiRocketLaunch: typeof import('~icons/mdi/rocket-launch.jsx')['default']
   const IconMdiSettings: typeof import('~icons/mdi/settings.jsx')['default']
+  const IconMdiWorkspace: typeof import('~icons/mdi/workspace.jsx')['default']
 }

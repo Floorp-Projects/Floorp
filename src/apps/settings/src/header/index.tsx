@@ -2,14 +2,23 @@ import {
   Flex,
   HStack,
   Icon,
+  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
   Spacer,
   Text,
+  useColorMode,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 function Header() {
+  const { toggleColorMode } = useColorMode();
+  const bgColor = useColorModeValue("rgba(255,255,255, 0.7)", "rgba(26,32,44, 0.7)");
+  const borderColor = useColorModeValue("#eee", "#2D3748");
+  const inputBgColor = useColorModeValue("#f1f3f4", "#2D3748");
+  const placeholderColor = useColorModeValue("#000000", "#A0AEC0");
+
   return (
     <Flex
       justifyContent="space-between"
@@ -19,10 +28,10 @@ function Header() {
       padding={"10px 2.5px"}
       position={"fixed"}
       width={"100%"}
-      backgroundColor={"rgba(255,255,255, 0.7)"}
+      backgroundColor={bgColor}
       backdropFilter={"blur(10px)"}
       zIndex={1000}
-      borderBottom={"#eee 1px solid"}
+      borderBottom={`1px solid ${borderColor}`}
     >
       <Text py={0} px={5} fontSize="2xl" pr={10}>
         Noraneko 設定
@@ -31,7 +40,7 @@ function Header() {
         <InputGroup
           borderRadius={"8px"}
           maxW={"750px"}
-          bg={"#f1f3f4"}
+          bg={inputBgColor}
           border={"1px solid transparent"}
         >
           <InputLeftElement pointerEvents="none">
@@ -40,11 +49,17 @@ function Header() {
           <Input
             type="text"
             placeholder="設定を検索"
-            _placeholder={{ color: "#000000" }}
+            _placeholder={{ color: placeholderColor }}
           />
         </InputGroup>
       </HStack>
       <Spacer />
+      <IconButton
+        icon={<IconLineMdLightDark style={{ fontSize: "16px", color: "currentColor" }} />}
+        aria-label="ダークモード"
+        onClick={toggleColorMode}
+        mr={2}
+      />
     </Flex>
   );
 }

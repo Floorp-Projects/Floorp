@@ -7,7 +7,7 @@ function Sidebar() {
       <VStack align="stretch" spacing={2}>
         <MenuItem
           icon={
-            <IconCarbonHome style={{ fontSize: "16px", color: "#000000" }} />
+            <IconCarbonHome style={{ fontSize: "16px", color: "currentColor" }} />
           }
           text="ホーム"
           to="/"
@@ -15,14 +15,21 @@ function Sidebar() {
         />
         <MenuItem
           icon={
-            <IconLucideSidebar style={{ fontSize: "16px", color: "#000000" }} />
+            <IconLucideSidebar style={{ fontSize: "16px", color: "currentColor" }} />
           }
           text="Noraneko サイドバー"
           to="/sidebar"
         />
         <MenuItem
           icon={
-            <IconCarbonHome style={{ fontSize: "16px", color: "#000000" }} />
+            <IconMaterialSymbolsLightSelectWindow style={{ fontSize: "16px", color: "currentColor" }} />
+          }
+          text="ワークスペース"
+          to="/workspaces"
+        />
+        <MenuItem
+          icon={
+            <IconCarbonHome style={{ fontSize: "16px", color: "currentColor" }} />
           }
           text="キーボードショートカット"
           to="/shortcuts"
@@ -30,7 +37,7 @@ function Sidebar() {
         <MenuItem
           icon={
             <IconMdiAppBadgeOutline
-              style={{ fontSize: "16px", color: "#000000" }}
+              style={{ fontSize: "16px", color: "currentColor" }}
             />
           }
           text="ウェブアプリ"
@@ -38,7 +45,7 @@ function Sidebar() {
         />
         <MenuItem
           icon={
-            <IconMdiAccount style={{ fontSize: "16px", color: "#000000" }} />
+            <IconMdiAccount style={{ fontSize: "16px", color: "currentColor" }} />
           }
           text="プロファイルとアカウント"
           to="/accounts"
@@ -46,11 +53,11 @@ function Sidebar() {
         <Divider />
         <MenuItem
           icon={
-            <IconMdiSettings style={{ fontSize: "16px", color: "#000000" }} />
+            <IconMdiSettings style={{ fontSize: "16px", color: "currentColor" }} />
           }
           text="Firefox の設定"
           onClick={() => {
-            window.location.href = "about:preferences#privacy";
+            window.open("about:preferences#privacy", "_blank");
           }}
         />
       </VStack>

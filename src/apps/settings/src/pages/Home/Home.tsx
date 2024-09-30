@@ -23,11 +23,11 @@ export default function Home() {
           />
           <Text fontSize="3xl">ようこそ、Account Name さん</Text>
         </Flex>
-        <Text color="gray.600">
-          Noraneko を便利にご利用いただけるよう、アカウント、プライバシー、セキュリティを管理できます。
+        <Text>
+          Noraneko を便利に、安全にご利用いただけるよう、アカウント、プライバシー、セキュリティを管理できます。
         </Text>
 
-        <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+        <Grid templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }} gap={4}>
           <Card title="セットアップ" icon={<IconMdiRocketLaunch style={{ fontSize: '24px', color: '#3182F6' }} />}>
             <Text fontSize="sm" mb={2}>
               Noraneko を最大限にご利用いただくために、セットアップを完了しましょう。
