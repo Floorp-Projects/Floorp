@@ -14,10 +14,15 @@
     "@nora/middleware-settings": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
+    "@iconify/json": "^2.2.254",
+    "@svgr/core": "^8.1.0",
+    "@svgr/plugin-jsx": "^8.1.0",
     "framer-motion": "^11.9.0",
     "jotai": "^2.10.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-icons": "^0.19.3"
   },
   "devDependencies": {
     "@types/node": "^22.7.3",

@@ -9,7 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 
-function PreferencesHeader() {
+function Header() {
   return (
     <Flex
       justifyContent="space-between"
@@ -49,4 +49,4 @@ function PreferencesHeader() {
   );
 }
 
-export default PreferencesHeader;
+export default Header;

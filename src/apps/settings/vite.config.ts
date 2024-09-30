@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import path from "node:path";
 import react from "@vitejs/plugin-react-swc";
+import Icons from "unplugin-icons/vite";
+import AutoImport from "unplugin-auto-import/vite";
+import IconsResolver from "unplugin-icons/resolver";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -31,7 +34,18 @@ export default defineConfig({
   //   transformer: "lightningcss",
   // },
 
-  plugins: [react()],
+  plugins: [
+    react(),
+    Icons({ compiler: "jsx", jsx: "react", autoInstall: true }),
+    AutoImport({
+      resolvers: [
+        IconsResolver({
+          prefix: "Icon",
+          extension: "jsx",
+        }),
+      ],
+    }),
+  ],
   optimizeDeps: {
     include: ["./node_modules/@nora"],
   },

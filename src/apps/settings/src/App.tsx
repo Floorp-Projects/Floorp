@@ -1,9 +1,9 @@
 import { getBoolPref, getIntPref, setBoolPref } from "./dev";
 import { Box } from "@chakra-ui/react";
-import PreferencesHeader from "./header";
 import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from "./pages/Home/Home";
+import Header from "./header";
 
 export default function App() {
   setBoolPref("noraneko.settings.dev", true);
@@ -13,11 +13,11 @@ export default function App() {
   return (
     <Router>
       <Box>
-        <PreferencesHeader />
+        <Header/>
         <Box mt={"80px"}>
           <Sidebar />
           <Box>
-            <Box p={"0px 48px"} ml={"250px"}>
+            <Box p={"0px 48px"} ml={"300px"}>
               <Routes>
                 <Route path="/" element={<Home />} />
               </Routes>

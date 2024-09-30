@@ -1,6 +1,4 @@
-import { getBoolPref, getIntPref, setBoolPref } from "../../dev";
 import {
-  Box,
   Flex,
   VStack,
   Text,
@@ -30,7 +28,7 @@ export default function Home() {
         </Text>
 
         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-          <Card title="セットアップ">
+          <Card title="セットアップ" icon={<IconMdiRocketLaunch style={{ fontSize: '24px', color: '#3182F6' }} />}>
             <Text fontSize="sm" mb={2}>
               Noraneko を最大限にご利用いただくために、セットアップを完了しましょう。
             </Text>
@@ -41,8 +39,8 @@ export default function Home() {
             <Text fontSize="sm">ステップ 2/4</Text>
           </Card>
           <Card
-            title="プライバシーとカスタマイズ"
-            icon={<Icon as={"svg"} color="blue.500" />}
+            title="プライバシーと追跡保護"
+            icon={<IconIcSharpPrivacyTip style={{ fontSize: '24px', color: '#137333' }} />}
           >
             <Text fontSize="sm">
               Noraneko は既定の状態であなたのデータとプライバシーを適切に保護するよう動作しますが、手動で管理することもできます。
@@ -53,7 +51,7 @@ export default function Home() {
           </Card>
           <Card
             title="Ablaze アカウントの設定"
-            icon={<Icon as={"svg"} color="blue.500" />}
+            icon={<IconMdiAccount style={{ fontSize: '24px', color: '#ff7708' }} />}
           >
             <Text fontSize="sm">
               Ablaze アカウントの設定を行います。
@@ -64,7 +62,7 @@ export default function Home() {
           </Card>
           <Card
             title="拡張機能を管理"
-            icon={<Icon as={"svg"} color="blue.500" />}
+            icon={<IconCodiconExtensions style={{ fontSize: '24px', color: '#8400ff' }} />}
           >
             <Text fontSize="sm">
               addons.mozilla.org で入手可能な拡張機能を管理します
@@ -75,7 +73,7 @@ export default function Home() {
           </Card>
           <Card
             title="Noraneko のサポート"
-            icon={<Icon as={"svg"} color="blue.500" />}
+            icon={<IconMdiHelpCircle style={{ fontSize: '24px', color: '#3182F6' }} />}
           >
             <Text fontSize="sm">
               Noraneko のコントリビューターによって書かれたサポートをご利用いただけます
@@ -84,23 +82,6 @@ export default function Home() {
               Noraneko のサポート記事を閲覧
             </Link>
           </Card>
-
-          {
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
-              <Card
-                key={v}
-                title="Noraneko のサポート"
-                icon={<Icon as={"svg"} color="blue.500" />}
-              >
-                <Text fontSize="sm">
-                  Noraneko のコントリビューターによって書かれたサポートをご利用いただけます
-                </Text>
-                <Link color="blue.500" fontSize="sm" mt={2}>
-                  Noraneko のサポート記事を閲覧
-                </Link>
-              </Card>
-            ))
-          }
         </Grid>
       </VStack>
     </GridItem>

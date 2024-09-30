@@ -12,13 +12,15 @@ const MenuItem = ({
   text,
   to,
   selected,
+  onClick,
 }: {
   icon: React.ReactNode;
   text: string;
-  to: string;
+  to?: string;
   selected?: boolean;
+  onClick?: () => void;
 }) => (
-  <Link to={to}>
+  <Link to={to ?? ""} onClick={onClick}>
     <HStack
       spacing={2}
       align="center"
