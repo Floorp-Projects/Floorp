@@ -5,6 +5,7 @@ import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Header from "./header";
+import Workspaces from "./pages/Workspaces";
 
 const createGlobalStyles = (props: Record<string, unknown>) => ({
   body: {
@@ -50,7 +51,7 @@ export default function App() {
               <Box p={"0px 48px"} mb={"48px"} ml={"300px"}>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/workspaces" element={<Home />} />
+                  <Route path="/workspaces" element={<Workspaces />} />
                 </Routes>
               </Box>
             </Box>

@@ -18,9 +18,13 @@ declare global {
   const IconMdiAccount: typeof import('~icons/mdi/account.jsx')['default']
   const IconMdiAccountBox: typeof import('~icons/mdi/account-box.jsx')['default']
   const IconMdiAppBadgeOutline: typeof import('~icons/mdi/app-badge-outline.jsx')['default']
+  const IconMdiCog: typeof import('~icons/mdi/cog.jsx')['default']
+  const IconMdiFolder: typeof import('~icons/mdi/folder.jsx')['default']
   const IconMdiHelpCircle: typeof import('~icons/mdi/help-circle.jsx')['default']
   const IconMdiHide: typeof import('~icons/mdi/hide.jsx')['default']
+  const IconMdiPlus: typeof import('~icons/mdi/plus.jsx')['default']
   const IconMdiRocketLaunch: typeof import('~icons/mdi/rocket-launch.jsx')['default']
   const IconMdiSettings: typeof import('~icons/mdi/settings.jsx')['default']
+  const IconMdiSync: typeof import('~icons/mdi/sync.jsx')['default']
   const IconMdiWorkspace: typeof import('~icons/mdi/workspace.jsx')['default']
 }
