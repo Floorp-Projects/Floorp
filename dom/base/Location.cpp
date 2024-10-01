@@ -562,7 +562,7 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
                               ? CallerType::System
                               : CallerType::NonSystem;
 
-  nsresult rv = bc->CheckLocationChangeRateLimit(callerType);
+  nsresult rv = bc->CheckNavigationRateLimit(callerType);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
