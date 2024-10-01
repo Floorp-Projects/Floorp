@@ -2,71 +2,58 @@ import {
   Flex,
   VStack,
   Text,
-  Avatar,
-  Grid,
-  GridItem,
-  Progress,
-  Link,
-  Icon,
+  Switch,
+  Input,
+  Select,
+  MenuList,
+  MenuItem,
+  Menu,
+  MenuButton,
+  Button,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
+import React from "react";
 
 export default function Workspaces() {
   return (
-    <GridItem display="flex" justifyContent="center">
-      <Text fontSize={"2xl"}>Workspaces</Text>
-      <VStack align="stretch" alignItems="center" maxW={"900px"} spacing={6}>
-        <Text>
-          ワークスペースを使用すると、タブやウィンドウを整理し、作業を効率的に管理できます。
-        </Text>
+    <Flex direction="column" alignItems="flex-start" maxW="800px" mx="auto" py={8}>
+      <Text fontSize="3xl" fontWeight="bold" mb={6}>ワークスペース</Text>
+      <Text mb={8}>
+        ワークスペースを使用すると、タブやウィンドウを整理し、作業を効率的に管理できます。
+      </Text>
 
-        <Grid templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }} gap={4}>
-          <Card
-            title="ワークスペースの作成"
-            icon={<IconMdiPlus style={{ fontSize: '24px', color: '#3182F6' }} />}
-          >
-            <Text fontSize="sm">
-              新しいワークスペースを作成して、プロジェクトや作業を整理します。
-            </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              ワークスペースを作成
-            </Link>
-          </Card>
-          <Card
-            title="ワークスペースの管理"
-            icon={<IconMdiFolder style={{ fontSize: '24px', color: '#ff7708' }} />}
-          >
-            <Text fontSize="sm">
-              既存のワークスペースを表示、編集、削除します。
-            </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              ワークスペースを管理
-            </Link>
-          </Card>
-          <Card
-            title="ワークスペースの設定"
-            icon={<IconMdiCog style={{ fontSize: '24px', color: '#137333' }} />}
-          >
-            <Text fontSize="sm">
-              ワークスペースの動作や表示方法をカスタマイズします。
-            </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              設定を変更
-            </Link>
-          </Card>
-          <Card
-            title="ワークスペースの同期"
-            icon={<IconMdiSync style={{ fontSize: '24px', color: '#8400ff' }} />}
-          >
-            <Text fontSize="sm">
-              ワークスペースをデバイス間で同期し、どこでも作業を継続できます。
-            </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              同期設定を管理
-            </Link>
-          </Card>
-        </Grid>
+      <VStack align="stretch" spacing={6} w="100%">
+        <Card
+          title="ワークスペースの設定"
+          icon={<IconMdiCog style={{ color: '#3182F6', fontSize: '24px' }} />}
+        >
+          <VStack align="stretch" spacing={4} mt={4}>
+            <Flex justifyContent="space-between" alignItems="center">
+              <Text>ワークスペース機能を有効にする</Text>
+              <Switch />
+            </Flex>
+            <Flex justifyContent="space-between" alignItems="center">
+              <Text>ワークスペースのデフォルト名</Text>
+              <Input width="100px" type="number" />
+            </Flex>
+            <Flex justifyContent="space-between" alignItems="center">
+              <Text>ワークスペースコンテナーのカスタマイズ</Text>
+              <Menu>
+                {({ isOpen }) => (
+                  <>
+                    <MenuButton isActive={isOpen} as={Button} rightIcon={<IconMdiCog />}>
+                      {isOpen ? 'Close' : 'Open'}
+                    </MenuButton>
+                    <MenuList>
+                      <MenuItem>Download</MenuItem>
+                    </MenuList>
+                  </>
+                )}
+              </Menu>
+            </Flex>
+          </VStack>
+        </Card>
       </VStack>
-    </GridItem>
+    </Flex>
   );
 }
