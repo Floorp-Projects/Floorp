@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import sys
+import warnings
 
 import attr
 from taskgraph.util.treeherder import join_symbol
@@ -211,7 +212,17 @@ def verify_routes_notification_filters(
     if task is None:
         return
     route_prefix = "notify."
-    valid_filters = ("on-any", "on-completed", "on-failed", "on-exception")
+    valid_filters = (
+        "on-any",
+        "on-completed",
+        "on-defined",
+        "on-failed",
+        "on-exception",
+        "on-pending",
+        "on-resolved",
+        "on-running",
+        "on-transition",
+    )
     task_dict = task.task
     routes = task_dict.get("routes", [])
 
@@ -223,6 +234,13 @@ def verify_routes_notification_filters(
                 raise Exception(
                     "{} has invalid notification filter ({})".format(
                         task.label, route_filter
+                    )
+                )
+            if route_filter == "on-any":
+                warnings.warn(
+                    DeprecationWarning(
+                        f"notification filter '{route_filter}' is deprecated. Use "
+                        "'on-transition' or 'on-resolved'."
                     )
                 )
 
