@@ -1,19 +1,19 @@
 import { getBoolPref, getIntPref, setBoolPref } from "./dev";
 import { Box, ChakraProvider, extendTheme } from "@chakra-ui/react";
-import { mode, StyleFunctionProps } from '@chakra-ui/theme-tools';
+import { mode, type StyleFunctionProps } from '@chakra-ui/theme-tools';
 import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Home from "./pages/Home/Home";
+import Home from "./pages/Home";
 import Header from "./header";
 
-const createGlobalStyles = (props: Record<string, any>) => ({
+const createGlobalStyles = (props: Record<string, unknown>) => ({
   body: {
     color: mode('chakra-ui-text-color', 'whiteAlpha.900')(props),
     bg: mode('chakra-ui-body-bg', '#1a1a1a')(props),
   },
 });
 
-const createDrawerStyles = (props: StyleFunctionProps | Record<string, any>) => ({
+const createDrawerStyles = (props: StyleFunctionProps | Record<string, unknown>) => ({
   dialog: {
     bg: mode('chakra-ui-body-bg', '#141214')(props),
   },
@@ -50,6 +50,7 @@ export default function App() {
               <Box p={"0px 48px"} mb={"48px"} ml={"300px"}>
                 <Routes>
                   <Route path="/" element={<Home />} />
+                  <Route path="/workspaces" element={<Home />} />
                 </Routes>
               </Box>
             </Box>
