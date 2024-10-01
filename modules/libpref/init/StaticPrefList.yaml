@@ -3165,13 +3165,13 @@
 
 # Limit of location change caused by content scripts in a time span per
 # BrowsingContext. This includes calls to History and Location APIs.
-- name: dom.navigation.locationChangeRateLimit.count
+- name: dom.navigation.navigationRateLimit.count
   type: uint32_t
   value: 200
   mirror: always
 
 # Time span in seconds for location change rate limit.
-- name: dom.navigation.locationChangeRateLimit.timespan
+- name: dom.navigation.navigationRateLimit.timespan
   type: uint32_t
   value: 10
   mirror: always

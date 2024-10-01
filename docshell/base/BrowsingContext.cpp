@@ -3772,7 +3772,7 @@ bool BrowsingContext::ShouldUpdateSessionHistory(uint32_t aLoadType) {
           (IsForceReloadType(aLoadType) && IsSubframe()));
 }
 
-nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {
+nsresult BrowsingContext::CheckNavigationRateLimit(CallerType aCallerType) {
   // We only rate limit non system callers
   if (aCallerType == CallerType::System) {
     return NS_OK;
@@ -3780,9 +3780,9 @@ nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {
 
   // Fetch rate limiting preferences
   uint32_t limitCount =
-      StaticPrefs::dom_navigation_locationChangeRateLimit_count();
+      StaticPrefs::dom_navigation_navigationRateLimit_count();
   uint32_t timeSpanSeconds =
-      StaticPrefs::dom_navigation_locationChangeRateLimit_timespan();
+      StaticPrefs::dom_navigation_navigationRateLimit_timespan();
 
   // Disable throttling if either of the preferences is set to 0.
   if (limitCount == 0 || timeSpanSeconds == 0) {
@@ -3791,15 +3791,15 @@ nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {
 
   TimeDuration throttleSpan = TimeDuration::FromSeconds(timeSpanSeconds);
 
-  if (mLocationChangeRateLimitSpanStart.IsNull() ||
-      ((TimeStamp::Now() - mLocationChangeRateLimitSpanStart) > throttleSpan)) {
+  if (mNavigationRateLimitSpanStart.IsNull() ||
+      ((TimeStamp::Now() - mNavigationRateLimitSpanStart) > throttleSpan)) {
     // Initial call or timespan exceeded, reset counter and timespan.
-    mLocationChangeRateLimitSpanStart = TimeStamp::Now();
-    mLocationChangeRateLimitCount = 1;
+    mNavigationRateLimitSpanStart = TimeStamp::Now();
+    mNavigationRateLimitCount = 1;
     return NS_OK;
   }
 
-  if (mLocationChangeRateLimitCount >= limitCount) {
+  if (mNavigationRateLimitCount >= limitCount) {
     // Rate limit reached
 
     Document* doc = GetDocument();
@@ -3812,14 +3812,14 @@ nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  mLocationChangeRateLimitCount++;
+  mNavigationRateLimitCount++;
   return NS_OK;
 }
 
-void BrowsingContext::ResetLocationChangeRateLimit() {
+void BrowsingContext::ResetNavigationRateLimit() {
   // Resetting the timestamp object will cause the check function to
   // init again and reset the rate limit.
-  mLocationChangeRateLimitSpanStart = TimeStamp();
+  mNavigationRateLimitSpanStart = TimeStamp();
 }
 
 void BrowsingContext::LocationCreated(dom::Location* aLocation) {

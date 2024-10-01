@@ -17,8 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
 
   async function setup() {
     await SpecialPowers.pushPrefEnv({set: [
-      ["dom.navigation.locationChangeRateLimit.count", RATE_LIMIT_COUNT],
-      ["dom.navigation.locationChangeRateLimit.timespan", RATE_LIMIT_TIME_SPAN]]});
+      ["dom.navigation.navigationRateLimit.count", RATE_LIMIT_COUNT],
+      ["dom.navigation.navigationRateLimit.timespan", RATE_LIMIT_TIME_SPAN]]});
   }
 
   let inc = 0;
@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
   const rateLimitedFunctions = (win) => ({
     "history.replaceState": () => win.history.replaceState(null, "test", `${win.location.href}#${inc++}`),
     "history.pushState":  () => win.history.pushState(null, "test", `${win.location.href}#${inc++}`),
+    "history.SetScrollRestoration": () => win.history.scrollRestoration = "auto",
     "history.back": () => win.history.back(),
     "history.forward": () => win.history.forward(),
     "history.go": () => win.history.go(-1),
@@ -53,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
     Object.entries(rateLimitedFunctions(win)).forEach(([name, fn]) => {
       // Reset the rate limit for the next run.
       info("Reset rate limit.");
-      SpecialPowers.wrap(win).browsingContext.resetLocationChangeRateLimit();
+      SpecialPowers.wrap(win).browsingContext.resetNavigationRateLimit();
 
       info(`Calling ${name} ${RATE_LIMIT_COUNT} times to reach the rate limit.`);
       for(let i = 0; i< RATE_LIMIT_COUNT; i++) {
@@ -83,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
 
     // Cleanup
     win.close();
-    SpecialPowers.wrap(win).browsingContext.resetLocationChangeRateLimit();
+    SpecialPowers.wrap(win).browsingContext.resetNavigationRateLimit();
     SimpleTest.finish();
   }
 

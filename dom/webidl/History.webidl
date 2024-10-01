@@ -17,7 +17,7 @@ enum ScrollRestoration { "auto", "manual" };
 interface History {
   [Throws]
   readonly attribute unsigned long length;
-  [Throws]
+  [Throws, NeedsCallerType]
   attribute ScrollRestoration scrollRestoration;
   [Throws]
   readonly attribute any state;
