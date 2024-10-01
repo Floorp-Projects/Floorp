@@ -518,4 +518,9 @@ interface nsIHttpChannelInternal : nsISupports
      * overridden header value.
      */
     [must_use] attribute boolean isUserAgentHeaderModified;
+
+    /**
+     * For testing purposes only.
+     */
+    readonly attribute unsigned long caps;
 };

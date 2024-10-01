@@ -58,7 +58,7 @@ add_setup(async function setup() {
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 });
 
 function makeChan(url) {
