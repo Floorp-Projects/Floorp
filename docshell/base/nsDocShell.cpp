@@ -10428,7 +10428,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
-      mBrowsingContext, Some(uriModified), Some(isEmbeddingBlockedError));
+      mBrowsingContext, uriModified, Some(isEmbeddingBlockedError));
 
   nsCOMPtr<nsIChannel> channel;
   if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI()) &&

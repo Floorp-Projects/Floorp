@@ -176,7 +176,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   if (isDocumentLoad) {
     promise = mDocumentLoadListener->OpenDocument(
         mLoadState, mCacheKey, Some(mChannelId), TimeStamp::Now(), mTiming,
-        std::move(initialClientInfo), Some(mUriModified),
+        std::move(initialClientInfo), mUriModified,
         Some(mIsEmbeddingBlockedError), nullptr /* ContentParent */, &rv);
   } else {
     promise = mDocumentLoadListener->OpenObject(
