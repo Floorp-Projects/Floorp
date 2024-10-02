@@ -16,37 +16,37 @@ import React from "react";
 export default function Workspaces() {
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
-      <Text fontSize="3xl" mb={10}>ワークスペース</Text>
+      <Text fontSize="3xl" mb={10}>Workspaces</Text>
       <Text mb={8}>
-        ワークスペースを使用すると、タブやウィンドウを整理し、作業を効率的に管理できます。
+        Workspaces allow you to organize tabs and windows, and manage your work efficiently.
       </Text>
 
       <VStack align="stretch" spacing={6} w="100%">
         <Card
           icon={<IconCarbonWorkspace style={{ fontSize: '24px', color: '#3182F6' }} />}
-          title="基本設定"
+          title="Basic Settings"
           footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-          footerLinkText="ワークスペースの使い方、設定について"
+          footerLinkText="How to use workspaces"
         >
           <VStack align="stretch" spacing={4} mt={4} paddingInlineStart={"10px"}>
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>ワークスペース機能を有効にする</Text>
-              <Switch />
+              <Text>Enable Workspace Function</Text>
+              <Switch size="lg" colorScheme={"blue"} />
             </Flex>
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>ワークスペースのデフォルト名</Text>
-              <Input width="100px" type="number" />
+              <Text>Workspace Default Name</Text>
+              <Input width="200px" type="text" />
             </Flex>
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>ワークスペースコンテナーのカスタマイズ</Text>
+              <Text>Customize Workspace Container</Text>
               <Menu>
                 {({ isOpen }) => (
                   <>
-                    <MenuButton isActive={isOpen} as={Button} rightIcon={<IconMdiCog />}>
+                    <MenuButton isActive={isOpen} as={Button} width="125px" rightIcon={<IconMdiCog />}>
                       {isOpen ? 'Close' : 'Open'}
                     </MenuButton>
                     <MenuList>
-                      <MenuItem>Download</MenuItem>
+                      <MenuItem>ワークスペースを追加</MenuItem>
                     </MenuList>
                   </>
                 )}

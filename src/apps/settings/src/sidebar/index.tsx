@@ -13,32 +13,32 @@ const data: {
   home: {
     path: "/",
     icon: <IconCarbonHome style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "ホーム"
+    text: "Home"
   },
   sidebar: {
     path: "/sidebar",
     icon: <IconLucideSidebar style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "Noraneko サイドバー"
+    text: "Noraneko Sidebar"
   },
   workspaces: {
     path: "/workspaces",
     icon: <IconMaterialSymbolsLightSelectWindow style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "ワークスペース"
+    text: "Workspaces"
   },
   shortcuts: {
     path: "/shortcuts",
     icon: <IconCarbonHome style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "キーボードショートカット"
+    text: "Keyboard Shortcuts"
   },
   webapps: {
     path: "/webapps",
     icon: <IconMdiAppBadgeOutline style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "ウェブアプリ"
+    text: "Web Apps"
   },
   accounts: {
     path: "/accounts",
     icon: <IconMdiAccount style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "プロファイルとアカウント"
+    text: "Profile and Account"
   }
 }
 
@@ -47,7 +47,7 @@ function Sidebar() {
   const [isMobile] = useMediaQuery("(max-width: 768px)")
 
   return (
-    <GridItem zIndex={1000} w={isMobile ? "75px" : "300px"} position={"fixed"}>
+    <GridItem zIndex={1000} w={isMobile ? "75px" : "300px"} maxH={"calc(100vh - 100px)"} position={"fixed"} overflowY={"scroll"}>
       <VStack align="stretch" spacing={2}>
         {
           Object.keys(data).map((key) => {
@@ -70,7 +70,7 @@ function Sidebar() {
           icon={
             <IconMdiSettings style={{ fontSize: "16px", color: "currentColor" }} />
           }
-          text="Firefox の設定"
+          text="Firefox Settings"
           onClick={() => {
             window.open("about:preferences#privacy", "_blank");
           }}

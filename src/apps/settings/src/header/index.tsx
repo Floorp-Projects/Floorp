@@ -3,6 +3,7 @@ import {
   HStack,
   Icon,
   IconButton,
+  Image,
   Input,
   InputGroup,
   InputLeftElement,
@@ -33,8 +34,9 @@ function Header() {
       zIndex={1000}
       borderBottom={`1px solid ${borderColor}`}
     >
-      <Text py={0} px={5} fontSize="2xl" pr={10}>
-        Noraneko 設定
+      <Image src={"chrome://branding/content/about-logo@2x.png"} boxSize='48px' ml={1} mr={2} alt="ロゴ" />
+      <Text py={0} fontSize="2xl" pr={10}>
+        Settings
       </Text>
       <HStack spacing={2} maxW={"100%"} flex="1 1 auto">
         <InputGroup
@@ -48,7 +50,7 @@ function Header() {
           </InputLeftElement>
           <Input
             type="text"
-            placeholder="設定を検索"
+            placeholder="Search Settings"
             _placeholder={{ color: placeholderColor }}
           />
         </InputGroup>
@@ -56,7 +58,7 @@ function Header() {
       <Spacer />
       <IconButton
         icon={<IconLineMdLightDark style={{ fontSize: "16px", color: "currentColor" }} />}
-        aria-label="ダークモード"
+        aria-label="Dark Mode"
         onClick={toggleColorMode}
         mr={2}
       />

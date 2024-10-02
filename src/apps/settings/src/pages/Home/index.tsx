@@ -21,66 +21,62 @@ export default function Home() {
             src="chrome://browser/skin/fxa/avatar-color.svg"
             m={4}
           />
-          <Text fontSize="3xl">ようこそ、Account Name さん</Text>
+          <Text fontSize="3xl">Welcome, Account Name </Text>
         </Flex>
         <Text>
-          Noraneko を便利に、安全にご利用いただけるよう、アカウント、プライバシー、セキュリティを管理できます。
+          Manage your account, privacy, and security to make your Noraneko experience convenient and safe.
         </Text>
 
         <Grid templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }} gap={4}>
-          <Card title="セットアップ" icon={<IconMdiRocketLaunch style={{ fontSize: '24px', color: '#3182F6' }} />}>
+          <Card title="Setup" footerLink="https://support.ablaze.one/setup" footerLinkText="Login to Mozilla & Ablaze Account" icon={<IconMdiRocketLaunch style={{ fontSize: '24px', color: '#3182F6' }} />}>
             <Text fontSize="sm" mb={2}>
-              Noraneko を最大限にご利用いただくために、セットアップを完了しましょう。
+              Complete the setup to get the most out of Noraneko.
             </Text>
             <Text fontWeight="bold" fontSize="sm" mb={1}>
-              進捗
+              Progress
             </Text>
             <Progress value={50} size="sm" colorScheme="blue" mb={1} h={"4px"} />
-            <Text fontSize="sm">ステップ 2/4</Text>
+            <Text fontSize="sm">Step 2/4</Text>
           </Card>
           <Card
-            title="プライバシーと追跡保護"
+            title="Privacy and Tracking Protection"
+            footerLink="https://support.google.com/chrome/answer/95647?hl=ja"
+            footerLinkText="Privacy and Tracking Protection"
             icon={<IconIcSharpPrivacyTip style={{ fontSize: '24px', color: '#137333' }} />}
           >
             <Text fontSize="sm">
-              Noraneko は既定の状態であなたのデータとプライバシーを適切に保護するよう動作しますが、手動で管理することもできます。
+              Noraneko will work to properly protect your data and privacy by default, but you can also manage it manually.
             </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              データとプライバシーを管理
-            </Link>
           </Card>
           <Card
-            title="Ablaze アカウントの設定"
+            title="Ablaze Account"
+            footerLink="https://accounts.ablaze.one/signin"
+            footerLinkText="Ablaze Account"
             icon={<IconMdiAccount style={{ fontSize: '24px', color: '#ff7708' }} />}
           >
             <Text fontSize="sm">
-              Ablaze アカウントの設定を行います。
+              Ablaze Account is used to sync some of your data with other devices. It is also used to sync data that cannot be synced with a Mozilla Account.
             </Text>
-            <Link color="blue.500" fontSize="sm" mt={2} href="https://security.google.com/settings/security/checkup">
-              セキュリティ診断
-            </Link>
           </Card>
           <Card
-            title="拡張機能を管理"
+            title="Manage Extensions"
+            footerLink="https://addons.mozilla.org"
+            footerLinkText="Manage Extensions"
             icon={<IconCodiconExtensions style={{ fontSize: '24px', color: '#8400ff' }} />}
           >
             <Text fontSize="sm">
-              addons.mozilla.org で入手可能な拡張機能を管理します
+              Manage the extensions available on addons.mozilla.org
             </Text>
-            <Link color="blue.500" fontSize="sm" mt={2} href="https://addons.mozilla.org">
-              拡張機能を管理
-            </Link>
           </Card>
           <Card
-            title="Noraneko のサポート"
+            title="Noraneko Support"
+            footerLink="https://support.mozilla.org/products/firefox/"
+            footerLinkText="Noraneko Support"
             icon={<IconMdiHelpCircle style={{ fontSize: '24px', color: '#3182F6' }} />}
           >
             <Text fontSize="sm">
-              Noraneko のコントリビューターによって書かれたサポートをご利用いただけます
+              You can use the support written by Noraneko contributors.
             </Text>
-            <Link color="blue.500" fontSize="sm" mt={2}>
-              Noraneko のサポート記事を閲覧
-            </Link>
           </Card>
         </Grid>
       </VStack>

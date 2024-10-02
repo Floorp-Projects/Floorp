@@ -1,38 +1,11 @@
 import { getBoolPref, getIntPref, setBoolPref } from "./dev";
-import { Box, ChakraProvider, extendTheme, useMediaQuery } from "@chakra-ui/react";
-import { mode, type StyleFunctionProps } from '@chakra-ui/theme-tools';
+import { Box, ChakraProvider, useMediaQuery } from "@chakra-ui/react";
 import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Header from "./header";
 import Workspaces from "./pages/Workspaces";
-
-const createGlobalStyles = (props: Record<string, unknown>) => ({
-  body: {
-    color: mode('chakra-ui-text-color', 'whiteAlpha.900')(props),
-    bg: mode('chakra-ui-body-bg', '#1a1a1a')(props),
-  },
-});
-
-const createDrawerStyles = (props: StyleFunctionProps | Record<string, unknown>) => ({
-  dialog: {
-    bg: mode('chakra-ui-body-bg', '#141214')(props),
-  },
-});
-
-const theme = {
-  config: {
-    initialColorMode: "system",
-  },
-  styles: {
-    global: createGlobalStyles,
-  },
-  components: {
-    Drawer: {
-      baseStyle: createDrawerStyles,
-    },
-  },
-};
+import customTheme from "./theme";
 
 
 export default function App() {
@@ -42,7 +15,7 @@ export default function App() {
     console.log(v);
   });
   return (
-    <ChakraProvider theme={extendTheme(theme)}>
+    <ChakraProvider theme={customTheme}>
       <Router>
         <Box>
           <Header />

@@ -1,11 +1,11 @@
 import {
-  Box,
   Divider,
   HStack,
   Text,
-  VStack,
   Link,
   Spacer,
+  useColorModeValue,
+  Flex,
 } from "@chakra-ui/react";
 import type React from "react";
 
@@ -25,8 +25,8 @@ function Card({
   footerChildren?: React.ReactNode;
 }) {
   return (
-    <Box borderWidth={1} borderRadius="md" p={"15px 20px"}>
-      <HStack>
+    <Flex flexDirection={"column"} borderWidth={1} borderRadius="md" p={"15px 20px"}>
+      <HStack mb={2}>
         {icon}
         <Text
           fontFamily={`"Google Sans",Roboto,A1rial,sans-serif`}
@@ -38,10 +38,11 @@ function Card({
         </Text>
       </HStack>
       {children}
+      <Spacer />
       {(footerLinkText && footerLink) || footerChildren ? (
         <Footer footerLink={footerLink} footerLinkText={footerLinkText} />
       ) : null}
-    </Box>
+    </Flex>
   );
 }
 export default Card;
@@ -58,10 +59,10 @@ function Footer({
   return (
     <>
       <Divider ml={"-20px"} pr={"40px"} mt={4} />
-      <Link href={footerLink} _hover={{ textDecoration: "none" }}>
-        <HStack align="flex-start" m={"12.5px 10px -5px 5px"} p={"10px"}  rounded={"15px"} _hover={{ bg: "chakra-body-bg" }}>
+      <Link href={footerLink} _hover={{ textDecoration: "none" }} target="_blank">
+        <HStack align="flex-start" m={"12.5px 10px -5px 5px"} p={"10px"}  rounded={"15px"} _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}>
           {footerLink ? (
-            <Text color="#8ab4f8" fontSize="sm" >
+            <Text color={useColorModeValue("blue.500", "blue.400")} fontSize="sm">
               {footerLinkText}
             </Text>
           ) : (
