@@ -1,6 +1,7 @@
 import { GridItem, VStack, Divider, Icon } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useState } from "react";
+import { useMediaQuery } from "@chakra-ui/react";
 
 const data: {
   [key: string]: {
@@ -43,8 +44,10 @@ const data: {
 
 function Sidebar() {
   const [selected, setSelected] = useState<string>("home")
+  const [isMobile] = useMediaQuery("(max-width: 768px)")
+
   return (
-    <GridItem zIndex={1000} w={"300px"} position={"fixed"}>
+    <GridItem zIndex={1000} w={isMobile ? "75px" : "300px"} position={"fixed"}>
       <VStack align="stretch" spacing={2}>
         {
           Object.keys(data).map((key) => {

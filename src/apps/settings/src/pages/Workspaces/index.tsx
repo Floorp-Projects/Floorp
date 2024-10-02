@@ -4,7 +4,6 @@ import {
   Text,
   Switch,
   Input,
-  Select,
   MenuList,
   MenuItem,
   Menu,
@@ -16,18 +15,20 @@ import React from "react";
 
 export default function Workspaces() {
   return (
-    <Flex direction="column" alignItems="flex-start" maxW="800px" mx="auto" py={8}>
-      <Text fontSize="3xl" fontWeight="bold" mb={6}>ワークスペース</Text>
+    <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
+      <Text fontSize="3xl" mb={10}>ワークスペース</Text>
       <Text mb={8}>
         ワークスペースを使用すると、タブやウィンドウを整理し、作業を効率的に管理できます。
       </Text>
 
       <VStack align="stretch" spacing={6} w="100%">
         <Card
-          title="ワークスペースの設定"
-          icon={<IconMdiCog style={{ color: '#3182F6', fontSize: '24px' }} />}
+          icon={<IconCarbonWorkspace style={{ fontSize: '24px', color: '#3182F6' }} />}
+          title="基本設定"
+          footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+          footerLinkText="ワークスペースの使い方、設定について"
         >
-          <VStack align="stretch" spacing={4} mt={4}>
+          <VStack align="stretch" spacing={4} mt={4} paddingInlineStart={"10px"}>
             <Flex justifyContent="space-between" alignItems="center">
               <Text>ワークスペース機能を有効にする</Text>
               <Switch />

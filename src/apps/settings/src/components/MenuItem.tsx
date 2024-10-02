@@ -1,5 +1,6 @@
 import { HStack, Text, useColorMode } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import { useMediaQuery } from "@chakra-ui/react";
 
 const MenuItem = ({
   icon,
@@ -15,7 +16,7 @@ const MenuItem = ({
   onClick?: () => void;
 }) => {
   const { colorMode } = useColorMode();
-
+  const [isMobile] = useMediaQuery("(max-width: 768px)")
   return (
     <Link to={to ?? ""} onClick={onClick}>
       <HStack
@@ -37,7 +38,7 @@ const MenuItem = ({
         transition="background-color 0.2s"
       >
         {icon}
-        <Text>{text}</Text>
+        <Text>{!isMobile ? text : null}</Text>
       </HStack>
     </Link>
   );

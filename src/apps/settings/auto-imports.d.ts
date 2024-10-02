@@ -7,7 +7,9 @@
 export {}
 declare global {
   const IconCarbonHome: typeof import('~icons/carbon/home.jsx')['default']
+  const IconCarbonWorkspace: typeof import('~icons/carbon/workspace.jsx')['default']
   const IconCodiconExtensions: typeof import('~icons/codicon/extensions.jsx')['default']
+  const IconIcOutlineOpenInNew: typeof import('~icons/ic/outline-open-in-new.jsx')['default']
   const IconIcRoundViewSidebar: typeof import('~icons/ic/round-view-sidebar.jsx')['default']
   const IconIcSharpPrivacyTip: typeof import('~icons/ic/sharp-privacy-tip.jsx')['default']
   const IconLineMdLightDark: typeof import('~icons/line-md/light-dark.jsx')['default']
