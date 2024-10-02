@@ -26,75 +26,59 @@ export class SplitView {
     return SplitView.instance;
   }
 
-  /**
-   * Initializes the SplitView instance.
-   * @description: Initializes the SplitView instance.
-   * This constructor sets up the necessary event listeners and initializes the split view functionality.
-   * It renders the style element, sets initial preferences, and adds various event listeners and progress listeners.
-   */
-  constructor() {
+  private constructor() {
+    this.initializeStyles();
+    this.initializePreferences();
+    this.setupEventListeners();
+    this.checkAllTabHaveSplitViewAttribute();
+  }
+
+  private initializeStyles() {
     render(this.StyleElement, document?.head, {
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       hotCtx: (import.meta as any).hot,
     });
-
-    Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
-    window.addEventListener("TabClose", (event: TabEvent) =>
-      this.handleTabClose(event),
-    );
-    window.gBrowser.addProgressListener(this.listener);
-    this.addMainPopupShowingListener();
-    this.checkAllTabHaveSplitViewAttribute();
-    window.gBrowser.addProgressListener(this.listener);
   }
 
-  /**
-   * @description: Progress listener. If the selected tab changes, update the split view for creating a new view.
-   */
+  private initializePreferences() {
+    Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
+  }
+
+  private setupEventListeners() {
+    window.addEventListener("TabClose", this.handleTabClose.bind(this));
+    window.gBrowser.addProgressListener(this.listener);
+    this.addMainPopupShowingListener();
+  }
+
   private listener = {
     onLocationChange: () => {
       this.checkAllTabHaveSplitViewAttribute();
       const tab = window.gBrowser.selectedTab as Tab;
       if (tab) {
         this.updateSplitView(tab);
-        tab.linkedBrowser.docShellIsActive = true;
-        tab.linkedBrowser.renderLayers = true;
-        document
-          ?.getElementById(tab.linkedPanel)
-          ?.classList.add("deck-selected");
+        this.activateTab(tab);
       }
     },
   };
 
-  /**
-   * @description: Style element for the split view.
-   * @returns {Element} The style element.
-   */
+  private activateTab(tab: Tab) {
+    tab.linkedBrowser.docShellIsActive = true;
+    tab.linkedBrowser.renderLayers = true;
+    document?.getElementById(tab.linkedPanel)?.classList.add("deck-selected");
+  }
+
   private StyleElement(): Element {
     return (<style>{splitViewStyles}</style>) as Element;
   }
 
-  /**
-   * @description: Get the tab browser panel element.
-   * @returns {XULElement} The tab browser panel element.
-   */
   get tabBrowserPanel(): XULElement {
     return document?.getElementById("tabbrowser-tabpanels") as XULElement;
   }
 
-  /**
-   * @description: Get the generated UUID.
-   * @returns {string} The generated UUID.
-   */
   private get getGeneratedUuid(): string {
     return Services.uuid.generateUUID().toString();
   }
 
-  /**
-   * @description: Get the tab ID.
-   * @param {Tab} tab - The tab element.
-   * @returns {string} The tab ID.
-   */
   private getTabId(tab: Tab): string {
     if (!tab) {
       throw new Error("Tab is not defined");
@@ -102,12 +86,6 @@ export class SplitView {
     return tab.getAttribute(SplitViewStaticNames.TabAttributionId) ?? "";
   }
 
-  /**
-   * @description: Set the tab ID.
-   * @param {Tab} tab - The tab element.
-   * @param {string} id - The tab ID.
-   * @returns {string} The tab ID.
-   */
   private setTabId(tab: Tab, id: string): string {
     const currentId = tab.getAttribute(SplitViewStaticNames.TabAttributionId);
     if (currentId) {
@@ -118,20 +96,12 @@ export class SplitView {
     return id;
   }
 
-  /**
-   * @description: Get the tab element by the tab ID.
-   * @param {string} id - The tab ID.
-   * @returns {Tab} The tab element.
-   */
   public getTabById(id: string): Tab {
     return document?.querySelector(
       `[${SplitViewStaticNames.TabAttributionId}="${id}"]`,
     ) as Tab;
   }
 
-  /**
-   * @description: Check if all tabs have the split view attribute.
-   */
   private checkAllTabHaveSplitViewAttribute() {
     for (const tab of window.gBrowser.tabs) {
       if (!tab.getAttribute(SplitViewStaticNames.TabAttributionId)) {
@@ -140,29 +110,23 @@ export class SplitView {
     }
   }
 
-  /**
-   * @description: Handle the tab close event.
-   * @param {TabEvent} event - The tab event.
-   */
-  private handleTabClose(event: TabEvent) {
+  private handleTabClose = (event: TabEvent) => {
     const tab = event.target;
-    const groupIndex = splitViewData().findIndex((group) =>
-      group.tabIds.includes(this.getTabId(tab)),
-    );
+    const groupIndex = this.findGroupIndexForTab(tab);
 
     if (groupIndex < 0) {
       return;
     }
 
     this.removeTabFromGroup(tab, groupIndex, event.forUnsplit);
+  };
+
+  private findGroupIndexForTab(tab: Tab): number {
+    return splitViewData().findIndex((group) =>
+      group.tabIds.includes(this.getTabId(tab)),
+    );
   }
 
-  /**
-   * @description: Remove the tab from the group.
-   * @param {Tab} tab - The tab element.
-   * @param {number} groupIndex - The group index.
-   * @param {boolean} forUnsplit - Whether to unsplit the tab.
-   */
   private removeTabFromGroup(
     tab: Tab,
     groupIndex: number,
@@ -183,11 +147,6 @@ export class SplitView {
     }
   }
 
-  /**
-   * @description: Reset the tab state.
-   * @param {Tab} tab - The tab element.
-   * @param {boolean} forUnsplit - Whether to unsplit the tab.
-   */
   private resetTabState(tab: Tab, forUnsplit: boolean) {
     tab.splitView = false;
     tab.linkedBrowser.spliting = false;
@@ -197,89 +156,80 @@ export class SplitView {
     ) as XULElement;
 
     if (container) {
-      container.removeAttribute("split");
-      container.removeAttribute("style");
-
-      if (!forUnsplit) {
-        tab.linkedBrowser.docShellIsActive = false;
-        container.style.display = "none";
-      } else {
-        container.style.flex = "";
-        container.style.order = "";
-      }
+      this.resetContainerState(container, forUnsplit);
     }
   }
 
-  /**
-   * @description: Remove the group.
-   * @param {number} groupIndex - The group index.
-   */
+  private resetContainerState(container: XULElement, forUnsplit: boolean) {
+    container.removeAttribute("split");
+    container.removeAttribute("style");
+
+    if (!forUnsplit) {
+      container.style.display = "none";
+    } else {
+      container.style.flex = "";
+      container.style.order = "";
+    }
+  }
+
   private removeGroup(groupIndex: number) {
     if (currentSplitView() === groupIndex) {
       this.resetSplitView();
     }
-    setSplitViewData((prev) => prev.splice(groupIndex, 1));
+    setSplitViewData((prev) => prev.filter((_, index) => index !== groupIndex));
   }
 
   private resetSplitView() {
-    for (const tab of splitViewData()[currentSplitView()].tabIds) {
-      this.resetTabState(this.getTabById(tab), true);
-    }
+    splitViewData()[currentSplitView()].tabIds.forEach((tabId) => {
+      this.resetTabState(this.getTabById(tabId), true);
+    });
 
     setCurrentSplitView(-1);
 
-    this.tabBrowserPanel.removeAttribute("split-view");
-    this.tabBrowserPanel.style.display = "";
-    this.tabBrowserPanel.style.flexDirection = "";
+    this.resetTabBrowserPanel();
 
     Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
   }
 
-  /**
-   * @description: Handle the split view panel reverse option click.
-   * @param {boolean} reverse - Whether to reverse the split view.
-   */
-  public handleSplitViewPanelRevseOptionClick(reverse: boolean) {
-    this.updateSplitView(window.gBrowser.selectedTab, reverse === true, null);
+  private resetTabBrowserPanel() {
+    this.tabBrowserPanel.removeAttribute("split-view");
+    this.tabBrowserPanel.style.display = "";
+    this.tabBrowserPanel.style.flexDirection = "";
   }
 
-  /**
-   * @description: Handle the split view panel type option click.
-   * @param {string} method - The split view method.
-   */
+  public handleSplitViewPanelRevseOptionClick(reverse: boolean) {
+    this.updateSplitView(window.gBrowser.selectedTab, reverse, null);
+  }
+
   public handleSplitViewPanelTypeOptionClick(method: "row" | "column") {
     this.updateSplitView(window.gBrowser.selectedTab, null, method);
   }
 
-  /**
-   * @description: Add the main popup showing listener.
-   */
   private addMainPopupShowingListener() {
     const mainPopup = document?.getElementById("mainPopupSet");
-    mainPopup?.addEventListener("popupshowing", () => {
-      if (!window.TabContextMenu.contextTab) {
-        return;
-      }
-
-      const elem = document?.getElementById("context_splittabs") as XULElement;
-      if (elem) {
-        elem.setAttribute("disabled", String(this.contextMenuShouldBeDisabled));
-        if (elem.getAttribute("disabled") === "true") {
-          document?.l10n?.setAttributes(
-            elem,
-            "floorp-split-view-open-menu-disabled",
-          );
-        } else {
-          document?.l10n?.setAttributes(elem, "floorp-split-view-open-menu");
-        }
-      }
-    });
+    mainPopup?.addEventListener("popupshowing", this.onMainPopupShowing);
   }
 
-  /**
-   * @description: Check if the context menu should be disabled.
-   * @returns {boolean} Whether the context menu should be disabled.
-   */
+  private onMainPopupShowing = () => {
+    if (!window.TabContextMenu.contextTab) {
+      return;
+    }
+
+    const elem = document?.getElementById("context_splittabs") as XULElement;
+    if (elem) {
+      this.updateContextMenuElement(elem);
+    }
+  };
+
+  private updateContextMenuElement(elem: XULElement) {
+    const isDisabled = this.contextMenuShouldBeDisabled;
+    elem.setAttribute("disabled", String(isDisabled));
+    const l10nId = isDisabled
+      ? "floorp-split-view-open-menu-disabled"
+      : "floorp-split-view-open-menu";
+    document?.l10n?.setAttributes(elem, l10nId);
+  }
+
   private get contextMenuShouldBeDisabled() {
     const excludeFixedTabDataList = splitViewData().filter(
       (group) => group.fixedMode !== true,
@@ -287,29 +237,29 @@ export class SplitView {
 
     return (
       window.TabContextMenu.contextTab === window.gBrowser.selectedTab ||
-      excludeFixedTabDataList.some((group) =>
-        group.tabIds.includes(this.getTabId(window.TabContextMenu.contextTab)),
+      this.isTabInAnyGroup(
+        window.TabContextMenu.contextTab,
+        excludeFixedTabDataList,
       ) ||
-      excludeFixedTabDataList.some((group) =>
-        group.tabIds.includes(this.getTabId(window.gBrowser.selectedTab)),
-      )
+      this.isTabInAnyGroup(window.gBrowser.selectedTab, excludeFixedTabDataList)
     );
   }
 
-  /**
-   * @description: Split the tabs. it should be called from the context menu.
-   */
+  private isTabInAnyGroup(tab: Tab, groups: SplitViewData[]) {
+    return groups.some((group) => group.tabIds.includes(this.getTabId(tab)));
+  }
+
   public contextSplitTabs() {
     if (window.TabContextMenu.contextTab === window.gBrowser.selectedTab) {
       return;
     }
-    const tab = [window.TabContextMenu.contextTab, window.gBrowser.selectedTab];
-    this.splitTabs(tab);
+    const tabs = [
+      window.TabContextMenu.contextTab,
+      window.gBrowser.selectedTab,
+    ];
+    this.splitTabs(tabs);
   }
 
-  /**
-   * @description: If a tab does not have a SplitView, This selected tab will be used as a fixed tab.
-   */
   public splitContextFixedTab() {
     if (window.TabContextMenu.contextTab === window.gBrowser.selectedTab) {
       return;
@@ -317,64 +267,53 @@ export class SplitView {
     this.splitFixedTab(window.TabContextMenu.contextTab);
   }
 
-  /**
-   * @description: Split the tabs from the current tab.
-   */
   public splitFromCsk() {
-    const tab = [this.getAnotherTab(), window.gBrowser.selectedTab];
-    this.splitTabs(tab);
+    const anotherTab = this.getAnotherTab();
+    if (anotherTab) {
+      this.splitTabs([anotherTab, window.gBrowser.selectedTab]);
+    }
   }
 
   private getAnotherTab() {
-    let result =
-      window.gBrowser.tabs[
-        window.gBrowser.tabs.indexOf(window.gBrowser.selectedTab) - 1
-      ];
-    if (!result) {
-      result =
-        window.gBrowser.tabs[
-          window.gBrowser.tabs.indexOf(window.gBrowser.selectedTab) + 1
-        ];
-    }
-    return result ?? null;
+    const currentIndex = window.gBrowser.tabs.indexOf(
+      window.gBrowser.selectedTab,
+    );
+    return (
+      window.gBrowser.tabs[currentIndex - 1] ||
+      window.gBrowser.tabs[currentIndex + 1] ||
+      null
+    );
   }
 
-  /**
-   * @description: Split the tabs.
-   * @param {Tab[]} tabs - The tab elements.
-   */
   private splitTabs(tabs: Tab[]) {
     if (tabs.length < 2 || tabs.some((tab) => !tab)) {
       return;
     }
     const existingSplitTab = tabs.find((tab) => tab.splitView);
     if (existingSplitTab) {
-      const groupIndex = splitViewData().findIndex((group) =>
-        group.tabIds.includes(this.getTabId(existingSplitTab)),
-      );
+      const groupIndex = this.findGroupIndexForTab(existingSplitTab);
       if (groupIndex >= 0) {
         this.updateSplitView(existingSplitTab);
         return;
       }
     }
 
-    setSplitViewData((prev) => {
-      prev.push({
-        tabIds: tabs.map((tab) => this.setTabId(tab, this.getGeneratedUuid)),
-        reverse: false,
-        method: "row",
-      });
-      return prev;
-    });
-
+    this.createNewSplitGroup(tabs);
     window.gBrowser.selectedTab = tabs[0];
     this.updateSplitView(tabs[0]);
   }
 
-  /**
-   * @description: Add default SplitView. This tab will be used as a fixed tab.
-   * @param {Tab} tab - The tab element.
-   */
+  private createNewSplitGroup(tabs: Tab[]) {
+    setSplitViewData((prev) => [
+      ...prev,
+      {
+        tabIds: tabs.map((tab) => this.setTabId(tab, this.getGeneratedUuid)),
+        reverse: false,
+        method: "row",
+      },
+    ]);
+  }
+
   private splitFixedTab(tab: Tab) {
     if (FixedTabUtils.isWorking()) {
       return;
@@ -388,12 +327,6 @@ export class SplitView {
     });
   }
 
-  /**
-   * @description: Update the split view.
-   * @param {Tab} tab - The tab element.
-   * @param {boolean | null} reverse - Whether to reverse the split view.
-   * @param {string | null} method - The split view method.
-   */
   private updateSplitView(
     tab: Tab,
     reverse: boolean | null = null,
@@ -415,33 +348,18 @@ export class SplitView {
     this.activateSplitView(newSplitData, tab);
   }
 
-  /**
-   * @description: Find the split data for the tab.
-   * @param {Tab} tab - The tab element.
-   * @returns {SplitViewData | undefined} The split data.
-   */
   private findSplitDataForTab(tab: Tab): SplitViewData | undefined {
     return splitViewData().find((group) =>
       group.tabIds.includes(this.getTabId(tab)),
     );
   }
 
-  /**
-   * @description: Handle the no split data.
-   */
   private handleNoSplitData() {
     if (currentSplitView() >= 0) {
       this.deactivateSplitView();
     }
   }
 
-  /**
-   * @description: Create the new split data.
-   * @param {SplitViewData} splitData - The split data.
-   * @param {boolean | null} reverse - Whether to reverse the split view.
-   * @param {string | null} method - The split view method.
-   * @returns {SplitViewData} The new split data.
-   */
   private createNewSplitData(
     splitData: SplitViewData,
     reverse: boolean | null,
@@ -449,16 +367,11 @@ export class SplitView {
   ): SplitViewData {
     return {
       ...splitData,
-      method: method === null ? splitData?.method ?? "row" : method,
-      reverse: reverse === null ? splitData?.reverse ?? false : reverse,
+      method: method ?? splitData.method ?? "row",
+      reverse: reverse ?? splitData.reverse ?? false,
     };
   }
 
-  /**
-   * @description: Update the split data if needed.
-   * @param {SplitViewData} oldSplitData - The old split data.
-   * @param {SplitViewData} newSplitData - The new split data.
-   */
   private updateSplitDataIfNeeded(
     oldSplitData: SplitViewData,
     newSplitData: SplitViewData,
@@ -466,17 +379,13 @@ export class SplitView {
     const index = splitViewData().indexOf(oldSplitData);
     if (index >= 0) {
       setSplitViewData((prev) => {
-        prev[index] = newSplitData;
-        return prev;
+        const newData = [...prev];
+        newData[index] = newSplitData;
+        return newData;
       });
     }
   }
 
-  /**
-   * @description: Check if the split view should be deactivated.
-   * @param {Tab} tab - The tab element.
-   * @returns {boolean} Whether the split view should be deactivated.
-   */
   private shouldDeactivateSplitView(tab: Tab): boolean {
     return (
       currentSplitView() >= 0 &&
@@ -484,17 +393,13 @@ export class SplitView {
     );
   }
 
-  /**
-   * @description: Deactivate the split view.
-   */
   private deactivateSplitView() {
     for (const tab of window.gBrowser.tabs) {
       const container = tab.linkedBrowser.closest(".browserSidebarContainer");
       this.resetContainerStyle(container);
       container.removeEventListener("click", this.handleTabClick);
     }
-    this.tabBrowserPanel.removeAttribute("split-view");
-    this.tabBrowserPanel.style.flexTemplateAreas = "";
+    this.resetTabBrowserPanel();
     Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
     this.setTabsDocShellState(
       splitViewData()[currentSplitView()].tabIds.map((id) =>
@@ -505,11 +410,6 @@ export class SplitView {
     setCurrentSplitView(-1);
   }
 
-  /**
-   * @description: Activate the split view.
-   * @param {SplitViewData} splitData - The split data.
-   * @param {Tab} activeTab - The active tab element.
-   */
   private activateSplitView(splitData: SplitViewData, activeTab: Tab) {
     this.tabBrowserPanel.setAttribute("split-view", "true");
     Services.prefs.setBoolPref("floorp.browser.splitView.working", true);
@@ -529,13 +429,6 @@ export class SplitView {
     );
   }
 
-  /**
-   * @description: Apply the flex box layout.
-   * @param {Tab[]} tabs - The tab elements.
-   * @param {Tab} activeTab - The active tab element.
-   * @param {boolean} reverse - Whether to reverse the split view.
-   * @param {string} method - The split view method.
-   */
   private applyFlexBoxLayout(
     tabs: Tab[],
     activeTab: Tab,
@@ -555,25 +448,16 @@ export class SplitView {
     });
   }
 
-  /**
-   * @description: Get the flex direction.
-   * @param {boolean} reverse - Whether to reverse the split view.
-   * @param {string} method - The split view method.
-   * @returns {string} The flex direction.
-   */
   private getFlexDirection(reverse: boolean, method: "row" | "column"): string {
-    if (method === "column") {
-      return reverse ? "column-reverse" : "column";
-    }
-    return reverse ? "row-reverse" : "row";
+    return method === "column"
+      ? reverse
+        ? "column-reverse"
+        : "column"
+      : reverse
+        ? "row-reverse"
+        : "row";
   }
 
-  /**
-   * @description: Style the container.
-   * @param {XULElement} container - The container element.
-   * @param {boolean} isActive - Whether the container is active.
-   * @param {number} index - The index.
-   */
   private styleContainer(
     container: XULElement,
     isActive: boolean,
@@ -590,10 +474,6 @@ export class SplitView {
     container.style.order = String(index);
   }
 
-  /**
-   * @description: Handle the tab click.
-   * @param {Event} event - The event.
-   */
   private handleTabClick = (event: Event) => {
     const container = event.currentTarget;
     const tab = window.gBrowser.tabs.find(
@@ -605,13 +485,8 @@ export class SplitView {
     }
   };
 
-  /**
-   * @description: Set the tabs doc shell state.
-   * @param {Tab[]} tabs - The tab elements.
-   * @param {boolean} active - Whether the tabs should be active.
-   */
   private setTabsDocShellState(tabs: Tab[], active: boolean) {
-    for (const tab of tabs) {
+    tabs.forEach((tab) => {
       tab.linkedBrowser.spliting = active;
       tab.linkedBrowser.docShellIsActive = active;
       const browser = tab.linkedBrowser.closest(
@@ -619,27 +494,27 @@ export class SplitView {
       ) as XULElement;
 
       if (browser) {
-        if (active) {
-          browser.setAttribute("split", "true");
-          const currentStyle = browser.getAttribute("style");
-          browser.setAttribute(
-            "style",
-            `${currentStyle}
-            -moz-subtree-hidden-only-visually: 0;
-            visibility: visible !important;`,
-          );
-        } else {
-          browser.removeAttribute("split");
-          browser.removeAttribute("style");
-        }
+        this.setTabDocShellState(browser, active);
       }
+    });
+  }
+
+  private setTabDocShellState(browser: XULElement, active: boolean) {
+    if (active) {
+      browser.setAttribute("split", "true");
+      const currentStyle = browser.getAttribute("style");
+      browser.setAttribute(
+        "style",
+        `${currentStyle}
+        -moz-subtree-hidden-only-visually: 0;
+        visibility: visible !important;`,
+      );
+    } else {
+      browser.removeAttribute("split");
+      browser.removeAttribute("style");
     }
   }
 
-  /**
-   * @description: Reset the container style.
-   * @param {XULElement} container - The container element.
-   */
   private resetContainerStyle(container: XULElement) {
     container.removeAttribute("split-active");
     container.classList.remove("deck-selected");
@@ -647,17 +522,14 @@ export class SplitView {
     container.style.order = "";
   }
 
-  /**
-   * @description: Unsplit the current view.
-   */
   public unsplitCurrentView() {
     const currentTab = window.gBrowser.selectedTab;
     const tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
       this.getTabById(id),
     );
-    for (const tab of tabs) {
+    tabs.forEach((tab) => {
       this.handleTabClose({ target: tab, forUnsplit: true } as TabEvent);
-    }
+    });
     window.gBrowser.selectedTab = currentTab;
   }
 }
