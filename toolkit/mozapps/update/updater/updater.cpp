@@ -55,6 +55,7 @@
 #ifdef XP_WIN
 #  include "mozilla/Maybe.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
+#  include "mozilla/WinTokenUtils.h"
 #  include <climits>
 #endif  // XP_WIN
 
@@ -130,14 +131,14 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
 // Closes the handle if valid and if the updater is elevated returns with the
 // return code specified. This prevents multiple launches of the callback
 // application by preventing the elevated process from launching the callback.
-#  define EXIT_WHEN_ELEVATED(path, handle, retCode) \
-    {                                               \
-      if (handle != INVALID_HANDLE_VALUE) {         \
-        CloseHandle(handle);                        \
-      }                                             \
-      if (NS_tremove(path) && errno != ENOENT) {    \
-        return retCode;                             \
-      }                                             \
+#  define EXIT_WHEN_ELEVATED(handle, retCode) \
+    {                                         \
+      if (handle != INVALID_HANDLE_VALUE) {   \
+        CloseHandle(handle);                  \
+      }                                       \
+      if (gIsElevated) {                      \
+        return retCode;                       \
+      }                                       \
     }
 #endif
 
@@ -2871,7 +2872,6 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
                                      int callbackIndex
 #ifdef XP_WIN
                                      ,
-                                     const WCHAR* elevatedLockFilePath,
                                      HANDLE updateLockFileHandle
 #elif XP_MACOSX
                                      ,
@@ -2928,7 +2928,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
       LOG(("Not launching Windows post update process because !gSucceeded"));
     }
 
-    EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 0);
+    EXIT_WHEN_ELEVATED(updateLockFileHandle, 0);
 #elif XP_MACOSX
     if (!gIsElevated) {
       if (gSucceeded) {
@@ -3102,18 +3102,31 @@ int NS_main(int argc, NS_tchar** argv) {
   gPatchDirPath[MAXPATHLEN - 1] = NS_T('\0');
 
 #ifdef XP_WIN
-  NS_tchar elevatedLockFilePath[MAXPATHLEN] = {NS_T('\0')};
-  NS_tsnprintf(elevatedLockFilePath,
-               sizeof(elevatedLockFilePath) / sizeof(elevatedLockFilePath[0]),
-               NS_T("%s\\update_elevated.lock"), gPatchDirPath);
-  gUseSecureOutputPath =
-      sUsingService || (NS_tremove(elevatedLockFilePath) && errno != ENOENT);
+  auto isAdmin = mozilla::UserHasAdminPrivileges();
+  if (isAdmin.isErr()) {
+    fprintf(stderr,
+            "Failed to query if the current process has admin privileges.\n");
+    return 1;
+  }
+  auto isLocalSystem = mozilla::UserIsLocalSystem();
+  if (isLocalSystem.isErr()) {
+    fprintf(
+        stderr,
+        "Failed to query if the current process has LocalSystem privileges.\n");
+    return 1;
+  }
 
-  // Even if a file has no sharing access, you can still get its attributes
-  // If we are running elevated, this file will exist, having been opened by
-  // the unelevated updater that started this one.
-  gIsElevated =
-      GetFileAttributesW(elevatedLockFilePath) != INVALID_FILE_ATTRIBUTES;
+  // While is it technically redundant to check LocalSystem in addition to Admin
+  // given the former contains privileges of the latter, we have opt to verify
+  // both. A few reasons for this decision include the off chance that the
+  // Windows security model changes in the future and weird system setups where
+  // someone has modified the group lists in surprising ways.
+  //
+  // We use this to detect if we were launched from the Maintenance Service
+  // under LocalSystem or UAC under the user's account, and therefore can
+  // proceed with an install to `Program Files` or `Program Files(x86)`.
+  gIsElevated = isAdmin.unwrap() || isLocalSystem.unwrap();
+  gUseSecureOutputPath = sUsingService || gIsElevated;
 #elif defined(XP_MACOSX)
     // This is only ever true on macOS and Windows. We don't currently have a
     // way of elevating on other platforms.
@@ -3566,26 +3579,9 @@ int NS_main(int argc, NS_tchar** argv) {
            (noServiceFallback || forceServiceFallback))) {
         LOG(("Can't open lock file - seems like we need elevation"));
 
-        HANDLE elevatedFileHandle;
-        if (NS_tremove(elevatedLockFilePath) && errno != ENOENT) {
-          LOG(("Unable to create elevated lock file! Exiting"));
-          output_finish();
-          return 1;
-        }
-
-        elevatedFileHandle = CreateFileW(
-            elevatedLockFilePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-            OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, nullptr);
-        if (elevatedFileHandle == INVALID_HANDLE_VALUE) {
-          LOG(("Unable to create elevated lock file! Exiting"));
-          output_finish();
-          return 1;
-        }
-
         auto cmdLine = mozilla::MakeCommandLine(argc - 1, argv + 1);
         if (!cmdLine) {
           LOG(("Failed to make command line! Exiting"));
-          CloseHandle(elevatedFileHandle);
           output_finish();
           return 1;
         }
@@ -3825,17 +3821,6 @@ int NS_main(int argc, NS_tchar** argv) {
             // And we don't have a good way of accepting the prompt in
             // automation.
             sinfo.lpVerb = L"open";
-            // This handle is what lets the updater that we spawn below know
-            // that it's the elevated updater. We are going to close it so that
-            // it doesn't know that and will run un-elevated. Doing this make
-            // this makes for an imperfect test of the service fallback
-            // functionality because it changes how the (usually) elevated
-            // updater runs. One of the effects of this is that the secure
-            // output files will not be used. So that functionality won't really
-            // be covered by testing. But we can't really have the updater run
-            // elevated, because that would require a UAC, which we have no way
-            // to deal with in automation.
-            CloseHandle(elevatedFileHandle);
             // We need to let go of the update lock to let the un-elevated
             // updater we are about to spawn update.
             if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
@@ -3905,8 +3890,6 @@ int NS_main(int argc, NS_tchar** argv) {
                  "'succeeded'."));
           }
         }
-
-        CloseHandle(elevatedFileHandle);
 
         if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
           CloseHandle(updateLockFileHandle);
@@ -3995,7 +3978,7 @@ int NS_main(int argc, NS_tchar** argv) {
       WriteStatusFile(WRITE_ERROR_APPLY_DIR_PATH);
       LOG(("NS_main: unable to find apply to dir: " LOG_S, gWorkingDirPath));
       output_finish();
-      EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+      EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
       if (argc > callbackIndex) {
         LaunchCallbackApp(argv[5], argc - callbackIndex, argv + callbackIndex,
                           sUsingService);
@@ -4049,7 +4032,7 @@ int NS_main(int argc, NS_tchar** argv) {
         WriteStatusFile(WRITE_ERROR_CALLBACK_PATH);
         LOG(("NS_main: unable to find callback file: " LOG_S, targetPath));
         output_finish();
-        EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+        EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
         if (argc > callbackIndex) {
           LaunchCallbackApp(argv[5], argc - callbackIndex, argv + callbackIndex,
                             sUsingService);
@@ -4098,7 +4081,7 @@ int NS_main(int argc, NS_tchar** argv) {
 
           // Don't attempt to launch the callback when the callback path is
           // longer than expected.
-          EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+          EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
           return 1;
         }
 
@@ -4115,7 +4098,7 @@ int NS_main(int argc, NS_tchar** argv) {
                " into place at " LOG_S,
                argv[callbackIndex], gCallbackBackupPath));
           output_finish();
-          EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+          EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
           LaunchCallbackApp(argv[callbackIndex], argc - callbackIndex,
                             argv + callbackIndex, sUsingService);
           return 1;
@@ -4190,7 +4173,7 @@ int NS_main(int argc, NS_tchar** argv) {
                    gCallbackBackupPath));
             }
             output_finish();
-            EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+            EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
             LaunchCallbackApp(argv[5], argc - callbackIndex,
                               argv + callbackIndex, sUsingService);
             return 1;
@@ -4301,7 +4284,6 @@ int NS_main(int argc, NS_tchar** argv) {
   int retVal = LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex
 #ifdef XP_WIN
                                                 ,
-                                                elevatedLockFilePath,
                                                 updateLockFileHandle
 #elif XP_MACOSX
                                                   ,

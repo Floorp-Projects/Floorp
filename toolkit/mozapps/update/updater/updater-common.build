@@ -36,6 +36,7 @@ if CONFIG["MOZ_VERIFY_MAR_SIGNATURE"]:
 if CONFIG["OS_ARCH"] == "WINNT":
     have_progressui = 1
     srcs += [
+        "/toolkit/xre/WinTokenUtils.cpp",
         "loaddlls.cpp",
         "progressui_win.cpp",
     ]
