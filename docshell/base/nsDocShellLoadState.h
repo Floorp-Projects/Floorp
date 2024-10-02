@@ -370,8 +370,7 @@ class nsDocShellLoadState final {
   // aIsEmbeddingBlockedError are expected to be Nothing when called from parent
   // process.
   nsLoadFlags CalculateChannelLoadFlags(
-      mozilla::dom::BrowsingContext* aBrowsingContext,
-      mozilla::Maybe<bool> aUriModified,
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool aUriModified,
       mozilla::Maybe<bool> aIsEmbeddingBlockedError);
 
   mozilla::dom::DocShellLoadStateInit Serialize(
