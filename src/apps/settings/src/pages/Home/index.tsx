@@ -60,12 +60,12 @@ export default function Home() {
           </Card>
           <Card
             title="Manage Extensions"
-            footerLink="https://addons.mozilla.org"
+            footerLink="about:addons"
             footerLinkText="Manage Extensions"
             icon={<IconCodiconExtensions style={{ fontSize: '24px', color: '#8400ff' }} />}
           >
             <Text fontSize="sm">
-              Manage the extensions available on addons.mozilla.org
+              Noraneko allows you to manage the extensions available on addons.mozilla.org.
             </Text>
           </Card>
           <Card

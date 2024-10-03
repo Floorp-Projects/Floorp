@@ -1,3 +1,4 @@
+import { openChromeURL } from "../dev";
 import {
   Divider,
   HStack,
@@ -59,7 +60,14 @@ function Footer({
   return (
     <>
       <Divider ml={"-20px"} pr={"40px"} mt={4} />
-      <Link href={footerLink} _hover={{ textDecoration: "none" }} target="_blank">
+      <Link href={footerLink} _hover={{ textDecoration: "none" }} target="_blank" onClick={
+        (e) => {
+          if (footerLink?.startsWith("about:")) {
+            e.preventDefault();
+            openChromeURL(footerLink);
+          }
+        }}
+      >
         <HStack align="flex-start" m={"12.5px 10px -5px 5px"} p={"10px"}  rounded={"15px"} _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}>
           {footerLink ? (
             <Text color={useColorModeValue("blue.500", "blue.400")} fontSize="sm">

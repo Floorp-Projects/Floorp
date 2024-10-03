@@ -2,6 +2,7 @@ import { GridItem, VStack, Divider, Icon } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useState } from "react";
 import { useMediaQuery } from "@chakra-ui/react";
+import { openChromeURL } from "../dev";
 
 const data: {
   [key: string]: {
@@ -72,7 +73,7 @@ function Sidebar() {
           }
           text="Firefox Settings"
           onClick={() => {
-            window.open("about:preferences#privacy", "_blank");
+            openChromeURL("about:preferences#privacy");
           }}
         />
       </VStack>

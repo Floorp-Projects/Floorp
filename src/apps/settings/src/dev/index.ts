@@ -79,3 +79,10 @@ export async function getStringPref(prefName: string): Promise<string> {
     }),
   ).value as string;
 }
+
+export async function openChromeURL(url: string) {
+  return trpc.post.broadcast.mutate({
+    topic: "settings-parent:openChromeURL",
+    data: JSON.stringify({ url }),
+  });
+}
