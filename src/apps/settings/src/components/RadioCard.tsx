@@ -19,8 +19,8 @@ const RadioCard: React.FC<RadioCardProps> = ({
   return (
     <Card
       as="label"
-      width="140px"
-      height="100px"
+      width="150px"
+      height="110px"
       cursor="pointer"
       borderWidth="2px"
       borderRadius="md"
@@ -30,7 +30,7 @@ const RadioCard: React.FC<RadioCardProps> = ({
       <CardBody px={2} pt={2} pb={1}>
         <input {...inputProps} />
         <Box {...radioProps}>
-          <Image src={image} alt={title} h="62.5px" w="128px" rounded="md" />
+          <Image src={image} alt={title} h="70px" w="145px" rounded="md" />
           <Text fontSize="15px" fontWeight="600" mt={1.4}>
             {title}
           </Text>
