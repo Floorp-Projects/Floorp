@@ -46,7 +46,7 @@ function Header() {
           border={"1px solid transparent"}
         >
           <InputLeftElement pointerEvents="none">
-            <Icon as={"svg"} color="gray.300" />
+            <IconIcRoundSearch style={{ fontSize: "20px", color: "currentColor" }} />
           </InputLeftElement>
           <Input
             type="text"

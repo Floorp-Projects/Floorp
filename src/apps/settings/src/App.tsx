@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Header from "./header";
 import Workspaces from "./pages/Workspaces";
 import customTheme from "./theme";
+import Design from "./pages/Design/Design";
 
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/workspaces" element={<Workspaces />} />
+                  <Route path="/design" element={<Design />} />
                 </Routes>
               </Box>
             </Box>
