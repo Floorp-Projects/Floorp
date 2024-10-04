@@ -1,11 +1,19 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { Alert, Grid, RadioGroup } from '@chakra-ui/react';
+import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  Box,
+  Grid,
+  Link,
+  RadioGroup,
+} from "@chakra-ui/react";
 import ThemeCard from "../../components/ThemeCard";
 import React, { useEffect } from "react";
 import Card from "../../components/Card";
 
 interface FormData {
-  theme: number;
+  design: number;
 }
 
 const options = [
@@ -44,7 +52,7 @@ const options = [
 export default function Interface() {
   const { control } = useForm<FormData>({
     defaultValues: {
-      theme: 1,
+      design: 1,
     },
   });
 
@@ -61,10 +69,12 @@ export default function Interface() {
       icon={
         <IconCarbonWorkspace style={{ fontSize: "24px", color: "#3182F6" }} />
       }
-      title="Interface Theme"
+      title="Interface Design"
+      footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+      footerLinkText="About Interface Design"
     >
       <Controller
-        name="theme"
+        name="design"
         control={control}
         render={({ field: { onChange, value } }) => (
           <RadioGroup
