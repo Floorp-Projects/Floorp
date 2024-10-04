@@ -8,13 +8,14 @@ import Workspaces from "./pages/Workspaces";
 import customTheme from "./theme";
 import Design from "./pages/Design/Design";
 
-
 export default function App() {
-  const [isMobile] = useMediaQuery("(max-width: 768px)")
+  const [isMobile] = useMediaQuery("(max-width: 768px)");
+  /*
   setBoolPref("noraneko.settings.dev", true);
   getBoolPref("bidi.browser.ui").then((v) => {
     console.log(v);
   });
+  */
   return (
     <ChakraProvider theme={customTheme}>
       <Router>

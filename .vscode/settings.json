@@ -20,6 +20,6 @@
   "js/ts.implicitProjectConfig.experimentalDecorators": true,
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

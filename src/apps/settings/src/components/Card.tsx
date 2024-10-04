@@ -26,7 +26,12 @@ function Card({
   footerChildren?: React.ReactNode;
 }) {
   return (
-    <Flex flexDirection={"column"} borderWidth={1} borderRadius="md" p={"15px 20px"}>
+    <Flex
+      flexDirection={"column"}
+      borderWidth={1}
+      borderRadius="md"
+      p={"15px 20px"}
+    >
       <HStack mb={2}>
         {icon}
         <Text
@@ -60,24 +65,36 @@ function Footer({
   return (
     <>
       <Divider ml={"-20px"} pr={"40px"} mt={4} />
-      <Link href={footerLink} _hover={{ textDecoration: "none" }} target="_blank" onClick={
-        (e) => {
+      <Link
+        href={footerLink}
+        _hover={{ textDecoration: "none" }}
+        target="_blank"
+        onClick={(e) => {
           if (footerLink?.startsWith("about:")) {
             e.preventDefault();
             openChromeURL(footerLink);
           }
         }}
       >
-        <HStack align="flex-start" m={"12.5px 10px -5px 5px"} p={"10px"}  rounded={"15px"} _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}>
+        <HStack
+          align="flex-start"
+          m={"12.5px 10px -5px 5px"}
+          p={"10px"}
+          rounded={"15px"}
+          _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
+        >
           {footerLink ? (
-            <Text color={useColorModeValue("blue.500", "blue.400")} fontSize="sm">
+            <Text
+              color={useColorModeValue("blue.500", "blue.400")}
+              fontSize="sm"
+            >
               {footerLinkText}
             </Text>
           ) : (
             footerChildren
           )}
           <Spacer />
-          <IconIcOutlineOpenInNew style={{ fontSize: '16px' }} />
+          <IconIcOutlineOpenInNew style={{ fontSize: "16px" }} />
         </HStack>
       </Link>
     </>

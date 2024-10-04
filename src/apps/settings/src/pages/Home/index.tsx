@@ -6,8 +6,6 @@ import {
   Grid,
   GridItem,
   Progress,
-  Link,
-  Icon,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 
@@ -24,55 +22,92 @@ export default function Home() {
           <Text fontSize="3xl">Welcome, Account Name </Text>
         </Flex>
         <Text>
-          Manage your account, privacy, and security to make your Noraneko experience convenient and safe.
+          Manage your account, privacy, and security to make your Noraneko
+          experience convenient and safe.
         </Text>
 
-        <Grid templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }} gap={4}>
-          <Card title="Setup" footerLink="https://support.ablaze.one/setup" footerLinkText="Login to Mozilla & Ablaze Account" icon={<IconMdiRocketLaunch style={{ fontSize: '24px', color: '#3182F6' }} />}>
+        <Grid
+          templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }}
+          gap={4}
+        >
+          <Card
+            title="Setup"
+            footerLink="https://support.ablaze.one/setup"
+            footerLinkText="Login to Mozilla & Ablaze Account"
+            icon={
+              <IconMdiRocketLaunch
+                style={{ fontSize: "24px", color: "#3182F6" }}
+              />
+            }
+          >
             <Text fontSize="sm" mb={2}>
               Complete the setup to get the most out of Noraneko.
             </Text>
             <Text fontWeight="bold" fontSize="sm" mb={1}>
               Progress
             </Text>
-            <Progress value={50} size="sm" colorScheme="blue" mb={1} h={"4px"} />
+            <Progress
+              value={50}
+              size="sm"
+              colorScheme="blue"
+              mb={1}
+              h={"4px"}
+            />
             <Text fontSize="sm">Step 2/4</Text>
           </Card>
           <Card
             title="Privacy and Tracking Protection"
             footerLink="https://support.google.com/chrome/answer/95647?hl=ja"
             footerLinkText="Privacy and Tracking Protection"
-            icon={<IconIcSharpPrivacyTip style={{ fontSize: '24px', color: '#137333' }} />}
+            icon={
+              <IconIcSharpPrivacyTip
+                style={{ fontSize: "24px", color: "#137333" }}
+              />
+            }
           >
             <Text fontSize="sm">
-              Noraneko will work to properly protect your data and privacy by default, but you can also manage it manually.
+              Noraneko will work to properly protect your data and privacy by
+              default, but you can also manage it manually.
             </Text>
           </Card>
           <Card
             title="Ablaze Account"
             footerLink="https://accounts.ablaze.one/signin"
             footerLinkText="Ablaze Account"
-            icon={<IconMdiAccount style={{ fontSize: '24px', color: '#ff7708' }} />}
+            icon={
+              <IconMdiAccount style={{ fontSize: "24px", color: "#ff7708" }} />
+            }
           >
             <Text fontSize="sm">
-              Ablaze Account is used to sync some of your data with other devices. It is also used to sync data that cannot be synced with a Mozilla Account.
+              Ablaze Account is used to sync some of your data with other
+              devices. It is also used to sync data that cannot be synced with a
+              Mozilla Account.
             </Text>
           </Card>
           <Card
             title="Manage Extensions"
             footerLink="about:addons"
             footerLinkText="Manage Extensions"
-            icon={<IconCodiconExtensions style={{ fontSize: '24px', color: '#8400ff' }} />}
+            icon={
+              <IconCodiconExtensions
+                style={{ fontSize: "24px", color: "#8400ff" }}
+              />
+            }
           >
             <Text fontSize="sm">
-              Noraneko allows you to manage the extensions available on addons.mozilla.org.
+              Noraneko allows you to manage the extensions available on
+              addons.mozilla.org.
             </Text>
           </Card>
           <Card
             title="Noraneko Support"
             footerLink="https://support.mozilla.org/products/firefox/"
             footerLinkText="Noraneko Support"
-            icon={<IconMdiHelpCircle style={{ fontSize: '24px', color: '#3182F6' }} />}
+            icon={
+              <IconMdiHelpCircle
+                style={{ fontSize: "24px", color: "#3182F6" }}
+              />
+            }
           >
             <Text fontSize="sm">
               You can use the support written by Noraneko contributors.
