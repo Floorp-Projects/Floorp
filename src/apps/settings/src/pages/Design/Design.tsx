@@ -13,6 +13,7 @@ import {
 import Card from "../../components/Card";
 import React from "react";
 import Interface from "./interface";
+import Tabbar from "./tabbar";
 
 export default function Design() {
   return (
@@ -26,18 +27,8 @@ export default function Design() {
       </Text>
 
       <VStack align="stretch" spacing={6} w="100%">
-        <Card
-          icon={
-            <IconCarbonWorkspace
-              style={{ fontSize: "24px", color: "#3182F6" }}
-            />
-          }
-          title="Interface Theme"
-          footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-          footerLinkText="How to use workspaces"
-        >
-          <Interface />
-        </Card>
+        <Interface />
+        <Tabbar />
       </VStack>
     </Flex>
   );

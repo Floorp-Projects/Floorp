@@ -1,7 +1,8 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { RadioGroup, Stack } from "@chakra-ui/react";
+import { Alert, Grid, RadioGroup } from '@chakra-ui/react';
 import ThemeCard from "../../components/ThemeCard";
 import React, { useEffect } from "react";
+import Card from "../../components/Card";
 
 interface FormData {
   theme: number;
@@ -56,28 +57,35 @@ export default function Interface() {
   }, [watchAll]);
 
   return (
-    <Controller
-      name="theme"
-      control={control}
-      render={({ field: { onChange, value } }) => (
-        <RadioGroup
-          onChange={(val) => onChange(Number(val))}
-          value={value.toString()}
-        >
-          <Stack direction="row" spacing={4}>
-            {options.map((option) => (
-              <ThemeCard
-                key={option.value}
-                title={option.title}
-                image={option.image}
-                value={option.value.toString()}
-                isChecked={value === option.value}
-                onChange={() => onChange(option.value)}
-              />
-            ))}
-          </Stack>
-        </RadioGroup>
-      )}
-    />
+    <Card
+      icon={
+        <IconCarbonWorkspace style={{ fontSize: "24px", color: "#3182F6" }} />
+      }
+      title="Interface Theme"
+    >
+      <Controller
+        name="theme"
+        control={control}
+        render={({ field: { onChange, value } }) => (
+          <RadioGroup
+            onChange={(val) => onChange(Number(val))}
+            value={value.toString()}
+          >
+            <Grid templateColumns="repeat(4, 1fr)" gap={4}>
+              {options.map((option) => (
+                <ThemeCard
+                  key={option.value}
+                  title={option.title}
+                  image={option.image}
+                  value={option.value.toString()}
+                  isChecked={value === option.value}
+                  onChange={() => onChange(option.value)}
+                />
+              ))}
+            </Grid>
+          </RadioGroup>
+        )}
+      />
+    </Card>
   );
 }
