@@ -3,22 +3,27 @@ import React, { useEffect } from "react";
 import Interface from "./interface";
 import Tabbar from "./tabbar";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
-import { saveDesignSettings } from "./saveDesignPref";
+import { getDesignSettings, saveDesignSettings } from "./saveDesignPref";
 import type { DesignFormData } from "@/type";
 
 export default function Design() {
   const methods = useForm<DesignFormData>({
-    defaultValues: {
-      design: "lepton",
-      faviconColor: false,
-      style: "multirow",
-      position: "bottom-of-window",
-    },
+    defaultValues: {},
   });
-
+  const { setValue } = methods;
   const watchAll = useWatch({
     control: methods.control,
   });
+
+  useEffect(() => {
+    const fetchDefaultValues = async () => {
+      const values = await getDesignSettings();
+      for (const key in values) {
+        setValue(key, values[key]);
+      }
+    };
+    fetchDefaultValues();
+  }, [setValue]);
 
   useEffect(() => {
     saveDesignSettings(watchAll as DesignFormData);

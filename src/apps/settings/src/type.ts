@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { z } from "zod";
-import { zFloorpDesignConfigs } from "../../main/core/common/designs/configs";
+import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/type";
 
 export const zDesignFormData = z.object({
   design: zFloorpDesignConfigs.shape.globalConfigs.shape.userInterface,
@@ -13,5 +13,4 @@ export const zDesignFormData = z.object({
   position: zFloorpDesignConfigs.shape.tabbar.shape.tabbarPosition,
 });
 
-export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
 export type DesignFormData = z.infer<typeof zDesignFormData>;

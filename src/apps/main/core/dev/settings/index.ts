@@ -45,6 +45,7 @@ trpc.post.onBroadcast.subscribe(undefined, {
       }
       case "settings-parent:getPref": {
         const data = zPrefType.parse(JSON.parse(value.data));
+        console.log(data);
 
         switch (data.prefType) {
           case "boolean": {
@@ -90,10 +91,13 @@ trpc.post.onBroadcast.subscribe(undefined, {
         break;
       }
       case "settings-parent:openChromeURL": {
-        const data = z.object({ url: z.string() }).parse(JSON.parse(value.data));
+        const data = z
+          .object({ url: z.string() })
+          .parse(JSON.parse(value.data));
         window.gBrowser.addTab(data.url, {
           inBackground: false,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
         break;
       }

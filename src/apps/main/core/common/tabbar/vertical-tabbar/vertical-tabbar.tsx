@@ -5,7 +5,7 @@
 
 import { createEffect } from "solid-js";
 import { config, setConfig } from "../../designs/configs";
-import type { zFloorpDesignConfigsType } from "../../designs/configs";
+import type { zFloorpDesignConfigsType } from "../../../../../../apps/common/scripts/global-types/type";
 import { render } from "@nora/solid-xul";
 import { VerticalTabbarStyle } from "./vertical-tabbar-style";
 import { VerticalTabbarSplitter } from "./vertical-tabbar-splitter";

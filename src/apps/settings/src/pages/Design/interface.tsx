@@ -69,7 +69,7 @@ export default function Interface() {
           render={({ field: { onChange, value } }) => (
             <RadioGroup
               onChange={(val) => onChange(Number(val))}
-              value={value.toString()}
+              value={value?.toString()}
             >
               <Grid
                 templateColumns={"repeat(auto-fill, minmax(140px, 1fr))"}
