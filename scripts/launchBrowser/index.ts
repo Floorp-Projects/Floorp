@@ -2,9 +2,10 @@ import { execa } from "execa";
 import chalk from "chalk";
 
 export async function runBrowser(port = 5180) {
+  // https://wiki.mozilla.org/Firefox/CommandLineOptions
   const processBrowser = execa(
     {},
-  )`./_dist/bin/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port}`;
+  )`./_dist/bin/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
 
   const stdout = processBrowser.readable({ from: "stdout" });
   const stderr = processBrowser.readable({ from: "stderr" });
@@ -103,6 +104,14 @@ export async function runBrowser(port = 5180) {
     }
 
     printFirefoxLog(str.split("\n"));
+  });
+
+  processBrowser.on("exit", () => {
+    /**
+     * Kill nodejs process gratefully
+     */
+
+    process.exit(0);
   });
   return ret;
 }

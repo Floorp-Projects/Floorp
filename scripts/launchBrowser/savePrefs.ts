@@ -23,9 +23,6 @@ user_pref("security.allow_parent_unrestricted_js_loads", true);
 user_pref("browser.preferences.moreFromMozilla", false);
 user_pref("general.useragent.compatMode.firefox", true);
 user_pref("remote.active-protocols", 1);
-user_pref("fission.webContentIsolationStrategy", 0);
-user_pref("focusmanager.testmode", true);
-user_pref("remote.active-protocols", 1);
 //? WebDriverBidi seems to disable newtabpage
 user_pref("browser.newtabpage.enabled", true);
 `;

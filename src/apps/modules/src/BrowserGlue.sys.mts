@@ -49,6 +49,12 @@ const JS_WINDOW_ACTORS: {
     },
     child: {
       esModuleURI: localPathToResourceURI("./actors/NRSettingsChild.sys.mts"),
+      events: {
+        /**
+         * actorCreated seems to require any of events for init
+         */
+        DOMDocElementInserted: {},
+      },
     },
     //* port seems to not be supported
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/JSWindowActor.webidl#99

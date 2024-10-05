@@ -145,16 +145,7 @@ importers:
         version: 2.10.2(bufferutil@4.0.8)(solid-js@1.9.1)(vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1))
       vite-tsconfig-paths:
         specifier: ^4.3.2
-        version: 5.0.1(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1))
-
-  src/apps/middleware-settings:
-    dependencies:
-      '@trpc/server':
-        specifier: 10.45.2
-        version: 10.45.2
-      ws:
-        specifier: ^8.18.0
-        version: 8.18.0(bufferutil@4.0.8)
+        version: 4.3.2(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1))
 
   src/apps/modules:
     devDependencies:
@@ -240,13 +231,13 @@ importers:
         version: 1.9.1
       vite:
         specifier: 5.3.4
-        version: 5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1)
+        version: 5.3.4(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1)
 
   src/packages/user-js-runner:
     devDependencies:
       '@bytecodealliance/componentize-js':
         specifier: ^0.10.3
-        version: 0.13.0
+        version: 0.10.5
       '@bytecodealliance/jco':
         specifier: ^1.4.4
         version: 1.7.0
@@ -471,12 +462,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@bytecodealliance/componentize-js@0.10.5':
+    resolution: {integrity: sha512-ywJlm82nlX0R39kmqluKYWIti6Pq2/TAc37CJxwYmamgGqyNno1t03MP3dcTZ9BAxD8vbbhg8YChWq/lnjLoQw==}
+
   '@bytecodealliance/componentize-js@0.13.0':
     resolution: {integrity: sha512-SBmuSiw2CQTBnmE5+944ujFG9VykovteE2q5XLsTblJgey67TAxrIjlLsygDypFbi2JUGNJJ6t9Y0HSarBgKxQ==}
+
+  '@bytecodealliance/jco@1.4.4':
+    resolution: {integrity: sha512-Gu9VzU99rptKnRgx1KSMUIy56BoVWy6uKCoKZwLL+nvEM9kSLtvEp2CLSSnpOxXaFIpTLhmNhSu7j8h965C8zw==}
+    hasBin: true
 
   '@bytecodealliance/jco@1.7.0':
     resolution: {integrity: sha512-DOoYzWmCjm5N3O1WE+g9VXUHXgKEJ3OatV3KhLYgaG1t9+sj+voS3PZA0JbWuA6vEkBT73Kg4yd4bJgIe1yFXA==}
     hasBin: true
+
+  '@bytecodealliance/preview2-shim@0.16.7':
+    resolution: {integrity: sha512-YxfbzaykY6iVCSmeHPwOqO4fnWGj6awQ5pCK3UyI0zOg9Okp7pvK4J5BkQUC5QpPdFC9vUmWdqx5QSLt9k3iyQ==}
 
   '@bytecodealliance/preview2-shim@0.17.0':
     resolution: {integrity: sha512-JorcEwe4ud0x5BS/Ar2aQWOQoFzjq/7jcnxYXCvSMh0oRm0dQXzOA+hqLDBnOMks1LLBA7dmiLLsEBl09Yd6iQ==}
@@ -1806,6 +1807,10 @@ packages:
     resolution: {integrity: sha512-nk5wEsP4RiKjG+vF+uG8lFsEn4d7Y6FVDamzzftSunXOoOcOOkzcWdKVlGgFFwlUQCj63SgnUkLLGF8v7lufhw==}
     engines: {node: '>=12'}
 
+  binaryen@118.0.0:
+    resolution: {integrity: sha512-KzekjPjpLE1zk29BKQSHNWLSHPYAfa80lcsIi5bDnev8vyfDyiMCVFPjaplhfXIKs7LI3r1RPyhoAj4qsRQwwg==}
+    hasBin: true
+
   binaryen@119.0.0:
     resolution: {integrity: sha512-DTdcs8ijrj2OIEftWVPVkYsgJ8MzlYH+uSsC8156g88E7CNaG8kEfWNGSXxb3tPlzadrm6sD3mgSEKKZJu4Q3g==}
     hasBin: true
@@ -2473,10 +2478,6 @@ packages:
   is-unicode-supported@1.3.0:
     resolution: {integrity: sha512-43r2mRvz+8JRIKnWJ+3j8JtjRKZ6GmjzfaE/qiBJnikNnYv/6bagRJ1kUhNk8R5EX/GkobD+r+sfxCPJsiKBLQ==}
     engines: {node: '>=12'}
-
-  is-unicode-supported@2.0.0:
-    resolution: {integrity: sha512-FRdAyx5lusK1iHG0TWpVtk9+1i+GjrzRffhDg4ovQ7mcidMQ6mj+MhKPmvh7Xwyv5gIS06ns49CA7Sqg7lC22Q==}
-    engines: {node: '>=18'}
 
   is-unicode-supported@2.1.0:
     resolution: {integrity: sha512-mE00Gnza5EEB3Ds0HfMyllZzbBrmLOX3vfWoj9A9PEnTfratQ/BcaJOuMhnkhjXvb2+FkY3VuHqtAGpTPmglFQ==}
@@ -3414,12 +3415,48 @@ packages:
       '@testing-library/jest-dom':
         optional: true
 
+  vite-tsconfig-paths@4.3.2:
+    resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==}
+    peerDependencies:
+      vite: '*'
+    peerDependenciesMeta:
+      vite:
+        optional: true
+
   vite-tsconfig-paths@5.0.1:
     resolution: {integrity: sha512-yqwv+LstU7NwPeNqajZzLEBVpUFU6Dugtb2P84FXuvaoYA+/70l9MHE+GYfYAycVyPSDYZ7mjOFuYBRqlEpTig==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
       vite:
+        optional: true
+
+  vite@5.3.4:
+    resolution: {integrity: sha512-Cw+7zL3ZG9/NZBB8C+8QbQZmR54GwqIz+WMI4b3JgdYJvX+ny9AjJXqkGQlDXSXRP9rP0B4tbciRMOVEKulVOA==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
         optional: true
 
   vite@5.4.8:
@@ -3826,12 +3863,28 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.3':
     optional: true
 
+  '@bytecodealliance/componentize-js@0.10.5':
+    dependencies:
+      '@bytecodealliance/jco': 1.4.4
+      '@bytecodealliance/wizer': 7.0.5
+      es-module-lexer: 1.5.4
+
   '@bytecodealliance/componentize-js@0.13.0':
     dependencies:
       '@bytecodealliance/jco': 1.7.0
       '@bytecodealliance/weval': 0.3.2
       '@bytecodealliance/wizer': 7.0.5
       es-module-lexer: 1.5.4
+
+  '@bytecodealliance/jco@1.4.4':
+    dependencies:
+      '@bytecodealliance/preview2-shim': 0.16.7
+      binaryen: 118.0.0
+      chalk-template: 1.1.0
+      commander: 12.1.0
+      mkdirp: 3.0.1
+      ora: 8.0.1
+      terser: 5.34.1
 
   '@bytecodealliance/jco@1.7.0':
     dependencies:
@@ -3843,6 +3896,8 @@ snapshots:
       mkdirp: 3.0.1
       ora: 8.0.1
       terser: 5.34.0
+
+  '@bytecodealliance/preview2-shim@0.16.7': {}
 
   '@bytecodealliance/preview2-shim@0.17.0': {}
 
@@ -4919,6 +4974,8 @@ snapshots:
       execa: 5.1.1
       find-versions: 5.1.0
 
+  binaryen@118.0.0: {}
+
   binaryen@119.0.0: {}
 
   bl@1.2.3:
@@ -5666,8 +5723,6 @@ snapshots:
 
   is-unicode-supported@1.3.0: {}
 
-  is-unicode-supported@2.0.0: {}
-
   is-unicode-supported@2.1.0: {}
 
   is-what@4.1.16: {}
@@ -5912,7 +5967,7 @@ snapshots:
       cli-cursor: 4.0.0
       cli-spinners: 2.9.2
       is-interactive: 2.0.0
-      is-unicode-supported: 2.0.0
+      is-unicode-supported: 2.1.0
       log-symbols: 6.0.0
       stdin-discarder: 0.2.2
       string-width: 7.2.0
@@ -6464,7 +6519,6 @@ snapshots:
       acorn: 8.12.1
       commander: 2.20.3
       source-map-support: 0.5.21
-    optional: true
 
   text-decoder@1.2.0:
     dependencies:
@@ -6580,6 +6634,17 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  vite-tsconfig-paths@4.3.2(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1)):
+    dependencies:
+      debug: 4.3.7
+      globrex: 0.1.2
+      tsconfck: 3.1.3(typescript@5.6.2)
+    optionalDependencies:
+      vite: 5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   vite-tsconfig-paths@5.0.1(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1)):
     dependencies:
       debug: 4.3.7
@@ -6590,6 +6655,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  vite@5.3.4(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.4.47
+      rollup: 4.24.0
+    optionalDependencies:
+      '@types/node': 22.7.4
+      fsevents: 2.3.3
+      lightningcss: 1.27.0
+      terser: 5.34.1
 
   vite@5.4.8(@types/node@22.7.4)(lightningcss@1.27.0)(terser@5.34.1):
     dependencies:

@@ -1,7 +1,7 @@
 import type { PrefDatum, PrefDatumWithValue } from "../common/defines.js";
 
 export class NRSettingsParent extends JSWindowActorParent {
-  async receiveMessage(message) {
+  async receiveMessage(message: ReceiveMessageArgument) {
     console.log(message);
     switch (message.name) {
       case "Pref:Set": {
