@@ -31,7 +31,7 @@
    * The .rdm-toolbar will be above the .dialogBox in RDM so we shift the
    * .dialogBox down by the height of the .rdm-toolbar so both are visible
    */
-  + .browserStack > .dialogStack > .dialogTemplate > .dialogBox {
+  + .browserStack > .dialogStack:not(.content-prompt-dialog) > .dialogTemplate > .dialogBox {
     margin-top: var(--rdm-toolbar-height);
   }
 }
