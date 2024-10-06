@@ -1,6 +1,7 @@
 {
   "name": "@nora/solid-xul",
   "private": true,
+  "version": "0.0.2",
   "dependencies": {
     "solid-js": "^1.8.18",
     "vite": "5.3.4"

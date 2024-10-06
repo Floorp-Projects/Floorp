@@ -27,7 +27,7 @@ export async function injectManifest(binPath: string, isDev: boolean) {
 
   await fs.writeFile(
     `${binPath}/noraneko/noraneko.manifest`,
-    `content noraneko content/
+    `content noraneko content/ contentaccessible=yes
 content noraneko-startup startup/ contentaccessible=yes
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes`,
@@ -48,6 +48,12 @@ resource noraneko resource/ contentaccessible=yes`,
   await fs.symlink(
     path.relative(`${binPath}/noraneko`, "./src/apps/designs/_dist"),
     `${binPath}/noraneko/skin`,
+    isWin ? "junction" : undefined,
+  );
+
+  await fs.symlink(
+    path.relative(`${binPath}/noraneko`, "./src/apps/modules/_dist"),
+    `${binPath}/noraneko/resource`,
     isWin ? "junction" : undefined,
   );
 }
