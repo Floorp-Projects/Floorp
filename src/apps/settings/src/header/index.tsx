@@ -60,7 +60,7 @@ function Header() {
         icon={<IconLineMdLightDark style={{ fontSize: "16px", color: "currentColor" }} />}
         aria-label="Dark Mode"
         onClick={toggleColorMode}
-        mr={2}
+        mx={4}
       />
     </Flex>
   );

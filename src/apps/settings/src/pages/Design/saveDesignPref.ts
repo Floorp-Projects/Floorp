@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DesignFormData } from "../../type";
-import { getStringPref } from "../../dev";
+// import { getStringPref } from "../../dev";
 import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
 
 export function saveDesignSettings(settings: DesignFormData) {

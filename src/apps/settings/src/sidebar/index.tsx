@@ -1,7 +1,7 @@
 import { GridItem, VStack, Divider, Icon } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useMediaQuery } from "@chakra-ui/react";
-import { openChromeURL } from "../dev";
+// import { openChromeURL } from "../dev";
 import { useLocation } from "react-router-dom";
 
 const data: {
@@ -45,6 +45,11 @@ const data: {
     path: "/accounts",
     icon: <IconMdiAccount style={{ fontSize: "16px", color: "currentColor" }} />,
     text: "Profile and Account"
+  },
+  about: {
+    path: "/about",
+    icon: <IconMdiAboutCircleOutline style={{ fontSize: "16px", color: "currentColor" }} />,
+    text: "About Noraneko"
   }
 }
 
@@ -74,7 +79,7 @@ function Sidebar() {
           }
           text="Firefox Settings"
           onClick={() => {
-            openChromeURL("about:preferences#privacy");
+            // openChromeURL("about:preferences#privacy");
           }}
         />
       </VStack>

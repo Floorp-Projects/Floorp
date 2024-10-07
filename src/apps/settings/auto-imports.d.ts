@@ -23,6 +23,7 @@ declare global {
   const IconMaterialSymbolsLightSelectWindow: typeof import('~icons/material-symbols-light/select-window.jsx')['default']
   const IconMaterialSymbolsToolbar: typeof import('~icons/material-symbols/toolbar.jsx')['default']
   const IconMaterialSymbolsToolbarOutline: typeof import('~icons/material-symbols/toolbar-outline.jsx')['default']
+  const IconMdiAboutCircleOutline: typeof import('~icons/mdi/about-circle-outline.jsx')['default']
   const IconMdiAccount: typeof import('~icons/mdi/account.jsx')['default']
   const IconMdiAccountBox: typeof import('~icons/mdi/account-box.jsx')['default']
   const IconMdiAppBadgeOutline: typeof import('~icons/mdi/app-badge-outline.jsx')['default']
@@ -36,6 +37,7 @@ declare global {
   const IconMdiRocketLaunch: typeof import('~icons/mdi/rocket-launch.jsx')['default']
   const IconMdiSettings: typeof import('~icons/mdi/settings.jsx')['default']
   const IconMdiSync: typeof import('~icons/mdi/sync.jsx')['default']
+  const IconMdiUpdate: typeof import('~icons/mdi/update.jsx')['default']
   const IconMdiWorkspace: typeof import('~icons/mdi/workspace.jsx')['default']
   const IconPepiconsPencilPaintPallet: typeof import('~icons/pepicons-pencil/paint-pallet.jsx')['default']
 }
