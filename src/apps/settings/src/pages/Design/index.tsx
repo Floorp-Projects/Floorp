@@ -23,7 +23,6 @@ export default function Design() {
   useEffect(() => {
     const fetchDefaultValues = async () => {
       const values = await getDesignSettings();
-      console.log(values)
       for (const key in values) {
         setValue(key, values[key]);
       }

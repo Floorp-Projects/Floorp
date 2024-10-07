@@ -4,10 +4,46 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DesignFormData } from "../../type";
-import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
+import {
+  zFloorpDesignConfigs,
+  type zFloorpDesignConfigsType,
+} from "../../../../../apps/common/scripts/global-types/type";
 
-export function saveDesignSettings(settings: DesignFormData) {
-  console.log(settings);
+export async function saveDesignSettings(settings: DesignFormData) {
+  if (!settings) {
+    return;
+  }
+
+  return await new Promise((resolve) => {
+    window.NRSPrefGet(
+      {
+        prefName: "floorp.design.configs",
+        prefType: "string",
+      },
+      (stringData: string) => {
+        const oldData = zFloorpDesignConfigs.parse(
+          JSON.parse(JSON.parse(stringData).prefValue),
+        );
+        const newData = {
+          ...oldData,
+          globalConfigs: {
+            userInterface: settings.design,
+          },
+          tabbar: {
+            tabbarPosition: settings.position,
+            tabbarStyle: settings.style,
+          },
+        };
+
+        window.NRSPrefSet({
+          prefType: "string",
+          prefName: "floorp.design.configs",
+          prefValue: JSON.stringify(newData),
+        });
+        resolve(true);
+      },
+    );
+  });
 }
 
 export async function getDesignSettings(): Promise<DesignFormData> {
