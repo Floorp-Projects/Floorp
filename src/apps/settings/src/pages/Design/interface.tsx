@@ -1,4 +1,8 @@
-import { useForm, Controller, useWatch, useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
+import type { zFloorpDesignConfigsType } from "../../../../common/scripts/global-types/type";
+import ThemeCard from "../../components/ThemeCard";
+import Card from "../../components/Card";
+import type { DesignFormData } from "@/type";
 import {
   Divider,
   Flex,
@@ -8,41 +12,38 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import ThemeCard from "../../components/ThemeCard";
-import Card from "../../components/Card";
 
-interface FormData {
-  design: number;
-  faviconColor: boolean;
-}
-
-const options = [
+const options: {
+  value: zFloorpDesignConfigsType["globalConfigs"]["userInterface"];
+  title: string;
+  image: string;
+}[] = [
   {
-    value: 1,
+    value: "proton",
     title: "Proton",
     image:
       "https://floorp.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.c2bc9f0f.webp&w=1080&q=75",
   },
   {
-    value: 2,
+    value: "lepton",
     title: "Lepton",
     image:
       "https://floorp.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.c2bc9f0f.webp&w=1080&q=75",
   },
   {
-    value: 3,
+    value: "photon",
     title: "Photon",
     image:
       "https://floorp.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.c2bc9f0f.webp&w=1080&q=75",
   },
   {
-    value: 4,
+    value: "protonfix",
     title: "Firefox UI Fix",
     image:
       "https://floorp.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.c2bc9f0f.webp&w=1080&q=75",
   },
   {
-    value: 5,
+    value: "fluerial",
     title: "Fluerial",
     image:
       "https://floorp.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.c2bc9f0f.webp&w=1080&q=75",
@@ -50,7 +51,7 @@ const options = [
 ];
 
 export default function Interface() {
-  const { control } = useFormContext<FormData>();
+  const { control } = useFormContext<DesignFormData>();
   return (
     <Card
       icon={<IconMdiPen style={{ fontSize: "24px", color: "#3182F6" }} />}
@@ -68,8 +69,8 @@ export default function Interface() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <RadioGroup
-              onChange={(val) => onChange(Number(val))}
-              value={value?.toString()}
+              onChange={(val) => onChange(val)}
+              value={value}
             >
               <Grid
                 templateColumns={"repeat(auto-fill, minmax(140px, 1fr))"}
@@ -80,7 +81,7 @@ export default function Interface() {
                     key={option.value}
                     title={option.title}
                     image={option.image}
-                    value={option.value.toString()}
+                    value={option.value}
                     isChecked={value === option.value}
                     onChange={() => onChange(option.value)}
                   />

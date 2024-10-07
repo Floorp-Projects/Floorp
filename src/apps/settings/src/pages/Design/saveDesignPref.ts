@@ -8,13 +8,12 @@ import { getStringPref } from "../../dev";
 import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
 
 export function saveDesignSettings(settings: DesignFormData) {
-  const parsedSettings = zFloorpDesignConfigs;
+  console.log(settings);
 }
 
 export async function getDesignSettings(): Promise<DesignFormData> {
-  const settings = await getStringPref("floorp.design.configs");
-
   /*
+  const settings = await getStringPref("floorp.design.configs");
   const parsedSettings = zFloorpDesignConfigs.parse(settings);
   const formDefaultValues = {
     design: parsedSettings.globalConfigs.userInterface ?? "lepton",
