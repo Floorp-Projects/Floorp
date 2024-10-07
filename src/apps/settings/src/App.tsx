@@ -1,4 +1,4 @@
-import { getBoolPref, getIntPref, setBoolPref } from "./dev";
+import { getBoolPref, getIntPref } from "./dev";
 import { Box, ChakraProvider, useMediaQuery } from "@chakra-ui/react";
 import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";

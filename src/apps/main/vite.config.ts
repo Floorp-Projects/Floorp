@@ -21,7 +21,6 @@ export default defineConfig({
     cssMinify: false,
     emptyOutDir: true,
     assetsInlineLimit: 0,
-    modulePreload: false,
     target: "firefox128",
 
     rollupOptions: {
@@ -30,6 +29,7 @@ export default defineConfig({
       input: {
         core: r("./core/index.ts"),
         "about-preferences": r("./about/preferences/index.ts"),
+        "about-newtab": r("./about/newtab/index.ts"),
         //env: "./experiment/env.ts",
       },
       output: {
