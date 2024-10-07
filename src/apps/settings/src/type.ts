@@ -8,7 +8,7 @@ import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/
 
 export const zDesignFormData = z.object({
   design: zFloorpDesignConfigs.shape.globalConfigs.shape.userInterface,
-  faviconColor: zFloorpDesignConfigs.shape.globalConfigs.shape.faviconColor,
+  faviconColor: z.boolean(),
   style: zFloorpDesignConfigs.shape.tabbar.shape.tabbarStyle,
   position: zFloorpDesignConfigs.shape.tabbar.shape.tabbarPosition,
 });

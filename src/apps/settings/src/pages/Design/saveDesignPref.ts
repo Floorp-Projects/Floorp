@@ -4,13 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DesignFormData } from "../../type";
-import {
-  zFloorpDesignConfigs,
-  type zFloorpDesignConfigsType,
-} from "../../../../../apps/common/scripts/global-types/type";
+import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
 
 export async function saveDesignSettings(settings: DesignFormData) {
-  if (!settings) {
+  if (Object.keys(settings).length === 0) {
     return;
   }
 
@@ -24,22 +21,28 @@ export async function saveDesignSettings(settings: DesignFormData) {
         const oldData = zFloorpDesignConfigs.parse(
           JSON.parse(JSON.parse(stringData).prefValue),
         );
+
         const newData = {
           ...oldData,
           globalConfigs: {
+            ...oldData.globalConfigs,
             userInterface: settings.design,
           },
           tabbar: {
+            ...oldData.tabbar,
             tabbarPosition: settings.position,
             tabbarStyle: settings.style,
           },
         };
 
-        window.NRSPrefSet({
-          prefType: "string",
-          prefName: "floorp.design.configs",
-          prefValue: JSON.stringify(newData),
-        });
+        window.NRSPrefSet(
+          {
+            prefType: "string",
+            prefName: "floorp.design.configs",
+            prefValue: JSON.stringify(newData),
+          },
+          (d: unknown) => console.log(d),
+        );
         resolve(true);
       },
     );

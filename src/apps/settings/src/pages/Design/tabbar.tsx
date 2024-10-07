@@ -82,7 +82,9 @@ export default function Tabbar() {
             >
               <Radio value="default">Default</Radio>
               <Radio value="hide-horizontal-tabbar">Hide Tab Bar</Radio>
-              <Radio value="hide-title">Hide Tab Bar & Title Bar</Radio>
+              <Radio value="optimise-to-vertical-tabbar">
+                Hide Tab Bar & Title Bar
+              </Radio>
               <Radio value="bottom-of-navigation-toolbar">
                 Show Tab Bar on Bottom of Navigation Bar
               </Radio>

@@ -97,7 +97,7 @@ export namespace gTabbarStyleFunctions {
   }
 
   export function applyTabbarStyle() {
-    // revertToDefaultStyle();
+    revertToDefaultStyle();
     render(
       () =>
         TabbarStyleModifyCSSElement({ style: config().tabbar.tabbarPosition }),

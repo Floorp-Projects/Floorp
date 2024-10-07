@@ -24,7 +24,10 @@ export default function Design() {
     const fetchDefaultValues = async () => {
       const values = await getDesignSettings();
       for (const key in values) {
-        setValue(key, values[key]);
+        setValue(
+          key as keyof DesignFormData,
+          values[key as keyof DesignFormData],
+        );
       }
     };
     fetchDefaultValues();
