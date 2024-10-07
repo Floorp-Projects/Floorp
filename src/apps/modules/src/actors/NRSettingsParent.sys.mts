@@ -48,11 +48,14 @@ export class NRSettingsParent extends JSWindowActorParent {
           }
           case "string": {
             const prefValue = Services.prefs.getStringPref(d.prefName);
-            this.sendAsyncMessage("Pref:Get", {
-              prefName: d.prefName,
-              prefType: d.prefType,
-              prefValue,
-            } as PrefDatumWithValue);
+            this.sendAsyncMessage(
+              "Pref:Get",
+              JSON.stringify({
+                prefName: d.prefName,
+                prefType: d.prefType,
+                prefValue,
+              } as PrefDatumWithValue),
+            );
             break;
           }
         }

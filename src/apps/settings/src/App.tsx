@@ -1,3 +1,8 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import { Box, ChakraProvider, useMediaQuery } from "@chakra-ui/react";
 import Sidebar from "./sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -10,12 +15,6 @@ import About from "./pages/About";
 
 export default function App() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
-  /*
-  setBoolPref("noraneko.settings.dev", true);
-  getBoolPref("bidi.browser.ui").then((v) => {
-    console.log(v);
-  });
-  */
   return (
     <ChakraProvider theme={customTheme}>
       <Router>

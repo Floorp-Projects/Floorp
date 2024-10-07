@@ -4,17 +4,17 @@ export class NRSettingsChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRSettingsChild created!");
     const window = this.contentWindow;
-    if (window.location.port === "5183") {
+    if (window?.location.port === "5183") {
       console.debug("NRSettingsChild 5183!");
       Cu.exportFunction(this.NRSPing.bind(this), window, {
         defineAs: "NRSPing",
       });
-      // Cu.exportFunction(this.NRSPrefGet.bind(this), window, {
-      //   defineAs: "NRSPrefGet",
-      // });
-      // Cu.exportFunction(this.NRSPrefSet.bind(this), window, {
-      //   defineAs: "NRSPrefSet",
-      // });
+      Cu.exportFunction(this.NRSPrefGet.bind(this), window, {
+        defineAs: "NRSPrefGet",
+      });
+      Cu.exportFunction(this.NRSPrefSet.bind(this), window, {
+        defineAs: "NRSPrefSet",
+      });
     }
   }
   NRSPing() {

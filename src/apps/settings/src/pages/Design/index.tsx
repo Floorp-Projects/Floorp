@@ -1,3 +1,8 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import { Flex, VStack, Text } from "@chakra-ui/react";
 import React, { useEffect } from "react";
 import Interface from "./interface";
@@ -18,6 +23,7 @@ export default function Design() {
   useEffect(() => {
     const fetchDefaultValues = async () => {
       const values = await getDesignSettings();
+      console.log(values)
       for (const key in values) {
         setValue(key, values[key]);
       }

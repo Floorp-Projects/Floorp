@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DesignFormData } from "../../type";
-// import { getStringPref } from "../../dev";
 import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
 
 export function saveDesignSettings(settings: DesignFormData) {
@@ -12,23 +11,24 @@ export function saveDesignSettings(settings: DesignFormData) {
 }
 
 export async function getDesignSettings(): Promise<DesignFormData> {
-  /*
-  const settings = await getStringPref("floorp.design.configs");
-  const parsedSettings = zFloorpDesignConfigs.parse(settings);
-  const formDefaultValues = {
-    design: parsedSettings.globalConfigs.userInterface ?? "lepton",
-    faviconColor: false, // parsedSettings.globalConfigs.faviconColor ?? false,
-    style: parsedSettings.tabbar.tabbarStyle ?? "horizontal",
-    position: parsedSettings.tabbar.tabbarPosition ?? "default",
-  };
-  */
-
-  return {
-    design: "lepton",
-    faviconColor: false,
-    style: "horizontal",
-    position: "default",
-  };
-
-  // return formDefaultValues;
+  return await new Promise((resolve) => {
+    window.NRSPrefGet(
+      {
+        prefName: "floorp.design.configs",
+        prefType: "string",
+      },
+      (stringData: string) => {
+        const data = zFloorpDesignConfigs.parse(
+          JSON.parse(JSON.parse(stringData).prefValue),
+        );
+        const formData: DesignFormData = {
+          design: data.globalConfigs.userInterface,
+          faviconColor: true,
+          position: data.tabbar.tabbarPosition,
+          style: data.tabbar.tabbarStyle,
+        };
+        resolve(formData);
+      },
+    );
+  });
 }

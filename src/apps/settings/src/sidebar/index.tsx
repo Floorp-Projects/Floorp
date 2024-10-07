@@ -1,7 +1,11 @@
-import { GridItem, VStack, Divider, Icon } from "@chakra-ui/react";
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import { GridItem, VStack, Divider } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useMediaQuery } from "@chakra-ui/react";
-// import { openChromeURL } from "../dev";
 import { useLocation } from "react-router-dom";
 
 const data: {
