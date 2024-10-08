@@ -187,7 +187,7 @@ Please note that while some of the software listed below is not included in Floo
 
 - [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/)
 - [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
-- Authers: [Mozilla & Contributors](https://www.mozilla.org/credits/)
+- Authors: [Mozilla & Contributors](https://www.mozilla.org/credits/)
 
 ### 💧 Waterfox
 
