@@ -160,11 +160,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
  public:
   RefPtr<OpenPromise> OpenDocument(
-      nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
-      const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
-      nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-      bool aUriModified, Maybe<bool> aIsEmbeddingBlockedError,
-      dom::ContentParent* aContentParent, nsresult* aRv);
+      nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
+      uint32_t aCacheKey, const Maybe<uint64_t>& aChannelId,
+      const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
+      Maybe<dom::ClientInfo>&& aInfo, bool aUriModified,
+      Maybe<bool> aIsEmbeddingBlockedError, dom::ContentParent* aContentParent,
+      nsresult* aRv);
 
   RefPtr<OpenPromise> OpenObject(
       nsDocShellLoadState* aLoadState, uint32_t aCacheKey,

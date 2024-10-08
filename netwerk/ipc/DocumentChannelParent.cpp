@@ -67,10 +67,10 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
       const DocumentCreationArgs& docArgs = aArgs.elementCreationArgs();
 
       promise = mDocumentLoadListener->OpenDocument(
-          loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
-          aArgs.asyncOpenTime(), aArgs.timing(), std::move(clientInfo),
-          docArgs.uriModified(), Some(docArgs.isEmbeddingBlockedError()),
-          contentParent, &rv);
+          loadState, docArgs.loadFlags(), aArgs.cacheKey(),
+          Some(aArgs.channelId()), aArgs.asyncOpenTime(), aArgs.timing(),
+          std::move(clientInfo), docArgs.uriModified(),
+          Some(docArgs.isEmbeddingBlockedError()), contentParent, &rv);
     } else {
       const ObjectCreationArgs& objectArgs = aArgs.elementCreationArgs();
 
