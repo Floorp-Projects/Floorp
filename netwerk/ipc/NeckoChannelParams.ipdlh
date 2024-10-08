@@ -468,13 +468,14 @@ struct CookieStructTable
 };
 
 struct DocumentCreationArgs {
+  uint32_t loadFlags;
   bool uriModified;
   bool isEmbeddingBlockedError;
 };
 
 struct ObjectCreationArgs {
-  uint64_t embedderInnerWindowId;
   uint32_t loadFlags;
+  uint64_t embedderInnerWindowId;
   nsContentPolicyType contentPolicyType;
   bool isUrgentStart;
 };
