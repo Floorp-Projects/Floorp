@@ -67,4 +67,13 @@ Maybe<double> WebGLVertexArray::GetVertexAttrib(const uint32_t index,
   }
 }
 
+void WebGLVertexArray::DoAttribDivisor(const uint32_t index) const {
+  const auto& binding = mBindings.at(index);
+  auto driverDivisor = binding.layout.divisor;
+  if (!binding.layout.isArray) {
+    driverDivisor = 0;
+  }
+  mContext->gl->fVertexAttribDivisor(index, driverDivisor);
+}
+
 }  // namespace mozilla
