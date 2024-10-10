@@ -1066,6 +1066,25 @@ var SessionStoreInternal = {
     );
 
     if (state) {
+      // Floorp injections
+      if (!state.windows.length) {
+        console.warn("Floorp Injections: No windows found in state");
+        const lastSessionWindows = state._closedWindows;
+        let closedTime = lastSessionWindows[0].closedAt;
+        for (let i = 0; i < lastSessionWindows.length; i++) {
+          let closedWindowTime = lastSessionWindows[i].closedAt;
+          // If the last closed window is closed in +-2000, we will restore it
+          if (
+            closedWindowTime >= closedTime - 10000 &&
+            closedWindowTime <= closedTime + 10000
+          ) {
+            state.windows.push(lastSessionWindows[i]);
+            state._closedWindows.splice(i, 1);
+          }
+        }
+      }
+      // End of floorp injections
+
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored.
@@ -4535,6 +4554,20 @@ var SessionStoreInternal = {
       winData.sizemodeBeforeMinimized = winData.sizemode;
     }
 
+    // Floorp Injections
+    let windowUuid = aWindow.workspacesWindowId;
+    if (windowUuid) {
+      winData.windowUuid = windowUuid;
+    } else {
+      delete winData.windowUuid;
+    }
+
+    let floorpShouldNotRestore = !!(
+      aWindow.floorpWebPanelWindow || aWindow.floorpSsbWindow
+    );
+    winData.floorpShouldNotRestore = floorpShouldNotRestore;
+    // Floorp Injections end
+
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
     });
@@ -5588,7 +5621,9 @@ var SessionStoreInternal = {
         "screenX" in aWinData ? +aWinData.screenX : NaN,
         "screenY" in aWinData ? +aWinData.screenY : NaN,
         aWinData.sizemode || "",
-        aWinData.sizemodeBeforeMinimized || ""
+        aWinData.sizemodeBeforeMinimized || "",
+        aWinData.windowUuid || "",
+        aWinData.floorpShouldNotRestore || false
       );
       this.restoreSidebar(aWindow, aWinData.sidebar);
     }, 0);
@@ -5636,7 +5671,10 @@ var SessionStoreInternal = {
     aLeft,
     aTop,
     aSizeMode,
-    aSizeModeBeforeMinimized
+    aSizeModeBeforeMinimized,
+    // Floorp Injections
+    aWindowId
+    // End Floorp Injections
   ) {
     var win = aWindow;
     var _this = this;
@@ -5778,6 +5816,19 @@ var SessionStoreInternal = {
             break;
         }
       }
+
+      let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
+        "resource://floorp/WorkspacesService.mjs"
+      );
+
+      // workspaces Window Id
+      if (aWindowId) {
+        aWindow.workspacesWindowId = aWindowId;
+      } else {
+        aWindow.workspacesWindowId =
+          WorkspacesWindowUuidService.getGeneratedUuid();
+      }
+
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
       if (this.windowToFocus) {
