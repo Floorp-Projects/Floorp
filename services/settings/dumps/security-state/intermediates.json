@@ -55,24 +55,6 @@
       "last_modified": 1727449022568
     },
     {
-      "schema": 1727445766386,
-      "derHash": "H9xTsmMhNrAzHyHou9ki308aN+kNHXAD4ma6UaIt1go=",
-      "subject": "CN=SZAFIR Trusted CA4,O=Krajowa Izba Rozliczeniowa S.A.,C=PL",
-      "subjectDN": "MFQxCzAJBgNVBAYTAlBMMSgwJgYDVQQKDB9LcmFqb3dhIEl6YmEgUm96bGljemVuaW93YSBTLkEuMRswGQYDVQQDDBJTWkFGSVIgVHJ1c3RlZCBDQTQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5edbb9faf8afdd695a8b696bdbda0a0c37b0563d0814beb21d87cdf0e1615569",
-        "size": 1987,
-        "filename": "ZrehctrlQgw7-98nAriVFzjwQrQFMTFvDtNMgXz4O30=.pem",
-        "location": "security-state-staging/intermediates/decb5554-88fc-46be-826b-4926d8589e54.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ZrehctrlQgw7+98nAriVFzjwQrQFMTFvDtNMgXz4O30=",
-      "crlite_enrolled": false,
-      "id": "5a69b7f2-8ab5-4599-ad04-e409bef08f61",
-      "last_modified": 1727449022565
-    },
-    {
       "schema": 1727445767029,
       "derHash": "jSqwZVFFxKeAXMMIDXwjRRhIxoZNoL6p/8yHratVLGE=",
       "subject": "CN=Crowdstrike\\, Inc. OV TLS Issuing ECC CA 1,O=SSL Corporation,C=US",
@@ -12763,24 +12745,6 @@
       "last_modified": 1666727872096
     },
     {
-      "schema": 1666727365525,
-      "derHash": "BO7qjlC0d1s8JHlyYpF+5QAC7Ex1tWzfPuHBjPylulI=",
-      "subject": "CN=Microsoft RSA TLS CA 01,O=Microsoft Corporation,C=US",
-      "subjectDN": "ME8xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xIDAeBgNVBAMTF01pY3Jvc29mdCBSU0EgVExTIENBIDAx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d21d673254fc1596b7b7c3a9a38e33ab09f786822535934e507dec3291deab5a",
-        "size": 1914,
-        "filename": "aJfLgiqk2RiMTiftDuK1Y2Y68uYH6daftf7O6r4ccks=.pem",
-        "location": "security-state-staging/intermediates/b0087125-69f0-40e4-bcb8-f571b5a20b41.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "aJfLgiqk2RiMTiftDuK1Y2Y68uYH6daftf7O6r4ccks=",
-      "crlite_enrolled": false,
-      "id": "879312d0-6226-4fa9-9f66-54ca56679a6f",
-      "last_modified": 1666727872082
-    },
-    {
       "schema": 1666727447252,
       "derHash": "8AQ+n++zeup5TmkEN9wjnWvSxcoPtYoSJEVVoaiioBo=",
       "subject": "CN=Panteion Univ. of Social and Political Sciences TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -13391,24 +13355,6 @@
       "crlite_enrolled": false,
       "id": "de2932da-102f-4bcc-a4a1-1fd5a41201f1",
       "last_modified": 1666727871368
-    },
-    {
-      "schema": 1666727343344,
-      "derHash": "BeQAXbDDgvO9ZrR3KekBFXdgG/b3sofppSztcQ0lg0Y=",
-      "subject": "CN=Microsoft RSA TLS CA 02,O=Microsoft Corporation,C=US",
-      "subjectDN": "ME8xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xIDAeBgNVBAMTF01pY3Jvc29mdCBSU0EgVExTIENBIDAy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b31f15756dd2424f4c72909e8e5489c3443c030299ab3270a47adebded78e565",
-        "size": 1914,
-        "filename": "1wMGTin0PoCN5O41h0-XIHXuzGRwDEa8ehHf7wSdSQE=.pem",
-        "location": "security-state-staging/intermediates/e5e7d7b9-3a61-4e9d-9834-9fba4f249f40.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1wMGTin0PoCN5O41h0+XIHXuzGRwDEa8ehHf7wSdSQE=",
-      "crlite_enrolled": false,
-      "id": "b181e65f-51fe-45f7-847d-c73c3a039a51",
-      "last_modified": 1666727871354
     },
     {
       "schema": 1666727379278,
@@ -17297,24 +17243,6 @@
       "crlite_enrolled": false,
       "id": "46153284-3091-49a4-a840-6d9733a4ebb1",
       "last_modified": 1666727867609
-    },
-    {
-      "schema": 1666727335833,
-      "derHash": "CgXEYnVjkN0fHV3YJ5TDAPBL54nc521+MS95DWj9OFo=",
-      "subject": "CN=InCommon RSA Server CA,OU=InCommon,O=Internet2,L=Ann Arbor,ST=MI,C=US",
-      "subjectDN": "MHYxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJNSTESMBAGA1UEBxMJQW5uIEFyYm9yMRIwEAYDVQQKEwlJbnRlcm5ldDIxETAPBgNVBAsTCEluQ29tbW9uMR8wHQYDVQQDExZJbkNvbW1vbiBSU0EgU2VydmVyIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b12f6e751ef575ac1683efe1f647ce386bb42994433744cc73e49947b6df8ff0",
-        "size": 2129,
-        "filename": "b1JA6-4svjmZnxGjAiQY3RS0A9FtjKLCWaRlVmCPM28=.pem",
-        "location": "security-state-staging/intermediates/46790f31-f30a-4ebc-a8bd-affde0c28bbf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "b1JA6+4svjmZnxGjAiQY3RS0A9FtjKLCWaRlVmCPM28=",
-      "crlite_enrolled": false,
-      "id": "37de3a14-4676-4734-8dba-62ddf13ebc00",
-      "last_modified": 1666727867596
     },
     {
       "schema": 1666727334979,
@@ -22339,24 +22267,6 @@
       "last_modified": 1663786626405
     },
     {
-      "schema": 1663786371097,
-      "derHash": "L/GDLeb5UGqsnSx3V+oHV2TsaMyccKDs4z7MYWB8vkM=",
-      "subject": "CN=TERENA SSL CA 2,O=TERENA,L=Amsterdam,ST=Noord-Holland,C=NL",
-      "subjectDN": "MGQxCzAJBgNVBAYTAk5MMRYwFAYDVQQIEw1Ob29yZC1Ib2xsYW5kMRIwEAYDVQQHEwlBbXN0ZXJkYW0xDzANBgNVBAoTBlRFUkVOQTEYMBYGA1UEAxMPVEVSRU5BIFNTTCBDQSAy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "baa36caebfdea55db8cf3498d94750076346aec56fd669ec04eafeaf63890516",
-        "size": 2129,
-        "filename": "PYHJ7Ok9y2OoV3yMZFAcH45HI64yll_qcT9kRYmQFTY=.pem",
-        "location": "security-state-staging/intermediates/be369640-ebcd-436b-9e2a-d8eb78f0a074.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "PYHJ7Ok9y2OoV3yMZFAcH45HI64yll/qcT9kRYmQFTY=",
-      "crlite_enrolled": false,
-      "id": "eda33ed0-a35f-477e-b707-1579063b6a7b",
-      "last_modified": 1663786626392
-    },
-    {
       "schema": 1663786374768,
       "derHash": "JEobcwyh11pppS9eX0IbtUfHl+JK++nPuZyZNIjNwnE=",
       "subject": "CN=SSLs.com RSA OV Secure Server CA,O=SSLs.com,L=Phoenix,ST=Arizona,C=US",
@@ -23957,24 +23867,6 @@
       "crlite_enrolled": false,
       "id": "8fdffd79-5bb1-448b-90d3-11e3584a9160",
       "last_modified": 1663786625029
-    },
-    {
-      "schema": 1663786189121,
-      "derHash": "MWImoQ0g2iJE0dqLwLKCg1ral92pT5AVPDy/n9UI8/s=",
-      "subject": "CN=TERENA eScience SSL CA 2,O=TERENA,L=Amsterdam,ST=Noord-Holland,C=NL",
-      "subjectDN": "MG0xCzAJBgNVBAYTAk5MMRYwFAYDVQQIEw1Ob29yZC1Ib2xsYW5kMRIwEAYDVQQHEwlBbXN0ZXJkYW0xDzANBgNVBAoTBlRFUkVOQTEhMB8GA1UEAxMYVEVSRU5BIGVTY2llbmNlIFNTTCBDQSAy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6086bae59471fac82182c394c42a30cd6147767167137c104869d063e26efd10",
-        "size": 2162,
-        "filename": "oc7AIKwh7i1ZIjRUXdABQp1IDxMtDZil5mONjuWhNrw=.pem",
-        "location": "security-state-staging/intermediates/7c02a248-d55d-4d08-9f14-62e6089e3af6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "oc7AIKwh7i1ZIjRUXdABQp1IDxMtDZil5mONjuWhNrw=",
-      "crlite_enrolled": false,
-      "id": "0e12a901-b06f-4671-b20e-8f894026f0ac",
-      "last_modified": 1663786625004
     },
     {
       "schema": 1663786188270,
@@ -26603,24 +26495,6 @@
       "crlite_enrolled": false,
       "id": "5163308a-7837-468c-9467-d3cb0e6db613",
       "last_modified": 1647658653936
-    },
-    {
-      "schema": 1647442123610,
-      "derHash": "gCRH7lIcxmbNt7uuk6OF5V8gDXaj0TVqhURaxMvb7RI=",
-      "subject": "CN=Cybertrust Global Root,O=Cybertrust\\, Inc",
-      "subjectDN": "MDsxGDAWBgNVBAoTD0N5YmVydHJ1c3QsIEluYzEfMB0GA1UEAxMWQ3liZXJ0cnVzdCBHbG9iYWwgUm9vdA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0311ba514ea52c161164a44190d3ff8d3f21d7e178936261c9f0f3b873c30bc0",
-        "size": 1317,
-        "filename": "foeCwVDOOVL4AuY2AjpdPpW7XWjjPoWtsroXgSXOvxU=.pem",
-        "location": "security-state-staging/intermediates/a7042ba0-a0c3-40c6-a970-0ee5cdb75e39.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "foeCwVDOOVL4AuY2AjpdPpW7XWjjPoWtsroXgSXOvxU=",
-      "crlite_enrolled": false,
-      "id": "75d60e87-9f16-4a0c-bd57-5fc185f8e40b",
-      "last_modified": 1647442637728
     },
     {
       "schema": 1646449055023,
@@ -31249,5 +31123,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1727510222645
+  "timestamp": 1728399422519
 }

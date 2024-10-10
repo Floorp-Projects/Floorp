@@ -2,6 +2,32 @@
   "data": [
     {
       "os": "Linux",
+      "schema": 1728291877519,
+      "vendor": "0x1002",
+      "details": {
+        "bug": "1913778",
+        "name": "linux_mesa_radeonsi_24_1_3_dmabuf_crash"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "DMABUF",
+      "hardware": "",
+      "driverVendor": "mesa/radeonsi",
+      "versionRange": {
+        "maxVersion": "132.0",
+        "minVersion": ""
+      },
+      "driverVersion": "24.1.3.0",
+      "featureStatus": "BLOCKED_DRIVER_VERSION",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "EQUAL",
+      "id": "a7f18b43-a0ce-463a-b143-a6f54c107caf",
+      "last_modified": 1728326856983
+    },
+    {
+      "os": "Linux",
       "schema": 1692576006114,
       "vendor": "0x1002",
       "details": {
@@ -1505,5 +1531,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1692730580117
+  "timestamp": 1728326856983
 }
