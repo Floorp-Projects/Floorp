@@ -13,5 +13,5 @@ psutil>=5.9.0
 ipaddr>=2.2.0
 passlib==1.7.4
 
-pyOpenSSL
+pyOpenSSL==23.2.0
 service_identity

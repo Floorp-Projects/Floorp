@@ -385,6 +385,14 @@ void CanvasChild::EndTransaction() {
     }
   }
 
+  // If we are continuously drawing/recording, then we need to periodically
+  // flush our external surface/image references, to ensure they actually get
+  // freed on a timely basis.
+  if (mRecorder) {
+    mRecorder->ClearProcessedExternalSurfaces();
+    mRecorder->ClearProcessedExternalImages();
+  }
+
   ++mTransactionsSinceGetDataSurface;
 }
 

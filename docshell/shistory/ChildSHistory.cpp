@@ -177,7 +177,7 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("ChildSHistory::AsyncGo(%d), current index = %d", aOffset,
            index.value()));
-  nsresult rv = mBrowsingContext->CheckLocationChangeRateLimit(aCallerType);
+  nsresult rv = mBrowsingContext->CheckNavigationRateLimit(aCallerType);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("Rejected"));
     aRv.Throw(rv);

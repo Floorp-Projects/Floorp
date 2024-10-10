@@ -898,13 +898,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Checks if we reached the rate limit for calls to Location and History API.
   // The rate limit is controlled by the
-  // "dom.navigation.locationChangeRateLimit" prefs.
+  // "dom.navigation.navigationRateLimit" prefs.
   // Rate limit applies per BrowsingContext.
   // Returns NS_OK if we are below the rate limit and increments the counter.
   // Returns NS_ERROR_DOM_SECURITY_ERR if limit is reached.
-  nsresult CheckLocationChangeRateLimit(CallerType aCallerType);
+  nsresult CheckNavigationRateLimit(CallerType aCallerType);
 
-  void ResetLocationChangeRateLimit();
+  void ResetNavigationRateLimit();
 
   mozilla::dom::DisplayMode DisplayMode() { return Top()->GetDisplayMode(); }
 
@@ -1432,9 +1432,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   nsTArray<std::function<void(uint64_t)>> mDiscardListeners;
 
   // Counter and time span for rate limiting Location and History API calls.
-  // Used by CheckLocationChangeRateLimit. Do not apply cross-process.
-  uint32_t mLocationChangeRateLimitCount;
-  mozilla::TimeStamp mLocationChangeRateLimitSpanStart;
+  // Used by CheckNavigationRateLimit. Do not apply cross-process.
+  uint32_t mNavigationRateLimitCount;
+  mozilla::TimeStamp mNavigationRateLimitSpanStart;
 
   mozilla::LinkedList<dom::Location> mLocations;
 };

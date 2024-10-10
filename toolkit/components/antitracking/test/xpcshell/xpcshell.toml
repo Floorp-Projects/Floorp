@@ -11,15 +11,13 @@ skip-if = ["socketprocess_networking"] # Bug 1759035
 
 ["test_purge_trackers.js"]
 skip-if = [
+  "os == 'linux' && os_version == '18.04'", # Bug 1760085
   "win10_2009", # Bug 1718292
   "win11_2009", # Bug 1797751
 ]
 run-sequentially = "very high failure rate in parallel"
 
 ["test_purge_trackers_telemetry.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04'", # Bug 1760085
-]
 
 ["test_staticPartition_authhttp.js"]
 skip-if = ["socketprocess_networking"] # Bug 1759035

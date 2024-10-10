@@ -72,7 +72,7 @@ uint32_t nsHistory::GetLength(ErrorResult& aRv) const {
   return len >= 0 ? len : 0;
 }
 
-ScrollRestoration nsHistory::GetScrollRestoration(mozilla::ErrorResult& aRv) {
+ScrollRestoration nsHistory::GetScrollRestoration(mozilla::dom::CallerType aCallerType, mozilla::ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));
   if (!win || !win->HasActiveDocument() || !win->GetDocShell()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -88,11 +88,21 @@ ScrollRestoration nsHistory::GetScrollRestoration(mozilla::ErrorResult& aRv) {
 }
 
 void nsHistory::SetScrollRestoration(mozilla::dom::ScrollRestoration aMode,
+                                     mozilla::dom::CallerType aCallerType,
                                      mozilla::ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));
   if (!win || !win->HasActiveDocument() || !win->GetDocShell()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
+  }
+
+  BrowsingContext* bc = win->GetBrowsingContext();
+  if (bc) {
+    nsresult rv = bc->CheckNavigationRateLimit(aCallerType);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
   }
 
   win->GetDocShell()->SetCurrentScrollRestorationIsManual(
@@ -152,7 +162,7 @@ void nsHistory::Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
                               ? CallerType::System
                               : CallerType::NonSystem;
 
-  // AsyncGo throws if we hit the location change rate limit.
+  // AsyncGo throws if we hit the navigation rate limit.
   session_history->AsyncGo(aDelta, /* aRequireUserInteraction = */ false,
                            userActivation, callerType, aRv);
 }
@@ -237,7 +247,7 @@ void nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
 
   BrowsingContext* bc = win->GetBrowsingContext();
   if (bc) {
-    nsresult rv = bc->CheckLocationChangeRateLimit(aCallerType);
+    nsresult rv = bc->CheckNavigationRateLimit(aCallerType);
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
       return;

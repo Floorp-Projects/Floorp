@@ -1430,7 +1430,14 @@ bool ContentParent::ValidatePrincipal(
 
   if (aPrincipal->SchemeIs("about")) {
     uint32_t flags = 0;
-    if (NS_FAILED(aPrincipal->GetAboutModuleFlags(&flags))) {
+    nsresult rv = aPrincipal->GetAboutModuleFlags(&flags);
+    if (rv == nsresult::NS_ERROR_FACTORY_NOT_REGISTERED) {
+      // This happens in our tests. There is a race between an about page
+      // getting unregistered and the content process unregistering a blob URL
+      // which it was using.
+      return true;
+    }
+    if (NS_FAILED(rv)) {
       return false;
     }
 

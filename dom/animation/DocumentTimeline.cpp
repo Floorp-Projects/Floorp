@@ -160,7 +160,12 @@ void DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
 }
 
 void DocumentTimeline::TriggerAllPendingAnimationsNow() {
+  AutoTArray<RefPtr<Animation>, 32> animationsToTrigger;
   for (Animation* animation : mAnimationOrder) {
+    animationsToTrigger.AppendElement(animation);
+  }
+
+  for (Animation* animation : animationsToTrigger) {
     animation->TryTriggerNow();
   }
 }
@@ -188,9 +193,6 @@ void DocumentTimeline::WillRefresh() {
   // of mDocument's PresShell.
   if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
     refreshDriver->EnsureAnimationUpdate();
-  } else {
-    MOZ_ASSERT_UNREACHABLE(
-        "Refresh driver should still be valid at end of WillRefresh");
   }
 }
 

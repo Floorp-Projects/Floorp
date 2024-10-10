@@ -642,20 +642,34 @@ nsresult nsHttpChannel::OnBeforeConnect() {
 // that HTTPS records can be resolved on this network - false otherwise.
 // When TRR is enabled, we always return true, as resolving HTTPS
 // records don't depend on the network.
-static bool canUseHTTPSRRonNetwork(bool* aTRREnabled = nullptr) {
+static bool canUseHTTPSRRonNetwork(bool& aTRREnabled) {
+  // Respect the pref.
+  if (StaticPrefs::network_dns_force_use_https_rr()) {
+    aTRREnabled = true;
+    return true;
+  }
+
+  aTRREnabled = false;
+
   if (nsCOMPtr<nsIDNSService> dns = mozilla::components::DNS::Service()) {
     nsIDNSService::ResolverMode mode;
     // If the browser is currently using TRR/DoH, then it can
     // definitely resolve HTTPS records.
-    if (NS_SUCCEEDED(dns->GetCurrentTrrMode(&mode)) &&
-        (mode == nsIDNSService::MODE_TRRFIRST ||
-         mode == nsIDNSService::MODE_TRRONLY)) {
-      if (aTRREnabled) {
-        *aTRREnabled = true;
+    if (NS_SUCCEEDED(dns->GetCurrentTrrMode(&mode))) {
+      if (mode == nsIDNSService::MODE_TRRFIRST) {
+        RefPtr<TRRService> trr = TRRService::Get();
+        if (trr && trr->IsConfirmed()) {
+          aTRREnabled = true;
+        }
+      } else if (mode == nsIDNSService::MODE_TRRONLY) {
+        aTRREnabled = true;
       }
-      return true;
+      if (aTRREnabled) {
+        return true;
+      }
     }
   }
+
   if (RefPtr<NetworkConnectivityService> ncs =
           NetworkConnectivityService::GetSingleton()) {
     nsINetworkConnectivityService::ConnectivityState state;
@@ -691,7 +705,7 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
     // blocking HTTPS requests, then we should skip them so we don't
     // needlessly wait for a timeout.
     bool trrEnabled = false;
-    if (!canUseHTTPSRRonNetwork(&trrEnabled)) {
+    if (!canUseHTTPSRRonNetwork(trrEnabled)) {
       return true;
     }
 
@@ -6665,7 +6679,7 @@ nsresult nsHttpChannel::BeginConnect() {
       !(mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
         mLoadInfo->GetExternalContentPolicyType() !=
             ExtContentPolicy::TYPE_DOCUMENT) &&
-      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork(&trrEnabled) &&
+      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork(trrEnabled) &&
       StaticPrefs::network_dns_use_https_rr_as_altsvc();
   if (!httpsRRAllowed) {
     DisallowHTTPSRR(mCaps);
@@ -6858,8 +6872,10 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
+    bool unused;
     if (StaticPrefs::network_dns_use_https_rr_as_altsvc() && !mHTTPSSVCRecord &&
-        !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR) && canUseHTTPSRRonNetwork()) {
+        !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR) &&
+        canUseHTTPSRRonNetwork(unused)) {
       MOZ_ASSERT(!mHTTPSSVCRecord);
 
       OriginAttributes originAttributes;

@@ -5168,7 +5168,7 @@ interface BrowsingContext extends LoadContextMixin {
     watchedByDevTools: boolean;
     readonly window: WindowProxy | null;
     getAllBrowsingContextsInSubtree(): BrowsingContext[];
-    resetLocationChangeRateLimit(): void;
+    resetNavigationRateLimit(): void;
     setRDMPaneMaxTouchPoints(maxTouchPoints: number): void;
     setRDMPaneOrientation(type: OrientationType, rotationAngle: number): void;
 }

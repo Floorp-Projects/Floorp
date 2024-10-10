@@ -103,17 +103,28 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
                mimeType.BeginReading()));
       return media::DecodeSupportSet{};
     }
-    AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
-    bool supports = !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
+    AVCodecID codecId =
+        audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
+    AVCodec* codec = FFmpegDataDecoder<V>::FindAVCodec(mLib, codecId);
     MOZ_LOG(sPDMLog, LogLevel::Debug,
             ("FFmpeg decoder %s requested type '%s'",
-             supports ? "supports" : "rejects", mimeType.BeginReading()));
-    if (supports) {
-      // TODO: Note that we do not yet distinguish between SW/HW decode support.
-      //       Will be done in bug 1754239.
-      return media::DecodeSupport::SoftwareDecode;
+             !!codec ? "supports" : "rejects", mimeType.BeginReading()));
+    if (!codec) {
+      return media::DecodeSupportSet{};
     }
-    return media::DecodeSupportSet{};
+    // This logic is mirrored in FFmpegDataDecoder<LIBAV_VER>::InitDecoder and
+    // FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder. We prefer to use our own
+    // OpenH264 decoder through the plugin over ffmpeg by default due to broken
+    // decoding with some versions.
+    if (!strcmp(codec->name, "libopenh264") &&
+        !StaticPrefs::media_ffmpeg_allow_openh264()) {
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
+              ("FFmpeg decoder rejects as openh264 disabled by pref"));
+      return media::DecodeSupportSet{};
+    }
+    // TODO: Note that we do not yet distinguish between SW/HW decode support.
+    //       Will be done in bug 1754239.
+    return media::DecodeSupport::SoftwareDecode;
   }
 
  protected:

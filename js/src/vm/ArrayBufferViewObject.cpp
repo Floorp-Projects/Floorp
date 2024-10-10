@@ -203,13 +203,13 @@ bool ArrayBufferViewObject::initResizable(JSContext* cx,
                                           AutoLength autoLength) {
   MOZ_ASSERT(buffer->isResizable());
 
-  if (!init(cx, buffer, byteOffset, length, bytesPerElement)) {
-    return false;
-  }
-
   initFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(static_cast<bool>(autoLength)));
   initFixedSlot(INITIAL_LENGTH_SLOT, PrivateValue(length));
   initFixedSlot(INITIAL_BYTE_OFFSET_SLOT, PrivateValue(byteOffset));
+
+  if (!init(cx, buffer, byteOffset, length, bytesPerElement)) {
+    return false;
+  }
 
   // Compute the actual byteLength and byteOffset for non-shared buffers.
   if (!isSharedMemory()) {

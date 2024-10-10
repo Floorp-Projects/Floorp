@@ -40,8 +40,10 @@ class nsHistory final : public nsISupports, public nsWrapperCache {
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
   mozilla::dom::ScrollRestoration GetScrollRestoration(
+      mozilla::dom::CallerType aCallerType,
       mozilla::ErrorResult& aRv);
   void SetScrollRestoration(mozilla::dom::ScrollRestoration aMode,
+                            mozilla::dom::CallerType aCallerType,
                             mozilla::ErrorResult& aRv);
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                 mozilla::ErrorResult& aRv) const;
