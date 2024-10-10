@@ -78,63 +78,71 @@ nsLineBreaker::~nsLineBreaker() {
                "Should have Reset() before destruction!");
 }
 
+/* static */
+bool nsLineBreaker::ShouldCapitalize(uint32_t aChar, bool& aCapitalizeNext) {
+  using mozilla::intl::GeneralCategory;
+  auto category = UnicodeProperties::CharType(aChar);
+  switch (category) {
+    case GeneralCategory::Uppercase_Letter:
+    case GeneralCategory::Lowercase_Letter:
+    case GeneralCategory::Titlecase_Letter:
+    case GeneralCategory::Modifier_Letter:
+    case GeneralCategory::Other_Letter:
+    case GeneralCategory::Decimal_Number:
+    case GeneralCategory::Letter_Number:
+    case GeneralCategory::Other_Number:
+      if (aCapitalizeNext) {
+        aCapitalizeNext = false;
+        return true;
+      }
+      break;
+    case GeneralCategory::Space_Separator:
+    case GeneralCategory::Line_Separator:
+    case GeneralCategory::Paragraph_Separator:
+    case GeneralCategory::Dash_Punctuation:
+    case GeneralCategory::Initial_Punctuation:
+      /* These punctuation categories are excluded, for examples like
+       *   "what colo[u]r" -> "What Colo[u]r?" (rather than "What Colo[U]R?")
+       * and
+       *   "snake_case" -> "Snake_case" (to match word selection behavior)
+      case GeneralCategory::Open_Punctuation:
+      case GeneralCategory::Close_Punctuation:
+      case GeneralCategory::Connector_Punctuation:
+       */
+      aCapitalizeNext = true;
+      break;
+    case GeneralCategory::Final_Punctuation:
+      /* Special-case: exclude Unicode single-close-quote/apostrophe,
+         for examples like "Lowe’s" etc. */
+      if (aChar != 0x2019) {
+        aCapitalizeNext = true;
+      }
+      break;
+    case GeneralCategory::Other_Punctuation:
+      /* Special-case: exclude ASCII apostrophe, for "Lowe's" etc.,
+         and MIDDLE DOT, for Catalan "l·l". */
+      if (aChar != '\'' && aChar != 0x00B7) {
+        aCapitalizeNext = true;
+      }
+      break;
+    default:
+      break;
+  }
+  return false;
+}
+
 static void SetupCapitalization(const char16_t* aWord, uint32_t aLength,
                                 bool* aCapitalization) {
   // Capitalize the first alphanumeric character after a space or punctuation.
-  using mozilla::intl::GeneralCategory;
   bool capitalizeNextChar = true;
   for (uint32_t i = 0; i < aLength; ++i) {
     uint32_t ch = aWord[i];
     if (i + 1 < aLength && NS_IS_SURROGATE_PAIR(ch, aWord[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, aWord[i + 1]);
     }
-    auto category = UnicodeProperties::CharType(ch);
-    switch (category) {
-      case GeneralCategory::Uppercase_Letter:
-      case GeneralCategory::Lowercase_Letter:
-      case GeneralCategory::Titlecase_Letter:
-      case GeneralCategory::Modifier_Letter:
-      case GeneralCategory::Other_Letter:
-      case GeneralCategory::Decimal_Number:
-      case GeneralCategory::Letter_Number:
-      case GeneralCategory::Other_Number:
-        if (capitalizeNextChar) {
-          aCapitalization[i] = true;
-          capitalizeNextChar = false;
-        }
-        break;
-      case GeneralCategory::Space_Separator:
-      case GeneralCategory::Line_Separator:
-      case GeneralCategory::Paragraph_Separator:
-      case GeneralCategory::Dash_Punctuation:
-      case GeneralCategory::Initial_Punctuation:
-        /* These punctuation categories are excluded, for examples like
-         *   "what colo[u]r" -> "What Colo[u]r?" (rather than "What Colo[U]R?")
-         * and
-         *   "snake_case" -> "Snake_case" (to match word selection behavior)
-        case GeneralCategory::Open_Punctuation:
-        case GeneralCategory::Close_Punctuation:
-        case GeneralCategory::Connector_Punctuation:
-         */
-        capitalizeNextChar = true;
-        break;
-      case GeneralCategory::Final_Punctuation:
-        /* Special-case: exclude Unicode single-close-quote/apostrophe,
-           for examples like "Lowe’s" etc. */
-        if (ch != 0x2019) {
-          capitalizeNextChar = true;
-        }
-        break;
-      case GeneralCategory::Other_Punctuation:
-        /* Special-case: exclude ASCII apostrophe, for "Lowe's" etc.,
-           and MIDDLE DOT, for Catalan "l·l". */
-        if (ch != '\'' && ch != 0x00B7) {
-          capitalizeNextChar = true;
-        }
-        break;
-      default:
-        break;
-    }
+    aCapitalization[i] =
+        nsLineBreaker::ShouldCapitalize(ch, capitalizeNextChar);
+
     if (!IS_IN_BMP(ch)) {
       ++i;
     }

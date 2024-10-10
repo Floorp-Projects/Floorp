@@ -18,6 +18,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
+#include "nsLineBreaker.h"
 #include "nsSpecialCasingData.h"
 #include "nsStyleConsts.h"
 #include "nsTextFrameUtils.h"
@@ -335,6 +336,10 @@ bool nsCaseTransformTextRunFactory::TransformString(
                                       // tonos added (if it is disjunctive eta)
   const char16_t kGreekUpperEta = 0x0397;
 
+  // If we're doing capitalization and don't have a textrun, this is the state
+  // to be passed to each call to nsLineBreaker::ShouldCapitalize.
+  bool capitalizeNext = true;
+
   for (uint32_t i = 0; i < length; ++i, ++aOffsetInTextRun) {
     uint32_t ch = str[i];
 
@@ -365,7 +370,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
 
     bool maskPassword = (charStyle && charStyle->mMaskPassword) || aMaskChar;
     int extraChars = 0;
-    const mozilla::unicode::MultiCharMapping* mcm;
+    const unicode::MultiCharMapping* mcm;
     bool inhibitBreakBefore = false;  // have we just deleted preceding hyphen?
 
     if (i < length - 1 && NS_IS_SURROGATE_PAIR(ch, str[i + 1])) {
@@ -448,7 +453,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
             }
           }
 
-          cat = mozilla::unicode::GetGenCategory(ch);
+          cat = unicode::GetGenCategory(ch);
 
           if (languageSpecificCasing == eLSCB_Irish &&
               cat == nsUGenCategory::kLetter) {
@@ -528,7 +533,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
             sigmaIndex = uint32_t(-1);
           }
 
-          mcm = mozilla::unicode::SpecialLower(ch);
+          mcm = unicode::SpecialLower(ch);
           if (mcm) {
             int j = 0;
             while (j < 2 && mcm->mMappedChars[j + 1]) {
@@ -664,7 +669,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
             break;
           }
 
-          mcm = mozilla::unicode::SpecialUpper(ch);
+          mcm = unicode::SpecialUpper(ch);
           if (mcm) {
             int j = 0;
             while (j < 2 && mcm->mMappedChars[j + 1]) {
@@ -686,61 +691,70 @@ bool nsCaseTransformTextRunFactory::TransformString(
           }
           break;
 
-        case StyleTextTransform::CAPITALIZE._0:
+        case StyleTextTransform::CAPITALIZE._0: {
+          if (capitalizeDutchIJ && ch == 'j') {
+            ch = 'J';
+            capitalizeDutchIJ = false;
+            break;
+          }
+          capitalizeDutchIJ = false;
+          // If we have a textrun, its mCapitalize array tells us which chars
+          // are to be capitalized. If not, we track the state locally, and
+          // assume there's no context to be considered.
+          bool doCapitalize = false;
           if (aTextRun) {
-            if (capitalizeDutchIJ && ch == 'j') {
-              ch = 'J';
-              capitalizeDutchIJ = false;
+            if (aOffsetInTextRun < aTextRun->mCapitalize.Length()) {
+              doCapitalize = aTextRun->mCapitalize[aOffsetInTextRun];
+            }
+          } else {
+            doCapitalize = nsLineBreaker::ShouldCapitalize(ch, capitalizeNext);
+          }
+          if (doCapitalize) {
+            if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
+              ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
               break;
             }
-            capitalizeDutchIJ = false;
-            if (aOffsetInTextRun < aTextRun->mCapitalize.Length() &&
-                aTextRun->mCapitalize[aOffsetInTextRun]) {
-              if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
-                ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+            if (languageSpecificCasing == eLSCB_Dutch && ch == 'i') {
+              ch = 'I';
+              capitalizeDutchIJ = true;
+              break;
+            }
+            if (languageSpecificCasing == eLSCB_Lithuanian) {
+              /*
+               * # Remove DOT ABOVE after "i" with upper or titlecase
+               *
+               * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
+               */
+              if (ch == 'i' || ch == 'j' || ch == 0x012F) {
+                seenSoftDotted = true;
+                ch = ToTitleCase(ch);
                 break;
               }
-              if (languageSpecificCasing == eLSCB_Dutch && ch == 'i') {
-                ch = 'I';
-                capitalizeDutchIJ = true;
-                break;
-              }
-              if (languageSpecificCasing == eLSCB_Lithuanian) {
-                /*
-                 * # Remove DOT ABOVE after "i" with upper or titlecase
-                 *
-                 * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
-                 */
-                if (ch == 'i' || ch == 'j' || ch == 0x012F) {
-                  seenSoftDotted = true;
-                  ch = ToTitleCase(ch);
+              if (seenSoftDotted) {
+                seenSoftDotted = false;
+                if (ch == 0x0307) {
+                  ch = uint32_t(-1);
                   break;
                 }
-                if (seenSoftDotted) {
-                  seenSoftDotted = false;
-                  if (ch == 0x0307) {
-                    ch = uint32_t(-1);
-                    break;
-                  }
-                }
               }
-
-              mcm = mozilla::unicode::SpecialTitle(ch);
-              if (mcm) {
-                int j = 0;
-                while (j < 2 && mcm->mMappedChars[j + 1]) {
-                  aConvertedString.Append(mcm->mMappedChars[j]);
-                  ++extraChars;
-                  ++j;
-                }
-                ch = mcm->mMappedChars[j];
-                break;
-              }
-
-              ch = ToTitleCase(ch);
             }
+
+            mcm = unicode::SpecialTitle(ch);
+            if (mcm) {
+              int j = 0;
+              while (j < 2 && mcm->mMappedChars[j + 1]) {
+                aConvertedString.Append(mcm->mMappedChars[j]);
+                ++extraChars;
+                ++j;
+              }
+              ch = mcm->mMappedChars[j];
+              break;
+            }
+
+            ch = ToTitleCase(ch);
           }
           break;
+        }
 
         case StyleTextTransform::MATH_AUTO._0:
           // text-transform: math-auto is used for automatic italicization of
@@ -773,7 +787,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
 
       if (!aCaseTransformsOnly) {
         if (!forceNonFullWidth && (style & StyleTextTransform::FULL_WIDTH)) {
-          ch = mozilla::unicode::GetFullWidth(ch);
+          ch = unicode::GetFullWidth(ch);
         }
 
         if (style & StyleTextTransform::FULL_SIZE_KANA) {
@@ -825,7 +839,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (forceNonFullWidth) {
-        ch = mozilla::unicode::GetFullWidthInverse(ch);
+        ch = unicode::GetFullWidthInverse(ch);
       }
     }
 
