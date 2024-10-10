@@ -44,7 +44,7 @@ function generateExpectedDetails(locales, subDomainName, telemetrySuffix) {
   testConfiguration.details.push({
     domain: `${subDomainName}.wikipedia.org`,
     telemetryId: telemetrySuffix ? `wikipedia-${telemetrySuffix}` : "wikipedia",
-    aliases: ["@wikipedia"],
+    required_aliases: ["@wikipedia"],
     included: [{ locales }],
   });
 }
