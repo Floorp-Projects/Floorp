@@ -12,10 +12,9 @@ import {
   setCurrentSplitView,
   setSplitViewData,
   splitViewData,
-  fixedSplitViewData,
   setFixedSplitViewData,
+  fixedSplitViewData,
 } from "./utils/data";
-import { FixedTabUtils } from "./fixedTabUtils";
 
 export class SplitView {
   private static instance: SplitView;
@@ -83,7 +82,10 @@ export class SplitView {
     if (!tab) {
       throw new Error("Tab is not defined");
     }
-    return tab.getAttribute(SplitViewStaticNames.TabAttributionId) ?? "";
+    return (
+      tab.getAttribute(SplitViewStaticNames.TabAttributionId) ??
+      this.setTabId(tab, this.getGeneratedUuid)
+    );
   }
 
   private setTabId(tab: Tab, id: string): string {
@@ -180,14 +182,12 @@ export class SplitView {
   }
 
   private resetSplitView() {
-    splitViewData()[currentSplitView()].tabIds.forEach((tabId) => {
-      this.resetTabState(this.getTabById(tabId), true);
-    });
+    for (const tab of window.gBrowser.tabs) {
+      this.resetTabState(tab, true);
+    }
 
     setCurrentSplitView(-1);
-
     this.resetTabBrowserPanel();
-
     Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
   }
 
@@ -315,9 +315,6 @@ export class SplitView {
   }
 
   private splitFixedTab(tab: Tab) {
-    if (FixedTabUtils.isWorking()) {
-      return;
-    }
     setFixedSplitViewData({
       fixedTabId: this.getTabId(tab),
       options: {
@@ -325,6 +322,7 @@ export class SplitView {
         method: "row",
       },
     });
+    this.updateSplitView(window.gBrowser.selectedTab);
   }
 
   private updateSplitView(
@@ -332,9 +330,39 @@ export class SplitView {
     reverse: boolean | null = null,
     method: "row" | "column" | null = null,
   ) {
+    // If current view is sync's view, before update view, we should remove the sync view.
+    const syncIndex = splitViewData().findIndex(
+      (group) => group.fixedMode === true,
+    );
+    if (syncIndex >= 0) {
+      this.removeGroup(syncIndex);
+    }
+
     const splitData = this.findSplitDataForTab(tab);
     if (!splitData) {
       this.handleNoSplitData();
+      const data = fixedSplitViewData();
+      if (
+        data.fixedTabId &&
+        this.getTabById(data.fixedTabId) !== window.gBrowser.selectedTab
+      ) {
+        const newSplitData = {
+          ...fixedSplitViewData().options,
+          tabIds: [data.fixedTabId, this.getTabId(tab)],
+          fixedMode: true,
+          reverse,
+          method,
+        } as SplitViewData;
+        setSplitViewData((prev) => [...prev, newSplitData]);
+        this.activateSplitView(newSplitData, tab);
+      }
+
+      if (
+        this.getTabById(data.fixedTabId ?? "") === window.gBrowser.selectedTab
+      ) {
+        this.resetSplitView();
+      }
+
       return;
     }
 
@@ -480,7 +508,7 @@ export class SplitView {
       (t: Tab) =>
         t.linkedBrowser.closest(".browserSidebarContainer") === container,
     );
-    if (tab) {
+    if (tab && tab !== this.getTabById(fixedSplitViewData().fixedTabId ?? "")) {
       window.gBrowser.selectedTab = tab;
     }
   };
@@ -524,9 +552,25 @@ export class SplitView {
 
   public unsplitCurrentView() {
     const currentTab = window.gBrowser.selectedTab;
-    const tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
+    let tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
       this.getTabById(id),
     );
+
+    if (splitViewData()[currentSplitView()].fixedMode) {
+      tabs = [
+        currentTab,
+        this.getTabById(fixedSplitViewData().fixedTabId ?? ""),
+      ];
+
+      setFixedSplitViewData({
+        fixedTabId: null,
+        options: {
+          reverse: false,
+          method: "row",
+        },
+      });
+    }
+
     tabs.forEach((tab) => {
       this.handleTabClose({ target: tab, forUnsplit: true } as TabEvent);
     });
