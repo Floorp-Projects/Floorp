@@ -11,41 +11,7 @@
 
 namespace mozilla {
 
-/**
- * Windows UAC can be disabled via the registry. This checks if the user has
- * Administrator privileges and UAC has been disabled.
- *
- * @return `Ok(true)` when the current process has Administrator privileges
- *         *and* UAC has been disabled, otherwise `Ok(false)` or
- *         `Err(WindowsError)`.
- */
 LauncherResult<bool> IsAdminWithoutUac();
-
-/**
- * Checks if the current process has Administrator privileges.
- *
- * @return `Ok(true)` when the current process has Administrator privileges,
- *         otherwise `Ok(false)` or `Err(WindowsError)`.
- *
- */
-LauncherResult<bool> UserHasAdminPrivileges();
-
-/**
- * Checks if the current process user is LocalSystem.
- *
- * LocalSystem (or just SYSTEM in Task Manager) is a high privileged account
- * similar to Administrator. Unlike Administrator which runs under a User
- * context, LocalSystem runs under a System context and has some privileges
- * beyond that of Administrator. We use LocalSystem for privileges necessary for
- * our updater.
- *
- * Note that LocalSystem is not equivalent to the lower privileged LocalSerivce
- * account.
- *
- * @return `Ok(true)` when the current process user is LocalSystem, otherwise
- *         `Ok(false)` or `Err(WindowsError)`.
- */
-LauncherResult<bool> UserIsLocalSystem();
 
 }  // namespace mozilla
 
