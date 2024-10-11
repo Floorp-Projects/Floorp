@@ -802,3 +802,38 @@ fn fast_pto_persistent_congestion() {
     client.process_input(&ack.unwrap(), now);
     assert_eq!(cwnd(&client), CWND_MIN);
 }
+
+/// Receiving an ACK frame for a packet number that was never sent is an error.
+#[test]
+fn ack_for_unsent() {
+    /// This inserts an ACK frame into packets that ACKs a packet that was never sent.
+    struct AckforUnsentWriter {}
+
+    impl FrameWriter for AckforUnsentWriter {
+        fn write_frames(&mut self, builder: &mut PacketBuilder) {
+            builder.encode_varint(FRAME_TYPE_ACK);
+            builder.encode_varint(666u16); // Largest ACKed
+            builder.encode_varint(0u8); // ACK delay
+            builder.encode_varint(0u8); // ACK block count
+            builder.encode_varint(0u8); // ACK block length
+        }
+    }
+
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    server.test_frame_writer = Some(Box::new(AckforUnsentWriter {}));
+    let spoofed = server.process_output(now()).dgram().unwrap();
+    server.test_frame_writer = None;
+
+    // Now deliver the packet with the spoofed ACK frame
+    client.process_input(&spoofed, now());
+    assert!(matches!(
+        client.state(),
+        State::Closing {
+            error: CloseReason::Transport(Error::AckedUnsentPacket),
+            ..
+        }
+    ));
+}
