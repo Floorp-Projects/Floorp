@@ -334,7 +334,7 @@ int CamerasChild::AllocateCapture(CaptureEngine aCapEngine,
   LOG(("%s", __PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
-      mozilla::NewRunnableMethod<CaptureEngine, nsCString, const uint64_t&>(
+      mozilla::NewRunnableMethod<CaptureEngine, nsCString, uint64_t>(
           "camera::PCamerasChild::SendAllocateCapture", this,
           &CamerasChild::SendAllocateCapture, aCapEngine, unique_id, aWindowID);
   LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mReplyInteger);
