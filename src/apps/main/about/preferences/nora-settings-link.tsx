@@ -5,6 +5,9 @@ export function NoraSettingsLink() {
       class="category"
       align="center"
       tooltiptext="Nora Settings Link"
+      onClick={() => {
+        window.location.href = "http://localhost:5183/";
+      }}
     >
       <xul:image class="category-icon" />
       <xul:label class="category-name" flex="1">

@@ -1,0 +1,13 @@
+{
+  "name": "@nora/modules",
+  "description": "This module has .sys.mjs files for Firefox Module System esp. for Actor",
+  "devDependencies": {
+    "@swc/core": "^1.7.26",
+    "@swc/cli": "0.4.1-nightly.20240914",
+    "oxlint": "^0.9.9"
+  },
+  "scripts": {
+    "build": "swc ./src -d _dist --strip-leading-paths --out-file-extension mjs",
+    "lint": "oxlint"
+  }
+}

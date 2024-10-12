@@ -139,7 +139,7 @@ const _render = (
         ...(hotCtxMap.get(options.hotCtx) ?? []),
         disposer,
       ]);
-      console.log("register disposer to hotCtx");
+      console.debug("register disposer to hotCtx");
       options.hotCtx.dispose(() => {
         hotCtxMap.get(options.hotCtx!)?.forEach((v) => v());
         hotCtxMap.delete(options.hotCtx!);
@@ -161,7 +161,7 @@ export function createRootHMR(
       if (cleanup) {
         hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), cleanup]);
       }
-      console.log("register disposer to hotCtx in createRoot");
+      console.debug("register disposer to hotCtx in createRoot");
       hotCtx.dispose(() => {
         hotCtxMap.get(hotCtx)?.forEach((v) => v());
         hotCtxMap.delete(hotCtx);

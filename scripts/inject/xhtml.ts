@@ -19,7 +19,7 @@ export async function injectXHTML(binPath: string) {
       "src",
       "chrome://noraneko-startup/content/chrome_root.js",
     );
-    script.setAttribute("defer", "defer");
+    script.setAttribute("async", "async");
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);

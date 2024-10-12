@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "checkJs": true
+  }
+}
