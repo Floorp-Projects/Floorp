@@ -7,77 +7,7 @@ import { GridItem, VStack, Divider } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useMediaQuery } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
-
-const data: {
-  [key: string]: {
-    path: string;
-    icon: React.ReactNode;
-    text: string;
-  };
-} = {
-  home: {
-    path: "/",
-    icon: (
-      <IconCarbonHome style={{ fontSize: "16px", color: "currentColor" }} />
-    ),
-    text: "Home",
-  },
-  design: {
-    path: "/design",
-    icon: <IconMdiDesign style={{ fontSize: "16px", color: "currentColor" }} />,
-    text: "Look & Feel",
-  },
-  sidebar: {
-    path: "/sidebar",
-    icon: (
-      <IconLucideSidebar style={{ fontSize: "16px", color: "currentColor" }} />
-    ),
-    text: "Noraneko Sidebar",
-  },
-  workspaces: {
-    path: "/workspaces",
-    icon: (
-      <IconMaterialSymbolsLightSelectWindow
-        style={{ fontSize: "16px", color: "currentColor" }}
-      />
-    ),
-    text: "Workspaces",
-  },
-  shortcuts: {
-    path: "/shortcuts",
-    icon: (
-      <IconIcOutlineKeyboard
-        style={{ fontSize: "16px", color: "currentColor" }}
-      />
-    ),
-    text: "Keyboard Shortcuts",
-  },
-  webapps: {
-    path: "/webapps",
-    icon: (
-      <IconMdiAppBadgeOutline
-        style={{ fontSize: "16px", color: "currentColor" }}
-      />
-    ),
-    text: "Web Apps",
-  },
-  accounts: {
-    path: "/accounts",
-    icon: (
-      <IconMdiAccount style={{ fontSize: "16px", color: "currentColor" }} />
-    ),
-    text: "Profile and Account",
-  },
-  about: {
-    path: "/about",
-    icon: (
-      <IconMdiAboutCircleOutline
-        style={{ fontSize: "16px", color: "currentColor" }}
-      />
-    ),
-    text: "About Noraneko",
-  },
-};
+import { pages } from "../pageData";
 
 function Sidebar() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -91,14 +21,14 @@ function Sidebar() {
       overflowY={"scroll"}
     >
       <VStack align="stretch" spacing={2}>
-        {Object.keys(data).map((key) => {
+        {Object.keys(pages).map((key) => {
           return (
             <MenuItem
               key={key}
-              to={data[key].path}
-              icon={data[key].icon}
-              text={data[key].text}
-              selected={location.pathname === data[key].path}
+              to={pages[key].path}
+              icon={pages[key].icon}
+              text={pages[key].text}
+              selected={location.pathname === pages[key].path}
             />
           );
         })}

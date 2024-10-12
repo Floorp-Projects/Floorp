@@ -11,6 +11,7 @@ import Header from "./header";
 import Workspaces from "./pages/Workspaces";
 import Design from "./pages/Design";
 import About from "./pages/About";
+import SearchResults from "./pages/Search/index";
 
 export default function App() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -27,6 +28,7 @@ export default function App() {
                 <Route path="/workspaces" element={<Workspaces />} />
                 <Route path="/design" element={<Design />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/search" element={<SearchResults />} />
               </Routes>
             </Box>
           </Box>
