@@ -15,18 +15,10 @@ import {
 import Card from "../../components/Card";
 
 export default function About() {
-  const bgColor = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
 
   return (
-    <Flex
-      direction="column"
-      alignItems="center"
-      maxW="700px"
-      mx="auto"
-      py={8}
-      bg={bgColor}
-    >
+    <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10} color={textColor}>
         About Noraneko
       </Text>
@@ -40,7 +32,7 @@ export default function About() {
           />
         }
         footerLink="https://noraneko.example.com/about"
-        footerLinkText="More Information"
+        footerLinkText="Release Notes & More Information"
       >
         <Text fontSize="md" mb={3} color={textColor} w={"700px"}>
           Noraneko version: 12.0.0 Firefox version: 128.0.1
@@ -68,6 +60,7 @@ export default function About() {
         </Text>
         <Link
           href="https://docs.floorp.app/ja/docs/other/contributors"
+          target="_blank"
           fontSize="sm"
           display="flex"
           alignItems="center"

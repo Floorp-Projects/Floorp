@@ -1,4 +1,3 @@
-// import { openChromeURL } from "../dev";
 import {
   Divider,
   HStack,
@@ -77,7 +76,7 @@ function Footer({
         onClick={(e) => {
           if (footerLink?.startsWith("about:")) {
             e.preventDefault();
-            // openChromeURL(footerLink);
+            window.NRAddTab(footerLink);
           }
         }}
       >

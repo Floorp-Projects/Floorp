@@ -31,6 +31,13 @@ export default function Design() {
       }
     };
     fetchDefaultValues();
+    document?.documentElement?.addEventListener("onfocus", fetchDefaultValues);
+    return () => {
+      document?.documentElement?.removeEventListener(
+        "onfocus",
+        fetchDefaultValues,
+      );
+    };
   }, [setValue]);
 
   useEffect(() => {

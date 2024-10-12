@@ -13,9 +13,10 @@ export class NRTabManagerParent extends JSWindowActorParent {
         ) as Window;
 
         win.gBrowser.selectedTab = win.gBrowser.addTab(url, {
-          ...options,
+          relatedToCurrent: true,
           triggeringPrincipal:
             Services.scriptSecurityManager.getSystemPrincipal(),
+          ...options,
         });
         this.sendAsyncMessage("Tabs:AddTab");
       }
