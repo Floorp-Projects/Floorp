@@ -21,7 +21,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "unplugin-auto-import": "^0.18.3",
-    "unplugin-icons": "^0.19.3"
+    "unplugin-icons": "^0.19.3",
+    "@chakra-ui/theme-tools": "^2.1.2",
+    "react-hook-form": "^7.53.0",
+    "react-router-dom": "^6.26.2",
+    "i18next": "^23.14.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "i18next-http-backend": "^2.6.2",
+    "react-i18next": "^15.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.7.3",

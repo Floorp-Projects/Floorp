@@ -44,10 +44,7 @@
     "vite-tsconfig-paths": "^5.0.1"
   },
   "dependencies": {
-    "@chakra-ui/theme-tools": "^2.1.2",
     "adm-zip": "^0.5.16",
-    "react-hook-form": "^7.53.0",
-    "react-router-dom": "^6.26.2",
     "solid-element": "^1.9.0",
     "solid-styled-jsx": "^0.27.1",
     "sortablejs": "^1.15.3",

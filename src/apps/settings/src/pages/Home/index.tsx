@@ -13,8 +13,10 @@ import {
   Progress,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
+  const { t } = useTranslation();
   return (
     <GridItem display="flex" justifyContent="center">
       <VStack align="stretch" alignItems="center" maxW={"900px"} spacing={6}>
@@ -24,7 +26,7 @@ export default function Home() {
             src="chrome://browser/skin/fxa/avatar-color.svg"
             m={4}
           />
-          <Text fontSize="3xl">Welcome, Account Name </Text>
+          <Text fontSize="3xl">{t("welcome")}</Text>
         </Flex>
         <Text>
           Manage your account, privacy, and security to make your Noraneko
