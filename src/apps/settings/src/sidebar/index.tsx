@@ -8,10 +8,21 @@ import MenuItem from "../components/MenuItem";
 import { useMediaQuery } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import { pages } from "../pageData";
+import { useEffect } from "react";
 
 function Sidebar() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
   const location = useLocation();
+
+  useEffect(() => {
+    if (document) {
+      const title =
+        pages[location.pathname === "/" ? "home" : location.pathname.slice(1)]
+          ?.text ?? "Noraneko Settings";
+      document.title = title;
+    }
+  }, [location.pathname]);
+
   return (
     <GridItem
       zIndex={1000}

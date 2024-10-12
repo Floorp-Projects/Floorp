@@ -103,7 +103,7 @@ function SearchResults() {
             <SearchResult key={result.path} result={result} />
           ))
         ) : (
-          <Text>No results found.</Text>
+          <Text fontSize="xl">No results found.</Text>
         )}
       </VStack>
     </Flex>
