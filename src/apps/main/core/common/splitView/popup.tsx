@@ -39,6 +39,7 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-position-left"
                 class="splitView-select-label"
+                for="splitView-position-selector-content-left"
               >
                 Left
               </label>
@@ -60,6 +61,7 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-position-right"
                 class="splitView-select-label"
+                for="splitView-position-selector-content-right"
               >
                 Right
               </label>
@@ -85,6 +87,7 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-flex-row"
                 class="splitView-select-label"
+                for="splitView-flex-selector-content-row"
               >
                 Row
               </label>
@@ -106,6 +109,7 @@ export function Popup() {
               <label
                 data-l10n-id="split-view-flex-column"
                 class="splitView-select-label"
+                for="splitView-flex-selector-content-column"
               >
                 Column
               </label>
@@ -125,7 +129,7 @@ export function Popup() {
             type="button"
             onClick={() => gSplitView.unsplitCurrentView()}
           >
-            Remove Curret View
+            Remove Current View
           </button>
         </xul:vbox>
       </xul:vbox>

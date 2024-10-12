@@ -7470,14 +7470,6 @@ interface ElementCSSInlineStyle {
     readonly style: CSSStyleDeclaration;
 }
 
-interface CSSStyleDeclaration {
-    display: string;
-    flex: string;
-    order: string;
-    flexDirection: string;
-    flexTemplateAreas: string;
-}
-
 interface ElementInternals extends ARIAMixin {
     readonly form: HTMLFormElement | null;
     readonly labels: NodeList;
