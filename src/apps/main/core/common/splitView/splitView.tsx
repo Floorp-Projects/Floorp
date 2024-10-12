@@ -199,10 +199,12 @@ export class SplitView {
 
   public handleSplitViewPanelRevseOptionClick(reverse: boolean) {
     this.updateSplitView(window.gBrowser.selectedTab, reverse, null);
+    this.updateSelectedItemState();
   }
 
   public handleSplitViewPanelTypeOptionClick(method: "row" | "column") {
     this.updateSplitView(window.gBrowser.selectedTab, null, method);
+    this.updateSelectedItemState();
   }
 
   private addMainPopupShowingListener() {
@@ -288,7 +290,11 @@ export class SplitView {
     }
     const existingSplitTab = tabs.find((tab) => tab.splitView);
     if (existingSplitTab) {
-      const groupIndex = this.findGroupIndexForTab(existingSplitTab);
+      const groupIndex = splitViewData().findIndex(
+        (group) =>
+          group.tabIds.includes(this.getTabId(existingSplitTab)) &&
+          group.fixedMode !== true,
+      );
       if (groupIndex >= 0) {
         this.updateSplitView(existingSplitTab);
         return;
@@ -356,8 +362,8 @@ export class SplitView {
           ...fixedSplitViewData().options,
           tabIds: [data.fixedTabId, this.getTabId(tab)],
           fixedMode: true,
-          reverse,
-          method,
+          reverse: reverse ?? fixedSplitViewData().options.reverse,
+          method: method ?? fixedSplitViewData().options.method,
         } as SplitViewData;
         setSplitViewData((prev) => [...prev, newSplitData]);
         this.activateSplitView(newSplitData, tab);
@@ -585,5 +591,38 @@ export class SplitView {
       this.handleTabClose({ target: tab, forUnsplit: true } as TabEvent);
     });
     window.gBrowser.selectedTab = currentTab;
+  }
+
+  public updateSelectedItemState() {
+    const elements = document?.querySelectorAll(".splitView-select-box");
+    if (elements) {
+      for (const element of elements) {
+        element?.classList.remove("selected");
+      }
+    }
+
+    const currentData = splitViewData()[currentSplitView()];
+    const reverse = currentData.reverse;
+    const method = currentData.method;
+
+    if (reverse) {
+      document
+        ?.getElementById("splitView-position-selector-right")
+        ?.classList.add("selected");
+    } else {
+      document
+        ?.getElementById("splitView-position-selector-left")
+        ?.classList.add("selected");
+    }
+
+    if (method === "column") {
+      document
+        ?.getElementById("splitView-flex-selector-column")
+        ?.classList.add("selected");
+    } else {
+      document
+        ?.getElementById("splitView-flex-selector-row")
+        ?.classList.add("selected");
+    }
   }
 }

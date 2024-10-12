@@ -7,8 +7,14 @@ import { SplitView } from "./splitView";
 
 export function Popup() {
   const gSplitView = SplitView.getInstance();
+
   return (
-    <xul:panel id="splitView-panel" type="arrow" position="bottomleft topleft">
+    <xul:panel
+      id="splitView-panel"
+      type="arrow"
+      position="bottomleft topleft"
+      onPopupShowing={gSplitView.updateSelectedItemState}
+    >
       <xul:vbox id="splitView-box">
         <xul:vbox class="panel-header">
           <h1>
@@ -40,8 +46,8 @@ export function Popup() {
                 id="splitView-position-selector-content-left"
                 class="splitView-select-content-box"
               >
-                <div />
-                <div />
+                <xul:box />
+                <xul:box />
               </xul:hbox>
             </xul:vbox>
             <xul:vbox
@@ -61,8 +67,8 @@ export function Popup() {
                 id="splitView-position-selector-content-right"
                 class="splitView-select-content-box"
               >
-                <div />
-                <div />
+                <xul:box />
+                <xul:box />
               </xul:hbox>
             </xul:vbox>
           </xul:hbox>
@@ -86,8 +92,8 @@ export function Popup() {
                 id="splitView-flex-selector-content-row"
                 class="splitView-select-content-box"
               >
-                <div />
-                <div />
+                <xul:box />
+                <xul:box />
               </xul:hbox>
             </xul:vbox>
             <xul:vbox
@@ -107,8 +113,8 @@ export function Popup() {
                 id="splitView-flex-selector-content-column"
                 class="splitView-select-content-box"
               >
-                <div />
-                <div />
+                <xul:box />
+                <xul:box />
               </xul:vbox>
             </xul:vbox>
           </xul:hbox>
