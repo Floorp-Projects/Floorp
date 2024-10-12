@@ -261,9 +261,6 @@ export class SplitView {
   }
 
   public splitContextFixedTab() {
-    if (window.TabContextMenu.contextTab === window.gBrowser.selectedTab) {
-      return;
-    }
     this.splitFixedTab(window.TabContextMenu.contextTab);
   }
 
@@ -325,18 +322,27 @@ export class SplitView {
     this.updateSplitView(window.gBrowser.selectedTab);
   }
 
-  private updateSplitView(
-    tab: Tab,
-    reverse: boolean | null = null,
-    method: "row" | "column" | null = null,
-  ) {
-    // If current view is sync's view, before update view, we should remove the sync view.
+  private tryToRemoveFixedView() {
     const syncIndex = splitViewData().findIndex(
       (group) => group.fixedMode === true,
     );
     if (syncIndex >= 0) {
       this.removeGroup(syncIndex);
     }
+
+    for (const data of splitViewData()) {
+      if (data.fixedMode) {
+        this.removeGroup(splitViewData().indexOf(data));
+      }
+    }
+  }
+
+  private updateSplitView(
+    tab: Tab,
+    reverse: boolean | null = null,
+    method: "row" | "column" | null = null,
+  ) {
+    this.tryToRemoveFixedView();
 
     const splitData = this.findSplitDataForTab(tab);
     if (!splitData) {
@@ -368,6 +374,10 @@ export class SplitView {
 
     const newSplitData = this.createNewSplitData(splitData, reverse, method);
     this.updateSplitDataIfNeeded(splitData, newSplitData);
+
+    if (fixedSplitViewData().fixedTabId) {
+      this.resetSplitView();
+    }
 
     if (this.shouldDeactivateSplitView(tab)) {
       this.deactivateSplitView();
