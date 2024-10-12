@@ -61,6 +61,20 @@ const JS_WINDOW_ACTORS: {
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
     matches: ["*://localhost/*"],
   },
+  NRTabManager: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRTabManagerParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("./actors/NRTabManagerChild.sys.mts"),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);

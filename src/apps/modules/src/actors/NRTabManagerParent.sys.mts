@@ -5,13 +5,19 @@
 
 export class NRTabManagerParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
-    const data = message.data;
     switch (message.name) {
-      case "Tabs:AddTrustedTab": {
-        window.gBrowser.addTab(data.url, {
-          ...data.options,
+      case "Tabs:AddTab": {
+        const { url, options } = message.data;
+        const win = Services.wm.getMostRecentWindow(
+          "navigator:browser",
+        ) as Window;
+
+        win.gBrowser.selectedTab = win.gBrowser.addTab(url, {
+          ...options,
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
-        this.sendAsyncMessage("Tabs:AddTrustedTab");
+        this.sendAsyncMessage("Tabs:AddTab");
       }
     }
   }
