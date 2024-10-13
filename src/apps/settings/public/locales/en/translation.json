@@ -61,6 +61,7 @@
     "about.aboutNoraneko": "About Noraneko",
     "about.releaseNotes": "Release Notes & More Information",
     "about.noranekoVersion": "Noraneko version: {{browserVersion}} Firefox version: {{firefoxVersion}}",
+    "about.isOfficialBuild": "(Official Build)",
     "about.noranekoDescription": "Noraneko is one of the domestically developed browsers in Japan. It is developed under Ablaze based on Firefox to make the web better.",
     "about.noraneko": "Noraneko",
     "about.copyright": "© 2024 Noraneko Project. All rights reserved.",

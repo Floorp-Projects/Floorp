@@ -14,10 +14,22 @@ import {
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import Card from "../../components/Card";
+import { useConstantsData } from "./utils";
 
 export default function About() {
   const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
+
+  const [constantsData, setConstantsData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    async function fetchConstantsData() {
+      const data = await useConstantsData();
+      console.log(data);
+      setConstantsData(data);
+    }
+    fetchConstantsData();
+  }, []);
 
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
@@ -30,7 +42,7 @@ export default function About() {
           <Image
             src={"chrome://branding/content/about-logo@2x.png"}
             boxSize="48px"
-            alt="ロゴ"
+            alt="logo"
           />
         }
         footerLink="https://noraneko.example.com/about"
@@ -38,8 +50,11 @@ export default function About() {
       >
         <Text fontSize="md" mb={3} color={textColor} w={"700px"}>
           {t("about.noranekoVersion", {
-            browserVersion: "12.0.0",
-            firefoxVersion: "128.0.1",
+            browserVersion: constantsData?.MOZ_APP_VERSION ?? "unknown",
+            firefoxVersion: constantsData?.MOZ_APP_VERSION_DISPLAY ?? "unknown",
+            isOfficialBuild: constantsData?.MOZ_OFFICIAL_BRANDING || true
+              ? t("about.isOfficialBuild")
+              : "",
           })}
         </Text>
 

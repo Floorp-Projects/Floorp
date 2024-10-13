@@ -91,6 +91,20 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*"],
   },
+  NRAppConstants: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRAppConstantsParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("./actors/NRAppConstantsChild.sys.mts"),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
