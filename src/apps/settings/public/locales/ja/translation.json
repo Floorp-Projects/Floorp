@@ -17,7 +17,7 @@
     "designs.photon": "Photon",
     "designs.protonfix": "Firefox UI Fix",
     "designs.fluerial": "Fluerial",
-    "home.welcome": "こうこそ、{{name}} さん👋",
+    "home.welcome": "ようこそ、{{name}} さん👋",
     "home.description": "アカウント、プライバシー、セキュリティを管理して、Noraneko の体験を便利で安全にします。",
     "home.setup.title": "セットアップ",
     "home.setup.footerLinkText": "Mozilla & Ablaze アカウントにログイン",
