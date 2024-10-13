@@ -12,6 +12,7 @@
     "pages.profileAndAccount": "Profile and Account",
     "pages.aboutNoraneko": "About Noraneko",
     "home.welcome": "Welcome, {{name}} 👋",
+    "home.defaultAccountName": "Noraneko User",
     "home.description": "Manage your account, privacy, and security to make your Noraneko experience convenient and safe.",
     "home.setup.title": "Setup",
     "home.setup.footerLinkText": "Login to Mozilla & Ablaze Account",

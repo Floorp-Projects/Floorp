@@ -13,21 +13,32 @@ import {
   Progress,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
+import { useHomeData } from "./utils";
 import { useTranslation } from "react-i18next";
+import React from "react";
+import type { HomeData } from "./utils";
 
 export default function Home() {
   const { t } = useTranslation();
+  const [homeData, setHomeData] = React.useState<HomeData | null>(null);
+
+  React.useEffect(() => {
+    async function fetchHomeData() {
+      const data = await useHomeData();
+      setHomeData(data);
+    }
+    fetchHomeData();
+  }, []);
+
   return (
     <GridItem display="flex" justifyContent="center">
       <VStack align="stretch" alignItems="center" maxW={"900px"} spacing={6}>
         <Flex alignItems="center" flexDirection={"column"}>
-          <Avatar
-            size="xl"
-            src="chrome://browser/skin/fxa/avatar-color.svg"
-            m={4}
-          />
+          <Avatar size="xl" src={homeData?.accountImage} m={4} />
           <Text fontSize="3xl">
-            {t("home.welcome", { name: "名無しのユーザー" })}
+            {t("home.welcome", {
+              name: homeData?.accountName ?? t("home.defaultAccountName"),
+            })}
           </Text>
         </Flex>
         <Text>{t("home.description")}</Text>

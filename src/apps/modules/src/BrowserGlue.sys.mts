@@ -75,6 +75,22 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*"],
   },
+  NRSyncManager: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRSyncManagerParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRSyncManagerChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
