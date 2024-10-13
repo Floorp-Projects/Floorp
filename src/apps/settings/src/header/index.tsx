@@ -4,19 +4,25 @@ import { useNavigate } from "react-router-dom";
 import {
   Flex,
   HStack,
-  Icon,
   IconButton,
   Image,
   Input,
   InputGroup,
   InputLeftElement,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Spacer,
   Text,
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 function Header() {
+  const { t } = useTranslation();
   const { toggleColorMode } = useColorMode();
   const bgColor = useColorModeValue(
     "rgba(255,255,255, 0.7)",
@@ -54,10 +60,10 @@ function Header() {
         boxSize="48px"
         ml={1}
         mr={2}
-        alt="ロゴ"
+        alt={t("header.logoAlt")}
       />
       <Text py={0} fontSize="2xl" pr={10}>
-        Settings
+        {t("header.title")}
       </Text>
       <HStack spacing={2} maxW={"100%"} flex="1 1 auto">
         <form onSubmit={handleSearch} style={{ width: "100%" }}>
@@ -74,7 +80,7 @@ function Header() {
             </InputLeftElement>
             <Input
               type="text"
-              placeholder="Search Settings"
+              placeholder={t("header.searchPlaceholder")}
               _placeholder={{ color: placeholderColor }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -83,13 +89,20 @@ function Header() {
         </form>
       </HStack>
       <Spacer />
+      <Menu>
+        <MenuButton as={IconButton} icon={<IconIcRoundLanguage />} />
+        <MenuList>
+          <MenuItem onClick={() => i18n.changeLanguage("ja")}>日本語</MenuItem>
+          <MenuItem onClick={() => i18n.changeLanguage("en")}>English</MenuItem>
+        </MenuList>
+      </Menu>
       <IconButton
         icon={
           <IconLineMdLightDark
             style={{ fontSize: "16px", color: "currentColor" }}
           />
         }
-        aria-label="Dark Mode"
+        aria-label={t("header.darkMode")}
         onClick={toggleColorMode}
         mx={4}
       />

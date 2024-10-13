@@ -11,6 +11,7 @@ declare global {
   const IconCodiconExtensions: typeof import('~icons/codicon/extensions.jsx')['default']
   const IconIcOutlineKeyboard: typeof import('~icons/ic/outline-keyboard.jsx')['default']
   const IconIcOutlineOpenInNew: typeof import('~icons/ic/outline-open-in-new.jsx')['default']
+  const IconIcRoundLanguage: typeof import('~icons/ic/round-language.jsx')['default']
   const IconIcRoundSearch: typeof import('~icons/ic/round-search.jsx')['default']
   const IconIcRoundTab: typeof import('~icons/ic/round-tab.jsx')['default']
   const IconIcRoundViewSidebar: typeof import('~icons/ic/round-view-sidebar.jsx')['default']

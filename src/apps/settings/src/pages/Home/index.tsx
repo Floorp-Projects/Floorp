@@ -26,21 +26,20 @@ export default function Home() {
             src="chrome://browser/skin/fxa/avatar-color.svg"
             m={4}
           />
-          <Text fontSize="3xl">{t("welcome")}</Text>
+          <Text fontSize="3xl">
+            {t("home.welcome", { name: "名無しのユーザー" })}
+          </Text>
         </Flex>
-        <Text>
-          Manage your account, privacy, and security to make your Noraneko
-          experience convenient and safe.
-        </Text>
+        <Text>{t("home.description")}</Text>
 
         <Grid
           templateColumns={{ base: "repeat(1, 1fr)", lg: "repeat(2, 1fr)" }}
           gap={4}
         >
           <Card
-            title="Setup"
+            title={t("home.setup.title")}
             footerLink="https://support.ablaze.one/setup"
-            footerLinkText="Login to Mozilla & Ablaze Account"
+            footerLinkText={t("home.setup.footerLinkText")}
             icon={
               <IconMdiRocketLaunch
                 style={{ fontSize: "24px", color: "#3182F6" }}
@@ -48,10 +47,10 @@ export default function Home() {
             }
           >
             <Text fontSize="sm" mb={2}>
-              Complete the setup to get the most out of Noraneko.
+              {t("home.setup.setupDescription")}
             </Text>
             <Text fontWeight="bold" fontSize="sm" mb={1}>
-              Progress
+              {t("home.setup.setupProgressTitle")}
             </Text>
             <Progress
               value={50}
@@ -60,12 +59,16 @@ export default function Home() {
               mb={1}
               h={"4px"}
             />
-            <Text fontSize="sm">Step 2/4</Text>
+            <Text fontSize="sm">
+              {t("home.setup.step", { step: 2, total: 4 })}
+            </Text>
           </Card>
           <Card
-            title="Privacy and Tracking Protection"
+            title={t("home.privacyAndTrackingProtection.title")}
             footerLink="https://support.google.com/chrome/answer/95647?hl=ja"
-            footerLinkText="Privacy and Tracking Protection"
+            footerLinkText={t(
+              "home.privacyAndTrackingProtection.footerLinkText",
+            )}
             icon={
               <IconIcSharpPrivacyTip
                 style={{ fontSize: "24px", color: "#137333" }}
@@ -73,52 +76,42 @@ export default function Home() {
             }
           >
             <Text fontSize="sm">
-              Noraneko will work to properly protect your data and privacy by
-              default, but you can also manage it manually.
+              {t("home.privacyAndTrackingProtection.description")}
             </Text>
           </Card>
           <Card
-            title="Ablaze Account"
+            title={t("home.ablazeAccount.title")}
             footerLink="https://accounts.ablaze.one/signin"
-            footerLinkText="Ablaze Account"
+            footerLinkText={t("home.ablazeAccount.footerLinkText")}
             icon={
               <IconMdiAccount style={{ fontSize: "24px", color: "#ff7708" }} />
             }
           >
-            <Text fontSize="sm">
-              Ablaze Account is used to sync some of your data with other
-              devices. It is also used to sync data that cannot be synced with a
-              Mozilla Account.
-            </Text>
+            <Text fontSize="sm">{t("home.ablazeAccount.description")}</Text>
           </Card>
           <Card
-            title="Manage Extensions"
+            title={t("home.manageExtensions.title")}
             footerLink="about:addons"
-            footerLinkText="Manage Extensions"
+            footerLinkText={t("home.manageExtensions.footerLinkText")}
             icon={
               <IconCodiconExtensions
                 style={{ fontSize: "24px", color: "#8400ff" }}
               />
             }
           >
-            <Text fontSize="sm">
-              Noraneko allows you to manage the extensions available on
-              addons.mozilla.org.
-            </Text>
+            <Text fontSize="sm">{t("home.manageExtensions.description")}</Text>
           </Card>
           <Card
-            title="Noraneko Support"
+            title={t("home.noranekoSupport.title")}
             footerLink="https://support.mozilla.org/products/firefox/"
-            footerLinkText="Noraneko Support"
+            footerLinkText={t("home.noranekoSupport.footerLinkText")}
             icon={
               <IconMdiHelpCircle
                 style={{ fontSize: "24px", color: "#3182F6" }}
               />
             }
           >
-            <Text fontSize="sm">
-              You can use the support written by Noraneko contributors.
-            </Text>
+            <Text fontSize="sm">{t("home.noranekoSupport.description")}</Text>
           </Card>
         </Grid>
       </VStack>

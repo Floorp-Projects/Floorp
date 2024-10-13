@@ -10,8 +10,10 @@ import Tabbar from "./tabbar";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { getDesignSettings, saveDesignSettings } from "./saveDesignPref";
 import type { DesignFormData } from "@/type";
+import { useTranslation } from "react-i18next";
 
 export default function Design() {
+  const { t } = useTranslation();
   const methods = useForm<DesignFormData>({
     defaultValues: {},
   });
@@ -47,12 +49,9 @@ export default function Design() {
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10}>
-        Look & Feel
+        {t("design.lookAndFeel")}
       </Text>
-      <Text mb={8}>
-        Customize position of toolbars, change the style of tab bar, and
-        customize appearance of Noraneko.
-      </Text>
+      <Text mb={8}>{t("design.customizePositionOfToolbars")}</Text>
 
       <VStack align="stretch" spacing={6} w="100%">
         <FormProvider {...methods}>

@@ -12,18 +12,20 @@ import {
   Image,
   Spacer,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 import Card from "../../components/Card";
 
 export default function About() {
+  const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
 
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10} color={textColor}>
-        About Noraneko
+        {t("about.aboutNoraneko")}
       </Text>
       <Card
-        title="Noraneko"
+        title={t("about.aboutNoraneko")}
         icon={
           <Image
             src={"chrome://branding/content/about-logo@2x.png"}
@@ -32,15 +34,17 @@ export default function About() {
           />
         }
         footerLink="https://noraneko.example.com/about"
-        footerLinkText="Release Notes & More Information"
+        footerLinkText={t("about.releaseNotes")}
       >
         <Text fontSize="md" mb={3} color={textColor} w={"700px"}>
-          Noraneko version: 12.0.0 Firefox version: 128.0.1
+          {t("about.noranekoVersion", {
+            browserVersion: "12.0.0",
+            firefoxVersion: "128.0.1",
+          })}
         </Text>
 
         <Text color={textColor} mb={4}>
-          Noraneko is one of the domestically developed browsers in Japan. It is
-          developed under Ablaze based on Firefox to make the web better.
+          {t("about.noranekoDescription")}
         </Text>
       </Card>
 
@@ -48,15 +52,13 @@ export default function About() {
 
       <Card>
         <Text mt={-2} fontSize={"sm"} w={"700px"}>
-          Noraneko
+          {t("about.noraneko")}
         </Text>
         <Text color={textColor} fontSize="sm" mb={2}>
-          © 2024 Noraneko Project. All rights reserved.
+          {t("about.copyright")}
         </Text>
         <Text fontSize="sm" mb={4} color={textColor}>
-          Noraneko is open-source software available to everyone under the
-          Mozilla Public License 2.0, made possible by the Firefox open-source
-          project and other open-source software.
+          {t("about.openSourceLicense")}
         </Text>
         <Link
           href="https://docs.floorp.app/ja/docs/other/contributors"
@@ -66,7 +68,7 @@ export default function About() {
           alignItems="center"
           color={useColorModeValue("blue.500", "blue.400")}
         >
-          Open Source License
+          {t("about.openSourceLicenseNotice")}
           <IconIcOutlineOpenInNew
             style={{ fontSize: "16px", marginLeft: "4px" }}
           />

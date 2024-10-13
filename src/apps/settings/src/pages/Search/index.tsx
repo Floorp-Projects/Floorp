@@ -7,7 +7,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { extractTextContent } from "./extractTextContent";
-import { pages } from "../../pageData";
+import { usePageData } from "../../pageData";
 import Card from "../../components/Card";
 import {
   Text,
@@ -17,6 +17,7 @@ import {
   useColorModeValue,
   Divider,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 
 interface SearchResult {
   component: React.ReactElement;
@@ -27,6 +28,7 @@ interface SearchResult {
 }
 
 function SearchResult({ result }: { result: SearchResult }) {
+  const { t } = useTranslation();
   return (
     <Card title={result.title} icon={result.icon}>
       <Link
@@ -38,14 +40,14 @@ function SearchResult({ result }: { result: SearchResult }) {
         mb={2}
         color={useColorModeValue("blue.500", "blue.400")}
       >
-        Open {result.title}
+        {t("search.open", { title: result.title })}
         <IconIcOutlineOpenInNew
           style={{ fontSize: "16px", marginLeft: "4px" }}
         />
       </Link>
       <Divider />
       <Text fontSize="sm" fontWeight="bold" mt={2}>
-        Matched Text
+        {t("search.matchedText")}
       </Text>
 
       <Text fontSize="sm" mt={2}>
@@ -56,15 +58,16 @@ function SearchResult({ result }: { result: SearchResult }) {
 }
 
 function SearchResults() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-
+  const pageData = usePageData();
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const query = searchParams.get("q");
 
     if (query) {
-      const resultList = Object.values(pages).map((page) => {
+      const resultList = Object.values(pageData).map((page) => {
         if (page.component === null) {
           return null;
         }
@@ -84,17 +87,18 @@ function SearchResults() {
     } else {
       setSearchResults([]);
     }
-  }, [location.search]);
+  }, [location.search, pageData]);
 
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10}>
-        Search Results
+        {t("search.results")}
       </Text>
 
       <Text fontSize="sm" mb={8}>
-        Search results for "{location.search.slice(3)}". Only Noraneko settings
-        are searched, Firefox settings are not included in the search.
+        {t("search.searchResultsDescription", {
+          query: new URLSearchParams(location.search).get("q") ?? "",
+        })}
       </Text>
 
       <VStack align="stretch" spacing={6} w="100%">
@@ -103,7 +107,7 @@ function SearchResults() {
             <SearchResult key={result.path} result={result} />
           ))
         ) : (
-          <Text fontSize="xl">No results found.</Text>
+          <Text fontSize="xl">{t("search.noResults")}</Text>
         )}
       </VStack>
     </Flex>

@@ -18,21 +18,22 @@ import Card from "../../components/Card";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import type { DesignFormData } from "@/type";
+import { useTranslation } from "react-i18next";
 
 export default function Tabbar() {
+  const { t } = useTranslation();
   const { control } = useFormContext<DesignFormData>();
   return (
     <Card
       icon={<IconIcRoundTab style={{ fontSize: "24px", color: "#137333" }} />}
-      title="Tab Bar"
+      title={t("design.tabBar")}
       footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-      footerLinkText="Customize Tab bar"
+      footerLinkText={t("design.customizeTabBar")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
-        <Text fontSize="lg">Style</Text>
+        <Text fontSize="lg">{t("design.style")}</Text>
         <Text fontSize="sm" mt={-1}>
-          Select the style og the tabbar. "Multi-row" stacks tab on multiple
-          rows reducing tab size
+          {t("design.styleDescription")}
         </Text>
         <Controller<DesignFormData, "style">
           name="style"
@@ -46,27 +47,25 @@ export default function Tabbar() {
               value={value}
               ref={ref}
             >
-              <Radio value="horizontal">Horizontal</Radio>
-              <Radio value="multirow">Multi-row</Radio>
+              <Radio value="horizontal">{t("design.horizontal")}</Radio>
+              <Radio value="multirow">{t("design.multirow")}</Radio>
             </RadioGroup>
           )}
         />
         <Alert status="info" rounded={"md"}>
           <AlertIcon />
           <AlertDescription>
-            Vertical Tab is removed from Noraneko. Use Firefox native Vertical
-            Tab Bar instead.
+            {t("design.verticalTabIsRemovedFromNoraneko")}
             <br />
             <Link color="blue.500" href="https://support.mozilla.org">
-              Learn more
+              {t("design.learnMore")}
             </Link>
           </AlertDescription>
         </Alert>
         <Divider />
-        <Text fontSize="lg">Position</Text>
+        <Text fontSize="lg">{t("design.position")}</Text>
         <Text fontSize="sm" mt={-1}>
-          Placing the tab bar outside the bottom of the window moves the buttons
-          for operating the window
+          {t("design.positionDescription")}
         </Text>
         <Controller
           name="position"
@@ -80,16 +79,18 @@ export default function Tabbar() {
               value={value}
               ref={ref}
             >
-              <Radio value="default">Default</Radio>
-              <Radio value="hide-horizontal-tabbar">Hide Tab Bar</Radio>
+              <Radio value="default">{t("design.default")}</Radio>
+              <Radio value="hide-horizontal-tabbar">
+                {t("design.hideTabBar")}
+              </Radio>
               <Radio value="optimise-to-vertical-tabbar">
-                Hide Tab Bar & Title Bar
+                {t("design.hideTabBarAndTitleBar")}
               </Radio>
               <Radio value="bottom-of-navigation-toolbar">
-                Show Tab Bar on Bottom of Navigation Bar
+                {t("design.showTabBarOnBottomOfNavigationBar")}
               </Radio>
               <Radio value="bottom-of-window">
-                Show Tab Bar on Bottom of Window
+                {t("design.showTabBarOnBottomOfWindow")}
               </Radio>
             </RadioGroup>
           )}

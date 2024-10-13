@@ -7,21 +7,25 @@ import { GridItem, VStack, Divider } from "@chakra-ui/react";
 import MenuItem from "../components/MenuItem";
 import { useMediaQuery } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
-import { pages } from "../pageData";
+import { usePageData } from "../pageData";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 function Sidebar() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
   const location = useLocation();
+  const pageData = usePageData();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (document) {
+      const pathKey =
+        location.pathname === "/" ? "home" : location.pathname.slice(1);
       const title =
-        pages[location.pathname === "/" ? "home" : location.pathname.slice(1)]
-          ?.text ?? "Noraneko Settings";
+        pageData[pathKey as keyof typeof pageData]?.text ?? "Noraneko Settings";
       document.title = title;
     }
-  }, [location.pathname]);
+  }, [location.pathname, pageData]);
 
   return (
     <GridItem
@@ -32,14 +36,17 @@ function Sidebar() {
       overflowY={"scroll"}
     >
       <VStack align="stretch" spacing={2}>
-        {Object.keys(pages).map((key) => {
+        {Object.keys(usePageData()).map((key) => {
           return (
             <MenuItem
               key={key}
-              to={pages[key].path}
-              icon={pages[key].icon}
-              text={pages[key].text}
-              selected={location.pathname === pages[key].path}
+              to={pageData[key as keyof typeof pageData].path}
+              icon={pageData[key as keyof typeof pageData].icon}
+              text={pageData[key as keyof typeof pageData].text}
+              selected={
+                location.pathname ===
+                pageData[key as keyof typeof pageData].path
+              }
             />
           );
         })}
@@ -50,7 +57,7 @@ function Sidebar() {
               style={{ fontSize: "16px", color: "currentColor" }}
             />
           }
-          text="Firefox Settings"
+          text={t("sidebar.firefoxSettings")}
           onClick={() => {
             window.NRAddTab("about:preferences");
           }}

@@ -19,19 +19,26 @@ const RadioCard: React.FC<RadioCardProps> = ({
   return (
     <Card
       as="label"
-      width="150px"
+      width="180px"
       height="110px"
       cursor="pointer"
       borderWidth="2px"
       borderRadius="md"
-      boxShadow="md"
+      boxShadow="base"
       borderColor={isChecked ? "blue.500" : "transparent"}
     >
-      <CardBody px={2} pt={2} pb={1}>
+      <CardBody px={2} pt={3} pb={1}>
         <input {...inputProps} />
         <Box {...radioProps}>
-          <Image src={image} alt={title} h="70px" w="145px" rounded="md" />
-          <Text fontSize="15px" fontWeight="600" mt={1.4}>
+          <Image
+            src={image}
+            alt={title}
+            h="60px"
+            w="180px"
+            rounded="md"
+            boxShadow="lg"
+          />
+          <Text fontSize="15px" fontWeight="600" mt={1.5}>
             {title}
           </Text>
         </Box>

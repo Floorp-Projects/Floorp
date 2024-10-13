@@ -12,7 +12,6 @@ import Workspaces from "./pages/Workspaces";
 import Design from "./pages/Design";
 import About from "./pages/About";
 import SearchResults from "./pages/Search/index";
-import i18n from "./i18n";
 
 export default function App() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
