@@ -36,7 +36,7 @@ export const zFloorpDesignConfigs = z.object({
   }),
   tab: z.object({
     tabbarScroll: z.object({
-      enable: z.boolean(),
+      enabled: z.boolean(),
       reverse: z.boolean(),
       wrap: z.boolean(),
     }),

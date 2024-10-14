@@ -3,13 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  createEffect,
-  For,
-  type ParentProps,
-  PropsWithChildren,
-  Show,
-} from "solid-js";
+import { createEffect, For, Show } from "solid-js";
 import type { z } from "zod";
 import type { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
 import { applyUserJS } from "./userjs-parser";

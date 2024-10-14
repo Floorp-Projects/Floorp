@@ -43,7 +43,7 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
   },
   tab: {
     tabbarScroll: {
-      enable: Services.prefs.getBoolPref("floorp.tabscroll.enable", false),
+      enabled: Services.prefs.getBoolPref("floorp.tabscroll.enable", false),
       reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
       wrap: Services.prefs.getBoolPref("floorp.tabscroll.wrap", false),
     },

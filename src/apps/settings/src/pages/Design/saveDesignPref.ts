@@ -39,6 +39,7 @@ export async function saveDesignSettings(settings: DesignFormData) {
               ...oldData.tab.tabbarScroll,
               reverse: settings.tabScrollReverse,
               wrap: settings.tabScrollWrap,
+              enabled: settings.tabScroll,
             },
             tabbarOpenPosition: settings.tabOpenPosition,
             tabbarMinHeight: settings.tabMinHeight,
@@ -85,7 +86,7 @@ export async function getDesignSettings(): Promise<DesignFormData> {
           tabScrollReverse: data.tab.tabbarScroll.reverse,
           tabScrollWrap: data.tab.tabbarScroll.wrap,
           tabDubleClickToClose: data.tab.tabDubleClickToClose,
-          tabScroll: data.tab.tabbarScroll.enable,
+          tabScroll: data.tab.tabbarScroll.enabled,
         };
         resolve(formData);
       },
