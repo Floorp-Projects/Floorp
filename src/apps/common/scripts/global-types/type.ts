@@ -35,14 +35,14 @@ export const zFloorpDesignConfigs = z.object({
     }),
   }),
   tab: z.object({
-    tabbarScroll: z.object({
+    tabScroll: z.object({
       enabled: z.boolean(),
       reverse: z.boolean(),
       wrap: z.boolean(),
     }),
-    tabbarMinHeight: z.number(),
-    tabbarMinWidth: z.number(),
-    tabbarPinTitle: z.boolean(),
+    tabMinHeight: z.number(),
+    tabMinWidth: z.number(),
+    tabPinTitle: z.boolean(),
     tabDubleClickToClose: z.boolean(),
     tabOpenPosition: z.number(),
   }),

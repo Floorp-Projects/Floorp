@@ -24,8 +24,11 @@ export const overrides = [
 
         const OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
           "floorp.browser.tabs.openNewTabPosition",
-          2,
+          -1,
         );
+
+        console.log(OPEN_NEW_TAB_POSITION_PREF);
+
         switch (OPEN_NEW_TAB_POSITION_PREF) {
           case 0:
             // Open the new tab as unrelated to the current tab.
@@ -66,7 +69,6 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = WorkspacesServices.getInstance();
-      console.log(gWorkspacesServices.getCurrentWorkspaceUserContextId);
 
       Services.obs.notifyObservers(
         {

@@ -20,7 +20,7 @@ export const usePageData = () => {
       icon: (
         <IconMdiDesign style={{ fontSize: "16px", color: "currentColor" }} />
       ),
-      text: t("pages.lookAndFeel"),
+      text: t("pages.tabAndAppearance"),
       component: <Design />,
     },
     sidebar: {

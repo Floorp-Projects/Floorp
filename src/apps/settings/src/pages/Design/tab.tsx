@@ -21,24 +21,27 @@ import { useTranslation } from "react-i18next";
 
 export default function Tab() {
   const { t } = useTranslation();
-  const { control } = useFormContext<DesignFormData>();
+  const { control, getValues } = useFormContext<DesignFormData>();
   return (
     <Card
       icon={
         <IconFluentMdl2Tab style={{ fontSize: "24px", color: "#ff7708" }} />
       }
-      title={"タブ"}
+      title={t("design.tab.title")}
       footerLink="https://noraneko.example.com/help/customize-tab-bar"
-      footerLinkText={"タブのカスタマイズについて"}
+      footerLinkText={t("design.tab.footerLinkText")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
-        <Text fontSize="lg">スクロール</Text>
+        <Text fontSize="lg">{t("design.tab.scroll")}</Text>
+        <Text fontSize="sm" mt={-1}>
+          {t("design.tab.scrollDescription")}
+        </Text>
         <Controller
           name="tabScroll"
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブをスクロールで切り替える</Text>
+              <Text>{t("design.tab.scrollTab")}</Text>
               <Switch
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
@@ -52,8 +55,9 @@ export default function Tab() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブのスクロール方向を反転する</Text>
+              <Text>{t("design.tab.reverseScroll")}</Text>
               <Switch
+                isDisabled={!getValues("tabScroll")}
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
                 isChecked={value}
@@ -66,8 +70,9 @@ export default function Tab() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブのスクロールをループさせる</Text>
+              <Text>{t("design.tab.scrollWrap")}</Text>
               <Switch
+                isDisabled={!getValues("tabScroll")}
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
                 isChecked={value}
@@ -76,7 +81,10 @@ export default function Tab() {
           )}
         />
         <Divider />
-        <Text fontSize="lg">新しいタブを開く位置</Text>
+        <Text fontSize="lg">{t("design.tab.openPosition")}</Text>
+        <Text fontSize="sm" mt={-1}>
+          {t("design.tab.openPositionDescription")}
+        </Text>
         <Controller
           name="tabOpenPosition"
           control={control}
@@ -89,20 +97,20 @@ export default function Tab() {
               value={value?.toString()}
               ref={ref}
             >
-              <Radio value="-1">デフォルトの設定（Firefox に従う）</Radio>
-              <Radio value="0">タブバーの最後尾に開く</Radio>
-              <Radio value="1">現在のタブの隣に開く</Radio>
+              <Radio value="-1">{t("design.tab.openDefault")}</Radio>
+              <Radio value="0">{t("design.tab.openLast")}</Radio>
+              <Radio value="1">{t("design.tab.openNext")}</Radio>
             </RadioGroup>
           )}
         />
         <Divider />
-        <Text fontSize="lg">その他のタブ設定</Text>
+        <Text fontSize="lg">{t("design.tab.other")}</Text>
         <Controller
           name="tabPinTitle"
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>ピン止めされたタブのタイトルを表示する</Text>
+              <Text>{t("design.tab.pinTitle")}</Text>
               <Switch
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
@@ -116,7 +124,7 @@ export default function Tab() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブをダブルクリックで閉じる</Text>
+              <Text>{t("design.tab.doubleClickToClose")}</Text>
               <Switch
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
@@ -130,7 +138,7 @@ export default function Tab() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブの最小幅</Text>
+              <Text>{t("design.tab.minWidth")}</Text>
               <Input
                 width="200px"
                 min={60}
@@ -147,7 +155,7 @@ export default function Tab() {
           control={control}
           render={({ field: { onChange, value } }) => (
             <Flex justifyContent="space-between" alignItems="center">
-              <Text>タブの最小高さ</Text>
+              <Text>{t("design.tab.minHeight")}</Text>
               <Input
                 width="200px"
                 height="40px"

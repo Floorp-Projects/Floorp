@@ -17,12 +17,12 @@ export const zDesignFormData = z.object({
 
   // Tab
   tabOpenPosition: zFloorpDesignConfigs.shape.tab.shape.tabOpenPosition,
-  tabMinHeight: zFloorpDesignConfigs.shape.tab.shape.tabbarMinHeight,
-  tabMinWidth: zFloorpDesignConfigs.shape.tab.shape.tabbarMinWidth,
-  tabPinTitle: zFloorpDesignConfigs.shape.tab.shape.tabbarPinTitle,
-  tabScroll: zFloorpDesignConfigs.shape.tab.shape.tabbarScroll.shape.enable,
-  tabScrollReverse: zFloorpDesignConfigs.shape.tab.shape.tabbarScroll.shape.reverse,
-  tabScrollWrap: zFloorpDesignConfigs.shape.tab.shape.tabbarScroll.shape.wrap,
+  tabMinHeight: zFloorpDesignConfigs.shape.tab.shape.tabMinHeight,
+  tabMinWidth: zFloorpDesignConfigs.shape.tab.shape.tabMinWidth,
+  tabPinTitle: zFloorpDesignConfigs.shape.tab.shape.tabPinTitle,
+  tabScroll: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.enabled,
+  tabScrollReverse: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.reverse,
+  tabScrollWrap: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.wrap,
   tabDubleClickToClose: zFloorpDesignConfigs.shape.tab.shape.tabDubleClickToClose,
 });
 

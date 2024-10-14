@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DesignFormData } from "../../type";
-import { zFloorpDesignConfigs } from "../../../../../apps/common/scripts/global-types/type";
+import { zFloorpDesignConfigs, type zFloorpDesignConfigsType } from "../../../../../apps/common/scripts/global-types/type";
 
 export async function saveDesignSettings(settings: DesignFormData) {
   if (Object.keys(settings).length === 0) {
     return;
   }
+
+  console.log(settings);
 
   return await new Promise((resolve) => {
     window.NRSPrefGet(
@@ -22,7 +24,7 @@ export async function saveDesignSettings(settings: DesignFormData) {
           JSON.parse(JSON.parse(stringData).prefValue),
         );
 
-        const newData = {
+        const newData: zFloorpDesignConfigsType = {
           ...oldData,
           globalConfigs: {
             ...oldData.globalConfigs,
@@ -35,16 +37,16 @@ export async function saveDesignSettings(settings: DesignFormData) {
           },
           tab: {
             ...oldData.tab,
-            tabbarScroll: {
-              ...oldData.tab.tabbarScroll,
+            tabScroll: {
+              ...oldData.tab.tabScroll,
               reverse: settings.tabScrollReverse,
               wrap: settings.tabScrollWrap,
               enabled: settings.tabScroll,
             },
-            tabbarOpenPosition: settings.tabOpenPosition,
-            tabbarMinHeight: settings.tabMinHeight,
-            tabbarMinWidth: settings.tabMinWidth,
-            tabbarPinTitle: settings.tabPinTitle,
+            tabOpenPosition: settings.tabOpenPosition,
+            tabMinHeight: settings.tabMinHeight,
+            tabMinWidth: settings.tabMinWidth,
+            tabPinTitle: settings.tabPinTitle,
             tabDubleClickToClose: settings.tabDubleClickToClose,
           },
         };
@@ -80,13 +82,13 @@ export async function getDesignSettings(): Promise<DesignFormData> {
           position: data.tabbar.tabbarPosition,
           style: data.tabbar.tabbarStyle,
           tabOpenPosition: data.tab.tabOpenPosition,
-          tabMinHeight: data.tab.tabbarMinHeight,
-          tabMinWidth: data.tab.tabbarMinWidth,
-          tabPinTitle: data.tab.tabbarPinTitle,
-          tabScrollReverse: data.tab.tabbarScroll.reverse,
-          tabScrollWrap: data.tab.tabbarScroll.wrap,
+          tabMinHeight: data.tab.tabMinHeight,
+          tabMinWidth: data.tab.tabMinWidth,
+          tabPinTitle: data.tab.tabPinTitle,
+          tabScrollReverse: data.tab.tabScroll.reverse,
+          tabScrollWrap: data.tab.tabScroll.wrap,
           tabDubleClickToClose: data.tab.tabDubleClickToClose,
-          tabScroll: data.tab.tabbarScroll.enabled,
+          tabScroll: data.tab.tabScroll.enabled,
         };
         resolve(formData);
       },

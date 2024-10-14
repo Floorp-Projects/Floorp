@@ -69,7 +69,6 @@ export default function Interface() {
                 {t("design.useFaviconColorToBackgroundOfNavigationBar")}
               </Text>
               <Switch
-                size="lg"
                 colorScheme={"blue"}
                 onChange={(e) => onChange(e.target.checked)}
                 isChecked={value}

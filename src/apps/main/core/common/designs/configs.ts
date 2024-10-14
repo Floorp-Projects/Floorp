@@ -42,17 +42,17 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
     },
   },
   tab: {
-    tabbarScroll: {
+    tabScroll: {
       enabled: Services.prefs.getBoolPref("floorp.tabscroll.enable", false),
       reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
       wrap: Services.prefs.getBoolPref("floorp.tabscroll.wrap", false),
     },
-    tabbarMinHeight: Services.prefs.getIntPref(
+    tabMinHeight: Services.prefs.getIntPref(
       "floorp.browser.tabs.tabMinHeight",
       30,
     ),
-    tabbarMinWidth: Services.prefs.getIntPref("browser.tabs.tabMinWidth", 76),
-    tabbarPinTitle: Services.prefs.getBoolPref(
+    tabMinWidth: Services.prefs.getIntPref("browser.tabs.tabMinWidth", 76),
+    tabPinTitle: Services.prefs.getBoolPref(
       "floorp.tabs.showPinnedTabsTitle",
       false,
     ),

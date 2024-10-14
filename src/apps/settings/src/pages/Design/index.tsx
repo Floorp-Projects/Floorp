@@ -50,7 +50,7 @@ export default function Design() {
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10}>
-        {t("design.lookAndFeel")}
+        {t("design.tabAndAppearance")}
       </Text>
       <Text mb={8}>{t("design.customizePositionOfToolbars")}</Text>
 

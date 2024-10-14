@@ -26,13 +26,13 @@ export class TabScroll {
     tabBrowserTabs: XULTabElement,
   ) => {
     if (Services.prefs.getBoolPref("toolkit.tabbox.switchByScrolling")) {
-      if (event.deltaY > 0 !== config().tab.tabbarScroll.reverse) {
+      if (event.deltaY > 0 !== config().tab.tabScroll.reverse) {
         tabBrowserTabs?.advanceSelectedTab(
           1,
-          config().tab.tabbarScroll.reverse,
+          config().tab.tabScroll.reverse,
         );
       } else {
-        tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabbarScroll.wrap);
+        tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabScroll.wrap);
       }
       event.preventDefault();
       event.stopPropagation();
@@ -50,7 +50,7 @@ export class TabScroll {
     }
 
     createEffect(() => {
-      const isEnable = config().tab.tabbarScroll.enabled;
+      const isEnable = config().tab.tabScroll.enabled;
       Services.prefs.setBoolPref("toolkit.tabbox.switchByScrolling", isEnable);
     });
   }
