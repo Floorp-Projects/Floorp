@@ -10,10 +10,10 @@ export const handleOnWheel = (
   tabBrowserTabs: XULElement,
 ) => {
   if (Services.prefs.getBoolPref("toolkit.tabbox.switchByScrolling")) {
-    if (event.deltaY > 0 !== config().tabbar.tabScroll.reverse) {
-      tabBrowserTabs?.advanceSelectedTab(1, config().tabbar.tabScroll.reverse);
+    if (event.deltaY > 0 !== config().tab.tabbarScroll.reverse) {
+      tabBrowserTabs?.advanceSelectedTab(1, config().tab.tabbarScroll.reverse);
     } else {
-      tabBrowserTabs?.advanceSelectedTab(-1, config().tabbar.tabScroll.wrap);
+      tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabbarScroll.wrap);
     }
     event.preventDefault();
     event.stopPropagation();

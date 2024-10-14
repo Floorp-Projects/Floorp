@@ -20,6 +20,10 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
     appliedUserJs: "",
   },
   tabbar: {
+    paddingEnabled: Services.prefs.getBoolPref(
+      "floorp.verticaltab.paddingtop.enabled",
+      false,
+    ),
     tabbarStyle: getOldTabbarStyleConfig(),
     tabbarPosition: getOldTabbarPositionConfig(),
     multiRowTabBar: {
@@ -43,10 +47,7 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
       "floorp.browser.tabs.tabMinHeight",
       30,
     ),
-    tabbarMinWidth: Services.prefs.getIntPref(
-      "browser.tabs.tabMinWidth",
-      76,
-    ),
+    tabbarMinWidth: Services.prefs.getIntPref("browser.tabs.tabMinWidth", 76),
     tabbarPinTitle: Services.prefs.getBoolPref(
       "floorp.tabs.showPinnedTabsTitle",
       false,

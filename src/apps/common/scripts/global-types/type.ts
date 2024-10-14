@@ -20,6 +20,7 @@ export const zFloorpDesignConfigs = z.object({
   }),
   tabbar: z.object({
     tabbarStyle: z.enum(["horizontal", "vertical", "multirow"]),
+    paddingEnabled: z.boolean(),
     tabbarPosition: z.enum([
       "hide-horizontal-tabbar",
       "optimise-to-vertical-tabbar",

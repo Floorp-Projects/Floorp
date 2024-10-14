@@ -5,7 +5,6 @@
 
 import { createEffect } from "solid-js";
 import { gTabbarStyleFunctions } from "./tabbbar-style-functions";
-import { checkPaddingEnabled } from "./titilebar-padding";
 import { handleOnWheel } from "./tabbar-on-wheel";
 
 export class gTabbarStyleClass {
@@ -30,7 +29,6 @@ export class gTabbarStyleClass {
     );
 
     gTabbarStyleFunctions.applyTabbarStyle();
-    checkPaddingEnabled();
 
     const tabBrowserTabs = document.querySelector(
       "#tabbrowser-tabs",
@@ -43,7 +41,6 @@ export class gTabbarStyleClass {
 
     createEffect(() => {
       gTabbarStyleFunctions.applyTabbarStyle();
-      checkPaddingEnabled();
     });
   }
 }
