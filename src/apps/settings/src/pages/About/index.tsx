@@ -48,11 +48,11 @@ export default function About() {
         footerLink="https://noraneko.example.com/about"
         footerLinkText={t("about.releaseNotes")}
       >
-        <Text fontSize="md" mb={3} color={textColor} w={"700px"}>
+        <Text fontSize="md" mb={3} color={textColor} maxW={"700px"}>
           {t("about.noranekoVersion", {
             browserVersion: constantsData?.MOZ_APP_VERSION ?? "unknown",
             firefoxVersion: constantsData?.MOZ_APP_VERSION_DISPLAY ?? "unknown",
-            isOfficialBuild: constantsData?.MOZ_OFFICIAL_BRANDING || true
+            isOfficialBuild: constantsData?.MOZ_OFFICIAL_BRANDING
               ? t("about.isOfficialBuild")
               : "",
           })}
@@ -66,7 +66,7 @@ export default function About() {
       <Spacer my={4} />
 
       <Card>
-        <Text mt={-2} fontSize={"sm"} w={"700px"}>
+        <Text mt={-2} fontSize={"sm"} maxW={"600px"}>
           {t("about.noraneko")}
         </Text>
         <Text color={textColor} fontSize="sm" mb={2}>
