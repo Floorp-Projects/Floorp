@@ -33,6 +33,19 @@ export async function saveDesignSettings(settings: DesignFormData) {
             tabbarPosition: settings.position,
             tabbarStyle: settings.style,
           },
+          tab: {
+            ...oldData.tab,
+            tabbarScroll: {
+              ...oldData.tab.tabbarScroll,
+              reverse: settings.tabScrollReverse,
+              wrap: settings.tabScrollWrap,
+            },
+            tabbarOpenPosition: settings.tabOpenPosition,
+            tabbarMinHeight: settings.tabMinHeight,
+            tabbarMinWidth: settings.tabMinWidth,
+            tabbarPinTitle: settings.tabPinTitle,
+            tabDubleClickToClose: settings.tabDubleClickToClose,
+          },
         };
 
         window.NRSPrefSet(
@@ -65,6 +78,14 @@ export async function getDesignSettings(): Promise<DesignFormData> {
           faviconColor: true,
           position: data.tabbar.tabbarPosition,
           style: data.tabbar.tabbarStyle,
+          tabOpenPosition: data.tab.tabOpenPosition,
+          tabMinHeight: data.tab.tabbarMinHeight,
+          tabMinWidth: data.tab.tabbarMinWidth,
+          tabPinTitle: data.tab.tabbarPinTitle,
+          tabScrollReverse: data.tab.tabbarScroll.reverse,
+          tabScrollWrap: data.tab.tabbarScroll.wrap,
+          tabDubleClickToClose: data.tab.tabDubleClickToClose,
+          tabScroll: data.tab.tabbarScroll.enable,
         };
         resolve(formData);
       },

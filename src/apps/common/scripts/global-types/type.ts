@@ -31,17 +31,17 @@ export const zFloorpDesignConfigs = z.object({
       maxRowEnabled: z.boolean(),
       maxRow: z.number(),
     }),
-    verticalTabBar: z.object({
-      hoverEnabled: z.boolean(),
-      paddingEnabled: z.boolean(),
-      width: z.number(),
-    }),
-    tabScroll: z.object({
-      reverse: z.boolean(),
-      wrap: z.number(),
-    }),
   }),
-  fluerial: z.object({
-    roundVerticalTabs: z.boolean(),
+  tab: z.object({
+    tabbarScroll: z.object({
+      enable: z.boolean(),
+      reverse: z.boolean(),
+      wrap: z.boolean(),
+    }),
+    tabbarMinHeight: z.number(),
+    tabbarMinWidth: z.number(),
+    tabbarPinTitle: z.boolean(),
+    tabDubleClickToClose: z.boolean(),
+    tabOpenPosition: z.number(),
   }),
 });

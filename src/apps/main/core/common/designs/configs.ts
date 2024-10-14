@@ -32,26 +32,32 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
         3,
       ),
     },
-    verticalTabBar: {
-      hoverEnabled: false,
-      paddingEnabled: Services.prefs.getBoolPref(
-        "floorp.verticaltab.paddingtop.enabled",
-        false,
-      ),
-      width: Services.prefs.getIntPref(
-        "floorp.browser.tabs.verticaltab.width",
-        200,
-      ),
-    },
-    tabScroll: {
-      reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
-      wrap: Services.prefs.getIntPref("floorp.tabscroll.wrap", 1),
-    },
   },
-  fluerial: {
-    roundVerticalTabs: Services.prefs.getBoolPref(
-      "floorp.fluerial.roundVerticalTabs",
+  tab: {
+    tabbarScroll: {
+      enable: Services.prefs.getBoolPref("floorp.tabscroll.enable", false),
+      reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
+      wrap: Services.prefs.getBoolPref("floorp.tabscroll.wrap", false),
+    },
+    tabbarMinHeight: Services.prefs.getIntPref(
+      "floorp.browser.tabs.tabMinHeight",
+      30,
+    ),
+    tabbarMinWidth: Services.prefs.getIntPref(
+      "browser.tabs.tabMinWidth",
+      76,
+    ),
+    tabbarPinTitle: Services.prefs.getBoolPref(
+      "floorp.tabs.showPinnedTabsTitle",
       false,
+    ),
+    tabDubleClickToClose: Services.prefs.getBoolPref(
+      "browser.tabs.closeTabByDblclick",
+      false,
+    ),
+    tabOpenPosition: Services.prefs.getIntPref(
+      "floorp.browser.tabs.openTabPosition",
+      -1,
     ),
   },
 };

@@ -11,6 +11,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { getDesignSettings, saveDesignSettings } from "./saveDesignPref";
 import type { DesignFormData } from "@/type";
 import { useTranslation } from "react-i18next";
+import Tab from "./tab";
 
 export default function Design() {
   const { t } = useTranslation();
@@ -57,6 +58,7 @@ export default function Design() {
         <FormProvider {...methods}>
           <Interface />
           <Tabbar />
+          <Tab />
         </FormProvider>
       </VStack>
     </Flex>
