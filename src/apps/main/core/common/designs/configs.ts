@@ -17,6 +17,10 @@ import {
 const oldObjectConfigs: zFloorpDesignConfigsType = {
   globalConfigs: {
     userInterface: getOldInterfaceConfig(),
+    faviconColor: Services.prefs.getBoolPref(
+      "floorp.titlebar.favicon.color",
+      true,
+    ),
     appliedUserJs: "",
   },
   tabbar: {

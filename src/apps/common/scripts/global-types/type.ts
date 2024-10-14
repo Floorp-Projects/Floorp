@@ -9,6 +9,7 @@ export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
 
 export const zFloorpDesignConfigs = z.object({
   globalConfigs: z.object({
+    faviconColor: z.boolean(),
     userInterface: z.enum([
       "fluerial",
       "lepton",

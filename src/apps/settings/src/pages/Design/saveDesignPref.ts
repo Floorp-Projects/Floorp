@@ -75,7 +75,7 @@ export async function getDesignSettings(): Promise<DesignFormData> {
         );
         const formData: DesignFormData = {
           design: data.globalConfigs.userInterface,
-          faviconColor: true,
+          faviconColor: data.globalConfigs.faviconColor,
           position: data.tabbar.tabbarPosition,
           style: data.tabbar.tabbarStyle,
           tabOpenPosition: data.tab.tabOpenPosition,
