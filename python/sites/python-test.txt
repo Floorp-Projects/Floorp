@@ -5,7 +5,7 @@ pypi:Flask==2.1.3
 pypi:MarkupSafe==2.0.1
 # (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
 pypi:werkzeug==2.1.2
-pypi:zstandard==0.22.0
+pypi:zstandard==0.23.0
 vendored:testing/web-platform/tests/tools/third_party/h2/src
 vendored:testing/web-platform/tests/tools/third_party/hpack/src
 vendored:testing/web-platform/tests/tools/third_party/html5lib
