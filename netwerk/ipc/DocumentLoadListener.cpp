@@ -2028,6 +2028,15 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
           return;
         }
 
+        // At this point the element has stored the container feature policy in
+        // the new browsing context, but we need to make sure that we copy it
+        // over to the load info.
+        nsCOMPtr<nsILoadInfo> loadInfo = self->mChannel->LoadInfo();
+        if (aBrowsingContext->GetContainerFeaturePolicy()) {
+          loadInfo->SetContainerFeaturePolicyInfo(
+              *aBrowsingContext->GetContainerFeaturePolicy());
+        }
+
         MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
                 ("Process Switch: Upgraded Object to Document Load"));
         self->TriggerProcessSwitch(aBrowsingContext, options);

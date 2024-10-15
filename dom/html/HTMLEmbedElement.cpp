@@ -79,6 +79,10 @@ void HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
   }
 
+  if (aName == nsGkAtoms::src) {
+    RefreshFeaturePolicy();
+  }
+
   if (aNamespaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::allowfullscreen && mFrameLoader) {
     if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
