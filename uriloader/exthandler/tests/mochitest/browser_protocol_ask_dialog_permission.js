@@ -1381,3 +1381,33 @@ add_task(async function test_redirect_principal_links() {
     });
   });
 });
+
+add_task(async function test_unloaded_iframe() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    await testOpenProto(browser, scheme, {
+      triggerLoad() {
+        let uri = `${scheme}://test`;
+        return ContentTask.spawn(browser, { uri }, args => {
+          let frame = content.document.createElement("iframe");
+          frame.setAttribute("loading", "lazy");
+          frame.setAttribute("src", "about:blank");
+          frame.setAttribute("style", "margin-top: 10000px;");
+          frame.setAttribute("name", "yo");
+          content.document.body.append(frame);
+          // Navigate...
+          content.open(args.uri, "yo");
+          // Then remove the iframe again so that we can't find a
+          // currentWindowGlobal for the BC once we show the dialog.
+          frame.remove();
+        });
+      },
+      permDialogOptions: {
+        checkboxOrigin: ORIGIN1,
+        chooserIsNext: true,
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+  });
+});
