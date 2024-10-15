@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pipes
 import subprocess
 import sys
 
 import buildconfig
 import six
+
+from mozbuild.shellutil import quote as shell_quote
 
 SCRIPT_ALLOWLIST = [buildconfig.topsrcdir + "/devtools/client/shared/build/build.js"]
 
@@ -47,8 +48,7 @@ def execute_node_cmd(node_cmd_list):
     """
 
     try:
-        printable_cmd = " ".join(pipes.quote(arg) for arg in node_cmd_list)
-        print('Executing "{}"'.format(printable_cmd), file=sys.stderr)
+        print('Executing "{}"'.format(shell_quote(*node_cmd_list)), file=sys.stderr)
         sys.stderr.flush()
 
         # We need to redirect stderr to a pipe because
