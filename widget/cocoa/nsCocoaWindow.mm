@@ -168,7 +168,16 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
   mWindow.delegate = nil;
+
+  // We might be in an embedded run loop which is still using mWindow.
+  // Hold an extra reference as an autorelease to cover these cases.
+  [[mWindow retain] autorelease];
+
+  // Closing the window will also release it, though our extra retain
+  // above will keep it alive through the event loop.
+  MOZ_ASSERT(mWindow.releasedWhenClosed);
   [mWindow close];
+
   mWindow = nil;
   [mDelegate autorelease];
 
