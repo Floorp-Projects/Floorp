@@ -4546,12 +4546,13 @@ var SessionStoreInternal = {
 
     let sidebarBox = aWindow.document.getElementById("sidebar-box");
     let command = sidebarBox.getAttribute("sidebarcommand");
+    // Store width and order from sidebar style
+    winData.sidebar = { style: sidebarBox.style.cssText };
     if (command && sidebarBox.getAttribute("checked") == "true") {
-      winData.sidebar = {
+      Object.assign(winData.sidebar, {
         command,
         positionEnd: sidebarBox.getAttribute("positionend"),
-        style: sidebarBox.style.cssText,
-      };
+      });
     } else if (winData.sidebar?.command) {
       delete winData.sidebar.command;
     }
@@ -5601,16 +5602,22 @@ var SessionStoreInternal = {
    *        Object containing command (sidebarcommand/category),styles and
    *        positionEnd (reflecting the sidebar.position_start pref)
    */
-  restoreSidebar(aWindow, aSidebar) {
-    let sidebarBox = aWindow.document.getElementById("sidebar-box");
-    if (
-      aSidebar?.command &&
-      (sidebarBox.getAttribute("sidebarcommand") != aSidebar.command ||
-        !sidebarBox.getAttribute("checked"))
-    ) {
-      aWindow.SidebarController.showInitially(aSidebar.command);
+  restoreSidebar(aWindow, aSidebar, isPopup) {
+    if (!aSidebar) {
+      return;
+    }
+    if (!isPopup) {
+      let sidebarBox = aWindow.document.getElementById("sidebar-box");
+      // Always restore sidebar width and order
       sidebarBox.setAttribute("style", aSidebar.style);
-      sidebarBox.setAttribute("positionend", !!aSidebar?.positionEnd);
+      if (
+        aSidebar.command &&
+        (sidebarBox.getAttribute("sidebarcommand") != aSidebar.command ||
+          !sidebarBox.getAttribute("checked"))
+      ) {
+        aWindow.SidebarController.showInitially(aSidebar.command);
+        sidebarBox.setAttribute("positionend", !!aSidebar?.positionEnd);
+      }
     }
   },
 
