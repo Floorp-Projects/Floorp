@@ -16,7 +16,7 @@
         ".popup-notification-description": "popupid,id=descriptionid",
         ".popup-notification-description > span:first-of-type":
           "text=label,popupid",
-        ".popup-notification-description > b:first-of-type":
+        ".popup-notification-description > .popup-notification-description-name":
           "text=name,popupid",
         ".popup-notification-description > span:nth-of-type(2)":
           "text=endlabel,popupid",
@@ -81,7 +81,7 @@
           <!-- These need to be on the same line to avoid creating
               whitespace between them (whitespace is added in the
               localization file, if necessary). -->
-          <description class="popup-notification-description"><html:span></html:span><html:b></html:b><html:span></html:span><html:b></html:b><html:span></html:span></description>
+          <description class="popup-notification-description"><html:span></html:span><html:b class="popup-notification-description-name"></html:b><html:span></html:span><html:b></html:b><html:span></html:span></description>
           <description class="popup-notification-hint-text"></description>
           <vbox class="popup-notification-bottom-content" align="start">
             <label class="popup-notification-learnmore-link" is="text-link" data-l10n-id="popup-notification-learn-more"></label>
