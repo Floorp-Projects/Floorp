@@ -104,6 +104,9 @@ run-if = ["os == 'win'"]
 
 ["TestNotNull"]
 
+["TestOleAut32Initialization"]
+run-if = ["os == 'win'"]
+
 ["TestPEExportSection"]
 run-if = ["os == 'win'"]
 

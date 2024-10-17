@@ -17,6 +17,9 @@
 #include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 
+#include <oleauto.h>
+#pragma comment(lib, "oleaut32.lib")
+
 #include "AssemblyPayloads.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -1482,6 +1485,8 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
   CredHandle credHandle;
   memset(&credHandle, 0, sizeof(CredHandle));
   OBJECT_ATTRIBUTES attributes = {};
+  VARIANTARG var;
+  VariantInit(&var);
 
   // NB: These tests should be ordered such that lower-level APIs are tested
   // before higher-level APIs.
@@ -1555,6 +1560,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("bcrypt.dll", BCryptGenRandom, Equals,
                 static_cast<NTSTATUS>(STATUS_INVALID_HANDLE)) &&
       TEST_HOOK("advapi32.dll", RtlGenRandom, Equals, TRUE) &&
+      TEST_HOOK_PARAMS("oleaut32.dll", VariantClear, Equals, S_OK, &var) &&
 #if !defined(_M_ARM64)
       TEST_HOOK("imm32.dll", ImmGetContext, Equals, nullptr) &&
 #endif  // !defined(_M_ARM64)

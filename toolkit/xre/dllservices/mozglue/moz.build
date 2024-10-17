@@ -19,6 +19,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"]:
         "WindowsBCryptInitialization.cpp",
         "WindowsFallbackLoaderAPI.cpp",
         "WindowsMsctfInitialization.cpp",
+        "WindowsOleAut32Initialization.cpp",
         "WindowsStackWalkInitialization.cpp",
     ]
 
@@ -53,6 +54,7 @@ EXPORTS.mozilla += [
     "WindowsDllBlocklistCommon.h",
     "WindowsDllBlocklistInfo.h",
     "WindowsMsctfInitialization.h",
+    "WindowsOleAut32Initialization.h",
     "WindowsStackWalkInitialization.h",
 ]
 
