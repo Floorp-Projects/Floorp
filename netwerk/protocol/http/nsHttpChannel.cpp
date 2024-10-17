@@ -497,12 +497,34 @@ nsresult nsHttpChannel::PrepareToConnect() {
          type == ExtContentPolicy::TYPE_SUBDOCUMENT) &&
         NS_SUCCEEDED(rv) && !query.IsEmpty() &&
         prefEnabledForCurrentContainer() && isUriMSAuthority()) {
-      AddMicrosoftEntraSSO(this);
+      nsMainThreadPtrHandle<nsHttpChannel> self(
+          new nsMainThreadPtrHolder<nsHttpChannel>(
+              "nsHttpChannel::PrepareToConnect::self", this));
+      auto resultCallback = [self(self)]() {
+        MOZ_ASSERT(NS_IsMainThread());
+        nsresult rv = self->ContinuePrepareToConnect();
+        if (NS_FAILED(rv)) {
+          self->CloseCacheEntry(false);
+          Unused << self->AsyncAbort(rv);
+        }
+      };
+
+      rv = AddMicrosoftEntraSSO(this, std::move(resultCallback));
+
+      // Returns NS_OK if performRequests is called in MicrosoftEntraSSOUtils
+      // This temporarily stops the channel setup for the delegate.
+      if (NS_SUCCEEDED(rv)) {
+        return rv;
+      }
     }
   }
 
 #endif
 
+  return ContinuePrepareToConnect();
+}
+
+nsresult nsHttpChannel::ContinuePrepareToConnect() {
   // notify "http-on-modify-request" observers
   CallOnModifyRequestObservers();
 
