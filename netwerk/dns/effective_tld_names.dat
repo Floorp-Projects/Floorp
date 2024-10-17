@@ -4102,7 +4102,6 @@ coop.mw
 edu.mw
 gov.mw
 int.mw
-museum.mw
 net.mw
 org.mw
 
@@ -4140,24 +4139,12 @@ net.mz
 org.mz
 
 // na : http://www.na-nic.com.na/
-// http://www.info.na/domain/
 na
-info.na
-pro.na
-name.na
-school.na
-or.na
-dr.na
-us.na
-mx.na
-ca.na
-in.na
-cc.na
-tv.na
-ws.na
-mobi.na
+alt.na
 co.na
 com.na
+gov.na
+net.na
 org.na
 
 // name : has 2nd-level tlds, but there's no list of them
@@ -5398,7 +5385,6 @@ nome.pt
 // pw : https://www.iana.org/domains/root/db/pw.html
 pw
 co.pw
-ne.pw
 or.pw
 ed.pw
 go.pw
@@ -6727,7 +6713,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-09-26T15:17:07Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-15T15:17:29Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -8405,11 +8391,11 @@ haus
 // https://www.iana.org/domains/root/db/hbo.html
 hbo
 
-// hdfc : HOUSING DEVELOPMENT FINANCE CORPORATION LIMITED
+// hdfc : HDFC BANK LIMITED
 // https://www.iana.org/domains/root/db/hdfc.html
 hdfc
 
-// hdfcbank : HDFC Bank Limited
+// hdfcbank : HDFC BANK LIMITED
 // https://www.iana.org/domains/root/db/hdfcbank.html
 hdfcbank
 
@@ -12206,12 +12192,6 @@ b-data.io
 // Submitted by Petros Angelatos <petrosagg@balena.io>
 balena-devices.com
 
-// Banzai Cloud
-// Submitted by Janos Matyas <info@banzaicloud.com>
-*.banzai.cloud
-app.banzaicloud.io
-*.backyards.banzaicloud.io
-
 // BASE, Inc. : https://binc.jp
 // Submitted by Yuya NAGASAWA <public-suffix-list@binc.jp>
 base.ec
@@ -12587,10 +12567,6 @@ dattoweb.com
 mydatto.com
 dattolocal.net
 mydatto.net
-
-// DDNS5 : https://ddns5.com
-// Submitted by Cameron Elliott <cameron@cameronelliott.com>
-ddns5.com
 
 // ddnss.de : https://www.ddnss.de/
 // Submitted by Robert Niedziela <webmaster@ddnss.de>
@@ -13700,10 +13676,7 @@ hs.zone
 // Harrison Network : https://hrsn.net
 // Submitted by William Harrison <psl@hrsn.net>
 wdh.app
-preview.wdh.app
 hrsn.dev
-t.hrsn.dev
-t.hrsn.net
 
 // Hashbang : https://hashbang.sh
 hashbang.sh
@@ -13924,8 +13897,8 @@ ir.md
 // Submitted by William Harrison <webmaster@is-a-good.dev>
 is-a-good.dev
 
-// is-a.dev : https://www.is-a.dev
-// Submitted by William Harrison <admin@m.is-a.dev>
+// is-a.dev : https://is-a.dev
+// Submitted by William Harrison <psl@is-a.dev>
 is-a.dev
 
 // IServ GmbH : https://iserv.de
@@ -14242,6 +14215,10 @@ mediatech.dev
 // Medicom Health : https://medicomhealth.com
 // Submitted by Michael Olson <molson@medicomhealth.com>
 hra.health
+
+// MedusaJS, Inc : https://medusajs.com/
+// Submitted by Stevche Radevski <engineering@medusajs.com>
+medusajs.app
 
 // Memset hosting : https://www.memset.com
 // Submitted by Tom Whitwell <domains@memset.com>
@@ -15381,8 +15358,7 @@ tabitorder.co.il
 taifun-dns.de
 
 // Tailscale Inc. : https://www.tailscale.com
-// Submitted by David Anderson <danderson@tailscale.com>
-beta.tailscale.net
+// Submitted by David Anderson <infra+public-suffix-list@tailscale.com>
 ts.net
 *.c.ts.net
 
@@ -15444,7 +15420,6 @@ pages.torproject.net
 
 // TownNews.com : http://www.townnews.com
 // Submitted by Dustin Ward <dward@townnews.com>
-bloxcms.com
 townnews-staging.com
 
 // TrafficPlex GmbH : https://www.trafficplex.de/
@@ -15718,13 +15693,7 @@ yolasite.com
 
 // Yombo : https://yombo.net
 // Submitted by Mitch Schwenk <mitch@yombo.net>
-ybo.faith
 yombo.me
-homelink.one
-ybo.party
-ybo.review
-ybo.science
-ybo.trade
 
 // Yunohost : https://yunohost.org
 // Submitted by Valentin Grimaud <security@yunohost.org>
