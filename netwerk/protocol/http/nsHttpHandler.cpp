@@ -343,6 +343,11 @@ nsresult nsHttpHandler::Init() {
   if (IsNeckoChild()) NeckoChild::InitNeckoChild();
 
   InitUserAgentComponents();
+#ifdef XP_MACOSX
+  if (XRE_IsParentProcess()) {
+    InitMSAuthorities();
+  }
+#endif
 
   // This perference is only used in parent process.
   if (!IsNeckoChild()) {
@@ -1021,6 +1026,28 @@ void nsHttpHandler::InitUserAgentComponents() {
 
   mUserAgentIsDirty = true;
 }
+
+#ifdef XP_MACOSX
+void nsHttpHandler::InitMSAuthorities() {
+  if (!StaticPrefs::network_http_microsoft_entra_sso_enabled()) {
+    return;
+  }
+
+  nsAutoCString authorityList;
+
+  if (NS_FAILED(Preferences::GetCString("network.microsoft-sso-authority-list",
+                                        authorityList))) {
+    return;
+  }
+
+  // Normalize the MS authority list
+  nsCCharSeparatedTokenizer tokenizer(authorityList, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsDependentCSubstring& token = tokenizer.nextToken();
+    mMSAuthorities.Insert(token);
+  }
+}
+#endif
 
 uint32_t nsHttpHandler::MaxSocketCount() {
   PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
@@ -2831,6 +2858,14 @@ bool nsHttpHandler::IsHostExcludedForHTTPSRR(const nsACString& aHost) {
 
   return mExcludedHostsForHTTPSRRUpgrade.Contains(aHost);
 }
+
+#ifdef XP_MACOSX
+bool nsHttpHandler::IsHostMSAuthority(const nsACString& aHost) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return mMSAuthorities.Contains(aHost);
+}
+#endif
 
 void nsHttpHandler::Exclude0RttTcp(const nsHttpConnectionInfo* ci) {
   MOZ_ASSERT(OnSocketThread());
