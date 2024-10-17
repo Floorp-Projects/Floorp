@@ -12066,6 +12066,34 @@
   value: true
   mirror: never
 
+# Whether or not we use MS Entra SSO to network.microsoft-sso-authority-list sites.
+- name: network.http.microsoft-entra-sso.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Whether microsoft-entra-sso is enabled for the default (0) container.
+# To enable SSO for additional containers, add a new pref like
+# `network.http.microsoft-entra-sso.container-enabled.${containerId}` = true
+- name: network.http.microsoft-entra-sso.container-enabled.0
+  type: bool
+  value: true
+  mirror: never
+
+# To specify the list of trusted Microsoft Single Sign-On (SSO) authority URLs
+# This is needed for macOS unlike Windows where we send every URL to SSO
+- name: network.microsoft-sso-authority-list
+  type: String
+  value: >-
+    login.microsoft.com,
+    login.microsoftonline.com,
+    sts.windows.net,
+    login.partner.microsoftonline.cn,
+    login.chinacloudapi.cn,
+    login.microsoftonline.us,
+    login-us.microsoftonline.com
+  mirror: never
+
 # The factor by which to increase the keepalive timeout when the
 # NS_HTTP_LARGE_KEEPALIVE flag is used for a connection
 - name: network.http.largeKeepaliveFactor
