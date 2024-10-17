@@ -3,6 +3,44 @@
     {
       "stash": {
         "blocked": [
+          "assetview@hammock.co.jp:13.2.0.1001",
+          "assetview@hammock.co.jp:13.0.0.1002",
+          "assetview@hammock.co.jp:9.1.2.1002",
+          "assetview@hammock.co.jp:9.2.0.1002",
+          "{eb471d16-d7fe-41dd-979a-091d03a527a5}:5.2.0",
+          "assetview@hammock.co.jp:9.1.2.1005",
+          "assetview@hammock.co.jp:13.2.0.1002",
+          "assetview@hammock.co.jp:13.0.0.1001",
+          "assetview@hammock.co.jp:9.2.0.1001",
+          "{6f376eb6-f726-4364-8662-a2fcbd03d302}:1.0.0",
+          "assetview@hammock.co.jp:9.2.0.1003"
+        ],
+        "unblocked": []
+      },
+      "schema": 1728930963390,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1729017304733,
+      "id": "1d6e943a-550f-47d4-8e68-fcf9e4675592",
+      "last_modified": 1729017352400
+    },
+    {
+      "stash": {
+        "blocked": [
+          "adblocktitan@addon:1.0",
+          "websensei6@gmail.com:1.0",
+          "kimamanchel@gmail.com:4.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1728896623517,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1728930905957,
+      "id": "3fb6abc5-d57b-41b3-aed3-7c6729d083c9",
+      "last_modified": 1728930963254
+    },
+    {
+      "stash": {
+        "blocked": [
           "{0e817acb-ed4b-419f-b429-563e32d83aae}:3.1.4",
           "{0e817acb-ed4b-419f-b429-563e32d83aae}:4.0.8",
           "{0e817acb-ed4b-419f-b429-563e32d83aae}:4.0.0",
@@ -344,5 +382,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1728477361202
+  "timestamp": 1729017352400
 }

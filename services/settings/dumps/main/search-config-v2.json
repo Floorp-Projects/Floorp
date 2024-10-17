@@ -3842,6 +3842,7 @@
     {
       "base": {
         "aliases": [
+          "biquipedia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -3871,9 +3872,9 @@
       },
       "id": "1c2173e4-1ad3-4347-900a-17f4103c6bbe",
       "identifier": "wikipedia-an",
-      "last_modified": 1702906502736,
+      "last_modified": 1729004089205,
       "recordType": "engine",
-      "schema": 1702901742155,
+      "schema": 1728896622109,
       "variants": [
         {
           "environment": {
@@ -3887,6 +3888,7 @@
     {
       "base": {
         "aliases": [
+          "ويكيبيديا",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -3916,9 +3918,9 @@
       },
       "id": "3ed57e7f-df2a-4bb0-aecf-10327d5ff1ea",
       "identifier": "wikipedia-ar",
-      "last_modified": 1702906502733,
+      "last_modified": 1729004089207,
       "recordType": "engine",
-      "schema": 1702901742756,
+      "schema": 1729002476264,
       "variants": [
         {
           "environment": {
@@ -3977,6 +3979,7 @@
     {
       "base": {
         "aliases": [
+          "vikipediya",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4006,9 +4009,9 @@
       },
       "id": "2230b4af-8fdf-4aa0-a496-5178b25382ed",
       "identifier": "wikipedia-az",
-      "last_modified": 1702906502726,
+      "last_modified": 1729004089209,
       "recordType": "engine",
-      "schema": 1702901743987,
+      "schema": 1729002478197,
       "variants": [
         {
           "environment": {
@@ -4022,6 +4025,7 @@
     {
       "base": {
         "aliases": [
+          "вікіпедыя",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4051,9 +4055,9 @@
       },
       "id": "5327659a-3b79-4071-95b5-b86f7cc25a25",
       "identifier": "wikipedia-be",
-      "last_modified": 1702906502510,
+      "last_modified": 1729004089289,
       "recordType": "engine",
-      "schema": 1702901782971,
+      "schema": 1729002480587,
       "variants": [
         {
           "environment": {
@@ -4067,7 +4071,7 @@
     {
       "base": {
         "aliases": [
-          "wikipedia"
+          "вікіпэдыя"
         ],
         "classification": "unknown",
         "name": "Вікіпэдыя (be-tarask)",
@@ -4096,9 +4100,9 @@
       },
       "id": "d7cb9b4b-f53a-49ea-ae04-27172fb108e9",
       "identifier": "wikipedia-be-tarask",
-      "last_modified": 1702906502506,
+      "last_modified": 1729004089292,
       "recordType": "engine",
-      "schema": 1702901783595,
+      "schema": 1729002485955,
       "variants": [
         {
           "environment": {
@@ -4112,6 +4116,7 @@
     {
       "base": {
         "aliases": [
+          "уикипедия",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4141,9 +4146,9 @@
       },
       "id": "6324bcb4-9aad-4aa2-b10c-f320ae1242c3",
       "identifier": "wikipedia-bg",
-      "last_modified": 1702906502723,
+      "last_modified": 1729004089211,
       "recordType": "engine",
-      "schema": 1702901744580,
+      "schema": 1729002487482,
       "variants": [
         {
           "environment": {
@@ -4157,10 +4162,11 @@
     {
       "base": {
         "aliases": [
+          "উইকিপিডিয়া",
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "উইকিপিডিয়া (bn)",
+        "name": "উইকিপিডিয়া (bn)",
         "urls": {
           "search": {
             "base": "https://bn.wikipedia.org/wiki/বিশেষ:Search",
@@ -4186,9 +4192,9 @@
       },
       "id": "a0a95a2c-83b7-4507-a4e9-5632ca9825dd",
       "identifier": "wikipedia-bn",
-      "last_modified": 1702906502503,
+      "last_modified": 1729004089294,
       "recordType": "engine",
-      "schema": 1702901784204,
+      "schema": 1729002489104,
       "variants": [
         {
           "environment": {
@@ -4294,6 +4300,7 @@
     {
       "base": {
         "aliases": [
+          "viquipèdia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4323,9 +4330,9 @@
       },
       "id": "7ed640c7-bc86-45dc-b07a-f7d8b5a8e079",
       "identifier": "wikipedia-ca",
-      "last_modified": 1702906502499,
+      "last_modified": 1729004089296,
       "recordType": "engine",
-      "schema": 1702901784840,
+      "schema": 1729002490717,
       "variants": [
         {
           "environment": {
@@ -4340,6 +4347,7 @@
     {
       "base": {
         "aliases": [
+          "wicipedia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4369,9 +4377,9 @@
       },
       "id": "0df7934b-5903-4382-ae3d-d898ac0487aa",
       "identifier": "wikipedia-cy",
-      "last_modified": 1702906502711,
+      "last_modified": 1729004089213,
       "recordType": "engine",
-      "schema": 1702901746399,
+      "schema": 1729002491953,
       "variants": [
         {
           "environment": {
@@ -4385,6 +4393,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedie",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4414,9 +4423,9 @@
       },
       "id": "2574b200-f878-4b0c-b7e0-49804b3f4b8e",
       "identifier": "wikipedia-cz",
-      "last_modified": 1702906502493,
+      "last_modified": 1729004089298,
       "recordType": "engine",
-      "schema": 1702901786063,
+      "schema": 1729002493066,
       "variants": [
         {
           "environment": {
@@ -4520,6 +4529,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4549,9 +4559,9 @@
       },
       "id": "c8a9299d-c9d2-4bf3-8f94-812d38af35f7",
       "identifier": "wikipedia-dsb",
-      "last_modified": 1702906502701,
+      "last_modified": 1729004089216,
       "recordType": "engine",
-      "schema": 1702901748278,
+      "schema": 1729002494375,
       "variants": [
         {
           "environment": {
@@ -4565,6 +4575,7 @@
     {
       "base": {
         "aliases": [
+          "βικιπαίδεια",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4594,9 +4605,9 @@
       },
       "id": "6ebc40f2-9307-4e58-8fd7-0e1a23b80723",
       "identifier": "wikipedia-el",
-      "last_modified": 1722952002207,
+      "last_modified": 1729004089203,
       "recordType": "engine",
-      "schema": 1722942003170,
+      "schema": 1729002495941,
       "variants": [
         {
           "environment": {
@@ -4610,6 +4621,7 @@
     {
       "base": {
         "aliases": [
+          "vikipedio",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4639,9 +4651,9 @@
       },
       "id": "25b42f42-d6e4-4193-be32-b4ca61cb55c7",
       "identifier": "wikipedia-eo",
-      "last_modified": 1702906502695,
+      "last_modified": 1729004089218,
       "recordType": "engine",
-      "schema": 1702901749556,
+      "schema": 1729002497291,
       "variants": [
         {
           "environment": {
@@ -4705,6 +4717,7 @@
     {
       "base": {
         "aliases": [
+          "vikipeedia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4734,9 +4747,9 @@
       },
       "id": "87388ad0-c470-4a90-b79d-231e28b86eda",
       "identifier": "wikipedia-et",
-      "last_modified": 1702906502691,
+      "last_modified": 1729004089220,
       "recordType": "engine",
-      "schema": 1702901750177,
+      "schema": 1729002498372,
       "variants": [
         {
           "environment": {
@@ -4795,6 +4808,7 @@
     {
       "base": {
         "aliases": [
+          "ویکی‌پدیا",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4824,9 +4838,9 @@
       },
       "id": "ce737d17-06f0-46f2-8c88-97f796ad88dc",
       "identifier": "wikipedia-fa",
-      "last_modified": 1702906502685,
+      "last_modified": 1729004089222,
       "recordType": "engine",
-      "schema": 1702901751455,
+      "schema": 1729002499436,
       "variants": [
         {
           "environment": {
@@ -4885,6 +4899,7 @@
     {
       "base": {
         "aliases": [
+          "wikipédia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4914,9 +4929,9 @@
       },
       "id": "a0261c4c-7b60-42c5-b35b-00ab57c5fbc4",
       "identifier": "wikipedia-fr",
-      "last_modified": 1702906502488,
+      "last_modified": 1729004089301,
       "recordType": "engine",
-      "schema": 1702901786670,
+      "schema": 1729002502123,
       "variants": [
         {
           "environment": {
@@ -4932,6 +4947,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedy",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -4961,9 +4977,9 @@
       },
       "id": "4a6a7952-460d-4951-a011-9fc414f2569a",
       "identifier": "wikipedia-fy-NL",
-      "last_modified": 1702906502679,
+      "last_modified": 1729004089224,
       "recordType": "engine",
-      "schema": 1702901752745,
+      "schema": 1729002503250,
       "variants": [
         {
           "environment": {
@@ -4977,6 +4993,7 @@
     {
       "base": {
         "aliases": [
+          "vicipéid",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5006,9 +5023,9 @@
       },
       "id": "d8d0e94c-27e7-42b1-a5e2-b24198021234",
       "identifier": "wikipedia-ga-IE",
-      "last_modified": 1702906502675,
+      "last_modified": 1729004089227,
       "recordType": "engine",
-      "schema": 1702901753350,
+      "schema": 1729002504366,
       "variants": [
         {
           "environment": {
@@ -5022,6 +5039,7 @@
     {
       "base": {
         "aliases": [
+          "uicipeid",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5051,9 +5069,9 @@
       },
       "id": "df26225d-6726-4630-94ce-7a398598139b",
       "identifier": "wikipedia-gd",
-      "last_modified": 1702906502672,
+      "last_modified": 1729004089229,
       "recordType": "engine",
-      "schema": 1702901753945,
+      "schema": 1729002505545,
       "variants": [
         {
           "environment": {
@@ -5112,6 +5130,7 @@
     {
       "base": {
         "aliases": [
+          "vikipetã",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5141,9 +5160,9 @@
       },
       "id": "b66515df-d7b1-403c-b0df-22a5ce9dd07f",
       "identifier": "wikipedia-gn",
-      "last_modified": 1702906502665,
+      "last_modified": 1729004089231,
       "recordType": "engine",
-      "schema": 1702901755160,
+      "schema": 1729002506870,
       "variants": [
         {
           "environment": {
@@ -5157,6 +5176,7 @@
     {
       "base": {
         "aliases": [
+          "વિકિપીડિયા",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5186,9 +5206,9 @@
       },
       "id": "ede0b78c-500a-4d1b-8236-cd5e7ceee815",
       "identifier": "wikipedia-gu",
-      "last_modified": 1702906502485,
+      "last_modified": 1729004089303,
       "recordType": "engine",
-      "schema": 1702901787288,
+      "schema": 1729002508415,
       "variants": [
         {
           "environment": {
@@ -5202,6 +5222,7 @@
     {
       "base": {
         "aliases": [
+          "ויקיפדיה",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5231,9 +5252,9 @@
       },
       "id": "f96aab0d-3562-445c-a70f-5805ea1d25fe",
       "identifier": "wikipedia-he",
-      "last_modified": 1702906502662,
+      "last_modified": 1729004089235,
       "recordType": "engine",
-      "schema": 1702901755766,
+      "schema": 1729002509714,
       "variants": [
         {
           "environment": {
@@ -5247,6 +5268,7 @@
     {
       "base": {
         "aliases": [
+          "विकिपीडिया",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5276,9 +5298,9 @@
       },
       "id": "8fc18864-53e1-47b4-8730-2e67962c7b32",
       "identifier": "wikipedia-hi",
-      "last_modified": 1702906502482,
+      "last_modified": 1729004089305,
       "recordType": "engine",
-      "schema": 1702901787905,
+      "schema": 1729002511062,
       "variants": [
         {
           "environment": {
@@ -5292,6 +5314,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5321,9 +5344,9 @@
       },
       "id": "eb03a427-1f71-4df9-b609-a36064d2d0e2",
       "identifier": "wikipedia-hr",
-      "last_modified": 1702906502658,
+      "last_modified": 1729004089237,
       "recordType": "engine",
-      "schema": 1702901756375,
+      "schema": 1729002512016,
       "variants": [
         {
           "environment": {
@@ -5337,6 +5360,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5366,9 +5390,9 @@
       },
       "id": "5235d5f1-e04d-4ba3-b53b-35a8d09d2142",
       "identifier": "wikipedia-hsb",
-      "last_modified": 1702906502655,
+      "last_modified": 1729004089239,
       "recordType": "engine",
-      "schema": 1702901756979,
+      "schema": 1729002513214,
       "variants": [
         {
           "environment": {
@@ -5382,6 +5406,7 @@
     {
       "base": {
         "aliases": [
+          "wikipédia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5411,9 +5436,9 @@
       },
       "id": "9a10f883-2da7-4070-8a73-543153bdd52c",
       "identifier": "wikipedia-hu",
-      "last_modified": 1702906502651,
+      "last_modified": 1729004089241,
       "recordType": "engine",
-      "schema": 1702901757634,
+      "schema": 1729002514305,
       "variants": [
         {
           "environment": {
@@ -5427,6 +5452,7 @@
     {
       "base": {
         "aliases": [
+          "վիքիպեդիա",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5456,9 +5482,9 @@
       },
       "id": "c6286785-b61b-4288-aec1-9a7820c32694",
       "identifier": "wikipedia-hy",
-      "last_modified": 1722952002231,
+      "last_modified": 1729004089187,
       "recordType": "engine",
-      "schema": 1722942005797,
+      "schema": 1729002515482,
       "variants": [
         {
           "environment": {
@@ -5700,6 +5726,7 @@
     {
       "base": {
         "aliases": [
+          "ვიკიპედია",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5729,9 +5756,9 @@
       },
       "id": "ca784382-7beb-4a93-b211-745d4d71ec6c",
       "identifier": "wikipedia-ka",
-      "last_modified": 1702906502636,
+      "last_modified": 1729004089244,
       "recordType": "engine",
-      "schema": 1702901760115,
+      "schema": 1729002516520,
       "variants": [
         {
           "environment": {
@@ -5790,6 +5817,7 @@
     {
       "base": {
         "aliases": [
+          "уикипедия",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5819,9 +5847,9 @@
       },
       "id": "15f00a29-0d68-4ff1-89d1-5e58b95618b7",
       "identifier": "wikipedia-kk",
-      "last_modified": 1702906502628,
+      "last_modified": 1729004089246,
       "recordType": "engine",
-      "schema": 1702901761359,
+      "schema": 1729002517453,
       "variants": [
         {
           "environment": {
@@ -5835,10 +5863,11 @@
     {
       "base": {
         "aliases": [
+          "វិគីភីឌា",
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "វីគីភីឌា (km)",
+        "name": "វិគីភីឌា (km)",
         "urls": {
           "search": {
             "base": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក",
@@ -5864,9 +5893,9 @@
       },
       "id": "c8a7bec0-7f33-44e1-9521-363530993acc",
       "identifier": "wikipedia-km",
-      "last_modified": 1702906502625,
+      "last_modified": 1729004089248,
       "recordType": "engine",
-      "schema": 1702901761969,
+      "schema": 1729002518717,
       "variants": [
         {
           "environment": {
@@ -5880,6 +5909,7 @@
     {
       "base": {
         "aliases": [
+          "ವಿಕಿಪೀಡಿಯ",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5909,9 +5939,9 @@
       },
       "id": "ce510c56-9d5e-416c-aef0-277bfbaac464",
       "identifier": "wikipedia-kn",
-      "last_modified": 1722952002211,
+      "last_modified": 1729004089200,
       "recordType": "engine",
-      "schema": 1722942007046,
+      "schema": 1729002519733,
       "variants": [
         {
           "environment": {
@@ -5925,6 +5955,7 @@
     {
       "base": {
         "aliases": [
+          "위키백과",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -5954,9 +5985,9 @@
       },
       "id": "831d7fed-79d2-4aac-9481-826300a03d65",
       "identifier": "wikipedia-kr",
-      "last_modified": 1702906502470,
+      "last_modified": 1729004089308,
       "recordType": "engine",
-      "schema": 1702901790335,
+      "schema": 1729002520757,
       "variants": [
         {
           "environment": {
@@ -6015,6 +6046,7 @@
     {
       "base": {
         "aliases": [
+          "ວິກິພີເດຍ",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6044,9 +6076,9 @@
       },
       "id": "515c4522-284d-468f-926a-eb7eb8a55e22",
       "identifier": "wikipedia-lo",
-      "last_modified": 1702906502615,
+      "last_modified": 1729004089250,
       "recordType": "engine",
-      "schema": 1702901763817,
+      "schema": 1729002521798,
       "variants": [
         {
           "environment": {
@@ -6060,6 +6092,7 @@
     {
       "base": {
         "aliases": [
+          "vikipedija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6089,9 +6122,9 @@
       },
       "id": "774990fb-aabc-4008-86d3-adf12f89ccd4",
       "identifier": "wikipedia-lt",
-      "last_modified": 1722952002214,
+      "last_modified": 1729004089198,
       "recordType": "engine",
-      "schema": 1722942008331,
+      "schema": 1729002522879,
       "variants": [
         {
           "environment": {
@@ -6105,6 +6138,7 @@
     {
       "base": {
         "aliases": [
+          "vikipedeja",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6134,9 +6168,9 @@
       },
       "id": "52871fd0-a24a-443b-a2d4-17eb09951691",
       "identifier": "wikipedia-ltg",
-      "last_modified": 1702906502609,
+      "last_modified": 1729004089252,
       "recordType": "engine",
-      "schema": 1702901765044,
+      "schema": 1729002523991,
       "variants": [
         {
           "environment": {
@@ -6150,6 +6184,7 @@
     {
       "base": {
         "aliases": [
+          "vikipēdija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6179,9 +6214,9 @@
       },
       "id": "395b6c93-f7ff-47b8-b895-6f7bb99f9c56",
       "identifier": "wikipedia-lv",
-      "last_modified": 1722952002217,
+      "last_modified": 1729004089196,
       "recordType": "engine",
-      "schema": 1722942009487,
+      "schema": 1729002525117,
       "variants": [
         {
           "environment": {
@@ -6195,6 +6230,7 @@
     {
       "base": {
         "aliases": [
+          "википедија",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6224,9 +6260,9 @@
       },
       "id": "a3aa8882-cbb0-4002-b0fc-b6ff5cdb9d92",
       "identifier": "wikipedia-mk",
-      "last_modified": 1702906502602,
+      "last_modified": 1729004089255,
       "recordType": "engine",
-      "schema": 1702901766290,
+      "schema": 1729002525972,
       "variants": [
         {
           "environment": {
@@ -6240,6 +6276,7 @@
     {
       "base": {
         "aliases": [
+          "विकिपीडिया",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6269,9 +6306,9 @@
       },
       "id": "09f48c9b-b420-4312-8c60-aeb4358e0b97",
       "identifier": "wikipedia-mr",
-      "last_modified": 1702906502599,
+      "last_modified": 1729004089257,
       "recordType": "engine",
-      "schema": 1702901766916,
+      "schema": 1729002526927,
       "variants": [
         {
           "environment": {
@@ -6330,6 +6367,7 @@
     {
       "base": {
         "aliases": [
+          "ဝီကီပီးဒီးယား",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6359,9 +6397,9 @@
       },
       "id": "0616dd06-2bfd-46f0-9870-832a1db8a622",
       "identifier": "wikipedia-my",
-      "last_modified": 1722952002221,
+      "last_modified": 1729004089194,
       "recordType": "engine",
-      "schema": 1722942010626,
+      "schema": 1729002527903,
       "variants": [
         {
           "environment": {
@@ -6375,10 +6413,11 @@
     {
       "base": {
         "aliases": [
+          "विकिपिडिया",
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "विकिपीडिया (ne)",
+        "name": "विकिपिडिया (ne)",
         "urls": {
           "search": {
             "base": "https://ne.wikipedia.org/wiki/विशेष:Search",
@@ -6404,9 +6443,9 @@
       },
       "id": "dd1c5a28-733d-46b4-ae5e-fff82f94aec9",
       "identifier": "wikipedia-ne",
-      "last_modified": 1702906502465,
+      "last_modified": 1729004089310,
       "recordType": "engine",
-      "schema": 1702901791565,
+      "schema": 1729002528998,
       "variants": [
         {
           "environment": {
@@ -6465,6 +6504,7 @@
     {
       "base": {
         "aliases": [
+          "wikipèdia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6494,9 +6534,9 @@
       },
       "id": "e3e2c4a1-4914-4a27-96f8-63fb6a90f490",
       "identifier": "wikipedia-oc",
-      "last_modified": 1702906502585,
+      "last_modified": 1729004089259,
       "recordType": "engine",
-      "schema": 1702901769405,
+      "schema": 1729002529878,
       "variants": [
         {
           "environment": {
@@ -6510,6 +6550,7 @@
     {
       "base": {
         "aliases": [
+          "ਵਿਕੀਪੀਡੀਆ",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6539,9 +6580,9 @@
       },
       "id": "fa428a75-44d5-4f21-84bd-64935d483540",
       "identifier": "wikipedia-pa",
-      "last_modified": 1722952002238,
+      "last_modified": 1729004089185,
       "recordType": "engine",
-      "schema": 1722942011825,
+      "schema": 1729002530859,
       "variants": [
         {
           "environment": {
@@ -6601,6 +6642,7 @@
     {
       "base": {
         "aliases": [
+          "wikipédia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6630,9 +6672,9 @@
       },
       "id": "f2e04c1b-b19f-40d9-841d-9b48b7ba9da2",
       "identifier": "wikipedia-pt",
-      "last_modified": 1722952002241,
+      "last_modified": 1729004089183,
       "recordType": "engine",
-      "schema": 1722942012990,
+      "schema": 1729002531798,
       "variants": [
         {
           "environment": {
@@ -6737,6 +6779,7 @@
     {
       "base": {
         "aliases": [
+          "википедия",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6766,9 +6809,9 @@
       },
       "id": "8f2b997a-8bfe-436d-9393-b9abb52522ef",
       "identifier": "wikipedia-ru",
-      "last_modified": 1702906502574,
+      "last_modified": 1729004089261,
       "recordType": "engine",
-      "schema": 1702901771244,
+      "schema": 1729002532830,
       "variants": [
         {
           "environment": {
@@ -6782,6 +6825,7 @@
     {
       "base": {
         "aliases": [
+          "විකිපීඩියා",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6811,9 +6855,9 @@
       },
       "id": "6a54dc6e-623a-4839-afd7-224e06d7ba73",
       "identifier": "wikipedia-si",
-      "last_modified": 1722952002224,
+      "last_modified": 1729004089191,
       "recordType": "engine",
-      "schema": 1722942014140,
+      "schema": 1729002533949,
       "variants": [
         {
           "environment": {
@@ -6827,6 +6871,7 @@
     {
       "base": {
         "aliases": [
+          "wikipédia",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6856,9 +6901,9 @@
       },
       "id": "f9d77028-e386-4093-aacd-a8c2a56acbc0",
       "identifier": "wikipedia-sk",
-      "last_modified": 1702906502568,
+      "last_modified": 1729004089264,
       "recordType": "engine",
-      "schema": 1702901772461,
+      "schema": 1729002534892,
       "variants": [
         {
           "environment": {
@@ -6872,6 +6917,7 @@
     {
       "base": {
         "aliases": [
+          "wikipedija",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6901,9 +6947,9 @@
       },
       "id": "887d2a1b-7275-4a4e-afa2-9157eb98a7d5",
       "identifier": "wikipedia-sl",
-      "last_modified": 1702906502565,
+      "last_modified": 1729004089266,
       "recordType": "engine",
-      "schema": 1702901773075,
+      "schema": 1729002535884,
       "variants": [
         {
           "environment": {
@@ -6962,6 +7008,7 @@
     {
       "base": {
         "aliases": [
+          "википедија",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -6991,9 +7038,9 @@
       },
       "id": "d381964d-d1e3-4378-962c-6ac5b89161f8",
       "identifier": "wikipedia-sr",
-      "last_modified": 1702906502558,
+      "last_modified": 1729004089268,
       "recordType": "engine",
-      "schema": 1702901774302,
+      "schema": 1729002536927,
       "variants": [
         {
           "environment": {
@@ -7052,6 +7099,7 @@
     {
       "base": {
         "aliases": [
+          "விக்கிப்பீடியா",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7081,9 +7129,9 @@
       },
       "id": "78ed73b5-4afd-467e-b7ee-c96658f345c6",
       "identifier": "wikipedia-ta",
-      "last_modified": 1702906502552,
+      "last_modified": 1729004089270,
       "recordType": "engine",
-      "schema": 1702901775549,
+      "schema": 1729002539071,
       "variants": [
         {
           "environment": {
@@ -7097,6 +7145,7 @@
     {
       "base": {
         "aliases": [
+          "వికీపీడియా",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7126,9 +7175,9 @@
       },
       "id": "391eb3c6-de7a-4aaf-8027-3ad1b8c3c00a",
       "identifier": "wikipedia-te",
-      "last_modified": 1702906502548,
+      "last_modified": 1729004089273,
       "recordType": "engine",
-      "schema": 1702901776173,
+      "schema": 1729002540762,
       "variants": [
         {
           "environment": {
@@ -7142,6 +7191,7 @@
     {
       "base": {
         "aliases": [
+          "วิกิพีเดีย",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7171,9 +7221,9 @@
       },
       "id": "5c7903a3-5a44-41a0-aac2-fc26fe8f8fe7",
       "identifier": "wikipedia-th",
-      "last_modified": 1702906502545,
+      "last_modified": 1729004089275,
       "recordType": "engine",
-      "schema": 1702901776774,
+      "schema": 1729002542224,
       "variants": [
         {
           "environment": {
@@ -7232,6 +7282,7 @@
     {
       "base": {
         "aliases": [
+          "vikipedi",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7261,9 +7312,9 @@
       },
       "id": "8885ffbb-f450-4642-8204-ed9128b29e51",
       "identifier": "wikipedia-tr",
-      "last_modified": 1722952002228,
+      "last_modified": 1729004089189,
       "recordType": "engine",
-      "schema": 1722942015303,
+      "schema": 1729002543730,
       "variants": [
         {
           "environment": {
@@ -7277,6 +7328,7 @@
     {
       "base": {
         "aliases": [
+          "вікіпедія",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7306,9 +7358,9 @@
       },
       "id": "3b65a693-177a-4bd2-9d66-8c038e005800",
       "identifier": "wikipedia-uk",
-      "last_modified": 1702906502536,
+      "last_modified": 1729004089277,
       "recordType": "engine",
-      "schema": 1702901778586,
+      "schema": 1729002544976,
       "variants": [
         {
           "environment": {
@@ -7322,6 +7374,7 @@
     {
       "base": {
         "aliases": [
+          "ویکیپیڈیا",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7351,9 +7404,9 @@
       },
       "id": "52a714ba-0471-47be-9557-fc5fe9c9ff50",
       "identifier": "wikipedia-ur",
-      "last_modified": 1702906502533,
+      "last_modified": 1729004089279,
       "recordType": "engine",
-      "schema": 1702901779213,
+      "schema": 1729002546136,
       "variants": [
         {
           "environment": {
@@ -7367,6 +7420,7 @@
     {
       "base": {
         "aliases": [
+          "vikipediya",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7396,9 +7450,9 @@
       },
       "id": "1b07d255-6f2c-4e2d-a4b4-b0e99aae39e9",
       "identifier": "wikipedia-uz",
-      "last_modified": 1702906502529,
+      "last_modified": 1729004089282,
       "recordType": "engine",
-      "schema": 1702901779828,
+      "schema": 1729002547362,
       "variants": [
         {
           "environment": {
@@ -7502,6 +7556,7 @@
     {
       "base": {
         "aliases": [
+          "维基百科",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7531,9 +7586,9 @@
       },
       "id": "c0f736ce-c219-4388-a242-48168237e3f5",
       "identifier": "wikipedia-zh-CN",
-      "last_modified": 1702906502518,
+      "last_modified": 1729004089284,
       "recordType": "engine",
-      "schema": 1702901781680,
+      "schema": 1729002548615,
       "variants": [
         {
           "environment": {
@@ -7547,6 +7602,7 @@
     {
       "base": {
         "aliases": [
+          "維基百科",
           "wikipedia"
         ],
         "classification": "unknown",
@@ -7580,9 +7636,9 @@
       },
       "id": "864df79e-c03d-47ee-aacf-06242cffe951",
       "identifier": "wikipedia-zh-TW",
-      "last_modified": 1702906502515,
+      "last_modified": 1729004089287,
       "recordType": "engine",
-      "schema": 1702901782303,
+      "schema": 1729002549717,
       "variants": [
         {
           "environment": {
@@ -7926,5 +7982,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1722952002241
+  "timestamp": 1729004089310
 }
