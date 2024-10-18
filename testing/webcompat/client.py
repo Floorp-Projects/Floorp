@@ -5,9 +5,12 @@
 import asyncio
 import contextlib
 import time
+from base64 import b64decode
+from io import BytesIO
 from urllib.parse import quote
 
 import webdriver
+from PIL import Image
 from webdriver.bidi.modules.script import ContextTarget
 
 
@@ -324,7 +327,7 @@ class Client:
             )
 
         async def await_text(self, text, **kwargs):
-            xpath = f"//*[contains(text(),'{text}')]"
+            xpath = f"//*[text()[contains(.,'{text}')]]"
             return await self.await_xpath(self, xpath, **kwargs)
 
         async def await_xpath(
@@ -567,8 +570,8 @@ class Client:
 
     def find_text(self, text, is_displayed=None, **kwargs):
         try:
-            ele = self.find_xpath(f"//*[contains(text(),'{text}')]", **kwargs)
-            return self._do_is_displayed_check(ele, is_displayed)
+            e = self.find_xpath(f"//*[text()[contains(.,'{text}')]]", **kwargs)
+            return self._do_is_displayed_check(e, is_displayed)
         except webdriver.error.NoSuchElementException:
             return None
 
@@ -757,3 +760,12 @@ class Client:
           """,
             args=[element],
         )
+
+    def is_one_solid_color(self, element, max_fuzz=8):
+        # max_fuzz is needed as screenshots can have slight color bleeding/fringing
+        shotb64 = element.screenshot()
+        shot = Image.open(BytesIO(b64decode(shotb64))).convert("RGB")
+        for min, max in shot.getextrema():
+            if max - min > max_fuzz:
+                return False
+        return True
