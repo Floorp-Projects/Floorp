@@ -360,20 +360,37 @@ void Geolocation::ReallowWithSystemPermissionOrCancel(
       do_GetService("@mozilla.org/prompter;1", &rv);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  RefPtr<mozilla::dom::Promise> cancelDialogPromise;
+  // The dialog should include a cancel button if Gecko is prompting the user
+  // for system permission.  It should have no buttons if the OS will be
+  // doing the prompting.
+  bool geckoWillPrompt =
+      GetLocationOSPermission() ==
+      geolocation::SystemGeolocationPermissionBehavior::GeckoWillPromptUser;
+  // This combination of flags removes the default yes and no buttons and adds a
+  // spinner to the title.
+  const auto kSpinnerNoButtonFlags = nsIPromptService::BUTTON_TITLE_IS_STRING *
+                                         nsIPromptService::BUTTON_POS_0 +
+                                     nsIPromptService::BUTTON_TITLE_IS_STRING *
+                                         nsIPromptService::BUTTON_POS_1 +
+                                     nsIPromptService::SHOW_SPINNER;
+  // This combination of flags indicates there is only one button labeled
+  // "Cancel".
+  const auto kCancelButtonFlags =
+      nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0;
+  RefPtr<mozilla::dom::Promise> tabBlockingDialogPromise;
   rv = promptSvc->AsyncConfirmEx(
       aBrowsingContext, nsIPromptService::MODAL_TYPE_TAB, title.get(),
       message.get(),
-      nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0,
-      nullptr, nullptr, nullptr, nullptr, false, JS::UndefinedHandleValue,
-      getter_AddRefs(cancelDialogPromise));
+      geckoWillPrompt ? kCancelButtonFlags : kSpinnerNoButtonFlags, nullptr,
+      nullptr, nullptr, nullptr, false, JS::UndefinedHandleValue,
+      getter_AddRefs(tabBlockingDialogPromise));
   NS_ENSURE_SUCCESS_VOID(rv);
-  MOZ_ASSERT(cancelDialogPromise);
+  MOZ_ASSERT(tabBlockingDialogPromise);
 
-  // If the cancel dialog promise is resolved or rejected then the dialog is no
-  // longer visible so we should stop waiting for permission, whether it was
-  // granted or not.
-  cancelDialogPromise->AppendNativeHandler(
+  // If the tab blocking dialog promise is resolved or rejected then the dialog
+  // is no longer visible so we should stop waiting for permission, whether it
+  // was granted or not.
+  tabBlockingDialogPromise->AppendNativeHandler(
       new CancelSystemGeolocationPermissionRequest(permissionRequest));
 
   cancelRequestOnError.release();
