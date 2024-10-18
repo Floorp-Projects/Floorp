@@ -8,10 +8,14 @@ import ThemeCard from "../../components/ThemeCard";
 import Card from "../../components/Card";
 import type { DesignFormData } from "@/type";
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
   Divider,
   Flex,
   Grid,
   RadioGroup,
+  Link,
   Switch,
   Text,
   VStack,
@@ -20,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { useInterfaceDesigns } from "./designs";
 
 export default function Interface() {
-  const { control } = useFormContext<DesignFormData>();
+  const { control, getValues } = useFormContext<DesignFormData>();
   const { t } = useTranslation();
   const options = useInterfaceDesigns();
   return (
@@ -58,6 +62,20 @@ export default function Interface() {
             </RadioGroup>
           )}
         />
+        {getValues("design") === "lepton" ||
+        getValues("design") === "photon" ||
+        getValues("design") === "protonfix" ? (
+          <Alert status="info" rounded={"md"} mt={2}>
+            <AlertIcon />
+            <AlertDescription>
+              {t("design.advancedLeptonThemeSettingsDescription")}
+              <br />
+              <Link color="blue.500" href="https://support.mozilla.org">
+                {t("design.advancedLeptonThemeSettings")}
+              </Link>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <Divider />
         <Text fontSize="lg">{t("design.otherInterfaceSettings")}</Text>
         <Controller

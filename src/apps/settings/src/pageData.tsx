@@ -30,7 +30,7 @@ export const usePageData = () => {
           style={{ fontSize: "16px", color: "currentColor" }}
         />
       ),
-      text: t("pages.noranekoSidebar"),
+      text: t("pages.browserSidebar"),
       component: null,
     },
     workspaces: {
@@ -78,7 +78,7 @@ export const usePageData = () => {
           style={{ fontSize: "16px", color: "currentColor" }}
         />
       ),
-      text: t("pages.aboutNoraneko"),
+      text: t("pages.aboutBrowser"),
       component: <About />,
     },
   };

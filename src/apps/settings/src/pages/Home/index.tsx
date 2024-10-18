@@ -113,16 +113,16 @@ export default function Home() {
             <Text fontSize="sm">{t("home.manageExtensions.description")}</Text>
           </Card>
           <Card
-            title={t("home.noranekoSupport.title")}
+            title={t("home.browserSupport.title")}
             footerLink="https://support.mozilla.org/products/firefox/"
-            footerLinkText={t("home.noranekoSupport.footerLinkText")}
+            footerLinkText={t("home.browserSupport.footerLinkText")}
             icon={
               <IconMdiHelpCircle
                 style={{ fontSize: "24px", color: "#3182F6" }}
               />
             }
           >
-            <Text fontSize="sm">{t("home.noranekoSupport.description")}</Text>
+            <Text fontSize="sm">{t("home.browserSupport.description")}</Text>
           </Card>
         </Grid>
       </VStack>

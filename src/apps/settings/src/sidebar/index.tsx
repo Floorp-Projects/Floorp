@@ -22,10 +22,12 @@ function Sidebar() {
       const pathKey =
         location.pathname === "/" ? "home" : location.pathname.slice(1);
       const title =
-        pageData[pathKey as keyof typeof pageData]?.text ?? "Noraneko Settings";
-      document.title = title;
+        pageData[pathKey as keyof typeof pageData]?.text ?? t("title.default");
+      document.title = t("title.withPageName", {
+        pageName: title,
+      });
     }
-  }, [location.pathname, pageData]);
+  }, [location.pathname, pageData, t]);
 
   return (
     <GridItem

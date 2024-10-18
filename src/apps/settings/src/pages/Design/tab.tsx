@@ -12,12 +12,17 @@ import {
   Flex,
   Switch,
   Input,
+  Link,
+  Alert,
+  AlertIcon,
+  AlertDescription,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import type { DesignFormData } from "@/type";
 import { useTranslation } from "react-i18next";
+import { register } from "node:module";
 
 export default function Tab() {
   const { t } = useTranslation();
@@ -80,6 +85,19 @@ export default function Tab() {
             </Flex>
           )}
         />
+        {!getValues("tabScroll") &&
+        (getValues("tabScrollReverse") || getValues("tabScrollWrap")) ? (
+          <Alert status="info" rounded={"md"} mt={2}>
+            <AlertIcon />
+            <AlertDescription>
+              {t("design.tab.scrollPrefInfo", {
+                reverseScrollPrefName: t("design.tab.reverseScroll"),
+                scrollWrapPrefName: t("design.tab.scrollWrap"),
+                scrollPrefName: t("design.tab.scrollTab"),
+              })}
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <Divider />
         <Text fontSize="lg">{t("design.tab.openPosition")}</Text>
         <Text fontSize="sm" mt={-1}>
@@ -142,7 +160,7 @@ export default function Tab() {
               <Input
                 width="200px"
                 min={60}
-                max={100}
+                max={300}
                 type="number"
                 onChange={(e) => onChange(Number(e.target.value))}
                 value={value}
@@ -157,13 +175,13 @@ export default function Tab() {
             <Flex justifyContent="space-between" alignItems="center">
               <Text>{t("design.tab.minHeight")}</Text>
               <Input
+                onChange={(e) => onChange(Number(e.target.value))}
                 width="200px"
                 height="40px"
-                min={60}
+                min={20}
                 max={100}
                 type="number"
                 value={value}
-                onChange={(e) => onChange(Number(e.target.value))}
               />
             </Flex>
           )}

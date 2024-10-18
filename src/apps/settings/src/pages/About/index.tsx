@@ -34,10 +34,10 @@ export default function About() {
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10} color={textColor}>
-        {t("about.aboutNoraneko")}
+        {t("about.aboutBrowser")}
       </Text>
       <Card
-        title={t("about.aboutNoraneko")}
+        title={t("about.aboutBrowser")}
         icon={
           <Image
             src={"chrome://branding/content/about-logo@2x.png"}
@@ -49,7 +49,7 @@ export default function About() {
         footerLinkText={t("about.releaseNotes")}
       >
         <Text fontSize="md" mb={3} color={textColor} maxW={"700px"}>
-          {t("about.noranekoVersion", {
+          {t("about.browserVersion", {
             browserVersion: constantsData?.MOZ_APP_VERSION ?? "unknown",
             firefoxVersion: constantsData?.MOZ_APP_VERSION_DISPLAY ?? "unknown",
             isOfficialBuild: constantsData?.MOZ_OFFICIAL_BRANDING
@@ -59,7 +59,7 @@ export default function About() {
         </Text>
 
         <Text color={textColor} mb={4}>
-          {t("about.noranekoDescription")}
+          {t("about.browserDescription")}
         </Text>
       </Card>
 
@@ -67,7 +67,7 @@ export default function About() {
 
       <Card>
         <Text mt={-2} fontSize={"sm"} maxW={"600px"}>
-          {t("about.noraneko")}
+          {t("about.browser")}
         </Text>
         <Text color={textColor} fontSize="sm" mb={2}>
           {t("about.copyright")}

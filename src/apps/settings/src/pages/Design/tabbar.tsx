@@ -13,8 +13,6 @@ import {
   AlertDescription,
   Link,
   Divider,
-  Flex,
-  Switch,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import React from "react";
@@ -57,7 +55,7 @@ export default function Tabbar() {
         <Alert status="info" rounded={"md"}>
           <AlertIcon />
           <AlertDescription>
-            {t("design.verticalTabIsRemovedFromNoraneko")}
+            {t("design.verticalTabIsRemovedFromBrowser")}
             <br />
             <Link color="blue.500" href="https://support.mozilla.org">
               {t("design.learnMore")}

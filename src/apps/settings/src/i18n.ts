@@ -19,6 +19,9 @@ i18n
     },
     interpolation: {
       escapeValue: false,
+      defaultVariables: {
+        productName: "Noraneko",
+      },
     },
     react: {
       useSuspense: false,
