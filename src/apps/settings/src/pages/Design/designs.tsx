@@ -12,27 +12,27 @@ export const useInterfaceDesigns = (): {
     {
       value: "proton",
       title: t("design.proton"),
-      image: `/images/designs/firefox-proton${useColorModeValue("-white", "-dark")}.jpg`,
+      image: `/images/designs/Floorp_UI_Proton_${useColorModeValue("Light", "Dark")}.svg`,
     },
     {
       value: "lepton",
       title: t("design.lepton"),
-      image: `/images/designs/firefox-lepton${useColorModeValue("-white", "-dark")}.jpg`,
+      image: `/images/designs/Floorp_UI_Lepton_${useColorModeValue("Light", "Dark")}.svg`,
     },
     {
       value: "photon",
       title: t("design.photon"),
-      image: `/images/designs/firefox-photon${useColorModeValue("-white", "-dark")}.jpg`,
+      image: `/images/designs/Floorp_UI_Photon_${useColorModeValue("Light", "Dark")}.svg`,
     },
     {
       value: "protonfix",
       title: t("design.protonfix"),
-      image: `/images/designs/firefox-proton${useColorModeValue("-white", "-dark")}.jpg`,
+      image: `/images/designs/Floorp_UI_ProtonFix_${useColorModeValue("Light", "Dark")}.svg`,
     },
     {
       value: "fluerial",
       title: t("design.fluerial"),
-      image: `/images/designs/floorp-fluerial${useColorModeValue("-white", "-dark")}.jpg`,
+      image: `/images/designs/Floorp_UI_Fluerial_${useColorModeValue("Light", "Dark")}.svg`,
     },
   ];
 };
