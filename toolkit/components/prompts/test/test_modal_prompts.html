@@ -750,6 +750,60 @@ async function runTests(util) {
   await promptDone;
 
   // =====
+  info("Starting test: ConfirmEx (no buttons)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    butt0Label: "",
+    butt1Label: "",
+    focused: null,
+    defButton: "button0",
+  };
+
+  if (isOSX) {
+    // OS X doesn't initially focus the button, but rather the infoBody.
+    state.focused = "infoBody";
+  }
+
+  action = {
+    buttonClick: "abort_dialogs",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  // BUTTON_TITLE_IS_STRING with no title removes the button.
+  flags =
+      Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_1 +
+      Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_0;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    null,
+    null,
+    null,
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    1,
+    "checked button click num unchanged from default"
+  );
+
+  await promptDone;
+
+  // =====
   info("Starting test: ConfirmEx (ok/cancel, ok)");
   state = {
     msg: "This is the confirmEx text.",
