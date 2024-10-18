@@ -7,6 +7,6 @@
   min-width: var(--floorp-tab-min-width) !important;
 }
 
-.tabbrowser-tab[pinned] {
+.tabbrowser-tab[class] {
   min-height: var(--floorp-tab-min-height) !important;
 }

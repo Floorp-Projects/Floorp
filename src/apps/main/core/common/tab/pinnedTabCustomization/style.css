@@ -5,6 +5,7 @@
 
 .tab-label-container[pinned] {
   width: unset !important;
+  max-width: 60px !important;
 }
 
 .tab-throbber[pinned],

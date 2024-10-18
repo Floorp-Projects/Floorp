@@ -7,13 +7,13 @@ import { WorkspacesServices } from "@core/common/workspaces/workspaces";
 
 export const overrides = [
   () => {
-    window.BrowserCommands.openTab = function openTab({
+    window.BrowserCommands.openTab = ({
       event,
       url,
     }: {
-      event: MouseEvent;
-      url: string;
-    }) {
+      event?: MouseEvent;
+      url?: string;
+    } = {}) => {
       const werePassedURL = !!url;
       url ??= window.BROWSER_NEW_TAB_URL;
       const searchClipboard =
