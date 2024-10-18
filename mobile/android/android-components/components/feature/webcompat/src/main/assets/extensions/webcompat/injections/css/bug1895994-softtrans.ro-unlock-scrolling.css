@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * softtrans.ro - users cannot scroll the page horizontally on Android
+ * Bug #1895994 - https://bugzilla.mozilla.org/show_bug.cgi?id=1895994
+ *
+ * The page uses a meta viewport tag on Android, and also hides overflow-x
+ * on the body tag, making it impossible to scroll the page. We can unset
+ * the overflow to fix this.
+ */
+
+body {
+  overflow-x: auto;
+}
