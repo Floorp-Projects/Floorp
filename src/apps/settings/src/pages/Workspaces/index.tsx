@@ -54,12 +54,9 @@ export default function Workspaces() {
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
       <Text fontSize="3xl" mb={10}>
-        ワークスペース
+        {t("workspaces.workspaces")}
       </Text>
-      <Text mb={8}>
-        ワークスペースは、タブのグループ化を行うプロセスを大幅に簡素化し、
-        タブの整理や、管理を容易にします。
-      </Text>
+      <Text mb={8}>{t("workspaces.workspacesDescription")}</Text>
       <VStack align="stretch" spacing={6} w="100%">
         <FormProvider {...methods}>
           <Preferences />

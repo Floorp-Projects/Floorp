@@ -36,15 +36,15 @@ export default function Preferences() {
           style={{ fontSize: "24px", color: "#3164ff" }}
         />
       }
-      title="ワークスペースの基本設定"
+      title={t("workspaces.basicSettings")}
       footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-      footerLinkText="ワークスペースの使い方とカスタマイズについて"
+      footerLinkText={t("workspaces.howToUseAndCustomize")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
-        <Text fontSize="lg">有効化・無効化</Text>
+        <Text fontSize="lg">{t("workspaces.enableOrDisable")}</Text>
         <FormControl>
           <Flex justifyContent="space-between">
-            <FormLabel flex={1}>ワークスペース機能を有効にする</FormLabel>
+            <FormLabel flex={1}>{t("workspaces.enableWorkspaces")}</FormLabel>
             <Controller
               name="enabled"
               control={control}
@@ -58,17 +58,17 @@ export default function Preferences() {
             />
           </Flex>
           <FormHelperText mt={0}>
-            ワークスペースのボタンがツールバーに配置されていない限り、この設定を有効にしてもワークスペースは機能しません。ワークスペースを完全に無効にしたい場合は、この設定を使用してください。
+            {t("workspaces.enableWorkspacesDescription")}
           </FormHelperText>
         </FormControl>
 
         <Divider />
 
-        <Text fontSize="lg">その他のワークスペース設定</Text>
+        <Text fontSize="lg">{t("workspaces.otherSettings")}</Text>
         <FormControl>
           <Flex justifyContent="space-between">
             <FormLabel flex={1}>
-              ワークスペース選択時にワークスペースのポップアップを閉じる
+              {t("workspaces.closePopupWhenSelectingWorkspace")}
             </FormLabel>
             <Controller
               name="closePopupAfterClick"
@@ -86,7 +86,9 @@ export default function Preferences() {
 
         <FormControl>
           <Flex justifyContent="space-between">
-            <FormLabel flex={1}>ワークスペース名をアイコンの隣に表示</FormLabel>
+            <FormLabel flex={1}>
+              {t("workspaces.showWorkspaceNameOnToolbar")}
+            </FormLabel>
             <Controller
               name="showWorkspaceNameOnToolbar"
               control={control}
@@ -103,9 +105,7 @@ export default function Preferences() {
 
         <FormControl>
           <Flex justifyContent="space-between">
-            <FormLabel flex={1}>
-              Noraneko サイドバー上でワークスペースを管理する
-            </FormLabel>
+            <FormLabel flex={1}>{t("workspaces.manageOnBms")}</FormLabel>
             <Controller
               name="manageOnBms"
               control={control}
@@ -119,8 +119,7 @@ export default function Preferences() {
             />
           </Flex>
           <FormHelperText mt={0}>
-            この機能を有効にすると、Noraneko
-            サイドバー上のみでワークスペースを管理できます。ツールバーボタンを使用したワークスペースの管理はできなくなります。
+            {t("workspaces.manageOnBmsDescription")}
           </FormHelperText>
         </FormControl>
       </VStack>

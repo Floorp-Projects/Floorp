@@ -30,12 +30,11 @@ export default function Backup() {
           style={{ fontSize: "24px", color: "#137333" }}
         />
       }
-      title="ワークスペースのバックアップ"
+      title={t("workspaces.backup")}
       footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-      footerLinkText="ワークスペースのバックアップについて"
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
-        <Text fontSize="lg">ワークスペースのバックアップ</Text>
+        <Text fontSize="lg">{t("workspaces.backupComingSoon")}</Text>
       </VStack>
     </Card>
   );
