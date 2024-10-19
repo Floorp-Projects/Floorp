@@ -22,7 +22,15 @@ export class TabSizeSpecification {
   }
 
   private setTabSizeSpecification(minH = 45, minW = 150) {
-    console.log("setTabSizeSpecification", minH, minW);
+    if (minH < 20 || minH > 100) {
+      console.error("Tab height must be between 20 and 100 pixels.");
+      return;
+    }
+    if (minW < 60 || minW > 300) {
+      console.error("Tab width must be between 60 and 300 pixels.");
+      return;
+    }
+
     const documentElem = document?.documentElement as XULElement;
     documentElem.style.setProperty("--floorp-tab-min-height", `${minH}px`);
     documentElem.style.setProperty("--floorp-tab-min-width", `${minW}px`);

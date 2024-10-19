@@ -18,6 +18,7 @@ import {
   AlertDescription,
   FormControl,
   FormLabel,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import React from "react";
@@ -172,18 +173,22 @@ export default function Tab() {
           name="tabMinWidth"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <FormControl>
+            <FormControl isInvalid={value < 60 || value > 300}>
               <Flex justifyContent="space-between">
                 <FormLabel flex={1}>{t("design.tab.minWidth")}</FormLabel>
                 <Input
                   width="200px"
-                  min={60}
-                  max={300}
                   type="number"
                   onChange={(e) => onChange(Number(e.target.value))}
                   value={value}
                 />
               </Flex>
+              <FormErrorMessage w="fit-content" ml="auto">
+                {t("design.tab.minWidthError", {
+                  min: 60,
+                  max: 300,
+                })}
+              </FormErrorMessage>
             </FormControl>
           )}
         />
@@ -191,19 +196,23 @@ export default function Tab() {
           name="tabMinHeight"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <FormControl>
+            <FormControl isInvalid={value < 20 || value > 100}>
               <Flex justifyContent="space-between">
                 <FormLabel flex={1}>{t("design.tab.minHeight")}</FormLabel>
                 <Input
                   onChange={(e) => onChange(Number(e.target.value))}
                   width="200px"
                   height="40px"
-                  min={20}
-                  max={100}
                   type="number"
                   value={value}
                 />
               </Flex>
+              <FormErrorMessage w="fit-content" ml="auto">
+                {t("design.tab.minHeightError", {
+                  min: 20,
+                  max: 100,
+                })}
+              </FormErrorMessage>
             </FormControl>
           )}
         />
