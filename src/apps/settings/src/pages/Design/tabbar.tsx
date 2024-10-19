@@ -13,6 +13,7 @@ import {
   AlertDescription,
   Link,
   Divider,
+  FormControl,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import React from "react";
@@ -23,6 +24,7 @@ import { useTranslation } from "react-i18next";
 export default function Tabbar() {
   const { t } = useTranslation();
   const { control } = useFormContext<DesignFormData>();
+
   return (
     <Card
       icon={<IconIcRoundTab style={{ fontSize: "24px", color: "#137333" }} />}
@@ -35,21 +37,18 @@ export default function Tabbar() {
         <Text fontSize="sm" mt={-1}>
           {t("design.styleDescription")}
         </Text>
-        <Controller<DesignFormData, "style">
+        <Controller
           name="style"
           control={control}
-          render={({ field: { onChange, value, ref } }) => (
-            <RadioGroup
-              display="flex"
-              flexDirection="column"
-              gap={4}
-              onChange={onChange}
-              value={value}
-              ref={ref}
-            >
-              <Radio value="horizontal">{t("design.horizontal")}</Radio>
-              <Radio value="multirow">{t("design.multirow")}</Radio>
-            </RadioGroup>
+          render={({ field: { onChange, value } }) => (
+            <FormControl>
+              <RadioGroup onChange={onChange} value={value}>
+                <VStack align="stretch" spacing={4}>
+                  <Radio value="horizontal">{t("design.horizontal")}</Radio>
+                  <Radio value="multirow">{t("design.multirow")}</Radio>
+                </VStack>
+              </RadioGroup>
+            </FormControl>
           )}
         />
         <Alert status="info" rounded={"md"}>
@@ -70,29 +69,26 @@ export default function Tabbar() {
         <Controller
           name="position"
           control={control}
-          render={({ field: { onChange, value, ref } }) => (
-            <RadioGroup
-              display="flex"
-              flexDirection="column"
-              gap={4}
-              onChange={onChange}
-              value={value}
-              ref={ref}
-            >
-              <Radio value="default">{t("design.default")}</Radio>
-              <Radio value="hide-horizontal-tabbar">
-                {t("design.hideTabBar")}
-              </Radio>
-              <Radio value="optimise-to-vertical-tabbar">
-                {t("design.hideTabBarAndTitleBar")}
-              </Radio>
-              <Radio value="bottom-of-navigation-toolbar">
-                {t("design.showTabBarOnBottomOfNavigationBar")}
-              </Radio>
-              <Radio value="bottom-of-window">
-                {t("design.showTabBarOnBottomOfWindow")}
-              </Radio>
-            </RadioGroup>
+          render={({ field: { onChange, value } }) => (
+            <FormControl>
+              <RadioGroup onChange={onChange} value={value}>
+                <VStack align="stretch" spacing={4}>
+                  <Radio value="default">{t("design.default")}</Radio>
+                  <Radio value="hide-horizontal-tabbar">
+                    {t("design.hideTabBar")}
+                  </Radio>
+                  <Radio value="optimise-to-vertical-tabbar">
+                    {t("design.hideTabBarAndTitleBar")}
+                  </Radio>
+                  <Radio value="bottom-of-navigation-toolbar">
+                    {t("design.showTabBarOnBottomOfNavigationBar")}
+                  </Radio>
+                  <Radio value="bottom-of-window">
+                    {t("design.showTabBarOnBottomOfWindow")}
+                  </Radio>
+                </VStack>
+              </RadioGroup>
+            </FormControl>
           )}
         />
       </VStack>

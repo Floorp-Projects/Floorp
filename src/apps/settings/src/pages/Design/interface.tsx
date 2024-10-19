@@ -19,14 +19,18 @@ import {
   Switch,
   Text,
   VStack,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { useInterfaceDesigns } from "./designs";
 
 export default function Interface() {
-  const { control, getValues } = useFormContext<DesignFormData>();
+  const { control, watch } = useFormContext<DesignFormData>();
   const { t } = useTranslation();
   const options = useInterfaceDesigns();
+  const design = watch("design");
+
   return (
     <Card
       icon={<IconMdiPen style={{ fontSize: "24px", color: "#3182F6" }} />}
@@ -62,9 +66,9 @@ export default function Interface() {
             </RadioGroup>
           )}
         />
-        {getValues("design") === "lepton" ||
-        getValues("design") === "photon" ||
-        getValues("design") === "protonfix" ? (
+        {(design === "lepton" ||
+          design === "photon" ||
+          design === "protonfix") && (
           <Alert status="info" rounded={"md"} mt={2}>
             <AlertIcon />
             <AlertDescription>
@@ -75,23 +79,25 @@ export default function Interface() {
               </Link>
             </AlertDescription>
           </Alert>
-        ) : null}
+        )}
         <Divider />
         <Text fontSize="lg">{t("design.otherInterfaceSettings")}</Text>
         <Controller
           name="faviconColor"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>
-                {t("design.useFaviconColorToBackgroundOfNavigationBar")}
-              </Text>
-              <Switch
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>
+                  {t("design.useFaviconColorToBackgroundOfNavigationBar")}
+                </FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
       </VStack>

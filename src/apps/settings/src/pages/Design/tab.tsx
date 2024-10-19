@@ -16,17 +16,19 @@ import {
   Alert,
   AlertIcon,
   AlertDescription,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import type { DesignFormData } from "@/type";
 import { useTranslation } from "react-i18next";
-import { register } from "node:module";
 
 export default function Tab() {
   const { t } = useTranslation();
   const { control, getValues } = useFormContext<DesignFormData>();
+
   return (
     <Card
       icon={
@@ -45,49 +47,54 @@ export default function Tab() {
           name="tabScroll"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.scrollTab")}</Text>
-              <Switch
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.scrollTab")}</FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
         <Controller
           name="tabScrollReverse"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.reverseScroll")}</Text>
-              <Switch
-                isDisabled={!getValues("tabScroll")}
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl isDisabled={!getValues("tabScroll")}>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.reverseScroll")}</FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
         <Controller
           name="tabScrollWrap"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.scrollWrap")}</Text>
-              <Switch
-                isDisabled={!getValues("tabScroll")}
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl isDisabled={!getValues("tabScroll")}>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.scrollWrap")}</FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
+
         {!getValues("tabScroll") &&
         (getValues("tabScrollReverse") || getValues("tabScrollWrap")) ? (
-          <Alert status="info" rounded={"md"} mt={2}>
+          <Alert status="info" rounded={"md"}>
             <AlertIcon />
             <AlertDescription>
               {t("design.tab.scrollPrefInfo", {
@@ -98,7 +105,9 @@ export default function Tab() {
             </AlertDescription>
           </Alert>
         ) : null}
+
         <Divider />
+
         <Text fontSize="lg">{t("design.tab.openPosition")}</Text>
         <Text fontSize="sm" mt={-1}>
           {t("design.tab.openPositionDescription")}
@@ -106,84 +115,96 @@ export default function Tab() {
         <Controller
           name="tabOpenPosition"
           control={control}
-          render={({ field: { onChange, value, ref } }) => (
-            <RadioGroup
-              display="flex"
-              flexDirection="column"
-              gap={4}
-              onChange={(val) => onChange(Number(val))}
-              value={value?.toString()}
-              ref={ref}
-            >
-              <Radio value="-1">{t("design.tab.openDefault")}</Radio>
-              <Radio value="0">{t("design.tab.openLast")}</Radio>
-              <Radio value="1">{t("design.tab.openNext")}</Radio>
-            </RadioGroup>
+          render={({ field: { onChange, value } }) => (
+            <FormControl>
+              <RadioGroup
+                onChange={(val) => onChange(Number(val))}
+                value={value?.toString()}
+              >
+                <VStack align="stretch" spacing={4}>
+                  <Radio value="-1">{t("design.tab.openDefault")}</Radio>
+                  <Radio value="0">{t("design.tab.openLast")}</Radio>
+                  <Radio value="1">{t("design.tab.openNext")}</Radio>
+                </VStack>
+              </RadioGroup>
+            </FormControl>
           )}
         />
+
         <Divider />
+
         <Text fontSize="lg">{t("design.tab.other")}</Text>
         <Controller
           name="tabPinTitle"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.pinTitle")}</Text>
-              <Switch
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.pinTitle")}</FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
         <Controller
           name="tabDubleClickToClose"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.doubleClickToClose")}</Text>
-              <Switch
-                colorScheme={"blue"}
-                onChange={(e) => onChange(e.target.checked)}
-                isChecked={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>
+                  {t("design.tab.doubleClickToClose")}
+                </FormLabel>
+                <Switch
+                  colorScheme={"blue"}
+                  onChange={(e) => onChange(e.target.checked)}
+                  isChecked={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
         <Controller
           name="tabMinWidth"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.minWidth")}</Text>
-              <Input
-                width="200px"
-                min={60}
-                max={300}
-                type="number"
-                onChange={(e) => onChange(Number(e.target.value))}
-                value={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.minWidth")}</FormLabel>
+                <Input
+                  width="200px"
+                  min={60}
+                  max={300}
+                  type="number"
+                  onChange={(e) => onChange(Number(e.target.value))}
+                  value={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
         <Controller
           name="tabMinHeight"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t("design.tab.minHeight")}</Text>
-              <Input
-                onChange={(e) => onChange(Number(e.target.value))}
-                width="200px"
-                height="40px"
-                min={20}
-                max={100}
-                type="number"
-                value={value}
-              />
-            </Flex>
+            <FormControl>
+              <Flex justifyContent="space-between">
+                <FormLabel flex={1}>{t("design.tab.minHeight")}</FormLabel>
+                <Input
+                  onChange={(e) => onChange(Number(e.target.value))}
+                  width="200px"
+                  height="40px"
+                  min={20}
+                  max={100}
+                  type="number"
+                  value={value}
+                />
+              </Flex>
+            </FormControl>
           )}
         />
       </VStack>
