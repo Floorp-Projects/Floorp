@@ -40,9 +40,7 @@ export default function Preferences() {
   return (
     <>
       <RestartWarningDialog
-        description={
-          "ワークスペース機能の完全な有効化・無効化には Noraneko の再起動が必要です。"
-        }
+        description={t("workspaces.needRestartDescriptionForEnableAndDisable")}
         onClose={onCloseEnableWorkspaces}
         isOpen={isOpenEnableWorkspaces}
       />

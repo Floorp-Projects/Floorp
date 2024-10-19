@@ -1,16 +1,14 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   AlertDescription,
   AlertDialog,
   AlertDialogBody,
-  AlertDialogCloseButton,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
-  AlertIcon,
-  AlertTitle,
   Button,
   Text,
 } from "@chakra-ui/react";
@@ -24,6 +22,7 @@ export const RestartWarningDialog = ({
   onClose: () => void;
   isOpen: boolean;
 }) => {
+  const { t } = useTranslation();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const onRestart = () => {
@@ -46,7 +45,7 @@ export const RestartWarningDialog = ({
       <AlertDialogOverlay />
 
       <AlertDialogContent>
-        <AlertDialogHeader>{"再起動が必要"}</AlertDialogHeader>
+        <AlertDialogHeader>{t("restartWarningDialog.title")}</AlertDialogHeader>
         <AlertDialogBody>
           <Text>{description}</Text>
           <Alert
@@ -56,16 +55,16 @@ export const RestartWarningDialog = ({
             mt={4}
           >
             <AlertDescription>
-              再起動後、開かれているプライベートウインドウとプライベートタブは失われます。
+              {t("restartWarningDialog.description")}
             </AlertDescription>
           </Alert>
         </AlertDialogBody>
         <AlertDialogFooter>
           <Button ref={cancelRef} onClick={onClose}>
-            後で
+            {t("restartWarningDialog.cancel")}
           </Button>
           <Button colorScheme="red" ml={3} onClick={onRestart}>
-            今すぐ再起動
+            {t("restartWarningDialog.restart")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
