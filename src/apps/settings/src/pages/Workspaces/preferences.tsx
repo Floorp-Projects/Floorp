@@ -18,8 +18,10 @@ import {
   FormLabel,
   FormControl,
   FormHelperText,
+  useDisclosure,
 } from "@chakra-ui/react";
 import Card from "../../components/Card";
+import RestartWarningDialog from "../../components/RestartWarningDialog";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -29,100 +31,118 @@ export default function Preferences() {
   const { t } = useTranslation();
   const { control } = useFormContext<WorkspacesFormData>();
 
+  const {
+    isOpen: isOpenEnableWorkspaces,
+    onOpen: onOpenEnableWorkspaces,
+    onClose: onCloseEnableWorkspaces,
+  } = useDisclosure();
+
   return (
-    <Card
-      icon={
-        <IconMaterialSymbolsLightSelectWindow
-          style={{ fontSize: "24px", color: "#3164ff" }}
-        />
-      }
-      title={t("workspaces.basicSettings")}
-      footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-      footerLinkText={t("workspaces.howToUseAndCustomize")}
-    >
-      <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
-        <Text fontSize="lg">{t("workspaces.enableOrDisable")}</Text>
-        <FormControl>
-          <Flex justifyContent="space-between">
-            <FormLabel flex={1}>{t("workspaces.enableWorkspaces")}</FormLabel>
-            <Controller
-              name="enabled"
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <Switch
-                  colorScheme={"blue"}
-                  onChange={(e) => onChange(e.target.checked)}
-                  isChecked={value}
-                />
-              )}
-            />
-          </Flex>
-          <FormHelperText mt={0}>
-            {t("workspaces.enableWorkspacesDescription")}
-          </FormHelperText>
-        </FormControl>
+    <>
+      <RestartWarningDialog
+        description={
+          "ワークスペース機能の完全な有効化・無効化には Noraneko の再起動が必要です。"
+        }
+        onClose={onCloseEnableWorkspaces}
+        isOpen={isOpenEnableWorkspaces}
+      />
+      <Card
+        icon={
+          <IconMaterialSymbolsLightSelectWindow
+            style={{ fontSize: "24px", color: "#3164ff" }}
+          />
+        }
+        title={t("workspaces.basicSettings")}
+        footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+        footerLinkText={t("workspaces.howToUseAndCustomize")}
+      >
+        <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
+          <Text fontSize="lg">{t("workspaces.enableOrDisable")}</Text>
+          <FormControl>
+            <Flex justifyContent="space-between">
+              <FormLabel flex={1}>{t("workspaces.enableWorkspaces")}</FormLabel>
+              <Controller
+                name="enabled"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    colorScheme={"blue"}
+                    onChange={(e) => {
+                      onOpenEnableWorkspaces();
+                      onChange(e.target.checked);
+                    }}
+                    isChecked={value}
+                  />
+                )}
+              />
+            </Flex>
+            <FormHelperText mt={0}>
+              {t("workspaces.enableWorkspacesDescription")}
+            </FormHelperText>
+          </FormControl>
 
-        <Divider />
+          <Divider />
 
-        <Text fontSize="lg">{t("workspaces.otherSettings")}</Text>
-        <FormControl>
-          <Flex justifyContent="space-between">
-            <FormLabel flex={1}>
-              {t("workspaces.closePopupWhenSelectingWorkspace")}
-            </FormLabel>
-            <Controller
-              name="closePopupAfterClick"
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <Switch
-                  colorScheme={"blue"}
-                  onChange={(e) => onChange(e.target.checked)}
-                  isChecked={value}
-                />
-              )}
-            />
-          </Flex>
-        </FormControl>
+          <Text fontSize="lg">{t("workspaces.otherSettings")}</Text>
+          <FormControl>
+            <Flex justifyContent="space-between">
+              <FormLabel flex={1}>
+                {t("workspaces.closePopupWhenSelectingWorkspace")}
+              </FormLabel>
+              <Controller
+                name="closePopupAfterClick"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    colorScheme={"blue"}
+                    onChange={(e) => onChange(e.target.checked)}
+                    isChecked={value}
+                  />
+                )}
+              />
+            </Flex>
+          </FormControl>
 
-        <FormControl>
-          <Flex justifyContent="space-between">
-            <FormLabel flex={1}>
-              {t("workspaces.showWorkspaceNameOnToolbar")}
-            </FormLabel>
-            <Controller
-              name="showWorkspaceNameOnToolbar"
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <Switch
-                  colorScheme={"blue"}
-                  onChange={(e) => onChange(e.target.checked)}
-                  isChecked={value}
-                />
-              )}
-            />
-          </Flex>
-        </FormControl>
+          <FormControl>
+            <Flex justifyContent="space-between">
+              <FormLabel flex={1}>
+                {t("workspaces.showWorkspaceNameOnToolbar")}
+              </FormLabel>
+              <Controller
+                name="showWorkspaceNameOnToolbar"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    colorScheme={"blue"}
+                    onChange={(e) => onChange(e.target.checked)}
+                    isChecked={value}
+                  />
+                )}
+              />
+            </Flex>
+          </FormControl>
 
-        <FormControl>
-          <Flex justifyContent="space-between">
-            <FormLabel flex={1}>{t("workspaces.manageOnBms")}</FormLabel>
-            <Controller
-              name="manageOnBms"
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <Switch
-                  colorScheme={"blue"}
-                  onChange={(e) => onChange(e.target.checked)}
-                  isChecked={value}
-                />
-              )}
-            />
-          </Flex>
-          <FormHelperText mt={0}>
-            {t("workspaces.manageOnBmsDescription")}
-          </FormHelperText>
-        </FormControl>
-      </VStack>
-    </Card>
+          <FormControl>
+            <Flex justifyContent="space-between">
+              <FormLabel flex={1}>{t("workspaces.manageOnBms")}</FormLabel>
+              <Controller
+                name="manageOnBms"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    colorScheme={"blue"}
+                    onChange={(e) => onChange(e.target.checked)}
+                    isChecked={value}
+                  />
+                )}
+              />
+            </Flex>
+            <FormHelperText mt={0}>
+              {t("workspaces.manageOnBmsDescription")}
+            </FormHelperText>
+          </FormControl>
+        </VStack>
+      </Card>
+    </>
   );
 }

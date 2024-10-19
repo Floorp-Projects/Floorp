@@ -98,7 +98,25 @@ const JS_WINDOW_ACTORS: {
       ),
     },
     child: {
-      esModuleURI: localPathToResourceURI("./actors/NRAppConstantsChild.sys.mts"),
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRAppConstantsChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*"],
+  },
+  NRRestartBrowser: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRRestartBrowserParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "./actors/NRRestartBrowserChild.sys.mts",
+      ),
       events: {
         DOMDocElementInserted: {},
       },
