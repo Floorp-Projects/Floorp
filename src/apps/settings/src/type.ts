@@ -5,7 +5,9 @@
 
 import { z } from "zod";
 import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/type";
+import { zWorkspacesServicesConfigs } from "../../../apps/main/core/common/workspaces/utils/type";
 
+/* Tab & Appearance */
 export const zDesignFormData = z.object({
   // Global
   design: zFloorpDesignConfigs.shape.globalConfigs.shape.userInterface,
@@ -21,9 +23,22 @@ export const zDesignFormData = z.object({
   tabMinWidth: zFloorpDesignConfigs.shape.tab.shape.tabMinWidth,
   tabPinTitle: zFloorpDesignConfigs.shape.tab.shape.tabPinTitle,
   tabScroll: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.enabled,
-  tabScrollReverse: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.reverse,
+  tabScrollReverse:
+    zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.reverse,
   tabScrollWrap: zFloorpDesignConfigs.shape.tab.shape.tabScroll.shape.wrap,
-  tabDubleClickToClose: zFloorpDesignConfigs.shape.tab.shape.tabDubleClickToClose,
+  tabDubleClickToClose:
+    zFloorpDesignConfigs.shape.tab.shape.tabDubleClickToClose,
 });
 
 export type DesignFormData = z.infer<typeof zDesignFormData>;
+
+/* Workspaces */
+export const zWorkspacesFormData = z.object({
+  enabled: z.boolean(),
+  manageOnBms: zWorkspacesServicesConfigs.shape.manageOnBms,
+  showWorkspaceNameOnToolbar:
+    zWorkspacesServicesConfigs.shape.showWorkspaceNameOnToolbar,
+  closePopupAfterClick: zWorkspacesServicesConfigs.shape.closePopupAfterClick,
+});
+
+export type WorkspacesFormData = z.infer<typeof zWorkspacesFormData>;

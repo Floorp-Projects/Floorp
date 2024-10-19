@@ -9,10 +9,16 @@ import { WorkspacesTabContextMenu } from "./tabContextMenu.js";
 import { WorkspacesPopupContxtMenu } from "./popupSet.js";
 import { WorkspaceManageModal } from "./workspace-modal.js";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import { enabled } from "./config.js";
 
 export function init() {
   const gWorkspaceIcons = WorkspaceIcons.getInstance();
   gWorkspaceIcons.initializeIcons().then(() => {
+    // If workspaces is not enabled, do not proceed.
+    if (!enabled()) {
+      return;
+    }
+
     WorkspacesServices.getInstance();
     WorkspacesTabContextMenu.getInstance();
     WorkspacesToolbarButton.getInstance();

@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Workspace } from "./utils/type.js";
-import { setworkspacesData, workspacesData } from "./data.js";
+import type { Workspace } from "./utils/type";
+import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
-import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names.js";
-import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import { setWorkspaceModalState } from "./workspace-modal.js";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { WorkspaceIcons } from "./utils/workspace-icons";
+import { setWorkspaceModalState } from "./workspace-modal";
+import { enabled } from "./config";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;
@@ -471,12 +472,22 @@ export class WorkspacesServices {
      * @returns void
      */
     onLocationChange: () => {
+      if (!enabled()) {
+        return;
+      }
+
       this.checkTabsVisibility();
     },
   };
 
   constructor() {
     createEffect(() => {
+      // If Workspaces is disabled when the effect runs, do not proceed.
+      // If user completely disabled workspaces, We need restart browser to apply changes.
+      if (!enabled()) {
+        return;
+      }
+
       // Check if workspaces data is empty, if so, create default workspace.
       if (!workspacesData().length) {
         this.createNoNameWorkspace(true);

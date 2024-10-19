@@ -20,18 +20,18 @@ export class NRSettingsChild extends JSWindowActorChild {
   NRSPing() {
     return true;
   }
-  resolvePrefSet: (() => void) | null = null;
+  resolvePrefSet: (() => void)[] = [];
   NRSPrefSet(setting: PrefDatum, callback: () => void) {
     const promise = new Promise<void>((resolve, _reject) => {
-      this.resolvePrefSet = resolve;
+      this.resolvePrefSet.push(resolve);
     });
     this.sendAsyncMessage("Pref:Set", setting);
     promise.then((_v) => callback());
   }
-  resolvePrefGet: ((setting: PrefDatumWithValue) => void) | null = null;
+  resolvePrefGet: ((setting: PrefDatumWithValue) => void)[] = [];
   NRSPrefGet(setting: PrefDatum, callback: (data: PrefDatumWithValue) => void) {
     const promise = new Promise<PrefDatumWithValue>((resolve, _reject) => {
-      this.resolvePrefGet = resolve;
+      this.resolvePrefGet.push(resolve);
     });
     this.sendAsyncMessage("Pref:Get", setting);
     promise.then((v) => callback(v));
@@ -39,13 +39,13 @@ export class NRSettingsChild extends JSWindowActorChild {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "Pref:Set": {
-        this.resolvePrefSet?.();
-        this.resolvePrefSet = null;
+        const resolve = this.resolvePrefSet.shift();
+        resolve?.();
         break;
       }
       case "Pref:Get": {
-        this.resolvePrefGet?.(message.data);
-        this.resolvePrefGet = null;
+        const resolve = this.resolvePrefGet.shift();
+        resolve?.(message.data);
         break;
       }
     }

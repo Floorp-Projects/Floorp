@@ -3,62 +3,68 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { Flex, VStack, Text } from "@chakra-ui/react";
+import React, { useEffect } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import Preferences from "./preferences";
+import Backup from "./backup";
+import type { WorkspacesFormData } from "../../type";
 import {
-  Flex,
-  VStack,
-  Text,
-  Switch,
-  Input,
-  MenuList,
-  MenuItem,
-  Menu,
-  MenuButton,
-  Button,
-} from "@chakra-ui/react";
-import Card from "../../components/Card";
-import React from "react";
+  getWorkspaceSettings,
+  saveWorkspaceSettings,
+} from "./saveWorkspacesPref";
 
 export default function Workspaces() {
+  const { t } = useTranslation();
+  const methods = useForm<WorkspacesFormData>({
+    defaultValues: {},
+  });
+
+  const { setValue } = methods;
+  const watchAll = useWatch({
+    control: methods.control,
+  });
+
+  useEffect(() => {
+    const fetchDefaultValues = async () => {
+      const values = await getWorkspaceSettings();
+      for (const key in values) {
+        setValue(
+          key as keyof WorkspacesFormData,
+          values[key as keyof WorkspacesFormData],
+        );
+      }
+    };
+
+    fetchDefaultValues();
+    document?.documentElement?.addEventListener("onfocus", fetchDefaultValues);
+    return () => {
+      document?.documentElement?.removeEventListener(
+        "onfocus",
+        fetchDefaultValues,
+      );
+    };
+  }, [setValue]);
+
+  useEffect(() => {
+    saveWorkspaceSettings(watchAll as WorkspacesFormData);
+  }, [watchAll]);
+
   return (
     <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
-      <Text fontSize="3xl" mb={10}>Workspaces</Text>
-      <Text mb={8}>
-        Workspaces allow you to organize tabs and windows, and manage your work efficiently.
+      <Text fontSize="3xl" mb={10}>
+        ワークスペース
       </Text>
-
+      <Text mb={8}>
+        ワークスペースは、タブのグループ化を行うプロセスを大幅に簡素化し、
+        タブの整理や、管理を容易にします。
+      </Text>
       <VStack align="stretch" spacing={6} w="100%">
-        <Card
-          icon={<IconCarbonWorkspace style={{ fontSize: '24px', color: '#3182F6' }} />}
-          title="Basic Settings"
-          footerLink="https://support.google.com/chrome/?p=settings_workspaces"
-          footerLinkText="How to use workspaces"
-        >
-          <VStack align="stretch" spacing={4} mt={4} paddingInlineStart={"10px"}>
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>Enable Workspace Function</Text>
-              <Switch size="lg" colorScheme={"blue"} />
-            </Flex>
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>Workspace Default Name</Text>
-              <Input width="200px" type="text" />
-            </Flex>
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>Customize Workspace Container</Text>
-              <Menu>
-                {({ isOpen }) => (
-                  <>
-                    <MenuButton isActive={isOpen} as={Button} width="125px" rightIcon={<IconMdiCog />}>
-                      {isOpen ? 'Close' : 'Open'}
-                    </MenuButton>
-                    <MenuList>
-                      <MenuItem>ワークスペースを追加</MenuItem>
-                    </MenuList>
-                  </>
-                )}
-              </Menu>
-            </Flex>
-          </VStack>
-        </Card>
+        <FormProvider {...methods}>
+          <Preferences />
+          <Backup />
+        </FormProvider>
       </VStack>
     </Flex>
   );
