@@ -1,7 +1,5 @@
 #![allow(clippy::collapsible_else_if)]
 
-use std::fmt::format;
-
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
     CallExpression, ClassElement, Declaration, Expression, ModuleDeclaration, Statement,
@@ -19,9 +17,6 @@ fn find_match_call_expr<'stmt>(
     match stmt {
         Statement::ExpressionStatement(expr_stmt) => {
             if let Expression::CallExpression(call_expr) = &expr_stmt.expression {
-                //let callee = &call_expr.callee;
-
-                //println!("ccc {:?}", call_expr.callee_name());
                 if call_expr.callee_name() == Some(&id) {
                     return Some(call_expr);
                 }
@@ -56,14 +51,11 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
     let mut return_src = source_text.clone();
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(value.meta.path())
-        .map_err(|e| format!("SourceType UnknownExtension {}", e.0))?;
+        .map_err(|e| format!("SourceType UnknownExtension {}", e))?;
     let now = std::time::Instant::now();
     let ret = Parser::new(&allocator, &source_text, source_type).parse();
     let elapsed_time = now.elapsed();
     println!("{}ms.", elapsed_time.as_millis());
-
-    //println!("AST:");
-    // println!("{}", serde_json::to_string_pretty(&ret.program).unwrap());
 
     for stmt in ret.program.body {
         match &value.meta {
@@ -82,15 +74,10 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
                                 && c.super_class.as_ref().map(|sc| sc.is_specific_id(extends))
                                     != Some(false)
                             {
-                                //println!("same!");
                                 for i in c.body.body.iter() {
                                     for inject in value.inject.iter() {
                                         match i {
                                             ClassElement::MethodDefinition(m) => {
-                                                // println!(
-                                                //     "{}",
-                                                //     m.key.is_specific_id(&inject.meta.method)
-                                                // );
                                                 if m.key.is_specific_id(
                                                     inject.meta.method.as_ref().unwrap(),
                                                 ) {
@@ -103,10 +90,6 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
                                                         .iter()
                                                     {
                                                         if inject.meta.at.value == AtValue::Invoke {
-                                                            // println!(
-                                                            //     "{}",
-                                                            //     inject.meta.at.target.clone()
-                                                            // );
                                                             if let Some(call_expr) =
                                                                 find_match_call_expr(
                                                                     method_stmt,
@@ -125,7 +108,6 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
                                                                     call_expr.span.start as usize,
                                                                     &format!("/*@nora:inject:start*/{func_body}/*@nora:inject:end*/"),
                                                                 );
-                                                                //println!("{return_src}");
                                                                 break;
                                                             }
                                                         }
@@ -178,10 +160,8 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
                                             call_expr.span.start as usize,
                                             &format!("/*@nora:inject:start*/{func_body}/*@nora:inject:end*/"),
                                             );
-                                            //println!("{return_src}");
                                             break;
                                         }
-                                        // println!("{:?}", ret);
                                     }
                                 }
                             }
@@ -204,12 +184,3 @@ pub fn transform(source: String, metadata: String) -> Result<String, String> {
 
     Ok(return_src)
 }
-
-// fn main() -> Result<(), String> {
-//     // let name = env::args().nth(1).unwrap_or_else(|| "test.js".to_string());
-//     // let path = Path::new(&name);
-
-//     // let _ = std::fs::write(path, return_src);
-
-//     // Ok(())
-// }

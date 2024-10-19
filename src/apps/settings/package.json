@@ -13,7 +13,6 @@
     "@chakra-ui/theme-tools": "^2.2.6",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@iconify/json": "^2.2.263",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "framer-motion": "^11.11.9",

@@ -2,17 +2,11 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "formatter": {
     "enabled": true,
-    "indentStyle": "space"
+    "indentStyle": "space",
+    "ignore": ["@types/gecko/**"]
   },
   "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "complexity": {
-        "noForEach": "off"
-      }
-    },
-    "ignore": ["@types/gecko/**"]
+    "enabled": false
   },
   "files": {
     "ignore": ["bin/**", "dist/**", "node_modules/**", "@types/gecko/**"]

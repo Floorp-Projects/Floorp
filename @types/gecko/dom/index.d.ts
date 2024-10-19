@@ -11,6 +11,7 @@
 /// <reference path="../lib.gecko.xpcom.d.ts" />
 /// <reference path="../lib.gecko.services.d.ts" />
 /// <reference path="../lib.gecko.dom.d.ts" />
+/// <reference path="../lib.gecko.tweaks.d.ts" />
 
 /* NORA START */
 declare var window: Window;

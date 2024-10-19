@@ -9,6 +9,7 @@ const r = (subpath: string): string =>
 export default defineConfig({
   server: {
     port: 5182,
+    strictPort: true,
   },
   build: {
     outDir: r("_dist"),

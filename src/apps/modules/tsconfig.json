@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,

@@ -3,10 +3,6 @@
     "enable": true
   },
   "compilerOptions": {
-    "paths": {
-      "@types-gecko/*": ["../../@types/gecko/*"],
-      "@core/*": ["./core/*"]
-    },
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],
     "module": "ESNext",
@@ -15,17 +11,13 @@
     "noEmit": true,
     "allowJs": true,
     "checkJs": true,
-    "jsx": "preserve",
     "strict": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "resolvePackageJsonExports": false,
     "isolatedModules": true,
-    "jsxImportSource": "solid-js",
     "types": ["vite/client"],
-
-    "resolveJsonModule": true,
-    "typeRoots": ["./@types", "./node_modules/@types/", "./node_modules"]
+    "resolveJsonModule": true
   },
   "exclude": ["_dist"]
 }
