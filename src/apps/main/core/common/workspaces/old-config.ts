@@ -12,7 +12,7 @@ export const oldObjectConfigs: WorkspacesServicesConfigsType = {
   ),
   showWorkspaceNameOnToolbar: Services.prefs.getBoolPref(
     "floorp.browser.workspace.showWorkspaceName",
-    false,
+    true,
   ),
   closePopupAfterClick: Services.prefs.getBoolPref(
     "floorp.browser.workspace.closePopupAfterClick",

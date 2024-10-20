@@ -58,3 +58,8 @@ export type WorkspacesBackup = z.infer<typeof zWorkspacesServicesBackup>;
 export type WorkspacesServicesConfigsType = z.infer<
   typeof zWorkspacesServicesConfigs
 >;
+
+/* XUL Elements */
+export type PanelMultiViewParentElement = XULElement & {
+  hidePopup: () => void;
+};

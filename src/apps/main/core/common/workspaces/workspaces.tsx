@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Workspace } from "./utils/type";
+import type { PanelMultiViewParentElement, Workspace } from "./utils/type";
 import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { setWorkspaceModalState } from "./workspace-modal";
-import { enabled } from "./config";
+import { config, enabled } from "./config";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;
@@ -30,6 +30,17 @@ export class WorkspacesServices {
       true,
     );
     return l10n;
+  }
+
+  private get targetToolbarItem(): XULElement | undefined | null {
+    return document?.querySelector("#workspaces-toolbar-button");
+  }
+
+  private get panelUITargetElement():
+    | PanelMultiViewParentElement
+    | undefined
+    | null {
+    return document?.querySelector("#customizationui-widget-panel");
   }
 
   /**
@@ -134,6 +145,13 @@ export class WorkspacesServices {
       throw new Error("Workspace id is required to change workspace");
     }
 
+    if (
+      config().closePopupAfterClick &&
+      this.targetToolbarItem?.hasAttribute("open")
+    ) {
+      this.panelUITargetElement?.hidePopup();
+    }
+
     const willChangeWorkspaceLastShowTab = document?.querySelector(
       `[${WorkspacesServicesStaticNames.workspaceLastShowId}="${workspaceId}"]`,
     );
@@ -176,7 +194,13 @@ export class WorkspacesServices {
     ) as XULElement;
 
     const workspace = this.getWorkspaceById(workspaceId);
-    targetToolbarItem?.setAttribute("label", workspace.name);
+
+    if (config().showWorkspaceNameOnToolbar) {
+      targetToolbarItem?.setAttribute("label", workspace.name);
+    } else {
+      targetToolbarItem?.removeAttribute("label");
+    }
+
     (document?.documentElement as XULElement).style.setProperty(
       "--workspaces-toolbar-button-icon",
       `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
@@ -504,6 +528,9 @@ export class WorkspacesServices {
 
       // Check Tabs visibility
       this.checkTabsVisibility();
+      this.changeWorkspaceToolbarState();
+
+      // Set workspace toolbar state
       this.changeWorkspaceToolbarState();
     });
     this.changeWorkspace(this.getCurrentWorkspaceId);
