@@ -203,6 +203,20 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
     }
   }
 
+  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE ||
+      aEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
+    LocalAccessible* target = aEvent->GetAccessible();
+    // We need to do this here while the relation is still intact. During the
+    // tick, where we we call PushNameOrDescriptionChange, it will be too late
+    // since we will already have unparented the label and severed the relation.
+    if (PushNameOrDescriptionChangeToRelations(target,
+                                               RelationType::LABEL_FOR) ||
+        PushNameOrDescriptionChangeToRelations(target,
+                                               RelationType::DESCRIPTION_FOR)) {
+      ScheduleProcessing();
+    }
+  }
+
   // We need to fire a reorder event after all of the events targeted at shown
   // or hidden children of a container.  So either queue a new one, or move an
   // existing one to the end of the queue if the container already has a
@@ -213,12 +227,6 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
     reorder = new AccReorderEvent(container);
     container->SetReorderEventTarget(true);
     mMutationMap.PutEvent(reorder);
-
-    // Since this is the first child of container that is changing, the name
-    // and/or description of dependent Accessibles may be changing.
-    if (PushNameOrDescriptionChange(aEvent)) {
-      ScheduleProcessing();
-    }
   } else {
     AccReorderEvent* event = downcast_accEvent(
         mMutationMap.GetEvent(container, EventMap::ReorderEvent));
@@ -649,6 +657,13 @@ void NotificationController::ProcessMutationEvents() {
       nsEventShell::FireEvent(event);
       if (!mDocument) {
         return;
+      }
+
+      // The mutation in the container can change its name, or an ancestor's
+      // name. A labelled/described by relation would also need to be notified
+      // if this is the case.
+      if (PushNameOrDescriptionChange(event)) {
+        ScheduleProcessing();
       }
 
       LocalAccessible* target = event->GetAccessible();
