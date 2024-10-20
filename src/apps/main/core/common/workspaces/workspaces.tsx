@@ -117,6 +117,9 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(workspaceId: string): void {
+    this.setCurrentWorkspaceId(
+      this.getDefaultWorkspaceId() ?? workspacesData()[0].id,
+    );
     setworkspacesData((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
