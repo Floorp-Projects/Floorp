@@ -32,10 +32,18 @@ export class WorkspacesServices {
     return l10n;
   }
 
+  /**
+   * Returns target toolbar item.
+   * @returns The target toolbar item.
+   */
   private get targetToolbarItem(): XULElement | undefined | null {
     return document?.querySelector("#workspaces-toolbar-button");
   }
 
+  /**
+   * Returns panel UI target element.
+   * @returns The panel UI target element.
+   */
   private get panelUITargetElement():
     | PanelMultiViewParentElement
     | undefined
@@ -131,6 +139,7 @@ export class WorkspacesServices {
     this.setCurrentWorkspaceId(
       this.getDefaultWorkspaceId() ?? workspacesData()[0].id,
     );
+    this.removeTabByWorkspaceId(workspaceId);
     setworkspacesData((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
@@ -363,6 +372,19 @@ export class WorkspacesServices {
       WorkspacesServicesStaticNames.workspacesTabAttributionId,
       workspaceId,
     );
+  }
+
+  /**
+   * Remove tab by workspace id.
+   * @param workspaceId The workspace id.
+   */
+  private removeTabByWorkspaceId(workspaceId: string) {
+    const tabs = window.gBrowser.tabs;
+    for (const tab of tabs) {
+      if (this.getWorkspaceIdFromAttribute(tab) === workspaceId) {
+        window.gBrowser.removeTab(tab);
+      }
+    }
   }
 
   /**
