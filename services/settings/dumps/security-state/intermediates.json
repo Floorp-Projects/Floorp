@@ -12871,24 +12871,6 @@
       "last_modified": 1666727872206
     },
     {
-      "schema": 1666727364817,
-      "derHash": "kmUc1IoCiKowdTVN3BXcJNCvjuZwFbaKFFlwoJNHXhk=",
-      "subject": "CN=GlobalSign Atlas R3 DV ACME CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFIzIERWIEFDTUUgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "82b4c8e10f053e786fb7faab5851c6767f411878b722fa4fe6665cc129ba1fd9",
-        "size": 1715,
-        "filename": "RTNL_r8kG4tFP4WLDbH3t3jORvLYveRyVe5Lped3y2k=.pem",
-        "location": "security-state-staging/intermediates/656d64cb-73fc-4bac-8a0a-77d5959346d5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "RTNL/r8kG4tFP4WLDbH3t3jORvLYveRyVe5Lped3y2k=",
-      "crlite_enrolled": false,
-      "id": "d9a8325b-38fd-4205-a3e8-1e692af95693",
-      "last_modified": 1666727872165
-    },
-    {
       "schema": 1666727411172,
       "derHash": "IgBA3aN3yURCnozpE7fYGzbeNOvy3CGNIGY5PZSGNDk=",
       "subject": "CN=Democritus University of Thrace TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -13303,24 +13285,6 @@
       "last_modified": 1666727871580
     },
     {
-      "schema": 1666727432201,
-      "derHash": "oE+mnoTM1E9eUmtVhjHjRrIUF9TRtgagjK3jko2/EVg=",
-      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA 2022 Q1,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIDIwMjIgUTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3f4317e778b3da30eec0cd9dbe908ae50b5736d6612f97db5ec06bc2d774dc25",
-        "size": 1715,
-        "filename": "bB0N8F_eQUgJWwMgm9RHXw1K3t_cLoC1Y1kTX0-qGSw=.pem",
-        "location": "security-state-staging/intermediates/ccd669e0-4496-4491-af67-b2b12c0361a6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bB0N8F/eQUgJWwMgm9RHXw1K3t/cLoC1Y1kTX0+qGSw=",
-      "crlite_enrolled": false,
-      "id": "c9d98cb3-1e77-460b-87d4-c645e50c2df1",
-      "last_modified": 1666727871566
-    },
-    {
       "schema": 1666727451288,
       "derHash": "ZTkjWloflBgMUjPq+KXWcQLeqhbAdRrvNbPmfOVgfyk=",
       "subject": "CN=University of Macedonia TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -13645,24 +13609,6 @@
       "last_modified": 1666727871267
     },
     {
-      "schema": 1666727418879,
-      "derHash": "2eSoA/tJju6Tefz5CsMGeuZdCYzHeJDDfldeJJzX18k=",
-      "subject": "CN=GlobalSign Atlas R3 DV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIERWIFRMUyBDQSAyMDIyIFEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "92ab09e1e79d49e44c86537b1abbde38e45f433060cb6d33b9a6ecaa6a058085",
-        "size": 1715,
-        "filename": "y55D7j3luCHY1W8t3APrJcmdLg5GymgZPl7Xw-vI1u8=.pem",
-        "location": "security-state-staging/intermediates/ce03c78f-04a2-472a-974c-e431282ab41c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "y55D7j3luCHY1W8t3APrJcmdLg5GymgZPl7Xw+vI1u8=",
-      "crlite_enrolled": false,
-      "id": "95476db8-9ecd-41a5-a165-c19b7b039ad0",
-      "last_modified": 1666727871248
-    },
-    {
       "schema": 1666727435110,
       "derHash": "ffgAB19SA8AXNk6BGVqayf8AxQfWSnD3N9jT6Ms/CEU=",
       "subject": "CN=e-Szigno Qualified TLS CA 2018,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -13877,24 +13823,6 @@
       "crlite_enrolled": false,
       "id": "a5b3dfaa-3b95-4b1c-9e4d-0c827e7214ea",
       "last_modified": 1666727870932
-    },
-    {
-      "schema": 1666727366399,
-      "derHash": "+dMhStb11tKzyBYflgKLdoErBYYUpmeGuSyP69rAIO4=",
-      "subject": "CN=GlobalSign Atlas ECCR5 OV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IE9WIFRMUyBDQSAyMDIyIFEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "09600768299e6006e17871433cfa0b5cdf6197aec92f5acc16c7336a85485e09",
-        "size": 1268,
-        "filename": "YnrjW9deXDaWO8A6Q2-8RN8iRv5dtgowKQv9ki2Qx2o=.pem",
-        "location": "security-state-staging/intermediates/e6449200-3f47-468c-bd11-7bc8c0389089.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "YnrjW9deXDaWO8A6Q2+8RN8iRv5dtgowKQv9ki2Qx2o=",
-      "crlite_enrolled": false,
-      "id": "d8bb5569-b8b9-4d0c-b76c-61a051cbcdc4",
-      "last_modified": 1666727870918
     },
     {
       "schema": 1666727435608,
@@ -14147,24 +14075,6 @@
       "crlite_enrolled": false,
       "id": "e207f6b2-a65d-496f-93d0-ba609cae2a11",
       "last_modified": 1666727870674
-    },
-    {
-      "schema": 1666727408573,
-      "derHash": "U2o1o/pjA3nPO01LThOVr5z+0iQxOOY05DaaMeKHKEM=",
-      "subject": "CN=GlobalSign Atlas R3 OV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIE9WIFRMUyBDQSAyMDIyIFEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "27ae75ce3a1364b7c6d354f4b20a7958b356098ef77f069b6822b1d1e0f1d519",
-        "size": 1715,
-        "filename": "FOIhxqHWraoWquKZ7Vdl8ZZq_LUDlRo5cGfh_Ue22N4=.pem",
-        "location": "security-state-staging/intermediates/d725c849-ba09-4744-9b67-2287530c0737.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "FOIhxqHWraoWquKZ7Vdl8ZZq/LUDlRo5cGfh/Ue22N4=",
-      "crlite_enrolled": false,
-      "id": "7cfb8b2b-97d9-4b79-9fd1-b7cabd248b02",
-      "last_modified": 1666727870661
     },
     {
       "schema": 1666727440773,
@@ -26461,24 +26371,6 @@
       "last_modified": 1645578269031
     },
     {
-      "schema": 1645577307592,
-      "derHash": "cnqQaaPGDSE1hOYW1b9V39GccaOXZkXqanOxj4N2DSQ=",
-      "subject": "CN=GlobalSign Atlas ECCR5 DV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IERWIFRMUyBDQSAyMDIyIFEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a2b90105268ee9dda0958e2474167ec50f9728091ad8167d84d5dbcd73dc4eeb",
-        "size": 1268,
-        "filename": "qYuc8soPP5srLa_gV5q-OE9DtidJ5ntVNioJYOgqRGI=.pem",
-        "location": "security-state-staging/intermediates/d3e97d30-085c-4a0d-aa3c-6eb9aff86e9b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qYuc8soPP5srLa/gV5q+OE9DtidJ5ntVNioJYOgqRGI=",
-      "crlite_enrolled": false,
-      "id": "ecdc9609-c91d-4745-b86c-2d2f8ed319a2",
-      "last_modified": 1645578268957
-    },
-    {
       "schema": 1645577313138,
       "derHash": "h9QhabJpNVHKIFzPF/BvbmZR9yGM1tJmB79bpN0vJvI=",
       "subject": "CN=Trustwave Global ECDSA P-384 Organization Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
@@ -26677,24 +26569,6 @@
       "last_modified": 1645578268229
     },
     {
-      "schema": 1645577404449,
-      "derHash": "yadACdrhlKQL0SKr0BXUTpPLeHmwlJBUoxBC70yZ5dY=",
-      "subject": "CN=GlobalSign Atlas R6 EV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFI2IEVWIFRMUyBDQSAyMDIyIFEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d654a6ce826d389336ce330646e5b80ca4bb56d02aa9b727acdf28b1351d111b",
-        "size": 2406,
-        "filename": "xnf9i2v7Syri1B3CTwp1xFENpad-RBcMO7FeEYw99N4=.pem",
-        "location": "security-state-staging/intermediates/a360a91c-d2e5-4d13-8496-29a389b5882e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "xnf9i2v7Syri1B3CTwp1xFENpad+RBcMO7FeEYw99N4=",
-      "crlite_enrolled": false,
-      "id": "a806764f-b6e1-4ecc-af1c-a4abab801cca",
-      "last_modified": 1645578268188
-    },
-    {
       "schema": 1645577412454,
       "derHash": "GGJqO3IREo1WNGnGVFV9E8k2bX/OyLlNtPCqfgWUQEE=",
       "subject": "CN=Trustwave Global Extended Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
@@ -26783,24 +26657,6 @@
       "crlite_enrolled": false,
       "id": "07100a67-e0bc-4170-ad65-14e652c630ab",
       "last_modified": 1645578267916
-    },
-    {
-      "schema": 1645577448994,
-      "derHash": "IYxHC3iwLTm4T8aJL1of6cmda5pri3Rx4Dntz8qRAEw=",
-      "subject": "CN=GlobalSign Atlas ECCR5 OV ACME CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFwxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTIwMAYDVQQDEylHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IE9WIEFDTUUgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ccc18ae4433e6adabdc6786dea95c19022d2fc58b5d53697664ebbe709b8d444",
-        "size": 1272,
-        "filename": "tknQlS8xhdJy4vVuy2O8_4Qbd1dyLFObjTdmW8c4SkE=.pem",
-        "location": "security-state-staging/intermediates/4d6d5cfd-e2e1-4865-85bb-e0b9cfdaec63.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tknQlS8xhdJy4vVuy2O8/4Qbd1dyLFObjTdmW8c4SkE=",
-      "crlite_enrolled": false,
-      "id": "8e045253-b803-4d74-b99c-8e5da4c8a8e6",
-      "last_modified": 1645578267856
     },
     {
       "schema": 1645577462286,
@@ -26947,24 +26803,6 @@
       "last_modified": 1645578267331
     },
     {
-      "schema": 1645577544239,
-      "derHash": "nJ1emGtb6noeyEV+vKpgDSQ1gDuR/sl8TlBDvmdC1LE=",
-      "subject": "CN=GlobalSign Atlas E46 EV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBUTFMgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dd328d8151311218aa922749509f8a8c6db7fadf4ef9eff750e0738bc8371ec6",
-        "size": 1252,
-        "filename": "DQGZqEoQOGPk3TGeSgw0Mv3YehFPmaDtde4hT_ZpQVY=.pem",
-        "location": "security-state-staging/intermediates/f0902f4c-c1c1-46a4-84ce-861f1fe14ae6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DQGZqEoQOGPk3TGeSgw0Mv3YehFPmaDtde4hT/ZpQVY=",
-      "crlite_enrolled": false,
-      "id": "0af2fa62-ff3e-4f7d-8a7d-8a81ddef262b",
-      "last_modified": 1645578267127
-    },
-    {
       "schema": 1645577552443,
       "derHash": "kxqqHsmyug+lmoIwL0+DBijIbZstKlCk0bLOiVxMxkg=",
       "subject": "CN=Actalis Organization Validated Server CA G3,O=Actalis S.p.A.,L=Ponte San Pietro,ST=Bergamo,C=IT",
@@ -27053,24 +26891,6 @@
       "crlite_enrolled": false,
       "id": "ec1245af-ec52-405d-8a7f-67e52e819d5b",
       "last_modified": 1645578266982
-    },
-    {
-      "schema": 1645577566450,
-      "derHash": "TPoUvH6PSNRnewYEd3r3arDFWzJvi5e6lfas4RXAXxY=",
-      "subject": "CN=GlobalSign Atlas R46 EV TLS CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBUTFMgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "df80822c69bdeecdf5fb5d1b30c3f046a0e6db7a73cb50ab774e35a2f8469f06",
-        "size": 2398,
-        "filename": "7o7YnXjBCwSnI2SqRPrDh62sfg55ErcgZ_bXovoqhw0=.pem",
-        "location": "security-state-staging/intermediates/637be407-0c8a-4e55-96f8-0556e5bf5471.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "7o7YnXjBCwSnI2SqRPrDh62sfg55ErcgZ/bXovoqhw0=",
-      "crlite_enrolled": false,
-      "id": "f34a58bc-87fc-4426-9ae2-9d88ac41278a",
-      "last_modified": 1645578266962
     },
     {
       "schema": 1645577572043,
@@ -27199,24 +27019,6 @@
       "last_modified": 1645578266773
     },
     {
-      "schema": 1645577594200,
-      "derHash": "6lMubXj/AP1PVkR/fgpH0jnZRUJLd88NFaeVy07mAr0=",
-      "subject": "CN=GlobalSign Atlas R3 OV ACME CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFIzIE9WIEFDTUUgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ad472ef5a46ea68bbb4a1a3f17c53c17fdea08a495931ba70ce99284d3b5111f",
-        "size": 1715,
-        "filename": "h_7tTSynG1Dd6RmqneQ-zxMZtzQrsbf-70yJDma14Nc=.pem",
-        "location": "security-state-staging/intermediates/ab17d88b-ef26-4d65-8355-434a27c5f68a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "h/7tTSynG1Dd6RmqneQ+zxMZtzQrsbf+70yJDma14Nc=",
-      "crlite_enrolled": false,
-      "id": "68ddf421-2e8c-4807-bf06-c6cf66ff7798",
-      "last_modified": 1645578266763
-    },
-    {
       "schema": 1645577614499,
       "derHash": "ugMS97cva2S0zO40tfYoz2Wh87nxa43+etqQxU5HWhw=",
       "subject": "CN=HARICA QWAC ECC SubCA R1,OU=Hellenic Academic and Research Institutions CA,O=Greek Universities Network (GUnet),L=Athens,C=GR",
@@ -27305,24 +27107,6 @@
       "crlite_enrolled": false,
       "id": "74868831-ea0c-4662-8ac9-49306168fcf7",
       "last_modified": 1645578266465
-    },
-    {
-      "schema": 1645577643866,
-      "derHash": "omL31lPmx0Xuq+v2Zyp1a1AagvBnCPK153kWIXA3u8o=",
-      "subject": "CN=GlobalSign Atlas ECCR5 DV ACME CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFwxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTIwMAYDVQQDEylHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IERWIEFDTUUgQ0EgMjAyMiBRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9907027a14a417d41ca144866e5b162ce5b83cfec221eb1748d533d670a60401",
-        "size": 1272,
-        "filename": "L4y0ygHUFwuHByot9xpn_RDuWzf0QN0ZdIEbPkYlCnQ=.pem",
-        "location": "security-state-staging/intermediates/4b66b8d3-aa86-427c-add7-a2a478b8df44.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "L4y0ygHUFwuHByot9xpn/RDuWzf0QN0ZdIEbPkYlCnQ=",
-      "crlite_enrolled": false,
-      "id": "49a76008-6d74-4c56-b7cc-3c1f5df190a7",
-      "last_modified": 1645578266385
     },
     {
       "schema": 1645577656054,
@@ -30943,5 +30727,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1729133822324
+  "timestamp": 1729436222555
 }
