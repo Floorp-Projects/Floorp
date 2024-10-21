@@ -176,8 +176,11 @@ org.am
 // http://www.dns.ao/REGISTR.DOC
 ao
 ed.ao
+edu.ao
+gov.ao
 gv.ao
 og.ao
+org.ao
 co.ao
 pb.ao
 it.ao
@@ -5604,6 +5607,7 @@ sr
 // Submitted by registry <technical@nic.ss>
 ss
 biz.ss
+co.ss
 com.ss
 edu.ss
 gov.ss
@@ -6713,7 +6717,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-15T15:17:29Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-17T15:16:23Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -9319,7 +9323,7 @@ nissay
 // https://www.iana.org/domains/root/db/nokia.html
 nokia
 
-// norton : NortonLifeLock Inc.
+// norton : Gen Digital Inc.
 // https://www.iana.org/domains/root/db/norton.html
 norton
 
