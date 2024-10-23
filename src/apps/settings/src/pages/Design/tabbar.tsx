@@ -29,7 +29,7 @@ export default function Tabbar() {
     <Card
       icon={<IconIcRoundTab style={{ fontSize: "24px", color: "#137333" }} />}
       title={t("design.tabBar")}
-      footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+      footerLink="https://docs.floorp.app/docs/features/tab-bar-customization"
       footerLinkText={t("design.customizeTabBar")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
@@ -56,7 +56,10 @@ export default function Tabbar() {
           <AlertDescription>
             {t("design.verticalTabIsRemovedFromBrowser")}
             <br />
-            <Link color="blue.500" href="https://support.mozilla.org">
+            <Link
+              color="blue.500"
+              href="https://docs.floorp.app/docs/features/tab-bar-customization/#tab-bar-layout"
+            >
               {t("design.learnMore")}
             </Link>
           </AlertDescription>

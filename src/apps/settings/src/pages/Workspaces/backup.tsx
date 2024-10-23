@@ -31,7 +31,6 @@ export default function Backup() {
         />
       }
       title={t("workspaces.backup")}
-      footerLink="https://support.google.com/chrome/?p=settings_workspaces"
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
         <Text fontSize="lg">{t("workspaces.backupComingSoon")}</Text>

@@ -76,7 +76,7 @@ export default function Home() {
           </Card>
           <Card
             title={t("home.privacyAndTrackingProtection.title")}
-            footerLink="https://support.google.com/chrome/answer/95647?hl=ja"
+            footerLink="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
             footerLinkText={t(
               "home.privacyAndTrackingProtection.footerLinkText",
             )}
@@ -114,7 +114,7 @@ export default function Home() {
           </Card>
           <Card
             title={t("home.browserSupport.title")}
-            footerLink="https://support.mozilla.org/products/firefox/"
+            footerLink="https://docs.floorp.app/docs/features/"
             footerLinkText={t("home.browserSupport.footerLinkText")}
             icon={
               <IconMdiHelpCircle

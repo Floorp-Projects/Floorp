@@ -36,7 +36,7 @@ export default function Tab() {
         <IconFluentMdl2Tab style={{ fontSize: "24px", color: "#ff7708" }} />
       }
       title={t("design.tab.title")}
-      footerLink="https://noraneko.example.com/help/customize-tab-bar"
+      footerLink="https://docs.floorp.app/docs/features/tab-customization"
       footerLinkText={t("design.tab.footerLinkText")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>

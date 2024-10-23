@@ -35,7 +35,7 @@ export default function Interface() {
     <Card
       icon={<IconMdiPen style={{ fontSize: "24px", color: "#3182F6" }} />}
       title={t("design.interface")}
-      footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+      footerLink="https://docs.floorp.app/docs/features/design-customization"
       footerLinkText={t("design.aboutInterfaceDesign")}
     >
       <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>

@@ -45,7 +45,7 @@ export default function Preferences() {
           />
         }
         title={t("workspaces.basicSettings")}
-        footerLink="https://support.google.com/chrome/?p=settings_workspaces"
+        footerLink="https://docs.floorp.app/docs/features/how-to-use-workspaces"
         footerLinkText={t("workspaces.howToUseAndCustomize")}
       >
         <VStack align="stretch" spacing={4} paddingInlineStart={"10px"}>
