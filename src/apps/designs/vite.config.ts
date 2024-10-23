@@ -11,12 +11,18 @@ export default defineConfig({
     port: 5182,
   },
   build: {
-    outDir: "_dist",
+    outDir: r("_dist"),
     target: "firefox128",
     reportCompressedSize: false,
+    minify: false,
     rollupOptions: {
       input: {
         designs: r("./src/index.ts"),
+        "newtab.script": r("./src/newtab.script.ts"),
+      },
+      output: {
+        esModule: true,
+        entryFileNames: "[name].js",
       },
     },
   },

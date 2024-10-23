@@ -9,13 +9,13 @@ import {
   Text,
 } from "@chakra-ui/react";
 import SimpleSidebar from "./modules/sidebar";
-import { getBoolPref, getIntPref, setBoolPref } from "./dev";
+// import { getBoolPref, getIntPref, setBoolPref } from "./dev";
 
 export default function Home() {
-  setBoolPref("noraneko.settings.dev", true);
-  getBoolPref("bidi.browser.ui").then((v) => {
-    console.log(v);
-  });
+  // setBoolPref("noraneko.settings.dev", true);
+  // getBoolPref("bidi.browser.ui").then((v) => {
+  //   console.log(v);
+  // });
 
   return (
     <>

@@ -3,8 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as fs from "node:fs/promises";
+import fg from "fast-glob";
 
-export async function generateJarManifest(bundle: object, options: {prefix: string, namespace: string, register_type: "content" | "skin"}) {
+export async function generateJarManifest(
+  bundle: object,
+  options: {
+    prefix: string;
+    namespace: string;
+    register_type: "content" | "skin";
+  },
+) {
   console.log("generate jar.mn");
   const viteManifest = bundle;
 

@@ -19,6 +19,13 @@ declare var Cc: nsIXPCComponents_Classes;
 declare var Cu: nsIXPCComponents_Utils;
 declare var Ci: nsIXPCComponents_Interfaces;
 declare var Services: JSServices;
+interface CSSStyleDeclaration {
+    display: string;
+    flex: string;
+    order: string;
+    flexDirection: string;
+    flexTemplateAreas: string;
+}
 /* NORA END */
 
 // interface CSSStyleDeclaration {

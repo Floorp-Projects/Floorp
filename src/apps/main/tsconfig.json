@@ -1,7 +1,6 @@
 {
   "typeAcquisition": {
-    "enable": true,
-    "include": ["vite/client"]
+    "enable": true
   },
   "compilerOptions": {
     "paths": {
