@@ -24,15 +24,17 @@ You can run `pnpm build` and `pnpm dev`.
 `pnpm build` outputs files, while `pnpm dev` is used for debugging the code with file watch.
 Refer to "How to Debug" for instructions on using `pnpm dev`.
 
-## How to Debug
+## How to debug
 
 ### Windows
 
 1. Install zstd and add it to the PATH.
-2. Download the latest successful build artifact from [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
-3. Extract the zip file and place `nora-win_x64-bin.tar.zst` in the project root.
+2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
+  the `Release Full` version is recommended.
+3. Download artifact named as "noraneko-win-amd64-dev" and place in project root.
 4. Run `pnpm dev`.
-5. The browser will launch, and if you change any files, the browser will restart automatically.
+5. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+  If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ## Credits
 
