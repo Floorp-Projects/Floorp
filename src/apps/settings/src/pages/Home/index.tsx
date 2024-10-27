@@ -11,7 +11,9 @@ import {
   Grid,
   GridItem,
   Progress,
+  Box,
 } from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 import Card from "../../components/Card";
 import { useHomeData } from "./utils";
 import { useTranslation } from "react-i18next";
@@ -20,6 +22,7 @@ import type { HomeData } from "./utils";
 
 export default function Home() {
   const { t } = useTranslation();
+  const color = useColorModeValue("white", "black");
   const [homeData, setHomeData] = React.useState<HomeData | null>(null);
 
   React.useEffect(() => {
@@ -30,11 +33,28 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
+  function isLoggedInToMozillaAccount() {
+    return homeData?.accountName !== null;
+  }
+
   return (
     <GridItem display="flex" justifyContent="center">
       <VStack align="stretch" alignItems="center" maxW={"900px"} spacing={6}>
         <Flex alignItems="center" flexDirection={"column"}>
-          <Avatar size="xl" src={homeData?.accountImage} m={4} />
+          <Box
+            m={5}
+            p={"3px"}
+            background={
+              isLoggedInToMozillaAccount()
+                ? "linear-gradient(150deg, #0060df , #c60084 ,#ffa436)"
+                : "none"
+            }
+            borderRadius={"full"}
+          >
+            <Box background={color} p={1} borderRadius={"full"}>
+              <Avatar size="xl" src={homeData?.accountImage} />
+            </Box>
+          </Box>
           <Text fontSize="3xl">
             {t("home.welcome", {
               name: homeData?.accountName ?? t("home.defaultAccountName"),
