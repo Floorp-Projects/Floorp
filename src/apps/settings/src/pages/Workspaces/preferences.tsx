@@ -14,12 +14,12 @@ import {
   FormHelperText,
   useDisclosure,
 } from "@chakra-ui/react";
-import Card from "../../components/Card";
-import RestartWarningDialog from "../../components/RestartWarningDialog";
+import Card from "@/components/Card";
+import RestartWarningDialog from "@/components/RestartWarningDialog";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { WorkspacesFormData } from "../../type";
+import type { WorkspacesFormData } from "@/type";
 
 export default function Preferences() {
   const { t } = useTranslation();

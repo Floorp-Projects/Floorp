@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 import path from "node:path";
 import react from "@vitejs/plugin-react-swc";
 import Icons from "unplugin-icons/vite";
@@ -46,6 +47,7 @@ export default defineConfig({
         }),
       ],
     }),
+    tsconfigPaths(),
     CustomHmr(),
   ],
   optimizeDeps: {

@@ -14,7 +14,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
-import Card from "../../components/Card";
+import Card from "@/components/Card";
 import { useHomeData } from "./utils";
 import { useTranslation } from "react-i18next";
 import React from "react";
@@ -52,7 +52,14 @@ export default function Home() {
             borderRadius={"full"}
           >
             <Box background={color} p={1} borderRadius={"full"}>
-              <Avatar size="xl" src={homeData?.accountImage} />
+              <Avatar
+                size="xl"
+                src={
+                  "https://firefoxusercontent.com/b3c5ce2796fbeaf4036dbd8f21a6cfc0"
+                }
+                color="white"
+                bg="blue.600"
+              />
             </Box>
           </Box>
           <Text fontSize="3xl">

@@ -42,3 +42,10 @@ export const zWorkspacesFormData = z.object({
 });
 
 export type WorkspacesFormData = z.infer<typeof zWorkspacesFormData>;
+
+/* About */
+export type ConstantsData = {
+  MOZ_APP_VERSION: string;
+  MOZ_APP_VERSION_DISPLAY: string;
+  MOZ_OFFICIAL_BRANDING: boolean;
+};

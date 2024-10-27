@@ -13,19 +13,20 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import Card from "../../components/Card";
+import Card from "@/components/Card";
 import { useConstantsData } from "./utils";
+import type { ConstantsData } from "@/type";
 
 export default function About() {
   const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
 
-  const [constantsData, setConstantsData] = React.useState<any>(null);
+  const [constantsData, setConstantsData] =
+    React.useState<ConstantsData | null>(null);
 
   React.useEffect(() => {
     async function fetchConstantsData() {
       const data = await useConstantsData();
-      console.log(data);
       setConstantsData(data);
     }
     fetchConstantsData();

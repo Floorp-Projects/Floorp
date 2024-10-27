@@ -9,7 +9,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Preferences from "./preferences";
 import Backup from "./backup";
-import type { WorkspacesFormData } from "../../type";
+import type { WorkspacesFormData } from "@/type";
 import {
   getWorkspaceSettings,
   saveWorkspaceSettings,

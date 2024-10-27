@@ -18,7 +18,7 @@ import {
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
-import i18n from "../i18n";
+import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
 function Header() {

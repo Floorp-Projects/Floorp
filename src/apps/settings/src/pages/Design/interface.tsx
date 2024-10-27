@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Controller, useFormContext } from "react-hook-form";
-import ThemeCard from "../../components/ThemeCard";
-import Card from "../../components/Card";
+import ThemeCard from "@/components/ThemeCard";
+import Card from "@/components/Card";
 import type { DesignFormData } from "@/type";
 import {
   Alert,

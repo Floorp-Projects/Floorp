@@ -3,11 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export async function useConstantsData(): Promise<object> {
+import type { ConstantsData } from "@/type";
+
+export async function useConstantsData(): Promise<ConstantsData> {
   return await getConstants();
 }
 
-async function getConstants(): Promise<any> {
+async function getConstants(): Promise<ConstantsData> {
   return await new Promise((resolve) => {
     window.NRGetConstants((data: string) => {
       resolve(JSON.parse(data));

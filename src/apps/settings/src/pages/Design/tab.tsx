@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormErrorMessage,
 } from "@chakra-ui/react";
-import Card from "../../components/Card";
+import Card from "@/components/Card";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import type { DesignFormData } from "@/type";

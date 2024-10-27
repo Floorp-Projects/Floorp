@@ -28,7 +28,8 @@
     "react-i18next": "^15.1.0",
     "react-router-dom": "^6.27.0",
     "unplugin-auto-import": "^0.18.3",
-    "unplugin-icons": "^0.19.3"
+    "unplugin-icons": "^0.19.3",
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.7.9",

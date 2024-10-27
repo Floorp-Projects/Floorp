@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { extractTextContent } from "./extractTextContent";
 import { usePageData } from "../../pageData";
-import Card from "../../components/Card";
+import Card from "@/components/Card";
 import {
   Text,
   VStack,
