@@ -22,7 +22,7 @@ import type { HomeData } from "./utils";
 
 export default function Home() {
   const { t } = useTranslation();
-  const color = useColorModeValue("white", "black");
+  const color = useColorModeValue("white", "#1a1a1a");
   const [homeData, setHomeData] = React.useState<HomeData | null>(null);
 
   React.useEffect(() => {
@@ -54,9 +54,7 @@ export default function Home() {
             <Box background={color} p={1} borderRadius={"full"}>
               <Avatar
                 size="xl"
-                src={
-                  "https://firefoxusercontent.com/b3c5ce2796fbeaf4036dbd8f21a6cfc0"
-                }
+                src={homeData?.accountImage}
                 color="white"
                 bg="blue.600"
               />
