@@ -56,6 +56,6 @@ export function init() {
   });
 
   import.meta.hot?.accept((m) => {
-    m?.initDownloadbar();
+    m?.init();
   });
 }
