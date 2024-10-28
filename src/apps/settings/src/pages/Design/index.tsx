@@ -8,7 +8,7 @@ import React, { useEffect } from "react";
 import Interface from "./interface";
 import Tabbar from "./tabbar";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
-import { getDesignSettings, saveDesignSettings } from "./saveDesignPref";
+import { getDesignSettings, saveDesignSettings } from "./dataManager";
 import type { DesignFormData } from "@/type";
 import { useTranslation } from "react-i18next";
 import Tab from "./tab";

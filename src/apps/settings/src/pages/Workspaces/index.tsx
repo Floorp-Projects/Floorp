@@ -10,10 +10,7 @@ import { useTranslation } from "react-i18next";
 import Preferences from "./preferences";
 import Backup from "./backup";
 import type { WorkspacesFormData } from "@/type";
-import {
-  getWorkspaceSettings,
-  saveWorkspaceSettings,
-} from "./saveWorkspacesPref";
+import { getWorkspaceSettings, saveWorkspaceSettings } from "./dataManager";
 
 export default function Workspaces() {
   const { t } = useTranslation();

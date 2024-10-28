@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import Card from "@/components/Card";
-import { useConstantsData } from "./utils";
+import { useConstantsData } from "./dataManager";
 import type { ConstantsData } from "@/type";
 
 export default function About() {

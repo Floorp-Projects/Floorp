@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Header from "./header";
 import Workspaces from "./pages/Workspaces";
 import Design from "./pages/Design";
+import Accounts from "./pages/Accounts";
 import About from "./pages/About";
 import SearchResults from "./pages/Search/index";
 
@@ -27,6 +28,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/workspaces" element={<Workspaces />} />
                 <Route path="/design" element={<Design />} />
+                <Route path="/accounts" element={<Accounts />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/search" element={<SearchResults />} />
               </Routes>

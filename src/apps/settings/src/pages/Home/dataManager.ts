@@ -3,16 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { AccountInfo } from "./type";
-export interface HomeData {
-  accountName: string | null;
-  accountImage: string;
-}
+import type { HomeData, AccountInfo } from "@/type";
 
 export async function useHomeData(): Promise<HomeData> {
   return {
     accountName: (await getAccountName()) ?? null,
     accountImage: await getAccountImage(),
+    accountInfo: await getAccountInfo(),
   };
 }
 

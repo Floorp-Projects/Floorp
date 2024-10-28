@@ -15,10 +15,10 @@ import {
 } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
 import Card from "@/components/Card";
-import { useHomeData } from "./utils";
+import { useHomeData } from "./dataManager";
 import { useTranslation } from "react-i18next";
 import React from "react";
-import type { HomeData } from "./utils";
+import type { HomeData } from "@/type";
 
 export default function Home() {
   const { t } = useTranslation();

@@ -30,6 +30,7 @@ declare global {
   const IconMdiAboutCircleOutline: typeof import('~icons/mdi/about-circle-outline.jsx')['default']
   const IconMdiAccount: typeof import('~icons/mdi/account.jsx')['default']
   const IconMdiAccountBox: typeof import('~icons/mdi/account-box.jsx')['default']
+  const IconMdiAccountCog: typeof import('~icons/mdi/account-cog.jsx')['default']
   const IconMdiAppBadgeOutline: typeof import('~icons/mdi/app-badge-outline.jsx')['default']
   const IconMdiCog: typeof import('~icons/mdi/cog.jsx')['default']
   const IconMdiDesign: typeof import('~icons/mdi/design.jsx')['default']
@@ -44,5 +45,6 @@ declare global {
   const IconMdiSync: typeof import('~icons/mdi/sync.jsx')['default']
   const IconMdiUpdate: typeof import('~icons/mdi/update.jsx')['default']
   const IconMdiWorkspace: typeof import('~icons/mdi/workspace.jsx')['default']
+  const IconMingcuteProfileFill: typeof import('~icons/mingcute/profile-fill.jsx')['default']
   const IconPepiconsPencilPaintPallet: typeof import('~icons/pepicons-pencil/paint-pallet.jsx')['default']
 }

@@ -7,6 +7,22 @@ import { z } from "zod";
 import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/type";
 import { zWorkspacesServicesConfigs } from "../../../apps/main/core/common/workspaces/utils/type";
 
+/* Home */
+export const zAccountInfo = z.object({
+  email: z.string(),
+  status: z.string(),
+  displayName: z.string(),
+  avatarURL: z.string(),
+});
+
+export interface HomeData {
+  accountName: string | null;
+  accountImage: string;
+  accountInfo: AccountInfo;
+}
+
+export type AccountInfo = z.infer<typeof zAccountInfo>;
+
 /* Tab & Appearance */
 export const zDesignFormData = z.object({
   // Global
@@ -49,3 +65,13 @@ export type ConstantsData = {
   MOZ_APP_VERSION_DISPLAY: string;
   MOZ_OFFICIAL_BRANDING: boolean;
 };
+
+/* Accounts */
+export const zAccountsFormData = z.object({
+  profileDir: z.string(),
+  profileName: z.string(),
+  loginState: z.boolean(),
+  syncState: z.boolean(),
+});
+
+export type AccountsFormData = z.infer<typeof zAccountsFormData>;
