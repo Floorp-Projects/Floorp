@@ -10,16 +10,13 @@ const { ManifestObtainer } = ChromeUtils.importESModule("resource://gre/modules/
 export function init() {
   createRootHMR(
     () => {
-      let prevURL: null | string;
       const listener = {
-        onLocationChange: (webProgress: nsIWebProgress, request: nsIRequest, location: nsIURI, flags: number) => {
-          if (location.spec !== prevURL) {
-            changeTabColor();
-            prevURL = location.spec;
-          }
+        onLocationChange: (browser, webProgress, request, newURI, flags) => {
+          changeTabColor();
         },
       };
-      window.gBrowser.addProgressListener(listener);
+      window.gBrowser.addTabsProgressListener(listener);
+      window.gBrowser.tabContainer.addEventListener("TabSelect", changeTabColor);
     },
     import.meta.hot,
   );
