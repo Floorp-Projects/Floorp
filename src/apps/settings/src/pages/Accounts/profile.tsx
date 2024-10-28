@@ -14,8 +14,13 @@ import {
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import Card from "@/components/Card";
+import type { AccountsFormData } from "@/type";
 
-export default function Profile() {
+type ProfileProps = {
+  accountAndProfileData: AccountsFormData | null;
+};
+
+export default function Profile({ accountAndProfileData }: ProfileProps) {
   const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
 
@@ -38,13 +43,13 @@ export default function Profile() {
 
       <Text fontSize="md" mb={3} color={textColor}>
         {t("accounts.currentProfileName", {
-          name: "jihjiojiofe446y66",
+          name: accountAndProfileData?.profileName,
         })}
       </Text>
 
       <Text fontSize="md" mb={1} color={textColor}>
         {t("accounts.profileSaveLocation", {
-          path: "/home/user/floorp/profiles/jihjiojiofe446y66",
+          path: accountAndProfileData?.profileDir,
         })}
       </Text>
 

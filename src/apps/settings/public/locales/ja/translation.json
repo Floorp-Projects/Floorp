@@ -125,6 +125,8 @@
     "accounts.manageMozillaAccount": "Mozillaアカウントを管理",
     "accounts.manageFirefoxFeatureSync": "Firefox の機能の同期設定を管理",
     "accounts.aboutMozillaAccount": "Mozillaアカウントについて",
+    "accounts.notLoggedIn": "ログインしていません",
+    "accounts.notSynced": "Mozilla アカウントにログインをして同期機能を有効化",
     "about.aboutBrowser": "{{productName}} について",
     "about.releaseNotes": "リリースノートと詳細情報",
     "about.browserVersion": "{{productName}} バージョン: {{browserVersion}} Firefox バージョン: {{firefoxVersion}} {{isOfficialBuild}}",

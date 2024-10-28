@@ -21,8 +21,13 @@ import {
 import { useTranslation } from "react-i18next";
 import Card from "@/components/Card";
 import { Controller } from "react-hook-form";
+import type { AccountsFormData } from "@/type";
 
-export default function Accounts() {
+type AccountsProps = {
+  accountAndProfileData: AccountsFormData | null;
+};
+
+export default function Accounts(props: AccountsProps) {
   const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
 
@@ -36,15 +41,21 @@ export default function Accounts() {
       footerLinkText={t("accounts.manageAccounts")}
     >
       <HStack spacing={6} align="stretch" mb={4}>
-        <Avatar size="md" />
+        <Avatar
+          size="md"
+          src={props.accountAndProfileData?.accountInfo.avatarURL}
+        />
         <VStack align="stretch" spacing={0}>
           <Text fontSize="md" color={textColor}>
-            Ryosuke Asano
+            {props.accountAndProfileData?.accountInfo.displayName ??
+              t("accounts.notLoggedIn")}
           </Text>
           <Text fontSize="md" color={useColorModeValue("gray.500", "gray.400")}>
-            {t("accounts.syncedTo", {
-              email: "ryouskeusuusu@gmail.com",
-            })}
+            {props.accountAndProfileData?.accountInfo.email
+              ? t("accounts.syncedTo", {
+                  email: props.accountAndProfileData?.accountInfo.email,
+                })
+              : t("accounts.notSynced")}
           </Text>
         </VStack>
       </HStack>
@@ -73,7 +84,7 @@ export default function Accounts() {
             {t("accounts.syncFloorpNotesToMozillaAccount")}
           </FormLabel>
           <Controller
-            name="closePopupAfterClick"
+            name="asyncNoesViaMozillaAccount"
             render={({ field: { onChange, value } }) => (
               <Switch
                 colorScheme={"blue"}

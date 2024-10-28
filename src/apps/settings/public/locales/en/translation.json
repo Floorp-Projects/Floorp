@@ -119,6 +119,8 @@
     "accounts.manageMozillaAccount": "Manage Mozilla Account",
     "accounts.manageFirefoxFeatureSync": "Manage Firefox Feature Sync",
     "accounts.aboutMozillaAccount": "About Mozilla Account",
+    "accounts.notLoggedIn": "Not logged in",
+    "accounts.notSynced": "Log in to Mozilla Account to enable sync feature",
     "about.aboutBrowser": "About {{productName}}",
     "about.releaseNotes": "Release Notes & More Information",
     "about.browserVersion": "{{productName}} version: {{browserVersion}} | Firefox version: {{firefoxVersion}}",

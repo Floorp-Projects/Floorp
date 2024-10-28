@@ -18,7 +18,6 @@ export const zAccountInfo = z.object({
 export interface HomeData {
   accountName: string | null;
   accountImage: string;
-  accountInfo: AccountInfo;
 }
 
 export type AccountInfo = z.infer<typeof zAccountInfo>;
@@ -68,10 +67,10 @@ export type ConstantsData = {
 
 /* Accounts */
 export const zAccountsFormData = z.object({
+  accountInfo: zAccountInfo,
   profileDir: z.string(),
   profileName: z.string(),
-  loginState: z.boolean(),
-  syncState: z.boolean(),
+  asyncNoesViaMozillaAccount: z.boolean(),
 });
 
 export type AccountsFormData = z.infer<typeof zAccountsFormData>;

@@ -9,11 +9,10 @@ export async function useHomeData(): Promise<HomeData> {
   return {
     accountName: (await getAccountName()) ?? null,
     accountImage: await getAccountImage(),
-    accountInfo: await getAccountInfo(),
   };
 }
 
-async function getAccountInfo(): Promise<AccountInfo> {
+export async function getAccountInfo(): Promise<AccountInfo> {
   return await new Promise((resolve) => {
     window.NRGetAccountInfo((data: string) => {
       const accountInfo = JSON.parse(data) as AccountInfo;
