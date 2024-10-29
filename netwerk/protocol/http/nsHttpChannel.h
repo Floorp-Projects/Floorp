@@ -328,6 +328,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // will be called when callback. See Bug 1325054 for more information.
   nsresult BeginConnect();
   [[nodiscard]] nsresult PrepareToConnect();
+  [[nodiscard]] nsresult ContinuePrepareToConnect();
   [[nodiscard]] nsresult OnBeforeConnect();
   [[nodiscard]] nsresult ContinueOnBeforeConnect(
       bool aShouldUpgrade, nsresult aStatus, bool aUpgradeWithHTTPSRR = false);

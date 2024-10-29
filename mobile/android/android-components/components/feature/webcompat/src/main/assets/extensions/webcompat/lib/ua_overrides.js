@@ -144,13 +144,14 @@ class UAOverrides {
 
   async registerUAOverrides() {
     const platformMatches = ["all"];
-    let platformInfo = await browser.runtime.getPlatformInfo();
-    platformMatches.push(platformInfo.os == "android" ? "android" : "desktop");
+    const { os } = await browser.runtime.getPlatformInfo();
+    platformMatches.push(os);
+    platformMatches.push(os == "android" ? "android" : "desktop");
 
     for (const override of this._availableOverrides) {
       if (platformMatches.includes(override.platform)) {
         override.availableOnPlatform = true;
-        override.currentPlatform = platformInfo.os;
+        override.currentPlatform = os;
 
         // If there is a specific about:config preference governing
         // this override, monitor its state.

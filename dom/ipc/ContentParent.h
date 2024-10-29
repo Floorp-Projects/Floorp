@@ -1399,6 +1399,14 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetSystemIcon(nsIURI* aURI,
                                             GetSystemIconResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvGetSystemGeolocationPermissionBehavior(
+      GetSystemGeolocationPermissionBehaviorResolver&& aResolver);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult
+  RecvRequestGeolocationPermissionFromUser(
+      const MaybeDiscardedBrowsingContext& aBrowsingContext,
+      RequestGeolocationPermissionFromUserResolver&& aResolver);
+
 #ifdef FUZZING_SNAPSHOT
   mozilla::ipc::IPCResult RecvSignalFuzzingReady();
 #endif

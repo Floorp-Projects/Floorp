@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+/**
+ * JS utility functions used in display of parts of the geolocation UI.
+ */
+[scriptable, uuid(bf4040de-e5e2-4be4-8402-ae0c10c499b6)]
+interface nsIGeolocationUIUtilsWin : nsISupports
+{
+  /**
+   * Removes prompts that are displayed over the browsing context.  This is
+   * used to remove the dialog that is presented over content while Gecko
+   * waits for the user to grant geolocation permission in Windows.
+   */
+  void dismissPrompts(in BrowsingContext aBC);
+};

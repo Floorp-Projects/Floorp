@@ -1056,10 +1056,8 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest* aRequest,
 
   oldFlags = flags;
 
-  // Inherit the following bits...
-  flags |= (mLoadFlags &
-            (LOAD_BACKGROUND | LOAD_BYPASS_CACHE | LOAD_FROM_CACHE |
-             VALIDATE_ALWAYS | VALIDATE_ONCE_PER_SESSION | VALIDATE_NEVER));
+  // Inherit some bits...
+  flags |= mLoadFlags & kInheritedLoadFlags;
 
   // ... and force the default flags.
   flags |= mDefaultLoadFlags;

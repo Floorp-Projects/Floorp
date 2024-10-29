@@ -342,7 +342,7 @@ function testNameForSubtreeRule(aElm) {
 
   if (gDumpToConsole) {
     dump(
-      "\nProcessed from subtree rule. Wait for reorder event on " +
+      "\nProcessed from subtree rule. Wait for name change event on " +
         prettyName(aElm) +
         "\n"
     );

@@ -221,7 +221,6 @@
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/ctrlTab.css                  (../shared/tabbrowser/ctrlTab.css)
   skin/classic/browser/tabbrowser/fullscreen-and-pointerlock.css (../shared/tabbrowser/fullscreen-and-pointerlock.css)
-  skin/classic/browser/tabbrowser/hourglass.svg                (../shared/tabbrowser/hourglass.svg)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)

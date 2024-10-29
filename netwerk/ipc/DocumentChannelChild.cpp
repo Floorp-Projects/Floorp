@@ -119,6 +119,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     case ExtContentPolicy::TYPE_DOCUMENT:
     case ExtContentPolicy::TYPE_SUBDOCUMENT: {
       DocumentCreationArgs docArgs;
+      docArgs.loadFlags() = mLoadFlags;
       docArgs.uriModified() = mUriModified;
       docArgs.isEmbeddingBlockedError() = mIsEmbeddingBlockedError;
 

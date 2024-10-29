@@ -74,7 +74,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .textRecognitionThrobber {
-    background-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    background-image: url("chrome://global/skin/icons/loading.svg");
     background-position: center;
     background-repeat: no-repeat;
     -moz-context-properties: fill;

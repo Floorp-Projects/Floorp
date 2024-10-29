@@ -600,7 +600,7 @@
     #defaultSlot;
 
     static get observedAttributes() {
-      return ["accesskey"];
+      return ["accesskey", "type"];
     }
 
     constructor() {
@@ -612,7 +612,8 @@
       style.href = "chrome://global/content/elements/panel-item.css";
 
       this.button = document.createElement("button");
-      this.button.setAttribute("role", "menuitem");
+      this.#setButtonAttributes();
+
       this.button.setAttribute("part", "button");
       // Use a XUL label element if possible to show the accesskey.
       this.label = document.createXULElement
@@ -741,6 +742,18 @@
         } else {
           this._accessKey = null;
         }
+      } else if (name === "type") {
+        this.#setButtonAttributes();
+      }
+    }
+
+    #setButtonAttributes() {
+      if (this.type == "checkbox") {
+        this.button.setAttribute("role", "menuitemcheckbox");
+        this.button.setAttribute("aria-checked", this.checked);
+      } else {
+        this.button.setAttribute("role", "menuitem");
+        this.button.removeAttribute("aria-checked");
       }
     }
 
@@ -767,11 +780,25 @@
     }
 
     get checked() {
+      if (this.type !== "checkbox") {
+        return false;
+      }
       return this.hasAttribute("checked");
     }
 
     set checked(val) {
-      this.toggleAttribute("checked", val);
+      if (this.type == "checkbox") {
+        this.toggleAttribute("checked", val);
+        this.button.setAttribute("aria-checked", !!val);
+      }
+    }
+
+    get type() {
+      return this.getAttribute("type") || "button";
+    }
+
+    set type(val) {
+      this.setAttribute("type", val);
     }
 
     focus() {

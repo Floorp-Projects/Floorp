@@ -44,6 +44,20 @@ tasks:
             # For some reason, this is required, now.
             - export DEBIAN_FRONTEND=noninteractive
             - apt-get install -y --no-install-recommends curl mercurial python3-pip
+    ubuntu2404:
+        image: ubuntu:noble
+        pre-commands:
+            - apt-get update
+            # For some reason, this is required, now.
+            - export DEBIAN_FRONTEND=noninteractive
+            - apt-get install -y --no-install-recommends curl mercurial python3-pip
+    ubuntu2410:
+        image: ubuntu:oracular
+        pre-commands:
+            - apt-get update
+            # For some reason, this is required, now.
+            - export DEBIAN_FRONTEND=noninteractive
+            - apt-get install -y --no-install-recommends curl mercurial python3-pip
     fedora36:
         image: fedora:36
         pre-commands:
@@ -61,6 +75,18 @@ tasks:
             - dnf install -y mercurial python3-pip
     fedora39:
         image: fedora:39
+        pre-commands:
+            - dnf install -y mercurial python3-pip
+    fedora40:
+        image: fedora:40
+        pre-commands:
+            - dnf install -y mercurial python3-pip
+    fedora41:
+        image: fedora:41
+        pre-commands:
+            - dnf install -y mercurial python3-pip
+    fedora42:
+        image: fedora:42
         pre-commands:
             - dnf install -y mercurial python3-pip
     rockylinux8:

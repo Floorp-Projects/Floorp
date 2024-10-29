@@ -37,7 +37,7 @@ class TestSessionRestore(SessionStoreTestCase):
             ),
         )
 
-    def test_restore(self):
+    def test_restore_sidebar_open(self):
         self.assertEqual(
             len(self.marionette.chrome_window_handles),
             1,
@@ -107,4 +107,57 @@ class TestSessionRestore(SessionStoreTestCase):
             ),
             "viewHistorySidebar",
             "Correct sidebar category has been restored.",
+        )
+
+    def test_restore_sidebar_closed(self):
+        self.marionette.execute_script(
+            """
+            let window = BrowserWindowTracker.getTopWindow()
+            window.SidebarController.show("viewHistorySidebar");
+            let sidebarBox = window.document.getElementById("sidebar-box")
+            sidebarBox.style.width = "100px";
+            window.SidebarController.toggle();
+            """
+        )
+
+        self.assertEqual(
+            self.marionette.execute_script(
+                """
+                let window = BrowserWindowTracker.getTopWindow()
+                return window.document.getElementById("sidebar-box").hidden;
+                """
+            ),
+            True,
+            "Sidebar is hidden before window is closed.",
+        )
+
+        self.marionette.restart()
+        self.marionette.set_context("chrome")
+
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles),
+            1,
+            msg="Windows from last session have been restored.",
+        )
+
+        self.assertEqual(
+            self.marionette.execute_script(
+                """
+                let window = BrowserWindowTracker.getTopWindow()
+                return window.document.getElementById("sidebar-box").hidden;
+                """
+            ),
+            True,
+            "Sidebar is hidden on session restore.",
+        )
+
+        self.assertEqual(
+            self.marionette.execute_script(
+                """
+                let window = BrowserWindowTracker.getTopWindow()
+                return window.document.getElementById("sidebar-box").style.width;
+                """
+            ),
+            "100px",
+            "Sidebar width has been restored.",
         )

@@ -14,3 +14,5 @@ skip-if = ["os == 'win'"] # Bug 1313894
 ["browser_captivePortal_https_only.js"]
 
 ["browser_closeCapPortalTabCanonicalURL.js"]
+
+["browser_captivePortal_trr_mode3.js"]

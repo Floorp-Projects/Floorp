@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * play.google.com - Extra scrollbar not hidden on store pages.
+ *
+ * Bug #1779908 - https://bugzilla.mozilla.org/show_bug.cgi?id=1779908
+ *
+ * They are hiding the scrollbar with ::webkit-scrollbar, but not the standards-
+ * compliant method `scrollbar-width:none`.
+ */
+.aoJE7e {
+  scrollbar-width: none;
+}

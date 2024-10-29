@@ -51,6 +51,17 @@ window.onload = function() {
       "A property with color values includes papayawhip.");
     ok(bgColorValues.includes("rgb"),
       "A property with color values includes non-colors.");
+
+    // Check that the "special" shorthands for white-space are exposed.
+    const whiteSpaceValues = cssProperties.getValues("white-space");
+    ok(whiteSpaceValues.includes("normal"),
+       "Values for the white-space shorthand include normal.");
+    ok(whiteSpaceValues.includes("pre"),
+       "Values for the white-space shorthand include pre.");
+    ok(whiteSpaceValues.includes("pre-line"),
+       "Values for the white-space shorthand include pre-line.");
+    ok(whiteSpaceValues.includes("pre-wrap"),
+       "Values for the white-space shorthand include pre-wrap.");
   };
 
   addAsyncTest(async function setup() {

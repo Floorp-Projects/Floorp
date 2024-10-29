@@ -4,7 +4,14 @@
 
 #include "WlanLibrary.h"
 
+#include "mozilla/Logging.h"
+
 // Moz headers (alphabetical)
+namespace mozilla {
+extern LazyLogModule gWifiScannerLog;
+}
+#define WIFISCAN_LOG(args) \
+  MOZ_LOG(mozilla::gWifiScannerLog, mozilla::LogLevel::Debug, args)
 
 WinWLANLibrary* WinWLANLibrary::Load() {
   WinWLANLibrary* ret = new WinWLANLibrary();
@@ -57,6 +64,8 @@ decltype(::WlanScan)* WinWLANLibrary::GetWlanScanPtr() const {
 bool WinWLANLibrary::Initialize() {
   mWlanLibrary = LoadLibraryW(L"Wlanapi.dll");
   if (!mWlanLibrary) {
+    WIFISCAN_LOG(
+        ("WinWLANLibrary::Initialize failed - couldn't open wlanapi.dll"));
     return false;
   }
 
@@ -81,6 +90,8 @@ bool WinWLANLibrary::Initialize() {
   if (!mWlanOpenHandlePtr || !mWlanEnumInterfacesPtr ||
       !mWlanRegisterNotificationPtr || !mWlanGetNetworkBssListPtr ||
       !mWlanScanPtr || !mWlanFreeMemoryPtr || !mWlanCloseHandlePtr) {
+    WIFISCAN_LOG(
+        ("WinWLANLibrary::Initialize failed to find functions in wlanapi.dll"));
     return false;
   }
 
@@ -93,9 +104,12 @@ bool WinWLANLibrary::Initialize() {
   if (ERROR_SUCCESS != (*mWlanOpenHandlePtr)(kXpWlanClientVersion, nullptr,
                                              &negotiated_version,
                                              &mWlanHandle)) {
+    WIFISCAN_LOG(("WinWLANLibrary::Initialize: WlanOpenHandle failed"));
     return false;
   }
 
+  WIFISCAN_LOG(("WinWLANLibrary::Initialize succeeded - version is %lu",
+                negotiated_version));
   return true;
 }
 
@@ -109,3 +123,5 @@ WinWLANLibrary::~WinWLANLibrary() {
     mWlanLibrary = nullptr;
   }
 }
+
+#undef WIFISCAN_LOG

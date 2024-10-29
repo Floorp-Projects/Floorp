@@ -1112,7 +1112,7 @@ void nsDocShellLoadState::CalculateLoadURIFlags() {
 }
 
 nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
-    BrowsingContext* aBrowsingContext, Maybe<bool> aUriModified,
+    BrowsingContext* aBrowsingContext, bool aUriModified,
     Maybe<bool> aIsEmbeddingBlockedError) {
   MOZ_ASSERT(aBrowsingContext);
 
@@ -1126,7 +1126,6 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
   const uint32_t loadType = LoadType();
 
   // These values aren't available for loads initiated in the Parent process.
-  MOZ_ASSERT_IF(loadType == LOAD_HISTORY, aUriModified.isSome());
   MOZ_ASSERT_IF(loadType == LOAD_ERROR_PAGE, aIsEmbeddingBlockedError.isSome());
 
   if (loadType == LOAD_ERROR_PAGE) {
@@ -1152,7 +1151,7 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
     case LOAD_HISTORY: {
       // Only send VALIDATE_NEVER if mLSHE's URI was never changed via
       // push/replaceState (bug 669671).
-      if (!*aUriModified) {
+      if (!aUriModified) {
         loadFlags |= nsIRequest::VALIDATE_NEVER;
       }
       break;

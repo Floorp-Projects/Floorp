@@ -18,6 +18,11 @@ class WifiScannerImpl final : public WifiScanner {
   ~WifiScannerImpl();
 
   /**
+   * True if there is a wifi adapter present that can perform a scan.
+   */
+  bool HasWifiAdapter() { return !!mWlanLibrary; }
+
+  /**
    * GetAccessPointsFromWLAN
    *
    * Scans the available wireless interfaces for nearby access points and

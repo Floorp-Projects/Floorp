@@ -14,7 +14,11 @@
 
 using std::wstring;
 
-extern "C" __declspec(dllexport) int ReturnResult() { return 2; }
+extern "C" MOZ_NEVER_INLINE MOZ_NOPROFILE MOZ_NOINSTRUMENT
+    __declspec(dllexport) int
+    ReturnResult() {
+  return 2;
+}
 
 static mozilla::CrossProcessDllInterceptor::FuncHookType<
     decltype(&ReturnResult)>

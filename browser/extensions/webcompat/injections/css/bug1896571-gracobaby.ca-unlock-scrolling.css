@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * gracobaby.ca - users cannot scroll the page on narrow viewports
+ * Bug #1896571 - https://bugzilla.mozilla.org/show_bug.cgi?id=1896571
+ *
+ * The page uses a meta viewport on narrower screen widths, and also
+ * hides overflow on the html tag, making it impossible to scroll the
+ * page. We can unset the overflow to fix this.
+ */
+
+@media (max-width: 767.98px) {
+  html {
+    overflow: auto;
+  }
+}

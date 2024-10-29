@@ -290,6 +290,8 @@ const AVAILABLE_INJECTIONS = [
         "*://www.facebook.com/*", // Bug 1739489
         "*://twitter.com/*", // Bug 1776229
         "*://mobile.twitter.com/*", // Bug 1776229
+        "*://x.com/*", // Bug 1776229
+        "*://mobile.x.com/*", // Bug 1776229
         "*://*.reddit.com/*", // Bug 1829755
       ],
       js: [
@@ -585,6 +587,7 @@ const AVAILABLE_INJECTIONS = [
         "*://*.lafoodbank.org/*", // 127006
         "*://rutamayacoffee.com/*", // 129353
         "*://ottoandspike.com.au/*", // bugzilla 1644602
+        "*://give.umrelief.org/give/*", // bugzilla 1916407
       ],
       js: [
         {
@@ -1002,20 +1005,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1877346",
-    platform: "android",
-    domain: "offerup.com",
-    bug: "1877346",
-    contentScripts: {
-      matches: ["*://offerup.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1877346-offerup.com-infinite-scroll-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1884842",
     platform: "android",
     domain: "foodora.cz",
@@ -1059,15 +1048,108 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "1882040",
-    platform: "android",
-    domain: "YouTube Shorts",
-    bug: "1882040",
+    id: "1922175",
+    platform: "all",
+    domain: "app.livingsecurity.com",
+    bug: "1922175",
     contentScripts: {
-      matches: ["*://m.youtube.com/shorts", "*://m.youtube.com/shorts/*"],
+      matches: ["*://app.livingsecurity.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1896383-error-capturestacktrace-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1889326",
+    platform: "desktop",
+    domain: "Office 365 email handling prompt",
+    bug: "1889326",
+    contentScripts: {
+      matches: [
+        "*://*.live.com/*",
+        "*://*.office.com/*",
+        "*://*.office365.com/*",
+        "*://*.office365.us/*",
+        "*://*.outlook.cn/*",
+        "*://*.outlook.com/*",
+        "*://*.sharepoint.com/*",
+      ],
+      js: [
+        {
+          file: "injections/js/bug1889326-office365-email-handling-prompt-autohide.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1881922",
+    platform: "all",
+    domain: "helpdeskgeek.com",
+    bug: "1881922",
+    contentScripts: {
+      matches: ["*://helpdeskgeek.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1881922-disable-legacy-mutation-events.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1901780",
+    platform: "all",
+    domain: "vanbreda-health.be",
+    bug: "1901780",
+    contentScripts: {
+      matches: ["*://www.vanbreda-health.be/*"],
+      js: [
+        {
+          file: "injections/js/bug1881922-disable-legacy-mutation-events.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1896571",
+    platform: "all",
+    domain: "gracobaby.ca",
+    bug: "1896571",
+    contentScripts: {
+      matches: ["*://www.gracobaby.ca/*"],
       css: [
         {
-          file: "injections/css/bug1882040-disable-pull-to-refresh.css",
+          file: "injections/css/bug1896571-gracobaby.ca-unlock-scrolling.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1895994",
+    platform: "android",
+    domain: "www.softrans.ro",
+    bug: "1895994",
+    contentScripts: {
+      matches: ["*://*.softrans.ro/*"],
+      css: [
+        {
+          file: "injections/css/bug1895994-softtrans.ro-unlock-scrolling.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1898952",
+    platform: "desktop",
+    domain: "digits.t-mobile.com",
+    bug: "1898952",
+    contentScripts: {
+      matches: ["*://digits.t-mobile.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1898952-digits.t-mobile.com.js",
         },
       ],
     },
@@ -1092,6 +1174,146 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
+    },
+  },
+  {
+    id: "bug1899937",
+    platform: "all",
+    domain: "plus.nhk.jp",
+    bug: "1899937",
+    contentScripts: {
+      matches: ["*://plus.nhk.jp/*"],
+      js: [
+        {
+          file: "injections/js/bug1899937-plus.nhk.jp-request-picture-in-picture.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1886616",
+    platform: "all",
+    domain: "www.six-group.com",
+    bug: "1886616",
+    contentScripts: {
+      matches: ["*://www.six-group.com/*/market-data/etf/etf-explorer.html*"],
+      css: [
+        {
+          file: "injections/css/bug1886616-www.six-group.com-select-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1896349",
+    platform: "all",
+    domain: "vivaldi.com",
+    bug: "1896349",
+    contentScripts: {
+      matches: ["*://vivaldi.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1896349-vivaldi.com-selected-text-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1836872",
+    platform: "desktop",
+    domain: "docs.google.com",
+    bug: "1836872",
+    contentScripts: {
+      matches: ["*://docs.google.com/document/*"],
+      css: [
+        {
+          file: "injections/css/bug1836872-docs.google.com-font-submenus-inaccessible.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1779908",
+    platform: "desktop",
+    domain: "docs.google.com",
+    bug: "1779908",
+    contentScripts: {
+      matches: ["*://play.google.com/store/*"],
+      css: [
+        {
+          file: "injections/css/bug1779908-play.google.com-scrollbar-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1879879",
+    platform: "all",
+    domain: "developers.pinterest.com",
+    bug: "1879879",
+    contentScripts: {
+      matches: ["*://developers.pinterest.com/docs/*"],
+      css: [
+        {
+          file: "injections/css/bug1879879-developers.pinterest.com-list-alignment-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1856915",
+    platform: "android",
+    domain: "login.yahoo.com",
+    bug: "1856915",
+    contentScripts: {
+      matches: ["*://login.yahoo.com/account/*"],
+      css: [
+        {
+          file: "injections/css/bug1856915-login.yahoo.com-unhide-password-button-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1841730",
+    platform: "desktop",
+    domain: "www.korg.com",
+    bug: "1841730",
+    contentScripts: {
+      matches: ["*://www.korg.com/*/support/download/product/*"],
+      js: [
+        {
+          file: "injections/js/bug1841730-www.korg.com-fix-broken-page-loads.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1895051",
+    platform: "all",
+    domain: "www.zhihu.com",
+    bug: "1895051",
+    contentScripts: {
+      matches: ["*://www.zhihu.com/question/*"],
+      css: [
+        {
+          file: "injections/css/bug1895051-www.zhihu.com-broken-button-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1924500",
+    platform: "desktop",
+    domain: "www.tiktok.com",
+    bug: "1924500",
+    contentScripts: {
+      matches: ["*://www.tiktok.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1924500-www.tiktok.com-fix-captcha-slider.js",
+        },
+      ],
     },
   },
 ];

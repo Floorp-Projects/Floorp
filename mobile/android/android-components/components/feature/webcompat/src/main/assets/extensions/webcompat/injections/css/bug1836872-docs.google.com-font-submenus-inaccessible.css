@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * docs.google.com - font submenus are inaccessible with overlay scrollbars on
+ * Bug #1836872 - https://bugzilla.mozilla.org/show_bug.cgi?id=1836872
+ *
+ * The submenu panels are shifted too far to the right when overlay
+ * scrollbars are visible, and so they are dismissed while attemting
+ * to mouse over to them. Shifting them to the left fixes them.
+ */
+/* font family sub-menus */
+[class="goog-menu goog-menu-vertical"],
+/* font style sub-menus */
+.goog-menu.apps-menu-hide-mnemonics {
+  margin-inline-start: -20px;
+}

@@ -172,6 +172,14 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         "HttpWinUtils.cpp",
     ]
 
+if CONFIG["TARGET_OS"] == "OSX":
+    UNIFIED_SOURCES += [
+        "MicrosoftEntraSSOUtils.mm",
+    ]
+    OS_LIBS += [
+        "-framework AuthenticationServices",
+    ]
+
 # These files cannot be built in unified mode because of OS X headers.
 SOURCES += [
     "nsHttpHandler.cpp",

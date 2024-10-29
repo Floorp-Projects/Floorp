@@ -635,11 +635,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
                                  Some(kidCBSize));
       kidReflowInput.mFlags.mIsTopOfPage = [&]() {
-        const bool isNestedMulticolOrPaginated =
+        const bool isNestedMulticolOrInRootPaginatedDoc =
             aReflowInput.mParentReflowInput->mFrame->HasAnyStateBits(
                 NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) ||
-            PresContext()->IsPaginated();
-        if (isNestedMulticolOrPaginated) {
+            PresContext()->IsRootPaginatedDocument();
+        if (isNestedMulticolOrInRootPaginatedDoc) {
           if (aConfig.mForceAuto) {
             // If we are forced to fill columns sequentially, force fit the
             // content whether we are at top of page or not.
@@ -656,8 +656,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
           // available block-size.
           return false;
         }
-        // We are a top-level multicol in non-paginated context. Force fit the
-        // content only if we are not balancing columns.
+        // We are a top-level multicol in a non-paginated root document or in a
+        // subdocument (regardless of whether the root document is paginated).
+        // Force fit the content only if we are not balancing columns.
         return !aConfig.mIsBalancing;
       }();
       kidReflowInput.mFlags.mTableIsSplittable = false;

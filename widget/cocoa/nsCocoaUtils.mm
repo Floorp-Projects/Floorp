@@ -523,7 +523,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(
   {
     const bool gotWidth = NS_SUCCEEDED(aImage->GetWidth(&width));
     const bool gotHeight = NS_SUCCEEDED(aImage->GetHeight(&height));
-    if (auto ratio = aImage->GetIntrinsicRatio()) {
+    if (auto ratio = aImage->GetIntrinsicRatio(); ratio && *ratio) {
       if (gotWidth != gotHeight) {
         if (gotWidth) {
           height = ratio->Inverted().ApplyTo(width);

@@ -109,6 +109,7 @@
     name="white-space"
     engines="gecko"
     sub_properties="text-wrap-mode white-space-collapse"
+    derive_value_info="False"
     spec="https://www.w3.org/TR/css-text-4/#white-space-property"
 >
     use crate::properties::longhands::{text_wrap_mode, white_space_collapse};
@@ -205,6 +206,18 @@
             }
 
             Ok(())
+        }
+    }
+
+    impl SpecifiedValueInfo for Longhands {
+        fn collect_completion_keywords(f: KeywordsCollectFn) {
+            // Collect keywords from our longhands.
+            text_wrap_mode::SpecifiedValue::collect_completion_keywords(f);
+            white_space_collapse::SpecifiedValue::collect_completion_keywords(f);
+
+            // Add the special values supported only by the shorthand
+            // (see parse_special_shorthands() above).
+            f(&["normal", "pre", "pre-wrap", "pre-line"])
         }
     }
 </%helpers:shorthand>

@@ -1,5 +1,5 @@
-diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
---- a/test/test_duplex.cpp
+diff -U8 b/test/test_duplex.cpp b/test/test_duplex.cpp
+--- b/test/test_duplex.cpp
 +++ b/test/test_duplex.cpp
 @@ -13,16 +13,18 @@
  #endif
@@ -20,22 +20,46 @@ diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
  #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
  #define INPUT_CHANNELS 1
  #define INPUT_LAYOUT CUBEB_LAYOUT_MONO
-@@ -202,16 +204,18 @@ TEST(cubeb, duplex_collection_change)
+@@ -199,16 +201,21 @@
+ 
+   duplex_collection_change_impl(ctx);
+   r = cubeb_register_device_collection_changed(
+       ctx, static_cast<cubeb_device_type>(CUBEB_DEVICE_TYPE_INPUT), nullptr,
+       nullptr);
+   ASSERT_EQ(r, CUBEB_OK);
  }
  
++void CauseDeath(cubeb * p) {
++  mozilla::gtest::DisableCrashReporter();
++  cubeb_destroy(p);
++}
++
  #ifdef GTEST_HAS_DEATH_TEST
  TEST(cubeb, duplex_collection_change_no_unregister)
  {
    cubeb * ctx;
    int r;
  
-+  mozilla::gtest::DisableCrashReporter();
-+
    r = common_init(&ctx, "Cubeb duplex example with collection change");
    ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
- 
+@@ -216,17 +223,19 @@
    /* This test needs an available input device, skip it if this host does not
     * have one. */
    if (!can_run_audio_input_test(ctx)) {
      cubeb_destroy(ctx);
      return;
+   }
+ 
+   std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
+-      ctx, [](cubeb * p) noexcept { EXPECT_DEATH(cubeb_destroy(p), ""); });
++      ctx, [](cubeb* p) noexcept {
++        EXPECT_DEATH(CauseDeath(p), "");
++      });
+ 
+   duplex_collection_change_impl(ctx);
+ }
+ #endif
+ 
+ long
+ data_cb_input(cubeb_stream * stream, void * user, const void * inputbuffer,
+               void * outputbuffer, long nframes)

@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Panel Item Checkbox type</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <panel-list>
+    <panel-item type="checkbox" checked="">First item</panel-item>
+    <panel-item type="checkbox">Second item</panel-item>
+    <panel-item checked="">Third item</panel-item>
+  </panel-list>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+  add_task(async function testCheckboxType() {
+    let panelList = document.querySelector("panel-list");
+    let panelItems = [...panelList.children];
+    let firstItem = panelItems[0];
+    let secondItem = panelItems[1];
+    let thirdItem = panelItems[2];
+
+    // Ensure declared markup items are rendered with correct state and attributes
+    is(
+      firstItem.checked,
+      true,
+      "Panel item's state should not have changed from initial render"
+    );
+    is(
+      firstItem.shadowRoot.querySelector("button").role,
+      "menuitemcheckbox",
+      "Checkbox panel item should have the correct role on the inner button"
+    );
+    is(
+      firstItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "true",
+      "Checkbox panel item correctly sets aria-checked attribute"
+    );
+
+    is(
+      secondItem.checked,
+      false,
+      "Panel item's state should not have changed from initial render"
+    );
+    is(
+      secondItem.shadowRoot.querySelector("button").role,
+      "menuitemcheckbox",
+      "Checkbox panel item should have the correct role on the inner button"
+    );
+    is(
+      secondItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "false",
+      "Checkbox panel item correctly sets aria-checked attribute"
+    );
+
+    is(
+      thirdItem.checked,
+      false,
+      "Non-checkbox panel item's checked attribute should never be true"
+    );
+    is(
+      thirdItem.shadowRoot.querySelector("button").role,
+      "menuitem",
+      "Non-checkbox panel item should have the correct role on the inner button"
+    );
+    is(
+      thirdItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      null,
+      "Non-checkbox panel item should not modify aria-checked attribute"
+    );
+
+    // Ensure that creating a checkbox panel-item dynamically works as expected
+    let dynamicItem = document.createElement("panel-item");
+    dynamicItem.type = "checkbox";
+    dynamicItem.checked = true;
+    panelList.appendChild(dynamicItem);
+    dynamicItem = panelList.lastElementChild;
+    is(
+      dynamicItem.checked,
+      true,
+      "Panel item's state should not have changed from initial render"
+    );
+    is(
+      dynamicItem.shadowRoot.querySelector("button").role,
+      "menuitemcheckbox",
+      "Checkbox panel item should have the correct role on the inner button"
+    );
+    is(
+      dynamicItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "true",
+      "Checkbox panel item correctly sets aria-checked attribute"
+    );
+
+    // Flip checked state of initially rendered checkbox,
+    // invalid checkbox item, and generated checkbox item and verify changes.
+
+    firstItem.checked = false;
+    thirdItem.checked = false;
+    dynamicItem.checked = false;
+
+    is(
+      firstItem.checked,
+      false,
+      "Item's state should be updated accordingly"
+    );
+    is(
+      firstItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "false",
+      "The aria-checked attribute should be updated when the checked property changes value"
+    );
+    is(
+      firstItem.shadowRoot.querySelector("button").role,
+      "menuitemcheckbox",
+      "The role of the button should not have changed when changing the checked property"
+    );
+    is(
+      firstItem.type,
+      "checkbox",
+      "The type attribute should not change when the checked value changes"
+    );
+
+    is(
+      thirdItem.checked,
+      false,
+      "Item's state should be updated accordingly"
+    );
+    is(
+      thirdItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      null,
+      "Items that are not checkboxes should not have an aria-checked attribute"
+    );
+    is(
+      thirdItem.shadowRoot.querySelector("button").role,
+      "menuitem",
+      "The role of the button should not have changed when changing the checked property"
+    );
+
+    is(
+      thirdItem.type,
+      "button",
+      "Changing the checked property should not result the type changing"
+    );
+    is(
+      thirdItem.getAttribute("type"),
+      null,
+      "Changing the checked property should not change the type attribute of items"
+    );
+
+    is(
+      dynamicItem.checked,
+      false,
+      "Item's state should be updated accordingly"
+    )
+    is(
+      dynamicItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "false",
+      "Aria-checked should be set to false when a checkbox item is no longer checked"
+    );
+    is(
+      dynamicItem.shadowRoot.querySelector("button").role,
+      "menuitemcheckbox",
+      "The role of the button should not have changed when changing the checked property"
+    );
+    is(
+      dynamicItem.type,
+      "checkbox",
+      "The type attribute should not change when the checked value changes"
+    );
+
+    // Ensure that aria-checked is set correctly when removing and re-adding
+    // the checkbox type
+
+    firstItem.checked = true;
+    is(
+      firstItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "true",
+      "aria-checked should update when checked property value is changed"
+    );
+    firstItem.removeAttribute("type");
+    is(
+      firstItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      null,
+      "aria-checked should no longer exist when a panel-item is not a checkbox type"
+    );
+    is(
+      firstItem.checked,
+      false,
+      "Non-checkbox items checked property should always be false"
+    );
+    is(
+      firstItem.getAttribute("checked"),
+      "",
+      "The checked attribute should not have changed value when changing type"
+    )
+    firstItem.type = "checkbox";
+    is(
+      firstItem.shadowRoot.querySelector("button").getAttribute("aria-checked"),
+      "true",
+      "aria-checked should be set to true when the checked attribute is set AND the type is checkbox"
+    );
+    is(
+      firstItem.checked,
+      true,
+      "Checked property should be true now since we're working with a checkbox panel-item"
+    );
+  });
+</script>
+</pre>
+</body>
+</html>

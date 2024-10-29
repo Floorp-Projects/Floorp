@@ -236,3 +236,11 @@ mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2
 # Patch `gpu-descriptor` 0.3.0 to remove unnecessary `allocator-api2` dep.:
 # Still waiting for the now-merged <https://github.com/zakarumych/gpu-descriptor/pull/40> to be released.
 gpu-descriptor = { git = "https://github.com/zakarumych/gpu-descriptor", rev = "7b71a4e47c81903ad75e2c53deb5ab1310f6ff4d" }
+
+[patch."https://github.com/mozilla/neqo"]
+neqo-bin = { path = "third_party/rust/neqo-bin" }
+neqo-common = { path = "third_party/rust/neqo-common" }
+neqo-crypto = { path = "third_party/rust/neqo-crypto" }
+neqo-http3 = { path = "third_party/rust/neqo-http3" }
+neqo-qpack = { path = "third_party/rust/neqo-qpack" }
+neqo-transport = { path = "third_party/rust/neqo-transport" }

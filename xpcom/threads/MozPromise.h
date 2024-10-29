@@ -642,45 +642,41 @@ class MozPromise : public MozPromiseBase {
   };
 
   /*
-   * We create two overloads for invoking Resolve/Reject Methods so as to
-   * make the resolve/reject value argument "optional".
+   * Helper to make the resolve/reject value argument "optional".
    */
   template <typename ThisType, typename MethodType, typename ValueType>
-  static std::enable_if_t<TakesAnyArguments<MethodType>,
-                          MethodReturnType<MethodType>>
-  InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
-    return (aThisVal->*aMethod)(std::forward<ValueType>(aValue));
-  }
-
-  template <typename ThisType, typename MethodType, typename ValueType>
-  static std::enable_if_t<!TakesAnyArguments<MethodType>,
-                          MethodReturnType<MethodType>>
-  InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
-    return (aThisVal->*aMethod)();
-  }
-
-  // Called when promise chaining is supported.
-  template <bool SupportChaining, typename ThisType, typename MethodType,
-            typename ValueType, typename CompletionPromiseType>
-  static std::enable_if_t<SupportChaining, void> InvokeCallbackMethod(
-      ThisType* aThisVal, MethodType aMethod, ValueType&& aValue,
-      CompletionPromiseType&& aCompletionPromise) {
-    auto p = InvokeMethod(aThisVal, aMethod, std::forward<ValueType>(aValue));
-    if (aCompletionPromise) {
-      p->ChainTo(aCompletionPromise.forget(), "<chained completion promise>");
+  static MethodReturnType<MethodType> InvokeMethod(ThisType* aThisVal,
+                                                   MethodType aMethod,
+                                                   ValueType&& aValue) {
+    if constexpr (TakesAnyArguments<MethodType>) {
+      return (aThisVal->*aMethod)(std::forward<ValueType>(aValue));
+    } else {
+      return (aThisVal->*aMethod)();
     }
   }
 
-  // Called when promise chaining is not supported.
-  template <bool SupportChaining, typename ThisType, typename MethodType,
-            typename ValueType, typename CompletionPromiseType>
-  static std::enable_if_t<!SupportChaining, void> InvokeCallbackMethod(
-      ThisType* aThisVal, MethodType aMethod, ValueType&& aValue,
-      CompletionPromiseType&& aCompletionPromise) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        !aCompletionPromise,
-        "Can't do promise chaining for a non-promise-returning method.");
-    InvokeMethod(aThisVal, aMethod, std::forward<ValueType>(aValue));
+  template <bool SupportChaining, typename PromiseType, typename ThisType,
+            typename MethodType, typename ValueType>
+  static RefPtr<PromiseType> InvokeCallbackMethod(ThisType* aThisVal,
+                                                  MethodType aMethod,
+                                                  ValueType&& aValue) {
+    if constexpr (SupportChaining) {
+      return InvokeMethod(aThisVal, aMethod, std::forward<ValueType>(aValue));
+    } else {
+      InvokeMethod(aThisVal, aMethod, std::forward<ValueType>(aValue));
+      return nullptr;
+    }
+  }
+
+  template <typename PromiseType>
+  static void MaybeChain(PromiseType* aFrom,
+                         RefPtr<typename PromiseType::Private>&& aTo) {
+    if (aTo) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          aFrom,
+          "Can't do promise chaining for a non-promise-returning method.");
+      aFrom->ChainTo(aTo.forget(), "<chained completion promise>");
+    }
   }
 
   template <typename>
@@ -729,21 +725,22 @@ class MozPromise : public MozPromiseBase {
     }
 
     void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
-      if (aValue.IsResolve()) {
-        InvokeCallbackMethod<SupportChaining>(mThisVal.get(), mResolveMethod,
-                                              MaybeMove(aValue.ResolveValue()),
-                                              std::move(mCompletionPromise));
-      } else {
-        InvokeCallbackMethod<SupportChaining>(mThisVal.get(), mRejectMethod,
-                                              MaybeMove(aValue.RejectValue()),
-                                              std::move(mCompletionPromise));
-      }
+      RefPtr<PromiseType> result =
+          aValue.IsResolve()
+              ? InvokeCallbackMethod<SupportChaining, PromiseType>(
+                    mThisVal.get(), mResolveMethod,
+                    MaybeMove(aValue.ResolveValue()))
+              : InvokeCallbackMethod<SupportChaining, PromiseType>(
+                    mThisVal.get(), mRejectMethod,
+                    MaybeMove(aValue.RejectValue()));
 
       // Null out mThisVal after invoking the callback so that any references
       // are released predictably on the dispatch thread. Otherwise, it would be
       // released on whatever thread last drops its reference to the ThenValue,
       // which may or may not be ok.
       mThisVal = nullptr;
+
+      MaybeChain<PromiseType>(result, std::move(mCompletionPromise));
     }
 
    private:
@@ -789,15 +786,17 @@ class MozPromise : public MozPromiseBase {
     }
 
     void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
-      InvokeCallbackMethod<SupportChaining>(
-          mThisVal.get(), mResolveRejectMethod, MaybeMove(aValue),
-          std::move(mCompletionPromise));
+      RefPtr<PromiseType> result =
+          InvokeCallbackMethod<SupportChaining, PromiseType>(
+              mThisVal.get(), mResolveRejectMethod, MaybeMove(aValue));
 
       // Null out mThisVal after invoking the callback so that any references
       // are released predictably on the dispatch thread. Otherwise, it would be
       // released on whatever thread last drops its reference to the ThenValue,
       // which may or may not be ok.
       mThisVal = nullptr;
+
+      MaybeChain<PromiseType>(result, std::move(mCompletionPromise));
     }
 
    private:
@@ -853,15 +852,14 @@ class MozPromise : public MozPromiseBase {
       // classes with ::operator()), since it allows us to share code more
       // easily. We could fix this if need be, though it's quite easy to work
       // around by just capturing something.
-      if (aValue.IsResolve()) {
-        InvokeCallbackMethod<SupportChaining>(
-            mResolveFunction.ptr(), &ResolveFunction::operator(),
-            MaybeMove(aValue.ResolveValue()), std::move(mCompletionPromise));
-      } else {
-        InvokeCallbackMethod<SupportChaining>(
-            mRejectFunction.ptr(), &RejectFunction::operator(),
-            MaybeMove(aValue.RejectValue()), std::move(mCompletionPromise));
-      }
+      RefPtr<PromiseType> result =
+          aValue.IsResolve()
+              ? InvokeCallbackMethod<SupportChaining, PromiseType>(
+                    mResolveFunction.ptr(), &ResolveFunction::operator(),
+                    MaybeMove(aValue.ResolveValue()))
+              : InvokeCallbackMethod<SupportChaining, PromiseType>(
+                    mRejectFunction.ptr(), &RejectFunction::operator(),
+                    MaybeMove(aValue.RejectValue()));
 
       // Destroy callbacks after invocation so that any references in closures
       // are released predictably on the dispatch thread. Otherwise, they would
@@ -869,6 +867,8 @@ class MozPromise : public MozPromiseBase {
       // ThenValue, which may or may not be ok.
       mResolveFunction.reset();
       mRejectFunction.reset();
+
+      MaybeChain<PromiseType>(result, std::move(mCompletionPromise));
     }
 
    private:
@@ -919,15 +919,18 @@ class MozPromise : public MozPromiseBase {
       // classes with ::operator()), since it allows us to share code more
       // easily. We could fix this if need be, though it's quite easy to work
       // around by just capturing something.
-      InvokeCallbackMethod<SupportChaining>(
-          mResolveRejectFunction.ptr(), &ResolveRejectFunction::operator(),
-          MaybeMove(aValue), std::move(mCompletionPromise));
+      RefPtr<PromiseType> result =
+          InvokeCallbackMethod<SupportChaining, PromiseType>(
+              mResolveRejectFunction.ptr(), &ResolveRejectFunction::operator(),
+              MaybeMove(aValue));
 
       // Destroy callbacks after invocation so that any references in closures
       // are released predictably on the dispatch thread. Otherwise, they would
       // be released on whatever thread last drops its reference to the
       // ThenValue, which may or may not be ok.
       mResolveRejectFunction.reset();
+
+      MaybeChain<PromiseType>(result, std::move(mCompletionPromise));
     }
 
    private:

@@ -1744,14 +1744,30 @@ const BounceTrackingProtectionStateCleaner = {
 const StoragePermissionsCleaner = {
   async deleteByRange(aFrom) {
     // We lack the ability to clear by range, but can clear from a certain time to now
-    // We have to divice aFrom by 1000 to convert the time from ms to microseconds
+    // Convert aFrom from microseconds to ms
     Services.perms.removeByTypeSince("storage-access", aFrom / 1000);
-    Services.perms.removeByTypeSince("persistent-storage", aFrom / 1000);
+
+    let persistentStoragePermissions = Services.perms.getAllByTypeSince(
+      "persistent-storage",
+      aFrom / 1000
+    );
+    persistentStoragePermissions.forEach(perm => {
+      // If it is an Addon Principal, do nothing.
+      // We want their persistant-storage permissions to remain (Bug 1907732)
+      if (this._isAddonPrincipal(perm.principal)) {
+        return;
+      }
+      Services.perms.removePermission(perm);
+    });
   },
 
   async deleteByPrincipal(aPrincipal) {
     Services.perms.removeFromPrincipal(aPrincipal, "storage-access");
-    Services.perms.removeFromPrincipal(aPrincipal, "persistent-storage");
+
+    // Only remove persistent-storage if it is not an extension principal (Bug 1907732)
+    if (!this._isAddonPrincipal(aPrincipal)) {
+      Services.perms.removeFromPrincipal(aPrincipal, "persistent-storage");
+    }
   },
 
   async deleteByHost(aHost) {
@@ -1783,14 +1799,40 @@ const StoragePermissionsCleaner = {
 
   async deleteAll() {
     Services.perms.removeByType("storage-access");
-    Services.perms.removeByType("persistent-storage");
+
+    // We don't want to clear the persistent-storage permission from addons (Bug 1907732)
+    let persistentStoragePermissions = Services.perms.getAllByTypes([
+      "persistent-storage",
+    ]);
+    persistentStoragePermissions.forEach(perm => {
+      if (this._isAddonPrincipal(perm.principal)) {
+        return;
+      }
+
+      Services.perms.removePermission(perm);
+    });
   },
 
   _getStoragePermissions() {
-    return Services.perms.getAllByTypes([
+    let storagePermissions = Services.perms.getAllByTypes([
       "storage-access",
       "persistent-storage",
     ]);
+
+    return storagePermissions.filter(
+      permission =>
+        !this._isAddonPrincipal(permission.principal) ||
+        permission.type == "storage-access"
+    );
+  },
+
+  _isAddonPrincipal(aPrincipal) {
+    return (
+      // AddonPolicy() returns a WebExtensionPolicy that has been registered before,
+      // typically during extension startup. Since Disabled or uninstalled add-ons
+      // don't appear there, we should use schemeIs instead
+      aPrincipal.schemeIs("moz-extension")
+    );
   },
 };
 

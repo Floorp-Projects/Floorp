@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
+with Files("GeolocationSystemWin.cpp"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
 EXPORTS += [
     "nsGeoPositionIPCSerialiser.h",
 ]
@@ -14,8 +17,10 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     "Geolocation.h",
     "GeolocationCoordinates.h",
+    "GeolocationIPCUtils.h",
     "GeolocationPosition.h",
     "GeolocationPositionError.h",
+    "GeolocationSystem.h",
 ]
 
 SOURCES += [
@@ -28,6 +33,29 @@ SOURCES += [
 UNIFIED_SOURCES += [
     "MLSFallback.cpp",
 ]
+
+# MinGW is missing the headers needed to build the Windows Geolocation System
+# Permission UI so it uses the platform-agnostic version.
+if (
+    CONFIG["OS_TARGET"] == "WINNT"
+    and CONFIG["CC_TYPE"] == "clang-cl"
+    and CONFIG["MOZ_BUILD_APP"] == "browser"
+):
+    UNIFIED_SOURCES += [
+        "GeolocationSystemWin.cpp",
+    ]
+    EXTRA_JS_MODULES += [
+        "GeolocationUIUtilsWin.sys.mjs",
+    ]
+    XPCOM_MANIFESTS += [
+        "components.conf",
+    ]
+    XPIDL_SOURCES += ["nsIGeolocationUIUtilsWin.idl"]
+    XPIDL_MODULE = "dom_geolocation"
+else:
+    UNIFIED_SOURCES += [
+        "GeolocationSystem.cpp",
+    ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

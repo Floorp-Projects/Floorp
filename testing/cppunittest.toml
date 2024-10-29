@@ -46,6 +46,12 @@ run-if = ["os == 'win'"]
 ["TestDllInterceptor"]
 run-if = ["os == 'win'"]
 
+["TestDllInterceptorCrossProcess"]
+run-if = [
+  "os == 'win' && processor == 'x86'",
+  "os == 'win' && processor == 'x86_64'",
+]
+
 ["TestDoublyLinkedList"]
 
 ["TestEndian"]
@@ -103,6 +109,9 @@ run-if = ["os == 'win'"]
 ["TestNonDereferenceable"]
 
 ["TestNotNull"]
+
+["TestOleAut32Initialization"]
+run-if = ["os == 'win'"]
 
 ["TestPEExportSection"]
 run-if = ["os == 'win'"]

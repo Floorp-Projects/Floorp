@@ -1022,6 +1022,29 @@ void nsHttpHandler::InitUserAgentComponents() {
   mUserAgentIsDirty = true;
 }
 
+#ifdef XP_MACOSX
+void nsHttpHandler::InitMSAuthorities() {
+  if (!StaticPrefs::network_http_microsoft_entra_sso_enabled()) {
+    return;
+  }
+
+  nsAutoCString authorityList;
+
+  if (NS_FAILED(Preferences::GetCString("network.microsoft-sso-authority-list",
+                                        authorityList))) {
+    return;
+  }
+  mMSAuthorities.Clear();
+
+  // Normalize the MS authority list
+  nsCCharSeparatedTokenizer tokenizer(authorityList, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsDependentCSubstring& token = tokenizer.nextToken();
+    mMSAuthorities.Insert(token);
+  }
+}
+#endif
+
 uint32_t nsHttpHandler::MaxSocketCount() {
   PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
               nsSocketTransportService::DiscoverMaxCount);
@@ -1831,6 +1854,18 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
       }
     }
   }
+
+#ifdef XP_MACOSX
+  if (XRE_IsParentProcess()) {
+    if (PREF_CHANGED(HTTP_PREF("microsoft-entra-sso.enabled"))) {
+      rv =
+          Preferences::GetBool(HTTP_PREF("microsoft-entra-sso.enabled"), &cVar);
+      if (NS_SUCCEEDED(rv) && cVar) {
+        InitMSAuthorities();
+      }
+    }
+  }
+#endif
 
   // Enable HTTP response timeout if TCP Keepalives are disabled.
   mResponseTimeoutEnabled =
@@ -2831,6 +2866,14 @@ bool nsHttpHandler::IsHostExcludedForHTTPSRR(const nsACString& aHost) {
 
   return mExcludedHostsForHTTPSRRUpgrade.Contains(aHost);
 }
+
+#ifdef XP_MACOSX
+bool nsHttpHandler::IsHostMSAuthority(const nsACString& aHost) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return mMSAuthorities.Contains(aHost);
+}
+#endif
 
 void nsHttpHandler::Exclude0RttTcp(const nsHttpConnectionInfo* ci) {
   MOZ_ASSERT(OnSocketThread());

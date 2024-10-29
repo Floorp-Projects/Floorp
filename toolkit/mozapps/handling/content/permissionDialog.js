@@ -76,8 +76,7 @@ let dialog = {
     let topContentPrincipal =
       this._browsingContext?.top.embedderElement?.contentPrincipal;
 
-    let shownScheme =
-      this._browsingContext.currentWindowGlobal.documentURI.scheme;
+    let shownScheme = this._browsingContext.currentURI.scheme;
     return (
       !topContentPrincipal ||
       !topContentPrincipal.equals(this._principal) ||

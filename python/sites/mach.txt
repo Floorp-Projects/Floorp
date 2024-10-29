@@ -101,4 +101,4 @@ pypi-optional:glean-sdk==60.1.1:telemetry will not be collected
 # We aren't (yet) able to pin packages in automation, so we have to
 # support down to the oldest locally-installed version (5.4.2).
 pypi-optional:psutil>=5.4.2,<=5.9.4:telemetry will be missing some data
-pypi-optional:zstandard>=0.11.1,<=0.22.0:zstd archives will not be possible to extract
+pypi-optional:zstandard>=0.11.1,<=0.23.0:zstd archives will not be possible to extract

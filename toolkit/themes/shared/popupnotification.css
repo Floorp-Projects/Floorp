@@ -50,6 +50,16 @@ popupnotificationcontent {
   flex: 1 auto;
 }
 
+/*
+ * Ensure that host names in PopupNotifications wrap. This targets the "name"
+ * element in the description container which is the "name" property of the
+ * PopupNotification. Name is what gets substituted from the l10n string using
+ * the placeholder <>.
+ */
+.popup-notification-description-name {
+  word-break: break-all;
+}
+
 .popup-notification-closebutton {
   margin-inline-end: -8px;
   margin-top: -8px;

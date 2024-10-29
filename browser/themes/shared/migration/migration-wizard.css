@@ -294,7 +294,7 @@ summary {
 
 @media (prefers-reduced-motion: reduce) {
   .progress-icon[state="loading"] {
-    content: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    content: url("chrome://global/skin/icons/loading.svg");
     fill: var(--text-color-deemphasized);
   }
 }

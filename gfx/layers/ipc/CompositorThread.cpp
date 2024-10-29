@@ -174,7 +174,11 @@ void CompositorThreadHolder::Shutdown() {
 /* static */
 bool CompositorThreadHolder::IsInCompositorThread() {
   if (!CompositorThread()) {
-    return false;
+    // We no longer have a pointer to the compositor thread, but we might
+    // still be running in the compositor thread. In we ever had a
+    // compositor thread, we logged the thread id in sProfilerThreadId,
+    // so we compare that value against the current thread id.
+    return (sProfilerThreadId == profiler_current_thread_id());
   }
   bool in = false;
   MOZ_ALWAYS_SUCCEEDS(CompositorThread()->IsOnCurrentThread(&in));

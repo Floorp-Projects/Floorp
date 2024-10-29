@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.six-group.com - Selected input values are hidden
+ * Bug #1886616 - https://bugzilla.mozilla.org/show_bug.cgi?id=1886616
+ * WebCompat issue #129271 - https://webcompat.com/issues/129271
+ *
+ * The page is hiding CSS content, which is not interoperable. In this
+ * case, it causes their select dropdown's values to be hidden.
+ */
+select {
+  content: normal;
+}

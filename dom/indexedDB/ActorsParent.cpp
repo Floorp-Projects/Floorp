@@ -2962,9 +2962,14 @@ class FactoryOp
 
     // Waiting to do/doing work on the "work thread". This involves waiting for
     // the VersionChangeOp (OpenDatabaseOp and DeleteDatabaseOp each have a
-    // different implementation) to do its work. Eventually the state will
-    // transition to SendingResults.
+    // different implementation) to do its work. If the VersionChangeOp is
+    // OpenDatabaseOp and it succeeded then the next state is
+    // DatabaseWorkVersionUpdate. Otherwise the next step is SendingResults.
     DatabaseWorkVersionChange,
+
+    // Waiting to do/doing finalization work on the QuotaManager IO thread.
+    // Eventually the state will transition to SendingResults.
+    DatabaseWorkVersionUpdate,
 
     // Waiting to send/sending results on the PBackground thread. Next step is
     // Completed.
@@ -3087,6 +3092,8 @@ class FactoryOp
 
   virtual nsresult DispatchToWorkThread() = 0;
 
+  virtual nsresult DoVersionUpdate() = 0;
+
   // Should only be called by Run().
   virtual void SendResults() = 0;
 
@@ -3166,6 +3173,8 @@ class OpenDatabaseOp final : public FactoryRequestOp {
   // cycles.
   VersionChangeOp* mVersionChangeOp;
 
+  MoveOnlyFunction<void()> mCompleteCallback;
+
   uint32_t mTelemetryId;
 
  public:
@@ -3209,6 +3218,8 @@ class OpenDatabaseOp final : public FactoryRequestOp {
   void SendBlockedNotification() override;
 
   nsresult DispatchToWorkThread() override;
+
+  nsresult DoVersionUpdate() override;
 
   void SendResults() override;
 
@@ -3281,6 +3292,8 @@ class DeleteDatabaseOp final : public FactoryRequestOp {
 
   nsresult DispatchToWorkThread() override;
 
+  nsresult DoVersionUpdate() override;
+
   void SendResults() override;
 };
 
@@ -3340,6 +3353,8 @@ class GetDatabasesOp final : public FactoryOp {
   void SendBlockedNotification() override;
 
   nsresult DispatchToWorkThread() override;
+
+  nsresult DoVersionUpdate() override;
 
   void SendResults() override;
 };
@@ -10699,6 +10714,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
 void VersionChangeTransaction::SendCompleteNotification(nsresult aResult) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mOpenDatabaseOp);
+  MOZ_ASSERT(!mOpenDatabaseOp->mCompleteCallback);
   MOZ_ASSERT_IF(!mActorWasAlive, mOpenDatabaseOp->HasFailed());
   MOZ_ASSERT_IF(!mActorWasAlive, mOpenDatabaseOp->mState >
                                      OpenDatabaseOp::State::SendingResults);
@@ -10709,21 +10725,40 @@ void VersionChangeTransaction::SendCompleteNotification(nsresult aResult) {
     return;
   }
 
+  openDatabaseOp->mCompleteCallback =
+      [self = SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aResult]() {
+        if (!self->IsActorDestroyed()) {
+          Unused << self->SendComplete(aResult);
+        }
+      };
+
+  auto handleError = [openDatabaseOp](const nsresult rv) {
+    openDatabaseOp->SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+
+    openDatabaseOp->mState = OpenDatabaseOp::State::SendingResults;
+
+    MOZ_ALWAYS_SUCCEEDS(openDatabaseOp->Run());
+  };
+
   if (NS_FAILED(aResult)) {
     // 3.3.1 Opening a database:
     // "If the upgrade transaction was aborted, run the steps for closing a
     //  database connection with connection, create and return a new AbortError
     //  exception and abort these steps."
-    openDatabaseOp->SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+    handleError(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+    return;
   }
 
-  openDatabaseOp->mState = OpenDatabaseOp::State::SendingResults;
+  openDatabaseOp->mState = OpenDatabaseOp::State::DatabaseWorkVersionUpdate;
 
-  if (!IsActorDestroyed()) {
-    Unused << SendComplete(aResult);
-  }
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
-  MOZ_ALWAYS_SUCCEEDS(openDatabaseOp->Run());
+  QM_TRY(MOZ_TO_RESULT(quotaManager->IOThread()->Dispatch(openDatabaseOp,
+                                                          NS_DISPATCH_NORMAL))
+             .mapErr(
+                 [](const auto) { return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR; }),
+         QM_VOID, handleError);
 }
 
 void VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy) {
@@ -11536,7 +11571,20 @@ DatabaseFileManager::DatabaseFileManager(
       mEnforcingQuota(aEnforcingQuota),
       mIsInPrivateBrowsingMode(aIsInPrivateBrowsingMode) {}
 
+uint64_t DatabaseFileManager::DatabaseVersion() const {
+  AssertIsOnIOThread();
+
+  return mDatabaseVersion;
+}
+
+void DatabaseFileManager::UpdateDatabaseVersion(uint64_t aDatabaseVersion) {
+  AssertIsOnIOThread();
+
+  mDatabaseVersion = aDatabaseVersion;
+}
+
 nsresult DatabaseFileManager::Init(nsIFile* aDirectory,
+                                   const uint64_t aDatabaseVersion,
                                    mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -11570,6 +11618,8 @@ nsresult DatabaseFileManager::Init(nsIFile* aDirectory,
 
     mJournalDirectoryPath.init(std::move(path));
   }
+
+  mDatabaseVersion = aDatabaseVersion;
 
   QM_TRY_INSPECT(const auto& stmt,
                  MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
@@ -14930,6 +14980,10 @@ FactoryOp::Run() {
       QM_WARNONLY_TRY(MOZ_TO_RESULT(DispatchToWorkThread()), handleError);
       break;
 
+    case State::DatabaseWorkVersionUpdate:
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DoVersionUpdate()), handleError);
+      break;
+
     case State::SendingResults:
       SendResults();
       break;
@@ -15168,7 +15222,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
          NS_ERROR_DOM_INDEXEDDB_VERSION_ERR);
 
   if (!fileManager->Initialized()) {
-    QM_TRY(MOZ_TO_RESULT(fileManager->Init(fmDirectory, *connection)));
+    QM_TRY(MOZ_TO_RESULT(fileManager->Init(
+        fmDirectory, mMetadata->mCommonMetadata.version(), *connection)));
 
     idm->AddFileManager(fileManager.clonePtr());
   }
@@ -15706,11 +15761,39 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
   return NS_OK;
 }
 
+nsresult OpenDatabaseOp::DoVersionUpdate() {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State::DatabaseWorkVersionUpdate);
+  MOZ_ASSERT(!HasFailed());
+
+  AUTO_PROFILER_LABEL("OpenDatabaseOp::DoVersionUpdate", DOM);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !OperationMayProceed()) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  mFileManager->UpdateDatabaseVersion(mRequestedVersion);
+
+  mState = State::SendingResults;
+
+  QM_TRY(MOZ_TO_RESULT(
+      DispatchThisAfterProcessingCurrentEvent(mOwningEventTarget)));
+
+  return NS_OK;
+}
+
 void OpenDatabaseOp::SendResults() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
   MOZ_ASSERT_IF(!HasFailed(), !mVersionChangeTransaction);
+
+  if (mCompleteCallback) {
+    auto completeCallback = std::move(mCompleteCallback);
+    completeCallback();
+  }
 
   DebugOnly<DatabaseActorInfo*> info = nullptr;
   MOZ_ASSERT_IF(mDatabaseId.isSome() && gLiveDatabaseHashtable &&
@@ -15733,8 +15816,6 @@ void OpenDatabaseOp::SendResults() {
       // If we just successfully completed a versionchange operation then we
       // need to update the version in our metadata.
       mMetadata->mCommonMetadata.version() = mRequestedVersion;
-
-      mFileManager->UpdateDatabaseVersion(mRequestedVersion);
 
       nsresult rv = EnsureDatabaseActorIsAlive();
       if (NS_SUCCEEDED(rv)) {
@@ -16356,6 +16437,10 @@ void DeleteDatabaseOp::SendBlockedNotification() {
   }
 }
 
+nsresult DeleteDatabaseOp::DoVersionUpdate() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
 void DeleteDatabaseOp::SendResults() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
@@ -16723,6 +16808,10 @@ void GetDatabasesOp::SendBlockedNotification() {
 }
 
 nsresult GetDatabasesOp::DispatchToWorkThread() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
+nsresult GetDatabasesOp::DoVersionUpdate() {
   MOZ_CRASH("Not implemented because this should be unreachable.");
 }
 

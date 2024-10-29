@@ -442,6 +442,12 @@ class SearchConfigTest {
           "Should have the correct aliases for the engine"
         );
       }
+      if (rule.required_aliases) {
+        this.assertOk(
+          rule.required_aliases.every(a => engine.aliases.includes(a)),
+          "Should have the required aliases for the engine"
+        );
+      }
       if (rule.telemetryId) {
         this.assertEqual(
           engine.telemetryId,

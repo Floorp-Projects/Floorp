@@ -89,11 +89,9 @@ class DatabaseFileManager final
 
   const nsAString& DatabaseFilePath() const { return mDatabaseFilePath; }
 
-  uint64_t DatabaseVersion() const { return mDatabaseVersion; }
+  uint64_t DatabaseVersion() const;
 
-  void UpdateDatabaseVersion(uint64_t aDatabaseVersion) {
-    mDatabaseVersion = aDatabaseVersion;
-  }
+  void UpdateDatabaseVersion(uint64_t aDatabaseVersion);
 
   IndexedDBCipherKeyManager& MutableCipherKeyManagerRef() const {
     MOZ_ASSERT(mIsInPrivateBrowsingMode);
@@ -108,7 +106,8 @@ class DatabaseFileManager final
 
   bool Initialized() const { return mInitialized; }
 
-  nsresult Init(nsIFile* aDirectory, mozIStorageConnection& aConnection);
+  nsresult Init(nsIFile* aDirectory, const uint64_t aDatabaseVersion,
+                mozIStorageConnection& aConnection);
 
   [[nodiscard]] nsCOMPtr<nsIFile> GetDirectory();
 

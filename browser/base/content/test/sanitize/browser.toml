@@ -28,6 +28,8 @@ support-files = [
 
 ["browser_sanitize-passwordDisabledHosts.js"]
 
+["browser_sanitize-siteDataExceptAddons.js"]
+
 ["browser_sanitize-sitepermissions.js"]
 
 ["browser_sanitize-timespans.js"]

@@ -61,6 +61,18 @@ class nsLoadGroup : public nsILoadGroup,
   void SetGroupObserver(nsIRequestObserver* aObserver,
                         bool aIncludeBackgroundRequests);
 
+  /**
+   * Flags inherited from the default request in the load group onto other loads
+   * added to the load group.
+   *
+   * NOTE(emilio): If modifying these, be aware that we allow these flags to be
+   * effectively set from the content process on a document navigation, and
+   * thus nothing security-critical should be allowed here.
+   */
+  static constexpr nsLoadFlags kInheritedLoadFlags =
+      LOAD_BACKGROUND | LOAD_BYPASS_CACHE | LOAD_FROM_CACHE | VALIDATE_ALWAYS |
+      VALIDATE_ONCE_PER_SESSION | VALIDATE_NEVER;
+
  protected:
   virtual ~nsLoadGroup();
 

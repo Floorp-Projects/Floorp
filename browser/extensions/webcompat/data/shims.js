@@ -380,6 +380,27 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "figshare",
+    platform: "all",
+    name: "Figshare",
+    bug: "1895990",
+    contentScripts: [
+      {
+        js: "figshare.js",
+        matches: [
+          "*://*.figsharelabs.io/*",
+          "*://opal.latrobe.edu.au/*",
+          "*://repository.lboro.ac.uk/*",
+          "*://portal.sds.ox.ac.uk/*",
+          "*://curate.nd.edu/*",
+          "*://kilthub.cmu.edu/*",
+        ],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "GoogleAnalyticsAndTagManager",
     platform: "all",
     name: "Google Analytics and Tag Manager",

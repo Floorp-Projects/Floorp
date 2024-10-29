@@ -6,7 +6,7 @@
 
 interface nsIWifiListener;
 
-[scriptable, uuid(F289701E-D9AF-4685-BC2F-E4226FF7C018)]
+[scriptable, builtinclass, uuid(F289701E-D9AF-4685-BC2F-E4226FF7C018)]
 interface nsIWifiMonitor : nsISupports
 {
   /*
@@ -24,4 +24,10 @@ interface nsIWifiMonitor : nsISupports
    * cancels all notifications to the |aListener|.
    */
   void stopWatching(in nsIWifiListener aListener);
+
+  /**
+   * True if there is a wifi adapter present that can perform a scan.
+   * Only valid on Windows.
+   */
+  [notxpcom, nostdcall] readonly attribute boolean hasWifiAdapter;
 };

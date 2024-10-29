@@ -253,7 +253,10 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_IS_REDIRECT = 0x800000;
 
   /**
-   * These flags force TRR modes 1 or 3 for the load.
+   * These flags force TRR_DISABLED_MODE or TRR_ONLY_MODE on the
+   * browsingContext's defaultLoadFlags.
+   * The basic use case for this is the captive portal login tab
+   * that needs skip TRR even when the browser defaults to TRR-only mode.
    */
   const unsigned long LOAD_FLAGS_DISABLE_TRR = 0x1000000;
   const unsigned long LOAD_FLAGS_FORCE_TRR = 0x2000000;

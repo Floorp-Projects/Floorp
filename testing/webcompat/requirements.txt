@@ -1,3 +1,4 @@
 asyncio==3.4.3
+pillow==10.3.0
 pytest-asyncio==0.16.0
 urllib3==1.26

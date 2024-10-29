@@ -4484,6 +4484,21 @@ gfx:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  tmp_writable:
+    bug_numbers:
+      - 1923741
+    description: >
+      Is the system temporary directory writable
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - aosmond@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
 
 apz:
   scrollwheel_overshoot:

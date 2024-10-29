@@ -3,8 +3,11 @@
 onbeforeunload = function() {
   opener.onChildBeforeUnload();
 };
-onload = function() {
+onload = async function() {
+  let ongoingLoad = fetch(location.href);
   location.href = "this-protocol-is-unlikely-to-exist://foo";
+  // Load shouldn't be canceled.
+  await ongoingLoad;
   setTimeout(function() {
     opener.onChildLoadTimedOut();
   }, 1000);

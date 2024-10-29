@@ -106,6 +106,8 @@ function getEncryptionParams(encryptField) {
 // aes128gcm scheme.
 function getCryptoParamsFromPayload(payload) {
   if (payload.byteLength < 21) {
+    // The value 21 is from https://datatracker.ietf.org/doc/html/rfc8188#section-2.1
+    // | salt (16) | rs (4) | idlen (1) | keyid (idlen) |
     throw new CryptoError("Truncated header", BAD_CRYPTO);
   }
   let rs =
@@ -113,8 +115,16 @@ function getCryptoParamsFromPayload(payload) {
     (payload[17] << 16) |
     (payload[18] << 8) |
     payload[19];
+  if (rs < 18) {
+    // https://datatracker.ietf.org/doc/html/rfc8188#section-2.1
+    throw new CryptoError(
+      "Record sizes smaller than 18 are invalid",
+      BAD_RS_PARAM
+    );
+  }
   let keyIdLen = payload[20];
   if (keyIdLen != 65) {
+    // https://datatracker.ietf.org/doc/html/rfc8291/#section-4
     throw new CryptoError("Invalid sender public key", BAD_DH_PARAM);
   }
   if (payload.byteLength <= 21 + keyIdLen) {
@@ -169,8 +179,12 @@ export function getCryptoParamsFromHeaders(headers) {
     throw new CryptoError("Invalid salt parameter", BAD_SALT_PARAM);
   }
   var rs = enc.rs ? parseInt(enc.rs, 10) : 4096;
-  if (isNaN(rs)) {
-    throw new CryptoError("rs parameter must be a number", BAD_RS_PARAM);
+  if (isNaN(rs) || rs < 1 || rs > 68719476705) {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-encryption-encoding-03#section-3.1
+    throw new CryptoError(
+      "rs parameter must be a number greater than 1 and smaller than 2^36-31",
+      BAD_RS_PARAM
+    );
   }
   return {
     salt,
@@ -789,6 +803,7 @@ class aes128gcmEncoder {
   // Perform the actual encryption of the payload.
   async encrypt(key, nonce) {
     if (this.rs < 18) {
+      // https://datatracker.ietf.org/doc/html/rfc8188#section-2.1
       throw new CryptoError("recordsize is too small", BAD_RS_PARAM);
     }
 
@@ -867,6 +882,7 @@ class aes128gcmEncoder {
   createHeader(key) {
     // layout is "salt|32-bit-int|8-bit-int|key"
     if (key.byteLength != 65) {
+      // https://datatracker.ietf.org/doc/html/rfc8291/#section-4
       throw new CryptoError("Invalid key length for header", BAD_DH_PARAM);
     }
     // the 2 ints

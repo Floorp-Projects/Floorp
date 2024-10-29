@@ -84,7 +84,9 @@ class WebGLVertexArray : public WebGLContextBoundObject {
   void AttribDivisor(const uint32_t index, const uint32_t val) {
     auto& binding = mBindings.at(index);
     binding.layout.divisor = val;
-  }
+    DoAttribDivisor(index);
+  };
+  void DoAttribDivisor(uint32_t index) const;
 
   void AttribPointer(const uint32_t index, WebGLBuffer* const buffer,
                      const webgl::VertAttribPointerDesc& desc,

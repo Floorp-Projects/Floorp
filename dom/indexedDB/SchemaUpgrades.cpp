@@ -2866,7 +2866,8 @@ nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
       /* aDatabaseFilePath */ u""_ns, /* aEnforcingQuota */ false,
       /* aIsInPrivateBrowsingMode */ false);
 
-  nsresult rv = fileManager->Init(aFMDirectory, aConnection);
+  nsresult rv =
+      fileManager->Init(aFMDirectory, /* aDatabaseVersion */ 0, aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

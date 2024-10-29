@@ -218,8 +218,6 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
     return nullptr;
   }
 
-  MaybeStoreCrossOriginFeaturePolicy();
-
   return docShell.forget();
 }
 
@@ -1552,6 +1550,7 @@ void nsObjectLoadingContent::Destroy() {
 void nsObjectLoadingContent::Traverse(nsObjectLoadingContent* tmp,
                                       nsCycleCollectionTraversalCallback& cb) {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFeaturePolicy);
 }
 
 /* static */
@@ -1560,6 +1559,7 @@ void nsObjectLoadingContent::Unlink(nsObjectLoadingContent* tmp) {
     tmp->mFrameLoader->Destroy();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy);
 }
 
 void nsObjectLoadingContent::UnloadObject(bool aResetState) {
@@ -1718,6 +1718,13 @@ nsObjectLoadingContent::UpgradeLoadToDocument(
     return NS_ERROR_FAILURE;
   }
 
+  // At this point we know that we have a browsing context, so it's time to make
+  // sure that that browsing context gets the correct container feature policy.
+  // This is needed for `DocumentLoadListener::MaybeTriggerProcessSwitch` to be
+  // able to start loading the document with the correct container feature
+  // policy in the load info.
+  RefreshFeaturePolicy();
+
   bc.forget(aBrowsingContext);
   return NS_OK;
 }
@@ -1818,6 +1825,9 @@ void nsObjectLoadingContent::SubdocumentImageLoadComplete(nsresult aResult) {
 
 void nsObjectLoadingContent::MaybeStoreCrossOriginFeaturePolicy() {
   MOZ_DIAGNOSTIC_ASSERT(mFrameLoader);
+  if (!mFrameLoader) {
+    return;
+  }
 
   // If the browsingContext is not ready (because docshell is dead), don't try
   // to create one.
@@ -1831,15 +1841,54 @@ void nsObjectLoadingContent::MaybeStoreCrossOriginFeaturePolicy() {
     return;
   }
 
-  Element* el = AsElement();
+  auto* el = nsGenericHTMLElement::FromNode(AsElement());
   if (!el->IsInComposedDoc()) {
     return;
   }
 
-  FeaturePolicy* featurePolicy = el->OwnerDoc()->FeaturePolicy();
-
-  if (ContentChild* cc = ContentChild::GetSingleton(); cc && featurePolicy) {
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
     Unused << cc->SendSetContainerFeaturePolicy(
-        browsingContext, Some(featurePolicy->ToFeaturePolicyInfo()));
+        browsingContext, Some(mFeaturePolicy->ToFeaturePolicyInfo()));
   }
+}
+
+/* static */ already_AddRefed<nsIPrincipal>
+nsObjectLoadingContent::GetFeaturePolicyDefaultOrigin(nsINode* aNode) {
+  auto* el = nsGenericHTMLElement::FromNode(aNode);
+  nsCOMPtr<nsIURI> nodeURI;
+  // Different elements keep this in various locations
+  if (el->NodeInfo()->Equals(nsGkAtoms::object)) {
+    el->GetURIAttr(nsGkAtoms::data, nullptr, getter_AddRefs(nodeURI));
+  } else if (el->NodeInfo()->Equals(nsGkAtoms::embed)) {
+    el->GetURIAttr(nsGkAtoms::src, nullptr, getter_AddRefs(nodeURI));
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  if (nodeURI) {
+    principal = BasePrincipal::CreateContentPrincipal(
+        nodeURI,
+        BasePrincipal::Cast(el->NodePrincipal())->OriginAttributesRef());
+  } else {
+    principal = el->NodePrincipal();
+  }
+
+  return principal.forget();
+}
+
+void nsObjectLoadingContent::RefreshFeaturePolicy() {
+  if (mType != ObjectType::Document) {
+    return;
+  }
+
+  if (!mFeaturePolicy) {
+    mFeaturePolicy = MakeAndAddRef<FeaturePolicy>(AsElement());
+  }
+
+  // The origin can change if 'src' or 'data' attributes change.
+  nsCOMPtr<nsIPrincipal> origin = GetFeaturePolicyDefaultOrigin(AsElement());
+  MOZ_ASSERT(origin);
+  mFeaturePolicy->SetDefaultOrigin(origin);
+
+  mFeaturePolicy->InheritPolicy(AsElement()->OwnerDoc()->FeaturePolicy());
+  MaybeStoreCrossOriginFeaturePolicy();
 }

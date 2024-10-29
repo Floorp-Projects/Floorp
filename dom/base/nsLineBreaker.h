@@ -72,6 +72,13 @@ class nsLineBreaker {
     return mozilla::intl::NS_IsSpace(u);
   }
 
+  // Helper also used by nsCaseTransformTextRunFactory::TransformString.
+  // aChar is the current character to be examined;
+  // aCapitalizeNext is a state variable: initialize it to true at start-of-
+  // text, then pass it back to this function as each successive character is
+  // considered.
+  static bool ShouldCapitalize(uint32_t aChar, bool& aCapitalizeNext);
+
   // Break opportunities exist at the end of each run of breakable whitespace
   // (see IsSpace above). Break opportunities can also exist between pairs of
   // non-whitespace characters, as determined by mozilla::intl::LineBreaker.

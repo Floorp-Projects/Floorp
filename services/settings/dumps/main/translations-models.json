@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "lex.50.50.enel.s2t.bin",
+      "schema": 1728418132946,
+      "toLang": "el",
+      "version": "1.0",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "c2acd9241eb8a1e5b13a43efa5723628839d6e3b3dc7b93e2f20990a6ab81e24",
+        "size": 2856724,
+        "filename": "lex.50.50.enel.s2t.bin",
+        "location": "main-workspace/translations-models/73568803-85e3-423a-8fb8-7f755a6ffed2.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "",
+      "id": "8944a263-7d26-4eb5-b997-0cccc22bf409",
+      "last_modified": 1728419357989
+    },
+    {
+      "name": "model.enel.intgemm.alphas.bin",
+      "schema": 1728418135876,
+      "toLang": "el",
+      "version": "1.0",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "724b358d399c6b23444de36d76e9e2630c7024c29d9e617323b820a11631535a",
+        "size": 17141051,
+        "filename": "model.enel.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/26dead91-e46c-442c-85d0-a6fe13fad55a.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "",
+      "id": "136b1eae-9cef-4d03-a38f-74b0cb543b74",
+      "last_modified": 1728419357986
+    },
+    {
+      "name": "vocab.enel.spm",
+      "schema": 1728418140704,
+      "toLang": "el",
+      "version": "1.0",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "0ffc5569d7f400f03539c5fc3e28ff35f1d0381eba0ec866c44aef0c26f3ce5e",
+        "size": 896168,
+        "filename": "vocab.enel.spm",
+        "location": "main-workspace/translations-models/79a76f88-a4c4-4b1d-b726-15c6a60bebcc.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "",
+      "id": "21ba494d-0782-4792-9aa9-decb9f5dbedd",
+      "last_modified": 1728419357983
+    },
+    {
       "name": "lex.50.50.enru.s2t.bin",
       "schema": 1727894453838,
       "toLang": "ru",
@@ -5395,5 +5449,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1727894623933
+  "timestamp": 1728419357989
 }
