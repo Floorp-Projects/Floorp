@@ -5,21 +5,34 @@
 
 
 import { createRootHMR } from "@nora/solid-xul";
+import {
+  onCleanup
+} from "solid-js";
+import { TabColorManager } from "./tabcolor-manager";
 const { ManifestObtainer } = ChromeUtils.importESModule("resource://gre/modules/ManifestObtainer.sys.mjs");
 
+export let manager: TabColorManager;
+
 export function init() {
+  const listener = {
+    onLocationChange: (browser, webProgress, request, newURI, flags) => {
+      changeTabColor();
+    },
+  };
   createRootHMR(
     () => {
-      const listener = {
-        onLocationChange: (browser, webProgress, request, newURI, flags) => {
-          changeTabColor();
-        },
-      };
+      manager = new TabColorManager();
       window.gBrowser.addTabsProgressListener(listener);
       window.gBrowser.tabContainer.addEventListener("TabSelect", changeTabColor);
     },
     import.meta.hot,
   );
+  onCleanup(
+    () => {
+      window.gBrowser.removeTabsProgressListener(listener);
+      window.gBrowser.tabContainer.removeEventListener("TabSelect", changeTabColor);
+    });
+  manager.init();
   import.meta.hot?.accept((m) => {
     m?.init();
   });
@@ -56,6 +69,10 @@ function getTextColor(backgroundColor: string) {
 }
 
 function changeTabColor() {
+  console.log(manager.enableTabColor());
+  if (!manager.enableTabColor()) {
+    return;
+  }
   getManifest().then(res => {
     document?.getElementById("floorp-toolbar-bgcolor")?.remove()
     if (res != null) {
