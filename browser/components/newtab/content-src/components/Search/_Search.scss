@@ -6,6 +6,15 @@ $search-icon-width: 2 * $search-icon-padding + $search-icon-size - 4px;
 $search-button-width: 48px;
 $glyph-forward: url('chrome://browser/skin/forward.svg');
 
+@supports -moz-bool-pref("browser.disable.nt.image.gb") {
+  @media (prefers-color-scheme: light) {
+    .search-wrapper .logo-and-wordmark .wordmark {
+      background: url("chrome://branding/content/firefox-wordmark-white.svg") no-repeat center center !important;
+      width: 306px !important;
+    }
+  }
+}
+
 .search-wrapper {
   padding: 34px 0 38px;
 
@@ -32,13 +41,13 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     .wordmark {
       background: url('chrome://branding/content/firefox-wordmark.svg') no-repeat center center;
-      background-size: $wordmark-size;
+      background-size: 300px;
       -moz-context-properties: fill;
       display: inline-block;
       fill: var(--newtab-wordmark-color);
-      height: $logo-size;
-      margin-inline-start: 16px;
-      width: $wordmark-size;
+      height: 100px;
+      margin-inline-start: 25px;
+      width: 300px;
 
       // Contrast fix for users who have wallpapers set
       @include wallpaper-contrast-fix;
