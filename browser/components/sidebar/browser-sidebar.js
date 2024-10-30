@@ -57,7 +57,10 @@ var SidebarController = {
     if (this._sidebars) {
       return this._sidebars;
     }
+    return this.generateSidebarsMap();
+  },
 
+  generateSidebarsMap() {
     this._sidebars = new Map([
       [
         "viewHistorySidebar",
@@ -188,6 +191,13 @@ var SidebarController = {
 
   get initialized() {
     return this._inited;
+  },
+
+  get sidebarMain() {
+    if (!this._sidebarMain) {
+      this._sidebarMain = document.querySelector("sidebar-main");
+    }
+    return this._sidebarMain;
   },
 
   async init() {
@@ -413,6 +423,42 @@ var SidebarController = {
     if (content && content.updatePosition) {
       content.updatePosition();
     }
+  },
+
+  /**
+   * Show/hide new sidebar based on sidebar.revamp pref
+   */
+  async toggleRevampSidebar() {
+    await this.promiseInitialized;
+    let wasOpen = this.isOpen;
+    if (wasOpen) {
+      this.hide();
+    }
+    // Reset sidebars map but preserve any existing extensions
+    let extensionsArr = [];
+    for (const [commandID, sidebar] of this.sidebars.entries()) {
+      if (sidebar.hasOwnProperty("extensionId")) {
+        extensionsArr.push({ commandID, sidebar });
+      }
+    }
+    this.sidebars = this.generateSidebarsMap();
+    for (const extension of extensionsArr) {
+      this.sidebars.set(extension.commandID, extension.sidebar);
+    }
+    if (!this.sidebarRevampEnabled) {
+      this.sidebarMain.hidden = true;
+      document.getElementById("sidebar-header").hidden = false;
+      // Disable vertical tabs if revamped sidebar is turned off
+      if (this.sidebarVerticalTabsEnabled) {
+        Services.prefs.setBoolPref("sidebar.verticalTabs", false);
+      }
+    } else {
+      this.sidebarMain.hidden = false;
+    }
+    if (!this._sidebars.get(this.lastOpenedId)) {
+      this.lastOpenedId = this.DEFAULT_SIDEBAR_ID;
+    }
+    await this.init();
   },
 
   /**
@@ -1028,5 +1074,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SidebarController,
   "sidebarRevampEnabled",
   "sidebar.revamp",
-  false
+  false,
+  SidebarController.toggleRevampSidebar.bind(SidebarController)
 );
