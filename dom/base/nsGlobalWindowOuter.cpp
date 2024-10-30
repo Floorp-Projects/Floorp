@@ -5005,7 +5005,9 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   });
 
-  const bool forPreview = !StaticPrefs::print_always_print_silent();
+  const bool forPreview =
+      !StaticPrefs::print_always_print_silent() &&
+      !Preferences::GetBool("print.prefer_system_dialog", false);
   Print(nullptr, nullptr, nullptr, nullptr, IsPreview(forPreview),
         IsForWindowDotPrint::Yes, nullptr, nullptr, aError);
 #endif
