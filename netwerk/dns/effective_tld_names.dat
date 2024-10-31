@@ -209,6 +209,7 @@ tur.ar
 // Confirmed by registry <iana-questions@icann.org> 2008-06-18
 arpa
 e164.arpa
+home.arpa
 in-addr.arpa
 ip6.arpa
 iris.arpa
@@ -759,8 +760,6 @@ go.ci
 asso.ci
 aéroport.ci
 int.ci
-presse.ci
-md.ci
 gouv.ci
 
 // ck : https://www.iana.org/domains/root/db/ck.html
@@ -869,7 +868,6 @@ cu
 com.cu
 edu.cu
 gob.cu
-gov.cu
 inf.cu
 nat.cu
 net.cu
@@ -1429,9 +1427,15 @@ int
 eu.int
 
 // io : http://www.nic.io/rules.htm
-// list of other 2nd level tlds ?
 io
+co.io
 com.io
+edu.io
+gov.io
+mil.io
+net.io
+nom.io
+org.io
 
 // iq : http://www.cmc.iq/english/iq/iqregister1.htm
 iq
@@ -5566,7 +5570,6 @@ si
 sj
 
 // sk : https://www.iana.org/domains/root/db/sk.html
-// list of 2nd level domains ?
 sk
 
 // sl : http://www.nic.sl
@@ -12379,20 +12382,24 @@ clickrising.net
 // Submitted by Aleksander Hristov <noc@cloudns.net> & Boyan Peychev <boyan@cloudns.net>
 cloudns.asia
 cloudns.be
+cloud-ip.biz
 cloudns.biz
 cloudns.cc
 cloudns.ch
 cloudns.cl
 cloudns.club
 dnsabr.com
+ip-ddns.com
 cloudns.cx
 cloudns.eu
 cloudns.in
 cloudns.info
+ddns-ip.net
 dns-cloud.net
 dns-dynamic.net
 cloudns.nz
 cloudns.org
+ip-dynamic.org
 cloudns.ph
 cloudns.pro
 cloudns.pw
@@ -13651,6 +13658,10 @@ london.cloudapps.digital
 // Submitted by <domeinnaam@minaz.nl>
 gov.nl
 
+// Grafana Labs: https://grafana.com/
+// Submitted by Platform Engineering <info@grafana.com>
+grafana-dev.net
+
 // GrayJay Web Solutions Inc. : https://grayjaysports.ca
 // Submitted by Matt Yamkowy <info@grayjaysports.ca>
 grayjayleagues.com
@@ -13671,11 +13682,6 @@ conf.se
 // Häkkinen.fi
 // Submitted by Eero Häkkinen <Eero+psl@Häkkinen.fi>
 häkkinen.fi
-
-// Handshake : https://handshake.org
-// Submitted by Mike Damm <md@md.vc>
-hs.run
-hs.zone
 
 // Harrison Network : https://hrsn.net
 // Submitted by William Harrison <psl@hrsn.net>
@@ -15372,6 +15378,10 @@ gdansk.pl
 gdynia.pl
 med.pl
 sopot.pl
+
+// Tave Creative Corp : https://tave.com/
+// Submitted by Adrian Ziemkowski <devops@tave.com>
+taveusercontent.com
 
 // tawk.to, Inc : https://www.tawk.to
 // Submitted by tawk.to developer team <dev-accounts@tawk.to>

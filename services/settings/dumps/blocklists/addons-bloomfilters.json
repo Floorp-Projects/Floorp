@@ -2,6 +2,141 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "{d4b2df91-905e-470a-aa1e-0c8c12c7b953}:1.0",
+          "{8daa62f9-abd4-46a4-ac76-3ce8d432595f}:1.0",
+          "pwaforge@example.com:1.0",
+          "{65c54879-4f68-4b92-a331-3cadb7cf9da3}:1.0",
+          "{fcb89b86-90b1-4191-ade1-357fe3b24457}:1.0",
+          "{4f80e798-015e-49fe-bd92-261a5d353b0e}:1.0",
+          "{f31fce0a-ffc1-4a2c-ab55-8b417a20b3ec}:1.0",
+          "{53d038ef-923b-4b4f-afc9-e9342a80f81c}:1.0",
+          "{0d4ff446-728d-4531-8342-2787827785f7}:1.0",
+          "{48e4aa94-005a-4d85-a4a9-19f7698476c5}:1.0",
+          "{0bef3253-65b1-4243-9fc5-3fd3fdced11a}:1.0",
+          "{c1ef2735-bb6f-421b-aab5-e3da7e78f3f7}:1.0",
+          "{06aece83-47e0-4bf0-b5fe-e54c378cb0b0}:1.0",
+          "{687610a5-e43c-4143-8c6a-8a12f95d6cb2}:4.0.0",
+          "{804c86b4-2dcf-404f-9dd6-60f1823fa755}:1.0",
+          "{01bd7e1e-cef0-4838-b51d-1e0506bb10bc}:1.0",
+          "{bd055c1e-8c55-44d1-b475-4a0b3fa5c1d2}:1.0",
+          "{1f097f90-c840-4a53-a6dd-609c483c0f1c}:1.0",
+          "{398defa2-681c-422a-a835-24d71769c978}:1.0",
+          "{e4aecb23-e4ad-42e7-9a78-78b13ac00cb0}:1.0",
+          "{01fa6a77-f94f-4343-8383-f65758542679}:1.0",
+          "{8e518f6b-ac88-4675-bc20-6788aa46ff25}:1.0",
+          "{0d9cc04d-1e4d-4194-9cc8-fd1885fc590c}:1.0",
+          "{f9d8bd84-fc85-4f63-b907-2f1cd330b883}:1.0",
+          "{29980c1c-4638-4e33-a332-73061c656b82}:1.0",
+          "{914110ae-a286-4f40-abe3-fb421f459994}:1.0",
+          "{86d7aede-3a83-4b41-88c0-eb914cd391af}:1.0",
+          "{46fb2c3e-050e-47c7-976a-d56cdb922d00}:1.0",
+          "{ff1de7a6-639f-4cc1-8f0f-f51c39b13172}:1.0",
+          "{c539c828-52df-4cc2-a0e5-bc0abe4f8496}:1.0",
+          "{c92ad1e6-62f8-417a-a349-94435586479f}:1.0",
+          "{07caab18-db31-4a44-8679-1942e5ddefb0}:1.0",
+          "{a49a8fcb-5a49-4645-aa2e-a1be7d7d372a}:1.0",
+          "{ec438075-de2c-42bb-87e6-0ceeffbf3215}:1.0",
+          "{f7510ce2-5c4b-465c-b083-3e7e26e9b589}:1.0",
+          "{5db12039-4896-4589-bf3a-950a8be09cad}:1.0",
+          "{3c2358cd-83a4-4d47-b0e5-5d61effb862e}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1730202218866,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1730205305506,
+      "id": "abb1697c-ce55-411c-a03a-9804492726a5",
+      "last_modified": 1730205365595
+    },
+    {
+      "stash": {
+        "blocked": [
+          "webextension@3sdekjhdax7:1.1",
+          "webextension@3sdekjhdax7:1.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1729850644352,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1730140505073,
+      "id": "62340f16-ff18-4e13-8609-230fb9ea5324",
+      "last_modified": 1730140566205
+    },
+    {
+      "stash": {
+        "blocked": [
+          "stellatosevero@gmail.com:1.0.3",
+          "{dd149546-e82e-476e-82a7-a0f079a2b151}:1.0.3",
+          "{b5a90a38-b466-4006-9509-86e2799a5a9e}:1.0.3",
+          "{b5a90a38-b466-4006-9509-86e2799a5a9e}:10.0.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1729759304449,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1729794905328,
+      "id": "bb9e1287-8447-46c6-8837-8424eee56770",
+      "last_modified": 1729794964993
+    },
+    {
+      "stash": {
+        "blocked": [
+          "webextensions@dsdf848hdb327:1.1",
+          "webextensions@dsdf848hdb327:1.2",
+          "webextensions@dsdf848hdb327:1.5"
+        ],
+        "unblocked": []
+      },
+      "schema": 1729622166881,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1729686905031,
+      "id": "ed393d5a-07b5-460e-86b7-fec867e4419d",
+      "last_modified": 1729686966879
+    },
+    {
+      "stash": {
+        "blocked": [
+          "webextension@871326hdbs26:12.5",
+          "webextension@871326hdbs26:1.3",
+          "webextension@871326hdbs26:1.2",
+          "webextension@871326hdbs26:1.4"
+        ],
+        "unblocked": []
+      },
+      "schema": 1729535765666,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1729622105235,
+      "id": "e316a36b-5fdf-457f-b85a-2fd224d4e846",
+      "last_modified": 1729622166737
+    },
+    {
+      "stash": {
+        "blocked": [
+          "ITHitEditDocOpener5a@webdavsystem.com:6.0.8734.2",
+          "ITHitEditDocOpener5a@webdavsystem.com:6.0.8736.2",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.8",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.9",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.5",
+          "ITHitEditDocOpener5a@webdavsystem.com:6.0.8735.2",
+          "weather-addona-books@6e7bdb7d2ghdb327:12.1",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.4",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.3",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.6",
+          "weather-addona-books@6e7bdb7d2ghdb327:12.0",
+          "weather-addona-books@6e7bdb7d2ghdb327:1.7",
+          "ITHitEditDocOpener5a@webdavsystem.com:6.0.8733.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1729276567278,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1729535705092,
+      "id": "86d02f7c-d06f-4910-a5f4-73757c3f7c9f",
+      "last_modified": 1729535765477
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": [
           "{1e0ef38e-0496-4a23-b463-e591c43a4d41}:1.0"
@@ -542,5 +677,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1729276567076
+  "timestamp": 1730205365595
 }
