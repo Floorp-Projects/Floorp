@@ -190,8 +190,11 @@ function makeMockContentAnalysis() {
     },
 
     getURIForBrowsingContext(aBrowsingContext) {
+      // The real implementation walks up the parent chain as long
+      // as the parent principal subsumes the child one. For testing
+      // purposes, just return the browsing context's URI.
       this.browsingContextsForURIs.push(aBrowsingContext);
-      return this.realCAService.getURIForBrowsingContext(aBrowsingContext);
+      return aBrowsingContext.currentURI;
     },
   };
 }
