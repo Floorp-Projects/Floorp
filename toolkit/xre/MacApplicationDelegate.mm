@@ -165,7 +165,7 @@ nsTArray<nsCString> TakeStartupURLs() { return std::move(StartupURLs()); }
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
-      NSMenu* windowsMenu = [[NSMenu alloc] initWithTitle:@"Window"];
+      NSMenu* windowsMenu = [[GeckoNSMenu alloc] initWithTitle:@"Window"];
       [NSApp setWindowsMenu:windowsMenu];
       [windowsMenu release];
     }
@@ -209,7 +209,7 @@ nsTArray<nsCString> TakeStartupURLs() { return std::move(StartupURLs()); }
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Create the NSMenu that will contain the dock menu items.
-  NSMenu* menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+  NSMenu* menu = [[[GeckoNSMenu alloc] initWithTitle:@""] autorelease];
   [menu setAutoenablesItems:NO];
 
   // Add application-specific dock menu items. On error, do not insert the
