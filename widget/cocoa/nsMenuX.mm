@@ -116,9 +116,9 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
   mVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
   NSString* newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
-  mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString
-                                               action:nil
-                                        keyEquivalent:@""];
+  mNativeMenuItem = [[GeckoNSMenuItem alloc] initWithTitle:newCocoaLabelString
+                                                    action:nil
+                                             keyEquivalent:@""];
   mNativeMenuItem.submenu = mNativeMenu;
 
   SetEnabled(!mContent->IsElement() ||
@@ -794,9 +794,9 @@ void nsMenuX::InsertPlaceholderIfNeeded() {
 
   if ([mNativeMenu numberOfItems] == 0) {
     MOZ_RELEASE_ASSERT(mVisibleItemsCount == 0);
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@""
-                                                  action:nil
-                                           keyEquivalent:@""];
+    NSMenuItem* item = [[GeckoNSMenuItem alloc] initWithTitle:@""
+                                                       action:nil
+                                                keyEquivalent:@""];
     item.enabled = NO;
     item.view =
         [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 150, 1)] autorelease];
