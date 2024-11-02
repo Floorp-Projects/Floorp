@@ -281,6 +281,31 @@ export var SelectParentHelper = {
   },
 
   open(browser, menulist, rect, isOpenedViaTouch, selectParentActor) {
+    const canOpen = (() => {
+      if (!menulist.ownerDocument.hasFocus()) {
+        // Don't open in inactive browser windows.
+        return false;
+      }
+      if (browser) {
+        if (!browser.browsingContext.isActive) {
+          // Don't open in inactive tabs.
+          return false;
+        }
+        let tabbrowser = browser.getTabBrowser();
+        if (tabbrowser && tabbrowser.selectedBrowser != browser) {
+          // AsyncTabSwitcher might delay activating our browser, check
+          // explicitly for tabbrowser.
+          return false;
+        }
+      }
+      return true;
+    })();
+
+    if (!canOpen) {
+      selectParentActor.sendAsyncMessage("Forms:DismissedDropDown", {});
+      return;
+    }
+
     this._actor = selectParentActor;
     menulist.hidden = false;
     this._currentBrowser = browser;
