@@ -72,6 +72,7 @@ const char* const sExecutableExts[] = {
 #endif
   ".js",
   ".jse",
+  ".library-ms",  // Windows Library Files
   ".lnk",
   ".mad",         // Access Module Shortcut
   ".maf",         // Access

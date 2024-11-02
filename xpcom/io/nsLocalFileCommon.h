@@ -8,9 +8,9 @@
 #define _NS_LOCAL_FILE_COMMON_H_
 
 #ifdef MOZ_ESR
-extern const char* const sExecutableExts[108];
-#else
 extern const char* const sExecutableExts[109];
+#else
+extern const char* const sExecutableExts[110];
 #endif
 
 #endif
