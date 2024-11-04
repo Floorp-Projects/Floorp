@@ -101,6 +101,42 @@ export var GMPUtils = {
     );
   },
 
+  _getChromiumUpdateParameters(aPlugin) {
+    let params = "";
+    if (AppConstants.platform === "win") {
+      params += "&os=win";
+    } else if (AppConstants.platform === "macosx") {
+      params += "&os=mac";
+    } else if (AppConstants.platform === "linux") {
+      params += "&os=Linux";
+    } else {
+      throw new Error("Unknown platform " + AppConstants.platform);
+    }
+
+    const abi = Services.appinfo.XPCOMABI;
+    if (abi.match(/aarch64/)) {
+      params += "&arch=arm64&os_arch=arm64";
+    } else if (abi.match(/x86_64/)) {
+      params += "&arch=x64&os_arch=x64";
+    } else if (abi.match(/x86/)) {
+      params += "&arch=x86&os_arch=x86";
+    } else {
+      throw new Error("Unknown ABI " + abi);
+    }
+
+    if (
+      GMPPrefs.getBool(
+        GMPPrefs.KEY_PLUGIN_FORCE_CHROMIUM_BETA,
+        false,
+        aPlugin.id
+      )
+    ) {
+      params += "&testrequest=1";
+    }
+
+    return params;
+  },
+
   _expectedABI(aPlugin) {
     let defaultABI = lazy.UpdateUtils.ABI;
     let expectedABIs = [defaultABI];
@@ -134,9 +170,13 @@ export var GMPPrefs = {
   KEY_PLUGIN_FORCE_SUPPORTED: "media.{0}.forceSupported",
   KEY_PLUGIN_FORCE_INSTALL: "media.{0}.forceInstall",
   KEY_PLUGIN_ALLOW_X64_ON_ARM64: "media.{0}.allow-x64-plugin-on-arm64",
+  KEY_PLUGIN_CHROMIUM_GUID: "media.{0}.chromium-guid",
+  KEY_PLUGIN_FORCE_CHROMIUM_UPDATE: "media.{0}.force-chromium-update",
+  KEY_PLUGIN_FORCE_CHROMIUM_BETA: "media.{0}.force-chromium-beta",
   KEY_ALLOW_LOCAL_SOURCES: "media.gmp-manager.allowLocalSources",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
+  KEY_CHROMIUM_UPDATE_URL: "media.gmp-manager.chromium-update-url",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
   KEY_CERT_REQUIREBUILTIN: "media.gmp-manager.cert.requireBuiltIn",
   KEY_CHECK_CONTENT_SIGNATURE: "media.gmp-manager.checkContentSignature",
