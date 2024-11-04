@@ -8,6 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 AddonTestUtils.init(this);
@@ -946,6 +947,122 @@ add_task(async function test_tabId_conditions_invalid_in_dynamic_rules() {
       browser.test.notifyPass();
     },
   });
+});
+
+// Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1921353
+// StartupCache contains hasDynamicRules and hasEnabledStaticRules as an
+// optimization, to avoid unnecessarily trying to read and parse DNR rules from
+// disk when an extension does knowingly not have any. This had two bugs:
+// 1. When rule reading was skipped, necessary internal state was not correctly
+//    initialized, and consequently rules could not be registered or updated.
+// 2. The hasDynamicRules/hasEnabledStaticRules flags were not cleared upon
+//    update, and consequently the flag stayed in the initial state (false),
+//    and the previously stored rules did not apply after a browser restart.
+// This is a regression test to verify that these issues do not occur any more.
+//
+// See also test_enable_disabled_static_rules_after_restart in
+// test_ext_dnr_static_rules.js for the similar test with static rules.
+add_task(async function test_register_dynamic_rules_after_restart() {
+  // Through this test, we confirm that the underlying "expensive" rule data
+  // storage is accessed when needed, and skipped when no relevant rules had
+  // been detected at the previous session. Caching too much or too little in
+  // StartupCache will trigger test failures in assertStoreReadsSinceLastCall.
+  const sandboxStoreSpies = sinon.createSandbox();
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  const spyReadDNRStore = sandboxStoreSpies.spy(dnrStore, "_readData");
+
+  function assertStoreReadsSinceLastCall(expectedCount, description) {
+    equal(spyReadDNRStore.callCount, expectedCount, description);
+    spyReadDNRStore.resetHistory();
+  }
+
+  let { extension } = await runAsDNRExtension({
+    unloadTestAtEnd: false,
+    id: "test-dnr-restart-and-rule-registration-changes@test-extension",
+    background: () => {
+      const dnr = browser.declarativeNetRequest;
+
+      browser.runtime.onInstalled.addListener(async () => {
+        browser.test.assertDeepEq(
+          await dnr.getDynamicRules(),
+          [],
+          "No DNR rules at install time"
+        );
+        browser.test.sendMessage("onInstalled");
+      });
+      browser.test.onMessage.addListener(async msg => {
+        if (msg === "get_rule_count") {
+          browser.test.sendMessage(
+            "get_rule_count:done",
+            (await dnr.getDynamicRules()).length
+          );
+          return;
+        } else if (msg === "zero_to_one_rule") {
+          await dnr.updateDynamicRules({
+            addRules: [{ id: 1, condition: {}, action: { type: "block" } }],
+          });
+        } else if (msg === "one_to_zero_rules") {
+          await dnr.updateDynamicRules({ removeRuleIds: [1] });
+        } else {
+          browser.test.fail(`Unexpected message: ${msg}`);
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      browser.runtime.onStartup.addListener(async () => {
+        browser.test.sendMessage("onStartup");
+      });
+    },
+  });
+  await extension.awaitMessage("onInstalled");
+  assertStoreReadsSinceLastCall(1, "Read once at initial startup");
+  await promiseRestartManager();
+  await extension.awaitMessage("onStartup");
+  assertStoreReadsSinceLastCall(0, "Read skipped due to hasDynamicRules=false");
+
+  // Regression test 1: before bug 1921353 was fixed, the test got stuck here
+  // because the getDynamicRules() call after a restart unexpectedly failed
+  // with "this._data.get(...) is undefined".
+  equal(
+    await callTestMessageHandler(extension, "get_rule_count"),
+    0,
+    "Started and without rules"
+  );
+
+  await callTestMessageHandler(extension, "zero_to_one_rule");
+
+  assertStoreReadsSinceLastCall(0, "No further reads before restart");
+  await promiseRestartManager();
+  await extension.awaitMessage("onStartup");
+
+  // Regression test 2: before bug 1921353 was fixed, even with a fix to the
+  // previous bug, the dynamic rules would not be read at startup due to the
+  // wrong cached hasDynamicRules flag in StartupCache.
+  assertStoreReadsSinceLastCall(1, "Read due to hasDynamicRules=true");
+  equal(
+    await callTestMessageHandler(extension, "get_rule_count"),
+    1,
+    "Started and should see the previously registered dynamic rule"
+  );
+
+  // For full coverage, also verify that when there are really 0 rules, that
+  // the initialization is skipped as expected.
+
+  await callTestMessageHandler(extension, "one_to_zero_rules");
+  await promiseRestartManager();
+  await extension.awaitMessage("onStartup");
+  assertStoreReadsSinceLastCall(0, "Read skipped because rules were cleared");
+  equal(
+    await callTestMessageHandler(extension, "get_rule_count"),
+    0,
+    "Started without rules, should not see rules"
+  );
+  // declarativeNetRequest.getDynamicRules() queries in-memory state, so we do
+  // not expect another read from disk.
+  assertStoreReadsSinceLastCall(0, "Read still skipped despite API call");
+
+  await extension.unload();
+
+  sandboxStoreSpies.restore();
 });
 
 add_task(async function test_dynamic_rules_telemetry() {
