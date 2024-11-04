@@ -3,6 +3,21 @@
     {
       "stash": {
         "blocked": [
+          "{f052f71d-92f0-47aa-bb82-f045b3eee29a}:1.7",
+          "{f052f71d-92f0-47aa-bb82-f045b3eee29a}:0.1",
+          "{f052f71d-92f0-47aa-bb82-f045b3eee29a}:1.78.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1730303447500,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1730399704832,
+      "id": "1ff07504-a119-40fe-a730-959423571358",
+      "last_modified": 1730399764270
+    },
+    {
+      "stash": {
+        "blocked": [
           "{d4b2df91-905e-470a-aa1e-0c8c12c7b953}:1.0",
           "{8daa62f9-abd4-46a4-ac76-3ce8d432595f}:1.0",
           "pwaforge@example.com:1.0",
@@ -677,5 +692,5 @@
       "last_modified": 1724351846412
     }
   ],
-  "timestamp": 1730205365595
+  "timestamp": 1730399764270
 }
