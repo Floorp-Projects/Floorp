@@ -1006,7 +1006,9 @@ class TelemetryHandler {
               continue;
             }
 
+            // Cookie values may take the form of "foo=bar&baz=1".
             let [cookieParam, cookieValue] = cookie.value
+              .split("&")[0]
               .split("=")
               .map(p => p.trim());
             if (
