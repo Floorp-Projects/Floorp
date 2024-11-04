@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: [macos-13, self-hosted]
+        runs-on: [macos-13, macos-14]
         # macos-latest-large is x86_64 and macos-latest is arm64
 
     steps:
@@ -51,7 +51,7 @@ jobs:
         id: download-artifacts-mac-enable-profgen
         name: Download artifact 📥
         with:
-          name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
+          name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen
           path: ~/downloads/artifacts
 
       - name: force install python3.12
