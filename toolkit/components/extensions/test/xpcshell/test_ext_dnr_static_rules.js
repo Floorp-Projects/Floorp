@@ -7,6 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 AddonTestUtils.init(this);
@@ -312,6 +313,118 @@ add_task(async function test_load_static_rules() {
     !(await IOUtils.exists(storeFile)),
     `DNR storeFile ${storeFile} removed on addon uninstalled`
   );
+});
+
+// As an optimization, the hasEnabledStaticRules flag in StartupCache is used
+// to avoid unnecessarily trying to read and parse DNR rules from disk when an
+// extension does knowingly not have any.
+//
+// 1. When rule reading was skipped, necessary internal state was not correctly
+//    initialized, and consequently updateStaticRules() would reject.
+// 2. The hasDynamicRules/hasEnabledStaticRules flags were not cleared upon
+//    update, and consequently the flag stayed in the initial state (false),
+//    and the previously stored rules did not apply after a browser restart.
+//
+// See also test_register_dynamic_rules_after_restart in
+// test_ext_dnr_dynamic_rules.js for the similar test with dynamic rules.
+add_task(async function test_enable_disabled_static_rules_after_restart() {
+  // Through this test, we confirm that the underlying "expensive" rule data
+  // storage is accessed when needed, and skipped when no relevant rules had
+  // been detected at the previous session. Caching too much or too little in
+  // StartupCache will trigger test failures in assertStoreReadsSinceLastCall.
+  const sandboxStoreSpies = sinon.createSandbox();
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  const spyReadDNRStore = sandboxStoreSpies.spy(dnrStore, "_readData");
+
+  function assertStoreReadsSinceLastCall(expectedCount, description) {
+    equal(spyReadDNRStore.callCount, expectedCount, description);
+    spyReadDNRStore.resetHistory();
+  }
+
+  const rule_resources = [
+    {
+      id: "ruleset_initially_disabled",
+      enabled: false,
+      path: "ruleset_initially_disabled.json",
+    },
+  ];
+
+  const files = {
+    "ruleset_initially_disabled.json": JSON.stringify([getDNRRule()]),
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({ rule_resources, files, id: "dnr@initially-disabled" })
+  );
+  await extension.startup();
+  await extension.awaitMessage("bgpage:ready");
+
+  assertStoreReadsSinceLastCall(1, "Read once at initial startup");
+  await AddonTestUtils.promiseRestartManager();
+  // Note: ordinarily, event pages do not wake up after a browser restart,
+  // unless a relevant event such as runtime.onStartup is triggered. But as
+  // noted in bug 1822735, "event pages without any event listeners" will be
+  // awakened after a restart, so we can expect the bgpage:ready message here:
+  await extension.awaitMessage("bgpage:ready");
+  assertStoreReadsSinceLastCall(
+    0,
+    "Read skipped due to hasEnabledStaticRules=false"
+  );
+
+  // Regression test 1: before bug 1921353 was fixed, the test got stuck here
+  // because the updateStaticRules() call after a restart unexpectedly failed
+  // with "can't access property "disabledStaticRuleIds", data is undefined".
+  extension.sendMessage("updateStaticRules", {
+    rulesetId: "ruleset_initially_disabled",
+    enableRuleIds: [1234], // Does not exist, does not matter.
+  });
+  info("Trying to call declarativeNetRequest.updateStaticRules()...");
+  Assert.deepEqual(
+    await extension.awaitMessage("updateStaticRules:done"),
+    [undefined],
+    "updateStaticRules() succeeded without error"
+  );
+
+  // Now transition from zero rulesets to one (zero_to_one_rule).
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset_initially_disabled"],
+  });
+  info("Trying to enable ruleset_initially_disabled...");
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_initially_disabled"]);
+
+  assertStoreReadsSinceLastCall(0, "No further reads before restart");
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitMessage("bgpage:ready");
+
+  // Regression test 2: before bug 1921353 was fixed, even with a fix to the
+  // previous bug, the static rules would not be read at startup due to the
+  // wrong cached hasEnabledStaticRules flag in StartupCache.
+  // Verify that the static rules are still enabled.
+  assertStoreReadsSinceLastCall(1, "Read due to hasEnabledStaticRules=true");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_initially_disabled"]);
+
+  // For full coverage, also verify that when all static rules are disabled,
+  // that the initialization is skipped as expected.
+
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset_initially_disabled"],
+  });
+  info("Trying to disable ruleset_initially_disabled...");
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, []);
+
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitMessage("bgpage:ready");
+  assertStoreReadsSinceLastCall(0, "Read skipped because rules were disabled");
+  await assertDNRGetEnabledRulesets(extension, []);
+  // declarativeNetRequest.getEnabledStaticRulesets() queries in-memory state,
+  // so we do not expect another read from disk.
+  assertStoreReadsSinceLastCall(0, "Read still skipped despite API call");
+
+  await extension.unload();
+
+  sandboxStoreSpies.restore();
 });
 
 add_task(async function test_load_from_corrupted_data() {
