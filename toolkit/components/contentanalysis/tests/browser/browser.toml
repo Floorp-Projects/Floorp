@@ -37,6 +37,20 @@ support-files = [
   "clipboard_read_async.html",
 ]
 
+["browser_content_analysis_dnd_diff_origin.js"]
+support-files = [
+  "!/dom/events/test/browser_dragdrop_impl.js",
+  "!/dom/events/test/browser_dragdrop_inner.html",
+  "!/dom/events/test/browser_dragdrop_outer.html",
+]
+
+["browser_content_analysis_dnd_same_origin.js"]
+support-files = [
+  "!/dom/events/test/browser_dragdrop_impl.js",
+  "!/dom/events/test/browser_dragdrop_inner.html",
+  "!/dom/events/test/browser_dragdrop_outer.html",
+]
+
 ["browser_content_analysis_policies.js"]
 
 ["browser_print_changing_page_content_analysis.js"]

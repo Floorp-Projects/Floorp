@@ -30,3 +30,5 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/dom/events/test/browser_dragdrop_impl.js",
   this
 );
+
+runTest = runDnd;
