@@ -25,6 +25,7 @@
 #include "mozilla/ipc/IPCForwards.h"
 #include "nsCOMPtr.h"
 #include "nsHashtablesFwd.h"
+#include "nsIFrame.h"
 #include "nsISelectionListener.h"
 #include "nsITransferable.h"
 #include "nsRect.h"
@@ -1248,6 +1249,10 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     bool mWidgetIsHit = false;
     // true if mContentRoot is focused editable content
     bool mIsEditableContent = false;
+    // Set to the element that a drop at the given coordinates would target
+    mozilla::dom::Element* mDropElement;
+    // Set to the frame that a drop at the given coordinates would target
+    nsIFrame* mDropFrame;
 
     Reply() = delete;
     explicit Reply(EventMessage aEventMessage) : mEventMessage(aEventMessage) {}

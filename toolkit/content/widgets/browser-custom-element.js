@@ -30,6 +30,13 @@
     Services.io.newURI("about:blank")
   );
 
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "contentAnalysis",
+    "@mozilla.org/contentanalysis;1",
+    Ci.nsIContentAnalysis
+  );
+
   let lazyPrefs = {};
   XPCOMUtils.defineLazyPreferenceGetter(
     lazyPrefs,
@@ -159,6 +166,128 @@
       this.addEventListener(
         "drop",
         event => {
+          if (lazy.contentAnalysis.isActive) {
+            let dragService = Cc[
+              "@mozilla.org/widget/dragservice;1"
+            ].getService(Ci.nsIDragService);
+            let dragSession = dragService.getCurrentSession(window);
+            if (!dragSession) {
+              return;
+            }
+
+            // Don't check items from drags that take place inside of a single
+            // frame, or in a same-origin iframe hierarchy.  Drag sessions with an
+            // external source have no sourceWindowContext and must be checked.
+            let sourceWC = dragSession.sourceWindowContext;
+            let targetWC = this.browsingContext?.currentWindowContext;
+            if (!targetWC) {
+              return;
+            }
+            if (
+              sourceWC &&
+              sourceWC.browsingContext.top == targetWC.browsingContext.top &&
+              targetWC.documentPrincipal?.subsumes(sourceWC.documentPrincipal)
+            ) {
+              return;
+            }
+
+            // Create a request for each text and file item in the DataTransfer
+            try {
+              // Submit a content analysis request for each checkable entry in the
+              // DataTransfer and stop dispatching this drop event.  Reissue the
+              // drop if all requests are permitted.
+              let caPromises = [];
+              let items = event.dataTransfer.items;
+              for (let elt of items) {
+                const kTextMimeTypes = [
+                  "text/plain",
+                  "text/html",
+                  "application/x-moz-nativehtml",
+                ];
+
+                let requestFields;
+                if (
+                  elt.kind === "string" &&
+                  kTextMimeTypes.includes(elt.type)
+                ) {
+                  let str = event.dataTransfer.getData(elt.type);
+                  if (!str) {
+                    continue;
+                  }
+                  requestFields = {
+                    analysisType: Ci.nsIContentAnalysisRequest.eBulkDataEntry,
+                    operationTypeForDisplay:
+                      Ci.nsIContentAnalysisRequest.eDroppedText,
+                    textContent: str,
+                  };
+                } else if (elt.kind === "file") {
+                  let file = elt.getAsFile();
+                  requestFields = {
+                    analysisType: Ci.nsIContentAnalysisRequest.eFileAttached,
+                    operationTypeForDisplay:
+                      Ci.nsIContentAnalysisRequest.eCustomDisplayString,
+                    operationDisplayString: file.name,
+                    filePath: file.mozFullPath,
+                  };
+                } else {
+                  // Unrecognized data type -- don't send to content analysis
+                  continue;
+                }
+
+                caPromises.push(
+                  lazy.contentAnalysis.analyzeContentRequest(
+                    {
+                      requestToken: Services.uuid.generateUUID().toString(),
+                      resources: [],
+                      url: dragSession.uriForEvent(event),
+                      windowGlobalParent:
+                        this.browsingContext.currentWindowContext,
+                      ...requestFields,
+                    },
+                    true /* autoAcknowledge */
+                  )
+                );
+              }
+
+              if (!caPromises.length) {
+                // Nothing was analyzable.
+                return;
+              }
+
+              // Tell browser to record the event target and to delay EndDragSession
+              // until the results are given.
+              dragSession.sendStoreDropTargetAndDelayEndDragSession(event);
+
+              // Only permit the drop if all requests were approved.  Issue dragexit
+              // instead of drop if CA rejected the content or there was an error.
+              Promise.all(caPromises).then(
+                caResults => {
+                  let allApproved = caResults.reduce((prev, current) => {
+                    return prev && current.shouldAllowContent;
+                  }, true);
+                  dragSession.sendDispatchToDropTargetAndResumeEndDragSession(
+                    allApproved
+                  );
+                },
+                () => {
+                  dragSession.sendDispatchToDropTargetAndResumeEndDragSession(
+                    false
+                  );
+                }
+              );
+
+              // Do not allow this drop to continue dispatch.
+              event.preventDefault();
+              event.stopPropagation();
+            } catch {
+              // On internal error, deny any drop.  CA has its own behavior to
+              // handle internal errors, like a lost connection to the agent, but
+              // we are more strict when facing errors here.
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }
+
           // No need to handle "drop" in e10s, since nsDocShellTreeOwner.cpp in the child process
           // handles that case using "@mozilla.org/content/dropped-link-handler;1" service.
           if (

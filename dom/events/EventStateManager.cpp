@@ -1508,6 +1508,7 @@ void EventStateManager::HandleQueryContentEvent(
     case eQueryCharacterAtPoint:
     case eQueryDOMWidgetHittest:
     case eQueryTextRectArray:
+    case eQueryDropTargetHittest:
       break;
     default:
       return;
