@@ -193,6 +193,10 @@
 
             // Create a request for each text and file item in the DataTransfer
             try {
+              // Tell browser to record the event target and to delay EndDragSession
+              // until the content analysis results are given.
+              dragSession.sendStoreDropTargetAndDelayEndDragSession(event);
+
               // Submit a content analysis request for each checkable entry in the
               // DataTransfer and stop dispatching this drop event.  Reissue the
               // drop if all requests are permitted.
@@ -251,12 +255,11 @@
 
               if (!caPromises.length) {
                 // Nothing was analyzable.
+                dragSession.sendDispatchToDropTargetAndResumeEndDragSession(
+                  true
+                );
                 return;
               }
-
-              // Tell browser to record the event target and to delay EndDragSession
-              // until the results are given.
-              dragSession.sendStoreDropTargetAndDelayEndDragSession(event);
 
               // Only permit the drop if all requests were approved.  Issue dragexit
               // instead of drop if CA rejected the content or there was an error.
