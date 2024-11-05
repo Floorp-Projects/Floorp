@@ -54,17 +54,24 @@ function mockService(serviceNames, contractId, interfaceObj, mockService) {
 /**
  * Mock the nsIContentAnalysis service with the object mockCAService.
  *
- * @param {object}    mockCAService
- *                    the service to mock for nsIContentAnalysis
- * @returns {object}  The newly-mocked service
+ * @param {object}    mockCAServiceTemplate
+ *                    the mock nsIContentAnalysis template object
+ * @returns {object}  The newly-mocked service that integrates the template
  */
-function mockContentAnalysisService(mockCAService) {
-  return mockService(
+function mockContentAnalysisService(mockCAServiceTemplate) {
+  let realCAService = SpecialPowers.Cc[
+    "@mozilla.org/contentanalysis;1"
+  ].getService(SpecialPowers.Ci.nsIContentAnalysis);
+  let mockCAService = mockService(
     ["nsIContentAnalysis"],
     "@mozilla.org/contentanalysis;1",
     Ci.nsIContentAnalysis,
-    mockCAService
+    mockCAServiceTemplate
   );
+  if (mockCAService) {
+    mockCAService.realCAService = realCAService;
+  }
+  return mockCAService;
 }
 
 /**

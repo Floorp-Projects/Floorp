@@ -216,12 +216,6 @@ interface nsIDragSession : nsISupports
                       [optional] in unsigned long aKeyModifiers);
 
   /**
-   * Returns the URI that should be used in a content analysis request for
-   * the given drag event.
-   */
-  nsIURI uriForEvent(in DragEvent event);
-
-  /**
    * Tell the drag session for the given browser that it
    * should store the would-be target of the aEvent (a drop event) and delay
    * calls to EndDragSession.  This is used in the main process.
