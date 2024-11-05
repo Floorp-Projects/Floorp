@@ -66,9 +66,13 @@ async function openWindow(tabIdx) {
   await SpecialPowers.spawn(
     tab.linkedBrowser.browsingContext,
     [INNER_BASE_ARRAY[tabIdx]],
-    iframeUrl => {
-      content.document.getElementById("iframe").src =
-        iframeUrl + "browser_dragdrop_inner.html";
+    async iframeUrl => {
+      let iframe = content.document.getElementById("iframe");
+      let loadedPromise = new Promise(res => {
+        iframe.addEventListener("load", res, { once: true });
+      });
+      iframe.src = iframeUrl + "browser_dragdrop_inner.html";
+      await loadedPromise;
       const ds = SpecialPowers.Cc[
         "@mozilla.org/widget/dragservice;1"
       ].getService(SpecialPowers.Ci.nsIDragService);
