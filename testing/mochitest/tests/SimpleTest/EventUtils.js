@@ -4172,21 +4172,18 @@ async function synthesizeMockDragAndDrop(aParams) {
   //
   // dragstart and dragend are special because they target the drag-source,
   // not the drag-target.
-  let expectProtectedDataTransferAccess =
-    !SpecialPowers.getBoolPref("dom.events.dataTransfer.protected.enabled") &&
-    browsingContextsAreRelated(targetBrowsingCxt, sourceBrowsingCxt);
-
-  // expectProtectedDataTransferAccessDragendOnly overrides
-  // expectProtectedDataTransferAccess when it is true
-  let expectProtectedDataTransferAccessDragendOnly = !SpecialPowers.getBoolPref(
+  let expectProtectedDataTransferAccessSource = !SpecialPowers.getBoolPref(
     "dom.events.dataTransfer.protected.enabled"
   );
+  let expectProtectedDataTransferAccessTarget =
+    expectProtectedDataTransferAccessSource &&
+    browsingContextsAreRelated(targetBrowsingCxt, sourceBrowsingCxt);
 
   info(
-    `expectProtectedDataTransferAccess: ${expectProtectedDataTransferAccess}`
+    `expectProtectedDataTransferAccessSource: ${expectProtectedDataTransferAccessSource}`
   );
   info(
-    `expectProtectedDataTransferAccessDragendOnly: ${expectProtectedDataTransferAccessDragendOnly}`
+    `expectProtectedDataTransferAccessTarget: ${expectProtectedDataTransferAccessTarget}`
   );
 
   // Essentially the entire function is in a try block so that we can make sure
@@ -4234,18 +4231,20 @@ async function synthesizeMockDragAndDrop(aParams) {
       expectCancelDragStart,
       expectSrcElementDisconnected,
       expectNoDragEvents,
-      expectProtectedDataTransferAccessDragendOnly,
+      expectProtectedDataTransferAccess:
+        expectProtectedDataTransferAccessSource,
       dragElementId: srcElement,
     };
     const targetVars = {
       expectDragLeave,
       expectNoDragTargetEvents,
+      expectProtectedDataTransferAccess:
+        expectProtectedDataTransferAccessTarget,
       dragElementId: targetElement,
     };
     const bothVars = {
       contextLabel,
       throwOnExtraMessage,
-      expectProtectedDataTransferAccess,
       relevantEvents: [
         "mousedown",
         "mouseup",
@@ -4385,20 +4384,20 @@ async function synthesizeMockDragAndDrop(aParams) {
 
     // Another move creates the drag session in the parent process (but we need
     // to wait for the src process to get there).
-    info(`Moving to target element.`);
-    let currentTargetScreenPos = [
-      Math.ceil(targetPos.screenPos[0]),
-      Math.ceil(targetPos.screenPos[1]),
+    currentSrcScreenPos = [
+      currentSrcScreenPos[0] + step[0],
+      currentSrcScreenPos[1] + step[1],
     ];
-
+    info(
+      `third mousemove at ${currentSrcScreenPos[0]}, ${currentSrcScreenPos[1]}`
+    );
     dragController.sendEvent(
       sourceBrowsingCxt,
       Ci.nsIMockDragServiceController.eMouseMove,
-      currentTargetScreenPos[0],
-      currentTargetScreenPos[1]
+      currentSrcScreenPos[0],
+      currentSrcScreenPos[1]
     );
-
-    await sourceCxt.checkExpected();
+    info(`third mousemove sent`);
 
     ok(
       _getDOMWindowUtils(sourceBrowsingCxt.ownerGlobal).dragSession,
@@ -4415,26 +4414,60 @@ async function synthesizeMockDragAndDrop(aParams) {
       return;
     }
 
-    currentTargetScreenPos = [
-      currentTargetScreenPos[0] + step[0],
-      currentTargetScreenPos[1] + step[1],
+    await sourceCxt.checkExpected();
+
+    // Implementation detail: EventStateManager::GenerateDragDropEnterExit
+    // expects the source to get at least one dragover before leaving the
+    // widget or else it fails to send dragenter/dragleave events to the
+    // browsers.
+    info("synthesizing dragover inside source");
+    sourceCxt.expect("dragenter");
+    sourceCxt.expect("dragover");
+    currentSrcScreenPos = [
+      currentSrcScreenPos[0] + step[0],
+      currentSrcScreenPos[1] + step[1],
+    ];
+    info(`dragover at ${currentSrcScreenPos[0]}, ${currentSrcScreenPos[1]}`);
+    dragController.sendEvent(
+      sourceBrowsingCxt,
+      Ci.nsIMockDragServiceController.eDragOver,
+      currentSrcScreenPos[0],
+      currentSrcScreenPos[1]
+    );
+
+    info(`dragover sent`);
+    await sourceCxt.checkExpected();
+
+    let currentTargetScreenPos = [
+      Math.ceil(targetPos.screenPos[0]),
+      Math.ceil(targetPos.screenPos[1]),
     ];
 
-    // Send dragleave and dragenter only if we moved to another widget.
-    // If we moved in the same widget then dragenter does not involve
-    // the parent process.  This mirrors the native behavior.  Note that
-    // these events are not forwarded to the content process -- they
-    // are generated there by the EventStateManager when appropriate.
+    // The next step is to drag to the target element.
+    if (!expectNoDragTargetEvents) {
+      sourceCxt.expect("dragleave");
+    }
+
     if (
       sourceBrowsingCxt.top.embedderElement !==
       targetBrowsingCxt.top.embedderElement
     ) {
-      // Dragging from widget to widget
-      info("synthesizing dragleave and dragenter to enter new widget");
+      // Send dragexit and dragenter only if we are dragging to another widget.
+      // If we are dragging in the same widget then dragenter does not involve
+      // the parent process.  This mirrors the native behavior. In the
+      // widget-to-widget case, the source gets the dragexit immediately but
+      // the target won't get a dragenter in content until we send a dragover --
+      // this is because dragenters are generated by the EventStateManager and
+      // are not forwarded remotely.
+      // NB: dragleaves are synthesized by Gecko from dragexits.
+      info("synthesizing dragexit and dragenter to enter new widget");
+      if (!expectNoDragTargetEvents) {
+        info("This will generate dragleave on the source");
+      }
 
       dragController.sendEvent(
         sourceBrowsingCxt,
-        Ci.nsIMockDragServiceController.eDragLeave,
+        Ci.nsIMockDragServiceController.eDragExit,
         currentTargetScreenPos[0],
         currentTargetScreenPos[1]
       );
@@ -4446,21 +4479,20 @@ async function synthesizeMockDragAndDrop(aParams) {
         currentTargetScreenPos[1]
       );
 
+      await sourceCxt.synchronize();
+
       await sourceCxt.checkExpected();
       await targetCxt.checkExpected();
     }
 
-    info("synthesizing dragover to generate dragenter in DOM");
-
+    info(
+      "Synthesizing dragover over target.  This will first generate a dragenter."
+    );
     if (!expectNoDragTargetEvents) {
       targetCxt.expect("dragenter");
       targetCxt.expect("dragover");
     }
 
-    currentTargetScreenPos = [
-      currentTargetScreenPos[0] + step[0],
-      currentTargetScreenPos[1] + step[1],
-    ];
     dragController.sendEvent(
       targetBrowsingCxt,
       Ci.nsIMockDragServiceController.eDragOver,

@@ -102,8 +102,8 @@ static EventMessage MockEventTypeToEventMessage(
       return EventMessage::eDragEnter;
     case EventType::eDragOver:
       return EventMessage::eDragOver;
-    case EventType::eDragLeave:
-      return EventMessage::eDragLeave;
+    case EventType::eDragExit:
+      return EventMessage::eDragExit;
     case EventType::eDrop:
       return EventMessage::eDrop;
     case EventType::eMouseDown:
@@ -184,7 +184,7 @@ MockDragServiceController::SendEvent(
       currentDragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
       widget->DispatchInputEvent(widgetEvent.get());
       break;
-    case EventType::eDragLeave: {
+    case EventType::eDragExit: {
       NS_ENSURE_TRUE(currentDragSession, NS_ERROR_UNEXPECTED);
       currentDragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
       widget->DispatchInputEvent(widgetEvent.get());
