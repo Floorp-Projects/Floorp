@@ -11,8 +11,10 @@
 #include "base/process_util.h"
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
@@ -2337,6 +2339,22 @@ NS_IMETHODIMP ContentAnalysis::GetURIForBrowsingContext(
   }
   uri.forget(aURI);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysis::GetURIForDropEvent(dom::DragEvent* aEvent, nsIURI** aURI) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  *aURI = nullptr;
+  auto* widgetEvent = aEvent->WidgetEventPtr();
+  MOZ_ASSERT(widgetEvent);
+  MOZ_ASSERT(widgetEvent->mClass == eDragEventClass &&
+             widgetEvent->mMessage == eDrop);
+  auto* bp =
+      dom::BrowserParent::GetBrowserParentFromLayersId(widgetEvent->mLayersId);
+  NS_ENSURE_TRUE(bp, NS_ERROR_FAILURE);
+  auto* bc = bp->GetBrowsingContext();
+  NS_ENSURE_TRUE(bc, NS_ERROR_FAILURE);
+  return GetURIForBrowsingContext(bc, aURI);
 }
 
 NS_IMETHODIMP ContentAnalysisCallback::ContentResult(

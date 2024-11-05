@@ -239,7 +239,7 @@
                     {
                       requestToken: Services.uuid.generateUUID().toString(),
                       resources: [],
-                      url: dragSession.uriForEvent(event),
+                      url: lazy.contentAnalysis.getURIForDropEvent(event),
                       windowGlobalParent:
                         this.browsingContext.currentWindowContext,
                       ...requestFields,

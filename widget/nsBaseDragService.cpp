@@ -1276,22 +1276,6 @@ nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(
 }
 
 NS_IMETHODIMP
-nsBaseDragSession::UriForEvent(DragEvent* aEvent, nsIURI** aUri) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  *aUri = nullptr;
-  auto* widgetEvent = aEvent->WidgetEventPtr();
-  MOZ_ASSERT(widgetEvent);
-  auto* bp =
-      dom::BrowserParent::GetBrowserParentFromLayersId(widgetEvent->mLayersId);
-  NS_ENSURE_TRUE(bp, NS_ERROR_FAILURE);
-  auto* bc = bp->GetBrowsingContext();
-  NS_ENSURE_TRUE(bc, NS_ERROR_FAILURE);
-  RefPtr<nsIURI> ret = bc->GetCurrentURI();
-  ret.forget(aUri);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBaseDragSession::SendStoreDropTargetAndDelayEndDragSession(
     DragEvent* aEvent) {
   mDelayedDropBrowserParent = dom::BrowserParent::GetBrowserParentFromLayersId(

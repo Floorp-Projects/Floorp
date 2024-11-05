@@ -24,6 +24,13 @@ let mockCA = {
   mightBeActive: true,
   caShouldAllow: undefined,
   numAnalyzeContentRequestCalls: undefined,
+  numGetURIForDropEvent: undefined,
+
+  getURIForDropEvent(event) {
+    info(`[${testName}]| Called getURIForDropEvent`);
+    this.numGetURIForDropEvent += 1;
+    return this.realCAService.getURIForDropEvent(event);
+  },
 
   async analyzeContentRequest(_aRequest, _aAutoAcknowledge) {
     info(`[${testName}]| Called analyzeContentRequest`);
@@ -76,6 +83,7 @@ runTest = async function (
     info(testRootName);
     testName = testRootName;
     mockCA.numAnalyzeContentRequestCalls = 0;
+    mockCA.numGetURIForDropEvent = 0;
     await runDnd(testRootName, sourceBrowsingCxt, targetBrowsingCxt, {
       ...dndOptions,
     });
@@ -83,6 +91,11 @@ runTest = async function (
       mockCA.numAnalyzeContentRequestCalls,
       0,
       `[${testName}]| AnalyzeContentRequest was not called`
+    );
+    is(
+      mockCA.numGetURIForDropEvent,
+      0,
+      `[${testName}]| GetURIForDropEvent was not called`
     );
     return;
   }
@@ -93,6 +106,7 @@ runTest = async function (
     testName = name;
     mockCA.caShouldAllow = caShouldAllow;
     mockCA.numAnalyzeContentRequestCalls = 0;
+    mockCA.numGetURIForDropEvent = 0;
     let dropPromise = new Promise(res => {
       resolveDropPromise = res;
     });
@@ -105,6 +119,11 @@ runTest = async function (
       mockCA.numAnalyzeContentRequestCalls,
       1,
       `[${testName}]| Called AnalyzeContentRequest once`
+    );
+    is(
+      mockCA.numGetURIForDropEvent,
+      1,
+      `[${testName}]| GetURIForDropEvent was called exactly once`
     );
   }
 };
