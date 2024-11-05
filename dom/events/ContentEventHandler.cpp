@@ -1448,6 +1448,9 @@ nsresult ContentEventHandler::HandleQueryContentEvent(
     case eQueryDOMWidgetHittest:
       rv = OnQueryDOMWidgetHittest(aEvent);
       break;
+    case eQueryDropTargetHittest:
+      rv = OnQueryDropTargetHittest(aEvent);
+      break;
     default:
       break;
   }
@@ -3028,16 +3031,15 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   return NS_OK;
 }
 
-nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
-    WidgetQueryContentEvent* aEvent) {
+nsresult ContentEventHandler::QueryHittestImpl(WidgetQueryContentEvent* aEvent,
+                                               bool aFlushLayout,
+                                               Element** aContentUnderMouse) {
   NS_ASSERTION(aEvent, "aEvent must not be null");
 
   nsresult rv = InitBasic();
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  aEvent->mReply->mWidgetIsHit = false;
 
   NS_ENSURE_TRUE(aEvent->mWidget, NS_ERROR_FAILURE);
 
@@ -3054,9 +3056,21 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
           docFrameRect.x,
       docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.y) -
           docFrameRect.y);
+  RefPtr<Element> contentUnderMouse = mDocument->ElementFromPointHelper(
+      eventLocCSS.x, eventLocCSS.y, false, false, ViewportType::Visual);
 
-  if (Element* contentUnderMouse = mDocument->ElementFromPointHelper(
-          eventLocCSS.x, eventLocCSS.y, false, false, ViewportType::Visual)) {
+  contentUnderMouse.forget(aContentUnderMouse);
+  return NS_OK;
+}
+
+nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
+    WidgetQueryContentEvent* aEvent) {
+  aEvent->mReply->mWidgetIsHit = false;
+  RefPtr<Element> contentUnderMouse;
+  nsresult rv =
+      QueryHittestImpl(aEvent, true, getter_AddRefs(contentUnderMouse));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (contentUnderMouse) {
     if (nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame()) {
       if (aEvent->mWidget == targetFrame->GetNearestWidget()) {
         aEvent->mReply->mWidgetIsHit = true;
@@ -3065,6 +3079,19 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
   }
 
   MOZ_ASSERT(aEvent->Succeeded());
+  return NS_OK;
+}
+
+nsresult ContentEventHandler::OnQueryDropTargetHittest(
+    WidgetQueryContentEvent* aEvent) {
+  RefPtr<Element> contentUnderMouse;
+  nsresult rv =
+      QueryHittestImpl(aEvent, true, getter_AddRefs(contentUnderMouse));
+  NS_ENSURE_SUCCESS(rv, rv);
+  aEvent->EmplaceReply();
+  aEvent->mReply->mDropElement = contentUnderMouse;
+  aEvent->mReply->mDropFrame =
+      mDocument->GetPresShell()->GetCurrentEventFrame();
   return NS_OK;
 }
 

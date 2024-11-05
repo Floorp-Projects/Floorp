@@ -164,6 +164,9 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // eQueryDOMWidgetHittest event handler
   MOZ_CAN_RUN_SCRIPT nsresult
   OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent);
+  // eQueryDropTargetHittest event handler
+  MOZ_CAN_RUN_SCRIPT nsresult
+  OnQueryDropTargetHittest(WidgetQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
   MOZ_CAN_RUN_SCRIPT nsresult OnSelectionEvent(WidgetSelectionEvent* aEvent);
@@ -546,6 +549,9 @@ class MOZ_STACK_CLASS ContentEventHandler {
   static nsRect GetCaretRectAfter(nsPresContext& aPresContext,
                                   const nsRect& aCharRect,
                                   const WritingMode& aWritingMode);
+
+  nsresult QueryHittestImpl(WidgetQueryContentEvent* aEvent, bool aFlushLayout,
+                            Element** aContentUnderMouse);
 };
 
 }  // namespace mozilla

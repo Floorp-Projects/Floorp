@@ -11,7 +11,12 @@
 
 %{ C++
 #include "mozilla/EventForwards.h"
+#include "nsIWidget.h"
 #include "nsSize.h"
+#include "Units.h"
+
+class nsIFrame;
+class nsIWidget;
 
 namespace mozilla {
 namespace dom {
@@ -19,13 +24,18 @@ class BrowserParent;
 } // namespace dom
 } // namespace mozilla
 %}
+
 interface nsIContentSecurityPolicy;
 
 [ptr] native BrowserParentPtr(mozilla::dom::BrowserParent);
 native EventMessage(mozilla::EventMessage);
+[ref] native LayoutDeviceIntPoint(mozilla::LayoutDeviceIntPoint);
+[ptr] native nsIFramePtr(nsIFrame);
+[ptr] native nsIWidgetPtr(nsIWidget);
 native nsSize(nsSize);
 
 webidl DataTransfer;
+webidl DragEvent;
 webidl Element;
 webidl WindowContext;
 webidl Node;
@@ -204,6 +214,59 @@ interface nsIDragSession : nsISupports
   [can_run_script]
   void endDragSession(in boolean aDoneDrag,
                       [optional] in unsigned long aKeyModifiers);
+
+  /**
+   * Returns the URI that should be used in a content analysis request for
+   * the given drag event.
+   */
+  nsIURI uriForEvent(in DragEvent event);
+
+  /**
+   * Tell the drag session for the given browser that it
+   * should store the would-be target of the aEvent (a drop event) and delay
+   * calls to EndDragSession.  This is used in the main process.
+   *
+   * @param aEvent The drag event
+   */
+  void sendStoreDropTargetAndDelayEndDragSession(
+      in DragEvent aEvent);
+
+  /**
+   * After sendStoreDropTargetAndDelayEndDragSession, send a drop (if
+   * aShouldDrop is true) or dragexit event to the recorded drop target and
+   * then reissue any stored EndDragSession call.  This is used in the main
+   * process.
+   *
+   * @param aShouldDrop  True to send drop event, false to send dragexit event
+   */
+  void sendDispatchToDropTargetAndResumeEndDragSession(
+      in boolean aShouldDrop);
+
+  /**
+   * Store aElement and aDocFrame as the future drop/dragexit context, and
+   * delay calls to EndDragSession.  This is used in content processes.
+   *
+   * @param aElement        The element to drop onto
+   * @param aDocFrame       The frame to dispatch to
+   */
+  [noscript] void storeDropTargetAndDelayEndDragSession(
+      in Element aElement,
+      in nsIFramePtr aDocFrame
+  );
+
+  /**
+   * Issue drop or dragexit to the stored drop target (if any) and issue
+   * any delayed call to EndDragSession.  This is used in content processes.
+   *
+   * @param aWidget      The widget on which the drop will happen
+   * @param aPt          Screen coords of drop
+   * @param aShouldDrop  If true, send a drop event.  Otherwise send dragexit.
+   */
+  [noscript, can_run_script]
+  void dispatchToDropTargetAndResumeEndDragSession(
+      in nsIWidgetPtr aWidget,
+      [const] in LayoutDeviceIntPoint aPt,
+      in boolean aShouldDrop);
 
   /**
    * Retrun true if nsIDragSession's data is updated.

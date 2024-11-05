@@ -9,6 +9,7 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsCOMPtr.h"
+#include "nsIFrame.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsString.h"
@@ -42,6 +43,7 @@ class SourceSurface;
 }  // namespace gfx
 
 namespace dom {
+class BrowserParent;
 class DataTransfer;
 class Selection;
 }  // namespace dom
@@ -194,6 +196,27 @@ class nsBaseDragSession : public nsIDragSession {
    * If the drag image is a popup, open the popup when the drag begins.
    */
   void OpenDragPopup();
+
+  // Data from a prior call to EndDragSession.
+  struct EndDragSessionData {
+    bool mDoneDrag = false;
+    uint32_t mKeyModifiers = 0;
+  };
+
+  // When we delay a drop event in a content process, if we subsequently need to
+  // also delay an EndDragSession call, this records the parameters to that
+  // call.
+  mozilla::Maybe<EndDragSessionData> mEndDragSessionData;
+  // When we delay a drop event in a content process, this is the dom::Element
+  // that the drop was targetted to.
+  nsWeakPtr mDelayedDropTarget;
+  // When we delay a drop event in a content process, this is the nsIFrame that
+  // would handle the drop.
+  WeakFrame mDelayedDropFrame;
+
+  // Parent process PBrowser with a the remote drag session that corresponds to
+  // this one and is currently delayed.
+  RefPtr<mozilla::dom::BrowserParent> mDelayedDropBrowserParent;
 
   RefPtr<mozilla::dom::WindowContext> mSourceWindowContext;
   RefPtr<mozilla::dom::WindowContext> mSourceTopWindowContext;
