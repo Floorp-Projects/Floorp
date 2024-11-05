@@ -72,3 +72,17 @@ support-files = [
   "!/toolkit/components/printing/tests/simplifyArticleSample.html",
   "clipboard_print_iframe.html",
 ]
+
+["browser_print_pdf_local_content_analysis.js"]
+support-files = [
+  "!/toolkit/components/printing/tests/head.js",
+  "browser_print_pdf_content_analysis_impl.js",
+  "file_pdf.pdf",
+]
+
+["browser_print_pdf_remote_content_analysis.js"]
+support-files = [
+  "!/toolkit/components/printing/tests/head.js",
+  "browser_print_pdf_content_analysis_impl.js",
+  "file_pdf.pdf",
+]
