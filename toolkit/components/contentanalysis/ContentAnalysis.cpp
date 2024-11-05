@@ -2308,6 +2308,7 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
   if (!windowGlobal) {
     return nullptr;
   }
+  dom::CanonicalBrowsingContext* oldBrowsingContext = aBrowsingContext;
   nsIPrincipal* principal = windowGlobal->DocumentPrincipal();
   dom::CanonicalBrowsingContext* curBrowsingContext =
       aBrowsingContext->GetParent();
@@ -2322,7 +2323,18 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
       break;
     }
     principal = newPrincipal;
+    oldBrowsingContext = curBrowsingContext;
     curBrowsingContext = curBrowsingContext->GetParent();
+  }
+  if (nsContentUtils::IsPDFJS(principal)) {
+    // the principal's URI is the URI of the pdf.js reader
+    // so get the document's URI
+    dom::WindowContext* windowContext =
+        oldBrowsingContext->GetCurrentWindowContext();
+    if (!windowContext) {
+      return nullptr;
+    }
+    return windowContext->Canonical()->GetDocumentURI();
   }
   return principal->GetURI();
 }
