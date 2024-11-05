@@ -117,35 +117,38 @@ async function setup() {
 // ----------------------------------------------------------------------------
 // Test dragging between different frames and different domains
 // ----------------------------------------------------------------------------
+// Define runTest to establish a test between two (possibly identical) contexts.
+// runTest has the same signature as runDnd.
+var runTest;
 
 add_task(async function test_dnd_tab1_to_tab1() {
-  await runDnd("tab1->tab1", tab1Cxt, tab1Cxt);
+  await runTest("tab1->tab1", tab1Cxt, tab1Cxt);
 });
 
 add_task(async function test_dnd_tab1_to_iframe1() {
-  await runDnd("tab1->iframe1", tab1Cxt, tab1Cxt.children[0]);
+  await runTest("tab1->iframe1", tab1Cxt, tab1Cxt.children[0]);
 });
 
 add_task(async function test_dnd_tab1_to_tab2() {
-  await runDnd("tab1->tab2", tab1Cxt, tab2Cxt);
+  await runTest("tab1->tab2", tab1Cxt, tab2Cxt);
 });
 
 add_task(async function test_dnd_tab1_to_iframe2() {
-  await runDnd("tab1->iframe2", tab1Cxt, tab2Cxt.children[0]);
+  await runTest("tab1->iframe2", tab1Cxt, tab2Cxt.children[0]);
 });
 
 add_task(async function test_dnd_iframe1_to_tab1() {
-  await runDnd("iframe1->tab1", tab1Cxt.children[0], tab1Cxt);
+  await runTest("iframe1->tab1", tab1Cxt.children[0], tab1Cxt);
 });
 
 add_task(async function test_dnd_iframe1_to_iframe1() {
-  await runDnd("iframe1->iframe1", tab1Cxt.children[0], tab1Cxt.children[0]);
+  await runTest("iframe1->iframe1", tab1Cxt.children[0], tab1Cxt.children[0]);
 });
 
 add_task(async function test_dnd_iframe1_to_tab2() {
-  await runDnd("iframe1->tab2", tab1Cxt.children[0], tab2Cxt);
+  await runTest("iframe1->tab2", tab1Cxt.children[0], tab2Cxt);
 });
 
 add_task(async function test_dnd_iframe1_to_iframe2() {
-  await runDnd("iframe1->iframe2", tab1Cxt.children[0], tab2Cxt.children[0]);
+  await runTest("iframe1->iframe2", tab1Cxt.children[0], tab2Cxt.children[0]);
 });
