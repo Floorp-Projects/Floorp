@@ -4,7 +4,7 @@
  *               resistance is enabled.
  */
 
-function getTimeZone(tab) {
+function getTimeZoneOnTab(tab) {
   const extractTime = function () {
     const xslText = `
     <xsl:stylesheet version="1.0"
@@ -28,7 +28,10 @@ function getTimeZone(tab) {
     const time = styledDoc.firstChild.textContent;
 
     SpecialPowers.Cu.getJSTestingFunctions().setTimeZone(undefined);
-    return time;
+
+    return time
+      .match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}([+-]\d{2}:\d{2})/)
+      .pop();
   };
 
   const extractTimeExpr = `(${extractTime.toString()})();`;
@@ -40,7 +43,7 @@ function getTimeZone(tab) {
   );
 }
 
-async function run_test(enabled) {
+async function getTimeZone(enabled) {
   const overrides = enabled ? "+JSDateTimeUTC" : "-JSDateTimeUTC";
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -57,13 +60,25 @@ async function run_test(enabled) {
     opening: TEST_PATH + "file_dummy.html",
   });
 
-  const timeZone = await getTimeZone(tab);
-
-  const expected = enabled ? "+00:00" : "-07:00";
-  ok(timeZone.endsWith(expected), `Timezone is ${expected}.`);
+  const timeZone = await getTimeZoneOnTab(tab);
 
   BrowserTestUtils.removeTab(tab);
+  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone(undefined);
   await SpecialPowers.popPrefEnv();
+
+  return timeZone;
+}
+
+let realTimeZone = "";
+add_setup(async () => {
+  realTimeZone = await getTimeZone(false);
+});
+
+async function run_test(enabled) {
+  const timeZone = await getTimeZone(enabled);
+  const expected = enabled ? "+00:00" : realTimeZone;
+
+  ok(timeZone.endsWith(expected), `Timezone is ${expected}.`);
 }
 
 add_task(() => run_test(true));
