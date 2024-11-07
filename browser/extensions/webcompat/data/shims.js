@@ -468,23 +468,6 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
-    id: "Google SafeFrame",
-    platform: "all",
-    name: "Google SafeFrame",
-    bug: "1713691",
-    matches: [
-      {
-        patterns: [
-          "*://tpc.googlesyndication.com/safeframe/*/html/container.html",
-          "*://*.safeframe.googlesyndication.com/safeframe/*/html/container.html",
-        ],
-        target: "google-safeframe.html",
-        types: ["sub_frame"],
-      },
-    ],
-    onlyIfBlockedByETP: true,
-  },
-  {
     id: "GoogleTrends",
     platform: "all",
     name: "Google Trends",
