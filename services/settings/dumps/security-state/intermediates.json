@@ -16978,24 +16978,6 @@
       "last_modified": 1666727867895
     },
     {
-      "schema": 1666727418550,
-      "derHash": "7A6RbnSr8VDXJpuoha5sdB5IeFXP3QAhsfklDg8CQKQ=",
-      "subject": "CN=Digi-Sign CA Digi-SSL,O=Digi-Sign Limited,L=Dublin,ST=County Dublin,C=IE",
-      "subjectDN": "MHIxCzAJBgNVBAYTAklFMRYwFAYDVQQIEw1Db3VudHkgRHVibGluMQ8wDQYDVQQHEwZEdWJsaW4xGjAYBgNVBAoTEURpZ2ktU2lnbiBMaW1pdGVkMR4wHAYDVQQDExVEaWdpLVNpZ24gQ0EgRGlnaS1TU0w=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "255f8ccc890b52f3a4ae2269e86976505b98807a97f2ca5c19edaa01b881f5a5",
-        "size": 2133,
-        "filename": "SjhfW8JOPoS_CGVE2In9gc0KODUuyPow9mwTaYtMEq0=.pem",
-        "location": "security-state-staging/intermediates/ebf8b4e4-74eb-4f1b-a908-599c391ef3da.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "SjhfW8JOPoS/CGVE2In9gc0KODUuyPow9mwTaYtMEq0=",
-      "crlite_enrolled": false,
-      "id": "a6d65258-40ec-4881-8af4-6cbfae5e1975",
-      "last_modified": 1666727867882
-    },
-    {
       "schema": 1666727382857,
       "derHash": "cpVqHFql2RrGnNYxB6JaoYQ4Gd3CHFEI7B2X8yKWA84=",
       "subject": "CN=USERTrust ECC Domain Validation Secure Server CA,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US",
@@ -30640,5 +30622,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1730516222536
+  "timestamp": 1730905022494
 }

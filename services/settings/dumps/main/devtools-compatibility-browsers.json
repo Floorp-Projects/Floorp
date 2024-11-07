@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Node.js",
+      "schema": 1730851504471,
+      "status": "esr",
+      "version": "20.17.0",
+      "browserid": "nodejs",
+      "id": "3e3c4a0d-cfae-4bb7-a40d-947d288e2e40",
+      "last_modified": 1730875036538
+    },
+    {
       "name": "Safari",
       "schema": 1730505903981,
       "status": "beta",
@@ -362,15 +371,6 @@
     },
     {
       "name": "Node.js",
-      "schema": 1717286706438,
-      "status": "esr",
-      "version": "20.12.0",
-      "browserid": "nodejs",
-      "id": "93175823-df25-4102-bda0-e45955132cb5",
-      "last_modified": 1718005312984
-    },
-    {
-      "name": "Node.js",
       "schema": 1715126727137,
       "status": "current",
       "version": "22.0.0",
@@ -388,5 +388,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1730702567944
+  "timestamp": 1730875036538
 }
