@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "133.2.0",
+  "version": "133.3.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -129,7 +129,6 @@
     "shims/google-ima.js",
     "shims/google-page-ad.js",
     "shims/google-publisher-tags.js",
-    "shims/google-safeframe.html",
     "shims/history.js",
     "shims/iam.js",
     "shims/iaspet.js",
