@@ -187,6 +187,8 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
+        rustup toolchain install 1.79.0
+
         if [[ $GHA_ARCH == 'x86_64' ]];then
           rustup target add x86_64-apple-darwin --toolchain 1.79.0
         else
