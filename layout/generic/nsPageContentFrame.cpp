@@ -379,10 +379,13 @@ void nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     // Add the canvas background color to the bottom of the list. This
     // happens after we've built the list so that AddCanvasBackgroundColorItem
-    // can monkey with the contents if necessary.
+    // can monkey with the contents if necessary. The opaque backstop should
+    // ideally not be needed, but it workarounds some windows-specific clipping
+    // issues, see bug 1928512 and bug 1930269.
     const nsRect backgroundRect(aBuilder->ToReferenceFrame(this), GetSize());
-    PresShell()->AddCanvasBackgroundColorItem(
-        aBuilder, &content, this, backgroundRect, NS_RGBA(0, 0, 0, 0));
+    constexpr nscolor kBackstop = NS_RGB(255, 255, 255);
+    PresShell()->AddCanvasBackgroundColorItem(aBuilder, &content, this,
+                                              backgroundRect, kBackstop);
   }
 
   content.AppendNewToTop<nsDisplayTransform>(
