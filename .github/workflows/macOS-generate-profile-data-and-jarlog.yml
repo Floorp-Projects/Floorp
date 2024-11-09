@@ -56,19 +56,16 @@ jobs:
 
       - name: force install python3.12
         continue-on-error: true
-        if: ${{ env.ARCH_TYPE == 'x86_64' }}
         run: |
           brew install python@3.12
 
       - name: force link python3.12
         continue-on-error: true
-        if: ${{ env.ARCH_TYPE == 'x86_64' }}
         run: |
           # due to "Error: The `brew link` step did not complete successfully" we need to force link python3.12
           brew link --force --overwrite python@3.12
 
       - uses: actions/setup-python@v5
-        if: ${{ env.ARCH_TYPE == 'x86_64' }}
         with:
           python-version: '3.11'
       - name: setup environment 🌲
