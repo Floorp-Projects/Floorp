@@ -187,12 +187,13 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
-        rustup toolchain install 1.79.0
+        rustup toolchain install 1.81.0
+        rustup default 1.81.0
 
         if [[ $GHA_ARCH == 'x86_64' ]];then
-          rustup target add x86_64-apple-darwin
+          rustup target add x86_64-apple-darwin --toolchain 1.81.0
         else
-          rustup target add aarch64-apple-darwin
+          rustup target add aarch64-apple-darwin --toolchain 1.81.0
         fi
 
         #? https://github.com/mozilla/sccache#known-caveats
