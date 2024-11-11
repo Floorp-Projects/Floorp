@@ -13196,6 +13196,21 @@
   value: true
   mirror: always
 
+# This pref controls whether to send the
+# SETTINGS_NO_RFC7540_PRIORITIES when stream dependencies
+# are disabled, and extensible prioritization scheme is in use.
+- name: network.http.http2.send_NO_RFC7540_PRI
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# This pref controls whether to send PRIORITY_UPDATE
+# frames for pushed streams.
+- name: network.http.http2.push_priority_update
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.http.http2.enforce-tls-profile
   type: RelaxedAtomicBool
   value: true

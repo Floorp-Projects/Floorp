@@ -1065,7 +1065,8 @@ void Http2Session::SendHello() {
       !gHttpHandler->CriticalRequestPrioritization();
 
   // See bug 1909666. Sending this new setting could break some websites.
-  if (disableRFC7540Priorities) {
+  if (disableRFC7540Priorities &&
+      StaticPrefs::network_http_http2_send_NO_RFC7540_PRI()) {
     NetworkEndian::writeUint16(
         packet + kFrameHeaderBytes + (6 * numberOfEntries),
         SETTINGS_NO_RFC7540_PRIORITIES);
@@ -2207,7 +2208,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     uint32_t priorityDependency = pushedWeak->PriorityDependency();
     uint8_t priorityWeight = pushedWeak->PriorityWeight();
     self->SendPriorityFrame(promisedID, priorityDependency, priorityWeight);
-  } else {
+  } else if (StaticPrefs::network_http_http2_push_priority_update()) {
     nsHttpTransaction* trans = associatedStream->HttpTransaction();
     if (trans) {
       uint8_t urgency = nsHttpHandler::UrgencyFromCoSFlags(
