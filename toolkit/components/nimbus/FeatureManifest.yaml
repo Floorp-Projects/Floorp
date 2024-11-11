@@ -1810,6 +1810,18 @@ networkPrioritization:
       setPref:
         branch: default
         pref: "network.http.http3.priority"
+    sendNoRFC7540Setting:
+      description: Whether to send the SETTINGS_NO_RFC7540_PRIORITIES for the HTTP2 session.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.http.http2.send_NO_RFC7540_PRI"
+    h2deps:
+      description: Whether RFC7540 priorities / stream dependencies are enabled
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.http.http2.enabled.deps"
     h3BackgroundTabDeprioritization:
       description: Lowers the priority when the tab is in the background. Potential privacy concerns.
       type: boolean
