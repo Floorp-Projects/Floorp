@@ -13243,7 +13243,7 @@
 
 - name: network.http.http2.allow-push
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: network.http.http2.push-allowance
