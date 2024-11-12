@@ -2264,12 +2264,22 @@ export const XPIDatabase = {
           addon.signedState === lazy.AddonManager.SIGNEDSTATE_SIGNED &&
           Services.policies
         ) {
-          const addonDetailsFromFile =
-            await XPIExports.XPIInstall.loadManifestFromFile(
-              addon._sourceBundle,
-              addon.location
-            );
-          addon.adminInstallOnly = addonDetailsFromFile.adminInstallOnly;
+          // Manifest file for an installed extension can still become
+          // invalid (e.g. due to backward incompatible changes between
+          // Firefox versions).
+          try {
+            const addonDetailsFromFile =
+              await XPIExports.XPIInstall.loadManifestFromFile(
+                addon._sourceBundle,
+                addon.location
+              );
+            addon.adminInstallOnly = addonDetailsFromFile.adminInstallOnly;
+          } catch (err) {
+            // Simply log the error as a warning to be able to check
+            // the signature and potentially update the disabled state
+            // accordingly.
+            logger.warn(`XPI_verifySignature Warning on '${addon.id}': ${err}`);
+          }
         }
 
         if (
