@@ -665,6 +665,7 @@ GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
     // If we're formatting a block, we should reformat first ancestor format
     // block.
     if (aEditSubAction == EditSubAction::eFormatBlockForHTMLCommand &&
+        point.IsContainerElement() &&
         HTMLEditUtils::IsFormatElementForFormatBlockCommand(
             *point.ContainerAs<Element>())) {
       point.Set(point.GetContainer());
@@ -836,6 +837,7 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
     // If we're formatting a block, we should reformat first ancestor format
     // block.
     if (aEditSubAction == EditSubAction::eFormatBlockForHTMLCommand &&
+        point.IsContainerElement() &&
         HTMLEditUtils::IsFormatElementForFormatBlockCommand(
             *point.ContainerAs<Element>())) {
       point.SetAfter(point.GetContainer());
