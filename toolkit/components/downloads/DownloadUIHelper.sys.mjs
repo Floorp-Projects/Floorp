@@ -171,7 +171,10 @@ DownloadPrompter.prototype = {
       "download-ui-file-executable-security-warning",
       { executable: PathUtils.filename(path) }
     );
-    return this._prompter.confirm(title, message);
+    let flags =
+      Ci.nsIPrompt.BUTTON_DELAY_ENABLE | Ci.nsIPrompt.STD_OK_CANCEL_BUTTONS;
+    let nulls = Array(4).fill(null);
+    return 0 == this._prompter.confirmEx(title, message, flags, ...nulls, {});
   },
 
   /**
