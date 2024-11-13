@@ -46,7 +46,7 @@ interface nsIGfxInfo : nsISupports
     Unassigned = 0,
     Unknown_Platform = 1,
     Windows_Platform = 2,
-    MacOS_Platform = 3,
+    MacOS_Unknown = 3,
     Android_Unknown_Release_Version = 4,
     Android_Unknown_Peloton = 5,
     Android_Unknown_vbox = 6,
@@ -62,7 +62,9 @@ interface nsIGfxInfo : nsISupports
     Linux_Ubuntu_22 = 16,
     Linux_Fedora_any = 17,
     Linux_Fedora_38 = 18,
-    Linux_Fedora_39 = 19
+    Linux_Fedora_39 = 19,
+    MacOS_13_plus = 20,
+    MacOS_sub_13 = 21
   };
   readonly attribute nsIGfxInfo_FontVisibilityDeviceDetermination fontVisibilityDetermination;
   readonly attribute AString fontVisibilityDeterminationStr;
