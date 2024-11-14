@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2024-11-07_17-56-52_UTC
-// COMMIT: e65bca4146a494d60dd4d3beb4a244376fb3825b
+// VERSION: 2024-11-12_14-53-17_UTC
+// COMMIT: c5a2c693abe0851e2aad80062f9ef654c05372ca
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -701,6 +701,7 @@ of.by
 // bz : https://www.iana.org/domains/root/db/bz.html
 // http://www.belizenic.bz/
 bz
+co.bz
 com.bz
 net.bz
 org.bz
@@ -13386,11 +13387,10 @@ gentlentapis.com
 lab.ms
 cdn-edges.net
 
-// Getlocalcert: https://www.getlocalcert.net
-// Submitted by Robert Alexander <support@getlocalcert.net>
+// GetLocalCert : https://getlocalcert.net
+// Submitted by William Harrison <psl@getlocalcert.net>
 localcert.net
 localhostcert.net
-corpnet.work
 
 // GignoSystemJapan: http://gsj.bz
 // Submitted by GignoSystemJapan <kakutou-ec@gsj.bz>
@@ -13679,7 +13679,6 @@ häkkinen.fi
 
 // Harrison Network : https://hrsn.net
 // Submitted by William Harrison <psl@hrsn.net>
-wdh.app
 hrsn.dev
 
 // Hashbang : https://hashbang.sh
@@ -13700,8 +13699,9 @@ hatenadiary.jp
 hatenadiary.org
 
 // Heilbronn University of Applied Sciences - Faculty Informatics (GitLab Pages): https://www.hs-heilbronn.de
-// Submitted by Richard Zowalla <mi-admin@hs-heilbronn.de>
+// Submitted by Richard Zowalla <it-admin@hs-heilbronn.de>
 pages.it.hs-heilbronn.de
+pages-research.it.hs-heilbronn.de
 
 // HeiyuSpace: https://lazycat.cloud
 // Submitted by Xia Bin <admin@lazycat.cloud>
@@ -14111,6 +14111,15 @@ ggff.net
 // Localcert : https://localcert.dev
 // Submitted by Lann Martin <security@localcert.dev>
 *.user.localcert.dev
+
+// Lodz University of Technology LODMAN regional domains https://www.man.lodz.pl/dns
+// Submitted by Piotr Wilk <dns@man.lodz.pl>
+lodz.pl
+pabianice.pl
+plock.pl
+sieradz.pl
+skierniewice.pl
+zgierz.pl
 
 // Log'in Line : https://www.loginline.com/
 // Submitted by Rémi Mach <remi.mach@loginline.com>
@@ -15630,6 +15639,10 @@ pages.wiardweb.com
 toolforge.org
 wmcloud.org
 wmflabs.org
+
+// William Harrison : https://wdh.gg
+// Submitted by William Harrison <william@harrison.id.au>
+wdh.app
 
 // WISP : https://wisp.gg
 // Submitted by Stepan Fedotov <stepan@wisp.gg>
