@@ -555,7 +555,7 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
     }
 
     float buffer[3 * WEBAUDIO_BLOCK_SIZE + 4];
-    bool onLeft[WEBAUDIO_BLOCK_SIZE];
+    alignas(16) bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
     float* alignedPanningL = ALIGNED16(buffer);
     float* alignedPanningR = alignedPanningL + WEBAUDIO_BLOCK_SIZE;
