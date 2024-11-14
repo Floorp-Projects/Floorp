@@ -7,10 +7,13 @@ import { WorkspacesServices } from "@core/common/workspaces/workspaces";
 
 export const overrides = [
   () => {
-    window.BrowserCommands.openTab = (
-      event: { button: number },
-      url: string,
-    ) => {
+    window.BrowserCommands.openTab = ({
+      event,
+      url,
+    }: {
+      event?: MouseEvent;
+      url?: string;
+    } = {}) => {
       const werePassedURL = !!url;
       url ??= window.BROWSER_NEW_TAB_URL;
       const searchClipboard =
@@ -18,40 +21,33 @@ export const overrides = [
 
       let relatedToCurrent = false;
       let where = "tab";
+      const OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
+        "floorp.browser.tabs.openNewTabPosition",
+      );
 
-      if (event) {
-        where = window.BrowserUtils.whereToOpenLink(event, false, true);
+      switch (OPEN_NEW_TAB_POSITION_PREF) {
+        case 0:
+          relatedToCurrent = false;
+          break;
+        case 1:
+          relatedToCurrent = true;
+          break;
+        default:
+          if (event) {
+            where = window.BrowserUtils.whereToOpenLink(event, false, true);
 
-        const OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
-          "floorp.browser.tabs.openNewTabPosition",
-          2,
-        );
-        switch (OPEN_NEW_TAB_POSITION_PREF) {
-          case 0:
-            // Open the new tab as unrelated to the current tab.
-            relatedToCurrent = false;
-            break;
-          case 1:
-            // Open the new tab as related to the current tab.
-            relatedToCurrent = true;
-            break;
-          default:
-            if (event) {
-              // eslint-disable-next-line no-undef
-              where = window.BrowserUtils.whereToOpenLink(event, false, true);
-              switch (where) {
-                case "tab":
-                case "tabshifted":
-                  // When accel-click or middle-click are used, open the new tab as
-                  // related to the current tab.
-                  relatedToCurrent = true;
-                  break;
-                case "current":
-                  where = "tab";
-                  break;
-              }
+            switch (where) {
+              case "tab":
+              case "tabshifted":
+                // When accel-click or middle-click are used, open the new tab as
+                // related to the current tab.
+                relatedToCurrent = true;
+                break;
+              case "current":
+                where = "tab";
+                break;
             }
-        }
+          }
       }
 
       // A notification intended to be useful for modular peformance tracking
@@ -66,15 +62,14 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = WorkspacesServices.getInstance();
-      console.log(gWorkspacesServices.getCurrentWorkspaceUserContextId);
 
       Services.obs.notifyObservers(
         {
           wrappedJSObject: new Promise((resolve) => {
-            const options = {
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            const options: any = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
-              allowThirdPartyFixup: false,
               userContextId:
                 gWorkspacesServices.getCurrentWorkspaceUserContextId,
             };

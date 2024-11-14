@@ -2,7 +2,6 @@ import type { PrefDatum, PrefDatumWithValue } from "../common/defines.js";
 
 export class NRSettingsParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
-    console.log(message);
     switch (message.name) {
       case "Pref:Set": {
         const d = message.data as PrefDatumWithValue;
@@ -30,29 +29,38 @@ export class NRSettingsParent extends JSWindowActorParent {
         switch (d.prefType) {
           case "boolean": {
             const prefValue = Services.prefs.getBoolPref(d.prefName);
-            this.sendAsyncMessage("Pref:Get", {
-              prefName: d.prefName,
-              prefType: d.prefType,
-              prefValue,
-            } as PrefDatumWithValue);
+            this.sendAsyncMessage(
+              "Pref:Get",
+              JSON.stringify({
+                prefName: d.prefName,
+                prefType: d.prefType,
+                prefValue,
+              } as PrefDatumWithValue),
+            );
             break;
           }
           case "integer": {
             const prefValue = Services.prefs.getIntPref(d.prefName);
-            this.sendAsyncMessage("Pref:Get", {
-              prefName: d.prefName,
-              prefType: d.prefType,
-              prefValue,
-            } as PrefDatumWithValue);
+            this.sendAsyncMessage(
+              "Pref:Get",
+              JSON.stringify({
+                prefName: d.prefName,
+                prefType: d.prefType,
+                prefValue,
+              } as PrefDatumWithValue),
+            );
             break;
           }
           case "string": {
             const prefValue = Services.prefs.getStringPref(d.prefName);
-            this.sendAsyncMessage("Pref:Get", {
-              prefName: d.prefName,
-              prefType: d.prefType,
-              prefValue,
-            } as PrefDatumWithValue);
+            this.sendAsyncMessage(
+              "Pref:Get",
+              JSON.stringify({
+                prefName: d.prefName,
+                prefType: d.prefType,
+                prefValue,
+              } as PrefDatumWithValue),
+            );
             break;
           }
         }

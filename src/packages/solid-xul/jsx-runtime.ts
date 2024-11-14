@@ -100,6 +100,10 @@ declare module "solid-js" {
       context?: string;
     }
 
+    interface XULTabElement extends XULElementBase, HTMLAttributes<HTMLElement> {
+      onwheel?: EventHandlerUnion<HTMLElement, WheelEvent>;
+    }
+
     interface IntrinsicElements {
       "xul:arrowscrollbox": XULElementBase;
       "xul:browser": XULBrowserElement;
@@ -108,6 +112,7 @@ declare module "solid-js" {
       "xul:linkset": XULElementBase;
       "xul:popupset": XULPopupSetElement;
       "xul:tooltip": XULElementBase;
+      "xul:tab": XULTabElement;
       "xul:panel": XULPanelElement;
       "xul:panelview": XULPanelElement;
       "xul:menupopup": XULMenuPopupElement;

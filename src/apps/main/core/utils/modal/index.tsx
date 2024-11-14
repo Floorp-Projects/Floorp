@@ -11,7 +11,8 @@ import { render } from "@nora/solid-xul";
 const targetParent = document?.getElementById("appcontent") as HTMLElement;
 
 render(() => <style>{modalStyle}</style>, document?.head, {
-  hotCtx: import.meta.hot,
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  hotCtx: (import.meta as any).hot,
   marker: document?.head?.lastChild as Element,
 });
 

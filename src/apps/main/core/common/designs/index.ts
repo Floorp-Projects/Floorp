@@ -8,6 +8,9 @@ import { BrowserDesignElement } from "./browser-design-element";
 
 export function init() {
   //render(BrowserStyle, document.head);
-  render(BrowserDesignElement, document.head, { hotCtx: import.meta.hot });
+  render(BrowserDesignElement, document?.head, {
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    hotCtx: (import.meta as any).hot,
+  });
   window.gURLBar._updateLayoutBreakoutDimensions();
 }

@@ -7,21 +7,23 @@ import hideHorizontalTabbar from "./styles/hide-horizontal-tabbar.css?inline";
 import optimiseToVerticalTabbar from "./styles/optimise-vertical-tabbar.css?inline";
 import bottomOfNavigationToolbar from "./styles/bottom-of-navigation-toolbar.css?inline";
 import bottomOfWindow from "./styles/bottom-of-window.css?inline";
-import type { zFloorpDesignConfigsType } from "@core/common/designs/configs";
+import type { zFloorpDesignConfigsType } from "../../../../../../apps/common/scripts/global-types/type";
 
-export function TabbarStyleModifyCSSElement(props: { style: zFloorpDesignConfigsType["tabbar"]["tabbarPosition"] }) {
-    const styleSheet = () => {
-        switch (props.style) {
-            case "hide-horizontal-tabbar":
-                return hideHorizontalTabbar;
-            case "optimise-to-vertical-tabbar":
-                return optimiseToVerticalTabbar;
-            case "bottom-of-navigation-toolbar":
-                return bottomOfNavigationToolbar;
-            case "bottom-of-window":
-                return bottomOfWindow;
-        }
-    };
+export function TabbarStyleModifyCSSElement(props: {
+  style: zFloorpDesignConfigsType["tabbar"]["tabbarPosition"];
+}) {
+  const styleSheet = () => {
+    switch (props.style) {
+      case "hide-horizontal-tabbar":
+        return hideHorizontalTabbar;
+      case "optimise-to-vertical-tabbar":
+        return optimiseToVerticalTabbar;
+      case "bottom-of-navigation-toolbar":
+        return bottomOfNavigationToolbar;
+      case "bottom-of-window":
+        return bottomOfWindow;
+    }
+  };
 
-    return <style id="floorp-tabbar-modify-css">{styleSheet()}</style>;
+  return <style id="floorp-tabbar-modify-css">{styleSheet()}</style>;
 }
