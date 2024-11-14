@@ -2826,7 +2826,7 @@
 # [1]: https://github.com/w3c/csswg-drafts/issues/5260
 - name: dom.innerSize.rounding
   type: uint32_t
-  value: 2
+  value: 1
   mirror: always
 
 # Whether we conform to Input Events Level 1 or Input Events Level 2.
