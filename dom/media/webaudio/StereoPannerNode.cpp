@@ -121,7 +121,7 @@ class StereoPannerNodeEngine final : public AudioNodeEngine {
       }
     } else {
       float computedGain[2 * WEBAUDIO_BLOCK_SIZE + 4];
-      bool onLeft[WEBAUDIO_BLOCK_SIZE];
+      alignas(16) bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
       float values[WEBAUDIO_BLOCK_SIZE];
       TrackTime tick = mDestination->GraphTimeToTrackTime(aFrom);
