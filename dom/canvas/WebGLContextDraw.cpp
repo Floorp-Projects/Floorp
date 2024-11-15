@@ -1190,6 +1190,12 @@ bool WebGLContext::DoFakeVertexAttrib0(
   }
 
   gl->fEnableVertexAttribArray(0);
+  {
+    const auto& attrib0 = mBoundVertexArray->AttribBinding(0);
+    if (attrib0.layout.divisor) {
+      gl->fVertexAttribDivisor(0, 0);
+    }
+  }
 
   if (!mFakeVertexAttrib0BufferObject) {
     gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
