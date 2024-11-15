@@ -23,7 +23,7 @@ void WebGLVertexArray::DoVertexAttrib(const uint32_t index,
                                       const uint32_t vertOffset) const {
   const auto& gl = mContext->gl;
 
-  const bool mightHaveDivisor =
+  const bool useDivisor =
       mContext->IsWebGL2() ||
       mContext->IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays);
 
@@ -36,8 +36,8 @@ void WebGLVertexArray::DoVertexAttrib(const uint32_t index,
     gl->fDisableVertexAttribArray(index);
   }
 
-  if (mightHaveDivisor) {
-    DoAttribDivisor(index);
+  if (useDivisor) {
+    gl->fVertexAttribDivisor(index, binding.layout.divisor);
   }
 
   static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
