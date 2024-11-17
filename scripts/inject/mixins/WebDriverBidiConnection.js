@@ -7,7 +7,7 @@ import { Mixin, Inject } from "../shared/define";
 
 @Mixin({
   //? https://searchfox.org/mozilla-central/rev/dd421ae14997e3bebb9c08634633a4a3e3edeffc/remote/webdriver-bidi/WebDriverBiDiConnection.sys.mjs#217
-  path: "chrome/remote/content/webdriver-bidi/WebDriverBidiConnection.sys.mjs",
+  path: "chrome/remote/content/webdriver-bidi/WebDriverBiDiConnection.sys.mjs",
   type: "class",
   export: true,
   className: "WebDriverBiDiConnection",

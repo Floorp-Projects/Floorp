@@ -5,7 +5,7 @@ export async function runBrowser(port = 5180) {
   // https://wiki.mozilla.org/Firefox/CommandLineOptions
   const processBrowser = execa(
     {},
-  )`./_dist/bin/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
+  )`./_dist/bin/noraneko${process.platform === "win32" ? ".exe" : "-bin"} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
 
   const stdout = processBrowser.readable({ from: "stdout" });
   const stderr = processBrowser.readable({ from: "stderr" });
