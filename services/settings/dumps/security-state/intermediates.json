@@ -13672,24 +13672,6 @@
       "last_modified": 1666727871539
     },
     {
-      "schema": 1666727366562,
-      "derHash": "eu3lN07Kn/NMVyfBDbmCIi11MVd5dEm4g2T3Du+gwkw=",
-      "subject": "CN=Alibaba Cloud GCC R3 AlphaSSL CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
-      "subjectDN": "MGkxCzAJBgNVBAYTAkNOMSowKAYDVQQKEyFBbGliYWJhIENsb3VkIENvbXB1dGluZyBDby4sIEx0ZC4xLjAsBgNVBAMTJUFsaWJhYmEgQ2xvdWQgR0NDIFIzIEFscGhhU1NMIENBIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "433ece3434c90b6bc0e4051245e9b8830f6689098ff3fae65e6394c641b077ca",
-        "size": 1735,
-        "filename": "AL3NHbHkwjd0miX1rwn-16RIrjnUTmWCdIdhb8wn4MU=.pem",
-        "location": "security-state-staging/intermediates/3e72d62e-adc7-4224-bd94-39d2b96357d7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "AL3NHbHkwjd0miX1rwn+16RIrjnUTmWCdIdhb8wn4MU=",
-      "crlite_enrolled": false,
-      "id": "7fa4194d-d6bd-4083-bca2-e937396a97c7",
-      "last_modified": 1666727871525
-    },
-    {
       "schema": 1666727357938,
       "derHash": "XavaBGJy7siey5WmKX26kQ0BRPfutYFNBzrlSkqM9kY=",
       "subject": "CN=University of Crete TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -14408,24 +14390,6 @@
       "crlite_enrolled": false,
       "id": "4a6655ab-9a9a-43db-bb34-1602419c8ed9",
       "last_modified": 1666727870728
-    },
-    {
-      "schema": 1666727387103,
-      "derHash": "jz5daFi5J9KE/bhaGxWHXNeOY7ggwg3cU5zNhLDBpqo=",
-      "subject": "CN=Alibaba Cloud GCC R3 DV TLS CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
-      "subjectDN": "MGcxCzAJBgNVBAYTAkNOMSowKAYDVQQKEyFBbGliYWJhIENsb3VkIENvbXB1dGluZyBDby4sIEx0ZC4xLDAqBgNVBAMTI0FsaWJhYmEgQ2xvdWQgR0NDIFIzIERWIFRMUyBDQSAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f98193821503fbb97e18ccaf2e25c0be62c2a4b730272b187bee61068dd23f96",
-        "size": 1735,
-        "filename": "Pg1Dubcu-8AyH8ZdyHa-bP6sDppBv9fvXsyA66WgFbo=.pem",
-        "location": "security-state-staging/intermediates/05386631-1c18-4e3b-93c0-4350043f3a9b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Pg1Dubcu+8AyH8ZdyHa+bP6sDppBv9fvXsyA66WgFbo=",
-      "crlite_enrolled": false,
-      "id": "e207f6b2-a65d-496f-93d0-ba609cae2a11",
-      "last_modified": 1666727870674
     },
     {
       "schema": 1666727440773,
@@ -30934,5 +30898,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1731337022665
+  "timestamp": 1731855422437
 }
