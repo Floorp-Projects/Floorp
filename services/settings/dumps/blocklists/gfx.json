@@ -2,6 +2,32 @@
   "data": [
     {
       "os": "Linux",
+      "schema": 1731431264604,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1924578",
+        "name": "linux_nvidia_dmabuf_webgl_before_133"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "DMABUF",
+      "hardware": "",
+      "driverVendor": "nvidia/unknown",
+      "versionRange": {
+        "maxVersion": "132.*",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "9717e767-5d2d-49e1-b0d1-605c4ff99f23",
+      "last_modified": 1731615130278
+    },
+    {
+      "os": "Linux",
       "schema": 1728291877519,
       "vendor": "0x1002",
       "details": {
@@ -1531,5 +1557,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1728326856983
+  "timestamp": 1731615130278
 }
