@@ -9,11 +9,15 @@ import { getOldConfigs } from "./old-config.js";
 
 /** enable/disable workspaces */
 export const [enabled, setEnabled] = createSignal(
-  Services.prefs.getBoolPref("floorp.browser.workspaces.enabled", false),
+  Services.prefs.getBoolPref("floorp.browser.workspaces.enabled", true),
 );
 Services.prefs.addObserver("floorp.browser.workspaces.enabled", () =>
   setEnabled(Services.prefs.getBoolPref("floorp.browser.workspaces.enabled")),
 );
+
+createEffect(() => {
+  Services.prefs.setBoolPref("floorp.browser.workspaces.enabled", enabled());
+});
 
 /** Configs */
 export const [config, setConfig] = createSignal(

@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Workspace } from "./utils/type.js";
-import { setworkspacesData, workspacesData } from "./data.js";
+import type { PanelMultiViewParentElement, Workspace } from "./utils/type";
+import { setworkspacesData, workspacesData } from "./data";
 import { createEffect } from "solid-js";
-import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names.js";
-import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import { setWorkspaceModalState } from "./workspace-modal.js";
+import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
+import { WorkspaceIcons } from "./utils/workspace-icons";
+import { setWorkspaceModalState } from "./workspace-modal";
+import { config, enabled } from "./config";
 
 export class WorkspacesServices {
   private static instance: WorkspacesServices;
@@ -29,6 +30,25 @@ export class WorkspacesServices {
       true,
     );
     return l10n;
+  }
+
+  /**
+   * Returns target toolbar item.
+   * @returns The target toolbar item.
+   */
+  private get targetToolbarItem(): XULElement | undefined | null {
+    return document?.querySelector("#workspaces-toolbar-button");
+  }
+
+  /**
+   * Returns panel UI target element.
+   * @returns The panel UI target element.
+   */
+  private get panelUITargetElement():
+    | PanelMultiViewParentElement
+    | undefined
+    | null {
+    return document?.querySelector("#customizationui-widget-panel");
   }
 
   /**
@@ -116,6 +136,10 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(workspaceId: string): void {
+    this.setCurrentWorkspaceId(
+      this.getDefaultWorkspaceId() ?? workspacesData()[0].id,
+    );
+    this.removeTabByWorkspaceId(workspaceId);
     setworkspacesData((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
@@ -128,6 +152,13 @@ export class WorkspacesServices {
   public changeWorkspace(workspaceId: string) {
     if (!workspaceId) {
       throw new Error("Workspace id is required to change workspace");
+    }
+
+    if (
+      config().closePopupAfterClick &&
+      this.targetToolbarItem?.hasAttribute("open")
+    ) {
+      this.panelUITargetElement?.hidePopup();
     }
 
     const willChangeWorkspaceLastShowTab = document?.querySelector(
@@ -172,7 +203,13 @@ export class WorkspacesServices {
     ) as XULElement;
 
     const workspace = this.getWorkspaceById(workspaceId);
-    targetToolbarItem?.setAttribute("label", workspace.name);
+
+    if (config().showWorkspaceNameOnToolbar) {
+      targetToolbarItem?.setAttribute("label", workspace.name);
+    } else {
+      targetToolbarItem?.removeAttribute("label");
+    }
+
     (document?.documentElement as XULElement).style.setProperty(
       "--workspaces-toolbar-button-icon",
       `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
@@ -338,6 +375,19 @@ export class WorkspacesServices {
   }
 
   /**
+   * Remove tab by workspace id.
+   * @param workspaceId The workspace id.
+   */
+  private removeTabByWorkspaceId(workspaceId: string) {
+    const tabs = window.gBrowser.tabs;
+    for (const tab of tabs) {
+      if (this.getWorkspaceIdFromAttribute(tab) === workspaceId) {
+        window.gBrowser.removeTab(tab);
+      }
+    }
+  }
+
+  /**
    * Create tab for workspace.
    * @param workspaceId The workspace id.
    * @param url The url will be opened in the tab.
@@ -471,12 +521,22 @@ export class WorkspacesServices {
      * @returns void
      */
     onLocationChange: () => {
+      if (!enabled()) {
+        return;
+      }
+
       this.checkTabsVisibility();
     },
   };
 
   constructor() {
     createEffect(() => {
+      // If Workspaces is disabled when the effect runs, do not proceed.
+      // If user completely disabled workspaces, We need restart browser to apply changes.
+      if (!enabled()) {
+        return;
+      }
+
       // Check if workspaces data is empty, if so, create default workspace.
       if (!workspacesData().length) {
         this.createNoNameWorkspace(true);
@@ -490,6 +550,9 @@ export class WorkspacesServices {
 
       // Check Tabs visibility
       this.checkTabsVisibility();
+      this.changeWorkspaceToolbarState();
+
+      // Set workspace toolbar state
       this.changeWorkspaceToolbarState();
     });
     this.changeWorkspace(this.getCurrentWorkspaceId);

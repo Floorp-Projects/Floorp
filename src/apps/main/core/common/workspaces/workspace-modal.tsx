@@ -60,58 +60,64 @@ export class WorkspaceManageModal {
 
     return (
       <>
-        <label>Name</label>
-        <input
-          type="text"
-          id="name"
-          class="form-control"
-          value={targetWorkspace.name}
-        />
+        <form>
+          <label for="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            class="form-control"
+            value={targetWorkspace.name}
+          />
+        </form>
 
-        <label>Icon</label>
-        <xul:menulist
-          class="form-control"
-          flex="1"
-          id="iconName"
-          value={targetWorkspace.icon ?? "fingerprint"}
-        >
-          <xul:menupopup id="workspacesIconSelectPopup">
-            <For each={gWorkspaceIcons.workspaceIconsArray}>
-              {(icon) => (
-                <xul:menuitem
-                  value={icon}
-                  label={icon}
-                  style={{
-                    "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(icon)})`,
-                  }}
-                />
+        <form>
+          <label for="iconName">Icon</label>
+          <xul:menulist
+            class="form-control"
+            flex="1"
+            id="iconName"
+            value={targetWorkspace.icon ?? "fingerprint"}
+          >
+            <xul:menupopup id="workspacesIconSelectPopup">
+              <For each={gWorkspaceIcons.workspaceIconsArray}>
+                {(icon) => (
+                  <xul:menuitem
+                    value={icon}
+                    label={icon}
+                    style={{
+                      "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(icon)})`,
+                    }}
+                  />
+                )}
+              </For>
+            </xul:menupopup>
+          </xul:menulist>
+        </form>
+
+        <form>
+          <label for="containerName">Container</label>
+          <select
+            id="containerName"
+            class="form-control"
+            value={targetWorkspace?.userContextId ?? 0}
+          >
+            <option value={0}>No Container</option>
+            <For each={this.containers}>
+              {(container) => (
+                <option
+                  value={container.userContextId}
+                  selected={
+                    targetWorkspace.userContextId === container.userContextId
+                      ? true
+                      : undefined
+                  }
+                >
+                  {this.getContainerName(container)}
+                </option>
               )}
             </For>
-          </xul:menupopup>
-        </xul:menulist>
-
-        <label>Container</label>
-        <select
-          id="containerName"
-          class="form-control"
-          value={targetWorkspace?.userContextId ?? 0}
-        >
-          <option value={0}>No Container</option>
-          <For each={this.containers}>
-            {(container) => (
-              <option
-                value={container.userContextId}
-                selected={
-                  targetWorkspace.userContextId === container.userContextId
-                    ? true
-                    : undefined
-                }
-              >
-                {this.getContainerName(container)}
-              </option>
-            )}
-          </For>
-        </select>
+          </select>
+        </form>
       </>
     );
   }
@@ -155,12 +161,14 @@ export class WorkspaceManageModal {
       () => this.WorkspaceManageModal(),
       document?.getElementById("fullscreen-and-pointerlock-wrapper"),
       {
-        hotCtx: import.meta.hot,
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        hotCtx: (import.meta as any)?.hot,
       },
     );
 
     render(() => this.StyleElement, document?.head, {
-      hotCtx: import.meta.hot,
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      hotCtx: (import.meta as any)?.hot,
     });
   }
 }

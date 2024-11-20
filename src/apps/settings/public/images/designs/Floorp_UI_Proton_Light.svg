@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="210.0pt" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 570 210" width="570.0pt" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<path d="M49.3659 150C49.3659 138.954 58.3207 130 69.3669 130C80.4132 130 89.368 138.954 89.368 150C89.368 161.046 80.4132 170 69.3669 170C58.3207 170 49.3659 161.046 49.3659 150Z" id="Fill"/>
+<path d="M129.37 150C129.37 138.954 138.325 130 149.371 130C160.418 130 169.372 138.954 169.372 150C169.372 161.046 160.418 170 149.371 170C138.325 170 129.37 161.046 129.37 150Z" id="Fill_2"/>
+<path d="M234.374 150C234.374 138.954 243.329 130 254.376 130C265.422 130 274.377 138.954 274.377 150C274.377 161.046 265.422 170 254.376 170C243.329 170 234.374 161.046 234.374 150Z" id="Fill_3"/>
+</defs>
+<path d="M0 0L570 0L570 210L0 210L0 0Z" fill="#f0f0f4" fill-rule="nonzero" opacity="1" stroke="none"/>
+<clipPath id="ArtboardFrame">
+<rect height="210" width="570" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="レイヤー-1">
+<path d="M79.375 5C71.0872 5 64.375 11.7168 64.375 20C64.375 35 64.375 65 64.375 80C64.375 88.2878 71.0918 95 79.375 95C149.375 95 289.375 95 359.375 95C367.663 95 374.375 88.2832 374.375 80C374.375 65 374.375 35 374.375 20C374.375 11.7122 367.658 5 359.375 5C289.375 5 149.375 5 79.375 5Z" fill="#cdcdd1" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M0 100L570 100L570 210L0 210L0 100Z" fill="#f9f9fb" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M69.3669 20C69.3669 14.4772 73.8441 10 79.3669 10L359.367 10C364.89 10 369.367 14.4772 369.367 20L369.367 80C369.367 85.5228 364.89 90 359.367 90L79.3669 90C73.8441 90 69.3669 85.5228 69.3669 80L69.3669 20Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+<g opacity="1">
+<mask height="40" id="StrokeMask" maskUnits="userSpaceOnUse" width="40.0022" x="49.3659" y="130">
+<rect fill="#000000" height="40" stroke="none" width="40.0022" x="49.3659" y="130"/>
+<use fill="#ffffff" fill-rule="evenodd" stroke="none" xlink:href="#Fill"/>
+</mask>
+<use fill="none" mask="url(#StrokeMask)" stroke="#202020" stroke-linecap="butt" stroke-linejoin="round" stroke-width="10" xlink:href="#Fill"/>
+</g>
+<g opacity="1">
+<mask height="40" id="StrokeMask_2" maskUnits="userSpaceOnUse" width="40.0022" x="129.37" y="130">
+<rect fill="#000000" height="40" stroke="none" width="40.0022" x="129.37" y="130"/>
+<use fill="#ffffff" fill-rule="evenodd" stroke="none" xlink:href="#Fill_2"/>
+</mask>
+<use fill="none" mask="url(#StrokeMask_2)" stroke="#202020" stroke-linecap="butt" stroke-linejoin="round" stroke-width="10" xlink:href="#Fill_2"/>
+</g>
+<path d="M224.375 110C216.091 110 209.375 116.716 209.375 125L209.375 175C209.375 183.284 216.091 190 224.375 190L570 190L570 110L224.375 110Z" fill="#f0f0f4" fill-rule="nonzero" opacity="1" stroke="none"/>
+<g opacity="1">
+<mask height="40" id="StrokeMask_3" maskUnits="userSpaceOnUse" width="40.0022" x="234.374" y="130">
+<rect fill="#000000" height="40" stroke="none" width="40.0022" x="234.374" y="130"/>
+<use fill="#ffffff" fill-rule="evenodd" stroke="none" xlink:href="#Fill_3"/>
+</mask>
+<use fill="none" mask="url(#StrokeMask_3)" stroke="#202020" stroke-linecap="butt" stroke-linejoin="round" stroke-width="10" xlink:href="#Fill_3"/>
+</g>
+<path d="M299.375 145C296.619 145 294.375 147.244 294.375 150C294.375 152.756 296.619 155 299.375 155L570 155L570 145L299.375 145Z" fill="#202020" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M119.367 49.9318C119.367 47.208 121.575 45 124.299 45L314.435 45C317.159 45 319.367 47.208 319.367 49.9318L319.367 50.0682C319.367 52.792 317.159 55 314.435 55L124.299 55C121.575 55 119.367 52.792 119.367 50.0682L119.367 49.9318Z" fill="#202020" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M434.312 45C431.589 45 429.375 47.2138 429.375 49.9375L429.375 50.0625C429.375 52.7862 431.589 55 434.312 55L570 55L570 45L434.312 45Z" fill="#5b5b67" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+</svg>

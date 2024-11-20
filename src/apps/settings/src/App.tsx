@@ -1,68 +1,41 @@
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Heading,
-  Button,
-  Box,
-  Text,
-} from "@chakra-ui/react";
-import SimpleSidebar from "./modules/sidebar";
-// import { getBoolPref, getIntPref, setBoolPref } from "./dev";
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export default function Home() {
-  // setBoolPref("noraneko.settings.dev", true);
-  // getBoolPref("bidi.browser.ui").then((v) => {
-  //   console.log(v);
-  // });
+import { Box, useMediaQuery } from "@chakra-ui/react";
+import Sidebar from "./sidebar";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Home from "./pages/Home";
+import Header from "./header";
+import Workspaces from "./pages/Workspaces";
+import Design from "./pages/Design";
+import Accounts from "./pages/Accounts";
+import About from "./pages/About";
+import SearchResults from "./pages/Search/index";
 
+export default function App() {
+  const [isMobile] = useMediaQuery("(max-width: 768px)");
   return (
-    <>
-      <div style={{ display: "flex", height: "100vh" }}>
-        <section style={{ width: "15rem" }}>
-          <SimpleSidebar />
-        </section>
-
-        <main style={{ display: "flex", flexDirection: "column" }}>
-          <Text>Hello World!</Text>
-          <Box display={"flex"}>
-            <Card width={"200px"} height={"300px"}>
-              <CardHeader>
-                <Heading size="md">
-                  {" "}
-                  Customer dashboard {process.env.NODE_ENV}
-                </Heading>
-              </CardHeader>
-              <CardBody>
-                View a summary of all your customers over the last month.
-              </CardBody>
-              <CardFooter>
-                <Button>View here</Button>
-              </CardFooter>
-            </Card>
-            <Card width={"200px"} height={"300px"}>
-              <CardHeader>
-                <Heading size="md"> Customer dashboard</Heading>
-              </CardHeader>
-              <CardBody>
-                View a summary of all your customers over the last month.
-              </CardBody>
-              <CardFooter>
-                <Button>View here</Button>
-              </CardFooter>
-            </Card>
+    <Router>
+      <Box>
+        <Header />
+        <Box mt={"100px"}>
+          <Sidebar />
+          <Box>
+            <Box p={"0px 48px"} mb={"48px"} ml={isMobile ? "75px" : "300px"}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/workspaces" element={<Workspaces />} />
+                <Route path="/design" element={<Design />} />
+                <Route path="/accounts" element={<Accounts />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/search" element={<SearchResults />} />
+              </Routes>
+            </Box>
           </Box>
-        </main>
-      </div>
-
-      {/* <div className={styles.page}>
-        <main className={styles.main}>
-          <div>The left space</div>
-
-
-        </main>
-      </div> */}
-    </>
+        </Box>
+      </Box>
+    </Router>
   );
 }

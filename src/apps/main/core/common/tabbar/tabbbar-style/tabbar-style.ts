@@ -5,8 +5,6 @@
 
 import { createEffect } from "solid-js";
 import { gTabbarStyleFunctions } from "./tabbbar-style-functions";
-import { checkPaddingEnabled } from "./titilebar-padding";
-import { handleOnWheel } from "./tabbar-on-wheel";
 
 export class gTabbarStyleClass {
   private static instance: gTabbarStyleClass;
@@ -18,7 +16,7 @@ export class gTabbarStyleClass {
   }
 
   private get tabbarWindowManageContainer() {
-    return document.querySelector(
+    return document?.querySelector(
       "#TabsToolbar > .titlebar-buttonbox-container",
     );
   }
@@ -30,20 +28,9 @@ export class gTabbarStyleClass {
     );
 
     gTabbarStyleFunctions.applyTabbarStyle();
-    checkPaddingEnabled();
-
-    const tabBrowserTabs = document.querySelector(
-      "#tabbrowser-tabs",
-    ) as XULElement;
-    if (tabBrowserTabs) {
-      tabBrowserTabs.on_wheel = (event: WheelEvent) => {
-        handleOnWheel(event, tabBrowserTabs);
-      };
-    }
 
     createEffect(() => {
       gTabbarStyleFunctions.applyTabbarStyle();
-      checkPaddingEnabled();
     });
   }
 }

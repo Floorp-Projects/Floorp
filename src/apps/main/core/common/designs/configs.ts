@@ -4,60 +4,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import { z } from "zod";
 import {
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
   getOldTabbarStyleConfig,
 } from "./old-config-migrator";
-
-export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
-
-export const zFloorpDesignConfigs = z.object({
-  globalConfigs: z.object({
-    userInterface: z.enum([
-      "fluerial",
-      "lepton",
-      "photon",
-      "protonfix",
-      "proton",
-    ]),
-    appliedUserJs: z.string(),
-  }),
-  tabbar: z.object({
-    tabbarStyle: z.enum(["horizontal", "vertical", "multirow"]),
-    tabbarPosition: z.enum([
-      "hide-horizontal-tabbar",
-      "optimise-to-vertical-tabbar",
-      "bottom-of-navigation-toolbar",
-      "bottom-of-window",
-      "default",
-    ]),
-    multiRowTabBar: z.object({
-      maxRowEnabled: z.boolean(),
-      maxRow: z.number(),
-    }),
-    verticalTabBar: z.object({
-      hoverEnabled: z.boolean(),
-      paddingEnabled: z.boolean(),
-      width: z.number(),
-    }),
-    tabScroll: z.object({
-      reverse: z.boolean(),
-      wrap: z.number(),
-    }),
-  }),
-  fluerial: z.object({
-    roundVerticalTabs: z.boolean(),
-  }),
-});
+import {
+  type zFloorpDesignConfigsType,
+  zFloorpDesignConfigs,
+} from "../../../../../apps/common/scripts/global-types/type";
 
 const oldObjectConfigs: zFloorpDesignConfigsType = {
   globalConfigs: {
     userInterface: getOldInterfaceConfig(),
+    faviconColor: Services.prefs.getBoolPref(
+      "floorp.titlebar.favicon.color",
+      true,
+    ),
     appliedUserJs: "",
   },
   tabbar: {
+    paddingEnabled: Services.prefs.getBoolPref(
+      "floorp.verticaltab.paddingtop.enabled",
+      false,
+    ),
     tabbarStyle: getOldTabbarStyleConfig(),
     tabbarPosition: getOldTabbarPositionConfig(),
     multiRowTabBar: {
@@ -70,26 +40,29 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
         3,
       ),
     },
-    verticalTabBar: {
-      hoverEnabled: false,
-      paddingEnabled: Services.prefs.getBoolPref(
-        "floorp.verticaltab.paddingtop.enabled",
-        false,
-      ),
-      width: Services.prefs.getIntPref(
-        "floorp.browser.tabs.verticaltab.width",
-        200,
-      ),
-    },
-    tabScroll: {
-      reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
-      wrap: Services.prefs.getIntPref("floorp.tabscroll.wrap", 1),
-    },
   },
-  fluerial: {
-    roundVerticalTabs: Services.prefs.getBoolPref(
-      "floorp.fluerial.roundVerticalTabs",
+  tab: {
+    tabScroll: {
+      enabled: Services.prefs.getBoolPref("floorp.tabscroll.enable", false),
+      reverse: Services.prefs.getBoolPref("floorp.tabscroll.reverse", false),
+      wrap: Services.prefs.getBoolPref("floorp.tabscroll.wrap", false),
+    },
+    tabMinHeight: Services.prefs.getIntPref(
+      "floorp.browser.tabs.tabMinHeight",
+      30,
+    ),
+    tabMinWidth: Services.prefs.getIntPref("browser.tabs.tabMinWidth", 76),
+    tabPinTitle: Services.prefs.getBoolPref(
+      "floorp.tabs.showPinnedTabsTitle",
       false,
+    ),
+    tabDubleClickToClose: Services.prefs.getBoolPref(
+      "browser.tabs.closeTabByDblclick",
+      false,
+    ),
+    tabOpenPosition: Services.prefs.getIntPref(
+      "floorp.browser.tabs.openTabPosition",
+      -1,
     ),
   },
 };
