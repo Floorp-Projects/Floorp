@@ -938,9 +938,6 @@ UniquePtr<ImageBitmapCloneData> ImageBitmap::ToCloneData() const {
     return nullptr;
   }
 
-  UniquePtr<ImageBitmapCloneData> result(new ImageBitmapCloneData());
-  result->mPictureRect = mPictureRect;
-  result->mAlphaType = mAlphaType;
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
   if (!surface) {
     // It might just not be possible to get/map the surface. (e.g. from another
@@ -948,10 +945,18 @@ UniquePtr<ImageBitmapCloneData> ImageBitmap::ToCloneData() const {
     return nullptr;
   }
 
-  result->mSurface = surface->GetDataSurface();
-  MOZ_ASSERT(result->mSurface);
-  result->mWriteOnly = mWriteOnly;
+  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+  if (NS_WARN_IF(!dataSurface)) {
+    // This can reasonably fail in many cases (e.g. canvas state doesn't allow
+    // reading back the snapshot).
+    return nullptr;
+  }
 
+  auto result = MakeUnique<ImageBitmapCloneData>();
+  result->mPictureRect = mPictureRect;
+  result->mAlphaType = mAlphaType;
+  result->mSurface = std::move(dataSurface);
+  result->mWriteOnly = mWriteOnly;
   return result;
 }
 
