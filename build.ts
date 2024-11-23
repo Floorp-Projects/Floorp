@@ -88,7 +88,7 @@ async function initBin() {
   }
 }
 
-let devViteProcesses: ViteDevServer[];
+let devViteProcesses: ViteDevServer[] | null = null;
 let buildViteProcesses: any[];
 const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
@@ -139,7 +139,7 @@ async function run(mode: "dev" | "test" = "dev") {
     }
     devInit = true;
   }
-  devViteProcesses.forEach((p) => {
+  devViteProcesses!.forEach((p) => {
     p.listen();
   });
   await Promise.all([
@@ -210,7 +210,7 @@ process.on("exit", () => {
   devExecaProcesses.forEach((v) => {
     v.kill();
   });
-  devViteProcesses.forEach(async (v) => {
+  devViteProcesses?.forEach(async (v) => {
     await v.close();
   });
 });
