@@ -85,6 +85,8 @@ class MFCDMChild final : public PMFCDMChild {
       mState = NS_ERROR_NOT_AVAILABLE;
     }
   }
+
+  void EnsureRemote();
   void Shutdown();
 
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
@@ -95,9 +97,6 @@ class MFCDMChild final : public PMFCDMChild {
  private:
   ~MFCDMChild();
 
-  using RemotePromise = GenericNonExclusivePromise;
-  RefPtr<RemotePromise> EnsureRemote();
-
   void AssertSendable();
 
   const nsString mKeySystem;
@@ -105,6 +104,7 @@ class MFCDMChild final : public PMFCDMChild {
   const RefPtr<nsISerialEventTarget> mManagerThread;
   RefPtr<MFCDMChild> mIPDLSelfRef;
 
+  using RemotePromise = GenericNonExclusivePromise;
   RefPtr<RemotePromise> mRemotePromise;
   MozPromiseHolder<RemotePromise> mRemotePromiseHolder;
   MozPromiseRequestHolder<RemotePromise> mRemoteRequest;
