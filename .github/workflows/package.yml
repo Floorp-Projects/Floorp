@@ -23,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: 'nyanrus/noraneko-runtime'
           submodules: "recursive"
       - name: Configure sccache
         uses: actions/github-script@v7
@@ -58,6 +59,12 @@ jobs:
           ./mach --no-interactive bootstrap --application-choice browser
       - name: Mach configure
         run: |
+
+          echo "ac_add_options --with-version-file-path=noraneko/gecko/config" >> mozconfig
+          # sed -i 's|ac_add_options --disable-maintenance-service|#ac_add_options --disable-maintenance-service|g' ./mozconfig
+          sed -i 's|ac_add_options --disable-updater|#ac_add_options --disable-updater|g' ./mozconfig
+          sed -i 's|https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml|https://github.com/nyanrus/noraneko/releases/download/%VERSION%/%BUILD_TARGET%-%CHANNEL%-%OS_VERSION%-update.xml|g' ./build/application.ini.in
+
           echo "ac_add_options --enable-artifact-builds" >> mozconfig
           ./mach configure
           git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
@@ -69,7 +76,7 @@ jobs:
           github-token: ${{github.token}}
           repository: "nyanrus/noraneko-runtime"
           path: ~/
-          
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9
