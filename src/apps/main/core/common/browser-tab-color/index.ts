@@ -24,14 +24,14 @@ export function init() {
       manager = new TabColorManager();
       window.gBrowser.addTabsProgressListener(listener);
       window.gBrowser.tabContainer.addEventListener("TabSelect", changeTabColor);
+      onCleanup(
+        () => {
+          window.gBrowser.removeTabsProgressListener(listener);
+          window.gBrowser.tabContainer.removeEventListener("TabSelect", changeTabColor);
+        });
     },
     import.meta.hot,
   );
-  onCleanup(
-    () => {
-      window.gBrowser.removeTabsProgressListener(listener);
-      window.gBrowser.tabContainer.removeEventListener("TabSelect", changeTabColor);
-    });
   manager.init();
   import.meta.hot?.accept((m) => {
     m?.init();
