@@ -279,6 +279,11 @@ class EditorDOMPointBase final {
   }
 
   /**
+   * Returns true if the container node is an element node.
+   */
+  bool IsContainerElement() const { return mParent && mParent->IsElement(); }
+
+  /**
    * IsContainerHTMLElement() returns true if the container node is an HTML
    * element node and its node name is aTag.
    */

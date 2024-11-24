@@ -1390,7 +1390,6 @@ add_task(async function test_unloaded_iframe() {
         let uri = `${scheme}://test`;
         return ContentTask.spawn(browser, { uri }, args => {
           let frame = content.document.createElement("iframe");
-          frame.setAttribute("loading", "lazy");
           frame.setAttribute("src", "about:blank");
           frame.setAttribute("style", "margin-top: 10000px;");
           frame.setAttribute("name", "yo");

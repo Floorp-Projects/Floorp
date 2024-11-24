@@ -258,6 +258,9 @@ NS_EVENT_MESSAGE(eQueryCharacterAtPoint)
 // Query if the DOM element under Event::mRefPoint belongs to our widget
 // or not.
 NS_EVENT_MESSAGE(eQueryDOMWidgetHittest)
+// Query for the DOM element under Event::mRefPoint that is the target of a
+// delayed drop event.
+NS_EVENT_MESSAGE(eQueryDropTargetHittest)
 
 // Video events
 NS_EVENT_MESSAGE(eLoadStart)

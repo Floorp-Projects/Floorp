@@ -21,7 +21,7 @@ interface nsIMockDragServiceController : nsISupports
   cenum EventType : 8 {
     eDragEnter = 0,
     eDragOver = 1,
-    eDragLeave = 2,
+    eDragExit = 2,
     eDrop = 3,
     eMouseDown = 4,
     eMouseMove = 5,

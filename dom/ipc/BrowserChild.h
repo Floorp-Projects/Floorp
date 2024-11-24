@@ -677,6 +677,15 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
       const uint32_t& aKeyModifiers, const uint32_t& aDropEffect);
 
+  mozilla::ipc::IPCResult RecvStoreDropTargetAndDelayEndDragSession(
+      const LayoutDeviceIntPoint& aPt, uint32_t aDropEffect,
+      uint32_t aDragAction, nsIPrincipal* aPrincipal,
+      nsIContentSecurityPolicy* aCsp);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvDispatchToDropTargetAndResumeEndDragSession(
+      bool aShouldDrop);
+
  protected:
   virtual ~BrowserChild();
 
@@ -803,6 +812,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   LayoutDeviceIntPoint mChromeOffset;
   ScreenIntCoord mDynamicToolbarMaxHeight;
   TabId mUniqueId;
+
+  // Position of a delayed drop event.
+  LayoutDeviceIntPoint mDelayedDropPoint;
 
   bool mDidFakeShow : 1;
   bool mTriedBrowserInit : 1;

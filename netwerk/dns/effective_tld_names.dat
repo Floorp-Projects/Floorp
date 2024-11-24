@@ -5,6 +5,9 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
+// VERSION: 2024-11-12_14-53-17_UTC
+// COMMIT: c5a2c693abe0851e2aad80062f9ef654c05372ca
+
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
 // ===BEGIN ICANN DOMAINS===
@@ -209,6 +212,7 @@ tur.ar
 // Confirmed by registry <iana-questions@icann.org> 2008-06-18
 arpa
 e164.arpa
+home.arpa
 in-addr.arpa
 ip6.arpa
 iris.arpa
@@ -697,6 +701,7 @@ of.by
 // bz : https://www.iana.org/domains/root/db/bz.html
 // http://www.belizenic.bz/
 bz
+co.bz
 com.bz
 net.bz
 org.bz
@@ -759,8 +764,6 @@ go.ci
 asso.ci
 aéroport.ci
 int.ci
-presse.ci
-md.ci
 gouv.ci
 
 // ck : https://www.iana.org/domains/root/db/ck.html
@@ -869,7 +872,6 @@ cu
 com.cu
 edu.cu
 gob.cu
-gov.cu
 inf.cu
 nat.cu
 net.cu
@@ -1429,9 +1431,15 @@ int
 eu.int
 
 // io : http://www.nic.io/rules.htm
-// list of other 2nd level tlds ?
 io
+co.io
 com.io
+edu.io
+gov.io
+mil.io
+net.io
+nom.io
+org.io
 
 // iq : http://www.cmc.iq/english/iq/iqregister1.htm
 iq
@@ -5566,7 +5574,6 @@ si
 sj
 
 // sk : https://www.iana.org/domains/root/db/sk.html
-// list of 2nd level domains ?
 sk
 
 // sl : http://www.nic.sl
@@ -6717,7 +6724,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-17T15:16:23Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-31T15:17:42Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -10063,7 +10070,7 @@ ski
 // https://www.iana.org/domains/root/db/skin.html
 skin
 
-// sky : Sky International AG
+// sky : Sky UK Limited
 // https://www.iana.org/domains/root/db/sky.html
 sky
 
@@ -12379,20 +12386,24 @@ clickrising.net
 // Submitted by Aleksander Hristov <noc@cloudns.net> & Boyan Peychev <boyan@cloudns.net>
 cloudns.asia
 cloudns.be
+cloud-ip.biz
 cloudns.biz
 cloudns.cc
 cloudns.ch
 cloudns.cl
 cloudns.club
 dnsabr.com
+ip-ddns.com
 cloudns.cx
 cloudns.eu
 cloudns.in
 cloudns.info
+ddns-ip.net
 dns-cloud.net
 dns-dynamic.net
 cloudns.nz
 cloudns.org
+ip-dynamic.org
 cloudns.ph
 cloudns.pro
 cloudns.pw
@@ -12642,10 +12653,6 @@ jozi.biz
 // DNShome : https://www.dnshome.de/
 // Submitted by Norbert Auler <mail@dnshome.de>
 dnshome.de
-
-// dnstrace.pro : https://dnstrace.pro/
-// Submitted by Chris Partridge <chris@partridge.tech>
-bci.dnstrace.pro
 
 // DotArai : https://www.dotarai.com/
 // Submitted by Atsadawat Netcharadsang <atsadawat@dotarai.co.th>
@@ -13002,11 +13009,6 @@ easypanel.host
 // EasyWP : https://www.easywp.com
 // Submitted by <infracloudteam@namecheap.com>
 *.ewp.live
-
-// ECG Robotics, Inc : https://ecgrobotics.org
-// Submitted by <frc1533@ecgrobotics.org>
-onred.one
-staging.onred.one
 
 // eDirect Corp. : https://hosting.url.com.tw/
 // Submitted by C.S. chang <cschang@corp.url.com.tw>
@@ -13385,11 +13387,10 @@ gentlentapis.com
 lab.ms
 cdn-edges.net
 
-// Getlocalcert: https://www.getlocalcert.net
-// Submitted by Robert Alexander <support@getlocalcert.net>
+// GetLocalCert : https://getlocalcert.net
+// Submitted by William Harrison <psl@getlocalcert.net>
 localcert.net
 localhostcert.net
-corpnet.work
 
 // GignoSystemJapan: http://gsj.bz
 // Submitted by GignoSystemJapan <kakutou-ec@gsj.bz>
@@ -13651,6 +13652,10 @@ london.cloudapps.digital
 // Submitted by <domeinnaam@minaz.nl>
 gov.nl
 
+// Grafana Labs: https://grafana.com/
+// Submitted by Platform Engineering <info@grafana.com>
+grafana-dev.net
+
 // GrayJay Web Solutions Inc. : https://grayjaysports.ca
 // Submitted by Matt Yamkowy <info@grayjaysports.ca>
 grayjayleagues.com
@@ -13672,14 +13677,8 @@ conf.se
 // Submitted by Eero Häkkinen <Eero+psl@Häkkinen.fi>
 häkkinen.fi
 
-// Handshake : https://handshake.org
-// Submitted by Mike Damm <md@md.vc>
-hs.run
-hs.zone
-
 // Harrison Network : https://hrsn.net
 // Submitted by William Harrison <psl@hrsn.net>
-wdh.app
 hrsn.dev
 
 // Hashbang : https://hashbang.sh
@@ -13700,8 +13699,9 @@ hatenadiary.jp
 hatenadiary.org
 
 // Heilbronn University of Applied Sciences - Faculty Informatics (GitLab Pages): https://www.hs-heilbronn.de
-// Submitted by Richard Zowalla <mi-admin@hs-heilbronn.de>
+// Submitted by Richard Zowalla <it-admin@hs-heilbronn.de>
 pages.it.hs-heilbronn.de
+pages-research.it.hs-heilbronn.de
 
 // HeiyuSpace: https://lazycat.cloud
 // Submitted by Xia Bin <admin@lazycat.cloud>
@@ -14111,6 +14111,15 @@ ggff.net
 // Localcert : https://localcert.dev
 // Submitted by Lann Martin <security@localcert.dev>
 *.user.localcert.dev
+
+// Lodz University of Technology LODMAN regional domains https://www.man.lodz.pl/dns
+// Submitted by Piotr Wilk <dns@man.lodz.pl>
+lodz.pl
+pabianice.pl
+plock.pl
+sieradz.pl
+skierniewice.pl
+zgierz.pl
 
 // Log'in Line : https://www.loginline.com/
 // Submitted by Rémi Mach <remi.mach@loginline.com>
@@ -15373,6 +15382,10 @@ gdynia.pl
 med.pl
 sopot.pl
 
+// Tave Creative Corp : https://tave.com/
+// Submitted by Adrian Ziemkowski <devops@tave.com>
+taveusercontent.com
+
 // tawk.to, Inc : https://www.tawk.to
 // Submitted by tawk.to developer team <dev-accounts@tawk.to>
 p.tawk.email
@@ -15626,6 +15639,10 @@ pages.wiardweb.com
 toolforge.org
 wmcloud.org
 wmflabs.org
+
+// William Harrison : https://wdh.gg
+// Submitted by William Harrison <william@harrison.id.au>
+wdh.app
 
 // WISP : https://wisp.gg
 // Submitted by Stepan Fedotov <stepan@wisp.gg>

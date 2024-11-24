@@ -185,6 +185,9 @@ LOCAL_INCLUDES += [
     "/xpcom/base",
 ]
 
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+
 DEFINES["MOZ_UNICODE"] = True
 DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 # Turn `firefox` into `Firefox`.

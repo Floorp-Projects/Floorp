@@ -60,7 +60,7 @@ class PrintHelper {
   }
 
   static getTestPageUrl(pathName) {
-    if (pathName.startsWith("http://")) {
+    if (pathName.startsWith("http://") || pathName.startsWith("file://")) {
       return pathName;
     }
     const testPath = getRootDirectory(gTestPath).replace(
@@ -71,7 +71,7 @@ class PrintHelper {
   }
 
   static getTestPageUrlHTTPS(pathName) {
-    if (pathName.startsWith("https://")) {
+    if (pathName.startsWith("https://") || pathName.startsWith("file://")) {
       return pathName;
     }
     const testPath = getRootDirectory(gTestPath).replace(

@@ -935,6 +935,10 @@
       "type": "boolean"
     },
 
+    "MicrosoftEntraSSO": {
+      "type": "boolean"
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },

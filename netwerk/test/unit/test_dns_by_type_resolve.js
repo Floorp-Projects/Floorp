@@ -26,6 +26,7 @@ add_setup(async function setup() {
   }
 
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  Services.prefs.setBoolPref("network.http.http2.allow-push", true);
 });
 
 let test_answer = "bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
@@ -62,7 +63,7 @@ add_task(async function testTXTRecordPushPart1() {
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   let answer = inRecord.getNextAddrAsString();
   Assert.equal(answer, test_answer_addr, "got correct answer");
-});
+}).skip("H2 push is disabled");
 
 // verify the TXT pushed record
 add_task(async function testTXTRecordPushPart2() {
@@ -80,4 +81,4 @@ add_task(async function testTXTRecordPushPart2() {
     .QueryInterface(Ci.nsIDNSTXTRecord)
     .getRecordsAsOneString();
   Assert.equal(answer, test_answer, "got correct answer");
-});
+}).skip("H2 push is disabled");

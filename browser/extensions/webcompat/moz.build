@@ -154,7 +154,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/google-ima.js",
     "shims/google-page-ad.js",
     "shims/google-publisher-tags.js",
-    "shims/google-safeframe.html",
     "shims/history.js",
     "shims/iam.js",
     "shims/iaspet.js",

@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Push Subscriptions'
+
+web_push:
+  detected_duplicated_message_ids:
+    type: counter
+    description: >
+      Counts the duplicated IDs from the server. The ability to detect
+      depends on the pref `dom.push.maxRecentMessageIDsPerSubscription`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1928124
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1928124
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never
+  error_code:
+    type: labeled_counter
+    description: >
+      The code indicating why the push message couldn't be processed.
+    labels:
+      - decryption_error
+      - not_delivered
+      - uncaught_exception
+      - unhandled_rejection
+      - internal_error
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1928124
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1928124
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never

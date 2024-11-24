@@ -253,6 +253,8 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
     return;
   }
 
+  InvalidateStyleAndLayoutOnSubtree(aSlot);
+
   HTMLSlotElement* oldSlot = currentSlots->SafeElementAt(1);
   if (SlotAssignment() == SlotAssignmentMode::Named) {
     if (oldSlot) {

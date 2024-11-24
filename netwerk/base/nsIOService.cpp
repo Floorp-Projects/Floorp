@@ -180,7 +180,7 @@ int16_t gBadPortList[] = {
     2049,   // nfs
     3659,   // apple-sasl
     4045,   // lockd
-    4160,   // sieve
+    4190,   // sieve
     5060,   // sip
     5061,   // sips
     6000,   // x11

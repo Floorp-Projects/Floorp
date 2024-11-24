@@ -59,6 +59,27 @@ function getLocalSources() {
   return [];
 }
 
+function redirectChromiumUpdateService(uri) {
+  let log = getScopedLogger("GMPInstallManager.checkForAddons");
+  log.info("fetching redirect from: " + uri);
+  return new Promise((resolve, reject) => {
+    let xmlHttp = new lazy.ServiceRequest({ mozAnon: true });
+
+    xmlHttp.onload = function () {
+      resolve(this.responseURL);
+    };
+
+    xmlHttp.onerror = function (e) {
+      reject("Fetching " + uri + " results in error code: " + e.target.status);
+    };
+
+    xmlHttp.open("GET", uri);
+    xmlHttp.overrideMimeType("*/*");
+    xmlHttp.setRequestHeader("Range", "bytes=0-0");
+    xmlHttp.send();
+  });
+}
+
 function downloadJSON(uri) {
   let log = getScopedLogger("GMPInstallManager.checkForAddons");
   log.info("fetching config from: " + uri);
@@ -447,6 +468,72 @@ GMPInstallManager.prototype = {
       log.info("Failed to force addons: " + err);
     }
 
+    // Now let's check the addons that we are configured to override to go
+    // directly to the Chromium component update service.
+    try {
+      for (let gmpAddon of addons) {
+        if (
+          !GMPPrefs.getBool(
+            GMPPrefs.KEY_PLUGIN_FORCE_CHROMIUM_UPDATE,
+            false,
+            gmpAddon.id
+          )
+        ) {
+          continue;
+        }
+
+        const guid = GMPPrefs.getString(
+          GMPPrefs.KEY_PLUGIN_CHROMIUM_GUID,
+          "",
+          gmpAddon.id
+        );
+        if (guid === "") {
+          log.warn("Skipping chromium update, missing GUID for ", gmpAddon.id);
+          continue;
+        }
+
+        const params = GMPUtils._getChromiumUpdateParameters(gmpAddon);
+        const serviceUrl = GMPPrefs.getString(
+          GMPPrefs.KEY_CHROMIUM_UPDATE_URL,
+          ""
+        );
+        const redirectUrl = await redirectChromiumUpdateService(
+          serviceUrl.replace("%GUID%", guid) + params
+        );
+        const versionMatch = redirectUrl.match(/_(\d+\.\d+\.\d+\.\d+)\//);
+        if (!versionMatch || versionMatch.length !== 2) {
+          log.warn(
+            "Skipping chromium update, no version from URL: ",
+            redirectUrl
+          );
+          continue;
+        }
+
+        const version = versionMatch[1];
+        log.info(
+          "Forcing " +
+            gmpAddon.id +
+            " to version " +
+            version +
+            " from chromium update " +
+            redirectUrl
+        );
+
+        // Update the addon with the final URL and the extracted version.
+        gmpAddon.URL = redirectUrl;
+        gmpAddon.version = version;
+        gmpAddon.usedChromiumUpdate = true;
+
+        // Delete these properties to avoid verifying the addon against our
+        // balrog configuration, which may or may not match.
+        delete gmpAddon.size;
+        delete gmpAddon.hash;
+        delete gmpAddon.hashFunction;
+      }
+    } catch (err) {
+      log.info("Failed to switch addons to Chromium update service: " + err);
+    }
+
     this._deferred.resolve({ addons });
     delete this._deferred;
     return deferredPromise;
@@ -669,6 +756,7 @@ GMPInstallManager.prototype = {
 export function GMPAddon(addon) {
   let log = getScopedLogger("GMPAddon.constructor");
   this.usedFallback = false;
+  this.usedChromiumUpdate = false;
   for (let name of Object.keys(addon)) {
     this[name] = addon[name];
   }
@@ -704,18 +792,18 @@ GMPAddon.prototype = {
       this.id &&
       this.URL &&
       this.version &&
-      this.hashFunction &&
-      !!this.hashValue
+      (this.usedChromiumUpdate || (this.hashFunction && !!this.hashValue))
     );
   },
   get isInstalled() {
     return (
       this.version &&
-      !!this.hashValue &&
       GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, "", this.id) ===
         this.version &&
-      GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "", this.id) ===
-        this.hashValue
+      (this.usedChromiumUpdate ||
+        (!!this.hashValue &&
+          GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "", this.id) ===
+            this.hashValue))
     );
   },
   get isEME() {
@@ -849,12 +937,16 @@ GMPDownloader.prototype = {
               log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
               GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
               // We use the combination of the hash and version to ensure we are
-              // up to date.
-              GMPPrefs.setString(
-                GMPPrefs.KEY_PLUGIN_HASHVALUE,
-                gmpAddon.hashValue,
-                gmpAddon.id
-              );
+              // up to date. Ignored if we used the Chromium update service directly.
+              if (!gmpAddon.usedChromiumUpdate) {
+                GMPPrefs.setString(
+                  GMPPrefs.KEY_PLUGIN_HASHVALUE,
+                  gmpAddon.hashValue,
+                  gmpAddon.id
+                );
+              } else {
+                GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_HASHVALUE, gmpAddon.id);
+              }
               // Setting the version pref signals installation completion to consumers,
               // if you need to set other prefs etc. do it before this.
               GMPPrefs.setString(

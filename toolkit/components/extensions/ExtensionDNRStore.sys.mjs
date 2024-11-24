@@ -841,6 +841,9 @@ class RulesetsStore {
         );
       }
 
+      // Note: when dataPromise resolves, this._data and this._dataPromises are
+      // set. Keep this logic in sync with the end of #initExtension().
+
       this.unloadOnShutdown(extension);
       dataPromise = this.#readData(extension);
       this._dataPromises.set(extension.uuid, dataPromise);
@@ -1140,6 +1143,7 @@ class RulesetsStore {
       async () => {
         const staticRulesets = await this.getEnabledStaticRulesets(extension);
 
+        // Note: if the outcome changes, call #setStartupFlag to update this!
         return staticRulesets.size;
       }
     );
@@ -1149,6 +1153,7 @@ class RulesetsStore {
       async () => {
         const dynamicRuleset = await this.getDynamicRules(extension);
 
+        // Note: if the outcome changes, call #setStartupFlag to update this!
         return dynamicRuleset.length;
       }
     );
@@ -1165,7 +1170,38 @@ class RulesetsStore {
         updateStaticRulesets: hasEnabledStaticRules,
         updateDynamicRuleset: hasDynamicRules,
       });
+    } else if (
+      !extension.hasShutdown &&
+      !this._dataPromises.has(extension.uuid)
+    ) {
+      // #getDataPromise() initializes _dataPromises and _data (via #readData).
+      // This may be called when the StartupCache is not populated, but if they
+      // were, then these methods are not called. All other logic expects these
+      // to be initialized when #initExtension() returns, see e.g. bug 1921353.
+      let storeData = this.#getDefaults(extension);
+      this._data.set(extension.uuid, storeData);
+      this._dataPromises.set(extension.uuid, Promise.resolve(storeData));
+      this.unloadOnShutdown(extension);
     }
+  }
+
+  /**
+   * Update the flags that record the (non-)existence of static/dynamic rules.
+   * These flags are used by #initExtension.
+   * "StartupCache" here refers to the general StartupCache, NOT the one from
+   * #getCacheFilePath().
+   */
+  #setStartupFlag(extension, name, value) {
+    // The StartupCache.set method is async, but we do not wait because in
+    // practice the "async" part of it completes very quickly because the
+    // underlying StartupCache data has already been read when an extension is
+    // starting.
+    // And any writes is scheduled with an AsyncShutdown blocker, which ensures
+    // that the writes complete before the browser shuts down.
+    StartupCache.general.set(
+      [extension.id, extension.version, "dnr", name],
+      value
+    );
   }
 
   #promiseStartupCacheLoaded() {
@@ -1250,7 +1286,11 @@ class RulesetsStore {
    *
    * @returns {Promise<StoreData>}
    */
-  async #readData(extension) {
+  #readData(extension) {
+    // This just forwards to the actual implementation.
+    return this._readData(extension);
+  }
+  async _readData(extension) {
     const startTime = Cu.now();
     try {
       let result;
@@ -1696,6 +1736,7 @@ class RulesetsStore {
     this._data.get(extension.uuid).updateRulesets({
       dynamicRuleset: validatedRules,
     });
+    this.#setStartupFlag(extension, "hasDynamicRules", validatedRules.length);
     await this.save(extension);
     // updateRulesetManager calls ruleManager.setDynamicRules using the
     // validated rules assigned above to this._data.
@@ -1854,6 +1895,11 @@ class RulesetsStore {
     this._data.get(extension.uuid).updateRulesets({
       staticRulesets: updatedEnabledRulesets,
     });
+    this.#setStartupFlag(
+      extension,
+      "hasEnabledStaticRules",
+      updatedEnabledRulesets.size
+    );
     await this.save(extension);
     this.updateRulesetManager(extension, {
       updateDynamicRuleset: false,

@@ -11,8 +11,10 @@
 #include "base/process_util.h"
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
@@ -1321,6 +1323,11 @@ void ContentAnalysis::DoAnalyzeRequest(
     nsCOMPtr<nsIContentAnalysisRequest> aRequestToCache,
     const std::shared_ptr<content_analysis::sdk::Client>& aClient) {
   MOZ_ASSERT(!NS_IsMainThread());
+  auto threadsafeErrorHandler = MakeScopeExit([&]() {
+    // Make sure the cache request is destroyed on the main thread.
+    NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+        "CARequestErrorCleanup", [aRTC = std::move(aRequestToCache)]() {}));
+  });
   RefPtr<ContentAnalysis> owner =
       ContentAnalysis::GetContentAnalysisFromService();
   if (!owner) {
@@ -1420,6 +1427,7 @@ void ContentAnalysis::DoAnalyzeRequest(
         }
         owner->IssueResponse(response);
       }));
+  threadsafeErrorHandler.release();
 }
 
 void ContentAnalysis::SendWarnResponse(
@@ -2300,6 +2308,7 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
   if (!windowGlobal) {
     return nullptr;
   }
+  dom::CanonicalBrowsingContext* oldBrowsingContext = aBrowsingContext;
   nsIPrincipal* principal = windowGlobal->DocumentPrincipal();
   dom::CanonicalBrowsingContext* curBrowsingContext =
       aBrowsingContext->GetParent();
@@ -2314,7 +2323,18 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
       break;
     }
     principal = newPrincipal;
+    oldBrowsingContext = curBrowsingContext;
     curBrowsingContext = curBrowsingContext->GetParent();
+  }
+  if (nsContentUtils::IsPDFJS(principal)) {
+    // the principal's URI is the URI of the pdf.js reader
+    // so get the document's URI
+    dom::WindowContext* windowContext =
+        oldBrowsingContext->GetCurrentWindowContext();
+    if (!windowContext) {
+      return nullptr;
+    }
+    return windowContext->Canonical()->GetDocumentURI();
   }
   return principal->GetURI();
 }
@@ -2331,6 +2351,22 @@ NS_IMETHODIMP ContentAnalysis::GetURIForBrowsingContext(
   }
   uri.forget(aURI);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysis::GetURIForDropEvent(dom::DragEvent* aEvent, nsIURI** aURI) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  *aURI = nullptr;
+  auto* widgetEvent = aEvent->WidgetEventPtr();
+  MOZ_ASSERT(widgetEvent);
+  MOZ_ASSERT(widgetEvent->mClass == eDragEventClass &&
+             widgetEvent->mMessage == eDrop);
+  auto* bp =
+      dom::BrowserParent::GetBrowserParentFromLayersId(widgetEvent->mLayersId);
+  NS_ENSURE_TRUE(bp, NS_ERROR_FAILURE);
+  auto* bc = bp->GetBrowsingContext();
+  NS_ENSURE_TRUE(bc, NS_ERROR_FAILURE);
+  return GetURIForBrowsingContext(bc, aURI);
 }
 
 NS_IMETHODIMP ContentAnalysisCallback::ContentResult(

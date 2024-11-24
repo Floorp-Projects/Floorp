@@ -258,7 +258,7 @@ var trimHttpTests = [
   },
   {
     loadURL: "http://example.com/a%20%C2%A0test",
-    expectedURL: "example.com/a %C2%A0test",
+    expectedURL: "example.com/a%20%C2%A0test",
     copyExpected: "http://example.com/a%20%C2%A0test",
   },
   {
@@ -540,7 +540,7 @@ var trimHttpsTests = [
   },
   {
     loadURL: "https://example.com/a%20%C2%A0test",
-    expectedURL: "example.com/a %C2%A0test",
+    expectedURL: "example.com/a%20%C2%A0test",
     copyExpected: "https://example.com/a%20%C2%A0test",
   },
   {

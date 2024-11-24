@@ -8,6 +8,7 @@ SetParentalControlEnabled(false);
 
 function setup() {
   Services.prefs.setBoolPref("network.dns.get-ttl", false);
+  Services.prefs.setBoolPref("network.http.http2.allow-push", true);
   h2Port = trr_test_setup();
 }
 
@@ -147,7 +148,7 @@ add_task(async function test_push() {
   setModeAndURI(3, "404");
 
   await new TRRDNSListener("push.example.org", "2018::2018");
-});
+}).skip("H2 push is disabled");
 
 add_task(test_AAAA_records);
 
@@ -216,9 +217,8 @@ add_task(async function test_dnsSuffix() {
   info("Checking that domains matching dns suffix list use Do53");
   async function checkDnsSuffixInMode(mode) {
     Services.dns.clearCache(true);
-    setModeAndURI(mode, "doh?responseIP=1.2.3.4&push=true");
+    setModeAndURI(mode, "doh?responseIP=1.2.3.4");
     await new TRRDNSListener("example.org", "1.2.3.4");
-    await new TRRDNSListener("push.example.org", "2018::2018");
     await new TRRDNSListener("test.com", "1.2.3.4");
 
     let networkLinkService = {
@@ -232,11 +232,8 @@ add_task(async function test_dnsSuffix() {
     await new TRRDNSListener("test.com", "1.2.3.4");
     if (Services.prefs.getBoolPref("network.trr.split_horizon_mitigations")) {
       await new TRRDNSListener("example.org", "127.0.0.1");
-      // Also test that we don't use the pushed entry.
-      await new TRRDNSListener("push.example.org", "127.0.0.1");
     } else {
       await new TRRDNSListener("example.org", "1.2.3.4");
-      await new TRRDNSListener("push.example.org", "2018::2018");
     }
 
     // Attempt to clean up, just in case
@@ -374,22 +371,8 @@ add_task(async function test_async_resolve_with_trr_server() {
     "3.3.3.3",
     true,
     undefined,
-    `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3&push=true`
+    `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`
   );
-
-  // AsyncResoleWithTrrServer rejects server pushes and the entry for push.example.org
-  // shouldn't be neither in the default cache not in AsyncResoleWithTrrServer cache.
-  setModeAndURI(2, "404");
-
-  await new TRRDNSListener(
-    "push.example.org",
-    "3.3.3.3",
-    true,
-    undefined,
-    `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3&push=true`
-  );
-
-  await new TRRDNSListener("push.example.org", "127.0.0.1");
 
   // Check confirmation is ignored
   Services.dns.clearCache(true);

@@ -299,6 +299,7 @@ void WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor) {
 
   MOZ_ASSERT(mBoundVertexArray);
   mBoundVertexArray->AttribDivisor(index, divisor);
+  gl->fVertexAttribDivisor(index, divisor);
 }
 
 }  // namespace mozilla

@@ -1010,6 +1010,24 @@ child:
                          uint32_t aKeyModifiers,
                          uint32_t aDropEffect);
 
+    /**
+     * Use a eQueryDropTargetHittest event to obtain the element under aPt.
+     * Store that in the current drag session for later event targetting.
+     * Also tell the drag session to hold off on running EndDragSession
+     * until it is told to resume.
+     */
+    async StoreDropTargetAndDelayEndDragSession(
+        LayoutDeviceIntPoint aPt, uint32_t aDropEffect, uint32_t aDragAction,
+        nullable nsIPrincipal aPrincipal,
+        nullable nsIContentSecurityPolicy aCsp);
+
+    /**
+     * Send a drop (if aShouldDrop) or dragexit (otherwise) event to the
+     * recorded drop target and issue any EndDragSession call that was stopped
+     * by StoreDropTargetAndDelayEndDragSession (if any).
+     */
+    async DispatchToDropTargetAndResumeEndDragSession(bool aShouldDrop);
+
 parent:
     /**
      * Fetches whether this window supports protected media, which is sent back in response.

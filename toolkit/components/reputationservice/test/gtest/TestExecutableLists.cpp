@@ -121,6 +121,7 @@ static const char* const kTestFileExtensions[] = {
     ".js",                 // JavaScript script
     ".jse",                // JScript
     ".ksh",                // Linux shell
+    ".library-ms",         // Windows Library Files
     ".lnk",                // Windows
     ".local",              // Windows
     ".mad",                // MS Access
