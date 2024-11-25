@@ -10,7 +10,7 @@ export async function generateJarManifest(
   options: {
     prefix: string;
     namespace: string;
-    register_type: "content" | "skin";
+    register_type: "content" | "skin" | "resource";
   },
 ) {
   console.log("generate jar.mn");
