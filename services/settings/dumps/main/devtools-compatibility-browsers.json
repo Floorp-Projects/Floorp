@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1731974719865,
+      "status": "current",
+      "version": "131",
+      "browserid": "edge",
+      "id": "0813388d-12c8-4c7b-84d5-25bb100f9a6b",
+      "last_modified": 1732521556533
+    },
+    {
+      "name": "Samsung Internet",
+      "schema": 1731974720014,
+      "status": "current",
+      "version": "27.0",
+      "browserid": "samsunginternet_android",
+      "id": "e05f8a82-8aa6-4621-b1ef-3195828ccdc0",
+      "last_modified": 1732521556529
+    },
+    {
       "name": "Node.js",
       "schema": 1731456303695,
       "status": "esr",
@@ -181,15 +199,6 @@
       "last_modified": 1730702567929
     },
     {
-      "name": "Edge",
-      "schema": 1730493823318,
-      "status": "beta",
-      "version": "131",
-      "browserid": "edge",
-      "id": "0813388d-12c8-4c7b-84d5-25bb100f9a6b",
-      "last_modified": 1730702567926
-    },
-    {
       "name": "Firefox",
       "schema": 1730505903387,
       "status": "beta",
@@ -280,15 +289,6 @@
       "last_modified": 1730271665249
     },
     {
-      "name": "Edge",
-      "schema": 1729296306256,
-      "status": "current",
-      "version": "130",
-      "browserid": "edge",
-      "id": "7827cb56-d1c0-4ef3-a278-75a90781f3de",
-      "last_modified": 1729504600765
-    },
-    {
       "name": "Opera",
       "schema": 1726617903351,
       "status": "beta",
@@ -323,24 +323,6 @@
       "browserid": "opera",
       "id": "ab0007b7-5788-4953-b488-7836ec98710f",
       "last_modified": 1726639148065
-    },
-    {
-      "name": "Samsung Internet",
-      "schema": 1725667506267,
-      "status": "current",
-      "version": "26.0",
-      "browserid": "samsunginternet_android",
-      "id": "ddffdac8-1de9-4c43-807c-a195012da511",
-      "last_modified": 1725871535790
-    },
-    {
-      "name": "Samsung Internet",
-      "schema": 1725667506345,
-      "status": "beta",
-      "version": "27.0",
-      "browserid": "samsunginternet_android",
-      "id": "e05f8a82-8aa6-4621-b1ef-3195828ccdc0",
-      "last_modified": 1725871535788
     },
     {
       "name": "Firefox for Android",
@@ -379,5 +361,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1731478588321
+  "timestamp": 1732521556533
 }
