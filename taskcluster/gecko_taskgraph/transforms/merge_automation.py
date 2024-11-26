@@ -34,6 +34,7 @@ def handle_keyed_by(config, tasks):
                     "project": config.params["project"],
                     "release-type": config.params["release_type"],
                     "behavior": merge_config["behavior"],
+                    "level": config.params["level"],
                 }
             )
         yield task
