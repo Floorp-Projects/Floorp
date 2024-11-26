@@ -64,6 +64,7 @@ jobs:
           # sed -i 's|ac_add_options --disable-maintenance-service|#ac_add_options --disable-maintenance-service|g' ./mozconfig
           sed -i 's|ac_add_options --disable-updater|#ac_add_options --disable-updater|g' ./mozconfig
           sed -i 's|https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml|https://github.com/nyanrus/noraneko/releases/download/%VERSION%/%BUILD_TARGET%-%CHANNEL%-%OS_VERSION%-update.xml|g' ./build/application.ini.in
+          echo "ac_add_options --enable-update-channel=alpha" >> mozconfig
 
           echo "ac_add_options --enable-artifact-builds" >> mozconfig
           ./mach configure
