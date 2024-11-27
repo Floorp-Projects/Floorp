@@ -8,6 +8,7 @@
 #define builtin_intl_Segmenter_h
 
 #include <stdint.h>
+#include <type_traits>
 
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
@@ -84,6 +85,66 @@ class SegmenterObject : public NativeObject {
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
+class SegmentsStringChars final {
+  uintptr_t tagged_ = 0;
+
+  enum Tag {
+    Latin1 = 0,
+    TwoByte = 1,
+
+    TagMask = TwoByte,
+  };
+
+  static uintptr_t toTagged(const void* chars, Tag tag) {
+    MOZ_ASSERT(chars != nullptr, "can't tag nullptr");
+
+    auto ptr = reinterpret_cast<uintptr_t>(chars);
+    MOZ_ASSERT((ptr & TagMask) == 0, "pointer already tagged");
+
+    return ptr | tag;
+  }
+
+  Tag tag() const { return static_cast<Tag>(tagged_ & TagMask); }
+
+  uintptr_t untagged() const { return tagged_ & ~TagMask; }
+
+  explicit SegmentsStringChars(const void* taggedChars)
+      : tagged_(reinterpret_cast<uintptr_t>(taggedChars)) {}
+
+ public:
+  SegmentsStringChars() = default;
+
+  explicit SegmentsStringChars(const JS::Latin1Char* chars)
+      : tagged_(toTagged(chars, Latin1)) {}
+
+  explicit SegmentsStringChars(const char16_t* chars)
+      : tagged_(toTagged(chars, TwoByte)) {}
+
+  static auto fromTagged(const void* taggedChars) {
+    return SegmentsStringChars{taggedChars};
+  }
+
+  explicit operator bool() const { return tagged_ != 0; }
+
+  template <typename CharT>
+  bool has() const {
+    if constexpr (std::is_same_v<CharT, JS::Latin1Char>) {
+      return tag() == Latin1;
+    } else {
+      static_assert(std::is_same_v<CharT, char16_t>);
+      return tag() == TwoByte;
+    }
+  }
+
+  template <typename CharT>
+  CharT* data() const {
+    MOZ_ASSERT(has<CharT>());
+    return reinterpret_cast<CharT*>(untagged());
+  }
+
+  uintptr_t tagged() const { return tagged_; }
+};
+
 class SegmentsObject : public NativeObject {
  public:
   static const JSClass class_;
@@ -125,20 +186,21 @@ class SegmentsObject : public NativeObject {
     return !getFixedSlot(STRING_CHARS_SLOT).isUndefined();
   }
 
-  void* getStringChars() const {
+  SegmentsStringChars getStringChars() const {
     const auto& slot = getFixedSlot(STRING_CHARS_SLOT);
     if (slot.isUndefined()) {
-      return nullptr;
+      return SegmentsStringChars{};
     }
-    return slot.toPrivate();
+    return SegmentsStringChars::fromTagged(slot.toPrivate());
   }
 
-  void setLatin1Chars(JS::Latin1Char* chars) {
-    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  void setStringChars(SegmentsStringChars chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars.tagged()));
   }
 
-  void setTwoByteChars(char16_t* chars) {
-    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  bool hasLatin1StringChars() const {
+    MOZ_ASSERT(hasStringChars());
+    return getStringChars().has<JS::Latin1Char>();
   }
 
   int32_t getIndex() const {
@@ -226,20 +288,21 @@ class SegmentIteratorObject : public NativeObject {
     return !getFixedSlot(STRING_CHARS_SLOT).isUndefined();
   }
 
-  void* getStringChars() const {
+  SegmentsStringChars getStringChars() const {
     const auto& slot = getFixedSlot(STRING_CHARS_SLOT);
     if (slot.isUndefined()) {
-      return nullptr;
+      return SegmentsStringChars{};
     }
-    return slot.toPrivate();
+    return SegmentsStringChars::fromTagged(slot.toPrivate());
   }
 
-  void setLatin1Chars(JS::Latin1Char* chars) {
-    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  void setStringChars(SegmentsStringChars chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars.tagged()));
   }
 
-  void setTwoByteChars(char16_t* chars) {
-    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  bool hasLatin1StringChars() const {
+    MOZ_ASSERT(hasStringChars());
+    return getStringChars().has<JS::Latin1Char>();
   }
 
   int32_t getIndex() const {
