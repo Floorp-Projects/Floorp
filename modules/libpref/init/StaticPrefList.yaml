@@ -13262,6 +13262,14 @@
   value: false
   mirror: always
 
+# When true, Firefox will send a SETTINGS_MAX_CONCURRENT_STREAMS
+# parameter when push is disabled. Chrome doesn't send this,
+# so some servers misbehave when we do. See Bug 1919750.
+- name: network.http.http2.send-push-max-concurrent-frame
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.http.http2.push-allowance
   type: RelaxedAtomicInt32
   value: 131072  # 128KB
