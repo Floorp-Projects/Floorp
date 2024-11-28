@@ -1035,11 +1035,13 @@ void Http2Session::SendHello() {
     // The value portion of the setting pair is already initialized to 0
     numberOfEntries++;
 
-    NetworkEndian::writeUint16(
-        packet + kFrameHeaderBytes + (6 * numberOfEntries),
-        SETTINGS_TYPE_MAX_CONCURRENT);
-    // The value portion of the setting pair is already initialized to 0
-    numberOfEntries++;
+    if (StaticPrefs::network_http_http2_send_push_max_concurrent_frame()) {
+      NetworkEndian::writeUint16(
+          packet + kFrameHeaderBytes + (6 * numberOfEntries),
+          SETTINGS_TYPE_MAX_CONCURRENT);
+      // The value portion of the setting pair is already initialized to 0
+      numberOfEntries++;
+    }
 
     mWaitingForSettingsAck = true;
   }
