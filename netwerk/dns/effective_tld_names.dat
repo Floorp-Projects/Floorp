@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2024-11-23_08-19-30_UTC
-// COMMIT: 931546b3beb45b544d0692aa116b420fb34b9dfa
+// VERSION: 2024-11-27_21-57-17_UTC
+// COMMIT: e1b1608547b24bb84034c1083060e3293e7907d0
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -876,13 +876,17 @@ net.cu
 org.cu
 
 // cv : https://www.iana.org/domains/root/db/cv.html
-// cv : http://www.dns.cv/tldcv_portal/do?com=DS;5446457100;111;+PAGE(4000018)+K-CAT-CODIGO(RDOM)+RCNT(100); <- registration rules
+// https://ola.cv/domain-extensions-under-cv/
+// Confirmed by registry <support@ola.cv> 2024-11-26
 cv
 com.cv
 edu.cv
+id.cv
 int.cv
+net.cv
 nome.cv
 org.cv
+publ.cv
 
 // cw : https://www.uoc.cw/cw-registry
 // Confirmed by registry <registry@uoc.cw> 2024-11-19
@@ -999,16 +1003,22 @@ org.ee
 fie.ee
 
 // eg : https://www.iana.org/domains/root/db/eg.html
+// https://domain.eg/en/domain-rules/subdomain-names-types/
 eg
+ac.eg
 com.eg
 edu.eg
 eun.eg
 gov.eg
+info.eg
+me.eg
 mil.eg
 name.eg
 net.eg
 org.eg
 sci.eg
+sport.eg
+tv.eg
 
 // er : https://www.iana.org/domains/root/db/er.html
 *.er
@@ -5817,20 +5827,19 @@ pro.tt
 tv
 
 // tw : https://www.iana.org/domains/root/db/tw.html
+// https://twnic.tw/dnservice_catag.php
+// Confirmed by registry <dns@twnic.tw> 2024-11-26
 tw
-edu.tw
-gov.tw
-mil.tw
+club.tw
 com.tw
+ebiz.tw
+edu.tw
+game.tw
+gov.tw
+idv.tw
+mil.tw
 net.tw
 org.tw
-idv.tw
-game.tw
-ebiz.tw
-club.tw
-網路.tw
-組織.tw
-商業.tw
 
 // tz : http://www.tznic.or.tz/index.php/domains
 // Submitted by registry <manager@tznic.or.tz>
@@ -6650,7 +6659,7 @@ yt
 تونس
 
 // xn--kpry57d ("Taiwan", Chinese, Traditional) : TW
-// http://www.twnic.net/english/dn/dn_07a.htm
+// https://twnic.tw/dnservice_catag.php
 台灣
 
 // xn--kprw13d ("Taiwan", Chinese, Simplified) : TW
@@ -6724,7 +6733,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-10-31T15:17:42Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-11-27T15:18:01Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -10778,7 +10787,7 @@ xin
 // https://www.iana.org/domains/root/db/xn--3bst00m.html
 集团
 
-// xn--3ds443g : TLD REGISTRY LIMITED OY
+// xn--3ds443g : Beijing TLD Registry Technology Limited
 // https://www.iana.org/domains/root/db/xn--3ds443g.html
 在线
 
@@ -14936,6 +14945,12 @@ git-pages.rit.edu
 // Rocky Enterprise Software Foundation : https://resf.org
 // Submitted by Neil Hanlon <neil@resf.org>
 rocky.page
+
+// Ruhr University Bochum http://ruhr-uni-bochum.de
+// Submitted by Andreas Jobs <noc@ruhr-uni-bochum.de>
+rub.de
+ruhr-uni-bochum.de
+io.noc.ruhr-uni-bochum.de
 
 // Rusnames Limited: http://rusnames.ru/
 // Submitted by Sergey Zotov <admin@rusnames.ru>
