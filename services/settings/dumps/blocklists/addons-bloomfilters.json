@@ -3,6 +3,25 @@
     {
       "stash": {
         "blocked": [
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.10",
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.2",
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.3",
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.4",
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.8",
+          "modenhancerforyoutube@johnrigoni.me:0.0.0.9",
+          "modenhancerforyoutube@johnrigoni.me:2.0.126.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1732530110804,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1732624505328,
+      "id": "f721f400-9ffa-44b0-bc4b-88584cd551f0",
+      "last_modified": 1732624571832
+    },
+    {
+      "stash": {
+        "blocked": [
           "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.0",
           "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.1",
           "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.4",
@@ -87,5 +106,5 @@
       "last_modified": 1730745429265
     }
   ],
-  "timestamp": 1731436571183
+  "timestamp": 1732624571832
 }
