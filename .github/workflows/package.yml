@@ -38,6 +38,13 @@ jobs:
 
           #? https://github.com/mozilla/sccache#known-caveats
           export CARGO_INCREMENTAL=0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Setup Noraneko
         run: |
           cd $GITHUB_WORKSPACE
@@ -88,13 +95,6 @@ jobs:
           repository: "nyanrus/noraneko-runtime"
           path: ~/
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - name: Build noraneko
         run: |
           cd ./noraneko
