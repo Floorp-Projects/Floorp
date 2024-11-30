@@ -21,7 +21,7 @@ const modules_keys = {
 };
 
 export default async function initScripts() {
-  ChromeUtils.importESModule("resource://noraneko/BrowserGlue.sys.mjs");
+  ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   initI18N();
   Services.prefs
     .getDefaultBranch(null as unknown as string)

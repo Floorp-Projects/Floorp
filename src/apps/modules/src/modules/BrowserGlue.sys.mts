@@ -2,10 +2,10 @@
 import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
 
 function localPathToResourceURI(path: string, mtsToMjs = true) {
-  if (!path.startsWith("./")) {
-    throw Error("localpath should starts with `./`");
+  if (!path.startsWith("../")) {
+    throw Error("localpath should starts with `../`");
   }
-  const resourceURI = `resource://noraneko/${path.slice(2)}`;
+  const resourceURI = `resource://noraneko/${path.slice(3)}`;
   return mtsToMjs ? resourceURI.replace(/.mts$/, ".mjs") : resourceURI;
 }
 
@@ -16,7 +16,7 @@ const JS_WINDOW_ACTORS: {
   NRAboutNewTab: {
     child: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRAboutNewTabChild.sys.mts",
+        "../actors/NRAboutNewTabChild.sys.mts",
       ),
 
       events: {
@@ -35,7 +35,7 @@ const JS_WINDOW_ACTORS: {
   NRAboutPreferences: {
     child: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRAboutPreferencesChild.sys.mts",
+        "../actors/NRAboutPreferencesChild.sys.mts",
       ),
       events: {
         DOMContentLoaded: {},
@@ -45,10 +45,10 @@ const JS_WINDOW_ACTORS: {
   },
   NRSettings: {
     parent: {
-      esModuleURI: localPathToResourceURI("./actors/NRSettingsParent.sys.mts"),
+      esModuleURI: localPathToResourceURI("../actors/NRSettingsParent.sys.mts"),
     },
     child: {
-      esModuleURI: localPathToResourceURI("./actors/NRSettingsChild.sys.mts"),
+      esModuleURI: localPathToResourceURI("../actors/NRSettingsChild.sys.mts"),
       events: {
         /**
          * actorCreated seems to require any of events for init
@@ -64,11 +64,13 @@ const JS_WINDOW_ACTORS: {
   NRTabManager: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRTabManagerParent.sys.mts",
+        "../actors/NRTabManagerParent.sys.mts",
       ),
     },
     child: {
-      esModuleURI: localPathToResourceURI("./actors/NRTabManagerChild.sys.mts"),
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRTabManagerChild.sys.mts",
+      ),
       events: {
         DOMDocElementInserted: {},
       },
@@ -78,12 +80,12 @@ const JS_WINDOW_ACTORS: {
   NRSyncManager: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRSyncManagerParent.sys.mts",
+        "../actors/NRSyncManagerParent.sys.mts",
       ),
     },
     child: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRSyncManagerChild.sys.mts",
+        "../actors/NRSyncManagerChild.sys.mts",
       ),
       events: {
         DOMDocElementInserted: {},
@@ -94,12 +96,12 @@ const JS_WINDOW_ACTORS: {
   NRAppConstants: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRAppConstantsParent.sys.mts",
+        "../actors/NRAppConstantsParent.sys.mts",
       ),
     },
     child: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRAppConstantsChild.sys.mts",
+        "../actors/NRAppConstantsChild.sys.mts",
       ),
       events: {
         DOMDocElementInserted: {},
@@ -110,12 +112,12 @@ const JS_WINDOW_ACTORS: {
   NRRestartBrowser: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRRestartBrowserParent.sys.mts",
+        "../actors/NRRestartBrowserParent.sys.mts",
       ),
     },
     child: {
       esModuleURI: localPathToResourceURI(
-        "./actors/NRRestartBrowserChild.sys.mts",
+        "../actors/NRRestartBrowserChild.sys.mts",
       ),
       events: {
         DOMDocElementInserted: {},

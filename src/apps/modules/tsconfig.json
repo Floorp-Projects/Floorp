@@ -6,6 +6,9 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noImplicitReturns": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }
