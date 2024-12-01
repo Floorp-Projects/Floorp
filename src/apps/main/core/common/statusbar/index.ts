@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createRootHMR, render } from "@nora/solid-xul";
-import { StatusBarManager } from "./statusbar-manager";
 import { ContextMenu } from "./context-menu";
 import { StatusBar } from "./statusbar";
+import { StatusBarManager } from "./statusbar-manager";
 
 export let manager: StatusBarManager;
 
@@ -42,7 +42,7 @@ export function init() {
   manager.init();
 
   import.meta.hot?.accept((m) => {
-    m?.initStatusbar();
+    m?.init();
   });
 }
 

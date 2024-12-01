@@ -11,7 +11,7 @@ export function init() {
   render(ContextMenu, document.querySelector("#tabContextMenu"), {
     marker: document.querySelector("#context_selectAllTabs")!,
   });
-  import.meta.hot?.accept((m) => m?.initPrivateContainer());
+  import.meta.hot?.accept((m) => m?.init());
   // Inject menu item to open link in private container.
   window.gFloorpPrivateContainer = gFloorpPrivateContainer.getInstance();
 }
