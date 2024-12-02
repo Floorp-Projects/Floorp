@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/type";
 import { zWorkspacesServicesConfigs } from "../../../apps/main/core/common/workspaces/utils/type";
+import { zPanelSidebarConfig } from "../../../apps/main/core/common/panel-sidebar/utils/type";
 
 /* Home */
 export const zAccountInfo = z.object({
@@ -74,3 +75,15 @@ export const zAccountsFormData = z.object({
 });
 
 export type AccountsFormData = z.infer<typeof zAccountsFormData>;
+
+/* Panel Sidebar */
+export const zPanelSidebarFormData = z.object({
+  enabled: z.boolean(),
+  autoUnload: zPanelSidebarConfig.shape.autoUnload,
+  position_start: zPanelSidebarConfig.shape.position_start,
+  displayed: zPanelSidebarConfig.shape.displayed,
+  webExtensionRunningEnabled:
+    zPanelSidebarConfig.shape.webExtensionRunningEnabled,
+});
+
+export type PanelSidebarFormData = z.infer<typeof zPanelSidebarFormData>;

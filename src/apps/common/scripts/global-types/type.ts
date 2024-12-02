@@ -5,8 +5,7 @@
 
 import { z } from "zod";
 
-export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
-
+/** Design configs */
 export const zFloorpDesignConfigs = z.object({
   globalConfigs: z.object({
     faviconColor: z.boolean(),
@@ -47,3 +46,12 @@ export const zFloorpDesignConfigs = z.object({
     tabOpenPosition: z.number(),
   }),
 });
+
+export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
+
+/** Panel sidebar configs */
+export const zPanelSidebarConfigs = z.object({
+  enabled: z.boolean(),
+});
+
+export type zPanelSidebarConfigsType = z.infer<typeof zPanelSidebarConfigs>;

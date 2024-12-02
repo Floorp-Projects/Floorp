@@ -67,6 +67,7 @@ export class WorkspaceManageModal {
             id="name"
             class="form-control"
             value={targetWorkspace.name}
+            placeholder="Enter a name for this workspace"
           />
         </form>
 

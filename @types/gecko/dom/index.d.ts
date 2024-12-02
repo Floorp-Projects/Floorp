@@ -15,10 +15,16 @@
 /* NORA START */
 declare var window: Window;
 declare var Components: nsIXPCComponents;
-declare var Cc: nsIXPCComponents_Classes;
 declare var Cu: nsIXPCComponents_Utils;
 declare var Ci: nsIXPCComponents_Interfaces;
 declare var Services: JSServices;
+declare var Cc: nsIXPCComponents_Classes & {
+  [key: string]: {
+    getService: (
+      t: typeof Ci[keyof typeof Ci],
+    ) => unknown;
+  };
+};
 interface CSSStyleDeclaration {
     display: string;
     flex: string;

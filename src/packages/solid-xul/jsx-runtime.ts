@@ -65,7 +65,10 @@ declare module "solid-js" {
         | "end_before"
         | "bottomleft topleft"
         | "overlap";
-      onpopupshowing?: string | ((event: Event) => void);
+      onpopupshowing?: string;
+      onpopuphiding?: string;
+      onPopupShowing?: (e: Event) => void;
+      onPopupHiding?: (e: Event) => void;
     }
 
     interface XULPanelElement extends XULElementBase {
@@ -100,7 +103,9 @@ declare module "solid-js" {
       context?: string;
     }
 
-    interface XULTabElement extends XULElementBase, HTMLAttributes<HTMLElement> {
+    interface XULTabElement
+      extends XULElementBase,
+        HTMLAttributes<HTMLElement> {
       onwheel?: EventHandlerUnion<HTMLElement, WheelEvent>;
     }
 

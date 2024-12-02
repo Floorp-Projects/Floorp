@@ -353,6 +353,11 @@
   --chakra-colors-fg-muted: var(--chakra-colors-gray-600);
   --chakra-colors-fg-subtle: var(--chakra-colors-gray-500);
   --chakra-colors-fg-on-accent: var(--chakra-colors-white);
+  --modal-input-font-size: var(--chakra-fontSizes-xl);
+  --modal-input-padding: var(--chakra-space-4);
+  --modal-input-border-radius: var(--chakra-radii-md);
+  --modal-input-height: var(--chakra-sizes-9);
+  --modal-select-height: var(--chakra-sizes-14);
 }
 
 .modal-overlay {
@@ -369,7 +374,7 @@
 }
 
 .modal {
-  --modal-bg: var(--chakra-colors-gray-700);
+  --modal-bg: var(--chakra-colors-gray-800);
   --modal-shadow: var(--chakra-shadows-dark-lg);
   display: flex;
   flex-direction: column;
@@ -389,9 +394,10 @@
   box-shadow: var(--modal-shadow);
 
   font-family: var(--chakra-fonts-body);
+  font-feature-settings: "kern";
+  font-weight: var(--chakra-fontWeights-normal);
   color: var(--chakra-colors-fg);
   line-height: var(--chakra-lineHeights-base);
-  font-feature-settings: "kern";
   max-width: var(--chakra-sizes-2xl);
   min-width: var(--chakra-sizes-xl);
   max-height: calc(100vh - var(--chakra-space-32));
@@ -401,7 +407,8 @@
 .modal-header {
   flex: 0 1 0%;
   padding: var(--chakra-space-8);
-  font-size: var(--chakra-fontSizes-2xl);
+  padding-bottom: 0;
+  font-size: var(--chakra-fontSizes-3xl);
   font-weight: var(--chakra-fontWeights-semibold);
 }
 
@@ -425,19 +432,12 @@
   gap: var(--chakra-space-1);
 }
 
-.modal input {
-  /* input variables */
-  --input-font-size: var(--chakra-fontSizes-md);
-  --input-padding: var(--chakra-space-4);
-  --input-border-radius: var(--chakra-radii-md);
-  --input-height: var(--chakra-sizes-7);
-
-  /* input */
-  height: var(--input-height);
-  font-size: var(--input-font-size);
-  padding-inline-start: var(--input-padding);
-  padding-inline-end: var(--input-padding);
-  border-radius: var(--input-border-radius);
+.modal input:not([type="checkbox"]) {
+  height: var(--modal-input-height);
+  font-size: var(--modal-input-font-size);
+  padding-inline-start: var(--modal-input-padding);
+  padding-inline-end: var(--modal-input-padding);
+  border-radius: var(--modal-input-border-radius);
   min-width: 0px;
   outline: transparent solid 2px;
   outline-offset: 2px;
@@ -461,14 +461,23 @@
   color: var(--chakra-colors-gray-300);
 }
 
+.modal input[type="checkbox"] {
+  margin-top: var(--chakra-space-2);
+}
+
 .modal select,
 .modal menulist {
-  background: #2d3748 !important;
+  min-height: var(--modal-select-height);
+  height: var(--modal-select-height);
+  font-size: var(--modal-input-font-size);
+  padding-inline-start: var(--modal-input-padding);
+  padding-inline-end: var(--modal-input-padding);
+  background-color: inherit;
+  border-radius: var(--modal-input-border-radius);
   border-width: 1px;
   border-style: solid;
   border-image: none;
   border-color: var(--chakra-colors-gray-600);
-  min-height: var(--chakra-sizes-12) !important;
 }
 
 .modal button:not(:last-child) {
@@ -506,25 +515,37 @@
   word-wrap: break-word;
 }
 
+.modal button:hover {
+  background: var(--chakra-colors-whiteAlpha-300);
+}
+
+.modal button:active {
+  background: var(--chakra-colors-whiteAlpha-400);
+}
+
 .modal button.primary {
   background: var(--chakra-colors-blue-200);
   color: var(--chakra-colors-blue-900);
 }
 
+.modal button.primary:hover {
+  background: var(--chakra-colors-blue-300);
+}
+
+.modal button.primary:active {
+  background: var(--chakra-colors-blue-400);
+}
+
 .modal label {
   display: block;
   text-align: start;
-  font-size: var(--chakra-fontSizes-md);
+  font-size: var(--chakra-fontSizes-2xl);
+  font-weight: var(--chakra-fontWeights-xl);
+  margin-top: var(--chakra-space-2);
   margin-inline-end: var(--chakra-space-3);
-  margin-bottom: var(--chakra-space-2);
-  font-weight: var(--chakra-fontWeights-medium);
   transition-property: var(--chakra-transition-property-common);
   transition-duration: var(--chakra-transition-duration-normal);
   opacity: 1;
-  border-width: 0;
-  border-style: solid;
-  box-sizing: border-box;
-  word-wrap: break-word;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -542,4 +563,20 @@
   .modal input::placeholder {
     color: var(--chakra-colors-gray-500);
   }
+}
+
+/*** CSS For Class */
+
+.flex-row-gap {
+  display: flex;
+  flex-direction: row;
+  gap: var(--chakra-space-4);
+}
+
+[data-hidden] {
+  display: none;
+}
+
+.modal-error {
+  color: var(--chakra-colors-red-500);
 }

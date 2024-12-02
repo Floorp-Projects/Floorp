@@ -30,7 +30,9 @@ export class SplitViewManager {
   }
 
   private get markerElement() {
-    return document?.getElementById("urlbar-searchmode-switcher") as XULElement;
+    return document?.getElementById(
+      ".urlbar-searchmode-and-input-box-container",
+    ) as XULElement;
   }
 
   private ToolbarElement() {

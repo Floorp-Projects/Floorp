@@ -37,8 +37,6 @@ export default function Accounts(props: AccountsProps) {
       icon={
         <IconMdiAccountCog style={{ fontSize: "24px", color: "#ff7708" }} />
       }
-      footerLink="https://docs.floorp.app/ja/docs/other/accounts"
-      footerLinkText={t("accounts.manageAccounts")}
     >
       <HStack spacing={6} align="stretch" mb={4}>
         <Avatar
@@ -60,7 +58,7 @@ export default function Accounts(props: AccountsProps) {
         </VStack>
       </HStack>
       <Link
-        href="https://docs.floorp.app/ja/docs/other/contributors"
+        href="https://accounts.firefox.com/signin"
         target="_blank"
         fontSize="sm"
         display="flex"
@@ -102,6 +100,11 @@ export default function Accounts(props: AccountsProps) {
         fontSize="sm"
         display="flex"
         alignItems="center"
+        onClick={(e) => {
+          e.preventDefault();
+          window.NRAddTab("about:preferences#sync");
+        }}
+        target="_blank"
         color={useColorModeValue("blue.500", "blue.400")}
       >
         {t("accounts.manageFirefoxFeatureSync")}
