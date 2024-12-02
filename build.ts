@@ -159,7 +159,7 @@ async function run(mode: "dev" | "test" = "dev") {
       configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest("_dist/bin", true),
+    injectManifest("_dist/bin", true, "noraneko-dev"),
     (async () => {
       await injectXHTML("_dist/bin");
       await injectXHTMLDev("_dist/bin");
@@ -243,6 +243,10 @@ async function release(mode: "before" | "after") {
       buildVite({
         configFile: r("./src/apps/designs/vite.config.ts"),
         root: r("./src/apps/designs"),
+      }),
+      buildVite({
+        configFile: r("./src/apps/settings/vite.config.ts"),
+        root: r("./src/apps/settings"),
       }),
 
       //applyMixin(binPath),

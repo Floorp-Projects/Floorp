@@ -41,5 +41,8 @@ const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
   `);
 nav_root.appendChild(fragment);
 document.querySelector("#category-nora-link").addEventListener("click", () => {
-  window.location.href = "http://localhost:5183/";
+  window.location.href =
+    import.meta.env.MODE === "dev"
+      ? "http://localhost:5183/"
+      : "chrome://noraneko-settings/index.html";
 });

@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@svgr/core':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.6.2)
+      '@svgr/plugin-jsx':
+        specifier: ^8.1.0
+        version: 8.1.0(@svgr/core@8.1.0(typescript@5.6.2))
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
@@ -39,6 +45,36 @@ importers:
       '@bytecodealliance/preview2-shim':
         specifier: ^0.17.0
         version: 0.17.0
+      '@iconify-json/carbon':
+        specifier: ^1.2.4
+        version: 1.2.4
+      '@iconify-json/codicon':
+        specifier: ^1.2.4
+        version: 1.2.4
+      '@iconify-json/fluent-mdl2':
+        specifier: ^1.2.0
+        version: 1.2.0
+      '@iconify-json/ic':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@iconify-json/line-md':
+        specifier: ^1.2.2
+        version: 1.2.2
+      '@iconify-json/lucide':
+        specifier: ^1.2.17
+        version: 1.2.17
+      '@iconify-json/material-symbols':
+        specifier: ^1.2.8
+        version: 1.2.8
+      '@iconify-json/material-symbols-light':
+        specifier: ^1.2.8
+        version: 1.2.8
+      '@iconify-json/mdi':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@iconify-json/mingcute':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@swc-node/register':
         specifier: ^1.10.9
         version: 1.10.9(@swc/core@1.7.39(@swc/helpers@0.5.13))(@swc/types@0.1.13)(typescript@5.6.2)
@@ -182,12 +218,6 @@ importers:
       '@svgr/plugin-jsx':
         specifier: ^8.1.0
         version: 8.1.0(@svgr/core@8.1.0(typescript@5.6.3))
-      '@trpc/client':
-        specifier: ^10.45.2
-        version: 10.45.2(@trpc/server@10.45.2)
-      '@trpc/server':
-        specifier: ^10.45.2
-        version: 10.45.2
       framer-motion:
         specifier: ^11.11.9
         version: 11.11.9(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1213,6 +1243,36 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@iconify-json/carbon@1.2.4':
+    resolution: {integrity: sha512-DhW2jjMVGwV0DLHc0cmDYohdtGxMra8UuwgjHrryPy+rQX4gXhJwCBBVP2h2UG/92AoRCTn7zUJve4WvY5MLYg==}
+
+  '@iconify-json/codicon@1.2.4':
+    resolution: {integrity: sha512-NXULTvat56uJoFkiyMmm3HsATKGzqaBbi/A8dfbpn1y6prNAW6A3U5AfGTmW20NoNonEKZ73fxFZZ7yQ8yCPfg==}
+
+  '@iconify-json/fluent-mdl2@1.2.0':
+    resolution: {integrity: sha512-V/8AmNxszliUbFv6sNEVJM1JHshB3k7m/yjysG8fi9hTMkIW4v8XncJJZJTPNCiZRY12Lm/yKUENa8v1X/goTA==}
+
+  '@iconify-json/ic@1.2.1':
+    resolution: {integrity: sha512-UjL/bjJP/T5EV881+hTzcfTKVo0KEUjhnMiJcLtPzNgPtU2KZZmRx8BSKKR61H4CN/5FTEbyawGyG0aEt3SwGQ==}
+
+  '@iconify-json/line-md@1.2.2':
+    resolution: {integrity: sha512-UCYTTO5aARoVbOOPCaomOoXDC8maSolIV8KVDmK9VuzfjpqkMg/vJo/nWaoQPIf310SZjdvAqHvIwsbzr6J+sw==}
+
+  '@iconify-json/lucide@1.2.17':
+    resolution: {integrity: sha512-y+4P1DxD2h4d4fGYxikUdMf0o21DD0GIE/YIgixEBIXKbE90LTOFqmoxkGyPpaGk3vT2qE2w/28+sdmBMFsd5w==}
+
+  '@iconify-json/material-symbols-light@1.2.8':
+    resolution: {integrity: sha512-EWj/nzvYXVm5sPNbhB7kHR35HClXZyVErytGkaNa6DSp7iFSHi1iG1sg9gzZX8SbR9pz7zjHs5m+p4D+JFJBSA==}
+
+  '@iconify-json/material-symbols@1.2.8':
+    resolution: {integrity: sha512-X89QwN5eRMVHEfm5HWMYCZxkUqUPQM2TNv7D8rIPUn2jTzDmgjgiTMomn3DOXWyh1/geHPnTt1bTSFcUXlpGbw==}
+
+  '@iconify-json/mdi@1.2.1':
+    resolution: {integrity: sha512-dSkQU78gsZV6Yxnq78+LuX7jzeFC/5NAmz7O3rh558GimGFcwMVY/OtqRowIzjqJBmMmWZft7wkFV4TrwRXjlg==}
+
+  '@iconify-json/mingcute@1.2.1':
+    resolution: {integrity: sha512-rv682dBsjKUs1/AVg5tOegAunjCLuqyQufXU0D6Kbmgg5jMoUcl/9K2C+9MAiepBP0Eyb05YwXQvGaXMLPu/YA==}
 
   '@iconify/json@2.2.263':
     resolution: {integrity: sha512-pY6Jpfz76F+OURDt5+J9njuQSzOLKECA3ah8C210T9VfXdtkpkYWA6+l6ZCHOvhABjcoGjBvcTub8HV9QNacrw==}
@@ -4889,6 +4949,46 @@ snapshots:
   '@esbuild/win32-x64@0.24.0':
     optional: true
 
+  '@iconify-json/carbon@1.2.4':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/codicon@1.2.4':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/fluent-mdl2@1.2.0':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/ic@1.2.1':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/line-md@1.2.2':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/lucide@1.2.17':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/material-symbols-light@1.2.8':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/material-symbols@1.2.8':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/mdi@1.2.1':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/mingcute@1.2.1':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify/json@2.2.263':
     dependencies:
       '@iconify/types': 2.0.0
@@ -5283,6 +5383,17 @@ snapshots:
       '@svgr/babel-plugin-transform-react-native-svg': 8.1.0(@babel/core@7.25.9)
       '@svgr/babel-plugin-transform-svg-component': 8.0.0(@babel/core@7.25.9)
 
+  '@svgr/core@8.1.0(typescript@5.6.2)':
+    dependencies:
+      '@babel/core': 7.25.9
+      '@svgr/babel-preset': 8.1.0(@babel/core@7.25.9)
+      camelcase: 6.3.0
+      cosmiconfig: 8.3.6(typescript@5.6.2)
+      snake-case: 3.0.4
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   '@svgr/core@8.1.0(typescript@5.6.3)':
     dependencies:
       '@babel/core': 7.25.9
@@ -5298,6 +5409,16 @@ snapshots:
     dependencies:
       '@babel/types': 7.25.9
       entities: 4.5.0
+
+  '@svgr/plugin-jsx@8.1.0(@svgr/core@8.1.0(typescript@5.6.2))':
+    dependencies:
+      '@babel/core': 7.25.9
+      '@svgr/babel-preset': 8.1.0(@babel/core@7.25.9)
+      '@svgr/core': 8.1.0(typescript@5.6.2)
+      '@svgr/hast-util-to-babel-ast': 8.0.0
+      svg-parser: 2.0.4
+    transitivePeerDependencies:
+      - supports-color
 
   '@svgr/plugin-jsx@8.1.0(@svgr/core@8.1.0(typescript@5.6.3))':
     dependencies:
@@ -5868,6 +5989,15 @@ snapshots:
       parse-json: 5.2.0
       path-type: 4.0.0
       yaml: 1.10.2
+
+  cosmiconfig@8.3.6(typescript@5.6.2):
+    dependencies:
+      import-fresh: 3.3.0
+      js-yaml: 4.1.0
+      parse-json: 5.2.0
+      path-type: 4.0.0
+    optionalDependencies:
+      typescript: 5.6.2
 
   cosmiconfig@8.3.6(typescript@5.6.3):
     dependencies:

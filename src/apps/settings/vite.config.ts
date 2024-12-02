@@ -29,12 +29,9 @@ export default defineConfig({
     outDir: r("_dist"),
   },
 
-  //? https://github.com/parcel-bundler/lightningcss/issues/685
-  //? lepton uses System Color and that occurs panic.
-  //? when the issue resolved, gladly we can use lightningcss
-  // css: {
-  //   transformer: "lightningcss",
-  // },
+  css: {
+    transformer: "lightningcss",
+  },
 
   plugins: [
     react(),
@@ -46,6 +43,7 @@ export default defineConfig({
           extension: "jsx",
         }),
       ],
+      dts: true,
     }),
     tsconfigPaths(),
     CustomHmr(),
