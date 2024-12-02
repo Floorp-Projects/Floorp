@@ -51,7 +51,7 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
 export function BrowserDesignElement() {
   [100, 500].forEach((time) => {
     setTimeout(() => {
-      window.gURLBar._updateLayoutBreakoutDimensions();
+      window.gURLBar.updateLayoutBreakout();
     }, time);
   });
 

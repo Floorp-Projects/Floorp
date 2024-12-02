@@ -3,12 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- import {
-  createEffect,
-  createSignal,
-  onCleanup
-} from "solid-js";
-import type { } from "solid-styled-jsx";
+import { createEffect, createSignal, onCleanup } from "solid-js";
+import type {} from "solid-styled-jsx";
 
 export class DownloadBarManager {
   _showDownloadBar = createSignal(
@@ -46,7 +42,7 @@ export class DownloadBarManager {
     });
     //move elem to bottom of window
     document
-      .querySelector("#appcontent")
+      .querySelector("#tabbrowser-tabbox")
       ?.appendChild(document.getElementById("downloadsPanel")!);
   }
 

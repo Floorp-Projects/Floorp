@@ -7,8 +7,11 @@ import { config } from "../../designs/configs";
 
 export function checkPaddingEnabled() {
   const isPaddingTopEnabled = config().tabbar.paddingEnabled;
-  const titlebar: null | XULElement | undefined =
-    document?.querySelector("#titlebar");
+  const tabsToolbar: null | XULElement | undefined =
+    document?.querySelector("#TabsToolbar");
 
-  titlebar?.style.setProperty("padding", isPaddingTopEnabled ? "5px" : "0px");
+  tabsToolbar?.style.setProperty(
+    "padding",
+    isPaddingTopEnabled ? "5px" : "0px",
+  );
 }

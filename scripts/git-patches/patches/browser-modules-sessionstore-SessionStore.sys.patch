@@ -1,0 +1,63 @@
+diff --git a/browser/modules/sessionstore/SessionStore.sys.mjs b/browser/modules/sessionstore/SessionStore.sys.mjs
+index 1b986ca..fda81da 100644
+--- ./browser/modules/sessionstore/SessionStore.sys.mjs
++++ ./browser/modules/sessionstore/SessionStore.sys.mjs
+@@ -1089,6 +1089,27 @@ var SessionStoreInternal = {
+     );
+ 
+     if (state) {
++      /*@nora:inject:start*/
++      // This code needs to be injected to restore the windows
++      // Some of reasons, Floorp Webpanel breaks last closed windows
++      // We consider the last closed windows as the last session
++      if (!state.windows.length) {
++        console.warn("Floorp Injections: No windows found in state");
++        const lastSessionWindows = state._closedWindows;
++        let closedTime = lastSessionWindows[0].closedAt;
++        for (let i = 0; i < lastSessionWindows.length; i++) {
++          let closedWindowTime = lastSessionWindows[i].closedAt;
++          // If the last closed window is closed in +-10000, we will restore it
++          if (
++            closedWindowTime >= closedTime - 10000 &&
++            closedWindowTime <= closedTime + 10000
++          ) {
++            state.windows.push(lastSessionWindows[i]);
++            state._closedWindows.splice(i, 1);
++          }
++        }
++      }
++      /*@nora:inject:end*/
+       try {
+         // If we're doing a DEFERRED session, then we want to pull pinned tabs
+         // out so they can be restored.
+@@ -4567,6 +4588,30 @@ var SessionStoreInternal = {
+       winData.sizemodeBeforeMinimized = winData.sizemode;
+     }
+ 
++    /*@nora:inject:start*/
++    // Old Workspaces code for compatibility
++    let workspacesWindowId = aWindow.workspacesWindowId;
++    if (workspacesWindowId) {
++      winData.workspacesWindowId = workspacesWindowId;
++    } else {
++      delete winData.workspacesWindowId;
++    }
++
++    // New Workspaces code
++    // Save Window Attributes for Restore Workspace feature
++    let floorpSelectedWorkspace = aWindow.floorpSelectedWorkspace;
++    if (floorpSelectedWorkspace) {
++      winData.floorpSelectedWorkspace = floorpSelectedWorkspace;
++    } else {
++      delete winData.floorpSelectedWorkspace;
++    }
++
++    // Make do not save Floorp's webpanel & PWA or SSB windows
++    let floorpShouldNotRestore = !!(
++      aWindow.floorpWebPanelWindow || aWindow.floorpSsbWindow
++    );
++    winData.floorpShouldNotRestore = floorpShouldNotRestore;
++    /*@nora:inject:end*/
+     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
+       return aWindow[aItem] && !aWindow[aItem].visible;
+     });

@@ -9,3 +9,6 @@
 :root[inFullscreen]:not([macOSNativeFullscreen]) #titlebar {
   display: none !important;
 }
+#TabsToolbar[class] {
+  flex: unset !important;
+}

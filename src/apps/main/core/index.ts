@@ -21,52 +21,64 @@ const modules_keys = {
 };
 
 export default async function initScripts() {
+  // Import required modules and initialize i18n
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   initI18N();
-  Services.prefs
-    .getDefaultBranch(null as unknown as string)
-    .setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
-  Services.prefs.lockPref("noraneko.features.all");
 
-  Services.prefs
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    .getDefaultBranch(null as any)
-    .setStringPref("noraneko.features.enabled", JSON.stringify(modules_keys));
+  // Set up preferences for features
+  const prefs = Services.prefs.getDefaultBranch(null as unknown as string);
+  prefs.setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
+  Services.prefs.lockPref("noraneko.features.all");
+  prefs.setStringPref(
+    "noraneko.features.enabled",
+    JSON.stringify(modules_keys),
+  );
+
+  // Get enabled features from preferences
   const enabled_features = JSON.parse(
     Services.prefs.getStringPref("noraneko.features.enabled", "{}"),
   ) as typeof modules_keys;
-  const modules: Array<{
-    init?: typeof Function;
-  }> = [];
-  //import("./example/counter/index");
-  for (const [categoryKey, categoryValue] of Object.entries(MODULES)) {
-    for (const moduleName in categoryValue) {
-      (async () => {
-        try {
-          if (
-            categoryKey in enabled_features &&
-            enabled_features[
-              categoryKey as keyof typeof enabled_features
-            ].includes(moduleName)
-          )
-            modules.push(
-              (await categoryValue[moduleName]()) as {
-                init?: typeof Function;
-              },
-            );
-        } catch (e) {
-          console.error(e);
+
+  // Load enabled modules
+  const modules = await loadEnabledModules(enabled_features);
+
+  // Initialize modules after session is ready
+  await initializeModules(modules);
+}
+
+async function loadEnabledModules(enabled_features: typeof modules_keys) {
+  const modules: Array<{ init?: typeof Function }> = [];
+
+  const loadModulePromises = Object.entries(MODULES).flatMap(
+    ([categoryKey, categoryValue]) =>
+      Object.keys(categoryValue).map(async (moduleName) => {
+        if (
+          categoryKey in enabled_features &&
+          enabled_features[
+            categoryKey as keyof typeof enabled_features
+          ].includes(moduleName)
+        ) {
+          try {
+            const module = await categoryValue[moduleName]();
+            modules.push(module as { init?: typeof Function });
+          } catch (e) {
+            console.error(`Failed to load module ${moduleName}:`, e);
+          }
         }
-      })();
-    }
-  }
-  //@ts-expect-error ii
-  SessionStore.promiseInitialized.then(async () => {
-    //CustomShortcutKey.getInstance();
-    modules.forEach((m) => {
-      try {
-        m?.init?.();
-      } catch {}
-    });
+      }),
+  );
+
+  await Promise.all(loadModulePromises);
+  return modules;
+}
+
+async function initializeModules(modules: Array<{ init?: typeof Function }>) {
+  // @ts-expect-error SessionStore type not defined
+  await SessionStore.promiseInitialized;
+
+  modules.forEach((module) => {
+    try {
+      module?.init?.();
+    } catch {}
   });
 }

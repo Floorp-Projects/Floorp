@@ -1,0 +1,34 @@
+diff --git a/browser/chrome/browser/res/activity-stream/lib/TopSitesFeed.sys.mjs b/browser/chrome/browser/res/activity-stream/lib/TopSitesFeed.sys.mjs
+index 928961f..b92b039 100644
+--- ./browser/chrome/browser/res/activity-stream/lib/TopSitesFeed.sys.mjs
++++ ./browser/chrome/browser/res/activity-stream/lib/TopSitesFeed.sys.mjs
+@@ -334,7 +334,18 @@ export class ContileIntegration {
+   constructor(topSitesFeed) {
+     this._topSitesFeed = topSitesFeed;
+     this._lastPeriodicUpdate = 0;
+-    this._sites = [];
++    /*@nora:inject:start*/
++    this._sites = [
++      {
++        id: 0,
++        name: "CubeSoft",
++        url: "https://www.cube-soft.jp",
++        image_url:
++          "https://raw.githubusercontent.com/cube-soft/cube.assets/master/cubesoft/logo/256px.png",
++        image_size: 200,
++      },
++    ];
++    /*@nora:inject:end*/
+     // The Share-of-Voice object managed by Shepherd and sent via Contile.
+     this._sov = null;
+     this.cache = this.PersistentCache(CACHE_KEY, true);
+@@ -492,6 +503,9 @@ export class ContileIntegration {
+ 
+   // eslint-disable-next-line max-statements
+   async _fetchSites() {
++    /*@nora:inject:start*/
++    return false;
++    /*@nora:inject:end*/
+     if (
+       !lazy.NimbusFeatures.newtab.getVariable(
+         NIMBUS_VARIABLE_CONTILE_ENABLED

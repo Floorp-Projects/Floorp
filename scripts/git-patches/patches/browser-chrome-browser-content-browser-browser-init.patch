@@ -1,0 +1,151 @@
+diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+index 849a609..24a07fc 100644
+--- ./browser/chrome/browser/content/browser/browser-init.js
++++ ./browser/chrome/browser/content/browser/browser-init.js
+@@ -127,10 +127,19 @@ var gBrowserInit = {
+ 
+   onDOMContentLoaded() {
+     // This needs setting up before we create the first remote browser.
+-    window.docShell.treeOwner
+-      .QueryInterface(Ci.nsIInterfaceRequestor)
+-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
+-    window.browserDOMWindow = new nsBrowserAccess();
++    /*@nora:inject:start*/
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (!webPanelId) {
++      // This needs setting up before we create the first remote browser.
++      window.docShell.treeOwner
++        .QueryInterface(Ci.nsIInterfaceRequestor)
++        .getInterface(Ci.nsIAppWindow).XULBrowserWindow =
++        window.XULBrowserWindow;
++      window.browserDOMWindow = new nsBrowserAccess();
++    }
++    /*@nora:inject:end*/
+ 
+     gBrowser = window._gBrowser;
+     delete window._gBrowser;
+@@ -164,7 +173,7 @@ var gBrowserInit = {
+     }
+     for (let area of CustomizableUI.areas) {
+       let type = CustomizableUI.getAreaType(area);
+-      if (type == CustomizableUI.TYPE_TOOLBAR) {
++      if (type == CustomizableUI.TYPE_TOOLBAR/*@nora:inject:start*/&& area !== "statusBar"/*@nora:inject:end*/) {
+         let node = document.getElementById(area);
+         CustomizableUI.registerToolbarNode(node);
+       }
+@@ -980,6 +989,92 @@ var gBrowserInit = {
+       //                      window (for this case, all other arguments are
+       //                      ignored).
+       let uri = window.arguments?.[0];
++      /*@nora:inject:start*/
++      if (uri) {
++        try {
++          // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
++          if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
++            let parseSsbArgs = uri.split(",");
++            let id = parseSsbArgs[1];
++
++            // Replace start uri
++            uri = parseSsbArgs[0];
++
++            document.documentElement.setAttribute(
++              "FloorpEnableSSBWindow",
++              "true"
++            );
++
++            document.documentElement.setAttribute("FloorpSSBId", id);
++
++            // Add SSB Window or Tab Attribute
++            // This attribute is used to make do not restore the window or tab when the browser is restarted.
++            window.floorpSsbWindow = true;
++
++            SessionStore.promiseInitialized.then(() => {
++              // Load SSB Support Script & CSS
++              gBrowser.tabs.forEach(tab => {
++                tab.setAttribute("floorpSSB", "true");
++              });
++              window.gBrowser.floorpSsbWindow = true;
++              import("chrome://floorp/content/browser-ssb-window.mjs");
++            });
++          }
++        } catch (e) {
++          // Do nothing
++        }
++      }
++
++      if (
++        Services.prefs.getBoolPref(
++          "floorp.browser.ssb.separation.enabled",
++          false
++        )
++      ) {
++          SessionStore.promiseInitialized.then(() => {
++            const windows = Services.wm.getEnumerator("navigator:browser");
++          const excludedWindows = Array.from(windows).filter(
++            win => win != window
++          );
++          if (
++            (window.SessionStartup.isAutomaticRestoreEnabled() &&
++              excludedWindows.length === 0 &&
++              window.workspacesWindowId == null) ||
++              window.workspacesWindowId == undefined ||
++              window.workspacesWindowId == ""
++          ) {
++            // If there is no other browser window, we need to restore the last session.
++            const closedWindows = window.SessionStore.getClosedWindowData();
++            const closedWindow = closedWindows[0] ? closedWindows[0] : null;
++            if (closedWindow && closedWindow.closedId) {
++              // Last window should be restored.
++              // But secound or later window should not be restored if it was not closed recent of 1st window closed time.
++              // recent is 10000ms or -10000ms.
++              window.SessionStore.undoCloseById(closedWindow.closedId);
++              window.close();
++            }
++          }
++          });
++        }
++        const SsbPrefName = "browser.ssb.startup";
++        let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
++        if (needSsbOpenWindow) {
++          let id = Services.prefs.getStringPref(SsbPrefName);
++          var { SiteSpecificBrowserIdUtils } = ChromeUtils.importESModule(
++            "chrome://floorp/content/modules/ssb/SiteSpecificBrowserIdUtils.mjs"
++          );
++
++        try {
++          window.setTimeout(() => {
++            SiteSpecificBrowserIdUtils.runSsbById(id);
++            Services.prefs.clearUserPref(SsbPrefName);
++            window.minimize();
++          }, 2000);
++        } catch (e) {
++          console.error(e);
++        }
++      }
++      /*@nora:inject:end*/
+       if (!uri || window.XULElement.isInstance(uri)) {
+         return null;
+       }
+@@ -1147,9 +1242,16 @@ var gBrowserInit = {
+     // Final window teardown, do this last.
+     gBrowser.destroy();
+     window.XULBrowserWindow = null;
+-    window.docShell.treeOwner
+-      .QueryInterface(Ci.nsIInterfaceRequestor)
+-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
+-    window.browserDOMWindow = null;
++    /*@nora:inject:start*/
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (!webPanelId) {
++      window.docShell.treeOwner
++        .QueryInterface(Ci.nsIInterfaceRequestor)
++        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
++      window.browserDOMWindow = null;
++    }
++    /*@nora:inject:end*/
+   },
+ };

@@ -1,0 +1,70 @@
+diff --git a/browser/modules/AsyncTabSwitcher.sys.mjs b/browser/modules/AsyncTabSwitcher.sys.mjs
+index 96103bc..c93cde1 100644
+--- ./browser/modules/AsyncTabSwitcher.sys.mjs
++++ ./browser/modules/AsyncTabSwitcher.sys.mjs
+@@ -77,6 +77,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
+  * actually takes place. Therefore, we don't unload the old tab
+  * until the next MozAfterPaint event.
+  */
++
++function floorpSplitViewIsEnabled() {
++  return Services.prefs.getBoolPref("floorp.browser.splitView.working", false);
++}
++
+ export class AsyncTabSwitcher {
+   constructor(tabbrowser) {
+     this.log("START");
+@@ -279,7 +284,7 @@ export class AsyncTabSwitcher {
+         browser.docShellIsActive = true;
+       }
+ 
+-      if (remoteTab) {
++      if (remoteTab /*@nora:inject:start*/&& !floorpSplitViewIsEnabled()/*@nora:inject:end*/) {
+         browser.renderLayers = true;
+         remoteTab.priorityHint = true;
+       }
+@@ -291,7 +296,7 @@ export class AsyncTabSwitcher {
+       // Setting the docShell to be inactive will also cause it
+       // to stop rendering layers.
+       browser.docShellIsActive = false;
+-      if (remoteTab) {
++      if (remoteTab /*@nora:inject:start*/&& !floorpSplitViewIsEnabled()/*@nora:inject:end*/) {
+         remoteTab.priorityHint = false;
+       }
+       if (!browser.hasLayers) {
+@@ -364,7 +369,7 @@ export class AsyncTabSwitcher {
+     // constructing BrowserChild's, layer trees, etc, by showing a blank
+     // tab instead and focusing it immediately.
+     let shouldBeBlank = false;
+-    if (requestedBrowser.isRemoteBrowser) {
++    if (requestedBrowser.isRemoteBrowser /*@nora:inject:start*/&& !floorpSplitViewIsEnabled()/*@nora:inject:end*/) {
+       // If a tab is remote and the window is not minimized, we can show a
+       // blank tab instead of a spinner in the following cases:
+       //
+@@ -399,7 +404,7 @@ export class AsyncTabSwitcher {
+       }
+     }
+ 
+-    if (requestedBrowser.isRemoteBrowser) {
++    if (requestedBrowser.isRemoteBrowser/*@nora:inject:start*/&& !floorpSplitViewIsEnabled()/*@nora:inject:end*/) {
+       this.addLogFlag("isRemote");
+     }
+ 
+@@ -836,7 +841,7 @@ export class AsyncTabSwitcher {
+     this.logState(
+       `onRemotenessChange(${tab._tPos}, ${tab.linkedBrowser.isRemoteBrowser})`
+     );
+-    if (!tab.linkedBrowser.isRemoteBrowser) {
++    if (!tab.linkedBrowser.isRemoteBrowser/*@nora:inject:start*/&& !floorpSplitViewIsEnabled()/* @nora:inject:end */) {
+       if (this.getTabState(tab) == this.STATE_LOADING) {
+         this.onLayersReady(tab.linkedBrowser);
+       } else if (this.getTabState(tab) == this.STATE_UNLOADING) {
+@@ -1029,7 +1034,8 @@ export class AsyncTabSwitcher {
+     if (
+       lazy.gTabCacheSize > 1 &&
+       tab.linkedBrowser.isRemoteBrowser &&
+-      tab.linkedBrowser.currentURI.spec != "about:blank"
++      tab.linkedBrowser.currentURI.spec != "about:blank"/*@nora:inject:start*/ &&
++      !floorpSplitViewIsEnabled()/*@nora:inject:end*/
+     ) {
+       let tabIndex = this.tabLayerCache.indexOf(tab);

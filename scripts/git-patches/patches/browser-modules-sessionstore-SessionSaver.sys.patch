@@ -1,0 +1,32 @@
+diff --git a/browser/modules/sessionstore/SessionSaver.sys.mjs b/browser/modules/sessionstore/SessionSaver.sys.mjs
+index 1237e3f..c61f443 100644
+--- ./browser/modules/sessionstore/SessionSaver.sys.mjs
++++ ./browser/modules/sessionstore/SessionSaver.sys.mjs
+@@ -253,6 +253,28 @@ var SessionSaverInternal = {
+     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
+ 
++    /*@nora:inject:start*/
++    function filterFloorpSpecificWindowAndTabs(browserState) {
++      for (let i = browserState.windows.length - 1; i >= 0; i--) {
++        const win = browserState.windows[i];
++        if (win.floorpShouldNotRestore) {
++          browserState.windows.splice(i, 1);
++
++          if (browserState.selectedWindow >= i) {
++            browserState.selectedWindow--;
++          }
++        }
++      }
++
++      // Remove private closed windows.
++      browserState._closedWindows = browserState._closedWindows.filter(
++        win => !win.floorpShouldNotRestore
++      );
++      return browserState;
++    }
++    state = filterFloorpSpecificWindowAndTabs(state);
++    /*@nora:inject:end*/
++
+     // Make sure we only write worth saving tabs to disk.
+     lazy.SessionStore.keepOnlyWorthSavingTabs(state);
