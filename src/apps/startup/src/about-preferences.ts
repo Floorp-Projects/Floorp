@@ -47,7 +47,7 @@ document.querySelector("#category-nora-link").addEventListener("click", () => {
     const win = Services.wm.getMostRecentWindow("navigator:browser") as Window;
 
     win.gBrowser.selectedTab = win.gBrowser.addTab(
-      "chrome://noraneko-settings/index.html",
+      "chrome://noraneko-settings/content/index.html",
       {
         relatedToCurrent: true,
         triggeringPrincipal:

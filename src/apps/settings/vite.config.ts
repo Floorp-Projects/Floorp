@@ -13,6 +13,8 @@ const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
 
+let mode = "";
+
 export default defineConfig({
   publicDir: r("public"),
   server: {
@@ -49,6 +51,13 @@ export default defineConfig({
     }),
     tsconfigPaths(),
     CustomHmr(),
+    {
+      name: "mode_gatherer",
+      enforce: "pre",
+      configResolved(config) {
+        mode = config.mode;
+      },
+    },
 
     {
       name: "gen_jarmn",
@@ -73,6 +82,14 @@ export default defineConfig({
       },
     },
   ],
+  experimental: {
+    renderBuiltUrl(filename, type) {
+      if (mode === "dev") {
+        return filename;
+      }
+      return "chrome://noraneko-settings/content/" + filename;
+    },
+  },
   optimizeDeps: {
     include: ["./node_modules/@nora"],
   },
