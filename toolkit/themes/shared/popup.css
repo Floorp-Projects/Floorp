@@ -132,67 +132,67 @@ panel:where([type="arrow"]) {
 
 /* ::::: panel animations ::::: */
 
-.animatable-menupopup,
-panel[type="arrow"] {
-  transition-timing-function: var(--animation-easing-function), ease-out;
+@media (-moz-panel-animations) and (prefers-reduced-motion: no-preference) {
+  .animatable-menupopup,
+  panel[type="arrow"] {
+    transition-timing-function: var(--animation-easing-function), ease-out;
 
-  @media (-moz-panel-animations) and (prefers-reduced-motion: no-preference) {
     &:not([animate="false"]) {
       transition-duration: 0.18s;
     }
-  }
 
-  @media not (-moz-platform: macos) {
-    transition-property: transform, opacity;
-    will-change: transform, opacity;
-    opacity: 0;
-    transform: translateY(-70px);
-
-    &[side="bottom"] {
-      transform: translateY(70px);
-    }
-  }
-
-  /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
-   * instead of "transform" and "opacity" for these animations.
-   * The -moz-window* properties apply to the whole window including the
-   * window's shadow, and they don't affect the window's "shape", so the
-   * system doesn't have to recompute the shadow shape during the animation.
-   * This makes them a lot faster. These properties are not implemented on
-   * other platforms.
-   */
-  @media (-moz-platform: macos) {
-    transition-property: -moz-window-transform, -moz-window-opacity;
-    /* Only do the fade-in animation on pre-Big Sur to avoid missing shadows on
-     * Big Sur, see bug 1672091. */
-    @media not (-moz-mac-big-sur-theme) {
-      -moz-window-opacity: 0;
-      -moz-window-transform: translateY(-70px);
+    @media not (-moz-platform: macos) {
+      transition-property: transform, opacity;
+      will-change: transform, opacity;
+      opacity: 0;
+      transform: translateY(-70px);
 
       &[side="bottom"] {
-        -moz-window-transform: translateY(70px);
+        transform: translateY(70px);
       }
     }
-    /* If the @media rule above is removed, then we can also remove this */
-    &[animate="cancel"] {
-      -moz-window-opacity: 0;
+
+    /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
+     * instead of "transform" and "opacity" for these animations.
+     * The -moz-window* properties apply to the whole window including the
+     * window's shadow, and they don't affect the window's "shape", so the
+     * system doesn't have to recompute the shadow shape during the animation.
+     * This makes them a lot faster. These properties are not implemented on
+     * other platforms.
+     */
+    @media (-moz-platform: macos) {
+      transition-property: -moz-window-transform, -moz-window-opacity;
+      /* Only do the fade-in animation on pre-Big Sur to avoid missing shadows on
+       * Big Sur, see bug 1672091. */
+      @media not (-moz-mac-big-sur-theme) {
+        -moz-window-opacity: 0;
+        -moz-window-transform: translateY(-70px);
+
+        &[side="bottom"] {
+          -moz-window-transform: translateY(70px);
+        }
+      }
+      /* If the @media rule above is removed, then we can also remove this */
+      &[animate="cancel"] {
+        -moz-window-opacity: 0;
+      }
     }
-  }
 
-  &[animate="cancel"] {
-    -moz-window-transform: none;
-    transform: none;
-  }
+    &[animate="cancel"] {
+      -moz-window-transform: none;
+      transform: none;
+    }
 
-  &:is([animate="false"], [animate="open"]) {
-    opacity: 1;
-    transform: none;
-    -moz-window-opacity: 1;
-    -moz-window-transform: none;
-    transition-timing-function: var(--animation-easing-function), ease-in-out;
-  }
+    &:is([animate="false"], [animate="open"]) {
+      opacity: 1;
+      transform: none;
+      -moz-window-opacity: 1;
+      -moz-window-transform: none;
+      transition-timing-function: var(--animation-easing-function), ease-in-out;
+    }
 
-  &[animating] {
-    pointer-events: none;
+    &[animating] {
+      pointer-events: none;
+    }
   }
 }
