@@ -1,1 +1,1 @@
-DIRS += ["_dist/noraneko/content","_dist/noraneko/skin","_dist/noraneko/startup","_dist/noraneko/resource"]
+DIRS += ["_dist/noraneko/content","_dist/noraneko/skin","_dist/noraneko/startup","_dist/noraneko/resource", "_dist/noraneko/settings"]
