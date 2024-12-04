@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Observer.h"
+#include "mozilla/WeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -17,10 +18,6 @@ struct JSContext;
 
 namespace mozilla {
 class ErrorResult;
-
-// Predeclare void_t here, as including IPCMessageUtils brings in windows.h and
-// causes binding compilation problems.
-struct void_t;
 
 namespace dom {
 
@@ -35,8 +32,6 @@ class MIDIPortInfo;
 class MIDIPortList;
 class Promise;
 
-using MIDIAccessDestructionObserver = Observer<void_t>;
-
 /**
  * MIDIAccess is the DOM object that is handed to the user upon MIDI permissions
  * being successfully granted. It manages access to MIDI ports, and fires events
@@ -46,7 +41,8 @@ using MIDIAccessDestructionObserver = Observer<void_t>;
  * MIDIAccess objects are managed via MIDIAccessManager.
  */
 class MIDIAccess final : public DOMEventTargetHelper,
-                         public Observer<MIDIPortList> {
+                         public Observer<MIDIPortList>,
+                         public SupportsWeakPtr {
   // Use the Permission Request class in MIDIAccessManager for creating
   // MIDIAccess objects.
   friend class MIDIPermissionRequest;
@@ -72,12 +68,6 @@ class MIDIAccess final : public DOMEventTargetHelper,
   // Observer implementation for receiving port connection updates
   void Notify(const MIDIPortList& aEvent) override;
 
-  // All MIDIPort objects observe destruction of the MIDIAccess object that
-  // created them, as the port object receives disconnection events which then
-  // must be passed up to the MIDIAccess object. If the Port object dies before
-  // the MIDIAccess object, it needs to be removed from the observer list.
-  void RemovePortListener(MIDIAccessDestructionObserver* aObs);
-
   // Fires DOM event on port connection/disconnection
   void FireConnectionEvent(MIDIPort* aPort);
 
@@ -101,8 +91,6 @@ class MIDIAccess final : public DOMEventTargetHelper,
   RefPtr<MIDIInputMap> mInputMap;
   // Stores all known MIDIOutput Ports
   RefPtr<MIDIOutputMap> mOutputMap;
-  // List of MIDIPort observers that need to be updated on destruction.
-  ObserverList<void_t> mDestructionObservers;
   // True if user gave permissions for sysex usage to this object.
   bool mSysexEnabled;
   // Promise created by RequestMIDIAccess call, to be resolved after port
