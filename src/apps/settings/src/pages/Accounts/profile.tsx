@@ -32,8 +32,6 @@ export default function Profile({ accountAndProfileData }: ProfileProps) {
           style={{ fontSize: "24px", color: "#3182F6" }}
         />
       }
-      footerLink="https://docs.floorp.app/ja/docs/other/profiles"
-      footerLinkText={t("accounts.profileManagement")}
     >
       <Text color={textColor}>
         {t("accounts.profileManagementDescription")}
@@ -57,7 +55,11 @@ export default function Profile({ accountAndProfileData }: ProfileProps) {
 
       <Flex gap={4}>
         <Link
-          href="https://docs.floorp.app/ja/docs/other/contributors"
+          href="about:profile"
+          onClick={(e) => {
+            e.preventDefault();
+            window.NRAddTab("about:profiles");
+          }}
           target="_blank"
           fontSize="sm"
           display="flex"

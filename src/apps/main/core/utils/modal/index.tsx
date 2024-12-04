@@ -49,7 +49,7 @@ export function ShareModal(props: {
                   const element = e as HTMLInputElement;
                   if (!element.id || !element.value) {
                     throw new Error(
-                      `Invalid Modal Form Control: "Id" and "Value" are required for all form elements!`,
+                      `Invalid Modal Form Control: "Id" and "Value" are required for all form elements! Occured element: ${element.id}, ${element.value}`,
                     );
                   }
                   return {

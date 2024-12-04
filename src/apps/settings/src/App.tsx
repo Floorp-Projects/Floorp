@@ -13,6 +13,7 @@ import Design from "./pages/Design";
 import Accounts from "./pages/Accounts";
 import About from "./pages/About";
 import SearchResults from "./pages/Search/index";
+import PanelSidebar from "./pages/PanelSidebar";
 
 export default function App() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -31,6 +32,7 @@ export default function App() {
                 <Route path="/accounts" element={<Accounts />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/search" element={<SearchResults />} />
+                <Route path="/sidebar" element={<PanelSidebar />} />
               </Routes>
             </Box>
           </Box>
