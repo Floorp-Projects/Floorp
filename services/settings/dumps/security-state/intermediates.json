@@ -1,6 +1,71 @@
 {
   "data": [
     {
+      "schema": 1732802585334,
+      "derHash": "Z5wM2dDE6JPgBzJQMiME8Od0EGfgyS20K5D/uUFEu/s=",
+      "attachment": {
+        "hash": "2099a9c736b55fd05f5e8e5d5698d6eddb3aabef9ed8060a592670b45489d2f3",
+        "size": 1288,
+        "filename": "-I-4BAEsnvlRMJgTojDAH2wr1gtGr0V0H05guWoASqU=.pem",
+        "location": "security-state-staging/intermediates/1bb5c8f4-ef6d-4022-b271-6a2723fc637b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "9f9b20a8-46c1-450f-8ce3-33d1ddedb0c8",
+      "last_modified": 1732805822694
+    },
+    {
+      "schema": 1732802585014,
+      "derHash": "LYFfKLJJO8Jd7qVhSOxHh53eg0i4IJb80REvpKtJAtM=",
+      "attachment": {
+        "hash": "977a26d1cb491373161dc70b09c2dc9cb298d18f56e53dc6a9a477ab0a8791c0",
+        "size": 2434,
+        "filename": "uFP6ihkMfWx9mcBXratDytZuhbue8psxFkCQ3-xp9Tk=.pem",
+        "location": "security-state-staging/intermediates/a07e41a1-ef0d-42a3-a299-519aeb9eefa8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "caf0bd02-9539-4729-a853-d355ddf492e1",
+      "last_modified": 1732805822692
+    },
+    {
+      "schema": 1732802584677,
+      "derHash": "aIwnXojrs4Lu0Kx9j61iqNDH0HMdY6nKMaZ7axUl4ig=",
+      "attachment": {
+        "hash": "de14579c6d08bb61c0b2c0d21888d80dffd20e7d8dfe253d86cbbf9e724c6309",
+        "size": 1288,
+        "filename": "tGWZA28lF6LJg0Dsi5yFRZWGA1wpl4xIY2axjBiIA9Q=.pem",
+        "location": "security-state-staging/intermediates/e7b6c763-bfcc-40e5-a008-7153fb967b29.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "77888f0e-d626-4a3f-a474-21bba75d9ed8",
+      "last_modified": 1732805822689
+    },
+    {
+      "schema": 1732802584020,
+      "derHash": "Rs+4Mu8k/jBaUK38oRye8S8GIQxVDAroNQXwJZB5Fb4=",
+      "attachment": {
+        "hash": "0ff6ac5fbb38d3c7981c53d2280660bb23491700621e7bf3395dbf6f03b8497c",
+        "size": 2434,
+        "filename": "tQbtm3UZur5Jv1CmL4d5hpGJ3Fu3hdpnIVGHV4syVas=.pem",
+        "location": "security-state-staging/intermediates/8ee536ef-4eed-4f43-9dfc-c997d682ad68.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "23ef3a88-2cbc-47cc-9669-82fd8458aeea",
+      "last_modified": 1732805822687
+    },
+    {
+      "schema": 1732802584360,
+      "derHash": "cI6elq1c5cmx95E3Qj+pioH/sIeHm3u+PacUJXQuLuw=",
+      "attachment": {
+        "hash": "acf1111e750120c2f4b057521983b2a9aebd6537c14d53ebb137495269bc094e",
+        "size": 1305,
+        "filename": "v8dOgElborW1IUHCEbZtZwJBAhpf159YOg3KW1W40dM=.pem",
+        "location": "security-state-staging/intermediates/eda4fdf9-2cd8-4359-93c9-6515635f8639.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "95773835-86a0-44f9-a43a-31f2537f54cf",
+      "last_modified": 1732805822684
+    },
+    {
       "schema": 1732176177498,
       "derHash": "JJUssFsNl6nxK0WMfubD86FA9R30RiGT2XUo/YnIuM0=",
       "attachment": {
@@ -16226,24 +16291,6 @@
       "last_modified": 1666727868851
     },
     {
-      "schema": 1666727364137,
-      "derHash": "vb8Gzp5WxFB/wk7X/h++uqm2yDpcbXwiw5kR2fUSXlo=",
-      "subject": "CN=Subordinate Advanced ECC CA G2,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MF0xCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMScwJQYDVQQDEx5TdWJvcmRpbmF0ZSBBZHZhbmNlZCBFQ0MgQ0EgRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9c5d31af488a6e6044a329488b4aa4e584216fba8e146cc8f01e162a53a1718d",
-        "size": 1638,
-        "filename": "1b-hdhDYKpJwO40m1GtAqNkn5luo7V8AYgKzz-dZ_YY=.pem",
-        "location": "security-state-staging/intermediates/90767168-53c0-470a-8f7c-94c792877b69.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1b+hdhDYKpJwO40m1GtAqNkn5luo7V8AYgKzz+dZ/YY=",
-      "crlite_enrolled": false,
-      "id": "d0f63dec-c1ea-4622-bb0a-f75cc3b93ee7",
-      "last_modified": 1666727868811
-    },
-    {
       "schema": 1666727332142,
       "derHash": "gc0DBnJS/+hJskDcwkVmZ4Z34/X+3ExUDXomytLAgcg=",
       "subject": "CN=NII Open Domain CA - G7 ECC,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -17126,24 +17173,6 @@
       "last_modified": 1666727867999
     },
     {
-      "schema": 1666727362933,
-      "derHash": "Ie5tT1/uSFrHoDXx1l3i/E3Q7SiXrNwqO2ecBNRZmug=",
-      "subject": "CN=DOMENY SSL EV Certification Authority,OU=Controlled by COMODO exclusively for DOMENY.PL sp. z o.o,O=DOMENY.PL sp. z o.o,L=Kraków,ST=Małopolskie,C=PL",
-      "subjectDN": "MIHHMQswCQYDVQQGEwJQTDEVMBMGA1UECAwMTWHFgm9wb2xza2llMRAwDgYDVQQHDAdLcmFrw7N3MRwwGgYDVQQKExNET01FTlkuUEwgc3AuIHogby5vMUEwPwYDVQQLEzhDb250cm9sbGVkIGJ5IENPTU9ETyBleGNsdXNpdmVseSBmb3IgRE9NRU5ZLlBMIHNwLiB6IG8ubzEuMCwGA1UEAxMlRE9NRU5ZIFNTTCBFViBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f3d76494c4464919cce63ecb05bf14fb950df9c35a2cf3ec14c5145510e1f8a7",
-        "size": 2292,
-        "filename": "QKMgYhV5InRJvYzUJ1ylX-BvwC9fUdLVL_e6cCnbdGM=.pem",
-        "location": "security-state-staging/intermediates/8de6e42d-be0e-493e-aa2b-55eca748c560.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "QKMgYhV5InRJvYzUJ1ylX+BvwC9fUdLVL/e6cCnbdGM=",
-      "crlite_enrolled": false,
-      "id": "47e09ae9-961e-4b44-84d8-2c5399f6d183",
-      "last_modified": 1666727867986
-    },
-    {
       "schema": 1666727442801,
       "derHash": "J38PyiY+EoVtuqTdCt8EIE9/mM/XLOnJOAfjd+NMiHY=",
       "subject": "CN=GEANT eScience SSL CA 4,O=GEANT Vereniging,C=NL",
@@ -17214,24 +17243,6 @@
       "crlite_enrolled": false,
       "id": "59adfb88-3b2d-4b3a-a8d5-1cdd21d4ea0f",
       "last_modified": 1666727867921
-    },
-    {
-      "schema": 1666727375856,
-      "derHash": "myLn+gjT+MbW6fQg2PdWx5E15m0bLXCweQNyHwPb5bY=",
-      "subject": "CN=DOMENY SSL OV Certification Authority,O=DOMENY.PL sp. z o.o,L=Kraków,ST=Małopolskie,C=PL",
-      "subjectDN": "MIGEMQswCQYDVQQGEwJQTDEVMBMGA1UECAwMTWHFgm9wb2xza2llMRAwDgYDVQQHDAdLcmFrw7N3MRwwGgYDVQQKExNET01FTlkuUEwgc3AuIHogby5vMS4wLAYDVQQDEyVET01FTlkgU1NMIE9WIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "33d3f9f98124a1520b06103eebe50e0a09b8bb366086d1c8d77eda1100020b3d",
-        "size": 2154,
-        "filename": "y6RI9X1eeUkKidF2MrXM7RymKK9CUcax6TB8EJO15E4=.pem",
-        "location": "security-state-staging/intermediates/34069b00-c339-4852-bd44-2c39ed72658f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "y6RI9X1eeUkKidF2MrXM7RymKK9CUcax6TB8EJO15E4=",
-      "crlite_enrolled": false,
-      "id": "5c84d921-ec2c-4b16-9bf3-a681d07e7c21",
-      "last_modified": 1666727867895
     },
     {
       "schema": 1666727382857,
@@ -17772,24 +17783,6 @@
       "crlite_enrolled": false,
       "id": "00da2a29-55d4-4141-b618-98cac6e7b045",
       "last_modified": 1666727867371
-    },
-    {
-      "schema": 1666727423605,
-      "derHash": "GUzCtbBkk8DvCwqfqDdvlYviQqJ0ral0rLyRAjNoeNw=",
-      "subject": "CN=DOMENY SSL DV Certification Authority,O=DOMENY.PL sp. z o.o,L=Kraków,ST=Małopolskie,C=PL",
-      "subjectDN": "MIGEMQswCQYDVQQGEwJQTDEVMBMGA1UECAwMTWHFgm9wb2xza2llMRAwDgYDVQQHDAdLcmFrw7N3MRwwGgYDVQQKExNET01FTlkuUEwgc3AuIHogby5vMS4wLAYDVQQDEyVET01FTlkgU1NMIERWIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ad32d53b83760d3ca2c18007c1e9dd8203dc16f07bd3a8bac0b99701a5b796f3",
-        "size": 2154,
-        "filename": "c4Z4xm0MVOlxzaOy4OXC86lTgsofdZML4CYOmaSpWYM=.pem",
-        "location": "security-state-staging/intermediates/b332d168-1bb8-4058-95fd-56aaad43101b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "c4Z4xm0MVOlxzaOy4OXC86lTgsofdZML4CYOmaSpWYM=",
-      "crlite_enrolled": false,
-      "id": "de87f0b6-9d2d-4592-8c45-a439301c4776",
-      "last_modified": 1666727867357
     },
     {
       "schema": 1666727419907,
@@ -27962,24 +27955,6 @@
       "last_modified": 1610999846060
     },
     {
-      "schema": 1606678892869,
-      "derHash": "ROvwEj4n/x2wSXvS2uGBVbKkFOa82cbI+49IOYRJuek=",
-      "subject": "CN=TeleSec Business CA 1,OU=T-Systems Trust Center,O=T-Systems International GmbH,C=DE",
-      "subjectDN": "MHUxCzAJBgNVBAYTAkRFMSUwIwYDVQQKExxULVN5c3RlbXMgSW50ZXJuYXRpb25hbCBHbWJIMR8wHQYDVQQLExZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMR4wHAYDVQQDExVUZWxlU2VjIEJ1c2luZXNzIENBIDE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5f456791aae0975819a267a4b01e2b4e0fcb12b375c5334b5a72562eefa58948",
-        "size": 1947,
-        "filename": "XmXOT9NXQoum_vwr876xEH0qCXmA3ZncBDyibtkXpQU=.pem",
-        "location": "security-state-staging/intermediates/085cace9-264b-4a9a-9330-f554e6585359.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "XmXOT9NXQoum/vwr876xEH0qCXmA3ZncBDyibtkXpQU=",
-      "crlite_enrolled": false,
-      "id": "eda28108-1b54-44e6-b8c5-1b6afcf10b67",
-      "last_modified": 1606744671982
-    },
-    {
       "schema": 1605123695624,
       "derHash": "yTGg+FoFKQEjSlT9Rg1BfxqLY8OMSBH3m5jzrhwv6fs=",
       "subject": "CN=SECOM Passport for Member PUB CA5,OU=SECOM Passport for Member 2.0 PUB,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -30680,24 +30655,6 @@
       "last_modified": 1559866973381
     },
     {
-      "schema": 1559866970155,
-      "derHash": "zx6hXcnAWrxyrw5ixI2TQ0rgJxsapDGL41RBJtJLYYQ=",
-      "subject": "CN=Certum Extended Validation CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJQTDEiMCAGA1UEChMZVW5pemV0byBUZWNobm9sb2dpZXMgUy5BLjEnMCUGA1UECxMeQ2VydHVtIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MSYwJAYDVQQDEx1DZXJ0dW0gRXh0ZW5kZWQgVmFsaWRhdGlvbiBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e34ed85d8f7cd8d8572bc535cef388fdeca726b0b1f570db12ecb2c658c3cfaf",
-        "size": 1727,
-        "filename": "M9jfvUTOEXqakcClNZh0xICWc12quCpR9R8l41FetpI=.pem",
-        "location": "security-state-staging/intermediates/aa0b4687-ec1c-483c-878f-31363ebb0565.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "M9jfvUTOEXqakcClNZh0xICWc12quCpR9R8l41FetpI=",
-      "crlite_enrolled": false,
-      "id": "52a1bed3-2ae3-4c96-8566-936ef8a25df3",
-      "last_modified": 1559866970939
-    },
-    {
       "schema": 1559866925659,
       "derHash": "PUUR0KgKqUmm2ZslOhc0cXl8RFkYemMp5zbDfLVJPkY=",
       "subject": "CN=emSign ECC Device CA - C3,OU=emSign PKI,O=eMudhra Inc,C=US",
@@ -30752,5 +30709,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1732179422564
+  "timestamp": 1733237822480
 }
