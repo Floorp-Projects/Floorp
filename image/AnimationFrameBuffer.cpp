@@ -432,32 +432,38 @@ RawAccessFrameRef AnimationFrameRecyclingQueue::RecycleFrame(
 
   RawAccessFrameRef recycledFrame;
   if (mRecycle.front().mFrame) {
-    recycledFrame = mRecycle.front().mFrame->RawAccessRef();
-    MOZ_ASSERT(recycledFrame);
+    recycledFrame = mRecycle.front().mFrame->RawAccessRef(
+        gfx::DataSourceSurface::READ_WRITE);
     mRecycle.pop_front();
 
-    if (mForceUseFirstFrameRefreshArea) {
-      // We are still crossing the loop boundary and cannot rely upon the dirty
-      // rects of entries in mDisplay to be representative. E.g. The first frame
-      // is probably has a full frame dirty rect.
-      aRecycleRect = mFirstFrameRefreshArea;
-    } else {
-      // Calculate the recycle rect for the recycled frame. This is the
-      // cumulative dirty rect of all of the frames ahead of us to be displayed,
-      // and to be used for recycling. Or in other words, the dirty rect between
-      // the recycled frame and the decoded frame which reuses the buffer.
-      //
-      // We know at this point that mRecycle contains either frames from the end
-      // of the animation with the first frame refresh area as the dirty rect
-      // (plus the first frame likewise) and frames with their actual dirty rect
-      // from the start. mDisplay should also only contain frames from the start
-      // of the animation onwards.
-      aRecycleRect.SetRect(0, 0, 0, 0);
-      for (const RefPtr<imgFrame>& frame : mDisplay) {
-        aRecycleRect = aRecycleRect.Union(frame->GetDirtyRect());
-      }
-      for (const RecycleEntry& entry : mRecycle) {
-        aRecycleRect = aRecycleRect.Union(entry.mDirtyRect);
+    // If we couldn't map in the surface, it is probably because the frame was
+    // finalized and we did not expect to need to write into it again. This
+    // happens for the first frames produced during an animation.
+    if (recycledFrame) {
+      if (mForceUseFirstFrameRefreshArea) {
+        // We are still crossing the loop boundary and cannot rely upon the
+        // dirty rects of entries in mDisplay to be representative. E.g. The
+        // first frame is probably has a full frame dirty rect.
+        aRecycleRect = mFirstFrameRefreshArea;
+      } else {
+        // Calculate the recycle rect for the recycled frame. This is the
+        // cumulative dirty rect of all of the frames ahead of us to be
+        // displayed, and to be used for recycling. Or in other words, the dirty
+        // rect between the recycled frame and the decoded frame which reuses
+        // the buffer.
+        //
+        // We know at this point that mRecycle contains either frames from the
+        // end of the animation with the first frame refresh area as the dirty
+        // rect (plus the first frame likewise) and frames with their actual
+        // dirty rect from the start. mDisplay should also only contain frames
+        // from the start of the animation onwards.
+        aRecycleRect.SetRect(0, 0, 0, 0);
+        for (const RefPtr<imgFrame>& frame : mDisplay) {
+          aRecycleRect = aRecycleRect.Union(frame->GetDirtyRect());
+        }
+        for (const RecycleEntry& entry : mRecycle) {
+          aRecycleRect = aRecycleRect.Union(entry.mDirtyRect);
+        }
       }
     }
   } else {
