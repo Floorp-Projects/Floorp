@@ -7,9 +7,13 @@ import AutoImport from "unplugin-auto-import/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import CustomHmr from "./react-18n-hmr";
 
+import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
+
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
+
+let mode = "";
 
 export default defineConfig({
   publicDir: r("public"),
@@ -29,12 +33,9 @@ export default defineConfig({
     outDir: r("_dist"),
   },
 
-  //? https://github.com/parcel-bundler/lightningcss/issues/685
-  //? lepton uses System Color and that occurs panic.
-  //? when the issue resolved, gladly we can use lightningcss
-  // css: {
-  //   transformer: "lightningcss",
-  // },
+  css: {
+    transformer: "lightningcss",
+  },
 
   plugins: [
     react(),
@@ -46,10 +47,49 @@ export default defineConfig({
           extension: "jsx",
         }),
       ],
+      dts: true,
     }),
     tsconfigPaths(),
     CustomHmr(),
+    {
+      name: "mode_gatherer",
+      enforce: "pre",
+      configResolved(config) {
+        mode = config.mode;
+      },
+    },
+
+    {
+      name: "gen_jarmn",
+      enforce: "post",
+      async generateBundle(options, bundle, isWrite) {
+        this.emitFile({
+          type: "asset",
+          fileName: "jar.mn",
+          needsCodeReference: false,
+          source: await generateJarManifest(bundle, {
+            prefix: "settings",
+            namespace: "noraneko-settings",
+            register_type: "content",
+          }),
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: "moz.build",
+          needsCodeReference: false,
+          source: `JAR_MANIFESTS += ["jar.mn"]`,
+        });
+      },
+    },
   ],
+  experimental: {
+    renderBuiltUrl(filename, type) {
+      if (mode === "dev") {
+        return filename;
+      }
+      return "chrome://noraneko-settings/content/" + filename;
+    },
+  },
   optimizeDeps: {
     include: ["./node_modules/@nora"],
   },

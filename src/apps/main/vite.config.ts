@@ -35,6 +35,39 @@ export default defineConfig({
       output: {
         esModule: true,
         entryFileNames: "[name].js",
+        manualChunks(id, meta) {
+          if (id.includes("node_modules")) {
+            const arr_module_name = id
+              .toString()
+              .split("node_modules/")[1]
+              .split("/");
+            if (arr_module_name[0] === ".pnpm") {
+              return "ext." + arr_module_name[1].toString();
+            }
+            return "ext." + arr_module_name[0].toString();
+          }
+          if (id.includes(".svg")) {
+            return "svg." + id.split("/").at(-1);
+          }
+        },
+        assetFileNames(assetInfo) {
+          if (assetInfo.name?.endsWith(".svg")) {
+            return "assets/svg/[name][extname]";
+          }
+          if (assetInfo.name?.endsWith(".css")) {
+            return "assets/css/[name][extname]";
+          }
+          return "assets/[name][extname]";
+        },
+        chunkFileNames(chunkInfo) {
+          if (chunkInfo.name.startsWith("svg.")) {
+            return "assets/svg/glue/[name].js";
+          }
+          if (chunkInfo.name.startsWith("ext.")) {
+            return "assets/js/external/[name].js";
+          }
+          return "assets/js/[name].js";
+        },
       },
     },
 

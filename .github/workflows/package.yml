@@ -25,6 +25,10 @@ jobs:
         with:
           repository: 'nyanrus/noraneko-runtime'
           submodules: "recursive"
+      - uses: actions/checkout@v4
+        with:
+          path: "noraneko"
+
       - name: Configure sccache
         uses: actions/github-script@v7
         with:
@@ -50,9 +54,6 @@ jobs:
         run: |
 
           cd $GITHUB_WORKSPACE
-
-          # update noraneko to latest
-          git submodule update --remote
 
           cd ./noraneko
           pnpm install

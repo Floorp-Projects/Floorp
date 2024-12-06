@@ -59,7 +59,7 @@ const JS_WINDOW_ACTORS: {
     //* port seems to not be supported
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/JSWindowActor.webidl#99
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
   NRTabManager: {
     parent: {

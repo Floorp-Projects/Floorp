@@ -41,5 +41,18 @@ const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
   `);
 nav_root.appendChild(fragment);
 document.querySelector("#category-nora-link").addEventListener("click", () => {
-  window.location.href = "http://localhost:5183/";
+  if (import.meta.env.MODE === "dev") {
+    window.location.href = "http://localhost:5183/";
+  } else {
+    const win = Services.wm.getMostRecentWindow("navigator:browser") as Window;
+
+    win.gBrowser.selectedTab = win.gBrowser.addTab(
+      "chrome://noraneko-settings/content/index.html",
+      {
+        relatedToCurrent: true,
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      },
+    );
+  }
 });

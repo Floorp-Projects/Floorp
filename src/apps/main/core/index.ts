@@ -62,9 +62,11 @@ export default async function initScripts() {
   }
   //@ts-expect-error ii
   SessionStore.promiseInitialized.then(async () => {
-    modules.forEach((m) => {
-      m?.init?.();
-    });
     //CustomShortcutKey.getInstance();
+    modules.forEach((m) => {
+      try {
+        m?.init?.();
+      } catch {}
+    });
   });
 }

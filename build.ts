@@ -34,10 +34,7 @@ try {
   await fs.rename("dist", "_dist");
 } catch {}
 
-const binPath = path.join(
-  binDir,
-  "noraneko"
-);
+const binPath = path.join(binDir, "noraneko");
 const binPathExe = binPath + (process.platform === "win32" ? ".exe" : "");
 
 const binVersion = path.join(binDir, "nora.version.txt");
@@ -159,7 +156,7 @@ async function run(mode: "dev" | "test" = "dev") {
       configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest("_dist/bin", true),
+    injectManifest("_dist/bin", true, "noraneko-dev"),
     (async () => {
       await injectXHTML("_dist/bin");
       await injectXHTMLDev("_dist/bin");
@@ -174,7 +171,7 @@ async function run(mode: "dev" | "test" = "dev") {
   ]);
 
   let browser: Browser | undefined = undefined;
-  // //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
+  //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
   await fs.mkdir("./_dist/profile/test", { recursive: true });
   await savePrefsForProfile("./_dist/profile/test");
   await runBrowser();
@@ -243,6 +240,10 @@ async function release(mode: "before" | "after") {
       buildVite({
         configFile: r("./src/apps/designs/vite.config.ts"),
         root: r("./src/apps/designs"),
+      }),
+      buildVite({
+        configFile: r("./src/apps/settings/vite.config.ts"),
+        root: r("./src/apps/settings"),
       }),
 
       //applyMixin(binPath),
