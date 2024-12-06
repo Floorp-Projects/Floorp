@@ -25,21 +25,13 @@ export default async function initScripts() {
   initI18N();
   Services.prefs
     .getDefaultBranch(null as unknown as string)
-    //.setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
-    .setStringPref(
-      "noraneko.features.all",
-      `{"common":["update-refresh-cache"]}`,
-    );
+    .setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
   Services.prefs.lockPref("noraneko.features.all");
 
   Services.prefs
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     .getDefaultBranch(null as any)
-    //.setStringPref("noraneko.features.enabled", JSON.stringify(modules_keys));
-    .setStringPref(
-      "noraneko.features.enabled",
-      `{"common":["update-refresh-cache"]}`,
-    );
+    .setStringPref("noraneko.features.enabled", JSON.stringify(modules_keys));
   const enabled_features = JSON.parse(
     Services.prefs.getStringPref("noraneko.features.enabled", "{}"),
   ) as typeof modules_keys;
@@ -68,16 +60,13 @@ export default async function initScripts() {
       })();
     }
   }
-  window.addEventListener("DOMContentLoaded", () => {
+  //@ts-expect-error ii
+  SessionStore.promiseInitialized.then(async () => {
+    //CustomShortcutKey.getInstance();
     modules.forEach((m) => {
       try {
         m?.init?.();
       } catch {}
     });
-  });
-  Services.obs.addObserver(() => {}, "browser-delayed-startup-finished");
-  //@ts-expect-error ii
-  SessionStore.promiseInitialized.then(async () => {
-    //CustomShortcutKey.getInstance();
   });
 }
