@@ -13200,7 +13200,7 @@
 # PRIORITY_UPDATE frames.
 - name: network.http.http2.priority_updates
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # This pref controls whether to send the
