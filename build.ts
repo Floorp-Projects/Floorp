@@ -162,18 +162,18 @@ async function run(mode: "dev" | "test" = "dev") {
       await injectXHTMLDev("_dist/bin");
     })(),
     applyMixin("_dist/bin"),
-    // (async () => {
-    //   try {
-    //     await fs.access("_dist/profile");
-    //     await fs.rm("_dist/profile", { recursive: true });
-    //   } catch {}
-    // })(),
+    (async () => {
+      try {
+        await fs.access("_dist/profile");
+        await fs.rm("_dist/profile", { recursive: true });
+      } catch {}
+    })(),
   ]);
 
   let browser: Browser | undefined = undefined;
-  // //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
-  //await fs.mkdir("./_dist/profile/test", { recursive: true });
-  //await savePrefsForProfile("./_dist/profile/test");
+  //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
+  await fs.mkdir("./_dist/profile/test", { recursive: true });
+  await savePrefsForProfile("./_dist/profile/test");
   await runBrowser();
 
   browser = await puppeteer.connect({
