@@ -1,0 +1,13 @@
+diff --git a/modules/Extension.sys.mjs b/modules/Extension.sys.mjs
+index 7e3ddd6..2c7ece3 100644
+--- ./modules/Extension.sys.mjs
++++ ./modules/Extension.sys.mjs
+@@ -2384,7 +2384,7 @@ export class ExtensionData {
+ 
+       // Privileged extensions may request access to "about:"-URLs, such as
+       // about:reader.
+-      let match = /^([a-z*]+):\/\/([^/]*)\/|^about:/.exec(permission);
++      let match = /^([a-z\-*]+):\/\/([^/]*)\/|^about:/.exec(permission);
+       if (!match) {
+         throw new Error(`Unparseable host permission ${permission}`);
+       }

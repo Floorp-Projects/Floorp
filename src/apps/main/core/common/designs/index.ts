@@ -12,5 +12,5 @@ export function init() {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     hotCtx: (import.meta as any).hot,
   });
-  window.gURLBar._updateLayoutBreakoutDimensions();
+  window.gURLBar.updateLayoutBreakout();
 }

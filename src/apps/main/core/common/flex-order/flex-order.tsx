@@ -15,7 +15,7 @@ export namespace gFlexOrder {
   const floorpSidebarId = "panel-sidebar-box";
   const floorpSidebarSplitterId = "panel-sidebar-splitter";
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
-  const browserBoxId = "appcontent";
+  const browserBoxId = "tabbrowser-tabbox";
 
   export function init() {
     applyFlexOrder();
@@ -92,25 +92,25 @@ export namespace gFlexOrder {
   ) {
     return (
       <style jsx>{`
-        #${fxSidebarId} {
-          order: ${fxSidebar} !important;
-        }
-        #${floorpSidebarId} {
-          order: ${floorpSidebar} !important;
-        }
-        #${floorpSidebarSelectBoxId} {
-          order: ${floorpSidebarSelectBox} !important;
-        }
-        #${floorpSidebarSplitterId} {
-          order: ${floorpSidebarSplitter} !important;
-        }
-        #${fxSidebarSplitterId} {
-          order: ${fxSidebarSplitter} !important;
-        }
-        #${browserBoxId} {
-          order: ${browserBox} !important;
-        }
-      `}</style>
+         #${fxSidebarId} {
+           order: ${fxSidebar} !important;
+         }
+         #${floorpSidebarId} {
+           order: ${floorpSidebar} !important;
+         }
+         #${floorpSidebarSelectBoxId} {
+           order: ${floorpSidebarSelectBox} !important;
+         }
+         #${floorpSidebarSplitterId} {
+           order: ${floorpSidebarSplitter} !important;
+         }
+         #${fxSidebarSplitterId} {
+           order: ${fxSidebarSplitter} !important;
+         }
+         #${browserBoxId} {
+           order: ${browserBox} !important;
+         }
+       `}</style>
     );
   }
 

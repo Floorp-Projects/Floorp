@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build"
+    "build": "vite build",
+    "analyze": "vite build --analyze"
   },
   "type": "module",
   "dependencies": {
@@ -34,6 +35,9 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react-swc": "^3.7.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vite": "latest",
+    "vite-plugin-compression": "^0.5.1",
+    "rollup-plugin-visualizer": "^5.12.0"
   }
 }

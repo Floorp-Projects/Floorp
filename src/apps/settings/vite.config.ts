@@ -21,14 +21,29 @@ export default defineConfig({
     port: 5183,
   },
   build: {
-    sourcemap: true,
     reportCompressedSize: false,
-    minify: false,
-    cssMinify: false,
     emptyOutDir: true,
     assetsInlineLimit: 0,
     modulePreload: false,
     target: "firefox128",
+    sourcemap: false,
+    cssMinify: true,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          chakra: ["@chakra-ui/react", "@emotion/react", "@emotion/styled"],
+          i18n: ["i18next", "react-i18next"],
+        },
+      },
+    },
 
     outDir: r("_dist"),
   },

@@ -22,5 +22,7 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "oxc.enable": true
+  "oxc.enable": true,
+  "git.scanRepositories": ["./"],
+  "git.ignoredRepositories": ["../_dist/*"]
 }

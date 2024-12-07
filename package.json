@@ -7,7 +7,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node --import @swc-node/register/esm-register ./build.ts",
-    "dev": "node --import @swc-node/register/esm-register ./build.ts --run"
+    "dev": "node --import @swc-node/register/esm-register ./build.ts --run",
+    "apply-patches": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --apply",
+    "dev-with-init-bin-git": "node --import @swc-node/register/esm-register ./build.ts --run-with-init-bin-git",
+    "init-bin-git": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --init",
+    "create-patches": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --create"
   },
   "keywords": [],
   "workspaces": [
