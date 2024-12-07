@@ -1,6 +1,6 @@
 {
   "typeAcquisition": {
-    "enable": true
+    "enable": true,
   },
   "compilerOptions": {
     "paths": {
@@ -22,9 +22,8 @@
     "resolvePackageJsonExports": false,
     "isolatedModules": true,
     "jsxImportSource": "solid-js",
-    "types": ["vite/client"],
     "resolveJsonModule": true,
-    "typeRoots": ["./@types"]
+    "typeRoots": ["./@types","./node_modules/vite"]
   },
   "exclude": ["_dist"]
 }

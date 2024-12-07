@@ -9,7 +9,8 @@ import AdmZip from "adm-zip";
 import { execa, type ResultPromise } from "execa";
 import { runBrowser } from "./scripts/launchBrowser/index.js";
 import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs.js";
-import { writeVersion } from "./scripts/version/index.js";
+import { writeVersion } from "./scripts/update/version.js";
+import { writeBuildid2 } from "./scripts/update/buildid2.js";
 import { applyPatches } from "./scripts/git-patches/git-patches-manager.js";
 import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.js";
 
@@ -110,6 +111,12 @@ let devInit = false;
 async function run(mode: "dev" | "test" = "dev") {
   await initBin();
   await applyPatches();
+  let buildid2: string | null = null;
+  try {
+    await fs.access("_dist/buildid2");
+    buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
+  } catch {}
+  console.log(`[dev] buildid2: ${buildid2}`);
   if (!devInit) {
     console.log("run dev servers");
     devViteProcesses = [
@@ -117,6 +124,9 @@ async function run(mode: "dev" | "test" = "dev") {
         mode,
         configFile: r("./src/apps/main/vite.config.ts"),
         root: r("./src/apps/main"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+        },
       }),
       await createServer({
         mode,
@@ -240,6 +250,12 @@ process.on("exit", () => {
  * @param mode
  */
 async function release(mode: "before" | "after") {
+  let buildid2: string | null = null;
+  try {
+    await fs.access("_dist/buildid2");
+    buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
+  } catch {}
+  console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
     await Promise.all([
       buildVite({
@@ -249,6 +265,9 @@ async function release(mode: "before" | "after") {
       buildVite({
         configFile: r("./src/apps/main/vite.config.ts"),
         root: r("./src/apps/main"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+        },
       }),
       buildVite({
         configFile: r("./src/apps/designs/vite.config.ts"),
@@ -275,11 +294,24 @@ async function release(mode: "before" | "after") {
   } else if (mode === "after") {
     const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
     injectXHTML(binPath);
+    let buildid2: string | null = null;
+    try {
+      await fs.access("_dist/buildid2");
+      buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
+    } catch {}
+    await writeBuildid2(`${binPath}/browser`, buildid2 ?? "");
   }
 }
 
+import { v7 as uuidv7 } from "uuid";
 async function version() {
   await writeVersion(r("./gecko"));
+  try {
+    await fs.access("_dist");
+  } catch {
+    await fs.mkdir("_dist");
+  }
+  await writeBuildid2(r("./_dist"), uuidv7());
 }
 
 if (process.argv[2]) {
