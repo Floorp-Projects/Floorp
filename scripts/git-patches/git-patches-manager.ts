@@ -39,7 +39,7 @@ export async function initializeBinGit() {
   console.log("Git repository initialized in _dist/bin");
 }
 
-export async function applyPatches() {
+export async function applyPatches(binDir = BIN_DIR) {
   const patches = await fs.readdir(PATCHES_DIR);
   for (const patch of patches) {
     if (!patch.endsWith(".patch")) continue;
@@ -48,10 +48,9 @@ export async function applyPatches() {
     console.log(`Applying patch: ${patchPath}`);
     try {
       await execa(
-        process.platform === "win32" ? "busybox patch" : "patch",
-        ["-p0", "-N", "<", `../../${patchPath}`],
+        "git",
+        ["apply", "--reject", "--whitespace=fix","--unsafe-paths", "--directory",`${binDir}`,`./${patchPath}`],
         {
-          cwd: BIN_DIR,
           shell: true,
         },
       );

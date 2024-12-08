@@ -300,6 +300,7 @@ async function release(mode: "before" | "after") {
       buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
     } catch {}
     await writeBuildid2(`${binPath}/browser`, buildid2 ?? "");
+    // await applyPatches(binPath);
   }
 }
 

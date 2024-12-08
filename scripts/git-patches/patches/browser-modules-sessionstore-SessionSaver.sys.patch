@@ -30,3 +30,4 @@ index 1237e3f..c61f443 100644
 +
      // Make sure we only write worth saving tabs to disk.
      lazy.SessionStore.keepOnlyWorthSavingTabs(state);
+

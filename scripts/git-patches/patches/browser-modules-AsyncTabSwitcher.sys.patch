@@ -1,8 +1,6 @@
-diff --git a/browser/modules/AsyncTabSwitcher.sys.mjs b/browser/modules/AsyncTabSwitcher.sys.mjs
-index 96103bc..c93cde1 100644
 --- ./browser/modules/AsyncTabSwitcher.sys.mjs
 +++ ./browser/modules/AsyncTabSwitcher.sys.mjs
-@@ -77,6 +77,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
+@@ -77,6 +77,11 @@
   * actually takes place. Therefore, we don't unload the old tab
   * until the next MozAfterPaint event.
   */
@@ -68,3 +66,4 @@ index 96103bc..c93cde1 100644
 +      !floorpSplitViewIsEnabled()/*@nora:inject:end*/
      ) {
        let tabIndex = this.tabLayerCache.indexOf(tab);
+
