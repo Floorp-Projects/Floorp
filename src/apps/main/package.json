@@ -15,8 +15,9 @@
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",
-    "vite-plugin-solid": "^2.10.2",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-plugin-solid": "^2.11.0",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vite": "6.0.3"
   },
   "scripts": {
     "build": "nx vite:build",

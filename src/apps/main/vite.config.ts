@@ -14,6 +14,9 @@ export default defineConfig({
   server: {
     port: 5181,
   },
+  define: {
+    "import.meta.env.__BUILDID2__": '"placeholder"',
+  },
   build: {
     sourcemap: true,
     reportCompressedSize: false,
@@ -42,30 +45,31 @@ export default defineConfig({
               .split("node_modules/")[1]
               .split("/");
             if (arr_module_name[0] === ".pnpm") {
-              return "ext." + arr_module_name[1].toString();
+              return `external/${arr_module_name[1].toString()}`;
             }
-            return "ext." + arr_module_name[0].toString();
+            return `external/${arr_module_name[0].toString()}`;
           }
           if (id.includes(".svg")) {
-            return "svg." + id.split("/").at(-1);
+            return `svg/${id.split("/").at(-1)?.replaceAll("svg_url","glue")}`;
           }
+          try {
+            const re = new RegExp(/\/core\/common\/([A-Za-z\-]+)/);
+            const result = re.exec(id);
+            if (result?.at(1) != null) {
+              return `modules/${result[1]}`
+            }
+          } catch {}
         },
         assetFileNames(assetInfo) {
-          if (assetInfo.name?.endsWith(".svg")) {
+          if (assetInfo.originalFileNames.at(0)?.endsWith(".svg")) {
             return "assets/svg/[name][extname]";
           }
-          if (assetInfo.name?.endsWith(".css")) {
+          if (assetInfo.originalFileNames.at(0)?.endsWith(".css")) {
             return "assets/css/[name][extname]";
           }
           return "assets/[name][extname]";
         },
         chunkFileNames(chunkInfo) {
-          if (chunkInfo.name.startsWith("svg.")) {
-            return "assets/svg/glue/[name].js";
-          }
-          if (chunkInfo.name.startsWith("ext.")) {
-            return "assets/js/external/[name].js";
-          }
           return "assets/js/[name].js";
         },
       },

@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+name: "(A) |α| Publish Alpha"
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options:
+          - win-x64
+          - linux-x64
+      artifact_workflow_run_id:
+        type: string
+        required: true
+
+run-name: \|α\| Package ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{'noraneko-win-amd64-mar-full'}}
+          run-id: ${{inputs.artifact_workflow_run_id}}
+          path: ~/noraneko-mar
+      - name: Setup
+        run: |
+          pnpm i
+
+          echo "{" >> ~/noraneko-mar/meta.json
+          echo "\"version_display\":\"$(cat ~/noraneko-mar/version_display.txt)\"," >> ~/noraneko-mar/meta.json
+          echo "\"version\":\"$(cat ~/noraneko-mar/version.txt)\"," >> ~/noraneko-mar/meta.json
+          echo "\"noraneko_version\":\"$(cat ~/noraneko-mar/noraneko_version.txt)\"," >> ~/noraneko-mar/meta.json
+          echo "\"mar_size\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-mar/meta.json
+          echo "\"mar_shasum\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-mar/meta.json
+          echo "\"buildid\":\"$(cat ~/noraneko-mar/buildid.txt)\"" >> ~/noraneko-mar/meta.json
+          echo "}" >> ~/noraneko-mar/meta.json
+
+          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-mar/meta.json ~/noraneko-mar/WINNT_x86_64-msvc-x64.update.xml
+
+      - name: Publish Package 🎁
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-publish
+          path: ~/noraneko-mar/*

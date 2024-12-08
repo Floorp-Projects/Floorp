@@ -24,15 +24,9 @@ export default async function initScripts() {
   // Import required modules and initialize i18n
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   initI18N();
+  console.debug(`[noraneko-buildid2]\nuuid: ${import.meta.env.__BUILDID2__}\ndate: ${new Date(Number.parseInt(import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""), 16)).toISOString()}`);
 
-  // Set up preferences for features
-  const prefs = Services.prefs.getDefaultBranch(null as unknown as string);
-  prefs.setStringPref("noraneko.features.all", JSON.stringify(modules_keys));
-  Services.prefs.lockPref("noraneko.features.all");
-  prefs.setStringPref(
-    "noraneko.features.enabled",
-    JSON.stringify(modules_keys),
-  );
+  setPrefFeatures(modules_keys)
 
   // Get enabled features from preferences
   const enabled_features = JSON.parse(
@@ -46,8 +40,20 @@ export default async function initScripts() {
   await initializeModules(modules);
 }
 
+async function setPrefFeatures(all_features_keys: typeof modules_keys) {
+  // Set up preferences for features
+  const prefs = Services.prefs.getDefaultBranch(null as unknown as string);
+  prefs.setStringPref("noraneko.features.all", JSON.stringify(all_features_keys));
+  Services.prefs.lockPref("noraneko.features.all");
+
+  prefs.setStringPref(
+    "noraneko.features.enabled",
+    JSON.stringify(all_features_keys),
+);
+}
+
 async function loadEnabledModules(enabled_features: typeof modules_keys) {
-  const modules: Array<{ init?: typeof Function }> = [];
+  const modules: Array<{ init?: typeof Function, name: string }> = [];
 
   const loadModulePromises = Object.entries(MODULES).flatMap(
     ([categoryKey, categoryValue]) =>
@@ -60,9 +66,9 @@ async function loadEnabledModules(enabled_features: typeof modules_keys) {
         ) {
           try {
             const module = await categoryValue[moduleName]();
-            modules.push(module as { init?: typeof Function });
+            modules.push(Object.assign({name: moduleName},module as { init?: typeof Function }));
           } catch (e) {
-            console.error(`Failed to load module ${moduleName}:`, e);
+            console.error(`[noraneko] Failed to load module ${moduleName}:`, e);
           }
         }
       }),
@@ -72,13 +78,15 @@ async function loadEnabledModules(enabled_features: typeof modules_keys) {
   return modules;
 }
 
-async function initializeModules(modules: Array<{ init?: typeof Function }>) {
+async function initializeModules(modules: Array<{ init?: typeof Function, name:string }>) {
   // @ts-expect-error SessionStore type not defined
-  await SessionStore.promiseInitialized;
+  //await SessionStore.promiseInitialized;
 
   modules.forEach((module) => {
     try {
       module?.init?.();
-    } catch {}
+    } catch(e) {
+      console.error(`[noraneko] Failed to init module ${module.name}:`, e);
+    }
   });
 }

@@ -50,12 +50,15 @@
     "fast-glob": "^3.3.2",
     "lightningcss": "^1.27.0",
     "linkedom": "0.18.5",
+    "oxlint": "^0.9.9",
     "puppeteer-core": "^23.5.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2",
-    "vite": "5.4.8",
-    "vite-plugin-solid": "^2.10.2",
-    "vite-tsconfig-paths": "^5.0.1"
+    "uuid": "^11.0.3",
+    "vite": "6.0.3",
+    "vite-plugin-solid": "^2.11.0",
+    "vite-tsconfig-paths": "^5.0.1",
+    "xml-js": "^1.6.11"
   },
   "dependencies": {
     "@svgr/core": "^8.1.0",
