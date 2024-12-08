@@ -1,16 +1,16 @@
-# Welcome to Noraneko Browser Repository!
+# Welcome to Noraneko Browser Repository
 
 <p align="center">
-<img src="docs/assets/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px"></img>
-<img src="docs/assets/logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px"></img>
+<img src=".github/assets/readme/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px"></img>
+<img src=".github/assets/readme//logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px"></img>
 </p>
 
 > [!WARNING]
 > Experimental!
 
-Noraneko Browser is currently testbed of modern JS environment for Floorp.
+Noraneko Browser is currently testbed for Floorp 12.
 
-Star me!
+Have a nice day!
 
 ## Noraneko Docs available!
 
@@ -30,7 +30,7 @@ Refer to "How to Debug" for instructions on using `pnpm dev`.
 
 1. Install zstd and add it to the PATH.
 2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
-  the `Release Full` version is recommended.
+  the `Release` version is recommended.
 3. Download artifact named as "noraneko-win-amd64-dev" and place in project root.
 4. Run `pnpm dev`.
 5. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
@@ -65,6 +65,10 @@ Thank you [@CutterKnife](https://github.com/CutterKnife) for the logo!
   [GitHub: black7375/Firefox-UI-Fix](https://github.com/black7375/Firefox-UI-Fix)
 
 Thank you!
+
+## Useful Links
+
+[![Link to Noraneko Runtime Repository](.github/assets/readme/Link2RuntimeRepo.svg)](https://github.com/nyanrus/noraneko-runtime/)
 
 ## LICENSE
 
