@@ -60,13 +60,14 @@ jobs:
 
           echo "VERSION=$(cat ~/noraneko-mar/version.txt)" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-mar/noraneko_version.txt)" >> "$GITHUB_ENV"
+          echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ~/noraneko-publish/WINNT_x86_64-msvc-x64.update.xml
-            ~/noraneko-publish/*.mar
+            ${{env.ROOT_DIR}}/noraneko-publish/WINNT_x86_64-msvc-x64.update.xml
+            ${{env.ROOT_DIR}}/noraneko-publish/*.mar
 
           tag_name: "alpha"
           name: "Alpha Release"
