@@ -16,16 +16,16 @@ on:
         type: string
         required: true
 
-run-name: \|α\| Package ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}
+permissions:
+  contents: write
+
+run-name: "|α| Publish Alpha ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}"
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -34,24 +34,49 @@ jobs:
         with:
           name: ${{'noraneko-win-amd64-mar-full'}}
           run-id: ${{inputs.artifact_workflow_run_id}}
+          github-token: ${{github.token}}
           path: ~/noraneko-mar
       - name: Setup
         run: |
           pnpm i
 
-          echo "{" >> ~/noraneko-mar/meta.json
-          echo "\"version_display\":\"$(cat ~/noraneko-mar/version_display.txt)\"," >> ~/noraneko-mar/meta.json
-          echo "\"version\":\"$(cat ~/noraneko-mar/version.txt)\"," >> ~/noraneko-mar/meta.json
-          echo "\"noraneko_version\":\"$(cat ~/noraneko-mar/noraneko_version.txt)\"," >> ~/noraneko-mar/meta.json
-          echo "\"mar_size\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-mar/meta.json
-          echo "\"mar_shasum\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-mar/meta.json
-          echo "\"buildid\":\"$(cat ~/noraneko-mar/buildid.txt)\"" >> ~/noraneko-mar/meta.json
-          echo "}" >> ~/noraneko-mar/meta.json
+          mkdir ~/noraneko-publish
 
-          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-mar/meta.json ~/noraneko-mar/WINNT_x86_64-msvc-x64.update.xml
+          echo "$(cat ~/noraneko-mar/version.txt | cut -d "@" -f 1)" > ~/noraneko-mar/version.txt
+          echo "$(cat ~/noraneko-mar/mar_shasum.txt | cut -c 1-128)" > ~/noraneko-mar/mar_shasum.txt
 
+          echo "{" >> ~/noraneko-publish/meta.json
+          echo "\"version_display\":\"$(cat ~/noraneko-mar/version_display.txt)\"," >> ~/noraneko-publish/meta.json
+          echo "\"version\":\"$(cat ~/noraneko-mar/version.txt)\"," >> ~/noraneko-publish/meta.json
+          echo "\"noraneko_version\":\"$(cat ~/noraneko-mar/noraneko_version.txt)\"," >> ~/noraneko-publish/meta.json
+          echo "\"mar_size\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-publish/meta.json
+          echo "\"mar_shasum\":\"$(cat ~/noraneko-mar/mar_shasum.txt)\"," >> ~/noraneko-publish/meta.json
+          echo "\"buildid\":\"$(cat ~/noraneko-mar/buildid.txt)\"" >> ~/noraneko-publish/meta.json
+          echo "}" >> ~/noraneko-publish/meta.json
+
+          cp ~/noraneko-mar/*.mar ~/noraneko-publish
+
+          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-publish/meta.json ~/noraneko-publish/WINNT_x86_64-msvc-x64.update.xml
+
+          echo "VERSION=$(cat ~/noraneko-mar/version.txt)" >> "$GITHUB_ENV"
+          echo "NR_VERSION=$(cat ~/noraneko-mar/noraneko_version.txt)" >> "$GITHUB_ENV"
+
+      - name: Deploy to GitHub Releases 🚀
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ~/noraneko-publish/WINNT_x86_64-msvc-x64.update.xml
+            ~/noraneko-publish/*.mar
+
+          tag_name: "alpha"
+          name: "Alpha Release"
+          body: |
+            "Noraneko Alpha: v${{ env.NR_VERSION }} (Firefox v${{ env.VERSION }})"
+          draft: false
+          prerelease: true
+          token: ${{ github.token }}
       - name: Publish Package 🎁
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-publish
-          path: ~/noraneko-mar/*
+          path: ~/noraneko-publish/*

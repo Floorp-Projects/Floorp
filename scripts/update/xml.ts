@@ -2,8 +2,6 @@ import {json2xml} from "xml-js"
 
 const meta = JSON.parse(await fs.readFile(process.argv[2],{encoding: "utf-8"})) as {version_display:string, version:string, noraneko_version:string, mar_size: string, mar_shasum: string, buildid: string};
 
-meta.mar_shasum = meta.mar_shasum.split(" ")[0];
-
 const update = {
   _declaration: {
     _attributes: {
