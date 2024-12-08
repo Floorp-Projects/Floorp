@@ -5,3 +5,4 @@
 MOZ_APP_DISPLAYNAME=Noraneko
 MOZ_APP_PROFILE=Noraneko
 MOZ_APP_UA_NAME=Firefox
+MOZ_APP_VENDOR="Noraneko Community"

@@ -24,10 +24,7 @@ export default async function initScripts() {
   // Import required modules and initialize i18n
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   initI18N();
-  console.log(`[noraneko-buildid2] uuid: ${import.meta.env.__BUILDID2__}`);
-  console.log(
-    `[noraneko-buildid2] date: ${new Date(Number.parseInt(import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""), 16)).toISOString()}`,
-  );
+  console.debug(`[noraneko-buildid2]\nuuid: ${import.meta.env.__BUILDID2__}\ndate: ${new Date(Number.parseInt(import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""), 16)).toISOString()}`);
 
   setPrefFeatures(modules_keys)
 
@@ -69,7 +66,7 @@ async function loadEnabledModules(enabled_features: typeof modules_keys) {
         ) {
           try {
             const module = await categoryValue[moduleName]();
-            modules.push(Object.assign(module as { init?: typeof Function },{name: moduleName}));
+            modules.push(Object.assign({name: moduleName},module as { init?: typeof Function }));
           } catch (e) {
             console.error(`[noraneko] Failed to load module ${moduleName}:`, e);
           }
@@ -83,7 +80,7 @@ async function loadEnabledModules(enabled_features: typeof modules_keys) {
 
 async function initializeModules(modules: Array<{ init?: typeof Function, name:string }>) {
   // @ts-expect-error SessionStore type not defined
-  await SessionStore.promiseInitialized;
+  //await SessionStore.promiseInitialized;
 
   modules.forEach((module) => {
     try {

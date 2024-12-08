@@ -57,7 +57,8 @@
     "uuid": "^11.0.3",
     "vite": "6.0.3",
     "vite-plugin-solid": "^2.11.0",
-    "vite-tsconfig-paths": "^5.0.1"
+    "vite-tsconfig-paths": "^5.0.1",
+    "xml-js": "^1.6.11"
   },
   "dependencies": {
     "@svgr/core": "^8.1.0",
