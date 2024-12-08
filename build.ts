@@ -27,8 +27,21 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const binArchive =
-  process.platform === "win32" ? "noraneko-win-amd64-dev.zip" : "bin.tar";
+const getBinArchive = () => {
+  if (process.platform === "win32") {
+    return "noraneko-win-amd64-dev.zip";
+  } else if (process.platform === "linux") {
+    const arch = process.arch;
+    if (arch === "arm64") {
+      return "noraneko-linux-aarch64-dev.zip";
+    } else if (arch === "x64") {
+      return "noraneko-linux-amd64-dev.zip"; 
+    }
+  }
+  throw new Error("Unsupported platform/architecture");
+};
+
+const binArchive = getBinArchive();
 const binDir = "_dist/bin";
 
 try {
@@ -49,14 +62,18 @@ async function decompressBin() {
       process.exit(1);
     }
 
-    if (process.platform === "win32") {
-      new AdmZip(binArchive).extractAllTo(binDir);
-    } else {
-      await execa`tar -xf ${binArchive} -C ${binDir}`;
-    }
-
+    new AdmZip(binArchive).extractAllTo(binDir);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
+
+    if (process.platform === "linux") {
+      try {
+        await execa("chmod", ["-R", "755", `./${binDir}`]);
+        await execa("chmod", ["755", binPathExe]);
+      } catch (chmodError) {
+        process.exit(1);
+      }
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);
