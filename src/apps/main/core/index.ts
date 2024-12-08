@@ -80,7 +80,7 @@ async function loadEnabledModules(enabled_features: typeof modules_keys) {
 
 async function initializeModules(modules: Array<{ init?: typeof Function, name:string }>) {
   // @ts-expect-error SessionStore type not defined
-  //await SessionStore.promiseInitialized;
+  await SessionStore.promiseInitialized;
 
   modules.forEach((module) => {
     try {
