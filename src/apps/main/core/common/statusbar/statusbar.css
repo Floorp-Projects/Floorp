@@ -1,7 +1,8 @@
 #nora-statusbar {
   visibility: visible !important;
 
-  :root[inFullscreen]:not([macOSNativeFullscreen]) &:not([fullscreentoolbar="true"]) {
+  :root[inFullscreen]:not([macOSNativeFullscreen])
+    &:not([fullscreentoolbar="true"]) {
     visibility: collapse !important;
   }
 
@@ -22,4 +23,8 @@
   #status-text {
     overflow: hidden !important;
   }
+}
+
+#toggle_nora-statusbar {
+  display: none !important;
 }

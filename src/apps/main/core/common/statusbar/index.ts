@@ -32,7 +32,8 @@ export function init() {
     },
     import.meta.hot,
   );
-  render(StatusBar, window.gNavToolbox, {
+  render(StatusBar, document.body, {
+    marker: document?.getElementById("customization-container"),
     hotCtx: import.meta.hot,
   });
   //https://searchfox.org/mozilla-central/rev/4d851945737082fcfb12e9e7b08156f09237aa70/browser/base/content/main-popupset.js#321
