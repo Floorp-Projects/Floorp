@@ -14,7 +14,7 @@ Have a nice day!
 
 ## Contributing
 
-Thank you for investing your time.
+Thank you for investing your time. \
 Please check [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ## Noraneko Docs available!
