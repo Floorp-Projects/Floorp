@@ -1,6 +1,6 @@
-# Contributing Guidelines
+# Welcome to Noraneko Contributing Guidelines
 
-Thank you for interest.
+Thank you for interest!
 
 First, please ask "how to contribute" in GitHub Issues or [Ablaze Community Discord](https://aka.ablaze.one/discord)
 It can be help if you stuck, or for communication to start contribution.
@@ -19,7 +19,7 @@ e.g.
 2. Two weeks ago
 3. src/apps/experiment/csk
 4. Custom Shortcut Keys
-5. improve with changing some UI
-6. was inconvenient because too many information about it in screen
+5. are dedicating to improve User Experience with changing some UI
+6. that was inconvenient because too many information in screen
 
 Thank you for reading. Have a nice day!

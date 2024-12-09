@@ -12,6 +12,11 @@ Noraneko Browser is currently testbed for Floorp 12.
 
 Have a nice day!
 
+## Contributing
+
+Thank you for investing your time.
+Please check [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+
 ## Noraneko Docs available!
 
 Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
