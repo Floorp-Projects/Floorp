@@ -58,6 +58,8 @@ class DragData final {
 
   int GetURIsNum() const;
 
+  bool IsDataValid() const;
+
 #ifdef MOZ_LOGGING
   void Print() const;
 #endif
