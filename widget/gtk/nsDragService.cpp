@@ -1476,7 +1476,11 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
   });
 
   RefPtr<DragData> dragData;
-  if (gtk_targets_include_uri(&target, 1)) {
+  if (target == sTextUriListTypeAtom || target == sPortalFileAtom ||
+      target == sPortalFileTransferAtom) {
+    // Direct replace gtk_targets_include_uri() with explicit check.
+    // gtk_targets_include_uri() on old Gtk3 systems doesn't support
+    // portal filetypes.
     if (target == sPortalFileAtom || target == sPortalFileTransferAtom) {
       const guchar* data = gtk_selection_data_get_data(aSelectionData);
       if (!data || data[0] == '\0') {
