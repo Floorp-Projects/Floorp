@@ -480,6 +480,18 @@ void DragData::ConvertToMozURIList() {
 DragData::DragData(GdkAtom aDataFlavor, gchar** aDragUris)
     : mDataFlavor(aDataFlavor), mAsURIData(true), mDragUris(aDragUris) {}
 
+bool DragData::IsDataValid() const {
+  if (mDragData) {
+    return mDragData.get() && mDragDataLen;
+  } else if (mDragUris) {
+    return !!(mDragUris.get()[0]);
+  } else if (mUris.Length()) {
+    return mUris.Length();
+  } else {
+    return false;
+  }
+}
+
 #ifdef MOZ_LOGGING
 void DragData::Print() const {
   if (mDragData) {
@@ -1469,13 +1481,20 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
       aContext, GUniquePtr<gchar>(gdk_atom_name(target)).get(),
       mWaitingForDragDataRequests);
 
-  auto cacheClear = MakeScopeExit([&] {
-    LOGDRAGSERVICE("  failed to get data, MIME %s",
-                   GUniquePtr<gchar>(gdk_atom_name(target)).get());
-    mCachedDragData.Remove(target);
+  RefPtr<DragData> dragData;
+
+  auto saveData = MakeScopeExit([&] {
+    if (dragData && !dragData->IsDataValid()) {
+      dragData = nullptr;
+    }
+    if (!dragData) {
+      LOGDRAGSERVICE("  failed to get data, MIME %s",
+                     GUniquePtr<gchar>(gdk_atom_name(target)).get());
+      return;
+    }
+    mCachedDragData.InsertOrUpdate(target, dragData);
   });
 
-  RefPtr<DragData> dragData;
   if (target == sTextUriListTypeAtom || target == sPortalFileAtom ||
       target == sPortalFileTransferAtom) {
     // Direct replace gtk_targets_include_uri() with explicit check.
@@ -1484,7 +1503,10 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
     if (target == sPortalFileAtom || target == sPortalFileTransferAtom) {
       const guchar* data = gtk_selection_data_get_data(aSelectionData);
       if (!data || data[0] == '\0') {
-        LOGDRAGSERVICE(" TargetDataReceived() failed");
+        LOGDRAGSERVICE(
+            "nsDragSession::TargetDataReceived() failed to get file portal data"
+            " (%s)",
+            GUniquePtr<gchar>(gdk_atom_name(target)).get());
         return;
       }
 
@@ -1532,9 +1554,6 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
 #if MOZ_LOGGING
   dragData->Print();
 #endif
-
-  cacheClear.release();
-  mCachedDragData.InsertOrUpdate(target, dragData);
 }
 
 static void TargetArrayAddTarget(nsTArray<GtkTargetEntry*>& aTargetArray,
