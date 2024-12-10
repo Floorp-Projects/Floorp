@@ -24,4 +24,6 @@ jobs:
   publish:
     needs: package
     uses: ./.github/workflows/publish_alpha.yml
+    with:
+      artifact_workflow_run_id: ${{ needs.package.outputs.run_id }}
     secrets: inherit
