@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2024-12-04_10-25-01_UTC
-// COMMIT: 7e9bf740f43749a8d57bc0d577783c8861d2663c
+// VERSION: 2024-12-06_15-17-10_UTC
+// COMMIT: d94154e5222aa000f70def82b9711df88b4612d9
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -4170,7 +4170,8 @@ gov.na
 net.na
 org.na
 
-// name : has 2nd-level tlds, but there's no list of them
+// name : http://www.nic.name/
+// Regarding 2LDs: https://github.com/publicsuffix/list/issues/2306
 name
 
 // nc : http://www.cctld.nc/
