@@ -31,12 +31,12 @@ const isExists = async (path: string) => {
 const getBinArchive = () => {
   if (process.platform === "win32") {
     return "noraneko-win-amd64-dev.zip";
-  } else if (process.platform === "linux") {
+  } if (process.platform === "linux") {
     const arch = process.arch;
     if (arch === "arm64") {
       return "noraneko-linux-aarch64-dev.zip";
-    } else if (arch === "x64") {
-      return "noraneko-linux-amd64-dev.zip"; 
+    } if (arch === "x64") {
+      return "noraneko-linux-amd64-dev.zip";
     }
   }
   throw new Error("Unsupported platform/architecture");

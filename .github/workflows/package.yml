@@ -20,10 +20,12 @@ run-name: 📦️ Package ${{inputs.platform == 'win-x64' && 'Windows x64' || 'L
 jobs:
   main:
     runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: 'nyanrus/noraneko-runtime'
+          repository: ${{github.repository}}-runtime
           submodules: "recursive"
       - uses: actions/checkout@v4
         with:
@@ -87,7 +89,7 @@ jobs:
           # sed -i 's|ac_add_options --disable-maintenance-service|#ac_add_options --disable-maintenance-service|g' ./mozconfig
           sed -i 's|ac_add_options --disable-updater|#ac_add_options --disable-updater|g' ./mozconfig
           sed -i 's|ac_add_options --enable-unverified-updates|#ac_add_options --enable-unverified-updates|g' ./mozconfig
-          sed -i 's|https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml|https://github.com/nyanrus/noraneko/releases/download/%VERSION%/%BUILD_TARGET%-%CHANNEL%-%OS_VERSION%-update.xml|g' ./build/application.ini.in
+          sed -i 's|https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml|https://github.com/${{github.repository}}/releases/download/%VERSION%/%BUILD_TARGET%-%CHANNEL%-%OS_VERSION%-update.xml|g' ./build/application.ini.in
 
           echo "ac_add_options --enable-release" >> mozconfig
           echo "ac_add_options --enable-update-channel=alpha" >> mozconfig
@@ -103,7 +105,7 @@ jobs:
           name: ${{inputs.platform == 'win-x64' && 'noraneko-win-amd64-moz-artifact'}}
           run-id: ${{inputs.runtime_artifact_workflow_run_id}}
           github-token: ${{github.token}}
-          repository: "nyanrus/noraneko-runtime"
+          repository: ${{github.repository}}-runtime
           path: ~/
 
       - name: Build noraneko
@@ -138,7 +140,7 @@ jobs:
           name: ${{'noraneko-dist-host'}}
           run-id: ${{inputs.runtime_artifact_workflow_run_id}}
           github-token: ${{github.token}}
-          repository: "nyanrus/noraneko-runtime"
+          repository: ${{github.repository}}-runtime
           path: obj-x86_64-pc-windows-msvc/dist/host
 
       - name: Download artifact of binary for getting buildid
@@ -147,7 +149,7 @@ jobs:
           name: ${{'noraneko-win-amd64-dev'}}
           run-id: ${{inputs.runtime_artifact_workflow_run_id}}
           github-token: ${{github.token}}
-          repository: "nyanrus/noraneko-runtime"
+          repository: ${{github.repository}}-runtime
           path: ~/noraneko-dev
 
       - name: Create MAR package

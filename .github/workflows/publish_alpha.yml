@@ -7,11 +7,6 @@ name: "(A) |α| Publish Alpha"
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        type: choice
-        options:
-          - win-x64
-          - linux-x64
       artifact_workflow_run_id:
         type: string
         required: true
@@ -19,7 +14,7 @@ on:
 permissions:
   contents: write
 
-run-name: "|α| Publish Alpha ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}"
+run-name: "|α| Publish Alpha"
 jobs:
   main:
     runs-on: ubuntu-latest
