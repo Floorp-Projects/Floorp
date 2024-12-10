@@ -50,6 +50,11 @@ export class WebChannelChild extends JSWindowActorChild {
   }
 
   _onMessageToChrome(e) {
+    // If target is window then we want the document principal, otherwise fallback to target itself.
+    let principal = e.target.nodePrincipal
+      ? e.target.nodePrincipal
+      : e.target.document.nodePrincipal;
+
     if (e.detail) {
       if (typeof e.detail != "string") {
         // Check if the principal is one of the ones that's allowed to send
@@ -74,6 +79,7 @@ export class WebChannelChild extends JSWindowActorChild {
       this.sendAsyncMessage("WebChannelMessageToChrome", {
         contentData: e.detail,
         eventTarget,
+        principal,
       });
     } else {
       console.error("WebChannel message failed. No message detail.");

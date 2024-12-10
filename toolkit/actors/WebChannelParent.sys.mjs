@@ -5,9 +5,7 @@
 
 import { WebChannelBroker } from "resource://gre/modules/WebChannel.sys.mjs";
 
-// Note: ERRNO 1 deprecated and unused.
-// We used to err for cases where the child did not send a principal,
-// but now we infer it from the actor.
+const ERRNO_MISSING_PRINCIPAL = 1;
 const ERRNO_NO_SUCH_CHANNEL = 2;
 
 export class WebChannelParent extends JSWindowActorParent {
@@ -17,7 +15,7 @@ export class WebChannelParent extends JSWindowActorParent {
       browsingContext: this.browsingContext,
       browser: this.browsingContext.top.embedderElement,
       eventTarget: msg.data.eventTarget,
-      principal: this.manager.documentPrincipal,
+      principal: msg.data.principal,
     };
     // data must be a string except for a few legacy origins allowed by browser-content.js.
     if (typeof data == "string") {
@@ -30,19 +28,28 @@ export class WebChannelParent extends JSWindowActorParent {
     }
 
     if (data && data.id) {
-      let validChannelFound = WebChannelBroker.tryToDeliver(
-        data,
-        sendingContext
-      );
-
-      // if no valid origins send an event that there is no such valid channel
-      if (!validChannelFound) {
+      if (!msg.data.principal) {
         this._sendErrorEventToContent(
           data.id,
           sendingContext,
-          ERRNO_NO_SUCH_CHANNEL,
-          "No Such Channel"
+          ERRNO_MISSING_PRINCIPAL,
+          "Message principal missing"
         );
+      } else {
+        let validChannelFound = WebChannelBroker.tryToDeliver(
+          data,
+          sendingContext
+        );
+
+        // if no valid origins send an event that there is no such valid channel
+        if (!validChannelFound) {
+          this._sendErrorEventToContent(
+            data.id,
+            sendingContext,
+            ERRNO_NO_SUCH_CHANNEL,
+            "No Such Channel"
+          );
+        }
       }
     } else {
       console.error("WebChannel channel id missing");
