@@ -347,6 +347,9 @@ BROWSER_PROCESS += [
     # old AMD JPEG decoder DLLs (bug 1328838)
     DllBlocklistEntry("amf-wic-jpeg-decoder64.dll", ALL_VERSIONS),
     DllBlocklistEntry("amf-wic-jpeg-decoder32.dll", ALL_VERSIONS),
+
+    # Qihoo 360 Total Security (bug 1934258)
+    DllBlocklistEntry("chromesafe64.dll", (2, 0, 0, 26)),
 ]
 
 CHILD_PROCESSES += [
