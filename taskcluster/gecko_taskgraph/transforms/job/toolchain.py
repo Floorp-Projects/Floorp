@@ -5,7 +5,6 @@
 Support for running toolchain-building jobs via dedicated scripts
 """
 
-
 import os
 
 import taskgraph
@@ -63,6 +62,11 @@ toolchain_run_schema = Schema(
             "toolchain-env",
             description="Additional env variables to add to the worker when using this toolchain",
         ): {str: object},
+        Optional(
+            "toolchain-extract",
+            description="Whether the toolchain should be extracted after it is fetched "
+            + "(default: True)",
+        ): bool,
         # Base work directory used to set up the task.
         Optional("workdir"): str,
     }
@@ -157,6 +161,8 @@ def common_toolchain(config, job, taskdesc, is_docker):
         attributes["toolchain-alias"] = alias
     if "toolchain-env" in run:
         attributes["toolchain-env"] = run.pop("toolchain-env")
+    if "toolchain-extract" in run:
+        attributes["toolchain-extract"] = run.pop("toolchain-extract")
 
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.

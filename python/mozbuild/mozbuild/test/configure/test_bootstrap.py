@@ -79,14 +79,17 @@ class TestBootstrap(BaseConfigureTest):
                 "toolchain-foo": {
                     "index": ["fake.index.foo"],
                     "artifact": "public/foo.artifact",
+                    "extract": True,
                 },
                 "toolchain-linux64-bar": {
                     "index": ["fake.index.bar"],
                     "artifact": "public/bar.artifact",
+                    "extract": True,
                 },
                 "toolchain-linux64-qux": {
                     "index": ["fake.index.qux"],
                     "artifact": "public/qux.artifact",
+                    "extract": True,
                 },
             },
         )

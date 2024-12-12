@@ -239,7 +239,7 @@ def get_attribute(dict, key, attributes, attribute_name):
     """Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value."""
     value = attributes.get(attribute_name)
-    if value:
+    if value is not None:
         dict[key] = value
 
 
@@ -282,6 +282,7 @@ def use_system_python(config, jobs):
 def use_fetches(config, jobs):
     artifact_names = {}
     extra_env = {}
+    should_extract = {}
     aliases = {}
     tasks = []
 
@@ -299,6 +300,9 @@ def use_fetches(config, jobs):
             artifact_names, task["label"], task["attributes"], f"{kind}-artifact"
         )
         get_attribute(extra_env, task["label"], task["attributes"], f"{kind}-env")
+        get_attribute(
+            should_extract, task["label"], task["attributes"], f"{kind}-extract"
+        )
         value = task["attributes"].get(f"{kind}-alias")
         if not value:
             value = []
@@ -348,7 +352,7 @@ def use_fetches(config, jobs):
                         {
                             "artifact": path,
                             "task": f"<{label}>",
-                            "extract": True,
+                            "extract": should_extract.get(label, True),
                         }
                     )
 
