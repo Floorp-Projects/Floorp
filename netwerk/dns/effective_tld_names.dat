@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2024-12-06_15-17-10_UTC
-// COMMIT: d94154e5222aa000f70def82b9711df88b4612d9
+// VERSION: 2024-12-11_09-51-13_UTC
+// COMMIT: 77a1948db10ae4225281856933eb5317463c9377
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -1483,12 +1483,12 @@ sch.ir
 is
 
 // it : https://www.iana.org/domains/root/db/it.html
+// https://www.nic.it/
 it
 edu.it
 gov.it
-// Reserved geo-names (regions and provinces):
-// https://www.nic.it/sites/default/files/archivio/docs/Regulation_assignation_v7.1.pdf
-// Regions
+// Regions (3.3.1)
+// https://www.nic.it/en/manage-your-it/forms-and-docs -> "Assignment and Management of domain names"
 abr.it
 abruzzo.it
 aosta-valley.it
@@ -1603,7 +1603,7 @@ vao.it
 vda.it
 ven.it
 veneto.it
-// Provinces
+// Provinces (3.3.2)
 ag.it
 agrigento.it
 al.it
@@ -1928,7 +1928,7 @@ jobs
 
 // jp : https://www.iana.org/domains/root/db/jp.html
 // http://jprs.co.jp/en/jpdomain.html
-// Submitted by registry <info@jprs.jp>
+// Confirmed by registry <info@jprs.jp> 2024-11-22
 jp
 // jp organizational type names
 ac.jp
@@ -1941,6 +1941,9 @@ lg.jp
 ne.jp
 or.jp
 // jp prefecture type names
+// 2024-11-22: JPRS confirmed that regional .jp suffixes no longer accept new registrations.
+// Once all existing registrations expire (marking full discontinuation), these suffixes
+// will be removed from the PSL.
 aichi.jp
 akita.jp
 aomori.jp
@@ -5408,12 +5411,9 @@ org.pt
 publ.pt
 
 // pw : https://www.iana.org/domains/root/db/pw.html
+// Confirmed by registry in private correspondence with @dnsguru 2024-12-09
 pw
-belau.pw
-co.pw
-ed.pw
-go.pw
-or.pw
+gov.pw
 
 // py : http://www.nic.py/pautas.html#seccion_9
 // Submitted by registry
@@ -5522,7 +5522,8 @@ org.sd
 tv.sd
 
 // se : https://www.iana.org/domains/root/db/se.html
-// Submitted by registry <patrik.wallstrom@iis.se>
+// https://data.internetstiftelsen.se/barred_domains_list.txt -> Second level domains & Sub-domains
+// Confirmed by Registry Services <registry@internetstiftelsen.se> 2024-11-20
 se
 a.se
 ac.se
@@ -5971,13 +5972,12 @@ police.uk
 *.sch.uk
 
 // us : https://www.iana.org/domains/root/db/us.html
+// Confirmed via the .us zone file by William Harrison - 2024-12-10
 us
 dni.us
-fed.us
 isa.us
-kids.us
 nsn.us
-// us geographic names
+// Geographic Names
 ak.us
 al.us
 ar.us
@@ -6204,15 +6204,15 @@ lib.wi.us
 // lib.wv.us  Bug 941670 - Removed at request of Larry W Arnold <arnold@wvlc.lib.wv.us>
 lib.wy.us
 // k12.ma.us contains school districts in Massachusetts. The 4LDs are
-//  managed independently except for private (PVT), charter (CHTR) and
-//  parochial (PAROCH) schools.  Those are delegated directly to the
-//  5LD operators.   <k12-ma-hostmaster _ at _ rsuc.gweep.net>
+// managed independently except for private (PVT), charter (CHTR) and
+// parochial (PAROCH) schools. Those are delegated directly to the
+// 5LD operators. <k12-ma-hostmaster@rsuc.gweep.net>
 chtr.k12.ma.us
 paroch.k12.ma.us
 pvt.k12.ma.us
 // Merit Network, Inc. maintains the registry for =~ /(k12|cc|lib).mi.us/ and the following
-//    see also: http://domreg.merit.edu
-//    see also: whois -h whois.domreg.merit.edu help
+// see also: https://domreg.merit.edu : domreg@merit.edu
+// see also: whois -h whois.domreg.merit.edu help
 ann-arbor.mi.us
 cog.mi.us
 dst.mi.us
@@ -6426,12 +6426,12 @@ yt
 
 // xn--fiqs8s ("Zhongguo/China", Chinese, Simplified) : CN
 // CNNIC
-// http://cnnic.cn/html/Dir/2005/10/11/3218.htm
+// https://www.cnnic.cn/11/192/index.html
 中国
 
 // xn--fiqz9s ("Zhongguo/China", Chinese, Traditional) : CN
 // CNNIC
-// http://cnnic.cn/html/Dir/2005/10/11/3218.htm
+// https://www.cnnic.com.cn/AU/MediaC/Announcement/201609/t20160905_54470.htm
 中國
 
 // xn--lgbbat1ad8j ("Algeria/Al Jazair", Arabic) : DZ
@@ -6734,7 +6734,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-11-27T15:18:01Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-12-10T15:19:18Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -11144,7 +11144,7 @@ yahoo
 // https://www.iana.org/domains/root/db/yamaxun.html
 yamaxun
 
-// yandex : Yandex Europe B.V.
+// yandex : ADC Tech Netherlands B.V.
 // https://www.iana.org/domains/root/db/yandex.html
 yandex
 
@@ -11238,10 +11238,6 @@ ltd.ua
 a2hosted.com
 cpserver.com
 
-// AAA workspace : https://aaa.vodka
-// Submitted by Kirill Rezraf <admin@aaa.vodka>
-aaa.vodka
-
 // Acorn Labs : https://acorn.io
 // Submitted by Craig Jellick <domains@acorn.io>
 *.on-acorn.io
@@ -11253,6 +11249,13 @@ activetrail.biz
 // Adaptable.io : https://adaptable.io
 // Submitted by Mark Terrel <support@adaptable.io>
 adaptable.app
+
+// addr.tools : https://addr.tools/
+// Submitted by Brian Shea <publicsuffixlist@addr.tools>
+myaddr.dev
+myaddr.io
+dyn.addr.tools
+myaddr.tools
 
 // Adobe : https://www.adobe.com/
 // Submitted by Ian Boston <boston@adobe.com> and Lars Trieloff <trieloff@adobe.com>
@@ -11284,8 +11287,9 @@ airkitapps.com
 airkitapps-au.com
 airkitapps.eu
 
-// Aiven: https://aiven.io/
-// Submitted by Etienne Stalmans <security@aiven.io>
+// Aiven : https://aiven.io/
+// Submitted by Aiven Security Team <security+appdomains@aiven.io>
+aiven.app
 aivencloud.com
 
 // Akamai : https://www.akamai.com/
@@ -12505,7 +12509,6 @@ edu.ru
 gov.ru
 int.ru
 mil.ru
-test.ru
 
 // COSIMO GmbH : http://www.cosimo.de
 // Submitted by Rene Marticke <rmarticke@cosimo.de>
@@ -12547,12 +12550,6 @@ cfolks.pl
 // Submitted by Dominic Luechinger <dol@cyon.ch>
 cyon.link
 cyon.site
-
-// Danger Science Group: https://dangerscience.com/
-// Submitted by Skylar MacDonald <skylar@dangerscience.com>
-platform0.app
-fnwk.site
-folionetwork.site
 
 // Dansk.net : http://www.dansk.net/
 // Submitted by Anani Voule <digital@digital.co.dk>
@@ -13282,6 +13279,10 @@ firebaseapp.com
 // Submitted by Eric Chan <support@flashdrive.io>
 fldrv.com
 
+// Fleek Labs Inc : https://fleek.xyz
+// Submitted by Parsa Ghadimi <dev@fleek.xyz>
+on-fleek.app
+
 // FlutterFlow : https://flutterflow.io
 // Submitted by Anton Emelyanov <anton@flutterflow.io>
 flutterflow.app
@@ -13392,11 +13393,6 @@ gentapps.com
 gentlentapis.com
 lab.ms
 cdn-edges.net
-
-// GetLocalCert : https://getlocalcert.net
-// Submitted by William Harrison <psl@getlocalcert.net>
-localcert.net
-localhostcert.net
 
 // GignoSystemJapan: http://gsj.bz
 // Submitted by GignoSystemJapan <kakutou-ec@gsj.bz>
@@ -13723,9 +13719,8 @@ heliohost.us
 hepforge.org
 
 // Heroku : https://www.heroku.com/
-// Submitted by Tom Maher <tmaher@heroku.com>
+// Submitted by Shumon Huque <public-dns@salesforce.com>
 herokuapp.com
-herokussl.com
 
 // Heyflow : https://www.heyflow.com
 // Submitted by Mirko Nitschke <tech@heyflow.com>
@@ -14123,6 +14118,11 @@ ggff.net
 // Submitted by Lann Martin <security@localcert.dev>
 *.user.localcert.dev
 
+// LocalCert : https://localcert.net
+// Submitted by William Harrison <psl@localcert.net>
+localcert.net
+localhostcert.net
+
 // Lodz University of Technology LODMAN regional domains https://www.man.lodz.pl/dns
 // Submitted by Piotr Wilk <dns@man.lodz.pl>
 lodz.pl
@@ -14355,6 +14355,10 @@ ui.nabu.casa
 // Submitted by Jan Jaeschke <jan.jaeschke@netatwork.de>
 cloud.nospamproxy.com
 o365.cloud.nospamproxy.com
+
+// Net libre : https://www.netlib.re
+// Submitted by Philippe PITTOLI <security@netlib.re>
+netlib.re
 
 // Netfy Domains : https://netfy.domains
 // Submitted by Suranga Ranasinghe <security@mavicsoft.com>
