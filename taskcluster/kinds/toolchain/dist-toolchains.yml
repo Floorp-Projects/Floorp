@@ -19,6 +19,7 @@ clang-dist-toolchain:
     run:
         arguments: ['clang']
         toolchain-artifact: public/build/clang-dist-toolchain.tar.xz
+        toolchain-extract: false
     use-sccache: true
     fetches:
         toolchain:
@@ -33,6 +34,7 @@ rustc-dist-toolchain:
     run:
         arguments: ['rustc']
         toolchain-artifact: public/build/rustc-dist-toolchain.tar.xz
+        toolchain-extract: false
     use-sccache: true
     fetches:
         toolchain:
