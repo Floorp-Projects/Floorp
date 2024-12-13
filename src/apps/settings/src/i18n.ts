@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-const translations = import.meta.glob("../locales/*/translation.json",{eager:true})
+const translations = import.meta.glob("../locales/*/translation.json",{eager:true,import:"default"})
 
 i18n
   .use(LanguageDetector)

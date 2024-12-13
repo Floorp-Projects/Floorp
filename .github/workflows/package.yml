@@ -157,7 +157,7 @@ jobs:
           touch "$(echo ./obj-*)/dist/noraneko/precomplete"
           MAR="$(echo ./obj-*)/dist/host/bin/mar" MOZ_PRODUCT_VERSION=$(cat noraneko/gecko/config/version.txt) MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-win-amd64-full.mar "$(echo ./obj-*)/dist/noraneko"
 
-          awk -F "=" '/Version/ {print $2}' "$(echo ~)/noraneko-dev/application.ini" > ~/noraneko-mar/version.txt
+          awk -F "=" '/^Version/ {print $2}' "$(echo ~)/noraneko-dev/application.ini" > ~/noraneko-mar/version.txt
           cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt
           echo "$(cat ~/noraneko-mar/version.txt)@$(cat ~/noraneko-mar/noraneko_version.txt)" > ~/noraneko-mar/version_display.txt
 

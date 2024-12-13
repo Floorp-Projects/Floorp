@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react-swc";
 import Icons from "unplugin-icons/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import IconsResolver from "unplugin-icons/resolver";
-import CustomHmr from "./react-18n-hmr";
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
@@ -13,7 +12,6 @@ const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
 
-let mode = "";
 
 export default defineConfig({
   publicDir: r("public"),
@@ -65,14 +63,7 @@ export default defineConfig({
       dts: true,
     }),
     tsconfigPaths(),
-    CustomHmr(),
-    {
-      name: "mode_gatherer",
-      enforce: "pre",
-      configResolved(config) {
-        mode = config.mode;
-      },
-    },
+    // CustomHmr(),
 
     {
       name: "gen_jarmn",
@@ -97,16 +88,7 @@ export default defineConfig({
       },
     },
   ],
-  experimental: {
-    renderBuiltUrl(filename, type) {
-      if (mode === "dev") {
-        return filename;
-      }
-      return "chrome://noraneko-settings/content/" + filename;
-    },
-  },
   optimizeDeps: {
     include: ["./node_modules/@nora"],
   },
-  assetsInclude: ["**/*.json"],
 });
