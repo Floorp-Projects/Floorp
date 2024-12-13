@@ -3,26 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { ContentDOMReference } from "resource://gre/modules/ContentDOMReference.sys.mjs";
-
-// Preference containing the list (space separated) of origins that are
-// allowed to send non-string values through a WebChannel, mainly for
-// backwards compatability. See bug 1238128 for more information.
-const URL_WHITELIST_PREF = "webchannel.allowObject.urlWhitelist";
-
-let _cachedWhitelist = null;
-
-const CACHED_PREFS = {};
-XPCOMUtils.defineLazyPreferenceGetter(
-  CACHED_PREFS,
-  "URL_WHITELIST",
-  URL_WHITELIST_PREF,
-  "",
-  // Null this out so we update it.
-  () => (_cachedWhitelist = null)
-);
 
 export class WebChannelChild extends JSWindowActorChild {
   handleEvent(event) {
@@ -39,16 +20,6 @@ export class WebChannelChild extends JSWindowActorChild {
     return undefined;
   }
 
-  _getWhitelistedPrincipals() {
-    if (!_cachedWhitelist) {
-      let urls = CACHED_PREFS.URL_WHITELIST.split(/\s+/);
-      _cachedWhitelist = urls.map(origin =>
-        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin)
-      );
-    }
-    return _cachedWhitelist;
-  }
-
   _onMessageToChrome(e) {
     // If target is window then we want the document principal, otherwise fallback to target itself.
     let principal = e.target.nodePrincipal
@@ -57,19 +28,8 @@ export class WebChannelChild extends JSWindowActorChild {
 
     if (e.detail) {
       if (typeof e.detail != "string") {
-        // Check if the principal is one of the ones that's allowed to send
-        // non-string values for e.detail.  They're whitelisted by site origin,
-        // so we compare on originNoSuffix in order to avoid other origin attributes
-        // that are not relevant here, such as containers or private browsing.
-        let objectsAllowed = this._getWhitelistedPrincipals().some(
-          whitelisted => principal.originNoSuffix == whitelisted.originNoSuffix
-        );
-        if (!objectsAllowed) {
-          console.error(
-            "WebChannelMessageToChrome sent with an object from a non-whitelisted principal"
-          );
-          return;
-        }
+        console.error("WebChannelMessageToChrome must only send strings");
+        return;
       }
 
       let eventTarget =
