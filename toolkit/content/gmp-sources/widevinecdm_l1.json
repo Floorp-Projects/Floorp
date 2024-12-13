@@ -6,7 +6,10 @@
     "gmp-widevinecdm-l1": {
       "platforms": {
         "WINNT_x86_64-msvc": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/release2/chrome_component/imoffpf67hel7kbknqflao2oo4_1.0.2738.0/neifaoindggfcjicffkgpmnlppeffabd_1.0.2738.0_win64_kj4dp5kifwxbdodqls7e5nzhtm.crx3",
+          "fileUrl": "https://edgedl.me.gvt1.com/edgedl/release2/chrome_component/imoffpf67hel7kbknqflao2oo4_1.0.2738.0/neifaoindggfcjicffkgpmnlppeffabd_1.0.2738.0_win64_kj4dp5kifwxbdodqls7e5nzhtm.crx3",
+          "mirrorUrls": [
+            "https://www.google.com/dl/release2/chrome_component/imoffpf67hel7kbknqflao2oo4_1.0.2738.0/neifaoindggfcjicffkgpmnlppeffabd_1.0.2738.0_win64_kj4dp5kifwxbdodqls7e5nzhtm.crx3"
+          ],
           "filesize": 1181927,
           "hashValue": "4fd27594c459fb1cd94a857be10f7d1d6216dbf202cd43e8a3fa395a268c72fc5f5c456c9cb314f2220d766af741db469c8bb106acbed419149a44a3b87619f1"
         },
