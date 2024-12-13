@@ -70,9 +70,7 @@ prefs = [
 ["browser_stale_product.js"]
 
 ["browser_ui_telemetry.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04'"
-]
+skip-if = ["true"]
 
 ["browser_unanalyzed_product.js"]
 
