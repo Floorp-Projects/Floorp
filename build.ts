@@ -285,6 +285,7 @@ async function release(mode: "before" | "after") {
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
         },
+        base: "chrome://noraneko/content"
       }),
       buildVite({
         configFile: r("./src/apps/designs/vite.config.ts"),
@@ -293,6 +294,7 @@ async function release(mode: "before" | "after") {
       buildVite({
         configFile: r("./src/apps/settings/vite.config.ts"),
         root: r("./src/apps/settings"),
+        base: "chrome://noraneko-settings/content"
       }),
 
       //applyMixin(binPath),
