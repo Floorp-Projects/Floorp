@@ -35,31 +35,17 @@ jobs:
           name: ${{'noraneko-win-amd64-mar-full'}}
           run-id: ${{inputs.artifact_workflow_run_id}}
           github-token: ${{github.token}}
-          path: ~/noraneko-mar
+          path: ~/noraneko-publish
       - name: Setup
         run: |
           pnpm i
 
-          mkdir ~/noraneko-publish
-
-          echo "$(cat ~/noraneko-mar/version.txt | cut -d "@" -f 1)" > ~/noraneko-mar/version.txt
-          echo "$(cat ~/noraneko-mar/mar_shasum.txt | cut -c 1-128)" > ~/noraneko-mar/mar_shasum.txt
-
-          echo "{" >> ~/noraneko-publish/meta.json
-          echo "\"version_display\":\"$(cat ~/noraneko-mar/version_display.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"version\":\"$(cat ~/noraneko-mar/version.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"noraneko_version\":\"$(cat ~/noraneko-mar/noraneko_version.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"mar_size\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"mar_shasum\":\"$(cat ~/noraneko-mar/mar_shasum.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"buildid\":\"$(cat ~/noraneko-mar/buildid.txt)\"" >> ~/noraneko-publish/meta.json
-          echo "}" >> ~/noraneko-publish/meta.json
-
-          cp ~/noraneko-mar/*.mar ~/noraneko-publish
+          sudo apt install jq
 
           node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-publish/meta.json ~/noraneko-publish/WINNT_x86_64-msvc-x64.update.xml
 
-          echo "VERSION=$(cat ~/noraneko-mar/version.txt)" >> "$GITHUB_ENV"
-          echo "NR_VERSION=$(cat ~/noraneko-mar/noraneko_version.txt)" >> "$GITHUB_ENV"
+          echo "VERSION=$(cat ~/noraneko-publish/meta.json | jq '.version' | sed 's/"//g')" >> "$GITHUB_ENV"
+          echo "NR_VERSION=$(cat ~/noraneko-publish/meta.json | jq '.noraneko_version' | sed 's/"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
       - name: Deploy to GitHub Releases 🚀
