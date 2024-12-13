@@ -161,13 +161,10 @@ jobs:
           cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt
           echo "$(cat ~/noraneko-mar/version.txt)@$(cat ~/noraneko-mar/noraneko_version.txt)" > ~/noraneko-mar/version_display.txt
 
-          shasum --algorithm 512 ~/noraneko-mar/noraneko-win-amd64-full.mar > ~/noraneko-mar/mar_shasum.txt
+          shasum --algorithm 512 ~/noraneko-mar/noraneko-win-amd64-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt
           stat --format "%s" ~/noraneko-mar/noraneko-win-amd64-full.mar > ~/noraneko-mar/mar_size.txt
 
           awk -F "=" '/BuildID/ {print $2}' "$(echo ~)/noraneko-dev/application.ini" > ~/noraneko-mar/buildid.txt
-
-          echo "$(cat ~/noraneko-mar/version.txt | cut -d "@" -f 1)" > ~/noraneko-mar/version.txt
-          echo "$(cat ~/noraneko-mar/mar_shasum.txt | cut -c 1-128)" > ~/noraneko-mar/mar_shasum.txt
 
           mkdir ~/noraneko-publish
 
