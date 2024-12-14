@@ -1194,15 +1194,9 @@ pref("network.manage-offline-status", true);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
-#ifdef XP_WIN
-  pref("network.protocol-handler.external.ms-windows-store", true);
-#endif
 
 // ...without warning dialogs
 pref("network.protocol-handler.warn-external.mailto", false);
-#ifdef XP_WIN
-  pref("network.protocol-handler.warn-external.ms-windows-store", false);
-#endif
 
 // By default, all protocol handlers are exposed.  This means that
 // the browser will respond to openURL commands for all URL types.
