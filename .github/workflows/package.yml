@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 name: "(A) 📦️ Package"
-
 on:
   workflow_dispatch:
     inputs:
@@ -12,6 +11,15 @@ on:
         options:
           - win-x64
           - linux-x64
+        default: win-x64
+      runtime_artifact_workflow_run_id:
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      platform:
+        type: string
+        default: win-x64
       runtime_artifact_workflow_run_id:
         type: string
         required: true

@@ -2,17 +2,26 @@ name: "(A) |α| Package and Publish Alpha"
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options:
+          - win-x64
+          - linux-x64
+        default: win-x64
+      runtime_artifact_workflow_run_id:
+        type: string
+        required: true
 
 jobs:
   package:
     uses: ./.github/workflows/package.yml
     with:
       platform: win-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_artifact_workflow_run_id }}
     secrets: inherit
 
   publish:
     needs: package
     uses: ./.github/workflows/publish_alpha.yml
-    with:
-      artifact_workflow_run_id: ${{ needs.package.outputs.run_id }}
     secrets: inherit
