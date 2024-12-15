@@ -7,19 +7,18 @@ name: "(A) |α| Publish Alpha"
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        type: choice
-        options:
-          - win-x64
-          - linux-x64
       artifact_workflow_run_id:
         type: string
         required: true
+  workflow_call:
+    inputs:
+      artifact_workflow_run_id:
+        type: string
 
 permissions:
   contents: write
 
-run-name: "|α| Publish Alpha ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}"
+run-name: "|α| Publish Alpha"
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -30,12 +29,21 @@ jobs:
         with:
           node-version: 20
       - name: Download artifact
+        if: ${{ github.event.inputs.artifact_workflow_run_id }}
         uses: actions/download-artifact@v4
         with:
           name: ${{'noraneko-win-amd64-mar-full'}}
           run-id: ${{inputs.artifact_workflow_run_id}}
           github-token: ${{github.token}}
           path: ~/noraneko-publish
+
+      - name: Try download artifact from same workflow
+        if: ${{ !github.event.inputs.artifact_workflow_run_id }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{'noraneko-win-amd64-mar-full'}}
+          path: ~/noraneko-publish
+
       - name: Setup
         run: |
           pnpm i
