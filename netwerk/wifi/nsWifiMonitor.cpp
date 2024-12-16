@@ -195,7 +195,9 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener,
     return NS_ERROR_NULL_POINTER;
   }
 
-  mListeners.AppendElement(WifiListenerHolder(aListener, aForcePolling));
+  if (!mListeners.put(WifiListenerHolder(aListener, aForcePolling))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Run a new scan to update the new listener.  If we were polling then
   // stop that polling and start a new polling interval now.
@@ -218,21 +220,16 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener* aListener) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  auto idx = mListeners.IndexOf(
-      WifiListenerHolder(aListener), 0,
-      [](const WifiListenerHolder& elt, const WifiListenerHolder& toRemove) {
-        return toRemove.mListener == elt.mListener ? 0 : 1;
-      });
-
-  if (idx == nsTArray<WifiListenerHolder>::NoIndex) {
+  auto iter = mListeners.lookup(WifiListenerHolder(aListener));
+  if (!iter) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mListeners[idx].mShouldPoll) {
+  if (iter->mShouldPoll) {
     --mNumPollingListeners;
   }
 
-  mListeners.RemoveElementAt(idx);
+  mListeners.remove(iter);
 
   if (!ShouldPoll()) {
     // Stop polling (if we were).
@@ -381,7 +378,9 @@ nsresult nsWifiMonitor::CallWifiListeners(
     bool aAccessPointsChanged) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("Sending wifi access points to the listeners"));
-  for (auto& listener : mListeners) {
+  // Listeners may (un)register other listeners while we iterate.
+  for (auto iter = mListeners.modIter(); !iter.done(); iter.next()) {
+    auto& listener = iter.getMutable();
     if (!listener.mHasSentData || aAccessPointsChanged) {
       listener.mHasSentData = true;
       listener.mListener->OnChange(aAccessPoints);
@@ -393,7 +392,9 @@ nsresult nsWifiMonitor::CallWifiListeners(
 nsresult nsWifiMonitor::PassErrorToWifiListeners(nsresult rv) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("About to send error to the wifi listeners"));
-  for (const auto& listener : mListeners) {
+  // Listeners may (un)register other listeners while we iterate.
+  for (auto iter = mListeners.iter(); !iter.done(); iter.next()) {
+    auto& listener = iter.get();
     listener.mListener->OnError(rv);
   }
   return NS_OK;
