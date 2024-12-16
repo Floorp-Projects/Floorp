@@ -12,6 +12,10 @@
 #include "nsWifiAccessPoint.h"
 #include "WifiScanner.h"
 
+#if defined(XP_WIN) && defined(_M_IX86)
+#  include <objbase.h>  // STDMETHODCALLTYPE
+#endif
+
 // Test that removing wifi scan listeners in a wifi scan listener does
 // not crash.
 
