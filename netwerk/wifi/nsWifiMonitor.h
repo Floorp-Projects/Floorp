@@ -20,7 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "WifiScanner.h"
-#include "mozilla/HashTable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 class TestWifiMonitor;
@@ -39,30 +39,12 @@ class nsWifiAccessPoint;
 #  define kMacOSWifiMonitorStackSize (512 * 1024)
 #endif
 
-struct WifiListenerHolder {
-  RefPtr<nsIWifiListener> mListener;
+struct WifiListenerData {
   bool mShouldPoll;
   bool mHasSentData = false;
 
-  explicit WifiListenerHolder(nsIWifiListener* aListener,
-                              bool aShouldPoll = false)
-      : mListener(aListener), mShouldPoll(aShouldPoll) {}
-
-  // We can't have more than one WifiListenerHolder per nsIWifiListener
-  // (during lookup we don't know the other values), so we delegate to the
-  // default hash for that value.
-  struct WifiListenerHasher {
-    using Key = WifiListenerHolder;
-    using Lookup = WifiListenerHolder;
-    static mozilla::HashNumber hash(const Lookup& aLookup) {
-      return mozilla::DefaultHasher<nsIWifiListener*>::hash(aLookup.mListener);
-    }
-    static bool match(const Key& aKey, const Lookup& aLookup) {
-      return mozilla::DefaultHasher<nsIWifiListener*>::match(aKey.mListener,
-                                                             aLookup.mListener);
-    }
-    static void rekey(Key& aKey, const Key& aNewKey) { aKey = aNewKey; }
-  };
+  explicit WifiListenerData(bool aShouldPoll = false)
+      : mShouldPoll(aShouldPoll) {}
 };
 
 class nsWifiMonitor final : public nsIWifiMonitor, public nsIObserver {
@@ -99,9 +81,12 @@ class nsWifiMonitor final : public nsIWifiMonitor, public nsIObserver {
 
   bool ShouldPoll() {
     MOZ_ASSERT(!IsBackgroundThread());
-    return (mShouldPollForCurrentNetwork && !mListeners.empty()) ||
+    return (mShouldPollForCurrentNetwork && !mListeners.IsEmpty()) ||
            mNumPollingListeners > 0;
   };
+
+  template <typename CallbackFn>
+  nsresult NotifyListeners(CallbackFn&& aCallback);
 
 #ifdef ENABLE_TESTS
   // Test-only function that confirms we "should" be polling.  May be wrong
@@ -114,8 +99,7 @@ class nsWifiMonitor final : public nsIWifiMonitor, public nsIObserver {
   nsCOMPtr<nsIThread> mThread;
 
   // Main thread only.
-  mozilla::HashSet<WifiListenerHolder, WifiListenerHolder::WifiListenerHasher>
-      mListeners;
+  nsTHashMap<RefPtr<nsIWifiListener>, WifiListenerData> mListeners;
 
   // Background thread only.
   mozilla::UniquePtr<mozilla::WifiScanner> mWifiScanner;
