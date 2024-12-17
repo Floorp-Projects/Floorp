@@ -12,12 +12,14 @@
 #include "AccessibleStates.h"
 
 #include "AccAttributes.h"
+#include "ApplicationAccessible.h"
 #include "Compatibility.h"
 #include "ia2AccessibleRelation.h"
 #include "IUnknownImpl.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleTypes.h"
 #include "mozilla/a11y/PDocAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "Relation.h"
 #include "TextRange-inl.h"
 #include "nsAccessibilityService.h"
@@ -352,6 +354,22 @@ ia2Accessible::get_windowHandle(HWND* aWindowHandle) {
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   *aWindowHandle = MsaaAccessible::GetHWNDFor(acc);
+  if (!*aWindowHandle && !StaticPrefs::accessibility_uia_enable()) {
+    // Bug 1890155: This can happen if a document is detached from its embedder.
+    // The document might be about to die or it might be moving to a different
+    // embedder; e.g. a tab in a different window. The IA2 -> UIA proxy may
+    // crash if we return a null HWND. For now, pick an arbitrary top level
+    // Gecko HWND. This might be wrong, but only briefly, since the document
+    // will either die or move very soon, at which point this method will
+    // return the correct answer.
+    // TODO This hack should be removed once we only use our native UIA
+    // implementation.
+    if (ApplicationAccessible* app = ApplicationAcc()) {
+      if (LocalAccessible* firstRoot = app->LocalFirstChild()) {
+        *aWindowHandle = MsaaAccessible::GetHWNDFor(firstRoot);
+      }
+    }
+  }
   return S_OK;
 }
 
