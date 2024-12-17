@@ -19,13 +19,13 @@ body:
         > [!NOTE]
         > Windows 7, 8, 8.1, and earlier versions are not supported due to maintenance costs.
         > DRM is not supported, esp. on Netflix.
-        > In addition, kindly refer to the [Issue Tracker](https://docs.floorp.app/en/issues/).
+        > In addition, kindly refer to the [Issue Tracker](https://docs.floorp.app/docs/issue-tracker/).
 
   - type: markdown
     attributes:
       value: |
         ## Before submitting your issue
-        Kindly refer to the guidelines in the ["When you submit an issue to Floorp"](https://docs.floorp.app/en/others/issue-checklist/) section of Floorp Docs!
+        Kindly refer to the guidelines in the ["When you submit an issue to Floorp"](https://docs.floorp.app/docs/other/issue-checklist/) section of Floorp Docs!
 
   - type: checkboxes
     attributes:
