@@ -766,12 +766,17 @@ impl CalcNode {
                     }
                     match *input.next()? {
                         Token::Delim('+') => {
-                            sum.push(Self::parse_product(context, input, allowed_units)?);
+                            let rhs = Self::parse_product(context, input, allowed_units)?;
+                            if sum.last_mut().unwrap().try_sum_in_place(&rhs).is_err() {
+                                sum.push(rhs);
+                            }
                         },
                         Token::Delim('-') => {
                             let mut rhs = Self::parse_product(context, input, allowed_units)?;
                             rhs.negate();
-                            sum.push(rhs);
+                            if sum.last_mut().unwrap().try_sum_in_place(&rhs).is_err() {
+                                sum.push(rhs);
+                            }
                         },
                         _ => {
                             input.reset(&start);
