@@ -13,6 +13,9 @@ on:
         type: string
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   package:
     uses: ./.github/workflows/package.yml
