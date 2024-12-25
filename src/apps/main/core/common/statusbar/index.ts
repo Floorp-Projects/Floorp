@@ -41,10 +41,6 @@ export function init() {
   mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
 
   manager.init();
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
 }
 
 function onPopupShowing(event: Event) {

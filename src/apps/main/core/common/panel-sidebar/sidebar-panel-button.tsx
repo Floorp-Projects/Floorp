@@ -65,7 +65,7 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
   }
 
   return (
-    <xul:hbox
+    <div
       draggable={true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -73,19 +73,18 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <xul:toolbarbutton
+      <div
         id={panel.id}
         class={`${panel.type} panel-sidebar-panel`}
-        context="panel-sidebar-panel-context"
         data-checked={selectedPanelId() === panel.id}
         data-panel-id={panel.id}
-        style={{
-          "list-style-image": `url(${faviconUrl()})`,
-        }}
-        onCommand={() => {
+        onClick={() => {
           gPanelSidebar.changePanel(panel.id);
         }}
-      />
+        style={{display:"flex","align-items":"center","justify-content":"center"}}
+      >
+        <img src={faviconUrl()} width="16" height="16" />
+      </div>
       <Show
         when={
           panel.userContextId !== 0 &&
@@ -100,6 +99,6 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
           }}
         />
       </Show>
-    </xul:hbox>
+    </div>
   );
 }

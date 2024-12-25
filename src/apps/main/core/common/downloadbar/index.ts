@@ -54,8 +54,4 @@ export function init() {
     e.preventDefault();
     scrollElem.scrollLeft += e.deltaY * 10;
   });
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
 }

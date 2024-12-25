@@ -20,9 +20,4 @@ export async function init() {
     PanelSidebarFloating.getInstance();
     PanelSidebar.getInstance();
   });
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept(async (m: any) => {
-    await m?.init();
-  });
 }

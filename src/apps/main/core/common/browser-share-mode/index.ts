@@ -5,12 +5,16 @@
 
 import { render } from "@nora/solid-xul";
 import { ShareModeElement } from "./browser-share-mode";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
-export function init() {
-  render(ShareModeElement, document.querySelector("#menu_ToolsPopup"), {
-    marker: document.querySelector("#menu_openFirefoxView")!,
-    hotCtx: import.meta.hot,
-  });
-
-  import.meta.hot?.accept((m) => m?.initShareMode());
+@noraComponent(import.meta.hot)
+export default class BrowserShareMode extends NoraComponentBase {
+  constructor() {
+    super();
+    this.logger.info("Hello from Logger!")
+    render(ShareModeElement, document.querySelector("#menu_ToolsPopup"), {
+      marker: document.querySelector("#menu_openFirefoxView")!,
+      hotCtx: import.meta.hot,
+    });
+  }
 }

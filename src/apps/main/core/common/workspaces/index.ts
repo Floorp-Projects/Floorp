@@ -25,8 +25,4 @@ export function init() {
     WorkspacesPopupContxtMenu.getInstance();
     WorkspaceManageModal.getInstance();
   });
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
 }

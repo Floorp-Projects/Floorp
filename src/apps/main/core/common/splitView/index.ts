@@ -11,9 +11,4 @@ export function init() {
   SplitViewManager.getInstance();
   SplitViewContextMenu.getInstance();
   SplitView.getInstance();
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept((m: { init: () => void }) => {
-    m?.init();
-  });
 }

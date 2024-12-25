@@ -3,6 +3,7 @@ import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
+import swc from 'unplugin-swc'
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
@@ -96,6 +97,18 @@ export default defineConfig({
         console.log(`handle hot : ${JSON.stringify(ctx.modules)}`);
       },
     },
+    swc.vite({
+      "jsc": {
+        "parser": {
+          "syntax":"typescript",
+          "decorators": true,
+        },
+        transform: {
+          decoratorMetadata: true,
+          decoratorVersion: "2022-03",
+        }
+      }
+    }),
     solidPlugin({
       solid: {
         generate: "universal",

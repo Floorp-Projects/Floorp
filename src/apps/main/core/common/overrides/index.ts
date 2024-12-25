@@ -7,5 +7,4 @@ import { Overrides } from "./overrides.js";
 
 export function init() {
   Overrides.getInstance();
-  import.meta.hot?.accept((m) => m?.init());
 }

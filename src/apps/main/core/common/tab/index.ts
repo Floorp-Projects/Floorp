@@ -15,9 +15,4 @@ export function init() {
   TabSizeSpecification.getInstance();
   TabDoubleClickClose.getInstance();
   TabPinnedTabCustomization.getInstance();
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept((m: { init: () => void }) => {
-    m?.init();
-  });
 }

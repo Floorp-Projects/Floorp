@@ -33,9 +33,6 @@ export function init() {
     import.meta.hot,
   );
   manager.init();
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
 }
 
 async function getManifest() {

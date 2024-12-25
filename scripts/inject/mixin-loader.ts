@@ -1,8 +1,8 @@
 import fg from "fast-glob";
 import path from "node:path";
-import babel from "@babel/core";
 import fs from "node:fs/promises";
 import { transform } from "./wasm/nora-inject";
+import {transformFileSync} from "@swc/core"
 
 const fileList = await fg("*", {
   cwd: import.meta.dirname + "/mixins",
@@ -10,11 +10,15 @@ const fileList = await fg("*", {
 });
 
 export async function applyMixin(binPath: string) {
-  const result = babel.transformFileSync(
+  const result = transformFileSync(
     path.resolve(import.meta.dirname, `./shared/define.ts`),
     {
-      presets: ["@babel/preset-typescript"],
-    },
+      "jsc":{
+        "parser":{
+          syntax:"typescript",
+        }
+      }
+    }
   );
   await fs.mkdir(
     `${path.relative(process.cwd(), import.meta.dirname)}/../../_dist/temp/mixins`,
@@ -34,16 +38,20 @@ export async function applyMixin(binPath: string) {
   );
 
   for (const file of fileList) {
-    const result = babel.transformFileSync(
+    const result = transformFileSync(
       path.resolve(import.meta.dirname, `./mixins/${file}`),
       {
-        plugins: [
-          [
-            "@babel/plugin-proposal-decorators",
-            { version: "2023-11", options: { decoratorsBeforeExport: true } },
-          ],
-        ],
-      },
+        "jsc":{
+          "parser":{
+            syntax:"typescript",
+            decorators:true
+          },
+          transform: {
+            decoratorMetadata: true,
+            decoratorVersion: "2022-03",
+          }
+        }
+      }
     );
 
     await fs.writeFile(

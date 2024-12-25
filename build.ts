@@ -43,7 +43,7 @@ const getBinArchive = () => {
 };
 
 const binArchive = getBinArchive();
-const binDir = "_dist/bin";
+const binDir = "_dist/bin/noraneko";
 
 try {
   await fs.access("dist");
@@ -128,6 +128,9 @@ let devInit = false;
 async function run(mode: "dev" | "test" = "dev") {
   await initBin();
   await applyPatches();
+
+  //create version for dev
+  await version();
   let buildid2: string | null = null;
   try {
     await fs.access("_dist/buildid2");
@@ -196,12 +199,12 @@ async function run(mode: "dev" | "test" = "dev") {
       configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest("_dist/bin", true, "noraneko-dev"),
+    injectManifest(binDir, true, "noraneko-dev"),
     (async () => {
-      await injectXHTML("_dist/bin");
-      await injectXHTMLDev("_dist/bin");
+      await injectXHTML(binDir);
+      await injectXHTMLDev(binDir);
     })(),
-    applyMixin("_dist/bin"),
+    applyMixin(binDir),
     (async () => {
       try {
         await fs.access("_dist/profile");

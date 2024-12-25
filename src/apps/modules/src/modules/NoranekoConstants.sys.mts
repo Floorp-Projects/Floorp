@@ -1,3 +1,3 @@
 export const NoranekoConstants = Object.freeze({
-  version2: "0.1.10",
+  version2: "0.1.11",
 });

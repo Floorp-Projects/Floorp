@@ -5,11 +5,6 @@
 
 import { gFlexOrder } from "./flex-order";
 
-export async function init() {
+export function init() {
   gFlexOrder.init();
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept(async (m: any) => {
-    await m?.init();
-  });
 }
