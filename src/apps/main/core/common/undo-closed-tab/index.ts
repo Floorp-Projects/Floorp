@@ -3,8 +3,55 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { UndoClosedTab } from "./undo-closed-tab";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { createRootHMR } from "@nora/solid-xul";
+import { addI18nObserver } from "../../../i18n/config";
+import { StyleElement } from "./styleElem";
+import { BrowserActionUtils } from "@core/utils/browser-action";
+import i18next from "i18next";
 
-export function init() {
-  new UndoClosedTab();
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs",
+);
+
+@noraComponent(import.meta.hot)
+export default class UndoClosedTab extends NoraComponentBase {
+  init() {
+    BrowserActionUtils.createToolbarClickActionButton(
+      "undo-closed-tab",
+      null,
+      () => {
+        window.undoCloseTab();
+      },
+      StyleElement(),
+      CustomizableUI.AREA_NAVBAR,
+      2,
+      (aNode: XULElement) => {
+        const tooltip = document?.createXULElement("tooltip") as XULElement;
+        tooltip.id = "undo-closed-tab-tooltip";
+        tooltip.hasbeenopened = "false";
+
+        document?.getElementById("mainPopupSet")?.appendChild(tooltip);
+
+        aNode.tooltip = "undo-closed-tab-tooltip";
+
+        createRootHMR(
+          () => {
+            addI18nObserver((locale) => {
+              aNode.label = i18next.t("undo-closed-tab.label", {
+                lng: locale,
+                ns: "undo"
+              });
+              tooltip.label = i18next.t("undo-closed-tab.tooltiptext", {
+                lng: locale,
+                ns: "undo"
+              });
+            });
+          },
+          import.meta.hot,
+        );
+      },
+    );
+  }
 }
+

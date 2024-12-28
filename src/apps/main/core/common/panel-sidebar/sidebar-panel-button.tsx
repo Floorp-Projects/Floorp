@@ -5,14 +5,15 @@
 
 import { createSignal, createEffect, Show } from "solid-js";
 import { getFaviconURLForPanel } from "./utils/favicon-getter";
-import { PanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar";
 import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "./data";
 import type { Panel } from "./utils/type";
 import { isExtensionExist } from "./extension-panels";
 import { getUserContextColor } from "./utils/userContextColor-getter";
 
-export function PanelSidebarButton({ panel }: { panel: Panel }) {
-  const gPanelSidebar = PanelSidebar.getInstance();
+export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar }) {
+  const panel = props.panel
+  const gPanelSidebar = props.ctx;
   const [faviconUrl, setFaviconUrl] = createSignal("");
 
   createEffect(async () => {

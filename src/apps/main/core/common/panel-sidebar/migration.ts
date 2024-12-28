@@ -6,7 +6,7 @@
 import { PanelSidebarStaticNames } from "./utils/panel-sidebar-static-names";
 import type { PanelSidebarConfig } from "./utils/type";
 
-export async function migratePanelSidebarData(callback: () => void) {
+export async function migratePanelSidebarData() {
   const oldData = Services.prefs.getCharPref(
     "floorp.browser.sidebar2.data",
     undefined,
@@ -55,7 +55,6 @@ export async function migratePanelSidebarData(callback: () => void) {
       JSON.stringify({ config }),
     );
   }
-  callback();
 }
 
 type OldSidebarData = {

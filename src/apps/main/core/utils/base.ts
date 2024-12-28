@@ -53,4 +53,5 @@ export abstract class NoraComponentBase {
     },hot);
   }
   abstract init(): void;
+  
 }

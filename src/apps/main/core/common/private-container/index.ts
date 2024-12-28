@@ -6,11 +6,15 @@
 import { render } from "@nora/solid-xul";
 import { gFloorpPrivateContainer } from "./browser-private-container";
 import { ContextMenu } from "./context-menu";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
-export function init() {
-  render(ContextMenu, document.querySelector("#tabContextMenu"), {
-    marker: document.querySelector("#context_selectAllTabs")!,
-  });
-  // Inject menu item to open link in private container.
-  window.gFloorpPrivateContainer = gFloorpPrivateContainer.getInstance();
+@noraComponent(import.meta.hot)
+export default class PrivateContainer extends NoraComponentBase {
+  init(): void {
+    render(ContextMenu, document.querySelector("#tabContextMenu"), {
+      marker: document.querySelector("#context_selectAllTabs")!,
+    });
+    // Inject menu item to open link in private container.
+    window.gFloorpPrivateContainer = gFloorpPrivateContainer.getInstance();
+  }
 }

@@ -7,15 +7,16 @@ import { For } from "solid-js";
 import { panelSidebarData } from "./data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { setPanelSidebarAddModalState } from "./panel-sidebar-modal";
+import { CPanelSidebar } from "./panel-sidebar";
 
-export function SidebarSelectbox() {
+export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
   return (
     <xul:vbox
       id="panel-sidebar-select-box"
       class="webpanel-box chromeclass-extrachrome"
     >
       <For each={panelSidebarData()}>
-        {(panel) => <PanelSidebarButton panel={panel} />}
+        {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
       </For>
       <xul:toolbarbutton
         id="panel-sidebar-add"

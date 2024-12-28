@@ -3,8 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 import { gFloorpProfileManager } from "./profile-manager";
 
-export function init() {
-  gFloorpProfileManager.getInstance();
+@noraComponent(import.meta.hot)
+export default class ProfileManager extends NoraComponentBase {
+  init() {
+    gFloorpProfileManager.getInstance();
+  }
 }

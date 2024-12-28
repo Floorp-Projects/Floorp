@@ -10,9 +10,9 @@ import { applyUserJS } from "./userjs-parser";
 import { config } from "./configs";
 import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
-import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?url";
-import photonUserJs from "@nora/skin/lepton/userjs/photon.js?url";
-import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?url";
+import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
+import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";
+import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import styleBrowser from "./browser.css?inline";
 
@@ -29,23 +29,35 @@ function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
     case "lepton": {
       return {
         styles: [leptonChromeStyles, leptonTabStyles],
-        userjs: `chrome://noraneko${leptonUserJs}`,
+        userjs: leptonUserJs,
       };
     }
     case "photon": {
       return {
         styles: [leptonChromeStyles, leptonTabStyles],
-        userjs: `chrome://noraneko${photonUserJs}`,
+        userjs: photonUserJs,
       };
     }
     case "protonfix": {
       return {
         styles: [leptonChromeStyles, leptonTabStyles],
-        userjs: `chrome://noraneko${protonfixUserJs}`,
+        userjs: protonfixUserJs,
       };
     }
+    case "proton": {
+      return {
+        styles: null,
+        userjs: null,
+      };
+    }
+    default: {
+      pref.globalConfigs.userInterface satisfies never;
+      return {
+        styles:null,
+        userjs:null
+      }
+    }
   }
-  return { styles: null, userjs: null };
 }
 
 export function BrowserDesignElement() {

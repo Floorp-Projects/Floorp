@@ -8,11 +8,15 @@ import { TabOpenPosition } from "./openPosition";
 import { TabSizeSpecification } from "./sizeSpecification";
 import { TabDoubleClickClose } from "./doubleClickClose";
 import { TabPinnedTabCustomization } from "./pinnedTabCustomization";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
-export function init() {
-  TabScroll.getInstance();
-  TabOpenPosition.getInstance();
-  TabSizeSpecification.getInstance();
-  TabDoubleClickClose.getInstance();
-  TabPinnedTabCustomization.getInstance();
+@noraComponent(import.meta.hot)
+export default class Tab extends NoraComponentBase {
+  init() {
+    TabScroll.getInstance();
+    TabOpenPosition.getInstance();
+    TabSizeSpecification.getInstance();
+    TabDoubleClickClose.getInstance();
+    TabPinnedTabCustomization.getInstance();
+  }
 }
