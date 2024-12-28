@@ -99,6 +99,7 @@ export default defineConfig({
     },
     swc.vite({
       "jsc": {
+        target: "esnext",
         "parser": {
           "syntax":"typescript",
           "decorators": true,

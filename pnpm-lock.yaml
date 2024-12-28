@@ -151,6 +151,9 @@ importers:
       '@nora/test':
         specifier: workspace:*
         version: link:../test
+      chroma-js:
+        specifier: ^3.1.2
+        version: 3.1.2
       consola:
         specifier: ^3.3.3
         version: 3.3.3
@@ -170,6 +173,9 @@ importers:
         specifier: ^8.18.0
         version: 8.18.0(bufferutil@4.0.8)
     devDependencies:
+      '@types/chroma-js':
+        specifier: ^2.4.5
+        version: 2.4.5
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -1654,6 +1660,9 @@ packages:
   '@types/babel__traverse@7.20.6':
     resolution: {integrity: sha512-r1bzfrm0tomOI8g1SzvCaQHo6Lcv6zu0EA+W2kHrt8dyrHQxGzBBL4kdkzIS+jBMV+EYcMAEAqXqYaLJq5rOZg==}
 
+  '@types/chroma-js@2.4.5':
+    resolution: {integrity: sha512-6ISjhzJViaPCy2q2e6PgK+8HcHQDQ0V2LDiKmYAh+jJlLqDa6HbwDh0wOevHY0kHHUx0iZwjSRbVD47WOUx5EQ==}
+
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
@@ -2135,6 +2144,9 @@ packages:
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
     engines: {node: '>= 14.16.0'}
+
+  chroma-js@3.1.2:
+    resolution: {integrity: sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==}
 
   chromium-bidi@0.11.0:
     resolution: {integrity: sha512-6CJWHkNRoyZyjV9Rwv2lYONZf1Xm0IuDyNq97nwSsxxP3wf5Bwy15K5rOvVKMtJ127jJBmxFUanSAOjgFRxgrA==}
@@ -5067,6 +5079,8 @@ snapshots:
     dependencies:
       '@babel/types': 7.26.3
 
+  '@types/chroma-js@2.4.5': {}
+
   '@types/cookie@0.6.0': {}
 
   '@types/estree@1.0.6': {}
@@ -5873,6 +5887,8 @@ snapshots:
   chokidar@4.0.3:
     dependencies:
       readdirp: 4.0.2
+
+  chroma-js@3.1.2: {}
 
   chromium-bidi@0.11.0(devtools-protocol@0.0.1367902):
     dependencies:

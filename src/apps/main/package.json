@@ -7,6 +7,7 @@
     "@nora/skin": "workspace:*",
     "@nora/solid-xul": "workspace:*",
     "@nora/test": "workspace:*",
+    "chroma-js": "^3.1.2",
     "consola": "^3.3.3",
     "es-toolkit": "^1.31.0",
     "i18next": "^24.2.0",
@@ -15,6 +16,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/chroma-js": "^2.4.5",
     "@types/uuid": "^10.0.0",
     "unplugin-swc": "^1.5.1",
     "vite": "6.0.5",

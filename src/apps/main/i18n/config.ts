@@ -27,6 +27,7 @@ export function initI18N() {
   });
 }
 const [lang, setLang] = createSignal("ja-JP");
+
 /**
  *
  * @param observer
