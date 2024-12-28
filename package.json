@@ -33,7 +33,7 @@
     "@iconify-json/mdi": "^1.2.2",
     "@iconify-json/mingcute": "^1.2.3",
     "@swc-node/register": "^1.10.9",
-    "@swc/core": "^1.10.1",
+    "@swc/core": "^1.10.3",
     "@types/adm-zip": "^0.5.7",
     "@types/node": "^22.10.2",
     "@types/postcss-sorting": "^8.0.2",
@@ -49,7 +49,7 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "uuid": "^11.0.3",
-    "vite": "6.0.5",
+    "vite": "6.0.6",
     "vite-plugin-solid": "^2.11.0",
     "vite-tsconfig-paths": "^5.1.4",
     "xml-js": "^1.6.11"
