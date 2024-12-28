@@ -5,12 +5,15 @@
 /**
  * This file from https://phabricator.services.mozilla.com/D209620,
  * the source of https://bugzilla.mozilla.org/show_bug.cgi?id=1895418
- * in 2024-05-28 21:30 KST
+ * Currently https://searchfox.org/mozilla-central/source/tools/%40types
+ * in 2024-12-28 21:05 KST
  */
 
-/// <reference path="../lib.gecko.xpcom.d.ts" />
-/// <reference path="../lib.gecko.services.d.ts" />
-/// <reference path="../lib.gecko.dom.d.ts" />
+/// <reference types="../lib.gecko.xpcom.d.ts" />
+/// <reference types="../lib.gecko.services.d.ts" />
+/// <reference types="../lib.gecko.dom.d.ts" />
+/// <reference types="../lib.gecko.tweaks.d.ts" />
+/// <reference types="../lib.gecko.nsresult.d.ts" />
 
 /* NORA START */
 declare var window: Window;

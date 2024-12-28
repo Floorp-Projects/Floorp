@@ -1,2 +1,6 @@
+[package]
+name = "noraneko"
+edition = "2021"
+
 [workspace]
 members = ["crates/nora-inject"]

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
+import istanbulPlugin from "vite-plugin-istanbul";
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
@@ -13,6 +14,7 @@ export default defineConfig({
   publicDir: r("public"),
   server: {
     port: 5181,
+    strictPort: true,
   },
   define: {
     "import.meta.env.__BUILDID2__": '"placeholder"',
@@ -124,6 +126,7 @@ export default defineConfig({
         });
       },
     },
+    istanbulPlugin({}),
   ],
   optimizeDeps: {
     include: ["./node_modules/@nora"],
