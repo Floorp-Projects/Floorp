@@ -9,6 +9,9 @@ import { DownloadBarManager } from "./downloadbar-manager";
 
 export let manager: DownloadBarManager;
 
+// THIS CANNOT BE HOT RELOADED
+// TODO: REMOVE ALL CREATE_ROOT_HMR
+
 export function init() {
   createRootHMR(
     () => {
@@ -40,8 +43,6 @@ export function init() {
   );
   window.DownloadsPanel._initialized = false;
   window.DownloadsPanel.initialize();
-  window.DownloadsView.onDownloadAdded_hook =
-    window.DownloadsView.onDownloadAdded;
   window.DownloadsView.onDownloadAdded = (download) => {
     document.getElementById("downloadsListBox").scrollLeft = 0;
     DownloadsView.onDownloadAdded_hook(download);
