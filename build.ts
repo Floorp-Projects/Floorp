@@ -28,9 +28,11 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const getBinArchive = () => {
+const getBinArchive = async () => {
   if (process.platform === "win32") {
-    return "noraneko-win-amd64-dev.zip";
+    for await (const x of fs.glob("noraneko-*.win64.zip")) {
+      return x
+    }
   } if (process.platform === "linux") {
     const arch = process.arch;
     if (arch === "arm64") {
@@ -42,7 +44,8 @@ const getBinArchive = () => {
   throw new Error("Unsupported platform/architecture");
 };
 
-const binArchive = getBinArchive();
+const binArchive = await getBinArchive();
+const binExtractDir = "_dist/bin";
 const binDir = "_dist/bin/noraneko";
 
 try {
@@ -63,7 +66,7 @@ async function decompressBin() {
       process.exit(1);
     }
 
-    new AdmZip(binArchive).extractAllTo(binDir);
+    new AdmZip(binArchive).extractAllTo(binExtractDir);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
 
