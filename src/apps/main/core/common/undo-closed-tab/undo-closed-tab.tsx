@@ -8,7 +8,7 @@ import iconStyle from "./icon.css?inline";
 
 import i18next from "i18next";
 import "../../../i18n/config";
-import { addI8NObserver } from "../../../i18n/config";
+import { addI18nObserver } from "../../../i18n/config";
 import { createRootHMR } from "@nora/solid-xul";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
@@ -41,12 +41,14 @@ export class UndoClosedTab {
 
         createRootHMR(
           () => {
-            addI8NObserver((locale) => {
+            addI18nObserver((locale) => {
               aNode.label = i18next.t("undo-closed-tab.label", {
                 lng: locale,
+                ns: "undo"
               });
               tooltip.label = i18next.t("undo-closed-tab.tooltiptext", {
                 lng: locale,
+                ns: "undo"
               });
             });
           },
