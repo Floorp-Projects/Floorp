@@ -1580,7 +1580,7 @@ interface LoadURIOptions {
     triggeringSandboxFlags?: number;
     triggeringStorageAccess?: boolean;
     triggeringWindowId?: number;
-    wasSchemelessInput?: boolean;
+    schemelessInput?: SchemelessInputType;
 }
 
 interface LockInfo {
@@ -24081,6 +24081,15 @@ declare namespace FuzzingFunctions {
     function synthesizeKeyboardEvents(aKeyValue: string, aDictionary?: KeyboardEventInit): void;
 }
 
+declare namespace Nyx {
+    function isEnabled(aFuzzerName: string): boolean;
+    function isReplay(): boolean;
+    function isStarted(): boolean;
+    function start(): void;
+    function release(): void;
+    function getRawData(aDst: Uint8Array): void;
+}
+
 declare namespace TestUtils {
     function gc(): Promise<void>;
 }
@@ -24275,7 +24284,7 @@ declare namespace L10nOverlays {
 }
 
 declare namespace MediaControlService {
-    function generateMediaControlKey(aKey: MediaControlKey): void;
+    function generateMediaControlKey(aKey: MediaControlKey, aSeekValue?: double): void;
     function getCurrentActiveMediaMetadata(): MediaMetadataInit;
     function getCurrentMediaSessionPlaybackState(): MediaSessionPlaybackState;
 }
@@ -25452,7 +25461,7 @@ type VideoTransferCharacteristics = "bt709" | "hlg" | "iec61966-2-1" | "linear" 
 type VisibilityState = "hidden" | "visible";
 type WakeLockType = "screen";
 type WebGLPowerPreference = "default" | "high-performance" | "low-power";
-type WebIDLProcType = "browser" | "extension" | "file" | "forkServer" | "gmpPlugin" | "gpu" | "inference" | "ipdlUnitTest" | "preallocated" | "privilegedabout" | "privilegedmozilla" | "rdd" | "remoteSandboxBroker" | "socket" | "unknown" | "utility" | "vr" | "web" | "webIsolated" | "webServiceWorker" | "withCoopCoep";
+type WebIDLProcType = "browser" | "extension" | "file" | "forkServer" | "gmpPlugin" | "gpu" | "inference" | "ipdlUnitTest" | "preallocated" | "privilegedabout" | "privilegedmozilla" | "rdd" | "socket" | "unknown" | "utility" | "vr" | "web" | "webIsolated" | "webServiceWorker" | "withCoopCoep";
 type WebIDLUtilityActorName = "audioDecoder_AppleMedia" | "audioDecoder_Generic" | "audioDecoder_WMF" | "jSOracle" | "mfMediaEngineCDM" | "unknown" | "windowsFileDialog" | "windowsUtils";
 type WebTransportCongestionControl = "default" | "low-latency" | "throughput";
 type WebTransportErrorSource = "session" | "stream";
