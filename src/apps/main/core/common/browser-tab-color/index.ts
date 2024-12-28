@@ -17,28 +17,24 @@ export let manager: TabColorManager;
 
 @noraComponent(import.meta.hot)
 export default class BrowserTabColor extends NoraComponentBase {
-  constructor() {
-    super();
+  init() {
     const _changeTabColor = this.changeTabColor.bind(this);
     const listener = {
       onLocationChange: (_webProgress, _request, _location, _flags) => {
         _changeTabColor();
       },
     } satisfies Pick<nsIWebProgressListener,"onLocationChange">;
-    createRootHMR(
-      () => {
-        manager = new TabColorManager();
-        window.gBrowser.addTabsProgressListener(listener);
-        window.gBrowser.tabContainer.addEventListener("TabSelect",this.changeTabColor);
-        onCleanup(
-          () => {
-            window.gBrowser.removeTabsProgressListener(listener);
-            window.gBrowser.tabContainer.removeEventListener("TabSelect", this.changeTabColor);
-          });
-          manager.init();
-      },
-      import.meta.hot,
-    );
+
+      manager = new TabColorManager();
+      window.gBrowser.addTabsProgressListener(listener);
+      window.gBrowser.tabContainer.addEventListener("TabSelect",this.changeTabColor);
+      onCleanup(
+        () => {
+          window.gBrowser.removeTabsProgressListener(listener);
+          window.gBrowser.tabContainer.removeEventListener("TabSelect", this.changeTabColor);
+        }
+      );
+      manager.init();
   }
 
   changeTabColor() {
@@ -58,7 +54,7 @@ export default class BrowserTabColor extends NoraComponentBase {
               --floorp-tab-label-fg-color: var(--floorp-tab-panel-fg-color);
               --floorp-tabs-icons-fg-color: var(--floorp-tab-panel-fg-color);
           }
-  
+
           #browser #TabsToolbar,
           :root:is(:not([lwtheme]), :not(:-moz-lwtheme)) #navigator-toolbox[id],
           #navigator-toolbox[id] {
@@ -67,7 +63,7 @@ export default class BrowserTabColor extends NoraComponentBase {
           .tab-label:not([selected]) {
             color: var(--floorp-tab-label-fg-color) !important;
           }
-  
+
           .tab-icon-stack > * , #TabsToolbar-customization-target > *, #tabs-newtab-button, .titlebar-color > * {
             color: var(--floorp-tabs-icons-fg-color) !important;
             fill: var(--floorp-tabs-icons-fg-color) !important;

@@ -9,8 +9,7 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
 @noraComponent(import.meta.hot)
 export default class BrowserShareMode extends NoraComponentBase {
-  constructor() {
-    super();
+  init() {
     this.logger.info("Hello from Logger!")
     render(ShareModeElement, document.querySelector("#menu_ToolsPopup"), {
       marker: document.querySelector("#menu_openFirefoxView")!,

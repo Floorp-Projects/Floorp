@@ -84,15 +84,14 @@ async function initializeModules(modules: Array<{ init?: typeof Function, name:s
 
   for (const module of modules) {
     try {
-      
       await module?.init?.();
       if (module && module.default) {
-        new module.default()
+        new module.default();
+      } else {
+        // import.meta.hot?.accept(module?.name,async(m)=>{
+        //   await m?.init?.();
+        // });
       }
-      
-      import.meta.hot?.accept(module?.name,async(m)=>{
-        await m?.init?.();
-      });
     } catch(e) {
       console.error(`[noraneko] Failed to init module ${module.name}:`, e);
     }
