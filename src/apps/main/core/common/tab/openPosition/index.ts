@@ -7,14 +7,6 @@ import { config } from "@core/common/designs/configs";
 import { createEffect } from "solid-js";
 
 export class TabOpenPosition {
-  private static instance: TabOpenPosition;
-  public static getInstance() {
-    if (!TabOpenPosition.instance) {
-      TabOpenPosition.instance = new TabOpenPosition();
-    }
-    return TabOpenPosition.instance;
-  }
-
   constructor() {
     createEffect(() => {
       const option = config().tab.tabOpenPosition;

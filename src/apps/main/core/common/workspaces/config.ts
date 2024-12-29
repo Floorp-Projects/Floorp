@@ -3,42 +3,57 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
-import { zWorkspacesServicesConfigs } from "./utils/type.js";
+import { Accessor, createEffect, createSignal, onCleanup, Setter } from "solid-js";
+import { TWorkspacesServicesConfigs, zWorkspacesServicesConfigs } from "./utils/type.js";
 import { getOldConfigs } from "./old-config.js";
+import { createRootHMR } from "@nora/solid-xul";
 
-/** enable/disable workspaces */
-export const [enabled, setEnabled] = createSignal(
-  Services.prefs.getBoolPref("floorp.browser.workspaces.enabled", true),
-);
-Services.prefs.addObserver("floorp.browser.workspaces.enabled", () =>
-  setEnabled(Services.prefs.getBoolPref("floorp.browser.workspaces.enabled")),
-);
-
-createEffect(() => {
-  Services.prefs.setBoolPref("floorp.browser.workspaces.enabled", enabled());
-});
-
-/** Configs */
-export const [config, setConfig] = createSignal(
-  zWorkspacesServicesConfigs.parse(
-    JSON.parse(
-      Services.prefs.getStringPref("floorp.workspaces.configs", getOldConfigs),
-    ),
-  ),
-);
-
-createEffect(() => {
-  Services.prefs.setStringPref(
-    "floorp.workspaces.configs",
-    JSON.stringify(config()),
+function createEnabled(): [Accessor<boolean>,Setter<boolean>] {
+  const [enabled, setEnabled] = createSignal(
+    Services.prefs.getBoolPref("floorp.browser.workspaces.enabled", true),
   );
-});
+  createEffect(() => {
+    Services.prefs.setBoolPref("floorp.browser.workspaces.enabled", enabled());
+  });
 
-Services.prefs.addObserver("floorp.workspaces.configs", () =>
-  setConfig(
+  const observer = () =>
+    setEnabled(Services.prefs.getBoolPref("floorp.browser.workspaces.enabled"));
+  Services.prefs.addObserver("floorp.browser.workspaces.enabled", observer);
+  onCleanup(()=>{
+    Services.prefs.removeObserver("floorp.browser.workspaces.enabled", observer);
+  })
+  return [enabled,setEnabled]
+}
+
+ /** enable/disable workspaces */
+export const [enabled,setEnabled] = createRootHMR(createEnabled,import.meta.hot);
+
+function createConfig(): [Accessor<TWorkspacesServicesConfigs>,Setter<TWorkspacesServicesConfigs>] {
+  const [config, setConfig] = createSignal(
+    zWorkspacesServicesConfigs.parse(
+      JSON.parse(
+        Services.prefs.getStringPref("floorp.workspaces.configs", getOldConfigs),
+      ),
+    ),
+  );
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      "floorp.workspaces.configs",
+      JSON.stringify(config()),
+    );
+  });
+
+  const observer = () => setConfig(
     zWorkspacesServicesConfigs.parse(
       JSON.parse(Services.prefs.getStringPref("floorp.workspaces.configs")),
     ),
-  ),
-);
+  );
+  Services.prefs.addObserver("floorp.workspaces.configs", observer);
+  onCleanup(()=>{
+    Services.prefs.removeObserver("floorp.workspaces.configs", observer);
+  });
+  return [config,setConfig]
+}
+
+/** Configs */
+export const [config,setConfig] = createRootHMR(createConfig,import.meta.hot);

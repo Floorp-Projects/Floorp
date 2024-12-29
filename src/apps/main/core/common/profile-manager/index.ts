@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
-import { gFloorpProfileManager } from "./profile-manager";
+import { CProfileManager } from "./profile-manager";
 
 @noraComponent(import.meta.hot)
 export default class ProfileManager extends NoraComponentBase {
   init() {
-    gFloorpProfileManager.getInstance();
+    new CProfileManager()
   }
 }

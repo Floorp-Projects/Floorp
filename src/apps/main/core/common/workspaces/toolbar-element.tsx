@@ -8,31 +8,25 @@ import { PopupElement } from "./popup-element.js";
 import workspacesStyles from "./styles.css?inline";
 import type { JSX } from "solid-js";
 import { WorkspacesServices } from "./workspaces.js";
+import { WorkspaceIcons } from "./utils/workspace-icons.js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
 );
 
 export class WorkspacesToolbarButton {
-  private static instance: WorkspacesToolbarButton;
-  public static getInstance() {
-    if (!WorkspacesToolbarButton.instance) {
-      WorkspacesToolbarButton.instance = new WorkspacesToolbarButton();
-    }
-    return WorkspacesToolbarButton.instance;
-  }
 
   private StyleElement = () => {
     return <style>{workspacesStyles}</style>;
   };
 
-  constructor() {
-    const gWorkspacesServices = WorkspacesServices.getInstance();
+  constructor(ctx:WorkspacesServices) {
+    const gWorkspacesServices = ctx;
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
       "workspaces-toolbar-button",
       "workspacesToolbarButtonPanel",
-      <PopupElement />,
+      <PopupElement ctx={gWorkspacesServices} />,
       null,
       (aNode) => {
         // On Startup, the workspace is not yet loaded, so we need to set the label after the workspace is loaded.

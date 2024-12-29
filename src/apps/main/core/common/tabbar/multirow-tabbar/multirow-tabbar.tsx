@@ -6,14 +6,7 @@
 import { config } from "../../designs/configs";
 import { createEffect } from "solid-js";
 
-export class gMultirowTabbarClass {
-  private static instance: gMultirowTabbarClass;
-  public static getInstance() {
-    if (!gMultirowTabbarClass.instance) {
-      gMultirowTabbarClass.instance = new gMultirowTabbarClass();
-    }
-    return gMultirowTabbarClass.instance;
-  }
+export class MultirowTabbarClass {
 
   private get arrowScrollbox(): XULElement | null {
     return document.querySelector("#tabbrowser-arrowscrollbox");

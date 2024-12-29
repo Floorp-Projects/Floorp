@@ -13,14 +13,6 @@ type XULTabElement = XULElement & {
 };
 
 export class TabScroll {
-  private static instance: TabScroll;
-  public static getInstance() {
-    if (!TabScroll.instance) {
-      TabScroll.instance = new TabScroll();
-    }
-    return TabScroll.instance;
-  }
-
   private handleOnWheel = (
     event: WheelEvent,
     tabBrowserTabs: XULTabElement,

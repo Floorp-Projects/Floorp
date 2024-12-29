@@ -3,23 +3,52 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { PanelMultiViewParentElement, Workspace } from "./utils/type";
-import { setworkspacesData, workspacesData } from "./data";
-import { createEffect } from "solid-js";
+import type { PanelMultiViewParentElement, TWorkspace } from "./utils/type";
+import { setWorkspacesData, workspacesData } from "./data";
+import { createEffect, onCleanup } from "solid-js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { setWorkspaceModalState } from "./workspace-modal";
 import { config, enabled } from "./config";
 
 export class WorkspacesServices {
-  private static instance: WorkspacesServices;
-  static getInstance() {
-    if (!WorkspacesServices.instance) {
-      WorkspacesServices.instance = new WorkspacesServices();
-    }
-    return WorkspacesServices.instance;
-  }
+  iconCtx:WorkspaceIcons
+  constructor(iconCtx:WorkspaceIcons) {
+    this.iconCtx=iconCtx;
+    createEffect(() => {
+      // If Workspaces is disabled when the effect runs, do not proceed.
+      // If user completely disabled workspaces, We need restart browser to apply changes.
+      if (!enabled()) {
+        return;
+      }
 
+      // Check if workspaces data is empty, if so, create default workspace.
+      if (!workspacesData().length) {
+        this.createNoNameWorkspace(true);
+      }
+
+      // Set default workspace id
+      if (!this.getCurrentWorkspaceId) {
+        this.setCurrentWorkspaceId(workspacesData()[0].id);
+        this.changeWorkspace(this.getCurrentWorkspaceId);
+      }
+
+      // Check Tabs visibility
+      this.checkTabsVisibility();
+      this.changeWorkspaceToolbarState();
+
+      // Set workspace toolbar state
+      this.changeWorkspaceToolbarState();
+    });
+    if (enabled()) {
+      this.changeWorkspace(this.getCurrentWorkspaceId);
+      window.gBrowser.addProgressListener(this.listener);
+
+      onCleanup(()=>{
+        window.gBrowser.removeProgressListener(this.listener)
+      })
+    }
+  }
   /**
    * Returns the localization object.
    * @returns The localization object.
@@ -105,14 +134,14 @@ export class WorkspacesServices {
    * @returns The new workspace id.
    */
   public createWorkspace(name: string, isDefault = false): string {
-    const workspace: Workspace = {
+    const workspace: TWorkspace = {
       id: this.getGeneratedUuid,
       name,
       icon: null,
       userContextId: 0,
       isDefault,
     };
-    setworkspacesData((prev) => {
+    setWorkspacesData((prev) => {
       return [...prev, workspace];
     });
     this.changeWorkspace(workspace.id);
@@ -140,7 +169,7 @@ export class WorkspacesServices {
       this.getDefaultWorkspaceId() ?? workspacesData()[0].id,
     );
     this.removeTabByWorkspaceId(workspaceId);
-    setworkspacesData((prev) => {
+    setWorkspacesData((prev) => {
       return prev.filter((workspace) => workspace.id !== workspaceId);
     });
   }
@@ -177,7 +206,7 @@ export class WorkspacesServices {
 
     const selectedWorkspace = this.getCurrentWorkspaceId;
     this.setCurrentWorkspaceId(workspaceId);
-    setworkspacesData((prev) => {
+    setWorkspacesData((prev) => {
       return prev.map((workspace) => {
         if (workspace.id === workspaceId) {
           return { ...workspace, isSelected: true };
@@ -197,7 +226,7 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public changeWorkspaceToolbarState(workspaceId = this.getCurrentWorkspaceId) {
-    const gWorkspaceIcons = WorkspaceIcons.getInstance();
+    const gWorkspaceIcons = this.iconCtx;
     const targetToolbarItem = document?.querySelector(
       "#workspaces-toolbar-button",
     ) as XULElement;
@@ -220,7 +249,7 @@ export class WorkspacesServices {
    * Get selected workspace id.
    * @returns The selected workspace id.
    */
-  public getWorkspaceById(workspaceId: string): Workspace {
+  public getWorkspaceById(workspaceId: string): TWorkspace {
     const workspace = workspacesData().find(
       (workspace) => workspace.id === workspaceId,
     );
@@ -256,8 +285,8 @@ export class WorkspacesServices {
    * @returns void
    * @throws Error if workspace with id not found.
    */
-  public saveWorkspaceById(workspaceId: string, workspace: Workspace) {
-    setworkspacesData((prev) => {
+  public saveWorkspaceById(workspaceId: string, workspace: TWorkspace) {
+    setWorkspacesData((prev) => {
       return prev.map((prevWorkspace) => {
         if (prevWorkspace.id === workspaceId) {
           return workspace;
@@ -272,7 +301,7 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceUp(workspaceId: string) {
-    setworkspacesData((prev) => {
+    setWorkspacesData((prev) => {
       const workspaces = [...prev];
       const workspaceIndex = workspaces.findIndex(
         (workspace) => workspace.id === workspaceId,
@@ -296,7 +325,7 @@ export class WorkspacesServices {
    * @param workspaceId The workspace id.
    */
   public reorderWorkspaceDown(workspaceId: string) {
-    setworkspacesData((prev) => {
+    setWorkspacesData((prev) => {
       const workspaces = [...prev];
       const workspaceIndex = workspaces.findIndex(
         (workspace) => workspace.id === workspaceId,
@@ -528,34 +557,4 @@ export class WorkspacesServices {
       this.checkTabsVisibility();
     },
   };
-
-  constructor() {
-    createEffect(() => {
-      // If Workspaces is disabled when the effect runs, do not proceed.
-      // If user completely disabled workspaces, We need restart browser to apply changes.
-      if (!enabled()) {
-        return;
-      }
-
-      // Check if workspaces data is empty, if so, create default workspace.
-      if (!workspacesData().length) {
-        this.createNoNameWorkspace(true);
-      }
-
-      // Set default workspace id
-      if (!this.getCurrentWorkspaceId) {
-        this.setCurrentWorkspaceId(workspacesData()[0].id);
-        this.changeWorkspace(this.getCurrentWorkspaceId);
-      }
-
-      // Check Tabs visibility
-      this.checkTabsVisibility();
-      this.changeWorkspaceToolbarState();
-
-      // Set workspace toolbar state
-      this.changeWorkspaceToolbarState();
-    });
-    this.changeWorkspace(this.getCurrentWorkspaceId);
-    window.gBrowser.addProgressListener(this.listener);
-  }
 }

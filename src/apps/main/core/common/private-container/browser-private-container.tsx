@@ -6,9 +6,7 @@
 import { ContextMenuUtils } from "@core/utils/context-menu";
 import { PrivateContainer } from "./PrivateContainer";
 
-export class gFloorpPrivateContainer {
-  private static instance: gFloorpPrivateContainer;
-  private initialized = false;
+export class FloorpPrivateContainer {
 
   private get privateContainerMenuItem() {
     return document.querySelector("#open_in_private_container") as XULElement;
@@ -17,18 +15,7 @@ export class gFloorpPrivateContainer {
     return document.querySelector("#context-openlink") as XULElement;
   }
 
-  public static getInstance() {
-    if (!gFloorpPrivateContainer.instance) {
-      gFloorpPrivateContainer.instance = new gFloorpPrivateContainer();
-    }
-    return gFloorpPrivateContainer.instance;
-  }
-
   constructor() {
-    if (this.initialized) {
-      return;
-    }
-
     // Create a private container.
     PrivateContainer.StartupCreatePrivateContainer();
     PrivateContainer.removePrivateContainerData();
@@ -36,12 +23,12 @@ export class gFloorpPrivateContainer {
     window.SessionStore.promiseInitialized.then(() => {
       window.gBrowser.tabContainer.addEventListener(
         "TabClose",
-        gFloorpPrivateContainer.removeDataIfPrivateContainerTabNotExist,
+        FloorpPrivateContainer.removeDataIfPrivateContainerTabNotExist,
       );
 
       window.gBrowser.tabContainer.addEventListener(
         "TabOpen",
-        gFloorpPrivateContainer.handleTabModifications,
+        FloorpPrivateContainer.handleTabModifications,
       );
 
       // add URL link a context menu to open in private container.
@@ -50,7 +37,7 @@ export class gFloorpPrivateContainer {
         "open-in_private-container",
         "context-openlink",
         () =>
-          gFloorpPrivateContainer.openWithPrivateContainer(
+          FloorpPrivateContainer.openWithPrivateContainer(
             window.gContextMenu.linkURL,
           ),
         "context-openlink",
@@ -60,8 +47,6 @@ export class gFloorpPrivateContainer {
         import.meta.hot,
       );
     });
-
-    this.initialized = true;
   }
 
   public static checkPrivateContainerTabExist() {
@@ -79,7 +64,7 @@ export class gFloorpPrivateContainer {
     const privateContainerUserContextID =
       PrivateContainer.getPrivateContainerUserContextId();
     setTimeout(() => {
-      if (!gFloorpPrivateContainer.checkPrivateContainerTabExist()) {
+      if (!FloorpPrivateContainer.checkPrivateContainerTabExist()) {
         PrivateContainer.removePrivateContainerData();
       }
 
@@ -115,10 +100,10 @@ export class gFloorpPrivateContainer {
     const tabs = window.gBrowser.tabs;
     for (const tab of tabs) {
       if (
-        gFloorpPrivateContainer.checkTabIsPrivateContainer(tab) &&
-        !gFloorpPrivateContainer.tabIsSaveHistory(tab)
+        FloorpPrivateContainer.checkTabIsPrivateContainer(tab) &&
+        !FloorpPrivateContainer.tabIsSaveHistory(tab)
       ) {
-        gFloorpPrivateContainer.applyDoNotSaveHistoryToTab(tab);
+        FloorpPrivateContainer.applyDoNotSaveHistoryToTab(tab);
       }
     }
   }

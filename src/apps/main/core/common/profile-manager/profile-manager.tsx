@@ -11,15 +11,7 @@ const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
 );
 
-export class gFloorpProfileManager {
-  private static instance: gFloorpProfileManager;
-  public static getInstance() {
-    if (!gFloorpProfileManager.instance) {
-      gFloorpProfileManager.instance = new gFloorpProfileManager();
-    }
-    return gFloorpProfileManager.instance;
-  }
-
+export class CProfileManager {
   private StyleElement = () => {
     return <style>{profileManagerStyle}</style>;
   };

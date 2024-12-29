@@ -4,17 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 type ModuleStrings = {
-  [key: string]: () => Promise<string>;
+  [key: string]: string;
 };
 
 export class WorkspaceIcons {
-  private static instance: WorkspaceIcons;
-  static getInstance(): WorkspaceIcons {
-    if (!WorkspaceIcons.instance) {
-      WorkspaceIcons.instance = new WorkspaceIcons();
-    }
-    return WorkspaceIcons.instance;
-  }
 
   private moduleStrings: ModuleStrings;
   private resolvedIcons: { [key: string]: string } = {};
@@ -64,13 +57,15 @@ export class WorkspaceIcons {
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
       query: "?url",
       import: "default",
+      eager:true
     }) as ModuleStrings;
   }
 
-  public async initializeIcons(): Promise<void> {
+  public initializeIcons() {
     if (this.iconsResolved) return;
+    console.log(this.moduleStrings)
     for (const path in this.moduleStrings) {
-      const iconUrl = await this.moduleStrings[path]();
+      const iconUrl = this.moduleStrings[path];
       const iconName = path.split("/").pop()?.replace(".svg", "") || "";
       this.resolvedIcons[iconName] = iconUrl;
     }

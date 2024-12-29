@@ -30,7 +30,6 @@ export namespace BrowserActionUtils {
     // This render is runnning every open browser window.
     if (styleElement) {
       render(() => styleElement, document?.head, {
-        hotCtx: import.meta.hot,
         marker: document?.head?.lastChild as Element,
       });
     }
@@ -72,14 +71,12 @@ export namespace BrowserActionUtils {
   ) {
     if (styleElement) {
       render(() => styleElement, document?.head, {
-        hotCtx: import.meta.hot,
         marker: document?.head?.lastChild as Element,
       });
     }
 
     if (popupElement) {
       render(() => popupElement, document?.getElementById("mainPopupSet"), {
-        hotCtx: import.meta.hot,
         marker: document?.getElementById("mainPopupSet")?.lastChild as Element,
       });
     }
@@ -89,26 +86,26 @@ export namespace BrowserActionUtils {
       return;
     }
 
-    (async () => {
-      CustomizableUI.createWidget({
-        id: widgetId,
-        type: "view",
-        viewId: targetViewId,
-        tooltiptext: (await document?.l10n?.formatValue(l10nId)) ?? "",
-        label: (await document?.l10n?.formatValue(l10nId)) ?? "",
-        removable: true,
-        onCreated: (aNode: XULElement) => {
-          onCreatedFunc?.(aNode);
-        },
-        onViewShowing: (event: Event) => {
-          onViewShowingFunc?.(event);
-        },
-      });
-      CustomizableUI.addWidgetToArea(
-        widgetId,
-        area as TCustomizableUIArea,
-        position ?? 0,
-      );
-    })();
+
+    CustomizableUI.createWidget({
+      id: widgetId,
+      type: "view",
+      viewId: targetViewId,
+      tooltiptext: (document?.l10n?.formatValue(l10nId)) ?? "",
+      label: (document?.l10n?.formatValue(l10nId)) ?? "",
+      removable: true,
+      onCreated: (aNode: XULElement) => {
+        onCreatedFunc?.(aNode);
+      },
+      onViewShowing: (event: Event) => {
+        onViewShowingFunc?.(event);
+      },
+    });
+    CustomizableUI.addWidgetToArea(
+      widgetId,
+      area as TCustomizableUIArea,
+      position ?? 0,
+    );
+
   }
 }

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
 
 export namespace gFlexOrder {
@@ -20,6 +20,10 @@ export namespace gFlexOrder {
   export function init() {
     applyFlexOrder();
     Services.prefs.addObserver(fxSidebarPosition, applyFlexOrder);
+
+    onCleanup(()=>{
+      Services.prefs.removeObserver(fxSidebarPosition, applyFlexOrder);
+    });
 
     createEffect(() => {
       panelSidebarConfig();
@@ -131,9 +135,6 @@ export namespace gFlexOrder {
       orders.browserBox,
     );
 
-    render(() => style, document?.head, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any)?.hot,
-    });
+    render(() => style, document?.head);
   }
 }

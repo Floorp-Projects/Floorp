@@ -12,21 +12,22 @@ import { WorkspaceIcons } from "./utils/workspace-icons.js";
 import { enabled } from "./config.js";
 import { noraComponent, NoraComponentBase } from "@core/utils/base.js";
 
+//TODO: Currently refactoring is required esp. for HMR
+
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
   init(): void {
-    const gWorkspaceIcons = WorkspaceIcons.getInstance();
-    gWorkspaceIcons.initializeIcons().then(() => {
+    const iconCtx = new WorkspaceIcons();
+    iconCtx.initializeIcons()
     // If workspaces is not enabled, do not proceed.
     if (!enabled()) {
       return;
     }
 
-    WorkspacesServices.getInstance();
-    WorkspacesTabContextMenu.getInstance();
-    WorkspacesToolbarButton.getInstance();
-    WorkspacesPopupContxtMenu.getInstance();
-    WorkspaceManageModal.getInstance();
-  });
+    const ctx = new WorkspacesServices(iconCtx);
+    new WorkspacesTabContextMenu(ctx);
+    new WorkspacesToolbarButton(ctx);
+    new WorkspacesPopupContxtMenu(ctx);
+    new WorkspaceManageModal(ctx,iconCtx);
   }
 }

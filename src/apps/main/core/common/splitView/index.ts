@@ -12,7 +12,7 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 export default class SplitView extends NoraComponentBase {
   init() {
     const ctx = new CSplitView();
-    SplitViewManager.getInstance();
+    new SplitViewManager(ctx);
     new SplitViewContextMenu(ctx);
   }
 }

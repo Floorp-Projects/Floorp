@@ -8,21 +8,22 @@ import { WorkspaceIcons } from "./utils/workspace-icons.js";
 import { WorkspacesServices } from "./workspaces.js";
 import { For } from "solid-js";
 import { workspacesData } from "./data.js";
-import type { Workspaces } from "./utils/type.js";
+import type { TWorkspaces } from "./utils/type.js";
 
 export class WorkspacesTabContextMenu {
-  private static instance: WorkspacesTabContextMenu;
-  public static getInstance() {
-    if (!WorkspacesTabContextMenu.instance) {
-      WorkspacesTabContextMenu.instance = new WorkspacesTabContextMenu();
-    }
-    return WorkspacesTabContextMenu.instance;
+  ctx:WorkspacesServices;
+  constructor(ctx:WorkspacesServices) {
+    this.ctx=ctx;
+    const parentElem = document?.getElementById("tabContextMenu");
+    render(() => this.contextMenu(), parentElem, {
+      marker: document?.getElementById("context_moveTabOptions") as XULElement,
+    });
   }
 
   // static is Against "this.menuItem is not a function" error.
-  private static menuItem(workspaces: Workspaces) {
-    const gWorkspaces = WorkspacesServices.getInstance();
-    const gWorkspaceIcons = WorkspaceIcons.getInstance();
+  private menuItem(workspaces: TWorkspaces) {
+    const gWorkspaces =this.ctx;
+    const gWorkspaceIcons = this.ctx.iconCtx;
     return (
       <For each={workspaces}>
         {(workspace) => (
@@ -49,14 +50,14 @@ export class WorkspacesTabContextMenu {
       >
         <xul:menupopup
           id="WorkspacesTabContextMenu"
-          onpopupshowing={this.createTabworkspacesContextMenuItems}
+          onPopupShowing={this.createTabworkspacesContextMenuItems}
         />
       </xul:menu>
     );
   }
 
   public createTabworkspacesContextMenuItems(this: WorkspacesTabContextMenu) {
-    const gWorkspacesServices = WorkspacesServices.getInstance();
+    const gWorkspacesServices = this.ctx;
     const menuElem = document?.getElementById("WorkspacesTabContextMenu");
     while (menuElem?.firstChild) {
       const child = menuElem.firstChild as XULElement;
@@ -70,24 +71,13 @@ export class WorkspacesTabContextMenu {
 
     const excludeHasTabWorkspaceIdWorkspaces = workspacesData().filter(
       (workspace) => workspace.id !== tabWorkspaceId,
-    ) as Workspaces;
+    ) as TWorkspaces;
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(
       () =>
-        WorkspacesTabContextMenu.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+        this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
       parentElem,
-      {
-        hotCtx: import.meta.hot,
-      },
     );
-  }
-
-  constructor() {
-    const parentElem = document?.getElementById("tabContextMenu");
-    render(() => this.contextMenu(), parentElem, {
-      marker: document?.getElementById("context_moveTabOptions") as XULElement,
-      hotCtx: import.meta.hot,
-    });
   }
 }

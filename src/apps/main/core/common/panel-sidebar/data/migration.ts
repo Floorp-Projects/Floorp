@@ -6,7 +6,7 @@
 import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names";
 import type { PanelSidebarConfig } from "../utils/type";
 
-export async function migratePanelSidebarData() {
+export function migratePanelSidebarData() {
   const oldData = Services.prefs.getCharPref(
     "floorp.browser.sidebar2.data",
     undefined,
