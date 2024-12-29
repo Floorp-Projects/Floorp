@@ -5,7 +5,7 @@
 
 import { render } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
-import { panelSidebarConfig } from "../panel-sidebar/data";
+import { panelSidebarConfig } from "../panel-sidebar/data/data";
 
 export namespace gFlexOrder {
   const fxSidebarPosition = "sidebar.position_start";

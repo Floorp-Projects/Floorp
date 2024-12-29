@@ -14,7 +14,7 @@ import {
   isFloating,
   isFloatingDragging,
   isPanelSidebarEnabled,
-} from "./data";
+} from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
 import { CPanelSidebar } from "./panel-sidebar";

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { panelSidebarConfig } from "./data";
-import { CPanelSidebar } from "./panel-sidebar";
+import { panelSidebarConfig } from "./data/data";
+import { CPanelSidebar } from "./components/panel-sidebar";
 import { WebsitePanel } from "./website-panel-window-parent";
 
 export namespace PanelNavigator {

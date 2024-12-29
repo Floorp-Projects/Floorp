@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSignal, createEffect, Show } from "solid-js";
-import { getFaviconURLForPanel } from "./utils/favicon-getter";
+import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import { CPanelSidebar } from "./panel-sidebar";
-import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "./data";
-import type { Panel } from "./utils/type";
-import { isExtensionExist } from "./extension-panels";
-import { getUserContextColor } from "./utils/userContextColor-getter";
+import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/data";
+import type { Panel } from "../utils/type";
+import { isExtensionExist } from "../extension-panels";
+import { getUserContextColor } from "../utils/userContextColor-getter";
 
 export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar }) {
   const panel = props.panel
