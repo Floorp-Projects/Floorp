@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "noImplicitAny": true,
     "strictNullChecks": true,

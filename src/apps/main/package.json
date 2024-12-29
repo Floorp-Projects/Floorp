@@ -20,6 +20,7 @@
     "@types/uuid": "^10.0.0",
     "unplugin-swc": "^1.5.1",
     "vite": "6.0.6",
+    "vite-plugin-istanbul": "^6.0.2",
     "vite-plugin-solid": "^2.11.0",
     "vite-tsconfig-paths": "^5.1.4"
   },

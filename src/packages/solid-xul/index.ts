@@ -1,4 +1,5 @@
-import { createRoot, type JSX } from "solid-js";
+import { createRoot, onCleanup, type JSX } from "solid-js";
+import { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";
 import type { ViteHotContext } from "vite/types/hot.js";
 import { z } from "zod";
@@ -115,58 +116,47 @@ const {
   },
 });
 
+/**
+ * @description This render must be called inside of NoraComponentBase or createRootHMR
+ * @param code 
+ * @param node 
+ * @param options 
+ * @returns 
+ */
 const _render = (
   code: () => JSX.Element,
   node: JSX.Element,
   options?: { marker?: Element; hotCtx?: ViteHotContext },
 ) => {
-  let disposer: () => void = () => {};
-  createRoot((dispose) => {
-    const elem = insert(node, code(), options ? options.marker : undefined);
-    disposer = () => {
-      dispose();
-      if (elem instanceof Element) {
-        elem.remove();
-      } else if (
-        Array.isArray(elem) &&
-        elem.every((e) => e instanceof Element)
-      ) {
-        elem.forEach((e) => e.remove());
-      }
-    };
-    if (options?.hotCtx) {
-      hotCtxMap.set(options.hotCtx, [
-        ...(hotCtxMap.get(options.hotCtx) ?? []),
-        disposer,
-      ]);
-      console.debug("register disposer to hotCtx");
-      options.hotCtx.dispose(() => {
-        hotCtxMap.get(options.hotCtx!)?.forEach((v) => v());
-        hotCtxMap.delete(options.hotCtx!);
-      });
+  const elem = insert(node, code(), options ? options.marker : undefined);
+  const disposer = onCleanup(()=>{
+    if (elem instanceof Element) {
+      elem.remove();
+    } else if (
+      Array.isArray(elem) &&
+      elem.every((e) => e instanceof Element)
+    ) {
+      elem.forEach((e) => e.remove());
     }
-  });
-
+  })
   return disposer;
 };
 
-export function createRootHMR(
-  fn: (() => void) | (() => () => void),
+export function createRootHMR<T>(
+  fn: RootFunction<T>,
   hotCtx?: ViteHotContext,
 ) {
-  createRoot((disposer) => {
-    const cleanup = fn();
+  return createRoot((disposer) => {
+    const ret = fn(disposer);
     if (hotCtx) {
       hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), disposer]);
-      if (cleanup) {
-        hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), cleanup]);
-      }
       console.debug("register disposer to hotCtx in createRoot");
       hotCtx.dispose(() => {
         hotCtxMap.get(hotCtx)?.forEach((v) => v());
         hotCtxMap.delete(hotCtx);
       });
     }
+    return ret;
   });
 }
 
@@ -187,3 +177,5 @@ export {
   setProp,
   mergeProps,
 };
+
+export {onCleanup} from "solid-js"

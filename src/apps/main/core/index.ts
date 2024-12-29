@@ -49,7 +49,14 @@ async function setPrefFeatures(all_features_keys: typeof modules_keys) {
   prefs.setStringPref(
     "noraneko.features.enabled",
     JSON.stringify(all_features_keys),
-);
+  );
+
+  if (import.meta.env.DEV) {
+    prefs.setStringPref(
+      "noraneko.features.enabled",
+      JSON.stringify({common:["browser-share-mode","browser-tab-color","context-menu","designs"]}),
+    );
+  }
 }
 
 async function loadEnabledModules(enabled_features: typeof modules_keys) {

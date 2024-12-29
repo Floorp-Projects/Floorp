@@ -1,18 +1,18 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { injectManifest } from "./scripts/inject/manifest.js";
-import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
-import { applyMixin } from "./scripts/inject/mixin-loader.js";
+import { injectManifest } from "./scripts/inject/manifest";
+import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
+import { applyMixin } from "./scripts/inject/mixin-loader";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { createServer, type ViteDevServer, build as buildVite } from "vite";
 import AdmZip from "adm-zip";
 import { execa, type ResultPromise } from "execa";
-import { runBrowser } from "./scripts/launchBrowser/index.js";
-import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs.js";
-import { writeVersion } from "./scripts/update/version.js";
-import { writeBuildid2 } from "./scripts/update/buildid2.js";
-import { applyPatches } from "./scripts/git-patches/git-patches-manager.js";
-import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.js";
+import { runBrowser } from "./scripts/launchBrowser/index";
+import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs";
+import { writeVersion } from "./scripts/update/version";
+import { writeBuildid2 } from "./scripts/update/buildid2";
+import { applyPatches } from "./scripts/git-patches/git-patches-manager";
+import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";

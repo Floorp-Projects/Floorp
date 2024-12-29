@@ -145,7 +145,7 @@ export default defineConfig({
       name:"noraneko_component_hmr_support",
       enforce: "pre",
       transform(code, id, options) {
-        if (code.includes("\n@noraComponent")) {
+        if (code.includes("\n@noraComponent") && !code.includes("//@nora-only-dispose")) {
           code += "\n"
           code += [
             "/**",

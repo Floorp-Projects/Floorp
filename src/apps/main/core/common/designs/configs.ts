@@ -3,18 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, onCleanup, createRoot } from "solid-js";
 import {
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
   getOldTabbarStyleConfig,
 } from "./old-config-migrator";
 import {
-  type zFloorpDesignConfigsType,
+  type TFloorpDesignConfigs,
   zFloorpDesignConfigs,
 } from "../../../../../apps/common/scripts/global-types/type";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { createRootHMR } from "@nora/solid-xul";
 
-const oldObjectConfigs: zFloorpDesignConfigsType = {
+const oldObjectConfigs: TFloorpDesignConfigs = {
   globalConfigs: {
     userInterface: getOldInterfaceConfig(),
     faviconColor: Services.prefs.getBoolPref(
@@ -67,53 +69,64 @@ const oldObjectConfigs: zFloorpDesignConfigsType = {
   },
 };
 
-const getOldConfigs = JSON.stringify(oldObjectConfigs);
+export const getOldConfigs = JSON.stringify(oldObjectConfigs);
 
-export const [config, setConfig] = createSignal(
-  zFloorpDesignConfigs.parse(
-    JSON.parse(
-      Services.prefs.getStringPref("floorp.design.configs", getOldConfigs),
-    ),
-  ),
-);
-
-export function setGlobalDesignConfig<
-  C extends zFloorpDesignConfigsType["globalConfigs"],
-  K extends keyof C,
->(key: K, value: C[K]) {
-  setConfig((prev) => ({
-    ...prev,
-    globalConfigs: {
-      ...prev.globalConfigs,
-      [key]: value,
-    },
-  }));
-}
-
-export function setBrowserInterface(
-  value: zFloorpDesignConfigsType["globalConfigs"]["userInterface"],
-) {
-  setGlobalDesignConfig("userInterface", value);
-}
-
-if (!window.gFloorp) {
-  window.gFloorp = {};
-}
-window.gFloorp.designs = {
-  setInterface: setBrowserInterface,
-};
-
-createEffect(() => {
-  Services.prefs.setStringPref(
-    "floorp.design.configs",
-    JSON.stringify(config()),
-  );
-});
-
-Services.prefs.addObserver("floorp.design.configs", () =>
-  setConfig(
+function createConfig() {
+  const [config,setConfig] = createSignal(
     zFloorpDesignConfigs.parse(
-      JSON.parse(Services.prefs.getStringPref("floorp.design.configs")),
+      JSON.parse(
+        Services.prefs.getStringPref("floorp.design.configs", getOldConfigs),
+      ),
     ),
-  ),
-);
+  );
+  function updateConfigFromPref() {
+    setConfig(
+      zFloorpDesignConfigs.parse(
+        JSON.parse(Services.prefs.getStringPref("floorp.design.configs")),
+      ),
+    )
+  }
+
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      "floorp.design.configs",
+      JSON.stringify(config()),
+    );
+  });
+
+  Services.prefs.addObserver("floorp.design.configs", updateConfigFromPref);
+
+  onCleanup(()=>{
+    Services.prefs.removeObserver("floorp.design.configs",updateConfigFromPref);
+  });
+  return [config,setConfig]
+}
+
+export const [config,setConfig] = createRootHMR(createConfig,import.meta.hot)
+
+
+  if (!window.gFloorp) {
+    window.gFloorp = {};
+  }
+  window.gFloorp.designs = {
+    setInterface: setBrowserInterface,
+  };
+
+  function setGlobalDesignConfig<
+    C extends TFloorpDesignConfigs["globalConfigs"],
+    K extends keyof C,
+  >(key: K, value: C[K]) {
+    setConfig((prev) => ({
+      ...prev,
+      globalConfigs: {
+        ...prev.globalConfigs,
+        [key]: value,
+      },
+    }));
+  }
+
+  function setBrowserInterface(
+    value: TFloorpDesignConfigs["globalConfigs"]["userInterface"],
+  ) {
+    setGlobalDesignConfig("userInterface", value);
+  }

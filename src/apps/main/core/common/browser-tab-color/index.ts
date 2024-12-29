@@ -4,10 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-import { createRootHMR } from "@nora/solid-xul";
-import {
-  onCleanup
-} from "solid-js";
+import { onCleanup } from "@nora/solid-xul";
 import { TabColorManager } from "./tabcolor-manager";
 import chroma from "chroma-js"
 import { noraComponent, NoraComponentBase } from "@core/utils/base";

@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noImplicitReturns": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
   }
 }
