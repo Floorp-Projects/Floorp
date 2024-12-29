@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup, createRoot } from "solid-js";
+import { createEffect, createSignal, onCleanup, createRoot, Accessor, Setter } from "solid-js";
 import {
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
   getOldTabbarStyleConfig,
-} from "./old-config-migrator";
+} from "./utils/old-config-migrator";
 import {
   type TFloorpDesignConfigs,
   zFloorpDesignConfigs,
@@ -71,7 +71,7 @@ const oldObjectConfigs: TFloorpDesignConfigs = {
 
 export const getOldConfigs = JSON.stringify(oldObjectConfigs);
 
-function createConfig() {
+function createConfig() : [Accessor<TFloorpDesignConfigs>,Setter<TFloorpDesignConfigs>]{
   const [config,setConfig] = createSignal(
     zFloorpDesignConfigs.parse(
       JSON.parse(
