@@ -6,7 +6,7 @@
 import { manager } from ".";
 import statusbarStyle from "./statusbar.css?inline";
 
-export function StatusBar() {
+export function StatusBarElem() {
   return (
     <>
       <xul:toolbar

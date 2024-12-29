@@ -2,8 +2,9 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { execa } from "execa";
 
-const BIN_DIR = "_dist/bin";
+const BIN_DIR = "_dist/bin/noraneko";
 const PATCHES_DIR = "scripts/git-patches/patches";
+const PATCHES_TMP = "_dist/bin/applied_patches"
 
 async function isGitInitialized(dir: string): Promise<boolean> {
   try {
@@ -40,7 +41,39 @@ export async function initializeBinGit() {
 }
 
 export async function applyPatches(binDir = BIN_DIR) {
+  let reverse_is_aborted = false;
+  try {
+    await fs.access(PATCHES_TMP);
+    // Already the bin is patched
+    // Need reverse patch
+    const reverse_patches = await fs.readdir(PATCHES_TMP);
+    for (const patch of reverse_patches) {
+      const patchPath = path.join(PATCHES_TMP, patch);
+      try {
+        await execa(
+          "git",
+          ["apply", "-R", "--reject", "--whitespace=fix","--unsafe-paths", "--directory",`${binDir}`,`./${patchPath}`],
+          {
+            shell: true,
+          },
+        );
+      } catch (e) {
+        console.warn(`Failed to reverse patch: ${patchPath}`);
+        console.warn(e);
+        reverse_is_aborted = true;
+      }
+    }
+    if (!reverse_is_aborted) {
+      await fs.rm(PATCHES_TMP,{"recursive":true});
+    }
+   
+  } catch {};
+  if (reverse_is_aborted) {
+    throw new Error("reverse_patch failed")
+  }
   const patches = await fs.readdir(PATCHES_DIR);
+  await fs.mkdir(PATCHES_TMP,{"recursive":true});
+  let aborted = false;
   for (const patch of patches) {
     if (!patch.endsWith(".patch")) continue;
 
@@ -54,10 +87,15 @@ export async function applyPatches(binDir = BIN_DIR) {
           shell: true,
         },
       );
+      await fs.cp(patchPath,PATCHES_TMP+"/"+patch);
     } catch (e) {
       console.warn(`Failed to apply patch: ${patchPath}`);
       console.warn(e);
+      aborted = true;
     }
+  }
+  if (aborted) {
+    throw new Error("patch failed")
   }
 }
 

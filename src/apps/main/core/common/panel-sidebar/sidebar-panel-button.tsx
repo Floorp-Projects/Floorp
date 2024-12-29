@@ -5,14 +5,15 @@
 
 import { createSignal, createEffect, Show } from "solid-js";
 import { getFaviconURLForPanel } from "./utils/favicon-getter";
-import { PanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar";
 import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "./data";
 import type { Panel } from "./utils/type";
 import { isExtensionExist } from "./extension-panels";
 import { getUserContextColor } from "./utils/userContextColor-getter";
 
-export function PanelSidebarButton({ panel }: { panel: Panel }) {
-  const gPanelSidebar = PanelSidebar.getInstance();
+export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar }) {
+  const panel = props.panel
+  const gPanelSidebar = props.ctx;
   const [faviconUrl, setFaviconUrl] = createSignal("");
 
   createEffect(async () => {
@@ -65,7 +66,7 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
   }
 
   return (
-    <xul:hbox
+    <div
       draggable={true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -73,19 +74,18 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <xul:toolbarbutton
+      <div
         id={panel.id}
         class={`${panel.type} panel-sidebar-panel`}
-        context="panel-sidebar-panel-context"
         data-checked={selectedPanelId() === panel.id}
         data-panel-id={panel.id}
-        style={{
-          "list-style-image": `url(${faviconUrl()})`,
-        }}
-        onCommand={() => {
+        onClick={() => {
           gPanelSidebar.changePanel(panel.id);
         }}
-      />
+        style={{display:"flex","align-items":"center","justify-content":"center"}}
+      >
+        <img src={faviconUrl()} width="16" height="16" />
+      </div>
       <Show
         when={
           panel.userContextId !== 0 &&
@@ -100,6 +100,6 @@ export function PanelSidebarButton({ panel }: { panel: Panel }) {
           }}
         />
       </Show>
-    </xul:hbox>
+    </div>
   );
 }

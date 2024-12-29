@@ -11,10 +11,11 @@ import {
   isFloating,
 } from "./data";
 import { PanelNavigator } from "./panel-navigator";
-import { PanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar";
 
-export function SidebarHeader() {
-  const gPanelSidebar = PanelSidebar.getInstance();
+export function SidebarHeader(props:{ctx:CPanelSidebar}) {
+  const gPanelSidebar = props.ctx;
+  PanelNavigator.gPanelSidebar = gPanelSidebar;
   return (
     <xul:box id="panel-sidebar-header" align="center">
       <Show

@@ -3,10 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 import { gMultirowTabbarClass } from "./multirow-tabbar/multirow-tabbar";
 import { gTabbarStyleClass } from "./tabbbar-style/tabbar-style";
 
-export function init() {
-  gTabbarStyleClass.getInstance();
-  gMultirowTabbarClass.getInstance();
+@noraComponent(import.meta.hot)
+export default class TabBar extends NoraComponentBase {
+  init() {
+    gTabbarStyleClass.getInstance();
+    gMultirowTabbarClass.getInstance();
+  }
 }

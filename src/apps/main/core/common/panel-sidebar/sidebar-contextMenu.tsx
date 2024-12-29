@@ -4,22 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { PanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar";
 import { createSignal, Show } from "solid-js";
 import type { Panel } from "./utils/type";
 
 export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
 
 export class SidebarContextMenuElem {
-  private static instance: SidebarContextMenuElem;
-  public static getInstance() {
-    if (!SidebarContextMenuElem.instance) {
-      SidebarContextMenuElem.instance = new SidebarContextMenuElem();
-    }
-    return SidebarContextMenuElem.instance;
-  }
 
-  constructor() {
+  ctx: CPanelSidebar
+  constructor(ctx:CPanelSidebar) {
+    this.ctx = ctx;
     const parentElem = document?.body;
     const beforeElem = document?.getElementById("window-modal-dialog");
     render(() => this.sidebarContextMenu(), parentElem, {
@@ -38,7 +33,7 @@ export class SidebarContextMenuElem {
 
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     const panelId = (target.dataset as any).panelId;
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     return gPanelSidebar.getPanelData(panelId);
   }
 
@@ -58,7 +53,7 @@ export class SidebarContextMenuElem {
   }
 
   private handleUnloadCommand() {
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       gPanelSidebar.unloadPanel(panelId);
@@ -66,7 +61,7 @@ export class SidebarContextMenuElem {
   }
 
   private handleDeleteCommand() {
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       gPanelSidebar.deletePanel(panelId);
@@ -74,7 +69,7 @@ export class SidebarContextMenuElem {
   }
 
   private handleMuteCommand() {
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       gPanelSidebar.mutePanel(panelId);
@@ -82,7 +77,7 @@ export class SidebarContextMenuElem {
   }
 
   private handleChangeZoomLevelCommand(type: "in" | "out" | "reset") {
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       gPanelSidebar.changeZoomLevel(panelId, type);
@@ -90,7 +85,7 @@ export class SidebarContextMenuElem {
   }
 
   private sidebarContextMenu() {
-    const gPanelSidebar = PanelSidebar.getInstance();
+    const gPanelSidebar = this.ctx;
     return (
       <xul:popupset>
         <xul:menupopup

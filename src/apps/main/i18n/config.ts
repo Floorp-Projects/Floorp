@@ -1,16 +1,21 @@
 import i18next from "i18next";
 
-import { en_US } from "./en-US/en-US";
-import { ja_JP } from "./ja-JP/ja_JP";
+const _modules = import.meta.glob("./*/*.json",{eager:true});
+
+const modules : Record<string, Record<string,object>>= {};
+for (const [idx,m] of Object.entries(_modules)) {
+  const [lng,ns] = idx.replaceAll("./","").replaceAll(".json","").split("/");
+  if (!Object.hasOwn(modules,lng)) {
+    modules[lng] = {}
+  }
+  modules[lng][ns] = (m as any).default as object;
+}
 
 import { createEffect, createSignal } from "solid-js";
 
-export const defaultNS = "undo";
+export const defaultNS = "default";
 
-export const resources = {
-  "en-US": en_US,
-  "ja-JP": ja_JP,
-};
+export const resources = modules;
 export function initI18N() {
   i18next.init({
     lng: "en-US",
@@ -22,6 +27,7 @@ export function initI18N() {
   });
 }
 const [lang, setLang] = createSignal("ja-JP");
+
 /**
  *
  * @param observer
@@ -32,13 +38,13 @@ const [lang, setLang] = createSignal("ja-JP");
  *
  * createRootHMR(
  *   () => {
- *     addI18NObserver(observer);
+ *     addI18nObserver(observer);
  *   },
  *   import.meta.hot
  * );
  * ```
  */
-export function addI8NObserver(observer: (locale: string) => void) {
+export function addI18nObserver(observer: (locale: string) => void) {
   createEffect(() => {
     observer(lang());
   });

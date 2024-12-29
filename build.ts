@@ -1,18 +1,18 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { injectManifest } from "./scripts/inject/manifest.js";
-import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
-import { applyMixin } from "./scripts/inject/mixin-loader.js";
+import { injectManifest } from "./scripts/inject/manifest";
+import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
+import { applyMixin } from "./scripts/inject/mixin-loader";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { createServer, type ViteDevServer, build as buildVite } from "vite";
 import AdmZip from "adm-zip";
 import { execa, type ResultPromise } from "execa";
-import { runBrowser } from "./scripts/launchBrowser/index.js";
-import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs.js";
-import { writeVersion } from "./scripts/update/version.js";
-import { writeBuildid2 } from "./scripts/update/buildid2.js";
-import { applyPatches } from "./scripts/git-patches/git-patches-manager.js";
-import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.js";
+import { runBrowser } from "./scripts/launchBrowser/index";
+import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs";
+import { writeVersion } from "./scripts/update/version";
+import { writeBuildid2 } from "./scripts/update/buildid2";
+import { applyPatches } from "./scripts/git-patches/git-patches-manager";
+import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -28,9 +28,11 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const getBinArchive = () => {
+const getBinArchive = async () => {
   if (process.platform === "win32") {
-    return "noraneko-win-amd64-dev.zip";
+    for await (const x of fs.glob("noraneko-*.win64.zip")) {
+      return x
+    }
   } if (process.platform === "linux") {
     const arch = process.arch;
     if (arch === "arm64") {
@@ -42,8 +44,9 @@ const getBinArchive = () => {
   throw new Error("Unsupported platform/architecture");
 };
 
-const binArchive = getBinArchive();
-const binDir = "_dist/bin";
+const binArchive = await getBinArchive();
+const binExtractDir = "_dist/bin";
+const binDir = "_dist/bin/noraneko";
 
 try {
   await fs.access("dist");
@@ -63,7 +66,7 @@ async function decompressBin() {
       process.exit(1);
     }
 
-    new AdmZip(binArchive).extractAllTo(binDir);
+    new AdmZip(binArchive).extractAllTo(binExtractDir);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
 
@@ -128,6 +131,9 @@ let devInit = false;
 async function run(mode: "dev" | "test" = "dev") {
   await initBin();
   await applyPatches();
+
+  //create version for dev
+  await version();
   let buildid2: string | null = null;
   try {
     await fs.access("_dist/buildid2");
@@ -196,12 +202,12 @@ async function run(mode: "dev" | "test" = "dev") {
       configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest("_dist/bin", true, "noraneko-dev"),
+    injectManifest(binDir, true, "noraneko-dev"),
     (async () => {
-      await injectXHTML("_dist/bin");
-      await injectXHTMLDev("_dist/bin");
+      await injectXHTML(binDir);
+      await injectXHTMLDev(binDir);
     })(),
-    applyMixin("_dist/bin"),
+    applyMixin(binDir),
     (async () => {
       try {
         await fs.access("_dist/profile");

@@ -64,7 +64,7 @@ export namespace ContextMenuUtils {
 
   export function addToolbarContentMenuPopupSet(
     JSXElem: () => JSXElement,
-    hotCtx?: ViteHotContext,
+    hotCtx: ViteHotContext | undefined,
   ) {
     render(JSXElem, document?.body, {
       marker: windowModalDialogElem() ?? undefined,
@@ -107,7 +107,7 @@ export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
       data-l10n-id={l10n}
       label={l10n}
       id={id}
-      oncommand={runFunction}
+      onCommand={runFunction}
     />
   );
 }

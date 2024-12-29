@@ -10,10 +10,13 @@ import { WorkspacesPopupContxtMenu } from "./popupSet.js";
 import { WorkspaceManageModal } from "./workspace-modal.js";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
 import { enabled } from "./config.js";
+import { noraComponent, NoraComponentBase } from "@core/utils/base.js";
 
-export function init() {
-  const gWorkspaceIcons = WorkspaceIcons.getInstance();
-  gWorkspaceIcons.initializeIcons().then(() => {
+@noraComponent(import.meta.hot)
+export default class Workspaces extends NoraComponentBase {
+  init(): void {
+    const gWorkspaceIcons = WorkspaceIcons.getInstance();
+    gWorkspaceIcons.initializeIcons().then(() => {
     // If workspaces is not enabled, do not proceed.
     if (!enabled()) {
       return;
@@ -25,8 +28,5 @@ export function init() {
     WorkspacesPopupContxtMenu.getInstance();
     WorkspaceManageModal.getInstance();
   });
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
+  }
 }

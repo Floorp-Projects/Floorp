@@ -7,19 +7,22 @@
     "@nora/skin": "workspace:*",
     "@nora/solid-xul": "workspace:*",
     "@nora/test": "workspace:*",
-    "@trpc/client": "^10.45.2",
-    "@trpc/server": "^10.45.2",
-    "birpc": "^0.2.19",
-    "i18next": "^23.14.0",
-    "solid-js": "^1.8.18",
-    "ws": "^8.18.0",
-    "vite": "5.4.8"
+    "chroma-js": "^3.1.2",
+    "consola": "^3.3.3",
+    "es-toolkit": "^1.31.0",
+    "i18next": "^24.2.0",
+    "solid-js": "^1.9.3",
+    "stacktracey": "^2.1.8",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/chroma-js": "^2.4.5",
     "@types/uuid": "^10.0.0",
+    "unplugin-swc": "^1.5.1",
+    "vite": "6.0.6",
+    "vite-plugin-istanbul": "^6.0.2",
     "vite-plugin-solid": "^2.11.0",
-    "vite-tsconfig-paths": "^4.3.2",
-    "vite": "6.0.3"
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
     "build": "nx vite:build",

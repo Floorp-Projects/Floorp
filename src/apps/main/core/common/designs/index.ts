@@ -5,12 +5,15 @@
 
 import { render } from "@nora/solid-xul";
 import { BrowserDesignElement } from "./browser-design-element";
-
-export function init() {
-  //render(BrowserStyle, document.head);
-  render(BrowserDesignElement, document?.head, {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    hotCtx: (import.meta as any).hot,
-  });
-  window.gURLBar.updateLayoutBreakout();
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
+@noraComponent(import.meta.hot)
+export default class Designs extends NoraComponentBase {
+  init(): void {
+      //render(BrowserStyle, document.head);
+    render(()=>{return BrowserDesignElement()}, document?.head, {
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      hotCtx: (import.meta as any).hot,
+    });
+    window.gURLBar.updateLayoutBreakout();
+  }
 }

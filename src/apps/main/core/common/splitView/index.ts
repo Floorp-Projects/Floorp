@@ -3,17 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { SplitView } from "./splitView";
+import { CSplitView } from "./splitView";
 import { SplitViewManager } from "./manager";
 import { SplitViewContextMenu } from "./tabContextMenu";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
-export function init() {
-  SplitViewManager.getInstance();
-  SplitViewContextMenu.getInstance();
-  SplitView.getInstance();
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept((m: { init: () => void }) => {
-    m?.init();
-  });
+@noraComponent(import.meta.hot)
+export default class SplitView extends NoraComponentBase {
+  init() {
+    const ctx = new CSplitView();
+    SplitViewManager.getInstance();
+    new SplitViewContextMenu(ctx);
+  }
 }

@@ -19,14 +19,7 @@ import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "./extension-panels";
 import { WebsitePanel } from "./website-panel-window-parent";
 
-export class PanelSidebar {
-  private static instance: PanelSidebar;
-  static getInstance(): PanelSidebar {
-    if (!PanelSidebar.instance) {
-      PanelSidebar.instance = new PanelSidebar();
-    }
-    return PanelSidebar.instance;
-  }
+export class CPanelSidebar {
 
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as

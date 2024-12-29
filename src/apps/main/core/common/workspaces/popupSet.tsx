@@ -85,6 +85,6 @@ export class WorkspacesPopupContxtMenu {
   }
 
   constructor() {
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet());
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet(),import.meta.hot);
   }
 }

@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
+import { render } from "@nora/solid-xul";
 import { ContextMenu } from "./context-menu";
-import { StatusBar } from "./statusbar";
+import { StatusBarElem } from "./statusbar";
 import { StatusBarManager } from "./statusbar-manager";
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
 export let manager: StatusBarManager;
 
@@ -24,27 +25,20 @@ export let manager: StatusBarManager;
 //   return tb;
 // }
 
-export function init() {
-  //console.log(createToolbarWithPlacements("nora-aaaa", [], {}));
-  createRootHMR(
-    () => {
-      manager = new StatusBarManager();
-    },
-    import.meta.hot,
-  );
-  render(StatusBar, document.body, {
-    marker: document?.getElementById("customization-container"),
-    hotCtx: import.meta.hot,
-  });
-  //https://searchfox.org/mozilla-central/rev/4d851945737082fcfb12e9e7b08156f09237aa70/browser/base/content/main-popupset.js#321
-  const mainPopupSet = document.getElementById("mainPopupSet");
-  mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
-
-  manager.init();
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
+@noraComponent(import.meta.hot)
+export default class StatusBar extends NoraComponentBase {
+  init() {
+    manager = new StatusBarManager();
+    render(StatusBarElem, document.body, {
+      marker: document?.getElementById("customization-container"),
+      hotCtx: import.meta.hot,
+    });
+    //https://searchfox.org/mozilla-central/rev/4d851945737082fcfb12e9e7b08156f09237aa70/browser/base/content/main-popupset.js#321
+    const mainPopupSet = document.getElementById("mainPopupSet");
+    mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
+  
+    manager.init();
+  }
 }
 
 function onPopupShowing(event: Event) {

@@ -47,7 +47,7 @@ export const zFloorpDesignConfigs = z.object({
   }),
 });
 
-export type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
+export type TFloorpDesignConfigs = z.infer<typeof zFloorpDesignConfigs>;
 
 /** Panel sidebar configs */
 export const zPanelSidebarConfigs = z.object({

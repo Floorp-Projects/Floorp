@@ -3,13 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 import { gFlexOrder } from "./flex-order";
 
-export async function init() {
-  gFlexOrder.init();
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  (import.meta as any).hot?.accept(async (m: any) => {
-    await m?.init();
-  });
+@noraComponent(import.meta.hot)
+export default class FlexOrder extends NoraComponentBase {
+  init(): void {
+    gFlexOrder.init();
+  }
 }

@@ -4,19 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { SplitView } from "./splitView";
+import { CSplitView } from "./splitView";
 
 export class SplitViewContextMenu {
-  private static instance: SplitViewContextMenu;
-  public static getInstance() {
-    if (!SplitViewContextMenu.instance) {
-      SplitViewContextMenu.instance = new SplitViewContextMenu();
-    }
-    return SplitViewContextMenu.instance;
-  }
 
   private contextMenu() {
-    const gSplitView = SplitView.getInstance();
+    const gSplitView = this.ctx;
     return (
       <>
         <xul:menuseparator />
@@ -37,7 +30,9 @@ export class SplitViewContextMenu {
     );
   }
 
-  constructor() {
+  ctx:CSplitView;
+  constructor(ctx:CSplitView) {
+    this.ctx=ctx;
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
       marker: document?.getElementById(

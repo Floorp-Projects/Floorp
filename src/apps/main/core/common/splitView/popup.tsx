@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { SplitView } from "./splitView";
+import { CSplitView } from "./splitView";
 
-export function Popup() {
-  const gSplitView = SplitView.getInstance();
+export function Popup(props:{ctx:CSplitView}) {
+  const gSplitView = props.ctx;
 
   return (
     <xul:panel

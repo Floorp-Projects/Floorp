@@ -3,11 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Overrides } from "./overrides.js";
+import iconStyle from "./icon.css?inline";
 
-// THIS CANNOT BE HOT RELOADED
-// TODO: REMOVE ALL CREATE_ROOT_HMR
-
-export function init() {
-  Overrides.getInstance();
-}
+export const StyleElement = () => {
+  return <style>{iconStyle}</style>;
+};

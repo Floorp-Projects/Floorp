@@ -4,43 +4,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { panelSidebarConfig } from "./data";
-import { PanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar";
 import { WebsitePanel } from "./website-panel-window-parent";
 
 export namespace PanelNavigator {
-  const gPanelSidebar = PanelSidebar.getInstance();
+  export let gPanelSidebar: CPanelSidebar | null = null;
   const gWebsitePanel = WebsitePanel.getInstance();
   const addonEnabled = panelSidebarConfig().webExtensionRunningEnabled;
 
   function goHome(browser: XULElement, sideBarId: string) {
     browser.src = "";
-    browser.src = gPanelSidebar.getPanelData(sideBarId)?.url ?? "";
+    browser.src = gPanelSidebar!.getPanelData(sideBarId)?.url ?? "";
   }
 
   /* Navigation */
   export function back(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.goBackPanel(sideBarId)
-      : gPanelSidebar.getBrowserElement(sideBarId)?.goBack();
+      : gPanelSidebar!.getBrowserElement(sideBarId)?.goBack();
   }
 
   export function forward(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.goForwardPanel(sideBarId)
-      : gPanelSidebar.getBrowserElement(sideBarId)?.goForward();
+      : gPanelSidebar!.getBrowserElement(sideBarId)?.goForward();
   }
 
   export function reload(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.reloadPanel(sideBarId)
-      : gPanelSidebar.getBrowserElement(sideBarId)?.reload();
+      : gPanelSidebar!.getBrowserElement(sideBarId)?.reload();
   }
 
   export function goIndexPage(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.goIndexPagePanel(sideBarId)
       : goHome(
-          gPanelSidebar.getBrowserElement(sideBarId) as XULElement,
+          gPanelSidebar!.getBrowserElement(sideBarId) as XULElement,
           sideBarId,
         );
   }
@@ -49,7 +49,7 @@ export namespace PanelNavigator {
   export function toggleMute(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.toggleMutePanel(sideBarId)
-      : gPanelSidebar.getBrowserElement(sideBarId)?.toggleMute();
+      : gPanelSidebar!.getBrowserElement(sideBarId)?.toggleMute();
   }
 
   /* Zoom */

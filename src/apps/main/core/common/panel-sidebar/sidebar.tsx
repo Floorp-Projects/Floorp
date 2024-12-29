@@ -17,25 +17,21 @@ import {
 } from "./data";
 import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
+import { CPanelSidebar } from "./panel-sidebar";
 
 export class PanelSidebarElem {
-  private static instance: PanelSidebarElem;
-  public static getInstance() {
-    if (!PanelSidebarElem.instance) {
-      PanelSidebarElem.instance = new PanelSidebarElem();
-    }
-    return PanelSidebarElem.instance;
-  }
+
+  ctx: CPanelSidebar
 
   private get documentElement() {
     return document?.documentElement as XULElement;
   }
 
-  constructor() {
+  constructor(ctx:CPanelSidebar) {
+    this.ctx = ctx;
     if (!isPanelSidebarEnabled()) {
       return;
     }
-
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
     render(() => this.sidebar(), parentElem, {
@@ -76,7 +72,7 @@ export class PanelSidebarElem {
           class="chromeclass-extrachrome"
           data-floating={isFloating().toString()}
         >
-          <SidebarHeader />
+          <SidebarHeader ctx={this.ctx} />
           <BrowserBox />
           <Show when={isFloating()}>
             <FloatingSplitter />
@@ -85,7 +81,7 @@ export class PanelSidebarElem {
         <Show when={!isFloating()}>
           <SidebarSplitter />
         </Show>
-        <SidebarSelectbox />
+        <SidebarSelectbox ctx={this.ctx} />
       </>
     );
   }

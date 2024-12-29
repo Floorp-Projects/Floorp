@@ -12,7 +12,7 @@ import type { } from "solid-styled-jsx";
 
 export class TabColorManager {
   _enableTabColor = createSignal(
-    Services.prefs.getBoolPref("noraneko.tabcolor.enable", false),
+    Services.prefs.getBoolPref("noraneko.tabcolor.enable", true),
   );
   enableTabColor = this._enableTabColor[0];
   setEnableTabColor = this._enableTabColor[1];

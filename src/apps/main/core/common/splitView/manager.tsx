@@ -7,18 +7,12 @@ import { Show } from "solid-js/web";
 import { Popup } from "./popup";
 import { currentSplitView } from "./utils/data";
 import { render } from "@nora/solid-xul";
+import { CSplitView } from "./splitView";
 
 export class SplitViewManager {
-  private static instance: SplitViewManager;
-  public static getInstance() {
-    if (!SplitViewManager.instance) {
-      SplitViewManager.instance = new SplitViewManager();
-    }
-    return SplitViewManager.instance;
-  }
 
-  private constructor() {
-    render(() => this.ToolbarElement(), this.targetParent, {
+  constructor(ctx:CSplitView) {
+    render(() => this.ToolbarElement({ctx}), this.targetParent, {
       marker: this.markerElement,
     });
   }
@@ -35,7 +29,7 @@ export class SplitViewManager {
     ) as XULElement;
   }
 
-  private ToolbarElement() {
+  private ToolbarElement(props:{ctx:CSplitView}) {
     return (
       <Show when={currentSplitView() !== -1}>
         <xul:hbox
@@ -47,7 +41,7 @@ export class SplitViewManager {
           hidden={false}
         >
           <xul:image id="splitView-image" class="urlbar-icon" />
-          <Popup />
+          <Popup ctx={props.ctx}/>
         </xul:hbox>
       </Show>
     );

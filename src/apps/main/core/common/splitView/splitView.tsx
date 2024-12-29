@@ -16,16 +16,9 @@ import {
   fixedSplitViewData,
 } from "./utils/data";
 
-export class SplitView {
-  private static instance: SplitView;
-  static getInstance() {
-    if (!SplitView.instance) {
-      SplitView.instance = new SplitView();
-    }
-    return SplitView.instance;
-  }
+export class CSplitView {
 
-  private constructor() {
+  constructor() {
     this.initializeStyles();
     this.initializePreferences();
     this.setupEventListeners();
