@@ -104,29 +104,28 @@ function createConfig() : [Accessor<TFloorpDesignConfigs>,Setter<TFloorpDesignCo
 
 export const [config,setConfig] = createRootHMR(createConfig,import.meta.hot)
 
+if (!window.gFloorp) {
+  window.gFloorp = {};
+}
+window.gFloorp.designs = {
+  setInterface: setBrowserInterface,
+};
 
-  if (!window.gFloorp) {
-    window.gFloorp = {};
-  }
-  window.gFloorp.designs = {
-    setInterface: setBrowserInterface,
-  };
+function setGlobalDesignConfig<
+  C extends TFloorpDesignConfigs["globalConfigs"],
+  K extends keyof C,
+>(key: K, value: C[K]) {
+  setConfig((prev) => ({
+    ...prev,
+    globalConfigs: {
+      ...prev.globalConfigs,
+      [key]: value,
+    },
+  }));
+}
 
-  function setGlobalDesignConfig<
-    C extends TFloorpDesignConfigs["globalConfigs"],
-    K extends keyof C,
-  >(key: K, value: C[K]) {
-    setConfig((prev) => ({
-      ...prev,
-      globalConfigs: {
-        ...prev.globalConfigs,
-        [key]: value,
-      },
-    }));
-  }
-
-  function setBrowserInterface(
-    value: TFloorpDesignConfigs["globalConfigs"]["userInterface"],
-  ) {
-    setGlobalDesignConfig("userInterface", value);
-  }
+function setBrowserInterface(
+  value: TFloorpDesignConfigs["globalConfigs"]["userInterface"],
+) {
+  setGlobalDesignConfig("userInterface", value);
+}

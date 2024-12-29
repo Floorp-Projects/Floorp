@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Match, Switch } from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs";
 import { getCSSFromConfig } from "./utils/css";
-
-
 
 export function BrowserDesignElement() {
   [100, 500].forEach((time) => {
@@ -18,26 +16,51 @@ export function BrowserDesignElement() {
     }, time);
   });
 
-  const getCSS = createMemo(() => getCSSFromConfig(config()));
+  const getCSS = createMemo(() => {
+    return getCSSFromConfig(config())
+  });
 
   createEffect(() => {
     const userjs = getCSS().userjs;
     if (userjs) applyUserJS(userjs);
   });
 
+  let [devStyle,setDevStyle] = createSignal([] as string[]);
+
+  if (import.meta.env.DEV) {
+    createEffect(async ()=>{
+      let arr = [];
+      for (const link of getCSS().styles) {
+        arr.push((await import(/* @vite-ignore */`${link}?raw`)).default)
+      }
+      setDevStyle(arr)
+    })
+  }
+
   return (
     <>
-      <Show when={getCSS()}>
-        <For each={getCSS().styles}>
-          {(style) => (
-            <link
+      <Switch>
+        <Match when={import.meta.env.PROD}>
+          <For each={getCSS().styles}>
+            {(style) => (
+              <link
               class="nora-designs"
               rel="stylesheet"
-              href={`chrome://noraneko${style}`}
+              href={ `chrome://noraneko${style}`}
             />
-          )}
-        </For>
-      </Show>
+            )}
+          </For>
+        </Match>
+        <Match when={import.meta.env.DEV}>
+          <For each={devStyle()}>
+            {(style)=>(
+              <style>
+                {style}
+              </style>
+            )}
+          </For>
+        </Match>
+      </Switch>
       <style>{styleBrowser}</style>
     </>
   );

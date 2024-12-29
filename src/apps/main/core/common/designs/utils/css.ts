@@ -1,14 +1,15 @@
 import { zFloorpDesignConfigs } from "../../../../../common/scripts/global-types/type";
-import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
+
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";
 import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
+import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
 import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
 import { z } from "zod";
 
 interface FCSS {
-  styles: string[] | null;
+  styles: string[];
   userjs: string | null;
 }
 
@@ -37,14 +38,14 @@ export function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FC
     }
     case "proton": {
       return {
-        styles: null,
+        styles: [],
         userjs: null,
       };
     }
     default: {
       pref.globalConfigs.userInterface satisfies never;
       return {
-        styles:null,
+        styles:[],
         userjs:null
       }
     }
