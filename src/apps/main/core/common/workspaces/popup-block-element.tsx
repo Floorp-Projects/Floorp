@@ -11,9 +11,10 @@ export function PopupToolbarElement(props: {
   isSelected: boolean;
   label: string;
   bmsMode: boolean;
+  ctx:WorkspacesServices,
 }) {
-  const gWorkspacesServices = WorkspacesServices.getInstance();
-  const gWorkspaceIcons = WorkspaceIcons.getInstance();
+  const gWorkspacesServices = props.ctx;
+  const gWorkspaceIcons = props.ctx.iconCtx;
   const { workspaceId, isSelected, bmsMode } = props;
   const workspace = gWorkspacesServices.getWorkspaceById(workspaceId);
   return (

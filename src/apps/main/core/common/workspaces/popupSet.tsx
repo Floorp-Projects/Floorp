@@ -9,21 +9,18 @@ import { ContextMenu } from "./contextMenu.js";
 import { render } from "@nora/solid-xul";
 
 export class WorkspacesPopupContxtMenu {
-  private static instance: WorkspacesPopupContxtMenu;
-  public static getInstance() {
-    if (!WorkspacesPopupContxtMenu.instance) {
-      WorkspacesPopupContxtMenu.instance = new WorkspacesPopupContxtMenu();
-    }
-    return WorkspacesPopupContxtMenu.instance;
+  ctx:WorkspacesServices
+  constructor(ctx:WorkspacesServices) {
+    this.ctx=ctx;
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet(),import.meta.hot);
   }
-
   /**
    * Create context menu items for workspaces.
    * @param event The event.
    * @returns The context menu items.
    */
   private createworkspacesContextMenuItems(event: Event) {
-    const gWorkspacesServices = WorkspacesServices.getInstance();
+    const gWorkspacesServices = this.ctx;
     //delete already exsist items
     const menuElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
@@ -65,9 +62,6 @@ export class WorkspacesPopupContxtMenu {
           contextWorkspaceId,
         }),
       parentElem,
-      {
-        hotCtx: import.meta.hot,
-      },
     );
   }
 
@@ -76,7 +70,7 @@ export class WorkspacesPopupContxtMenu {
       <xul:popupset>
         <xul:menupopup
           id="workspaces-toolbar-item-context-menu"
-          onpopupshowing={(event) =>
+          onPopupShowing={(event) =>
             this.createworkspacesContextMenuItems(event)
           }
         />
@@ -84,7 +78,5 @@ export class WorkspacesPopupContxtMenu {
     );
   }
 
-  constructor() {
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet(),import.meta.hot);
-  }
+  
 }

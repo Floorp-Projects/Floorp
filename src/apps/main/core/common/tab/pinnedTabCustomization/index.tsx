@@ -9,14 +9,6 @@ import style from "./style.css?inline";
 import { render } from "@nora/solid-xul";
 
 export class TabPinnedTabCustomization {
-  private static instance: TabPinnedTabCustomization;
-  public static getInstance() {
-    if (!TabPinnedTabCustomization.instance) {
-      TabPinnedTabCustomization.instance = new TabPinnedTabCustomization();
-    }
-    return TabPinnedTabCustomization.instance;
-  }
-
   private dispose: (() => void) | null = null;
 
   private StyleElement() {

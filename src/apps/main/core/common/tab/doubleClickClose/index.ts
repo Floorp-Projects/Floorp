@@ -7,14 +7,6 @@ import { config } from "@core/common/designs/configs";
 import { createEffect } from "solid-js";
 
 export class TabDoubleClickClose {
-  private static instance: TabDoubleClickClose;
-  public static getInstance() {
-    if (!TabDoubleClickClose.instance) {
-      TabDoubleClickClose.instance = new TabDoubleClickClose();
-    }
-    return TabDoubleClickClose.instance;
-  }
-
   constructor() {
     createEffect(() => {
       const option = config().tab.tabDubleClickToClose;

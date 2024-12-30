@@ -13,10 +13,10 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 @noraComponent(import.meta.hot)
 export default class Tab extends NoraComponentBase {
   init() {
-    TabScroll.getInstance();
-    TabOpenPosition.getInstance();
-    TabSizeSpecification.getInstance();
-    TabDoubleClickClose.getInstance();
-    TabPinnedTabCustomization.getInstance();
+    new TabScroll();
+    new TabOpenPosition();
+    new TabSizeSpecification();
+    new TabDoubleClickClose();
+    new TabPinnedTabCustomization();
   }
 }

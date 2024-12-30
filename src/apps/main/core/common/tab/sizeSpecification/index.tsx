@@ -9,13 +9,6 @@ import style from "./style.css?inline";
 import { render } from "@nora/solid-xul";
 
 export class TabSizeSpecification {
-  private static instance: TabSizeSpecification;
-  public static getInstance() {
-    if (!TabSizeSpecification.instance) {
-      TabSizeSpecification.instance = new TabSizeSpecification();
-    }
-    return TabSizeSpecification.instance;
-  }
 
   private StyleElement() {
     return <style>{style}</style>;

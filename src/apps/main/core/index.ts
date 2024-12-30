@@ -1,23 +1,31 @@
 import "vite/modulepreload-polyfill";
 
-// import { initSidebar } from "./browser-sidebar";
 import { initI18N } from "../i18n/config";
-//console.log("run init");
-
-const MODULES_COMMON = import.meta.glob("./common/*/index.ts");
 
 const MODULES = {
   common: {} as Record<string, () => Promise<unknown>>,
+  static: {} as Record<string, () => Promise<unknown>>
 };
 
-Object.entries(MODULES_COMMON).map((v) => {
-  MODULES.common[v[0].replace("./common/", "").replace("/index.ts", "")] =
-    v[1] as () => Promise<unknown>;
-});
-console.log(MODULES);
+{
+  const MODULES_COMMON = import.meta.glob("./common/*/index.ts");
+
+  Object.entries(MODULES_COMMON).map((v) => {
+    MODULES.common[v[0].replace("./common/", "").replace("/index.ts", "")] =
+      v[1] as () => Promise<unknown>;
+  });
+}
+
+{
+  MODULES.static = {
+    downloadbar: () => import("./static/downloadbar/index"),
+    overrides: () => import("./static/overrides/index")
+  }
+}
 
 const modules_keys = {
   common: Object.keys(MODULES.common),
+  static: Object.keys(MODULES.static)
 };
 
 export default async function initScripts() {
@@ -51,10 +59,31 @@ async function setPrefFeatures(all_features_keys: typeof modules_keys) {
     JSON.stringify(all_features_keys),
   );
 
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && false) {
     prefs.setStringPref(
       "noraneko.features.enabled",
-      JSON.stringify({common:["browser-share-mode","browser-tab-color","context-menu","designs"]}),
+      JSON.stringify(
+        {
+          common:[
+            "browser-share-mode",
+            "browser-tab-color",
+            "context-menu",
+            "designs",
+            "flex-order",
+            "panel-sidebar",
+            "private-container",
+            "profile-manager",
+            "splitView",
+            "statusbar",
+            "tab",
+            "tabbar",
+            "undo-closed-tab",
+            "update-refresh-cache",
+            "workspaces"
+          ],
+          static:["downloadbar","overrides"]
+        }
+      ),
     );
   }
 }

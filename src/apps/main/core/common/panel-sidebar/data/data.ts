@@ -8,14 +8,14 @@ import {
   defaultEnabled,
   strDefaultConfig,
   strDefaultData,
-} from "./utils/default-prerf.js";
-import { PanelSidebarStaticNames } from "./utils/panel-sidebar-static-names.js";
+} from "../utils/default-prerf.js";
+import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.js";
 import {
   type Panels,
   type PanelSidebarConfig,
   zPanels,
   zPanelSidebarConfig,
-} from "./utils/type.js";
+} from "../utils/type.js";
 
 /** PanelSidebar data */
 export const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(

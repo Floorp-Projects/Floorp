@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { gFloorpPrivateContainer } from "./browser-private-container";
+import { FloorpPrivateContainer } from "./browser-private-container";
 import { ContextMenu } from "./context-menu";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
@@ -15,6 +15,6 @@ export default class PrivateContainer extends NoraComponentBase {
       marker: document.querySelector("#context_selectAllTabs")!,
     });
     // Inject menu item to open link in private container.
-    window.gFloorpPrivateContainer = gFloorpPrivateContainer.getInstance();
+    window.gFloorpPrivateContainer = new FloorpPrivateContainer();
   }
 }

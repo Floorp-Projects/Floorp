@@ -8,13 +8,17 @@ If you are to make feature modifying preferences, or other internal html, go to 
 
 common/
 
-- codes that don't require noraneko-runtime
-- almost main code
+- main codes
+- supports hot reload
+
+static/
+
+- codes that can't be hot-reloaded
 
 nora/
 
 - codes that requires noraneko-runtime (esp. cpp patch)
-- should be disabled easily by others
+- should be disabled easily for other-runtime
 
 utils/
 
@@ -24,7 +28,3 @@ utils/
 example/
 
 - as test and template for basic codes
-
-temp/
-
-- obsolete files

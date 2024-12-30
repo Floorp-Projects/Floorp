@@ -126,10 +126,14 @@ const {
 const _render = (
   code: () => JSX.Element,
   node: JSX.Element,
-  options?: { marker?: Element; hotCtx?: ViteHotContext },
+  options?: { marker?: Element },
 ) => {
-  const elem = insert(node, code(), options ? options.marker : undefined);
+  let elem : unknown = insert(node, code(), options ? options.marker : undefined);
   const disposer = onCleanup(()=>{
+    console.log("[nora@solid-xul] cleanup")
+    if (typeof elem === "function") {
+      elem = elem();
+    }
     if (elem instanceof Element) {
       elem.remove();
     } else if (

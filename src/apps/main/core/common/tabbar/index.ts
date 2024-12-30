@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
-import { gMultirowTabbarClass } from "./multirow-tabbar/multirow-tabbar";
-import { gTabbarStyleClass } from "./tabbbar-style/tabbar-style";
+import { MultirowTabbarClass } from "./multirow-tabbar/multirow-tabbar";
+import { TabbarStyleClass } from "./tabbbar-style/tabbar-style";
 
 @noraComponent(import.meta.hot)
 export default class TabBar extends NoraComponentBase {
   init() {
-    gTabbarStyleClass.getInstance();
-    gMultirowTabbarClass.getInstance();
+    new TabbarStyleClass();
+    new MultirowTabbarClass();
   }
 }

@@ -7,7 +7,7 @@ import { createSignal, For, Show } from "solid-js";
 import { render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import type { Workspace } from "./utils/type.js";
+import type { TWorkspace } from "./utils/type.js";
 import { WorkspacesServices } from "./workspaces.js";
 import modalStyle from "./modal-style.css?inline";
 
@@ -23,16 +23,21 @@ type Container = {
 
 export const [workspaceModalState, setWorkspaceModalState] = createSignal<{
   show: boolean;
-  targetWorkspace: Workspace | null;
+  targetWorkspace: TWorkspace | null;
 }>({ show: false, targetWorkspace: null });
 
 export class WorkspaceManageModal {
-  private static instance: WorkspaceManageModal;
-  public static getInstance() {
-    if (!WorkspaceManageModal.instance) {
-      WorkspaceManageModal.instance = new WorkspaceManageModal();
-    }
-    return WorkspaceManageModal.instance;
+  ctx:WorkspacesServices
+  iconCtx:WorkspaceIcons
+  constructor(ctx:WorkspacesServices,iconCtx:WorkspaceIcons) {
+    this.ctx=ctx;
+    this.iconCtx=iconCtx;
+    render(
+      () => this.WorkspaceManageModal(),
+      document?.getElementById("fullscreen-and-pointerlock-wrapper"),
+    );
+
+    render(() => this.StyleElement, document?.head);
   }
 
   private get containers(): Container[] {
@@ -52,9 +57,9 @@ export class WorkspaceManageModal {
     return container.name;
   }
 
-  private ContentElement(workspace: Workspace | null) {
-    const gWorkspacesServices = WorkspacesServices.getInstance();
-    const gWorkspaceIcons = WorkspaceIcons.getInstance();
+  private ContentElement(workspace: TWorkspace | null) {
+    const gWorkspacesServices = this.ctx;
+    const gWorkspaceIcons = this.iconCtx;
     const targetWorkspace =
       workspace ?? gWorkspacesServices.getCurrentWorkspace;
 
@@ -124,7 +129,7 @@ export class WorkspaceManageModal {
   }
 
   private Modal() {
-    const gWorkspacesServices = WorkspacesServices.getInstance();
+    const gWorkspacesServices = this.ctx;
     return (
       <ShareModal
         name="Manage Workspace"
@@ -155,21 +160,5 @@ export class WorkspaceManageModal {
 
   private WorkspaceManageModal() {
     return <Show when={workspaceModalState().show}>{this.Modal()}</Show>;
-  }
-
-  constructor() {
-    render(
-      () => this.WorkspaceManageModal(),
-      document?.getElementById("fullscreen-and-pointerlock-wrapper"),
-      {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        hotCtx: (import.meta as any)?.hot,
-      },
-    );
-
-    render(() => this.StyleElement, document?.head, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any)?.hot,
-    });
   }
 }

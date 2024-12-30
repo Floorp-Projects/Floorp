@@ -9,8 +9,8 @@ import { workspacesData } from "./data.js";
 import { PopupToolbarElement } from "./popup-block-element.js";
 import { config } from "./config.js";
 
-export function PopupElement() {
-  const gWorkspacesServices = WorkspacesServices.getInstance();
+export function PopupElement(props:{ctx:WorkspacesServices}) {
+  const gWorkspacesServices = props.ctx;
   return (
     <xul:panelview
       id="workspacesToolbarButtonPanel"
@@ -34,6 +34,7 @@ export function PopupElement() {
                   label={workspace.name}
                   isSelected={workspace.id === window.floorpSelectedWorkspace}
                   bmsMode={config().manageOnBms}
+                  ctx={gWorkspacesServices}
                 />
               )}
             </For>

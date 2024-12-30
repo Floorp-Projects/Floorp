@@ -18,12 +18,6 @@ export class DownloadBarManager {
       "noraneko.downloadbar.enable",
       this.observerDownloadbarPref,
     );
-    onCleanup(() => {
-      Services.prefs.removeObserver(
-        "noraneko.downloadbar.enable",
-        this.observerDownloadbarPref,
-      );
-    });
     if (!window.gFloorp) {
       window.gFloorp = {};
     }

@@ -3,42 +3,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
-import { type Workspaces, zWorkspacesServicesStoreData } from "./utils/type.js";
+import { Accessor, createEffect, createSignal, onCleanup, Setter } from "solid-js";
+import { type TWorkspaces, zWorkspacesServicesStoreData } from "./utils/type.js";
 import { WorkspacesServicesStaticNames } from "./utils/workspaces-static-names.js";
+import { createRootHMR } from "@nora/solid-xul";
 
-/** WorkspacesServices data */
-export const [workspacesData, setworkspacesData] = createSignal<Workspaces>(
-  zWorkspacesServicesStoreData.parse(
-    getworkspacesServicesArrayData(
-      Services.prefs.getStringPref(
-        WorkspacesServicesStaticNames.workspaceDataPrefName,
-        "{}",
-      ),
-    ),
-  ),
-);
+function getWorkspacesServicesArrayData(stringData: string){
+  return JSON.parse(stringData).workspaces || [];
+}
 
-createEffect(() => {
-  Services.prefs.setStringPref(
-    WorkspacesServicesStaticNames.workspaceDataPrefName,
-    JSON.stringify({ workspaces: workspacesData() }),
-  );
-});
-
-Services.prefs.addObserver("floorp.workspaces.v3.data", () =>
-  setworkspacesData(
+function createWorkspacesData():[Accessor<TWorkspaces>,Setter<TWorkspaces>]{
+  const [workspacesData, setWorkspacesData] = createSignal<TWorkspaces>(
     zWorkspacesServicesStoreData.parse(
-      getworkspacesServicesArrayData(
+      getWorkspacesServicesArrayData(
         Services.prefs.getStringPref(
           WorkspacesServicesStaticNames.workspaceDataPrefName,
           "{}",
         ),
       ),
     ),
-  ),
-);
+  );
+  
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      WorkspacesServicesStaticNames.workspaceDataPrefName,
+      JSON.stringify({ workspaces: workspacesData() }),
+    );
+  });
 
-function getworkspacesServicesArrayData(stringData: string) {
-  return JSON.parse(stringData).workspaces || [];
+  const observer =() =>
+    setWorkspacesData(
+      zWorkspacesServicesStoreData.parse(
+        getWorkspacesServicesArrayData(
+          Services.prefs.getStringPref(
+            WorkspacesServicesStaticNames.workspaceDataPrefName,
+            "{}",
+          ),
+        ),
+      ),
+    )
+  Services.prefs.addObserver("floorp.workspaces.v3.data", observer);
+  onCleanup(()=>{
+    Services.prefs.removeObserver("floorp.workspaces.v3.data", observer);
+  })
+  return [workspacesData,setWorkspacesData]
 }
+
+/** WorkspacesServices data */
+export const [workspacesData, setWorkspacesData] = createRootHMR(createWorkspacesData,import.meta.hot);
+
+
+
+
+

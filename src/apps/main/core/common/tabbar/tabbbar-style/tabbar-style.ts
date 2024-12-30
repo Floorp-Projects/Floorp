@@ -6,15 +6,7 @@
 import { createEffect } from "solid-js";
 import { gTabbarStyleFunctions } from "./tabbbar-style-functions";
 
-export class gTabbarStyleClass {
-  private static instance: gTabbarStyleClass;
-  public static getInstance() {
-    if (!gTabbarStyleClass.instance) {
-      gTabbarStyleClass.instance = new gTabbarStyleClass();
-    }
-    return gTabbarStyleClass.instance;
-  }
-
+export class TabbarStyleClass {
   private get tabbarWindowManageContainer() {
     return document?.querySelector(
       "#TabsToolbar > .titlebar-buttonbox-container",

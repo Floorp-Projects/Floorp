@@ -49,13 +49,13 @@ export const zWorkspacesServicesConfigs = z.object({
 });
 
 /* Export as types */
-export type Workspace = z.infer<typeof zWorkspace>;
-export type Workspaces = z.infer<typeof zWorkspacesServices>;
-export type WorkspacesStoreData = z.infer<typeof zWorkspacesServicesStoreData>;
-export type WorkspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
-export type WorkspaceBackup = z.infer<typeof zWorkspaceBackup>;
-export type WorkspacesBackup = z.infer<typeof zWorkspacesServicesBackup>;
-export type WorkspacesServicesConfigsType = z.infer<
+export type TWorkspace = z.infer<typeof zWorkspace>;
+export type TWorkspaces = z.infer<typeof zWorkspacesServices>;
+export type TWorkspacesStoreData = z.infer<typeof zWorkspacesServicesStoreData>;
+export type TWorkspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
+export type TWorkspaceBackup = z.infer<typeof zWorkspaceBackup>;
+export type TWorkspacesBackup = z.infer<typeof zWorkspacesServicesBackup>;
+export type TWorkspacesServicesConfigs = z.infer<
   typeof zWorkspacesServicesConfigs
 >;
 
