@@ -97,7 +97,16 @@ export default defineConfig({
         console.log(`handle hot : ${JSON.stringify(ctx.modules)}`);
       },
     },
+    solidPlugin({
+      solid: {
+        generate: "universal",
+        moduleName: "@nora/solid-xul",
+        contextToCustomElements: false,
+      },
+      hot: false,
+    }),
     swc.vite({
+      exclude:"*solid-xul*",
       "jsc": {
         target: "esnext",
         "parser": {
@@ -109,14 +118,6 @@ export default defineConfig({
           decoratorVersion: "2022-03",
         }
       }
-    }),
-    solidPlugin({
-      solid: {
-        generate: "universal",
-        moduleName: "@nora/solid-xul",
-        contextToCustomElements: false,
-      },
-      hot: false,
     }),
     {
       name: "gen_jarmn",
@@ -144,6 +145,7 @@ export default defineConfig({
     {
       name:"noraneko_component_hmr_support",
       enforce: "pre",
+      "apply":"serve",
       transform(code, id, options) {
         if (code.includes("\n@noraComponent") && !code.includes("//@nora-only-dispose")) {
           code += "\n"
