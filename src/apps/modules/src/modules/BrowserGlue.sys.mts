@@ -125,6 +125,22 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*"],
   },
+  NRProgressiveWebApp: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProgressiveWebAppParent.sys.mts"
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProgressiveWebAppChild.sys.mts"
+      ),
+      events: {
+        pageshow: {},
+      },
+    },
+    allFrames: true,
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);

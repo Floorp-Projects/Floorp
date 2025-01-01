@@ -62,6 +62,7 @@ declare module "solid-js" {
     interface XULMenuPopupElement extends XULElementBase {
       position?:
         | "after_start"
+        | "bottomright topright"
         | "end_before"
         | "bottomleft topleft"
         | "overlap";
@@ -77,8 +78,10 @@ declare module "solid-js" {
         | "after_start"
         | "end_before"
         | "bottomleft topleft"
+        | "bottomright topright"
         | "overlap";
       onPopupShowing?: () => void;
+      onPopupHiding?: () => void;
       onpopupshowing?: string;
     }
 
@@ -101,6 +104,24 @@ declare module "solid-js" {
       oncommand?: string;
       onCommand?: () => void;
       context?: string;
+      image?: string;
+      hidden?: boolean;
+      closemenu?: "none" | "all" | "current" | "parent";
+    }
+
+    interface XULButtonElement extends XULElementBase {
+      label?: string;
+      accesskey?: string;
+      oncommand?: string;
+      onCommand?: () => void;
+      context?: string;
+      image?: string;
+    }
+
+    interface XULImageElement extends XULElementBase {
+      src?: string;
+      width?: string;
+      height?: string;
     }
 
     interface XULTabElement
@@ -112,11 +133,22 @@ declare module "solid-js" {
     interface IntrinsicElements {
       "xul:arrowscrollbox": XULElementBase;
       "xul:browser": XULBrowserElement;
+      "xul:button": XULButtonElement;
       "xul:menuitem": XULMenuitemElement;
       "xul:window": XULElementBase;
       "xul:linkset": XULElementBase;
       "xul:popupset": XULPopupSetElement;
       "xul:tooltip": XULElementBase;
+      "xul:toolbaritem": XULElementBase & {
+        role?: string;
+        ariaLabel?: string;
+        ariaLevel?: number;
+        orient?: "vertical" | "horizontal";
+        smoothscroll?: boolean;
+        flatList?: boolean;
+        tooltip?: string;
+        context?: string;
+      };
       "xul:tab": XULTabElement;
       "xul:panel": XULPanelElement;
       "xul:panelview": XULPanelElement;
@@ -166,7 +198,7 @@ declare module "solid-js" {
       "xul:description": XULElementBase;
       "xul:checkbox": XULElementBase;
       "xul:richlistitem": XULRichListItem;
-      "xul:image": XULElementBase;
+      "xul:image": XULImageElement;
       "xul:label": XULElementBase;
     }
 

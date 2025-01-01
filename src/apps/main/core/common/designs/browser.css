@@ -153,10 +153,7 @@ browser[type="content"] > html {
 
 @media (min-resolution: 1.1dppx) {
   toolbar[brighttext] .webextension-browser-action {
-    list-style-image: var(
-      --webextension-toolbar-image-2x-light,
-      inherit
-    ) !important;
+    list-style-image: var(--webextension-toolbar-image-2x-light, inherit) !important;
   }
 }
 
@@ -184,58 +181,6 @@ browser[type="content"] > html {
   flex: 1;
 }
 
-#ssb-app-install-button {
-  appearance: none;
-  border: 0;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-weight: 600;
-  min-width: 0;
-  margin-inline: 8px 0;
-  margin-bottom: 0;
-  color: var(--button-primary-color);
-  background-color: var(--button-primary-bgcolor);
-  margin-left: auto;
-  margin-right: 5px;
-}
-
-#ssb-app-install-button:hover {
-  background-color: var(--button-primary-hover-bgcolor);
-}
-
-#ssb-app-install-button:hover:active {
-  background-color: var(--button-primary-active-bgcolor);
-}
-
-#ssb-app-cancel-button {
-  appearance: none;
-  border: 0;
-  border-radius: 4px;
-  color: var(--button-color, inherit);
-  background-color: var(
-    --button-bgcolor,
-    color-mix(in srgb, currentColor 13%, transparent)
-  );
-  padding: 8px 16px;
-  font-weight: 600;
-  min-width: 0;
-  margin-bottom: 0;
-}
-
-#ssb-app-cancel-button:hover {
-  background-color: var(
-    --button-hover-bgcolor,
-    color-mix(in srgb, currentColor 17%, transparent)
-  );
-}
-
-#ssb-app-cancel-button:active {
-  background-color: var(
-    --button-active-bgcolor,
-    color-mix(in srgb, currentColor 30%, transparent)
-  );
-}
-
 #ssb-button-hbox {
   margin-top: 15px;
   height: 35px;
@@ -260,17 +205,17 @@ browser[type="content"] > html {
 }
 
 #ssbPageAction-image {
-  list-style-image: url("chrome://floorp/skin/designs/lepton/pwa-install.svg");
+  list-style-image: url("chrome://branding/content/about-logo-private.png");
 }
 
 #ssbPageAction-image[open-ssb="true"] {
-  list-style-image: url("chrome://floorp/skin/designs/lepton/pwa-launch.svg");
+  list-style-image: url("chrome://branding/content/icon32.png");
 }
 
 #run-ssb-contextmenu {
-  --menuitem-image: url("chrome://floorp/skin/designs/lepton/pwa-launch.svg");
+  --menuitem-image: url("chrome://branding/content/about-logo-private.png");
 }
 
 #uninstall-ssb-contextmenu {
-  --menuitem-image: url("chrome://floorp/skin/designs/lepton/pwa-remove.svg");
+  --menuitem-image: url("chrome://branding/content/about-logo-private.png");
 }
