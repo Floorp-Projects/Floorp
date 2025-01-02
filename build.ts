@@ -128,7 +128,7 @@ let buildViteProcesses: any[];
 const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
 
-import packageJson from "./package.json"
+import packageJson from "./package.json" assert { type: "json" };
 
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
