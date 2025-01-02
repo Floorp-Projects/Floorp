@@ -165,7 +165,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
         await buildVite({
           mode,
           configFile: r("./src/apps/designs/vite.config.ts"),
-          root: r("./src/apps/designs/vite.config.ts"),
+          root: r("./src/apps/designs"),
         }),
         await buildVite({
           configFile: r("./src/apps/modules/vite.config.ts"),
