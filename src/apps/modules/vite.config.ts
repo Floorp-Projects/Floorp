@@ -30,7 +30,7 @@ export default defineConfig({
         //* Tells rollup to preserve file structure
         //https://stackoverflow.com/a/78546497
         preserveModules: true,
-        preserveModulesRoot: "./src"
+        preserveModulesRoot: import.meta.dirname +"/src"
       },
     },
   },
