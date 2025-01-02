@@ -128,6 +128,8 @@ let buildViteProcesses: any[];
 const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
 
+import packageJson from "./package.json"
+
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
   await applyPatches();
@@ -150,6 +152,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
           root: r("./src/apps/main"),
           define: {
             "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
           },
         }),
         await createServer({
@@ -164,6 +167,14 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
           configFile: r("./src/apps/designs/vite.config.ts"),
           root: r("./src/apps/designs/vite.config.ts"),
         }),
+        await buildVite({
+          configFile: r("./src/apps/modules/vite.config.ts"),
+          root:r("./src/apps/modules"),
+          define: {
+            "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+          }
+        })
       ];
       devExecaProcesses.push(
         execa({
@@ -172,11 +183,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
           cwd: r("./src/apps/settings"),
         })`pnpm dev`,
       );
-      await execa({
-        preferLocal: true,
-        stdout: "inherit",
-        cwd: r("./src/apps/modules"),
-      })`pnpm build`;
       await execa({
         preferLocal: true,
         stdout: "inherit",
@@ -304,6 +310,7 @@ async function release(mode: "before" | "after") {
         root: r("./src/apps/main"),
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
         },
         base: "chrome://noraneko/content"
       }),
@@ -316,13 +323,16 @@ async function release(mode: "before" | "after") {
         root: r("./src/apps/settings"),
         base: "chrome://noraneko-settings/content"
       }),
+      buildVite({
+        configFile: r("./src/apps/modules/vite.config.ts"),
+        root:r("./src/apps/modules"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+        }
+      })
       //applyMixin(binPath),
     ]);
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
-      cwd: r("./src/apps/modules"),
-    })`pnpm build`;
     await execa({
       preferLocal: true,
       stdout: "inherit",
