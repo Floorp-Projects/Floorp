@@ -3,18 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, createEffect, Show, createComputed, createMemo, createResource } from "solid-js";
+import { createSignal, createEffect, Show, createComputed, createMemo, createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import { CPanelSidebar } from "./panel-sidebar";
 import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/data";
 import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
+import { createRootHMR } from "@nora/solid-xul";
 
-export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar }) {
+export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
   const gPanelSidebar = props.ctx;
 
-  const [faviconUrl] = createResource(props.panel,async (panel)=>{return await getFaviconURLForPanel(panel)});
+  const [faviconURL] = createResource(()=>props.panel,getFaviconURLForPanel);
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/plain", props.panel.id);
@@ -79,7 +80,9 @@ export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar }) {
         }}
         style={{display:"flex","align-items":"center","justify-content":"center"}}
       >
-        <img src={faviconUrl()} width="16" height="16" />
+      <Suspense>
+        <img src={faviconURL()} width="16" height="16" />
+        </Suspense>
       </div>
       <Show
         when={

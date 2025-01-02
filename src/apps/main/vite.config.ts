@@ -12,6 +12,7 @@ const r = (dir: string) => {
 };
 
 export default defineConfig({
+ 
   publicDir: r("public"),
   server: {
     port: 5181,
@@ -27,11 +28,12 @@ export default defineConfig({
     cssMinify: false,
     emptyOutDir: true,
     assetsInlineLimit: 0,
-    target: "firefox128",
+    target: "firefox133",
 
     rollupOptions: {
       //https://github.com/vitejs/vite/discussions/14454
       preserveEntrySignatures: "allow-extension",
+
       input: {
         core: r("./core/index.ts"),
         "about-preferences": r("./about/preferences/index.ts"),
@@ -98,15 +100,17 @@ export default defineConfig({
       },
     },
     solidPlugin({
+      // dev:true,
       solid: {
         generate: "universal",
         moduleName: "@nora/solid-xul",
         contextToCustomElements: false,
+        hydratable:true,
       },
       hot: false,
     }),
     swc.vite({
-      exclude:"*solid-xul*",
+      exclude:["*solid-xul*","*solid-js*"],
       "jsc": {
         target: "esnext",
         "parser": {
@@ -174,9 +178,10 @@ export default defineConfig({
     }
   ],
   optimizeDeps: {
-    include: ["./node_modules/@nora"],
+    include: ["./node_modules/@nora",'solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/html', 'solid-js/h'],
   },
   resolve: {
+    dedupe: ['solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/html', 'solid-js/h'],
     preserveSymlinks: true,
   },
 });

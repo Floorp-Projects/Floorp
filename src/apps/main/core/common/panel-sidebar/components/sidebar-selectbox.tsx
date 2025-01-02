@@ -3,11 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { For } from "solid-js";
+import { createResource, For, lazy, Suspense } from "solid-js";
 import { panelSidebarData } from "../data/data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { setPanelSidebarAddModalState } from "./panel-sidebar-modal";
 import { CPanelSidebar } from "./panel-sidebar";
+import { createRootHMR } from "@nora/solid-xul";
+import { getFaviconURLForPanel } from "../utils/favicon-getter";
 
 export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
   return (
@@ -16,7 +18,11 @@ export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
       class="webpanel-box chromeclass-extrachrome"
     >
       <For each={panelSidebarData()}>
-        {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
+        {(panel) =>
+
+          <PanelSidebarButton panel={panel} ctx={props.ctx} />
+          }
+
       </For>
       <xul:toolbarbutton
         id="panel-sidebar-add"

@@ -35,15 +35,10 @@ export class PanelSidebarElem {
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
     render(() => this.sidebar(), parentElem, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any).hot,
       marker: beforeElem as XULElement,
     });
 
-    render(() => this.style(), document?.head, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any).hot,
-    });
+    render(() => this.style(), document?.head);
 
     createEffect(() => {
       if (selectedPanelId() === null) {
