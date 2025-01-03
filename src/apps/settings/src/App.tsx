@@ -10,10 +10,11 @@ import Home from "./pages/Home";
 import Header from "./header";
 import Workspaces from "./pages/Workspaces";
 import Design from "./pages/Design";
-import Accounts from "./pages/Accounts";
 import About from "./pages/About";
 import SearchResults from "./pages/Search/index";
 import PanelSidebar from "./pages/PanelSidebar";
+import ProgressiveWebApp from "./pages/ProgressiveWebApp";
+import ProfileAndAccount from "./pages/Accounts";
 
 export default function App() {
   const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -29,10 +30,11 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/workspaces" element={<Workspaces />} />
                 <Route path="/design" element={<Design />} />
-                <Route path="/accounts" element={<Accounts />} />
+                <Route path="/accounts" element={<ProfileAndAccount />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/sidebar" element={<PanelSidebar />} />
+                <Route path="/webapps" element={<ProgressiveWebApp />} />
               </Routes>
             </Box>
           </Box>

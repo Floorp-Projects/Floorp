@@ -73,21 +73,21 @@ export class SsbPanelView {
     if (!this.parentElement || !this.beforeElement) return;
 
     this.isRendered = true;
-    render(() => <this.Render />, this.parentElement, {
+    render(() => <SsbPanelView.Render />, this.parentElement, {
       marker: this.beforeElement,
     });
   }
 
-  private async showSsbPanelSubView() {
+  private static async showSsbPanelSubView() {
     await window.PanelUI.showSubView(
       "PanelUI-ssb",
       document?.getElementById("appMenu-ssb-button"),
     );
 
-    this.updateInstalledApps();
+    SsbPanelView.updateInstalledApps();
   }
 
-  private async updateInstalledApps() {
+  private static async updateInstalledApps() {
     const [, setInstalledApps] = SsbPanelView.installedApps;
     const apps =
       await SiteSpecificBrowserManager.getInstance().getInstalledApps();
@@ -96,7 +96,7 @@ export class SsbPanelView {
     );
   }
 
-  private handleInstallOrRunCurrentPageAsSsb() {
+  private static handleInstallOrRunCurrentPageAsSsb() {
     SiteSpecificBrowserManager.getInstance().installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
       false,
@@ -123,16 +123,16 @@ export class SsbPanelView {
     );
   }
 
-  public Render(): JSX.Element {
+  public static Render(): JSX.Element {
     return (
       <>
         <xul:toolbarbutton
           id="appMenu-ssb-button"
           class="subviewbutton subviewbutton-nav"
           data-l10n-id="appmenuitem-webapps"
-          label="Progressive Web Apps"
+          label="Web Apps"
           closemenu="none"
-          onCommand={() => this.showSsbPanelSubView()}
+          onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
         <xul:panelview id="PanelUI-ssb">
           <xul:vbox id="ssb-subview-body" class="panel-subview-body">
@@ -141,7 +141,7 @@ export class SsbPanelView {
               class="subviewbutton"
               data-l10n-id="appmenuitem-install-current-page"
               label="Install Current Page as Progressive Web App"
-              onCommand={() => this.handleInstallOrRunCurrentPageAsSsb()}
+              onCommand={() => SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
             />
             <xul:toolbarseparator />
             <h2

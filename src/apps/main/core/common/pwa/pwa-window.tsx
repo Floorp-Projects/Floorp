@@ -7,11 +7,11 @@
 import { SiteSpecificBrowserManager } from "./ssbManager";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import { render } from "@nora/solid-xul";
-import { createSignal, createEffect } from "solid-js";
+import { createSignal } from "solid-js";
+import { config } from "./config";
 
 export class PwaWindowSupport {
   private static instance: PwaWindowSupport;
-  private toolbarsDisabled: ReturnType<typeof createSignal<boolean>>;
   private ssbId: ReturnType<typeof createSignal<string | null>>;
 
   public static getInstance(): PwaWindowSupport {
@@ -22,7 +22,6 @@ export class PwaWindowSupport {
   }
 
   private constructor() {
-    this.toolbarsDisabled = createSignal(false);
     this.ssbId = createSignal<string | null>(null);
 
     const uri = window.arguments?.[0];
@@ -47,15 +46,6 @@ export class PwaWindowSupport {
     const ssbIdAttr = document?.documentElement?.getAttribute("FloorpSSBId") ?? null;
     const [, setSsbId] = this.ssbId;
     setSsbId(ssbIdAttr);
-
-    const [, setToolbarsDisabled] = this.toolbarsDisabled;
-    createEffect(() => {
-      const disabled = Services.prefs.getBoolPref(
-        "floorp.browser.ssb.toolbars.disabled",
-        false
-      );
-      setToolbarsDisabled(disabled);
-    });
   }
 
   private setupPageActions(): void {
@@ -78,11 +68,10 @@ export class PwaWindowSupport {
   }
 
   private createStyleElement() {
-    const [toolbarsDisabled] = this.toolbarsDisabled;
     return (
       <style>
         {PwaWindowStyle}
-        {toolbarsDisabled()
+        {!config().showToolbar
           ? `
            #nav-bar, #status-bar, #PersonalToolbar, #titlebar {
              display: none;

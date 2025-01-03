@@ -31,7 +31,6 @@ export class DataManager {
   }
 
   async saveSsbData(ssbData: Manifest) {
-    console.log("saveSsbData", ssbData);
     const start_url = ssbData.start_url;
     const currentSsbData = await this.getCurrentSsbData();
     currentSsbData[start_url] = ssbData;

@@ -32,6 +32,17 @@ export class SiteSpecificBrowserManager {
     document?.addEventListener("floorpOnLocationChangeEvent", () => {
       this.onCurrentTabChangedOrLoaded();
     });
+
+    Services.obs.addObserver(async (subject: any) => {
+      await this.renameSsb(
+        subject?.wrappedJSObject?.id as string,
+        subject?.wrappedJSObject?.newName as string
+      );
+    }, "nora-ssb-rename");
+
+    Services.obs.addObserver(async (subject: any) => {
+      await this.uninstallById(subject?.wrappedJSObject?.id as string);
+    }, "nora-ssb-uninstall");
   }
 
   async onCommand() {
@@ -142,6 +153,14 @@ export class SiteSpecificBrowserManager {
     await this.dataManager.removeSsbData(manifest.start_url);
   }
 
+  private async uninstallById(id: string) {
+    const ssbObj = await this.getSsbObj(id);
+    if (!ssbObj) {
+      return;
+    }
+    await this.uninstall(ssbObj);
+  }
+
   private async getIdByUrl(url: string) {
     const ssbData = await this.dataManager.getCurrentSsbData();
     return ssbData[url];
@@ -199,6 +218,24 @@ export class SiteSpecificBrowserManager {
 
   public async getInstalledApps() {
     return await this.dataManager.getCurrentSsbData();
+  }
+
+  public async renameSsb(id: string, newName: string): Promise<boolean> {
+    const ssbObj = await this.getSsbObj(id);
+    if (!ssbObj) {
+      return false;
+    }
+
+    const updatedManifest: Manifest = {
+      ...ssbObj,
+      name: newName,
+      short_name: newName,
+    };
+
+    await this.uninstall(ssbObj);
+    await this.install(updatedManifest);
+
+    return true;
   }
 
   public useOSIntegration() {

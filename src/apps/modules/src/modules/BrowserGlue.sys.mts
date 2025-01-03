@@ -75,7 +75,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
   NRSyncManager: {
     parent: {
@@ -91,7 +91,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
   NRAppConstants: {
     parent: {
@@ -123,7 +123,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
   NRProgressiveWebApp: {
     parent: {
@@ -140,6 +140,22 @@ const JS_WINDOW_ACTORS: {
       },
     },
     allFrames: true,
+  },
+  NRPwaManager: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPwaManagerParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPwaManagerChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
 };
 

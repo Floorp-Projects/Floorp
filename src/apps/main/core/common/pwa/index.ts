@@ -5,10 +5,12 @@
 
 import { SsbPageAction } from "./SsbPageAction";
 import { SsbPanelView } from "./SsbPanelView";
+import { enabled } from "./config";
 import { PwaWindowSupport } from "./pwa-window";
 import { SiteSpecificBrowserManager } from "./ssbManager";
 
 export function init() {
+  if (!enabled()) return;
   SsbPageAction.getInstance();
   SsbPanelView.getInstance();
   PwaWindowSupport.getInstance();

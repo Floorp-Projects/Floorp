@@ -77,7 +77,7 @@ export const WindowsSupport = {
    * @param {SiteSpecificBrowser} ssb the SSB to uninstall.
    */
   async uninstall(ssb: Manifest) {
-    if (this.ssbManager.useOSIntegration()) {
+    if (!this.ssbManager.useOSIntegration()) {
       return;
     }
 
