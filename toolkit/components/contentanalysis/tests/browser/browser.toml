@@ -63,6 +63,9 @@ support-files = [
   "!/toolkit/components/printing/tests/longerArticle.html",
   "!/toolkit/components/printing/tests/simplifyArticleSample.html",
 ]
+skip-if = [
+  "win11_2009", # Bug 1890792
+]
 
 ["browser_print_iframe_content_analysis.js"]
 support-files = [
