@@ -33,16 +33,19 @@ Refer to "How to Debug" for instructions on using `pnpm dev`.
 
 ### Windows
 
-1. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
-  the `Release` version is recommended.
-2. Download artifact named as "noraneko-win-amd64-dev" and place in project root.
-3. Run `pnpm dev`.
-4. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+1. Install `gh cli` from [https://cli.github.com/]
+2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
+3. Go to latest successful build and check the id in url.
+   It is run_id and is number.
+   the `Release` version is recommended.
+4. Run `gh run download -R nyanrus/noraneko-runtime -n noraneko-win-amd64-dev [run_id]`
+5. Run `pnpm dev`.
+6. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ### GNU/Linux
 
-1. Install `gh cli` and `lbzip2`
+1. Install `gh cli` from [https://cli.github.com/] and `lbzip2` from your package manager.
 2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_linux_build.yml).
 3. Go to latest successful build and check the id in url.
    It is run_id and is number.
@@ -50,6 +53,8 @@ Refer to "How to Debug" for instructions on using `pnpm dev`.
 5. Run `mkdir -p _dist/bin`
 6. Run `tar --strip-components=1 -xvf ./noraneko-*.tar.bz2 -C _dist/bin`
 7. Run `pnpm dev`
+8. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+  If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ## Credits
 
