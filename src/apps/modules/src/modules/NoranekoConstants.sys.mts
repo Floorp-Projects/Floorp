@@ -1,3 +1,4 @@
 export const NoranekoConstants = Object.freeze({
-  version2: "0.1.11",
+  version2: import.meta.__VERSION2__,
+  buildid2: import.meta.__BUILDID2__
 });

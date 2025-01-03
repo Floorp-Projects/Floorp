@@ -16,6 +16,8 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base.js";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
+  static ctx:WorkspacesServices | null = null;
+  
   init(): void {
     const iconCtx = new WorkspaceIcons();
     iconCtx.initializeIcons()
@@ -29,5 +31,6 @@ export default class Workspaces extends NoraComponentBase {
     new WorkspacesToolbarButton(ctx);
     new WorkspacesPopupContxtMenu(ctx);
     new WorkspaceManageModal(ctx,iconCtx);
+    Workspaces.ctx=ctx;
   }
 }

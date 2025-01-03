@@ -12,6 +12,7 @@ const r = (dir: string) => {
 };
 
 export default defineConfig({
+ 
   publicDir: r("public"),
   server: {
     port: 5181,
@@ -27,11 +28,12 @@ export default defineConfig({
     cssMinify: false,
     emptyOutDir: true,
     assetsInlineLimit: 0,
-    target: "firefox128",
+    target: "firefox133",
 
     rollupOptions: {
       //https://github.com/vitejs/vite/discussions/14454
       preserveEntrySignatures: "allow-extension",
+
       input: {
         core: r("./core/index.ts"),
         "about-preferences": r("./about/preferences/index.ts"),
@@ -97,7 +99,18 @@ export default defineConfig({
         console.log(`handle hot : ${JSON.stringify(ctx.modules)}`);
       },
     },
+    solidPlugin({
+      // dev:true,
+      solid: {
+        generate: "universal",
+        moduleName: "@nora/solid-xul",
+        contextToCustomElements: false,
+        hydratable:true,
+      },
+      hot: false,
+    }),
     swc.vite({
+      exclude:["*solid-xul*","*solid-js*"],
       "jsc": {
         target: "esnext",
         "parser": {
@@ -109,14 +122,6 @@ export default defineConfig({
           decoratorVersion: "2022-03",
         }
       }
-    }),
-    solidPlugin({
-      solid: {
-        generate: "universal",
-        moduleName: "@nora/solid-xul",
-        contextToCustomElements: false,
-      },
-      hot: false,
     }),
     {
       name: "gen_jarmn",
@@ -144,6 +149,7 @@ export default defineConfig({
     {
       name:"noraneko_component_hmr_support",
       enforce: "pre",
+      "apply":"serve",
       transform(code, id, options) {
         if (code.includes("\n@noraComponent") && !code.includes("//@nora-only-dispose")) {
           code += "\n"
@@ -172,9 +178,10 @@ export default defineConfig({
     }
   ],
   optimizeDeps: {
-    include: ["./node_modules/@nora"],
+    include: ["./node_modules/@nora",'solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/html', 'solid-js/h'],
   },
   resolve: {
+    dedupe: ['solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/html', 'solid-js/h'],
     preserveSymlinks: true,
   },
 });
