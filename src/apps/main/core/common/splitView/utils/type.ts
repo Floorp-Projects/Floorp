@@ -4,14 +4,14 @@
 
 import { z } from "zod";
 
-export const zSplitViewData = z.object({
+export const zSplitViewDatum = z.object({
   tabIds: z.array(z.string()),
   reverse: z.boolean(),
   method: z.enum(["row", "column"]),
   fixedMode: z.boolean().optional(),
 });
 
-export const zSplitViewDatas = z.array(zSplitViewData);
+export const zSplitViewData = z.array(zSplitViewDatum);
 
 export const zFixedSplitViewDataGroup = z.object({
   fixedTabId: z.string().nullable(),
@@ -24,7 +24,7 @@ export const zFixedSplitViewDataGroup = z.object({
 export const zSplitViewConfigData = z.object({
   currentViewIndex: z.number(),
   fixedSplitViewData: zFixedSplitViewDataGroup,
-  splitViewData: zSplitViewDatas,
+  splitViewData: zSplitViewData,
 });
 
 // Types for SplitView
@@ -45,6 +45,6 @@ export type Tab = XULElement & {
   splitView: boolean;
 };
 
-export type SplitViewData = z.infer<typeof zSplitViewData>;
-export type FixedSplitViewDataGroup = z.infer<typeof zFixedSplitViewDataGroup>;
-export type SplitViewDatas = z.infer<typeof zSplitViewDatas>;
+export type TSplitViewDatum = z.infer<typeof zSplitViewDatum>;
+export type TFixedSplitViewDataGroup = z.infer<typeof zFixedSplitViewDataGroup>;
+export type TSplitViewData = z.infer<typeof zSplitViewData>;

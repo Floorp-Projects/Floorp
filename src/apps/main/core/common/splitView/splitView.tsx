@@ -5,7 +5,7 @@
 
 import { SplitViewStaticNames } from "./utils/static-names";
 import { render } from "@nora/solid-xul";
-import type { SplitViewData, Tab, TabEvent } from "./utils/type";
+import type { TSplitViewDatum, Tab, TabEvent } from "./utils/type";
 import splitViewStyles from "./style.css?inline";
 import {
   currentSplitView,
@@ -26,10 +26,7 @@ export class CSplitView {
   }
 
   private initializeStyles() {
-    render(this.StyleElement, document?.head, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any).hot,
-    });
+    render(this.StyleElement, document?.head);
   }
 
   private initializePreferences() {
@@ -240,7 +237,7 @@ export class CSplitView {
     );
   }
 
-  private isTabInAnyGroup(tab: Tab, groups: SplitViewData[]) {
+  private isTabInAnyGroup(tab: Tab, groups: TSplitViewDatum[]) {
     return groups.some((group) => group.tabIds.includes(this.getTabId(tab)));
   }
 
@@ -385,7 +382,7 @@ export class CSplitView {
     this.activateSplitView(newSplitData, tab);
   }
 
-  private findSplitDataForTab(tab: Tab): SplitViewData | undefined {
+  private findSplitDataForTab(tab: Tab): TSplitViewDatum | undefined {
     return splitViewData().find((group) =>
       group.tabIds.includes(this.getTabId(tab)),
     );
@@ -398,10 +395,10 @@ export class CSplitView {
   }
 
   private createNewSplitData(
-    splitData: SplitViewData,
+    splitData: TSplitViewDatum,
     reverse: boolean | null,
     method: "row" | "column" | null,
-  ): SplitViewData {
+  ): TSplitViewDatum {
     return {
       ...splitData,
       method: method ?? splitData.method ?? "row",
@@ -410,8 +407,8 @@ export class CSplitView {
   }
 
   private updateSplitDataIfNeeded(
-    oldSplitData: SplitViewData,
-    newSplitData: SplitViewData,
+    oldSplitData: TSplitViewDatum,
+    newSplitData: TSplitViewDatum,
   ) {
     const index = splitViewData().indexOf(oldSplitData);
     if (index >= 0) {
@@ -447,7 +444,7 @@ export class CSplitView {
     setCurrentSplitView(-1);
   }
 
-  private activateSplitView(splitData: SplitViewData, activeTab: Tab) {
+  private activateSplitView(splitData: TSplitViewDatum, activeTab: Tab) {
     this.tabBrowserPanel.setAttribute("split-view", "true");
     Services.prefs.setBoolPref("floorp.browser.splitView.working", true);
 

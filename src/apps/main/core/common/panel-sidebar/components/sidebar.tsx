@@ -12,7 +12,6 @@ import { createEffect, Show } from "solid-js";
 import {
   selectedPanelId,
   isFloating,
-  isFloatingDragging,
   isPanelSidebarEnabled,
 } from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";

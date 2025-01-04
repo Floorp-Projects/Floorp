@@ -11,7 +11,7 @@ const MODULES = {
   const MODULES_COMMON = import.meta.glob("./common/*/index.ts");
 
   Object.entries(MODULES_COMMON).map((v) => {
-    MODULES.common[v[0].replace("./common/", "").replace("/index.ts", "")] =
+    MODULES.common[v[0].replaceAll(/\.\/common\/([a-zA-Z-]+)\/index\.ts/g,"$1")] =
       v[1] as () => Promise<unknown>;
   });
 }

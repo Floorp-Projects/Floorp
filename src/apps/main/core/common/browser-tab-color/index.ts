@@ -22,16 +22,16 @@ export default class BrowserTabColor extends NoraComponentBase {
       },
     } satisfies Pick<nsIWebProgressListener,"onLocationChange">;
 
-      manager = new TabColorManager();
-      window.gBrowser.addTabsProgressListener(listener);
-      window.gBrowser.tabContainer.addEventListener("TabSelect",this.changeTabColor);
-      onCleanup(
-        () => {
-          window.gBrowser.removeTabsProgressListener(listener);
-          window.gBrowser.tabContainer.removeEventListener("TabSelect", this.changeTabColor);
-        }
-      );
-      manager.init();
+    manager = new TabColorManager();
+    window.gBrowser.addTabsProgressListener(listener);
+    window.gBrowser.tabContainer.addEventListener("TabSelect",this.changeTabColor);
+    onCleanup(
+      () => {
+        window.gBrowser.removeTabsProgressListener(listener);
+        window.gBrowser.tabContainer.removeEventListener("TabSelect", this.changeTabColor);
+      }
+    );
+    manager.init();
   }
 
   changeTabColor() {

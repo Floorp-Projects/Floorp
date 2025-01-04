@@ -4,15 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import { WorkspacesServices } from "./workspaces.js";
+import { WorkspacesService } from "./workspacesService";
 import { For } from "solid-js";
-import { workspacesData } from "./data.js";
-import type { TWorkspaces } from "./utils/type.js";
+import { workspacesDataStore } from "./data/data.js";
+import { WorkspaceID } from "./utils/type.js";
 
 export class WorkspacesTabContextMenu {
-  ctx:WorkspacesServices;
-  constructor(ctx:WorkspacesServices) {
+  ctx:WorkspacesService;
+  constructor(ctx:WorkspacesService) {
     this.ctx=ctx;
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
@@ -21,22 +20,22 @@ export class WorkspacesTabContextMenu {
   }
 
   // static is Against "this.menuItem is not a function" error.
-  private menuItem(workspaces: TWorkspaces) {
-    const gWorkspaces =this.ctx;
+  private menuItem(order: string[]) {
     const gWorkspaceIcons = this.ctx.iconCtx;
     return (
-      <For each={workspaces}>
-        {(workspace) => (
-          <xul:menuitem
+      <For each={order}>
+        {(id) => {
+          const workspace = workspacesDataStore.data.get(id)!;
+          return <xul:menuitem
             id="context_MoveTabToOtherWorkspace"
             label={workspace.name}
             class="menuitem-iconic"
             style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
             onCommand={() =>
-              gWorkspaces.moveTabsToWorkspaceFromTabContextMenu(workspace.id)
+              this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(id as WorkspaceID)
             }
           />
-        )}
+        }}
       </For>
     );
   }
@@ -57,7 +56,6 @@ export class WorkspacesTabContextMenu {
   }
 
   public createTabworkspacesContextMenuItems(this: WorkspacesTabContextMenu) {
-    const gWorkspacesServices = this.ctx;
     const menuElem = document?.getElementById("WorkspacesTabContextMenu");
     while (menuElem?.firstChild) {
       const child = menuElem.firstChild as XULElement;
@@ -65,13 +63,11 @@ export class WorkspacesTabContextMenu {
     }
 
     //create context menu
-    const tabWorkspaceId = gWorkspacesServices.getWorkspaceIdFromAttribute(
+    const tabWorkspaceId = this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(
       window.TabContextMenu.contextTab,
     );
 
-    const excludeHasTabWorkspaceIdWorkspaces = workspacesData().filter(
-      (workspace) => workspace.id !== tabWorkspaceId,
-    ) as TWorkspaces;
+    const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter((w)=>w !== tabWorkspaceId)
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(

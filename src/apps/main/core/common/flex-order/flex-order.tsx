@@ -3,9 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createEffect, onCleanup } from "solid-js";
+import { createRootHMR, render } from "@nora/solid-xul";
+import { createSignal, onCleanup } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
+
+type Orders = {
+  fxSidebar: number,
+  fxSidebarSplitter: number,
+  browserBox: number,
+  floorpSidebarSplitter: number,
+  floorpSidebar: number,
+  floorpSidebarSelectBox: number,
+}
 
 export namespace gFlexOrder {
   const fxSidebarPosition = "sidebar.position_start";
@@ -17,17 +26,15 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   const browserBoxId = "tabbrowser-tabbox";
 
+  const [orders,setOrders] = createRootHMR(()=>createSignal<Orders>({fxSidebar:-1,fxSidebarSplitter:-1,browserBox:-1,floorpSidebarSplitter:-1,floorpSidebar:-1,floorpSidebarSelectBox:-1}),import.meta.hot)
+
   export function init() {
     applyFlexOrder();
+    renderOrderStyle()
     Services.prefs.addObserver(fxSidebarPosition, applyFlexOrder);
 
     onCleanup(()=>{
       Services.prefs.removeObserver(fxSidebarPosition, applyFlexOrder);
-    });
-
-    createEffect(() => {
-      panelSidebarConfig();
-      applyFlexOrder();
     });
   }
 
@@ -37,29 +44,27 @@ export namespace gFlexOrder {
 
     if (fxSidebarPositionPref && floorpSidebarPositionPref) {
       // Fx's sidebar -> browser -> Floorp's sidebar
-      const orders = {
+      setOrders({
         fxSidebar: 0,
         fxSidebarSplitter: 1,
         browserBox: 2,
         floorpSidebarSplitter: 3,
         floorpSidebar: 4,
         floorpSidebarSelectBox: 5,
-      };
-      renderOrderStyle(orders);
+      });
     } else if (fxSidebarPositionPref && !floorpSidebarPositionPref) {
       // Floorp sidebar -> Fx's sidebar -> browser
-      const orders = {
+      setOrders({
         floorpSidebarSelectBox: 0,
         floorpSidebar: 1,
         floorpSidebarSplitter: 2,
         fxSidebar: 3,
         fxSidebarSplitter: 4,
         browserBox: 5,
-      };
-      renderOrderStyle(orders);
+      });
     } else if (!fxSidebarPositionPref && floorpSidebarPositionPref) {
       // browser -> Vertical tab bar -> Fx's sidebar -> Floorp's sidebar
-      const orders = {
+      setOrders({
         browserBox: 0,
         verticaltabbarSplitter: 1,
         verticaltabbar: 2,
@@ -68,11 +73,10 @@ export namespace gFlexOrder {
         floorpSidebarSplitter: 5,
         floorpSidebar: 6,
         floorpSidebarSelectBox: 7,
-      };
-      renderOrderStyle(orders);
+      });
     } else {
       // Floorp's sidebar -> browser -> Vertical tab bar -> Fx's sidebar
-      const orders = {
+      setOrders({
         floorpSidebarSelectBox: 0,
         floorpSidebar: 1,
         floorpSidebarSplitter: 2,
@@ -81,60 +85,30 @@ export namespace gFlexOrder {
         verticaltabbar: 5,
         fxSidebar: 6,
         fxSidebarSplitter: 7,
-      };
-      renderOrderStyle(orders);
+      });
     }
   }
 
-  function createOrderStyle(
-    fxSidebar: number,
-    fxSidebarSplitter: number,
-    floorpSidebar: number,
-    floorpSidebarSplitter: number,
-    floorpSidebarSelectBox: number,
-    browserBox: number,
-  ) {
-    return (
-      <style jsx>{`
-         #${fxSidebarId} {
-           order: ${fxSidebar} !important;
-         }
-         #${floorpSidebarId} {
-           order: ${floorpSidebar} !important;
-         }
-         #${floorpSidebarSelectBoxId} {
-           order: ${floorpSidebarSelectBox} !important;
-         }
-         #${floorpSidebarSplitterId} {
-           order: ${floorpSidebarSplitter} !important;
-         }
-         #${fxSidebarSplitterId} {
-           order: ${fxSidebarSplitter} !important;
-         }
-         #${browserBoxId} {
-           order: ${browserBox} !important;
-         }
-       `}</style>
-    );
-  }
-
-  function renderOrderStyle(orders: {
-    fxSidebar: number;
-    fxSidebarSplitter: number;
-    floorpSidebar: number;
-    floorpSidebarSplitter: number;
-    floorpSidebarSelectBox: number;
-    browserBox: number;
-  }) {
-    const style = createOrderStyle(
-      orders.fxSidebar,
-      orders.fxSidebarSplitter,
-      orders.floorpSidebar,
-      orders.floorpSidebarSplitter,
-      orders.floorpSidebarSelectBox,
-      orders.browserBox,
-    );
-
-    render(() => style, document?.head);
+  function renderOrderStyle() {
+    render(() => <style jsx>{`
+      #${fxSidebarId} {
+        order: ${orders().fxSidebar} !important;
+      }
+      #${floorpSidebarId} {
+        order: ${orders().floorpSidebar} !important;
+      }
+      #${floorpSidebarSelectBoxId} {
+        order: ${orders().floorpSidebarSelectBox} !important;
+      }
+      #${floorpSidebarSplitterId} {
+        order: ${orders().floorpSidebarSplitter} !important;
+      }
+      #${fxSidebarSplitterId} {
+        order: ${orders().fxSidebarSplitter} !important;
+      }
+      #${browserBoxId} {
+        order: ${orders().browserBox} !important;
+      }
+    `}</style>, document?.head);
   }
 }

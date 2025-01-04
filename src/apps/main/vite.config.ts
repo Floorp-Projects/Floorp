@@ -58,7 +58,7 @@ export default defineConfig({
             return `svg/${id.split("/").at(-1)?.replaceAll("svg_url","glue")}`;
           }
           try {
-            const re = new RegExp(/\/core\/common\/([A-Za-z\-]+)/);
+            const re = new RegExp(/\/core\/common\/([A-Za-z-]+)/);
             const result = re.exec(id);
             if (result?.at(1) != null) {
               return `modules/${result[1]}`

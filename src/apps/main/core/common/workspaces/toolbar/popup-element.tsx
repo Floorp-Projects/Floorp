@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { WorkspacesServices } from "./workspaces.js";
-import { workspacesData } from "./data.js";
-import { PopupToolbarElement } from "./popup-block-element.js";
-import { config } from "./config.js";
+import { WorkspacesService } from "../workspacesService";
+import { PopupToolbarElement } from "./popup-block-element";
+import { configStore } from "../data/config";
+import { workspacesDataStore } from "../data/data.js";
 
-export function PopupElement(props:{ctx:WorkspacesServices}) {
-  const gWorkspacesServices = props.ctx;
+export function PopupElement(props:{ctx:WorkspacesService}) {
   return (
     <xul:panelview
       id="workspacesToolbarButtonPanel"
@@ -27,16 +26,18 @@ export function PopupElement(props:{ctx:WorkspacesServices}) {
             clicktoscroll={true}
             class="statusbar-padding"
           >
-            <For each={workspacesData()}>
-              {(workspace) => (
-                <PopupToolbarElement
-                  workspaceId={workspace.id}
+            <For each={workspacesDataStore.order}>
+              {(id) => {
+                  const workspace = workspacesDataStore.data.get(id)!;
+                  return <PopupToolbarElement
+                  workspaceId={id}
                   label={workspace.name}
-                  isSelected={workspace.id === window.floorpSelectedWorkspace}
-                  bmsMode={config().manageOnBms}
-                  ctx={gWorkspacesServices}
+                  isSelected={id === workspacesDataStore.selectedID}
+                  bmsMode={configStore.manageOnBms}
+                  ctx={props.ctx}
                 />
-              )}
+              }
+              }
             </For>
           </xul:vbox>
         </xul:arrowscrollbox>
@@ -48,14 +49,14 @@ export function PopupElement(props:{ctx:WorkspacesServices}) {
             data-l10n-id="workspaces-create-new-workspace-button"
             label="Create New Workspace..."
             context="tab-stacks-toolbar-item-context-menu"
-            onCommand={() => gWorkspacesServices.createNoNameWorkspace()}
+            onCommand={() => props.ctx.createNoNameWorkspace()}
           />
           <xul:toolbarbutton
             id="workspacesManageworkspacesServicesButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-manage-workspaces-button"
             context="tab-stacks-toolbar-item-context-menu"
-            onCommand={() => gWorkspacesServices.manageWorkspaceFromDialog()}
+            onCommand={() => props.ctx.manageWorkspaceFromDialog()}
           />
         </xul:hbox>
       </xul:vbox>

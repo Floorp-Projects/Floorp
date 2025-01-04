@@ -4,13 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
-import { WorkspacesServices } from "./workspaces.js";
+import { WorkspacesService } from "../workspacesService.js";
 import { ContextMenu } from "./contextMenu.js";
 import { render } from "@nora/solid-xul";
+import { workspacesDataStore } from "../data/data.js";
 
 export class WorkspacesPopupContxtMenu {
-  ctx:WorkspacesServices
-  constructor(ctx:WorkspacesServices) {
+  ctx:WorkspacesService
+  constructor(ctx:WorkspacesService) {
     this.ctx=ctx;
     ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet(),import.meta.hot);
   }
@@ -20,7 +21,6 @@ export class WorkspacesPopupContxtMenu {
    * @returns The context menu items.
    */
   private createworkspacesContextMenuItems(event: Event) {
-    const gWorkspacesServices = this.ctx;
     //delete already exsist items
     const menuElem = document?.getElementById(
       "workspaces-toolbar-item-context-menu",
@@ -32,7 +32,7 @@ export class WorkspacesPopupContxtMenu {
 
     const eventTargetElement = event.explicitOriginalTarget as XULElement;
     const contextWorkspaceId = eventTargetElement.id.replace("workspace-", "");
-    const defaultWorkspaceId = gWorkspacesServices.getDefaultWorkspaceId();
+    const defaultWorkspaceId = workspacesDataStore.defaultID
 
     const beforeSiblingElem =
       eventTargetElement.previousElementSibling?.getAttribute(
@@ -60,6 +60,7 @@ export class WorkspacesPopupContxtMenu {
           disableBefore: needDisableBefore,
           disableAfter: needDisableAfter,
           contextWorkspaceId,
+          ctx:this.ctx
         }),
       parentElem,
     );

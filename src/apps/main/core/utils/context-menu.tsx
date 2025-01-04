@@ -1,6 +1,5 @@
 import { render } from "@nora/solid-xul";
 import type { JSXElement } from "solid-js";
-import type { ViteHotContext } from "vite/types/hot";
 
 export namespace ContextMenuUtils {
   const checkItems: (() => void)[] = [];
@@ -39,7 +38,6 @@ export namespace ContextMenuUtils {
     runFunction: () => void,
     checkID: string,
     checkedFunction: () => void,
-    hotCtx?: ViteHotContext,
   ) {
     const contextMenu = ContextMenu(id, l10n, runFunction);
     const targetNode = document?.getElementById(checkID) as XULElement;
@@ -49,7 +47,6 @@ export namespace ContextMenuUtils {
 
     render(() => contextMenu, contentAreaContextMenu(), {
       marker: renderElement,
-      hotCtx: hotCtx,
     });
     contextMenuObserver.observe(targetNode, { attributes: true });
     checkItems.push(checkedFunction);
@@ -64,11 +61,9 @@ export namespace ContextMenuUtils {
 
   export function addToolbarContentMenuPopupSet(
     JSXElem: () => JSXElement,
-    hotCtx: ViteHotContext | undefined,
   ) {
     render(JSXElem, document?.body, {
       marker: windowModalDialogElem() ?? undefined,
-      hotCtx,
     });
   }
 
@@ -86,10 +81,8 @@ export namespace ContextMenuUtils {
     (async () => {
       for (const contextMenuSeparator of contextMenuSeparators()) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
-        const previousSibling =
-          contextMenuSeparator.previousSibling as XULElement;
+        
         if (
-          nextSibling?.hidden &&
           nextSibling?.hidden &&
           contextMenuSeparator.id !== "context-sep-navigation" &&
           contextMenuSeparator.id !== "context-sep-pdfjs-selectall"

@@ -38,8 +38,6 @@ export class SplitViewContextMenu {
       marker: document?.getElementById(
         "context_closeDuplicateTabs",
       ) as XULElement,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any).hot,
     });
   }
 }

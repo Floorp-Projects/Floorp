@@ -8,6 +8,7 @@ import { SplitViewManager } from "./manager";
 import { SplitViewContextMenu } from "./tabContextMenu";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
+//TODO: refactor needed
 @noraComponent(import.meta.hot)
 export default class SplitView extends NoraComponentBase {
   init() {

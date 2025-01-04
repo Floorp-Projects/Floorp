@@ -12,7 +12,7 @@ import { PanelSidebarAddModal } from "./components/panel-sidebar-modal";
 import { PanelSidebarFloating } from "./components/floating";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
 
-//TODO: check HMR
+//TODO: refactor needed
 
 @noraComponent(import.meta.hot)
 export default class PanelSidebar extends NoraComponentBase {
