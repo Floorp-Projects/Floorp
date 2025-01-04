@@ -7,6 +7,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  createRoot,
 } from "solid-js";
 import { zPwaConfig, type TPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
@@ -20,54 +21,77 @@ if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.config")) {
   Services.prefs.setStringPref("floorp.browser.ssb.config", strDefaultConfig);
 }
 
-/** enable/disable PWA */
-export const [enabled, setEnabled] = createSignal(
-  Services.prefs.getBoolPref("floorp.browser.ssb.enabled", defaultEnabled),
-);
+class PwaConfig {
+  private static instance: PwaConfig;
+  public enabled: ReturnType<typeof createSignal<boolean>> = createSignal(false);
+  public config: ReturnType<typeof createSignal<TPwaConfig>> = createSignal<TPwaConfig>({showToolbar:false});
+  private constructor() {
+    createRoot(() => {
+      this.enabled = createSignal(
+        Services.prefs.getBoolPref("floorp.browser.ssb.enabled", defaultEnabled),
+      );
 
-createEffect(() => {
-  Services.prefs.setBoolPref("floorp.browser.ssb.enabled", enabled());
-});
-
-const enabledObserver = () =>
-  setEnabled(Services.prefs.getBoolPref("floorp.browser.ssb.enabled"));
-Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
-onCleanup(() => {
-  Services.prefs.removeObserver("floorp.browser.ssb.enabled", enabledObserver);
-});
-
-/** Config */
-export const [config, setConfig] = createSignal<TPwaConfig>(
-  zPwaConfig.parse(
-    JSON.parse(
-      Services.prefs.getStringPref(
-        "floorp.browser.ssb.config",
-        strDefaultConfig,
-      ),
-    ),
-  ),
-);
-
-createEffect(() => {
-  Services.prefs.setStringPref(
-    "floorp.browser.ssb.config",
-    JSON.stringify(config()),
-  );
-});
-
-const configObserver = () =>
-  setConfig(
-    zPwaConfig.parse(
-      JSON.parse(
-        Services.prefs.getStringPref(
-          "floorp.browser.ssb.config",
-          strDefaultConfig,
+      this.config = createSignal<TPwaConfig>(
+        zPwaConfig.parse(
+          JSON.parse(
+            Services.prefs.getStringPref(
+              "floorp.browser.ssb.config",
+              strDefaultConfig,
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
-Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
-onCleanup(() => {
-  Services.prefs.removeObserver("floorp.browser.ssb.config", configObserver);
-});
+      const [enabled] = this.enabled;
+      const [config] = this.config;
+
+      createEffect(() => {
+        Services.prefs.setBoolPref("floorp.browser.ssb.enabled", enabled());
+      });
+
+      createEffect(() => {
+        Services.prefs.setStringPref(
+          "floorp.browser.ssb.config",
+          JSON.stringify(config()),
+        );
+      });
+
+      const enabledObserver = () =>
+        this.enabled[1](Services.prefs.getBoolPref("floorp.browser.ssb.enabled"));
+      Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
+      onCleanup(() => {
+        Services.prefs.removeObserver("floorp.browser.ssb.enabled", enabledObserver);
+      });
+
+      const configObserver = () =>
+        this.config[1](
+          zPwaConfig.parse(
+            JSON.parse(
+              Services.prefs.getStringPref(
+                "floorp.browser.ssb.config",
+                strDefaultConfig,
+              ),
+            ),
+          ),
+        );
+
+      Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
+      onCleanup(() => {
+        Services.prefs.removeObserver("floorp.browser.ssb.config", configObserver);
+      });
+    });
+  }
+
+  public static getInstance(): PwaConfig {
+    if (!PwaConfig.instance) {
+      PwaConfig.instance = new PwaConfig();
+    }
+    return PwaConfig.instance;
+  }
+}
+
+const pwaConfig = PwaConfig.getInstance();
+export const enabled = () => pwaConfig.enabled[0]();
+export const setEnabled = (value: boolean) => pwaConfig.enabled[1](value);
+export const config = () => pwaConfig.config[0]();
+export const setConfig = (value: TPwaConfig) => pwaConfig.config[1](value);

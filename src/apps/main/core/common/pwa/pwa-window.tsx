@@ -6,7 +6,7 @@
 
 import { SiteSpecificBrowserManager } from "./ssbManager";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
-import { render } from "@nora/solid-xul";
+import { render, createRootHMR } from "@nora/solid-xul";
 import { createSignal } from "solid-js";
 import { config } from "./config";
 
@@ -63,8 +63,9 @@ export class PwaWindowSupport {
   }
 
   private renderStyles(): void {
-    render(() => this.createStyleElement(), document?.head, {
-    });
+    createRootHMR(() => {
+      render(() => this.createStyleElement(), document?.head);
+    }, import.meta.hot);
   }
 
   private createStyleElement() {

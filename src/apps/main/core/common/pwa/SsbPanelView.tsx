@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, For,  onCleanup } from "solid-js";
+import { createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
-import { render } from "@nora/solid-xul";
+import { render, createRootHMR } from "@nora/solid-xul";
 import { SiteSpecificBrowserManager } from "./ssbManager";
 import type { Manifest } from "./type";
 import { SsbRunner } from "./ssbRunner";
@@ -43,28 +43,30 @@ export class SsbPanelView {
   constructor() {
     if (!this.panelUIButton) return;
 
-    const [, setIsOpen] = this.isOpen;
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === "open"
-        ) {
-          const isOpened = this.panelUIButton?.getAttribute("open") === "true";
-          setIsOpen(isOpened);
+    createRootHMR(() => {
+      const [, setIsOpen] = this.isOpen;
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === "attributes" &&
+            mutation.attributeName === "open"
+          ) {
+            const isOpened = this.panelUIButton?.getAttribute("open") === "true";
+            setIsOpen(isOpened);
 
-          if (isOpened && !this.isRendered) {
-            this.renderPanel();
+            if (isOpened && !this.isRendered) {
+              this.renderPanel();
+            }
           }
-        }
+        });
       });
-    });
 
-    observer.observe(this.panelUIButton, {
-      attributes: true,
-    });
+      observer.observe(this.panelUIButton!, {
+        attributes: true,
+      });
 
-    onCleanup(() => observer.disconnect());
+      onCleanup(() => observer.disconnect());
+    }, import.meta.hot);
   }
 
   private isRendered = false;

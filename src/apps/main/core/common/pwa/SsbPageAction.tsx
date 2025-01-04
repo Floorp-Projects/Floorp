@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, Show } from "solid-js";
+import { createSignal, Show, createRoot } from "solid-js";
 import type { JSX } from "solid-js";
 import { SiteSpecificBrowserManager } from "./ssbManager";
 import { ManifestProcesser } from "./manifestProcesser";
 import { render } from "@nora/solid-xul";
 
-const [isInstalling, setIsInstalling] = createSignal(false);
-const [icon, setIcon] = createSignal("");
-const [title, setTitle] = createSignal("");
-const [description, setDescription] = createSignal("");
-const [canBeInstallAsPwa, setCanBeInstallAsPwa] = createSignal(false);
-const [isInstalled, setIsInstalled] = createSignal(false);
-
 export class SsbPageAction {
   private static instance: SsbPageAction;
+  private isInstalling: ReturnType<typeof createSignal<boolean>> = createSignal(false);
+  private icon: ReturnType<typeof createSignal<string>> = createSignal("");
+  private title: ReturnType<typeof createSignal<string>> = createSignal("");
+  private description: ReturnType<typeof createSignal<string>> = createSignal("");
+  private canBeInstallAsPwa: ReturnType<typeof createSignal<boolean>> = createSignal(false);
+  private isInstalled: ReturnType<typeof createSignal<boolean>> = createSignal(false);
+
   public static getInstance(): SsbPageAction {
     if (!SsbPageAction.instance) {
       SsbPageAction.instance = new SsbPageAction();
@@ -26,23 +26,24 @@ export class SsbPageAction {
   }
 
   constructor() {
-    const starButtonBox = document?.getElementById("star-button-box");
-    const ssbPageAction = document?.getElementById("page-action-buttons");
-    if (!starButtonBox || !ssbPageAction) return;
+    createRoot(() => {
+      const starButtonBox = document?.getElementById("star-button-box");
+      const ssbPageAction = document?.getElementById("page-action-buttons");
+      if (!starButtonBox || !ssbPageAction) return;
 
-    render(() => <this.Render />, ssbPageAction, {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      marker: starButtonBox,
+      render(() => this.Render(), ssbPageAction, {
+        marker: starButtonBox,
+      });
+
+      Services.obs.addObserver(
+        () => this.onCheckPageHasManifest(),
+        "nora-pwa-check-page-has-manifest",
+      );
+      window.gBrowser.tabContainer.addEventListener(
+        "TabSelect",
+        () => this.onCheckPageHasManifest(),
+      );
     });
-
-    Services.obs.addObserver(
-      () => this.onCheckPageHasManifest(),
-      "nora-pwa-check-page-has-manifest",
-    );
-    window.gBrowser.tabContainer.addEventListener(
-      "TabSelect",
-      this.onCheckPageHasManifest,
-    );
   }
 
   private async onCheckPageHasManifest() {
@@ -51,55 +52,62 @@ export class SsbPageAction {
       await ManifestProcesser.getInstance().checkBrowserCanBeInstallAsPwa(
         browser,
       );
-    setCanBeInstallAsPwa(canBeInstallAsPwa);
+    this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
     const isInstalled =
       await SiteSpecificBrowserManager.getInstance().checkCurrentPageIsInstalled(
         browser,
       );
-    setIsInstalled(isInstalled);
+    this.isInstalled[1](isInstalled);
     SiteSpecificBrowserManager.getInstance().updateUIElements(isInstalled);
   }
 
-  private static onCommand() {
+  private onCommand = () => {
     SiteSpecificBrowserManager.getInstance().installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
       true,
     );
-    setIsInstalling(true);
+    this.isInstalling[1](true);
   }
 
-  private static async onPopupShowing() {
+  private onPopupShowing = async () => {
     const icon = await SiteSpecificBrowserManager.getInstance().getIcon(
       window.gBrowser.selectedBrowser,
     );
-    setIcon(icon);
+    this.icon[1](icon);
 
     const manifest = await SiteSpecificBrowserManager.getInstance().getManifest(
       window.gBrowser.selectedBrowser,
     );
-    setTitle(manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec);
-    setDescription(window.gBrowser.selectedBrowser.currentURI.host);
+    this.title[1](manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec);
+    this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
   }
 
-  private static onPopupHiding() {
-    setIsInstalling(false);
-    setIcon("");
-    setTitle("");
-    setDescription("");
+  private onPopupHiding = () => {
+    this.isInstalling[1](false);
+    this.icon[1]("");
+    this.title[1]("");
+    this.description[1]("");
   }
 
-  private static closePopup() {
+  private closePopup = () => {
     const panel = document?.getElementById("ssb-panel") as XULElement & {
       hidePopup: () => void;
     };
     if (panel) {
       panel.hidePopup();
     }
-    setIsInstalling(false);
+    this.isInstalling[1](false);
   }
 
-  public Render(): JSX.Element {
+  private Render(): JSX.Element {
+    const [isInstalling] = this.isInstalling;
+    const [icon] = this.icon;
+    const [title] = this.title;
+    const [description] = this.description;
+    const [canBeInstallAsPwa] = this.canBeInstallAsPwa;
+    const [isInstalled] = this.isInstalled;
+
     return (
       <Show when={canBeInstallAsPwa() || isInstalled()}>
         <xul:hbox
@@ -116,8 +124,8 @@ export class SsbPageAction {
             id="ssb-panel"
             type="arrow"
             position="bottomright topright"
-            onPopupShowing={SsbPageAction.onPopupShowing}
-            onPopupHiding={SsbPageAction.onPopupHiding}
+            onPopupShowing={this.onPopupShowing}
+            onPopupHiding={this.onPopupHiding}
           >
             <xul:vbox id="ssb-box">
               <xul:vbox class="panel-header">
@@ -141,7 +149,6 @@ export class SsbPageAction {
                 </xul:vbox>
                 <xul:vbox id="ssb-content-label-vbox">
                   <h2>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
                     <xul:label id="ssb-content-label" />
                     {title()}
                   </h2>
@@ -165,7 +172,7 @@ export class SsbPageAction {
                   id="ssb-app-install-button"
                   class="panel-button ssb-install-buttons footer-button primary"
                   hidden={isInstalling()}
-                  onClick={SsbPageAction.onCommand}
+                  onClick={this.onCommand}
                   label={
                     isInstalled() ? "アプリケーションを開く" : "インストール"
                   }
@@ -175,7 +182,7 @@ export class SsbPageAction {
                   class="panel-button ssb-install-buttons footer-button"
                   data-l10n-id="ssb-app-cancel-button"
                   hidden={isInstalling()}
-                  onClick={SsbPageAction.closePopup}
+                  onClick={this.closePopup}
                   label="キャンセル"
                 />
               </xul:hbox>
