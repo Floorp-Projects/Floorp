@@ -3,22 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, Show } from "solid-js";
+import { createEffect, } from "solid-js";
 import { isFloatingDragging } from "../data/data";
 
-createEffect(() => {
-  if (isFloatingDragging()) {
-    document
-      ?.getElementById("panel-sidebar-browser-box-wrapper")
-      ?.classList.add("warp");
-  } else {
-    document
-      ?.getElementById("panel-sidebar-browser-box-wrapper")
-      ?.classList.remove("warp");
-  }
-});
-
 export function BrowserBox() {
+  createEffect(() => {
+    if (isFloatingDragging()) {
+      document
+        ?.getElementById("panel-sidebar-browser-box-wrapper")
+        ?.classList.add("warp");
+    } else {
+      document
+        ?.getElementById("panel-sidebar-browser-box-wrapper")
+        ?.classList.remove("warp");
+    }
+  });
   return (
     <>
       <xul:box id="panel-sidebar-browser-box-wrapper" />

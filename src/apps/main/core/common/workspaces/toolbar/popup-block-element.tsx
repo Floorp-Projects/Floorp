@@ -3,33 +3,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import { WorkspacesServices } from "./workspaces.js";
+import { workspacesDataStore } from "../data/data.js";
+import { WorkspaceID } from "../utils/type.js";
+import { WorkspacesService } from "../workspacesService";
 
 export function PopupToolbarElement(props: {
   workspaceId: string;
   isSelected: boolean;
   label: string;
   bmsMode: boolean;
-  ctx:WorkspacesServices,
+  ctx:WorkspacesService,
 }) {
-  const gWorkspacesServices = props.ctx;
-  const gWorkspaceIcons = props.ctx.iconCtx;
-  const { workspaceId, isSelected, bmsMode } = props;
-  const workspace = gWorkspacesServices.getWorkspaceById(workspaceId);
+ 
+  const workspace =  workspacesDataStore.data.get(props.workspaceId)!
   return (
     <xul:toolbarbutton
-      id={`workspace-${workspaceId}`}
+      id={`workspace-${props.workspaceId}`}
       label={props.label}
       context="workspaces-toolbar-item-context-menu"
       class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
       style={{
-        "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
+        "list-style-image": `url(${ props.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon)})`,
       }}
-      data-selected={isSelected}
-      data-workspaceId={workspaceId}
+      data-selected={props.isSelected}
+      data-workspaceId={props.workspaceId}
       onCommand={() => {
-        gWorkspacesServices.changeWorkspace(workspaceId);
+        //TODO: validate
+        props.ctx.changeWorkspace(props.workspaceId as WorkspaceID);
       }}
     />
   );

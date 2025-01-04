@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
+import { Accessor, createEffect, createSignal, onCleanup, Setter } from "solid-js";
 import {
   defaultEnabled,
   strDefaultConfig,
@@ -16,22 +16,23 @@ import {
   zPanels,
   zPanelSidebarConfig,
 } from "../utils/type.js";
+import { createRootHMR } from "@nora/solid-xul";
 
-/** PanelSidebar data */
-export const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-  zPanels.parse(
-    getPanelSidebarData(
-      Services.prefs.getStringPref(
-        PanelSidebarStaticNames.panelSidebarDataPrefName,
-        strDefaultData,
+function createPanelSidebarData(): [Accessor<Panels>,Setter<Panels>] {
+  function getPanelSidebarData(stringData: string) {
+    return JSON.parse(stringData).data || {};
+  }
+  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
+    zPanels.parse(
+      getPanelSidebarData(
+        Services.prefs.getStringPref(
+          PanelSidebarStaticNames.panelSidebarDataPrefName,
+          strDefaultData,
+        ),
       ),
     ),
-  ),
-);
-
-Services.prefs.addObserver(
-  PanelSidebarStaticNames.panelSidebarDataPrefName,
-  () =>
+  );
+  const observer = () =>
     setPanelSidebarData(
       zPanels.parse(
         getPanelSidebarData(
@@ -41,31 +42,42 @@ Services.prefs.addObserver(
           ),
         ),
       ),
-    ),
-);
+    );
+  Services.prefs.addObserver(
+    PanelSidebarStaticNames.panelSidebarDataPrefName,
+    observer
+  );
+  onCleanup(()=>{
+    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarDataPrefName,observer)
+  })
 
-function getPanelSidebarData(stringData: string) {
-  return JSON.parse(stringData).data || {};
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      PanelSidebarStaticNames.panelSidebarDataPrefName,
+      JSON.stringify({ data: panelSidebarData() }),
+    );
+  });
+  return [panelSidebarData,setPanelSidebarData]
 }
 
-createEffect(() => {
-  Services.prefs.setStringPref(
-    PanelSidebarStaticNames.panelSidebarDataPrefName,
-    JSON.stringify({ data: panelSidebarData() }),
-  );
-});
+/** PanelSidebar data */
+export const [panelSidebarData, setPanelSidebarData] = createRootHMR(createPanelSidebarData,import.meta.hot)
+
+function createSelectedPanelId(): [Accessor<string|null>,Setter<string|null>] {
+  const [selectedPanelId, setSelectedPanelId] = createSignal<
+    string | null
+  >(null);
+  createEffect(() => {
+    window.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
+  });
+  return [selectedPanelId, setSelectedPanelId]
+}
 
 /** Selected Panel */
-export const [selectedPanelId, setSelectedPanelId] = createSignal<
-  string | null
->(null);
+export const [selectedPanelId, setSelectedPanelId] = createRootHMR(createSelectedPanelId,import.meta.hot);
 
-createEffect(() => {
-  window.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
-});
-
-/** Get PanelSidebar Config data */
-export const [panelSidebarConfig, setPanelSidebarConfig] =
+function createPanelSidebarConfig(): [Accessor<PanelSidebarConfig>,Setter<PanelSidebarConfig>] {
+  const [panelSidebarConfig, setPanelSidebarConfig] =
   createSignal<PanelSidebarConfig>(
     zPanelSidebarConfig.parse(
       getPanelSidebarConfig(
@@ -76,17 +88,16 @@ export const [panelSidebarConfig, setPanelSidebarConfig] =
       ),
     ),
   );
-
-createEffect(() => {
-  Services.prefs.setStringPref(
-    PanelSidebarStaticNames.panelSidebarConfigPrefName,
-    JSON.stringify({ ...panelSidebarConfig() }),
-  );
-});
-
-Services.prefs.addObserver(
-  PanelSidebarStaticNames.panelSidebarConfigPrefName,
-  () =>
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      PanelSidebarStaticNames.panelSidebarConfigPrefName,
+      JSON.stringify({ ...panelSidebarConfig() }),
+    );
+  });
+  function getPanelSidebarConfig(stringData: string) {
+    return JSON.parse(stringData) || {};
+  }
+  const observer = () =>
     setPanelSidebarConfig(
       zPanelSidebarConfig.parse(
         getPanelSidebarConfig(
@@ -96,38 +107,55 @@ Services.prefs.addObserver(
           ),
         ),
       ),
-    ),
-);
+    );
 
-function getPanelSidebarConfig(stringData: string) {
-  return JSON.parse(stringData) || {};
+  Services.prefs.addObserver(
+    PanelSidebarStaticNames.panelSidebarConfigPrefName,
+    observer
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarConfigPrefName,observer);
+  })
+  return [panelSidebarConfig, setPanelSidebarConfig]
 }
 
+/** Get PanelSidebar Config data */
+export const [panelSidebarConfig, setPanelSidebarConfig] = createRootHMR(createPanelSidebarConfig,import.meta.hot)
+
 /** Floating state */
-export const [isFloating, setIsFloating] = createSignal(false);
+export const [isFloating, setIsFloating] = createRootHMR(()=>createSignal(false),import.meta.hot);
 
 /** Floating DraggingState */
 export const [isFloatingDragging, setIsFloatingDragging] =
-  createSignal<boolean>(false);
+createRootHMR(()=>createSignal<boolean>(false),import.meta.hot);
 
-/** Panel Sidebar Enabled */
-export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
+function createIsPanelSidebarEnabled(): [Accessor<boolean>,Setter<boolean>] {
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
   createSignal<boolean>(defaultEnabled);
-
-createEffect(() => {
-  Services.prefs.setBoolPref(
-    PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-    isPanelSidebarEnabled(),
-  );
-});
-
-Services.prefs.addObserver(
-  PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-  () =>
+  createEffect(() => {
+    Services.prefs.setBoolPref(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      isPanelSidebarEnabled(),
+    );
+  });
+  const observer = () =>
     setIsPanelSidebarEnabled(
       Services.prefs.getBoolPref(
         PanelSidebarStaticNames.panelSidebarEnabledPrefName,
         defaultEnabled,
       ),
-    ),
-);
+    );
+  Services.prefs.addObserver(
+    PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+    observer
+  );
+  onCleanup(()=>{
+    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarEnabledPrefName,observer)
+  }) 
+
+  return [isPanelSidebarEnabled, setIsPanelSidebarEnabled]
+}
+
+/** Panel Sidebar Enabled */
+export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createRootHMR(createIsPanelSidebarEnabled,import.meta.hot)
+

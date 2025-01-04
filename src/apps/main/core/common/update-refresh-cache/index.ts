@@ -1,7 +1,5 @@
 export function init() {
-  const { NoranekoConstants } = ChromeUtils.importESModule(
-    "resource://noraneko/modules/NoranekoConstants.sys.mjs",
-  );
+  
   // if (
   //   Services.prefs.getStringPref("noraneko.version2", "") !==
   //   NoranekoConstants.version2

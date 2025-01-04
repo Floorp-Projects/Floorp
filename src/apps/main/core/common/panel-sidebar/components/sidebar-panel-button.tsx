@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, createEffect, Show, createComputed, createMemo, createResource, Suspense } from "solid-js";
+import { Show, createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import { CPanelSidebar } from "./panel-sidebar";
 import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/data";
 import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
-import { createRootHMR } from "@nora/solid-xul";
+
 
 export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
   const gPanelSidebar = props.ctx;

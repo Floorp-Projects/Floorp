@@ -1,3 +1,4 @@
+import { createRootHMR } from "@nora/solid-xul";
 import i18next from "i18next";
 
 const _modules = import.meta.glob("./*/*.json",{eager:true});
@@ -26,7 +27,7 @@ export function initI18N() {
     fallbackLng: ["en-US", "dev"],
   });
 }
-const [lang, setLang] = createSignal("ja-JP");
+const [lang,setLang] = createRootHMR(()=>createSignal("ja-JP"),import.meta.hot);
 
 /**
  *
