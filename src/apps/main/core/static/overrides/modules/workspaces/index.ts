@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspacesServices } from "@core/common/workspaces/workspaces";
+import Workspaces from "@core/common/workspaces";
 
 export const overrides = [
   () => {
@@ -61,7 +61,7 @@ export const overrides = [
       // Note 2: This is also used to notify a user that an extension has changed
       //         the New Tab page.
 
-      const gWorkspacesServices = WorkspacesServices.getInstance();
+      const gWorkspacesServices = Workspaces.ctx!;
 
       Services.obs.notifyObservers(
         {

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup, createRoot, Accessor, Setter } from "solid-js";
+import { createEffect, createSignal, onCleanup, Accessor, Setter } from "solid-js";
 import {
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
@@ -13,7 +13,7 @@ import {
   type TFloorpDesignConfigs,
   zFloorpDesignConfigs,
 } from "../../../../../apps/common/scripts/global-types/type";
-import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { } from "@core/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 
 const oldObjectConfigs: TFloorpDesignConfigs = {

@@ -128,7 +128,9 @@ let buildViteProcesses: any[];
 const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
 
-async function run(mode: "dev" | "test" = "dev") {
+import packageJson from "./package.json" assert { type: "json" };
+
+async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
   await applyPatches();
 
@@ -140,61 +142,81 @@ async function run(mode: "dev" | "test" = "dev") {
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
   } catch {}
   console.log(`[dev] buildid2: ${buildid2}`);
-  if (!devInit) {
-    console.log("run dev servers");
-    devViteProcesses = [
-      await createServer({
-        mode,
-        configFile: r("./src/apps/main/vite.config.ts"),
-        root: r("./src/apps/main"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-        },
-      }),
-      await createServer({
-        mode,
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
-      }),
-    ];
-    buildViteProcesses = [
-      await buildVite({
-        mode,
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs/vite.config.ts"),
-      }),
-    ];
-    devExecaProcesses.push(
-      execa({
-        preferLocal: true,
-        stdout: "inherit",
-        cwd: r("./src/apps/settings"),
-      })`pnpm dev`,
-    );
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
-      cwd: r("./src/apps/modules"),
-    })`pnpm build`;
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
-      cwd: r("./src/apps/modules"),
-    })`pnpm genJarManifest`;
-
-    if (mode === "test") {
+  if (mode !== "release") {
+    if (!devInit) {
+      console.log("run dev servers");
+      devViteProcesses = [
+        await createServer({
+          mode,
+          configFile: r("./src/apps/main/vite.config.ts"),
+          root: r("./src/apps/main"),
+          define: {
+            "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+          },
+        }),
+        await createServer({
+          mode,
+          configFile: r("./src/apps/designs/vite.config.ts"),
+          root: r("./src/apps/designs"),
+        }),
+      ];
+      buildViteProcesses = [
+        await buildVite({
+          mode,
+          configFile: r("./src/apps/designs/vite.config.ts"),
+          root: r("./src/apps/designs"),
+        }),
+        await buildVite({
+          configFile: r("./src/apps/modules/vite.config.ts"),
+          root:r("./src/apps/modules"),
+          define: {
+            "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+          }
+        })
+      ];
       devExecaProcesses.push(
         execa({
           preferLocal: true,
-          cwd: r("./src/apps/test"),
-        })`node --import @swc-node/register/esm-register server.ts`,
+          stdout: "inherit",
+          cwd: r("./src/apps/settings"),
+        })`pnpm dev`,
       );
+      await execa({
+        preferLocal: true,
+        stdout: "inherit",
+        cwd: r("./src/apps/modules"),
+      })`pnpm genJarManifest`;
+  
+      if (mode === "test") {
+        devExecaProcesses.push(
+          execa({
+            preferLocal: true,
+            cwd: r("./src/apps/test"),
+          })`node --import @swc-node/register/esm-register server.ts`,
+        );
+      }
+      devInit = true;
     }
-    devInit = true;
+    devViteProcesses!.forEach((p) => {
+      p.listen();
+    });
+    await Promise.all([
+      injectManifest(binDir, true, "noraneko-dev"),
+      injectXHTMLDev(binDir),
+    ])
+  } else {
+    await release("before");
+    try {
+        await fs.access("_dist/bin/noraneko/noraneko-dev");
+        await fs.rm("_dist/bin/noraneko/noraneko-dev", { recursive: true });
+      } catch {}
+    await fs.symlink("../../noraneko","./_dist/bin/noraneko/noraneko-dev",process.platform==="win32" ? "junction" : undefined);
   }
-  devViteProcesses!.forEach((p) => {
-    p.listen();
-  });
+
+
+
   await Promise.all([
     buildVite({
       mode,
@@ -202,10 +224,8 @@ async function run(mode: "dev" | "test" = "dev") {
       configFile: r("./src/apps/startup/vite.config.ts"),
     }),
 
-    injectManifest(binDir, true, "noraneko-dev"),
     (async () => {
       await injectXHTML(binDir);
-      await injectXHTMLDev(binDir);
     })(),
     applyMixin(binDir),
     (async () => {
@@ -290,6 +310,7 @@ async function release(mode: "before" | "after") {
         root: r("./src/apps/main"),
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
         },
         base: "chrome://noraneko/content"
       }),
@@ -302,14 +323,16 @@ async function release(mode: "before" | "after") {
         root: r("./src/apps/settings"),
         base: "chrome://noraneko-settings/content"
       }),
-
+      buildVite({
+        configFile: r("./src/apps/modules/vite.config.ts"),
+        root:r("./src/apps/modules"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+        }
+      })
       //applyMixin(binPath),
     ]);
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
-      cwd: r("./src/apps/modules"),
-    })`pnpm build`;
     await execa({
       preferLocal: true,
       stdout: "inherit",
@@ -350,6 +373,9 @@ if (process.argv[2]) {
       break;
     case "--test":
       run("test");
+      break;
+    case "--run-prod":
+      run("release");
       break;
     case "--release-build-before":
       release("before");

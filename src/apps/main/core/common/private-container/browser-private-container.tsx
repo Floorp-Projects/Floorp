@@ -5,6 +5,7 @@
 
 import { ContextMenuUtils } from "@core/utils/context-menu";
 import { PrivateContainer } from "./PrivateContainer";
+import { createRootHMR } from "@nora/solid-xul";
 
 export class FloorpPrivateContainer {
 
@@ -31,21 +32,22 @@ export class FloorpPrivateContainer {
         FloorpPrivateContainer.handleTabModifications,
       );
 
-      // add URL link a context menu to open in private container.
-      ContextMenuUtils.addContextBox(
-        "open_in_private_container",
-        "open-in_private-container",
-        "context-openlink",
-        () =>
-          FloorpPrivateContainer.openWithPrivateContainer(
-            window.gContextMenu.linkURL,
-          ),
-        "context-openlink",
-        () => {
-          this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
-        },
-        import.meta.hot,
-      );
+      createRootHMR(()=>{
+        // add URL link a context menu to open in private container.
+        ContextMenuUtils.addContextBox(
+          "open_in_private_container",
+          "open-in_private-container",
+          "context-openlink",
+          () =>
+            FloorpPrivateContainer.openWithPrivateContainer(
+              window.gContextMenu.linkURL,
+            ),
+          "context-openlink",
+          () => {
+            this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
+          },
+        );
+      },import.meta.hot)
     });
   }
 

@@ -6,15 +6,16 @@
 import type { JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import modalStyle from "./styles.css?inline";
-import { render } from "@nora/solid-xul";
+import { createRootHMR, render } from "@nora/solid-xul";
 
 const targetParent = document?.getElementById("appcontent") as HTMLElement;
 
-render(() => <style>{modalStyle}</style>, document?.head, {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  hotCtx: (import.meta as any).hot,
-  marker: document?.head?.lastChild as Element,
-});
+createRootHMR(()=>{
+  render(() => <style>{modalStyle}</style>, document?.head, {
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    marker: document?.head?.lastChild as Element,
+  });
+},import.meta.hot)
 
 export function ShareModal(props: {
   onClose: () => void;

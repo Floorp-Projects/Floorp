@@ -1,6 +1,6 @@
 import { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from 'es-toolkit/string';
-import { consola, InputLogObject } from "consola/browser";
+import { } from "consola/browser";
 import type { ClassDecorator } from "./decorator";
 import { createRootHMR } from "@nora/solid-xul";
 import { onCleanup } from "solid-js";
@@ -23,7 +23,7 @@ export function noraComponent(aViteHotContext : ViteHotContext | undefined): Cla
     }
 
     _NoraComponentBase_viteHotContext.set(ctx.name!,aViteHotContext);
-    console.debug("[nora@base] noraComponent");
+    console.debug("[nora@base] noraComponent "+ctx.name);
   }
 }
 

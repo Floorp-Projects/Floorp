@@ -7,8 +7,8 @@ import { BrowserActionUtils } from "@core/utils/browser-action";
 import { PopupElement } from "./popup-element.js";
 import workspacesStyles from "./styles.css?inline";
 import type { JSX } from "solid-js";
-import { WorkspacesServices } from "./workspaces.js";
-import { WorkspaceIcons } from "./utils/workspace-icons.js";
+import { WorkspacesService } from "../workspacesService";
+import { workspacesDataStore } from "../data/data.js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -20,7 +20,7 @@ export class WorkspacesToolbarButton {
     return <style>{workspacesStyles}</style>;
   };
 
-  constructor(ctx:WorkspacesServices) {
+  constructor(ctx:WorkspacesService) {
     const gWorkspacesServices = ctx;
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
@@ -31,7 +31,7 @@ export class WorkspacesToolbarButton {
       (aNode) => {
         // On Startup, the workspace is not yet loaded, so we need to set the label after the workspace is loaded.
         // We cannot get Element from WorkspacesServices, so we need to get it from CustomizableUI directly.
-        const workspace = gWorkspacesServices.getCurrentWorkspace;
+        const workspace = workspacesDataStore.data.get(workspacesDataStore.selectedID)!;
         aNode?.setAttribute("label", workspace.name);
       },
       CustomizableUI.AREA_TABSTRIP,

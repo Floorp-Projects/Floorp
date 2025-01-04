@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, For, Show } from "solid-js";
-import { render } from "@nora/solid-xul";
+import { Accessor, createSignal, For, Setter, Show } from "solid-js";
+import { createRootHMR, render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import type { TWorkspace } from "./utils/type.js";
-import { WorkspacesServices } from "./workspaces.js";
+import type { TWorkspace, WorkspaceID } from "./utils/type.js";
+import { WorkspacesService } from "./workspacesService";
 import modalStyle from "./modal-style.css?inline";
+import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.js";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
@@ -21,15 +22,17 @@ type Container = {
   l10nId?: string;
 };
 
-export const [workspaceModalState, setWorkspaceModalState] = createSignal<{
+type ModalState = {
   show: boolean;
-  targetWorkspace: TWorkspace | null;
-}>({ show: false, targetWorkspace: null });
+  targetWorkspaceID: WorkspaceID | null;
+}
+
+export const [workspaceModalState, setWorkspaceModalState] = createRootHMR<[Accessor<ModalState>,Setter<ModalState>]>(()=>createSignal<ModalState>({ show: false, targetWorkspaceID: null }),import.meta.hot);
 
 export class WorkspaceManageModal {
-  ctx:WorkspacesServices
+  ctx:WorkspacesService
   iconCtx:WorkspaceIcons
-  constructor(ctx:WorkspacesServices,iconCtx:WorkspaceIcons) {
+  constructor(ctx:WorkspacesService,iconCtx:WorkspaceIcons) {
     this.ctx=ctx;
     this.iconCtx=iconCtx;
     render(
@@ -58,10 +61,8 @@ export class WorkspaceManageModal {
   }
 
   private ContentElement(workspace: TWorkspace | null) {
-    const gWorkspacesServices = this.ctx;
-    const gWorkspaceIcons = this.iconCtx;
     const targetWorkspace =
-      workspace ?? gWorkspacesServices.getCurrentWorkspace;
+      workspace ?? workspacesDataStore.data.get(workspacesDataStore.selectedID)!;
 
     return (
       <>
@@ -85,13 +86,13 @@ export class WorkspaceManageModal {
             value={targetWorkspace.icon ?? "fingerprint"}
           >
             <xul:menupopup id="workspacesIconSelectPopup">
-              <For each={gWorkspaceIcons.workspaceIconsArray}>
+              <For each={this.iconCtx.workspaceIconsArray}>
                 {(icon) => (
                   <xul:menuitem
                     value={icon}
                     label={icon}
                     style={{
-                      "list-style-image": `url(${gWorkspaceIcons.getWorkspaceIconUrl(icon)})`,
+                      "list-style-image": `url(${this.iconCtx.getWorkspaceIconUrl(icon)})`,
                     }}
                   />
                 )}
@@ -129,30 +130,29 @@ export class WorkspaceManageModal {
   }
 
   private Modal() {
-    const gWorkspacesServices = this.ctx;
     return (
       <ShareModal
         name="Manage Workspace"
         ContentElement={() =>
-          this.ContentElement(workspaceModalState().targetWorkspace)
+          this.ContentElement(workspacesDataStore.data.get(workspaceModalState().targetWorkspaceID!)!)
         }
         StyleElement={() => this.StyleElement}
         onClose={() =>
-          setWorkspaceModalState({ show: false, targetWorkspace: null })
+          setWorkspaceModalState({ show: false, targetWorkspaceID: null })
         }
         onSave={(formControls) => {
           console.log(formControls);
           const targetWorkspace =
-            workspaceModalState().targetWorkspace ??
-            gWorkspacesServices.getCurrentWorkspace;
+            workspaceModalState().targetWorkspaceID ??
+            workspacesDataStore.selectedID;
           const newData = {
-            ...targetWorkspace,
+            ...workspacesDataStore.data.get(targetWorkspace)!,
             name: formControls[0].value,
             icon: formControls[1].value,
             userContextId: Number(formControls[2].value),
           };
-          gWorkspacesServices.saveWorkspaceById(targetWorkspace.id, newData);
-          setWorkspaceModalState({ show: false, targetWorkspace: null });
+          setWorkspacesDataStore("data",(prev)=>{prev.set(targetWorkspace,newData);return new Map(prev);})
+          setWorkspaceModalState({ show: false, targetWorkspaceID: null });
         }}
       />
     );

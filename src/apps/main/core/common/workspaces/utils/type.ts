@@ -7,7 +7,6 @@ import { z } from "zod";
 
 /* zod schemas */
 export const zWorkspace = z.object({
-  id: z.string(),
   name: z.string(),
   icon: z.string().nullish(),
   userContextId: z.number(),
@@ -15,9 +14,13 @@ export const zWorkspace = z.object({
   isDefault: z.boolean().nullish(),
 });
 
-export const zWorkspacesServices = z.array(zWorkspace);
+export const zWorkspacesServicesStoreData = z.object({
+  defaultID: z.string().uuid(),
+  selectedID: z.string().uuid(),
+  data: z.map(z.string().uuid(),zWorkspace),
+  order: z.array(z.string().uuid())
+});
 
-export const zWorkspacesServicesStoreData = z.array(zWorkspace);
 export const zWorkspaceBackupTab = z.object({
   title: z.string(),
   url: z.string(),
@@ -50,7 +53,6 @@ export const zWorkspacesServicesConfigs = z.object({
 
 /* Export as types */
 export type TWorkspace = z.infer<typeof zWorkspace>;
-export type TWorkspaces = z.infer<typeof zWorkspacesServices>;
 export type TWorkspacesStoreData = z.infer<typeof zWorkspacesServicesStoreData>;
 export type TWorkspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
 export type TWorkspaceBackup = z.infer<typeof zWorkspaceBackup>;
@@ -63,3 +65,5 @@ export type TWorkspacesServicesConfigs = z.infer<
 export type PanelMultiViewParentElement = XULElement & {
   hidePopup: () => void;
 };
+
+export type WorkspaceID = string & {__WORKSPACE_ID__:never}

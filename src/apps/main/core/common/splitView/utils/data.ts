@@ -3,20 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal } from "solid-js";
-import type { FixedSplitViewDataGroup, SplitViewDatas } from "./type";
+import { Accessor, createSignal, Setter } from "solid-js";
+import type { TFixedSplitViewDataGroup, TSplitViewData } from "./type";
+import { createRootHMR } from "@nora/solid-xul";
 
 /** SplitView data */
-export const [splitViewData, setSplitViewData] = createSignal<SplitViewDatas>(
+export const [splitViewData, setSplitViewData] = createRootHMR<[Accessor<TSplitViewData>,Setter<TSplitViewData>]>(()=>createSignal<TSplitViewData>(
   [],
-);
+),import.meta.hot);
 
 /* Current split view */
 export const [currentSplitView, setCurrentSplitView] = createSignal<number>(-1);
 
 /* Sync data */
 export const [fixedSplitViewData, setFixedSplitViewData] =
-  createSignal<FixedSplitViewDataGroup>({
+  createSignal<TFixedSplitViewDataGroup>({
     fixedTabId: null,
     options: {
       reverse: false,

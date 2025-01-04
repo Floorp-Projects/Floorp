@@ -6,7 +6,7 @@
 import { config } from "@core/common/designs/configs";
 import { createEffect } from "solid-js";
 import style from "./style.css?inline";
-import { render } from "@nora/solid-xul";
+import { createRootHMR, render } from "@nora/solid-xul";
 
 export class TabPinnedTabCustomization {
   private dispose: (() => void) | null = null;
@@ -17,7 +17,10 @@ export class TabPinnedTabCustomization {
 
   private toggleTitleVisibility(showTitleEnabled: boolean) {
     if (showTitleEnabled) {
-      this.dispose = render(() => this.StyleElement(), document?.head);
+      createRootHMR((dispose)=>{
+        render(() => this.StyleElement(), document?.head);
+        this.dispose = dispose;
+      },import.meta.hot);
     } else {
       this.dispose?.();
     }
