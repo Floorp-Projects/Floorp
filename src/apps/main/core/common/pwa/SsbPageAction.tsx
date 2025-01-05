@@ -26,7 +26,6 @@ export class SsbPageAction {
   }
 
   constructor() {
-    createRoot(() => {
       const starButtonBox = document?.getElementById("star-button-box");
       const ssbPageAction = document?.getElementById("page-action-buttons");
       if (!starButtonBox || !ssbPageAction) return;
@@ -41,9 +40,8 @@ export class SsbPageAction {
       );
       window.gBrowser.tabContainer.addEventListener(
         "TabSelect",
-        () => this.onCheckPageHasManifest(),
-      );
-    });
+      () => this.onCheckPageHasManifest(),
+    );
   }
 
   private async onCheckPageHasManifest() {

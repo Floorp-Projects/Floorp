@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { noraComponent, NoraComponentBase } from "@core/utils/base";
 import { SsbPageAction } from "./SsbPageAction";
 import { SsbPanelView } from "./SsbPanelView";
 import { enabled } from "./config";
 import { PwaWindowSupport } from "./pwa-window";
 import { SiteSpecificBrowserManager } from "./ssbManager";
 
-export function init() {
-  if (!enabled()) return;
-  SsbPageAction.getInstance();
-  SsbPanelView.getInstance();
-  PwaWindowSupport.getInstance();
-  SiteSpecificBrowserManager.getInstance();
-
-  import.meta.hot?.accept((m) => {
-    m?.init();
-  });
+@noraComponent(import.meta.hot)
+export default class Pwa extends NoraComponentBase {
+  init() {
+    if (!enabled()) return;
+    SsbPageAction.getInstance();
+    SsbPanelView.getInstance();
+    PwaWindowSupport.getInstance();
+    SiteSpecificBrowserManager.getInstance();
+  }
 }
