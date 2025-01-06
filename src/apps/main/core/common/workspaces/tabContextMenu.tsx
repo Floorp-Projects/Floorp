@@ -7,7 +7,7 @@ import { render } from "@nora/solid-xul";
 import { WorkspacesService } from "./workspacesService";
 import { For } from "solid-js";
 import { workspacesDataStore } from "./data/data.js";
-import { WorkspaceID } from "./utils/type.js";
+import { TWorkspaceID } from "./utils/type.js";
 
 export class WorkspacesTabContextMenu {
   ctx:WorkspacesService;
@@ -25,16 +25,20 @@ export class WorkspacesTabContextMenu {
     return (
       <For each={order}>
         {(id) => {
-          const workspace = workspacesDataStore.data.get(id)!;
-          return <xul:menuitem
-            id="context_MoveTabToOtherWorkspace"
-            label={workspace.name}
-            class="menuitem-iconic"
-            style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
-            onCommand={() =>
-              this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(id as WorkspaceID)
-            }
-          />
+          if (this.ctx.isWorkspaceID(id)) {
+            const workspace = this.ctx.getRawWorkspace(id);
+            return <xul:menuitem
+              id="context_MoveTabToOtherWorkspace"
+              label={workspace.name}
+              class="menuitem-iconic"
+              style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
+              onCommand={() =>
+                this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(id)
+              }
+            />
+          } else {
+            console.error("Not valid ID for Workspaces (maybe order is not updated) : "+id);
+          }
         }}
       </For>
     );

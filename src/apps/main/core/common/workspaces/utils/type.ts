@@ -14,11 +14,13 @@ export const zWorkspace = z.object({
   isDefault: z.boolean().nullish(),
 });
 
+export const zWorkspaceID = z.string().uuid().brand<"WorkspaceID">()
+
 export const zWorkspacesServicesStoreData = z.object({
-  defaultID: z.string().uuid(),
-  selectedID: z.string().uuid(),
-  data: z.map(z.string().uuid(),zWorkspace),
-  order: z.array(z.string().uuid())
+  defaultID: zWorkspaceID,
+  selectedID: zWorkspaceID,
+  data: z.map(zWorkspaceID,zWorkspace),
+  order: z.array(zWorkspaceID)
 });
 
 export const zWorkspaceBackupTab = z.object({
@@ -52,6 +54,7 @@ export const zWorkspacesServicesConfigs = z.object({
 });
 
 /* Export as types */
+export type TWorkspaceID = z.infer<typeof zWorkspaceID>;
 export type TWorkspace = z.infer<typeof zWorkspace>;
 export type TWorkspacesStoreData = z.infer<typeof zWorkspacesServicesStoreData>;
 export type TWorkspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
@@ -65,5 +68,3 @@ export type TWorkspacesServicesConfigs = z.infer<
 export type PanelMultiViewParentElement = XULElement & {
   hidePopup: () => void;
 };
-
-export type WorkspaceID = string & {__WORKSPACE_ID__:never}

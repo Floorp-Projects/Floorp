@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, onCleanup } from "solid-js";
-import { TWorkspacesStoreData, zWorkspacesServicesStoreData } from "../utils/type.js";
+import { TWorkspacesStoreData, zWorkspaceID, zWorkspacesServicesStoreData } from "../utils/type.js";
 import { WORKSPACE_DATA_PREF_NAME } from "../utils/workspaces-static-names.js";
 import { createRootHMR } from "@nora/solid-xul";
 import {createStore, SetStoreFunction, Store, unwrap} from "solid-js/store"
@@ -21,9 +21,10 @@ function getDefaultStore() {
   if (result.success) {
     return result.data
   } else {
+    const stubID = zWorkspaceID.parse("00000000-0000-0000-0000-000000000000");
     return {
-      defaultID: "",
-      selectedID: "",
+      defaultID: stubID,
+      selectedID: stubID,
       data: new Map(),
       order: []
     } satisfies TWorkspacesStoreData
