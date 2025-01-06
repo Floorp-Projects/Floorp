@@ -3,31 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ManifestProcesser } from "./manifestProcesser.js";
-import { DataManager } from "./dataStore.js";
+import type { ManifestProcesser } from "./manifestProcesser.js";
+import type { DataManager } from "./dataStore.js";
 import type { Browser, Manifest } from "./type.js";
 import { SsbRunner } from "./ssbRunner.js";
 import { WindowsSupport } from "./supports/windows.js";
 
 const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+  "resource://gre/modules/AppConstants.sys.mjs",
 );
 
 export class SiteSpecificBrowserManager {
-  private static instance: SiteSpecificBrowserManager;
-  private manifestProcesser: ManifestProcesser;
-  private dataManager: DataManager;
+  private ssbRunner: SsbRunner;
+  static instance: SiteSpecificBrowserManager | null = null;
 
-  public static getInstance(): SiteSpecificBrowserManager {
-    if (!SiteSpecificBrowserManager.instance) {
-      SiteSpecificBrowserManager.instance = new SiteSpecificBrowserManager();
-    }
-    return SiteSpecificBrowserManager.instance;
-  }
-
-  private constructor() {
-    this.manifestProcesser = ManifestProcesser.getInstance();
-    this.dataManager = DataManager.getInstance();
+  constructor(
+    private manifestProcesser: ManifestProcesser,
+    public readonly dataManager: DataManager
+  ) {
+    this.ssbRunner = new SsbRunner(dataManager, this);
+    SiteSpecificBrowserManager.instance = this;
 
     document?.addEventListener("floorpOnLocationChangeEvent", () => {
       this.onCurrentTabChangedOrLoaded();
@@ -36,7 +31,7 @@ export class SiteSpecificBrowserManager {
     Services.obs.addObserver(async (subject: any) => {
       await this.renameSsb(
         subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.newName as string
+        subject?.wrappedJSObject?.newName as string,
       );
     }, "nora-ssb-rename");
 
@@ -130,17 +125,18 @@ export class SiteSpecificBrowserManager {
 
   private async createFromBrowser(
     browser: Browser,
-    options: { useWebManifest: boolean }
+    options: { useWebManifest: boolean },
   ): Promise<Manifest> {
     return await this.manifestProcesser.getManifestFromBrowser(
       browser,
-      options.useWebManifest
+      options.useWebManifest,
     );
   }
 
   private async install(manifest: Manifest) {
     if (AppConstants.platform === "win") {
-      await WindowsSupport.install(manifest);
+      const windowsSupport = new WindowsSupport(this);
+      await windowsSupport.install(manifest);
     }
 
     await this.dataManager.saveSsbData(manifest);
@@ -148,12 +144,13 @@ export class SiteSpecificBrowserManager {
 
   private async uninstall(manifest: Manifest) {
     if (AppConstants.platform === "win") {
-      await WindowsSupport.uninstall(manifest);
+      const windowsSupport = new WindowsSupport(this);
+      await windowsSupport.uninstall(manifest);
     }
     await this.dataManager.removeSsbData(manifest.start_url);
   }
 
-  private async uninstallById(id: string) {
+  public async uninstallById(id: string) {
     const ssbObj = await this.getSsbObj(id);
     if (!ssbObj) {
       return;
@@ -176,20 +173,19 @@ export class SiteSpecificBrowserManager {
     return null;
   }
 
-  private async runSsbByUrl(url: string) {
-    SsbRunner.getInstance().runSsbByUrl(url);
+  public async runSsbByUrl(url: string) {
+    this.ssbRunner.runSsbByUrl(url);
   }
 
   private async onCurrentTabChangedOrLoaded() {
     const browser = window.gBrowser.selectedBrowser;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
-      browser.currentURI
+      browser.currentURI,
     );
     const currentPageHasSsbManifest =
       await this.manifestProcesser.getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
-      browser
-    );
+    const currentPageIsInstalled =
+      await this.checkCurrentPageIsInstalled(browser);
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&

@@ -3,90 +3,76 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, Show, createRoot } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import type { JSX } from "solid-js";
-import { SiteSpecificBrowserManager } from "./ssbManager";
-import { ManifestProcesser } from "./manifestProcesser";
 import { render } from "@nora/solid-xul";
+import type { PwaService } from "./pwaService";
 
 export class SsbPageAction {
-  private static instance: SsbPageAction;
-  private isInstalling: ReturnType<typeof createSignal<boolean>> = createSignal(false);
-  private icon: ReturnType<typeof createSignal<string>> = createSignal("");
-  private title: ReturnType<typeof createSignal<string>> = createSignal("");
-  private description: ReturnType<typeof createSignal<string>> = createSignal("");
-  private canBeInstallAsPwa: ReturnType<typeof createSignal<boolean>> = createSignal(false);
-  private isInstalled: ReturnType<typeof createSignal<boolean>> = createSignal(false);
+  private isInstalling = createSignal(false);
+  private icon = createSignal("");
+  private title = createSignal("");
+  private description = createSignal("");
+  private canBeInstallAsPwa = createSignal(false);
+  private isInstalled = createSignal(false);
 
-  public static getInstance(): SsbPageAction {
-    if (!SsbPageAction.instance) {
-      SsbPageAction.instance = new SsbPageAction();
-    }
-    return SsbPageAction.instance;
-  }
+  constructor(private pwaService: PwaService) {
+    const starButtonBox = document?.getElementById("star-button-box");
+    const ssbPageAction = document?.getElementById("page-action-buttons");
+    if (!starButtonBox || !ssbPageAction) return;
 
-  constructor() {
-      const starButtonBox = document?.getElementById("star-button-box");
-      const ssbPageAction = document?.getElementById("page-action-buttons");
-      if (!starButtonBox || !ssbPageAction) return;
+    render(() => this.Render(), ssbPageAction, {
+      marker: starButtonBox,
+    });
 
-      render(() => this.Render(), ssbPageAction, {
-        marker: starButtonBox,
-      });
-
-      Services.obs.addObserver(
-        () => this.onCheckPageHasManifest(),
-        "nora-pwa-check-page-has-manifest",
-      );
-      window.gBrowser.tabContainer.addEventListener(
-        "TabSelect",
+    Services.obs.addObserver(
       () => this.onCheckPageHasManifest(),
+      "nora-pwa-check-page-has-manifest"
     );
+    window.gBrowser.tabContainer.addEventListener(
+      "TabSelect",
+      () => this.onCheckPageHasManifest()
+    );
+
+    this.onCheckPageHasManifest();
   }
 
   private async onCheckPageHasManifest() {
     const browser = window.gBrowser.selectedBrowser;
-    const canBeInstallAsPwa =
-      await ManifestProcesser.getInstance().checkBrowserCanBeInstallAsPwa(
-        browser,
-      );
+
+    const canBeInstallAsPwa = await this.pwaService.checkBrowserCanBeInstallAsPwa(browser);
     this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
-    const isInstalled =
-      await SiteSpecificBrowserManager.getInstance().checkCurrentPageIsInstalled(
-        browser,
-      );
+    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(browser);
     this.isInstalled[1](isInstalled);
-    SiteSpecificBrowserManager.getInstance().updateUIElements(isInstalled);
+    this.pwaService.updateUIElements(isInstalled);
   }
 
   private onCommand = () => {
-    SiteSpecificBrowserManager.getInstance().installOrRunCurrentPageAsSsb(
+    this.pwaService.installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
-      true,
+      true
     );
     this.isInstalling[1](true);
-  }
+  };
 
   private onPopupShowing = async () => {
-    const icon = await SiteSpecificBrowserManager.getInstance().getIcon(
-      window.gBrowser.selectedBrowser,
-    );
+    const icon = await this.pwaService.getIcon(window.gBrowser.selectedBrowser);
     this.icon[1](icon);
 
-    const manifest = await SiteSpecificBrowserManager.getInstance().getManifest(
-      window.gBrowser.selectedBrowser,
+    const manifest = await this.pwaService.getManifest(
+      window.gBrowser.selectedBrowser
     );
     this.title[1](manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec);
     this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
-  }
+  };
 
   private onPopupHiding = () => {
     this.isInstalling[1](false);
     this.icon[1]("");
     this.title[1]("");
     this.description[1]("");
-  }
+  };
 
   private closePopup = () => {
     const panel = document?.getElementById("ssb-panel") as XULElement & {
@@ -96,7 +82,7 @@ export class SsbPageAction {
       panel.hidePopup();
     }
     this.isInstalling[1](false);
-  }
+  };
 
   private Render(): JSX.Element {
     const [isInstalling] = this.isInstalling;

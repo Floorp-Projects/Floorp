@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { DataManager } from "./dataStore";
+import type { DataManager } from "./dataStore";
 import type { Manifest } from "./type";
 import { SiteSpecificBrowserManager } from "./ssbManager";
 
@@ -14,24 +14,18 @@ const { AppConstants } = ChromeUtils.importESModule(
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunner {
-  private static instance: SsbRunner;
-  public static getInstance(): SsbRunner {
-    if (!SsbRunner.instance) {
-      SsbRunner.instance = new SsbRunner();
-    }
-    return SsbRunner.instance;
-  }
+  constructor(
+    private dataManager: DataManager,
+    private ssbManager: SiteSpecificBrowserManager
+  ) {}
 
   public async runSsbById(id: string) {
-    const dataManager = DataManager.getInstance();
-    const ssbData = await dataManager.getCurrentSsbData();
-
+    const ssbData = await this.dataManager.getCurrentSsbData();
     this.openSsbWindow(ssbData[id]);
   }
 
   public async runSsbByUrl(url: string) {
-    const dataManager = DataManager.getInstance();
-    const ssbData = await dataManager.getCurrentSsbData();
+    const ssbData = await this.dataManager.getCurrentSsbData();
     this.openSsbWindow(ssbData[url]);
   }
 
@@ -57,7 +51,7 @@ export class SsbRunner {
   }
 }
 
-async function startSSBFromCmdLine(id: string) {
+async function startSSBFromCmdLine(id: string, ssbManager: SiteSpecificBrowserManager) {
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
@@ -65,9 +59,10 @@ async function startSSBFromCmdLine(id: string) {
 
   // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
   try {
-    const ssb = await SiteSpecificBrowserManager.getInstance().getSsbObj(id);
+    const ssb = await ssbManager.getSsbObj(id);
     if (ssb) {
-      SsbRunner.getInstance().openSsbWindow(ssb);
+      const ssbRunner = new SsbRunner(ssbManager.dataManager, ssbManager);
+      ssbRunner.openSsbWindow(ssb);
     } else {
       dump(`No SSB installed as ID ${id}\n`);
     }
@@ -75,6 +70,7 @@ async function startSSBFromCmdLine(id: string) {
     Services.startup.exitLastWindowClosingSurvivalArea();
   }
 }
+
 class CSSB implements nsIFactory, nsICommandLineHandler {
   classDescription = "Floorp SSB Implementation";
   contractID = "@floorp-app/site-specific-browser;1";
@@ -90,9 +86,9 @@ class CSSB implements nsIFactory, nsICommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     console.log("handle nsICommandLine for start-ssb");
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
-    if (id) {
+    if (id && SiteSpecificBrowserManager.instance) {
       cmdLine.preventDefault = true;
-      startSSBFromCmdLine(id);
+      startSSBFromCmdLine(id, SiteSpecificBrowserManager.instance);
     }
   }
   helpInfo = "  --start-ssb <id>  Start the SSB with the given id.\n";

@@ -15,15 +15,13 @@ const { ManifestProcessor } = ChromeUtils.importESModule(
 );
 
 export class ManifestProcesser {
-  private static instance: ManifestProcesser;
-  public static getInstance() {
-    if (!ManifestProcesser.instance) {
-      ManifestProcesser.instance = new ManifestProcesser();
-    }
-    return ManifestProcesser.instance;
+  private iconProcesser: IconProcesser;
+
+  constructor() {
+    this.iconProcesser = new IconProcesser();
   }
 
-  public get uuid() {
+  private get uuid() {
     return Services.uuid.generateUUID().toString();
   }
 
@@ -95,7 +93,7 @@ export class ManifestProcesser {
 
     // If the site provided no icons then try to use the normal page icons.
     if (!manifest.icons.length) {
-      const icon = await IconProcesser.getInstance().getIconForBrowser(browser);
+      const icon = await this.iconProcesser.getIconForBrowser(browser);
       manifest.icons.push({ src: icon });
     }
 

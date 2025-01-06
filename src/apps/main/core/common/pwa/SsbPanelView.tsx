@@ -6,41 +6,17 @@
 import { createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { render, createRootHMR } from "@nora/solid-xul";
-import { SiteSpecificBrowserManager } from "./ssbManager";
 import type { Manifest } from "./type";
-import { SsbRunner } from "./ssbRunner";
+import type { PwaService } from "./pwaService";
 
 export class SsbPanelView {
-  private static instance: SsbPanelView;
   private static installedApps = createSignal<Manifest[]>([]);
+  private static pwaService: PwaService;
   private isOpen = createSignal<boolean>(false);
+  private isRendered = false;
 
-  public static getInstance(): SsbPanelView {
-    if (!SsbPanelView.instance) {
-      SsbPanelView.instance = new SsbPanelView();
-    }
-    return SsbPanelView.instance;
-  }
-
-  private get parentElement(): HTMLElement | null {
-    return document?.querySelector(
-      "#appMenu-mainView > .panel-subview-body",
-    ) as HTMLElement | null;
-  }
-
-  private get beforeElement(): HTMLElement | null {
-    return document?.getElementById(
-      "appMenu-bookmarks-button",
-    ) as HTMLElement | null;
-  }
-
-  private get panelUIButton(): HTMLElement | null {
-    return document?.getElementById(
-      "PanelUI-menu-button",
-    ) as HTMLElement | null;
-  }
-
-  constructor() {
+  constructor(pwaService: PwaService) {
+    SsbPanelView.pwaService = pwaService;
     if (!this.panelUIButton) return;
 
     createRootHMR(() => {
@@ -69,7 +45,23 @@ export class SsbPanelView {
     }, import.meta.hot);
   }
 
-  private isRendered = false;
+  private get parentElement(): HTMLElement | null {
+    return document?.querySelector(
+      "#appMenu-mainView > .panel-subview-body"
+    ) as HTMLElement | null;
+  }
+
+  private get beforeElement(): HTMLElement | null {
+    return document?.getElementById(
+      "appMenu-bookmarks-button"
+    ) as HTMLElement | null;
+  }
+
+  private get panelUIButton(): HTMLElement | null {
+    return document?.getElementById(
+      "PanelUI-menu-button"
+    ) as HTMLElement | null;
+  }
 
   private renderPanel(): void {
     if (!this.parentElement || !this.beforeElement) return;
@@ -83,7 +75,7 @@ export class SsbPanelView {
   private static async showSsbPanelSubView() {
     await window.PanelUI.showSubView(
       "PanelUI-ssb",
-      document?.getElementById("appMenu-ssb-button"),
+      document?.getElementById("appMenu-ssb-button")
     );
 
     SsbPanelView.updateInstalledApps();
@@ -91,17 +83,16 @@ export class SsbPanelView {
 
   private static async updateInstalledApps() {
     const [, setInstalledApps] = SsbPanelView.installedApps;
-    const apps =
-      await SiteSpecificBrowserManager.getInstance().getInstalledApps();
+    const apps = await SsbPanelView.pwaService.getInstalledApps();
     setInstalledApps(
-      Object.values(apps).map((value) => ({ ...(value as Manifest) })),
+      Object.values(apps).map((value) => ({ ...(value as Manifest) }))
     );
   }
 
   private static handleInstallOrRunCurrentPageAsSsb() {
-    SiteSpecificBrowserManager.getInstance().installOrRunCurrentPageAsSsb(
+    SsbPanelView.pwaService.installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
-      false,
+      false
     );
   }
 
@@ -117,7 +108,7 @@ export class SsbPanelView {
             image={app.icon}
             data-ssbId={app.id}
             onCommand={() => {
-              SsbRunner.getInstance().runSsbById(app.start_url);
+              SsbPanelView.pwaService.runSsbByUrl(app.start_url);
             }}
           />
         )}

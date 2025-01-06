@@ -3,39 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { SiteSpecificBrowserManager } from "../ssbManager";
+import type { SiteSpecificBrowserManager } from "../ssbManager";
 import { ImageTools } from "../imageTools";
 import type { Manifest } from "../type";
 
-export const WindowsSupport = {
-  get shellService() {
-    return Cc["@mozilla.org/browser/shell-service;1"].getService(
-      Ci.nsIWindowsShellService
-    );
-  },
-  get uiUtils() {
-    return Cc["@mozilla.org/windows-ui-utils;1"].getService(
-      Ci.nsIWindowsUIUtils
-    );
-  },
-  get taskbar() {
-    return Cc["@mozilla.org/windows-taskbar;1"].getService(Ci.nsIWinTaskbar);
-  },
-  get nsIFile() {
-    return Components.Constructor(
-      "@mozilla.org/file/local;1",
-      Ci.nsIFile,
-      "initWithPath"
-    );
-  },
+export class WindowsSupport {
+  private static shellService = Cc["@mozilla.org/browser/shell-service;1"].getService(
+    Ci.nsIWindowsShellService
+  );
 
-  get ssbManager() {
-    return SiteSpecificBrowserManager.getInstance();
-  },
+  private static uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
+    Ci.nsIWindowsUIUtils
+  );
 
-  buildGroupId(id: string) {
+  private static taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
+    Ci.nsIWinTaskbar
+  );
+
+  private static nsIFile = Components.Constructor(
+    "@mozilla.org/file/local;1",
+    Ci.nsIFile,
+    "initWithPath"
+  );
+
+  constructor(private ssbManager: SiteSpecificBrowserManager) {}
+
+  private buildGroupId(id: string) {
     return `ablaze.floorp.ssb.${id}`;
-  },
+  }
 
   async install(ssb: Manifest) {
     if (!this.ssbManager.useOSIntegration()) {
@@ -67,11 +62,11 @@ export const WindowsSupport = {
       ssb.name,
       iconFile,
       0,
-      WindowsSupport.buildGroupId(ssb.id),
+      this.buildGroupId(ssb.id),
       "Programs",
       `${ssb.name}.lnk`
     );
-  },
+  }
 
   /**
    * @param {SiteSpecificBrowser} ssb the SSB to uninstall.
@@ -96,7 +91,7 @@ export const WindowsSupport = {
     } catch (e) {
       console.error(e);
     }
-  },
+  }
 
   /**
    * Applies the necessary OS integration to an open SSB.
@@ -109,7 +104,7 @@ export const WindowsSupport = {
   async applyOSIntegration(ssb: Manifest, aWindow: Window) {
     WindowsSupport.taskbar.setGroupIdForWindow(
       aWindow,
-      WindowsSupport.buildGroupId(ssb.id)
+      this.buildGroupId(ssb.id)
     );
     const getIcon = async (size: number) => {
       const icon = ssb.icon;
@@ -138,5 +133,5 @@ export const WindowsSupport = {
     if (icons[0] || icons[1]) {
       WindowsSupport.uiUtils.setWindowIcon(aWindow, icons[0], icons[1]);
     }
-  },
-};
+  }
+}

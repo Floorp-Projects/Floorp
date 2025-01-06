@@ -1,46 +1,41 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "./type";
 
 export class DataManager {
-  private static instance: DataManager;
-  public static getInstance() {
-    if (!DataManager.instance) {
-      DataManager.instance = new DataManager();
-    }
-    return DataManager.instance;
-  }
-
   private get ssbStoreFile() {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
   }
 
-  public async getCurrentSsbData() {
+  constructor() {}
+
+  public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
     const fileExists = await IOUtils.exists(this.ssbStoreFile);
     if (!fileExists) {
-      IOUtils.writeJSON(this.ssbStoreFile, {});
+      await IOUtils.writeJSON(this.ssbStoreFile, {});
       return {};
     }
     return await IOUtils.readJSON(this.ssbStoreFile);
   }
 
-  public async overrideCurrentSsbData(ssbData: object) {
+  private async overrideCurrentSsbData(ssbData: object) {
     await IOUtils.writeJSON(this.ssbStoreFile, ssbData);
   }
 
-  async saveSsbData(ssbData: Manifest) {
-    const start_url = ssbData.start_url;
+  public async saveSsbData(manifest: Manifest) {
+    const start_url = manifest.start_url;
     const currentSsbData = await this.getCurrentSsbData();
-    currentSsbData[start_url] = ssbData;
+    currentSsbData[start_url] = manifest;
     await this.overrideCurrentSsbData(currentSsbData);
   }
 
-  public async removeSsbData(id: string) {
+  public async removeSsbData(url: string) {
     const list = await this.getCurrentSsbData();
-    if (list[id]) {
-      delete list[id];
+    if (list[url]) {
+      delete list[url];
       await this.overrideCurrentSsbData(list);
     }
   }

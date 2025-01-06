@@ -4,26 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { SiteSpecificBrowserManager } from "./ssbManager";
-import PwaWindowStyle from "./pwa-window-style.css?inline";
 import { render, createRootHMR } from "@nora/solid-xul";
 import { createSignal } from "solid-js";
 import { config } from "./config";
+import PwaWindowStyle from "./pwa-window-style.css?inline";
+import type { PwaService } from "./pwaService";
 
 export class PwaWindowSupport {
-  private static instance: PwaWindowSupport;
-  private ssbId: ReturnType<typeof createSignal<string | null>>;
+  private ssbId = createSignal<string | null>(null);
 
-  public static getInstance(): PwaWindowSupport {
-    if (!PwaWindowSupport.instance) {
-      PwaWindowSupport.instance = new PwaWindowSupport();
-    }
-    return PwaWindowSupport.instance;
-  }
-
-  private constructor() {
-    this.ssbId = createSignal<string | null>(null);
-
+  constructor(private pwaService: PwaService) {
     const uri = window.arguments?.[0];
     if (!uri?.endsWith("?FloorpEnableSSBWindow=true")) {
       return;
@@ -89,6 +79,6 @@ export class PwaWindowSupport {
   }
 
   public async getSsbObj(id: string) {
-    return await SiteSpecificBrowserManager.getInstance().getSsbObj(id);
+    return await this.pwaService.getSsbObj(id);
   }
 }
