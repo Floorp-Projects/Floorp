@@ -3,6 +3,9 @@ import Design from "./pages/Design";
 import Workspaces from "./pages/Workspaces";
 import About from "./pages/About";
 import { useTranslation } from "react-i18next";
+import PanelSidebar from "./pages/PanelSidebar";
+import ProgressiveWebApp from "./pages/ProgressiveWebApp";
+import ProfileAndAccount from "./pages/Accounts";
 
 export const usePageData = () => {
   const { t } = useTranslation();
@@ -31,7 +34,7 @@ export const usePageData = () => {
         />
       ),
       text: t("pages.browserSidebar"),
-      component: null,
+      component: <PanelSidebar />,
     },
     workspaces: {
       path: "/workspaces",
@@ -61,7 +64,7 @@ export const usePageData = () => {
         />
       ),
       text: t("pages.webApps"),
-      component: null,
+      component: <ProgressiveWebApp />,
     },
     accounts: {
       path: "/accounts",
@@ -69,7 +72,7 @@ export const usePageData = () => {
         <IconMdiAccount style={{ fontSize: "16px", color: "currentColor" }} />
       ),
       text: t("pages.profileAndAccount"),
-      component: null,
+      component: <ProfileAndAccount />,
     },
     about: {
       path: "/about",

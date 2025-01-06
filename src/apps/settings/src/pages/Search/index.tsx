@@ -3,115 +3,147 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type React from "react";
-import { useEffect, useState } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
-import { extractTextContent } from "./extractTextContent";
-import { usePageData } from "../../pageData";
-import Card from "@/components/Card";
-import {
-  Text,
-  VStack,
-  Link,
-  Flex,
-  useColorModeValue,
-  Divider,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect, useMemo } from 'react';
+import { Box, VStack, Text,  Heading, useColorModeValue } from '@chakra-ui/react';
+import { usePageData } from '../../pageData';
+import { extractTextContent } from './extractTextContent';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface SearchResult {
-  component: React.ReactElement;
-  icon: React.ReactNode;
   path: string;
+  text: string;
   title: string;
-  content: string;
+  matches: {
+    text: string;
+    context: string;
+  }[];
 }
 
-function SearchResult({ result }: { result: SearchResult }) {
+export default function Search() {
   const { t } = useTranslation();
-  return (
-    <Card title={result.title} icon={result.icon}>
-      <Link
-        as={RouterLink}
-        to={result.path}
-        fontSize="md"
-        display="flex"
-        alignItems="center"
-        mb={2}
-        color={useColorModeValue("blue.500", "blue.400")}
-      >
-        {t("search.open", { title: result.title })}
-        <IconIcOutlineOpenInNew
-          style={{ fontSize: "16px", marginLeft: "4px" }}
-        />
-      </Link>
-      <Divider />
-      <Text fontSize="sm" fontWeight="bold" mt={2}>
-        {t("search.matchedText")}
-      </Text>
-
-      <Text fontSize="sm" mt={2}>
-        {result.content}
-      </Text>
-    </Card>
-  );
-}
-
-function SearchResults() {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchParams] = useSearchParams();
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const navigate = useNavigate();
   const pageData = usePageData();
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const query = searchParams.get("q");
+  const borderColor = useColorModeValue("#eee", "#2D3748");
+  const hoverBgColor = useColorModeValue("gray.50", "gray.700");
+  const matchBgColor = useColorModeValue("yellow.100", "yellow.700");
 
-    if (query) {
-      const resultList = Object.values(pageData).map((page) => {
-        if (page.component === null) {
-          return null;
-        }
-        const fullContent = extractTextContent(page.component);
-        const matchIndex = fullContent
-          ?.toLowerCase()
-          .indexOf(query.toLowerCase());
-        if (matchIndex !== -1 && matchIndex !== undefined) {
-          const start = Math.max(0, matchIndex - 80);
-          const end = Math.min((fullContent?.length ?? 0) + 80, start + 80);
-          const content = `...${fullContent?.slice(start, end)}...`;
-          return { ...page, content, title: page.text };
-        }
-        return null;
+  const searchQuery = searchParams.get('q') || '';
+
+  const findMatchesWithContext = (text: string, query: string): { text: string; context: string; }[] => {
+    const matches: { text: string; context: string; }[] = [];
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    let lastIndex = 0;
+
+    while ((lastIndex = lowerText.indexOf(lowerQuery, lastIndex)) !== -1) {
+      const matchText = text.slice(lastIndex, lastIndex + query.length);
+      const contextStart = Math.max(0, lastIndex - 50);
+      const contextEnd = Math.min(text.length, lastIndex + query.length + 50);
+      let context = text.slice(contextStart, contextEnd);
+      if (contextStart > 0) context = '...' + context;
+      if (contextEnd < text.length) context += '...';
+
+      matches.push({
+        text: matchText,
+        context: context
       });
-      setSearchResults(resultList.filter((r) => r !== null) as SearchResult[]);
-    } else {
-      setSearchResults([]);
+
+      lastIndex += query.length;
     }
-  }, [location.search, pageData]);
+
+    return matches;
+  };
+
+  const searchIndex = useMemo(async () => {
+    const index: SearchResult[] = [];
+
+    for (const [, page] of Object.entries(pageData)) {
+      if (page.component) {
+        const content = await extractTextContent(page.component);
+        index.push({
+          path: page.path,
+          text: content,
+          title: page.text,
+          matches: []
+        });
+      }
+    }
+    return index;
+  }, []);
+
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!searchQuery.trim()) {
+        setResults([]);
+        return;
+      }
+
+      const index = await searchIndex;
+      const searchResults = index
+        .map(item => {
+          const titleMatches = findMatchesWithContext(item.title, searchQuery);
+          const contentMatches = findMatchesWithContext(item.text, searchQuery);
+
+          return {
+            ...item,
+            matches: [...titleMatches, ...contentMatches]
+          };
+        })
+        .filter(item => item.matches.length > 0);
+
+      setResults(searchResults);
+    };
+
+    performSearch();
+  }, [searchQuery, searchIndex]);
 
   return (
-    <Flex direction="column" alignItems="center" maxW="700px" mx="auto" py={8}>
-      <Text fontSize="3xl" mb={10}>
-        {t("search.results")}
-      </Text>
+    <Box p={4} mt="80px">
+      <Heading mb={4}>{t('search.title')}</Heading>
+      {searchQuery && (
+        <Text mb={4}>
+          {t('search.resultsFor', { query: searchQuery })}
+        </Text>
+      )}
 
-      <Text fontSize="sm" mb={8}>
-        {t("search.searchResultsDescription", {
-          query: new URLSearchParams(location.search).get("q") ?? "",
-        })}
-      </Text>
-
-      <VStack align="stretch" spacing={6} w="100%">
-        {searchResults.length > 0 ? (
-          searchResults.map((result) => (
-            <SearchResult key={result.path} result={result} />
-          ))
-        ) : (
-          <Text fontSize="xl">{t("search.noResults")}</Text>
+      <VStack spacing={4} align="stretch">
+        {results.map((result, index) => (
+          <Box
+            key={index}
+            p={4}
+            borderWidth="1px"
+            borderColor={borderColor}
+            borderRadius="md"
+            cursor="pointer"
+            _hover={{ bg: hoverBgColor }}
+            onClick={() => navigate(result.path)}
+          >
+            <Text fontWeight="bold" mb={2}>{result.title}</Text>
+            <VStack align="stretch" spacing={2} mt={2}>
+            <Text color="gray.500" mb={1}>{t('search.matchedText')}:</Text>
+              {result.matches.map((match, matchIndex) => (
+                <Box key={matchIndex} fontSize="sm" pl={2}>
+                  <Text>
+                    {match.context.split(new RegExp(`(${searchQuery})`, 'i')).map((part, i) =>
+                      part.toLowerCase() === searchQuery.toLowerCase() ? (
+                        <Box key={i} as="span" bg={matchBgColor} px={1} rounded="sm">
+                          {part}
+                        </Box>
+                      ) : part
+                    )}
+                  </Text>
+                </Box>
+              ))}
+            </VStack>
+          </Box>
+        ))}
+        {searchQuery && results.length === 0 && (
+          <Text color="gray.500">{t('search.noResults')}</Text>
         )}
       </VStack>
-    </Flex>
+    </Box>
   );
 }
-
-export default SearchResults;

@@ -1,12 +1,14 @@
-import ReactDOMServer from "react-dom/server";
-import type React from "react";
+import type { ReactNode } from "react";
+import { renderToString } from "react-dom/server";
 
-export function extractTextContent(component: React.ReactElement) {
-  const html = ReactDOMServer.renderToStaticMarkup(component);
-  const div = document?.createElement("div");
-  if (div) {
-    div.innerHTML = html;
-    return div.textContent;
+export async function extractTextContent(component: ReactNode): Promise<string> {
+  try {
+    const htmlString = renderToString(component as any);
+    const tempDiv = document?.createElement('div') as HTMLDivElement;
+    tempDiv.innerHTML = htmlString;
+    return tempDiv.textContent || '';
+  } catch (error) {
+    console.error("Error extracting text content:", error);
+    return '';
   }
-  return "";
 }

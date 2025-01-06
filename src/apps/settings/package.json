@@ -30,6 +30,8 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
+    "@iconify-json/simple-icons": "^1.2.17",
+    "@iconify-json/streamline": "^1.2.2",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

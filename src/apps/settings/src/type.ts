@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
+import { any, z } from "zod";
 import { zFloorpDesignConfigs } from "../../../apps/common/scripts/global-types/type";
 import { zWorkspacesServicesConfigs } from "../../../apps/main/core/common/workspaces/utils/type";
 import { zPanelSidebarConfig } from "../../../apps/main/core/common/panel-sidebar/utils/type";
@@ -87,3 +87,21 @@ export const zPanelSidebarFormData = z.object({
 });
 
 export type PanelSidebarFormData = z.infer<typeof zPanelSidebarFormData>;
+
+/* Progressive Web App */
+export const zProgressiveWebAppFormData = z.object({
+  enabled: z.boolean(),
+  showToolbar: z.boolean(),
+});
+
+export const zProgressiveWebAppObject = z.record(z.object({
+  id: z.string(),
+  name: z.string(),
+  short_name: z.string().optional(),
+  start_url: z.string(),
+  icon: z.string(),
+  scope: z.string().optional(),
+}));
+
+export type TProgressiveWebAppFormData = z.infer<typeof zProgressiveWebAppFormData>;
+export type TProgressiveWebAppObject = z.infer<typeof zProgressiveWebAppObject>;

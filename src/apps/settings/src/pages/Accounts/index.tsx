@@ -12,7 +12,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useAccountAndProfileData } from "./dataManager";
 import type { AccountsFormData } from "@/type";
 
-export default function About() {
+export default function ProfileAndAccount() {
   const { t } = useTranslation();
   const textColor = useColorModeValue("gray.800", "gray.100");
 

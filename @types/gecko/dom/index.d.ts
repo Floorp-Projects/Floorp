@@ -23,18 +23,32 @@ declare var Ci: nsIXPCComponents_Interfaces;
 declare var Services: JSServices;
 declare var Cc: nsIXPCComponents_Classes & {
   [key: string]: {
-    getService: (
-      t: typeof Ci[keyof typeof Ci],
-    ) => unknown;
+    getService: (t: (typeof Ci)[keyof typeof Ci]) => any;
+    createInstance: (aClass: (typeof Ci)[keyof typeof Ci]) => any;
   };
 };
 interface CSSStyleDeclaration {
-    display: string;
-    flex: string;
-    order: string;
-    flexDirection: string;
-    flexTemplateAreas: string;
+  display: string;
+  flex: string;
+  order: string;
+  flexDirection: string;
+  flexTemplateAreas: string;
 }
+
+interface nsIXPCComponents extends nsISupports {
+  readonly interfaces: nsIXPCComponents_Interfaces;
+  readonly results: nsIXPCComponents_Results;
+  isSuccessCode(result: any): boolean;
+  readonly classes: nsIXPCComponents_Classes;
+  readonly stack: nsIStackFrame;
+  readonly manager: nsIComponentManager;
+  readonly utils: nsIXPCComponents_Utils;
+  readonly ID: nsIXPCComponents_ID;
+  readonly Exception: any;
+  readonly Constructor: (aClass: any, aIID: any, aFlags: any) => any;
+  returnCode: any;
+}
+
 /* NORA END */
 
 // interface CSSStyleDeclaration {
