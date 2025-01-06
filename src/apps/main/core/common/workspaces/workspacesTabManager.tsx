@@ -1,14 +1,17 @@
 import { createEffect } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
-import { PanelMultiViewParentElement, WorkspaceID } from "./utils/type";
+import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
 import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
 import { configStore } from "./data/config";
 import { WorkspaceIcons } from "./utils/workspace-icons";
+import { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
 export class WorkspacesTabManager {
+  dataManagerCtx: WorkspacesDataManager;
   iconCtx: WorkspaceIcons
-  constructor(iconCtx:WorkspaceIcons) {
+  constructor(iconCtx:WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
+    this.dataManagerCtx = dataManagerCtx;
     createEffect(() => {
       if (workspacesDataStore.selectedID) {
         this.updateTabsVisibility()
@@ -21,7 +24,7 @@ export class WorkspacesTabManager {
    */
   public updateTabsVisibility() {
     // Get Current Workspace & Workspace Id
-    const currentWorkspaceId = workspacesDataStore.selectedID as WorkspaceID;
+    const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     // Last Show Workspace Attribute
     const selectedTab = window.gBrowser.selectedTab;
     if (
@@ -74,12 +77,16 @@ export class WorkspacesTabManager {
    * @param tab The tab.
    * @returns The workspace id.
    */
-  getWorkspaceIdFromAttribute(tab: XULElement): WorkspaceID {
+  getWorkspaceIdFromAttribute(tab: XULElement): TWorkspaceID | null {
     const workspaceId = tab.getAttribute(
       WORKSPACE_TAB_ATTRIBUTION_ID,
     );
-    //TODO: check is id valid
-    return workspaceId as WorkspaceID;
+
+    if (workspaceId && this.dataManagerCtx.isWorkspaceID(workspaceId)) {
+      return workspaceId;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -87,7 +94,7 @@ export class WorkspacesTabManager {
    * @param tab The tab.
    * @param workspaceId The workspace id.
    */
-  setWorkspaceIdToAttribute(tab: XULElement, workspaceId: WorkspaceID) {
+  setWorkspaceIdToAttribute(tab: XULElement, workspaceId: TWorkspaceID) {
     tab.setAttribute(
       WORKSPACE_TAB_ATTRIBUTION_ID,
       workspaceId,
@@ -98,7 +105,7 @@ export class WorkspacesTabManager {
    * Remove tab by workspace id.
    * @param workspaceId The workspace id.
    */
-  public removeTabByWorkspaceId(workspaceId: WorkspaceID) {
+  public removeTabByWorkspaceId(workspaceId: TWorkspaceID) {
     const tabs = window.gBrowser.tabs;
     for (const tab of tabs) {
       if (this.getWorkspaceIdFromAttribute(tab) === workspaceId) {
@@ -114,7 +121,7 @@ export class WorkspacesTabManager {
    * @param select will select tab if true.
    * @returns The created tab.
    */
-  createTabForWorkspace(workspaceId: WorkspaceID, select = false, url?: string) {
+  createTabForWorkspace(workspaceId: TWorkspaceID, select = false, url?: string) {
     const targetURL =
       url ?? Services.prefs.getStringPref("browser.startup.homepage");
     const tab = window.gBrowser.addTab(targetURL, {
@@ -134,7 +141,7 @@ export class WorkspacesTabManager {
    * Change workspace. Selected workspace id will be stored in window object.
    * @param workspaceId The workspace id.
    */
-  public changeWorkspace(workspaceId: WorkspaceID) {
+  public changeWorkspace(workspaceId: TWorkspaceID) {
     if (
       configStore.closePopupAfterClick &&
       this.targetToolbarItem?.hasAttribute("open")
@@ -164,14 +171,13 @@ export class WorkspacesTabManager {
    * Change workspace. Selected workspace id will be stored in window object.
    * @param workspaceId The workspace id.
    */
-  public changeWorkspaceToolbarState(workspaceId: WorkspaceID) {
+  public changeWorkspaceToolbarState(workspaceId: TWorkspaceID) {
     const gWorkspaceIcons = this.iconCtx;
     const targetToolbarItem = document?.querySelector(
       "#workspaces-toolbar-button",
     ) as XULElement;
 
-    //TODO: check is id valid
-    const workspace = workspacesDataStore.data.get(workspaceId)!;
+    const workspace = this.dataManagerCtx.getRawWorkspace(workspaceId);
 
     if (configStore.showWorkspaceNameOnToolbar) {
       targetToolbarItem?.setAttribute("label", workspace.name);
@@ -191,7 +197,7 @@ export class WorkspacesTabManager {
    * @param workspaceId The workspace id.
    * @returns void
    */
-  switchToAnotherWorkspaceTab(workspaceId: WorkspaceID) {
+  switchToAnotherWorkspaceTab(workspaceId: TWorkspaceID) {
     const workspaceTabs = document?.querySelectorAll(
       `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
     ) as XULElement[];
@@ -238,7 +244,7 @@ export class WorkspacesTabManager {
    * Move tabs to workspace.
    * @param workspaceId The workspace id.
    */
-  async moveTabToWorkspace(workspaceId: WorkspaceID, tab: XULElement) {
+  async moveTabToWorkspace(workspaceId: TWorkspaceID, tab: XULElement) {
     const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
     this.setWorkspaceIdToAttribute(tab, workspaceId);
     if (tab === window.gBrowser.selectedTab) {
@@ -252,7 +258,7 @@ export class WorkspacesTabManager {
    * Move tabs to workspace from tab context menu.
    * @param workspaceId The workspace id.
    */
-  public moveTabsToWorkspaceFromTabContextMenu(workspaceId: WorkspaceID) {
+  public moveTabsToWorkspaceFromTabContextMenu(workspaceId: TWorkspaceID) {
     const reopenedTabs = window.TabContextMenu.contextTab.multiselected
       ? window.gBrowser.selectedTabs
       : [window.TabContextMenu.contextTab];

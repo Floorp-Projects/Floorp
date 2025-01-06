@@ -1,8 +1,8 @@
 # Welcome to Noraneko Browser Repository
 
 <p align="center">
-<img src=".github/assets/readme/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px"></img>
-<img src=".github/assets/readme//logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px"></img>
+<img src=".github/assets/readme/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px" alt="Noraneko Logo and Workmark"></img>
+<img src=".github/assets/readme//logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px" alt="Noraneko Logo and Workmark"></img>
 </p>
 
 > [!WARNING]
@@ -17,7 +17,7 @@ Have a nice day!
 Thank you for investing your time. \
 Please check [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
-## Noraneko Docs available!
+## Noraneko Docs available
 
 Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
 

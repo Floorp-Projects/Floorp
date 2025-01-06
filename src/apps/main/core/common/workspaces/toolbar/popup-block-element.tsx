@@ -3,19 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { workspacesDataStore } from "../data/data.js";
-import { WorkspaceID } from "../utils/type.js";
+import { TWorkspaceID } from "../utils/type.js";
 import { WorkspacesService } from "../workspacesService";
 
 export function PopupToolbarElement(props: {
-  workspaceId: string;
+  workspaceId: TWorkspaceID;
   isSelected: boolean;
   label: string;
   bmsMode: boolean;
   ctx:WorkspacesService,
 }) {
  
-  const workspace =  workspacesDataStore.data.get(props.workspaceId)!
+  const workspace = props.ctx.getRawWorkspace(props.workspaceId)
   return (
     <xul:toolbarbutton
       id={`workspace-${props.workspaceId}`}
@@ -28,8 +27,7 @@ export function PopupToolbarElement(props: {
       data-selected={props.isSelected}
       data-workspaceId={props.workspaceId}
       onCommand={() => {
-        //TODO: validate
-        props.ctx.changeWorkspace(props.workspaceId as WorkspaceID);
+        props.ctx.changeWorkspace(props.workspaceId);
       }}
     />
   );

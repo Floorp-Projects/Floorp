@@ -1,24 +1,25 @@
 import { onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
-import { WorkspaceID } from "./utils/type";
+import { TWorkspace, TWorkspaceID } from "./utils/type";
 import { setWorkspaceModalState } from "./workspace-modal";
-import { WorkspacesDataManagerBase } from "./workspacesDataManagerBase";
+import { WorkspacesDataManager, WorkspacesDataManagerBase } from "./workspacesDataManagerBase";
 import { WorkspacesTabManager } from "./workspacesTabManager";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 
 
-export class WorkspacesService extends WorkspacesDataManagerBase {
+export class WorkspacesService implements WorkspacesDataManagerBase {
+  dataManagerCtx: WorkspacesDataManager;
   tabManagerCtx: WorkspacesTabManager;
   iconCtx: WorkspaceIcons
-  constructor(tabManagerCtx:WorkspacesTabManager, iconCtx: WorkspaceIcons){
-    super();
+  constructor(tabManagerCtx:WorkspacesTabManager, iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager){
+    this.tabManagerCtx = tabManagerCtx;
+    this.iconCtx = iconCtx;
+    this.dataManagerCtx = dataManagerCtx;
     if (workspacesDataStore.data.size === 0) {
       const id = this.createNoNameWorkspace();
       this.setDefaultWorkspace(id);
       this.setCurrentWorkspaceID(id);
     }
-    this.tabManagerCtx = tabManagerCtx;
-    this.iconCtx = iconCtx;
 
     window.gBrowser.addProgressListener(this.listener);
 
@@ -26,31 +27,51 @@ export class WorkspacesService extends WorkspacesDataManagerBase {
       window.gBrowser.removeProgressListener(this.listener)
     })
   }
+  setCurrentWorkspaceID(id: TWorkspaceID): void {
+    this.dataManagerCtx.setCurrentWorkspaceID(id)
+  }
+  setDefaultWorkspace(id: TWorkspaceID): void {
+    this.dataManagerCtx.setDefaultWorkspace(id)
+  }
+  isWorkspaceID(id: string): id is TWorkspaceID {
+    return this.dataManagerCtx.isWorkspaceID(id)
+  }
+  getRawWorkspace(id: TWorkspaceID): TWorkspace {
+    return this.dataManagerCtx.getRawWorkspace(id)
+  }
+  getSelectedWorkspaceID(): TWorkspaceID {
+    return this.dataManagerCtx.getSelectedWorkspaceID()
+  }
+  getDefaultWorkspaceID(): TWorkspaceID {
+    return this.dataManagerCtx.getDefaultWorkspaceID()
+  }
 
-  override deleteWorkspace(workspaceID: WorkspaceID): void {
+  deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
     this.tabManagerCtx.removeTabByWorkspaceId(workspaceID);
-    super.deleteWorkspace(workspaceID)
+    setWorkspacesDataStore("order",(prev)=>prev.filter((v)=>v !== workspaceID))
+    this.dataManagerCtx.deleteWorkspace(workspaceID)
   }
 
   /**
      * Returns new workspace object with default name.
      * @returns The new workspace id.
      */
-  public createNoNameWorkspace(): WorkspaceID {
+  public createNoNameWorkspace(): TWorkspaceID {
     //TODO: i18n support
     return this.createWorkspace(
       `New Workspaces (${workspacesDataStore.data.size})`,
     );
   };
 
-  override createWorkspace(name: string): WorkspaceID {
-    const id = super.createWorkspace(name);
+  createWorkspace(name: string): TWorkspaceID {
+    //This function is deprecated because WorkspacesService is wrapping this function
+    const id = this.dataManagerCtx.createWorkspace(name);
     setWorkspacesDataStore("order",(prev)=>[...prev,id])
     return id;
   }
 
-  reorderWorkspaceUp(id: WorkspaceID): void {
+  reorderWorkspaceUp(id: TWorkspaceID): void {
     setWorkspacesDataStore("order",(prev)=>{
       const index = prev.indexOf(id);
       if (index > 0) [prev[index-1],prev[index]] = [prev[index],prev[index-1]];
@@ -58,7 +79,7 @@ export class WorkspacesService extends WorkspacesDataManagerBase {
     })
   }
 
-  reorderWorkspaceDown(id: WorkspaceID): void {
+  reorderWorkspaceDown(id: TWorkspaceID): void {
     setWorkspacesDataStore("order",(prev)=>{
       const index = prev.indexOf(id);
       if (index < prev.length-1) [prev[index],prev[index+1]] = [prev[index+1],prev[index]];
@@ -70,12 +91,12 @@ export class WorkspacesService extends WorkspacesDataManagerBase {
    * Open manage workspace dialog. This function should not be called directly on Preferences page.
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
-  public manageWorkspaceFromDialog(id?: WorkspaceID) {
-    const targetWorkspaceID = id ?? workspacesDataStore.selectedID as WorkspaceID;
+  public manageWorkspaceFromDialog(id?: TWorkspaceID) {
+    const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
     setWorkspaceModalState({ show: true, targetWorkspaceID });
   }
 
-  public changeWorkspace(id: WorkspaceID) {
+  public changeWorkspace(id: TWorkspaceID) {
     this.tabManagerCtx.changeWorkspace(id);
   }
 

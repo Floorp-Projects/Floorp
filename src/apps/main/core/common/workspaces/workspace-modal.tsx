@@ -7,7 +7,7 @@ import { Accessor, createSignal, For, Setter, Show } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
-import type { TWorkspace, WorkspaceID } from "./utils/type.js";
+import type { TWorkspace, TWorkspaceID } from "./utils/type.js";
 import { WorkspacesService } from "./workspacesService";
 import modalStyle from "./modal-style.css?inline";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.js";
@@ -24,7 +24,7 @@ type Container = {
 
 type ModalState = {
   show: boolean;
-  targetWorkspaceID: WorkspaceID | null;
+  targetWorkspaceID: TWorkspaceID | null;
 }
 
 export const [workspaceModalState, setWorkspaceModalState] = createRootHMR<[Accessor<ModalState>,Setter<ModalState>]>(()=>createSignal<ModalState>({ show: false, targetWorkspaceID: null }),import.meta.hot);
@@ -62,7 +62,7 @@ export class WorkspaceManageModal {
 
   private ContentElement(workspace: TWorkspace | null) {
     const targetWorkspace =
-      workspace ?? workspacesDataStore.data.get(workspacesDataStore.selectedID)!;
+      workspace ?? this.ctx.getRawWorkspace(this.ctx.getSelectedWorkspaceID());
 
     return (
       <>
@@ -134,7 +134,7 @@ export class WorkspaceManageModal {
       <ShareModal
         name="Manage Workspace"
         ContentElement={() =>
-          this.ContentElement(workspacesDataStore.data.get(workspaceModalState().targetWorkspaceID!)!)
+            this.ContentElement(this.ctx.getRawWorkspace(workspaceModalState().targetWorkspaceID!))
         }
         StyleElement={() => this.StyleElement}
         onClose={() =>
@@ -144,9 +144,9 @@ export class WorkspaceManageModal {
           console.log(formControls);
           const targetWorkspace =
             workspaceModalState().targetWorkspaceID ??
-            workspacesDataStore.selectedID;
+            this.ctx.getSelectedWorkspaceID()!;
           const newData = {
-            ...workspacesDataStore.data.get(targetWorkspace)!,
+            ...this.ctx.getRawWorkspace(targetWorkspace),
             name: formControls[0].value,
             icon: formControls[1].value,
             userContextId: Number(formControls[2].value),

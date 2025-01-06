@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspaceID } from "../utils/type";
+import { TWorkspaceID } from "../utils/type";
 import { WorkspacesService } from "../workspacesService";
 
 export function ContextMenu(props: {
   disableBefore: boolean;
   disableAfter: boolean;
-  contextWorkspaceId: string;
+  contextWorkspaceId: TWorkspaceID;
   ctx: WorkspacesService
 }) {
   return (
@@ -20,7 +20,7 @@ export function ContextMenu(props: {
         disabled={props.disableBefore}
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.reorderWorkspaceUp(props.contextWorkspaceId as WorkspaceID)
+          props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)
         }
       />
       <xul:menuitem
@@ -29,7 +29,7 @@ export function ContextMenu(props: {
         disabled={props.disableAfter}
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.reorderWorkspaceDown(props.contextWorkspaceId as WorkspaceID)
+          props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)
         }
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
@@ -38,7 +38,7 @@ export function ContextMenu(props: {
         label="Delete Workspace"
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.deleteWorkspace(props.contextWorkspaceId as WorkspaceID)
+          props.ctx.deleteWorkspace(props.contextWorkspaceId)
         }
       />
       <xul:menuitem
@@ -46,7 +46,7 @@ export function ContextMenu(props: {
         label="Manage Workspace"
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId as WorkspaceID)
+          props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)
         }
       />
     </>
