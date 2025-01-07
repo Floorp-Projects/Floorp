@@ -6,23 +6,23 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.mjs";
-import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 import {
   insertPinned,
   TOP_SITES_MAX_SITES_PER_ROW,
 } from "resource://activity-stream/common/Reducers.sys.mjs";
-import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
-import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
 import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
 
 import {
-  CUSTOM_SEARCH_SHORTCUTS,
-  SEARCH_SHORTCUTS_EXPERIMENT,
-  SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
-  SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
   checkHasSearchEngine,
-  getSearchProvider,
+  CUSTOM_SEARCH_SHORTCUTS,
   getSearchFormURL,
+  getSearchProvider,
+  SEARCH_SHORTCUTS_EXPERIMENT,
+  SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+  SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
 } from "resource://activity-stream/lib/SearchShortcuts.sys.mjs";
 
 const lazy = {};
@@ -440,109 +440,6 @@ export class ContileIntegration {
   }
 
   async _fetchSites() {
-    if (
-      !lazy.NimbusFeatures.newtab.getVariable(
-        NIMBUS_VARIABLE_CONTILE_ENABLED
-      ) ||
-      !this._topSitesFeed.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
-    ) {
-      if (this._sites.length) {
-        this._sites = [];
-        return true;
-      }
-      return false;
-    }
-    try {
-      let url = Services.prefs.getStringPref(CONTILE_ENDPOINT_PREF);
-      const response = await this._topSitesFeed.fetch(url, {
-        credentials: "omit",
-      });
-      if (!response.ok) {
-        lazy.log.warn(
-          `Contile endpoint returned unexpected status: ${response.status}`
-        );
-        if (response.status === 304 || response.status >= 500) {
-          return this._loadTilesFromCache();
-        }
-      }
-
-      const lastFetch = Math.round(Date.now() / 1000);
-      Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, lastFetch);
-      this._topSitesFeed._telemetryUtility.setSponsoredTilesConfigured();
-
-      // Contile returns 204 indicating there is no content at the moment.
-      // If this happens, it will clear `this._sites` reset the cached tiles
-      // to an empty array.
-      if (response.status === 204) {
-        this._topSitesFeed._telemetryUtility.clearTilesForProvider(
-          SPONSORED_TILE_PARTNER_AMP
-        );
-        if (this._sites.length) {
-          this._sites = [];
-          Services.prefs.setStringPref(
-            CONTILE_CACHE_PREF,
-            JSON.stringify(this._sites)
-          );
-          return true;
-        }
-        return false;
-      }
-      const body = await response.json();
-
-      if (body?.sov) {
-        this._sov = JSON.parse(atob(body.sov));
-      }
-      if (body?.tiles && Array.isArray(body.tiles)) {
-        const useAdditionalTiles = lazy.NimbusFeatures.newtab.getVariable(
-          NIMBUS_VARIABLE_ADDITIONAL_TILES
-        );
-
-        const maxNumFromContile = this._getMaxNumFromContile();
-
-        let { tiles } = body;
-        this._topSitesFeed._telemetryUtility.setTiles(tiles);
-        if (
-          useAdditionalTiles !== undefined &&
-          !useAdditionalTiles &&
-          tiles.length > maxNumFromContile
-        ) {
-          tiles.length = maxNumFromContile;
-          this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToOversold(
-            tiles
-          );
-        }
-        tiles = this._filterBlockedSponsors(tiles);
-        this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToDismissed(
-          tiles
-        );
-        if (tiles.length > maxNumFromContile) {
-          lazy.log.info("Remove unused links from Contile");
-          tiles.length = maxNumFromContile;
-          this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToOversold(
-            tiles
-          );
-        }
-        this._sites = tiles;
-        Services.prefs.setStringPref(
-          CONTILE_CACHE_PREF,
-          JSON.stringify(this._sites)
-        );
-        Services.prefs.setIntPref(
-          CONTILE_CACHE_VALID_FOR_PREF,
-          this._extractCacheValidFor(
-            response.headers.get("cache-control") ||
-              response.headers.get("Cache-Control")
-          )
-        );
-
-        return true;
-      }
-    } catch (error) {
-      lazy.log.warn(
-        `Failed to fetch data from Contile server: ${error.message}`
-      );
-      return this._loadTilesFromCache();
-    }
     return false;
   }
 }
@@ -698,6 +595,17 @@ export class TopSitesFeed {
     let hasContileTiles = false;
     if (contileEnabled) {
       let contilePositionIndex = 0;
+      let sponsorsList = [
+        {
+          id: 0,
+          name: "CubeSoft",
+          url: "https://www.cube-soft.jp",
+          image_url:
+            "https://raw.githubusercontent.com/cube-soft/cube.assets/master/cubesoft/logo/256px.png",
+          image_size: 200,
+        },
+      ];
+
       // We need to loop through potential spocs and set their positions.
       // If we run out of spocs or positions, we stop.
       // First, we need to know which array is shortest. This is our exit condition.
@@ -706,8 +614,8 @@ export class TopSitesFeed {
         this._contile.sites.length
       );
       // Loop until we run out of spocs or positions.
-      for (let i = 0; i < minLength; i++) {
-        let site = this._contile.sites[i];
+      for (let i = 0; i < sponsorsList.length; i++) {
+        let site = sponsorsList[i];
         let hostname = shortURL(site);
         let link = {
           isDefault: true,
