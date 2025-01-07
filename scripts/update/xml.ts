@@ -1,6 +1,6 @@
 import {json2xml} from "xml-js"
 
-const meta = JSON.parse(await fs.readFile(process.argv[2],{encoding: "utf-8"})) as {version_display:string, version:string, noraneko_version:string, mar_size: string, mar_shasum: string, buildid: string};
+const meta = JSON.parse(await fs.readFile(process.argv[2],{encoding: "utf-8"})) as {version_display:string, version:string, noraneko_version:string, mar_size: string, mar_shasum: string, buildid: string, noraneko_buildid: string};
 
 const update = {
   _declaration: {
@@ -17,7 +17,8 @@ const update = {
         appVersion: meta.version,
         platformVersion:meta.version,
         buildID:meta.buildid,
-        appVersion2:meta.noraneko_version
+        appVersion2:meta.noraneko_version,
+        buildID2: meta.noraneko_buildid
       },
       patch: [
         {
