@@ -62,7 +62,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 //  The maximum time to wait for a "drag_received" arrived in microseconds.
-#define NS_DND_TIMEOUT (5 * 1000000)
+#define NS_DND_TIMEOUT (1 * 1000000)
 
 //  The maximum time to wait before temporary files resulting
 //  from drag'n'drop events will be removed in miliseconds.
@@ -479,6 +479,18 @@ void DragData::ConvertToMozURIList() {
 
 DragData::DragData(GdkAtom aDataFlavor, gchar** aDragUris)
     : mDataFlavor(aDataFlavor), mAsURIData(true), mDragUris(aDragUris) {}
+
+bool DragData::IsDataValid() const {
+  if (mDragData) {
+    return mDragData.get() && mDragDataLen;
+  } else if (mDragUris) {
+    return !!(mDragUris.get()[0]);
+  } else if (mUris.Length()) {
+    return mUris.Length();
+  } else {
+    return false;
+  }
+}
 
 #ifdef MOZ_LOGGING
 void DragData::Print() const {
@@ -1469,18 +1481,32 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
       aContext, GUniquePtr<gchar>(gdk_atom_name(target)).get(),
       mWaitingForDragDataRequests);
 
-  auto cacheClear = MakeScopeExit([&] {
-    LOGDRAGSERVICE("  failed to get data, MIME %s",
-                   GUniquePtr<gchar>(gdk_atom_name(target)).get());
-    mCachedDragData.Remove(target);
+  RefPtr<DragData> dragData;
+
+  auto saveData = MakeScopeExit([&] {
+    if (dragData && !dragData->IsDataValid()) {
+      dragData = nullptr;
+    }
+    if (!dragData) {
+      LOGDRAGSERVICE("  failed to get data, MIME %s",
+                     GUniquePtr<gchar>(gdk_atom_name(target)).get());
+      return;
+    }
+    mCachedDragData.InsertOrUpdate(target, dragData);
   });
 
-  RefPtr<DragData> dragData;
-  if (gtk_targets_include_uri(&target, 1)) {
+  if (target == sTextUriListTypeAtom || target == sPortalFileAtom ||
+      target == sPortalFileTransferAtom) {
+    // Direct replace gtk_targets_include_uri() with explicit check.
+    // gtk_targets_include_uri() on old Gtk3 systems doesn't support
+    // portal filetypes.
     if (target == sPortalFileAtom || target == sPortalFileTransferAtom) {
       const guchar* data = gtk_selection_data_get_data(aSelectionData);
       if (!data || data[0] == '\0') {
-        LOGDRAGSERVICE(" TargetDataReceived() failed");
+        LOGDRAGSERVICE(
+            "nsDragSession::TargetDataReceived() failed to get file portal data"
+            " (%s)",
+            GUniquePtr<gchar>(gdk_atom_name(target)).get());
         return;
       }
 
@@ -1528,9 +1554,6 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
 #if MOZ_LOGGING
   dragData->Print();
 #endif
-
-  cacheClear.release();
-  mCachedDragData.InsertOrUpdate(target, dragData);
 }
 
 static void TargetArrayAddTarget(nsTArray<GtkTargetEntry*>& aTargetArray,

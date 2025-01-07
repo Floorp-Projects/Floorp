@@ -480,6 +480,7 @@ def artifact_toolchain(
             )
 
             record = ArtifactRecord(task_id, artifact_name)
+            record.unpack = task.attributes.get("toolchain-extract", True)
             records[record.filename] = record
 
     # Handle the list of files of the form task_id:path from --from-task.

@@ -2044,14 +2044,48 @@
       },
       "id": "e8e4a7e3-aead-43e3-887d-4064a186bd70",
       "identifier": "ecosia",
-      "last_modified": 1718719100319,
+      "last_modified": 1734364924960,
       "recordType": "engine",
-      "schema": 1718698454063,
+      "schema": 1734220806364,
       "variants": [
         {
           "environment": {
             "locales": [
               "de"
+            ]
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "813cf1dd"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "16eeffc4"
+            }
+          ]
+        },
+        {
+          "environment": {
+            "regions": [
+              "at",
+              "be",
+              "ch",
+              "de",
+              "es",
+              "it",
+              "nl",
+              "se"
             ]
           },
           "subVariants": [
@@ -2701,7 +2735,7 @@
         "name": "พจนานุกรม ลองดู",
         "urls": {
           "search": {
-            "base": "https://dict.longdo.org/",
+            "base": "https://dict.longdo.com/",
             "params": [
               {
                 "name": "src",
@@ -2728,9 +2762,9 @@
       },
       "id": "fcc54178-e432-4d2b-820e-50f389bfb396",
       "identifier": "longdo",
-      "last_modified": 1702906502295,
+      "last_modified": 1734364924962,
       "recordType": "engine",
-      "schema": 1702901825919,
+      "schema": 1734352952859,
       "variants": [
         {
           "environment": {
@@ -7982,5 +8016,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1729004089310
+  "timestamp": 1734364924962
 }

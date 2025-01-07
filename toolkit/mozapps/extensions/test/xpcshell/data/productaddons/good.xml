@@ -7,5 +7,12 @@
     <addon id="test3" URL="http://example.com/test3.xpi" version="1.0" size="45"/>
     <addon id="test4"/>
     <addon URL="http://example.com/test5.xpi"/>
+    <addon id="test6" URL="http://example.com/test6.xpi">
+      <mirror URL="http://alt.example.com/test6.xpi"/>
+    </addon>
+    <addon id="test7" URL="http://example.com/test7.xpi">
+      <mirror URL="http://alt.example.com/test7.xpi"/>
+      <mirror URL="http://alt2.example.com/test7.xpi"/>
+    </addon>
   </addons>
 </updates>

@@ -3048,7 +3048,12 @@ static inline AAStroke::LineCap ToAAStrokeLineCap(CapStyle aCap) {
 }
 
 static inline Point WGRPointToPoint(const WGR::Point& aPoint) {
-  return Point(IntPoint(aPoint.x, aPoint.y)) * (1.0f / 16.0f);
+  // WGR points are 28.4 fixed-point where (0.0, 0.0) is assumed to be a pixel
+  // center, as opposed to (0.5, 0.5) in canvas device space. WGR thus shifts
+  // each point by (-0.5, -0.5). To undo this, transform from fixed-point back
+  // to floating-point, and reverse the pixel shift by adding back (0.5, 0.5).
+  return Point(IntPoint(aPoint.x, aPoint.y)) * (1.0f / 16.0f) +
+         Point(0.5f, 0.5f);
 }
 
 // Generates a vertex buffer for a stroked path using aa-stroke.

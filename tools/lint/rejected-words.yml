@@ -35,7 +35,6 @@ avoid-blacklist-and-whitelist:
         - browser/app/winlauncher/LauncherProcessWin.cpp
         - browser/base/content/browser.js
         - browser/base/content/contentTheme.js
-        - browser/base/content/test/general/browser_remoteTroubleshoot.js
         - browser/base/content/test/general/browser_tab_drag_drop_perwindow.js
         - browser/base/content/test/performance/browser_preferences_usage.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_cryptominers.js
@@ -234,7 +233,6 @@ avoid-blacklist-and-whitelist:
         - testing/raptor/browsertime/browsertime_scenario.js
         - testing/web-platform/tests/tools/manifest/tests/test_manifest.py
         - toolkit/actors/RemotePageChild.sys.mjs
-        - toolkit/actors/WebChannelChild.sys.mjs
         - toolkit/components/antitracking/docs/tracking-lists/index.md
         - toolkit/components/antitracking/test/browser/browser_socialtracking_save_image.js
         - toolkit/components/reputationservice/ApplicationReputation.cpp
@@ -270,7 +268,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/content/tests/browser/browser_delay_autoplay_webAudio.js
         - toolkit/modules/PermissionsUtils.sys.mjs
         - toolkit/modules/tests/browser/browser_AsyncPrefs.js
-        - toolkit/modules/tests/browser/browser_web_channel.js
         - toolkit/modules/tests/xpcshell/test_PermissionsUtils.js
         - toolkit/modules/third_party/jsesc/jsesc.mjs
         - toolkit/modules/Troubleshoot.sys.mjs

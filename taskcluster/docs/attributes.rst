@@ -243,6 +243,11 @@ toolchain-artifact
 ==================
 For toolchain jobs, this is the path to the artifact for that toolchain.
 
+toolchain-extract
+=================
+Control whether toolchain should be automatically extracted after download.
+Default is true.
+
 toolchain-alias
 ===============
 An alias that can be used instead of the real toolchain job name in fetch

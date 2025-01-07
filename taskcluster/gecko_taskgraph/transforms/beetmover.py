@@ -86,13 +86,6 @@ def make_task_description(config, jobs):
         )
 
         dependencies = {dep_job.kind: dep_job.label}
-
-        # XXX release snap-repackage has a variable number of dependencies, depending on how many
-        # "post-beetmover-dummy" jobs there are in the graph.
-        if dep_job.kind != "release-snap-repackage" and len(dep_job.dependencies) > 1:
-            raise NotImplementedError(
-                "Can't beetmove a signing task with multiple dependencies"
-            )
         signing_dependencies = dep_job.dependencies
         dependencies.update(signing_dependencies)
 
@@ -152,9 +145,7 @@ def make_task_worker(config, jobs):
         valid_beetmover_job = len(job["dependencies"]) == 2 and any(
             ["signing" in j for j in job["dependencies"]]
         )
-        # XXX release snap-repackage has a variable number of dependencies, depending on how many
-        # "post-beetmover-dummy" jobs there are in the graph.
-        if "-snap-" not in job["label"] and not valid_beetmover_job:
+        if not valid_beetmover_job:
             raise NotImplementedError("Beetmover must have two dependencies.")
 
         locale = job["attributes"].get("locale")
