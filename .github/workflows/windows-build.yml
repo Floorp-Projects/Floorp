@@ -63,6 +63,10 @@ on:
       PAT:
         description: "Personal Access Token"
         required: true
+      SIGNPATH_API_TOKEN:
+        description: "SignPath API Token"
+        required: true
+
 jobs:
   win-build:
     runs-on: ubuntu-latest
@@ -334,9 +338,27 @@ jobs:
         GHA_out_artifact_name : ${{inputs.out_artifact_name}}
         GHA_default_name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.aarch64]}}_64-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
 
-    - name: Publish Package🎁
+    - name: Publish Unsigned Package
+      id: publish-unsigned-package
+      uses: actions/upload-artifact@v4
+      with:
+        name: 'unsigned artifact'
+        path: ~/output
+    - name: Sign 🖊️
+      id: Sign
+      uses: signpath/github-action-submit-signing-request@v1.1
+      with:
+        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+        organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+        project-slug: 'Floorp'
+        signing-policy-slug: 'test-signing'
+        github-artifact-id: '${{ steps.publish-unsigned-package.outputs.artifact-id }}'
+        wait-for-completion: true
+        output-artifact-directory: signed_output
+
+    - name: Publish Package 🎁
       uses: actions/upload-artifact@v4
       with:
         name: ${{env.ARTIFACT_NAME}}
-        path: ~/output
+        path: /home/runner/work/Floorp/Floorp/signed_output
     # Publish END
