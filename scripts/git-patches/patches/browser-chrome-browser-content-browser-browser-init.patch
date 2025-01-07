@@ -1,45 +1,86 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
-index 849a609..24a07fc 100644
+index 9c1bff6..1a8c45d 100644
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -127,10 +127,19 @@ var gBrowserInit = {
+@@ -126,11 +126,36 @@ var gBrowserInit = {
+   },
  
    onDOMContentLoaded() {
-     // This needs setting up before we create the first remote browser.
--    window.docShell.treeOwner
--      .QueryInterface(Ci.nsIInterfaceRequestor)
--      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
--    window.browserDOMWindow = new nsBrowserAccess();
-+    /*@nora:inject:start*/
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
 +    let webPanelId = new URL(window.location.href).searchParams.get(
 +      "floorpWebPanelId"
 +    );
 +    if (!webPanelId) {
-+      // This needs setting up before we create the first remote browser.
-+      window.docShell.treeOwner
-+        .QueryInterface(Ci.nsIInterfaceRequestor)
-+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow =
-+        window.XULBrowserWindow;
-+      window.browserDOMWindow = new nsBrowserAccess();
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+     // This needs setting up before we create the first remote browser.
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+       .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
+     window.browserDOMWindow = new nsBrowserAccess();
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
 +    }
-+    /*@nora:inject:end*/
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
  
-     gBrowser = window._gBrowser;
-     delete window._gBrowser;
-@@ -164,7 +173,7 @@ var gBrowserInit = {
+     gBrowser = new window.Tabbrowser();
+     gBrowser.init();
+@@ -163,10 +188,32 @@ var gBrowserInit = {
      }
      for (let area of CustomizableUI.areas) {
        let type = CustomizableUI.getAreaType(area);
--      if (type == CustomizableUI.TYPE_TOOLBAR) {
-+      if (type == CustomizableUI.TYPE_TOOLBAR/*@nora:inject:start*/&& area !== "statusBar"/*@nora:inject:end*/) {
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * START
++       */
++      if (area !== "statusBar") {
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * END
++       */
+       if (type == CustomizableUI.TYPE_TOOLBAR) {
          let node = document.getElementById(area);
          CustomizableUI.registerToolbarNode(node);
        }
-@@ -980,6 +989,92 @@ var gBrowserInit = {
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * START
++       */
++      }
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * END
++       */
+     }
+     if (isVerticalTabs) {
+       // Show the vertical tabs toolbar
+@@ -975,6 +1022,98 @@ var gBrowserInit = {
        //                      window (for this case, all other arguments are
        //                      ignored).
        let uri = window.arguments?.[0];
-+      /*@nora:inject:start*/
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * START
++       */
 +      if (uri) {
 +        try {
 +          // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
@@ -70,9 +111,7 @@ index 849a609..24a07fc 100644
 +              import("chrome://floorp/content/browser-ssb-window.mjs");
 +            });
 +          }
-+        } catch (e) {
-+          // Do nothing
-+        }
++        } catch {/* DO NOTHING */}
 +      }
 +
 +      if (
@@ -124,28 +163,45 @@ index 849a609..24a07fc 100644
 +          console.error(e);
 +        }
 +      }
-+      /*@nora:inject:end*/
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [STATUS_BAR]
++       * * END
++       */
        if (!uri || window.XULElement.isInstance(uri)) {
          return null;
        }
-@@ -1147,9 +1242,16 @@ var gBrowserInit = {
+@@ -1140,9 +1279,33 @@ var gBrowserInit = {
      // Final window teardown, do this last.
      gBrowser.destroy();
      window.XULBrowserWindow = null;
--    window.docShell.treeOwner
--      .QueryInterface(Ci.nsIInterfaceRequestor)
--      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
--    window.browserDOMWindow = null;
-+    /*@nora:inject:start*/
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
 +    let webPanelId = new URL(window.location.href).searchParams.get(
 +      "floorpWebPanelId"
 +    );
 +    if (!webPanelId) {
-+      window.docShell.treeOwner
-+        .QueryInterface(Ci.nsIInterfaceRequestor)
-+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-+      window.browserDOMWindow = null;
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * END
++     */
++    // This needs setting up before we create the first remote browser.
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+       .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
 +    }
-+    /*@nora:inject:end*/
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * END
++     */
+     window.browserDOMWindow = null;
    },
  };

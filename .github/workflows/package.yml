@@ -154,7 +154,7 @@ jobs:
           MAR="$(echo ./obj-*)/dist/host/bin/mar" MOZ_PRODUCT_VERSION=$(cat ~/noraneko-mar/version.txt) MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-win-amd64-full.mar "$(echo ./obj-*)/dist/noraneko"
 
           cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt
-          cp noraneko/dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt
+          cp noraneko/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt
           echo "$(cat ~/noraneko-mar/version.txt)@$(cat ~/noraneko-mar/noraneko_version.txt)" > ~/noraneko-mar/version_display.txt
 
           shasum --algorithm 512 ~/noraneko-mar/noraneko-win-amd64-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt

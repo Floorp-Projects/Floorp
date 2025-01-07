@@ -1,12 +1,16 @@
 diff --git a/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js b/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-index fec3dc8..1e0469f 100644
+index ce68c33..47ccc30 100644
 --- ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
 +++ ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-@@ -3330,6 +3330,26 @@
+@@ -3377,6 +3377,35 @@
          let tab;
          let tabWasReused = false;
  
-+        /*@nora:inject:start*/
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
 +        if (tabData.floorpDisableHistory) {
 +          continue;
 +        }
@@ -25,15 +29,24 @@ index fec3dc8..1e0469f 100644
 +        if (floorpSSB) {
 +          window.close();
 +        }
-+        /*@nora:inject:end*/
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
++
          // Re-use existing selected tab if possible to avoid the overhead of
          // selecting a new tab. For now, we only do this for horizontal tabs;
          // we'll let tabs.js handle pinning for vertical tabs until we unify
-@@ -3342,6 +3362,22 @@
+@@ -3389,6 +3418,30 @@
          ) {
            tabWasReused = true;
            tab = this.selectedTab;
-+          /*@nora:inject:start*/
++          /**
++           * * NORANEKO PATCH - 0.1.19
++           * * [WORKSPACES]
++           * * START
++           */
 +          if (floorpWorkspaceId) {
 +            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
 +          }
@@ -48,15 +61,23 @@ index fec3dc8..1e0469f 100644
 +          if (floorpSSB) {
 +            tab.setAttribute("floorpSSB", floorpSSB);
 +          }
-+          /*@nora:inject:end*/
++          /**
++           * * NORANEKO PATCH - 0.1.19
++           * * [WORKSPACES]
++           * * END
++           */
            if (!tabData.pinned) {
              this.unpinTab(tab);
            } else {
-@@ -3391,6 +3427,23 @@
+@@ -3438,6 +3491,31 @@
              preferredRemoteType,
            });
  
-+          /*@nora:inject:start*/
++          /**
++           * * NORANEKO PATCH - 0.1.19
++           * * [WORKSPACES]
++           * * START
++           */
 +          if (floorpWorkspaceId) {
 +            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
 +          }
@@ -71,23 +92,12 @@ index fec3dc8..1e0469f 100644
 +          if (floorpSSB) {
 +            tab.setAttribute("floorpSSB", floorpSSB);
 +          }
-+          /*@nora:inject:end*/
++          /**
++           * * NORANEKO PATCH - 0.1.19
++           * * [WORKSPACES]
++           * * END
++           */
 +
            if (select) {
              tabToSelect = tab;
            }
-@@ -4395,6 +4448,14 @@
-         aTab,
-         this
-       );
-+      /*@nora:inject:start*/
-+      // Force to close & Make do not save history of the tab.
-+      try {
-+        this._endRemoveTab(aTab);
-+      } catch (e) {
-+        console.warn(e);
-+      }
-+      /*@nora:inject:end*/
-     },
- 
-     _hasBeforeUnload(aTab) {
