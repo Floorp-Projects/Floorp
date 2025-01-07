@@ -143,7 +143,7 @@ jobs:
 
       - name: Create MAR package
         run: |
-          7za x ~/noraneko-dev/noraneko-133.0.4.en-US.win64.zip -o"$(echo ~)/noraneko-dev"
+          7za x "$(echo ~/noraneko-dev/noraneko-*.win64.zip)" -o"$(echo ~)/noraneko-dev"
 
           chmod +x $(echo ./obj-*)/dist/host/bin/mar
           mkdir ~/noraneko-mar
