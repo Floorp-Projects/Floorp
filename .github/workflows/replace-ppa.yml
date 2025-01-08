@@ -1,0 +1,34 @@
+name: Replace PPA Package
+on:
+  workflow_dispatch:
+jobs:
+    update-latest-json:
+     runs-on: ubuntu-latest
+     steps:
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+            workflow: linux-x64-deb.yml
+            name: floorp-debian-amd64
+      - name: Replace
+        run: |
+            unzip dist.zip
+            echo "::add-mask::${{ secrets.KEYMASK }}"
+            mkdir publish
+            ls
+            echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
+            gpg --import Floorp_sec.asc
+            echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
+            echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
+            cd publish
+            ftp -n -p < ../init_script.txt
+            cp ../*.deb ./
+            dpkg-scanpackages --multiversion . > Packages
+            gzip -k -f Packages
+            apt-ftparchive release . > Release
+            gpg --default-key "${{ secrets.GPG_SSB }}" -abs -o - Release > Release.gpg
+            gpg --default-key "${{ secrets.GPG_SSB }}" --clearsign -o - Release > InRelease
+            ftp -n -p < ../finish_script.txt
+            cd ../
+            rm init_script.txt finish_script.txt Floorp_sec.asc

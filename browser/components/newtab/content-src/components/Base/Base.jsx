@@ -15,6 +15,8 @@ import { Sections } from "content-src/components/Sections/Sections";
 import { Weather } from "content-src/components/Weather/Weather";
 import { WallpaperFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WallpaperFeatureHighlight";
 
+import { Background } from "content-src/components/Background/Background";
+
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const WALLPAPER_HIGHLIGHT_DISMISSED_PREF =
@@ -39,7 +41,7 @@ function debounce(func, wait) {
       return;
     }
 
-    let wakeUp = () => {
+    const wakeUp = () => {
       timer = null;
     };
 
@@ -113,6 +115,7 @@ export class BaseContent extends React.PureComponent {
     this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.setPref = this.setPref.bind(this);
     this.setPref = this.setPref.bind(this);
     this.shouldShowWallpapersHighlight =
       this.shouldShowWallpapersHighlight.bind(this);
@@ -371,15 +374,19 @@ export class BaseContent extends React.PureComponent {
       return [];
     }
 
-    const r = parseInt(input.substr(1, 2), 16);
-    const g = parseInt(input.substr(3, 2), 16);
-    const b = parseInt(input.substr(5, 2), 16);
+    const r = Number.parseInt(input.substr(1, 2), 16);
+    const g = Number.parseInt(input.substr(3, 2), 16);
+    const b = Number.parseInt(input.substr(5, 2), 16);
 
     return [r, g, b];
   }
 
   isWallpaperColorDark([r, g, b]) {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
+  }
+
+  getImageSend(path) {
+    this.props.dispatch(ac.GetImageSend(path));
   }
 
   render() {
@@ -398,7 +405,7 @@ export class BaseContent extends React.PureComponent {
 
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
-    let filteredSections = props.Sections.filter(
+    const filteredSections = props.Sections.filter(
       section => section.id !== "topstories"
     );
 
@@ -450,8 +457,39 @@ export class BaseContent extends React.PureComponent {
       this.updateWallpaper();
     }
 
+    let Background_ClassName = "";
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+      case 4:
+        Background_ClassName = "selected_image";
+        break;
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+
     return (
-      <div>
+      <div
+        className={
+          prefs["floorp.newtab.backdrop.blur.disable"]
+            ? ""
+            : "floorp-backdrop-blur-enable"
+        }
+      >
+        {this.getImageSend.bind(this)}
+        <Background
+          className={Background_ClassName}
+          getImg = {this.getImageSend.bind(this)}
+          pref={prefs}
+        />
         {/* Floating menu for customize menu toggle */}
         <menu className="personalizeButtonWrapper">
           <CustomizeMenu
@@ -517,6 +555,12 @@ export class BaseContent extends React.PureComponent {
             )}
           </aside>
         </div>
+        <div id="floorp">
+          {/* TODO: use css instead this br tag */}
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://support.ablaze.one">Support</a><br /><br />
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp">Release Note</a>
+        </div>
+        <a className={prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred" } href="https://unsplash.com/" id="unsplash">Unsplash</a>
       </div>
     );
   }
