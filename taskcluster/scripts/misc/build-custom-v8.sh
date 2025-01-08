@@ -24,6 +24,8 @@ cd $GECKO_PATH
 # Setup depot_tools
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH=$PATH:$GECKO_PATH/depot_tools
+# Bug 1901936 changes to config upstream for depot tools path
+export XDG_CONFIG_HOME=$GECKO_PATH
 
 # Get v8 source code and dependencies
 fetch --force v8

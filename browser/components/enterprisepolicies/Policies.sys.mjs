@@ -1864,6 +1864,7 @@ export var Policies = {
         "general.smoothScroll",
         "geo.",
         "gfx.",
+        "identity.fxaccounts.toolbar.",
         "intl.",
         "keyword.enabled",
         "layers.",

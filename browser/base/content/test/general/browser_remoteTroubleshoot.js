@@ -13,9 +13,6 @@ const TEST_URL_TAIL =
   "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html";
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URL_TAIL);
 const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URL_TAIL);
-const TEST_URI_GOOD_OBJECT = Services.io.newURI(
-  "https://" + TEST_URL_TAIL + "?object"
-);
 
 // Creates a one-shot web-channel for the test data to be sent back from the test page.
 function promiseChannelResponse(channelID, originOrPermission) {
@@ -116,15 +113,4 @@ add_task(async function () {
     got.message.errno === 2,
     "should have failed with errno 2, no such channel"
   );
-
-  // Check that the page can send an object as well if it's in the whitelist
-  let webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
-  let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
-  let newWhitelist = origWhitelist + " https://example.com";
-  Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(webchannelWhitelistPref);
-  });
-  got = await promiseNewChannelResponse(TEST_URI_GOOD_OBJECT);
-  Assert.ok(got.message, "should have gotten some data back");
 });

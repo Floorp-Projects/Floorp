@@ -30,3 +30,4 @@ run-sequentially = "very high failure rate in parallel"
 ["subclassing.js"]
 
 ["too-big-array-buffer.js"]
+skip-if = ["bits == 32"] # autoAllocateChunkSize limit is different on 32-bit

@@ -22,6 +22,10 @@ CUSTOM_CAR_DIR=$PWD
 # Setup depot_tools
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH="$PATH:$CUSTOM_CAR_DIR/depot_tools"
+# Bug 1901936 changes to config upstream for depot tools path
+if [[ $(uname -s) == "Linux" ]]; then
+  export XDG_CONFIG_HOME=$CUSTOM_CAR_DIR
+fi
 
 # Log the current revision of depot tools for easier tracking in the future
 DEPOT_TOOLS_REV=$(cd depot_tools && git rev-parse HEAD && cd ..)

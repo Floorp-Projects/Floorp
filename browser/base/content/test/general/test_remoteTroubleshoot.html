@@ -1,21 +1,12 @@
 <!DOCTYPE HTML>
 <html>
 <script>
-// This test is run multiple times, once with only strings allowed through the
-// WebChannel, and once with objects allowed. This function allows us to handle
-// both cases without too much pain.
-function makeDetails(object) {
-  if (window.location.search.includes("object")) {
-    return object;
-  }
-  return JSON.stringify(object);
-}
 // Add a listener for responses to our remote requests.
 window.addEventListener("WebChannelMessageToContent", function(event) {
   if (event.detail.id == "remote-troubleshooting") {
     // Send what we got back to the test.
     var backEvent = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: makeDetails({
+      detail: JSON.stringify({
         id: "test-remote-troubleshooting-backchannel",
         message: {
           message: event.detail.message,
@@ -32,7 +23,7 @@ window.addEventListener("WebChannelMessageToContent", function(event) {
 // Make a request for the troubleshooting data as we load.
 window.onload = function() {
   var event = new window.CustomEvent("WebChannelMessageToChrome", {
-    detail: makeDetails({
+    detail: JSON.stringify({
       id: "remote-troubleshooting",
       message: {
         command: "request",

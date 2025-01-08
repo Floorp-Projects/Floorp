@@ -45,6 +45,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MIDIAccess,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputMap)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessPromise)
   tmp->Shutdown();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MIDIAccess)
@@ -74,7 +75,6 @@ void MIDIAccess::Shutdown() {
   if (mHasShutdown) {
     return;
   }
-  mDestructionObservers.Broadcast(void_t());
   if (MIDIAccessManager::IsRunning()) {
     MIDIAccessManager::Get()->RemoveObserver(this);
   }
@@ -188,8 +188,6 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
     // That is bad.
     MOZ_CRASH("We shouldn't be here!");
   }
-  // Set up port to listen for destruction of this access object.
-  mDestructionObservers.AddObserver(port);
 
   // If we haven't resolved the promise for handing the MIDIAccess object to
   // content, this means we're still populating the list of already connected
@@ -234,10 +232,6 @@ void MIDIAccess::Notify(const MIDIPortList& aEvent) {
 JSObject* MIDIAccess::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
   return MIDIAccess_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void MIDIAccess::RemovePortListener(MIDIAccessDestructionObserver* aObs) {
-  mDestructionObservers.RemoveObserver(aObs);
 }
 
 void MIDIAccess::DisconnectFromOwner() {

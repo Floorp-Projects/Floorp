@@ -531,6 +531,48 @@ add_task(async function test_protocolHandler_duplicate() {
   await extension.unload();
 });
 
+// Test that the tabs.onUpdated event is fired for extension protocol handlers,
+// even if the protocol handler does not exist and opens the error page for
+// "The address wasn’t understood".
+add_task(async function test_protocolHandler_onUpdated_missing_handler() {
+  let extensionData = {
+    manifest: {
+      permissions: ["tabs"]
+    },
+
+    background() {
+      let urlSeen = false;
+      let tabPromise = Promise.withResolvers();
+      const updateListener = async (tabId, changeInfo) => {
+        let tab = await tabPromise.promise;
+        if (tab.id != tabId) {
+          return;
+        }
+        browser.test.log(`tabs.onUpdated fired with changeInfo ${JSON.stringify(changeInfo)}`);
+        if (!urlSeen && changeInfo.url == "ext+missing:test") {
+            urlSeen = true;
+        }
+        if (urlSeen && changeInfo.status == "complete") {
+            browser.tabs.onUpdated.removeListener(updateListener);
+            await browser.tabs.remove(tabId);
+            browser.test.notifyPass();
+        }
+      };
+      browser.tabs.onUpdated.addListener(updateListener);
+
+      browser.test.log("Waiting for tabs.onUpdated event for 'ext+missing:test' with `complete` status.");
+      browser.tabs.create({ url: "ext+missing:test" }).then(
+        tab => tabPromise.resolve(tab)
+      );
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
+});
+
 // Test that a protocol handler will work if ftp is enabled
 add_task(async function test_ftp_protocolHandler() {
   await SpecialPowers.pushPrefEnv({

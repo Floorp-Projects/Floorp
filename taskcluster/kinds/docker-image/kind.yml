@@ -204,8 +204,6 @@ tasks:
     periodic-updates:
         symbol: I(file)
         parent: debian12-base
-    firefox-snap:
-        symbol: I(snap)
     firefox-flatpak:
         symbol: I(flatpak)
     webrender:

@@ -303,8 +303,7 @@ nsresult Decoder::AllocateFrame(const gfx::IntSize& aOutputSize,
   if (mCurrentFrame) {
     mHasFrameToTake = true;
 
-    // Gather the raw pointers the decoders will use.
-    mCurrentFrame->GetImageData(&mImageData, &mImageDataLength);
+    mImageData = mCurrentFrame.Data();
 
     // We should now be on |aFrameNum|. (Note that we're comparing the frame
     // number, which is zero-based, with the frame count, which is one-based.)
@@ -316,6 +315,9 @@ nsresult Decoder::AllocateFrame(const gfx::IntSize& aOutputSize,
     // Update our state to reflect the new frame.
     MOZ_ASSERT(!mInFrame, "Starting new frame but not done with old one!");
     mInFrame = true;
+  } else {
+    mImageData = nullptr;
+    mImageDataLength = 0;
   }
 
   return mCurrentFrame ? NS_OK : NS_ERROR_FAILURE;
@@ -376,7 +378,8 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
       // animation parameters elsewhere. For now we just drop it.
       bool blocked = ref.get() == mRestoreFrame.get();
       if (!blocked) {
-        blocked = NS_FAILED(ref->InitForDecoderRecycle(aAnimParams.ref()));
+        blocked = NS_FAILED(
+            ref->InitForDecoderRecycle(aAnimParams.ref(), &mImageDataLength));
       }
 
       if (blocked) {
@@ -395,12 +398,13 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
     bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
     auto frame = MakeNotNull<RefPtr<imgFrame>>();
     if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFormat, nonPremult,
-                                        aAnimParams, bool(mFrameRecycler)))) {
+                                        aAnimParams, bool(mFrameRecycler),
+                                        &mImageDataLength))) {
       NS_WARNING("imgFrame::Init should succeed");
       return RawAccessFrameRef();
     }
 
-    ref = frame->RawAccessRef();
+    ref = frame->RawAccessRef(gfx::DataSourceSurface::READ_WRITE);
     if (!ref) {
       frame->Abort();
       return RawAccessFrameRef();

@@ -269,8 +269,8 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def ensure_sccache_packages(self):
         from mozboot import sccache
 
-        self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True)
-        self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True)
+        self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN)
+        self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN)
 
     def install_homebrew(self):
         print(BREW_INSTALL)

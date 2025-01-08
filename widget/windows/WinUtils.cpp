@@ -7,6 +7,7 @@
 #include "WinUtils.h"
 
 #include <knownfolders.h>
+#include <psapi.h>
 #include <winioctl.h>
 
 #include "gfxPlatform.h"
@@ -2068,6 +2069,23 @@ const char* WinUtils::WinEventToEventName(UINT msg) {
   return eventMsgInfo != mozilla::widget::gAllEvents.end()
              ? eventMsgInfo->second.mStr
              : nullptr;
+}
+
+nsresult WinUtils::GetProcessImageName(DWORD aProcessId, nsAString& aName) {
+  nsAutoHandle procHandle(
+      ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, aProcessId));
+  if (!procHandle) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  wchar_t path[MAX_PATH] = {L'\0'};
+  auto len = ::GetProcessImageFileNameW(procHandle, path, std::size(path));
+  if (!len) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aName = path;
+  return NS_OK;
 }
 
 // Note to testers and/or test-authors: on Windows 10, and possibly on other

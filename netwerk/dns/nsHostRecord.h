@@ -79,13 +79,15 @@ struct nsHostKey {
   const nsCString host;
   const nsCString mTrrServer;
   uint16_t type = 0;
-  nsIDNSService::DNSFlags flags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+  mozilla::Atomic<nsIDNSService::DNSFlags> flags{
+      nsIDNSService::RESOLVE_DEFAULT_FLAGS};
   uint16_t af = 0;
   bool pb = false;
   const nsCString originSuffix;
   explicit nsHostKey(const nsACString& host, const nsACString& aTrrServer,
                      uint16_t type, nsIDNSService::DNSFlags flags, uint16_t af,
                      bool pb, const nsACString& originSuffix);
+  explicit nsHostKey(const nsHostKey& other);
   bool operator==(const nsHostKey& other) const;
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   PLDHashNumber Hash() const;

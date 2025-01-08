@@ -137,6 +137,7 @@ function downloadLocalConfig(sources) {
         return {
           id: conf.id,
           URL: details.fileUrl,
+          mirrorURLs: details.mirrorUrls,
           hashFunction: addons.hashFunction,
           hashValue: details.hashValue,
           version: addons.vendors[conf.id].version,
@@ -521,6 +522,7 @@ GMPInstallManager.prototype = {
 
         // Update the addon with the final URL and the extracted version.
         gmpAddon.URL = redirectUrl;
+        gmpAddon.mirrorURLs = [];
         gmpAddon.version = version;
         gmpAddon.usedChromiumUpdate = true;
 

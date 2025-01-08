@@ -1,91 +1,35 @@
 {
   "data": [
     {
-      "stash": {
-        "blocked": [
-          "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.0",
-          "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.1",
-          "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.4",
-          "{3fd86354-c73f-4395-9e26-2c5c984579bf}:1.1.3"
-        ],
-        "unblocked": []
-      },
-      "schema": 1731431264546,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1731436505349,
-      "id": "5c2e87cd-70e2-4f4e-bf7e-b0230ca886c0",
-      "last_modified": 1731436571183
-    },
-    {
-      "stash": {
-        "blocked": [
-          "8b2b3c9b6a7310bc@organicapolo.com:1.0"
-        ],
-        "unblocked": []
-      },
-      "schema": 1731090971514,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1731328505156,
-      "id": "cf3bc9c7-69d9-4651-bfd7-21468aacd6f0",
-      "last_modified": 1731328570492
-    },
-    {
-      "stash": {
-        "blocked": [
-          "{9ff90378-e398-4f0c-ae19-29b84487dd39}:3.1.6"
-        ],
-        "unblocked": []
-      },
-      "schema": 1730896569408,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1731090905027,
-      "id": "b12b92a3-3222-4aa3-b1d2-3faa934a50a6",
-      "last_modified": 1731090971390
-    },
-    {
-      "stash": {
-        "blocked": [
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.5",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.8",
-          "{a9649639-2ea3-43b9-a1f1-e0182bab24d2}:1.3.55",
-          "arxivpp@example.com:1.0",
-          "hsbc.glossary.extension@hsbc.com:1.0",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.10",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:24.3.2",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.3",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:24.4.1",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.6",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.9",
-          "{a9649639-2ea3-43b9-a1f1-e0182bab24d2}:1.3.43.2",
-          "{a9649639-2ea3-43b9-a1f1-e0182bab24d2}:1.3.43",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.4",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.11.7",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:23.12.1",
-          "{eddf1c58-948d-4e0e-9c42-e611e9050a97}:24.2.1"
-        ],
-        "unblocked": []
-      },
-      "schema": 1730745429380,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1730896505400,
-      "id": "d68e9ad7-00f6-4f02-ae64-d904fdeb543d",
-      "last_modified": 1730896569292
-    },
-    {
-      "schema": 1730745428845,
+      "schema": 1734363060800,
       "attachment": {
-        "hash": "b367fa073e2f50d8119023190aeb4ed8050fd28cf823cce070e240fbd7ba3e05",
-        "size": 845025,
+        "hash": "e97f56fe431fbfb547a15c074ed1a2e2bff55cbb71b8ed8ba0543a41879be611",
+        "size": 9413,
         "filename": "filter.bin",
-        "location": "staging/addons-bloomfilters/47758106-fb81-4eaa-86a8-f7f7d77cd192.bin",
+        "location": "staging/addons-bloomfilters/3ec9adc2-7c53-4ad8-b817-6127f516414a.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "key_format": "{guid}:{version}",
+      "attachment_type": "softblocks-bloomfilter-base",
+      "generation_time": 1734362843464,
+      "id": "24617a6a-8f2a-4687-a780-130c146baaa2",
+      "last_modified": 1734363061861
+    },
+    {
+      "schema": 1733942181628,
+      "attachment": {
+        "hash": "1b8df94642abf6688b74528f1ee733e0d3f7c8a5a165be9c24b481b09c859a42",
+        "size": 931343,
+        "filename": "filter.bin",
+        "location": "staging/addons-bloomfilters/7e9f31d5-81be-4d06-94bf-a5f61dfbfb00.bin",
         "mimetype": "application/octet-stream"
       },
       "key_format": "{guid}:{version}",
       "attachment_type": "bloomfilter-base",
-      "generation_time": 1730745304840,
-      "id": "c974fc29-bf82-4820-8d05-c1486af17be2",
-      "last_modified": 1730745429265
+      "generation_time": 1734362843464,
+      "id": "870ed6d2-ffe8-41b8-87be-25c0e1e13326",
+      "last_modified": 1734363061859
     }
   ],
-  "timestamp": 1731436571183
+  "timestamp": 1734363061861
 }

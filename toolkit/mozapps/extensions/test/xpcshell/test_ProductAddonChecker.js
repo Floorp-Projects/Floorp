@@ -124,8 +124,7 @@ add_task(async function test_good_xml() {
   let res = await ProductAddonChecker.getProductAddonList(root + "good.xml");
   Assert.ok(Array.isArray(res.addons));
 
-  // There are three valid entries in the XML
-  Assert.equal(res.addons.length, 5);
+  Assert.equal(res.addons.length, 7);
 
   let addon = res.addons[0];
   Assert.equal(addon.id, "test1");
@@ -134,6 +133,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.hashValue, undefined);
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, []);
 
   addon = res.addons[1];
   Assert.equal(addon.id, "test2");
@@ -142,6 +142,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.hashValue, "djhfgsjdhf");
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, []);
 
   addon = res.addons[2];
   Assert.equal(addon.id, "test3");
@@ -150,6 +151,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.hashValue, undefined);
   Assert.equal(addon.version, "1.0");
   Assert.equal(addon.size, 45);
+  Assert.deepEqual(addon.mirrorURLs, []);
 
   addon = res.addons[3];
   Assert.equal(addon.id, "test4");
@@ -158,6 +160,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.hashValue, undefined);
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, []);
 
   addon = res.addons[4];
   Assert.equal(addon.id, undefined);
@@ -166,6 +169,28 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.hashValue, undefined);
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, []);
+
+  addon = res.addons[5];
+  Assert.equal(addon.id, "test6");
+  Assert.equal(addon.URL, "http://example.com/test6.xpi");
+  Assert.equal(addon.hashFunction, undefined);
+  Assert.equal(addon.hashValue, undefined);
+  Assert.equal(addon.version, undefined);
+  Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, ["http://alt.example.com/test6.xpi"]);
+
+  addon = res.addons[6];
+  Assert.equal(addon.id, "test7");
+  Assert.equal(addon.URL, "http://example.com/test7.xpi");
+  Assert.equal(addon.hashFunction, undefined);
+  Assert.equal(addon.hashValue, undefined);
+  Assert.equal(addon.version, undefined);
+  Assert.equal(addon.size, undefined);
+  Assert.deepEqual(addon.mirrorURLs, [
+    "http://alt.example.com/test7.xpi",
+    "http://alt2.example.com/test7.xpi",
+  ]);
 });
 
 add_task(async function test_download_nourl() {
@@ -186,6 +211,20 @@ add_task(async function test_download_missing() {
   try {
     let path = await ProductAddonChecker.downloadAddon({
       URL: root + "nofile.xpi",
+    });
+
+    await IOUtils.remove(path);
+    do_throw("Should not have downloaded a missing file");
+  } catch (e) {
+    Assert.ok(true, "Should have thrown when downloading a missing file.");
+  }
+});
+
+add_task(async function test_download_mirror_missing() {
+  try {
+    let path = await ProductAddonChecker.downloadAddon({
+      URL: root + "nofile.xpi",
+      mirrorURLs: [root + "nofile.xpi"],
     });
 
     await IOUtils.remove(path);
@@ -290,6 +329,29 @@ add_task(async function test_download_badhash() {
 add_task(async function test_download_works() {
   let path = await ProductAddonChecker.downloadAddon({
     URL: root + "unsigned.xpi",
+    size: 452,
+    hashFunction: "sha256",
+    hashValue:
+      "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
+  });
+
+  let stat = await IOUtils.stat(path);
+  Assert.ok(stat.type !== "directory");
+
+  Assert.ok(
+    compareFiles(
+      do_get_file("data/productaddons/unsigned.xpi"),
+      new LocalFile(path)
+    )
+  );
+
+  await IOUtils.remove(path);
+});
+
+add_task(async function test_download_mirror_works() {
+  let path = await ProductAddonChecker.downloadAddon({
+    URL: root + "nofile.xpi",
+    mirrorURLs: [root + "unsigned.xpi"],
     size: 452,
     hashFunction: "sha256",
     hashValue:

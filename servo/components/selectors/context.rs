@@ -398,7 +398,7 @@ where
         F: FnOnce(&mut Self) -> R,
     {
         let old_in_negation = self.in_negation;
-        self.in_negation = true;
+        self.in_negation = !self.in_negation;
         let result = self.nest(f);
         self.in_negation = old_in_negation;
         result

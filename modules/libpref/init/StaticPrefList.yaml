@@ -13200,6 +13200,13 @@
   value: false
   mirror: always
 
+# When true, Firefox will send Extensivle prioritization scheme
+# PRIORITY_UPDATE frames.
+- name: network.http.http2.priority_updates
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # This pref controls whether to send the
 # SETTINGS_NO_RFC7540_PRIORITIES when stream dependencies
 # are disabled, and extensible prioritization scheme is in use.
@@ -13262,6 +13269,14 @@
   mirror: always
 
 - name: network.http.http2.allow-push
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# When true, Firefox will send a SETTINGS_MAX_CONCURRENT_STREAMS
+# parameter when push is disabled. Chrome doesn't send this,
+# so some servers misbehave when we do. See Bug 1919750.
+- name: network.http.http2.send-push-max-concurrent-frame
   type: RelaxedAtomicBool
   value: false
   mirror: always
