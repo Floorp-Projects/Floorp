@@ -20,8 +20,6 @@ user_pref("security.disallow_privileged_https_script_loads", false);
 // https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#14743
 user_pref("security.allow_parent_unrestricted_js_loads", true);
 // https://searchfox.org/mozilla-central/rev/71aada9d4055e420f91f3d0fa107f0328763e40b/browser/app/profile/firefox.js#1249
-user_pref("browser.preferences.moreFromMozilla", false);
-user_pref("general.useragent.compatMode.firefox", true);
 user_pref("remote.active-protocols", 1);
 //? WebDriverBidi seems to disable newtabpage
 user_pref("browser.newtabpage.enabled", true);
