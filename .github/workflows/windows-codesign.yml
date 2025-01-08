@@ -1,0 +1,128 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+on:
+    workflow_call:
+      inputs:
+        package-artifact-name:
+          description: 'Artifact to download'
+          required: true
+          default: 'floorp-windows-x86_64-package'
+          type: string
+        arch:
+          type: boolean
+          description:
+          required: true
+      secrets:
+        SIGNPATH_API_TOKEN:
+            description: "SignPath API Token"
+            required: true
+
+    workflow_dispatch:
+      inputs:
+        package-artifact-name:
+          description: 'Artifact to download'
+          required: true
+          default: 'floorp-windows-x86_64-package'
+          type: string
+
+jobs:
+  codesign:
+    runs-on: windows-latest
+    steps:
+        - uses: actions/download-artifact@v4
+          name: Download artifact 📥
+          with:
+            name: ${{ inputs.package-artifact-name }}
+            path: C:\artifact
+
+        - name: install 7z for extract
+          run: |
+            choco install 7zip -y
+
+        - name: extract
+          run: |
+            mkdir -p C:\unsigned\bin
+            mkdir -p C:\unsigned\stub
+            C:\ProgramData\chocolatey\bin\7z.exe x C:\artifact\floorp-win*installer.exe -oC:\unsigned\bin
+            C:\ProgramData\chocolatey\bin\7z.exe x C:\artifact\floorp-stub.installer.exe -oC:\unsigned\stub
+
+            # rename stub installer
+            mv C:\unsigned\stub\setup-stub.exe C:\unsigned\stub\floorp-stub.installer.exe
+
+        - uses: actions/checkout@v4
+          name: Clone 🧬
+          with:
+            submodules: 'recursive'
+            token: ${{ secrets.PAT }}
+
+        - name: Create Environment for Repackaging
+          run: |
+            unzip -d Floorp-Repackage .\.github\windows-code-sign.zip
+
+        - name: Publish Unsigned Package
+          id: publish-unsigned-package
+          uses: actions/upload-artifact@v4
+          with:
+            name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned
+            path: C:\unsigned\bin
+
+        - name: Sign 🖊️
+          id: Sign
+          uses: signpath/github-action-submit-signing-request@v1.1
+          with:
+            api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+            organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+            project-slug: 'Floorp'
+            signing-policy-slug: 'test-signing'
+            github-artifact-id: '${{ steps.publish-unsigned-package.outputs.artifact-id }}'
+            wait-for-completion: true
+            output-artifact-directory: signed_output
+
+        - name: Copy Signed Artifact to Floorp-Repackage
+          run: |
+            cp -r signed_output Floorp-Repackage/Floorp-work
+
+        - name: Create Repackaged Artifact
+          run: |
+            cd Floorp-Repackage/Floorp-work
+            "C:\Program Files\7-Zip\7z.exe" a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+            cd ..\
+            copy /B 7zSD.sfx+ "app.tag" + "Floorp-work\app.7z" "floorp-win64.installer.exe"
+
+        - name: Publish Unsigned Installer
+          id: Publish-Unsigned-Installer
+          uses: actions/upload-artifact@v4
+          with:
+            name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
+            path: |
+              Floorp-Repackage/Floorp-work/floorp-win64.installer.exe
+              C:\unsigned\stub\setup-stub.exe
+
+        - name: Sign Installers 🖊️
+          id: Sign-Installers
+          uses: signpath/github-action-submit-signing-request@v1.1
+          with:
+            api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+            organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+            project-slug: 'Floorp'
+            signing-policy-slug: 'test-signing'
+            github-artifact-id: '${{ steps.Publish-Unsigned-Installer.outputs.artifact-id }}'
+            wait-for-completion: true
+            output-artifact-directory: signed_installers
+
+        - name: Publish Signed Package
+          uses: actions/upload-artifact@v4
+          with:
+            name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed
+            path: signed_installers
+
+        - name: Publish Signed Installer
+          uses: actions/upload-artifact@v4
+          with:
+            name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed-installer
+            path: signed_installers

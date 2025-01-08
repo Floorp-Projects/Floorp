@@ -29,4 +29,13 @@ jobs:
       aarch64: ${{inputs.aarch64}}
     secrets:
       PAT: ${{ secrets.PAT }}
+
+  windows-codesign:
+    needs: windows-build
+    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-${{fromJson('["AMD","AARCH"]')[inputs.aarch64]}}-64bit
+    uses: ./.github/workflows/windows-codesign.yml
+    with:
+      package-artifact-name: floorp-windows-${{fromJSON('["x86_64","aarch64"]')[inputs.aarch64]}}-package
+      arch: ${{ inputs.aarch64 }}
+    secrets:
       SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
