@@ -39,3 +39,4 @@ jobs:
       arch: ${{ inputs.aarch64 }}
     secrets:
       SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      PAT: ${{ secrets.PAT }}
