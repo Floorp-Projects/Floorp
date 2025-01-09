@@ -100,7 +100,7 @@ jobs:
           shell: cmd
 
         - name: Publish Unsigned Installer
-          id: Publish-Unsigned-Installer
+          id: publish-unsigned-installer
           uses: actions/upload-artifact@v4
           with:
             name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
@@ -117,7 +117,7 @@ jobs:
             project-slug: 'Floorp'
             signing-policy-slug: 'test-signing'
             artifact-configuration-slug: 'stub-signing'
-            github-artifact-id: '${{ steps.Publish-Unsigned-Installer.outputs.artifact-id }}'
+            github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
             wait-for-completion: true
             output-artifact-directory: signed_installers
 
