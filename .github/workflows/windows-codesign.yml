@@ -55,7 +55,7 @@ jobs:
             C:\ProgramData\chocolatey\bin\7z.exe x C:\artifact\floorp-stub.installer.exe -oC:\unsigned\stub
 
             # rename stub installer
-            mv C:\unsigned\stub\setup-stub.exe ./floorp-stub.installer.exe
+            mv C:\unsigned\stub\setup-stub.exe C:\unsigned\stub\floorp-stub.installer.exe
 
         - uses: actions/checkout@v4
           name: Clone 🧬
@@ -93,10 +93,10 @@ jobs:
 
         - name: Create Repackaged Artifact
           run: |
-            cd Floorp-Repackage/Floorp-work
-            C:\Program Files\7-Zip\7z.exe a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-            cd ..\
-            copy /B 7zSD.sfx+ "app.tag" + "Floorp-work\app.7z" "floorp-win64.installer.exe"
+            cd Floorp-Repackage/Floorp-work/core
+            "C:\Program Files\7-Zip\7z.exe" a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+            cd ..\..\
+            copy /B 7zSD.sfx+ "app.tag" + "Floorp-work\app.7z" "C:\unsigned\stub\floorp-win64.installer.exe"
           shell: cmd
 
         - name: Publish Unsigned Installer
@@ -104,9 +104,7 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
-            path: |
-              Floorp-Repackage/floorp-win64.installer.exe
-              floorp-stub.installer.exe
+            path: C:\unsigned\stub
 
         - name: Sign Installers 🖊️
           id: Sign-Installers
@@ -125,7 +123,7 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed
-            path: signed_installers
+            path: signed_output
 
         - name: Publish Signed Installer
           uses: actions/upload-artifact@v4
