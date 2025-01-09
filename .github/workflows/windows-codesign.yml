@@ -87,15 +87,15 @@ jobs:
             wait-for-completion: true
             output-artifact-directory: signed_output
 
-        - name: Copy Signed Artifact to Floorp-Repackage
+        - name: Copy Signed Artifact to Floorp-Repackage And unpack
           run: |
-            cp -r signed_output Floorp-Repackage/Floorp-work
+            cp -r signed_output/* Floorp-Repackage/Floorp-work
 
         - name: Create Repackaged Artifact
           run: |
-            cd Floorp-Repackage/Floorp-work/core
+            cd Floorp-Repackage/Floorp-work
             "C:\Program Files\7-Zip\7z.exe" a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-            cd ..\..\
+            cd ..\
             copy /B 7zSD.sfx+ "app.tag" + "Floorp-work\app.7z" "C:\unsigned\stub\floorp-win64.installer.exe"
           shell: cmd
 
