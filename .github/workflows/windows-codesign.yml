@@ -55,7 +55,7 @@ jobs:
             C:\ProgramData\chocolatey\bin\7z.exe x C:\artifact\floorp-stub.installer.exe -oC:\unsigned\stub
 
             # rename stub installer
-            mv C:\unsigned\stub\setup-stub.exe C:\unsigned\stub\floorp-stub.installer.exe
+            mv C:\unsigned\stub\setup-stub.exe ./floorp-stub.installer.exe
 
         - uses: actions/checkout@v4
           name: Clone 🧬
@@ -105,8 +105,8 @@ jobs:
           with:
             name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
             path: |
-              Floorp-Repackage/Floorp-work/floorp-win64.installer.exe
-              C:\unsigned\stub\floorp-stub.installer.exe
+              Floorp-Repackage/floorp-win64.installer.exe
+              floorp-stub.installer.exe
 
         - name: Sign Installers 🖊️
           id: Sign-Installers
