@@ -1,6 +1,86 @@
 {
   "data": [
     {
+      "stash": {
+        "blocked": [
+          "robinhood-nba-scores@citrixereceiver.com:1.0.0",
+          "robinhood-nba-scores@citrixereceiver.com:1.1.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1735603204714,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1736166905736,
+      "id": "b99ccd3c-6aea-4144-bffc-a9c9734a5a77",
+      "last_modified": 1736166978010
+    },
+    {
+      "stash": {
+        "blocked": [
+          "nba-news-score@itdigitalmedia.site:1.1",
+          "nba-news-score@itdigitalmedia.site:1.2",
+          "nba-news-score@itdigitalmedia.site:1.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1734973676348,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1734978905447,
+      "id": "0e70a836-a64b-4006-843d-cfeabd663900",
+      "last_modified": 1734978979500
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{7b0c4908-3c9b-4b5b-bb5f-e59f79d58b6e}:0.0.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1734686350220,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1734698104421,
+      "id": "8d721ff6-479a-486e-bc6f-464497bb655b",
+      "last_modified": 1734698171807
+    },
+    {
+      "stash": {
+        "blocked": [
+          "sciaddon@scigreat.com:2.9.3",
+          "sciaddon@scigreat.com:2.9.4",
+          "sciaddon@scigreat.com:2.9.5",
+          "sciaddon@scigreat.com:2.9.6",
+          "sciaddon@scigreat.com:2.9.7",
+          "sciaddon@scigreat.com:2.9.8",
+          "sciaddon@scigreat.com:2.9.9",
+          "sciaddon@scigreat.com:3.0.0",
+          "sciaddon@scigreat.com:3.0.1",
+          "sciaddon@scigreat.com:3.0.2",
+          "sciaddon@scigreat.com:3.0.3",
+          "sciaddon@scigreat.com:3.0.4",
+          "sciaddon@scigreat.com:3.0.5",
+          "sciaddon@scigreat.com:3.0.6",
+          "sciaddon@scigreat.com:3.0.7",
+          "sciaddon@scigreat.com:3.0.8",
+          "sciaddon@scigreat.com:3.0.9",
+          "sciaddon@scigreat.com:3.1.0",
+          "sciaddon@scigreat.com:3.1.1",
+          "sciaddon@scigreat.com:3.1.2",
+          "sciaddon@scigreat.com:3.1.3",
+          "sciaddon@scigreat.com:3.1.4"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1734363061973,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1734546905283,
+      "id": "d16e4834-2cbc-476c-993f-1014240830c0",
+      "last_modified": 1734546992038
+    },
+    {
       "schema": 1734363060800,
       "attachment": {
         "hash": "e97f56fe431fbfb547a15c074ed1a2e2bff55cbb71b8ed8ba0543a41879be611",
@@ -31,5 +111,5 @@
       "last_modified": 1734363061859
     }
   ],
-  "timestamp": 1734363061861
+  "timestamp": 1736166978010
 }
