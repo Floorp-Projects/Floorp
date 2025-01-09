@@ -345,10 +345,12 @@ jobs:
         path: ~/output
 
     - name: install 7z for extract
+      if: inputs.profgen != true
       run: |
         sudo apt install -y p7zip-full
 
     - name: extract
+      if: inputs.profgen != true
       run: |
         mkdir -p unsigned/bin
         mkdir -p unsigned/stub
@@ -359,11 +361,13 @@ jobs:
         mv unsigned/stub/setup-stub.exe unsigned/stub/floorp-stub.installer.exe
 
     - name: Create Environment for Repackaging
+      if: inputs.profgen != true
       run: |
         unzip -d Floorp-Repackage ./.github/windows-code-sign.zip
 
     - name: Publish Unsigned Package
       id: publish-unsigned-package
+      if: inputs.profgen != true
       uses: actions/upload-artifact@v4
       with:
         name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned
@@ -371,6 +375,7 @@ jobs:
 
     - name: Sign 🖊️
       id: Sign
+      if: inputs.profgen != true
       uses: signpath/github-action-submit-signing-request@v1.1
       with:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -383,18 +388,21 @@ jobs:
         output-artifact-directory: signed_output
 
     - name: Copy Signed Artifact to Floorp-Repackage And unpack
+      if: inputs.profgen != true
       run: |
         cp -r signed_output/* Floorp-Repackage/Floorp-work
 
     - name: Create Repackaged Artifact
+      if: inputs.profgen != true
       run: |
         cd Floorp-Repackage/Floorp-work
         7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
         cd ../
-        cat 7zSD.sfx app.tag Floorp-work\app.7z > ~/unsigned/stub/floorp-win64.installer.exe
+        cat 7zSD.sfx app.tag Floorp-work/app.7z > ../unsigned/stub/floorp-win64.installer.exe
 
     - name: Publish Unsigned Installer
       id: publish-unsigned-installer
+      if: inputs.profgen != true
       uses: actions/upload-artifact@v4
       with:
         name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
@@ -402,6 +410,7 @@ jobs:
 
     - name: Sign Installers 🖊️
       id: Sign-Installers
+      if: inputs.profgen != true
       uses: signpath/github-action-submit-signing-request@v1.1
       with:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -414,12 +423,14 @@ jobs:
         output-artifact-directory: signed_installers
 
     - name: Publish Signed Package
+      if: inputs.profgen != true
       uses: actions/upload-artifact@v4
       with:
         name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed
         path: signed_output
 
     - name: Publish Signed Installer
+      if: inputs.profgen != true
       uses: actions/upload-artifact@v4
       with:
         name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed-installer
