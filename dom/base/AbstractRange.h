@@ -199,8 +199,7 @@ class AbstractRange : public nsISupports,
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
    */
-  void UnregisterClosestCommonInclusiveAncestor(nsINode* aNode,
-                                                bool aIsUnlinking);
+  void UnregisterClosestCommonInclusiveAncestor(bool aIsUnlinking = false);
 
   void UpdateCommonAncestorIfNecessary();
 
