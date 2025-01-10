@@ -501,6 +501,10 @@ void txMozillaXSLTProcessor::ImportStylesheet(nsINode& aStyle,
     return;
   }
 
+  MOZ_ASSERT(!mEmbeddedStylesheetRoot);
+
+  mCompileResult = NS_OK;
+
   if (!nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(
           aStyle.NodePrincipal())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
