@@ -27,7 +27,7 @@ export async function initializeBinGit() {
   await fs.writeFile(
     path.join(BIN_DIR, ".gitignore"),
     `
-./noraneko/*
+./noraneko-dev/*
 ./browser/chrome/browser/res/activity-stream/data/content/abouthomecache/*
 `,
   );
