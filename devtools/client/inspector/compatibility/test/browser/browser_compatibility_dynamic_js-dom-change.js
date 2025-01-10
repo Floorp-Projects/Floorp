@@ -22,10 +22,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_SCROLLBAR_WIDTH = {
+const ISSUE_SCROLLBAR_COLOR = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "scrollbar-width",
-  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+  property: "scrollbar-color",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-color",
   deprecated: false,
   experimental: false,
 };
@@ -61,13 +61,13 @@ add_task(async function () {
     selectedElementPane,
     allElementsPane,
     [ISSUE_OUTLINE_RADIUS],
-    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_COLOR, ISSUE_OUTLINE_RADIUS],
     async function () {
       const doc = content.document;
       const parent = doc.querySelector("body");
 
       const newElementWithIssue = doc.createElement("div");
-      newElementWithIssue.style["scrollbar-width"] = "none";
+      newElementWithIssue.style["scrollbar-color"] = "auto";
 
       const parentOfIssueElement = doc.createElement("div");
       parentOfIssueElement.classList.add("parent");
@@ -88,8 +88,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_SCROLLBAR_WIDTH],
-    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_COLOR],
+    [ISSUE_SCROLLBAR_COLOR],
     async function () {
       const doc = content.document;
       const parent = doc.querySelector(".parent");

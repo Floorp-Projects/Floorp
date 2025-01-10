@@ -21,10 +21,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_SCROLLBAR_WIDTH = {
+const ISSUE_SCROLLBAR_COLOR = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "scrollbar-width",
-  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+  property: "scrollbar-color",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-color",
   deprecated: false,
   experimental: false,
 };
@@ -65,10 +65,10 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_SCROLLBAR_WIDTH],
-    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_COLOR],
+    [ISSUE_SCROLLBAR_COLOR],
     async function () {
-      content.document.querySelector(".test").style["scrollbar-width"] = "none";
+      content.document.querySelector(".test").style["scrollbar-color"] = "auto";
     }
   );
 
@@ -78,8 +78,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
-    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_COLOR, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_COLOR, ISSUE_OUTLINE_RADIUS],
     async function () {
       content.document.querySelector(".test").classList.add("issue");
     }
@@ -91,8 +91,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_SCROLLBAR_WIDTH],
-    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_COLOR],
+    [ISSUE_SCROLLBAR_COLOR],
     async function () {
       content.document.querySelector(".test").classList.remove("issue");
     }
