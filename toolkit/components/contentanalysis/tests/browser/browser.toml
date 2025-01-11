@@ -51,8 +51,6 @@ support-files = [
   "!/dom/events/test/browser_dragdrop_outer.html",
 ]
 
-["browser_content_analysis_policies.js"]
-
 ["browser_print_changing_page_content_analysis.js"]
 support-files = [
   "!/toolkit/components/printing/tests/head.js",
