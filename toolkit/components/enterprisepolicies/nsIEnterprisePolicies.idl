@@ -17,7 +17,7 @@ interface nsIEnterprisePolicies : nsISupports
   // We only consider a build to be enterprise when certain conditions are
   // met. This value is set between profile-do-change and addons-startup,
   // so it should be usable from most places.
-  readonly attribute short isEnterprise;
+  readonly attribute boolean isEnterprise;
 
   boolean isAllowed(in ACString feature);
 
