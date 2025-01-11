@@ -266,10 +266,10 @@ impl SecurityState {
         };
         let reader = env_and_store.env.read()?;
         match env_and_store.store.get(&reader, key) {
-            Ok(Some(Value::I64(i))) => {
-                Ok(Some(i.try_into().map_err(|_| {
-                    SecurityStateError::from("Stored value out of range for i16")
-                })?))
+            Ok(Some(Value::I64(i)))
+                if i <= (std::i16::MAX as i64) && i >= (std::i16::MIN as i64) =>
+            {
+                Ok(Some(i as i16))
             }
             Ok(None) => Ok(None),
             Ok(_) => Err(SecurityStateError::from(
@@ -893,10 +893,10 @@ struct Cert<'a> {
 
 impl<'a> Cert<'a> {
     fn new(der: &'a [u8], subject: &'a [u8], trust: i16) -> Result<Cert<'a>, SecurityStateError> {
-        if der.len() > u16::MAX.into() {
+        if der.len() > u16::max as usize {
             return Err(SecurityStateError::from("certificate is too long"));
         }
-        if subject.len() > u16::MAX.into() {
+        if subject.len() > u16::max as usize {
             return Err(SecurityStateError::from("subject is too long"));
         }
         Ok(Cert {
@@ -920,7 +920,7 @@ impl<'a> Cert<'a> {
             return Err(SecurityStateError::from("invalid Cert: no der len?"));
         }
         let (mut der_len, rest) = rest.split_at(size_of::<u16>());
-        let der_len = der_len.read_u16::<NetworkEndian>()?.into();
+        let der_len = der_len.read_u16::<NetworkEndian>()? as usize;
         if rest.len() < der_len {
             return Err(SecurityStateError::from("invalid Cert: no der?"));
         }
@@ -930,7 +930,7 @@ impl<'a> Cert<'a> {
             return Err(SecurityStateError::from("invalid Cert: no subject len?"));
         }
         let (mut subject_len, rest) = rest.split_at(size_of::<u16>());
-        let subject_len = subject_len.read_u16::<NetworkEndian>()?.into();
+        let subject_len = subject_len.read_u16::<NetworkEndian>()? as usize;
         if rest.len() < subject_len {
             return Err(SecurityStateError::from("invalid Cert: no subject?"));
         }
@@ -961,19 +961,15 @@ impl<'a> Cert<'a> {
                 + size_of::<i16>(),
         );
         bytes.write_u8(CERT_SERIALIZATION_VERSION_1)?;
-        bytes.write_u16::<NetworkEndian>(
-            self.der
-                .len()
-                .try_into()
-                .map_err(|_| SecurityStateError::from("certificate is too long"))?,
-        )?;
+        if self.der.len() > u16::max as usize {
+            return Err(SecurityStateError::from("certificate is too long"));
+        }
+        bytes.write_u16::<NetworkEndian>(self.der.len() as u16)?;
         bytes.extend_from_slice(&self.der);
-        bytes.write_u16::<NetworkEndian>(
-            self.subject
-                .len()
-                .try_into()
-                .map_err(|_| SecurityStateError::from("subject is too long"))?,
-        )?;
+        if self.subject.len() > u16::max as usize {
+            return Err(SecurityStateError::from("subject is too long"));
+        }
+        bytes.write_u16::<NetworkEndian>(self.subject.len() as u16)?;
         bytes.extend_from_slice(&self.subject);
         bytes.write_i16::<NetworkEndian>(self.trust)?;
         Ok(bytes)
@@ -1187,7 +1183,7 @@ fn load_crlite_stash_from_reader_into_map(
         let issuer_spki_hash_len = reader.read_u8().map_err(|e| {
             SecurityStateError::from(format!("error reading stash issuer_spki_hash_len: {}", e))
         })?;
-        let mut issuer_spki_hash = vec![0; issuer_spki_hash_len.into()];
+        let mut issuer_spki_hash = vec![0; issuer_spki_hash_len as usize];
         reader.read_exact(&mut issuer_spki_hash).map_err(|e| {
             SecurityStateError::from(format!("error reading stash issuer_spki_hash: {}", e))
         })?;
@@ -1196,7 +1192,7 @@ fn load_crlite_stash_from_reader_into_map(
             let serial_len = reader.read_u8().map_err(|e| {
                 SecurityStateError::from(format!("error reading stash serial_len: {}", e))
             })?;
-            let mut serial = vec![0; serial_len.into()];
+            let mut serial = vec![0; serial_len as usize];
             reader.read_exact(&mut serial).map_err(|e| {
                 SecurityStateError::from(format!("error reading stash serial: {}", e))
             })?;
