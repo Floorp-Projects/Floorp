@@ -10,7 +10,7 @@ import type {
   TCustomizableUI,
   TCustomizableUIArea,
 } from "@types-gecko/CustomizableUI";
-import type { JSXElement } from "solid-js";
+import { createRoot, getOwner, type JSXElement } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -86,7 +86,7 @@ export namespace BrowserActionUtils {
       return;
     }
 
-
+    const owner = getOwner();
     CustomizableUI.createWidget({
       id: widgetId,
       type: "view",
@@ -95,10 +95,10 @@ export namespace BrowserActionUtils {
       label: (document?.l10n?.formatValue(l10nId)) ?? "",
       removable: true,
       onCreated: (aNode: XULElement) => {
-        onCreatedFunc?.(aNode);
+        createRoot(()=>onCreatedFunc?.(aNode),owner);
       },
       onViewShowing: (event: Event) => {
-        onViewShowingFunc?.(event);
+        createRoot(()=>onViewShowingFunc?.(event),owner);
       },
     });
     CustomizableUI.addWidgetToArea(
@@ -106,6 +106,5 @@ export namespace BrowserActionUtils {
       area as TCustomizableUIArea,
       position ?? 0,
     );
-
   }
 }

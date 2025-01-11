@@ -11,7 +11,6 @@ export class WorkspaceIcons {
 
   private moduleStrings: ModuleStrings;
   private resolvedIcons: { [key: string]: string } = {};
-  private iconsResolved = false;
   public workspaceIcons = new Set([
     "article",
     "book",
@@ -59,29 +58,17 @@ export class WorkspaceIcons {
       import: "default",
       eager:true
     }) as ModuleStrings;
-  }
-
-  public initializeIcons() {
-    if (this.iconsResolved) return;
-    console.log(this.moduleStrings)
     for (const path in this.moduleStrings) {
       const iconUrl = this.moduleStrings[path];
       const iconName = path.split("/").pop()?.replace(".svg", "") || "";
       this.resolvedIcons[iconName] = iconUrl;
     }
-    this.iconsResolved = true;
-  }
-
-  private getUrlBase(): string {
-    return import.meta.env.PROD
-      ? "chrome://noraneko/content"
-      : "http://localhost:5181";
   }
 
   public getWorkspaceIconUrl(icon: string | null | undefined): string {
     if (!icon || !this.workspaceIcons.has(icon)) {
-      return `${this.getUrlBase()}${this.resolvedIcons.fingerprint}`;
+      return this.resolvedIcons.fingerprint;
     }
-    return `${this.getUrlBase()}${this.resolvedIcons[icon]}`;
+    return this.resolvedIcons[icon];
   }
 }

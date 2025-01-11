@@ -6,9 +6,10 @@
 import { BrowserActionUtils } from "@core/utils/browser-action";
 import { PopupElement } from "./popup-element.js";
 import workspacesStyles from "./styles.css?inline";
-import type { JSX } from "solid-js";
+import { createEffect, createMemo, createResource, type JSX } from "solid-js";
 import { WorkspacesService } from "../workspacesService";
 import { workspacesDataStore } from "../data/data.js";
+import { configStore } from "../data/config.js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -31,8 +32,16 @@ export class WorkspacesToolbarButton {
       (aNode) => {
         // On Startup, the workspace is not yet loaded, so we need to set the label after the workspace is loaded.
         // We cannot get Element from WorkspacesServices, so we need to get it from CustomizableUI directly.
-        const workspace = workspacesDataStore.data.get(workspacesDataStore.selectedID)!;
-        aNode?.setAttribute("label", workspace.name);
+        const workspace = () => ctx.getRawWorkspace(ctx.getSelectedWorkspaceID());
+        const icon = ()=>ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
+        createEffect(()=>{
+          aNode?.style.setProperty("list-style-image",icon() ? `url(${icon()})` : `url("chrome://branding/content/icon32.png")`);
+          if (configStore.showWorkspaceNameOnToolbar) {
+            aNode?.setAttribute("label", workspace().name);
+          } else {
+            aNode?.removeAttribute("label");
+          }
+        });
       },
       CustomizableUI.AREA_TABSTRIP,
       this.StyleElement() as JSX.Element,

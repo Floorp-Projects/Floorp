@@ -4,7 +4,7 @@ import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspacesService } from "./workspacesService";
 import { WorkspaceManageModal } from "./workspace-modal";
 import { WorkspacesToolbarButton } from "./toolbar/toolbar-element";
-import { WorkspacesPopupContxtMenu } from "./popup/popupSet";
+import { WorkspacesPopupContxtMenu } from "./contextMenu/popupSet";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
 @noraComponent(import.meta.hot)
