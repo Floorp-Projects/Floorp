@@ -381,9 +381,10 @@ jobs:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
         organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
         project-slug: 'Floorp'
-        signing-policy-slug: 'test-signing'
+        signing-policy-slug: 'release-signing'
         artifact-configuration-slug: 'core-signing'
         github-artifact-id: '${{ steps.publish-unsigned-package.outputs.artifact-id }}'
+        wait-for-completion-timeout-in-seconds: 7200
         wait-for-completion: true
         output-artifact-directory: signed_output
 
@@ -416,9 +417,10 @@ jobs:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
         organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
         project-slug: 'Floorp'
-        signing-policy-slug: 'test-signing'
+        signing-policy-slug: 'release-signing'
         artifact-configuration-slug: 'stub-signing'
         github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
+        wait-for-completion-timeout-in-seconds: 7200
         wait-for-completion: true
         output-artifact-directory: signed_installers
 
