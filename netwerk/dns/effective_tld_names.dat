@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-01-08_11-54-03_UTC
-// COMMIT: d1420f641cf8523ae758342e8b5661287718d33f
+// VERSION: 2025-01-10_10-28-58_UTC
+// COMMIT: b067df3f267dc1233e27e2d4d37c470886861370
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -6274,7 +6274,9 @@ tec.ve
 web.ve
 
 // vg : https://www.iana.org/domains/root/db/vg.html
+// Confirmed by registry <tld.ops@centralnic.com> 2025-01-10
 vg
+edu.vg
 
 // vi : https://www.iana.org/domains/root/db/vi.html
 vi
@@ -11932,7 +11934,7 @@ notebook.cn-northwest-1.sagemaker.com.cn
 
 // Amazon SageMaker Studio
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: 69c723d9-6e1a-4bff-a203-48eecd203183
+// Reference: 475f237e-ab88-4041-9f41-7cfccdf66aeb
 studio.af-south-1.sagemaker.aws
 studio.ap-east-1.sagemaker.aws
 studio.ap-northeast-1.sagemaker.aws
@@ -11944,6 +11946,7 @@ studio.ap-southeast-2.sagemaker.aws
 studio.ap-southeast-3.sagemaker.aws
 studio.ca-central-1.sagemaker.aws
 studio.eu-central-1.sagemaker.aws
+studio.eu-central-2.sagemaker.aws
 studio.eu-north-1.sagemaker.aws
 studio.eu-south-1.sagemaker.aws
 studio.eu-south-2.sagemaker.aws
@@ -12115,6 +12118,19 @@ awsglobalaccelerator.com
 // Submitted by AWS Security <psl-maintainers@amazon.com>
 // Reference: 83385945-225f-416e-9aa0-ad0632bfdcee
 *.private.repost.aws
+
+// AWS Transfer Family web apps
+// Submitted by AWS Security <psl-maintainers@amazon.com>
+// Reference: 67e9cfe6-ac57-49c7-b197-6652711c8e8d
+transfer-webapp.ap-northeast-1.on.aws
+transfer-webapp.ap-southeast-1.on.aws
+transfer-webapp.ap-southeast-2.on.aws
+transfer-webapp.eu-central-1.on.aws
+transfer-webapp.eu-north-1.on.aws
+transfer-webapp.eu-west-1.on.aws
+transfer-webapp.us-east-1.on.aws
+transfer-webapp.us-east-2.on.aws
+transfer-webapp.us-west-2.on.aws
 
 // eero
 // Submitted by Yue Kang <eero-dynamic-dns@amazon.com>
