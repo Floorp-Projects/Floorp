@@ -18,6 +18,9 @@
 
 namespace webrtc {
 
+// Returns true if the ScreenCaptureKit capturer is available.
+bool ScreenCapturerSckAvailable();
+
 // A DesktopCapturer implementation that uses ScreenCaptureKit.
 std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(
     const DesktopCaptureOptions& options);

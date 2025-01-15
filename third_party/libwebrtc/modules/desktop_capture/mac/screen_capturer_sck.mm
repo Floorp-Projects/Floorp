@@ -24,6 +24,8 @@
 
 using webrtc::DesktopFrameIOSurface;
 
+#define SCK_AVAILABLE @available(macOS 14.0, *)
+
 namespace webrtc {
 class ScreenCapturerSck;
 }  // namespace webrtc
@@ -47,6 +49,14 @@ API_AVAILABLE(macos(14.0))
 @end
 
 namespace webrtc {
+
+bool ScreenCapturerSckAvailable() {
+  bool sonomaOrHigher = false;
+  if (SCK_AVAILABLE) {
+    sonomaOrHigher = true;
+  }
+  return sonomaOrHigher;
+}
 
 class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final : public DesktopCapturer {
  public:
@@ -353,11 +363,10 @@ void ScreenCapturerSck::StartOrReconfigureCapturer() {
 }
 
 std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(const DesktopCaptureOptions& options) {
-  if (@available(macOS 14.0, *)) {
+  if (SCK_AVAILABLE) {
     return std::make_unique<ScreenCapturerSck>(options);
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 
 }  // namespace webrtc
@@ -418,3 +427,5 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(const DesktopCaptureOpt
 }
 
 @end
+
+#undef SCK_AVAILABLE

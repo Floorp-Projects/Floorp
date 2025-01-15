@@ -40,6 +40,10 @@
 #include "nsThreadUtils.h"
 #include "tab_capturer.h"
 
+#ifdef XP_MACOSX
+#  include "modules/desktop_capture/mac/screen_capturer_sck.h"
+#endif
+
 using mozilla::NewRunnableMethod;
 using mozilla::TabCapturerWebrtc;
 using mozilla::TimeDuration;
@@ -374,6 +378,7 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 #endif
 
 #if defined(WEBRTC_MAC)
+  options.set_prefer_cursor_embedded(true);
   options.set_allow_sck_capturer(
       mozilla::StaticPrefs::
           media_getdisplaymedia_screencapturekit_enabled_AtStartup());
@@ -414,8 +419,6 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
     CaptureDeviceType aDeviceType, DesktopCapturer::SourceId aSourceId,
     nsIThread** aOutThread) {
   DesktopCaptureOptions options = CreateDesktopCaptureOptions();
-  std::unique_ptr<DesktopCapturer> capturer;
-
   auto ensureThread = [&]() {
     if (*aOutThread) {
       return *aOutThread;
@@ -431,45 +434,73 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
     return *aOutThread;
   };
 
-  if ((aDeviceType == CaptureDeviceType::Screen ||
-       aDeviceType == CaptureDeviceType::Window) &&
-      UsePipewire()) {
-    capturer = DesktopCapturer::CreateGenericCapturer(options);
-    if (!capturer) {
-      return capturer;
+  auto createCapturer = [&]() -> std::unique_ptr<DesktopCapturer> {
+    if ((aDeviceType == CaptureDeviceType::Screen ||
+         aDeviceType == CaptureDeviceType::Window) &&
+        UsePipewire()) {
+      auto capturer = DesktopCapturer::CreateGenericCapturer(options);
+      if (!capturer) {
+        return capturer;
+      }
+
+      return std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                        options);
     }
 
-    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                          options);
-  } else if (aDeviceType == CaptureDeviceType::Screen) {
-    capturer = DesktopCapturer::CreateScreenCapturer(options);
-    if (!capturer) {
-      return capturer;
-    }
+    if (aDeviceType == CaptureDeviceType::Screen) {
+      auto capturer = DesktopCapturer::CreateScreenCapturer(options);
+      if (!capturer) {
+        return capturer;
+      }
 
-    capturer->SelectSource(aSourceId);
+      capturer->SelectSource(aSourceId);
 
-    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                          options);
-  } else if (aDeviceType == CaptureDeviceType::Window) {
-#if defined(RTC_ENABLE_WIN_WGC)
-    options.set_allow_wgc_capturer_fallback(true);
+#if defined(XP_MACOSX)
+      // The MouseCursorMonitor on macOS is rather expensive, as for every
+      // pulled frame it compares all pixels of the cursors used for the current
+      // and last frames. Getting to the pixels may also incur a conversion.
+      //
+      // Note that this comparison happens even if the backend reports it had
+      // embedded the cursor already, as the embedding only affects composing
+      // the monitored cursor into a captured frame.
+      //
+      // Avoid the composer (and monitor) if we can.
+      if (options.prefer_cursor_embedded() && options.allow_sck_capturer() &&
+          ScreenCapturerSckAvailable()) {
+        return capturer;
+      }
 #endif
-    capturer = DesktopCapturer::CreateWindowCapturer(options);
-    if (!capturer) {
-      return capturer;
+
+      return std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                        options);
     }
 
-    capturer->SelectSource(aSourceId);
+    if (aDeviceType == CaptureDeviceType::Window) {
+#if defined(RTC_ENABLE_WIN_WGC)
+      options.set_allow_wgc_capturer_fallback(true);
+#endif
+      auto capturer = DesktopCapturer::CreateWindowCapturer(options);
+      if (!capturer) {
+        return capturer;
+      }
 
-    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                          options);
-  } else if (aDeviceType == CaptureDeviceType::Browser) {
-    // XXX We don't capture cursors, so avoid the extra indirection layer. We
-    // could also pass null for the pMouseCursorMonitor.
-    capturer = CreateTabCapturer(options, aSourceId, ensureThread());
-  } else {
-    MOZ_ASSERT(!capturer);
+      capturer->SelectSource(aSourceId);
+
+      return std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                        options);
+    }
+
+    if (aDeviceType == CaptureDeviceType::Browser) {
+      // XXX We don't capture cursors, so avoid the extra indirection layer. We
+      // could also pass null for the pMouseCursorMonitor.
+      return CreateTabCapturer(options, aSourceId, ensureThread());
+    }
+
+    return nullptr;
+  };
+
+  std::unique_ptr<DesktopCapturer> capturer = createCapturer();
+  if (!capturer) {
     return capturer;
   }
 
