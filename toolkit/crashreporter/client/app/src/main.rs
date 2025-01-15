@@ -79,28 +79,27 @@ fn main() {
     let log_target = logging::init();
 
     let mut config = Config::new();
-    let config_result = config.read_from_environment();
+    config.read_from_environment();
     config.log_target = Some(log_target);
 
     let mut config = Arc::new(config);
 
-    let result = config_result.and_then(|()| {
-        let attempted_send = try_run(&mut config)?;
-        if !attempted_send {
-            // Exited without attempting to send the crash report; delete files.
-            config.delete_files();
+    match try_run(&mut config) {
+        Ok(attempted_send) => {
+            if !attempted_send {
+                // Exited without attempting to send the crash report; delete files.
+                config.delete_files();
+            }
         }
-        Ok(())
-    });
-
-    if let Err(message) = result {
-        // TODO maybe errors should also delete files?
-        log::error!("exiting with error: {message}");
-        if !config.auto_submit {
-            // Only show a dialog if auto_submit is disabled.
-            ui::error_dialog(&config, message);
+        Err(message) => {
+            // TODO maybe errors should also delete files?
+            log::error!("exiting with error: {message}");
+            if !config.auto_submit {
+                // Only show a dialog if auto_submit is disabled.
+                ui::error_dialog(&config, message);
+            }
+            std::process::exit(1);
         }
-        std::process::exit(1);
     }
 }
 
@@ -185,7 +184,8 @@ fn main() {
         cfg.ping_dir = Some("ping_dir".into());
         cfg.dump_file = Some("minidump.dmp".into());
         cfg.restart_command = Some("mockfox".into());
-        cfg.strings = Some(lang::load().unwrap());
+        cfg.strings = Some(lang::load());
+
         let mut cfg = Arc::new(cfg);
         try_run(&mut cfg)
     });

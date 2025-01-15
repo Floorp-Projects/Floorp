@@ -9,24 +9,41 @@ mod zip;
 
 use fluent::{bundle::FluentBundle, FluentArgs, FluentResource};
 use intl_memoizer::concurrent::IntlLangMemoizer;
-#[cfg(test)]
-pub use language_info::LanguageInfo;
+use language_info::LanguageInfo;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-/// Get the localized string bundle.
-pub fn load() -> anyhow::Result<LangStrings> {
-    omnijar::read().unwrap_or_else(|e| {
-        log::warn!("failed to read localization data from the omnijar ({e:#}), falling back to bundled content");
-        Default::default()
-    }).load_strings()
+/// Get the localized strings.
+pub fn load() -> LangStrings {
+    let mut bundles = Vec::new();
+    match omnijar::read() {
+        Ok(infos) => bundles.extend(infos.into_iter().filter_map(|info| {
+            let id = info.identifier.clone();
+            match info.load_strings() {
+                Ok(bundle) => Some(bundle),
+                Err(e) => {
+                    log::error!("failed to load localization bundle for {id}: {e:#}");
+                    None
+                }
+            }
+        })),
+        Err(e) => {
+            log::error!("failed to read localization data from the omnijar ({e:#})");
+        }
+    }
+    bundles.push(
+        LanguageInfo::default()
+            .load_strings()
+            .expect("the default/fallback LanguageInfo failed to load"),
+    );
+    LangStrings::new(bundles)
 }
 
 /// Get a localized string bundle from the configured locale langpack, if any.
-pub fn load_langpack(
+fn load_langpack(
     profile_dir: &crate::std::path::Path,
     locale: Option<&str>,
-) -> anyhow::Result<Option<LangStrings>> {
+) -> anyhow::Result<Option<LanguageBundle>> {
     langpack::read(profile_dir, locale).and_then(|r| match r {
         Some(language_info) => language_info.load_strings().map(Some),
         None => Ok(None),
@@ -35,40 +52,98 @@ pub fn load_langpack(
 
 /// A bundle of localized strings.
 pub struct LangStrings {
+    bundles: Vec<LanguageBundle>,
+}
+
+#[cfg(test)]
+impl Default for LangStrings {
+    fn default() -> Self {
+        LangStrings::new(vec![LanguageInfo::default().load_strings().unwrap()])
+    }
+}
+
+struct LanguageBundle {
     bundle: FluentBundle<FluentResource, IntlLangMemoizer>,
     rtl: bool,
+}
+
+impl LanguageBundle {
+    fn new(bundle: FluentBundle<FluentResource, IntlLangMemoizer>, rtl: bool) -> Self {
+        LanguageBundle { bundle, rtl }
+    }
+
+    /// Return the language identifier string for the primary locale.
+    fn locale(&self) -> String {
+        self.bundle.locales.first().unwrap().to_string()
+    }
+
+    /// Return whether the localized language has right-to-left text flow.
+    fn is_rtl(&self) -> bool {
+        self.rtl
+    }
+
+    fn get(&self, index: &str, args: &FluentArgs) -> anyhow::Result<String> {
+        let Some(pattern) = self.bundle.get_message(index).and_then(|m| m.value()) else {
+            anyhow::bail!("failed to get fluent message for {index}");
+        };
+        let mut errs = Vec::new();
+        let ret = self.bundle.format_pattern(pattern, Some(&args), &mut errs);
+        if !errs.is_empty() {
+            anyhow::bail!("errors while formatting pattern in {index}: {errs:?}");
+        }
+        Ok(ret.into_owned())
+    }
 }
 
 /// Arguments to build a localized string.
 pub type LangStringsArgs<'a> = BTreeMap<&'a str, Cow<'a, str>>;
 
 impl LangStrings {
-    pub fn new(bundle: FluentBundle<FluentResource, IntlLangMemoizer>, rtl: bool) -> Self {
-        LangStrings { bundle, rtl }
+    fn new(bundles: Vec<LanguageBundle>) -> Self {
+        debug_assert!(!bundles.is_empty());
+        LangStrings { bundles }
     }
 
     /// Return whether the localized language has right-to-left text flow.
     pub fn is_rtl(&self) -> bool {
-        self.rtl
+        self.bundles[0].is_rtl()
     }
 
-    pub fn get(&self, index: &str, args: LangStringsArgs) -> anyhow::Result<String> {
+    /// Add a localized string bundle from the configured locale langpack, if any.
+    ///
+    /// This adds the loaded langpack (if successful) as the first/default bundle to be used, using
+    /// all existing bundles as fallbacks.
+    pub fn add_langpack(
+        &mut self,
+        profile_dir: &crate::std::path::Path,
+        locale: Option<&str>,
+    ) -> anyhow::Result<()> {
+        if let Some(strings) = load_langpack(profile_dir, locale)? {
+            self.bundles.insert(0, strings);
+        }
+        Ok(())
+    }
+
+    pub fn get(&self, index: &str, args: LangStringsArgs) -> String {
         let mut fluent_args = FluentArgs::with_capacity(args.len());
         for (k, v) in args {
             fluent_args.set(k, v);
         }
 
-        let Some(pattern) = self.bundle.get_message(index).and_then(|m| m.value()) else {
-            anyhow::bail!("failed to get fluent message for {index}");
-        };
-        let mut errs = Vec::new();
-        let ret = self
-            .bundle
-            .format_pattern(pattern, Some(&fluent_args), &mut errs);
-        if !errs.is_empty() {
-            anyhow::bail!("errors while formatting pattern: {errs:?}");
+        for bundle in &self.bundles {
+            match bundle.get(index, &fluent_args) {
+                Ok(v) => return v,
+                Err(e) => {
+                    log::error!(
+                        "failed to get localized string from {} bundle: {e}",
+                        bundle.locale()
+                    );
+                }
+            }
         }
-        Ok(ret.into_owned())
+        // Just show the fluent index. This will make the error somewhat obvious, and it also
+        // matches how at least some parts of Firefox UI behave in a similar situation.
+        index.to_owned()
     }
 
     pub fn builder<'a>(&'a self, index: &'a str) -> LangStringBuilder<'a> {
@@ -95,7 +170,7 @@ impl<'a> LangStringBuilder<'a> {
     }
 
     /// Get the localized string.
-    pub fn get(self) -> anyhow::Result<String> {
+    pub fn get(self) -> String {
         self.strings.get(self.index, self.args)
     }
 }
