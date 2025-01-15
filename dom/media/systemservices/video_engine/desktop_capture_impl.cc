@@ -374,6 +374,9 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 #endif
 
 #if defined(WEBRTC_MAC)
+  options.set_allow_sck_capturer(
+      mozilla::StaticPrefs::
+          media_getdisplaymedia_screencapturekit_enabled_AtStartup());
   options.set_allow_iosurface(
       mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface());
 #endif
