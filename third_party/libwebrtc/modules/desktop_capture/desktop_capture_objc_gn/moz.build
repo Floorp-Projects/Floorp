@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_frame_cgimage.mm",
     "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_frame_iosurface.mm",
     "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_frame_provider.mm",
+    "/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.mm",
     "/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_mac.mm",
     "/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_sck.mm",
     "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
