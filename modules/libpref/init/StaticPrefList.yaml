@@ -11077,6 +11077,15 @@
     value: true
     mirror: once
 
+# Use SCContentSharingPicker for source picking when the libwebrtc
+# ScreenCaptureKit desktop capture backend is used. When this is true and the
+# backend supports SCContentSharingPicker, this takes precendence over the
+# enumeration pref below.
+-   name: media.getdisplaymedia.screencapturekit.picker.enabled
+    type: bool
+    value: false
+    mirror: once
+
 # Use the libwebrtc ScreenCaptureKit desktop capture backend on Mac for screen
 # enumeration when enabled.
 # When this is false and the backend is used (see above), the older CoreGraphics

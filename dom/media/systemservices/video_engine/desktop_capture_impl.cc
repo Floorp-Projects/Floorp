@@ -96,13 +96,18 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   options.set_allow_sck_capturer(
       mozilla::StaticPrefs::
           media_getdisplaymedia_screencapturekit_enabled_AtStartup());
+  options.set_allow_sck_system_picker(
+      GenericCapturerSckWithPickerAvailable() &&
+      mozilla::StaticPrefs::
+          media_getdisplaymedia_screencapturekit_picker_enabled_AtStartup());
   options.set_allow_iosurface(
       mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface());
 #endif
 
 #if defined(WEBRTC_USE_PIPEWIRE)
   options.set_allow_pipewire(
-      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire());
+      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+      webrtc::DesktopCapturer::IsRunningUnderWayland());
 #endif
 
   return options;
@@ -114,11 +119,11 @@ DesktopCaptureImpl::CreateDeviceInfo(const int32_t aId,
   if (aType == CaptureDeviceType::Screen) {
     auto options = CreateDesktopCaptureOptions();
 #ifdef XP_MACOSX
-    options.set_allow_sck_capturer(
-        mozilla::StaticPrefs::
-            media_getdisplaymedia_screencapturekit_enabled_AtStartup() &&
-        mozilla::StaticPrefs::
-            media_getdisplaymedia_screencapturekit_enumeration_enabled_AtStartup());
+    if (!options.allow_sck_system_picker() &&
+        !mozilla::StaticPrefs::
+            media_getdisplaymedia_screencapturekit_enumeration_enabled_AtStartup()) {
+      options.set_allow_sck_capturer(false);
+    }
 #endif
     return CreateDesktopDeviceInfo(aId, CreateScreenCaptureInfo(options));
   }
@@ -148,15 +153,6 @@ static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
   return capturer;
 }
 
-static bool UsePipewire() {
-#if defined(WEBRTC_USE_PIPEWIRE)
-  return mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
-         webrtc::DesktopCapturer::IsRunningUnderWayland();
-#else
-  return false;
-#endif
-}
-
 static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
     CaptureDeviceType aDeviceType, DesktopCapturer::SourceId aSourceId,
     nsIThread** aOutThread) {
@@ -177,16 +173,20 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
   };
 
   auto createCapturer = [&]() -> std::unique_ptr<DesktopCapturer> {
-    if ((aDeviceType == CaptureDeviceType::Screen ||
-         aDeviceType == CaptureDeviceType::Window) &&
-        UsePipewire()) {
+    if (aDeviceType == CaptureDeviceType::Screen ||
+        aDeviceType == CaptureDeviceType::Window) {
       auto capturer = DesktopCapturer::CreateGenericCapturer(options);
-      if (!capturer) {
-        return capturer;
+      if (capturer) {
+#if defined(XP_MACOSX)
+        // See comment for same conditional below.
+        if (options.prefer_cursor_embedded() && options.allow_sck_capturer() &&
+            ScreenCapturerSckAvailable()) {
+          return capturer;
+        }
+#endif
+        return std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
       }
-
-      return std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                        options);
     }
 
     if (aDeviceType == CaptureDeviceType::Screen) {
