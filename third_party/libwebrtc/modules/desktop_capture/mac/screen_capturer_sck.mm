@@ -19,6 +19,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/time_utils.h"
 #include "sdk/objc/helpers/scoped_cftyperef.h"
 
 using webrtc::DesktopFrameIOSurface;
@@ -108,6 +109,8 @@ class API_AVAILABLE(macos(13.0)) ScreenCapturerSck final : public DesktopCapture
   Mutex latest_frame_lock_;
   std::unique_ptr<SharedDesktopFrame> latest_frame_ RTC_GUARDED_BY(latest_frame_lock_);
 
+  int32_t latest_frame_dpi_ RTC_GUARDED_BY(latest_frame_lock_) = kStandardDPI;
+
   // Tracks whether the latest frame contains new data since it was returned to the caller. This is
   // used to set the DesktopFrame's `updated_region` property. The flag is cleared after the frame
   // is sent to OnCaptureResult(), and is set when SCK reports a new frame with non-empty "dirty"
@@ -138,6 +141,8 @@ void ScreenCapturerSck::SetMaxFrameRate(uint32_t max_frame_rate) {
 }
 
 void ScreenCapturerSck::CaptureFrame() {
+  int64_t capture_start_time_millis = rtc::TimeMillis();
+
   if (permanent_error_) {
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
@@ -155,6 +160,7 @@ void ScreenCapturerSck::CaptureFrame() {
     MutexLock lock(&latest_frame_lock_);
     if (latest_frame_) {
       frame = latest_frame_->Share();
+      frame->set_dpi(DesktopVector(latest_frame_dpi_, latest_frame_dpi_));
       if (frame_is_dirty_) {
         frame->mutable_updated_region()->AddRect(DesktopRect::MakeSize(frame->size()));
         frame_is_dirty_ = false;
@@ -163,6 +169,7 @@ void ScreenCapturerSck::CaptureFrame() {
   }
 
   if (frame) {
+    frame->set_capture_time_ms(rtc::TimeSince(capture_start_time_millis));
     callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
   } else {
     callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
@@ -232,6 +239,11 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content) {
 
   if (@available(macOS 14.0, *)) {
     config.captureResolution = SCCaptureResolutionNominal;
+  }
+
+  {
+    MutexLock lock(&latest_frame_lock_);
+    latest_frame_dpi_ = filter.pointPixelScale * kStandardDPI;
   }
 
   MutexLock lock(&lock_);
