@@ -3,27 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::language_info::LanguageInfo;
-use crate::config::sibling_path;
-use crate::std::{
-    fs::File,
-    io::{BufRead, BufReader, Read},
-    path::Path,
-};
+use super::zip::{read_archive_file_as_string, read_zip};
+use crate::config::installation_resource_path;
+use crate::std::io::{BufRead, BufReader};
 use anyhow::Context;
 use once_cell::unsync::Lazy;
-use zip::read::ZipArchive;
 
 /// Read the appropriate localization fluent definitions from the omnijar files.
 ///
 /// Returns language information if found in adjacent omnijar files.
 pub fn read() -> anyhow::Result<LanguageInfo> {
-    let mut path = sibling_path(if cfg!(target_os = "macos") {
-        "../Resources/omni.ja"
-    } else {
-        "omni.ja"
-    });
+    let mut path = installation_resource_path().join("omni.ja");
 
-    let mut zip = read_omnijar_file(&path)?;
+    let mut zip = read_zip(&path)?;
     let buf = BufReader::new(
         zip.by_name("res/multilocale.txt")
             .context("failed to read multilocale file in zip archive")?,
@@ -53,7 +45,7 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
     path.push("browser");
     path.push("omni.ja");
 
-    let mut browser_omnijar = Lazy::new(|| match read_omnijar_file(&path) {
+    let mut browser_omnijar = Lazy::new(|| match read_zip(&path) {
         Err(e) => {
             log::debug!("no browser omnijar found at {}: {e:#}", path.display());
             None
@@ -90,25 +82,4 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
         ftl_definitions,
         ftl_branding,
     })
-}
-
-/// Read a file from the given zip archive (omnijar) as a string.
-fn read_archive_file_as_string(
-    archive: &mut ZipArchive<File>,
-    path: &str,
-) -> anyhow::Result<String> {
-    let mut file = archive
-        .by_name(path)
-        .with_context(|| format!("failed to locate {path} in archive"))?;
-    let mut data = String::new();
-    file.read_to_string(&mut data)
-        .with_context(|| format!("failed to read {path} from archive"))?;
-    Ok(data)
-}
-
-fn read_omnijar_file(path: &Path) -> anyhow::Result<ZipArchive<File>> {
-    ZipArchive::new(
-        File::open(&path).with_context(|| format!("failed to open {}", path.display()))?,
-    )
-    .with_context(|| format!("failed to read zip archive in {}", path.display()))
 }

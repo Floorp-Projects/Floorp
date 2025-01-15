@@ -169,6 +169,7 @@ impl ReportCrash {
     fn sanitize_extra(&mut self) {
         if let Some(map) = self.extra.as_object_mut() {
             // Remove these entries, they don't need to be sent.
+            map.remove("ProfileDirectory");
             map.remove("ServerURL");
             map.remove("StackTraces");
         }
