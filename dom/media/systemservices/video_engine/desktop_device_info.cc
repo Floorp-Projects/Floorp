@@ -3,12 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "desktop_device_info.h"
+#include "VideoEngine.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/UniquePtr.h"
 #include "nsIBrowserWindowTracker.h"
 #include "nsImportModule.h"
 
@@ -16,327 +15,70 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <map>
 #include <memory>
+
+using mozilla::camera::CaptureDeviceType;
 
 namespace webrtc {
 
-static inline void SetStringMember(char** aMember, const char* aValue) {
-  if (!aValue) {
-    return;
-  }
+void DesktopSource::setScreenId(ScreenId aId) { mScreenId = aId; }
+void DesktopSource::setName(nsCString&& aName) { mName = std::move(aName); }
+void DesktopSource::setUniqueId(nsCString&& aId) { mUniqueId = std::move(aId); }
+void DesktopSource::setPid(const int aPid) { mPid = aPid; }
 
-  if (*aMember) {
-    delete[] *aMember;
-    *aMember = nullptr;
-  }
+ScreenId DesktopSource::getScreenId() const { return mScreenId; }
+const nsCString& DesktopSource::getName() const { return mName; }
+const nsCString& DesktopSource::getUniqueId() const { return mUniqueId; }
+pid_t DesktopSource::getPid() const { return mPid; }
 
-  size_t nBufLen = strlen(aValue) + 1;
-  char* buffer = new char[nBufLen];
-  memcpy(buffer, aValue, nBufLen - 1);
-  buffer[nBufLen - 1] = '\0';
-  *aMember = buffer;
-}
+void TabSource::setBrowserId(uint64_t aId) { mBrowserId = aId; }
+void TabSource::setUniqueId(nsCString&& aId) { mUniqueId = std::move(aId); }
+void TabSource::setName(nsCString&& aName) { mName = std::move(aName); }
 
-DesktopDisplayDevice::DesktopDisplayDevice() {
-  mScreenId = kInvalidScreenId;
-  mDeviceUniqueIdUTF8 = nullptr;
-  mDeviceNameUTF8 = nullptr;
-  mPid = 0;
-}
+uint64_t TabSource::getBrowserId() const { return mBrowserId; }
+const nsCString& TabSource::getName() const { return mName; }
+const nsCString& TabSource::getUniqueId() const { return mUniqueId; }
 
-DesktopDisplayDevice::~DesktopDisplayDevice() {
-  mScreenId = kInvalidScreenId;
-
-  delete[] mDeviceUniqueIdUTF8;
-  delete[] mDeviceNameUTF8;
-
-  mDeviceUniqueIdUTF8 = nullptr;
-  mDeviceNameUTF8 = nullptr;
-}
-
-void DesktopDisplayDevice::setScreenId(const ScreenId aScreenId) {
-  mScreenId = aScreenId;
-}
-
-void DesktopDisplayDevice::setDeviceName(const char* aDeviceNameUTF8) {
-  SetStringMember(&mDeviceNameUTF8, aDeviceNameUTF8);
-}
-
-void DesktopDisplayDevice::setUniqueIdName(const char* aDeviceUniqueIdUTF8) {
-  SetStringMember(&mDeviceUniqueIdUTF8, aDeviceUniqueIdUTF8);
-}
-
-void DesktopDisplayDevice::setPid(const int aPid) { mPid = aPid; }
-
-ScreenId DesktopDisplayDevice::getScreenId() { return mScreenId; }
-
-const char* DesktopDisplayDevice::getDeviceName() { return mDeviceNameUTF8; }
-
-const char* DesktopDisplayDevice::getUniqueIdName() {
-  return mDeviceUniqueIdUTF8;
-}
-
-pid_t DesktopDisplayDevice::getPid() { return mPid; }
-
-DesktopDisplayDevice& DesktopDisplayDevice::operator=(
-    DesktopDisplayDevice& aOther) {
-  if (&aOther == this) {
-    return *this;
-  }
-  mScreenId = aOther.getScreenId();
-  setUniqueIdName(aOther.getUniqueIdName());
-  setDeviceName(aOther.getDeviceName());
-  mPid = aOther.getPid();
-
-  return *this;
-}
-
-DesktopTab::DesktopTab() {
-  mTabBrowserId = 0;
-  mTabNameUTF8 = nullptr;
-  mTabUniqueIdUTF8 = nullptr;
-  mTabCount = 0;
-}
-
-DesktopTab::~DesktopTab() {
-  delete[] mTabNameUTF8;
-  delete[] mTabUniqueIdUTF8;
-
-  mTabNameUTF8 = nullptr;
-  mTabUniqueIdUTF8 = nullptr;
-}
-
-void DesktopTab::setTabBrowserId(uint64_t aTabBrowserId) {
-  mTabBrowserId = aTabBrowserId;
-}
-
-void DesktopTab::setUniqueIdName(const char* aTabUniqueIdUTF8) {
-  SetStringMember(&mTabUniqueIdUTF8, aTabUniqueIdUTF8);
-}
-
-void DesktopTab::setTabName(const char* aTabNameUTF8) {
-  SetStringMember(&mTabNameUTF8, aTabNameUTF8);
-}
-
-void DesktopTab::setTabCount(const uint32_t aCount) { mTabCount = aCount; }
-
-uint64_t DesktopTab::getTabBrowserId() { return mTabBrowserId; }
-
-const char* DesktopTab::getUniqueIdName() { return mTabUniqueIdUTF8; }
-
-const char* DesktopTab::getTabName() { return mTabNameUTF8; }
-
-uint32_t DesktopTab::getTabCount() { return mTabCount; }
-
-DesktopTab& DesktopTab::operator=(DesktopTab& aOther) {
-  mTabBrowserId = aOther.getTabBrowserId();
-  setUniqueIdName(aOther.getUniqueIdName());
-  setTabName(aOther.getTabName());
-
-  return *this;
-}
-
-class DesktopDeviceInfoImpl : public DesktopDeviceInfo {
+template <CaptureDeviceType Type, typename Device>
+class DesktopDeviceInfoImpl : public CaptureInfo<Device> {
  public:
-  DesktopDeviceInfoImpl();
-  ~DesktopDeviceInfoImpl();
+  explicit DesktopDeviceInfoImpl(const DesktopCaptureOptions& aOptions);
 
-  int32_t Init() override;
-  int32_t Refresh() override;
-  int32_t getDisplayDeviceCount() override;
-  int32_t getDesktopDisplayDeviceInfo(
-      uint32_t aIndex, DesktopDisplayDevice& aDesktopDisplayDevice) override;
-  int32_t getWindowCount() override;
-  int32_t getWindowInfo(uint32_t aIndex,
-                        DesktopDisplayDevice& aWindowDevice) override;
-  uint32_t getTabCount() override;
-  int32_t getTabInfo(uint32_t aIndex, DesktopTab& aDesktopTab) override;
+  void Refresh() override;
+  size_t getSourceCount() const override;
+  const Device* getSource(size_t aIndex) const override;
 
  protected:
-  DesktopDisplayDeviceList mDesktopDisplayList;
-  DesktopDisplayDeviceList mDesktopWindowList;
-  DesktopTabList mDesktopTabList;
-
-  void CleanUp();
-  void CleanUpWindowList();
-  void CleanUpTabList();
-  void CleanUpScreenList();
-
-  void InitializeWindowList();
-  virtual void InitializeTabList();
-  void InitializeScreenList();
-
-  void RefreshWindowList();
-  void RefreshTabList();
-  void RefreshScreenList();
-
-  void DummyTabList(DesktopTabList& aList);
+  const DesktopCaptureOptions mOptions;
+  std::map<intptr_t, Device> mDeviceList;
 };
 
-DesktopDeviceInfoImpl::DesktopDeviceInfoImpl() = default;
+template <CaptureDeviceType Type, typename Device>
+DesktopDeviceInfoImpl<Type, Device>::DesktopDeviceInfoImpl(
+    const DesktopCaptureOptions& aOptions)
+    : mOptions(aOptions) {}
 
-DesktopDeviceInfoImpl::~DesktopDeviceInfoImpl() { CleanUp(); }
-
-int32_t DesktopDeviceInfoImpl::getDisplayDeviceCount() {
-  return static_cast<int32_t>(mDesktopDisplayList.size());
+template <CaptureDeviceType Type, typename Device>
+size_t DesktopDeviceInfoImpl<Type, Device>::getSourceCount() const {
+  return mDeviceList.size();
 }
 
-int32_t DesktopDeviceInfoImpl::getDesktopDisplayDeviceInfo(
-    uint32_t aIndex, DesktopDisplayDevice& aDesktopDisplayDevice) {
-  if (aIndex >= mDesktopDisplayList.size()) {
-    return -1;
+template <CaptureDeviceType Type, typename Device>
+const Device* DesktopDeviceInfoImpl<Type, Device>::getSource(
+    size_t aIndex) const {
+  if (aIndex >= mDeviceList.size()) {
+    return nullptr;
   }
-
-  std::map<intptr_t, DesktopDisplayDevice*>::iterator iter =
-      mDesktopDisplayList.begin();
-  std::advance(iter, aIndex);
-  DesktopDisplayDevice* desktopDisplayDevice = iter->second;
-  if (desktopDisplayDevice) {
-    aDesktopDisplayDevice = (*desktopDisplayDevice);
-  }
-
-  return 0;
+  auto it = mDeviceList.begin();
+  std::advance(it, aIndex);
+  return &std::get<Device>(*it);
 }
 
-int32_t DesktopDeviceInfoImpl::getWindowCount() {
-  return static_cast<int32_t>(mDesktopWindowList.size());
-}
-
-int32_t DesktopDeviceInfoImpl::getWindowInfo(
-    uint32_t aIndex, DesktopDisplayDevice& aWindowDevice) {
-  if (aIndex >= mDesktopWindowList.size()) {
-    return -1;
-  }
-
-  std::map<intptr_t, DesktopDisplayDevice*>::iterator itr =
-      mDesktopWindowList.begin();
-  std::advance(itr, aIndex);
-  DesktopDisplayDevice* window = itr->second;
-  if (!window) {
-    return -1;
-  }
-
-  aWindowDevice = (*window);
-  return 0;
-}
-
-uint32_t DesktopDeviceInfoImpl::getTabCount() { return mDesktopTabList.size(); }
-
-int32_t DesktopDeviceInfoImpl::getTabInfo(uint32_t aIndex,
-                                          DesktopTab& aDesktopTab) {
-  if (aIndex >= mDesktopTabList.size()) {
-    return -1;
-  }
-
-  std::map<intptr_t, DesktopTab*>::iterator iter = mDesktopTabList.begin();
-  std::advance(iter, aIndex);
-  DesktopTab* desktopTab = iter->second;
-  if (desktopTab) {
-    aDesktopTab = (*desktopTab);
-  }
-
-  return 0;
-}
-
-void DesktopDeviceInfoImpl::CleanUp() {
-  CleanUpScreenList();
-  CleanUpWindowList();
-  CleanUpTabList();
-}
-int32_t DesktopDeviceInfoImpl::Init() {
-  InitializeScreenList();
-  InitializeWindowList();
-  InitializeTabList();
-
-  return 0;
-}
-int32_t DesktopDeviceInfoImpl::Refresh() {
-  RefreshScreenList();
-  RefreshWindowList();
-  RefreshTabList();
-
-  return 0;
-}
-
-void DesktopDeviceInfoImpl::CleanUpWindowList() {
-  std::map<intptr_t, DesktopDisplayDevice*>::iterator iterWindow;
-  for (iterWindow = mDesktopWindowList.begin();
-       iterWindow != mDesktopWindowList.end(); iterWindow++) {
-    DesktopDisplayDevice* aWindow = iterWindow->second;
-    delete aWindow;
-    iterWindow->second = nullptr;
-  }
-  mDesktopWindowList.clear();
-}
-
-void DesktopDeviceInfoImpl::InitializeWindowList() {
-  DesktopCaptureOptions options;
-
-// Wayland is special and we will not get any information about windows
-// without going through xdg-desktop-portal. We will already have
-// a screen placeholder so there is no reason to build windows list.
-#if defined(WEBRTC_USE_PIPEWIRE)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
-      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
-    return;
-  }
-#endif
-
-// Help avoid an X11 deadlock, see bug 1456101.
-#ifdef MOZ_X11
-  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
-      mozilla::GetMainThreadSerialEventTarget(),
-      NS_NewRunnableFunction(__func__, [&] {
-        options = DesktopCaptureOptions::CreateDefault();
-      })));
-#else
-  options = DesktopCaptureOptions::CreateDefault();
-#endif
-  std::unique_ptr<DesktopCapturer> winCap =
-      DesktopCapturer::CreateWindowCapturer(options);
-  DesktopCapturer::SourceList list;
-  if (winCap && winCap->GetSourceList(&list)) {
-    DesktopCapturer::SourceList::iterator itr;
-    for (itr = list.begin(); itr != list.end(); itr++) {
-      DesktopDisplayDevice* winDevice = new DesktopDisplayDevice;
-      if (!winDevice) {
-        continue;
-      }
-
-      winDevice->setScreenId(itr->id);
-      winDevice->setDeviceName(itr->title.c_str());
-      winDevice->setPid(itr->pid);
-
-      char idStr[BUFSIZ];
-#if WEBRTC_WIN
-      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld",
-                  static_cast<long>(winDevice->getScreenId()));
-#else
-      SprintfLiteral(idStr, "%ld", static_cast<long>(winDevice->getScreenId()));
-#endif
-      winDevice->setUniqueIdName(idStr);
-      mDesktopWindowList[winDevice->getScreenId()] = winDevice;
-    }
-  }
-}
-
-void DesktopDeviceInfoImpl::RefreshWindowList() {
-  CleanUpWindowList();
-  InitializeWindowList();
-}
-
-void DesktopDeviceInfoImpl::CleanUpTabList() {
-  for (auto& iterTab : mDesktopTabList) {
-    DesktopTab* desktopTab = iterTab.second;
-    delete desktopTab;
-    iterTab.second = nullptr;
-  }
-  mDesktopTabList.clear();
-}
-
-void webrtc::DesktopDeviceInfoImpl::InitializeTabList() {
+static std::map<intptr_t, TabSource> InitializeTabList() {
+  std::map<intptr_t, TabSource> tabList;
   if (!mozilla::StaticPrefs::media_getusermedia_browser_enabled()) {
-    return;
+    return tabList;
   }
 
   // This is a sync dispatch to main thread, which is unfortunate. To
@@ -365,124 +107,307 @@ void webrtc::DesktopDeviceInfoImpl::InitializeTabList() {
       int64_t browserId;
       browserTab->GetBrowserId(&browserId);
 
-      DesktopTab* desktopTab = new DesktopTab;
-      if (desktopTab) {
-        char* contentTitleUTF8 = ToNewUTF8String(contentTitle);
-        desktopTab->setTabBrowserId(browserId);
-        desktopTab->setTabName(contentTitleUTF8);
-        std::ostringstream uniqueId;
-        uniqueId << browserId;
-        desktopTab->setUniqueIdName(uniqueId.str().c_str());
-        mDesktopTabList[static_cast<intptr_t>(desktopTab->getTabBrowserId())] =
-            desktopTab;
-        free(contentTitleUTF8);
+      auto result = tabList.try_emplace(static_cast<intptr_t>(browserId));
+      auto& [iter, inserted] = result;
+      if (!inserted) {
+        MOZ_ASSERT_UNREACHABLE("Duplicate browser ids");
+        continue;
       }
+      auto& [key, desktopTab] = *iter;
+      desktopTab.setBrowserId(browserId);
+      desktopTab.setName(NS_ConvertUTF16toUTF8(contentTitle));
+      desktopTab.setUniqueId(nsPrintfCString("%" PRId64, browserId));
     }
   });
   mozilla::SyncRunnable::DispatchToThread(
       mozilla::GetMainThreadSerialEventTarget(), runnable);
+  return tabList;
 }
 
-void DesktopDeviceInfoImpl::RefreshTabList() {
-  CleanUpTabList();
-  InitializeTabList();
-}
-
-void DesktopDeviceInfoImpl::CleanUpScreenList() {
-  std::map<intptr_t, DesktopDisplayDevice*>::iterator iterDevice;
-  for (iterDevice = mDesktopDisplayList.begin();
-       iterDevice != mDesktopDisplayList.end(); iterDevice++) {
-    DesktopDisplayDevice* desktopDisplayDevice = iterDevice->second;
-    delete desktopDisplayDevice;
-    iterDevice->second = nullptr;
+template <CaptureDeviceType Type, typename Device>
+void DesktopDeviceInfoImpl<Type, Device>::Refresh() {
+  if constexpr (Type == CaptureDeviceType::Browser) {
+    mDeviceList = InitializeTabList();
+    return;
   }
-  mDesktopDisplayList.clear();
-}
 
-// With PipeWire we can't select which system resource is shared so
-// we don't create a window/screen list. Instead we place these constants
-// as window name/id so frontend code can identify PipeWire backend
-// and does not try to create screen/window preview.
+  mDeviceList.clear();
 
-#define PIPEWIRE_ID 0xaffffff
-#define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
-
-void DesktopDeviceInfoImpl::InitializeScreenList() {
-  DesktopCaptureOptions options;
-
-// Wayland is special and we will not get any information about screens
-// without going through xdg-desktop-portal so we just need a screen
-// placeholder.
 #if defined(WEBRTC_USE_PIPEWIRE)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+  if (mOptions.allow_pipewire() &&
       webrtc::DesktopCapturer::IsRunningUnderWayland()) {
-    DesktopDisplayDevice* screenDevice = new DesktopDisplayDevice;
-    if (!screenDevice) {
+    // Wayland is special and we will not get any information about screens or
+    // windows without going through xdg-desktop-portal. We add a single screen
+    // placeholder here.
+    if constexpr (Type == CaptureDeviceType::Screen) {
+      // With PipeWire we can't select which system resource is shared so
+      // we don't create a window/screen list. Instead we place these constants
+      // as window name/id so frontend code can identify PipeWire backend
+      // and does not try to create screen/window preview.
+      constexpr ScreenId PIPEWIRE_ID = 0xaffffff;
+      constexpr const char* PIPEWIRE_NAME = "####_PIPEWIRE_PORTAL_####";
+
+      auto result = mDeviceList.try_emplace(PIPEWIRE_ID);
+      auto& [iter, inserted] = result;
+      if (!inserted) {
+        MOZ_CRASH("Device list was supposed to be empty");
+      }
+      auto& [key, device] = *iter;
+
+      device.setScreenId(PIPEWIRE_ID);
+      device.setUniqueId(nsPrintfCString("%" PRIdPTR, PIPEWIRE_ID));
+      device.setName(nsCString(PIPEWIRE_NAME));
+      return;
+    } else if constexpr (Type == CaptureDeviceType::Window) {
+      // Wayland is special and we will not get any information about windows
+      // without going through xdg-desktop-portal. We will already have
+      // a screen placeholder so there is no reason to build windows list.
+      return;
+    }
+  }
+#endif
+
+  std::unique_ptr<DesktopCapturer> cap;
+  if constexpr (Type == CaptureDeviceType::Screen ||
+                Type == CaptureDeviceType::Window) {
+    if constexpr (Type == CaptureDeviceType::Screen) {
+      cap = DesktopCapturer::CreateScreenCapturer(mOptions);
+    } else if constexpr (Type == CaptureDeviceType::Window) {
+      cap = DesktopCapturer::CreateWindowCapturer(mOptions);
+    }
+
+    if (!cap) {
       return;
     }
 
-    screenDevice->setScreenId(PIPEWIRE_ID);
-    screenDevice->setDeviceName(PIPEWIRE_NAME);
+    DesktopCapturer::SourceList list;
+    if (!cap->GetSourceList(&list)) {
+      return;
+    }
 
-    char idStr[BUFSIZ];
-    SprintfLiteral(idStr, "%ld",
-                   static_cast<long>(screenDevice->getScreenId()));
-    screenDevice->setUniqueIdName(idStr);
-    mDesktopDisplayList[screenDevice->getScreenId()] = screenDevice;
-    return;
-  }
-#endif
-
-// Help avoid an X11 deadlock, see bug 1456101.
-#ifdef MOZ_X11
-  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
-      mozilla::GetMainThreadSerialEventTarget(),
-      NS_NewRunnableFunction(__func__, [&] {
-        options = DesktopCaptureOptions::CreateDefault();
-      })));
-#else
-  options = DesktopCaptureOptions::CreateDefault();
-#endif
-  std::unique_ptr<DesktopCapturer> screenCapturer =
-      DesktopCapturer::CreateScreenCapturer(options);
-  DesktopCapturer::SourceList list;
-  if (screenCapturer && screenCapturer->GetSourceList(&list)) {
-    DesktopCapturer::SourceList::iterator itr;
-    for (itr = list.begin(); itr != list.end(); itr++) {
-      DesktopDisplayDevice* screenDevice = new DesktopDisplayDevice;
-      screenDevice->setScreenId(itr->id);
-      if (list.size() == 1) {
-        screenDevice->setDeviceName("Primary Monitor");
-      } else {
-        screenDevice->setDeviceName(itr->title.c_str());
+    for (const auto& elem : list) {
+      auto result = mDeviceList.try_emplace(elem.id);
+      auto& [iter, inserted] = result;
+      if (!inserted) {
+        MOZ_ASSERT_UNREACHABLE("Duplicate screen id");
+        continue;
       }
-      screenDevice->setPid(itr->pid);
-
-      char idStr[BUFSIZ];
-#if WEBRTC_WIN
-      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld",
-                  static_cast<long>(screenDevice->getScreenId()));
-#else
-      SprintfLiteral(idStr, "%ld",
-                     static_cast<long>(screenDevice->getScreenId()));
-#endif
-      screenDevice->setUniqueIdName(idStr);
-      mDesktopDisplayList[screenDevice->getScreenId()] = screenDevice;
+      auto& [key, device] = *iter;
+      device.setScreenId(elem.id);
+      device.setUniqueId(nsPrintfCString("%" PRIdPTR, elem.id));
+      if (Type == CaptureDeviceType::Screen && list.size() == 1) {
+        device.setName(nsCString("Primary Monitor"));
+      } else {
+        device.setName(nsCString(elem.title.c_str()));
+      }
+      device.setPid(elem.pid);
     }
   }
 }
 
-void DesktopDeviceInfoImpl::RefreshScreenList() {
-  CleanUpScreenList();
-  InitializeScreenList();
+std::unique_ptr<DesktopCaptureInfo> CreateScreenCaptureInfo(
+    const DesktopCaptureOptions& aOptions) {
+  std::unique_ptr<DesktopCaptureInfo> info(
+      new DesktopDeviceInfoImpl<CaptureDeviceType::Screen, DesktopSource>(
+          aOptions));
+  info->Refresh();
+  return info;
 }
 
-/* static */
-DesktopDeviceInfo* DesktopDeviceInfo::Create() {
-  auto info = mozilla::MakeUnique<DesktopDeviceInfoImpl>();
-  if (info->Init() != 0) {
-    return nullptr;
+std::unique_ptr<DesktopCaptureInfo> CreateWindowCaptureInfo(
+    const DesktopCaptureOptions& aOptions) {
+  std::unique_ptr<DesktopCaptureInfo> info(
+      new DesktopDeviceInfoImpl<CaptureDeviceType::Window, DesktopSource>(
+          aOptions));
+  info->Refresh();
+  return info;
+}
+
+std::unique_ptr<TabCaptureInfo> CreateTabCaptureInfo() {
+  std::unique_ptr<TabCaptureInfo> info(
+      new DesktopDeviceInfoImpl<CaptureDeviceType::Browser, TabSource>(
+          DesktopCaptureOptions()));
+  info->Refresh();
+  return info;
+}
+
+// simulate deviceInfo interface for video engine, bridge screen/application and
+// real screen/application device info
+template <typename Source>
+class DesktopCaptureDeviceInfo final : public VideoCaptureModule::DeviceInfo {
+ public:
+  DesktopCaptureDeviceInfo(int32_t aId,
+                           std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo);
+
+  int32_t Refresh() override;
+
+  uint32_t NumberOfDevices() override;
+  int32_t GetDeviceName(uint32_t aDeviceNumber, char* aDeviceNameUTF8,
+                        uint32_t aDeviceNameUTF8Size, char* aDeviceUniqueIdUTF8,
+                        uint32_t aDeviceUniqueIdUTF8Size,
+                        char* aProductUniqueIdUTF8,
+                        uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+                        bool* aDeviceIsPlaceholder = nullptr) override;
+
+  int32_t DisplayCaptureSettingsDialogBox(const char* aDeviceUniqueIdUTF8,
+                                          const char* aDialogTitleUTF8,
+                                          void* aParentWindow,
+                                          uint32_t aPositionX,
+                                          uint32_t aPositionY) override;
+  int32_t NumberOfCapabilities(const char* aDeviceUniqueIdUTF8) override;
+  int32_t GetCapability(const char* aDeviceUniqueIdUTF8,
+                        uint32_t aDeviceCapabilityNumber,
+                        VideoCaptureCapability& aCapability) override;
+
+  int32_t GetBestMatchedCapability(const char* aDeviceUniqueIdUTF8,
+                                   const VideoCaptureCapability& aRequested,
+                                   VideoCaptureCapability& aResulting) override;
+  int32_t GetOrientation(const char* aDeviceUniqueIdUTF8,
+                         VideoRotation& aOrientation) override;
+
+ protected:
+  int32_t mId;
+  std::unique_ptr<CaptureInfo<Source>> mDeviceInfo;
+};
+
+using DesktopDeviceInfo = DesktopCaptureDeviceInfo<DesktopSource>;
+using TabDeviceInfo = DesktopCaptureDeviceInfo<TabSource>;
+
+template <typename Source>
+DesktopCaptureDeviceInfo<Source>::DesktopCaptureDeviceInfo(
+    int32_t aId, std::unique_ptr<CaptureInfo<Source>>&& aSourceInfo)
+    : mId(aId), mDeviceInfo(std::move(aSourceInfo)) {}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::Refresh() {
+  mDeviceInfo->Refresh();
+  return 0;
+}
+
+template <typename Source>
+uint32_t DesktopCaptureDeviceInfo<Source>::NumberOfDevices() {
+  return mDeviceInfo->getSourceCount();
+}
+
+template <>
+int32_t DesktopCaptureDeviceInfo<DesktopSource>::GetDeviceName(
+    uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameUTF8Size,
+    char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Size,
+    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+    bool* aDeviceIsPlaceholder) {
+  // always initialize output
+  if (aDeviceNameUTF8 && aDeviceNameUTF8Size > 0) {
+    memset(aDeviceNameUTF8, 0, aDeviceNameUTF8Size);
   }
-  return info.release();
+  if (aDeviceUniqueIdUTF8 && aDeviceUniqueIdUTF8Size > 0) {
+    memset(aDeviceUniqueIdUTF8, 0, aDeviceUniqueIdUTF8Size);
+  }
+  if (aProductUniqueIdUTF8 && aProductUniqueIdUTF8Size > 0) {
+    memset(aProductUniqueIdUTF8, 0, aProductUniqueIdUTF8Size);
+  }
+
+  const DesktopSource* source = mDeviceInfo->getSource(aDeviceNumber);
+  if (!source) {
+    return 0;
+  }
+
+  const nsCString& deviceName = source->getName();
+  size_t len = deviceName.Length();
+  if (len && aDeviceNameUTF8 && len < aDeviceNameUTF8Size) {
+    memcpy(aDeviceNameUTF8, deviceName.Data(), len);
+  }
+
+  const nsCString& deviceUniqueId = source->getUniqueId();
+  len = deviceUniqueId.Length();
+  if (len && aDeviceUniqueIdUTF8 && len < aDeviceUniqueIdUTF8Size) {
+    memcpy(aDeviceUniqueIdUTF8, deviceUniqueId.Data(), len);
+  }
+
+  if (aPid) {
+    *aPid = source->getPid();
+  }
+
+  return 0;
+}
+
+template <>
+int32_t DesktopCaptureDeviceInfo<TabSource>::GetDeviceName(
+    uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameUTF8Size,
+    char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Size,
+    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+    bool* aDeviceIsPlaceholder) {
+  // always initialize output
+  if (aDeviceNameUTF8 && aDeviceNameUTF8Size > 0) {
+    memset(aDeviceNameUTF8, 0, aDeviceNameUTF8Size);
+  }
+  if (aDeviceUniqueIdUTF8 && aDeviceUniqueIdUTF8Size > 0) {
+    memset(aDeviceUniqueIdUTF8, 0, aDeviceUniqueIdUTF8Size);
+  }
+  if (aProductUniqueIdUTF8 && aProductUniqueIdUTF8Size > 0) {
+    memset(aProductUniqueIdUTF8, 0, aProductUniqueIdUTF8Size);
+  }
+
+  const TabSource* source = mDeviceInfo->getSource(aDeviceNumber);
+  if (!source) {
+    return 0;
+  }
+
+  const nsCString& deviceName = source->getName();
+  size_t len = deviceName.Length();
+  if (len && aDeviceNameUTF8 && len < aDeviceNameUTF8Size) {
+    memcpy(aDeviceNameUTF8, deviceName.Data(), len);
+  }
+
+  const nsCString& deviceUniqueId = source->getUniqueId();
+  len = deviceUniqueId.Length();
+  if (len && aDeviceUniqueIdUTF8 && len < aDeviceUniqueIdUTF8Size) {
+    memcpy(aDeviceUniqueIdUTF8, deviceUniqueId.Data(), len);
+  }
+
+  return 0;
+}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::DisplayCaptureSettingsDialogBox(
+    const char* aDeviceUniqueIdUTF8, const char* aDialogTitleUTF8,
+    void* aParentWindow, uint32_t aPositionX, uint32_t aPositionY) {
+  // no device properties to change
+  return 0;
+}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::NumberOfCapabilities(
+    const char* aDeviceUniqueIdUTF8) {
+  return 0;
+}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::GetCapability(
+    const char* aDeviceUniqueIdUTF8, uint32_t aDeviceCapabilityNumber,
+    VideoCaptureCapability& aCapability) {
+  return 0;
+}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::GetBestMatchedCapability(
+    const char* aDeviceUniqueIdUTF8, const VideoCaptureCapability& aRequested,
+    VideoCaptureCapability& aResulting) {
+  return 0;
+}
+
+template <typename Source>
+int32_t DesktopCaptureDeviceInfo<Source>::GetOrientation(
+    const char* aDeviceUniqueIdUTF8, VideoRotation& aOrientation) {
+  return 0;
+}
+
+std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateDesktopDeviceInfo(
+    int32_t aId, std::unique_ptr<DesktopCaptureInfo>&& aInfo) {
+  return std::make_shared<DesktopDeviceInfo>(aId, std::move(aInfo));
+}
+
+std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateTabDeviceInfo(
+    int32_t aId, std::unique_ptr<TabCaptureInfo>&& aInfo) {
+  return std::make_shared<TabDeviceInfo>(aId, std::move(aInfo));
 }
 }  // namespace webrtc
