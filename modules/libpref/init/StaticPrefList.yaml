@@ -11083,7 +11083,7 @@
 # enumeration pref below.
 -   name: media.getdisplaymedia.screencapturekit.picker.enabled
     type: bool
-    value: false
+    value: true
     mirror: once
 
 # Use the libwebrtc ScreenCaptureKit desktop capture backend on Mac for screen
