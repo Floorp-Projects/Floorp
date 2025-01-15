@@ -11074,7 +11074,7 @@
 # CoreGraphics backend is used instead.
 -   name: media.getdisplaymedia.screencapturekit.enabled
     type: bool
-    value: false
+    value: true
     mirror: once
 
 # Use the libwebrtc ScreenCaptureKit desktop capture backend on Mac for screen
