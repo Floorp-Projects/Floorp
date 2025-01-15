@@ -112,8 +112,15 @@ std::shared_ptr<VideoCaptureModule::DeviceInfo>
 DesktopCaptureImpl::CreateDeviceInfo(const int32_t aId,
                                      const CaptureDeviceType aType) {
   if (aType == CaptureDeviceType::Screen) {
-    return CreateDesktopDeviceInfo(
-        aId, CreateScreenCaptureInfo(CreateDesktopCaptureOptions()));
+    auto options = CreateDesktopCaptureOptions();
+#ifdef XP_MACOSX
+    options.set_allow_sck_capturer(
+        mozilla::StaticPrefs::
+            media_getdisplaymedia_screencapturekit_enabled_AtStartup() &&
+        mozilla::StaticPrefs::
+            media_getdisplaymedia_screencapturekit_enumeration_enabled_AtStartup());
+#endif
+    return CreateDesktopDeviceInfo(aId, CreateScreenCaptureInfo(options));
   }
   if (aType == CaptureDeviceType::Window) {
     return CreateDesktopDeviceInfo(
