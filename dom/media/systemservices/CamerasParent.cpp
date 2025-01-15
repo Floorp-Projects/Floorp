@@ -312,16 +312,14 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
     memcpy(shMemBuff.GetBytes(), aAltBuffer, aProps.bufferSize());
     rec.Record();
 
-    if (!SendDeliverFrame(aCapEngine, aStreamId, std::move(shMemBuff.Get()),
-                          aProps)) {
+    if (!SendDeliverFrame(aStreamId, std::move(shMemBuff.Get()), aProps)) {
       return -1;
     }
   } else {
     MOZ_ASSERT(aBuffer.Valid());
     // ShmemBuffer was available, we're all good. A single copy happened
     // in the original webrtc callback.
-    if (!SendDeliverFrame(aCapEngine, aStreamId, std::move(aBuffer.Get()),
-                          aProps)) {
+    if (!SendDeliverFrame(aStreamId, std::move(aBuffer.Get()), aProps)) {
       return -1;
     }
   }
@@ -336,9 +334,8 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
 void CallbackHelper::OnCaptureEnded() {
   nsIEventTarget* target = mParent->GetBackgroundEventTarget();
 
-  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(__func__, [&] {
-    Unused << mParent->SendCaptureEnded(mCapEngine, mStreamId);
-  })));
+  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(
+      __func__, [&] { Unused << mParent->SendCaptureEnded(mStreamId); })));
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
