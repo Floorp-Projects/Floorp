@@ -30,7 +30,9 @@ class ScreenCapturerSck;
 
 // The ScreenCaptureKit API was available in macOS 12.3, but full-screen capture was reported to be
 // broken before macOS 13 - see http://crbug.com/40234870.
-API_AVAILABLE(macos(13.0))
+// Also, the `SCContentFilter` fields `contentRect` and `pointPixelScale` were introduced in
+// macOS 14.
+API_AVAILABLE(macos(14.0))
 @interface SckHelper : NSObject <SCStreamDelegate, SCStreamOutput>
 
 - (instancetype)initWithCapturer:(webrtc::ScreenCapturerSck*)capturer;
@@ -46,7 +48,7 @@ API_AVAILABLE(macos(13.0))
 
 namespace webrtc {
 
-class API_AVAILABLE(macos(13.0)) ScreenCapturerSck final : public DesktopCapturer {
+class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final : public DesktopCapturer {
  public:
   explicit ScreenCapturerSck(const DesktopCaptureOptions& options);
 
@@ -236,10 +238,7 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content) {
   config.showsCursor = capture_options_.prefer_cursor_embedded();
   config.width = filter.contentRect.size.width * filter.pointPixelScale;
   config.height = filter.contentRect.size.height * filter.pointPixelScale;
-
-  if (@available(macOS 14.0, *)) {
-    config.captureResolution = SCCaptureResolutionNominal;
-  }
+  config.captureResolution = SCCaptureResolutionNominal;
 
   {
     MutexLock lock(&latest_frame_lock_);
@@ -354,7 +353,7 @@ void ScreenCapturerSck::StartOrReconfigureCapturer() {
 }
 
 std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(const DesktopCaptureOptions& options) {
-  if (@available(macOS 13.0, *)) {
+  if (@available(macOS 14.0, *)) {
     return std::make_unique<ScreenCapturerSck>(options);
   } else {
     return nullptr;
