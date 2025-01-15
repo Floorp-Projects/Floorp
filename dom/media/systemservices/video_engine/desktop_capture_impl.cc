@@ -315,14 +315,21 @@ int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& aCapability) {
   RTC_DCHECK_RUN_ON(&mControlThreadChecker);
 
+  const int maxFps = std::max(aCapability.maxFPS, 1);
   if (mRequestedCapability) {
-    // Already initialized
-    MOZ_ASSERT(*mRequestedCapability == aCapability);
-
+    MOZ_DIAGNOSTIC_ASSERT(mCaptureThread);
+    if (std::max(mRequestedCapability->maxFPS, 1) == maxFps) {
+      // No change in effective requested capability (only knob is fps).
+      return 0;
+    }
+    mRequestedCapability = mozilla::Some(aCapability);
+    MOZ_ALWAYS_SUCCEEDS(mCaptureThread->Dispatch(
+        NS_NewRunnableFunction("DesktopCaptureImpl::UpdateOnThread",
+                               [this, self = RefPtr(this), maxFps]() mutable {
+                                 UpdateOnThread(maxFps);
+                               })));
     return 0;
   }
-
-  MOZ_ASSERT(!mCaptureThread);
 
   DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
   std::unique_ptr capturer = CreateDesktopCapturerAndThread(
@@ -339,9 +346,7 @@ int32_t DesktopCaptureImpl::StartCapture(
   MOZ_ALWAYS_SUCCEEDS(mCaptureThread->Dispatch(NS_NewRunnableFunction(
       "DesktopCaptureImpl::InitOnThread",
       [this, self = RefPtr(this), capturer = std::move(capturer),
-       maxFps = std::max(aCapability.maxFPS, 1)]() mutable {
-        InitOnThread(std::move(capturer), maxFps);
-      })));
+       maxFps]() mutable { InitOnThread(std::move(capturer), maxFps); })));
 
   return 0;
 }
@@ -517,6 +522,17 @@ void DesktopCaptureImpl::InitOnThread(
   mCapturer->Start(this);
 
   mCaptureTimer = NS_NewTimer();
+  mRequestedCaptureInterval = mozilla::Some(
+      TimeDuration::FromSeconds(1. / static_cast<double>(aFramerate)));
+
+  CaptureFrameOnThread();
+}
+
+void DesktopCaptureImpl::UpdateOnThread(int aFramerate) {
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
+  MOZ_DIAGNOSTIC_ASSERT(mCapturer);
+  MOZ_DIAGNOSTIC_ASSERT(mCaptureTimer);
+
   mRequestedCaptureInterval = mozilla::Some(
       TimeDuration::FromSeconds(1. / static_cast<double>(aFramerate)));
 
