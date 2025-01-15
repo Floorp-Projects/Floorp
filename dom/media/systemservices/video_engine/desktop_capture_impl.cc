@@ -356,9 +356,8 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   options.set_disable_effects(false);
 
 #if defined(WEBRTC_WIN)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_directx()) {
-    options.set_allow_directx_capturer(true);
-  }
+  options.set_allow_directx_capturer(
+      mozilla::StaticPrefs::media_webrtc_capture_allow_directx());
   options.set_allow_cropping_window_capturer(true);
 #  if defined(RTC_ENABLE_WIN_WGC)
   if (mozilla::StaticPrefs::media_webrtc_capture_screen_allow_wgc()) {
@@ -375,15 +374,13 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 #endif
 
 #if defined(WEBRTC_MAC)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface()) {
-    options.set_allow_iosurface(true);
-  }
+  options.set_allow_iosurface(
+      mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface());
 #endif
 
 #if defined(WEBRTC_USE_PIPEWIRE)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire()) {
-    options.set_allow_pipewire(true);
-  }
+  options.set_allow_pipewire(
+      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire());
 #endif
 
   return options;
