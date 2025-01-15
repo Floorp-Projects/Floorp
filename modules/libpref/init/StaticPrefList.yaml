@@ -11076,6 +11076,16 @@
     type: bool
     value: false
     mirror: once
+
+# Use the libwebrtc ScreenCaptureKit desktop capture backend on Mac for screen
+# enumeration when enabled.
+# When this is false and the backend is used (see above), the older CoreGraphics
+# backend is used to enumerate CGDirectDisplayIDs, which the ScreenCaptureKit
+# backend understand as well.
+-   name: media.getdisplaymedia.screencapturekit.enumeration.enabled
+    type: bool
+    value: false
+    mirror: once
 #endif
 
 # Turn off any cameras (but not mics) while in the background. This is desirable
