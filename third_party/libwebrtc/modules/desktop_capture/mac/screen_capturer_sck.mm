@@ -103,7 +103,7 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final : public DesktopCapture
   void StartWithFilter(SCContentFilter* filter) RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
   // Called by SckHelper to notify of a newly captured frame. May run on an arbitrary thread.
-  void OnNewIOSurface(IOSurfaceRef io_surface, CFDictionaryRef attachment);
+  void OnNewIOSurface(IOSurfaceRef io_surface, NSDictionary* attachment);
 
  private:
   // Called when starting the capturer or the configuration has changed (either from a
@@ -480,10 +480,13 @@ void ScreenCapturerSck::StartWithFilter(SCContentFilter* __strong filter) {
   }
 }
 
-void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface, CFDictionaryRef attachment) {
+void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface, NSDictionary* attachment) {
   RTC_LOG(LS_VERBOSE) << "ScreenCapturerSck " << this << " " << __func__
                       << " width=" << IOSurfaceGetWidth(io_surface)
                       << ", height=" << IOSurfaceGetHeight(io_surface) << ".";
+
+  const auto* dirty_rects = (NSArray*)attachment[SCStreamFrameInfoDirtyRects];
+
   rtc::ScopedCFTypeRef<IOSurfaceRef> scoped_io_surface(io_surface, rtc::RetainPolicy::RETAIN);
   std::unique_ptr<DesktopFrameIOSurface> desktop_frame_io_surface =
       DesktopFrameIOSurface::Wrap(scoped_io_surface);
@@ -505,28 +508,20 @@ void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface, CFDictionaryRef 
   }
 
   if (!dirty) {
-    const void* dirty_rects_ptr =
-        CFDictionaryGetValue(attachment, (__bridge CFStringRef)SCStreamFrameInfoDirtyRects);
-    if (!dirty_rects_ptr) {
+    if (!dirty_rects) {
       // This is never expected to happen - SCK attaches a non-empty dirty-rects list to every
       // frame, even when nothing has changed.
       return;
     }
-    if (CFGetTypeID(dirty_rects_ptr) != CFArrayGetTypeID()) {
-      return;
-    }
-
-    CFArrayRef dirty_rects_array = static_cast<CFArrayRef>(dirty_rects_ptr);
-    int size = CFArrayGetCount(dirty_rects_array);
-    for (int i = 0; i < size; i++) {
-      const void* rect_ptr = CFArrayGetValueAtIndex(dirty_rects_array, i);
+    for (NSUInteger i = 0; i < dirty_rects.count; i++) {
+      const auto* rect_ptr = (__bridge CFDictionaryRef)dirty_rects[i];
       if (CFGetTypeID(rect_ptr) != CFDictionaryGetTypeID()) {
         // This is never expected to happen - the dirty-rects attachment should always be an array
         // of dictionaries.
         return;
       }
       CGRect rect{};
-      CGRectMakeWithDictionaryRepresentation(static_cast<CFDictionaryRef>(rect_ptr), &rect);
+      CGRectMakeWithDictionaryRepresentation(rect_ptr, &rect);
       if (!CGRectIsEmpty(rect)) {
         dirty = true;
         break;
@@ -672,7 +667,7 @@ std::unique_ptr<DesktopCapturer> CreateGenericCapturerSck(const DesktopCaptureOp
 
   webrtc::MutexLock lock(&_capturer_lock);
   if (_capturer) {
-    _capturer->OnNewIOSurface(ioSurface, attachment);
+    _capturer->OnNewIOSurface(ioSurface, (__bridge NSDictionary*)attachment);
   }
 }
 
