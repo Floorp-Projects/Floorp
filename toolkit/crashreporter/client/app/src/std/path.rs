@@ -7,7 +7,7 @@
 pub use std::path::*;
 
 use super::mock::MockKey;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 
 macro_rules! delegate {
     ( fn $name:ident (&self $(, $arg:ident : $argty:ty )* ) -> $ret:ty ) => {
@@ -24,6 +24,13 @@ pub struct Path(std::path::Path);
 impl AsRef<std::path::Path> for Path {
     fn as_ref(&self) -> &std::path::Path {
         &self.0
+    }
+}
+
+impl ToOwned for Path {
+    type Owned = PathBuf;
+    fn to_owned(&self) -> Self::Owned {
+        PathBuf(self.0.to_owned())
     }
 }
 
@@ -46,6 +53,12 @@ impl AsRef<Path> for String {
 }
 
 impl AsRef<Path> for &OsStr {
+    fn as_ref(&self) -> &Path {
+        Path::from_path(self.as_ref())
+    }
+}
+
+impl AsRef<Path> for OsString {
     fn as_ref(&self) -> &Path {
         Path::from_path(self.as_ref())
     }
@@ -125,6 +138,12 @@ impl PathBuf {
 impl std::ops::Deref for PathBuf {
     type Target = Path;
     fn deref(&self) -> &Self::Target {
+        Path::from_path(self.0.as_ref())
+    }
+}
+
+impl std::borrow::Borrow<Path> for PathBuf {
+    fn borrow(&self) -> &Path {
         Path::from_path(self.0.as_ref())
     }
 }

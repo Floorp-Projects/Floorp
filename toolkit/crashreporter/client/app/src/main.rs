@@ -206,7 +206,7 @@ fn try_run(config: &mut Arc<Config>) -> anyhow::Result<bool> {
     } else {
         // Run minidump-analyzer to gather stack traces.
         {
-            let analyzer_path = config.sibling_program_path("minidump-analyzer");
+            let analyzer_path = config.installation_program_path("minidump-analyzer");
             let mut cmd = crate::process::background_command(&analyzer_path);
             if config.dump_all_threads {
                 cmd.arg("--full");
