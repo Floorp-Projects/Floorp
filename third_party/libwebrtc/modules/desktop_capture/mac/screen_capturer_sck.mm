@@ -245,6 +245,7 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content) {
                                                     excludingWindows:@[]];
   SCStreamConfiguration* config = [[SCStreamConfiguration alloc] init];
   config.pixelFormat = kCVPixelFormatType_32BGRA;
+  config.colorSpaceName = kCGColorSpaceSRGB;
   config.showsCursor = capture_options_.prefer_cursor_embedded();
   config.width = filter.contentRect.size.width * filter.pointPixelScale;
   config.height = filter.contentRect.size.height * filter.pointPixelScale;
