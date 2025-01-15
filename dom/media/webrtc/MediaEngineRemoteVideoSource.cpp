@@ -216,7 +216,7 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mState == kAllocated || mState == kStarted || mState == kStopped);
   MOZ_ASSERT(mTrack);
 
   {
@@ -317,26 +317,13 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
     return NS_OK;
   }
 
-  bool started = mState == kStarted;
-  if (started) {
-    nsresult rv = Stop();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      nsAutoCString name;
-      GetErrorName(rv, name);
-      LOG("Video source %p for video device %d Reconfigure() failed "
-          "unexpectedly in Stop(). rv=%s",
-          this, mCaptureId, name.Data());
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
   {
     MutexAutoLock lock(mMutex);
     // Start() applies mCapability on the device.
     mCapability = newCapability;
   }
 
-  if (started) {
+  if (mState == kStarted) {
     nsresult rv = Start();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString name;

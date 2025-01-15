@@ -908,16 +908,12 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
       mVideoCaptureThread, __func__,
       [this, self = RefPtr(this), aCapEngine, aCaptureId, aIpcCaps] {
         LOG_FUNCTION();
-        CallbackHelper** cbh;
         int error = -1;
 
         if (!EnsureInitialized(aCapEngine)) {
           return Promise::CreateAndResolve(error,
                                            "CamerasParent::RecvStartCapture");
         }
-
-        cbh = mCallbacks.AppendElement(new CallbackHelper(
-            static_cast<CaptureEngine>(aCapEngine), aCaptureId, this));
 
         mEngines->ElementAt(aCapEngine)
             ->WithEntry(aCaptureId, [&](VideoEngine::CaptureEntry& cap) {
@@ -929,19 +925,21 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                   static_cast<webrtc::VideoType>(aIpcCaps.videoType());
               capability.interlaced = aIpcCaps.interlaced();
 
-#ifndef FUZZING_SNAPSHOT
-              MOZ_DIAGNOSTIC_ASSERT(sDeviceUniqueIDs.find(aCaptureId) ==
-                                    sDeviceUniqueIDs.end());
-#endif
-              sDeviceUniqueIDs.emplace(aCaptureId,
-                                       cap.VideoCapture()->CurrentDeviceName());
-
-#ifndef FUZZING_SNAPSHOT
-              MOZ_DIAGNOSTIC_ASSERT(
-                  sAllRequestedCapabilities.find(aCaptureId) ==
-                  sAllRequestedCapabilities.end());
-#endif
-              sAllRequestedCapabilities.emplace(aCaptureId, capability);
+              if (sDeviceUniqueIDs.find(aCaptureId) == sDeviceUniqueIDs.end()) {
+                sDeviceUniqueIDs.emplace(
+                    aCaptureId, cap.VideoCapture()->CurrentDeviceName());
+                sAllRequestedCapabilities.emplace(aCaptureId, capability);
+              } else {
+                // Starting capture for an id that already exists. Update its
+                // requested capability.
+                MOZ_DIAGNOSTIC_ASSERT(
+                    strcmp(sDeviceUniqueIDs[aCaptureId],
+                           cap.VideoCapture()->CurrentDeviceName()) == 0);
+                MOZ_DIAGNOSTIC_ASSERT(
+                    sAllRequestedCapabilities.find(aCaptureId) !=
+                    sAllRequestedCapabilities.end());
+                sAllRequestedCapabilities[aCaptureId] = capability;
+              }
 
               if (aCapEngine == CameraEngine) {
                 for (const auto& it : sDeviceUniqueIDs) {
@@ -1005,20 +1003,36 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                 }
               }
 
-              cap.VideoCapture()->SetTrackingId(
-                  (*cbh)->mTrackingId.mUniqueInProcId);
+              bool cbhExists = false;
+              CallbackHelper** cbh = nullptr;
+              for (auto* cb : mCallbacks) {
+                if (cb->mCapEngine == aCapEngine &&
+                    cb->mStreamId == (uint32_t)aCaptureId) {
+                  cbhExists = true;
+                  break;
+                }
+              }
+              if (!cbhExists) {
+                cbh = mCallbacks.AppendElement(new CallbackHelper(
+                    static_cast<CaptureEngine>(aCapEngine), aCaptureId, this));
+                cap.VideoCapture()->SetTrackingId(
+                    (*cbh)->mTrackingId.mUniqueInProcId);
+              }
+
               error = cap.VideoCapture()->StartCapture(capability);
 
               if (!error) {
-                cap.VideoCapture()->RegisterCaptureDataCallback(
-                    static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
-                        *cbh));
-                if (auto* event = cap.CaptureEndedEvent();
-                    event && !(*cbh)->mConnectedToCaptureEnded) {
-                  (*cbh)->mCaptureEndedListener =
-                      event->Connect(mVideoCaptureThread, (*cbh),
-                                     &CallbackHelper::OnCaptureEnded);
-                  (*cbh)->mConnectedToCaptureEnded = true;
+                if (cbh) {
+                  cap.VideoCapture()->RegisterCaptureDataCallback(
+                      static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+                          *cbh));
+                  if (auto* event = cap.CaptureEndedEvent();
+                      event && !(*cbh)->mConnectedToCaptureEnded) {
+                    (*cbh)->mCaptureEndedListener =
+                        event->Connect(mVideoCaptureThread, (*cbh),
+                                       &CallbackHelper::OnCaptureEnded);
+                    (*cbh)->mConnectedToCaptureEnded = true;
+                  }
                 }
               } else {
                 sDeviceUniqueIDs.erase(aCaptureId);

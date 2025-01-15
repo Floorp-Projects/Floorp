@@ -96,6 +96,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // Maximum CPU usage in %.
   static constexpr uint32_t kMaxDesktopCaptureCpuUsage = 50;
   void InitOnThread(std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate);
+  void UpdateOnThread(int aFramerate);
   void ShutdownOnThread();
   // DesktopCapturer::Callback interface.
   void OnCaptureResult(DesktopCapturer::Result aResult,
