@@ -366,22 +366,27 @@ int CamerasChild::ReleaseCapture(CaptureEngine aCapEngine,
   return dispatcher.ReturnValue();
 }
 
-void CamerasChild::AddCallback(const CaptureEngine aCapEngine,
-                               const int capture_id, FrameRelay* render) {
+void CamerasChild::AddCallback(int capture_id, FrameRelay* render) {
   MutexAutoLock lock(mCallbackMutex);
   CapturerElement ce;
-  ce.engine = aCapEngine;
   ce.id = capture_id;
   ce.callback = render;
-  mCallbacks.AppendElement(ce);
+
+  if (!mCallbacks.Contains(ce, [](const auto& aLhs, const auto& aRhs) -> int {
+        if (int res = aLhs.id - aRhs.id; res != 0) {
+          return res;
+        }
+        return aLhs.callback - aRhs.callback;
+      })) {
+    mCallbacks.AppendElement(ce);
+  }
 }
 
-void CamerasChild::RemoveCallback(const CaptureEngine aCapEngine,
-                                  const int capture_id) {
+void CamerasChild::RemoveCallback(const int capture_id) {
   MutexAutoLock lock(mCallbackMutex);
   for (unsigned int i = 0; i < mCallbacks.Length(); i++) {
     CapturerElement ce = mCallbacks[i];
-    if (ce.engine == aCapEngine && ce.id == capture_id) {
+    if (ce.id == capture_id) {
       mCallbacks.RemoveElementAt(i);
       break;
     }
@@ -392,7 +397,7 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
                                const webrtc::VideoCaptureCapability& webrtcCaps,
                                FrameRelay* cb) {
   LOG(("%s", __PRETTY_FUNCTION__));
-  AddCallback(aCapEngine, capture_id, cb);
+  AddCallback(capture_id, cb);
   VideoCaptureCapability capCap(
       webrtcCaps.width, webrtcCaps.height, webrtcCaps.maxFPS,
       static_cast<int>(webrtcCaps.videoType), webrtcCaps.interlaced);
@@ -423,7 +428,7 @@ int CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id) {
           &CamerasChild::SendStopCapture, aCapEngine, capture_id);
   LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
-    RemoveCallback(aCapEngine, capture_id);
+    RemoveCallback(capture_id);
   }
   return dispatcher.ReturnValue();
 }
@@ -475,11 +480,10 @@ void Shutdown(void) {
   CamerasSingleton::Thread() = nullptr;
 }
 
-mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(
-    const CaptureEngine& capEngine, const int& capId) {
+mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(const int& capId) {
   MutexAutoLock lock(mCallbackMutex);
-  if (Callback(capEngine, capId)) {
-    Callback(capEngine, capId)->OnCaptureEnded();
+  if (Callback(capId)) {
+    Callback(capId)->OnCaptureEnded();
   } else {
     LOG(("CaptureEnded called with dead callback"));
   }
@@ -487,12 +491,12 @@ mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
-    const CaptureEngine& capEngine, const int& capId,
-    mozilla::ipc::Shmem&& shmem, const VideoFrameProperties& prop) {
+    const int& capId, mozilla::ipc::Shmem&& shmem,
+    const VideoFrameProperties& prop) {
   MutexAutoLock lock(mCallbackMutex);
-  if (Callback(capEngine, capId)) {
+  if (Callback(capId)) {
     unsigned char* image = shmem.get<unsigned char>();
-    Callback(capEngine, capId)->DeliverFrame(image, prop);
+    Callback(capId)->DeliverFrame(image, prop);
   } else {
     LOG(("DeliverFrame called with dead callback"));
   }
@@ -535,10 +539,10 @@ CamerasChild::~CamerasChild() {
   MOZ_COUNT_DTOR(CamerasChild);
 }
 
-FrameRelay* CamerasChild::Callback(CaptureEngine aCapEngine, int capture_id) {
+FrameRelay* CamerasChild::Callback(int capture_id) {
   for (unsigned int i = 0; i < mCallbacks.Length(); i++) {
     CapturerElement ce = mCallbacks[i];
-    if (ce.engine == aCapEngine && ce.id == capture_id) {
+    if (ce.id == capture_id) {
       return ce.callback;
     }
   }
