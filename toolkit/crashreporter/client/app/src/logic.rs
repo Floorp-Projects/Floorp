@@ -146,7 +146,7 @@ impl ReportCrash {
 
         serde_json::to_writer(file, &ping).context("failed to serialize telemetry crash ping")?;
 
-        let pingsender_path = self.config.sibling_program_path("pingsender");
+        let pingsender_path = self.config.installation_program_path("pingsender");
 
         crate::process::background_command(&pingsender_path)
             .arg(submission_url)

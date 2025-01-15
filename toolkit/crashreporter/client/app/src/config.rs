@@ -68,10 +68,7 @@ impl<'a> ConfigStringBuilder<'a> {
 
     /// Get the localized string.
     pub fn get(self) -> String {
-        self.0
-            .get()
-            .context("failed to get localized string")
-            .unwrap()
+        self.0.get()
     }
 }
 
@@ -83,7 +80,7 @@ impl Config {
 
     /// Load a configuration from the application environment.
     #[cfg_attr(mock, allow(unused))]
-    pub fn read_from_environment(&mut self) -> anyhow::Result<()> {
+    pub fn read_from_environment(&mut self) {
         self.auto_submit = env_bool(ekey!("AUTO_SUBMIT"));
         self.dump_all_threads = env_bool(ekey!("DUMP_ALL_THREADS"));
         self.delete_dump = !env_bool(ekey!("NO_DELETE_DUMP"));
@@ -122,9 +119,7 @@ impl Config {
             log::warn!("ignoring extraneous argument: {}", arg.to_string_lossy());
         }
 
-        self.strings = Some(lang::load().context("failed to load localized strings")?);
-
-        Ok(())
+        self.strings = Some(lang::load());
     }
 
     /// Get the localized string for the given index.
@@ -210,14 +205,12 @@ impl Config {
 
         self.profile_dir = Some(profile_dir);
 
-        // Update the localization, if applicable.
-        match lang::load_langpack(
-            self.profile_dir.as_deref().unwrap(),
-            extra.get("useragent_locale").and_then(|v| v.as_str()),
-        ) {
-            Ok(Some(strings)) => self.strings = Some(strings),
-            Ok(None) => (),
-            Err(e) => {
+        // Update the localization information.
+        if let Some(strings) = self.strings.as_mut() {
+            if let Err(e) = strings.add_langpack(
+                self.profile_dir.as_deref().unwrap(),
+                extra.get("useragent_locale").and_then(|v| v.as_str()),
+            ) {
                 log::warn!("failed to read localization information from profile: {e:#}")
             }
         }

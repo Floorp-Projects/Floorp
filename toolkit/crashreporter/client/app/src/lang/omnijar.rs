@@ -12,7 +12,7 @@ use once_cell::unsync::Lazy;
 /// Read the appropriate localization fluent definitions from the omnijar files.
 ///
 /// Returns language information if found in adjacent omnijar files.
-pub fn read() -> anyhow::Result<LanguageInfo> {
+pub fn read() -> anyhow::Result<Vec<LanguageInfo>> {
     let mut path = installation_resource_path().join("omni.ja");
 
     let mut zip = read_zip(&path)?;
@@ -27,18 +27,26 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
         .context("failed to read first line of multilocale file")?;
     let locales = line.split(",").map(|s| s.trim());
 
-    let (identifier, ftl_definitions) = 'defs: {
-        for locale in locales.clone() {
+    let loaded: Vec<_> = locales
+        .clone()
+        .filter_map(|locale| {
             match read_archive_file_as_string(
                 &mut zip,
                 &format!("localization/{locale}/crashreporter/crashreporter.ftl"),
             ) {
-                Ok(v) => break 'defs (locale.to_owned(), v),
-                Err(e) => log::warn!("failed to get localized strings for {locale}: {e:#}"),
+                Ok(v) => Some((locale.to_owned(), v)),
+                Err(e) => {
+                    log::warn!("failed to get localized strings for {locale}: {e:#}");
+                    None
+                }
             }
-        }
-        anyhow::bail!("failed to find any usable localized strings in the omnijar")
-    };
+        })
+        .collect();
+
+    anyhow::ensure!(
+        !loaded.is_empty(),
+        "failed to find any usable localized strings in the omnijar"
+    );
 
     // Firefox branding is in the browser omnijar.
     path.pop();
@@ -53,6 +61,9 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
         Ok(z) => Some(z),
     });
 
+    // Only use the first branding file we find (rather than loading from all locales). The
+    // branding file is relatively static so we shouldn't encounter incompatibilities (e.g. missing
+    // identifiers).
     let ftl_branding = 'branding: {
         for locale in locales {
             let brand_file = format!("localization/{locale}/branding/brand.ftl");
@@ -77,9 +88,12 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
         LanguageInfo::default().ftl_branding
     };
 
-    Ok(LanguageInfo {
-        identifier,
-        ftl_definitions,
-        ftl_branding,
-    })
+    Ok(loaded
+        .into_iter()
+        .map(|(identifier, ftl_definitions)| LanguageInfo {
+            identifier,
+            ftl_definitions,
+            ftl_branding: ftl_branding.clone(),
+        })
+        .collect())
 }
