@@ -84,7 +84,7 @@ Notification.prototype = {
   },
 };
 
-this.notifications = class extends ExtensionAPI {
+this.notifications = class extends ExtensionAPIPersistent {
   constructor(extension) {
     super(extension);
 
@@ -98,6 +98,55 @@ this.notifications = class extends ExtensionAPI {
       notification.clear();
     }
   }
+
+  PERSISTENT_EVENTS = {
+    onClosed({ fire }) {
+      let listener = (event, notificationId) => {
+        // TODO Bug 1413188, Support the byUser argument.
+        fire.async(notificationId, true);
+      };
+
+      this.notificationsMap.on("closed", listener);
+      return {
+        unregister: () => {
+          this.notificationsMap.off("closed", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onClicked({ fire }) {
+      let listener = (event, notificationId) => {
+        fire.async(notificationId);
+      };
+
+      this.notificationsMap.on("clicked", listener);
+      return {
+        unregister: () => {
+          this.notificationsMap.off("clicked", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onShown({ fire }) {
+      let listener = (event, notificationId) => {
+        fire.async(notificationId);
+      };
+
+      this.notificationsMap.on("shown", listener);
+      return {
+        unregister: () => {
+          this.notificationsMap.off("shown", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
 
   getAPI(context) {
     let notificationsMap = this.notificationsMap;
@@ -136,48 +185,23 @@ this.notifications = class extends ExtensionAPI {
 
         onClosed: new EventManager({
           context,
-          name: "notifications.onClosed",
-          register: fire => {
-            let listener = (event, notificationId) => {
-              // TODO Bug 1413188, Support the byUser argument.
-              fire.async(notificationId, true);
-            };
-
-            notificationsMap.on("closed", listener);
-            return () => {
-              notificationsMap.off("closed", listener);
-            };
-          },
+          module: "notifications",
+          event: "onClosed",
+          extensionApi: this,
         }).api(),
 
         onClicked: new EventManager({
           context,
-          name: "notifications.onClicked",
-          register: fire => {
-            let listener = (event, notificationId) => {
-              fire.async(notificationId);
-            };
-
-            notificationsMap.on("clicked", listener);
-            return () => {
-              notificationsMap.off("clicked", listener);
-            };
-          },
+          module: "notifications",
+          event: "onClicked",
+          extensionApi: this,
         }).api(),
 
         onShown: new EventManager({
           context,
-          name: "notifications.onShown",
-          register: fire => {
-            let listener = (event, notificationId) => {
-              fire.async(notificationId);
-            };
-
-            notificationsMap.on("shown", listener);
-            return () => {
-              notificationsMap.off("shown", listener);
-            };
-          },
+          module: "notifications",
+          event: "onShown",
+          extensionApi: this,
         }).api(),
 
         // TODO Bug 1190681, implement button support.

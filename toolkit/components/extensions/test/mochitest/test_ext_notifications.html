@@ -4,6 +4,7 @@
   <title>Test for notifications</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
   <script type="text/javascript" src="head_notifications.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -18,7 +19,7 @@ let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
                  "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-add_task(async function setup_mock_alert_service() {
+add_setup(async function setup_mock_alert_service() {
   await MockAlertsService.register();
 });
 
@@ -143,6 +144,87 @@ add_task(async function test_notification_events() {
   await waitForNotificationEvent("closed");
   await checkNotificationCount(0);
 
+  await extension.unload();
+});
+
+add_task(async function test_notifications_events_in_event_page() {
+  function background() {
+    browser.notifications.onClicked.addListener(id => {
+      browser.test.sendMessage("onClicked", id);
+    });
+    browser.notifications.onShown.addListener(id => {
+      browser.test.sendMessage("onShown", id);
+    });
+    browser.notifications.onClosed.addListener(id => {
+      browser.test.sendMessage("onClosed", id);
+    });
+  }
+  async function tabScript() {
+    let id = await browser.notifications.create({
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    });
+    browser.test.sendMessage("created_notification", id);
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      // Manifest V3 defaults to using event pages by default.
+      manifest_version: 3,
+      permissions: ["notifications"],
+    },
+    background,
+    files: {
+      "page.js": tabScript,
+      "page.html": `<!DOCTYPE html><script src="page.js"><\/script>`,
+    },
+  });
+  await extension.startup();
+  await extension.terminateBackground();
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    `moz-extension://${extension.uuid}/page.html`
+  );
+  let id = await extension.awaitMessage("created_notification");
+  ok(id, "Created notification");
+  let shownId = await extension.awaitMessage("onShown");
+  is(shownId, id, "onShown should wake up event page");
+
+  await extension.terminateBackground();
+
+  await MockAlertsService.clickNotificationsWithoutClose();
+  let clickedId = await extension.awaitMessage("onClicked");
+  is(clickedId, id, "onClicked should wake up event page");
+
+  await extension.terminateBackground();
+
+  // On most platforms, clicking the notification closes it.
+  // MockAlertsService.clickNotificationsWithoutClose() was used above to
+  // simulate clicking without closing across all platforms, so here we can
+  // simulate closing all (=the only one notification) without clicking:
+  await MockAlertsService.closeNotifications();
+  let closedId = await extension.awaitMessage("onClosed");
+  is(closedId, id, "onClosed should wake up event page");
+
+  // The above confirms the behavior from the API perspective; for completeness
+  // also verify the internal state, like all other tests that check persistent
+  // listeners:
+  await assertPersistentListeners(
+    extension,
+    "notifications",
+    ["onClicked", "onClosed", "onShown"],
+    { primed: false }
+  );
+  await extension.terminateBackground();
+  await assertPersistentListeners(
+    extension,
+    "notifications",
+    ["onClicked", "onClosed", "onShown"],
+    { primed: true }
+  );
+
+  await AppTestDelegate.removeTab(window, tab);
   await extension.unload();
 });
 
