@@ -305,10 +305,18 @@ void ScreenCapturerSck::EnsureVisible() {
   SCContentSharingPickerConfiguration* config = picker.defaultConfiguration;
   config.allowedPickerModes = picker_modes_;
   picker.defaultConfiguration = config;
+  SCShareableContentStyle style = SCShareableContentStyleNone;
   // Pick a sensible style to start out with, based on our current mode.
-  // Default to Screen because if using Window the picker automatically hides
-  // our current window to show others.
-  SCShareableContentStyle style = SCShareableContentStyleDisplay;
+  if (@available(macOS 15, *)) {
+    // Stick with None because if we use Display, the picker doesn't let us
+    // pick a window when first opened. Behaves like Window in 14 except doesn't
+    // change window focus.
+  } else {
+    // Default to Display because if using Window the picker automatically hides
+    // our current window to show others. Saves a click compared to None when
+    // picking a display.
+    style = SCShareableContentStyleDisplay;
+  }
   if (picker_modes_ == SCContentSharingPickerModeSingleDisplay) {
     style = SCShareableContentStyleDisplay;
   } else if (picker_modes_ == SCContentSharingPickerModeSingleWindow ||
