@@ -79,6 +79,14 @@ class RTC_EXPORT DesktopCaptureOptions {
   // new versions of macOS that remove support for the CGDisplay-based APIs.
   bool allow_sck_capturer() const { return allow_sck_capturer_; }
   void set_allow_sck_capturer(bool allow) { allow_sck_capturer_ = allow; }
+
+  // If ScreenCaptureKit is used for desktop capture and this flag is
+  // set, the ScreenCaptureKit backend will use SCContentSharingPicker for
+  // picking source.
+  bool allow_sck_system_picker() const { return allow_sck_system_picker_; }
+  void set_allow_sck_system_picker(bool allow) {
+    allow_sck_system_picker_ = allow;
+  }
 #endif
 
   const rtc::scoped_refptr<FullScreenWindowDetector>&
@@ -243,6 +251,7 @@ class RTC_EXPORT DesktopCaptureOptions {
   rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
   bool allow_iosurface_ = false;
   bool allow_sck_capturer_ = false;
+  bool allow_sck_system_picker_ = false;
 #endif
 
   rtc::scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
