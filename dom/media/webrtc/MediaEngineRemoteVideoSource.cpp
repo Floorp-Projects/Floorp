@@ -393,6 +393,7 @@ const TrackingId& MediaEngineRemoteVideoSource::GetTrackingId() const {
 }
 
 void MediaEngineRemoteVideoSource::OnCaptureEnded() {
+  mFirstFramePromiseHolder.RejectIfExists(NS_ERROR_UNEXPECTED, __func__);
   mCaptureEndedEvent.Notify();
 }
 
