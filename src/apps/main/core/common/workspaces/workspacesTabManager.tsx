@@ -1,4 +1,4 @@
-import { createEffect } from "solid-js";
+import { createEffect, createResource } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
 import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
@@ -164,31 +164,6 @@ export class WorkspacesTabManager {
     }
 
     setWorkspacesDataStore("selectedID",workspaceId)
-    this.changeWorkspaceToolbarState(workspaceId);
-  }
-
-  /**
-   * Change workspace. Selected workspace id will be stored in window object.
-   * @param workspaceId The workspace id.
-   */
-  public changeWorkspaceToolbarState(workspaceId: TWorkspaceID) {
-    const gWorkspaceIcons = this.iconCtx;
-    const targetToolbarItem = document?.querySelector(
-      "#workspaces-toolbar-button",
-    ) as XULElement;
-
-    const workspace = this.dataManagerCtx.getRawWorkspace(workspaceId);
-
-    if (configStore.showWorkspaceNameOnToolbar) {
-      targetToolbarItem?.setAttribute("label", workspace.name);
-    } else {
-      targetToolbarItem?.removeAttribute("label");
-    }
-
-    (document?.documentElement as XULElement).style.setProperty(
-      "--workspaces-toolbar-button-icon",
-      `url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`,
-    );
   }
 
 

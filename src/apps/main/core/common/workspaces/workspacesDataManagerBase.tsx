@@ -29,8 +29,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
       };
       //TODO: If the id is duplicated, regenerate with limit to try
       setWorkspacesDataStore("data",(prev)=>{
-        prev.set(id,workspace)
-        return new Map(prev);
+        const temp = new Map(prev);
+        temp.set(id,workspace)
+        return temp;
       });
       return id;
     }

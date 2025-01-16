@@ -5,10 +5,6 @@
 
 /* Toolbar button */
 #workspaces-toolbar-button {
-  list-style-image: var(
-    --workspaces-toolbar-button-icon,
-    url("chrome://branding/content/icon32.png")
-  );
   border-radius: 0px !important;
 
   &:hover {

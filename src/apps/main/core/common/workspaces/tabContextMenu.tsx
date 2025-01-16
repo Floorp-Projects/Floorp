@@ -5,7 +5,7 @@
 
 import { render } from "@nora/solid-xul";
 import { WorkspacesService } from "./workspacesService";
-import { For } from "solid-js";
+import { createResource, For } from "solid-js";
 import { workspacesDataStore } from "./data/data.js";
 import { TWorkspaceID } from "./utils/type.js";
 
@@ -21,17 +21,17 @@ export class WorkspacesTabContextMenu {
 
   // static is Against "this.menuItem is not a function" error.
   private menuItem(order: string[]) {
-    const gWorkspaceIcons = this.ctx.iconCtx;
     return (
       <For each={order}>
         {(id) => {
           if (this.ctx.isWorkspaceID(id)) {
-            const workspace = this.ctx.getRawWorkspace(id);
+            const workspace = () => this.ctx.getRawWorkspace(id);
+            const icon = () => this.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
             return <xul:menuitem
               id="context_MoveTabToOtherWorkspace"
-              label={workspace.name}
+              label={workspace().name}
               class="menuitem-iconic"
-              style={`list-style-image: url(${gWorkspaceIcons.getWorkspaceIconUrl(workspace.icon)})`}
+              style={`list-style-image: url(${icon()})`}
               onCommand={() =>
                 this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(id)
               }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Accessor, createSignal, For, Setter, Show } from "solid-js";
+import { Accessor, createResource, createSignal, For, Setter, Show } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
@@ -87,15 +87,16 @@ export class WorkspaceManageModal {
           >
             <xul:menupopup id="workspacesIconSelectPopup">
               <For each={this.iconCtx.workspaceIconsArray}>
-                {(icon) => (
-                  <xul:menuitem
-                    value={icon}
-                    label={icon}
+                {(_icon) => {
+                  const icon = () => this.iconCtx.getWorkspaceIconUrl(_icon);
+                  return <xul:menuitem
+                    value={_icon}
+                    label={_icon}
                     style={{
-                      "list-style-image": `url(${this.iconCtx.getWorkspaceIconUrl(icon)})`,
+                      "list-style-image": `url(${icon()})`,
                     }}
                   />
-                )}
+                }}
               </For>
             </xul:menupopup>
           </xul:menulist>

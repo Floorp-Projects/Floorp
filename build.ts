@@ -283,8 +283,8 @@ process.on("exit", () => {
   devExecaProcesses.forEach((v) => {
     v.kill();
   });
-  devViteProcesses?.forEach(async (v) => {
-    await v.close();
+  devViteProcesses?.forEach((v) => {
+    v.close();
   });
 });
 

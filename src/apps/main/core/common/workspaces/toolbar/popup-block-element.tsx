@@ -3,26 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createMemo, createResource } from "solid-js";
 import { TWorkspaceID } from "../utils/type.js";
 import { WorkspacesService } from "../workspacesService";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
   isSelected: boolean;
-  label: string;
   bmsMode: boolean;
   ctx:WorkspacesService,
 }) {
- 
-  const workspace = props.ctx.getRawWorkspace(props.workspaceId)
+  const workspace = createMemo(()=>props.ctx.getRawWorkspace(props.workspaceId))
+  const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
   return (
     <xul:toolbarbutton
       id={`workspace-${props.workspaceId}`}
-      label={props.label}
+      label={workspace().name}
       context="workspaces-toolbar-item-context-menu"
       class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
       style={{
-        "list-style-image": `url(${ props.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon)})`,
+        "list-style-image": `url(${icon()})`,
       }}
       data-selected={props.isSelected}
       data-workspaceId={props.workspaceId}
