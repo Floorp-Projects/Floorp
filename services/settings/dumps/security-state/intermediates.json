@@ -17857,42 +17857,6 @@
       "last_modified": 1666727867841
     },
     {
-      "schema": 1666727338533,
-      "derHash": "BPehwRJgflk5KP7HhsxgIb1uvZUAHxxpO4xLOE6xn2o=",
-      "subject": "CN=TrustSign BR Certification Authority (DV) 2,O=TrustSign Certificadora Dig. & Soluções Segurança da Inf. Ltda.,L=São José dos Campos,ST=São Paulo,C=BR",
-      "subjectDN": "MIHFMQswCQYDVQQGEwJCUjETMBEGA1UECAwKU8OjbyBQYXVsbzEeMBwGA1UEBwwVU8OjbyBKb3PDqSBkb3MgQ2FtcG9zMUswSQYDVQQKDEJUcnVzdFNpZ24gQ2VydGlmaWNhZG9yYSBEaWcuICYgU29sdcOnw7VlcyBTZWd1cmFuw6dhIGRhIEluZi4gTHRkYS4xNDAyBgNVBAMTK1RydXN0U2lnbiBCUiBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoRFYpIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5ce5dd30457bde8708e84a8640eac9615ef70123626729952c867c8353aa36ed",
-        "size": 2247,
-        "filename": "BWKUCA6WpdRrjXTT5uzsuXJ6Gb81wQGRLjW5bslnp7k=.pem",
-        "location": "security-state-staging/intermediates/412937b3-4c01-460f-919e-91f7868ee734.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "BWKUCA6WpdRrjXTT5uzsuXJ6Gb81wQGRLjW5bslnp7k=",
-      "crlite_enrolled": false,
-      "id": "5dc64f1b-9006-4ed5-82d0-52e326d82c8b",
-      "last_modified": 1666727867814
-    },
-    {
-      "schema": 1666727351979,
-      "derHash": "vf2E2QKq0BDE4IExd1r7c2VpTugcm4ri33ZBnz7fG+E=",
-      "subject": "CN=TrustSign BR Certification Authority (OV) 2,O=TrustSign Certificadora Dig. & Soluções Segurança da Inf. Ltda.,L=São José dos Campos,ST=São Paulo,C=BR",
-      "subjectDN": "MIHFMQswCQYDVQQGEwJCUjETMBEGA1UECAwKU8OjbyBQYXVsbzEeMBwGA1UEBwwVU8OjbyBKb3PDqSBkb3MgQ2FtcG9zMUswSQYDVQQKDEJUcnVzdFNpZ24gQ2VydGlmaWNhZG9yYSBEaWcuICYgU29sdcOnw7VlcyBTZWd1cmFuw6dhIGRhIEluZi4gTHRkYS4xNDAyBgNVBAMTK1RydXN0U2lnbiBCUiBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoT1YpIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ac0f6646e6e159c0f132494d81240ae29ddfcf2954944473d1e91010b3363810",
-        "size": 2251,
-        "filename": "YH8nyVlvrD15SoA59nrCYN5KN2y2Xz-fJ5K-uBAfl1Y=.pem",
-        "location": "security-state-staging/intermediates/30fc0da8-fbce-4173-8b65-04302c315cb1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "YH8nyVlvrD15SoA59nrCYN5KN2y2Xz+fJ5K+uBAfl1Y=",
-      "crlite_enrolled": false,
-      "id": "3b53f789-4bfc-430a-afa4-c2ea3dac27aa",
-      "last_modified": 1666727867800
-    },
-    {
       "schema": 1666727427317,
       "derHash": "ICi1Ih3id+8elh9OMYKjxQDuWqZ79bVE06bVil6md30=",
       "subject": "CN=RU-CENTER High Assurance Services CA 2,O=RU-Center (ЗАО Региональный Сетевой Информационный Центр),L=Moscow,ST=Moscow,C=RU",
@@ -18179,24 +18143,6 @@
       "crlite_enrolled": false,
       "id": "4627074c-5b10-4a84-93b4-b84a6d421f42",
       "last_modified": 1666727867498
-    },
-    {
-      "schema": 1666727417865,
-      "derHash": "dp9v8Jp0Yqwnpugt53ABPTwCEzr92+WBrvzKGwoCkYA=",
-      "subject": "CN=TrustSign BR Certification Authority (EV) 2,OU=Controlled by COMODO for TrustSign Certificadora Digital,O=TrustSign Certificadora Dig. & Soluções Segurança da Inf. Ltda.,L=São José dos Campos,ST=São Paulo,C=BR",
-      "subjectDN": "MIIBCDELMAkGA1UEBhMCQlIxEzARBgNVBAgMClPDo28gUGF1bG8xHjAcBgNVBAcMFVPDo28gSm9zw6kgZG9zIENhbXBvczFLMEkGA1UECgxCVHJ1c3RTaWduIENlcnRpZmljYWRvcmEgRGlnLiAmIFNvbHXDp8O1ZXMgU2VndXJhbsOnYSBkYSBJbmYuIEx0ZGEuMUEwPwYDVQQLEzhDb250cm9sbGVkIGJ5IENPTU9ETyBmb3IgVHJ1c3RTaWduIENlcnRpZmljYWRvcmEgRGlnaXRhbDE0MDIGA1UEAxMrVHJ1c3RTaWduIEJSIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IChFVikgMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "53e1a6064d72cde24e9a929e83a1ec07595879fadd48df9cf8f4f91e06a15849",
-        "size": 2373,
-        "filename": "iKWK-FGvQxVzCQKwKOQ7Rd18KzTZXBBwxTbfJaG1qN0=.pem",
-        "location": "security-state-staging/intermediates/47329d36-da41-4576-a809-44f3e303a29a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "iKWK+FGvQxVzCQKwKOQ7Rd18KzTZXBBwxTbfJaG1qN0=",
-      "crlite_enrolled": false,
-      "id": "beddfc3b-a262-4ab7-855b-150e374efd6e",
-      "last_modified": 1666727867481
     },
     {
       "schema": 1666727385276,
@@ -20915,24 +20861,6 @@
       "crlite_enrolled": false,
       "id": "df75a865-7d14-4a07-bd27-76ff9a5d3634",
       "last_modified": 1664891823141
-    },
-    {
-      "schema": 1664585320096,
-      "derHash": "SKfJxaNnNPyeIE1jzmu7zZ4hwZeGBHYM2NMNb0xntnw=",
-      "subject": "CN=Plex Devices High Assurance CA,O=Plex\\, Inc.,C=US",
-      "subjectDN": "MEsxCzAJBgNVBAYTAlVTMRMwEQYDVQQKEwpQbGV4LCBJbmMuMScwJQYDVQQDEx5QbGV4IERldmljZXMgSGlnaCBBc3N1cmFuY2UgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "02be526c7cf8b8327b244d8abd905b5da27d108eee4a719d225004abd4209f2f",
-        "size": 1670,
-        "filename": "vLeOEXjDgoNqSXwuYXRAIm7pApi-S-w8e2zLIwsC76A=.pem",
-        "location": "security-state-staging/intermediates/4e7685be-f9c0-4d17-b8f3-865d25b5d33f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "vLeOEXjDgoNqSXwuYXRAIm7pApi+S+w8e2zLIwsC76A=",
-      "crlite_enrolled": false,
-      "id": "452205f3-07bd-412c-a0f3-3fed26c0eeb0",
-      "last_modified": 1664585823072
     },
     {
       "schema": 1664585320982,
@@ -31087,5 +31015,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1736391427547
+  "timestamp": 1736866622843
 }

@@ -3,6 +3,26 @@
     {
       "stash": {
         "blocked": [
+          "addonY271@paperboynews.app:1.24.1210",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.101:2.0.101",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.104.12:2.0.104.13",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.121:2.0.121",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.123:2.0.123",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.126.1:2.0.126.1",
+          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.126.1:2.0.126.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1736871466380,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1736879705378,
+      "id": "8e0dcd23-8aca-4d28-a3d1-a9f22b84025b",
+      "last_modified": 1736879778353
+    },
+    {
+      "stash": {
+        "blocked": [
           "{01e71313-2672-4ea3-a848-2b450a06e717}:1.0",
           "{03466d7f-5ab1-426d-a83e-77855f469f8d}:1.0",
           "{03dffc9c-1402-4439-a1eb-4f5336e9c2b5}:1.0",
@@ -187,5 +207,5 @@
       "last_modified": 1734363061859
     }
   ],
-  "timestamp": 1736512576946
+  "timestamp": 1736879778353
 }
