@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-01-10_10-28-58_UTC
-// COMMIT: b067df3f267dc1233e27e2d4d37c470886861370
+// VERSION: 2025-01-16_09-12-01_UTC
+// COMMIT: 4f2d3b20034a6c7a0ad4400716f1e0f752e2c737
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -14869,6 +14869,11 @@ itcouldbewor.se
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
 aus.basketball
 nz.basketball
+
+// ROBOT PAYMENT INC. : https://www.robotpayment.co.jp/
+// Submitted by Kentaro Takamori <takamori.kentaro@robotpayment.co.jp>
+subsc-pay.com
+subsc-pay.net
 
 // Rochester Institute of Technology : http://www.rit.edu/
 // Submitted by Jennifer Herting <jchits@rit.edu>
