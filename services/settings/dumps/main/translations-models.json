@@ -2,7 +2,7 @@
   "data": [
     {
       "name": "model.zhen.intgemm.alphas.bin",
-      "schema": 1735913496315,
+      "schema": 1737062830778,
       "toLang": "en",
       "version": "2.0a2",
       "fileType": "model",
@@ -14,13 +14,13 @@
         "location": "main-workspace/translations-models/bca7961c-2e76-4102-899e-638155c71e14.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "58235f04-f80e-4f4f-806b-8f40c10d08a6",
-      "last_modified": 1735926299991
+      "last_modified": 1737063788107
     },
     {
       "name": "lex.50.50.zhen.s2t.bin",
-      "schema": 1735913511691,
+      "schema": 1737062853795,
       "toLang": "en",
       "version": "2.0a2",
       "fileType": "lex",
@@ -32,13 +32,13 @@
         "location": "main-workspace/translations-models/4fdaecf6-356f-4ebe-a23d-356b6e9ca500.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "89b94e15-8795-4b4c-b56b-865dde4c4912",
-      "last_modified": 1735926299988
+      "last_modified": 1737063788104
     },
     {
       "name": "vocab.koen.spm",
-      "schema": 1735913288929,
+      "schema": 1737062835263,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "vocab",
@@ -50,13 +50,13 @@
         "location": "main-workspace/translations-models/0b22840b-f3be-4bbc-ac47-ddf02d8029d0.spm",
         "mimetype": "text/plain"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "eb1385ab-3358-4b9c-b7a8-f862ffdb7fba",
-      "last_modified": 1735926299986
+      "last_modified": 1737063788102
     },
     {
       "name": "lex.50.50.koen.s2t.bin",
-      "schema": 1735913276966,
+      "schema": 1737062844972,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "lex",
@@ -68,13 +68,13 @@
         "location": "main-workspace/translations-models/b02d145a-7f55-4ab1-abc8-581653df31d7.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "279db7ef-99c6-4557-b3a5-ac7dde5e5db8",
-      "last_modified": 1735926299983
+      "last_modified": 1737063788099
     },
     {
       "name": "vocab.jaen.spm",
-      "schema": 1735913273704,
+      "schema": 1737062848889,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "vocab",
@@ -86,13 +86,13 @@
         "location": "main-workspace/translations-models/d3bdd059-6b08-4d9d-82bb-e90d3413925f.spm",
         "mimetype": "text/plain"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "07cc5d66-6daf-4683-bc9a-8377870755c0",
-      "last_modified": 1735926299980
+      "last_modified": 1737063788097
     },
     {
       "name": "vocab.zhen.spm",
-      "schema": 1735913505879,
+      "schema": 1737062793744,
       "toLang": "en",
       "version": "2.0a2",
       "fileType": "vocab",
@@ -104,13 +104,13 @@
         "location": "main-workspace/translations-models/2de3f177-8838-47b3-b789-cc4021686116.spm",
         "mimetype": "text/plain"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "bb4c4356-d97c-4155-b3a2-01aa574221b0",
-      "last_modified": 1735926299977
+      "last_modified": 1737063788094
     },
     {
       "name": "lex.50.50.jaen.s2t.bin",
-      "schema": 1735913252164,
+      "schema": 1737062864069,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "lex",
@@ -122,13 +122,13 @@
         "location": "main-workspace/translations-models/26ffe7a2-0c48-4a56-8157-6a14bce0556b.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "dd3bc51f-fb74-472c-a838-6dedd25729cd",
-      "last_modified": 1735926299974
+      "last_modified": 1737063788091
     },
     {
       "name": "model.koen.intgemm.alphas.bin",
-      "schema": 1735913279652,
+      "schema": 1737062840491,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "model",
@@ -140,13 +140,13 @@
         "location": "main-workspace/translations-models/d9a92d5a-3e74-49db-abef-0fce0fe55e54.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "f662c1f9-4b51-432f-862b-fe9262e48ed3",
-      "last_modified": 1735926299971
+      "last_modified": 1737063788089
     },
     {
       "name": "model.jaen.intgemm.alphas.bin",
-      "schema": 1735913254825,
+      "schema": 1737062857965,
       "toLang": "en",
       "version": "2.0a1",
       "fileType": "model",
@@ -158,9 +158,9 @@
         "location": "main-workspace/translations-models/879d6529-0fcc-4268-8b22-0a3f67e1ae12.bin",
         "mimetype": "application/octet-stream"
       },
-      "filter_expression": "env.channel == \"default\" || env.channel == \"nightly\"",
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly' || env.channel == 'beta'",
       "id": "489bff98-ae4c-4504-9dde-956b0fa41a75",
-      "last_modified": 1735926299968
+      "last_modified": 1737063788086
     },
     {
       "name": "model.zhen.intgemm.alphas.bin",
@@ -5719,5 +5719,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1735926299991
+  "timestamp": 1737063788107
 }

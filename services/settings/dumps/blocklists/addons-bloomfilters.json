@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "email@temporary.com:1.3.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1736879778450,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1737117305578,
+      "id": "9b3665bb-ebc9-40a4-aac2-4a7cfe0cf5f5",
+      "last_modified": 1737117377427
+    },
+    {
+      "stash": {
+        "blocked": [
           "addonY271@paperboynews.app:1.24.1210",
           "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.101:2.0.101",
           "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.104.12:2.0.104.13",
@@ -207,5 +221,5 @@
       "last_modified": 1734363061859
     }
   ],
-  "timestamp": 1736879778353
+  "timestamp": 1737117377427
 }
