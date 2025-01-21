@@ -72,9 +72,17 @@ nsresult OutputStreamHolder::AsyncWait(uint32_t aFlags,
                                        uint32_t aRequestedCount,
                                        nsIEventTarget* aEventTarget) {
   mAsyncWaitWorkerRef = mWorkerRef;
+  // Grab the strong reference for the reader but only when we are waiting for
+  // the output stream, because it means we still have things to write.
+  // (WAIT_CLOSURE_ONLY happens when waiting for ReadableStream to respond, at
+  // which point the pull callback should get an indirect strong reference via
+  // the controller argument.)
+  mAsyncWaitReader =
+      aFlags == nsIAsyncOutputStream::WAIT_CLOSURE_ONLY ? nullptr : mReader;
   nsresult rv = mOutput->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mAsyncWaitWorkerRef = nullptr;
+    mAsyncWaitReader = nullptr;
   }
   return rv;
 }
@@ -84,10 +92,16 @@ NS_IMETHODIMP OutputStreamHolder::OnOutputStreamReady(
   // We may get called back after ::Shutdown()
   if (!mReader) {
     mAsyncWaitWorkerRef = nullptr;
+    MOZ_ASSERT(!mAsyncWaitReader);
     return NS_OK;
   }
-  if (!mReader->OnOutputStreamReady()) {
+
+  // mAsyncWaitReader may be reset during OnOutputStreamReady, make sure to let
+  // it live during the call
+  RefPtr<FetchStreamReader> reader = mReader.get();
+  if (!reader->OnOutputStreamReady()) {
     mAsyncWaitWorkerRef = nullptr;
+    mAsyncWaitReader = nullptr;
     return NS_OK;
   }
   return NS_OK;
