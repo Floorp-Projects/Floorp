@@ -10,6 +10,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsIAsyncOutputStream.h"
@@ -21,17 +22,55 @@ class ReadableStream;
 class ReadableStreamDefaultReader;
 class StrongWorkerRef;
 
-class FetchStreamReader final : public nsIOutputStreamCallback {
+class FetchStreamReader;
+
+class OutputStreamHolder final : public nsIOutputStreamCallback {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOUTPUTSTREAMCALLBACK
+
+  OutputStreamHolder(FetchStreamReader* aReader, nsIAsyncOutputStream* aOutput);
+
+  nsresult Init(JSContext* aCx);
+
+  void Shutdown();
+
+  // These just proxy the calls to the nsIAsyncOutputStream
+  nsresult AsyncWait(uint32_t aFlags, uint32_t aRequestedCount,
+                     nsIEventTarget* aEventTarget);
+  nsresult Write(char* aBuffer, uint32_t aLength, uint32_t* aWritten) {
+    return mOutput->Write(aBuffer, aLength, aWritten);
+  }
+  nsresult CloseWithStatus(nsresult aStatus) {
+    return mOutput->CloseWithStatus(aStatus);
+  }
+  nsresult StreamStatus() { return mOutput->StreamStatus(); }
+
+  nsIAsyncOutputStream* GetOutputStream() { return mOutput; }
+
+ private:
+  ~OutputStreamHolder();
+
+  // WeakPtr to avoid cycles
+  WeakPtr<FetchStreamReader> mReader;
+  // To ensure the worker sticks around
+  RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
+  RefPtr<StrongWorkerRef> mWorkerRef;
+  nsCOMPtr<nsIAsyncOutputStream> mOutput;
+};
+
+class FetchStreamReader final : public nsISupports, public SupportsWeakPtr {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FetchStreamReader)
-  NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
   // This creates a nsIInputStream able to retrieve data from the ReadableStream
   // object. The reading starts when StartConsuming() is called.
   static nsresult Create(JSContext* aCx, nsIGlobalObject* aGlobal,
                          FetchStreamReader** aStreamReader,
                          nsIInputStream** aInputStream);
+
+  bool OnOutputStreamReady();
 
   MOZ_CAN_RUN_SCRIPT
   void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
@@ -60,8 +99,6 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);
   ~FetchStreamReader();
 
-  nsresult MaybeGrabStrongWorkerRef(JSContext* aCx);
-
   nsresult WriteBuffer();
 
   // Attempt to copy data from mBuffer into mPipeOut. Returns `true` if data was
@@ -75,19 +112,7 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
-  nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
-
-  RefPtr<StrongWorkerRef> mWorkerRef;
-  // This is an additional refcount we add to `mWorkerRef` when we have a
-  // pending callback from mPipeOut.AsyncWait() which is guaranteed to fire when
-  // either we can write to the pipe or the stream has been closed.  Because
-  // this callback must run on our owning worker thread, we must ensure that the
-  // worker thread lives long enough to process the runnable (and potentially
-  // release the last reference to this non-thread-safe object on this thread).
-  //
-  // By holding an additional refcount we can avoid creating a mini state
-  // machine around mWorkerRef which hopefully improves clarity.
-  RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
+  RefPtr<OutputStreamHolder> mOutput;
 
   RefPtr<ReadableStreamDefaultReader> mReader;
 
