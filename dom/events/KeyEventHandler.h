@@ -133,13 +133,11 @@ class KeyEventHandler final {
   static const int32_t cAlt;
   static const int32_t cControl;
   static const int32_t cMeta;
-  static const int32_t cOS;
 
   static const int32_t cShiftMask;
   static const int32_t cAltMask;
   static const int32_t cControlMask;
   static const int32_t cMetaMask;
-  static const int32_t cOSMask;
 
   static const int32_t cAllModifiers;
 
