@@ -213,7 +213,7 @@ already_AddRefed<Promise> CredentialsContainer::Get(
     MOZ_ASSERT(mParent);
     if (!FeaturePolicyUtils::IsFeatureAllowed(
             mParent->GetExtantDoc(), u"publickey-credentials-get"_ns) ||
-        !IsInActiveTab(mParent)) {
+        !(IsInActiveTab(mParent) || conditionallyMediated)) {
       return CreateAndRejectWithNotAllowed(mParent, aRv);
     }
 
