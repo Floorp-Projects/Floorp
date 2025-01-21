@@ -39,12 +39,7 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceSharedDataWrapper,
                                           override)
 
-  SourceSurfaceSharedDataWrapper()
-      : mStride(0),
-        mConsumers(0),
-        mFormat(SurfaceFormat::UNKNOWN),
-        mCreatorPid(0),
-        mCreatorRef(true) {}
+  SourceSurfaceSharedDataWrapper() = default;
 
   void Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
             SharedMemoryBasic::Handle aHandle, base::ProcessId aCreatorPid);
@@ -85,10 +80,7 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
     return --mConsumers == 0;
   }
 
-  uint32_t GetConsumers() const {
-    MOZ_ASSERT(mConsumers > 0);
-    return mConsumers;
-  }
+  uint32_t GetConsumers() const { return mConsumers; }
 
   bool HasCreatorRef() const { return mCreatorRef; }
 
@@ -112,13 +104,13 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
   // Protects mapping and unmapping of mBuf.
   Maybe<Mutex> mHandleLock;
   nsExpirationState mExpirationState;
-  int32_t mStride;
-  uint32_t mConsumers;
+  int32_t mStride = 0;
+  uint32_t mConsumers = 1;
   IntSize mSize;
   RefPtr<SharedMemoryBasic> mBuf;
-  SurfaceFormat mFormat;
-  base::ProcessId mCreatorPid;
-  bool mCreatorRef;
+  SurfaceFormat mFormat = SurfaceFormat::UNKNOWN;
+  base::ProcessId mCreatorPid = 0;
+  bool mCreatorRef = true;
 };
 
 /**
