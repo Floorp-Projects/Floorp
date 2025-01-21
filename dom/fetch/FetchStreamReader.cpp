@@ -28,13 +28,77 @@
 
 namespace mozilla::dom {
 
+NS_IMPL_ISUPPORTS(OutputStreamHolder, nsIOutputStreamCallback)
+
+OutputStreamHolder::OutputStreamHolder(FetchStreamReader* aReader,
+                                       nsIAsyncOutputStream* aOutput)
+    : mReader(aReader), mOutput(aOutput) {}
+
+nsresult OutputStreamHolder::Init(JSContext* aCx) {
+  if (NS_IsMainThread()) {
+    return NS_OK;
+  }
+
+  // We're in a worker
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+
+  workerPrivate->AssertIsOnWorkerThread();
+
+  // Note, this will create a ref-cycle between the holder and the stream.
+  // The cycle is broken when the stream is closed or the worker begins
+  // shutting down.
+  mWorkerRef =
+      StrongWorkerRef::Create(workerPrivate, "OutputStreamHolder",
+                              [self = RefPtr{this}]() { self->Shutdown(); });
+  if (NS_WARN_IF(!mWorkerRef)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+OutputStreamHolder::~OutputStreamHolder() = default;
+
+void OutputStreamHolder::Shutdown() {
+  if (mOutput) {
+    mOutput->Close();
+  }
+  // If we have an AsyncWait running, we'll get a callback and clear
+  // the mAsyncWaitWorkerRef
+  mWorkerRef = nullptr;
+}
+
+nsresult OutputStreamHolder::AsyncWait(uint32_t aFlags,
+                                       uint32_t aRequestedCount,
+                                       nsIEventTarget* aEventTarget) {
+  mAsyncWaitWorkerRef = mWorkerRef;
+  nsresult rv = mOutput->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mAsyncWaitWorkerRef = nullptr;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP OutputStreamHolder::OnOutputStreamReady(
+    nsIAsyncOutputStream* aStream) {
+  // We may get called back after ::Shutdown()
+  if (!mReader) {
+    mAsyncWaitWorkerRef = nullptr;
+    return NS_OK;
+  }
+  if (!mReader->OnOutputStreamReady()) {
+    mAsyncWaitWorkerRef = nullptr;
+    return NS_OK;
+  }
+  return NS_OK;
+}
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FetchStreamReader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FetchStreamReader)
 
-NS_IMPL_CYCLE_COLLECTION(FetchStreamReader, mGlobal, mReader)
+NS_IMPL_CYCLE_COLLECTION_WEAK_PTR(FetchStreamReader, mGlobal, mReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchStreamReader)
-  NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -50,48 +114,15 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
   RefPtr<FetchStreamReader> streamReader = new FetchStreamReader(aGlobal);
 
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
+  nsCOMPtr<nsIAsyncOutputStream> pipeOut;
 
-  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(streamReader->mPipeOut),
-              true, true, 0, 0);
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true, 0,
+              0);
+
+  streamReader->mOutput = new OutputStreamHolder(streamReader, pipeOut);
 
   pipeIn.forget(aInputStream);
   streamReader.forget(aStreamReader);
-  return NS_OK;
-}
-
-nsresult FetchStreamReader::MaybeGrabStrongWorkerRef(JSContext* aCx) {
-  if (NS_IsMainThread()) {
-    return NS_OK;
-  }
-
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  MOZ_ASSERT(workerPrivate);
-
-  RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-      workerPrivate, "FetchStreamReader", [streamReader = RefPtr(this)]() {
-        MOZ_ASSERT(streamReader);
-
-        // mAsyncWaitWorkerRef may keep the (same) StrongWorkerRef alive even
-        // when mWorkerRef has already been nulled out by a previous call to
-        // CloseAndRelease, we can just safely ignore this callback then
-        // (as would the CloseAndRelease do on a second call).
-        if (streamReader->mWorkerRef) {
-          streamReader->CloseAndRelease(
-              streamReader->mWorkerRef->Private()->GetJSContext(),
-              NS_ERROR_DOM_INVALID_STATE_ERR);
-        } else {
-          MOZ_DIAGNOSTIC_ASSERT(streamReader->mAsyncWaitWorkerRef);
-        }
-      });
-
-  if (NS_WARN_IF(!workerRef)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // These 2 objects create a ref-cycle here that is broken when the stream is
-  // closed or the worker shutsdown.
-  mWorkerRef = std::move(workerRef);
-
   return NS_OK;
 }
 
@@ -153,12 +184,11 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
 
   mGlobal = nullptr;
 
-  if (mPipeOut) {
-    mPipeOut->CloseWithStatus(aStatus);
+  if (mOutput) {
+    mOutput->CloseWithStatus(aStatus);
+    mOutput->Shutdown();
+    mOutput = nullptr;
   }
-  mPipeOut = nullptr;
-
-  mWorkerRef = nullptr;
 
   mReader = nullptr;
   mBuffer.Clear();
@@ -174,7 +204,7 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
              "nsIInputStream here. Extract nsIInputStream and read it instead "
              "to reduce overhead.");
 
-  aRv = MaybeGrabStrongWorkerRef(aCx);
+  aRv = mOutput->Init(aCx);
   if (aRv.Failed()) {
     CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -189,10 +219,8 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
 
   mReader = reader;
 
-  mAsyncWaitWorkerRef = mWorkerRef;
-  aRv = mPipeOut->AsyncWait(this, 0, 0, mOwningEventTarget);
+  aRv = mOutput->AsyncWait(0, 0, mOwningEventTarget);
   if (NS_WARN_IF(aRv.Failed())) {
-    mAsyncWaitWorkerRef = nullptr;
     CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
@@ -237,21 +265,14 @@ NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
 
 // nsIOutputStreamCallback interface
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP
-FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
+bool FetchStreamReader::OnOutputStreamReady() {
   NS_ASSERT_OWNINGTHREAD(FetchStreamReader);
   if (mStreamClosed) {
-    mAsyncWaitWorkerRef = nullptr;
-    return NS_OK;
+    return false;
   }
 
-  AutoEntryScript aes(mGlobal, "ReadableStreamReader.read", !mWorkerRef);
-  if (!Process(aes.cx())) {
-    // We're done processing data, and haven't queued up a new AsyncWait - we
-    // can clear our mAsyncWaitWorkerRef.
-    mAsyncWaitWorkerRef = nullptr;
-  }
-  return NS_OK;
+  AutoEntryScript aes(mGlobal, "ReadableStreamReader.read");
+  return Process(aes.cx());
 }
 
 bool FetchStreamReader::Process(JSContext* aCx) {
@@ -270,15 +291,15 @@ bool FetchStreamReader::Process(JSContext* aCx) {
   // Check if the output stream has already been closed. This lets us propagate
   // errors eagerly, and detect output stream closures even when we have no data
   // to write.
-  if (NS_WARN_IF(NS_FAILED(mPipeOut->StreamStatus()))) {
+  if (NS_WARN_IF(NS_FAILED(mOutput->StreamStatus()))) {
     CloseAndRelease(aCx, NS_ERROR_DOM_ABORT_ERR);
     return false;
   }
 
   // We're waiting on new data - set up a WAIT_CLOSURE_ONLY callback so we
   // notice if the reader closes.
-  nsresult rv = mPipeOut->AsyncWait(
-      this, nsIAsyncOutputStream::WAIT_CLOSURE_ONLY, 0, mOwningEventTarget);
+  nsresult rv = mOutput->AsyncWait(nsIAsyncOutputStream::WAIT_CLOSURE_ONLY, 0,
+                                   mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
     return false;
@@ -362,7 +383,7 @@ nsresult FetchStreamReader::WriteBuffer() {
   while (mBufferRemaining > 0) {
     uint32_t written = 0;
     nsresult rv =
-        mPipeOut->Write(data + mBufferOffset, mBufferRemaining, &written);
+        mOutput->Write(data + mBufferOffset, mBufferRemaining, &written);
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       break;
@@ -382,7 +403,7 @@ nsresult FetchStreamReader::WriteBuffer() {
     }
   }
 
-  nsresult rv = mPipeOut->AsyncWait(this, 0, 0, mOwningEventTarget);
+  nsresult rv = mOutput->AsyncWait(0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
