@@ -51,6 +51,7 @@ class OutputStreamHolder final : public nsIOutputStreamCallback {
  private:
   ~OutputStreamHolder();
 
+  RefPtr<FetchStreamReader> mAsyncWaitReader;
   // WeakPtr to avoid cycles
   WeakPtr<FetchStreamReader> mReader;
   // To ensure the worker sticks around
