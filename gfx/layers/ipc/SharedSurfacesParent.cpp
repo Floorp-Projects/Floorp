@@ -200,7 +200,6 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
-  surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
@@ -269,7 +268,6 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
-  surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
@@ -284,6 +282,7 @@ void SharedSurfacesParent::AddTrackingLocked(
     SourceSurfaceSharedDataWrapper* aSurface,
     const StaticMutexAutoLock& aAutoLock) {
   MOZ_ASSERT(!aSurface->GetExpirationState()->IsTracked());
+  MOZ_ASSERT(aSurface->GetConsumers() > 0);
   sInstance->mTracker.AddObjectLocked(aSurface, aAutoLock);
 }
 
@@ -356,6 +355,7 @@ bool SharedSurfacesParent::AgeAndExpireOneGeneration() {
 void SharedSurfacesParent::ExpireMap(
     nsTArray<RefPtr<SourceSurfaceSharedDataWrapper>>& aExpired) {
   for (auto& surface : aExpired) {
+    MOZ_ASSERT(surface->GetConsumers() > 0);
     surface->ExpireMap();
   }
 }

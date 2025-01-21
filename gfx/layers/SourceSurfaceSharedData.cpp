@@ -105,7 +105,9 @@ bool SourceSurfaceSharedDataWrapper::Map(MapType aMapType,
     MutexAutoLock lock(*mHandleLock);
     dataPtr = GetData();
     if (mMapCount == 0) {
-      SharedSurfacesParent::RemoveTracking(this);
+      if (mConsumers > 0) {
+        SharedSurfacesParent::RemoveTracking(this);
+      }
       if (!dataPtr) {
         size_t len = GetAlignedDataLength();
         if (!EnsureMapped(len)) {
@@ -129,7 +131,7 @@ bool SourceSurfaceSharedDataWrapper::Map(MapType aMapType,
 void SourceSurfaceSharedDataWrapper::Unmap() {
   if (mHandleLock) {
     MutexAutoLock lock(*mHandleLock);
-    if (--mMapCount == 0) {
+    if (--mMapCount == 0 && mConsumers > 0) {
       SharedSurfacesParent::AddTracking(this);
     }
   } else {
