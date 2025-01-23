@@ -534,20 +534,29 @@ export class AppProvidedSearchEngine extends SearchEngine {
     );
 
     if (urlData.params) {
+      let isEnterprise = Services.policies.isEnterprise;
+      let enterpriseParams = urlData.params
+        .filter(p => "enterpriseValue" in p)
+        .map(p => p.name);
+
       for (const param of urlData.params) {
         switch (true) {
           case "value" in param:
-            engineURL.addParam(
-              param.name,
-              param.value == "{partnerCode}" ? partnerCode : param.value
-            );
+            if (!isEnterprise || !enterpriseParams.includes(param.name)) {
+              engineURL.addParam(
+                param.name,
+                param.value == "{partnerCode}" ? partnerCode : param.value
+              );
+            }
             break;
           case "experimentConfig" in param:
-            engineURL._addMozParam({
-              name: param.name,
-              pref: param.experimentConfig,
-              condition: "pref",
-            });
+            if (!isEnterprise || !enterpriseParams.includes(param.name)) {
+              engineURL._addMozParam({
+                name: param.name,
+                pref: param.experimentConfig,
+                condition: "pref",
+              });
+            }
             break;
           case "searchAccessPoint" in param:
             for (const [key, value] of Object.entries(
@@ -560,6 +569,15 @@ export class AppProvidedSearchEngine extends SearchEngine {
               );
             }
             break;
+          case "enterpriseValue" in param:
+            if (isEnterprise) {
+              engineURL.addParam(
+                param.name,
+                param.enterpriseValue == "{partnerCode}"
+                  ? partnerCode
+                  : param.enterpriseValue
+              );
+            }
         }
       }
     }

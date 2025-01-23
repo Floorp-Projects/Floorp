@@ -57,6 +57,7 @@ support-files = [
   "data1/exp3/manifest.json",
   "data1/engines.json",
   "data1/search-config-v2.json",
+  "enterprise/search-config-v2.json",
   "simple-engines/engines.json",
   "simple-engines/search-config-v2.json",
   "simple-engines/basic/manifest.json",

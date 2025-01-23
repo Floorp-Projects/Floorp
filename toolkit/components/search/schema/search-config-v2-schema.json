@@ -205,6 +205,12 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9-_{}]*$"
               },
+              "enterpriseValue": {
+                "title": "Value",
+                "description": "Same as value but only used if Services.polices.isEnterprise is true. Overrides other parameters of the same name.",
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9-_{}]*$"
+              },
               "experimentConfig": {
                 "title": "Experiment Configuration",
                 "description": "The value for the parameter will be derived from the equivalent experiment configuration value. If not experiment is present, this parameter will not be included in the final url.",
@@ -251,6 +257,7 @@
             },
             "oneOf": [
               { "required": ["name", "value"] },
+              { "required": ["name", "enterpriseValue"] },
               { "required": ["name", "experimentConfig"] },
               { "required": ["name", "searchAccessPoint"] }
             ]

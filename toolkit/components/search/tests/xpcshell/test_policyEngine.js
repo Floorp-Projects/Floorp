@@ -7,31 +7,7 @@
 
 "use strict";
 
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
-);
-
 SearchSettings.SETTINGS_INVALIDATION_DELAY = 100;
-
-/**
- * Loads a new enterprise policy, and re-initialise the search service
- * with the new policy. Also waits for the search service to write the settings
- * file to disk.
- *
- * @param {object} policy
- *   The enterprise policy to use.
- */
-async function setupPolicyEngineWithJson(policy) {
-  Services.search.wrappedJSObject.reset();
-
-  await EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
-
-  let settingsWritten = SearchTestUtils.promiseSearchNotification(
-    "write-settings-to-disk-complete"
-  );
-  await Services.search.init();
-  await settingsWritten;
-}
 
 add_setup(async function () {
   // This initializes the policy engine for xpcshell tests
