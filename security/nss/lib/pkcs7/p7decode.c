@@ -542,6 +542,7 @@ sec_pkcs7_decoder_start_decrypt(SEC_PKCS7DecoderContext *p7dcx, int depth,
      * We are done with (this) bulkkey now.
      */
     PK11_FreeSymKey(bulkkey);
+    bulkkey = NULL;
 
     if (decryptobj == NULL) {
         p7dcx->error = PORT_GetError();
