@@ -12,6 +12,14 @@
               {
                 "name": "config",
                 "value": "1"
+              },
+              {
+                "name": "is_enterprise",
+                "value": "false"
+              },
+              {
+                "name": "is_enterprise",
+                "enterpriseValue": "true"
               }
             ],
             "searchTermParamName": "search"
@@ -22,6 +30,10 @@
               {
                 "name": "config",
                 "value": "1"
+              },
+              {
+                "name": "is_enterprise",
+                "enterpriseValue": "yes"
               }
             ],
             "searchTermParamName": "suggest"
