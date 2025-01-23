@@ -577,9 +577,11 @@ get_token_objects_for_cache(
     } else {
         PRUint32 j;
         for (j = 0; j < i; j++) {
-            /* Any token references that were removed in successful loop iterations
-             * need to be restored before we call nssCryptokiObjectArray_Destroy */
-            nssToken_AddRef(cache->objects[objectType][j]->object->token);
+            /* Objects that were successfully added to the cache do not own a
+             * token reference (they share a reference with the cache itself).
+             * Nulling out the pointer here prevents the token's refcount
+             * from being decremented in nssCryptokiObject_Destroy */
+            cache->objects[objectType][j]->object->token = NULL;
             nssArena_Destroy(cache->objects[objectType][j]->arena);
         }
         nss_ZFreeIf(cache->objects[objectType]);
