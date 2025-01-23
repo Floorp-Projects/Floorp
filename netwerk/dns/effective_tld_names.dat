@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-01-16_09-12-01_UTC
-// COMMIT: 4f2d3b20034a6c7a0ad4400716f1e0f752e2c737
+// VERSION: 2025-01-21_09-07-06_UTC
+// COMMIT: 47264b57765919188b9f4144de8d95cf77e1b6dc
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -4034,13 +4034,20 @@ net.mk
 org.mk
 
 // ml : https://www.iana.org/domains/root/db/ml.html
+// Confirmed by Boubacar NDIAYE <bndiaye@agetic.gouv.ml> 2024-12-31
 ml
+ac.ml
+art.ml
+asso.ml
 com.ml
 edu.ml
 gouv.ml
 gov.ml
+info.ml
+inst.ml
 net.ml
 org.ml
+pr.ml
 presse.ml
 
 // mm : https://www.iana.org/domains/root/db/mm.html
