@@ -110,6 +110,11 @@ bool ClearKeyUtils::DecryptCbcs(const vector<uint8_t>& aKey,
     return false;
   }
 
+  if (aSubsample.Length() == 0) {
+    // Nothing to decrypt.
+    return true;
+  }
+
   std::unique_ptr<PK11SlotInfo, MaybeDeleteHelper<PK11SlotInfo>> slot(
       PK11_GetInternalKeySlot());
 
