@@ -73,6 +73,30 @@ struct AnimationEventInfo {
     return nullptr;
   }
 
+  // Return the event context if the event is animationcancel or
+  // transitioncancel.
+  Maybe<dom::Animation::EventContext> GetEventContext() const {
+    if (mData.is<CssAnimationData>()) {
+      const auto& data = mData.as<CssAnimationData>();
+      return data.mMessage == eAnimationCancel
+                 ? Some(dom::Animation::EventContext{
+                       NonOwningAnimationTarget(data.mTarget),
+                       data.mAnimationIndex})
+                 : Nothing();
+    }
+
+    if (mData.is<CssTransitionData>()) {
+      const auto& data = mData.as<CssTransitionData>();
+      return data.mMessage == eTransitionCancel
+                 ? Some(dom::Animation::EventContext{
+                       NonOwningAnimationTarget(data.mTarget),
+                       data.mAnimationIndex})
+                 : Nothing();
+    }
+
+    return Nothing();
+  }
+
   void MaybeAddMarker() const;
 
   // For CSS animation events
@@ -143,8 +167,8 @@ struct AnimationEventInfo {
       return this->IsWebAnimationEvent();
     }
 
-    AnimationPtrComparator<RefPtr<dom::Animation>> comparator;
-    return comparator.LessThan(this->mAnimation, aOther.mAnimation);
+    return mAnimation->HasLowerCompositeOrderThan(
+        GetEventContext(), *aOther.mAnimation, aOther.GetEventContext());
   }
 
   bool IsWebAnimationEvent() const { return mData.is<WebAnimationData>(); }

@@ -206,10 +206,13 @@ AnimationValue CSSTransition::ToValue() const {
 }
 
 bool CSSTransition::HasLowerCompositeOrderThan(
-    const CSSTransition& aOther) const {
-  MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup(),
+    const Maybe<EventContext>& aContext, const CSSTransition& aOther,
+    const Maybe<EventContext>& aOtherContext) const {
+  MOZ_ASSERT((IsTiedToMarkup() || aContext) &&
+                 (aOther.IsTiedToMarkup() || aOtherContext),
              "Should only be called for CSS transitions that are sorted "
-             "as CSS transitions (i.e. tied to CSS markup)");
+             "as CSS transitions (i.e. tied to CSS markup) or with overridden "
+             "target and animation index");
 
   // 0. Object-equality case
   if (&aOther == this) {
@@ -217,16 +220,23 @@ bool CSSTransition::HasLowerCompositeOrderThan(
   }
 
   // 1. Sort by document order
-  if (!mOwningElement.Equals(aOther.mOwningElement)) {
-    return mOwningElement.LessThan(
-        const_cast<CSSTransition*>(this)->CachedChildIndexRef(),
-        aOther.mOwningElement,
+  const OwningElementRef& owningElement1 =
+      aContext ? OwningElementRef(aContext->mTarget) : mOwningElement;
+  const OwningElementRef& owningElement2 =
+      aOtherContext ? OwningElementRef(aOtherContext->mTarget)
+                    : aOther.mOwningElement;
+  if (!owningElement1.Equals(owningElement2)) {
+    return owningElement1.LessThan(
+        const_cast<CSSTransition*>(this)->CachedChildIndexRef(), owningElement2,
         const_cast<CSSTransition*>(&aOther)->CachedChildIndexRef());
   }
 
   // 2. (Same element and pseudo): Sort by transition generation
-  if (mAnimationIndex != aOther.mAnimationIndex) {
-    return mAnimationIndex < aOther.mAnimationIndex;
+  const uint64_t& index1 = aContext ? aContext->mIndex : mAnimationIndex;
+  const uint64_t& index2 =
+      aOtherContext ? aOtherContext->mIndex : aOther.mAnimationIndex;
+  if (index1 != index2) {
+    return index1 < index2;
   }
 
   // 3. (Same transition generation): Sort by transition property
