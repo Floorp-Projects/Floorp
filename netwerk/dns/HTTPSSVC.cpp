@@ -214,12 +214,24 @@ class AlpnComparator {
 
 nsTArray<std::tuple<nsCString, SupportedAlpnRank>> SVCB::GetAllAlpn() const {
   nsTArray<std::tuple<nsCString, SupportedAlpnRank>> alpnList;
+  bool shouldAddDefaultAlpn = true;
   for (const auto& value : mSvcFieldValue) {
     if (value.mValue.is<SvcParamAlpn>()) {
       for (const auto& alpn : value.mValue.as<SvcParamAlpn>().mValue) {
-        alpnList.AppendElement(std::make_tuple(alpn, IsAlpnSupported(alpn)));
+        auto tuple = std::make_tuple(alpn, IsAlpnSupported(alpn));
+        alpnList.AppendElement(tuple);
+        if (std::get<1>(tuple) == SupportedAlpnRank::HTTP_1_1) {
+          shouldAddDefaultAlpn = false;
+        }
       }
+    } else if (value.mValue.is<SvcParamKeyNoDefaultAlpn>()) {
+      // Found "no-default-alpn", so don't bother to add it.
+      shouldAddDefaultAlpn = false;
     }
+  }
+  if (shouldAddDefaultAlpn) {
+    alpnList.AppendElement(
+        std::make_tuple("http/1.1"_ns, SupportedAlpnRank::HTTP_1_1));
   }
   alpnList.Sort(AlpnComparator());
   return alpnList;
@@ -330,8 +342,10 @@ static bool CheckAlpnIsUsable(SupportedAlpnRank aAlpnType, bool aNoHttp2,
   return true;
 }
 
-static nsTArray<SVCBWrapper> FlattenRecords(const nsTArray<SVCB>& aRecords) {
+static nsTArray<SVCBWrapper> FlattenRecords(const nsTArray<SVCB>& aRecords,
+                                            uint32_t& aH3RecordCount) {
   nsTArray<SVCBWrapper> result;
+  aH3RecordCount = 0;
   for (const auto& record : aRecords) {
     nsTArray<std::tuple<nsCString, SupportedAlpnRank>> alpnList =
         record.GetAllAlpn();
@@ -341,6 +355,9 @@ static nsTArray<SVCBWrapper> FlattenRecords(const nsTArray<SVCB>& aRecords) {
       for (const auto& alpn : alpnList) {
         SVCBWrapper wrapper(record);
         wrapper.mAlpn = Some(alpn);
+        if (IsHttp3(std::get<1>(alpn))) {
+          aH3RecordCount++;
+        }
         result.AppendElement(wrapper);
       }
     }
@@ -359,8 +376,8 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   aRecordsAllExcluded = false;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
   uint32_t h3ExcludedCount = 0;
-
-  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords);
+  uint32_t h3RecordCount = 0;
+  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords, h3RecordCount);
   for (const auto& record : records) {
     if (record.mRecord.mSvcFieldPriority == 0) {
       // In ServiceMode, the SvcPriority should never be 0.
@@ -421,7 +438,7 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
 
     // If all records are in http3 excluded list, try again without checking the
     // excluded list. This is better than returning nothing.
-    if (h3ExcludedCount == records.Length() && aCheckHttp3ExcludedList) {
+    if (h3ExcludedCount == h3RecordCount && aCheckHttp3ExcludedList) {
       return GetServiceModeRecordInternal(aNoHttp2, aNoHttp3, aRecords,
                                           aRecordsAllExcluded, false);
     }
@@ -454,7 +471,8 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
   }
 
   uint32_t h3ExcludedCount = 0;
-  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords);
+  uint32_t h3RecordCount = 0;
+  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords, h3RecordCount);
   for (const auto& record : records) {
     if (record.mRecord.mSvcFieldPriority == 0) {
       // This should not happen, since GetAllRecordsWithEchConfigInternal()
@@ -493,7 +511,7 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
 
   // If all records are in http3 excluded list, try again without checking the
   // excluded list. This is better than returning nothing.
-  if (h3ExcludedCount == records.Length() && aCheckHttp3ExcludedList) {
+  if (h3ExcludedCount == h3RecordCount && aCheckHttp3ExcludedList) {
     GetAllRecordsWithEchConfigInternal(
         aNoHttp2, aNoHttp3, aRecords, aAllRecordsHaveEchConfig,
         aAllRecordsInH3ExcludedList, aResult, false);
