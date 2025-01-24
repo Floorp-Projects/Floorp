@@ -120,7 +120,7 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
     }
     events.AppendElement(AnimationEventInfo(
         TransitionProperty(), mOwningElement.Target(), aMessage, elapsedTime,
-        aScheduledEventTimeStamp, this));
+        mAnimationIndex, aScheduledEventTimeStamp, this));
   };
 
   // Handle cancel events first
