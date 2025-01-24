@@ -877,10 +877,16 @@ WinWebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
 NS_IMETHODIMP
 WinWebAuthnService::GetAutoFillEntries(
     uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
-  auto guard = mTransactionState.Lock();
-  if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
-      guard->ref().pendingSignArgs.isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
+  aRv.Clear();
+  nsString rpId;
+
+  {
+    auto guard = mTransactionState.Lock();
+    if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+        guard->ref().pendingSignArgs.isNothing()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    Unused << guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
   }
 
   StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
@@ -888,17 +894,12 @@ WinWebAuthnService::GetAutoFillEntries(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  aRv.Clear();
-
   if (gWinWebauthnGetApiVersionNumber() < WEBAUTHN_API_VERSION_4) {
     // GetPlatformCredentialList was added in version 4. Earlier versions
     // can still present a generic "Use a Passkey" autofill entry, so
     // this isn't an error.
     return NS_OK;
   }
-
-  nsString rpId;
-  Unused << guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
 
   WEBAUTHN_GET_CREDENTIALS_OPTIONS getCredentialsOptions{
       WEBAUTHN_GET_CREDENTIALS_OPTIONS_VERSION_1,
