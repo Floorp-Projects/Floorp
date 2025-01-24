@@ -136,7 +136,27 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
     case TransitionPhase::Idle:
       if (currentPhase == TransitionPhase::Pending ||
           currentPhase == TransitionPhase::Before) {
-        appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
+        // When we are replacing a transition and flushing the style in the
+        // meantime, after a timeout, we may tick this transition without a
+        // proper |mPendingReadyTime| because the refresh driver is not in
+        // refresh, i.e. mInRefresh is false. So in the current tick we queue
+        // this event but the transition would be triggered in the next tick.
+        //
+        // In general, we use Animation::EnsurePaintIsScheduled() to assign a
+        // valid time to |mPendingReadyTime| of this transition, and then we
+        // could trigger this transition if this value is set. When triggering,
+        // we set a proper |mStartTime|, which could be used to calculate the
+        // animation time, i.e. |zeroTimeStamp|.
+        //
+        // However, due to this race condition (i.e. the transition hasn't been
+        // triggered yet but we are enqueuing this event), it's posssible to
+        // have a null |zeroTimeStamp|, which breaks the sorting of transition
+        // events. So we use the current time as a fallback way to make sure we
+        // have a reasonable schedule time for sorting.
+        appendTransitionEvent(eTransitionRun, intervalStartTime,
+                              zeroTimeStamp.IsNull()
+                                  ? GetTimelineCurrentTimeAsTimeStamp()
+                                  : zeroTimeStamp);
       } else if (currentPhase == TransitionPhase::Active) {
         appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
         appendTransitionEvent(eTransitionStart, intervalStartTime,
