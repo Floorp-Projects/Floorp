@@ -12809,6 +12809,13 @@
   value: true
   mirror: always
 
+# When true, the default Accept request header will include the supported mime
+# types for images.
+- name: network.http.accept_include_images
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to run proxy checks when processing Alt-Svc headers.
 - name: network.http.altsvc.proxy_checks
   type: bool
