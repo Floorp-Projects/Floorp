@@ -229,18 +229,22 @@ static nsCString DocumentAcceptHeader() {
   // https://fetch.spec.whatwg.org/#document-accept-header-value
   // The value specified by the fetch standard is
   // `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
-  // but we also insert all of the image formats before */*
   nsCString mimeTypes("text/html,application/xhtml+xml,application/xml;q=0.9,");
 
-  if (mozilla::StaticPrefs::image_avif_enabled()) {
-    mimeTypes.Append("image/avif,");
+  // we also insert all of the image formats before */* when the pref is set
+  if (mozilla::StaticPrefs::network_http_accept_include_images()) {
+    if (mozilla::StaticPrefs::image_avif_enabled()) {
+      mimeTypes.Append("image/avif,");
+    }
+
+    if (mozilla::StaticPrefs::image_jxl_enabled()) {
+      mimeTypes.Append("image/jxl,");
+    }
+
+    mimeTypes.Append("image/webp,image/png,image/svg+xml,");
   }
 
-  if (mozilla::StaticPrefs::image_jxl_enabled()) {
-    mimeTypes.Append("image/jxl,");
-  }
-
-  mimeTypes.Append("image/webp,image/png,image/svg+xml,*/*;q=0.8");
+  mimeTypes.Append("*/*;q=0.8");
 
   return mimeTypes;
 }
