@@ -212,6 +212,20 @@ add_task(async function testFallbackToTheOrigin() {
         type: "HTTPS",
         flush: false,
         data: {
+          priority: 3,
+          name: "test.foo3.com",
+          values: [
+            { key: "alpn", value: ["h2", "h3-26"] },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.foo.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
           priority: 2,
           name: "test.foo2.com",
           values: [
@@ -785,7 +799,6 @@ add_task(async function testHttp3ExcludedList() {
           name: "www.h3_fail.org",
           values: [
             { key: "alpn", value: "h3-29" },
-            { key: "no-default-alpn" },
             { key: "port", value: h3Port },
           ],
         },
@@ -888,7 +901,6 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
           name: "www.h3_fail1.org",
           values: [
             { key: "alpn", value: "h3-29" },
-            { key: "no-default-alpn" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],

@@ -211,7 +211,6 @@ add_task(async function testFastfallback() {
           name: "test.fastfallback1.com",
           values: [
             { key: "alpn", value: "h3-29" },
-            { key: "no-default-alpn" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
@@ -301,7 +300,6 @@ add_task(async function testFastfallback1() {
           name: "test.fastfallback1.org",
           values: [
             { key: "alpn", value: "h3-29" },
-            { key: "no-default-alpn" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
