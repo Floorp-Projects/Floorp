@@ -2,7 +2,8 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { execa } from "execa";
 
-const BIN_DIR = "_dist/bin/noraneko";
+const BIN_DIR = process.platform !== "darwin" ? "_dist/bin/noraneko"
+  : "_dist/bin/noraneko/Noraneko.app/Contents/Resources";
 const PATCHES_DIR = "scripts/git-patches/patches";
 const PATCHES_TMP = "_dist/bin/applied_patches"
 

@@ -16,6 +16,9 @@ import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
+const binExtractDir = "_dist/bin";
+const binDir = process.platform !== "darwin" ? "_dist/bin/noraneko"
+  : "_dist/bin/noraneko/Noraneko.app/Contents/Resources";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -40,13 +43,15 @@ const getBinArchive = async () => {
     } if (arch === "x64") {
       return "noraneko-linux-amd64-dev.zip";
     }
+  } else {
+    if (process.platform === "darwin") {
+      return "noraneko-macOS-universal.dmg";
+    }
   }
   throw new Error("Unsupported platform/architecture");
 };
 
 const binArchive = await getBinArchive();
-const binExtractDir = "_dist/bin";
-const binDir = "_dist/bin/noraneko";
 
 try {
   await fs.access("dist");
@@ -54,7 +59,9 @@ try {
 } catch {}
 
 const binPath = path.join(binDir, "noraneko");
-const binPathExe = binPath + (process.platform === "win32" ? ".exe" : "");
+const binPathExe = process.platform !== "darwin" ?
+  binPath + (process.platform === "win32" ? ".exe" : ""):
+  "./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko";
 
 const binVersion = path.join(binDir, "nora.version.txt");
 
@@ -66,9 +73,28 @@ async function decompressBin() {
       process.exit(1);
     }
 
-    new AdmZip(binArchive).extractAllTo(binExtractDir);
-    console.log("decompress complete!");
-    await fs.writeFile(binVersion, VERSION);
+    if (process.platform !== "darwin") {
+      new AdmZip(binArchive).extractAllTo(binExtractDir);
+      console.log("decompress complete!");
+      await fs.writeFile(binVersion, VERSION);
+    } else {
+      //? macOS
+      const mountDir = "_dist/mount";
+      await fs.mkdir(mountDir, { recursive: true });
+      await execa("hdiutil", [
+        "attach",
+        "-mountpoint",
+        mountDir,
+        binArchive,
+      ]);
+      await fs.mkdir(binDir, { recursive: true });
+      await execa("cp", ["-R", path.join(mountDir, "Noraneko.app"), path.join("./_dist/bin/noraneko", "")]);
+      await fs.writeFile(binVersion, VERSION);
+      await execa("hdiutil", ["detach", mountDir]);
+      await fs.rm(mountDir, { recursive: true });
+      await execa("chmod", ["-R", "777", `./_dist/bin/noraneko/Noraneko.app`]);
+      await execa("xattr", ["-rc", `./_dist/bin/noraneko/Noraneko.app`]);
+    }
 
     if (process.platform === "linux") {
       try {
@@ -196,6 +222,10 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
             cwd: r("./src/apps/test"),
           })`node --import @swc-node/register/esm-register server.ts`,
         );
+      }
+      // env
+      if (process.platform === "darwin") {
+        process.env.MOZ_DISABLE_CONTENT_SANDBOX = "1";
       }
       devInit = true;
     }

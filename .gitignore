@@ -5,6 +5,7 @@
 
 *.tar.zst
 *.zip
+*.dmg
 
 .idea/
 

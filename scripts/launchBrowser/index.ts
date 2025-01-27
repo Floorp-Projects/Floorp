@@ -3,9 +3,16 @@ import chalk from "chalk";
 
 export async function runBrowser(port = 5180) {
   // https://wiki.mozilla.org/Firefox/CommandLineOptions
+  const binPath = () => {
+    if (process.platform !== "darwin") {
+      return `./_dist/bin/noraneko/noraneko${process.platform === "win32" ? ".exe" : ""} `
+    }
+    return "./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko";
+  }
+
   const processBrowser = execa(
     {},
-  )`./_dist/bin/noraneko/noraneko${process.platform === "win32" ? ".exe" : ""} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
+  )`${binPath()} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
 
   const stdout = processBrowser.readable({ from: "stdout" });
   const stderr = processBrowser.readable({ from: "stderr" });
