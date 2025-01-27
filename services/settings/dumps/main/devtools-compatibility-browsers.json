@@ -1,13 +1,49 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1737763503442,
+      "status": "planned",
+      "version": "135",
+      "browserid": "edge",
+      "id": "2966c2e2-2f1a-4ccc-a0e9-5f14fe995f08",
+      "last_modified": 1737958890365
+    },
+    {
       "name": "Deno",
-      "schema": 1735949103107,
+      "schema": 1737763503219,
       "status": "current",
-      "version": "1.46",
+      "version": "2.1",
       "browserid": "deno",
-      "id": "06c76d19-8afd-4585-983d-7c755d6dbfbd",
-      "last_modified": 1736752583792
+      "id": "d98ddb8c-628b-4769-beb1-c1d91c4879cd",
+      "last_modified": 1737958890362
+    },
+    {
+      "name": "Edge",
+      "schema": 1737763503366,
+      "status": "nightly",
+      "version": "134",
+      "browserid": "edge",
+      "id": "d23388fd-74d6-41d4-af81-5dbd58e6ca92",
+      "last_modified": 1737958890355
+    },
+    {
+      "name": "Edge",
+      "schema": 1737763503294,
+      "status": "beta",
+      "version": "133",
+      "browserid": "edge",
+      "id": "a4608ee5-515c-4a4b-8080-7173eedbeb64",
+      "last_modified": 1737958890352
+    },
+    {
+      "name": "Edge",
+      "schema": 1737504302849,
+      "status": "current",
+      "version": "132",
+      "browserid": "edge",
+      "id": "571146ba-02c4-478e-bc83-f5e47b52f7fa",
+      "last_modified": 1737958890350
     },
     {
       "name": "WebView Android",
@@ -289,42 +325,6 @@
       "last_modified": 1733896859501
     },
     {
-      "name": "Edge",
-      "schema": 1733529903592,
-      "status": "planned",
-      "version": "134",
-      "browserid": "edge",
-      "id": "d23388fd-74d6-41d4-af81-5dbd58e6ca92",
-      "last_modified": 1733835190114
-    },
-    {
-      "name": "Edge",
-      "schema": 1733529903524,
-      "status": "nightly",
-      "version": "133",
-      "browserid": "edge",
-      "id": "a4608ee5-515c-4a4b-8080-7173eedbeb64",
-      "last_modified": 1733835190111
-    },
-    {
-      "name": "Edge",
-      "schema": 1733529604403,
-      "status": "beta",
-      "version": "132",
-      "browserid": "edge",
-      "id": "571146ba-02c4-478e-bc83-f5e47b52f7fa",
-      "last_modified": 1733835190108
-    },
-    {
-      "name": "Edge",
-      "schema": 1731974719865,
-      "status": "current",
-      "version": "131",
-      "browserid": "edge",
-      "id": "0813388d-12c8-4c7b-84d5-25bb100f9a6b",
-      "last_modified": 1732521556533
-    },
-    {
       "name": "Samsung Internet",
       "schema": 1731974720014,
       "status": "current",
@@ -370,5 +370,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1736752583792
+  "timestamp": 1737958890365
 }
