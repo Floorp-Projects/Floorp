@@ -1,18 +1,24 @@
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import * as pathe from "pathe"
 import { injectManifest } from "./scripts/inject/manifest";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
 import { applyMixin } from "./scripts/inject/mixin-loader";
-import puppeteer, { type Browser } from "puppeteer-core";
-import { createServer, type ViteDevServer, build as buildVite } from "vite";
+import { build as buildVite } from "vite";
 import AdmZip from "adm-zip";
-import { execa, type ResultPromise } from "execa";
-import { runBrowser } from "./scripts/launchBrowser/index";
-import { savePrefsForProfile } from "./scripts/launchBrowser/savePrefs";
-import { writeVersion } from "./scripts/update/version";
-import { writeBuildid2 } from "./scripts/update/buildid2";
+import { execa, ExecaError, type ResultPromise } from "execa";
+import { savePrefsForProfile } from "./scripts/launchDev/savePrefs";
+
 import { applyPatches } from "./scripts/git-patches/git-patches-manager";
 import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
+import { genVersion } from "./scripts/launchDev/writeVersion";
+import { writeBuildid2 } from "./scripts/update/buildid2";
+import { $, ProcessPromise } from "zx";
+import { usePwsh } from 'zx'
+
+switch (process.platform) {
+  case "win32":
+    usePwsh()
+}
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -21,7 +27,7 @@ const binDir = process.platform !== "darwin" ? "_dist/bin/noraneko"
   : "_dist/bin/noraneko/Noraneko.app/Contents/Resources";
 
 const r = (dir: string) => {
-  return path.resolve(import.meta.dirname, dir);
+  return pathe.resolve(import.meta.dirname, dir);
 };
 
 const isExists = async (path: string) => {
@@ -58,12 +64,12 @@ try {
   await fs.rename("dist", "_dist");
 } catch {}
 
-const binPath = path.join(binDir, "noraneko");
+const binPath = pathe.join(binDir, "noraneko");
 const binPathExe = process.platform !== "darwin" ?
   binPath + (process.platform === "win32" ? ".exe" : ""):
   "./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko";
 
-const binVersion = path.join(binDir, "nora.version.txt");
+const binVersion = pathe.join(binDir, "nora.version.txt");
 
 async function decompressBin() {
   try {
@@ -88,7 +94,7 @@ async function decompressBin() {
         binArchive,
       ]);
       await fs.mkdir(binDir, { recursive: true });
-      await execa("cp", ["-R", path.join(mountDir, "Noraneko.app"), path.join("./_dist/bin/noraneko", "")]);
+      await execa("cp", ["-R", pathe.join(mountDir, "Noraneko.app"), pathe.join("./_dist/bin/noraneko", "")]);
       await fs.writeFile(binVersion, VERSION);
       await execa("hdiutil", ["detach", mountDir]);
       await fs.rm(mountDir, { recursive: true });
@@ -149,19 +155,17 @@ async function runWithInitBinGit() {
   await run();
 }
 
-let devViteProcesses: ViteDevServer[] | null = null;
-let buildViteProcesses: any[];
+let devViteProcess: ProcessPromise | null = null;
+let browserProcess: ProcessPromise | null = null;
 const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
-
-import packageJson from "./package.json" assert { type: "json" };
 
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
   await applyPatches();
 
   //create version for dev
-  await version();
+  await genVersion();
   let buildid2: string | null = null;
   try {
     await fs.access("_dist/buildid2");
@@ -171,50 +175,16 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   if (mode !== "release") {
     if (!devInit) {
       console.log("run dev servers");
-      devViteProcesses = [
-        await createServer({
-          mode,
-          configFile: r("./src/apps/main/vite.config.ts"),
-          root: r("./src/apps/main"),
-          define: {
-            "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-          },
-        }),
-        await createServer({
-          mode,
-          configFile: r("./src/apps/designs/vite.config.ts"),
-          root: r("./src/apps/designs"),
-        }),
-      ];
-      buildViteProcesses = [
-        await buildVite({
-          mode,
-          configFile: r("./src/apps/designs/vite.config.ts"),
-          root: r("./src/apps/designs"),
-        }),
-        await buildVite({
-          configFile: r("./src/apps/modules/vite.config.ts"),
-          root:r("./src/apps/modules"),
-          define: {
-            "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-            "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-          }
-        })
-      ];
-      devExecaProcesses.push(
-        execa({
-          preferLocal: true,
-          stdout: "inherit",
-          cwd: r("./src/apps/settings"),
-        })`pnpm dev`,
-      );
-      await execa({
-        preferLocal: true,
-        stdout: "inherit",
-        cwd: r("./src/apps/modules"),
-      })`pnpm genJarManifest`;
-  
+      devViteProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-dev.ts ${mode} ${buildid2 ?? ""}`.stdio("pipe").nothrow();
+      
+      (async () => {for await (const temp of devViteProcess.stdout) {
+        process.stdout.write(temp)
+      }})();
+      (async () => {for await (const temp of devViteProcess.stderr) {
+        process.stdout.write(temp)
+      }})();
+      await execa({stdout: "inherit",preferLocal: true,stderr:"inherit"})`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
+
       if (mode === "test") {
         devExecaProcesses.push(
           execa({
@@ -229,9 +199,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       }
       devInit = true;
     }
-    devViteProcesses!.forEach((p) => {
-      p.listen();
-    });
     await Promise.all([
       injectManifest(binDir, true, "noraneko-dev"),
       injectXHTMLDev(binDir),
@@ -244,8 +211,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       } catch {}
     await fs.symlink("../../noraneko","./_dist/bin/noraneko/noraneko-dev",process.platform==="win32" ? "junction" : undefined);
   }
-
-
 
   await Promise.all([
     buildVite({
@@ -266,57 +231,51 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     })(),
   ]);
 
-  let browser: Browser | undefined = undefined;
   //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
   await fs.mkdir("./_dist/profile/test", { recursive: true });
   await savePrefsForProfile("./_dist/profile/test");
-  await runBrowser();
 
-  browser = await puppeteer.connect({
-    browserWSEndpoint: "ws://127.0.0.1:5180/session",
-    protocol: "webDriverBiDi",
-  });
+  browserProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-browser.ts`.stdio("pipe").nothrow();
 
-  //await (await browser.pages())[0].goto("https://google.com");
-
-  if (mode === "dev" && false) {
-    // const pages = await browser.pages();
-    // await pages[0].goto("about:newtab", {
-    //   timeout: 0,
-    //   waitUntil: "domcontentloaded",
-    // });
-    // //? We should not go to about:preferences
-    // //? Puppeteer cannot get the load event so when reload, this errors.
-    // // await pages[0].goto("about:preferences", {
-    // //   timeout: 0,
-    // //   waitUntil: "domcontentloaded",
-    // // });
-  } else if (mode === "test") {
-    browser.pages().then(async (page) => {
-      await page[0].goto("about:newtab", {
-        timeout: 0,
-        waitUntil: "domcontentloaded",
-      });
-      // await page[0].goto("about:preferences#csk", {
-      //   timeout: 0,
-      //   waitUntil: "domcontentloaded",
-      // });
-    });
-  }
-
-  // browser.on("disconnected", () => {
-  //   process.exit();
-  // });
+  (async () => {for await (const temp of browserProcess.stdout) {
+    process.stdout.write(temp)
+  }})();
+  (async () => {for await (const temp of browserProcess.stderr) {
+    process.stdout.write(temp)
+  }})();
 }
 
-process.on("exit", () => {
+let runningExit = false
+async function exit() {
+  if (runningExit) return;
+  runningExit = true;
+  if (browserProcess) {
+    console.log("[build] Shutdown browserProcess")
+    browserProcess.stdin.write("s")
+    try {
+      await browserProcess
+    } catch (e){
+      console.error(e)
+    }
+  }
   devExecaProcesses.forEach((v) => {
-    v.kill();
+    v.kill(new Error("Kill by exit()"));
   });
-  devViteProcesses?.forEach((v) => {
-    v.close();
-  });
-});
+  if (devViteProcess) {
+    console.log("[build] Shutdown devViteProcess")
+    devViteProcess.stdin.write("s")
+    try {
+      await devViteProcess
+    } catch (e){
+      console.error(e)
+    }
+  }
+  process.exit(0)
+}
+
+process.on("SIGINT",async ()=>{
+  await exit()
+})
 
 /**
  * * Please run with NODE_ENV='production'
@@ -330,44 +289,7 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
-    await Promise.all([
-      buildVite({
-        configFile: r("./src/apps/startup/vite.config.ts"),
-        root: r("./src/apps/startup"),
-      }),
-      buildVite({
-        configFile: r("./src/apps/main/vite.config.ts"),
-        root: r("./src/apps/main"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-        },
-        base: "chrome://noraneko/content"
-      }),
-      buildVite({
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
-      }),
-      buildVite({
-        configFile: r("./src/apps/settings/vite.config.ts"),
-        root: r("./src/apps/settings"),
-        base: "chrome://noraneko-settings/content"
-      }),
-      buildVite({
-        configFile: r("./src/apps/modules/vite.config.ts"),
-        root:r("./src/apps/modules"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-        }
-      })
-      //applyMixin(binPath),
-    ]);
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
-      cwd: r("./src/apps/modules"),
-    })`pnpm genJarManifest`;
+    await execa({stdout: "inherit",preferLocal: true})`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
     await injectManifest("./_dist", false);
   } else if (mode === "after") {
     const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
@@ -378,19 +300,7 @@ async function release(mode: "before" | "after") {
       buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
     } catch {}
     await writeBuildid2(`${binPath}/browser`, buildid2 ?? "");
-    // await applyPatches(binPath);
   }
-}
-
-import { v7 as uuidv7 } from "uuid";
-async function version() {
-  await writeVersion(r("./gecko"));
-  try {
-    await fs.access("_dist");
-  } catch {
-    await fs.mkdir("_dist");
-  }
-  await writeBuildid2(r("./_dist"), uuidv7());
 }
 
 if (process.argv[2]) {
@@ -414,7 +324,7 @@ if (process.argv[2]) {
       release("after");
       break;
     case "--write-version":
-      version();
+      await genVersion();
       break;
   }
 }
