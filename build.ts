@@ -5,7 +5,6 @@ import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
 import { applyMixin } from "./scripts/inject/mixin-loader";
 import { build as buildVite } from "vite";
 import AdmZip from "adm-zip";
-import { execa, ExecaError, type ResultPromise } from "execa";
 import { savePrefsForProfile } from "./scripts/launchDev/savePrefs";
 
 import { applyPatches } from "./scripts/git-patches/git-patches-manager";
@@ -14,6 +13,7 @@ import { genVersion } from "./scripts/launchDev/writeVersion";
 import { writeBuildid2 } from "./scripts/update/buildid2";
 import { $, ProcessPromise } from "zx";
 import { usePwsh } from 'zx'
+import chalk from "chalk";
 
 switch (process.platform) {
   case "win32":
@@ -79,36 +79,34 @@ async function decompressBin() {
       process.exit(1);
     }
 
-    if (process.platform !== "darwin") {
+    if (process.platform === "win32") {
       new AdmZip(binArchive).extractAllTo(binExtractDir);
       console.log("decompress complete!");
       await fs.writeFile(binVersion, VERSION);
-    } else {
+    }
+
+    if (process.platform === "darwin") {
       //? macOS
       const mountDir = "_dist/mount";
       await fs.mkdir(mountDir, { recursive: true });
-      await execa("hdiutil", [
+      await $`hdiutil ${[
         "attach",
         "-mountpoint",
         mountDir,
         binArchive,
-      ]);
+      ]}`;
       await fs.mkdir(binDir, { recursive: true });
-      await execa("cp", ["-R", pathe.join(mountDir, "Noraneko.app"), pathe.join("./_dist/bin/noraneko", "")]);
+      await fs.cp(pathe.join(mountDir, "Noraneko.app"),pathe.join("./_dist/bin/noraneko", ""))
       await fs.writeFile(binVersion, VERSION);
-      await execa("hdiutil", ["detach", mountDir]);
+      await $`hdiutil ${["detach", mountDir]}`;
       await fs.rm(mountDir, { recursive: true });
-      await execa("chmod", ["-R", "777", `./_dist/bin/noraneko/Noraneko.app`]);
-      await execa("xattr", ["-rc", `./_dist/bin/noraneko/Noraneko.app`]);
+      await $`chmod ${["-R", "777", `./_dist/bin/noraneko/Noraneko.app`]}`;
+      await $`xattr ${["-rc", `./_dist/bin/noraneko/Noraneko.app`]}`;
     }
 
     if (process.platform === "linux") {
-      try {
-        await execa("chmod", ["-R", "755", `./${binDir}`]);
-        await execa("chmod", ["755", binPathExe]);
-      } catch (chmodError) {
-        process.exit(1);
-      }
+      await $`chmod ${["-R", "755", `./${binDir}`]}`;
+      await $`chmod ${["755", binPathExe]}`;
     }
   } catch (e) {
     console.error(e);
@@ -157,7 +155,6 @@ async function runWithInitBinGit() {
 
 let devViteProcess: ProcessPromise | null = null;
 let browserProcess: ProcessPromise | null = null;
-const devExecaProcesses: ResultPromise[] = [];
 let devInit = false;
 
 async function run(mode: "dev" | "test" | "release" = "dev") {
@@ -176,23 +173,15 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     if (!devInit) {
       console.log("run dev servers");
       devViteProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-dev.ts ${mode} ${buildid2 ?? ""}`.stdio("pipe").nothrow();
-      
+
       (async () => {for await (const temp of devViteProcess.stdout) {
         process.stdout.write(temp)
       }})();
       (async () => {for await (const temp of devViteProcess.stderr) {
         process.stdout.write(temp)
       }})();
-      await execa({stdout: "inherit",preferLocal: true,stderr:"inherit"})`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
+      await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
 
-      if (mode === "test") {
-        devExecaProcesses.push(
-          execa({
-            preferLocal: true,
-            cwd: r("./src/apps/test"),
-          })`node --import @swc-node/register/esm-register server.ts`,
-        );
-      }
       // env
       if (process.platform === "darwin") {
         process.env.MOZ_DISABLE_CONTENT_SANDBOX = "1";
@@ -250,26 +239,26 @@ async function exit() {
   if (runningExit) return;
   runningExit = true;
   if (browserProcess) {
-    console.log("[build] Shutdown browserProcess")
+    console.log("[build] Start Shutdown browserProcess")
     browserProcess.stdin.write("s")
     try {
       await browserProcess
     } catch (e){
       console.error(e)
     }
+    console.log("[build] End Shutdown browserProcess")
   }
-  devExecaProcesses.forEach((v) => {
-    v.kill(new Error("Kill by exit()"));
-  });
   if (devViteProcess) {
-    console.log("[build] Shutdown devViteProcess")
+    console.log("[build] Start Shutdown devViteProcess")
     devViteProcess.stdin.write("s")
     try {
       await devViteProcess
     } catch (e){
       console.error(e)
     }
+    console.log("[build] End Shutdown devViteProcess")
   }
+  console.log(chalk.green("[build] Cleanup Complete!"))
   process.exit(0)
 }
 
@@ -289,7 +278,7 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
-    await execa({stdout: "inherit",preferLocal: true})`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
+    await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
     await injectManifest("./_dist", false);
   } else if (mode === "after") {
     const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";

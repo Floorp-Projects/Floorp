@@ -50,5 +50,5 @@ async function shutdownDev() {
       process.exit(1);
     }
   });
-  await launchDev(process.argv[1],process.argv[2])
+  await launchDev(process.argv[2],process.argv[3])
 }

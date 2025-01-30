@@ -1,7 +1,12 @@
 import {resolve} from "pathe"
 import {build} from "vite"
 import packageJson from "../../package.json" assert { type: "json" };
-import { execa } from "execa";
+import { $,usePwsh } from "zx";
+
+switch (process.platform) {
+  case "win32":
+    usePwsh()
+}
 
 const r = (value:string) : string => {
   return resolve(import.meta.dirname,"../..",value)
@@ -24,9 +29,7 @@ async function launchBuild(mode:string,buildid2:string) {
         }
       })
     ])
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
+    await $({
       cwd: r("./src/apps/modules"),
     })`pnpm genJarManifest`;
   } else {
@@ -62,14 +65,12 @@ async function launchBuild(mode:string,buildid2:string) {
         }
       })
     ]);
-    await execa({
-      preferLocal: true,
-      stdout: "inherit",
+    await $({
       cwd: r("./src/apps/modules"),
     })`pnpm genJarManifest`;
   }
 }
 
 { //* main
-  await launchBuild(process.argv[1],process.argv[2])
+  await launchBuild(process.argv[2],process.argv[3])
 }

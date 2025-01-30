@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { execa } from "execa";
+import { $ } from "zx";
 
 const BIN_DIR = process.platform !== "darwin" ? "_dist/bin/noraneko"
   : "_dist/bin/noraneko/Noraneko.app/Contents/Resources";
@@ -34,9 +34,9 @@ export async function initializeBinGit() {
   );
 
   // Initialize git repository
-  await execa("git", ["init"], { cwd: BIN_DIR });
-  await execa("git", ["add", "."], { cwd: BIN_DIR });
-  await execa("git", ["commit", "-m", "initialize"], { cwd: BIN_DIR });
+  await $({cwd: BIN_DIR})`git init`;
+  await $({cwd: BIN_DIR})`git add .`;
+  await $({cwd: BIN_DIR})`git commit -m initialize`;
 
   console.log("Git repository initialized in _dist/bin");
 }
@@ -51,13 +51,7 @@ export async function applyPatches(binDir = BIN_DIR) {
     for (const patch of reverse_patches) {
       const patchPath = path.join(PATCHES_TMP, patch);
       try {
-        await execa(
-          "git",
-          ["apply", "-R", "--reject", "--whitespace=fix","--unsafe-paths", "--directory",`${binDir}`,`./${patchPath}`],
-          {
-            shell: true,
-          },
-        );
+        await $`git apply -R --reject --whitespace=fix --unsafe-paths --directory ${binDir} ./${patchPath}`
       } catch (e) {
         console.warn(`Failed to reverse patch: ${patchPath}`);
         console.warn(e);
@@ -81,13 +75,7 @@ export async function applyPatches(binDir = BIN_DIR) {
     const patchPath = path.join(PATCHES_DIR, patch);
     console.log(`Applying patch: ${patchPath}`);
     try {
-      await execa(
-        "git",
-        ["apply", "--reject", "--whitespace=fix","--unsafe-paths", "--directory",`${binDir}`,`./${patchPath}`],
-        {
-          shell: true,
-        },
-      );
+      await $`git apply --reject --whitespace=fix --unsafe-paths --directory ${binDir} ./${patchPath}`
       await fs.cp(patchPath,PATCHES_TMP+"/"+patch);
     } catch (e) {
       console.warn(`Failed to apply patch: ${patchPath}`);
@@ -108,9 +96,7 @@ export async function createPatches() {
   }
 
   // Get list of changed files
-  const { stdout: diffNameOnly } = await execa("git", ["diff", "--name-only"], {
-    cwd: BIN_DIR,
-  });
+  const { stdout: diffNameOnly } = await $({cwd: BIN_DIR})`git diff --name-only`;
   const changedFiles = diffNameOnly.split("\n").filter(Boolean);
 
   if (changedFiles.length === 0) {
@@ -124,9 +110,7 @@ export async function createPatches() {
   // Create patch for each changed file
   for (const file of changedFiles) {
     try {
-      const { stdout: diff } = await execa("git", ["diff", file], {
-        cwd: BIN_DIR,
-      });
+      const { stdout: diff } = await $({cwd: BIN_DIR})`git diff ${file}`;
 
       const modifiedDiff = `${`${diff}`
         .replace(/^--- a\//gm, "--- ./")
