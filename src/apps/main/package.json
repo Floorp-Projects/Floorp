@@ -3,10 +3,20 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@jsr/std__assert": "^1.0.11",
+    "@jsr/std__internal": "^1.0.5",
+    "@deno/vite-plugin": "^1.0.3",
     "@nora/shared": "workspace:*",
     "@nora/skin": "workspace:*",
     "@nora/solid-xul": "workspace:*",
     "@nora/test": "workspace:*",
+    "@types/karma": "^6.3.9",
+    "jasmine-core": "^5.5.0",
+    "karma": "^6.4.4",
+    "karma-jasmine": "^5.1.0",
+    "uuid": "^11.0.5",
+    "vitest": "^3.0.5",
+    "vitest-noraneko": "workspace:*",
     "@solid-primitives/deep": "^0.3.0",
     "@solid-primitives/map": "^0.6.0",
     "@solid-primitives/memo": "^1.4.0",
@@ -30,7 +40,6 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
-    "build": "nx vite:build",
     "check-types": "tsc --noEmit"
   }
 }

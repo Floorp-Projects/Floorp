@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "lib": ["ESNext"],
     "target": "ESNext",
     "experimentalDecorators": true,
     "allowImportingTsExtensions": true,

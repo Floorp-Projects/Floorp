@@ -9,6 +9,7 @@
     "noImplicitReturns": true,
     "noUnusedParameters": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": []
   }
 }

@@ -1,11 +1,10 @@
 import { defineConfig } from "vite";
-import {generateJarManifest} from "../common/scripts/gen_jarmanifest"
+import {generateJarManifest} from "../common/scripts/gen_jarmanifest.ts"
+import {expandGlob} from "@std/fs/expand-glob"
 
-import fs from "fs/promises"
-
-let entry = []
-for await (const x of fs.glob(import.meta.dirname + "/src/**/*.mts")) {
-  entry.push(x);
+const entry = []
+for await (const x of expandGlob(import.meta.dirname + "/src/**/*.mts")) {
+  entry.push(x.path);
 }
 
 export default defineConfig({
