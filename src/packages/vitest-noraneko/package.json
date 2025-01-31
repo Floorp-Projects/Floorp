@@ -1,0 +1,22 @@
+{
+  "name": "vitest-pool-noraneko",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "@vitest/runner": "^3.0.4",
+    "birpc": "^2.0.19",
+    "vitest": "^3.0.4",
+    "ws": "^8.18.0",
+    "zx": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.14"
+  }
+}

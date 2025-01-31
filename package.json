@@ -5,13 +5,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --import @swc-node/register/esm-register ./build.ts --test",
-    "build": "node --import @swc-node/register/esm-register ./build.ts",
-    "dev": "node --import @swc-node/register/esm-register ./build.ts --run",
-    "apply-patches": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --apply",
-    "dev-with-init-bin-git": "node --import @swc-node/register/esm-register ./build.ts --run-with-init-bin-git",
-    "init-bin-git": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --init",
-    "create-patches": "node --import @swc-node/register/esm-register ./scripts/git-patches/git-patches-manager.ts --create"
+    "test": "node --experimental-strip-types ./build.ts --test",
+    "build": "node --experimental-strip-types ./build.ts",
+    "dev": "node --experimental-strip-types ./build.ts --run",
+    "apply-patches": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --apply",
+    "dev-with-init-bin-git": "node --experimental-strip-types ./build.ts --run-with-init-bin-git",
+    "init-bin-git": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --init",
+    "create-patches": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --create"
   },
   "keywords": [],
   "workspaces": [
@@ -22,20 +22,10 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@bytecodealliance/preview2-shim": "^0.17.1",
-    "@iconify-json/carbon": "^1.2.5",
-    "@iconify-json/codicon": "^1.2.8",
-    "@iconify-json/fluent-mdl2": "^1.2.1",
-    "@iconify-json/ic": "^1.2.2",
-    "@iconify-json/line-md": "^1.2.5",
-    "@iconify-json/lucide": "^1.2.25",
-    "@iconify-json/material-symbols": "^1.2.14",
-    "@iconify-json/material-symbols-light": "^1.2.14",
-    "@iconify-json/mdi": "^1.2.3",
-    "@iconify-json/mingcute": "^1.2.3",
-    "@swc-node/register": "^1.10.9",
+    "@swc-node/register": "^1.10.0",
     "@swc/core": "^1.10.12",
     "@types/adm-zip": "^0.5.7",
-    "@types/node": "^22.12.0",
+    "@types/node": "^22.13.0",
     "@types/postcss-sorting": "^8.0.2",
     "@typescript/lib-dom": "link:@types\\gecko\\dom",
     "chalk": "^5.4.1",
@@ -43,7 +33,7 @@
     "fast-glob": "^3.3.3",
     "lightningcss": "^1.29.1",
     "linkedom": "0.18.7",
-    "oxlint": "^0.15.8",
+    "oxlint": "^0.15.9",
     "pathe": "^2.0.2",
     "puppeteer-core": "^24.1.1",
     "typescript": "^5.7.3",
@@ -51,8 +41,7 @@
     "vite": "6.0.11",
     "vite-plugin-solid": "^2.11.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "xml-js": "^1.6.11",
-    "zx": "^8.3.1"
+    "xml-js": "^1.6.11"
   },
   "dependencies": {
     "@svgr/core": "^8.1.0",
@@ -61,7 +50,8 @@
     "solid-element": "^1.9.1",
     "solid-styled-jsx": "^0.27.1",
     "sortablejs": "^1.15.6",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "zx": "^8.3.2"
   },
   "packageManager": "pnpm@9.2.0"
 }

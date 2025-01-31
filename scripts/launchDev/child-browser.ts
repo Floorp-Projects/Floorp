@@ -67,7 +67,7 @@ let logStatusForFollowingLine: "error" | "warn" | "info" | "debug" = "info";
     }
   }
 
-import {LogEntry, log} from 'zx/core'
+import {type LogEntry, log} from 'zx/core'
 
 $.log = (entry: LogEntry) => {
   // if the buffer is null, the process is on exit.
@@ -151,16 +151,14 @@ export async function runBrowser(port = 5180) {
   //   printFirefoxLog(str.split("\n"));
   // });
 
-  (async () => {
-    await processBrowser;
-    /**
-     * Kill nodejs process gratefully
-     */
-    if (!intendedShutdown) {
-      console.log("[child-browser] Browser Closed")
-      process.exit(0);
-    }
-  })();
+  await processBrowser;
+  /**
+   * Kill nodejs process gratefully
+   */
+  if (!intendedShutdown) {
+    console.log("[child-browser] Browser Closed")
+    process.exit(0);
+  }
 }
 
 { //* main

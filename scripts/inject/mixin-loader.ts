@@ -1,7 +1,7 @@
 import fg from "fast-glob";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { transform } from "./wasm/nora-inject";
+import { transform } from "./wasm/nora-inject.js";
 import {transformFileSync} from "@swc/core"
 
 const fileList = await fg("*", {

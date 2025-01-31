@@ -1,0 +1,1 @@
+import.meta.hot?.send("vitest-noraneko","hello world from main/core!")

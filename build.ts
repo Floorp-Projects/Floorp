@@ -1,16 +1,15 @@
 import * as fs from "node:fs/promises";
 import * as pathe from "pathe"
-import { injectManifest } from "./scripts/inject/manifest";
-import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
-import { applyMixin } from "./scripts/inject/mixin-loader";
-import { build as buildVite } from "vite";
+import { injectManifest } from "./scripts/inject/manifest.ts";
+import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.ts";
+import { applyMixin } from "./scripts/inject/mixin-loader.ts";
 import AdmZip from "adm-zip";
-import { savePrefsForProfile } from "./scripts/launchDev/savePrefs";
+import { savePrefsForProfile } from "./scripts/launchDev/savePrefs.ts";
 
-import { applyPatches } from "./scripts/git-patches/git-patches-manager";
-import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
-import { genVersion } from "./scripts/launchDev/writeVersion";
-import { writeBuildid2 } from "./scripts/update/buildid2";
+import { applyPatches } from "./scripts/git-patches/git-patches-manager.ts";
+import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.ts";
+import { genVersion } from "./scripts/launchDev/writeVersion.ts";
+import { writeBuildid2 } from "./scripts/update/buildid2.ts";
 import { $, ProcessPromise } from "zx";
 import { usePwsh } from 'zx'
 import chalk from "chalk";
@@ -195,15 +194,23 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   if (mode !== "release") {
     if (!devInit) {
       console.log("run dev servers");
-      devViteProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-dev.ts ${mode} ${buildid2 ?? ""}`.stdio("pipe").nothrow();
+      devViteProcess = $`node --experimental-strip-types ./scripts/launchDev/child-dev.ts ${mode} ${buildid2 ?? ""}`.stdio("pipe").nothrow();
 
+      let resolve: Function | undefined = undefined;
+      const temp_prm = new Promise<void>((rs,_rj)=>{
+        resolve = rs;
+      });
       (async () => {for await (const temp of devViteProcess.stdout) {
+        if (temp.includes("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-dev")) {
+          if (resolve) {(resolve as Function)()}
+        }
         process.stdout.write(temp)
       }})();
       (async () => {for await (const temp of devViteProcess.stderr) {
         process.stdout.write(temp)
       }})();
-      await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
+      await temp_prm;
+      await $`node --experimental-strip-types ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
 
       // env
       if (process.platform === "darwin") {
@@ -225,12 +232,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   }
 
   await Promise.all([
-    buildVite({
-      mode,
-      root: r("./src/apps/startup"),
-      configFile: r("./src/apps/startup/vite.config.ts"),
-    }),
-
     (async () => {
       await injectXHTML(binDir);
     })(),
@@ -247,7 +248,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   await fs.mkdir("./_dist/profile/test", { recursive: true });
   await savePrefsForProfile("./_dist/profile/test");
 
-  browserProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-browser.ts`.stdio("pipe").nothrow();
+  browserProcess = $`node --experimental-strip-types ./scripts/launchDev/child-browser.ts`.stdio("pipe").nothrow();
 
   (async () => {for await (const temp of browserProcess.stdout) {
     process.stdout.write(temp)
@@ -301,7 +302,7 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
-    await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
+    await $`node --experimental-strip-types ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
     await injectManifest("./_dist", false);
   } else if (mode === "after") {
     const binPath = "../obj-artifact-build-output/dist/bin";

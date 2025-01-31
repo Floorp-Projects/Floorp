@@ -1,6 +1,7 @@
 import "vite/modulepreload-polyfill";
 
 import { initI18N } from "../i18n/config";
+import "./test/index.ts"
 
 const MODULES = {
   common: {} as Record<string, () => Promise<unknown>>,

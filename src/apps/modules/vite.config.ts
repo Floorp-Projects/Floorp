@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
+import {generateJarManifest} from "../common/scripts/gen_jarmanifest"
 
-import swc from "unplugin-swc"
 import fs from "fs/promises"
 
 let entry = []
@@ -9,7 +9,10 @@ for await (const x of fs.glob(import.meta.dirname + "/src/**/*.mts")) {
 }
 
 export default defineConfig({
+  base: "resource://noraneko",
   build: {
+    target:"firefox133",
+    assetsInlineLimit: 0,
     outDir: "_dist",
     reportCompressedSize: false,
     modulePreload: false,
@@ -35,13 +38,27 @@ export default defineConfig({
     },
   },
   plugins: [
-    swc.vite({
-      "jsc": {
-        "target":"esnext",
-        "parser": {
-          "syntax":"typescript"
-        }
-      }
-    }),
+    {
+      name: "gen_jarmn",
+      enforce: "post",
+      async generateBundle(options, bundle, isWrite) {
+        this.emitFile({
+          type: "asset",
+          fileName: "jar.mn",
+          needsCodeReference: false,
+          source: await generateJarManifest(bundle, {
+            prefix: "resource",
+            namespace: "noraneko",
+            register_type: "resource",
+          }),
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: "moz.build",
+          needsCodeReference: false,
+          source: `JAR_MANIFESTS += ["jar.mn"]`,
+        });
+      },
+    },
   ]
 });

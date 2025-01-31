@@ -1,6 +1,22 @@
-import type { PrefDatum, PrefDatumWithValue } from "../common/defines.js";
+import { createBirpc } from "birpc";
+import { NRSettingsParentFunctions } from "../common/defines.js";
 
 export class NRSettingsChild extends JSWindowActorChild {
+  rpcCallback: Function | null = null;
+  rpc;
+  constructor() {
+    super();
+    this.rpc = createBirpc<NRSettingsParentFunctions,{}>(
+      {},
+      {
+        post: data => this.sendAsyncMessage("birpc",data),
+        on: callback => {this.rpcCallback = callback},
+        // these are required when using WebSocket
+        serialize: v => JSON.stringify(v),
+        deserialize: v => JSON.parse(v),
+      },
+    )
+  }
   actorCreated() {
     console.debug("NRSettingsChild created!");
     const window = this.contentWindow;
@@ -9,45 +25,29 @@ export class NRSettingsChild extends JSWindowActorChild {
       Cu.exportFunction(this.NRSPing.bind(this), window, {
         defineAs: "NRSPing",
       });
-      Cu.exportFunction(this.NRSPrefGet.bind(this), window, {
-        defineAs: "NRSPrefGet",
-      });
-      Cu.exportFunction(this.NRSPrefSet.bind(this), window, {
-        defineAs: "NRSPrefSet",
+      Cu.exportFunction(this.NRS_getBoolPref.bind(this), window, {
+        defineAs: "NRS_getBoolPref",
       });
     }
   }
   NRSPing() {
     return true;
   }
-  resolvePrefSet: (() => void)[] = [];
-  NRSPrefSet(setting: PrefDatum, callback: () => void) {
-    const promise = new Promise<void>((resolve, _reject) => {
-      this.resolvePrefSet.push(resolve);
-    });
-    this.sendAsyncMessage("Pref:Set", setting);
-    promise.then((_v) => callback());
+  /**
+   * Wrap a promise so content can use Promise methods.
+   */
+  wrapPromise<T>(promise: Promise<T>) {
+    return new (this.contentWindow!.Promise as PromiseConstructorLike)<T>((resolve, reject) =>
+      promise.then(resolve, reject)
+    );
   }
-  resolvePrefGet: ((setting: PrefDatumWithValue) => void)[] = [];
-  NRSPrefGet(setting: PrefDatum, callback: (data: PrefDatumWithValue) => void) {
-    const promise = new Promise<PrefDatumWithValue>((resolve, _reject) => {
-      this.resolvePrefGet.push(resolve);
-    });
-    this.sendAsyncMessage("Pref:Get", setting);
-    promise.then((v) => callback(v));
+  NRS_getBoolPref(prefName: string): PromiseLike<boolean|null> {
+    return this.wrapPromise(this.rpc.getBoolPref(prefName))
   }
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
-      case "Pref:Set": {
-        const resolve = this.resolvePrefSet.shift();
-        resolve?.();
-        break;
-      }
-      case "Pref:Get": {
-        const resolve = this.resolvePrefGet.shift();
-        resolve?.(message.data);
-        break;
-      }
+      case "birpc":
+        this.rpcCallback?.(message.data)
     }
   }
 }

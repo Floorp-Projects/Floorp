@@ -2,9 +2,11 @@
   "compilerOptions": {
     "useDefineForClassFields": false,
     "esModuleInterop": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ESNext",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }

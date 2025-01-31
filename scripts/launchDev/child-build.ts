@@ -1,6 +1,6 @@
 import {resolve} from "pathe"
 import {build} from "vite"
-import packageJson from "../../package.json" assert { type: "json" };
+import packageJson from "../../package.json" with { type: "json" };
 import { $,usePwsh } from "zx";
 
 switch (process.platform) {
@@ -15,28 +15,27 @@ const r = (value:string) : string => {
 async function launchBuild(mode:string,buildid2:string) {
   if (mode.startsWith("dev")) {
     await Promise.all([
-      build({
-        mode,
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
-      }),
+      $({cwd:r("./src/apps/startup")})`pnpm build ${mode}`,
       build({
         configFile: r("./src/apps/modules/vite.config.ts"),
-        root:r("./src/apps/modules"),
+        root: r("./src/apps/modules"),
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
           "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-        }
-      })
+        },
+      }),
     ])
-    await $({
-      cwd: r("./src/apps/modules"),
-    })`pnpm genJarManifest`;
   } else {
     await Promise.all([
+      $({cwd:r("./src/apps/startup")})`pnpm build ${mode}`,
+      //$({cwd:r("./src/apps/modules")})`pnpm build ${JSON.stringify({mode,buildid2,version2:packageJson.version})}`,
       build({
-        configFile: r("./src/apps/startup/vite.config.ts"),
-        root: r("./src/apps/startup"),
+        configFile: r("./src/apps/modules/vite.config.ts"),
+        root: r("./src/apps/modules"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+        },
       }),
       build({
         configFile: r("./src/apps/main/vite.config.ts"),
@@ -56,18 +55,7 @@ async function launchBuild(mode:string,buildid2:string) {
         root: r("./src/apps/settings"),
         base: "chrome://noraneko-settings/content"
       }),
-      build({
-        configFile: r("./src/apps/modules/vite.config.ts"),
-        root:r("./src/apps/modules"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-          "import.meta.env.__VERSION2__": `"${packageJson.version}"`
-        }
-      })
     ]);
-    await $({
-      cwd: r("./src/apps/modules"),
-    })`pnpm genJarManifest`;
   }
 }
 

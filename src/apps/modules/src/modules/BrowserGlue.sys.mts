@@ -1,12 +1,14 @@
 //@ts-expect-error
 import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
 
-function localPathToResourceURI(path: string, mtsToMjs = true) {
-  if (!path.startsWith("../")) {
-    throw Error("localpath should starts with `../`");
+function localPathToResourceURI(path: string) {
+  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/)
+  const result = re.exec(path)
+  if (!result || result.length != 2) {
+    throw Error(`[nora-browserGlue] localPathToResource URI match failed : ${path}`);
   }
-  const resourceURI = `resource://noraneko/${path.slice(3)}`;
-  return mtsToMjs ? resourceURI.replace(/.mts$/, ".mjs") : resourceURI;
+  const resourceURI = `resource://noraneko/${result[1]}.sys.mjs`;
+  return resourceURI;
 }
 
 const JS_WINDOW_ACTORS: {

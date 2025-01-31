@@ -1,5 +1,11 @@
 {
   "name": "@nora/startup",
-  "private":true,
-  "type": "module"
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rolldown -c rolldown.config.ts"
+  },
+  "devDependencies": {
+    "rolldown": "1.0.0-beta.3"
+  }
 }

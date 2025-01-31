@@ -4,6 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import swc from 'unplugin-swc'
+import NoranekoTestPlugin from "vitest-noraneko/plugin";
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
@@ -175,7 +176,8 @@ export default defineConfig({
         }
 
       },
-    }
+    },
+    NoranekoTestPlugin(),
   ],
   optimizeDeps: {
     include: ["./node_modules/@nora",'solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/html', 'solid-js/h'],

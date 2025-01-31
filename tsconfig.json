@@ -8,5 +8,7 @@
     "strictPropertyInitialization": true,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }
