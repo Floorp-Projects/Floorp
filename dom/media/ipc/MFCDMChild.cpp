@@ -24,6 +24,7 @@ namespace mozilla {
         self->mManagerThread, callsite,                                      \
         [self, promiseId, callsite](                                         \
             PMFCDMChild::method##Promise::ResolveOrRejectValue&& result) {   \
+          MutexAutoLock lock(self->mMutex);                                  \
           auto iter = self->mPendingGenericPromises.find(promiseId);         \
           if (iter == self->mPendingGenericPromises.end()) {                 \
             return;                                                          \
@@ -135,15 +136,18 @@ void MFCDMChild::Shutdown() {
           mRemoteRequest.DisconnectIfExists();
           mInitRequest.DisconnectIfExists();
 
-          for (auto& promise : mPendingSessionPromises) {
-            promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
-          }
-          mPendingSessionPromises.clear();
+          {
+            MutexAutoLock lock(mMutex);
+            for (auto& promise : mPendingSessionPromises) {
+              promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
+            }
+            mPendingSessionPromises.clear();
 
-          for (auto& promise : mPendingGenericPromises) {
-            promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
+            for (auto& promise : mPendingGenericPromises) {
+              promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
+            }
+            mPendingGenericPromises.clear();
           }
-          mPendingGenericPromises.clear();
 
           mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
           mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
@@ -274,6 +278,7 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
                                                        __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingSessionPromises.find(aPromiseId) ==
              mPendingSessionPromises.end());
   mPendingSessionPromises.emplace(aPromiseId,
@@ -287,6 +292,7 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
         SendCreateSessionAndGenerateRequest(params)->Then(
             mManagerThread, __func__,
             [self, aPromiseId, this](const MFCDMSessionResult& result) {
+              MutexAutoLock lock(mMutex);
               auto iter = mPendingSessionPromises.find(aPromiseId);
               if (iter == mPendingSessionPromises.end()) {
                 return;
@@ -303,6 +309,7 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
             },
             [self, aPromiseId,
              this](const mozilla::ipc::ResponseRejectReason& aReason) {
+              MutexAutoLock lock(mMutex);
               auto iter = mPendingSessionPromises.find(aPromiseId);
               if (iter == mPendingSessionPromises.end()) {
                 return;
@@ -325,6 +332,7 @@ RefPtr<GenericPromise> MFCDMChild::LoadSession(
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,
@@ -343,6 +351,7 @@ RefPtr<GenericPromise> MFCDMChild::UpdateSession(uint32_t aPromiseId,
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,
@@ -361,6 +370,7 @@ RefPtr<GenericPromise> MFCDMChild::CloseSession(uint32_t aPromiseId,
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,
@@ -378,6 +388,7 @@ RefPtr<GenericPromise> MFCDMChild::RemoveSession(uint32_t aPromiseId,
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,
@@ -395,6 +406,7 @@ RefPtr<GenericPromise> MFCDMChild::SetServerCertificate(
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,
@@ -412,6 +424,7 @@ RefPtr<GenericPromise> MFCDMChild::GetStatusForPolicy(
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
              mPendingGenericPromises.end());
   mPendingGenericPromises.emplace(aPromiseId,

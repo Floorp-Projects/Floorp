@@ -141,11 +141,13 @@ class MFCDMChild final : public PMFCDMChild {
   MozPromiseHolder<GenericPromise> mRemoveSessionPromiseHolder;
   MozPromiseRequestHolder<RemoveSessionPromise> mRemoveSessionRequest;
 
+  mutable Mutex mMutex{"MFCDMChild"};
+
   std::unordered_map<uint32_t, MozPromiseHolder<SessionPromise>>
-      mPendingSessionPromises;
+      mPendingSessionPromises MOZ_GUARDED_BY(mMutex);
 
   std::unordered_map<uint32_t, MozPromiseHolder<GenericPromise>>
-      mPendingGenericPromises;
+      mPendingGenericPromises MOZ_GUARDED_BY(mMutex);
 
   RefPtr<WMFCDMProxyCallback> mProxyCallback;
 };
