@@ -11,7 +11,6 @@
 #include "jsmath.h"
 
 #include "builtin/Object.h"
-#include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Bailouts.h"
@@ -1444,30 +1443,6 @@ bool RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const {
   }
 
   iter.storeInstructionResult(DoubleValue(v));
-  return true;
-}
-
-bool MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpMatcher));
-  return true;
-}
-
-RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader) {}
-
-bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject regexp(cx, iter.readObject());
-  RootedString input(cx, iter.readString());
-
-  // Int32 because |lastIndex| is computed from transpiled self-hosted call.
-  int32_t lastIndex = iter.readInt32();
-
-  RootedValue result(cx);
-  if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, nullptr, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
   return true;
 }
 
