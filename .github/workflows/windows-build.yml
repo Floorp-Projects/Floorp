@@ -30,6 +30,9 @@ on:
       beta:
         type: boolean
         default: false
+      enable-codesign:
+        type: boolean
+        default: false
       #! does not compartible with aarch64
       #? maybe light change needed to fix
       mar:
@@ -63,6 +66,10 @@ on:
       PAT:
         description: "Personal Access Token"
         required: true
+      SIGNPATH_API_TOKEN:
+            description: "SignPath API Token"
+            required: true
+
 jobs:
   win-build:
     runs-on: ubuntu-latest
@@ -339,4 +346,98 @@ jobs:
       with:
         name: ${{env.ARTIFACT_NAME}}
         path: ~/output
+
+    - name: install 7z for extract
+      if: inputs.enable-codesign == true
+      run: |
+        sudo apt install -y p7zip-full
+
+    - name: extract
+      if: inputs.profgen != true
+      run: |
+        mkdir -p unsigned/bin
+        mkdir -p unsigned/stub
+        7z x ~/output/floorp-win*installer.exe -ounsigned/bin
+        7z x ~/output/floorp-stub.installer.exe -ounsigned/stub
+
+        # rename stub installer
+        mv unsigned/stub/setup-stub.exe unsigned/stub/floorp-stub.installer.exe
+
+    - name: Create Environment for Repackaging
+      if: inputs.enable-codesign == true
+      run: |
+        unzip -d Floorp-Repackage ./.github/windows-code-sign.zip
+
+    - name: Publish Unsigned Package
+      id: publish-unsigned-package
+      if: inputs.enable-codesign == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned
+        path: unsigned/bin
+
+    - name: Sign 🖊️
+      id: Sign
+      if: inputs.enable-codesign == true
+      uses: signpath/github-action-submit-signing-request@v1.1
+      with:
+        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+        organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+        project-slug: 'Floorp'
+        signing-policy-slug: 'release-signing'
+        artifact-configuration-slug: 'core-signing'
+        github-artifact-id: '${{ steps.publish-unsigned-package.outputs.artifact-id }}'
+        wait-for-completion-timeout-in-seconds: 7200
+        wait-for-completion: true
+        output-artifact-directory: signed_output
+
+    - name: Copy Signed Artifact to Floorp-Repackage And unpack
+      if: inputs.enable-codesign == true
+      run: |
+        cp -r signed_output/* Floorp-Repackage/Floorp-work
+
+    - name: Create Repackaged Artifact
+      if: inputs.enable-codesign == true
+      run: |
+        cd Floorp-Repackage/Floorp-work
+        7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+        cd ../
+        cat 7zSD.sfx app.tag Floorp-work/app.7z > ../unsigned/stub/floorp-win64.installer.exe
+
+    - name: Publish Unsigned Installer
+      id: publish-unsigned-installer
+      if: inputs.enable-codesign == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-unsigned-installer
+        path: unsigned/stub
+
+    - name: Sign Installers 🖊️
+      id: Sign-Installers
+      if: inputs.enable-codesign == true
+      uses: signpath/github-action-submit-signing-request@v1.1
+      with:
+        api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+        organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+        project-slug: 'Floorp'
+        signing-policy-slug: 'release-signing'
+        artifact-configuration-slug: 'stub-signing'
+        github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
+        wait-for-completion-timeout-in-seconds: 7200
+        wait-for-completion: true
+        output-artifact-directory: signed_installers
+
+    - name: Publish Signed Package
+      if: inputs.enable-codesign == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed
+        path: signed_output
+
+    - name: Publish Signed Installer
+      if: inputs.enable-codesign == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.arch]}}_64-package-signed-installer
+        path: signed_installers
     # Publish END

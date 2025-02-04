@@ -73,7 +73,8 @@ jobs:
       zstd: true
     secrets:
       PAT: ${{ secrets.PAT }}
-  
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
     uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
@@ -93,8 +94,10 @@ jobs:
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      enable-codesign: true
     secrets:
       PAT: ${{ secrets.PAT }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
 
   Part4-win-x86_64-gen-update-xml:
     needs: [get-display-version, get-buildid, get-inside-version, Part3-win-x86_64-build-with-profdata-and-jarlog]

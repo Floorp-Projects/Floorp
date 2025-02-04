@@ -81,6 +81,7 @@ jobs:
       zstd: true
     secrets:
       PAT: ${{ secrets.PAT }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
 
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
@@ -102,8 +103,10 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
+      enable-codesign: true
     secrets:
       PAT: ${{ secrets.PAT }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
