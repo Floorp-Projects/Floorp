@@ -18,6 +18,7 @@
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/DebugOnly.h"
@@ -155,6 +156,13 @@ class FetchDriver final : public nsIChannelEventSink,
   SafeRefPtr<InternalRequest> mRequest;
   SafeRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
+
+  // mutex to prevent race between OnDataAvailable (OMT) and main thread
+  // functions
+  Mutex mODAMutex;
+  // access to mObserver can race between FetchDriverAbortActions (main thread)
+  // and OnDataAvailable (OMT)
+  // See Bug 1810805
   RefPtr<FetchDriverObserver> mObserver;
   RefPtr<Document> mDocument;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
