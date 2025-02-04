@@ -16,10 +16,7 @@ ac_add_options --disable-tests
 ac_add_options --enable-rust-simd
 ac_add_options --enable-release
 ac_add_options --enable-bootstrap
-ac_add_options --enable-lto
 ac_add_options --enable-updater
-
-ac_add_options RUSTC_OPT_LEVEL=3
 
 MOZ_REQUIRE_SIGNING=
 MOZ_DATA_REPORTING=
