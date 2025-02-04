@@ -190,12 +190,16 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   surface->Init(aSurface);
 
   uint64_t id = wr::AsUint64(aId);
-  MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
+  if (sInstance->mSurfaces.Contains(id)) {
+    gfxCriticalNote << "SSP:Ads " << wr::AsUint64(aId) << " dupe";
+    SharedSurfacesParent::RemoveTrackingLocked(surface, lock);
+    MOZ_DIAGNOSTIC_ASSERT(false, "External image ID reused!");
+    return;
+  }
 
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
-  surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
@@ -254,12 +258,16 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   }
 
   uint64_t id = wr::AsUint64(aId);
-  MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
+  if (sInstance->mSurfaces.Contains(id)) {
+    gfxCriticalNote << "SSP:Add " << wr::AsUint64(aId) << " dupe";
+    SharedSurfacesParent::RemoveTrackingLocked(surface, lock);
+    MOZ_DIAGNOSTIC_ASSERT(false, "External image ID reused!");
+    return;
+  }
 
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
-  surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
@@ -274,6 +282,7 @@ void SharedSurfacesParent::AddTrackingLocked(
     SourceSurfaceSharedDataWrapper* aSurface,
     const StaticMutexAutoLock& aAutoLock) {
   MOZ_ASSERT(!aSurface->GetExpirationState()->IsTracked());
+  MOZ_ASSERT(aSurface->GetConsumers() > 0);
   sInstance->mTracker.AddObjectLocked(aSurface, aAutoLock);
 }
 
@@ -346,6 +355,7 @@ bool SharedSurfacesParent::AgeAndExpireOneGeneration() {
 void SharedSurfacesParent::ExpireMap(
     nsTArray<RefPtr<SourceSurfaceSharedDataWrapper>>& aExpired) {
   for (auto& surface : aExpired) {
+    MOZ_ASSERT(surface->GetConsumers() > 0);
     surface->ExpireMap();
   }
 }

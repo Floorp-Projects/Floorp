@@ -120,7 +120,7 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
     }
     events.AppendElement(AnimationEventInfo(
         TransitionProperty(), mOwningElement.Target(), aMessage, elapsedTime,
-        aScheduledEventTimeStamp, this));
+        mAnimationIndex, aScheduledEventTimeStamp, this));
   };
 
   // Handle cancel events first
@@ -136,7 +136,27 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
     case TransitionPhase::Idle:
       if (currentPhase == TransitionPhase::Pending ||
           currentPhase == TransitionPhase::Before) {
-        appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
+        // When we are replacing a transition and flushing the style in the
+        // meantime, after a timeout, we may tick this transition without a
+        // proper |mPendingReadyTime| because the refresh driver is not in
+        // refresh, i.e. mInRefresh is false. So in the current tick we queue
+        // this event but the transition would be triggered in the next tick.
+        //
+        // In general, we use Animation::EnsurePaintIsScheduled() to assign a
+        // valid time to |mPendingReadyTime| of this transition, and then we
+        // could trigger this transition if this value is set. When triggering,
+        // we set a proper |mStartTime|, which could be used to calculate the
+        // animation time, i.e. |zeroTimeStamp|.
+        //
+        // However, due to this race condition (i.e. the transition hasn't been
+        // triggered yet but we are enqueuing this event), it's posssible to
+        // have a null |zeroTimeStamp|, which breaks the sorting of transition
+        // events. So we use the current time as a fallback way to make sure we
+        // have a reasonable schedule time for sorting.
+        appendTransitionEvent(eTransitionRun, intervalStartTime,
+                              zeroTimeStamp.IsNull()
+                                  ? GetTimelineCurrentTimeAsTimeStamp()
+                                  : zeroTimeStamp);
       } else if (currentPhase == TransitionPhase::Active) {
         appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
         appendTransitionEvent(eTransitionStart, intervalStartTime,
@@ -206,10 +226,13 @@ AnimationValue CSSTransition::ToValue() const {
 }
 
 bool CSSTransition::HasLowerCompositeOrderThan(
-    const CSSTransition& aOther) const {
-  MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup(),
+    const Maybe<EventContext>& aContext, const CSSTransition& aOther,
+    const Maybe<EventContext>& aOtherContext) const {
+  MOZ_ASSERT((IsTiedToMarkup() || aContext) &&
+                 (aOther.IsTiedToMarkup() || aOtherContext),
              "Should only be called for CSS transitions that are sorted "
-             "as CSS transitions (i.e. tied to CSS markup)");
+             "as CSS transitions (i.e. tied to CSS markup) or with overridden "
+             "target and animation index");
 
   // 0. Object-equality case
   if (&aOther == this) {
@@ -217,16 +240,23 @@ bool CSSTransition::HasLowerCompositeOrderThan(
   }
 
   // 1. Sort by document order
-  if (!mOwningElement.Equals(aOther.mOwningElement)) {
-    return mOwningElement.LessThan(
-        const_cast<CSSTransition*>(this)->CachedChildIndexRef(),
-        aOther.mOwningElement,
+  const OwningElementRef& owningElement1 =
+      aContext ? OwningElementRef(aContext->mTarget) : mOwningElement;
+  const OwningElementRef& owningElement2 =
+      aOtherContext ? OwningElementRef(aOtherContext->mTarget)
+                    : aOther.mOwningElement;
+  if (!owningElement1.Equals(owningElement2)) {
+    return owningElement1.LessThan(
+        const_cast<CSSTransition*>(this)->CachedChildIndexRef(), owningElement2,
         const_cast<CSSTransition*>(&aOther)->CachedChildIndexRef());
   }
 
   // 2. (Same element and pseudo): Sort by transition generation
-  if (mAnimationIndex != aOther.mAnimationIndex) {
-    return mAnimationIndex < aOther.mAnimationIndex;
+  const uint64_t& index1 = aContext ? aContext->mIndex : mAnimationIndex;
+  const uint64_t& index2 =
+      aOtherContext ? aOtherContext->mIndex : aOther.mAnimationIndex;
+  if (index1 != index2) {
+    return index1 < index2;
   }
 
   // 3. (Same transition generation): Sort by transition property

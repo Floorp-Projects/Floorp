@@ -170,9 +170,14 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     return;
   }
 
-  if (maybeEntryTypes.WasPassed() &&
-      (maybeType.WasPassed() || maybeBuffered.WasPassed())) {
+  if (maybeEntryTypes.WasPassed() && maybeType.WasPassed()) {
     /* Per spec (3.3.1.3), this, too, should be a syntax error. */
+    /*
+     * As per the spec we also need to throw a type error if there are both
+     * `entryTypes` and `buffered` options, but either Blink or WebKit doesn't
+     * throw the error so we don't throw to align the behavior with them.
+     * https://github.com/w3c/performance-timeline/issues/215
+     */
     aRv.ThrowTypeError("Can't call observe with both `type` and `entryTypes`");
     return;
   }

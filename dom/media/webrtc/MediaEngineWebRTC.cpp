@@ -18,6 +18,11 @@
 #  include "modules/desktop_capture/desktop_capturer.h"
 #endif
 
+#if defined(WEBRTC_MAC)
+#  include "mozilla/StaticPrefs_media.h"
+#  include "modules/desktop_capture/mac/screen_capturer_sck.h"
+#endif
+
 #define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 500
 
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
@@ -57,13 +62,21 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
   // flag sources with cross-origin exploit potential
   bool scaryKind = (aMediaSource == MediaSourceEnum::Screen ||
                     aMediaSource == MediaSourceEnum::Browser);
+  bool desktopKind = aMediaSource == MediaSourceEnum::Application ||
+                     aMediaSource == MediaSourceEnum::Screen ||
+                     aMediaSource == MediaSourceEnum::Window;
+  (void)desktopKind;  // Suppress "unused variable" on Windows and Android.
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool canRequestOsLevelPrompt =
       mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
-      webrtc::DesktopCapturer::IsRunningUnderWayland() &&
-      (aMediaSource == MediaSourceEnum::Application ||
-       aMediaSource == MediaSourceEnum::Screen ||
-       aMediaSource == MediaSourceEnum::Window);
+      webrtc::DesktopCapturer::IsRunningUnderWayland() && desktopKind;
+#elif defined(WEBRTC_MAC)
+  bool canRequestOsLevelPrompt =
+      mozilla::StaticPrefs::
+          media_getdisplaymedia_screencapturekit_enabled_AtStartup() &&
+      mozilla::StaticPrefs::
+          media_getdisplaymedia_screencapturekit_picker_enabled_AtStartup() &&
+      webrtc::GenericCapturerSckWithPickerAvailable() && desktopKind;
 #else
   bool canRequestOsLevelPrompt = false;
 #endif

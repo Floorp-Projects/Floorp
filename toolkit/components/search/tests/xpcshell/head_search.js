@@ -6,6 +6,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  EnterprisePolicyTesting:
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -497,6 +499,41 @@ async function assertGleanDefaultEngine(expected) {
       );
     }
   }
+}
+
+/**
+ * Loads a new enterprise policy, and re-initialise the search service
+ * with the new policy. Also waits for the search service to write the settings
+ * file to disk.
+ *
+ * @param {object} policy
+ *   The enterprise policy to use.
+ */
+async function setupPolicyEngineWithJson(policy) {
+  Services.search.wrappedJSObject.reset();
+
+  await this.EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
+
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await Services.search.init();
+  await settingsWritten;
+}
+
+/**
+ * Makes Services.policies.isEnterprise return true by loading an enterprise
+ * policy and re-initialise the search service with the new policy. Also waits
+ * for the search service to write the settings file to disk.
+ */
+async function enableEnterprise() {
+  await setupPolicyEngineWithJson({
+    // Use any policy.
+    policies: {
+      BlockAboutSupport: true,
+    },
+  });
+  Assert.ok(Services.policies.isEnterprise, "isEnterprise");
 }
 
 /**

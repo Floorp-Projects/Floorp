@@ -457,6 +457,10 @@ void DragData::ConvertToMozURIList() {
   mAsURIData = true;
 
   const nsDependentSubstring uris((char16_t*)mDragData.get(), mDragDataLen / 2);
+
+  LOGDRAG("DragData::ConvertToMozURIList(), data %s",
+          NS_ConvertUTF16toUTF8(uris).get());
+
   int32_t uriBegin = 0;
   do {
     nsAutoString uri;
@@ -470,6 +474,8 @@ void DragData::ConvertToMozURIList() {
         0) {
       break;
     }
+
+    LOGDRAG("  URI: %s", NS_ConvertUTF16toUTF8(uri).get());
     mUris.AppendElement(uri);
   } while (uriBegin < (int32_t)uris.Length());
 
@@ -1046,8 +1052,15 @@ nsDragSession::GetNumDropItems(uint32_t* aNumItems) {
     return NS_OK;
   }
 
-  const GdkAtom fileListFlavors[] = {sURLMimeAtom, sTextUriListTypeAtom,
-                                     sPortalFileAtom, sPortalFileTransferAtom};
+  // Put text/uri-list first, text/x-moz-url tends to be poorly supported
+  // by third party apps, we got only one file instead of file list
+  // for instance (Bug 1908196).
+  //
+  // We're getting the data to only get number of items here,
+  // actual data will be received at nsDragSession::GetData().
+  const GdkAtom fileListFlavors[] = {sTextUriListTypeAtom,  // text/uri-list
+                                     sPortalFileAtom, sPortalFileTransferAtom,
+                                     sURLMimeAtom};  // text/x-moz-url
 
   for (auto fileFlavour : fileListFlavors) {
     RefPtr<DragData> data = GetDragData(fileFlavour);
@@ -1139,10 +1152,38 @@ nsDragSession::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     LOGDRAGSERVICE("  we're getting data %s\n", flavorStr.get());
 
     RefPtr<DragData> dragData;
+
+    // Let's do conversions first. We may be asked for some kind of MIME
+    // type data but we rather try to get something different and
+    // convert to desider MIME type.
+
+    // We're asked to get text data. Try to get UTF-8 variant first.
     if (requestedFlavor == sTextMimeAtom) {
       dragData = GetDragData(sTextPlainUTF8TypeAtom);
     }
 
+    // We are looking for text/x-moz-url. That format may be poorly supported,
+    // try first with text/uri-list, and then _NETSCAPE_URL
+    if (requestedFlavor == sURLMimeAtom) {
+      LOGDRAGSERVICE("  conversion %s => %s", gTextUriListType, kURLMime);
+      dragData = GetDragData(sTextUriListTypeAtom);
+      if (dragData) {
+        dragData = dragData->ConvertToMozURL();
+        mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
+      }
+      if (!dragData) {
+        LOGDRAGSERVICE("  conversion %s => %s", gMozUrlType, kURLMime);
+        dragData = GetDragData(sMozUrlTypeAtom);
+        if (dragData) {
+          dragData = dragData->ConvertToMozURL();
+          if (dragData) {
+            mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
+          }
+        }
+      }
+    }
+
+    // Try to get requested MIME directly
     if (!dragData) {
       dragData = GetDragData(requestedFlavor);
     }
@@ -1166,28 +1207,6 @@ nsDragSession::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
         dragData = GetDragData(sTextUriListTypeAtom);
         if (dragData) {
           dragData = dragData->ConvertToFile();
-          if (dragData) {
-            mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
-          }
-        }
-      }
-    }
-
-    if (!dragData && requestedFlavor == sURLMimeAtom) {
-      // if we are looking for text/x-moz-url and we failed to find
-      // it on the clipboard, try again with text/uri-list, and then
-      // _NETSCAPE_URL
-      LOGDRAGSERVICE("  conversion %s => %s", gTextUriListType, kURLMime);
-      dragData = GetDragData(sTextUriListTypeAtom);
-      if (dragData) {
-        dragData = dragData->ConvertToMozURL();
-        mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
-      }
-      if (!dragData) {
-        LOGDRAGSERVICE("  conversion %s => %s", gMozUrlType, kURLMime);
-        dragData = GetDragData(sMozUrlTypeAtom);
-        if (dragData) {
-          dragData = dragData->ConvertToMozURL();
           if (dragData) {
             mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
           }
@@ -1546,6 +1565,7 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
       LOGDRAGSERVICE(" TargetDataReceived() failed");
       return;
     }
+
     dragData = new DragData(target, data, len);
     LOGDRAGSERVICE("  TargetDataReceived(): plain data, MIME %s len = %d",
                    GUniquePtr<gchar>(gdk_atom_name(target)).get(), len);

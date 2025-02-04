@@ -230,9 +230,9 @@ void CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime) {
       elapsedTime = nsRFPService::ReduceTimePrecisionAsSecsRFPOnly(
           elapsedTime, 0, mRTPCallerType);
     }
-    events.AppendElement(
-        AnimationEventInfo(mAnimationName, mOwningElement.Target(), aMessage,
-                           elapsedTime, aScheduledEventTimeStamp, this));
+    events.AppendElement(AnimationEventInfo(
+        mAnimationName, mOwningElement.Target(), aMessage, elapsedTime,
+        mAnimationIndex, aScheduledEventTimeStamp, this));
   };
 
   // Handle cancel event first

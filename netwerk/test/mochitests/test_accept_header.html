@@ -26,7 +26,7 @@ function test_iframe() {
   let ifr = document.createElement("iframe");
   ifr.src = "test_accept_header.sjs?iframe";
   ifr.onload = () => {
-    test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8");
+    test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
   };
   document.body.appendChild(ifr);
 }

@@ -33,7 +33,7 @@ class SvcParam : public nsISVCParam,
   NS_DECL_NSISVCPARAMIPV6HINT
   NS_DECL_NSISVCPARAMODOHCONFIG
  public:
-  explicit SvcParam(const SvcParamType& value) : mValue(value){};
+  explicit SvcParam(const SvcParamType& value) : mValue(value) {};
 
  private:
   virtual ~SvcParam() = default;

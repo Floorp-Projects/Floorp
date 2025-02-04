@@ -8,6 +8,7 @@ support-files = [
 ["browser_BestBuy.js"]
 
 ["browser_CDW.js"]
+skip-if = ["true"] # Bug 1939626
 
 ["browser_CostCo.js"]
 

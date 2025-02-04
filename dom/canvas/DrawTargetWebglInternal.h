@@ -414,6 +414,12 @@ struct PathVertexRange {
   bool IsValid() const { return mLength > 0; }
 };
 
+enum class AAStrokeMode {
+  Unsupported,
+  Geometry,
+  Mask,
+};
+
 // PathCacheEntry stores a rasterized version of a supplied path with a given
 // pattern.
 class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
@@ -421,14 +427,15 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCacheEntry, override)
 
   PathCacheEntry(QuantizedPath&& aPath, Pattern* aPattern,
-                 StoredStrokeOptions* aStrokeOptions, const Matrix& aTransform,
-                 const IntRect& aBounds, const Point& aOrigin, HashNumber aHash,
-                 float aSigma = -1.0f);
+                 StoredStrokeOptions* aStrokeOptions, AAStrokeMode aStrokeMode,
+                 const Matrix& aTransform, const IntRect& aBounds,
+                 const Point& aOrigin, HashNumber aHash, float aSigma = -1.0f);
 
   bool MatchesPath(const QuantizedPath& aPath, const Pattern* aPattern,
                    const StrokeOptions* aStrokeOptions,
-                   const Matrix& aTransform, const IntRect& aBounds,
-                   const Point& aOrigin, HashNumber aHash, float aSigma);
+                   AAStrokeMode aStrokeMode, const Matrix& aTransform,
+                   const IntRect& aBounds, const Point& aOrigin,
+                   HashNumber aHash, float aSigma);
 
   static HashNumber HashPath(const QuantizedPath& aPath,
                              const Pattern* aPattern, const Matrix& aTransform,
@@ -453,6 +460,8 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   UniquePtr<Pattern> mPattern;
   // The StrokeOptions used for stroked paths, if applicable
   UniquePtr<StoredStrokeOptions> mStrokeOptions;
+  // The AAStroke mode used for rendering a stroked path.
+  AAStrokeMode mAAStrokeMode = AAStrokeMode::Unsupported;
   // The shadow blur sigma
   float mSigma;
   // If the path has cached geometry in the vertex buffer.
@@ -465,8 +474,9 @@ class PathCache : public CacheImpl<PathCacheEntry, true> {
 
   already_AddRefed<PathCacheEntry> FindOrInsertEntry(
       QuantizedPath aPath, const Pattern* aPattern,
-      const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
-      const IntRect& aBounds, const Point& aOrigin, float aSigma = -1.0f);
+      const StrokeOptions* aStrokeOptions, AAStrokeMode aStrokeMode,
+      const Matrix& aTransform, const IntRect& aBounds, const Point& aOrigin,
+      float aSigma = -1.0f);
 
   void ClearVertexRanges();
 };

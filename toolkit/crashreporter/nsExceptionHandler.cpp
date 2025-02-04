@@ -2843,6 +2843,13 @@ static void SetCrashEventsDir(nsIFile* aDir) {
 }
 
 void SetProfileDirectory(nsIFile* aDir) {
+  // Record the profile directory for use by the crash reporter client.
+  {
+    nsAutoString path;
+    aDir->GetPath(path);
+    RecordAnnotationNSString(Annotation::ProfileDirectory, path);
+  }
+
   nsCOMPtr<nsIFile> dir;
   aDir->Clone(getter_AddRefs(dir));
 

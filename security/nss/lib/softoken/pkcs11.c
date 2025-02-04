@@ -3182,14 +3182,15 @@ SFTK_DestroySlotData(SFTKSlot *slot)
 char **
 NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args)
 {
-#ifndef NSS_DISABLE_DBM
+#ifdef NSS_DISABLE_DBM
+    return NSSUTIL_DoModuleDBFunction(function, parameters, args);
+#else
     char *secmod = NULL;
     char *appName = NULL;
     char *filename = NULL;
     NSSDBType dbType = NSS_DB_TYPE_NONE;
     PRBool rw;
     static char *success = "Success";
-#endif /* NSS_DISABLE_DBM */
     char **rvstr = NULL;
 
     rvstr = NSSUTIL_DoModuleDBFunction(function, parameters, args);
@@ -3201,7 +3202,6 @@ NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args)
         return NULL;
     }
 
-#ifndef NSS_DISABLE_DBM
     /* The legacy database uses the old dbm, which is only linked with the
      * legacy DB handler, which is only callable from softoken */
 
@@ -3293,8 +3293,8 @@ loser:
         PORT_Free(appName);
     if (filename)
         PORT_Free(filename);
-#endif /* NSS_DISABLE_DBM */
     return rvstr;
+#endif /* NSS_DISABLE_DBM */
 }
 
 static void

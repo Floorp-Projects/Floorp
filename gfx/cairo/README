@@ -63,3 +63,5 @@ pixman-interp.patch: use lower quality interpolation by default on mobile
 pixman-intrin.patch: include intrin.h on Windows to fix bustage
 
 pixman-rename.patch: include pixman-rename.h for renaming of external symbols
+
+pixman-neon.patch: fix for a build failure with clang on armhf linux

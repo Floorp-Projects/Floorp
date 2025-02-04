@@ -994,13 +994,16 @@ sftk_PutObjectToList(SFTKObject *object, SFTKObjectFreeList *list,
      */
     PRBool optimizeSpace = isSessionObject &&
                            ((SFTKSessionObject *)object)->optimizeSpace;
-    if (object->refLock && !optimizeSpace && (list->count < MAX_OBJECT_LIST_SIZE)) {
+    if (object->refLock && !optimizeSpace) {
         PZ_Lock(list->lock);
-        object->next = list->head;
-        list->head = object;
-        list->count++;
+        if (list->count < MAX_OBJECT_LIST_SIZE) {
+            object->next = list->head;
+            list->head = object;
+            list->count++;
+            PZ_Unlock(list->lock);
+            return;
+        }
         PZ_Unlock(list->lock);
-        return;
     }
     if (isSessionObject) {
         SFTKSessionObject *so = (SFTKSessionObject *)object;

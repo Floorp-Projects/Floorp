@@ -37,34 +37,22 @@ class Element;
 - (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu;
 @end
 
-// Objective-C class used to allow us to intervene with keyboard event handling.
-// We allow mouse actions to work normally.
-@interface GeckoNSMenu : NSMenu {
-}
-- (BOOL)performSuperKeyEquivalent:(NSEvent*)aEvent;
-@end
-
-// Objective-C class used as action target for menu items
-@interface NativeMenuItemTarget : NSObject {
-}
-- (IBAction)menuItemHit:(id)aSender;
-@end
-
-// Objective-C class used for menu items on the Services menu to allow Gecko
-// to override their standard behavior in order to stop key equivalents from
-// firing in certain instances.
-@interface GeckoServicesNSMenuItem : NSMenuItem {
+// Objective-C class used for menu items to allow Gecko to override their
+// standard behavior in order to stop key equivalents from firing in certain
+// instances.
+@interface GeckoNSMenuItem : NSMenuItem {
 }
 - (id)target;
 - (SEL)action;
 - (void)_doNothing:(id)aSender;
 @end
 
-// Objective-C class used as the Services menu so that Gecko can override the
-// standard behavior of the Services menu in order to stop key equivalents
-// from firing in certain instances.
-@interface GeckoServicesNSMenu : NSMenu {
+// Objective-C class used to allow us to intervene with keyboard event handling,
+// particularly to stop key equivalents from firing in certain instances. We
+// allow mouse actions to work normally.
+@interface GeckoNSMenu : NSMenu {
 }
+- (BOOL)performSuperKeyEquivalent:(NSEvent*)aEvent;
 - (void)addItem:(NSMenuItem*)aNewItem;
 - (NSMenuItem*)addItemWithTitle:(NSString*)aString
                          action:(SEL)aSelector
@@ -75,6 +63,12 @@ class Element;
                      keyEquivalent:(NSString*)aKeyEquiv
                            atIndex:(NSInteger)aIndex;
 - (void)_overrideClassOfMenuItem:(NSMenuItem*)aMenuItem;
+@end
+
+// Objective-C class used as action target for menu items.
+@interface NativeMenuItemTarget : NSObject {
+}
+- (IBAction)menuItemHit:(id)aSender;
 @end
 
 // Once instantiated, this object lives until its DOM node or its parent window

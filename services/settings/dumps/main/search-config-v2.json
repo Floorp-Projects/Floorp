@@ -2437,6 +2437,10 @@
               {
                 "experimentConfig": "google_channel_row",
                 "name": "channel"
+              },
+              {
+                "enterpriseValue": "entpr",
+                "name": "channel"
               }
             ],
             "searchTermParamName": "q"
@@ -2474,9 +2478,9 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1718719100288,
+      "last_modified": 1736951037874,
       "recordType": "engine",
-      "schema": 1718698468913,
+      "schema": 1736871464861,
       "variants": [
         {
           "environment": {
@@ -2566,6 +2570,10 @@
                 },
                 {
                   "experimentConfig": "google_channel_us",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
                   "name": "channel"
                 }
               ]
@@ -8016,5 +8024,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1734364924962
+  "timestamp": 1736951037874
 }

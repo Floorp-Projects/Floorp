@@ -71,6 +71,9 @@ nsresult BrowserBridgeParent::InitWithProcess(
   browsingContext->Group()->EnsureHostProcess(aContentParent);
   browsingContext->SetOwnerProcessId(aContentParent->ChildID());
 
+  browsingContext->Group()->NotifyFocusedOrActiveBrowsingContextToProcess(
+      aContentParent);
+
   // Construct the BrowserParent object for our subframe.
   auto browserParent = MakeRefPtr<BrowserParent>(
       aContentParent, aTabId, *aParentBrowser, browsingContext, aChromeFlags);

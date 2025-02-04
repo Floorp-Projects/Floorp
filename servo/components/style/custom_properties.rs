@@ -1385,6 +1385,9 @@ fn substitute_all(
         non_custom_references: NonCustomReferences,
         /// Whether the builder has seen a non-custom color-scheme reference.
         has_color_scheme: bool,
+        /// Whether this strongly connected component contains any custom properties involving
+        /// value computation.
+        contains_computed_custom_property: bool,
         map: &'a mut ComputedCustomProperties,
         /// The stylist is used to get registered properties, and to resolve the environment to
         /// substitute `env()` variables.
@@ -1477,6 +1480,7 @@ fn substitute_all(
                         entry.insert(context.count);
                     },
                 }
+                context.contains_computed_custom_property |= !registration.syntax.is_universal();
 
                 // Hold a strong reference to the value so that we don't
                 // need to keep reference to context.map.
@@ -1584,21 +1588,25 @@ fn substitute_all(
         let name;
 
         let handle_variable_in_loop = |name: &Name, context: &mut Context<'a, 'b>| {
-            if context
-                .non_custom_references
-                .intersects(NonCustomReferences::FONT_UNITS | NonCustomReferences::ROOT_FONT_UNITS)
-            {
-                context
-                    .invalid_non_custom_properties
-                    .insert(LonghandId::FontSize);
-            }
-            if context
-                .non_custom_references
-                .intersects(NonCustomReferences::LH_UNITS | NonCustomReferences::ROOT_LH_UNITS)
-            {
-                context
-                    .invalid_non_custom_properties
-                    .insert(LonghandId::LineHeight);
+            if context.contains_computed_custom_property {
+                // These non-custom properties can't become invalid-at-compute-time from
+                // cyclic dependencies purely consisting of non-registered properties.
+                if context
+                    .non_custom_references
+                    .intersects(NonCustomReferences::FONT_UNITS | NonCustomReferences::ROOT_FONT_UNITS)
+                {
+                    context
+                        .invalid_non_custom_properties
+                        .insert(LonghandId::FontSize);
+                }
+                if context
+                    .non_custom_references
+                    .intersects(NonCustomReferences::LH_UNITS | NonCustomReferences::ROOT_LH_UNITS)
+                {
+                    context
+                        .invalid_non_custom_properties
+                        .insert(LonghandId::LineHeight);
+                }
             }
             // This variable is in loop. Resolve to invalid.
             handle_invalid_at_computed_value_time(name, context.map, context.computed_context);
@@ -1702,6 +1710,7 @@ fn substitute_all(
             computed_context,
             invalid_non_custom_properties,
             deferred_properties: deferred_properties_map.as_deref_mut(),
+            contains_computed_custom_property: false,
         };
         traverse(
             VarType::Custom((*name).clone()),

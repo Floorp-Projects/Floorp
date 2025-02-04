@@ -70,14 +70,14 @@ const certBlocklist = [
   },
   {
     issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-    serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
+    serialNumber: "AxPrsRjtbFinLUfRzhtR8EeYh4Y=",
   },
   // ... and some good
   // In this case, the issuer name and the valid serialNumber correspond
   // to other-test-ca.pem in bad_certs/ (for testing root revocation)
   {
     issuerName: "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=",
-    serialNumber: "Rym6o+VN9xgZXT/QLrvN/nv1ZN4=",
+    serialNumber: "VTTv5DQM+fh01nnfm3AoUJt4UIY=",
   },
   // These items correspond to an entry in sample_revocations.txt where:
   // isser name is the base-64 encoded subject DN for the shared Test

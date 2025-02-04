@@ -1,0 +1,46 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "engine-pref",
+      "base": {
+        "name": "engine-pref",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "code",
+                "enterpriseValue": "enterprise"
+              },
+              {
+                "name": "code",
+                "experimentConfig": "code"
+              },
+              {
+                "name": "test",
+                "experimentConfig": "test"
+              }
+            ],
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [{ "environment": { "allRegionsAndLocales": true } }]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "engine-pref",
+      "specificDefaults": []
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": [
+        {
+          "environment": { "allRegionsAndLocales": true },
+          "order": ["engine-pref"]
+        }
+      ]
+    }
+  ]
+}

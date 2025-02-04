@@ -713,6 +713,11 @@ ProductID:
   type: string
   ping: true
 
+ProfileDirectory:
+  description: >
+    The directory of the active profile, if any.
+  type: string
+
 ProfilerChildShutdownPhase:
   description: >
     When a child process shuts down, this describes if the profiler is running,

@@ -5623,8 +5623,15 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   // If we haven't found a chrome window to open in, just use the most recently
-  // opened one.
+  // opened non PBM window.
   if (!outerWin) {
+    // The parent was a private window but it's no longer available.
+    if (aOriginAttributes.mPrivateBrowsingId !=
+        nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+      aResult = NS_ERROR_FAILURE;
+      return IPC_OK();
+    }
+
     outerWin = nsContentUtils::GetMostRecentNonPBWindow();
     if (NS_WARN_IF(!outerWin)) {
       aResult = NS_ERROR_FAILURE;

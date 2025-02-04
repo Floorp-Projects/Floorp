@@ -51,6 +51,7 @@ support-files = [
 ]
 
 ["browser_check_identity_state.js"]
+skip-if = ["os == 'win' && !debug && msix"] # Bug 1895285
 https_first_disabled = true
 
 ["browser_check_identity_state_pdf.js"]

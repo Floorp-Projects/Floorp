@@ -308,6 +308,7 @@ nssutil_growList(char ***pModuleList, int *useCount, int last)
     return SECSuccess;
 }
 
+#ifndef NSS_DISABLE_DBM
 static char *
 _NSSUTIL_GetOldSecmodName(const char *dbname, const char *filename)
 {
@@ -332,6 +333,7 @@ _NSSUTIL_GetOldSecmodName(const char *dbname, const char *filename)
     PORT_Free(dirPath);
     return file;
 }
+#endif // NSS_DISABLE_DBM
 
 static SECStatus nssutil_AddSecmodDBEntry(const char *appName,
                                           const char *filename,
@@ -567,6 +569,7 @@ nssutil_ReadSecmodDB(const char *appName,
         moduleString = NULL;
     }
 done:
+#ifndef NSS_DISABLE_DBM
     /* if we couldn't open a pkcs11 database, look for the old one */
     if (fd == NULL) {
         char *olddbname = _NSSUTIL_GetOldSecmodName(dbname, filename);
@@ -591,6 +594,7 @@ done:
             PR_smprintf_free(olddbname);
         }
     }
+#endif // NSS_DISABLE_DBM
 
 return_default:
 

@@ -649,7 +649,6 @@
     wideningOp: wasm::FieldWideningOp
   type_policy: none
   result_type: Int32
-  movable: true
   congruent_to: if_operands_equal
   alias_set: none
 

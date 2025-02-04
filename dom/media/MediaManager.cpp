@@ -1769,7 +1769,16 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
                       return DeviceListener::DeviceListenerPromise::
                           CreateAndResolve(true, __func__);
                     },
-                    [] {
+                    [](nsresult aError) {
+                      MOZ_ASSERT(NS_FAILED(aError));
+                      if (aError == NS_ERROR_UNEXPECTED) {
+                        return DeviceListener::DeviceListenerPromise::
+                            CreateAndReject(
+                                MakeRefPtr<MediaMgrError>(
+                                    MediaMgrError::Name::NotAllowedError),
+                                __func__);
+                      }
+                      MOZ_ASSERT(aError == NS_ERROR_ABORT);
                       return DeviceListener::DeviceListenerPromise::
                           CreateAndReject(MakeRefPtr<MediaMgrError>(
                                               MediaMgrError::Name::AbortError,

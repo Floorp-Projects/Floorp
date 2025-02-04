@@ -300,7 +300,18 @@ class Animation : public DOMEventTargetHelper,
   /**
    * Returns true if this Animation has a lower composite order than aOther.
    */
-  bool HasLowerCompositeOrderThan(const Animation& aOther) const;
+  struct EventContext {
+    NonOwningAnimationTarget mTarget;
+    uint64_t mIndex;
+  };
+  // Note: we provide |aContext|/|aOtherContext| only when it is a cancelled
+  // transition or animation (for overridding the target and animation index).
+  bool HasLowerCompositeOrderThan(
+      const Maybe<EventContext>& aContext, const Animation& aOther,
+      const Maybe<EventContext>& aOtherContext) const;
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const {
+    return HasLowerCompositeOrderThan(Nothing(), aOther, Nothing());
+  }
 
   /**
    * Returns the level at which the effect(s) associated with this Animation

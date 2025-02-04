@@ -1,0 +1,30 @@
+diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S b/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S
+index 6bd27360aa027..cd33babca1e0c 100644
+--- a/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S
++++ b/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S
+@@ -55,9 +55,9 @@
+ #endif
+ 
+ .text
+-.fpu neon
+ .arch armv7a
+ .object_arch armv4
++.fpu neon
+ .eabi_attribute 10, 0
+ .eabi_attribute 12, 0
+ .arm
+diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S b/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S
+index 0e092577f1c73..c04b335d1e5bd 100644
+--- a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S
++++ b/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S
+@@ -40,9 +40,9 @@
+ #endif
+ 
+     .text
+-    .fpu neon
+     .arch armv7a
+     .object_arch armv4
++    .fpu neon
+     .eabi_attribute 10, 0 /* suppress Tag_FP_arch */
+     .eabi_attribute 12, 0 /* suppress Tag_Advanced_SIMD_arch */
+     .arm

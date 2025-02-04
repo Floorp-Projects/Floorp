@@ -115,13 +115,11 @@ void StyleComputedUrl::ResolveImage(Document& aDocument,
                                     const StyleComputedUrl* aOldImage) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
-  StyleLoadData& data = LoadData();
+  StyleLoadData& data = MutLoadData();
 
   MOZ_ASSERT(!(data.flags & StyleLoadDataFlags::TRIED_TO_RESOLVE_IMAGE));
 
   data.flags |= StyleLoadDataFlags::TRIED_TO_RESOLVE_IMAGE;
-
-  MOZ_ASSERT(NS_IsMainThread());
 
   // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
   // lack of non-http image caching in imagelib (bug 1406134), which causes

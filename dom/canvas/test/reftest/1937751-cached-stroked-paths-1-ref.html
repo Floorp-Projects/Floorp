@@ -1,0 +1,28 @@
+<canvas id=dest height="768" width="1024"></canvas>
+<script>
+
+var c=document.getElementById("dest");
+var ctx=c.getContext("2d");
+ctx.setTransform(1,0,0,1,0,0);
+
+ctx.transform(1,0,0,1,512,384);
+ctx.globalAlpha=0.5;
+ctx.beginPath();
+ctx.moveTo(0,324);
+
+ctx.lineTo(239.66624210637872,84.6706564587356);
+ctx.lineTo(78.17543855489896,-213.5804865149861);
+ctx.lineTo(-136.36617853185373,-262.93052317185794);
+ctx.lineTo(-195.91764235680165,51.60583806061618);
+ctx.lineTo(0,324);
+
+ctx.closePath();
+ctx.fillStyle="rgba(0,0,0,0)";
+ctx.fill();
+ctx.lineWidth=40;
+ctx.lineCap="butt";
+ctx.lineJoin="miter";
+ctx.miterLimit="10";
+ctx.strokeStyle="#555555";
+ctx.stroke();
+</script>

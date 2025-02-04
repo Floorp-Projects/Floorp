@@ -719,6 +719,11 @@ add_task(async function match_request_domains() {
         [2], // Rule 4 was a candidate, but excluded anyway.
         "sub.one.net: url's domain matches sub.one.net, but excluded by one.net"
       );
+      await testMatchesRequest(
+        { url: "http://sub1.sub2.one.net/", type },
+        [2, 3],
+        "sub1.sub2.one.net: url's domain matches one.net, but not sub.one.net"
+      );
 
       // Tests related to IP addresses
       await testMatchesRequest(
@@ -882,6 +887,13 @@ add_task(async function match_initiator_domains() {
             },
             action,
           },
+          {
+            id: 7,
+            condition: {
+              initiatorDomains: ["d.com"],
+            },
+            action,
+          },
         ],
       });
 
@@ -925,6 +937,11 @@ add_task(async function match_initiator_domains() {
         { url: "http://a.com/", type },
         [2, 5],
         "initiatorDomains should not match the request URL (initiator=null)"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: "http://sub1.sub2.d.com" },
+        [2, 5, 7],
+        "initiatorDomains matches subdomain"
       );
 
       browser.test.notifyPass();

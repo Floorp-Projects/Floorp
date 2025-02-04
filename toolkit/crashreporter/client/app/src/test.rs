@@ -136,7 +136,7 @@ fn test_config() -> Config {
     cfg.events_dir = Some("events_dir".into());
     cfg.ping_dir = Some("ping_dir".into());
     cfg.dump_file = Some("minidump.dmp".into());
-    cfg.strings = lang::LanguageInfo::default().load_strings().ok();
+    cfg.strings = Some(Default::default());
     cfg
 }
 
@@ -396,7 +396,7 @@ fn no_dump_file() {
     let mut cfg = Arc::new(Config::default());
     {
         let cfg = Arc::get_mut(&mut cfg).unwrap();
-        cfg.strings = lang::LanguageInfo::default().load_strings().ok();
+        cfg.strings = Some(Default::default());
     }
     assert!(try_run(&mut cfg).is_err());
     Arc::get_mut(&mut cfg).unwrap().auto_submit = true;

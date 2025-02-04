@@ -5,80 +5,72 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DEVICE_INFO_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DEVICE_INFO_H_
 
-#include <map>
 #include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/video_capture/video_capture.h"
+#include "nsString.h"
 
 namespace webrtc {
 
-class DesktopDisplayDevice {
- public:
-  DesktopDisplayDevice();
-  ~DesktopDisplayDevice();
+class DesktopCaptureOptions;
 
-  void setScreenId(const ScreenId aScreenId);
-  void setDeviceName(const char* aDeviceNameUTF8);
-  void setUniqueIdName(const char* aDeviceUniqueIdUTF8);
+class DesktopSource {
+ public:
+  void setScreenId(ScreenId aId);
+  void setName(nsCString&& aName);
+  void setUniqueId(nsCString&& aId);
   void setPid(pid_t aPid);
 
-  ScreenId getScreenId();
-  const char* getDeviceName();
-  const char* getUniqueIdName();
-  pid_t getPid();
-
-  DesktopDisplayDevice& operator=(DesktopDisplayDevice& aOther);
+  ScreenId getScreenId() const;
+  const nsCString& getName() const;
+  const nsCString& getUniqueId() const;
+  pid_t getPid() const;
 
  protected:
-  ScreenId mScreenId;
-  char* mDeviceNameUTF8;
-  char* mDeviceUniqueIdUTF8;
-  pid_t mPid;
+  ScreenId mScreenId = kInvalidScreenId;
+  nsCString mName;
+  nsCString mUniqueId;
+  pid_t mPid = 0;
 };
 
-using DesktopDisplayDeviceList = std::map<intptr_t, DesktopDisplayDevice*>;
-
-class DesktopTab {
+class TabSource {
  public:
-  DesktopTab();
-  ~DesktopTab();
+  void setBrowserId(uint64_t aId);
+  void setName(nsCString&& aName);
+  void setUniqueId(nsCString&& aId);
 
-  void setTabBrowserId(uint64_t aTabBrowserId);
-  void setUniqueIdName(const char* aTabUniqueIdUTF8);
-  void setTabName(const char* aTabNameUTF8);
-  void setTabCount(const uint32_t aCount);
-
-  uint64_t getTabBrowserId();
-  const char* getUniqueIdName();
-  const char* getTabName();
-  uint32_t getTabCount();
-
-  DesktopTab& operator=(DesktopTab& aOther);
+  uint64_t getBrowserId() const;
+  const nsCString& getName() const;
+  const nsCString& getUniqueId() const;
 
  protected:
-  uint64_t mTabBrowserId;
-  char* mTabNameUTF8;
-  char* mTabUniqueIdUTF8;
-  uint32_t mTabCount;
+  uint64_t mBrowserId = 0;
+  nsCString mName;
+  nsCString mUniqueId;
 };
 
-using DesktopTabList = std::map<intptr_t, DesktopTab*>;
-
-class DesktopDeviceInfo {
+template <typename Source>
+class CaptureInfo {
  public:
-  virtual ~DesktopDeviceInfo() = default;
+  virtual ~CaptureInfo() = default;
 
-  virtual int32_t Init() = 0;
-  virtual int32_t Refresh() = 0;
-  virtual int32_t getDisplayDeviceCount() = 0;
-  virtual int32_t getDesktopDisplayDeviceInfo(
-      uint32_t aIndex, DesktopDisplayDevice& aDesktopDisplayDevice) = 0;
-  virtual int32_t getWindowCount() = 0;
-  virtual int32_t getWindowInfo(uint32_t aIndex,
-                                DesktopDisplayDevice& aWindowDevice) = 0;
-  virtual uint32_t getTabCount() = 0;
-  virtual int32_t getTabInfo(uint32_t aIndex, DesktopTab& aDesktopTab) = 0;
-
-  static DesktopDeviceInfo* Create();
+  virtual void Refresh() = 0;
+  virtual size_t getSourceCount() const = 0;
+  virtual const Source* getSource(size_t aIndex) const = 0;
 };
+
+using DesktopCaptureInfo = CaptureInfo<DesktopSource>;
+std::unique_ptr<DesktopCaptureInfo> CreateScreenCaptureInfo(
+    const DesktopCaptureOptions& aOptions);
+std::unique_ptr<DesktopCaptureInfo> CreateWindowCaptureInfo(
+    const DesktopCaptureOptions& aOptions);
+using TabCaptureInfo = CaptureInfo<TabSource>;
+std::unique_ptr<TabCaptureInfo> CreateTabCaptureInfo();
+
+std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateDesktopDeviceInfo(
+    int32_t aId, std::unique_ptr<DesktopCaptureInfo>&& aInfo);
+std::shared_ptr<VideoCaptureModule::DeviceInfo> CreateTabDeviceInfo(
+    int32_t aId, std::unique_ptr<TabCaptureInfo>&& aInfo);
+
 };  // namespace webrtc
 
 #endif

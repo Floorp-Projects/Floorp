@@ -246,3 +246,4 @@ skip-if(isDebugBuild) == draw-large-image.html draw-large-image-ref.html
 == 1758968-1.html 1758968-1-ref.html
 == 1768521-1.html 1768521-1-ref.html
 == 1851943.html 1851943-ref.html
+== 1937751-cached-stroked-paths-1.html 1937751-cached-stroked-paths-1-ref.html

@@ -2143,7 +2143,7 @@ static void DumpHelp() {
       "  --dbus-service <launcher>  Run as DBus service for "
       "org.freedesktop.Application and\n"
       "                             set a launcher (usually /usr/bin/appname "
-      "script) for it.");
+      "script) for it.\n");
 #endif
 
   // this works, but only after the components have registered.  so if you drop

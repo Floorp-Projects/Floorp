@@ -391,16 +391,16 @@ void DNSRequestSender::OnRecvCancelDNSRequest(
 
 NS_IMETHODIMP
 DNSRequestSender::Cancel(nsresult reason) {
-  if (!mIPCActor || !mIPCActor->CanSend()) {
-    // Really a failure, but we won't be able to tell anyone about it anyways
-    return NS_OK;
-  }
-
   // we can only do IPC on the MainThread
   if (!NS_IsMainThread()) {
     SchedulerGroup::Dispatch(
         NewRunnableMethod<nsresult>("net::DNSRequestSender::Cancel", this,
                                     &DNSRequestSender::Cancel, reason));
+    return NS_OK;
+  }
+
+  if (!mIPCActor || !mIPCActor->CanSend()) {
+    // Really a failure, but we won't be able to tell anyone about it anyways
     return NS_OK;
   }
 

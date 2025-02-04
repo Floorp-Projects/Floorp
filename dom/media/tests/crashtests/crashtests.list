@@ -40,3 +40,4 @@ load 1764933.html
 load 1764940.html
 load 1766668.html
 load 1783765.html
+skip-if(Android) load 1920264.html

@@ -55,9 +55,9 @@
 #endif
 
 .text
-.fpu neon
 .arch armv7a
 .object_arch armv4
+.fpu neon
 .eabi_attribute 10, 0
 .eabi_attribute 12, 0
 .arm

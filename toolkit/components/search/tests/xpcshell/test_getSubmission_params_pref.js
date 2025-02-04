@@ -14,12 +14,11 @@ const defaultBranch = Services.prefs.getDefaultBranch(
   SearchUtils.BROWSER_SEARCH_PREF
 );
 const baseURL = "https://www.google.com/search?q=foo";
-const baseURLSearchConfigV2 = "https://www.google.com/search?";
 
 add_setup(async function () {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams will be ignored.
-  await SearchTestUtils.useTestEngines();
+  await SearchTestUtils.useTestEngines("enterprise");
 });
 
 add_task(async function test_pref_initial_value() {
@@ -39,12 +38,13 @@ add_task(async function test_pref_initial_value() {
   await Services.search.init();
 
   const engine = Services.search.getEngineByName("engine-pref");
+  let expectedCode =
+    SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "enterprise" : "good";
+  let searchParams = new URL(engine.getSubmission("foo").uri.spec).searchParams;
   Assert.equal(
-    engine.getSubmission("foo").uri.spec,
-    SearchUtils.newSearchConfigEnabled
-      ? baseURLSearchConfigV2 + "code=good%26id%3Dunique&q=foo"
-      : baseURL + "&code=good%26id%3Dunique",
-    "Should have got the submission URL with the correct code"
+    searchParams.get("code"),
+    expectedCode,
+    "Should have the correct code in the submissionURL"
   );
 
   // Now clear the user-set preference. Having a user set preference means
@@ -60,12 +60,16 @@ add_task(async function test_pref_updated() {
   defaultBranch.setCharPref("param.code", "supergood&id=unique123456");
 
   const engine = Services.search.getEngineByName("engine-pref");
+  let expectedCode =
+    SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+      ? "enterprise"
+      : "supergood%26id%3Dunique123456";
+  let searchParams = new URL(engine.getSubmission("foo").uri.spec).searchParams;
+
   Assert.equal(
-    engine.getSubmission("foo").uri.spec,
-    SearchUtils.newSearchConfigEnabled
-      ? baseURLSearchConfigV2 + "code=supergood%26id%3Dunique123456&q=foo"
-      : baseURL + "&code=supergood%26id%3Dunique123456",
-    "Should have got the submission URL with the updated code"
+    searchParams.get("code"),
+    expectedCode,
+    "Should have the correct code in the submissionURL"
   );
 });
 
@@ -75,9 +79,26 @@ add_task(async function test_pref_cleared() {
   defaultBranch.setCharPref("param.code", "");
 
   let engine = Services.search.getEngineByName("engine-pref");
+  // ESR always has an enterprise code
+  if (SearchUtils.MODIFIED_APP_CHANNEL != "esr") {
+    Assert.equal(
+      engine.getSubmission("foo").uri.spec,
+      baseURL,
+      "Should have just the base URL after the pref was cleared"
+    );
+  }
+});
+
+add_task(async function test_pref_updated_enterprise() {
+  // Set the pref to some value and enable enterprise mode at the same time.
+  defaultBranch.setCharPref("param.code", "supergood&id=unique123456");
+  await enableEnterprise();
+
+  const engine = Services.search.getEngineByName("engine-pref");
+  let searchParams = new URL(engine.getSubmission("foo").uri.spec).searchParams;
   Assert.equal(
-    engine.getSubmission("foo").uri.spec,
-    baseURL,
-    "Should have just the base URL after the pref was cleared"
+    searchParams.get("code"),
+    "enterprise",
+    "Should have the correct code in the submissionURL"
   );
 });

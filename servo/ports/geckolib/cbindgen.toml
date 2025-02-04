@@ -817,7 +817,8 @@ renaming_overrides_prefixing = true
 "CssUrl" = """
   inline nsDependentCSubstring SpecifiedSerialization() const;
   inline const URLExtraData& ExtraData() const;
-  inline StyleLoadData& LoadData() const;
+  inline const StyleLoadData& LoadData() const;
+  inline StyleLoadData& MutLoadData() const;
   inline nsIURI* GetURI() const;
 """
 
@@ -826,7 +827,8 @@ renaming_overrides_prefixing = true
   inline nsDependentCSubstring SpecifiedSerialization() const;
   inline const URLExtraData& ExtraData() const;
   inline nsIURI* GetURI() const;
-  inline StyleLoadData& LoadData() const;
+  inline const StyleLoadData& LoadData() const;
+  inline StyleLoadData& MutLoadData() const;
 
   inline bool IsLocalRef() const;
   inline bool HasRef() const;

@@ -520,6 +520,8 @@ CERT_DecodeCertFromPackage(char *certbuf, int certlen)
     CERTCertificate *cert = NULL;
 
     collectArgs.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    collectArgs.cert.data = NULL;
+    collectArgs.cert.len = 0;
 
     rv = CERT_DecodeCertPackage(certbuf, certlen, collect_certs,
                                 (void *)&collectArgs);

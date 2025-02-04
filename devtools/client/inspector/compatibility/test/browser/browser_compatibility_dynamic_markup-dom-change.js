@@ -22,10 +22,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_SCROLLBAR_WIDTH = {
+const ISSUE_SCROLLBAR_COLOR = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "scrollbar-width",
-  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+  property: "scrollbar-color",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-color",
   deprecated: false,
   experimental: false,
 };
@@ -39,7 +39,7 @@ const TEST_URI = `
   <body>
     <div></div>
     <div class="parent">
-      <div style="scrollbar-width: none"></div>
+      <div style="scrollbar-color: auto"></div>
     </div>
   </body>
 `;
@@ -55,7 +55,7 @@ add_task(async function () {
   info("Check initial issues");
   await assertIssueList(allElementsPane, [
     ISSUE_OUTLINE_RADIUS,
-    ISSUE_SCROLLBAR_WIDTH,
+    ISSUE_SCROLLBAR_COLOR,
   ]);
 
   info("Delete node whose child node has CSS compatibility issue");

@@ -2436,7 +2436,9 @@ void nsHttpConnection::HandshakeDoneInternal() {
   if (!transactionNPN.IsEmpty() && negotiatedNPN != transactionNPN) {
     LOG(("Resetting connection due to mismatched NPN token"));
     DontReuse();
-    mTransaction->Close(NS_ERROR_NET_RESET);
+    if (mTransaction) {
+      mTransaction->Close(NS_ERROR_NET_RESET);
+    }
     return;
   }
 

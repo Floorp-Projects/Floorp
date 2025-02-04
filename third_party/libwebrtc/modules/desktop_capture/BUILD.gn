@@ -604,8 +604,12 @@ if (is_mac) {
       "mac/desktop_frame_iosurface.mm",
       "mac/desktop_frame_provider.h",
       "mac/desktop_frame_provider.mm",
+      "mac/sck_picker_handle.h",
+      "mac/sck_picker_handle.mm",
       "mac/screen_capturer_mac.h",
       "mac/screen_capturer_mac.mm",
+      "mac/screen_capturer_sck.h",
+      "mac/screen_capturer_sck.mm",
       "mac/window_list_utils.h",
       "mouse_cursor.h",
       "mouse_cursor_monitor.h",
@@ -635,9 +639,11 @@ if (is_mac) {
     ]
     frameworks = [
       "AppKit.framework",
+      "CoreVideo.framework",
       "IOKit.framework",
       "IOSurface.framework",
     ]
+    weak_frameworks = [ "ScreenCaptureKit.framework" ]  # macOS 12.3
   }
 }
 

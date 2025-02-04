@@ -406,6 +406,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   while (reader.pos < reader.len) {
     size_t end = reader.ReadSize();
     size_t extra_end = reader.ReadSize();
+    MOZ_RELEASE_ASSERT(offset <= end);
     MOZ_RELEASE_ASSERT(extra_end >= end);
     MOZ_RELEASE_ASSERT(extra_end < aBlob.length());
 

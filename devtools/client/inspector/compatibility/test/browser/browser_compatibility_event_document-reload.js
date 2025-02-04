@@ -9,11 +9,11 @@ const TEST_URI = `
   <style>
   body {
     color: blue;
-    ruby-align: center;
+    overflow-anchor: auto;
     user-modify: read-only;
   }
   div {
-    scrollbar-width: thin;
+    scrollbar-color: auto;
   }
   </style>
   <body>
@@ -23,8 +23,8 @@ const TEST_URI = `
 
 const TEST_DATA_SELECTED = [
   {
-    property: "ruby-align",
-    url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+    property: "overflow-anchor",
+    url: "https://developer.mozilla.org/docs/Web/CSS/overflow-anchor",
   },
   {
     property: "user-modify",
@@ -35,8 +35,8 @@ const TEST_DATA_SELECTED = [
 const TEST_DATA_ALL = [
   ...TEST_DATA_SELECTED,
   {
-    property: "scrollbar-width",
-    url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+    property: "scrollbar-color",
+    url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-color",
   },
 ];
 
