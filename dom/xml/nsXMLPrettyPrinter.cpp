@@ -80,7 +80,7 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
   }
 
   RefPtr<DocumentFragment> resultFragment =
-      transformer->TransformToFragment(*aDocument, *aDocument, err);
+      transformer->TransformToFragment(*aDocument, false, *aDocument, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
