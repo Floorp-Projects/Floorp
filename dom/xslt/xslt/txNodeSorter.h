@@ -36,7 +36,7 @@ class txNodeSorter {
   struct SortData {
     txNodeSorter* mNodeSorter;
     txNodeSetContext* mContext;
-    txObject** mSortValues;
+    mozilla::UniquePtr<txObject>* mSortValues;
     nsresult mRv;
   };
   struct SortKey {
@@ -46,8 +46,9 @@ class txNodeSorter {
 
   static int compareNodes(uint32_t aIndexA, uint32_t aIndexB,
                           SortData& aSortData);
-  static bool calcSortValue(txObject*& aSortValue, SortKey* aKey,
-                            SortData* aSortData, uint32_t aNodeIndex);
+  static mozilla::UniquePtr<txObject> calcSortValue(SortKey* aKey,
+                                                    SortData* aSortData,
+                                                    uint32_t aNodeIndex);
   txList mSortKeys;
   unsigned int mNKeys;
 };
