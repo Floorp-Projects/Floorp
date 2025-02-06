@@ -1,0 +1,33 @@
+From 2816b5a7b10899b8500352d6bd410a0f1a7699bf Mon Sep 17 00:00:00 2001
+From: Matthew Gregan <kinetik@flim.org>
+Date: Thu, 9 Jan 2025 10:36:24 +1300
+Subject: [PATCH] wasapi: Remove thread shutdown timeout.
+
+This was a workaround for rare pre-Windows 10 systems where the render
+thread would hang inside OS API calls for multiple seconds.
+---
+ src/cubeb_wasapi.cpp | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index f13c5ad7..d3786b68 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -1780,16 +1780,7 @@ stop_and_join_render_thread(cubeb_stream * stm)
+     return false;
+   }
+ 
+-  /* Wait five seconds for the rendering thread to return. It's supposed to
+-   * check its event loop very often, five seconds is rather conservative.
+-   * Note: 5*1s loop to work around timer sleep issues on pre-Windows 8. */
+-  DWORD r;
+-  for (int i = 0; i < 5; ++i) {
+-    r = WaitForSingleObject(stm->thread, 1000);
+-    if (r == WAIT_OBJECT_0) {
+-      break;
+-    }
+-  }
++  DWORD r = WaitForSingleObject(stm->thread, INFINITE);
+   if (r != WAIT_OBJECT_0) {
+     LOG("stop_and_join_render_thread: WaitForSingleObject on thread failed: "
+         "%lx, %lx",

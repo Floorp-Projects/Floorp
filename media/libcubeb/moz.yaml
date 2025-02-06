@@ -21,6 +21,7 @@ vendoring:
     - 0002-disable-crash-reporter-death-test.patch
     - 0003-audiounit-ios-compile-fixes.patch
     - 0004-disable-cubeb_one_duplex_one_input-macos10.15.patch
+    - 0005-remove-wasapi-timeout.patch
   skip-vendoring-steps:
     - update-moz-build
   exclude:
