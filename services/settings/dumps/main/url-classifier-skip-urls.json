@@ -1,6 +1,20 @@
 {
   "data": [
     {
+      "schema": 1738108808211,
+      "feature": "tracking-protection",
+      "pattern": "cdn.cookielaw.org",
+      "id": "37b353b8-aef3-4040-aa73-465a3bffd64a",
+      "last_modified": 1738256382699
+    },
+    {
+      "schema": 1738230055283,
+      "feature": "tracking-protection",
+      "pattern": "onetrust.com",
+      "id": "8ac377ad-931f-40f6-85aa-968c8b485905",
+      "last_modified": 1738256382696
+    },
+    {
       "schema": 1735850161343,
       "feature": "tracking-annotation",
       "pattern": "bat.bing.com",
@@ -16,5 +30,5 @@
       "last_modified": 1701090424142
     }
   ],
-  "timestamp": 1736162589530
+  "timestamp": 1738256382699
 }
