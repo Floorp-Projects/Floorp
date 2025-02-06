@@ -2478,9 +2478,9 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1736951037874,
+      "last_modified": 1738595538915,
       "recordType": "engine",
-      "schema": 1736871464861,
+      "schema": 1738577315091,
       "variants": [
         {
           "environment": {
@@ -2647,6 +2647,15 @@
           },
           "partnerCode": "firefox-b-1-lm",
           "telemetrySuffix": "b-1-lm"
+        },
+        {
+          "environment": {
+            "distributions": [
+              "vivo-001"
+            ]
+          },
+          "partnerCode": "firefox-b-vv",
+          "telemetrySuffix": "b-vv"
         }
       ]
     },
@@ -8024,5 +8033,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1736951037874
+  "timestamp": 1738595538915
 }
