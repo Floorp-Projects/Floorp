@@ -579,6 +579,11 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
       contributors: null,
       locales: [aLocale],
     };
+    if (result.name.length > lazy.ExtensionData.EXT_NAME_MAX_LEN) {
+      // See comment at EXT_NAME_MAX_LEN in Extension.sys.mjs.
+      logger.warn(`Truncating add-on name ${addon.id} for locale ${aLocale}`);
+      result.name = result.name.slice(0, lazy.ExtensionData.EXT_NAME_MAX_LEN);
+    }
     return result;
   }
 

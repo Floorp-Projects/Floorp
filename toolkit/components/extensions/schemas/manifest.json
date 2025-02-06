@@ -29,6 +29,7 @@
 
           "name": {
             "type": "string",
+            "description": "Name must be at least 2, at should be at most 75 characters",
             "optional": false,
             "preprocess": "localize"
           },

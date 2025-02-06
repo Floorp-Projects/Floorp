@@ -51,6 +51,13 @@ add_task(async function test_1() {
           description: "name",
         },
       },
+      "_locales/es-ES/messages.json": {
+        name: {
+          // This length is 80, which exceeds ExtensionData.EXT_NAME_MAX_LEN:
+          message: "123456789_".repeat(8),
+          description: "name with 80 chars, should truncate to 75",
+        },
+      },
     },
   });
 
@@ -98,6 +105,21 @@ add_task(async function test_6() {
 
   Assert.equal(addon.name, "Fallback Name");
   Assert.equal(addon.description, "Fallback Description");
+
+  await addon.enable();
+});
+
+add_task(async function test_name_too_long() {
+  await restartWithLocales(["es-ES"]);
+
+  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  Assert.notEqual(addon, null);
+
+  Assert.equal(
+    addon.name,
+    "123456789_123456789_123456789_123456789_123456789_123456789_123456789_12345",
+    "Name should be truncated"
+  );
 
   await addon.enable();
 });
