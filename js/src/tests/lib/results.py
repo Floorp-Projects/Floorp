@@ -1,6 +1,6 @@
 import json
-import pipes
 import re
+import shlex
 
 from .progressbar import NullProgressBar, ProgressBar
 from .structuredlog import TestLogger
@@ -9,7 +9,7 @@ from .structuredlog import TestLogger
 
 
 def escape_cmdline(args):
-    return " ".join([pipes.quote(a) for a in args])
+    return " ".join([shlex.quote(a) for a in args])
 
 
 class TestOutput:

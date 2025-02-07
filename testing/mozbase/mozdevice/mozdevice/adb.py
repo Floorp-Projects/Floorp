@@ -4,7 +4,6 @@
 
 import io
 import os
-import pipes
 import posixpath
 import re
 import shlex
@@ -1292,8 +1291,6 @@ class ADBDevice(ADBCommand):
         """Utility function to return quoted version of command argument."""
         if hasattr(shlex, "quote"):
             quote = shlex.quote
-        elif hasattr(pipes, "quote"):
-            quote = pipes.quote
         else:
 
             def quote(arg):
