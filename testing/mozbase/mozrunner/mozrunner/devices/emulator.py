@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import tempfile
 import time
-from telnetlib import Telnet
 
 from mozdevice import ADBHost
 from mozprocess import ProcessHandler
@@ -189,6 +188,11 @@ class BaseEmulator(Device):
 
     def _run_telnet(self, command):
         if not self.telnet:
+            # telnetlib is dropped in Python 3.13 (bug 1925198).
+            # Import here instead of the top level to avoid breaking users of
+            # this file that are independent of telnet.
+            from telnetlib import Telnet
+
             self.telnet = Telnet("localhost", self.port)
             self._get_telnet_response()
         return self._get_telnet_response(command)
