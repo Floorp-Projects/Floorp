@@ -139,13 +139,17 @@ void MacroAssemblerARM::convertDoubleToInt32(FloatRegister src, Register dest,
   ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
 
   if (negativeZeroCheck) {
+    Label nonzero;
     as_cmp(dest, Imm8(0));
+    ma_b(&nonzero, Assembler::NotEqual);
     // Test and bail for -0.0, when integer result is 0. Move the top word
     // of the double into the output reg, if it is non-zero, then the
     // original value was -0.0.
-    as_vxfer(dest, InvalidReg, src, FloatToCore, Assembler::Equal, 1);
-    ma_cmp(dest, Imm32(0x80000000), scratch, Assembler::Equal);
-    ma_b(fail, Assembler::Equal);
+    as_vxfer(dest, InvalidReg, src, FloatToCore, Assembler::Always, 1);
+    as_cmp(dest, Imm8(0));
+    ma_b(fail, Assembler::LessThan);
+    ma_mov(Imm32(0), dest);
+    bind(&nonzero);
   }
 }
 
@@ -180,14 +184,18 @@ void MacroAssemblerARM::convertFloat32ToInt32(FloatRegister src, Register dest,
   ma_b(fail, Assembler::Equal);
 
   if (negativeZeroCheck) {
+    Label nonzero;
     as_cmp(dest, Imm8(0));
+    ma_b(&nonzero, Assembler::NotEqual);
     // Test and bail for -0.0, when integer result is 0. Move the float into
     // the output reg, and if it is non-zero then the original value was
     // -0.0
     as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore,
-             Assembler::Equal, 0);
-    ma_cmp(dest, Imm32(0x80000000), scratch, Assembler::Equal);
-    ma_b(fail, Assembler::Equal);
+             Assembler::Always, 0);
+    as_cmp(dest, Imm8(0));
+    ma_b(fail, Assembler::LessThan);
+    ma_mov(Imm32(0), dest);
+    bind(&nonzero);
   }
 }
 
