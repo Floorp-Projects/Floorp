@@ -81,6 +81,8 @@ class ProfilerChild final : public PProfilerChild,
   void ProcessChunkManagerUpdate(
       ProfileBufferControlledChunkManager::Update&& aUpdate);
 
+  static void ClearPendingUpdate();
+
   static void GatherProfileThreadFunction(void* already_AddRefedParameters);
 
   nsCOMPtr<nsIThread> mThread;

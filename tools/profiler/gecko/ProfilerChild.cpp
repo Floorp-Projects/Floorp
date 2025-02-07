@@ -139,6 +139,12 @@ void ProfilerChild::SetupChunkManager() {
       });
 }
 
+/* static */ void ProfilerChild::ClearPendingUpdate() {
+  auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+  lockedUpdate->mProfilerChild = nullptr;
+  lockedUpdate->mUpdate.Clear();
+}
+
 void ProfilerChild::ResetChunkManager() {
   if (!mChunkManager) {
     return;
@@ -149,9 +155,7 @@ void ProfilerChild::ResetChunkManager() {
   mChunkManager->SetUpdateCallback({});
 
   // Clear the pending update.
-  auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
-  lockedUpdate->mProfilerChild = nullptr;
-  lockedUpdate->mUpdate.Clear();
+  ClearPendingUpdate();
   // And process a final update right now.
   ProcessChunkManagerUpdate(
       ProfileBufferControlledChunkManager::Update(nullptr));
@@ -483,7 +487,7 @@ void ProfilerChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
 }
 
 void ProfilerChild::Destroy() {
-  ResetChunkManager();
+  ClearPendingUpdate();
   if (!mDestroyed) {
     Close();
   }
