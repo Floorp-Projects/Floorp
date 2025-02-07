@@ -5889,8 +5889,13 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   }
   invoke_profiler_state_change_callbacks(ProfilingState::ShuttingDown);
 
-  const auto preRecordedMetaInformation =
-      PreRecordMetaInformation(/* aShutdown = */ true);
+  // We collect information here to be used below so it can be done outside of
+  // the lock. We only need it if MOZ_PROFILER_SHUTDOWN is set and not empty.
+  const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
+  PreRecordedMetaInformation preRecordedMetaInformation = {};
+  if (filename && filename[0] != '\0') {
+    preRecordedMetaInformation = PreRecordMetaInformation(/* aShutdown */ true);
+  }
 
   ProfilerParent::ProfilerWillStopIfStarted();
 
@@ -5902,7 +5907,6 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
 
     // Save the profile on shutdown if requested.
     if (ActivePS::Exists(lock)) {
-      const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename && filename[0] != '\0') {
         locked_profiler_save_profile_to_file(lock, filename,
                                              preRecordedMetaInformation,
