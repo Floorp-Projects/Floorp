@@ -1,6 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
-// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
+// Generated using tools/cldr/cldr-to-icu/
 windowsZones:table(nofallback){
     mapTimezones{
         "AUS Central Standard Time"{
@@ -179,7 +179,6 @@ windowsZones:table(nofallback){
                 "ca/Menominee America/North_Dakota/Beulah America/North_Dakota/Center"
                 " America/North_Dakota/New_Salem"
             }
-            ZZ{"CST6CDT"}
         }
         "Chatham Islands Standard Time"{
             001{"Pacific/Chatham"}
@@ -243,7 +242,6 @@ windowsZones:table(nofallback){
                 "Indiana/Vincennes America/Indiana/Winamac America/Kentucky/Monticell"
                 "o America/Louisville"
             }
-            ZZ{"EST5EDT"}
         }
         "Egypt Standard Time"{
             001{"Africa/Cairo"}
@@ -398,7 +396,6 @@ windowsZones:table(nofallback){
             CA{"America/Edmonton America/Cambridge_Bay America/Inuvik"}
             MX{"America/Ciudad_Juarez"}
             US{"America/Denver America/Boise"}
-            ZZ{"MST7MDT"}
         }
         "Myanmar Standard Time"{
             001{"Asia/Rangoon"}
@@ -458,7 +455,6 @@ windowsZones:table(nofallback){
             001{"America/Los_Angeles"}
             CA{"America/Vancouver"}
             US{"America/Los_Angeles"}
-            ZZ{"PST8PDT"}
         }
         "Pakistan Standard Time"{
             001{"Asia/Karachi"}
@@ -717,7 +713,7 @@ windowsZones:table(nofallback){
         }
         "Ulaanbaatar Standard Time"{
             001{"Asia/Ulaanbaatar"}
-            MN{"Asia/Ulaanbaatar Asia/Choibalsan"}
+            MN{"Asia/Ulaanbaatar"}
         }
         "Venezuela Standard Time"{
             001{"America/Caracas"}
