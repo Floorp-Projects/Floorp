@@ -97,7 +97,10 @@ SessionHistoryInfo::SessionHistoryInfo(
     nsIChannel* aChannel, uint32_t aLoadType,
     nsIPrincipal* aPartitionedPrincipalToInherit,
     nsIContentSecurityPolicy* aCsp) {
-  aChannel->GetURI(getter_AddRefs(mURI));
+  if (NS_FAILED(NS_GetFinalChannelURI(aChannel, getter_AddRefs(mURI)))) {
+    NS_WARNING("NS_GetFinalChannelURI somehow failed in SessionHistoryInfo?");
+    aChannel->GetURI(getter_AddRefs(mURI));
+  }
   mLoadType = aLoadType;
 
   nsCOMPtr<nsILoadInfo> loadInfo;
