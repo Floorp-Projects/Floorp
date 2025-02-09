@@ -104,16 +104,19 @@ let intendedShutdown = false;
 
 export async function runBrowser(port = 5180) {
   // https://wiki.mozilla.org/Firefox/CommandLineOptions
-  const binPath = () => {
-    if (process.platform !== "darwin") {
-      return `./_dist/bin/noraneko/noraneko${process.platform === "win32" ? ".exe" : ""} `
-    }
-    return "./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko";
-  }
-
   switch (process.platform) {
     case "win32":
       processBrowser = $`./_dist/bin/noraneko/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe");
+      break;
+
+    case "linux":
+      processBrowser = $`./_dist/bin/noraneko/noraneko --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe");
+      break;
+
+    case "darwin":
+      processBrowser = $`./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe")
+      break;
+  } processBrowser = $`./_dist/bin/noraneko/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe");
   }
 
   //processBrowser = $`${binPath()} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;

@@ -96,7 +96,7 @@ async function decompressBin() {
         binArchive,
       ]}`;
       await fs.mkdir(binDir, { recursive: true });
-      await fs.cp(pathe.join(mountDir, "Noraneko.app"),pathe.join("./_dist/bin/noraneko", ""))
+      await fs.cp(pathe.join(mountDir, "Noraneko.app"), pathe.join("./_dist/bin/noraneko", "Noraneko.app"), { recursive: true });
       await fs.writeFile(binVersion, VERSION);
       await $`hdiutil ${["detach", mountDir]}`;
       await fs.rm(mountDir, { recursive: true });
