@@ -116,7 +116,6 @@ export async function runBrowser(port = 5180) {
     case "darwin":
       processBrowser = $`./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe")
       break;
-  } processBrowser = $`./_dist/bin/noraneko/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`.stdio("pipe");
   }
 
   //processBrowser = $`${binPath()} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
