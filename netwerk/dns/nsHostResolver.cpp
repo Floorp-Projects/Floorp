@@ -139,25 +139,11 @@ class DnsThreadListener final : public nsIThreadPoolListener {
 };
 
 NS_IMETHODIMP
-DnsThreadListener::OnThreadCreated() {
-#if defined(HAVE_RES_NINIT)
-  if (!(_res.options & RES_INIT)) {
-    auto result = res_ninit(&_res);
-    LOG(("'res_ninit' returned %d ", result));
-  }
-#endif
-  return NS_OK;
-}
+DnsThreadListener::OnThreadCreated() { return NS_OK; }
 
 NS_IMETHODIMP
 DnsThreadListener::OnThreadShuttingDown() {
   DNSThreadShutdown();
-#if defined(HAVE_RES_NINIT)
-  if (_res.options & RES_INIT) {
-    res_nclose(&_res);
-    memset(&_res, 0, sizeof(_res));
-  }
-#endif
   return NS_OK;
 }
 
