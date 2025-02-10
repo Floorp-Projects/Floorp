@@ -4,6 +4,7 @@
 **/.turbo
 
 *.tar.zst
+*.tar.xz
 *.zip
 *.dmg
 
