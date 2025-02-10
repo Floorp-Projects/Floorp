@@ -3,30 +3,47 @@ name: "(A) |α| Package and Publish Alpha"
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        type: choice
-        options:
-          - win-x64
-          - linux-x64
-        default: win-x64
-      runtime_artifact_workflow_run_id:
+      runtime_windows_artifact_workflow_run_id:
+        description: "The workflow run ID for the Windows runtime artifact"
+        required: false
         type: string
-        required: true
-
+      runtime_linux_artifact_workflow_run_id:
+        description: "The workflow run ID for the Linux runtime artifact"
+        required: false
+        type: string
+      runtime_mac_artifact_workflow_run_id:
+        description: "The workflow run ID for the macOS runtime artifact"
+        required: false
+        type: string
 permissions:
   contents: write
 
 jobs:
-  package:
+  package-windows:
     uses: ./.github/workflows/package.yml
     with:
-      platform: win-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_artifact_workflow_run_id }}
+      platform: Windows-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
     secrets: inherit
 
-  publish:
-    needs: package
+  package-linux:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: Linux-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
+    secrets: inherit
+
+  package-macos:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: macOS-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
+    secrets: inherit
+
+  publishs:
+    needs: [package-windows, package-linux, package-macos]
     uses: ./.github/workflows/publish_alpha.yml
     with:
-      artifact_workflow_run_id: ${{ needs.package.outputs.run_id }}
-    secrets: inherit
+      win_runtime_artifact_workflow_call: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
+      linux_runtime_artifact_workflow_call: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
+      mac_runtime_artifact_workflow_call: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
