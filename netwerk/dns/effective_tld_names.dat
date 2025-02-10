@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-01-31_07-02-21_UTC
-// COMMIT: 5421ee732b6ad9733220267cd8d3d6b45a63ce05
+// VERSION: 2025-02-10_08-32-12_UTC
+// COMMIT: 123d8aa7aa4baa5c9fe74b5655244ae49f176577
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -11329,6 +11329,10 @@ barsy.ca
 *.compute.estate
 *.alces.network
 
+// Alibaba Cloud API Gateway
+// Submitted by Alibaba Cloud Security <cloud_product_security_team@alibaba-inc.com>
+alibabacloudcs.com
+
 // all-inkl.com : https://all-inkl.com
 // Submitted by Werner Kaltofen <wk@all-inkl.com>
 kasserver.com
@@ -13999,6 +14003,10 @@ krellian.net
 // KUROKU LTD : https://kuroku.ltd/
 // Submitted by DisposaBoy <security@oya.to>
 oya.to
+
+// Laravel Holdings, Inc. : https://laravel.com
+// Submitted by André Valentin <security@laravel.com>
+laravel.cloud
 
 // LCube - Professional hosting e.K. : https://www.lcube-webhosting.de
 // Submitted by Lars Laehn <info@lcube.de>

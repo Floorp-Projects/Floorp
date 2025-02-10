@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "{0381128b-f8ba-439a-a0cd-7df677760fc4}:1.1.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1738694179591,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1738931705483,
+      "id": "4b616058-809c-45bd-9e16-cd2ddf52df9f",
+      "last_modified": 1738931776678
+    },
+    {
+      "stash": {
+        "blocked": [
           "customized-leechblockng@glaebhoerl.website:1.6.7.1"
         ],
         "unblocked": [],
@@ -326,5 +340,5 @@
       "last_modified": 1734363061859
     }
   ],
-  "timestamp": 1738694179495
+  "timestamp": 1738931776678
 }
