@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@trpc/server": "10.45.2",
-    "birpc": "^0.2.19",
+    "birpc": "^2.0.19",
     "ws": "^8.18.0"
   },
   "scripts": {
@@ -11,6 +11,6 @@
   },
   "type": "module",
   "devDependencies": {
-    "@types/ws": "^8.5.13"
+    "@types/ws": "^8.5.14"
   }
 }

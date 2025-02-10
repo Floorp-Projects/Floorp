@@ -3,14 +3,14 @@
   "type": "module",
   "description": "This module has .sys.mjs files for Firefox Module System esp. for Actor",
   "devDependencies": {
-    "@swc/cli": "0.5.2",
-    "@swc/core": "^1.10.3",
-    "oxlint": "^0.15.3",
+    "@swc/cli": "0.6.0",
+    "@swc/core": "^1.10.12",
+    "oxlint": "^0.15.8",
     "unplugin-swc": "^1.5.1",
-    "vite": "^6.0.6"
+    "vite": "^6.0.11"
   },
   "dependencies": {
-    "birpc": "^0.2.19"
+    "birpc": "^2.0.19"
   },
   "scripts": {
     "build": "vite build",
