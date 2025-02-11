@@ -3991,7 +3991,9 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
        mLoadInfo->InternalContentPolicyType() ==
            nsIContentPolicy::TYPE_XMLHTTPREQUEST ||
        mLoadInfo->InternalContentPolicyType() ==
-           nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST)) {
+           nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC ||
+       mLoadInfo->InternalContentPolicyType() ==
+           nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC)) {
     mCacheIdExtension.Append("FETCH");
   }
 

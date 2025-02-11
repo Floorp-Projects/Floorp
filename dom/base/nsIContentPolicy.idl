@@ -232,11 +232,11 @@ interface nsIContentPolicy : nsISupports
     TYPE_INTERNAL_TRACK = 32,
 
     /**
-     * Indicates an internal constant for an XMLHttpRequest.
+     * Indicates an internal constant for an asynchronous XMLHttpRequest.
      *
      * This will be mapped to TYPE_XMLHTTPREQUEST.
      */
-    TYPE_INTERNAL_XMLHTTPREQUEST = 33,
+    TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC = 33,
 
     /**
      * Indicates an internal constant for EventSource.
@@ -435,12 +435,19 @@ interface nsIContentPolicy : nsISupports
     TYPE_WEB_TRANSPORT = 59,
 
     /**
+     * Indicates an internal constant for a synchronous XMLHttpRequest.
+     *
+     * This will be mapped to TYPE_XMLHTTPREQUEST.
+     */
+    TYPE_INTERNAL_XMLHTTPREQUEST_SYNC = 60,
+
+    /**
      * Used to indicate the end of this list, not a content policy. If you want
      * to add a new content policy type, place it before this sentinel value
      * TYPE_END, have it use TYPE_END's current value, and increment TYPE_END by
      * one. (TYPE_END should always have the highest numerical value.)
      */
-    TYPE_END = 60,
+    TYPE_END = 61,
 
 
     /* When adding new content types, please update
