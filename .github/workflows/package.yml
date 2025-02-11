@@ -8,23 +8,29 @@ on:
     inputs:
       platform:
         type: choice
+        required: true
+        default: Windows-x64
         options:
-          - win-x64
-          - linux-x64
-        default: win-x64
+          - Windows-x64
+          - Linux-x64
+          - macOS-x64
       runtime_artifact_workflow_run_id:
         type: string
-        required: true
+        default: ""
+        required: false
+
   workflow_call:
     inputs:
       platform:
         type: string
-        default: win-x64
+        default: Windows-x64
+        required: true
       runtime_artifact_workflow_run_id:
         type: string
-        required: true
+        default: ""
+        required: false
 
-run-name: 📦️ Package ${{inputs.platform == 'win-x64' && 'Windows x64' || 'Linux x64'}}
+run-name: 📦️ Package ${{ inputs.platform }}
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -35,39 +41,50 @@ jobs:
         with:
           repository: ${{github.repository}}-runtime
           submodules: "recursive"
+
       - uses: actions/checkout@v4
         with:
           path: "noraneko"
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Setup Noraneko
         run: |
 
           cd $GITHUB_WORKSPACE
-
           cd ./noraneko
           pnpm install
           cd ..
+
       - name: Setup 🪛
         run: |
           sudo apt install msitools -y
 
           ./mach --no-interactive bootstrap --application-choice browser_artifact_mode
+
       - name: Write Versions
         run: |
-
           cd ./noraneko
           pnpm build --write-version
           cd ..
+
       - name: Mach configure
         run: |
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            cp ./.github/workflows/mozconfigs/win64.mozconfig mozconfig
+          elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            cp ./.github/workflows/mozconfigs/linux64.mozconfig mozconfig
+          else
+            cp ./.github/workflows/mozconfigs/macosx64-x86_64.mozconfig mozconfig
+          fi
 
-          cp ./.github/workflows/mozconfigs/win64.mozconfig mozconfig
           # Copy Noraneko Branding
           cp -r ./noraneko/gecko/branding/* ./browser/branding/
 
@@ -81,86 +98,173 @@ jobs:
 
           echo "ac_add_options --enable-release" >> mozconfig
           echo "ac_add_options --enable-update-channel=alpha" >> mozconfig
+          echo "ac_add_options --disable-tests" >> mozconfig
           echo "ac_add_options --enable-artifact-builds" >> mozconfig
+          echo "mk_add_options MOZ_OBJDIR=./obj-artifact-build-output" >> mozconfig
 
           sed -i 's|MOZ_BRANDING_DIRECTORY=browser/branding/unofficial|MOZ_BRANDING_DIRECTORY=browser/branding/noraneko-unofficial|g' ./browser/confvars.sh
           sed -i 's|ac_add_options --enable-chrome-format=flat||g' ./mozconfig
 
+          if [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            # Extract macOS .dmg tools
+            mkdir -p ~/tools
+            curl -L https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ceSQWV1AS76UlhYJ0_PfJQ/artifacts/public/build/dmg.tar.zst -o dmg.tar.zst
+            tar -I zstd -xf dmg.tar.zst -C ~/tools
+            sudo chmod 777 ~/tools/dmg
+
+            curl -L https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/N2SwCRLrRw2l-UWP4N7dhQ/artifacts/public/build/hfsplus.tar.zst -o hfsplus.tar.zst
+            tar -I zstd -xf hfsplus.tar.zst -C ~/tools
+            sudo chmod 777 ~/tools/hfsplus
+
+            # write mozconfig
+            echo "DMG_TOOL=$(echo ~/tools/dmg/dmg)" >> mozconfig
+            echo "HFS_TOOL=$(echo ~/tools/dmg/hfsplus)" >> mozconfig
+            echo "MKFSHFS=$(echo ~/tools/hfsplus/newfs_hfs)" >> mozconfig
+          fi
+
           ./mach configure
           git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
-      - name: Download artifact
+
+      - name: Possibly retrieve run ID if not provided
+        run: |
+          if [ -z "${{ inputs.runtime_artifact_workflow_run_id }}" ]; then
+            case "${{ inputs.platform }}" in
+              "Linux-x64") workflow_file="wrapper_linux_build.yml" ;;
+              "Windows-x64") workflow_file="wrapper_windows_build.yml" ;;
+              "macOS-x64") workflow_file="wrapper_mac_build.yml" ;;
+            esac
+
+            LATEST_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.PAT }}" \
+              "https://api.github.com/repos/${{ github.repository }}-runtime/actions/workflows/$workflow_file/runs?branch=main&status=success" \
+            | jq -r '.workflow_runs[0].id')
+
+            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=$LATEST_ID" >> $GITHUB_ENV
+          else
+            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=${{ inputs.runtime_artifact_workflow_run_id }}" >> $GITHUB_ENV
+          fi
+
+      - name: Get Artifact Name
+        run: |
+            case "${{ inputs.platform }}" in
+            "Windows-x64")
+              echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV
+              echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV
+              ;;
+            "Linux-x64")
+              echo "ARTIFACT_NAME=noraneko-linux-amd64-moz-artifact" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV
+              echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV
+              ;;
+            "macOS-x64")
+              echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
+              echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV
+              ;;
+            esac
+
+      - name: Download Mozilla artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{inputs.platform == 'win-x64' && 'noraneko-win-amd64-moz-artifact'}}
-          run-id: ${{inputs.runtime_artifact_workflow_run_id}}
+          name: ${{ env.ARTIFACT_NAME }}
+          run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
-          repository: ${{github.repository}}-runtime
-          path: ~/
+          repository: ${{ github.repository }}runtime
+          path: ~/downloads
 
-      - name: Build noraneko
+      - name: Make Downloaded Artifact to Moz Artifact
         run: |
+          mkdir -p ~/artifacts
+          cd ~/downloads
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            zip -r ~/artifacts/moz-artifact-win64.zip ./*
+          else
+            cp -r ~/downloads/* ~/artifacts
+          fi
 
+          cd $GITHUB_WORKSPACE
+
+      - name: Build Noraneko
+        run: |
           cd ./noraneko
           NODE_ENV='production' pnpm build --release-build-before
           cd ..
 
-      - name: build
+      - name: Build
         run: |
-          MOZ_ARTIFACT_FILE=$(echo ~/noraneko-*.win64.zip) ./mach build
-      - name: Inject noraneko
-        run: |
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            MOZ_ARTIFACT_FILE=$(echo ~/artifacts/moz-artifact-win64.zip) ./mach build
+          elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            MOZ_ARTIFACT_FILE=$(echo ~/artifacts/noraneko-linux-amd64-moz-artifact.tar.xz) ./mach build
+          elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            MOZ_ARTIFACT_FILE="$(echo ~/artifacts/noraneko-macOS-universal-moz-artifact.dmg):$(echo ~/artifacts/noraneko-macOS.update_framework_artifacts.zip)" ./mach build
+          fi
 
+      - name: Inject Noraneko
+        run: |
           cd ./noraneko
           pnpm build --release-build-after
 
           # https://www.spinics.net/lists/git/msg391750.html
-          rsync -aL ../obj-x86_64-pc-windows-msvc/dist/bin/ ../obj-x86_64-pc-windows-msvc/dist/tmp__bin
-          rm -rf ../obj-x86_64-pc-windows-msvc/dist/bin
-          mv ../obj-x86_64-pc-windows-msvc/dist/tmp__bin ../obj-x86_64-pc-windows-msvc/dist/bin
+          rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
+          rm -rf ../obj-artifact-build-output/dist/bin
+          mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
 
-          git apply --reject ./scripts/git-patches/patches/*.patch --directory ../obj-x86_64-pc-windows-msvc/dist/bin --unsafe-paths --check --apply
+          git apply --reject ./scripts/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
           cd ..
+
       - name: Package noraneko
         run: |
           ./mach package
+
+      - name: Rename and move installer
+        run: |
+          mkdir -p ~/noraneko-installer
+          mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+
       - name: Download artifact of MAR tools
         uses: actions/download-artifact@v4
         with:
-          name: ${{'noraneko-dist-host'}}
-          run-id: ${{inputs.runtime_artifact_workflow_run_id}}
+          pattern: '*dist-host'
+          run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
           repository: ${{github.repository}}-runtime
-          path: obj-x86_64-pc-windows-msvc/dist/host
+          path: obj-artifact-build-output/dist/host
+          merge-multiple: true
 
-      - name: Download artifact of binary for getting buildid
+      - name: Download artifact of binary for getting build information
         uses: actions/download-artifact@v4
         with:
-          name: ${{'noraneko-win-amd64-dev'}}
-          run-id: ${{inputs.runtime_artifact_workflow_run_id}}
+          pattern: '*application-ini'
+          run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
           repository: ${{github.repository}}-runtime
           path: ~/noraneko-dev
+          merge-multiple: true
 
       - name: Create MAR package
         run: |
-          7za x "$(echo ~/noraneko-dev/noraneko-*.win64.zip)" -o"$(echo ~)/noraneko-dev"
-
           chmod +x $(echo ./obj-*)/dist/host/bin/mar
           mkdir ~/noraneko-mar
 
-          awk -F "=" '/^Version/ {print $2}' "$(echo ~)/noraneko-dev/noraneko/application.ini" > ~/noraneko-mar/version.txt
+          awk -F "=" '/^Version/ {print $2}' "$(echo ~)/noraneko-dev/nora-application.ini" > ~/noraneko-mar/version.txt
 
           touch "$(echo ./obj-*)/dist/noraneko/precomplete"
-          MAR="$(echo ./obj-*)/dist/host/bin/mar" MOZ_PRODUCT_VERSION=$(cat ~/noraneko-mar/version.txt) MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-win-amd64-full.mar "$(echo ./obj-*)/dist/noraneko"
+          MAR="$(echo ./obj-*)/dist/host/bin/mar" MOZ_PRODUCT_VERSION=$(cat ~/noraneko-mar/version.txt) MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar "$(echo ./obj-*)/dist/noraneko"
 
           cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt
           cp noraneko/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt
           echo "$(cat ~/noraneko-mar/version.txt)@$(cat ~/noraneko-mar/noraneko_version.txt)" > ~/noraneko-mar/version_display.txt
 
-          shasum --algorithm 512 ~/noraneko-mar/noraneko-win-amd64-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt
-          stat --format "%s" ~/noraneko-mar/noraneko-win-amd64-full.mar > ~/noraneko-mar/mar_size.txt
+          shasum --algorithm 512 ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt
+          stat --format "%s" ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar > ~/noraneko-mar/mar_size.txt
 
-          awk -F "=" '/BuildID/ {print $2}' "$(echo ~)/noraneko-dev/noraneko/application.ini" > ~/noraneko-mar/buildid.txt
+          awk -F "=" '/BuildID/ {print $2}' "$(echo ~)/noraneko-dev/nora-application.ini" > ~/noraneko-mar/buildid.txt
 
           mkdir ~/noraneko-publish
 
@@ -175,18 +279,16 @@ jobs:
           echo "}" >> ~/noraneko-publish/meta.json
 
           cp ~/noraneko-mar/*.mar ~/noraneko-publish
-      - name: Publish Package 🎁
+
+      - name: Publish dist 🎁
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-win-amd64-moz-artifact
-          path: obj-x86_64-pc-windows-msvc/dist/noraneko-*.zip
-      - name: Publish Installer 🎁
-        uses: actions/upload-artifact@v4
-        with:
-          name: noraneko-win-amd64-installer
-          path: obj-x86_64-pc-windows-msvc/dist/install/sea/*
+          name: noraneko-${{ env.OUTPUT_NAME }}-installer
+          path: ~/noraneko-installer/*
+          compression-level: 9
+
       - name: Publish MAR 🎁
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-win-amd64-mar-full
+          name: noraneko-${{ env.OUTPUT_NAME }}-mar-full
           path: ~/noraneko-publish/*
