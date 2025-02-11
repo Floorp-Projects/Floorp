@@ -213,6 +213,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   console.log(`[dev] buildid2: ${buildid2}`);
   if (mode !== "release") {
     if (!devInit) {
+      await $`deno run -A ./scripts/launchDev/child-build.ts ${mode} ${
+        buildid2 ?? ""
+      }`;
       console.log("run dev servers");
       devViteProcess = $`deno run -A ./scripts/launchDev/child-dev.ts ${mode} ${
         buildid2 ?? ""

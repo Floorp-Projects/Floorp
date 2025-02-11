@@ -4,6 +4,12 @@ import { initI18N } from "../i18n/config.ts";
 import "./test/index.ts";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
+import {
+  _registerModuleLoadState,
+  _rejectOtherLoadStates,
+} from "./modules-hooks.ts";
+
+console.log("[noraneko] Initializing scripts...");
 
 export default async function initScripts() {
   // Import required modules and initialize i18n
@@ -114,8 +120,12 @@ async function initializeModules(
       if (module?.default) {
         new module.default();
       }
+      _registerModuleLoadState(module.name, true);
     } catch (e) {
       console.error(`[noraneko] Failed to init module ${module.name}:`, e);
+      _registerModuleLoadState(module.name, false);
     }
   }
+  _registerModuleLoadState("__init_all__", true);
+  await _rejectOtherLoadStates();
 }

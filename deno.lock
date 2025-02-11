@@ -60,6 +60,7 @@
     "npm:consola@^3.4.0": "3.4.0",
     "npm:es-toolkit@^1.32.0": "1.32.0",
     "npm:fast-glob@^3.3.3": "3.3.3",
+    "npm:hookable@^5.5.3": "5.5.3",
     "npm:i18next@^24.2.2": "24.2.2_typescript@5.7.3",
     "npm:isomorphic-ws@5": "5.0.0_ws@8.18.0",
     "npm:jasmine-core@^5.5.0": "5.5.0",
@@ -95,6 +96,7 @@
     "npm:vite-plugin-istanbul@^6.0.2": "6.0.2_vite@6.0.11__@types+node@22.5.4__lightningcss@1.29.1_@types+node@22.5.4_lightningcss@1.29.1",
     "npm:vite-plugin-solid@^2.11.0": "2.11.1_solid-js@1.9.4__seroval@1.2.1_vite@6.0.11__@types+node@22.13.1__lightningcss@1.29.1_@babel+core@7.26.7_@types+node@22.13.1_lightningcss@1.29.1",
     "npm:vite-tsconfig-paths@^5.1.4": "5.1.4_vite@6.0.11__@types+node@22.13.1__lightningcss@1.29.1_typescript@5.7.3_@types+node@22.13.1_lightningcss@1.29.1",
+    "npm:vite@*": "6.1.0_@types+node@22.5.4_lightningcss@1.29.1",
     "npm:vite@6.0.11": "6.0.11_@types+node@22.5.4_lightningcss@1.29.1",
     "npm:vite@^6.0.11": "6.0.11_@types+node@22.5.4_lightningcss@1.29.1",
     "npm:vite@^6.1.0": "6.1.0_@types+node@22.5.4_lightningcss@1.29.1",
@@ -3156,6 +3158,9 @@
         "function-bind"
       ]
     },
+    "hookable@5.5.3": {
+      "integrity": "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="
+    },
     "html-entities@2.3.3": {
       "integrity": "sha512-DV5Ln36z34NNTDgnz0EWGBLZENelNAtkiFA4kyNOG2tDI6Mz1uSWiq1wAKdyjnJwyDiDO7Fa2SO1CTxPXL8VxA=="
     },
@@ -5386,6 +5391,7 @@
             "npm:chroma-js@^3.1.2",
             "npm:consola@^3.4.0",
             "npm:es-toolkit@^1.32.0",
+            "npm:hookable@^5.5.3",
             "npm:i18next@^24.2.2",
             "npm:jasmine-core@^5.5.0",
             "npm:karma-jasmine@^5.1.0",

@@ -11,6 +11,7 @@
     "@nora/solid-xul": "workspace:*",
     "@nora/test": "workspace:*",
     "@types/karma": "^6.3.9",
+    "hookable": "^5.5.3",
     "jasmine-core": "^5.5.0",
     "karma": "^6.4.4",
     "karma-jasmine": "^5.1.0",

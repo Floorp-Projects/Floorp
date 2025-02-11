@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Page from './app/dashboard/page'
+import Page from "./app/dashboard/page.tsx"
 
 function App() {
 

@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { $ } from "zx";
 import process from "node:process";
 import { resolve } from "pathe";
-import { encodeHex } from "jsr:@std/encoding/hex";
+import { existsSync } from "@std/fs";
 
 const BIN_DIR = process.platform !== "darwin"
   ? "_dist/bin/noraneko"
@@ -50,6 +50,9 @@ export async function initializeBinGit() {
 }
 
 export function checkPatchIsNeeded() {
+  if (!existsSync(PATCHES_TMP, { "isDirectory": true })) {
+    return true;
+  }
   const patches_tmp = Deno.readDirSync(PATCHES_TMP);
   const patches_dir = Deno.readDirSync(PATCHES_DIR);
 
