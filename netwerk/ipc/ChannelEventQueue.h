@@ -114,8 +114,8 @@ class ChannelEventQueue final {
         mSuspended(false),
         mForcedCount(0),
         mFlushing(false),
-        mHasCheckedForXMLHttpRequest(false),
-        mForXMLHttpRequest(false),
+        mHasCheckedForAsyncXMLHttpRequest(false),
+        mForAsyncXMLHttpRequest(false),
         mOwner(owner),
         mMutex("ChannelEventQueue::mMutex"),
         mRunningMutex("ChannelEventQueue::mRunningMutex") {}
@@ -184,10 +184,11 @@ class ChannelEventQueue final {
       MOZ_GUARDED_BY(mMutex);
   bool mFlushing MOZ_GUARDED_BY(mMutex);
 
-  // Whether the queue is associated with an XHR. This is lazily instantiated
-  // the first time it is needed. These are MainThread-only.
-  bool mHasCheckedForXMLHttpRequest;
-  bool mForXMLHttpRequest;
+  // Whether the queue is associated with an ssync XHR.
+  // This is lazily instantiated the first time it is needed.
+  // These are MainThread-only.
+  bool mHasCheckedForAsyncXMLHttpRequest;
+  bool mForAsyncXMLHttpRequest;
 
   // Keep ptr to avoid refcount cycle: only grab ref during flushing.
   nsISupports* mOwner MOZ_GUARDED_BY(mMutex);

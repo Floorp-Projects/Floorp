@@ -66,7 +66,8 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_PING:
       return "empty"_ns;
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
-    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC:
       return "empty"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
       return "empty"_ns;

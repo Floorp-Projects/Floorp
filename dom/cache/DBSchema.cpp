@@ -365,7 +365,7 @@ static_assert(
         nsIContentPolicy::TYPE_INTERNAL_AUDIO == 30 &&
         nsIContentPolicy::TYPE_INTERNAL_VIDEO == 31 &&
         nsIContentPolicy::TYPE_INTERNAL_TRACK == 32 &&
-        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST == 33 &&
+        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC == 33 &&
         nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE == 34 &&
         nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER == 35 &&
         nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD == 36 &&
@@ -391,7 +391,8 @@ static_assert(
         nsIContentPolicy::TYPE_WEB_IDENTITY == 57 &&
         nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE == 58 &&
         nsIContentPolicy::TYPE_WEB_TRANSPORT == 59 &&
-        nsIContentPolicy::TYPE_END == 60,
+        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC == 60 &&
+        nsIContentPolicy::TYPE_END == 61,
     "nsContentPolicyType values are as expected");
 
 namespace {

@@ -339,7 +339,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_BEACON:
     case nsIContentPolicy::TYPE_PING:
     case nsIContentPolicy::TYPE_FETCH:
-    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC:
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
     case nsIContentPolicy::TYPE_WEB_IDENTITY:
