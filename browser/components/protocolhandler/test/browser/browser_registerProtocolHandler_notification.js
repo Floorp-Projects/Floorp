@@ -6,7 +6,16 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
 );
+
+const SECURITY_DELAY = 3000;
+
 add_task(async function () {
+  // Set a custom, higher security delay for the test to avoid races on slow
+  // builds.
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.notification_enable_delay", SECURITY_DELAY]],
+  });
+
   let notificationValue = "Protocol Registration: web+testprotocol";
   let testURI = TEST_PATH + "browser_registerProtocolHandler_notification.html";
 
@@ -54,4 +63,16 @@ add_task(async function () {
   let button = buttons[0];
   isnot(button.label, null, "We expect the add button to have a label.");
   todo(button.accesskey, "We expect the add button to have a accesskey.");
+
+  ok(button.disabled, "We expect the button to be disabled initially.");
+
+  let timeoutMS = SECURITY_DELAY + 100;
+  info(`Wait ${timeoutMS}ms for the button to enable.`);
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, SECURITY_DELAY + 100));
+
+  ok(
+    !button.disabled,
+    "We expect the button to be enabled after the security delay."
+  );
 });
