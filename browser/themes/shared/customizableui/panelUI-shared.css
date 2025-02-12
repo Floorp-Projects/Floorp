@@ -1530,7 +1530,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   }
 }
 
-#PanelUI-panic-actionlist-history::before {
+#PanelUI-panic-actionlist-newwindow::before {
   background-position-x: 16px;
 }
 
@@ -1538,7 +1538,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   background-position-x: 32px;
 }
 
-#PanelUI-panic-actionlist-newwindow::before {
+#PanelUI-panic-actionlist-history::before {
   background-position-x: 48px;
 }
 
