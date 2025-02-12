@@ -4165,7 +4165,7 @@ nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
   if (!zip) {
     return NS_ERROR_FAILURE;
   }
-  nsZipItem* zipItem = zip->GetItem(aFile.get());
+  nsZipItem* zipItem = zip->GetItem(aFile);
   if (!zipItem) {
     return NS_ERROR_FILE_NOT_FOUND;
   }

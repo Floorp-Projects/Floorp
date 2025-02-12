@@ -402,7 +402,7 @@ void URLPreloader::BackgroundReadFiles() {
             entry->TypeString(), entry->mPath.get());
       }
 
-      auto item = zip->GetItem(entry->mPath.get());
+      auto item = zip->GetItem(entry->mPath);
       if (!item) {
         entry->mResultCode = NS_ERROR_FILE_NOT_FOUND;
         continue;
@@ -567,7 +567,7 @@ Result<nsCString, nsresult> URLPreloader::ReadURIInternal(nsIURI* uri,
   }
 
   // Not an Omnijar archive, so just read it directly.
-  FileLocation location(zip, PromiseFlatCString(path).BeginReading());
+  FileLocation location(zip, path);
   return URLEntry::ReadLocation(location);
 }
 
@@ -636,7 +636,7 @@ Result<FileLocation, nsresult> URLPreloader::CacheKey::ToFileLocation() {
   }
 
   RefPtr<nsZipArchive> zip = Archive();
-  return FileLocation(zip, mPath.get());
+  return FileLocation(zip, mPath);
 }
 
 Result<nsCString, nsresult> URLPreloader::URLEntry::Read() {

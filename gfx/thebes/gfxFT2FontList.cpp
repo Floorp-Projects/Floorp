@@ -103,7 +103,7 @@ already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
   RefPtr<SharedFTFace> face;
   if (mFilename[0] != '/') {
     RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
-    nsZipItem* item = reader->GetItem(mFilename.get());
+    nsZipItem* item = reader->GetItem(mFilename);
     NS_ASSERTION(item, "failed to find zip entry");
 
     uint32_t bufSize = item->RealSize();
@@ -468,7 +468,7 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
     // A relative path means an omnijar resource, which we may need to
     // decompress to a temporary buffer.
     RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
-    nsZipItem* item = reader->GetItem(mFilename.get());
+    nsZipItem* item = reader->GetItem(mFilename);
     MOZ_ASSERT(item, "failed to find zip entry");
     if (item) {
       // TODO(jfkthame):
@@ -1507,7 +1507,7 @@ void gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
     }
   }
 
-  nsZipItem* item = aArchive->GetItem(aEntryName.get());
+  nsZipItem* item = aArchive->GetItem(aEntryName);
   NS_ASSERTION(item, "failed to find zip entry");
 
   uint32_t bufSize = item->RealSize();

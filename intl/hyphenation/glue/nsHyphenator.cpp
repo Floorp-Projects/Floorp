@@ -52,7 +52,7 @@ static const void* GetItemPtrFromJarURI(nsIJARURI* aJAR, uint32_t* aLength) {
   if (archive) {
     nsCString path;
     aJAR->GetJAREntry(path);
-    nsZipItem* item = archive->GetItem(path.get());
+    nsZipItem* item = archive->GetItem(path);
     if (item && item->Compression() == 0 && item->Size() > 0) {
       // We do NOT own this data, but it won't go away until the omnijar
       // file is closed during shutdown.
