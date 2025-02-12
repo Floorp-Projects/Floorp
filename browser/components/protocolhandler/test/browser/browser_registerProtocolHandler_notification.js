@@ -75,4 +75,34 @@ add_task(async function () {
     !button.disabled,
     "We expect the button to be enabled after the security delay."
   );
+
+  info(
+    "Clicking the button should close the notification box and register the protocol."
+  );
+
+  await EventUtils.synthesizeMouseAtCenter(button, {}, window);
+
+  await TestUtils.waitForCondition(
+    () => notificationBox.currentNotification == null,
+    "Waiting for notification to be closed."
+  );
+
+  info("check that the protocol handler has been registered.");
+  const protoSvc = Cc[
+    "@mozilla.org/uriloader/external-protocol-service;1"
+  ].getService(Ci.nsIExternalProtocolService);
+
+  let protoInfo = protoSvc.getProtocolHandlerInfo("web+testprotocol");
+  let handlers = protoInfo.possibleApplicationHandlers;
+  is(1, handlers.length, "only one handler registered for web+testprotocol");
+  let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
+  ok(handler instanceof Ci.nsIWebHandlerApp, "the handler is a web handler");
+
+  // Cleanup
+  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+    Ci.nsIHandlerService
+  );
+  protoInfo.preferredApplicationHandler = null;
+  handlers.removeElementAt(0);
+  handlerSvc.store(protoInfo);
 });
