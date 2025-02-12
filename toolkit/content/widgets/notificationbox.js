@@ -890,9 +890,10 @@
         this._securityDelayMS = securityDelayMS;
         // Attach a global focus handler so we can restart the delay when the window
         // refocuses (e.g., user navigated away or used a popup).
-        this._focusHandler = () => {
-          // If the notification is still connected, restart the delay.
-          if (this.isConnected) {
+        this._focusHandler = event => {
+          // Only restart delay if the notification is still connected and this
+          // is actually a window focus.
+          if (this.isConnected && event.target === window) {
             this._startClickJackingDelay();
           }
         };
