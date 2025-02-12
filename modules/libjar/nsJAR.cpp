@@ -135,8 +135,7 @@ nsJAR::OpenInner(nsIZipReader* aZipReader, const nsACString& aZipEntry) {
   {
     nsJAR* outerJAR = static_cast<nsJAR*>(aZipReader);
     RecursiveMutexAutoLock outerLock(outerJAR->mLock);
-    rv = nsZipHandle::Init(outerJAR->mZip.get(),
-                           PromiseFlatCString(aZipEntry).get(),
+    rv = nsZipHandle::Init(outerJAR->mZip.get(), aZipEntry,
                            getter_AddRefs(handle));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -191,8 +190,7 @@ nsJAR::Test(const nsACString& aEntryName) {
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
-  return mZip->Test(
-      aEntryName.IsEmpty() ? nullptr : PromiseFlatCString(aEntryName).get());
+  return mZip->Test(aEntryName);
 }
 
 NS_IMETHODIMP
@@ -205,7 +203,7 @@ nsJAR::Extract(const nsACString& aEntryName, nsIFile* outFile) {
   }
 
   LOG(("Extract[%p] %s", this, PromiseFlatCString(aEntryName).get()));
-  nsZipItem* item = mZip->GetItem(PromiseFlatCString(aEntryName).get());
+  nsZipItem* item = mZip->GetItem(aEntryName);
   NS_ENSURE_TRUE(item, NS_ERROR_FILE_NOT_FOUND);
 
   // Remove existing file or directory so we set permissions correctly.
@@ -245,7 +243,7 @@ nsJAR::GetEntry(const nsACString& aEntryName, nsIZipEntry** result) {
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
-  nsZipItem* zipItem = mZip->GetItem(PromiseFlatCString(aEntryName).get());
+  nsZipItem* zipItem = mZip->GetItem(aEntryName);
   NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_NOT_FOUND);
 
   nsJARItem* jarItem = new nsJARItem(zipItem);
@@ -261,7 +259,7 @@ nsJAR::HasEntry(const nsACString& aEntryName, bool* result) {
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
-  *result = mZip->GetItem(PromiseFlatCString(aEntryName).get()) != nullptr;
+  *result = mZip->GetItem(aEntryName) != nullptr;
   return NS_OK;
 }
 
@@ -300,7 +298,7 @@ nsJAR::GetInputStream(const nsACString& aEntryName, nsIInputStream** result) {
   const nsCString& entry = PromiseFlatCString(aEntryName);
   if (*entry.get()) {
     // First check if item exists in jar
-    item = mZip->GetItem(entry.get());
+    item = mZip->GetItem(entry);
     if (!item) return NS_ERROR_FILE_NOT_FOUND;
   }
   nsJARInputStream* jis = new nsJARInputStream();

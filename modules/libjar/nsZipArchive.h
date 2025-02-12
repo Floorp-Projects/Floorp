@@ -116,14 +116,14 @@ class nsZipArchive final {
    *
    * @return  status code
    */
-  nsresult Test(const char* aEntryName);
+  nsresult Test(const nsACString& aEntryName);
 
   /**
    * GetItem
    * @param   aEntryName Name of file in the archive
    * @return  pointer to nsZipItem
    */
-  nsZipItem* GetItem(const char* aEntryName);
+  nsZipItem* GetItem(const nsACString& aEntryName);
 
   /**
    * ExtractFile
@@ -303,7 +303,8 @@ class nsZipItemPtr_base {
    * @param   aEntryName  Archive membername
    * @param   doCRC       When set to true Read() will check crc
    */
-  nsZipItemPtr_base(nsZipArchive* aZip, const char* aEntryName, bool doCRC);
+  nsZipItemPtr_base(nsZipArchive* aZip, const nsACString& aEntryName,
+                    bool doCRC);
 
   uint32_t Length() const { return mReadlen; }
 
@@ -321,7 +322,8 @@ class nsZipItemPtr final : public nsZipItemPtr_base {
                 " a number of assumptions.");
 
  public:
-  nsZipItemPtr(nsZipArchive* aZip, const char* aEntryName, bool doCRC = false)
+  nsZipItemPtr(nsZipArchive* aZip, const nsACString& aEntryName,
+               bool doCRC = false)
       : nsZipItemPtr_base(aZip, aEntryName, doCRC) {}
   /**
    * @return buffer containing the whole zip member or nullptr on error.
@@ -363,7 +365,8 @@ class nsZipHandle final {
  public:
   static nsresult Init(nsIFile* file, nsZipHandle** ret,
                        PRFileDesc** aFd = nullptr);
-  static nsresult Init(nsZipArchive* zip, const char* entry, nsZipHandle** ret);
+  static nsresult Init(nsZipArchive* zip, const nsACString& entry,
+                       nsZipHandle** ret);
   static nsresult Init(const uint8_t* aData, uint32_t aLen, nsZipHandle** aRet);
 
   NS_METHOD_(MozExternalRefCountType) AddRef(void);
