@@ -122,6 +122,12 @@
         "browser.tabs.allow_transparent_browser",
         false
       );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_notificationEnableDelay",
+        "security.notification_enable_delay",
+        500
+      );
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineESModuleGetters(this, {
@@ -970,7 +976,7 @@
           if (browser == this.selectedBrowser) {
             this._updateVisibleNotificationBox(browser);
           }
-        });
+        }, this._notificationEnableDelay);
       }
       return browser._notificationBox;
     },
