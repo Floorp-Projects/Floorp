@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-02-10_08-32-12_UTC
-// COMMIT: 123d8aa7aa4baa5c9fe74b5655244ae49f176577
+// VERSION: 2025-02-12_10-28-12_UTC
+// COMMIT: 560007a8aea8267f15cad9abcdbcff7848186bd8
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -1945,9 +1945,6 @@ lg.jp
 ne.jp
 or.jp
 // jp prefecture type names
-// 2024-11-22: JPRS confirmed that regional .jp suffixes no longer accept new registrations.
-// Once all existing registrations expire (marking full discontinuation), these suffixes
-// will be removed from the PSL.
 aichi.jp
 akita.jp
 aomori.jp
@@ -2044,6 +2041,9 @@ yamanashi.jp
 鹿児島.jp
 // jp geographic type names
 // http://jprs.jp/doc/rule/saisoku-1.html
+// 2024-11-22: JPRS confirmed that jp geographic type names no longer accept new registrations.
+// Once all existing registrations expire (marking full discontinuation), these suffixes
+// will be removed from the PSL.
 *.kawasaki.jp
 !city.kawasaki.jp
 *.kitakyushu.jp
@@ -12331,6 +12331,11 @@ browsersafetymark.io
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
 radio.am
 radio.fm
+
+// Bubble : https://bubble.io/
+// Submitted by Merlin Zhao <devops@bubble.io>
+cdn.bubble.io
+bubbleapps.io
 
 // Bytemark Hosting : https://www.bytemark.co.uk
 // Submitted by Paul Cammish <paul.cammish@bytemark.co.uk>
