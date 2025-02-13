@@ -491,11 +491,8 @@ nsresult nsHttpChannel::PrepareToConnect() {
       mURI->SchemeIs("https") && !(mLoadFlags & LOAD_ANONYMOUS) &&
       !mPrivateBrowsing) {
     ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
-    nsAutoCString query;
-    nsresult rv = mURI->GetQuery(query);
     if ((type == ExtContentPolicy::TYPE_DOCUMENT ||
          type == ExtContentPolicy::TYPE_SUBDOCUMENT) &&
-        NS_SUCCEEDED(rv) && !query.IsEmpty() &&
         prefEnabledForCurrentContainer() && isUriMSAuthority()) {
       nsMainThreadPtrHandle<nsHttpChannel> self(
           new nsMainThreadPtrHolder<nsHttpChannel>(
@@ -509,7 +506,7 @@ nsresult nsHttpChannel::PrepareToConnect() {
         }
       };
 
-      rv = AddMicrosoftEntraSSO(this, std::move(resultCallback));
+      nsresult rv = AddMicrosoftEntraSSO(this, std::move(resultCallback));
 
       // Returns NS_OK if performRequests is called in MicrosoftEntraSSOUtils
       // This temporarily stops the channel setup for the delegate.
