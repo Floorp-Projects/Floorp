@@ -10,6 +10,7 @@
 
 #include "MicrosoftEntraSSOUtils.h"
 #include "nsIURI.h"
+#include "nsHttp.h"
 #include "nsHttpChannel.h"
 #include "nsCocoaUtils.h"
 #include "nsTHashMap.h"
@@ -17,6 +18,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/glean/GleanMetrics.h"
 
 namespace {
 static mozilla::LazyLogModule gMacOSWebAuthnServiceLog("macOSSingleSignOn");
@@ -104,12 +106,14 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
         if (!err) {
           NSMutableArray* allHeaders = [NSMutableArray array];
 
+          nsCString entraSuccessLabel;
           if (ssoCookiesDict[@"device_headers"]) {
             [allHeaders addObject:ssoCookiesDict[@"device_headers"]];
           } else {
             MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
                     ("SSORequestDelegate::didCompleteWithAuthorization: "
                      "Missing device_headers"));
+            entraSuccessLabel = "device_headers_missing"_ns;
           }
 
           if (ssoCookiesDict[@"prt_headers"]) {
@@ -118,6 +122,11 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
             MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
                     ("SSORequestDelegate::didCompleteWithAuthorization: "
                      "Missing prt_headers"));
+            entraSuccessLabel = "prt_headers_missing"_ns;
+          }
+
+          if (allHeaders.count == 0) {
+            entraSuccessLabel = "both_headers_missing"_ns;
           }
 
           // We would like to have both device_headers and prt_headers before
@@ -145,7 +154,10 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
                 }
               }
             }
+            mozilla::glean::network_sso::entra_success.Get("success"_ns).Add(1);
           } else {
+            mozilla::glean::network_sso::entra_success.Get(entraSuccessLabel)
+                .Add(1);
             MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
                     ("SSORequestDelegate::didCompleteWithAuthorization: "
                      "sso_cookies has missing headers"));
@@ -155,21 +167,28 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
                   ("SSORequestDelegate::didCompleteWithAuthorization: "
                    "Failed to parse sso_cookies: %s",
                    [[err localizedDescription] UTF8String]));
+          mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
+              .Add(1);
         }
       } else {
         MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
                 ("SSORequestDelegate::didCompleteWithAuthorization: "
                  "sso_cookies is not present"));
+        mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
+            .Add(1);
       }
     } else {
       MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
               ("SSORequestDelegate::didCompleteWithAuthorization: "
                "authenticatedResponse is nil"));
+      mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
+          .Add(1);
     }
   } else {
     MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
             ("SSORequestDelegate::didCompleteWithAuthorization: "
              "should have ASAuthorizationSingleSignOnCredential"));
+    mozilla::glean::network_sso::entra_success.Get("no_credential"_ns).Add(1);
   }
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -232,6 +251,7 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
     }
   }
 
+  mozilla::glean::network_sso::entra_success.Get("broker_error"_ns).Add(1);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "SSORequestDelegate::didCompleteWithError", [callback(mCallback)]() {
         MOZ_ASSERT(NS_IsMainThread());
@@ -373,7 +393,17 @@ nsresult AddMicrosoftEntraSSO(nsHttpChannel* aChannel,
   // after AddMicrosoftEntraSSO returns.
   RefPtr<MicrosoftEntraSSOUtils> service =
       new MicrosoftEntraSSOUtils(aChannel, std::move(aResultCallback));
-  return service->AddMicrosoftEntraSSOInternal() ? NS_OK : NS_ERROR_FAILURE;
+
+  mozilla::glean::network_sso::total_entra_uses.Add(1);
+
+  if (!service->AddMicrosoftEntraSSOInternal()) {
+    mozilla::glean::network_sso::entra_success
+        .Get("invalid_controller_setup"_ns)
+        .Add(1);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 }  // namespace net
 }  // namespace mozilla
