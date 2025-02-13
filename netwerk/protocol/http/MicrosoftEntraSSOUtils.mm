@@ -65,139 +65,143 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
 }
 - (void)authorizationController:(ASAuthorizationController*)controller
     didCompleteWithAuthorization:(ASAuthorization*)authorization {
-  if ([authorization.credential
-          isKindOfClass:[ASAuthorizationSingleSignOnCredential class]]) {
-    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-            ("SSORequestDelegate::didCompleteWithAuthorization: "
-             "got ASAuthorizationSingleSignOnCredential"));
+  ASAuthorizationSingleSignOnCredential* ssoCredential =
+      [authorization.credential
+          isKindOfClass:[ASAuthorizationSingleSignOnCredential class]]
+          ? (ASAuthorizationSingleSignOnCredential*)authorization.credential
+          : nil;
 
-    ASAuthorizationSingleSignOnCredential* ssoCredential =
-        (ASAuthorizationSingleSignOnCredential*)authorization.credential;
-
-    NSHTTPURLResponse* authenticatedResponse =
-        ssoCredential.authenticatedResponse;
-    if (authenticatedResponse) {
-      NSDictionary* headers = authenticatedResponse.allHeaderFields;
-      NSMutableString* headersString = [NSMutableString string];
-      for (NSString* key in headers) {
-        [headersString appendFormat:@"%@: %@\n", key, headers[key]];
-      }
-      MOZ_LOG(
-          gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-          ("SSORequestDelegate::didCompleteWithAuthorization: "
-           "authenticatedResponse: \nStatus Code: %ld\nHeaders:\n%s",
-           (long)authenticatedResponse.statusCode, [headersString UTF8String]));
-
-      // An example format of ssoCookies:
-      // sso_cookies:
-      // {"device_headers":[
-      // {"header":{"x-ms-DeviceCredential”:”…”},”tenant_id”:”…”}],
-      // ”prt_headers":[{"header":{"x-ms-RefreshTokenCredential”:”…”},
-      // ”home_account_id”:”….”}]}
-      NSString* ssoCookies = headers[@"sso_cookies"];
-      if (ssoCookies) {
-        NSError* err = nil;
-        NSDictionary* ssoCookiesDict = [NSJSONSerialization
-            JSONObjectWithData:[ssoCookies
-                                   dataUsingEncoding:NSUTF8StringEncoding]
-                       options:0
-                         error:&err];
-
-        if (!err) {
-          NSMutableArray* allHeaders = [NSMutableArray array];
-
-          nsCString entraSuccessLabel;
-          if (ssoCookiesDict[@"device_headers"]) {
-            [allHeaders addObject:ssoCookiesDict[@"device_headers"]];
-          } else {
-            MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-                    ("SSORequestDelegate::didCompleteWithAuthorization: "
-                     "Missing device_headers"));
-            entraSuccessLabel = "device_headers_missing"_ns;
-          }
-
-          if (ssoCookiesDict[@"prt_headers"]) {
-            [allHeaders addObject:ssoCookiesDict[@"prt_headers"]];
-          } else {
-            MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-                    ("SSORequestDelegate::didCompleteWithAuthorization: "
-                     "Missing prt_headers"));
-            entraSuccessLabel = "prt_headers_missing"_ns;
-          }
-
-          if (allHeaders.count == 0) {
-            entraSuccessLabel = "both_headers_missing"_ns;
-          }
-
-          // We would like to have both device_headers and prt_headers before
-          // attaching the headers
-          if (allHeaders.count == 2) {
-            // Append cookie headers retrieved from MS Broker
-            for (NSArray* headerArray in allHeaders) {
-              if (headerArray) {
-                for (NSDictionary* headerDict in headerArray) {
-                  NSDictionary* headers = headerDict[@"header"];
-                  if (headers) {
-                    for (NSString* key in headers) {
-                      NSString* value = headers[key];
-                      if (value) {
-                        nsAutoString nsKey;
-                        nsAutoString nsValue;
-                        mozilla::CopyNSStringToXPCOMString(key, nsKey);
-                        mozilla::CopyNSStringToXPCOMString(value, nsValue);
-                        mCallback->AddRequestHeader(
-                            NS_ConvertUTF16toUTF8(nsKey),
-                            NS_ConvertUTF16toUTF8(nsValue));
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            mozilla::glean::network_sso::entra_success.Get("success"_ns).Add(1);
-          } else {
-            mozilla::glean::network_sso::entra_success.Get(entraSuccessLabel)
-                .Add(1);
-            MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-                    ("SSORequestDelegate::didCompleteWithAuthorization: "
-                     "sso_cookies has missing headers"));
-          }
-        } else {
-          MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-                  ("SSORequestDelegate::didCompleteWithAuthorization: "
-                   "Failed to parse sso_cookies: %s",
-                   [[err localizedDescription] UTF8String]));
-          mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
-              .Add(1);
-        }
-      } else {
-        MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-                ("SSORequestDelegate::didCompleteWithAuthorization: "
-                 "sso_cookies is not present"));
-        mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
-            .Add(1);
-      }
-    } else {
-      MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
-              ("SSORequestDelegate::didCompleteWithAuthorization: "
-               "authenticatedResponse is nil"));
-      mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns)
-          .Add(1);
-    }
-  } else {
+  if (!ssoCredential) {
     MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
             ("SSORequestDelegate::didCompleteWithAuthorization: "
              "should have ASAuthorizationSingleSignOnCredential"));
     mozilla::glean::network_sso::entra_success.Get("no_credential"_ns).Add(1);
+    [self invokeCallbackOnMainThread];
+    return;
   }
 
+  NSHTTPURLResponse* authenticatedResponse =
+      ssoCredential.authenticatedResponse;
+  if (!authenticatedResponse) {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: "
+             "authenticatedResponse is nil"));
+    mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns).Add(1);
+    [self invokeCallbackOnMainThread];
+    return;
+  }
+
+  NSDictionary* headers = authenticatedResponse.allHeaderFields;
+  NSMutableString* headersString = [NSMutableString string];
+  for (NSString* key in headers) {
+    [headersString appendFormat:@"%@: %@\n", key, headers[key]];
+  }
+  MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+          ("SSORequestDelegate::didCompleteWithAuthorization: "
+           "authenticatedResponse: \nStatus Code: %ld\nHeaders:\n%s",
+           (long)authenticatedResponse.statusCode, [headersString UTF8String]));
+
+  // An example format of ssoCookies:
+  // sso_cookies:
+  // {"device_headers":[
+  // {"header":{"x-ms-DeviceCredential”:”…”},”tenant_id”:”…”}],
+  // ”prt_headers":[{"header":{"x-ms-RefreshTokenCredential”:”…”},
+  // ”home_account_id”:”….”}]}
+  NSString* ssoCookies = headers[@"sso_cookies"];
+  if (!ssoCookies) {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: "
+             "authenticatedResponse is nil"));
+    mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns).Add(1);
+    [self invokeCallbackOnMainThread];
+    return;
+  }
+  NSError* err = nil;
+  NSDictionary* ssoCookiesDict = [NSJSONSerialization
+      JSONObjectWithData:[ssoCookies dataUsingEncoding:NSUTF8StringEncoding]
+                 options:0
+                   error:&err];
+
+  if (err) {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: Error parsing "
+             "JSON: %s",
+             [[err localizedDescription] UTF8String]));
+    mozilla::glean::network_sso::entra_success.Get("invalid_cookie"_ns).Add(1);
+    [self invokeCallbackOnMainThread];
+    return;
+  }
+
+  NSMutableArray* allHeaders = [NSMutableArray array];
+  nsCString entraSuccessLabel;
+
+  if (ssoCookiesDict[@"device_headers"]) {
+    [allHeaders addObject:ssoCookiesDict[@"device_headers"]];
+  } else {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: "
+             "Missing device_headers"));
+    entraSuccessLabel = "device_headers_missing"_ns;
+  }
+
+  if (ssoCookiesDict[@"prt_headers"]) {
+    [allHeaders addObject:ssoCookiesDict[@"prt_headers"]];
+  } else {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: "
+             "Missing prt_headers"));
+    entraSuccessLabel = "prt_headers_missing"_ns;
+  }
+
+  if (allHeaders.count == 0) {
+    entraSuccessLabel = "both_headers_missing"_ns;
+  }
+
+  // We would like to have both device_headers and prt_headers before
+  // attaching the headers
+  if (allHeaders.count != 2) {
+    MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+            ("SSORequestDelegate::didCompleteWithAuthorization: "
+             "sso_cookies has missing headers"));
+    mozilla::glean::network_sso::entra_success.Get(entraSuccessLabel).Add(1);
+    [self invokeCallbackOnMainThread];
+    return;
+  }
+
+  // Append cookie headers retrieved from MS Broker
+  for (NSArray* headerArray in allHeaders) {
+    if (!headerArray) {
+      continue;
+    }
+    for (NSDictionary* headerDict in headerArray) {
+      NSDictionary* headers = headerDict[@"header"];
+      if (!headers) {
+        continue;
+      }
+      for (NSString* key in headers) {
+        NSString* value = headers[key];
+        if (!value) {
+          continue;
+        }
+        nsAutoString nsKey;
+        nsAutoString nsValue;
+        mozilla::CopyNSStringToXPCOMString(key, nsKey);
+        mozilla::CopyNSStringToXPCOMString(value, nsValue);
+        mCallback->AddRequestHeader(NS_ConvertUTF16toUTF8(nsKey),
+                                    NS_ConvertUTF16toUTF8(nsValue));
+      }
+    }
+  }
+  mozilla::glean::network_sso::entra_success.Get("success"_ns).Add(1);
+
+  [self invokeCallbackOnMainThread];
+}
+- (void)invokeCallbackOnMainThread {
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "SSORequestDelegate::didCompleteWithAuthorization failure",
-      [callback(mCallback)]() {
-        MOZ_ASSERT(NS_IsMainThread());
-        callback->InvokeCallback();
-      }));
+      [callback(mCallback)]() { callback->InvokeCallback(); }));
 }
+
 - (void)authorizationController:(ASAuthorizationController*)controller
            didCompleteWithError:(NSError*)error {
   nsAutoString errorDescription;
