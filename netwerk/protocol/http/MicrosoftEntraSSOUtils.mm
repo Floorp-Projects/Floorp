@@ -164,8 +164,8 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
             ("SSORequestDelegate::didCompleteWithAuthorization: "
              "sso_cookies has missing headers"));
     mozilla::glean::network_sso::entra_success.Get(entraSuccessLabel).Add(1);
-    [self invokeCallbackOnMainThread];
-    return;
+  } else {
+    mozilla::glean::network_sso::entra_success.Get("success"_ns).Add(1);
   }
 
   // Append cookie headers retrieved from MS Broker
@@ -192,7 +192,6 @@ class API_AVAILABLE(macos(13.3)) MicrosoftEntraSSOUtils final {
       }
     }
   }
-  mozilla::glean::network_sso::entra_success.Get("success"_ns).Add(1);
 
   [self invokeCallbackOnMainThread];
 }
