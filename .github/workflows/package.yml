@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{github.repository}}-runtime
+          repository: ${{ github.repository }}-runtime
           submodules: "recursive"
 
       - uses: actions/checkout@v4
@@ -128,19 +128,7 @@ jobs:
       - name: Possibly retrieve run ID if not provided
         run: |
           if [ -z "${{ inputs.runtime_artifact_workflow_run_id }}" ]; then
-            case "${{ inputs.platform }}" in
-              "Linux-x64") workflow_file="wrapper_linux_build.yml" ;;
-              "Windows-x64") workflow_file="wrapper_windows_build.yml" ;;
-              "macOS-x64") workflow_file="wrapper_mac_build.yml" ;;
-            esac
-
-            LATEST_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.PAT }}" \
-              "https://api.github.com/repos/${{ github.repository }}-runtime/actions/workflows/$workflow_file/runs?branch=main&status=success" \
-            | jq -r '.workflow_runs[0].id')
-
-            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=$LATEST_ID" >> $GITHUB_ENV
+            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=false" >> $GITHUB_ENV
           else
             echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=${{ inputs.runtime_artifact_workflow_run_id }}" >> $GITHUB_ENV
           fi
@@ -150,44 +138,68 @@ jobs:
             case "${{ inputs.platform }}" in
             "Windows-x64")
               echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV
               echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV
               echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV
               echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV
               ;;
             "Linux-x64")
-              echo "ARTIFACT_NAME=noraneko-linux-amd64-moz-artifact" >> $GITHUB_ENV
+              echo "ARTIFACT_NAME=noraneko-linux-amd64-moz-artifact-release" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV
               echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV
               echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV
               echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV
               ;;
             "macOS-x64")
               echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV
               echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
               echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV
               echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV
               ;;
             esac
 
-      - name: Download Mozilla artifact
+      - name: Download mozilla artifact from Actions
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
-          github-token: ${{github.token}}
-          repository: ${{ github.repository }}runtime
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}-runtime
           path: ~/downloads
 
-      - name: Make Downloaded Artifact to Moz Artifact
+      - name: Download Mozilla Artifact from GitHub Releases
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        run: |
+          mkdir -p ~/downloads
+          curl -L https://github.com/${{ github.repository }}-runtime/releases/latest/download/${{ env.ARTIFACT_FROM_RELEASE_NAME }} -o ~/downloads/${{ env.ARTIFACT_FROM_RELEASE_NAME }}
+
+      - name: Make Downloaded Artifact to Mozilla Artifact (Actions)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         run: |
           mkdir -p ~/artifacts
           cd ~/downloads
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            zip -r ~/artifacts/moz-artifact-win64.zip ./*
+            zip -r ~/artifacts/noraneko-win-amd64-moz-artifact.zip ./*
           else
             cp -r ~/downloads/* ~/artifacts
           fi
 
           cd $GITHUB_WORKSPACE
+
+      - name: Make Download Artifact to Mozilla Artifact (GitHub Releases)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        run: |
+            mkdir -p ~/artifacts
+            cd ~/downloads
+            if [ "${{inputs.platform}}" == "macOS-x64" ]; then
+              unzip noraneko-mac-universal-moz-artifact-release.zip -d ~/artifacts
+            else
+              cp -r ~/downloads/* ~/artifacts
+            fi
+
+            cd $GITHUB_WORKSPACE
 
       - name: Build Noraneko
         run: |
@@ -198,7 +210,7 @@ jobs:
       - name: Build
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            MOZ_ARTIFACT_FILE=$(echo ~/artifacts/moz-artifact-win64.zip) ./mach build
+            MOZ_ARTIFACT_FILE=$(echo ~/artifacts/noraneko-win-amd64-moz-artifact.zip) ./mach build
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             MOZ_ARTIFACT_FILE=$(echo ~/artifacts/noraneko-linux-amd64-moz-artifact.tar.xz) ./mach build
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
@@ -227,25 +239,39 @@ jobs:
           mkdir -p ~/noraneko-installer
           mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
 
-      - name: Download artifact of MAR tools
+      - name: Download artifact of MAR tools (Actions)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           pattern: '*dist-host'
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
-          github-token: ${{github.token}}
-          repository: ${{github.repository}}-runtime
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}-runtime
           path: obj-artifact-build-output/dist/host
           merge-multiple: true
 
-      - name: Download artifact of binary for getting build information
+      - name: Download artifact of MAR tools (GitHub Releases)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        run: |
+          curl -L https://github.com/${{ github.repository }}-runtime/releases/latest/download/${{ inputs.platform }}-dist-host.zip -o ~/downloads/${{ inputs.platform }}-dist-host.zip
+          unzip ~/downloads/${{ inputs.platform }}-dist-host.zip -d ./obj-artifact-build-output/dist/host
+
+      - name: Download artifact of binary for getting build information (Actions)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           pattern: '*application-ini'
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
-          github-token: ${{github.token}}
-          repository: ${{github.repository}}-runtime
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}-runtime
           path: ~/noraneko-dev
           merge-multiple: true
+
+      - name: Download artifact of binary for getting build information (GiHub Releases)
+        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        run: |
+          curl -L https://github.com/${{ github.repository }}-runtime/releases/latest/download/${{ inputs.platform }}-application-ini.zip -o ~/downloads/${{ inputs.platform }}-application-ini.zip
+          unzip ~/downloads/${{ inputs.platform }}-application-ini.zip -d ~/noraneko-dev
 
       - name: Create MAR package
         run: |

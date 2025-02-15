@@ -75,8 +75,9 @@ async function decompressBin() {
   try {
     console.log(`decompressing ${binArchive}`);
     if (!(await isExists(binArchive))) {
-      console.error(`${binArchive} not found`);
-      process.exit(1);
+      console.log(`${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`);
+      await downloadBinArchive();
+      return;
     }
 
     if (process.platform === "win32") {
@@ -111,6 +112,29 @@ async function decompressBin() {
     console.error(e);
     process.exit(1);
   }
+}
+
+async function downloadBinArchive() {
+  const fileName = await getBinArchive();
+  const originUrl = (await $`git remote get-url origin`).stdout.trim();
+  const originDownloadUrl = `${originUrl}releases/latest/download/${fileName}`;
+  console.log(`Downloading from origin: ${originDownloadUrl}`);
+  try {
+    await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
+    console.log("Download complete from origin!");
+  } catch (error) {
+    console.error("Origin download failed, falling back to upstream:", error.stderr);
+    const upstreamUrl = `https://github.com/nyanrus/noraneko/releases/latest/download/${fileName}`;
+    console.log(`Downloading from upstream: ${upstreamUrl}`);
+    try {
+      await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
+      console.log("Download complete from upstream!");
+    } catch (error2) {
+      console.error("Upstream download failed:", error2.stderr);
+      throw error2.stderr;
+    }
+  }
+  await decompressBin();
 }
 
 async function initBin() {
