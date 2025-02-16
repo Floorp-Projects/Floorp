@@ -1,9 +1,9 @@
 
 import { v7 as uuidv7 } from "uuid";
-import { writeVersion } from "../update/version";
-import { writeBuildid2 } from "../update/buildid2";
+import { writeVersion } from "../update/version.ts";
+import { writeBuildid2 } from "../update/buildid2.ts";
 import {resolve} from 'pathe'
-import fs from "fs/promises"
+import fs from "node:fs/promises"
 
 const r = (value:string) : string => {
   return resolve(import.meta.dirname,"../..",value)

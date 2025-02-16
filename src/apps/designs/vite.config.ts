@@ -11,6 +11,8 @@ export default defineConfig({
     port: 5182,
     strictPort: true,
   },
+  root: r("./src"),
+  publicDir: r("./public"),
   build: {
     outDir: r("_dist"),
     target: "firefox128",

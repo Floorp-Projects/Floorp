@@ -8,8 +8,11 @@
     "strictPropertyInitialization": true,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["vite/client"],
   }
 }

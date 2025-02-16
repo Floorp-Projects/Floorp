@@ -1,71 +1,51 @@
-import type { PrefDatum, PrefDatumWithValue } from "../common/defines.js";
+import { createBirpc } from "birpc";
+import type { NRSettingsParentFunctions } from "../common/defines.js";
 
-export class NRSettingsParent extends JSWindowActorParent {
-  async receiveMessage(message: ReceiveMessageArgument) {
-    switch (message.name) {
-      case "Pref:Set": {
-        const d = message.data as PrefDatumWithValue;
-        switch (d.prefType) {
-          case "boolean": {
-            Services.prefs.setBoolPref(d.prefName, d.prefValue);
-            this.sendAsyncMessage("Pref:Set");
-            break;
-          }
-          case "integer": {
-            Services.prefs.setIntPref(d.prefName, d.prefValue);
-            this.sendAsyncMessage("Pref:Set");
-            break;
-          }
-          case "string": {
-            Services.prefs.setStringPref(d.prefName, d.prefValue);
-            this.sendAsyncMessage("Pref:Set");
-            break;
-          }
-        }
-        break;
-      }
-      case "Pref:Get": {
-        const d = message.data as PrefDatum;
-        switch (d.prefType) {
-          case "boolean": {
-            const prefValue = Services.prefs.getBoolPref(d.prefName);
-            this.sendAsyncMessage(
-              "Pref:Get",
-              JSON.stringify({
-                prefName: d.prefName,
-                prefType: d.prefType,
-                prefValue,
-              } as PrefDatumWithValue),
-            );
-            break;
-          }
-          case "integer": {
-            const prefValue = Services.prefs.getIntPref(d.prefName);
-            this.sendAsyncMessage(
-              "Pref:Get",
-              JSON.stringify({
-                prefName: d.prefName,
-                prefType: d.prefType,
-                prefValue,
-              } as PrefDatumWithValue),
-            );
-            break;
-          }
-          case "string": {
-            const prefValue = Services.prefs.getStringPref(d.prefName);
-            this.sendAsyncMessage(
-              "Pref:Get",
-              JSON.stringify({
-                prefName: d.prefName,
-                prefType: d.prefType,
-                prefValue,
-              } as PrefDatumWithValue),
-            );
-            break;
-          }
-        }
-        break;
-      }
+const parentFunctions:NRSettingsParentFunctions = {
+  getBoolPref: function (prefName: string): boolean | null {
+    if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID) {
+      return null;
     }
+    return Services.prefs.getBoolPref(prefName)
+  },
+  getIntPref: function (prefName: string): number | null {
+    if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID) {
+      return null;
+    }
+    return Services.prefs.getIntPref(prefName)
+  },
+  getStringPref: function (prefName: string): string | null {
+    if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID) {
+      return null;
+    }
+    return Services.prefs.getStringPref(prefName)
+  },
+  setBoolPref: function (prefName: string, prefValue: boolean): void {
+    Services.prefs.setBoolPref(prefName,prefValue)
+  },
+  setIntPref: function (prefName: string, prefValue: number): void {
+    Services.prefs.setIntPref(prefName,prefValue)
+  },
+  setStringPref: function (prefName: string, prefValue: string): void {
+    Services.prefs.setStringPref(prefName,prefValue)
+  }
+}
+
+//TODO: make reject when the prefName is invalid
+export class NRSettingsParent extends JSWindowActorParent {
+  rpcCallback: Function | null = null;
+  rpc;
+  constructor() {
+    super();
+    this.rpc = createBirpc<{},NRSettingsParentFunctions>(
+      parentFunctions,
+      {
+        post: data => this.sendAsyncMessage("birpc",data),
+        on: callback => {this.rpcCallback = callback},
+        // these are required when using WebSocket
+        serialize: v => JSON.stringify(v),
+        deserialize: v => JSON.parse(v),
+      },
+    )
   }
 }

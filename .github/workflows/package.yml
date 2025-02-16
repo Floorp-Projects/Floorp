@@ -37,30 +37,33 @@ jobs:
     outputs:
       run_id: ${{ github.run_id }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ${{ github.repository }}-runtime
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}-runtime
           submodules: "recursive"
 
-      - uses: actions/checkout@v4
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
         with:
           path: "noraneko"
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: init zx
+        run: |
+          deno install -g -A npm:zx
+
       - name: Setup Noraneko
         run: |
-
           cd $GITHUB_WORKSPACE
           cd ./noraneko
-          pnpm install
+          deno install --allow-scripts
           cd ..
 
       - name: Setup 🪛
@@ -72,7 +75,7 @@ jobs:
       - name: Write Versions
         run: |
           cd ./noraneko
-          pnpm build --write-version
+          deno task build --write-version
           cd ..
 
       - name: Mach configure
@@ -134,30 +137,33 @@ jobs:
           fi
 
       - name: Get Artifact Name
+        shell: zx --verbose {0}
+        env:
+          FORCE_COLOR: 3
+          BUILD_PLATFORM: ${{ inputs.platform }}
         run: |
-            case "${{ inputs.platform }}" in
-            "Windows-x64")
-              echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV
-              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV
-              echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV
-              ;;
-            "Linux-x64")
-              echo "ARTIFACT_NAME=noraneko-linux-amd64-moz-artifact-release" >> $GITHUB_ENV
-              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV
-              echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV
-              ;;
-            "macOS-x64")
-              echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV
-              echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
-              echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV
-              ;;
-            esac
+          switch (process.env.BUILD_PLATFORM) {
+            case "Windows-x64":
+              await $`echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV`
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV`
+              break;
+            case "Linux-x64":
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV`
+              break;
+            case "macOS-x64":
+              await $`echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV`
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV`
+              break;
+          }
 
       - name: Download mozilla artifact from Actions
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -191,20 +197,20 @@ jobs:
       - name: Make Download Artifact to Mozilla Artifact (GitHub Releases)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
-            mkdir -p ~/artifacts
-            cd ~/downloads
-            if [ "${{inputs.platform}}" == "macOS-x64" ]; then
-              unzip noraneko-mac-universal-moz-artifact-release.zip -d ~/artifacts
-            else
-              cp -r ~/downloads/* ~/artifacts
-            fi
+          mkdir -p ~/artifacts
+          cd ~/downloads
+          if [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            unzip noraneko-mac-universal-moz-artifact-release.zip -d ~/artifacts
+          else
+            cp -r ~/downloads/* ~/artifacts
+          fi
 
-            cd $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE
 
       - name: Build Noraneko
         run: |
           cd ./noraneko
-          NODE_ENV='production' pnpm build --release-build-before
+          NODE_ENV='production' deno task build --release-build-before
           cd ..
 
       - name: Build
@@ -220,7 +226,7 @@ jobs:
       - name: Inject Noraneko
         run: |
           cd ./noraneko
-          pnpm build --release-build-after
+          deno task build --release-build-after
 
           # https://www.spinics.net/lists/git/msg391750.html
           rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
@@ -243,7 +249,7 @@ jobs:
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
-          pattern: '*dist-host'
+          pattern: "*dist-host"
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}-runtime
@@ -260,7 +266,7 @@ jobs:
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
-          pattern: '*application-ini'
+          pattern: "*application-ini"
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}-runtime

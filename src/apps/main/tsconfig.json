@@ -5,7 +5,8 @@
   "compilerOptions": {
     "paths": {
       "@types-gecko/*": ["../../@types/gecko/*"],
-      "@core/*": ["./core/*"]
+      "@core/*": ["./core/*"],
+      "@nora/vitest-noraneko/*": ["../../packages/vitest-noraneko/*"],
     },
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],

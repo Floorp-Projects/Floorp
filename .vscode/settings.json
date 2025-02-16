@@ -2,36 +2,21 @@
   "editor.codeActionsOnSave": {
     "quickfix.biome": "explicit"
   },
-  "editor.defaultFormatter": "biomejs.biome",
   "files.associations": {
     "*.xhtml": "xml",
     "*.html.template": "html",
     "*.js.template": "javascript"
   },
-  "[css]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[postcss]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "js/ts.implicitProjectConfig.experimentalDecorators": true,
-  "typescript.tsdk": "node_modules\\typescript\\lib",
-  "[javascript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "oxc.enable": true,
   "git.scanRepositories": ["./"],
-  "git.ignoredRepositories": ["../_dist/*"]
+  "git.ignoredRepositories": [
+    "../_dist/*"
+  ],
+  "deno.enable": true,
+  "deno.lint": true,
+  "editor.formatOnSave": true,
+  "[typescript]": { "editor.defaultFormatter": "denoland.vscode-deno" }
 }

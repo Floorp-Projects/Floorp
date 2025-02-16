@@ -1,14 +1,20 @@
-import { createServer, ViteDevServer } from "vite"
-import {resolve} from "pathe"
-import packageJson from "../../package.json" assert { type: "json" };
+import { createServer, type ViteDevServer } from "vite";
+import { resolve } from "pathe";
+import packageJson from "../../package.json" with { type: "json" };
+import { $, type Options, type ProcessPromise, usePwsh } from "zx";
 
-let pDevVite: ViteDevServer[] = []
-
-const r = (value:string) : string => {
-  return resolve(import.meta.dirname,"../..",value)
+if (Deno.build.os === "windows") {
+  usePwsh();
 }
 
-async function launchDev(mode:string,buildid2:string) {
+let pDevVite: ViteDevServer[] = [];
+let pSettings: ProcessPromise | null = null;
+
+const r = (value: string): string => {
+  return resolve(import.meta.dirname, "../..", value);
+};
+
+async function launchDev(mode: string, buildid2: string) {
   pDevVite = [
     await createServer({
       mode,
@@ -16,7 +22,7 @@ async function launchDev(mode:string,buildid2:string) {
       root: r("./src/apps/main"),
       define: {
         "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-        "import.meta.env.__VERSION2__": `"${packageJson.version}"`
+        "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
       },
     }),
     await createServer({
@@ -24,31 +30,34 @@ async function launchDev(mode:string,buildid2:string) {
       configFile: r("./src/apps/designs/vite.config.ts"),
       root: r("./src/apps/designs"),
     }),
-    await createServer({
-      mode,
-      configFile: r("./src/apps/settings/vite.config.ts"),
-      root: r("./src/apps/settings"),
-    })
-  ]
+  ];
+
   for (const i of pDevVite) {
-    await i.listen()
-    i.printUrls()
+    await i.listen();
+    i.printUrls();
   }
+  console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-dev");
 }
 
 async function shutdownDev() {
   for (const i of pDevVite) {
-    await i.close()
+    await i.close();
   }
+  // await pSettings!.kill("SIGABRT")
+  console.log("[child-dev] Completed Shutdown ViteDevServer✅");
 }
 
 { //* main
-  process.stdin.on("data",async (d)=>{
-    if (d.toString().startsWith("s")) {
-      console.log("[child-dev] Shutdown ViteDevServer")
-      await shutdownDev()
-      process.exit(1);
+  const decoder = new TextDecoder();
+  (async () => {
+    for await (const chunk of Deno.stdin.readable) {
+      const text = decoder.decode(chunk);
+      if (text.startsWith("q")) {
+        console.log("[child-dev] Shutdown ViteDevServer");
+        await shutdownDev();
+        Deno.exit(0);
+      }
     }
-  });
-  await launchDev(process.argv[2],process.argv[3])
+  })();
+  await launchDev(Deno.args[0], Deno.args[1]);
 }

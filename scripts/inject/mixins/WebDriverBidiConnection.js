@@ -3,7 +3,7 @@
 //? While some error occurs in vscode, it runs well.
 //? So I turned this file to JS and `checkJS` to false.
 
-import { Mixin, Inject } from "../shared/define";
+import { Mixin, Inject } from "../shared/define.js";
 
 @Mixin({
   //? https://searchfox.org/mozilla-central/rev/dd421ae14997e3bebb9c08634633a4a3e3edeffc/remote/webdriver-bidi/WebDriverBiDiConnection.sys.mjs#217

@@ -1,5 +1,8 @@
-import * as fs from "node:fs/promises";
-import path from "node:path";
+import { symlink } from "@std/fs/unstable-symlink";
+import { emptyDir } from "@std/fs/empty-dir";
+import { relative, resolve } from "npm:pathe@^2.0.2";
+import {SymlinkOptions} from '@std/fs/unstable-types'
+import {ensureDir} from "@std/fs/ensure-dir"
 
 export async function injectManifest(
   binPath: string,
@@ -7,29 +10,25 @@ export async function injectManifest(
   dirName = "noraneko",
 ) {
   if (isDev) {
-    const manifest_chrome = (
-      await fs.readFile(`${binPath}/chrome.manifest`)
-    ).toString();
+    const manifest_chrome = await Deno.readTextFile(`${binPath}/chrome.manifest`);
 
     console.log(manifest_chrome);
 
     if (!manifest_chrome.includes(`manifest ${dirName}/noraneko.manifest`)) {
-      await fs.writeFile(
+      await Deno.writeTextFile(
         `${binPath}/chrome.manifest`,
         `${manifest_chrome}\nmanifest ${dirName}/noraneko.manifest`,
       );
     }
   }
 
-  try {
-    await fs.access(`${binPath}/${dirName}`);
-    await fs.rm(`${binPath}/${dirName}`, { recursive: true });
-  } catch {}
-  const isWin = process.platform === "win32";
+  await emptyDir(`${binPath}/${dirName}`)
 
-  await fs.mkdir(`${binPath}/${dirName}`, { recursive: true });
+  const option: SymlinkOptions= {type:"dir"}
 
-  await fs.writeFile(
+  await ensureDir(`${binPath}/${dirName}`);
+
+  await Deno.writeTextFile(
     `${binPath}/${dirName}/noraneko.manifest`,
     `content noraneko content/ contentaccessible=yes
 content noraneko-startup startup/ contentaccessible=yes
@@ -38,35 +37,13 @@ resource noraneko resource/ contentaccessible=yes
 ${!isDev ? "\ncontent noraneko-settings settings/ contentaccessible=yes" : ""}`,
   );
 
-  await fs.symlink(
-    path.relative(`${binPath}/${dirName}`, "./src/apps/main/_dist"),
-    `${binPath}/${dirName}/content`,
-    isWin ? "junction" : undefined,
-  );
+  await symlink(resolve(import.meta.dirname,"../../src/apps/main/_dist"),`${binPath}/${dirName}/content`,option)
 
-  await fs.symlink(
-    path.relative(`${binPath}/${dirName}`, "./src/apps/startup/_dist"),
-    `${binPath}/${dirName}/startup`,
-    isWin ? "junction" : undefined,
-  );
-
-  await fs.symlink(
-    path.relative(`${binPath}/${dirName}`, "./src/apps/designs/_dist"),
-    `${binPath}/${dirName}/skin`,
-    isWin ? "junction" : undefined,
-  );
-
-  await fs.symlink(
-    path.relative(`${binPath}/${dirName}`, "./src/apps/modules/_dist"),
-    `${binPath}/${dirName}/resource`,
-    isWin ? "junction" : undefined,
-  );
+  await symlink(resolve(import.meta.dirname,"../../src/apps/startup/_dist"),`${binPath}/${dirName}/startup`,option)
+  await symlink(resolve(import.meta.dirname,"../../src/apps/designs/_dist"),`${binPath}/${dirName}/skin`,option)
+  await symlink(resolve(import.meta.dirname,"../../src/apps/modules/_dist"),`${binPath}/${dirName}/resource`,option)
 
   if (!isDev) {
-    await fs.symlink(
-      path.relative(`${binPath}/${dirName}`, "./src/apps/settings/_dist"),
-      `${binPath}/${dirName}/settings`,
-      isWin ? "junction" : undefined,
-    );
+    await symlink(relative(`${binPath}/${dirName}`, "./src/apps/settings/_dist"),`${binPath}/${dirName}/settings`,option)
   }
 }

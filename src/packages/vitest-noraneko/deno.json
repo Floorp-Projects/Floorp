@@ -1,0 +1,9 @@
+{
+  "name": "@nora/vitest-noraneko",
+  "version": "1.0.0",
+  "exports": "./*",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "types": ["vite/client"]
+  }
+}

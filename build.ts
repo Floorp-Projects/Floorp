@@ -1,23 +1,23 @@
 import * as fs from "node:fs/promises";
-import * as pathe from "pathe"
-import { injectManifest } from "./scripts/inject/manifest";
-import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml";
-import { applyMixin } from "./scripts/inject/mixin-loader";
-import { build as buildVite } from "vite";
+import * as pathe from "pathe";
+import { injectManifest } from "./scripts/inject/manifest.ts";
+import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.ts";
+import { applyMixin } from "./scripts/inject/mixin-loader.ts";
 import AdmZip from "adm-zip";
-import { savePrefsForProfile } from "./scripts/launchDev/savePrefs";
+import { savePrefsForProfile } from "./scripts/launchDev/savePrefs.ts";
 
-import { applyPatches } from "./scripts/git-patches/git-patches-manager";
-import { initializeBinGit } from "./scripts/git-patches/git-patches-manager";
-import { genVersion } from "./scripts/launchDev/writeVersion";
-import { writeBuildid2 } from "./scripts/update/buildid2";
+import { applyPatches } from "./scripts/git-patches/git-patches-manager.ts";
+import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.ts";
+import { genVersion } from "./scripts/launchDev/writeVersion.ts";
+import { writeBuildid2 } from "./scripts/update/buildid2.ts";
 import { $, ProcessPromise } from "zx";
-import { usePwsh } from 'zx'
+import { usePwsh } from "zx";
 import chalk from "chalk";
+import process from "node:process";
 
 switch (process.platform) {
   case "win32":
-    usePwsh()
+    usePwsh();
 }
 
 //? branding
@@ -27,7 +27,8 @@ const brandingName = "Noraneko";
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
 const binExtractDir = "_dist/bin";
-const binDir = process.platform !== "darwin" ? `_dist/bin/${brandingBaseName}`
+const binDir = process.platform !== "darwin"
+  ? `_dist/bin/${brandingBaseName}`
   : `_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/Resources`;
 
 const r = (dir: string) => {
@@ -65,9 +66,9 @@ try {
 } catch {}
 
 const binPath = pathe.join(binDir, brandingBaseName);
-const binPathExe = process.platform !== "darwin" ?
-  binPath + (process.platform === "win32" ? ".exe" : ""):
-  `./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName}`;
+const binPathExe = process.platform !== "darwin"
+  ? binPath + (process.platform === "win32" ? ".exe" : "")
+  : `./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName}`;
 
 const binVersion = pathe.join(binDir, "nora.version.txt");
 
@@ -75,7 +76,9 @@ async function decompressBin() {
   try {
     console.log(`decompressing ${binArchive}`);
     if (!(await isExists(binArchive))) {
-      console.log(`${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`);
+      console.log(
+        `${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`,
+      );
       await downloadBinArchive();
       return;
     }
@@ -92,17 +95,28 @@ async function decompressBin() {
       await fs.mkdir(mountDir, { recursive: true });
       await $`hdiutil ${["attach", "-mountpoint", mountDir, binArchive]}`;
       await fs.mkdir(binDir, { recursive: true });
-      await fs.cp(pathe.join(mountDir, `${brandingName}.app`), pathe.join(`./_dist/bin/${brandingBaseName}`, `${brandingName}.app`), { recursive: true });
+      await fs.cp(
+        pathe.join(mountDir, `${brandingName}.app`),
+        pathe.join(`./_dist/bin/${brandingBaseName}`, `${brandingName}.app`),
+        { recursive: true },
+      );
       await fs.writeFile(binVersion, VERSION);
       await $`hdiutil ${["detach", mountDir]}`;
       await fs.rm(mountDir, { recursive: true });
-      await $`chmod ${["-R", "777", `./_dist/bin/${brandingBaseName}/${brandingName}.app`]}`;
-      await $`xattr ${["-rc", `./_dist/bin/${brandingBaseName}/${brandingName}.app`]}`;
+      await $`chmod ${[
+        "-R",
+        "777",
+        `./_dist/bin/${brandingBaseName}/${brandingName}.app`,
+      ]}`;
+      await $`xattr ${[
+        "-rc",
+        `./_dist/bin/${brandingBaseName}/${brandingName}.app`,
+      ]}`;
     }
 
     if (process.platform === "linux") {
       //? linux
-      await $`tar -xf ${binArchive} -C ${binExtractDir}`
+      await $`tar -xf ${binArchive} -C ${binExtractDir}`;
       await $`chmod ${["-R", "755", `./${binDir}`]}`;
       await $`chmod ${["755", binPathExe]}`;
     }
@@ -123,8 +137,12 @@ async function downloadBinArchive() {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
     console.log("Download complete from origin!");
   } catch (error) {
-    console.error("Origin download failed, falling back to upstream:", error.stderr);
-    const upstreamUrl = `https://github.com/nyanrus/noraneko/releases/latest/download/${fileName}`;
+    console.error(
+      "Origin download failed, falling back to upstream:",
+      error.stderr,
+    );
+    const upstreamUrl =
+      `https://github.com/nyanrus/noraneko/releases/latest/download/${fileName}`;
     console.log(`Downloading from upstream: ${upstreamUrl}`);
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
@@ -194,16 +212,34 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   console.log(`[dev] buildid2: ${buildid2}`);
   if (mode !== "release") {
     if (!devInit) {
+      await $`deno run -A ./scripts/launchDev/child-build.ts ${mode} ${
+        buildid2 ?? ""
+      }`;
       console.log("run dev servers");
-      devViteProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-dev.ts ${mode} ${buildid2 ?? ""}`.stdio("pipe").nothrow();
+      devViteProcess = $`deno run -A ./scripts/launchDev/child-dev.ts ${mode} ${
+        buildid2 ?? ""
+      }`.stdio("pipe").nothrow();
 
-      (async () => {for await (const temp of devViteProcess.stdout) {
-        process.stdout.write(temp)
-      }})();
-      (async () => {for await (const temp of devViteProcess.stderr) {
-        process.stdout.write(temp)
-      }})();
-      await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts ${mode} ${buildid2 ?? ""}`
+      let resolve: Function | undefined = undefined;
+      const temp_prm = new Promise<void>((rs, _rj) => {
+        resolve = rs;
+      });
+      (async () => {
+        for await (const temp of devViteProcess.stdout) {
+          if (
+            temp.includes("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-dev")
+          ) {
+            if (resolve) (resolve as Function)();
+          }
+          process.stdout.write(temp);
+        }
+      })();
+      (async () => {
+        for await (const temp of devViteProcess.stderr) {
+          process.stdout.write(temp);
+        }
+      })();
+      await temp_prm;
 
       // env
       if (process.platform === "darwin") {
@@ -214,23 +250,23 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     await Promise.all([
       injectManifest(binDir, true, "noraneko-dev"),
       injectXHTMLDev(binDir),
-    ])
+    ]);
   } else {
     await release("before");
     try {
-        await fs.access(`_dist/bin/${brandingBaseName}/noraneko-dev`);
-        await fs.rm(`_dist/bin/${brandingBaseName}/noraneko-dev`, { recursive: true });
-      } catch {}
-    await fs.symlink(`../../${brandingBaseName}`,`./_dist/bin/${brandingBaseName}/noraneko-dev` ,process.platform==="win32" ? "junction" : undefined);
+      await fs.access(`_dist/bin/${brandingBaseName}/noraneko-dev`);
+      await fs.rm(`_dist/bin/${brandingBaseName}/noraneko-dev`, {
+        recursive: true,
+      });
+    } catch {}
+    await fs.symlink(
+      `../../${brandingBaseName}`,
+      `./_dist/bin/${brandingBaseName}/noraneko-dev`,
+      process.platform === "win32" ? "junction" : undefined,
+    );
   }
 
   await Promise.all([
-    buildVite({
-      mode,
-      root: r("./src/apps/startup"),
-      configFile: r("./src/apps/startup/vite.config.ts"),
-    }),
-
     (async () => {
       await injectXHTML(binDir);
     })(),
@@ -247,47 +283,59 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   await fs.mkdir("./_dist/profile/test", { recursive: true });
   await savePrefsForProfile("./_dist/profile/test");
 
-  browserProcess = $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-browser.ts`.stdio("pipe").nothrow();
+  browserProcess = $`deno run -A ./scripts/launchDev/child-browser.ts`.stdio(
+    "pipe",
+  ).nothrow();
 
-  (async () => {for await (const temp of browserProcess.stdout) {
-    process.stdout.write(temp)
-  }})();
-  (async () => {for await (const temp of browserProcess.stderr) {
-    process.stdout.write(temp)
-  }})();
+  (async () => {
+    for await (const temp of browserProcess.stdout) {
+      process.stdout.write(temp);
+    }
+  })();
+  (async () => {
+    for await (const temp of browserProcess.stderr) {
+      process.stdout.write(temp);
+    }
+  })();
+  (async () => {
+    try {
+      await browserProcess;
+    } catch {}
+    exit();
+  })();
 }
 
-let runningExit = false
+let runningExit = false;
 async function exit() {
   if (runningExit) return;
   runningExit = true;
   if (browserProcess) {
-    console.log("[build] Start Shutdown browserProcess")
-    browserProcess.stdin.write("s")
+    console.log("[build] Start Shutdown browserProcess");
+    browserProcess.stdin.write("q");
     try {
-      await browserProcess
-    } catch (e){
-      console.error(e)
+      await browserProcess;
+    } catch (e) {
+      console.error(e);
     }
-    console.log("[build] End Shutdown browserProcess")
+    console.log("[build] End Shutdown browserProcess");
   }
   if (devViteProcess) {
-    console.log("[build] Start Shutdown devViteProcess")
-    devViteProcess.stdin.write("s")
+    console.log("[build] Start Shutdown devViteProcess");
+    devViteProcess.stdin.write("q");
     try {
-      await devViteProcess
-    } catch (e){
-      console.error(e)
+      await devViteProcess;
+    } catch (e) {
+      console.error(e);
     }
-    console.log("[build] End Shutdown devViteProcess")
+    console.log("[build] End Shutdown devViteProcess");
   }
-  console.log(chalk.green("[build] Cleanup Complete!"))
-  process.exit(0)
+  console.log(chalk.green("[build] Cleanup Complete!"));
+  process.exit(0);
 }
 
-process.on("SIGINT",async ()=>{
-  await exit()
-})
+process.on("SIGINT", async () => {
+  await exit();
+});
 
 /**
  * * Please run with NODE_ENV='production'
@@ -301,7 +349,9 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
-    await $`node --import @swc-node/register/esm-register ./scripts/launchDev/child-build.ts production ${buildid2 ?? ""}`
+    await $`deno run -A ./scripts/launchDev/child-build.ts production ${
+      buildid2 ?? ""
+    }`;
     await injectManifest("./_dist", false);
   } else if (mode === "after") {
     const binPath = "../obj-artifact-build-output/dist/bin";

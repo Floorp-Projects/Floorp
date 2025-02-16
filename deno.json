@@ -1,0 +1,20 @@
+{
+  "patch": ["@types/gecko/dom"],
+  "workspace": ["./src/packages/*", "./src/apps/*"],
+  "imports": {
+    "@std/encoding": "jsr:@std/encoding@^1.0.7",
+    "@std/fs": "jsr:@std/fs@^1.0.11"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "ESNext"]
+  },
+  "tasks": {
+    "build": "deno run -A build.ts",
+    "dev": "deno run -A build.ts --run",
+    "apply-patches": "deno run -A ./scripts/git-patches/git-patches-manager.ts --apply",
+    "dev-with-init-bin-git": "deno run -A ./build.ts --run-with-init-bin-git",
+    "init-bin-git": "deno run -A ./scripts/git-patches/git-patches-manager.ts --init",
+    "create-patches": "deno run -A ./scripts/git-patches/git-patches-manager.ts --create"
+  },
+  "nodeModulesDir": "auto"
+}
