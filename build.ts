@@ -13,7 +13,6 @@ import { writeBuildid2 } from "./scripts/update/buildid2.ts";
 import { $, ProcessPromise } from "zx";
 import { usePwsh } from "zx";
 import chalk from "chalk";
-import { expandGlob } from "@std/fs";
 import process from "node:process";
 
 switch (process.platform) {

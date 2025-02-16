@@ -37,12 +37,14 @@ jobs:
     outputs:
       run_id: ${{ github.run_id }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ${{ github.repository }}-runtime
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}-runtime
           submodules: "recursive"
 
-      - uses: actions/checkout@v4
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
         with:
           path: "noraneko"
 
@@ -53,10 +55,12 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: init zx
+        run: |
+          deno install -g -A npm:zx
 
       - name: Setup Noraneko
         run: |
-
           cd $GITHUB_WORKSPACE
           cd ./noraneko
           deno install --allow-scripts
@@ -133,30 +137,33 @@ jobs:
           fi
 
       - name: Get Artifact Name
+        shell: zx --verbose {0}
+        env:
+          FORCE_COLOR: 3
+          BUILD_PLATFORM: ${{ inputs.platform }}
         run: |
-          case "${{ inputs.platform }}" in
-          "Windows-x64")
-            echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV
-            echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV
-            echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV
-            echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV
-            echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV
-            ;;
-          "Linux-x64")
-            echo "ARTIFACT_NAME=noraneko-linux-amd64-moz-artifact-release" >> $GITHUB_ENV
-            echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV
-            echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV
-            echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV
-            echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV
-            ;;
-          "macOS-x64")
-            echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV
-            echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV
-            echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
-            echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV
-            echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV
-            ;;
-          esac
+          switch (process.env.BUILD_PLATFORM) {
+            case "Windows-x64":
+              await $`echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV`
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV`
+              break;
+            case "Linux-x64":
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV`
+              break;
+            case "macOS-x64":
+              await $`echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV`
+              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV`
+              await $`echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV`
+              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV`
+              break;
+          }
 
       - name: Download mozilla artifact from Actions
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
