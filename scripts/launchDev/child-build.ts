@@ -32,7 +32,6 @@ async function launchBuild(mode: string, buildid2: string) {
   } else {
     await Promise.all([
       $({ cwd: r("./src/apps/startup") })`deno task build ${mode}`,
-      //$({cwd:r("./src/apps/modules")})`pnpm build ${JSON.stringify({mode,buildid2,version2:packageJson.version})}`,
       build({
         configFile: r("./src/apps/modules/vite.config.ts"),
         define: {

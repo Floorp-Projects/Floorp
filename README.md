@@ -23,11 +23,11 @@ Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
 
 ## How to Start Development
 
-1. Run `pnpm install`
+1. Run `deno install --allow-scripts`
 
-You can run `pnpm build` and `pnpm dev`.
-`pnpm build` outputs files, while `pnpm dev` is used for debugging the code with file watch.
-Refer to "How to Debug" for instructions on using `pnpm dev`.
+You can run `deno task build` and `deno task dev`.
+`deno task build` outputs files, while `deno task dev` is used for debugging the code with file watch.
+Refer to "How to Debug" for instructions on using `deno task dev`.
 
 ## How to debug
 
@@ -39,8 +39,8 @@ Refer to "How to Debug" for instructions on using `pnpm dev`.
    It is run_id and is number.
    the `Release` version is recommended.
 4. Run `gh run download -R nyanrus/noraneko-runtime -n noraneko-win-amd64-dev [run_id]`
-5. Run `pnpm dev`.
-6. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+5. Run `deno task dev`.
+6. The browser will launch, and if you change some files, you could rerun `deno task dev`.
   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ### GNU/Linux
@@ -52,8 +52,8 @@ Refer to "How to Debug" for instructions on using `pnpm dev`.
 4. Run `gh run download -R nyanrus/noraneko-runtime -n noraneko-linux-amd64-dev [run_id]`
 5. Run `mkdir -p _dist/bin`
 6. Run `tar --strip-components=1 -xvf ./noraneko-*.tar.bz2 -C _dist/bin`
-7. Run `pnpm dev`
-8. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+7. Run `deno task dev`
+8. The browser will launch, and if you change some files, you could rerun `deno task dev`.
   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ## Credits

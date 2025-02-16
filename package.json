@@ -4,15 +4,6 @@
   "description": "",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "test": "node --experimental-strip-types ./build.ts --test",
-    "build": "node --experimental-strip-types ./build.ts",
-    "dev": "node --experimental-strip-types ./build.ts --run",
-    "apply-patches": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --apply",
-    "dev-with-init-bin-git": "node --experimental-strip-types ./build.ts --run-with-init-bin-git",
-    "init-bin-git": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --init",
-    "create-patches": "node --experimental-strip-types ./scripts/git-patches/git-patches-manager.ts --create"
-  },
   "keywords": [],
   "workspaces": [
     "./packages/*"
@@ -51,6 +42,5 @@
     "sortablejs": "^1.15.6",
     "zod": "^3.24.1",
     "zx": "^8.3.2"
-  },
-  "packageManager": "pnpm@9.2.0"
+  }
 }

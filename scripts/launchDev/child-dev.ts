@@ -31,18 +31,7 @@ async function launchDev(mode: string, buildid2: string) {
       root: r("./src/apps/designs"),
     }),
   ];
-  // pSettings = $({cwd:r("./src/apps/settings-new"),preferLocal:true} as Options)`pnpm vite dev --mode ${mode}`;
-  // pSettings.catch(console.log);
-  // (async () => {
-  //   for await (const i of pSettings!.stdout) {
-  //     process.stdout.write(i)
-  //   }
-  // })();
-  // (async () => {
-  //   for await (const i of pSettings!.stderr) {
-  //     process.stdout.write(i)
-  //   }
-  // })();
+
   for (const i of pDevVite) {
     await i.listen();
     i.printUrls();
