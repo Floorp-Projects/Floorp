@@ -30,10 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: init zx
+        run: |
+          deno install -g -A npm:zx
 
       - name: Retrieve run IDs
         run: |
@@ -120,11 +126,11 @@ jobs:
 
       - name: Setup
         run: |
-          pnpm i
+          deno install --allow-scripts
           sudo apt install jq
-          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
-          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux/Linux_x86_64.update.xml
-          node --import @swc-node/register/esm-register ./scripts/update/xml.ts ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac/Darwin_x86_64.update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux/Linux_x86_64.update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac/Darwin_x86_64.update.xml
 
           echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
