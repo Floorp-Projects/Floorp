@@ -7,10 +7,10 @@
 import copy
 import json
 import os
-import pipes
 import platform
 import random
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -372,11 +372,11 @@ class XPCShellTestThread(Thread):
         )
         self.log.info("%s | environment: %s" % (name, list(changedEnv)))
         shell_command_tokens = [
-            pipes.quote(tok) for tok in list(changedEnv) + completeCmd
+            shlex.quote(tok) for tok in list(changedEnv) + completeCmd
         ]
         self.log.info(
             "%s | as shell command: (cd %s; %s)"
-            % (name, pipes.quote(testdir), " ".join(shell_command_tokens))
+            % (name, shlex.quote(testdir), " ".join(shell_command_tokens))
         )
 
     def killTimeout(self, proc):

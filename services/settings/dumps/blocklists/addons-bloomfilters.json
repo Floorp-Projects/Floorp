@@ -1,239 +1,35 @@
 {
   "data": [
     {
-      "stash": {
-        "blocked": [
-          "{8b9aa0f0-4402-4abc-b85a-8ff2d787184a}:1.2.4"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1737117377605,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1737376505231,
-      "id": "e89520f5-a773-43ec-bb15-99f479fe84af",
-      "last_modified": 1737376574433
-    },
-    {
-      "stash": {
-        "blocked": [
-          "email@temporary.com:1.3.3"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1736879778450,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1737117305578,
-      "id": "9b3665bb-ebc9-40a4-aac2-4a7cfe0cf5f5",
-      "last_modified": 1737117377427
-    },
-    {
-      "stash": {
-        "blocked": [
-          "addonY271@paperboynews.app:1.24.1210",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.101:2.0.101",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.104.12:2.0.104.13",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.121:2.0.121",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.123:2.0.123",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.126.1:2.0.126.1",
-          "enhancerforyoutube@maximerf.addons.mozilla.org.pep.2.0.126.1:2.0.126.2"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1736871466380,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1736879705378,
-      "id": "8e0dcd23-8aca-4d28-a3d1-a9f22b84025b",
-      "last_modified": 1736879778353
-    },
-    {
-      "stash": {
-        "blocked": [
-          "{01e71313-2672-4ea3-a848-2b450a06e717}:1.0",
-          "{03466d7f-5ab1-426d-a83e-77855f469f8d}:1.0",
-          "{03dffc9c-1402-4439-a1eb-4f5336e9c2b5}:1.0",
-          "{0cbf390f-d16e-49fd-9f89-153b3a9a97ad}:1.0",
-          "{0d9b27d0-c6e5-4ebe-aa77-eeb83d8b23f5}:1.0",
-          "{0f042eda-4410-4a6f-bb4f-b4a530d4d1f7}:1.0.2",
-          "{14ab3bbf-82bf-4af7-ae09-60bb169456e4}:1.3",
-          "{17f5c2df-bc83-480c-9f22-ecb533aba0ae}:4",
-          "{1cd92eda-f272-4e01-8da4-b4afe4720f21}:1.0",
-          "{218166a9-0990-4381-96b6-546fab6171e6}:0.0.5",
-          "{335bdc06-7a08-4c1a-8699-b116745f0593}:0.0.0.13",
-          "{3fe6fc7f-98c2-4829-b341-30f3d74100e3}:1.0",
-          "{48ace26d-a913-468a-b082-90615714a4e3}:1.0",
-          "{526c442e-a49e-4c72-9b36-9ca1a6b0e4b8}:1.3.1",
-          "{57bc8b41-31fb-4aab-b761-9584a3a5c6cd}:1.0",
-          "{5fa2406a-f096-4dc1-a275-2ce701935710}:1.0",
-          "{62288d60-73a6-476a-8d62-8a8483358e8b}:1.0",
-          "{641b2d4f-89d0-43c3-b396-d10844e07edd}:1.0",
-          "{662a04aa-8d0f-47d2-9f4c-96fcbce4eedd}:1.0",
-          "{7115eeb0-0b66-4461-b56a-9dbed97fb8b8}:1.0",
-          "{71af868f-5981-4042-b893-a7b64eb50f04}:1.0",
-          "{74fb9f9f-b668-4fe8-acdd-4f065bf445fe}:1.0",
-          "{74ff855a-278c-4fbe-977b-68415e634f38}:1.0",
-          "{85ccc231-9357-4695-b927-a00ff1916243}:1.0",
-          "{92435d69-b415-40b6-b04a-3abc9ae35204}:1.0",
-          "{93f7e5fc-3408-4d3b-9a31-a1455f58cdc3}:1.0",
-          "{95a14684-9d81-424c-b6c5-5edb286cfa5f}:1.0",
-          "{966c43c3-80e5-4d12-b947-c985e8556ec6}:1.0",
-          "{a06d30e5-3573-4b66-b413-545fb2797a9a}:1.0",
-          "{a2e74913-730c-4166-aa12-19d49a0590c0}:0.1.1",
-          "{a90244b1-2074-4ee8-9411-b2f6e0094f7b}:1.0",
-          "{a969db96-0647-48e5-9d14-b18ae272bbaa}:1.0",
-          "{af162eb4-6a1a-4b3e-ae0f-a751a2a432a5}:0.0.1",
-          "{b0efc126-2bd6-4c23-95e2-dfc7a60dbe36}:1.0",
-          "{b4c07645-aab8-42f1-8d00-96914f1bf8f6}:1.0",
-          "{bad02a13-7263-4052-a0ac-06a05c1e4bed}:1.0",
-          "{c2220a89-1777-4f4b-82d6-5d4e36ec610b}:1.0",
-          "{c7188781-4268-4220-a275-23bea7b30fdd}:0.1.3",
-          "{c97985d6-b8c2-4e8d-aa13-96f7215f097b}:0.0.1",
-          "{dbe798e6-220e-456a-a680-6b52a8d204fc}:1.2",
-          "{dcb9ed01-9515-4aec-bd74-5e17a9cbe955}:1.0",
-          "{dd8e4102-891c-4c6b-8b72-d6944102d38d}:1.1.1",
-          "{e07c8082-9f6d-447d-823a-df00cbb48804}:2.0.0",
-          "{e21d9eb3-a18d-4c6e-ab7c-5d82e3612114}:1.0.1",
-          "{e9afcbb3-a7d8-4606-baf3-8cf19a72d38e}:1.0.0",
-          "{f2cf45d6-60bd-4ff5-82ee-1ddeea5ef0c7}:1.0",
-          "{f492184f-259d-477a-b7ef-0d8ee781531b}:1.0",
-          "{f85e74cb-98b4-4ead-a042-907d81d6de6b}:1.4"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1736447778665,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1736512505231,
-      "id": "e1365407-fe26-4331-b1c8-bedf2004be2a",
-      "last_modified": 1736512576946
-    },
-    {
-      "stash": {
-        "blocked": [
-          "OKX-Live-MLB-Scores@noonee.site:1.0.1",
-          "OKX-Live-MLB-Scores@noonee.site:1.1.1"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1736443271428,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1736447705249,
-      "id": "16ef2e8c-7719-4159-b931-f325d692622f",
-      "last_modified": 1736447778457
-    },
-    {
-      "stash": {
-        "blocked": [
-          "robinhood-nba-scores@citrixereceiver.com:1.0.0",
-          "robinhood-nba-scores@citrixereceiver.com:1.1.0"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1735603204714,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1736166905736,
-      "id": "b99ccd3c-6aea-4144-bffc-a9c9734a5a77",
-      "last_modified": 1736166978010
-    },
-    {
-      "stash": {
-        "blocked": [
-          "nba-news-score@itdigitalmedia.site:1.1",
-          "nba-news-score@itdigitalmedia.site:1.2",
-          "nba-news-score@itdigitalmedia.site:1.3"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1734973676348,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1734978905447,
-      "id": "0e70a836-a64b-4006-843d-cfeabd663900",
-      "last_modified": 1734978979500
-    },
-    {
-      "stash": {
-        "blocked": [
-          "{7b0c4908-3c9b-4b5b-bb5f-e59f79d58b6e}:0.0.2"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1734686350220,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1734698104421,
-      "id": "8d721ff6-479a-486e-bc6f-464497bb655b",
-      "last_modified": 1734698171807
-    },
-    {
-      "stash": {
-        "blocked": [
-          "sciaddon@scigreat.com:2.9.3",
-          "sciaddon@scigreat.com:2.9.4",
-          "sciaddon@scigreat.com:2.9.5",
-          "sciaddon@scigreat.com:2.9.6",
-          "sciaddon@scigreat.com:2.9.7",
-          "sciaddon@scigreat.com:2.9.8",
-          "sciaddon@scigreat.com:2.9.9",
-          "sciaddon@scigreat.com:3.0.0",
-          "sciaddon@scigreat.com:3.0.1",
-          "sciaddon@scigreat.com:3.0.2",
-          "sciaddon@scigreat.com:3.0.3",
-          "sciaddon@scigreat.com:3.0.4",
-          "sciaddon@scigreat.com:3.0.5",
-          "sciaddon@scigreat.com:3.0.6",
-          "sciaddon@scigreat.com:3.0.7",
-          "sciaddon@scigreat.com:3.0.8",
-          "sciaddon@scigreat.com:3.0.9",
-          "sciaddon@scigreat.com:3.1.0",
-          "sciaddon@scigreat.com:3.1.1",
-          "sciaddon@scigreat.com:3.1.2",
-          "sciaddon@scigreat.com:3.1.3",
-          "sciaddon@scigreat.com:3.1.4"
-        ],
-        "unblocked": [],
-        "softblocked": []
-      },
-      "schema": 1734363061973,
-      "key_format": "{guid}:{version}",
-      "stash_time": 1734546905283,
-      "id": "d16e4834-2cbc-476c-993f-1014240830c0",
-      "last_modified": 1734546992038
-    },
-    {
-      "schema": 1734363060800,
+      "schema": 1739277368345,
       "attachment": {
-        "hash": "e97f56fe431fbfb547a15c074ed1a2e2bff55cbb71b8ed8ba0543a41879be611",
-        "size": 9413,
+        "hash": "2456074c5ca73b46f67d552580e82f5da8ea6cc524cb09d283a036936d793173",
+        "size": 852137,
         "filename": "filter.bin",
-        "location": "staging/addons-bloomfilters/3ec9adc2-7c53-4ad8-b817-6127f516414a.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "key_format": "{guid}:{version}",
-      "attachment_type": "softblocks-bloomfilter-base",
-      "generation_time": 1734362843464,
-      "id": "24617a6a-8f2a-4687-a780-130c146baaa2",
-      "last_modified": 1734363061861
-    },
-    {
-      "schema": 1733942181628,
-      "attachment": {
-        "hash": "1b8df94642abf6688b74528f1ee733e0d3f7c8a5a165be9c24b481b09c859a42",
-        "size": 931343,
-        "filename": "filter.bin",
-        "location": "staging/addons-bloomfilters/7e9f31d5-81be-4d06-94bf-a5f61dfbfb00.bin",
+        "location": "staging/addons-bloomfilters/b8643575-1c88-433b-9259-3c864e435916.bin",
         "mimetype": "application/octet-stream"
       },
       "key_format": "{guid}:{version}",
       "attachment_type": "bloomfilter-base",
-      "generation_time": 1734362843464,
-      "id": "870ed6d2-ffe8-41b8-87be-25c0e1e13326",
-      "last_modified": 1734363061859
+      "generation_time": 1739466275950,
+      "id": "88946e64-c81a-42f1-9021-c608fce0b47f",
+      "last_modified": 1739466430719
+    },
+    {
+      "schema": 1739466428648,
+      "attachment": {
+        "hash": "842edc3cf92a5d32b0d08c94eeaec1152c16d191aebdfe574e8289465e6153e3",
+        "size": 9351,
+        "filename": "filter.bin",
+        "location": "staging/addons-bloomfilters/2c9dd046-c9a0-460b-8ba8-28e08cda4097.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "key_format": "{guid}:{version}",
+      "attachment_type": "softblocks-bloomfilter-base",
+      "generation_time": 1739466275950,
+      "id": "08cd99e5-afd1-4cf6-bd52-ae4f67298c0a",
+      "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1737376574433
+  "timestamp": 1739466430719
 }

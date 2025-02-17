@@ -258,7 +258,7 @@ static Result<FileLocation, nsresult> GetFileLocation(nsIURI* uri) {
 
     MOZ_TRY_VAR(file, GetFile(fileURI));
 
-    location.Init(file, entry.get());
+    location.Init(file, entry);
   }
 
   return std::move(location);

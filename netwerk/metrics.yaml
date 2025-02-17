@@ -1086,3 +1086,44 @@ networking:
       - necko@mozilla.com
       - kershaw@mozilla.com
     expires: never
+
+network.sso:
+  entra_success:
+    type: labeled_counter
+    description: >
+      Counts how often Entra SSO succeeded/failed (macOS only). Labels are ordered in reverse chronological relation to SSO success, meaning the labels higher up are closer to the SSO success.
+      device_headers_missing: only device_headers is missing in the SSO cookie.
+      prt_headers_missing: only prt_headers is missing in the SSO cookie.
+      both_headers_missing: both prt_headers and device_headers are missing in the SSO cookie.
+      invalid_cookie: Failed to parse SSO cookie (could be a null cookie/format is incorrect).
+      no_credential: ASAuthorizationSingleSignOnCredential is not present
+      broker_error: An error from Microsoft's broker.
+      invalid_controller_setup: ASAuthorizationController is setup incorrectly.
+    bugs:
+      - https://bugzilla.mozilla.org/1930742
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1930742
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+    labels:
+      - success
+      - device_headers_missing
+      - prt_headers_missing
+      - both_headers_missing
+      - invalid_cookie
+      - no_credential
+      - broker_error
+      - invalid_controller_setup
+
+  total_entra_uses:
+    type: counter
+    description: >
+      Counts how often Entra SSO is used (macOS only).
+    bugs:
+      - https://bugzilla.mozilla.org/1930742
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1930742
+    notification_emails:
+      - necko@mozilla.com
+    expires: never

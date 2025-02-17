@@ -156,6 +156,28 @@ add_task(
   }
 );
 
+add_task(async function test_name_too_long() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      // This length is 80, which exceeds ExtensionData.EXT_NAME_MAX_LEN:
+      name: "123456789_".repeat(8),
+    },
+  });
+  await extension.startup();
+  equal(
+    extension.extension.name,
+    "123456789_123456789_123456789_123456789_123456789_123456789_123456789_12345",
+    "Name should be truncated"
+  );
+  Assert.deepEqual(
+    extension.extension.warnings,
+    ['Reading manifest: Warning processing "name": must be shorter than 75'],
+    "Expected error message when the name is too long"
+  );
+
+  await extension.unload();
+});
+
 add_task(async function test_simpler_version_format() {
   const TEST_CASES = [
     // Valid cases

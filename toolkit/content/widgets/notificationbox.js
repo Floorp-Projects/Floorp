@@ -12,12 +12,14 @@
      * Creates a new class to handle a notification box, but does not add any
      * elements to the DOM until a notification has to be displayed.
      *
-     * @param insertElementFn
-     *        Called with the "notification-stack" element as an argument when the
-     *        first notification has to be displayed.
+     * @param insertElementFn Called with the "notification-stack" element as an
+     *        argument when the first notification has to be displayed.
+     * @param {Number} securityDelayMS - Delay in milliseconds until buttons are enabled to
+     * protect against click- and tapjacking.
      */
-    constructor(insertElementFn) {
+    constructor(insertElementFn, securityDelayMS = 0) {
       this._insertElementFn = insertElementFn;
+      this._securityDelayMS = securityDelayMS;
       this._animating = false;
       this.currentNotification = null;
     }
@@ -141,10 +143,18 @@
      *            Defines a Custom Element name to use as the "is" value on
      *            button creation.
      *        }
+     *    aDisableClickJackingDelay
+     *        Optional boolean arg to disable clickjacking protections. By
+     *        default the security delay is enabled.
      *
      * @return The <notification> element that is shown.
      */
-    async appendNotification(aType, aNotification, aButtons) {
+    async appendNotification(
+      aType,
+      aNotification,
+      aButtons,
+      aDisableClickJackingDelay = false
+    ) {
       if (
         aNotification.priority < this.PRIORITY_SYSTEM ||
         aNotification.priority > this.PRIORITY_CRITICAL_HIGH
@@ -242,6 +252,13 @@
         newitem.setAttribute("type", "info");
       } else {
         newitem.setAttribute("type", "warning");
+      }
+
+      // If clickjacking protection is not explicitly disabled, enable it.
+      // aDisableClickJackingDelay is per notification, this._securityDelayMS is
+      // global for the entire notification box.
+      if (!aDisableClickJackingDelay && this._securityDelayMS > 0) {
+        newitem._initClickJackingProtection(this._securityDelayMS);
       }
 
       // Animate the notification.
@@ -639,6 +656,13 @@
         this.dismissable = true;
         this._shown = false;
 
+        // Variables used for security delay / clickjacking protection.
+        this._clickjackingDelayActive = false;
+        this._securityDelayMS = 0;
+        this._delayTimer = null;
+        this._focusHandler = null;
+        this._buttons = [];
+
         this.addEventListener("click", this);
         this.addEventListener("command", this);
       }
@@ -661,6 +685,8 @@
         if (this.eventCallback) {
           this.eventCallback("disconnected");
         }
+        // Clean up clickjacking listeners if active.
+        this._uninitClickJackingProtection();
       }
 
       closeButtonTemplate() {
@@ -715,6 +741,24 @@
       }
 
       handleEvent(e) {
+        // If clickjacking delay is active, prevent any "click"/"command" from
+        // going through. Also restart the delay if the user tries to click too early.
+        if (this._clickjackingDelayActive) {
+          // Only relevant if user clicked on the notification’s actual button/link area.
+          if (
+            e.type === "click" &&
+            (e.target.localName === "button" ||
+              e.target.classList.contains("text-link") ||
+              e.target.classList.contains("notification-link"))
+          ) {
+            // Stop immediate action, restart the delay
+            e.stopPropagation();
+            e.preventDefault();
+            this._startClickJackingDelay();
+            return;
+          }
+        }
+
         if (e.type == "click" && e.target.localName != "label") {
           return;
         }
@@ -765,7 +809,7 @@
       }
 
       setButtons(buttons) {
-        this._buttons = buttons;
+        this._buttons = [];
         for (let button of buttons) {
           let link = button.link || button.supportPage;
           let localeId = button["l10n-id"];
@@ -814,7 +858,9 @@
           } else {
             this.buttonContainer.appendChild(buttonElem);
           }
+
           buttonElem.buttonInfo = button;
+          this._buttons.push(buttonElem);
         }
       }
 
@@ -826,7 +872,76 @@
         }
         super.dismiss();
       }
+
+      /**
+       * Initialize clickjacking protection for this notification, disabling
+       * buttons initially and re-enabling them after a short delay. The delay
+       * restarts on window focus or if the user attempts to click during the
+       * disabled period.
+       *
+       * @param {Number} securityDelayMS - ClickJacking delay to apply
+       * (milliseconds).
+       */
+      _initClickJackingProtection(securityDelayMS) {
+        if (this._clickjackingDelayActive) {
+          return; // Already enabled.
+        }
+
+        this._securityDelayMS = securityDelayMS;
+        // Attach a global focus handler so we can restart the delay when the window
+        // refocuses (e.g., user navigated away or used a popup).
+        this._focusHandler = event => {
+          // Only restart delay if the notification is still connected and this
+          // is actually a window focus.
+          if (this.isConnected && event.target === window) {
+            this._startClickJackingDelay();
+          }
+        };
+
+        window.addEventListener("focus", this._focusHandler, true);
+        this._startClickJackingDelay();
+      }
+
+      /**
+       * Remove any event listeners or timers related to clickjacking protection.
+       */
+      _uninitClickJackingProtection() {
+        window.removeEventListener("focus", this._focusHandler, true);
+        this._focusHandler = null;
+        if (this._delayTimer) {
+          clearTimeout(this._delayTimer);
+          this._delayTimer = null;
+        }
+        this._enableAllButtons();
+        this._clickjackingDelayActive = false;
+      }
+
+      _startClickJackingDelay() {
+        this._clickjackingDelayActive = true;
+        this._disableAllButtons();
+        if (this._delayTimer) {
+          clearTimeout(this._delayTimer);
+        }
+        this._delayTimer = setTimeout(() => {
+          this._clickjackingDelayActive = false;
+          this._enableAllButtons();
+          this._delayTimer = null;
+        }, this._securityDelayMS);
+      }
+
+      _disableAllButtons() {
+        for (let button of this._buttons) {
+          button.disabled = true;
+        }
+      }
+
+      _enableAllButtons() {
+        for (let button of this._buttons) {
+          button.disabled = false;
+        }
+      }
     }
+
     if (!customElements.get("notification-message")) {
       customElements.define("notification-message", NotificationMessage);
     }

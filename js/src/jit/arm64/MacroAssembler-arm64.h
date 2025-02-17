@@ -626,8 +626,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       if (negativeZeroCheck) {
         Label nonzero;
         Cbnz(dest32, &nonzero);
+        // dest32 is 0, fail if fsrc64 is negative.
         Fmov(dest64, fsrc64);
-        Cbnz(dest64, fail);
+        Cmp(dest64, xzr);
+        B(fail, Assembler::Signed);
+        Mov(dest64, xzr);
         bind(&nonzero);
       }
     }
@@ -651,8 +654,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     if (negativeZeroCheck) {
       Label nonzero;
       Cbnz(dest32, &nonzero);
+      // dest32 is 0, fail if fsrc64 is negative.
       Fmov(dest32, fsrc);
-      Cbnz(dest32, fail);
+      Cmp(dest32, xzr);
+      B(fail, Assembler::Signed);
+      Mov(dest32, xzr);
       bind(&nonzero);
     }
     Uxtw(dest64, dest64);
@@ -678,8 +684,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     if (negativeZeroCheck) {
       Label nonzero;
       Cbnz(dest64, &nonzero);
+      // dest64 is 0, fail if fsrc64 is negative.
       Fmov(dest64, fsrc64);
-      Cbnz(dest64, fail);
+      Cmp(dest64, xzr);
+      B(fail, Assembler::Signed);
+      Mov(dest64, xzr);
       bind(&nonzero);
     }
   }

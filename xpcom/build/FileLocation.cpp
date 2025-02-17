@@ -18,11 +18,11 @@ FileLocation::~FileLocation() = default;
 
 FileLocation::FileLocation(nsIFile* aFile) { Init(aFile); }
 
-FileLocation::FileLocation(nsIFile* aFile, const char* aPath) {
+FileLocation::FileLocation(nsIFile* aFile, const nsACString& aPath) {
   Init(aFile, aPath);
 }
 
-FileLocation::FileLocation(nsZipArchive* aZip, const char* aPath) {
+FileLocation::FileLocation(nsZipArchive* aZip, const nsACString& aPath) {
   Init(aZip, aPath);
 }
 
@@ -37,14 +37,14 @@ FileLocation::FileLocation(FileLocation&& aOther)
   aOther.mPath.Truncate();
 }
 
-FileLocation::FileLocation(const FileLocation& aFile, const char* aPath) {
+FileLocation::FileLocation(const FileLocation& aFile, const nsACString& aPath) {
   if (aFile.IsZip()) {
     if (aFile.mBaseFile) {
-      Init(aFile.mBaseFile, aFile.mPath.get());
+      Init(aFile.mBaseFile, aFile.mPath);
     } else {
-      Init(aFile.mBaseZip, aFile.mPath.get());
+      Init(aFile.mBaseZip, aFile.mPath);
     }
-    if (aPath) {
+    if (aPath.Length()) {
       int32_t i = mPath.RFindChar('/');
       if (kNotFound == i) {
         mPath.Truncate(0);
@@ -54,7 +54,7 @@ FileLocation::FileLocation(const FileLocation& aFile, const char* aPath) {
       mPath += aPath;
     }
   } else {
-    if (aPath) {
+    if (aPath.Length()) {
       nsCOMPtr<nsIFile> cfile;
       aFile.mBaseFile->GetParent(getter_AddRefs(cfile));
 
@@ -69,7 +69,7 @@ FileLocation::FileLocation(const FileLocation& aFile, const char* aPath) {
       }
       cfile->AppendRelativeNativePath(pathStr);
 #else
-      cfile->AppendRelativeNativePath(nsDependentCString(aPath));
+      cfile->AppendRelativeNativePath(aPath);
 #endif
       Init(cfile);
     } else {
@@ -84,13 +84,13 @@ void FileLocation::Init(nsIFile* aFile) {
   mPath.Truncate();
 }
 
-void FileLocation::Init(nsIFile* aFile, const char* aPath) {
+void FileLocation::Init(nsIFile* aFile, const nsACString& aPath) {
   mBaseZip = nullptr;
   mBaseFile = aFile;
   mPath = aPath;
 }
 
-void FileLocation::Init(nsZipArchive* aZip, const char* aPath) {
+void FileLocation::Init(nsZipArchive* aZip, const nsACString& aPath) {
   mBaseZip = aZip;
   mBaseFile = nullptr;
   mPath = aPath;
@@ -158,7 +158,7 @@ nsresult FileLocation::GetData(Data& aData) {
     aData.mZip = nsZipArchive::OpenArchive(mBaseFile);
   }
   if (aData.mZip) {
-    aData.mItem = aData.mZip->GetItem(mPath.get());
+    aData.mItem = aData.mZip->GetItem(mPath);
     if (aData.mItem) {
       return NS_OK;
     }

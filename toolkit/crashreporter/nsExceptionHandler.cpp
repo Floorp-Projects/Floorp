@@ -3319,7 +3319,8 @@ static void MaybeAnnotateDumperError(const ClientInfo& aClientInfo,
                                      AnnotationTable& aAnnotations) {
 #if defined(MOZ_OXIDIZED_BREAKPAD)
   if (aClientInfo.had_error()) {
-    aAnnotations[Annotation::DumperError] = *aClientInfo.error_msg();
+    aAnnotations[Annotation::DumperError] =
+        nsDependentCString(aClientInfo.error_msg());
   }
 #endif
 }

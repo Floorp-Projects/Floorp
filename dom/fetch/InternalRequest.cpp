@@ -305,7 +305,8 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_PING:
       return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
-    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC:
+    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC:
       return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
       return RequestDestination::_empty;
