@@ -201,5 +201,8 @@ export default defineConfig({
       "solid-js/h",
     ],
     preserveSymlinks: true,
+    alias: [
+      { find: "@nora/skin", replacement: r("../../packages/skin") },
+    ],
   },
 });

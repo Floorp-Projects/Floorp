@@ -349,6 +349,9 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
+    console.log(`deno run -A ./scripts/launchDev/child-build.ts production ${
+      buildid2 ?? ""
+    }`);
     await $`deno run -A ./scripts/launchDev/child-build.ts production ${
       buildid2 ?? ""
     }`;
@@ -365,8 +368,8 @@ async function release(mode: "before" | "after") {
   }
 }
 
-if (process.argv[2]) {
-  switch (process.argv[2]) {
+if (Deno.args[0]) {
+  switch (Deno.args[0]) {
     case "--run":
       run();
       break;

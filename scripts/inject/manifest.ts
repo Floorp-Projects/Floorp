@@ -1,8 +1,8 @@
 import { symlink } from "@std/fs/unstable-symlink";
 import { emptyDir } from "@std/fs/empty-dir";
 import { relative, resolve } from "npm:pathe@^2.0.2";
-import {SymlinkOptions} from '@std/fs/unstable-types'
-import {ensureDir} from "@std/fs/ensure-dir"
+import { SymlinkOptions } from "@std/fs/unstable-types";
+import { ensureDir } from "@std/fs/ensure-dir";
 
 export async function injectManifest(
   binPath: string,
@@ -10,7 +10,9 @@ export async function injectManifest(
   dirName = "noraneko",
 ) {
   if (isDev) {
-    const manifest_chrome = await Deno.readTextFile(`${binPath}/chrome.manifest`);
+    const manifest_chrome = await Deno.readTextFile(
+      `${binPath}/chrome.manifest`,
+    );
 
     console.log(manifest_chrome);
 
@@ -22,9 +24,9 @@ export async function injectManifest(
     }
   }
 
-  await emptyDir(`${binPath}/${dirName}`)
+  await emptyDir(`${binPath}/${dirName}`);
 
-  const option: SymlinkOptions= {type:"dir"}
+  const option: SymlinkOptions = { type: "dir" };
 
   await ensureDir(`${binPath}/${dirName}`);
 
@@ -37,13 +39,41 @@ resource noraneko resource/ contentaccessible=yes
 ${!isDev ? "\ncontent noraneko-settings settings/ contentaccessible=yes" : ""}`,
   );
 
-  await symlink(resolve(import.meta.dirname,"../../src/apps/main/_dist"),`${binPath}/${dirName}/content`,option)
+  const r = (v: string) => {
+    if (Deno.build.os === "windows") {
+      return resolve(import.meta.dirname, v);
+    } else {
+      return relative(`${binPath}/${dirName}`, `./${v.replace("../../", "")}`);
+    }
+  };
 
-  await symlink(resolve(import.meta.dirname,"../../src/apps/startup/_dist"),`${binPath}/${dirName}/startup`,option)
-  await symlink(resolve(import.meta.dirname,"../../src/apps/designs/_dist"),`${binPath}/${dirName}/skin`,option)
-  await symlink(resolve(import.meta.dirname,"../../src/apps/modules/_dist"),`${binPath}/${dirName}/resource`,option)
+  await symlink(
+    r("../../src/apps/main/_dist"),
+    `${binPath}/${dirName}/content`,
+    option,
+  );
+
+  await symlink(
+    r("../../src/apps/startup/_dist"),
+    `${binPath}/${dirName}/startup`,
+    option,
+  );
+  await symlink(
+    r("../../src/apps/designs/_dist"),
+    `${binPath}/${dirName}/skin`,
+    option,
+  );
+  await symlink(
+    r("../../src/apps/modules/_dist"),
+    `${binPath}/${dirName}/resource`,
+    option,
+  );
 
   if (!isDev) {
-    await symlink(relative(`${binPath}/${dirName}`, "./src/apps/settings/_dist"),`${binPath}/${dirName}/settings`,option)
+    await symlink(
+      r("../../src/apps/settings/_dist"),
+      `${binPath}/${dirName}/settings`,
+      option,
+    );
   }
 }

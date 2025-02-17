@@ -142,26 +142,29 @@ jobs:
           FORCE_COLOR: 3
           BUILD_PLATFORM: ${{ inputs.platform }}
         run: |
+          async function addToENV(name,value) {
+            await $`echo "${name}=${value}" >> $GITHUB_ENV`
+          }
           switch (process.env.BUILD_PLATFORM) {
             case "Windows-x64":
-              await $`echo "ARTIFACT_NAME=noraneko-win-amd64-moz-artifact" >> $GITHUB_ENV`
-              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-win-amd64-moz-artifact.zip" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV`
-              await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-win64-installer.exe" >> $GITHUB_ENV`
+              await addToENV("ARTIFACT_NAME","noraneko-win-amd64-moz-artifact");
+              await addToENV("ARTIFACT_FROM_RELEASE_NAME","noraneko-win-amd64-moz-artifact.zip");
+              await addToENV("OUTPUT_NAME","win-amd64");
+              await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`;
+              await addToENV("OUTPUT_INSTALLER_NAME","noraneko-win64-installer.exe");
               break;
             case "Linux-x64":
-              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV`
-              await $`echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-linux-amd64.tar.xz" >> $GITHUB_ENV`
+              await addToENV("ARTIFACT_FROM_RELEASE_NAME","noraneko-linux-amd64-moz-artifact.tar.xz");
+              await addToENV("OUTPUT_NAME","linux-amd64");
+              await $`echo "INSTALLER_PATH=noraneko*tar.xz" >> $GITHUB_ENV`;
+              await addToENV("OUTPUT_INSTALLER_NAME","noraneko-linux-amd64.tar.xz");
               break;
             case "macOS-x64":
-              await $`echo "ARTIFACT_NAME=noraneko-mac-universal-moz-artifact-release" >> $GITHUB_ENV`
-              await $`echo "ARTIFACT_FROM_RELEASE_NAME=noraneko-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV`
-              await $`echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV`
-              await $`echo "OUTPUT_INSTALLER_NAME=noraneko-macOS-universal.dmg" >> $GITHUB_ENV`
+              await addToENV("ARTIFACT_NAME","noraneko-mac-universal-moz-artifact-release");
+              await addToENV("ARTIFACT_FROM_RELEASE_NAME","noraneko-mac-universal-moz-artifact-release.zip");
+              await addToENV("OUTPUT_NAME","mac-universal");
+              await $`echo "INSTALLER_PATH=noraneko-*dmg" >> $GITHUB_ENV`;
+              await addToENV("OUTPUT_INSTALLER_NAME","noraneko-macOS-universal.dmg");
               break;
           }
 
@@ -280,37 +283,54 @@ jobs:
           unzip ~/downloads/${{ inputs.platform }}-application-ini.zip -d ~/noraneko-dev
 
       - name: Create MAR package
+        shell: zx --verbose {0}
+        env:
+          FORCE_COLOR: 3
         run: |
-          chmod +x $(echo ./obj-*)/dist/host/bin/mar
-          mkdir ~/noraneko-mar
+          const path_obj = await $`echo ./obj-*`;
+          await $`chmod +x ${path_obj}/dist/host/bin/mar`
+          await $`mkdir ~/noraneko-mar`
 
-          awk -F "=" '/^Version/ {print $2}' "$(echo ~)/noraneko-dev/nora-application.ini" > ~/noraneko-mar/version.txt
+          await $`awk -F "=" '/^Version/ {print $2}' "${os.homedir()}/noraneko-dev/nora-application.ini" > ~/noraneko-mar/version.txt`;
 
-          touch "$(echo ./obj-*)/dist/noraneko/precomplete"
-          MAR="$(echo ./obj-*)/dist/host/bin/mar" MOZ_PRODUCT_VERSION=$(cat ~/noraneko-mar/version.txt) MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar "$(echo ./obj-*)/dist/noraneko"
+          const version_txt = await $`cat ~/noraneko-mar/version.txt`
 
-          cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt
-          cp noraneko/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt
-          echo "$(cat ~/noraneko-mar/version.txt)@$(cat ~/noraneko-mar/noraneko_version.txt)" > ~/noraneko-mar/version_display.txt
+          await $`touch "${path_obj}/dist/noraneko/precomplete"`
+          await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/noraneko"`;
 
-          shasum --algorithm 512 ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt
-          stat --format "%s" ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar > ~/noraneko-mar/mar_size.txt
+          await $`cp noraneko/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt`
+          await $`cp noraneko/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt`
 
-          awk -F "=" '/BuildID/ {print $2}' "$(echo ~)/noraneko-dev/nora-application.ini" > ~/noraneko-mar/buildid.txt
+          const noraneko_version_txt = await $`cat ~/noraneko-mar/noraneko_version.txt`
+          await $`echo "${version_txt}@${noraneko_version_txt}" > ~/noraneko-mar/version_display.txt`
 
-          mkdir ~/noraneko-publish
+          await $`shasum --algorithm 512 ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt`
+          await $`stat --format "%s" ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar > ~/noraneko-mar/mar_size.txt`
 
-          echo "{" >> ~/noraneko-publish/meta.json
-          echo "\"version_display\":\"$(cat ~/noraneko-mar/version_display.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"version\":\"$(cat ~/noraneko-mar/version.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"noraneko_version\":\"$(cat ~/noraneko-mar/noraneko_version.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"noraneko_buildid\":\"$(cat ~/noraneko-mar/noraneko_buildid.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"mar_size\":\"$(cat ~/noraneko-mar/mar_size.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"mar_shasum\":\"$(cat ~/noraneko-mar/mar_shasum.txt)\"," >> ~/noraneko-publish/meta.json
-          echo "\"buildid\":\"$(cat ~/noraneko-mar/buildid.txt)\"" >> ~/noraneko-publish/meta.json
-          echo "}" >> ~/noraneko-publish/meta.json
+          await $`awk -F "=" '/BuildID/ {print $2}' "${os.homedir()}/noraneko-dev/nora-application.ini" > ~/noraneko-mar/buildid.txt`
 
-          cp ~/noraneko-mar/*.mar ~/noraneko-publish
+          await $`mkdir ~/noraneko-publish`
+
+          const version_display = (await $`cat ~/noraneko-mar/version_display.txt`)._stdout;
+          const version = (await $`cat ~/noraneko-mar/version.txt`)._stdout;
+          const noraneko_version = (await $`cat ~/noraneko-mar/noraneko_version.txt`)._stdout;
+          const noraneko_buildid = (await $`cat ~/noraneko-mar/noraneko_buildid.txt`)._stdout;
+          const mar_size = (await $`cat ~/noraneko-mar/mar_size.txt`)._stdout;
+          const mar_shasum = (await $`cat ~/noraneko-mar/mar_shasum.txt`)._stdout;
+          const buildid = (await $`cat ~/noraneko-mar/buildid.txt`)._stdout;
+
+          const json = {
+            version,
+            noraneko_version,
+            noraneko_buildid,
+            mar_size,
+            mar_shasum,
+            buildid,
+          }
+
+          await fs.writeJson(os.homedir()+"/noraneko-publish/meta.json",json);
+
+          await $`cp ~/noraneko-mar/*.mar ~/noraneko-publish`;
 
       - name: Publish dist 🎁
         uses: actions/upload-artifact@v4
