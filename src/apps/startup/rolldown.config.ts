@@ -5,6 +5,8 @@ import {resolve} from "pathe"
 const r = (subpath: string): string =>
   resolve(import.meta.dirname, subpath);
 
+console.log(Deno.args);
+
 let mode = "";
 if (!process.argv.at(-1).includes(".")) mode = process.argv.at(-1)
 

@@ -10,6 +10,8 @@ if (Deno.build.os === "windows") {
 let pDevVite: ViteDevServer[] = [];
 let pSettings: ProcessPromise | null = null;
 
+let worker: Worker | null = null;
+
 const r = (value: string): string => {
   return resolve(import.meta.dirname, "../..", value);
 };
@@ -32,6 +34,13 @@ async function launchDev(mode: string, buildid2: string) {
     }),
   ];
 
+  worker = new Worker(
+    new URL("./workers/dev-settings.ts", import.meta.url).href,
+    {
+      type: "module",
+    },
+  );
+
   for (const i of pDevVite) {
     await i.listen();
     i.printUrls();
@@ -42,6 +51,9 @@ async function launchDev(mode: string, buildid2: string) {
 async function shutdownDev() {
   for (const i of pDevVite) {
     await i.close();
+  }
+  if (worker) {
+    worker.postMessage("");
   }
   // await pSettings!.kill("SIGABRT")
   console.log("[child-dev] Completed Shutdown ViteDevServer✅");

@@ -1,4 +1,4 @@
-import { zFloorpDesignConfigs } from "../../../../../common/scripts/global-types/type";
+import { zFloorpDesignConfigs } from "../../../../../common/scripts/global-types/type.ts";
 
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";
@@ -13,7 +13,9 @@ interface FCSS {
   userjs: string | null;
 }
 
-export function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FCSS {
+export function getCSSFromConfig(
+  pref: z.infer<typeof zFloorpDesignConfigs>,
+): FCSS {
   switch (pref.globalConfigs.userInterface) {
     case "fluerial": {
       return { styles: [fluerialStyles], userjs: null };
@@ -45,9 +47,9 @@ export function getCSSFromConfig(pref: z.infer<typeof zFloorpDesignConfigs>): FC
     default: {
       pref.globalConfigs.userInterface satisfies never;
       return {
-        styles:[],
-        userjs:null
-      }
+        styles: [],
+        userjs: null,
+      };
     }
   }
 }

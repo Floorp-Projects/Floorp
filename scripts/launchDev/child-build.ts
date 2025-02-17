@@ -33,11 +33,22 @@ async function launchBuild(mode: string, buildid2: string) {
     await Promise.all([
       $({ cwd: r("./src/apps/startup") })`deno task build ${mode}`,
       build({
+        root: r("./src/apps/main"),
+        configFile: r("./src/apps/main/vite.config.ts"),
+        define: {
+          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
+          "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
+        },
+        base: "chrome://noraneko/content",
+      }),
+      build({
+        root: r("./src/apps/modules"),
         configFile: r("./src/apps/modules/vite.config.ts"),
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
           "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
         },
+        base: "resource://noraneko",
       }),
       build({
         configFile: r("./src/apps/designs/vite.config.ts"),

@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "types": ["vite/client", "jsr:@nora/lib-dom-gecko"]
+    "types": ["npm:vite/client", "jsr:@nora/lib-dom-gecko"]
   },
   "imports": {
-    "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko"
+    "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
+    "@nora/skin/": "../../packages/skin/"
   }
 }

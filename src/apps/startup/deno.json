@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "build": "deno run -A npm:rolldown -c rolldown.config.ts"
+  }
+}
+    
