@@ -330,6 +330,7 @@ jobs:
 
         echo "MAR_NAME=WINNT-${arch}.mar" >> $GITHUB_OUTPUT
         echo "MAR_SIZE=$(stat -c "%s" ~/output/WINNT-${arch}.mar)" >> $GITHUB_OUTPUT
+
     # Publish START
     - name: make name of publish archive
       shell: node {0}
@@ -426,6 +427,23 @@ jobs:
         wait-for-completion-timeout-in-seconds: 7200
         wait-for-completion: true
         output-artifact-directory: signed_installers
+
+    - name: Create MAR artifact 📦
+      if: inputs.enable-codesign == true
+      run: |
+        if [[ $GHA_aarch64 == 'true' ]];then
+          arch="aarch64"
+        else
+          arch="x86_64"
+        fi
+
+        cd Floorp-Repackage
+        MAR="$GITHUB_WORKSPACE/obj-${arch}-pc-windows-msvc/dist/host/bin/mar" \
+        MOZ_PRODUCT_VERSION=$(cat $GITHUB_WORKSPACE/browser/config/version_display.txt) \
+        MAR_CHANNEL_ID=release \
+        $GITHUB_WORKSPACE/tools/update-packaging/make_full_update.sh $GITHUB_WORKSPACE/signed_installers/WINNT-x86_64.mar "$GITHUB_WORKSPACE/obj-${arch}-pc-windows-msvc/dist/floorp"
+      env:
+        GHA_aarch64: ${{inputs.aarch64}}
 
     - name: Publish Signed Package
       if: inputs.enable-codesign == true

@@ -222,7 +222,7 @@ jobs:
     - name: download Windows x86_64 build artifact📥
       uses: actions/download-artifact@v4
       with:
-        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+        name: floorp-windows-x86_64-package-signed-installer
         path: ~/downloads/artifacts/windows-x64
 
     - name: download macOS Universal build artifact📥
@@ -260,6 +260,7 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
           /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64.mar
           /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
+          /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
           /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
