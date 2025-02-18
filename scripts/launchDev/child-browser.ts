@@ -66,7 +66,8 @@ function printFirefoxLog(lines: string[]) {
   }
 }
 
-import { log, type LogEntry } from "zx/core";
+import { type LogEntry, log } from "zx/core";
+import { brandingBaseName, brandingName } from "../../build.ts";
 
 $.log = (entry: LogEntry) => {
   // if the buffer is null, the process is on exit.
@@ -106,19 +107,19 @@ export async function runBrowser(port = 5180) {
   switch (Deno.build.os) {
     case "windows":
       processBrowser =
-        $`./_dist/bin/noraneko/noraneko.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
+        $`./_dist/bin/${brandingBaseName}/${brandingBaseName}.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
           .stdio("pipe");
       break;
 
     case "linux":
       processBrowser =
-        $`./_dist/bin/noraneko/noraneko --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
+        $`./_dist/bin/${brandingBaseName}/${brandingBaseName} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
           .stdio("pipe");
       break;
 
     case "darwin":
       processBrowser =
-        $`./_dist/bin/noraneko/Noraneko.app/Contents/MacOS/noraneko --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
+        $`./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
           .stdio("pipe");
       break;
   }
