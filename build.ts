@@ -14,6 +14,7 @@ import { $, ProcessPromise } from "zx";
 import { usePwsh } from "zx";
 import chalk from "chalk";
 import process from "node:process";
+import { ensureSymlink } from "@std/fs";
 
 switch (process.platform) {
   case "win32":
@@ -248,21 +249,19 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       devInit = true;
     }
     await Promise.all([
-      injectManifest(binDir, true, "noraneko-dev"),
+      injectManifest(binDir, "dev", "noraneko-dev"),
       injectXHTMLDev(binDir),
     ]);
   } else {
     await release("before");
+    await injectManifest(binDir, "run-prod", "noraneko-dev");
     try {
-      await fs.access(`_dist/bin/${brandingBaseName}/noraneko-dev`);
-      await fs.rm(`_dist/bin/${brandingBaseName}/noraneko-dev`, {
-        recursive: true,
-      });
+      await Deno.remove("_dist/bin/noraneko/noraneko-dev", { recursive: true });
     } catch {}
-    await fs.symlink(
-      `../../${brandingBaseName}`,
-      `./_dist/bin/${brandingBaseName}/noraneko-dev`,
-      process.platform === "win32" ? "junction" : undefined,
+    await Deno.symlink(
+      pathe.resolve(import.meta.dirname, "_dist/noraneko"),
+      "_dist/bin/noraneko/noraneko-dev",
+      { type: "junction" },
     );
   }
 
@@ -349,13 +348,15 @@ async function release(mode: "before" | "after") {
   } catch {}
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
-    console.log(`deno run -A ./scripts/launchDev/child-build.ts production ${
-      buildid2 ?? ""
-    }`);
+    console.log(
+      `deno run -A ./scripts/launchDev/child-build.ts production ${
+        buildid2 ?? ""
+      }`,
+    );
     await $`deno run -A ./scripts/launchDev/child-build.ts production ${
       buildid2 ?? ""
     }`;
-    await injectManifest("./_dist", false);
+    await injectManifest("./_dist", "prod");
   } else if (mode === "after") {
     const binPath = "../obj-artifact-build-output/dist/bin";
     injectXHTML(binPath);

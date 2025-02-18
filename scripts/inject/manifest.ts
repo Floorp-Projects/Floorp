@@ -6,10 +6,10 @@ import { ensureDir } from "@std/fs/ensure-dir";
 
 export async function injectManifest(
   binPath: string,
-  isDev: boolean,
+  mode: "dev" | "run-prod" | "prod",
   dirName = "noraneko",
 ) {
-  if (isDev) {
+  if (mode !== "prod") {
     const manifest_chrome = await Deno.readTextFile(
       `${binPath}/chrome.manifest`,
     );
@@ -36,7 +36,11 @@ export async function injectManifest(
 content noraneko-startup startup/ contentaccessible=yes
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
-${!isDev ? "\ncontent noraneko-settings settings/ contentaccessible=yes" : ""}`,
+${
+      mode !== "dev"
+        ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
+        : ""
+    }`,
   );
 
   const r = (v: string) => {
@@ -69,7 +73,7 @@ ${!isDev ? "\ncontent noraneko-settings settings/ contentaccessible=yes" : ""}`,
     option,
   );
 
-  if (!isDev) {
+  if (mode !== "dev") {
     await symlink(
       r("../../src/apps/settings/_dist"),
       `${binPath}/${dirName}/settings`,
