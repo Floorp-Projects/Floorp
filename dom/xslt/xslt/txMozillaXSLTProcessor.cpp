@@ -260,9 +260,18 @@ inline void ImplCycleCollectionTraverse(
  * txMozillaXSLTProcessor
  */
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(txMozillaXSLTProcessor, mOwner,
-                                      mEmbeddedStylesheetRoot, mSource,
-                                      mVariables)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(txMozillaXSLTProcessor)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(txMozillaXSLTProcessor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner, mSource)
+  tmp->Reset();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(txMozillaXSLTProcessor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+      mOwner, mStylesheetDocument, mEmbeddedStylesheetRoot, mSource, mVariables)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
@@ -276,23 +285,17 @@ NS_INTERFACE_MAP_END
 
 txMozillaXSLTProcessor::txMozillaXSLTProcessor()
     : mOwner(nullptr),
-      mStylesheetDocument(nullptr),
       mTransformResult(NS_OK),
       mCompileResult(NS_OK),
       mFlags(0) {}
 
 txMozillaXSLTProcessor::txMozillaXSLTProcessor(nsISupports* aOwner)
     : mOwner(aOwner),
-      mStylesheetDocument(nullptr),
       mTransformResult(NS_OK),
       mCompileResult(NS_OK),
       mFlags(0) {}
 
-txMozillaXSLTProcessor::~txMozillaXSLTProcessor() {
-  if (mStylesheetDocument) {
-    mStylesheetDocument->RemoveMutationObserver(this);
-  }
-}
+txMozillaXSLTProcessor::~txMozillaXSLTProcessor() { Reset(); }
 
 NS_IMETHODIMP
 txMozillaXSLTProcessor::SetTransformObserver(nsITransformObserver* aObserver) {
