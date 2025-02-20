@@ -6,7 +6,7 @@ import { BreadcrumbLink } from "../components/ui/breadcrumb.tsx";
 import { BreadcrumbPage } from "../components/ui/breadcrumb.tsx";
 import { BreadcrumbList } from "../components/ui/breadcrumb.tsx";
 import { BreadcrumbItem } from "../components/ui/breadcrumb.tsx";
-import i18n from "@/i18n.ts";
+import i18n from "../lib/i18n/i18n.ts";
 
 export function Header() {
     const location = useLocation();

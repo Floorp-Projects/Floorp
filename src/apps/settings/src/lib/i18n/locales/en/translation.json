@@ -1,7 +1,6 @@
 {
     "title": {
-        "default": "{{productName}} Settings",
-        "withPageName": "{{productName}} Settings - {{pageName}}"
+        "default": "{{productName}} Settings"
     },
     "header": {
         "title": "Settings",
