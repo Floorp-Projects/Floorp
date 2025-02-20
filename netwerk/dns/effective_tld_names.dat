@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-02-12_10-28-12_UTC
-// COMMIT: 560007a8aea8267f15cad9abcdbcff7848186bd8
+// VERSION: 2025-02-18_07-24-33_UTC
+// COMMIT: 445e11a2ebe9ef1ff9c1983ed8e1ff6e5b5cda28
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -14107,6 +14107,11 @@ lohmus.me
 // Lokalized : https://lokalized.nl
 // Submitted by Noah Taheij <noah@lokalized.nl>
 servers.run
+
+// Lovable : https://lovable.dev
+// Submitted by Fabian Hedin <security@lovable.dev>
+lovable.app
+lovableproject.com
 
 // LubMAN UMCS Sp. z o.o : https://lubman.pl/
 // Submitted by Ireneusz Maliszewski <ireneusz.maliszewski@lubman.pl>
