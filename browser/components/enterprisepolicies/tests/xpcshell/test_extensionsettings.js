@@ -673,7 +673,9 @@ add_task(async function test_private_browsing() {
         addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
       ),
       expectLocked,
-      `Addon should ${expectLocked ? "NOT" : ""} be able to change private browsing setting.`
+      `Addon should ${
+        expectLocked ? "NOT" : ""
+      } be able to change private browsing setting.`
     );
 
     await ext.unload();
