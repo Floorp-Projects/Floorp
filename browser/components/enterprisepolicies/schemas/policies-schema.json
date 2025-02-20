@@ -710,6 +710,9 @@
             },
             "temporarily_allow_weak_signatures": {
               "type": "boolean"
+            },
+            "private_browsing": {
+              "type": "boolean"
             }
           }
         }

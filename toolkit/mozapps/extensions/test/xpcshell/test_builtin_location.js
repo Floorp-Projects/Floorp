@@ -11,9 +11,10 @@ AddonTestUtils.createAppInfo(
   "1"
 );
 
-async function getWrapper(id, hidden) {
+async function getWrapper(id, hidden, { manifest } = {}) {
   let wrapper = await installBuiltinExtension({
     manifest: {
+      ...manifest,
       browser_specific_settings: { gecko: { id } },
       hidden,
     },
@@ -147,3 +148,79 @@ add_task(async function test_builtin_update() {
   await wrapper.unload();
   await AddonTestUtils.promiseShutdownManager();
 });
+
+// Tests private_browsing policy extension settings doesn't apply
+// to built-in extensions.
+add_task(
+  // This test is skipped on builds that don't support enterprise policies
+  // (e.g. android builds).
+  { skip_if: () => !Services.policies },
+  async function test_builtin_private_browsing_policy_setting() {
+    await AddonTestUtils.promiseStartupManager();
+
+    const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+      "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+    );
+
+    let id = "builtin-addon@tests.mozilla.org";
+    let idNotAllowed = "builtin-not-allowed@tests.mozilla.org";
+
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          [id]: {
+            private_browsing: false,
+          },
+          [idNotAllowed]: {
+            private_browsing: true,
+          },
+        },
+      },
+    });
+
+    // Sanity check the policy data has been loaded.
+    Assert.equal(
+      Services.policies.getExtensionSettings(id)?.private_browsing,
+      false,
+      `Got expected policies setting private_browsing for ${id}`
+    );
+    Assert.equal(
+      Services.policies.getExtensionSettings(idNotAllowed)?.private_browsing,
+      true,
+      `Got expected policies setting private_browsing for ${idNotAllowed}`
+    );
+
+    async function assertPrivateBrowsingAllowed({
+      addonId,
+      manifest,
+      expectedPrivateBrowsingAllowed,
+    }) {
+      let wrapper = await getWrapper(addonId, undefined, { manifest });
+      let addon = await promiseAddonByID(addonId);
+      notEqual(addon, null, `${addonId} is installed`);
+      ok(addon.isActive, `${addonId} is active`);
+      ok(addon.isPrivileged, `${addonId} is privileged`);
+      ok(wrapper.extension.isAppProvided, `${addonId} is app provided`);
+      equal(
+        wrapper.extension.privateBrowsingAllowed,
+        expectedPrivateBrowsingAllowed,
+        `Builtin Addon ${addonId} should ${expectedPrivateBrowsingAllowed ? "" : "NOT"} have access private browsing access`
+      );
+      await wrapper.unload();
+    }
+
+    await assertPrivateBrowsingAllowed({
+      addonId: id,
+      expectedPrivateBrowsingAllowed: true,
+    });
+    await assertPrivateBrowsingAllowed({
+      addonId: idNotAllowed,
+      manifest: {
+        incognito: "not_allowed",
+      },
+      expectedPrivateBrowsingAllowed: false,
+    });
+
+    await AddonTestUtils.promiseShutdownManager();
+  }
+);
