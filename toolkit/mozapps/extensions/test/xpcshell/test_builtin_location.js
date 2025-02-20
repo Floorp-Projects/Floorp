@@ -204,7 +204,9 @@ add_task(
       equal(
         wrapper.extension.privateBrowsingAllowed,
         expectedPrivateBrowsingAllowed,
-        `Builtin Addon ${addonId} should ${expectedPrivateBrowsingAllowed ? "" : "NOT"} have access private browsing access`
+        `Builtin Addon ${addonId} should ${
+          expectedPrivateBrowsingAllowed ? "" : "NOT"
+        } have access private browsing access`
       );
       await wrapper.unload();
     }
