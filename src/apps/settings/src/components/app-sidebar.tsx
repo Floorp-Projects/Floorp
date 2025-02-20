@@ -1,24 +1,18 @@
-import * as React from "react"
+import type * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
-  Bot,
-  Frame,
-  Map,
-  PieChart,
-  Settings2,
-  House,
-  PencilRuler,
-  PanelLeft,
-  Briefcase,
-  Option,
-  Grip,
-  UserRoundPen,
   BadgeInfo,
-  Wrench
-} from "lucide-react"
-
-import { NavUser } from "@/components/nav-user"
-import { NavHeader } from "@/components/nav-header"
+  Briefcase,
+  Grip,
+  House,
+  Option,
+  PanelLeft,
+  PencilRuler,
+  UserRoundPen,
+  Wrench,
+} from "lucide-react";
+import { NavUser } from "@/components/nav-user.tsx";
+import { NavHeader } from "@/components/nav-header.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -30,50 +24,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { NavFeatures } from "./nav-features"
+} from "@/components/ui/sidebar.tsx";
+import { NavFeatures } from "@/components/nav-features.tsx";
 
-// This is sample data.
-const data = {
-  user: {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { t } = useTranslation();
+
+  const user = {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
-  },
-  features: [
-    {
-      title: "Tab & Appearance",
-      url: "#",
-      icon: PencilRuler
-    },
-    {
-      title: "Panel Sidebar",
-      url: "#",
-      icon: PanelLeft
-    },
-    {
-      title: "Workspaces",
-      url: "#",
-      icon: Briefcase
-    },{
-      title: "Keyboard Shortcuts",
-      url: "#",
-      icon: Option
-    },
-    {
-      title: "Web Apps",
-      url: "#",
-      icon: Grip
-    },
-    {
-      title: "Profile and Account",
-      url: "#",
-      icon: UserRoundPen
-    }
-  ]
-}
+  };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const features = [
+    { title: t("pages.home"), url: "#/", icon: House },
+    { title: t("pages.tabAndAppearance"), url: "#/design", icon: PencilRuler },
+    { title: t("pages.browserSidebar"), url: "#/sidebar", icon: PanelLeft },
+    { title: t("pages.workspaces"), url: "#/workspaces", icon: Briefcase },
+    { title: t("pages.keyboardShortcuts"), url: "#/shortcuts", icon: Option },
+    { title: t("pages.webApps"), url: "#/webapps", icon: Grip },
+    { title: t("pages.profileAndAccount"), url: "#/accounts", icon: UserRoundPen },
+  ];
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -81,17 +53,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavFeatures features={data.features}/>
+        <NavFeatures features={features} />
         <SidebarGroup>
           <SidebarGroupLabel>
-            About
+            {t("sidebar.about", "About")}
           </SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <a href={"#"}>
                   <BadgeInfo />
-                  <span>About Noraneko</span>
+                  <span>{t("sidebar.aboutNoraneko", "About Noraneko")}</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -99,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton asChild>
                 <a href={"#"}>
                   <Wrench />
-                  <span>Debug</span>
+                  <span>{t("sidebar.debug", "Debug")}</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -107,9 +79,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

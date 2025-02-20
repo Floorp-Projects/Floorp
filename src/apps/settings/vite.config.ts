@@ -2,8 +2,10 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest.ts";
+import CustomHmr from "./react-18n-hmr.ts";
+import { join } from "node:path";
+import { dirname } from "node:path";
 
 export default defineConfig({
   server: {
@@ -18,13 +20,14 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
+      "@/": join(dirname(import.meta.url), "src"),
     },
   },
   plugins: [
     tsconfigPaths(),
     react(),
     tailwindcss(),
+    CustomHmr(),
     {
       name: "gen_jarmn",
       enforce: "post",
