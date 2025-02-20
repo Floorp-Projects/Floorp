@@ -22,8 +22,8 @@ switch (process.platform) {
 }
 
 //? branding
-const brandingBaseName = "noraneko";
-const brandingName = "Noraneko";
+export const brandingBaseName = "noraneko";
+export const brandingName = "Noraneko";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -131,8 +131,11 @@ async function decompressBin() {
 
 async function downloadBinArchive() {
   const fileName = await getBinArchive();
-  const originUrl = (await $`git remote get-url origin`).stdout.trim();
-  const originDownloadUrl = `${originUrl}releases/latest/download/${fileName}`;
+  let originUrl = (await $`git remote get-url origin`).stdout.trim();
+  if (originUrl.endsWith("/")) {
+    originUrl = originUrl.slice(0, -1);
+  }
+  const originDownloadUrl = `${originUrl}-runtime/releases/latest/download/${fileName}`;
   console.log(`Downloading from origin: ${originDownloadUrl}`);
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
@@ -143,7 +146,7 @@ async function downloadBinArchive() {
       error.stderr,
     );
     const upstreamUrl =
-      `https://github.com/nyanrus/noraneko/releases/latest/download/${fileName}`;
+      `https://github.com/nyanrus/noraneko-runtime/releases/latest/download/${fileName}`;
     console.log(`Downloading from upstream: ${upstreamUrl}`);
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
