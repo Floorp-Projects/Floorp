@@ -8,6 +8,7 @@
 #define mozilla_dom_indexeddatabasemanager_h__
 
 #include "js/TypeDecls.h"
+#include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/Logging.h"
@@ -159,6 +160,7 @@ class IndexedDatabaseManager final {
       mPendingDeleteInfos;
 
   nsCString mLocale;
+  bool mLocaleInitialized MOZ_GUARDED_BY(sMainThreadCapability);
 
   indexedDB::BackgroundUtilsChild* mBackgroundActor;
 
