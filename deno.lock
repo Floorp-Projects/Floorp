@@ -87,6 +87,7 @@
     "npm:postcss@^8.5.1": "8.5.1",
     "npm:puppeteer-core@^24.1.1": "24.2.0_devtools-protocol@0.0.1402036",
     "npm:react-dom@19": "19.0.0_react@19.0.0",
+    "npm:react-hook-form@^7.54.2": "7.54.2_react@19.0.0",
     "npm:react-i18next@^15.4.1": "15.4.1_i18next@24.2.2__typescript@5.7.3_react@19.0.0_typescript@5.7.3",
     "npm:react-refresh@0.16": "0.16.0",
     "npm:react-router-dom@^7.1.5": "7.1.5_react@19.0.0_react-dom@19.0.0__react@19.0.0",
@@ -4671,6 +4672,12 @@
         "scheduler"
       ]
     },
+    "react-hook-form@7.54.2_react@19.0.0": {
+      "integrity": "sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==",
+      "dependencies": [
+        "react@19.0.0"
+      ]
+    },
     "react-i18next@15.4.1_i18next@24.2.2__typescript@5.7.3_react@19.0.0_typescript@5.7.3": {
       "integrity": "sha512-ahGab+IaSgZmNPYXdV1n+OYky95TGpFwnKRflX/16dY04DsYYKHtVLjeny7sBSCREEcoMbAgSkFiGLF5g5Oofw==",
       "dependencies": [
@@ -6168,6 +6175,7 @@
             "npm:next-themes@~0.4.4",
             "npm:postcss@^8.5.1",
             "npm:react-dom@19",
+            "npm:react-hook-form@^7.54.2",
             "npm:react-i18next@^15.4.1",
             "npm:react-refresh@0.16",
             "npm:react-router-dom@^7.1.5",

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import Dashboard from "@/app/dashboard/page.tsx";
+import Design from "@/app/design/page.tsx";
 import { Route, Routes } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
@@ -31,8 +32,8 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 {
-                  /* <Route path="/workspaces" element={<Workspaces />} />
                   <Route path="/design" element={<Design />} />
+                  /* <Route path="/workspaces" element={<Workspaces />} />
                   <Route path="/accounts" element={<ProfileAndAccount />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/search" element={<SearchResults />} />
