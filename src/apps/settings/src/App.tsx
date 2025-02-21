@@ -26,7 +26,7 @@ export default function App() {
       <div className="flex flex-col h-screen w-screen">
         <div className="flex flex-1">
           <AppSidebar />
-          <div className="flex-1 max-w-4xl">
+          <div className="flex-1 max-w-3xl">
             <Header />
             <div className="p-4">
               <Routes>

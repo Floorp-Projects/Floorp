@@ -15,13 +15,13 @@ export default function Page() {
   const accountName = "User";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       <div className="flex flex-col items-start pl-6">
         <div className="m-5 p-1 rounded-full bg-gradient-to-tr from-blue-600 via-pink-600 to-orange-400">
           <div className="p-1 rounded-full bg-white">
             <Avatar alt="Avatar" className="w-20 h-20">
               <AvatarImage src={accountImage} />
-              <AvatarFallback>User</AvatarFallback>
+              <AvatarFallback>{accountName}</AvatarFallback>
             </Avatar>
           </div>
         </div>
