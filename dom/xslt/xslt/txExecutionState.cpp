@@ -14,14 +14,12 @@
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 
-using mozilla::UniquePtr;
-using mozilla::Unused;
-using mozilla::WrapUnique;
+using namespace mozilla;
 
 const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(const txXPathNode& aSource) {
-  mSourceDocument = WrapUnique(txXPathNodeUtils::getOwnerDocument(aSource));
+  mSourceDocument = Some(txXPathNodeUtils::getOwnerDocument(aSource));
 
   nsAutoString baseURI;
   nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
@@ -39,22 +37,10 @@ nsresult txLoadedDocumentsHash::init(const txXPathNode& aSource) {
   // txMozillaXSLTProcessor::TransformToFragment) it makes more sense to return
   // the real root of the source tree, which is the node where the transform
   // started.
-  PutEntry(baseURI)->mDocument = WrapUnique(
-      txXPathNativeNode::createXPathNode(txXPathNativeNode::getNode(aSource)));
+  WithEntryHandle(baseURI, [&aSource](auto&& entry) {
+    entry.Insert(txLoadedDocumentEntry{txXPathNode(aSource)});
+  });
   return NS_OK;
-}
-
-txLoadedDocumentsHash::~txLoadedDocumentsHash() {
-  if (mSourceDocument) {
-    nsAutoString baseURI;
-    nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
-    if (NS_SUCCEEDED(rv)) {
-      txLoadedDocumentEntry* entry = GetEntry(baseURI);
-      if (entry) {
-        delete entry->mDocument.release();
-      }
-    }
-  }
 }
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet,
@@ -358,27 +344,24 @@ const txXPathNode* txExecutionState::retrieveDocument(const nsAString& aUri) {
           ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
 
   // try to get already loaded document
-  txLoadedDocumentEntry* entry = mLoadedDocuments.PutEntry(aUri);
-  if (!entry) {
-    return nullptr;
-  }
+  const Variant<txXPathNode, nsresult>& result =
+      mLoadedDocuments.LookupOrInsertWith(aUri, [&] {
+        // open URI
+        nsAutoString errMsg;
+        // XXX we should get the loader from the actual node
+        // triggering the load, but this will do for the time being
+        Result<txXPathNode, nsresult> loadResult = txParseDocumentFromURI(
+            aUri, *mLoadedDocuments.mSourceDocument, errMsg);
 
-  if (!entry->mDocument && !entry->LoadingFailed()) {
-    // open URI
-    nsAutoString errMsg;
-    // XXX we should get the loader from the actual node
-    // triggering the load, but this will do for the time being
-    entry->mLoadResult =
-        txParseDocumentFromURI(aUri, *mLoadedDocuments.mSourceDocument, errMsg,
-                               getter_Transfers(entry->mDocument));
-
-    if (entry->LoadingFailed()) {
-      receiveError(u"Couldn't load document '"_ns + aUri + u"': "_ns + errMsg,
-                   entry->mLoadResult);
-    }
-  }
-
-  return entry->mDocument.get();
+        if (loadResult.isErr()) {
+          nsresult rv = loadResult.unwrapErr();
+          receiveError(
+              u"Couldn't load document '"_ns + aUri + u"': "_ns + errMsg, rv);
+          return txLoadedDocumentEntry(rv);
+        }
+        return txLoadedDocumentEntry(loadResult.unwrap());
+      });
+  return result.is<txXPathNode>() ? &result.as<txXPathNode>() : nullptr;
 }
 
 nsresult txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
