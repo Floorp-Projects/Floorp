@@ -59,6 +59,7 @@
     "npm:adm-zip@~0.5.16": "0.5.16",
     "npm:autoprefixer@^10.4.20": "10.4.20_postcss@8.5.1",
     "npm:birpc@^2.0.19": "2.2.0",
+    "npm:birpc@^2.2.0": "2.2.0",
     "npm:chai@^5.1.2": "5.1.2",
     "npm:chalk@^5.4.1": "5.4.1",
     "npm:chokidar@^4.0.3": "4.0.3",
@@ -6164,6 +6165,10 @@
         }
       },
       "src/apps/modules": {
+        "dependencies": [
+          "jsr:@nora/lib-dom-gecko@*",
+          "npm:vite@*"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@swc/cli@0.6.0",
@@ -6195,6 +6200,7 @@
             "npm:@types/react@19",
             "npm:@vitejs/plugin-react-swc@^3.7.2",
             "npm:autoprefixer@^10.4.20",
+            "npm:birpc@^2.2.0",
             "npm:class-variance-authority@~0.7.1",
             "npm:clsx@^2.1.1",
             "npm:cmdk@^1.0.4",

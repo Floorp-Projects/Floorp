@@ -1,14 +1,3 @@
-export interface PrefGetParams {
-  prefName: string;
-  prefType: "string" | "boolean" | "number";
-}
-
-export interface PrefSetParams {
-  prefName: string;
-  prefType: "string" | "boolean" | "number";
-  prefValue: string | boolean | number;
-}
-
 export interface NRSettingsParentFunctions {
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
