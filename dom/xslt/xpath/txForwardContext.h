@@ -9,7 +9,7 @@
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 
-class txForwardContext : public txIEvalContext {
+class MOZ_STACK_CLASS txForwardContext : public txIEvalContext {
  public:
   txForwardContext(txIMatchContext* aContext, const txXPathNode& aContextNode,
                    txNodeSet* aContextNodeSet)

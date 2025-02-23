@@ -60,7 +60,7 @@ class txXPathNodeUtils {
   static uint16_t getNodeType(const txXPathNode& aNode);
   static void appendNodeValue(const txXPathNode& aNode, nsAString& aResult);
   static bool isWhitespace(const txXPathNode& aNode);
-  static txXPathNode* getOwnerDocument(const txXPathNode& aNode);
+  static txXPathNode getOwnerDocument(const txXPathNode& aNode);
   static int32_t getUniqueIdentifier(const txXPathNode& aNode);
   static nsresult getXSLTId(const txXPathNode& aNode, const txXPathNode& aBase,
                             nsAString& aResult);
@@ -86,19 +86,10 @@ class txXPathNodeUtils {
 
 class txXPathNativeNode {
  public:
-  static txXPathNode* createXPathNode(nsINode* aNode,
-                                      bool aKeepRootAlive = false);
-  static txXPathNode* createXPathNode(nsIContent* aContent,
-                                      bool aKeepRootAlive = false);
-  static txXPathNode* createXPathNode(mozilla::dom::Document* aDocument);
+  static mozilla::Maybe<txXPathNode> createXPathNode(nsINode* aNode);
   static nsINode* getNode(const txXPathNode& aNode);
   static nsIContent* getContent(const txXPathNode& aNode);
   static mozilla::dom::Document* getDocument(const txXPathNode& aNode);
-  static void addRef(const txXPathNode& aNode) { NS_ADDREF(aNode.mNode); }
-  static void release(const txXPathNode& aNode) {
-    nsINode* node = aNode.mNode;
-    NS_RELEASE(node);
-  }
 };
 
 inline const txXPathNode& txXPathTreeWalker::getCurrentPosition() const {
@@ -123,21 +114,8 @@ inline void txXPathTreeWalker::getNodeName(nsAString& aName) const {
 }
 
 inline void txXPathTreeWalker::moveTo(const txXPathTreeWalker& aWalker) {
-  nsINode* root = nullptr;
-  if (mPosition.mRefCountRoot) {
-    root = mPosition.Root();
-  }
   mPosition.mIndex = aWalker.mPosition.mIndex;
-  mPosition.mRefCountRoot = aWalker.mPosition.mRefCountRoot;
   mPosition.mNode = aWalker.mPosition.mNode;
-  nsINode* newRoot = nullptr;
-  if (mPosition.mRefCountRoot) {
-    newRoot = mPosition.Root();
-  }
-  if (root != newRoot) {
-    NS_IF_ADDREF(newRoot);
-    NS_IF_RELEASE(root);
-  }
 }
 
 inline bool txXPathTreeWalker::isOnNode(const txXPathNode& aNode) const {
@@ -147,12 +125,7 @@ inline bool txXPathTreeWalker::isOnNode(const txXPathNode& aNode) const {
 /* static */
 inline int32_t txXPathNodeUtils::getUniqueIdentifier(const txXPathNode& aNode) {
   MOZ_ASSERT(!aNode.isAttribute(), "Not implemented for attributes.");
-  return NS_PTR_TO_INT32(aNode.mNode);
-}
-
-/* static */
-inline void txXPathNodeUtils::release(txXPathNode* aNode) {
-  NS_RELEASE(aNode->mNode);
+  return NS_PTR_TO_INT32(aNode.mNode.get());
 }
 
 /* static */

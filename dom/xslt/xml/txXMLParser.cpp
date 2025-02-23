@@ -12,16 +12,15 @@
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult txParseDocumentFromURI(const nsAString& aHref,
-                                const txXPathNode& aLoader, nsAString& aErrMsg,
-                                txXPathNode** aResult) {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
+Result<txXPathNode, nsresult> txParseDocumentFromURI(const nsAString& aHref,
+                                                     const txXPathNode& aLoader,
+                                                     nsAString& aErrMsg) {
   nsCOMPtr<nsIURI> documentURI;
   nsresult rv = NS_NewURI(getter_AddRefs(documentURI), aHref);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, Err(rv));
 
   Document* loaderDocument = txXPathNativeNode::getDocument(aLoader);
 
@@ -32,7 +31,7 @@ nsresult txParseDocumentFromURI(const nsAString& aHref,
 
   // Raw pointer, we want the resulting txXPathNode to hold a reference to
   // the document.
-  Document* theDocument = nullptr;
+  nsCOMPtr<Document> theDocument;
   nsAutoSyncOperation sync(loaderDocument,
                            SyncOperationBehavior::eSuspendInput);
   rv = nsSyncLoadService::LoadDocument(
@@ -40,20 +39,14 @@ nsresult txParseDocumentFromURI(const nsAString& aHref,
       loaderDocument->NodePrincipal(),
       nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT, loadGroup,
       loaderDocument->CookieJarSettings(), true,
-      loaderDocument->GetReferrerPolicy(), &theDocument);
+      loaderDocument->GetReferrerPolicy(), getter_AddRefs(theDocument));
 
   if (NS_FAILED(rv)) {
     aErrMsg.AppendLiteral("Document load of ");
     aErrMsg.Append(aHref);
     aErrMsg.AppendLiteral(" failed.");
-    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+    return Err(rv);
   }
 
-  *aResult = txXPathNativeNode::createXPathNode(theDocument);
-  if (!*aResult) {
-    NS_RELEASE(theDocument);
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return txXPathNode(theDocument);
 }
