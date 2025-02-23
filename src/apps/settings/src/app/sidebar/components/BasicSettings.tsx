@@ -53,7 +53,7 @@ function EnableSection({ enabled, onEnableChange }: {
                     type="checkbox"
                     id="enable-panel"
                     checked={enabled}
-                    onChange={(e) => onEnableChange(e.target.checked)}
+                    onChange={(e) => onEnableChange(e.currentTarget.checked)}
                     className="h-4 w-4"
                 />
             </div>

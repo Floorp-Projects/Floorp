@@ -6,6 +6,7 @@
 import Dashboard from "@/app/dashboard/page.tsx";
 import Design from "@/app/design/page.tsx";
 import PanelSidebar from "@/app/sidebar/page.tsx";
+import Workspaces from "@/app/workspaces/page.tsx";
 import { Route, Routes } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
@@ -34,8 +35,9 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/design" element={<Design />} />
                 <Route path="/sidebar" element={<PanelSidebar />} />
+                <Route path="/workspaces" element={<Workspaces />} />
                 {
-                  /* <Route path="/workspaces" element={<Workspaces />} />
+                  /*
                   <Route path="/accounts" element={<ProfileAndAccount />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/search" element={<SearchResults />} />
