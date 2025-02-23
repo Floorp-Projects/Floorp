@@ -5,6 +5,7 @@ import { getDesignSettings, saveDesignSettings } from "@/app/design/dataManager.
 import { Interface } from "@/app/design/components/Interface.tsx";
 import { Tabbar } from "@/app/design/components/Tabbar.tsx";
 import { Tab } from "@/app/design/components/Tab.tsx";
+import { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
     const { t } = useTranslation();
@@ -16,7 +17,7 @@ export default function Page() {
         const fetchDefaultValues = async () => {
             const values = await getDesignSettings();
             for (const key in values) {
-                setValue(key, values[key]);
+                setValue(key as keyof DesignFormData, values[key]);
             }
         };
         fetchDefaultValues();

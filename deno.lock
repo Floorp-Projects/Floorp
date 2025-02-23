@@ -10,6 +10,7 @@
     "npm:@bytecodealliance/jco@^1.9.1": "1.9.1",
     "npm:@bytecodealliance/preview2-shim@~0.17.1": "0.17.1",
     "npm:@deno/vite-plugin@^1.0.3": "1.0.3_vite@6.0.11__@types+node@22.5.4__lightningcss@1.29.1_@types+node@22.5.4_lightningcss@1.29.1",
+    "npm:@hookform/resolvers@^4.1.1": "4.1.1_react-hook-form@7.54.2__react@19.0.0_react@18.3.1",
     "npm:@icons-pack/react-simple-icons@^11.2.0": "11.2.0_react@19.0.0",
     "npm:@jridgewell/sourcemap-codec@^1.5.0": "1.5.0",
     "npm:@jsr/std__assert@^1.0.11": "1.0.11",
@@ -130,6 +131,7 @@
     "npm:ws@^8.18.0": "8.18.0",
     "npm:xml-js@^1.6.11": "1.6.11",
     "npm:zod@^3.24.1": "3.24.1",
+    "npm:zod@^3.24.2": "3.24.2",
     "npm:zx@*": "8.3.2",
     "npm:zx@^8.3.2": "8.3.2"
   },
@@ -726,6 +728,13 @@
     },
     "@floating-ui/utils@0.2.9": {
       "integrity": "sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg=="
+    },
+    "@hookform/resolvers@4.1.1_react-hook-form@7.54.2__react@19.0.0_react@18.3.1": {
+      "integrity": "sha512-S9YN1RgNWG+klUz5uQaV6rjE4pr6Py2tamj7ekshzLcMyg+/Pal1KZAYgGszV0+doiy41dUiQgXL3uRS9stndQ==",
+      "dependencies": [
+        "caniuse-lite",
+        "react-hook-form@7.54.2_react@19.0.0_react@18.3.1"
+      ]
     },
     "@icons-pack/react-simple-icons@11.2.0_react@19.0.0": {
       "integrity": "sha512-jCJ+1Fe0yiBQGYSfhx8QGU/9o27t8J4Hw3mxHEI9vohRltLSi5CaPzO2fCQcMNeTrAUAm4j+yaDuAutskiKRjA==",
@@ -1540,7 +1549,7 @@
         "node-fetch",
         "ora@6.3.1",
         "prompts",
-        "zod"
+        "zod@3.24.1"
       ]
     },
     "@sindresorhus/is@5.6.0": {
@@ -2614,7 +2623,7 @@
       "dependencies": [
         "devtools-protocol",
         "mitt",
-        "zod"
+        "zod@3.24.1"
       ]
     },
     "class-variance-authority@0.7.1": {
@@ -4694,6 +4703,12 @@
         "react@19.0.0"
       ]
     },
+    "react-hook-form@7.54.2_react@19.0.0_react@18.3.1": {
+      "integrity": "sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==",
+      "dependencies": [
+        "react@18.3.1"
+      ]
+    },
     "react-i18next@15.4.1_i18next@24.2.2__typescript@5.7.3_react@19.0.0_typescript@5.7.3": {
       "integrity": "sha512-ahGab+IaSgZmNPYXdV1n+OYky95TGpFwnKRflX/16dY04DsYYKHtVLjeny7sBSCREEcoMbAgSkFiGLF5g5Oofw==",
       "dependencies": [
@@ -5081,7 +5096,7 @@
         "stringify-object",
         "ts-morph",
         "tsconfig-paths",
-        "zod"
+        "zod@3.24.1"
       ]
     },
     "shadcn@2.4.0-canary.6_@babel+core@7.26.7_typescript@5.7.3": {
@@ -5108,7 +5123,7 @@
         "stringify-object",
         "ts-morph",
         "tsconfig-paths",
-        "zod"
+        "zod@3.24.1"
       ]
     },
     "shebang-command@2.0.0": {
@@ -6070,6 +6085,9 @@
     "zod@3.24.1": {
       "integrity": "sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A=="
     },
+    "zod@3.24.2": {
+      "integrity": "sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ=="
+    },
     "zx@8.3.2": {
       "integrity": "sha512-qjTunv1NClO05jDaUjrNZfpqC9yvNCchge/bzOcQevsh1aM5qE3TG6MY24kuQKlOWx+7vNuhqO2wa9nQCIGvZA==",
       "dependencies": [
@@ -6220,7 +6238,8 @@
             "npm:tailwindcss-animate@^1.0.7",
             "npm:tailwindcss@4",
             "npm:vite-tsconfig-paths@^5.1.4",
-            "npm:vite@^6.0.11"
+            "npm:vite@^6.0.11",
+            "npm:zod@^3.24.2"
           ]
         }
       },

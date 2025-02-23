@@ -1,46 +1,37 @@
-import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { useForm } from "react-hook-form"
-import { FormProvider } from "react-hook-form"
-import type { PanelSidebarFormData } from "../../../types/sidebar"
-import { getPanelSidebarSettings, savePanelSidebarSettings } from "./data-manager.ts"
-import Preferences from "./preferences.tsx"
+import React from "react";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { BasicSettings } from "./components/BasicSettings.tsx";
+import { savePanelSidebarSettings, getPanelSidebarSettings } from "./dataManager.ts";
+import type { PanelSidebarFormData } from "@/types/pref.ts";
 
-declare global {
-    interface Window {
-        NRSPrefGet: (options: { prefName: string; prefType: string }) => Promise<string>;
-        NRSPrefSet: (options: { prefName: string; prefValue: string | boolean | number; prefType: string }) => Promise<void>;
-        addEventListener: typeof window.addEventListener;
-        removeEventListener: typeof window.removeEventListener;
-    }
-}
+export default function Page() {
+    const { t } = useTranslation();
+    const methods = useForm({ defaultValues: {} });
+    const { control, setValue } = methods;
+    const watchAll = useWatch({ control });
 
-export default function SidebarSettingsPage() {
-    const { t } = useTranslation()
-    const methods = useForm<PanelSidebarFormData>()
-    const { setValue, watch } = methods
-    const watchAll = watch()
-
-    useEffect(() => {
+    React.useEffect(() => {
         const fetchDefaultValues = async () => {
-            const values = await getPanelSidebarSettings()
-            Object.entries(values).forEach(([key, value]) => {
-                setValue(key as keyof PanelSidebarFormData, value)
-            })
-        }
+            const values = await getPanelSidebarSettings();
+            if (!values) return;
 
-        fetchDefaultValues()
-        globalThis.addEventListener("focus", fetchDefaultValues)
+            for (const key in values) {
+                setValue(key as keyof PanelSidebarFormData, values[key]);
+            }
+        };
+
+        fetchDefaultValues();
+        document.documentElement.addEventListener("onfocus", fetchDefaultValues);
         return () => {
-            globalThis.removeEventListener("focus", fetchDefaultValues)
-        }
-    }, [setValue])
+            document.documentElement.removeEventListener("onfocus", fetchDefaultValues);
+        };
+    }, [setValue]);
 
-    useEffect(() => {
-        if (Object.keys(watchAll).length > 0) {
-            savePanelSidebarSettings(watchAll as PanelSidebarFormData)
-        }
-    }, [watchAll])
+    React.useEffect(() => {
+        if (Object.keys(watchAll).length === 0) return;
+        savePanelSidebarSettings(watchAll);
+    }, [watchAll]);
 
     return (
         <div className="p-6 space-y-6">
@@ -51,9 +42,9 @@ export default function SidebarSettingsPage() {
 
             <FormProvider {...methods}>
                 <form className="space-y-6 pl-6">
-                    <Preferences />
+                    <BasicSettings />
                 </form>
             </FormProvider>
         </div>
-    )
+    );
 }

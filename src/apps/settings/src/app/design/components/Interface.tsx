@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns";
+import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 
@@ -45,7 +45,7 @@ export function Interface() {
                     {["lepton", "photon", "protonfix"].includes(getValues("design") || "") && (
                         <div className="mt-4 p-3 bg-muted rounded-lg">
                             <p className="text-sm">
-                                {t("design.advancedLeptonThemeSettingsDescription")}{" "}
+                                {t("design.advancedLeptonThemeSettingsDescription")}
                                 <a href="https://support.floorp.app/docs/features/design-customization"
                                     className="text-primary hover:underline">
                                     {t("design.advancedLeptonThemeSettings")}

@@ -1,8 +1,12 @@
-import { useMemo } from 'react';
-import { useTheme } from '@/components/theme-provider.tsx';
-import { useTranslation } from 'react-i18next';
+import { useMemo } from "react";
+import { useTheme } from "@/components/theme-provider.tsx";
+import { useTranslation } from "react-i18next";
 
-export const useInterfaceDesigns = () => {
+export const useInterfaceDesigns = (): {
+  value: string;
+  title: string;
+  image: string;
+}[] => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 

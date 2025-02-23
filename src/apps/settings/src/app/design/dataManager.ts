@@ -1,20 +1,9 @@
-import { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
-import { createBirpc } from "birpc";
+import { rpc } from "@/lib/rcp/rcp.ts";
+import { DesignFormData } from "@/types/pref.ts";
 
-const rpc = createBirpc<NRSettingsParentFunctions, {}>(
-  {},
-  {
-    post: (data) => window.NRSettingsSend(data),
-    on: (callback) => {
-      window.NRSettingsRegisterReceiveCallback(callback);
-    },
-    // these are required when using WebSocket
-    serialize: (v) => JSON.stringify(v),
-    deserialize: (v) => JSON.parse(v),
-  },
-);
-
-export async function saveDesignSettings(settings: any) {
+export async function saveDesignSettings(
+  settings: DesignFormData,
+): Promise<null | void> {
   if (Object.keys(settings).length === 0) {
     return;
   }
@@ -54,13 +43,13 @@ export async function saveDesignSettings(settings: any) {
   rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
 }
 
-export async function getDesignSettings(): Promise<DesignSettings> {
+export async function getDesignSettings(): Promise<DesignFormData | null> {
   const result = await rpc.getStringPref("floorp.design.configs");
   if (!result) {
     return null;
   }
   const data = JSON.parse(result);
-  const formData: DesignSettings = {
+  const formData: DesignFormData = {
     design: data.globalConfigs.userInterface,
     position: data.tabbar.tabbarPosition,
     style: data.tabbar.tabbarStyle,
