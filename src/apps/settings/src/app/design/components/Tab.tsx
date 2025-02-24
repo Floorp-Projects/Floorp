@@ -107,7 +107,7 @@ export function Tab() {
                     <Input
                         type="number"
                         value={getValues("tabMinWidth") || ""}
-                        onChange={(e) => setValue("tabMinWidth", Number(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue("tabMinWidth", Number(e.target.value))}
                         className="w-full"
                     />
                     {(getValues("tabMinWidth") < 60 || getValues("tabMinWidth") > 300) && (
@@ -125,7 +125,7 @@ export function Tab() {
                     <Input
                         type="number"
                         value={getValues("tabMinHeight") || ""}
-                        onChange={(e) => setValue("tabMinHeight", Number(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue("tabMinHeight", Number(e.target.value))}
                         className="w-full"
                     />
                     {(getValues("tabMinHeight") < 20 || getValues("tabMinHeight") > 100) && (

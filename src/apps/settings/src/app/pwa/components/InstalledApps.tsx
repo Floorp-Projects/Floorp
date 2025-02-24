@@ -2,14 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef } from "react";
-import { TProgressiveWebAppObject } from "@/types/pref.ts";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { TProgressiveWebAppObject, InstalledApp } from "@/types/pref.ts";
 import { getInstalledApps, renamePwaApp, uninstallPwaApp } from "../dataManager.ts";
 
 export function InstalledApps() {
     const { t } = useTranslation();
     const [installedApps, setInstalledApps] = useState<TProgressiveWebAppObject>({});
-    const [selectedApp, setSelectedApp] = useState<TProgressiveWebAppObject[string] | null>(null);
+    const [selectedApp, setSelectedApp] = useState<InstalledApp | null>(null);
     const [newName, setNewName] = useState("");
     const [error, setError] = useState<string>("");
     const renameDialogRef = useRef<HTMLDialogElement>(null);
@@ -34,14 +34,14 @@ export function InstalledApps() {
         };
     }, []);
 
-    const handleRename = (app: TProgressiveWebAppObject[string]) => {
+    const handleRename = (app: InstalledApp) => {
         setSelectedApp(app);
         setNewName(app.name);
         setError("");
         renameDialogRef.current?.showModal();
     };
 
-    const handleUninstall = (app: TProgressiveWebAppObject[string]) => {
+    const handleUninstall = (app: InstalledApp) => {
         setSelectedApp(app);
         setError("");
         uninstallDialogRef.current?.showModal();
@@ -94,7 +94,7 @@ export function InstalledApps() {
                         <p className="text-muted-foreground">{t("progressiveWebApp.noInstalledApps")}</p>
                     ) : (
                         <div className="space-y-4">
-                            {Object.values(installedApps).map((app) => (
+                            {(Object.values(installedApps) as InstalledApp[]).map((app) => (
                                 <div key={app.id} className="flex items-center p-3 border rounded-lg">
                                     <img
                                         src={app.icon}
@@ -133,7 +133,7 @@ export function InstalledApps() {
 
             <dialog
                 ref={renameDialogRef}
-                className="p-6 rounded-lg shadow-lg backdrop:bg-black/50"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-lg shadow-lg backdrop:bg-black/50"
                 onClick={(e) => {
                     if (e.target === renameDialogRef.current) {
                         handleClose(renameDialogRef);
@@ -150,7 +150,7 @@ export function InstalledApps() {
                     </p>
                     <Input
                         value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
                         className="mb-4"
                     />
                     <div className="flex justify-end gap-2">
@@ -172,7 +172,7 @@ export function InstalledApps() {
 
             <dialog
                 ref={uninstallDialogRef}
-                className="p-6 rounded-lg shadow-lg backdrop:bg-black/50"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-lg shadow-lg backdrop:bg-black/50"
                 onClick={(e) => {
                     if (e.target === uninstallDialogRef.current) {
                         handleClose(uninstallDialogRef);

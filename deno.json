@@ -1,12 +1,22 @@
 {
-  "patch": ["@types/gecko/dom"],
-  "workspace": ["./src/packages/*", "./src/apps/*"],
+  "patch": [
+    "@types/gecko/dom"
+  ],
+  "workspace": [
+    "./src/packages/*",
+    "./src/apps/*"
+  ],
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.7",
     "@std/fs": "jsr:@std/fs@^1.0.11"
   },
   "compilerOptions": {
-    "lib": ["deno.ns", "ESNext"]
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "deno.ns",
+      "ESNext"
+    ]
   },
   "tasks": {
     "build": "deno run -A build.ts",

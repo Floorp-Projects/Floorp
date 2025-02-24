@@ -108,3 +108,5 @@ export type TProgressiveWebAppFormData = z.infer<
   typeof zProgressiveWebAppFormData
 >;
 export type TProgressiveWebAppObject = z.infer<typeof zProgressiveWebAppObject>;
+
+export type InstalledApp = TProgressiveWebAppObject[string];
