@@ -9907,24 +9907,6 @@
       "last_modified": 1680512223621
     },
     {
-      "schema": 1680270493771,
-      "derHash": "PdacW+Fw+UP4BNHTH+j5FsDAImzd166pqpoM39NHQ2E=",
-      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
-      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
-      "whitelist": false,
-      "attachment": {
-        "hash": "731abf0288a65056be76b95961168ac9cefd34f85f98777eeb686e5ba6c912a2",
-        "size": 2052,
-        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
-        "location": "security-state-staging/intermediates/457d9552-723c-4b98-97ad-990c5a4bedd6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
-      "crlite_enrolled": false,
-      "id": "cafda296-6d89-431c-a92d-0bd54e535030",
-      "last_modified": 1680271023541
-    },
-    {
       "schema": 1679518190665,
       "derHash": "uLGLq6y2qU6r5pKMa6z09qLYQjXX+GZIa194RHO+cIw=",
       "subject": "CN=CATrust ECC DV SSL CA,O=Zhejiang Xinya Network Technology Co.\\, Ltd.,C=CN",
@@ -31039,5 +31021,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1740020222997
+  "timestamp": 1740149822559
 }
