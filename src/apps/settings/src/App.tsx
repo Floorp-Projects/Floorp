@@ -9,20 +9,10 @@ import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import About from "./app/about/noraneko.tsx";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
-
-// import Home from "./pages/Home";
-// import Header from "./header";
-// import Workspaces from "./pages/Workspaces";
-// import Design from "./pages/Design";
-// import About from "./pages/About";
-// import SearchResults from "./pages/Search/index";
-// import PanelSidebar from "./pages/PanelSidebar";
-// import ProgressiveWebApp from "./pages/ProgressiveWebApp";
-// import ProfileAndAccount from "./pages/Accounts";
 
 export default function App() {
   return (
@@ -34,12 +24,13 @@ export default function App() {
             <Header />
             <div className="p-4">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/design" element={<Design />} />
-                <Route path="/sidebar" element={<PanelSidebar />} />
-                <Route path="/workspaces" element={<Workspaces />} />
-                <Route path="/webapps" element={<ProgressiveWebApp />} />
-                <Route path="/about" element={<About />} />
+                <Route path="/" element={<Navigate to="/overview/home" replace />} />
+                <Route path="/overview/home" element={<Dashboard />} />
+                <Route path="/features/design" element={<Design />} />
+                <Route path="/features/sidebar" element={<PanelSidebar />} />
+                <Route path="/features/workspaces" element={<Workspaces />} />
+                <Route path="/features/webapps" element={<ProgressiveWebApp />} />
+                <Route path="/about/browser" element={<About />} />
                 {
                   /*
                   <Route path="/accounts" element={<ProfileAndAccount />} />

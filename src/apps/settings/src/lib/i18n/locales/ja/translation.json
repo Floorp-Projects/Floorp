@@ -16,9 +16,11 @@
     },
     "sidebar": {
         "firefoxSettings": "Firefox 設定",
-        "about": "概要",
+        "about": "詳細",
         "aboutNoraneko": "Noranekoについて",
-        "debug": "デバッグ"
+        "debug": "デバッグ",
+        "overview": "概要",
+        "features": "機能"
     },
     "pages": {
         "home": "ホーム",
@@ -28,7 +30,8 @@
         "keyboardShortcuts": "キーボードショートカット",
         "webApps": "ウェブアプリ",
         "profileAndAccount": "プロファイルとアカウント",
-        "aboutBrowser": "{{productName}} について"
+        "aboutBrowser": "{{productName}} について",
+        "debug": "デバッグ"
     },
     "designs": {
         "proton": "Proton",

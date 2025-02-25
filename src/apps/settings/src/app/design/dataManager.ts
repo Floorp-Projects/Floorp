@@ -1,4 +1,4 @@
-import { rpc } from "@/lib/rcp/rcp.ts";
+import { rpc } from "@/lib/rpc/rpc.ts";
 import { DesignFormData } from "@/types/pref.ts";
 
 export async function saveDesignSettings(

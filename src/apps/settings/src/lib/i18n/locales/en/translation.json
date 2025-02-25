@@ -17,7 +17,9 @@
         "firefoxSettings": "Firefox Settings",
         "about": "About",
         "aboutNoraneko": "About Noraneko",
-        "debug": "Debug"
+        "debug": "Debug",
+        "overview": "Overview",
+        "features": "Features"
     },
     "pages": {
         "home": "Home",
@@ -27,7 +29,8 @@
         "keyboardShortcuts": "Keyboard Shortcuts",
         "webApps": "Web Apps",
         "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}"
+        "aboutBrowser": "About {{productName}}",
+        "debug": "Debug"
     },
     "home": {
         "welcome": "Welcome, {{name}} 👋",

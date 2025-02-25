@@ -17,12 +17,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar.tsx";
 import { NavFeatures } from "@/components/nav-features.tsx";
@@ -31,19 +26,47 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
 
   const user = {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Noraneko",
+    email: "noraneko@example.com",
     avatar: "/avatars/shadcn.jpg",
   };
 
+  const overview = [
+    { title: t("pages.home"), url: "#/overview/home", icon: House },
+  ];
+
   const features = [
-    { title: t("pages.home"), url: "#/", icon: House },
-    { title: t("pages.tabAndAppearance"), url: "#/design", icon: PencilRuler },
-    { title: t("pages.browserSidebar"), url: "#/sidebar", icon: PanelLeft },
-    { title: t("pages.workspaces"), url: "#/workspaces", icon: Briefcase },
-    { title: t("pages.keyboardShortcuts"), url: "#/shortcuts", icon: Option },
-    { title: t("pages.webApps"), url: "#/webapps", icon: Grip },
-    { title: t("pages.profileAndAccount"), url: "#/accounts", icon: UserRoundPen },
+    {
+      title: t("pages.tabAndAppearance"),
+      url: "#/features/design",
+      icon: PencilRuler,
+    },
+    {
+      title: t("pages.browserSidebar"),
+      url: "#/features/sidebar",
+      icon: PanelLeft,
+    },
+    {
+      title: t("pages.workspaces"),
+      url: "#/features/workspaces",
+      icon: Briefcase,
+    },
+    {
+      title: t("pages.keyboardShortcuts"),
+      url: "#/features/shortcuts",
+      icon: Option,
+    },
+    { title: t("pages.webApps"), url: "#/features/webapps", icon: Grip },
+    {
+      title: t("pages.profileAndAccount"),
+      url: "#/features/accounts",
+      icon: UserRoundPen,
+    },
+  ];
+
+  const about = [
+    { title: t("pages.aboutBrowser"), url: "#/about/browser", icon: BadgeInfo },
+    { title: t("pages.debug"), url: "#/debug", icon: Wrench },
   ];
 
   return (
@@ -51,32 +74,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <NavHeader />
       </SidebarHeader>
-
       <SidebarContent>
-        <NavFeatures features={features} />
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            {t("sidebar.about", "About")}
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href={"#/about"}>
-                  <BadgeInfo />
-                  <span>{t("sidebar.aboutNoraneko", "About Noraneko")}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href={"#"}>
-                  <Wrench />
-                  <span>{t("sidebar.debug", "Debug")}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+        <NavFeatures
+          title={t("sidebar.overview")}
+          features={overview}
+        />
+        <NavFeatures
+          title={t("sidebar.features")}
+          features={features}
+        />
+        <NavFeatures
+          title={t("sidebar.about")}
+          features={about}
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

@@ -1,4 +1,4 @@
-import { rpc } from "@/lib/rcp/rcp.ts";
+import { rpc } from "../../lib/rpc/rpc.ts";
 import { type WorkspacesFormData } from "../../types/pref.ts";
 
 export async function saveWorkspaceSettings(
