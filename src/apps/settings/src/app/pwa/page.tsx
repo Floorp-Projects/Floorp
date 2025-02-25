@@ -31,14 +31,13 @@ export default function Page() {
     }, [watchAll]);
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col items-start pl-6">
-                <h1 className="text-3xl font-bold mb-2">{t("progressiveWebApp.title")}</h1>
-                <p className="text-sm mb-8">{t("progressiveWebApp.description")}</p>
-            </div>
-
+        <div className="p-6 space-y-6 container mx-auto max-w-3xl">
+            <header className="mb-8">
+                <h1 className="text-3xl font-bold">{t("progressiveWebApp.title")}</h1>
+                <p className="text-lg text-muted-foreground">{t("progressiveWebApp.description")}</p>
+            </header>
             <FormProvider {...methods}>
-                <form className="space-y-6 pl-6">
+                <form className="space-y-6">
                     <Preferences />
                     <InstalledApps />
                 </form>
