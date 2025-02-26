@@ -1,115 +1,97 @@
-import * as React from "react"
+import type * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
-  Bot,
-  Frame,
-  Map,
-  PieChart,
-  Settings2,
-  House,
-  PencilRuler,
-  PanelLeft,
-  Briefcase,
-  Option,
-  Grip,
-  UserRoundPen,
   BadgeInfo,
-  Wrench
-} from "lucide-react"
-
-import { NavUser } from "@/components/nav-user"
-import { NavHeader } from "@/components/nav-header"
+  Briefcase,
+  Grip,
+  House,
+  Option,
+  PanelLeft,
+  PencilRuler,
+  UserRoundPen,
+  Wrench,
+} from "lucide-react";
+import { NavUser } from "@/components/nav-user.tsx";
+import { NavHeader } from "@/components/nav-header.tsx";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { NavFeatures } from "./nav-features"
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  features: [
-    {
-      title: "Tab & Appearance",
-      url: "#",
-      icon: PencilRuler
-    },
-    {
-      title: "Panel Sidebar",
-      url: "#",
-      icon: PanelLeft
-    },
-    {
-      title: "Workspaces",
-      url: "#",
-      icon: Briefcase
-    },{
-      title: "Keyboard Shortcuts",
-      url: "#",
-      icon: Option
-    },
-    {
-      title: "Web Apps",
-      url: "#",
-      icon: Grip
-    },
-    {
-      title: "Profile and Account",
-      url: "#",
-      icon: UserRoundPen
-    }
-  ]
-}
+} from "@/components/ui/sidebar.tsx";
+import { NavFeatures } from "@/components/nav-features.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { t } = useTranslation();
+
+  const user = {
+    name: "Noraneko",
+    email: "noraneko@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  };
+
+  const overview = [
+    { title: t("pages.home"), url: "#/overview/home", icon: House },
+  ];
+
+  const features = [
+    {
+      title: t("pages.tabAndAppearance"),
+      url: "#/features/design",
+      icon: PencilRuler,
+    },
+    {
+      title: t("pages.browserSidebar"),
+      url: "#/features/sidebar",
+      icon: PanelLeft,
+    },
+    {
+      title: t("pages.workspaces"),
+      url: "#/features/workspaces",
+      icon: Briefcase,
+    },
+    {
+      title: t("pages.keyboardShortcuts"),
+      url: "#/features/shortcuts",
+      icon: Option,
+    },
+    { title: t("pages.webApps"), url: "#/features/webapps", icon: Grip },
+    {
+      title: t("pages.profileAndAccount"),
+      url: "#/features/accounts",
+      icon: UserRoundPen,
+    },
+  ];
+
+  const about = [
+    { title: t("pages.aboutBrowser"), url: "#/about/browser", icon: BadgeInfo },
+    { title: t("pages.debug"), url: "#/debug", icon: Wrench },
+  ];
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <NavHeader />
       </SidebarHeader>
-
       <SidebarContent>
-        <NavFeatures features={data.features}/>
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            About
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href={"#"}>
-                  <BadgeInfo />
-                  <span>About Noraneko</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href={"#"}>
-                  <Wrench />
-                  <span>Debug</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+        <NavFeatures
+          title={t("sidebar.overview")}
+          features={overview}
+        />
+        <NavFeatures
+          title={t("sidebar.features")}
+          features={features}
+        />
+        <NavFeatures
+          title={t("sidebar.about")}
+          features={about}
+        />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

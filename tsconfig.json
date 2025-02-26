@@ -10,6 +10,6 @@
     "noUnusedParameters": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "lib": []
+    "lib": ["DOM"]
   }
 }

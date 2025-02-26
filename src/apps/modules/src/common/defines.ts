@@ -1,9 +1,19 @@
-export interface NRSettingsParentFunctions {
-  getBoolPref(prefName:string): boolean|null
-  getIntPref(prefName:string): number|null
-  getStringPref(prefName:string): string|null
+export interface PrefGetParams {
+  prefName: string;
+  prefType: "string" | "boolean" | "number";
+}
 
-  setBoolPref(prefName:string,prefValue:boolean): void
-  setIntPref(prefName:string,prefValue:number): void
-  setStringPref(prefName:string,prefValue:string): void
+export interface PrefSetParams {
+  prefName: string;
+  prefType: "string" | "boolean" | "number";
+  prefValue: string | boolean | number;
+}
+
+export interface NRSettingsParentFunctions {
+  getBoolPref(prefName: string): Promise<boolean | null>;
+  getIntPref(prefName: string): Promise<number | null>;
+  getStringPref(prefName: string): Promise<string | null>;
+  setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
+  setIntPref(prefName: string, prefValue: number): Promise<void>;
+  setStringPref(prefName: string, prefValue: string): Promise<void>;
 }

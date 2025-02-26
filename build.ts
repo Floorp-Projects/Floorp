@@ -10,7 +10,7 @@ import { applyPatches } from "./scripts/git-patches/git-patches-manager.ts";
 import { initializeBinGit } from "./scripts/git-patches/git-patches-manager.ts";
 import { genVersion } from "./scripts/launchDev/writeVersion.ts";
 import { writeBuildid2 } from "./scripts/update/buildid2.ts";
-import { $, ProcessPromise } from "zx";
+import { $, type ProcessPromise } from "zx";
 import { usePwsh } from "zx";
 import chalk from "chalk";
 import process from "node:process";
@@ -92,27 +92,57 @@ async function decompressBin() {
 
     if (process.platform === "darwin") {
       //? macOS
-      const mountDir = "_dist/mount";
+      const macConfig = {
+        mountDir: "_dist/mount",
+        appDirName: "Contents",
+        resourcesDirName: "Resources",
+      };
+      const mountDir = macConfig.mountDir;
       await fs.mkdir(mountDir, { recursive: true });
       await $`hdiutil ${["attach", "-mountpoint", mountDir, binArchive]}`;
-      await fs.mkdir(binDir, { recursive: true });
-      await fs.cp(
-        pathe.join(mountDir, `${brandingName}.app`),
-        pathe.join(`./_dist/bin/${brandingBaseName}`, `${brandingName}.app`),
-        { recursive: true },
-      );
-      await fs.writeFile(binVersion, VERSION);
-      await $`hdiutil ${["detach", mountDir]}`;
-      await fs.rm(mountDir, { recursive: true });
-      await $`chmod ${[
-        "-R",
-        "777",
-        `./_dist/bin/${brandingBaseName}/${brandingName}.app`,
-      ]}`;
-      await $`xattr ${[
-        "-rc",
-        `./_dist/bin/${brandingBaseName}/${brandingName}.app`,
-      ]}`;
+
+      try {
+        const appDestBase = pathe.join(
+          "./_dist/bin",
+          brandingBaseName,
+          `${brandingName}.app`,
+        );
+        const destContents = pathe.join(appDestBase, macConfig.appDirName);
+        await fs.mkdir(destContents, { recursive: true });
+        await fs.mkdir(binDir, { recursive: true });
+
+        const srcContents = pathe.join(
+          mountDir,
+          `${brandingName}.app/${macConfig.appDirName}`,
+        );
+        const items = await fs.readdir(srcContents);
+        for (const item of items) {
+          const srcItem = pathe.join(srcContents, item);
+          if (item === macConfig.resourcesDirName) {
+            const resourcesItems = await fs.readdir(srcItem);
+            await Promise.all(resourcesItems.map((resItem) =>
+              fs.cp(
+                pathe.join(srcItem, resItem),
+                pathe.join(binDir, resItem),
+                { recursive: true },
+              )
+            ));
+          } else {
+            await fs.cp(srcItem, pathe.join(destContents, item), {
+              recursive: true,
+            });
+          }
+        }
+
+        await fs.writeFile(pathe.join(binDir, "nora.version.txt"), VERSION);
+        await Promise.all([
+          $`chmod ${["-R", "777", appDestBase]}`,
+          $`xattr ${["-rc", appDestBase]}`,
+        ]);
+      } finally {
+        await $`hdiutil ${["detach", mountDir]}`;
+        await fs.rm(mountDir, { recursive: true });
+      }
     }
 
     if (process.platform === "linux") {
