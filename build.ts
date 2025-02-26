@@ -22,8 +22,8 @@ switch (process.platform) {
 }
 
 //? branding
-export const brandingBaseName = "noraneko";
-export const brandingName = "Noraneko";
+export const brandingBaseName = "floorp";
+export const brandingName = "Floorp";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -176,7 +176,7 @@ async function downloadBinArchive() {
       error.stderr,
     );
     const upstreamUrl =
-      `https://github.com/nyanrus/noraneko-runtime/releases/latest/download/${fileName}`;
+      `https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${fileName}`;
     console.log(`Downloading from upstream: ${upstreamUrl}`);
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;

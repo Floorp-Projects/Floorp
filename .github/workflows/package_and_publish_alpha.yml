@@ -24,6 +24,7 @@ jobs:
     with:
       platform: Windows-x64
       runtime_artifact_workflow_run_id: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
+      beta: true
     secrets: inherit
 
   package-linux:
@@ -31,6 +32,7 @@ jobs:
     with:
       platform: Linux-x64
       runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
+      beta: true
     secrets: inherit
 
   package-macos:
@@ -38,6 +40,7 @@ jobs:
     with:
       platform: macOS-x64
       runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
+      beta: true
     secrets: inherit
 
   publishs:

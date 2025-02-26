@@ -47,7 +47,7 @@ jobs:
             WINDOWS_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("Windows-x64"))][0].id')
             echo "WINDOWS_RUN_ID=$WINDOWS_ID" >> $GITHUB_ENV
           else
@@ -58,7 +58,7 @@ jobs:
             LINUX_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-x64"))][0].id')
             echo "LINUX_RUN_ID=$LINUX_ID" >> $GITHUB_ENV
           else
@@ -69,7 +69,7 @@ jobs:
             MAC_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("macOS-x64"))][0].id')
             echo "MAC_RUN_ID=$MAC_ID" >> $GITHUB_ENV
           else
@@ -149,9 +149,9 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
-          tag_name: "alpha"
-          name: "Alpha Release"
-          body: "Noraneko Alpha for Windows, Linux, and macOS"
+          tag_name: "beta" # Keeping the tag name as beta for the release
+          name: "Floorp 12 beta build"
+          body: "Floorp Daylight: Based on Firefox Stable Channel \n\n **This is NOT the release (stable) channel version of Floorp. This is a beta build of Floorp. It is intended for testing purposes only. It is not recommended that you use this version of Floorp for daily browsing. If you would like to download the release version of Floorp, please visit [floorp.app](https://floorp.app).**"
           draft: false
           prerelease: true
           token: ${{ github.token }}
