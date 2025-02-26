@@ -300,3 +300,8 @@
 #panel-sidebar-preferences-icon {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
 }
+
+/* Child Windows */
+#browser[data-is-child] > #panel-sidebar-select-box {
+  display: none;
+}

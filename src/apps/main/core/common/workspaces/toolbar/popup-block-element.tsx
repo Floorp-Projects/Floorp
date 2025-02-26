@@ -24,6 +24,7 @@ export function PopupToolbarElement(props: {
       style={{
         "list-style-image": `url(${icon()})`,
       }}
+      closemenu="none"
       data-selected={props.isSelected}
       data-workspaceId={props.workspaceId}
       onCommand={() => {

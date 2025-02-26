@@ -133,12 +133,12 @@ export class WebsitePanelWindowChild {
   createWebpanelWindow() {
     const { userContextId, userAgent, loadURL, mainWindow } = this;
 
-    console.log("createWebpanelWindow", this.webpanelId);
-
     mainWindow.setAttribute("BSM-window", "true");
     mainWindow.setAttribute("BMS-usercontextid", userContextId.toString());
     mainWindow.setAttribute("BMS-useragent", userAgent.toString());
     mainWindow.setAttribute("BMS-webpanelid", this.webpanelId ?? "");
+    document?.getElementById("navigator-toolbox")?.setAttribute("hidden", "true");
+    document?.getElementById("browser")?.setAttribute("data-is-child", "true");
     window.bmsLoadedURI = loadURL;
 
     // Remove "navigator:browser" from window-main attribute
@@ -171,5 +171,7 @@ export class WebsitePanelWindowChild {
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {
       this.setZoomLevel();
     });
+
+    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")?.remove();
   }
 }
