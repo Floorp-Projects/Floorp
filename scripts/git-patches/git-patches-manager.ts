@@ -1,5 +1,5 @@
 /// <reference lib="deno.ns" />
-
+import { brandingBaseName, brandingName } from "../../build.ts";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { $ } from "zx";
@@ -7,9 +7,12 @@ import process from "node:process";
 import { resolve } from "pathe";
 import { existsSync } from "@std/fs";
 
-const BIN_DIR = process.platform !== "darwin"
-  ? "_dist/bin/noraneko"
-  : "_dist/bin/noraneko/Noraneko.app/Contents/Resources";
+function getBinDir() {
+  return process.platform !== "darwin"
+    ? `_dist/bin/${brandingBaseName}`
+    : `_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/Resources`;
+}
+
 const PATCHES_DIR = "scripts/git-patches/patches";
 const PATCHES_TMP = "_dist/bin/applied_patches";
 
@@ -23,6 +26,7 @@ async function isGitInitialized(dir: string): Promise<boolean> {
 }
 
 export async function initializeBinGit() {
+  const BIN_DIR = getBinDir();
   if (await isGitInitialized(BIN_DIR)) {
     console.log(
       "[git-patches] Git repository already initialized in _dist/bin",
@@ -86,7 +90,7 @@ export function checkPatchIsNeeded() {
   return false;
 }
 
-export async function applyPatches(binDir = BIN_DIR) {
+export async function applyPatches(binDir = getBinDir()) {
   if (!checkPatchIsNeeded()) {
     console.log(`[git-patches] No patches needed to apply`);
     return;
@@ -137,6 +141,7 @@ export async function applyPatches(binDir = BIN_DIR) {
 }
 
 export async function createPatches() {
+  const BIN_DIR = getBinDir();
   if (!(await isGitInitialized(BIN_DIR))) {
     throw new Error(
       "[git-patches] Git repository not initialized. Run initializeBinGit first.",
