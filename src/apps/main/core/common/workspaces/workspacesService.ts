@@ -68,6 +68,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     //This function is deprecated because WorkspacesService is wrapping this function
     const id = this.dataManagerCtx.createWorkspace(name);
     setWorkspacesDataStore("order",(prev)=>[...prev,id])
+    this.changeWorkspace(id);
     return id;
   }
 

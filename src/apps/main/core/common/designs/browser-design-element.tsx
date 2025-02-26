@@ -46,7 +46,7 @@ export function BrowserDesignElement() {
               <link
               class="nora-designs"
               rel="stylesheet"
-              href={ `chrome://noraneko${style}`}
+              href={ `${style}`}
             />
             )}
           </For>
