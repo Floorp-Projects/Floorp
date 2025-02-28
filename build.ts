@@ -244,6 +244,12 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
   } catch {}
   console.log(`[dev] buildid2: ${buildid2}`);
+
+  // env
+  if (process.platform === "darwin") {
+    process.env.MOZ_DISABLE_CONTENT_SANDBOX = "1";
+  }
+
   if (mode !== "release") {
     if (!devInit) {
       await $`deno run -A ./scripts/launchDev/child-build.ts ${mode} ${
@@ -274,11 +280,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
         }
       })();
       await temp_prm;
-
-      // env
-      if (process.platform === "darwin") {
-        process.env.MOZ_DISABLE_CONTENT_SANDBOX = "1";
-      }
       devInit = true;
     }
     await Promise.all([
