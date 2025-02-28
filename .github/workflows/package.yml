@@ -109,15 +109,16 @@ jobs:
           sed -i 's|ac_add_options --enable-unverified-updates||g' ./mozconfig
 
           echo "ac_add_options --enable-release" >> mozconfig
-          echo "ac_add_options --enable-update-channel=alpha" >> mozconfig
           echo "ac_add_options --disable-tests" >> mozconfig
           echo "ac_add_options --enable-artifact-builds" >> mozconfig
           echo "mk_add_options MOZ_OBJDIR=./obj-artifact-build-output" >> mozconfig
 
           if [ "${{inputs.beta}}" == "true" ]; then
             sed -i 's|MOZ_BRANDING_DIRECTORY=browser/branding/unofficial|MOZ_BRANDING_DIRECTORY=browser/branding/floorp-daylight|g' ./browser/confvars.sh
+            echo "ac_add_options --enable-update-channel=beta" >> mozconfig
           else
             sed -i 's|MOZ_BRANDING_DIRECTORY=browser/branding/unofficial|MOZ_BRANDING_DIRECTORY=browser/branding/floorp-official|g' ./browser/confvars.sh
+            echo "ac_add_options --enable-update-channel=release" >> mozconfig
           fi
 
           sed -i 's|ac_add_options --enable-chrome-format=flat||g' ./mozconfig
@@ -323,8 +324,9 @@ jobs:
 
           const version_txt = await $`cat ~/noraneko-mar/version.txt`
 
-          await $`touch "${path_obj}/dist/floorp/precomplete"`
-          await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=alpha ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
+            await $`touch "${path_obj}/dist/floorp/precomplete"`
+            const channelId = "${{ inputs.beta }}" === "true" ? "beta" : "release";
+            await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
 
           await $`cp floorp/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt`
           await $`cp floorp/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt`
