@@ -68,7 +68,7 @@ export function Tabbar() {
                     <div className="mt-4 p-3 bg-muted rounded-lg">
                         <p className="text-sm">
                             {t("design.verticalTabIsRemovedFromBrowser")}{" "}
-                            <a href="https://support.floorp.app/docs/features/tab-bar-customization/#vertical-tabs"
+                            <a href="https://docs.floorp.app/docs/features/tab-bar-customization/#vertical-tabs"
                                 className="text-primary hover:underline">
                                 {t("design.learnMore")}
                             </a>

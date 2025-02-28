@@ -46,7 +46,7 @@ export function Interface() {
                         <div className="mt-4 p-3 bg-muted rounded-lg">
                             <p className="text-sm">
                                 {t("design.advancedLeptonThemeSettingsDescription")}
-                                <a href="https://support.floorp.app/docs/features/design-customization"
+                                <a href="https://docs.floorp.app/docs/features/design-customization"
                                     className="text-primary hover:underline">
                                     {t("design.advancedLeptonThemeSettings")}
                                 </a>
