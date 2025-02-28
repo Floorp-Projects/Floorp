@@ -39,7 +39,7 @@ body:
         - label: I have checked with a new profile and the issue still occurs.
         - label: I have provided detailed step-by-step instructions on how to reproduce the issue.
         - label: I have included relevant screenshots or console outputs.
-        - label: I have checked that this problem is not occurring in the latest version of Firefox ESR.
+        - label: I have checked that this problem is not occurring in the latest version of Firefox.
         - label: This issue is specific to this browser and does not occur in other browsers.
 
   - type: textarea
