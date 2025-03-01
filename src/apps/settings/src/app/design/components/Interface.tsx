@@ -16,7 +16,6 @@ export function Interface() {
             <CardContent>
                 <div className="space-y-6">
                     <div>
-                        <h3 className="text-base font-medium mb-2">{t("design.interface")}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{t("design.interfaceDescription")}</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                             {interfaceOptions.map((option) => (
