@@ -44,6 +44,6 @@ jobs:
     needs: [package-windows, package-linux, package-macos]
     uses: ./.github/workflows/publish_alpha.yml
     with:
-      win_runtime_artifact_workflow_call: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
-      linux_runtime_artifact_workflow_call: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
-      mac_runtime_artifact_workflow_call: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
+      win_runtime_artifact_workflow_call: ${{ github.run_id }}
+      linux_runtime_artifact_workflow_call: ${{ github.run_id }}
+      mac_runtime_artifact_workflow_call: ${{ github.run_id }}

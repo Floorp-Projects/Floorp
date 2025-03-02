@@ -290,11 +290,11 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     await release("before");
     await injectManifest(binDir, "run-prod", "noraneko-dev");
     try {
-      await Deno.remove("_dist/bin/noraneko/noraneko-dev", { recursive: true });
+      await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, { recursive: true });
     } catch {}
     await Deno.symlink(
       pathe.resolve(import.meta.dirname, "_dist/noraneko"),
-      "_dist/bin/noraneko/noraneko-dev",
+      `_dist/bin/${brandingBaseName}/noraneko-dev`,
       { type: "junction" },
     );
   }
@@ -392,7 +392,24 @@ async function release(mode: "before" | "after") {
     }`;
     await injectManifest("./_dist", "prod");
   } else if (mode === "after") {
-    const binPath = "../obj-artifact-build-output/dist/bin";
+    let binPath: string;
+    const baseDir = "../obj-artifact-build-output/dist";
+    try {
+      const files = await fs.readdir(baseDir);
+      const appFiles = files.filter((file) => file.endsWith(".app"));
+      if (appFiles.length > 0) {
+        const appFile = appFiles[0];
+        const appPath = `${baseDir}/${appFile}`;
+        binPath = `${appPath}/Contents/Resources`;
+        console.log(`Using app bundle directory: ${appPath}/Contents/Resources`);
+      } else {
+        binPath = `${baseDir}/bin`;
+        console.log(`Using bin directory: ${baseDir}/bin`);
+      }
+    } catch (error) {
+      console.warn("Error reading output directory:", error);
+      binPath = `${baseDir}/bin`;
+    }
     injectXHTML(binPath);
     let buildid2: string | null = null;
     try {
