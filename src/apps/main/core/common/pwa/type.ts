@@ -36,6 +36,31 @@ export type Browser = {
   scope: string;
 };
 
+export type LegacyPWAEntry = {
+  id: string;
+  name: string;
+  startURI: string;
+  manifest: {
+    dir: string;
+    start_url: string;
+    display: string;
+    name: string;
+    short_name: string;
+    theme_color: string;
+    background_color: string;
+    scope: string;
+    id: string;
+    icons: {
+      src: { src: string; sizes: string[] }[];
+    };
+  };
+  scope: string;
+  config: {
+    needsUpdate: boolean;
+    persisted: boolean;
+  };
+};
+
 export const zPwaConfig = z.object({
   showToolbar: z.boolean(),
 });

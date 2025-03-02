@@ -304,12 +304,6 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       await injectXHTML(binDir);
     })(),
     applyMixin(binDir),
-    (async () => {
-      try {
-        await fs.access("_dist/profile");
-        await fs.rm("_dist/profile", { recursive: true });
-      } catch {}
-    })(),
   ]);
 
   //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
