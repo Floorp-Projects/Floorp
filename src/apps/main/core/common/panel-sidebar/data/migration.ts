@@ -52,7 +52,7 @@ export function migratePanelSidebarData() {
 
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
-      JSON.stringify({ config }),
+      JSON.stringify(config),
     );
   }
 }
@@ -96,7 +96,7 @@ function convertSidebar(oldSidebar: OldSidebar): NewSidebar {
 
     if (url.startsWith("extension")) {
       type = "extension";
-      width = width || 450; // 任意のデフォルト値
+      width = width || 450;
     } else if (url.startsWith("floorp//")) {
       type = "static";
     } else {
