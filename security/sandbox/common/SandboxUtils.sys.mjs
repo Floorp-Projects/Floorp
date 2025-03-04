@@ -17,6 +17,15 @@ export var SandboxUtils = {
         return;
       }
 
+      // This would cover Flatpak, Snap or any "Packaged App" (e.g., Debian package)
+      // Showing the notification on Flatpak would not be correct because of
+      // existing Flatpak isolation (see Bug 1882881). And for Snap and
+      // Debian packages it would be irrelevant as well.
+      const isPackagedApp = Services.sysinfo.getPropertyAsBool("isPackagedApp");
+      if (isPackagedApp) {
+        return;
+      }
+
       const kSandboxUserNamespacesPref =
         "security.sandbox.warn_unprivileged_namespaces";
       const kSandboxUserNamespacesPrefValue = Services.prefs.getBoolPref(

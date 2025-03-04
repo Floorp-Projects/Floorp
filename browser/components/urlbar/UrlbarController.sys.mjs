@@ -67,7 +67,7 @@ export class UrlbarController {
     }
     if (
       !options.input.window.location ||
-      options.input.window.location.href != AppConstants.BROWSER_CHROME_URL
+      !options.input.window.location.href.startsWith(AppConstants.BROWSER_CHROME_URL)
     ) {
       throw new Error("input.window should be an actual browser window.");
     }
