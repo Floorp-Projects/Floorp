@@ -1,6 +1,32 @@
 {
   "data": [
     {
+      "schema": 1740016989299,
+      "derHash": "dyjxgh5QnHYVLCIiPnZ5AzNE/cNoecjd1q28LvlSd7g=",
+      "attachment": {
+        "hash": "7f978e7f2f54f86ab99dd0ac53ebbc112e267c2fb89f9e4a33e18fd446fbc540",
+        "size": 1971,
+        "filename": "UzuyYgFDNDylymReOHdu87peMQpE_dpoot2mYdJtNxQ=.pem",
+        "location": "security-state-staging/intermediates/359b58ea-a6c4-4414-8b15-7ed55342a1f3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "f4b74884-77a8-4835-b1cd-dca3cfa3ef94",
+      "last_modified": 1740020222997
+    },
+    {
+      "schema": 1739973781198,
+      "derHash": "2yT/fO18kyRtuqIffvv9JhxCOvGWTA6W8cICZ6DEwGc=",
+      "attachment": {
+        "hash": "a812266d21945f84cb02594b49540af5f2287691c714612e7eb08f2111b249b1",
+        "size": 1662,
+        "filename": "L-0ns1-a1N7gbdJF0ibj9--2kC_ZrqqX9YET1Taf7R4=.pem",
+        "location": "security-state-staging/intermediates/0d600544-e522-4b93-949c-805b81c8ec41.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "10b4ee5d-e7bf-402a-b0d0-5545f6378682",
+      "last_modified": 1739977022649
+    },
+    {
       "schema": 1739541773363,
       "derHash": "VXY5QTKxB09PtYrFrVnKuhD9adeD0XR8lMAFUZkskTQ=",
       "attachment": {
@@ -9879,24 +9905,6 @@
       "crlite_enrolled": false,
       "id": "b6aa83f8-f475-4f5c-8d7e-dcb466827c22",
       "last_modified": 1680512223621
-    },
-    {
-      "schema": 1680270493771,
-      "derHash": "PdacW+Fw+UP4BNHTH+j5FsDAImzd166pqpoM39NHQ2E=",
-      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
-      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
-      "whitelist": false,
-      "attachment": {
-        "hash": "731abf0288a65056be76b95961168ac9cefd34f85f98777eeb686e5ba6c912a2",
-        "size": 2052,
-        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
-        "location": "security-state-staging/intermediates/457d9552-723c-4b98-97ad-990c5a4bedd6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
-      "crlite_enrolled": false,
-      "id": "cafda296-6d89-431c-a92d-0bd54e535030",
-      "last_modified": 1680271023541
     },
     {
       "schema": 1679518190665,
@@ -31013,5 +31021,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1739545022840
+  "timestamp": 1740149822559
 }

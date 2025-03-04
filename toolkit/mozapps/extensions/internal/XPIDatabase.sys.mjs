@@ -910,9 +910,12 @@ export class AddonInternal {
       }
     }
 
+    let settings = Services.policies?.getExtensionSettings(this.id) || {};
     // The permission to "toggle the private browsing access" is locked down
     // when the extension has opted out or it gets the permission automatically
-    // on every extension startup (as system, privileged and builtin addons).
+    // on every extension startup (as system, privileged and builtin addons) or
+    // when private browsing access as been set and locked through enterprise
+    // policy settings.
     if (
       (this.type === "extension" ||
         // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
@@ -920,7 +923,8 @@ export class AddonInternal {
       this.incognito !== "not_allowed" &&
       this.signedState !== lazy.AddonManager.SIGNEDSTATE_PRIVILEGED &&
       this.signedState !== lazy.AddonManager.SIGNEDSTATE_SYSTEM &&
-      !this.location.isBuiltin
+      !this.location.isBuiltin &&
+      !("private_browsing" in settings)
     ) {
       permissions |= lazy.AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
     }

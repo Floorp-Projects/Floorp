@@ -3738,7 +3738,8 @@ export class Extension extends ExtensionData {
     // We automatically add permissions to system/built-in extensions.
     // Extensions expliticy stating not_allowed will never get permission.
     let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
-    if (this.manifest.incognito === "not_allowed") {
+    const hasIncognitoNotAllowed = this.manifest.incognito === "not_allowed";
+    if (hasIncognitoNotAllowed) {
       // If an extension previously had permission, but upgrades/downgrades to
       // a version that specifies "not_allowed" in manifest, remove the
       // permission.
@@ -3764,6 +3765,30 @@ export class Extension extends ExtensionData {
       this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
     }
 
+    // On builds where Enterprise Policies are supported, grant or revoke
+    // the private browsing access for extensions that are not app provided
+    // (system and builtin add-ons) or hidden.
+    if (
+      Services.policies &&
+      !this.isAppProvided &&
+      !this.isHidden &&
+      !hasIncognitoNotAllowed &&
+      this.type === "extension"
+    ) {
+      const settings = Services.policies.getExtensionSettings(this.id);
+      if (settings?.private_browsing) {
+        lazy.ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+      } else if (settings?.private_browsing === false) {
+        lazy.ExtensionPermissions.remove(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
+      }
 
     // Floorp Injections
     // We automatically add permissions to "Gesturefy" and "uBlock Origin" extensions.
