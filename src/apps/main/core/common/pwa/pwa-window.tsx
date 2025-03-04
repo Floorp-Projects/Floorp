@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render, createRootHMR } from "@nora/solid-xul";
+import { createRootHMR, render } from "@nora/solid-xul";
 import { createSignal } from "solid-js";
 import { config } from "./config";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
@@ -33,7 +33,8 @@ export class PwaWindowSupport {
   }
 
   private setupSignals(): void {
-    const ssbIdAttr = document?.documentElement?.getAttribute("FloorpSSBId") ?? null;
+    const ssbIdAttr = document?.documentElement?.getAttribute("FloorpSSBId") ??
+      null;
     const [, setSsbId] = this.ssbId;
     setSsbId(ssbIdAttr);
   }

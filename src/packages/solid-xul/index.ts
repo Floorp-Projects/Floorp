@@ -1,8 +1,11 @@
-import { createRoot, onCleanup, type JSX } from "solid-js";
-import { RootFunction } from "solid-js/types/reactive/signal.js";
+import { createRoot, type JSX, onCleanup } from "solid-js";
+import type { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";
 import type { ViteHotContext } from "vite/types/hot.js";
 import { z } from "zod";
+
+// Import the JSX definitions
+import "./jsx-runtime";
 
 //TODO: test required
 const eventListener = z
@@ -118,38 +121,49 @@ const {
 
 /**
  * @description This render must be called inside of NoraComponentBase or createRootHMR
- * @param code 
- * @param node 
- * @param options 
- * @returns 
+ * @param code
+ * @param node
+ * @param options
+ * @returns
  */
 const _render = (
   code: () => JSX.Element,
   node: JSX.Element,
-  options?: { marker?: Element },
+  options?: { marker?: Element; hotCtx?: ViteHotContext },
 ) => {
-  let elem : unknown = insert(node, code(), options ? options.marker : undefined);
-  const disposer = onCleanup(()=>{
-    console.log("[nora@solid-xul] cleanup")
+  let elem: unknown = insert(
+    node,
+    code(),
+    options ? options.marker : undefined,
+  );
+  const disposer = onCleanup(() => {
+    console.log("[nora@solid-xul] cleanup");
     if (typeof elem === "function") {
       elem = elem();
     }
     if (elem instanceof Element) {
       elem.remove();
-    } else if (
-      Array.isArray(elem) &&
-      elem.every((e) => e instanceof Element)
-    ) {
+    } else if (Array.isArray(elem) && elem.every((e) => e instanceof Element)) {
       elem.forEach((e) => e.remove());
     }
-  })
+  });
+
+  if (options?.hotCtx) {
+    hotCtxMap.set(options.hotCtx, [
+      ...(hotCtxMap.get(options.hotCtx) ?? []),
+      disposer,
+    ]);
+    console.debug("register disposer to hotCtx in render");
+    options.hotCtx.dispose(() => {
+      hotCtxMap.get(options.hotCtx)?.forEach((v) => v());
+      hotCtxMap.delete(options.hotCtx);
+    });
+  }
+
   return disposer;
 };
 
-export function createRootHMR<T>(
-  fn: RootFunction<T>,
-  hotCtx?: ViteHotContext,
-) {
+export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
   return createRoot((disposer) => {
     const ret = fn(disposer);
     if (hotCtx) {
@@ -166,20 +180,20 @@ export function createRootHMR<T>(
 
 export {
   _render as render,
-  effect,
-  memo,
   createComponent,
   createElement,
   createTextNode,
-  insertNode,
+  effect,
   /**
    * insertBefore
    * @deprecated please use render with marker
    */
   insert,
-  spread,
-  setProp,
+  insertNode,
+  memo,
   mergeProps,
+  setProp,
+  spread,
 };
 
-export {onCleanup} from "solid-js"
+export { onCleanup } from "solid-js";

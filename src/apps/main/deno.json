@@ -1,10 +1,29 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
-    "types": ["npm:vite/client", "jsr:@nora/lib-dom-gecko"]
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "npm:vite/client",
+      "jsr:@nora/lib-dom-gecko"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "solid-js"
   },
   "imports": {
     "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
-    "@nora/skin/": "../../packages/skin/"
-  }
+    "@nora/skin/": "../../packages/skin/",
+    "@nora/solid-xul": "../../packages/solid-xul/index.ts",
+    "@core/": "./core/",
+    "solid-xul": "../../packages/solid-xul/index.ts",
+    "solid-js": "npm:solid-js",
+    "solid-js/web": "npm:solid-js/web",
+    "solid-js/store": "npm:solid-js/store"
+  },
+  "jsximportsource": "solid-js",
+  "unstable": [
+    "sloppy-imports",
+    "deno-unresolved-imports"
+  ]
 }

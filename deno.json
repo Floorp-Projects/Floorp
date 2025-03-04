@@ -8,7 +8,9 @@
   ],
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.7",
-    "@std/fs": "jsr:@std/fs@^1.0.11"
+    "@std/fs": "jsr:@std/fs@^1.0.11",
+    "zod": "npm:zod",
+    "solid-styled-jsx": "npm:solid-styled-jsx"
   },
   "compilerOptions": {
     "lib": [
@@ -18,6 +20,9 @@
       "ESNext"
     ]
   },
+  "unstable": [
+    "sloppy-imports"
+  ],
   "tasks": {
     "build": "deno run -A build.ts",
     "dev": "deno run -A build.ts --run",
