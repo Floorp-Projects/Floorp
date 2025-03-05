@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 
@@ -104,7 +103,7 @@ export function Tab() {
                         <label>{t("design.tab.minWidth")}</label>
                         <span className="text-sm text-muted-foreground">60px - 300px</span>
                     </div>
-                    <Input
+                    <input
                         type="number"
                         value={getValues("tabMinWidth") || ""}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue("tabMinWidth", Number(e.target.value))}
@@ -122,7 +121,7 @@ export function Tab() {
                         <label>{t("design.tab.minHeight")}</label>
                         <span className="text-sm text-muted-foreground">20px - 100px</span>
                     </div>
-                    <Input
+                    <input
                         type="number"
                         value={getValues("tabMinHeight") || ""}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue("tabMinHeight", Number(e.target.value))}

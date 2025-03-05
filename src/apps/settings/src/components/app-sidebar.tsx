@@ -19,7 +19,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar.tsx";
+} from "@/components/common/sidebar.tsx";
 import { NavFeatures } from "@/components/nav-features.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -70,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar {...props}>
       <SidebarHeader>
         <NavHeader />
       </SidebarHeader>
@@ -88,9 +88,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           features={about}
         />
       </SidebarContent>
-      <SidebarFooter>
+      {
+        /* <SidebarFooter>
         <NavUser user={user} />
-      </SidebarFooter>
+      </SidebarFooter> */
+      }
       <SidebarRail />
     </Sidebar>
   );

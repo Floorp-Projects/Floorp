@@ -9,39 +9,39 @@ import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import About from "./app/about/noraneko.tsx";
-import { Route, Routes, Navigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar.tsx";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
 
 export default function App() {
   return (
-    <SidebarProvider>
-      <div className="flex flex-col h-screen w-screen">
-        <div className="flex flex-1">
-          <AppSidebar />
-          <div className="flex-1 max-w-3xl">
-            <Header />
-            <div className="p-4">
-              <Routes>
-                <Route path="/" element={<Navigate to="/overview/home" replace />} />
-                <Route path="/overview/home" element={<Dashboard />} />
-                <Route path="/features/design" element={<Design />} />
-                <Route path="/features/sidebar" element={<PanelSidebar />} />
-                <Route path="/features/workspaces" element={<Workspaces />} />
-                <Route path="/features/webapps" element={<ProgressiveWebApp />} />
-                <Route path="/about/browser" element={<About />} />
-                {
-                  /*
+    <div className="flex flex-col w-screen">
+      <div className="flex flex-1">
+        <AppSidebar />
+        <div className="flex-1 max-w-3xl">
+          <Header />
+          <div className="p-4">
+            <Routes>
+              <Route
+                path="/"
+                element={<Navigate to="/overview/home" replace />}
+              />
+              <Route path="/overview/home" element={<Dashboard />} />
+              <Route path="/features/design" element={<Design />} />
+              <Route path="/features/sidebar" element={<PanelSidebar />} />
+              <Route path="/features/workspaces" element={<Workspaces />} />
+              <Route path="/features/webapps" element={<ProgressiveWebApp />} />
+              <Route path="/about/browser" element={<About />} />
+              {
+                /*
                   <Route path="/accounts" element={<ProfileAndAccount />} />
                   <Route path="/search" element={<SearchResults />} />
                  */
-                }
-              </Routes>
-            </div>
+              }
+            </Routes>
           </div>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

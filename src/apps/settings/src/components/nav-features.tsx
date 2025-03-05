@@ -1,8 +1,17 @@
-import { LucideIcon } from "lucide-react";
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar.tsx";
+import type { LucideIcon } from "lucide-react";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/common/sidebar.tsx";
 import { useLocation } from "react-router-dom";
 
-export function NavFeatures({ title, features }: {
+export function NavFeatures({
+  title,
+  features,
+}: {
   title: string;
   features: {
     title: string;
@@ -21,17 +30,18 @@ export function NavFeatures({ title, features }: {
           const featurePath = feature.url.startsWith("#")
             ? feature.url.slice(1)
             : feature.url;
-          const isActive =
-            featurePath === "/" ? currentRoute === "/" : currentRoute.startsWith(featurePath);
-          const activeClass = isActive
-            ? "bg-gray-200 dark:bg-gray-700 rounded-sm"
-            : "";
+          const isActive = featurePath === "/"
+            ? currentRoute === "/"
+            : currentRoute.startsWith(featurePath);
 
           return (
-            <SidebarMenuItem key={feature.title} className={activeClass}>
-              <SidebarMenuButton asChild>
-                <a href={feature.url}>
-                  <feature.icon />
+            <SidebarMenuItem key={feature.title} href={feature.url}>
+              <SidebarMenuButton
+                asChild
+                className={isActive ? "bg-base-300" : ""}
+              >
+                <a className="flex items-center gap-2">
+                  <feature.icon className="size-4" />
                   <span>{feature.title}</span>
                 </a>
               </SidebarMenuButton>

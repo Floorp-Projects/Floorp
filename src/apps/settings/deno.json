@@ -6,7 +6,11 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "jsxImportSourceTypes": "@types/react",
-    "lib": ["dom", "dom.asynciterable", "deno.ns"]
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
   },
   "imports": {
     "@/": "./src/"

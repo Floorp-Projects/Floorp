@@ -85,6 +85,7 @@ export const zPanelSidebarFormData = z.object({
   displayed: zPanelSidebarConfig.shape.displayed,
   webExtensionRunningEnabled:
     zPanelSidebarConfig.shape.webExtensionRunningEnabled,
+  globalWidth: zPanelSidebarConfig.shape.globalWidth,
 });
 
 export type PanelSidebarFormData = z.infer<typeof zPanelSidebarFormData>;

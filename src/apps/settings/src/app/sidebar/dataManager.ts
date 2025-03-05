@@ -45,9 +45,11 @@ export async function getPanelSidebarSettings(): Promise<
 
   const config = JSON.parse(configResult);
   return {
-    enabled,
+    enabled: enabled ?? true,
     autoUnload: config.autoUnload,
     position_start: config.position_start,
     globalWidth: config.globalWidth,
+    displayed: config.displayed ?? false,
+    webExtensionRunningEnabled: config.webExtensionRunningEnabled ?? false,
   };
 }

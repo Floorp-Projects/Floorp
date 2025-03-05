@@ -21,9 +21,5 @@
     "solid-js/web": "npm:solid-js/web",
     "solid-js/store": "npm:solid-js/store"
   },
-  "jsximportsource": "solid-js",
-  "unstable": [
-    "sloppy-imports",
-    "deno-unresolved-imports"
-  ]
+  "jsximportsource": "solid-js"
 }

@@ -1,12 +1,16 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/common/avatar.tsx";
+import { Button } from "@/components/common/button.tsx";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
 
 export default function Page() {
@@ -19,7 +23,7 @@ export default function Page() {
       <div className="flex flex-col items-start pl-6">
         <div className="m-5 p-1 rounded-full bg-gradient-to-tr from-blue-600 via-pink-600 to-orange-400">
           <div className="p-1 rounded-full bg-white">
-            <Avatar alt="Avatar" className="w-20 h-20">
+            <Avatar className="w-20 h-20">
               <AvatarImage src={accountImage} />
               <AvatarFallback>{accountName}</AvatarFallback>
             </Avatar>
@@ -46,7 +50,8 @@ export default function Page() {
               {t("home.setup.setupProgressTitle")}: 50%
             </p>
             <div className="w-full h-1 bg-blue-200 rounded">
-              <div className="bg-blue-500 h-1 rounded" style={{ width: "25%" }}></div>
+              <div className="bg-blue-500 h-1 rounded" style={{ width: "25%" }}>
+              </div>
             </div>
             <p className="text-xs mt-1">
               {t("home.setup.step", { step: 2, total: 4 })}
