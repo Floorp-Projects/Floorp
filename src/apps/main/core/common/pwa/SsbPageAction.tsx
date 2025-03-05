@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService";
@@ -27,11 +27,11 @@ export class SsbPageAction {
 
     Services.obs.addObserver(
       () => this.onCheckPageHasManifest(),
-      "nora-pwa-check-page-has-manifest"
+      "nora-pwa-check-page-has-manifest",
     );
     window.gBrowser.tabContainer.addEventListener(
       "TabSelect",
-      () => this.onCheckPageHasManifest()
+      () => this.onCheckPageHasManifest(),
     );
 
     this.onCheckPageHasManifest();
@@ -40,10 +40,13 @@ export class SsbPageAction {
   private async onCheckPageHasManifest() {
     const browser = window.gBrowser.selectedBrowser;
 
-    const canBeInstallAsPwa = await this.pwaService.checkBrowserCanBeInstallAsPwa(browser);
+    const canBeInstallAsPwa = await this.pwaService
+      .checkBrowserCanBeInstallAsPwa(browser);
     this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
-    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(browser);
+    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
+      browser,
+    );
     this.isInstalled[1](isInstalled);
     this.pwaService.updateUIElements(isInstalled);
   }
@@ -51,7 +54,7 @@ export class SsbPageAction {
   private onCommand = () => {
     this.pwaService.installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
-      true
+      true,
     );
     this.isInstalling[1](true);
   };
@@ -61,9 +64,11 @@ export class SsbPageAction {
     this.icon[1](icon);
 
     const manifest = await this.pwaService.getManifest(
-      window.gBrowser.selectedBrowser
+      window.gBrowser.selectedBrowser,
     );
-    this.title[1](manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec);
+    this.title[1](
+      manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec,
+    );
     this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
   };
 
@@ -93,87 +98,86 @@ export class SsbPageAction {
     const [isInstalled] = this.isInstalled;
 
     return (
-      <Show when={canBeInstallAsPwa() || isInstalled()}>
-        <xul:hbox
-          id="ssbPageAction"
-          data-l10n-id="ssb-page-action"
-          class="urlbar-page-action"
-          popup="ssb-panel"
+      <xul:hbox
+        id="ssbPageAction"
+        data-l10n-id="ssb-page-action"
+        class="urlbar-page-action"
+        popup="ssb-panel"
+        hidden={!canBeInstallAsPwa() && !isInstalled()}
+      >
+        <xul:image
+          id="ssbPageAction-image"
+          class={`urlbar-icon ${isInstalled() ? "open-ssb" : ""}`}
+        />
+        <xul:panel
+          id="ssb-panel"
+          type="arrow"
+          position="bottomright topright"
+          onPopupShowing={this.onPopupShowing}
+          onPopupHiding={this.onPopupHiding}
         >
-          <xul:image
-            id="ssbPageAction-image"
-            class={`urlbar-icon ${isInstalled() ? "open-ssb" : ""}`}
-          />
-          <xul:panel
-            id="ssb-panel"
-            type="arrow"
-            position="bottomright topright"
-            onPopupShowing={this.onPopupShowing}
-            onPopupHiding={this.onPopupHiding}
-          >
-            <xul:vbox id="ssb-box">
-              <xul:vbox class="panel-header">
-                <h1>
-                  <span data-l10n-id="ssb-page-action-title" />
-                  {isInstalled()
-                    ? "アプリケーションを開く"
-                    : "アプリケーションをインストール"}
-                </h1>
-              </xul:vbox>
-              <xul:toolbarseparator />
-              <xul:hbox id="ssb-content-hbox">
-                <xul:vbox id="ssb-content-icon-vbox">
-                  <img
-                    id="ssb-content-icon"
-                    width="48"
-                    height="48"
-                    alt="Site icon"
-                    src={icon()}
-                  />
-                </xul:vbox>
-                <xul:vbox id="ssb-content-label-vbox">
-                  <h2>
-                    <xul:label id="ssb-content-label" />
-                    {title()}
-                  </h2>
-                  <xul:description id="ssb-content-description">
-                    {description()}
-                  </xul:description>
-                </xul:vbox>
-              </xul:hbox>
-              <xul:hbox id="ssb-button-hbox">
-                <xul:vbox id="ssb-installing-vbox">
-                  <img
-                    id="ssb-installing-icon"
-                    hidden={!isInstalling()}
-                    src="chrome://floorp/skin/icons/installing.gif"
-                    width="48"
-                    height="48"
-                    alt="Installing indicator"
-                  />
-                </xul:vbox>
-                <xul:button
-                  id="ssb-app-install-button"
-                  class="panel-button ssb-install-buttons footer-button primary"
-                  hidden={isInstalling()}
-                  onClick={this.onCommand}
-                  label={
-                    isInstalled() ? "アプリケーションを開く" : "インストール"
-                  }
-                />
-                <xul:button
-                  id="ssb-app-cancel-button"
-                  class="panel-button ssb-install-buttons footer-button"
-                  data-l10n-id="ssb-app-cancel-button"
-                  hidden={isInstalling()}
-                  onClick={this.closePopup}
-                  label="キャンセル"
-                />
-              </xul:hbox>
+          <xul:vbox id="ssb-box">
+            <xul:vbox class="panel-header">
+              <h1>
+                <span data-l10n-id="ssb-page-action-title" />
+                {isInstalled()
+                  ? "アプリケーションを開く"
+                  : "アプリケーションをインストール"}
+              </h1>
             </xul:vbox>
-          </xul:panel>
-        </xul:hbox>
-      </Show>
+            <xul:toolbarseparator />
+            <xul:hbox id="ssb-content-hbox">
+              <xul:vbox id="ssb-content-icon-vbox">
+                <img
+                  id="ssb-content-icon"
+                  width="48"
+                  height="48"
+                  alt="Site icon"
+                  src={icon()}
+                />
+              </xul:vbox>
+              <xul:vbox id="ssb-content-label-vbox">
+                <h2>
+                  <xul:label id="ssb-content-label" />
+                  {title()}
+                </h2>
+                <xul:description id="ssb-content-description">
+                  {description()}
+                </xul:description>
+              </xul:vbox>
+            </xul:hbox>
+            <xul:hbox id="ssb-button-hbox">
+              <xul:vbox id="ssb-installing-vbox">
+                <img
+                  id="ssb-installing-icon"
+                  hidden={!isInstalling()}
+                  src="chrome://floorp/skin/icons/installing.gif"
+                  width="48"
+                  height="48"
+                  alt="Installing indicator"
+                />
+              </xul:vbox>
+              <xul:button
+                id="ssb-app-install-button"
+                class="panel-button ssb-install-buttons footer-button primary"
+                hidden={isInstalling()}
+                onClick={this.onCommand}
+                label={isInstalled()
+                  ? "アプリケーションを開く"
+                  : "インストール"}
+              />
+              <xul:button
+                id="ssb-app-cancel-button"
+                class="panel-button ssb-install-buttons footer-button"
+                data-l10n-id="ssb-app-cancel-button"
+                hidden={isInstalling()}
+                onClick={this.closePopup}
+                label="キャンセル"
+              />
+            </xul:hbox>
+          </xul:vbox>
+        </xul:panel>
+      </xul:hbox>
     );
   }
 }
