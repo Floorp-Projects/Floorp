@@ -341,23 +341,31 @@ jobs:
 
           await $`mkdir ~/noraneko-publish`
 
-          const version_display = (await $`cat ~/noraneko-mar/version_display.txt`)._stdout;
-          const version = (await $`cat ~/noraneko-mar/version.txt`)._stdout;
-          const noraneko_version = (await $`cat ~/noraneko-mar/noraneko_version.txt`)._stdout;
-          const noraneko_buildid = (await $`cat ~/noraneko-mar/noraneko_buildid.txt`)._stdout;
-          const mar_size = (await $`cat ~/noraneko-mar/mar_size.txt`)._stdout;
-          const mar_shasum = (await $`cat ~/noraneko-mar/mar_shasum.txt`)._stdout;
-          const buildid = (await $`cat ~/noraneko-mar/buildid.txt`)._stdout;
+          const version_display = (await $`cat ~/noraneko-mar/version_display.txt`);
+          const version = (await $`cat ~/noraneko-mar/version.txt`);
+          const noraneko_version = (await $`cat ~/noraneko-mar/noraneko_version.txt`);
+          const noraneko_buildid = (await $`cat ~/noraneko-mar/noraneko_buildid.txt`);
+          const mar_size = (await $`cat ~/noraneko-mar/mar_size.txt`);
+          const mar_shasum = (await $`cat ~/noraneko-mar/mar_shasum.txt`);
+          const buildid = (await $`cat ~/noraneko-mar/buildid.txt`);
+
+          console.log(`Version Display: ${version_display}`);
+          console.log(`Version: ${version}`);
+          console.log(`Noraneko Version: ${noraneko_version}`);
+          console.log(`Noraneko BuildID: ${noraneko_buildid}`);
+          console.log(`MAR Size: ${mar_size}`);
+          console.log(`MAR SHA-512: ${mar_shasum}`);
+          console.log(`BuildID: ${buildid}`);
 
           const json = {
-            version_display: version_display.trim(),
-            version: version.trim(),
-            noraneko_version: noraneko_version.trim(),
-            noraneko_buildid: noraneko_buildid.trim(),
-            mar_size: mar_size.trim(),
-            mar_shasum: mar_shasum.trim(),
-            buildid: buildid.trim()
-          }
+            version_display: version_display.toString().trim(),
+            version: version.toString().trim(),
+            noraneko_version: noraneko_version.toString().trim(),
+            noraneko_buildid: noraneko_buildid.toString().trim(),
+            mar_size: parseInt(mar_size.toString().trim()),
+            mar_shasum: mar_shasum.toString().trim(),
+            buildid: buildid.toString().trim()
+          };
 
           await fs.writeJson(os.homedir()+"/noraneko-publish/meta.json", json, { spaces: 2 });
           await $`cat ~/noraneko-publish/meta.json`
