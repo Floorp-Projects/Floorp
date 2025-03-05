@@ -58,6 +58,8 @@ const update = {
         buildID: meta.buildid,
         appVersion2: meta.noraneko_version,
         buildID2: meta.noraneko_buildid,
+        detailsURL:
+          "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/",
       },
       patch: [
         {

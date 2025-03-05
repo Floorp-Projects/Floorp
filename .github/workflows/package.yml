@@ -349,15 +349,18 @@ jobs:
           const buildid = (await $`cat ~/noraneko-mar/buildid.txt`)._stdout;
 
           const json = {
-            version,
-            noraneko_version,
-            noraneko_buildid,
-            mar_size,
-            mar_shasum,
-            buildid,
+            version_display: version_display.trim(),
+            version: version.trim(),
+            noraneko_version: noraneko_version.trim(),
+            noraneko_buildid: noraneko_buildid.trim(),
+            mar_size: mar_size.trim(),
+            mar_shasum: mar_shasum.trim(),
+            buildid: buildid.trim()
           }
 
-          await fs.writeJson(os.homedir()+"/noraneko-publish/meta.json",json);
+          await fs.writeJson(os.homedir()+"/noraneko-publish/meta.json", json, { spaces: 2 });
+          await $`cat ~/noraneko-publish/meta.json`
+          await $`echo "Meta JSON file content has been created and saved successfully."`
 
           await $`cp ~/noraneko-mar/*.mar ~/noraneko-publish`;
 
