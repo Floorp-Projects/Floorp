@@ -1,5 +1,5 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
-import { DesignFormData } from "@/types/pref.ts";
+import type { DesignFormData } from "@/types/pref.ts";
 
 export async function saveDesignSettings(
   settings: DesignFormData,
@@ -19,6 +19,7 @@ export async function saveDesignSettings(
     globalConfigs: {
       ...oldData.globalConfigs,
       userInterface: settings.design,
+      faviconColor: settings.faviconColor,
     },
     tabbar: {
       ...oldData.tabbar,
@@ -61,6 +62,7 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     tabScrollWrap: data.tab.tabScroll.wrap,
     tabDubleClickToClose: data.tab.tabDubleClickToClose,
     tabScroll: data.tab.tabScroll.enabled,
+    faviconColor: data.globalConfigs.faviconColor,
   };
   return formData;
 }

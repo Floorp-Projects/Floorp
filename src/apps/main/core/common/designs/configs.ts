@@ -3,7 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup, Accessor, Setter } from "solid-js";
+import {
+  type Accessor,
+  createEffect,
+  createSignal,
+  onCleanup,
+  type Setter,
+} from "solid-js";
 import {
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
@@ -13,7 +19,7 @@ import {
   type TFloorpDesignConfigs,
   zFloorpDesignConfigs,
 } from "../../../../../apps/common/scripts/global-types/type";
-import { } from "@core/utils/base";
+import {} from "@core/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 
 const oldObjectConfigs: TFloorpDesignConfigs = {
@@ -71,8 +77,11 @@ const oldObjectConfigs: TFloorpDesignConfigs = {
 
 export const getOldConfigs = JSON.stringify(oldObjectConfigs);
 
-function createConfig() : [Accessor<TFloorpDesignConfigs>,Setter<TFloorpDesignConfigs>]{
-  const [config,setConfig] = createSignal(
+function createConfig(): [
+  Accessor<TFloorpDesignConfigs>,
+  Setter<TFloorpDesignConfigs>,
+] {
+  const [config, setConfig] = createSignal(
     zFloorpDesignConfigs.parse(
       JSON.parse(
         Services.prefs.getStringPref("floorp.design.configs", getOldConfigs),
@@ -84,7 +93,7 @@ function createConfig() : [Accessor<TFloorpDesignConfigs>,Setter<TFloorpDesignCo
       zFloorpDesignConfigs.parse(
         JSON.parse(Services.prefs.getStringPref("floorp.design.configs")),
       ),
-    )
+    );
   }
 
   createEffect(() => {
@@ -96,13 +105,16 @@ function createConfig() : [Accessor<TFloorpDesignConfigs>,Setter<TFloorpDesignCo
 
   Services.prefs.addObserver("floorp.design.configs", updateConfigFromPref);
 
-  onCleanup(()=>{
-    Services.prefs.removeObserver("floorp.design.configs",updateConfigFromPref);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      "floorp.design.configs",
+      updateConfigFromPref,
+    );
   });
-  return [config,setConfig]
+  return [config, setConfig];
 }
 
-export const [config,setConfig] = createRootHMR(createConfig,import.meta.hot)
+export const [config, setConfig] = createRootHMR(createConfig, import.meta.hot);
 
 if (!window.gFloorp) {
   window.gFloorp = {};

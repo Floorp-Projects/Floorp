@@ -165,12 +165,13 @@ async function downloadBinArchive() {
   if (originUrl.endsWith("/")) {
     originUrl = originUrl.slice(0, -1);
   }
-  const originDownloadUrl = `${originUrl}-runtime/releases/latest/download/${fileName}`;
+  const originDownloadUrl =
+    `${originUrl}-runtime/releases/latest/download/${fileName}`;
   console.log(`Downloading from origin: ${originDownloadUrl}`);
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
     console.log("Download complete from origin!");
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       "Origin download failed, falling back to upstream:",
       error.stderr,
@@ -181,7 +182,7 @@ async function downloadBinArchive() {
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
       console.log("Download complete from upstream!");
-    } catch (error2) {
+    } catch (error2: any) {
       console.error("Upstream download failed:", error2.stderr);
       throw error2.stderr;
     }
@@ -226,6 +227,14 @@ async function runWithInitBinGit() {
   await initBin();
   await initializeBinGit();
   await run();
+}
+
+async function clobber() {
+  try {
+    await fs.rm("_dist", { recursive: true });
+  } catch {
+    console.error("Failed to remove _dist directory");
+  }
 }
 
 let devViteProcess: ProcessPromise | null = null;
@@ -290,7 +299,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     await release("before");
     await injectManifest(binDir, "run-prod", "noraneko-dev");
     try {
-      await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, { recursive: true });
+      await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, {
+        recursive: true,
+      });
     } catch {}
     await Deno.symlink(
       pathe.resolve(import.meta.dirname, "_dist/noraneko"),
@@ -395,7 +406,9 @@ async function release(mode: "before" | "after") {
         const appFile = appFiles[0];
         const appPath = `${baseDir}/${appFile}`;
         binPath = `${appPath}/Contents/Resources`;
-        console.log(`Using app bundle directory: ${appPath}/Contents/Resources`);
+        console.log(
+          `Using app bundle directory: ${appPath}/Contents/Resources`,
+        );
       } else {
         binPath = `${baseDir}/bin`;
         console.log(`Using bin directory: ${baseDir}/bin`);
@@ -418,6 +431,9 @@ if (Deno.args[0]) {
   switch (Deno.args[0]) {
     case "--run":
       run();
+      break;
+    case "--clobber":
+      clobber();
       break;
     case "--run-with-init-bin-git":
       runWithInitBinGit();

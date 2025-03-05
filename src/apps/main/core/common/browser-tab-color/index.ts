@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 import { onCleanup } from "@nora/solid-xul";
+import { createEffect } from "solid-js";
 import { TabColorManager } from "./tabcolor-manager";
-import chroma from "chroma-js"
+import chroma from "chroma-js";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
-const { ManifestObtainer } = ChromeUtils.importESModule("resource://gre/modules/ManifestObtainer.sys.mjs");
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs",
+);
 
 export let manager: TabColorManager;
 
@@ -20,27 +22,39 @@ export default class BrowserTabColor extends NoraComponentBase {
       onLocationChange: (_webProgress, _request, _location, _flags) => {
         _changeTabColor();
       },
-    } satisfies Pick<nsIWebProgressListener,"onLocationChange">;
+    } satisfies Pick<nsIWebProgressListener, "onLocationChange">;
 
     manager = new TabColorManager();
-    window.gBrowser.addTabsProgressListener(listener);
-    window.gBrowser.tabContainer.addEventListener("TabSelect",this.changeTabColor);
+    globalThis.gBrowser.addTabsProgressListener(listener);
+    globalThis.gBrowser.tabContainer.addEventListener(
+      "TabSelect",
+      this.changeTabColor,
+    );
+
+    createEffect(() => {
+      if (manager.enableTabColor()) {
+        this.changeTabColor();
+      } else {
+        document?.getElementById("floorp-toolbar-bgcolor")?.remove();
+      }
+    });
+
     onCleanup(
       () => {
-        window.gBrowser.removeTabsProgressListener(listener);
-        window.gBrowser.tabContainer.removeEventListener("TabSelect", this.changeTabColor);
-      }
+        globalThis.gBrowser.removeTabsProgressListener(listener);
+        globalThis.gBrowser.tabContainer.removeEventListener(
+          "TabSelect",
+          this.changeTabColor,
+        );
+      },
     );
     manager.init();
   }
 
   changeTabColor() {
-    console.log(manager.enableTabColor());
-    if (!manager.enableTabColor()) {
-      return;
-    }
-    getManifest().then(res => {
-      document?.getElementById("floorp-toolbar-bgcolor")?.remove()
+    if (!manager.enableTabColor()) return;
+    getManifest().then((res) => {
+      document?.getElementById("floorp-toolbar-bgcolor")?.remove();
       if (res != null) {
         const elem = document.createElement("style");
         const styleSheet = `
@@ -70,17 +84,21 @@ export default class BrowserTabColor extends NoraComponentBase {
         elem.id = "floorp-toolbar-bgcolor";
         document?.head?.appendChild(elem);
       }
-    })
+    });
   }
 }
 
 async function getManifest() {
-return await ManifestObtainer.browserObtainManifest(window.gBrowser.selectedBrowser);
+  return await ManifestObtainer.browserObtainManifest(
+    window.gBrowser.selectedBrowser,
+  );
 }
-function getTextColor(backgroundColor:string) {
+function getTextColor(backgroundColor: string) {
   if (chroma.valid(backgroundColor)) {
-    return chroma(backgroundColor).luminance() >= 0.5 ? "black" : "white"
+    return chroma(backgroundColor).luminance() >= 0.5 ? "black" : "white";
   } else {
-    throw Error("[nora@browser-tab-color] theme_color in manifest is not valid");
+    throw Error(
+      "[nora@browser-tab-color] theme_color in manifest is not valid",
+    );
   }
 }
