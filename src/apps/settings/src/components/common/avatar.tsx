@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface AvatarProps {
   children?: ReactNode;
@@ -25,33 +26,34 @@ export function AvatarImage({
   src,
   alt,
   className,
+  fallback,
 }: {
   src: string;
   alt?: string;
   className?: string;
+  fallback?: string;
 }) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={cn(
-        "aspect-square h-full w-full object-cover transition-opacity",
-        className,
-      )}
-    />
-  );
-}
+  const [error, setError] = useState(false);
 
-export function AvatarFallback({ children, className }: AvatarProps) {
   return (
-    <div
-      className={cn(
-        "flex h-full w-full items-center justify-center rounded-lg",
-        "bg-base-300/50 text-base-content/70 text-sm font-medium",
-        className,
-      )}
-    >
-      {children}
+    <div className="relative h-full w-full">
+      {!error
+        ? (
+          <img
+            src={src}
+            alt={alt}
+            className={cn(
+              "aspect-square h-full w-full object-cover transition-opacity",
+              className,
+            )}
+            onError={() => setError(true)}
+          />
+        )
+        : (
+          <div className="flex h-full w-full items-center justify-center bg-muted text-black">
+            {fallback || alt?.charAt(0) || "?"}
+          </div>
+        )}
     </div>
   );
 }

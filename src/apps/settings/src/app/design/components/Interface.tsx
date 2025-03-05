@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
+import { Switch } from "@/components/common/switch.tsx";
 import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
@@ -19,7 +20,7 @@ export function Interface() {
         <CardTitle>{t("design.interface")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
+        <div className="space-y-3">
           <div>
             <p className="text-sm text-base-content/70 mb-4">
               {t("design.interfaceDescription")}
@@ -61,7 +62,7 @@ export function Interface() {
                 {t("design.advancedLeptonThemeSettingsDescription")}
                 <a
                   href="https://docs.floorp.app/docs/features/design-customization"
-                  className="text-primary hover:underline"
+                  className="text-[var(--link-text-color)] hover:underline"
                 >
                   {t("design.advancedLeptonThemeSettings")}
                 </a>
@@ -73,17 +74,16 @@ export function Interface() {
             <h3 className="text-base font-medium mb-2">
               {t("design.otherInterfaceSettings")}
             </h3>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="space-y-1">
-                <label>
+                <label htmlFor="favicon-color">
                   {t("design.useFaviconColorToBackgroundOfNavigationBar")}
                 </label>
               </div>
-              <input
-                type="checkbox"
+              <Switch
+                id="favicon-color"
                 checked={!!getValues("faviconColor")}
                 onChange={(e) => setValue("faviconColor", e.target.checked)}
-                className="checkbox"
               />
             </div>
           </div>

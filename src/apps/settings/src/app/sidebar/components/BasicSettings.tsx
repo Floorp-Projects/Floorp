@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { Input } from "@/components/common/input.tsx";
+import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 
@@ -18,12 +19,12 @@ export function BasicSettings() {
       <CardHeader>
         <CardTitle>{t("panelSidebar.basicSettings")}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3">
         <div>
           <h3 className="text-base font-medium mb-2">
             {t("panelSidebar.enableOrDisable")}
           </h3>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
               <label
                 htmlFor="enable-panel"
@@ -35,12 +36,10 @@ export function BasicSettings() {
                 {t("panelSidebar.enableDescription")}
               </p>
             </div>
-            <input
-              type="checkbox"
+            <Switch
               id="enable-panel"
               checked={watchAll.enabled}
               onChange={(e) => setValue("enabled", e.currentTarget.checked)}
-              className="checkbox"
             />
           </div>
         </div>
@@ -50,19 +49,17 @@ export function BasicSettings() {
             {t("panelSidebar.otherSettings")}
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <label
                 htmlFor="auto-unload"
                 className="text-sm font-medium leading-none"
               >
                 {t("panelSidebar.autoUnloadOnClose")}
               </label>
-              <input
-                type="checkbox"
+              <Switch
                 id="auto-unload"
                 checked={watchAll.autoUnload}
                 onChange={(e) => setValue("autoUnload", e.target.checked)}
-                className="checkbox"
               />
             </div>
 

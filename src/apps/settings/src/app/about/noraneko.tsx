@@ -28,16 +28,28 @@ export default function Page() {
               Binaries: Mozilla Public License 2.0 (MPL)
             </div>
             <div className="pt-4">
-              <Button asChild>
-                <a href="about:license">
-                  <Scale />License Notice: Know your rights
+              <Button asChild className="flex flex-col items-start">
+                <a
+                  href="about:license"
+                  target="_blank"
+                  className="flex items-center gap-2"
+                  rel="noreferrer"
+                >
+                  <Scale />
+                  License Notice: Know your rights
                 </a>
               </Button>
             </div>
             <div className="pt-2">
-              <Button asChild>
-                <a href="https://github.com/nyanrus/noraneko">
-                  <SiGithub />GitHub Repository: nyanrus/noraneko
+              <Button asChild className="flex flex-col items-start">
+                <a
+                  href="https://github.com/nyanrus/noraneko"
+                  target="_blank"
+                  className="flex items-center gap-2"
+                  rel="noreferrer"
+                >
+                  <SiGithub />
+                  GitHub Repository: nyanrus/noraneko
                 </a>
               </Button>
             </div>

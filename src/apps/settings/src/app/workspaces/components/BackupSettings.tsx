@@ -14,7 +14,7 @@ export function BackupSettings() {
       <CardHeader>
         <CardTitle>{t("workspaces.backup")}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3">
         <div>
           <h3 className="text-base font-medium">
             {t("workspaces.backupComingSoon")}

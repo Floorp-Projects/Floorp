@@ -19,14 +19,14 @@ export function Sidebar({ children, className }: SidebarProps) {
   return (
     <div className="drawer w-auto lg:drawer-open">
       <input id="settings-drawer" type="checkbox" className="drawer-toggle" />
-      <div className={cn("drawer-side", className)}>
+      <div className={cn("drawer-side z-50", className)}>
         <label
           htmlFor="settings-drawer"
           aria-label="close sidebar"
           className="drawer-overlay"
         >
         </label>
-        <div className="min-h-screen w-80 bg-base-200/50 text-base-content border-r border-base-300">
+        <div className="min-h-screen w-80 bg-base-200 text-base-content border-r border-base-300">
           {children}
         </div>
       </div>
@@ -38,7 +38,7 @@ export function SidebarHeader({ children, className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "border-b border-base-300/50 px-6 py-3 backdrop-blur-sm bg-base-200/30",
+        "border-b border-base-300/50 px-6 py-3 bg-base-200/30",
         className,
       )}
     >
@@ -51,7 +51,7 @@ export function SidebarContent({ children, className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "flex-1 overflow-auto px-4 py-2 backdrop-blur-sm",
+        "flex-1 overflow-auto px-4 py-2",
         className,
       )}
     >
@@ -64,7 +64,7 @@ export function SidebarFooter({ children, className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "mt-auto border-t border-base-300/50 py-4 px-6 backdrop-blur-sm bg-base-200/30",
+        "mt-auto border-t border-base-300/50 py-4 px-6 bg-base-200/30",
         className,
       )}
     >

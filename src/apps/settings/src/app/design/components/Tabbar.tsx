@@ -16,7 +16,7 @@ export function Tabbar() {
       <CardHeader>
         <CardTitle>{t("design.tabBar")}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3">
         <div>
           <label className="block mb-2 text-base font-medium">
             {t("design.style")}
@@ -93,7 +93,7 @@ export function Tabbar() {
               {t("design.verticalTabIsRemovedFromBrowser")}{" "}
               <a
                 href="https://docs.floorp.app/docs/features/tab-bar-customization/#vertical-tabs"
-                className="text-primary hover:underline"
+                className="text-[var(--link-text-color)] hover:underline"
               >
                 {t("design.learnMore")}
               </a>

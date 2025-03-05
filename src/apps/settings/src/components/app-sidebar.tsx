@@ -11,12 +11,10 @@ import {
   UserRoundPen,
   Wrench,
 } from "lucide-react";
-import { NavUser } from "@/components/nav-user.tsx";
 import { NavHeader } from "@/components/nav-header.tsx";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
@@ -24,12 +22,6 @@ import { NavFeatures } from "@/components/nav-features.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
-
-  const user = {
-    name: "Noraneko",
-    email: "noraneko@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  };
 
   const overview = [
     { title: t("pages.home"), url: "#/overview/home", icon: House },
