@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["buildjet-16vcpu-ubuntu-2204"]
+        runs-on:  ["ubuntu-latest"]
         arch: [x86_64, aarch64]
     steps:
     - name: Use Node.js
@@ -236,7 +236,8 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        ./mach build
+        export MOZ_NUM_JOBS=$(( $(nproc) * 3 / 4 ))
+        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
@@ -247,7 +248,8 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        ./mach build
+        export MOZ_NUM_JOBS=$(( $(nproc) * 3 / 4 ))
+        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
