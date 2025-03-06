@@ -68,8 +68,8 @@ PipeWireNode::PipeWireNode(PipeWireSession* session,
 }
 
 PipeWireNode::~PipeWireNode() {
-  pw_proxy_destroy(proxy_);
   spa_hook_remove(&node_listener_);
+  pw_proxy_destroy(proxy_);
 }
 
 // static
