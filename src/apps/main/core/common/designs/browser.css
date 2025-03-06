@@ -151,12 +151,6 @@ browser[type="content"] > html {
   list-style-image: url("chrome://floorp/skin/icons/floorp-share.svg");
 }
 
-@media (min-resolution: 1.1dppx) {
-  toolbar[brighttext] .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x-light, inherit) !important;
-  }
-}
-
 /* Progressive Web Apps */
 
 #ssb-box {
