@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "lex.50.50.enko.s2t.bin",
+      "schema": 1740602104436,
+      "toLang": "ko",
+      "version": "2.0",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "7734265822ce315c72334ad538e698ab3900ab8e8f04bd43768d0aecad6b6df7",
+        "size": 6676356,
+        "filename": "lex.50.50.enko.s2t.bin",
+        "location": "main-workspace/translations-models/f8a94a6b-264c-4c06-8016-2b57364fbd90.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "5afd7b25-e57e-45f9-9555-fecd7cd34b6e",
+      "last_modified": 1740604458734
+    },
+    {
+      "name": "vocab.enko.spm",
+      "schema": 1740602200372,
+      "toLang": "ko",
+      "version": "2.0",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "709bf0e425345e0e92ce41ed84348a1296a2107c92bdb6624404450ffecbd1f9",
+        "size": 1406926,
+        "filename": "vocab.enko.spm",
+        "location": "main-workspace/translations-models/2143a895-2f68-4f00-8ebc-40c9563f304d.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "c8a3c1e6-4618-4cb9-a2e9-527496ec1de9",
+      "last_modified": 1740604458730
+    },
+    {
+      "name": "model.enko.intgemm.alphas.bin",
+      "schema": 1740602196106,
+      "toLang": "ko",
+      "version": "2.0",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "1c310a79b61b8824b2eb26b045db043d92722f3e66ea06998f7c89f48da9f6bc",
+        "size": 59504955,
+        "filename": "model.enko.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/4041be52-9e75-41f1-9d4f-04801f112553.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "84c9d745-3c01-41e5-8262-244efd47be74",
+      "last_modified": 1740604458726
+    },
+    {
       "name": "model.enzh.intgemm.alphas.bin",
       "schema": 1739301907813,
       "toLang": "zh-Hans",
@@ -6097,5 +6151,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1739313213072
+  "timestamp": 1740604458734
 }

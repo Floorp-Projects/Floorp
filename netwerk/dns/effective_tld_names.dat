@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-02-21_19-46-31_UTC
-// COMMIT: f83c8b19f351e813eda3ace0cc224ad965b79465
+// VERSION: 2025-03-05_07-06-32_UTC
+// COMMIT: b5aa82bff01b7f9ebd61ab118a224ad8ca57bf43
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -6271,6 +6271,7 @@ co.ve
 com.ve
 e12.ve
 edu.ve
+emprende.ve
 firm.ve
 gob.ve
 gov.ve
@@ -6744,7 +6745,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-02-21T15:17:09Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-02-28T15:18:00Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -8754,10 +8755,6 @@ kddi
 // https://www.iana.org/domains/root/db/kerryhotels.html
 kerryhotels
 
-// kerrylogistics : Kerry Trading Co. Limited
-// https://www.iana.org/domains/root/db/kerrylogistics.html
-kerrylogistics
-
 // kerryproperties : Kerry Trading Co. Limited
 // https://www.iana.org/domains/root/db/kerryproperties.html
 kerryproperties
@@ -8953,10 +8950,6 @@ lincoln
 // link : Nova Registry Ltd
 // https://www.iana.org/domains/root/db/link.html
 link
-
-// lipsy : Lipsy Ltd
-// https://www.iana.org/domains/root/db/lipsy.html
-lipsy
 
 // live : Dog Beach, LLC
 // https://www.iana.org/domains/root/db/live.html
@@ -11154,7 +11147,7 @@ yahoo
 // https://www.iana.org/domains/root/db/yamaxun.html
 yamaxun
 
-// yandex : ADC Tech Netherlands B.V.
+// yandex : YANDEX, LLC
 // https://www.iana.org/domains/root/db/yandex.html
 yandex
 
@@ -12286,6 +12279,10 @@ blackbaudcdn.net
 // Submitted by Luke Bratch <luke@bratch.co.uk>
 of.je
 
+// Block, Inc. : https://block.xyz
+// Submitted by Jonathan Boice <security@block.xyz>
+square.site
+
 // Blue Bite, LLC : https://bluebite.com
 // Submitted by Joshua Weiss <admin.engineering@bluebite.com>
 bluebite.io
@@ -12647,6 +12644,7 @@ definima.net
 // Submitted by Luca Casonato <hostmaster@deno.com>
 deno.dev
 deno-staging.dev
+deno.net
 
 // deSEC : https://desec.io/
 // Submitted by Peter Thomassen <peter@desec.io>
@@ -15600,6 +15598,7 @@ pleskns.com
 wp2.host
 pdns.page
 plesk.page
+cpanel.site
 wpsquared.site
 
 // WebWaddle Ltd : https://webwaddle.com/
@@ -15715,6 +15714,10 @@ zap.cloud
 // Submitted by Zeabur Team <contact@zeabur.com>
 zeabur.app
 
+// Zerops : https://zerops.io/
+// Submitted by Zerops Team <security@zerops.io>
+*.zerops.app
+
 // Zine EOOD : https://zine.bg/
 // Submitted by Martin Angelov <martin@zine.bg>
 bss.design
@@ -15724,5 +15727,9 @@ bss.design
 basicserver.io
 virtualserver.io
 enterprisecloud.nu
+
+// Zone.ID: https://zone.id
+// Submitted by Gx1.org <security@gx1.org>
+zone.id
 
 // ===END PRIVATE DOMAINS===
