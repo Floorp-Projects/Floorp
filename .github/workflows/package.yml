@@ -292,9 +292,22 @@ jobs:
             mkdir -p ~/temp_mnt ~/temp_base ~/extracted_output
             chmod -R 777 ~/temp_mnt ~/temp_base ~/extracted_output
 
+            chmod +x ~/tools/dmg/dmg
+
+            ls -ld ~/temp_mnt
+            ls -ld ~/temp_base
+            ls -l ~/tools/dmg/dmg
+
             echo "Extracting base.dmg ..."
-            ~/tools/dmg/dmg extract ~/codesign/macos/temp.dmg ~/temp_mnt
-            ~/tools/dmg/dmg extract ~/codesign/macos/base.dmg ~/temp_base
+            if ! ~/tools/dmg/dmg extract ~/codesign/macos/temp.dmg ~/temp_mnt; then
+                echo "Error: Failed to extract temp.dmg to ~/temp_mnt"
+                exit 1
+            fi
+
+            if ! ~/tools/dmg/dmg extract ~/codesign/macos/base.dmg ~/temp_base; then
+                echo "Error: Failed to extract base.dmg to ~/temp_base"
+                exit 1
+            fi
 
             APP_PATH=$(find ~/temp_mnt -maxdepth 2 -name "${APP_NAME}.app" -type d | head -n 1)
             if [ -z "$APP_PATH" ]; then
@@ -305,6 +318,7 @@ jobs:
             echo "Existing ${APP_NAME}.app found at: $APP_PATH"
             echo "Removing old ${APP_NAME}.app..."
             rm -rf "$APP_PATH"
+
             NEW_APP_PATH=$(find ~/temp_base -maxdepth 2 -name "${APP_NAME}.app" -type d | head -n 1)
             if [ -z "$NEW_APP_PATH" ]; then
               echo "Error: Could not find new ${APP_NAME}.app in temp_base"
@@ -312,6 +326,7 @@ jobs:
             fi
             echo "Copying new ${APP_NAME}.app from $NEW_APP_PATH to $APP_PATH..."
             cp -r "$NEW_APP_PATH" "$APP_PATH"
+
             echo "Creating new DMG..."
             ~/tools/dmg/dmg create -o ~/codesign/macos/floorp-macOS-universal.dmg -s 500M -v "Floorp Installer" ~/temp_mnt --format=UDZO
             rm -rf ~/temp_mnt ~/temp_base ~/extracted_output

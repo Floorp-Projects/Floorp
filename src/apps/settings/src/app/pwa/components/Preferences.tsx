@@ -17,14 +17,14 @@ export function Preferences() {
       <CardHeader>
         <CardTitle>{t("progressiveWebApp.basicSettings")}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         <div>
           <h3 className="text-base font-medium mb-2">
             {t("progressiveWebApp.enableDisable")}
           </h3>
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
-              <label htmlFor="enable-pwa">
+              <label htmlFor="enable-pwa" className="font-medium">
                 {t("progressiveWebApp.enablePwa")}
               </label>
               <p className="text-sm text-base-content/70">
@@ -39,13 +39,15 @@ export function Preferences() {
           </div>
         </div>
 
-        <div className="border-t pt-6">
+        <div className="divider my-2"></div>
+
+        <div>
           <h3 className="text-base font-medium mb-2">
             {t("progressiveWebApp.otherSettings")}
           </h3>
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
-              <label htmlFor="show-toolbar">
+              <label htmlFor="show-toolbar" className="font-medium">
                 {t("progressiveWebApp.showToolbar")}
               </label>
               <p className="text-sm text-base-content/70">
@@ -60,10 +62,10 @@ export function Preferences() {
           </div>
         </div>
 
-        <div>
+        <div className="mt-6">
           <a
             href="https://docs.floorp.app/docs/features/how-to-use-pwa"
-            className="text-[var(--link-text-color)] hover:underline text-sm"
+            className="link link-primary text-sm"
           >
             {t("progressiveWebApp.learnMore")}
           </a>

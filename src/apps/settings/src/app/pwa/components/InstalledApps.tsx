@@ -96,10 +96,10 @@ export function InstalledApps() {
           <CardTitle>{t("progressiveWebApp.installedApps")}</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <p className="text-destructive mb-4">{error}</p>}
+          {error && <p className="text-error mb-4">{error}</p>}
           {Object.keys(installedApps).length === 0
             ? (
-              <p className="text-muted-foreground">
+              <p className="text-base-content/70">
                 {t("progressiveWebApp.noInstalledApps")}
               </p>
             )
@@ -117,21 +117,22 @@ export function InstalledApps() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{app.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm text-base-content/70 truncate">
                         {app.start_url}
                       </p>
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button
                         type="button"
+                        className="btn btn-sm"
                         onClick={() => handleRename(app)}
                       >
                         {t("progressiveWebApp.renameApp")}
                       </button>
                       <button
                         type="button"
+                        className="btn btn-sm btn-error"
                         onClick={() => handleUninstall(app)}
-                        className="text-destructive"
                       >
                         {t("progressiveWebApp.uninstallApp")}
                       </button>
@@ -145,36 +146,39 @@ export function InstalledApps() {
 
       <dialog
         ref={renameDialogRef}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-lg shadow-lg backdrop:bg-black/50"
+        className="modal modal-bottom sm:modal-middle"
         onClick={(e) => {
           if (e.target === renameDialogRef.current) {
             handleClose(renameDialogRef);
           }
         }}
       >
-        <div className="min-w-[300px]">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">
             {t("progressiveWebApp.renameApp")}
-          </h2>
-          {error && <p className="text-destructive mb-4">{error}</p>}
-          <p className="text-sm text-muted-foreground mb-4">
+          </h3>
+          {error && <p className="text-error mb-4">{error}</p>}
+          <p className="py-4 text-base-content/70">
             {t("progressiveWebApp.enterNewName")}
           </p>
           <input
+            type="text"
             value={newName}
-            onChange={(e: ChangeEvent<HTMLinputElement>) =>
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setNewName(e.target.value)}
-            className="mb-4"
+            className="input input-bordered w-full mb-4"
           />
-          <div className="flex justify-end gap-2">
+          <div className="modal-action">
             <button
               type="button"
+              className="btn"
               onClick={() => handleClose(renameDialogRef)}
             >
               {t("progressiveWebApp.cancel")}
             </button>
             <button
               type="button"
+              className="btn btn-primary"
               onClick={executeRename}
               disabled={!newName.trim() || newName === selectedApp?.name}
             >
@@ -182,39 +186,50 @@ export function InstalledApps() {
             </button>
           </div>
         </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => handleClose(renameDialogRef)}>close</button>
+        </form>
       </dialog>
 
       <dialog
         ref={uninstallDialogRef}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-lg shadow-lg backdrop:bg-black/50"
+        className="modal modal-bottom sm:modal-middle"
         onClick={(e) => {
           if (e.target === uninstallDialogRef.current) {
             handleClose(uninstallDialogRef);
           }
         }}
       >
-        <div className="min-w-[300px]">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">
             {t("progressiveWebApp.uninstallConfirmation")}
-          </h2>
-          {error && <p className="text-destructive mb-4">{error}</p>}
-          <p className="text-sm text-muted-foreground mb-4">
+          </h3>
+          {error && <p className="text-error mb-4">{error}</p>}
+          <p className="py-4 text-base-content/70">
             {t("progressiveWebApp.uninstallWarning", {
               name: selectedApp?.name,
             })}
           </p>
-          <div className="flex justify-end gap-2">
+          <div className="modal-action">
             <button
               type="button"
+              className="btn"
               onClick={() => handleClose(uninstallDialogRef)}
             >
               {t("progressiveWebApp.cancel")}
             </button>
-            <button type="button" onClick={executeUninstall}>
+            <button
+              type="button"
+              className="btn btn-error"
+              onClick={executeUninstall}
+            >
               {t("progressiveWebApp.uninstall")}
             </button>
           </div>
         </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => handleClose(uninstallDialogRef)}>close</button>
+        </form>
       </dialog>
     </>
   );
