@@ -17,14 +17,21 @@ import {
 } from "./utils/data";
 
 export class CSplitView {
+  private _tabIdCache: WeakMap<Tab, string> | undefined;
+
   constructor() {
     this.initializeStyles();
+    this.initializePreferences();
     this.setupEventListeners();
     this.checkAllTabHaveSplitViewAttribute();
   }
 
   private initializeStyles() {
     render(this.StyleElement, document?.head);
+  }
+
+  private initializePreferences() {
+    Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
   }
 
   private setupEventListeners() {
@@ -35,19 +42,35 @@ export class CSplitView {
 
   private listener = {
     onLocationChange: () => {
-      this.checkAllTabHaveSplitViewAttribute();
+      if (splitViewData().length > 0) {
+        this.checkAllTabHaveSplitViewAttribute();
+      }
+
       const tab = window.gBrowser.selectedTab as Tab;
       if (tab) {
         this.updateSplitView(tab);
-        this.activateTab(tab);
+        tab.linkedBrowser.renderLayers = true;
+        if (currentSplitView() >= 0) {
+          this.activateTab(tab);
+        }
       }
     },
   };
 
   private activateTab(tab: Tab) {
-    tab.linkedBrowser.docShellIsActive = true;
-    tab.linkedBrowser.renderLayers = true;
-    document?.getElementById(tab.linkedPanel)?.classList.add("deck-selected");
+    if (tab.linkedBrowser.docShellIsActive === true) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      tab.linkedBrowser.docShellIsActive = true;
+      tab.linkedBrowser.renderLayers = true;
+
+      const panel = document?.getElementById(tab.linkedPanel);
+      if (panel && !panel.classList.contains("deck-selected")) {
+        panel.classList.add("deck-selected");
+      }
+    });
   }
 
   private StyleElement(): Element {
@@ -66,10 +89,20 @@ export class CSplitView {
     if (!tab) {
       throw new Error("Tab is not defined");
     }
-    return (
-      tab.getAttribute(SplitViewStaticNames.TabAttributionId) ??
-        this.setTabId(tab, this.getGeneratedUuid)
-    );
+
+    if (this._tabIdCache && this._tabIdCache.has(tab)) {
+      return this._tabIdCache.get(tab)!;
+    }
+
+    const attrId = tab.getAttribute(SplitViewStaticNames.TabAttributionId);
+    if (attrId) {
+      if (this._tabIdCache) {
+        this._tabIdCache.set(tab, attrId);
+      }
+      return attrId;
+    }
+
+    return this.setTabId(tab, this.getGeneratedUuid);
   }
 
   private setTabId(tab: Tab, id: string): string {
@@ -89,9 +122,18 @@ export class CSplitView {
   }
 
   private checkAllTabHaveSplitViewAttribute() {
+    if (!this._tabIdCache) {
+      this._tabIdCache = new WeakMap<Tab, string>();
+    }
+
     for (const tab of window.gBrowser.tabs) {
-      if (!tab.getAttribute(SplitViewStaticNames.TabAttributionId)) {
-        this.setTabId(tab, this.getGeneratedUuid);
+      if (
+        !tab.getAttribute(SplitViewStaticNames.TabAttributionId) &&
+        !this._tabIdCache.has(tab)
+      ) {
+        const id = this.getGeneratedUuid;
+        tab.setAttribute(SplitViewStaticNames.TabAttributionId, id);
+        this._tabIdCache.set(tab, id);
       }
     }
   }
@@ -172,6 +214,7 @@ export class CSplitView {
 
     setCurrentSplitView(-1);
     this.resetTabBrowserPanel();
+    Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
   }
 
   private resetTabBrowserPanel() {
@@ -421,23 +464,41 @@ export class CSplitView {
   }
 
   private deactivateSplitView() {
-    for (const tab of window.gBrowser.tabs) {
-      const container = tab.linkedBrowser.closest(".browserSidebarContainer");
-      this.resetContainerStyle(container);
-      container.removeEventListener("click", this.handleTabClick);
-    }
-    this.resetTabBrowserPanel();
-    this.setTabsDocShellState(
-      splitViewData()[currentSplitView()].tabIds.map((id) =>
+    if (currentSplitView() < 0) return;
+
+    const tabsToDeactivate =
+      splitViewData()[currentSplitView()]?.tabIds.map((id) =>
         this.getTabById(id)
-      ),
-      false,
-    );
+      ).filter(Boolean) || [];
+
+    const containersToReset: XULElement[] = [];
+
+    tabsToDeactivate.forEach((tab) => {
+      const container = tab.linkedBrowser.closest(".browserSidebarContainer");
+      if (container) {
+        container.removeEventListener("click", this.handleTabClick);
+        containersToReset.push(container as XULElement);
+      }
+    });
+
+    this.resetTabBrowserPanel();
+    Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
+
+    if (containersToReset.length > 0) {
+      requestAnimationFrame(() => {
+        containersToReset.forEach((container) => {
+          this.resetContainerStyle(container);
+        });
+      });
+    }
+
+    this.setTabsDocShellState(tabsToDeactivate, false);
     setCurrentSplitView(-1);
   }
 
   private activateSplitView(splitData: TSplitViewDatum, activeTab: Tab) {
     this.tabBrowserPanel.setAttribute("split-view", "true");
+    Services.prefs.setBoolPref("floorp.browser.splitView.working", true);
 
     setCurrentSplitView(splitViewData().indexOf(splitData));
 
@@ -509,29 +570,44 @@ export class CSplitView {
   };
 
   private setTabsDocShellState(tabs: Tab[], active: boolean) {
-    tabs.forEach((tab) => {
+    const containersToProcess = [] as XULElement[];
+
+    for (const tab of tabs) {
+      if (tab.linkedBrowser.spliting === active) {
+        continue;
+      }
+
       tab.linkedBrowser.spliting = active;
       tab.linkedBrowser.docShellIsActive = active;
+
       const browser = tab.linkedBrowser.closest(
         ".browserSidebarContainer",
       ) as XULElement;
 
       if (browser) {
-        this.setTabDocShellState(browser, active);
+        containersToProcess.push(browser);
       }
-    });
+    }
+
+    if (containersToProcess.length > 0) {
+      requestAnimationFrame(() => {
+        containersToProcess.forEach((browser) => {
+          this.setTabDocShellState(browser, active);
+        });
+      });
+    }
   }
 
   private setTabDocShellState(browser: XULElement, active: boolean) {
     if (active) {
       browser.setAttribute("split", "true");
-      const currentStyle = browser.getAttribute("style");
-      browser.setAttribute(
-        "style",
-        `${currentStyle}
-        -moz-subtree-hidden-only-visually: 0;
-        visibility: visible !important;`,
-      );
+      const styleUpdates = [
+        browser.getAttribute("style") || "",
+        "-moz-subtree-hidden-only-visually: 0;",
+        "visibility: visible !important;",
+      ].filter(Boolean).join(" ");
+
+      browser.setAttribute("style", styleUpdates);
     } else {
       browser.removeAttribute("split");
       browser.removeAttribute("style");
