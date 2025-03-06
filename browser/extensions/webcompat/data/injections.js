@@ -1316,6 +1316,20 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1950282",
+    platform: "linux",
+    domain: "formula1.com",
+    bug: "1950282",
+    contentScripts: {
+      matches: ["*://*.formula1.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1950282-formula1.com-platform-linux-fix.js",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
