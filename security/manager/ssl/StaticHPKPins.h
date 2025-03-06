@@ -535,6 +535,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "google.dz", true, false, false, -1, &kPinset_google_root_pems },
   { "google.ee", true, false, false, -1, &kPinset_google_root_pems },
   { "google.es", true, false, false, -1, &kPinset_google_root_pems },
+  { "google.eus", true, false, false, -1, &kPinset_google_root_pems },
   { "google.fi", true, false, false, -1, &kPinset_google_root_pems },
   { "google.fm", true, false, false, -1, &kPinset_google_root_pems },
   { "google.fr", true, false, false, -1, &kPinset_google_root_pems },
@@ -731,8 +732,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 400;
+// Pinning Preload List Length = 401;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1748862876288000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1749731285558000);
