@@ -19,14 +19,15 @@ export class SiteSpecificBrowserManager {
 
   constructor(
     private manifestProcesser: ManifestProcesser,
-    public readonly dataManager: DataManager
+    public readonly dataManager: DataManager,
   ) {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    document?.addEventListener("floorpOnLocationChangeEvent", () => {
+    //TODO: Replace Actor and Sbs.Observer
+    setInterval(() => {
       this.onCurrentTabChangedOrLoaded();
-    });
+    }, 3000);
 
     Services.obs.addObserver(async (subject: any) => {
       await this.renameSsb(
@@ -182,10 +183,11 @@ export class SiteSpecificBrowserManager {
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
-    const currentPageHasSsbManifest =
-      await this.manifestProcesser.getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled =
-      await this.checkCurrentPageIsInstalled(browser);
+    const currentPageHasSsbManifest = await this.manifestProcesser
+      .getManifestFromBrowser(browser, true);
+    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
+      browser,
+    );
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
