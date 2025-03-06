@@ -275,7 +275,49 @@ jobs:
       - name: Rename and move installer
         run: |
           mkdir -p ~/noraneko-installer
-          mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            APP_ZIP_NAME=$(basename "$(find obj-artifact-build-output/dist -name "*.app" -type d | head -n 1)" | sed 's/ /-/g' | sed 's/\.app$//')
+            APP_NAME=$(echo "$APP_ZIP_NAME" | sed 's/-/ /g')
+
+            mkdir -p ~/codesign/macos
+            mv obj-*/dist/$INSTALLER_PATH ~/codesign/macos/temp.dmg
+            unzip ./floorp/.github/workflows/assets/dmg-${APP_ZIP_NAME}-base.zip -d ~/codesign/macos
+
+            # Replace .app with new one
+            mkdir -p ~/temp_mnt ~/temp_base ~/extracted_output
+            chmod -R 777 ~/temp_mnt ~/temp_base ~/extracted_output
+
+            echo "Extracting base.dmg ..."
+            ~/tools/dmg/dmg extract ~/codesign/macos/temp.dmg ~/temp_mnt
+            ~/tools/dmg/dmg extract ~/codesign/macos/base.dmg ~/temp_base
+
+            APP_PATH=$(find ~/temp_mnt -maxdepth 2 -name "${APP_NAME}.app" -type d | head -n 1)
+            if [ -z "$APP_PATH" ]; then
+              echo "Error: Could not find existing ${APP_NAME}.app in temp_mnt"
+              exit 1
+            fi
+
+            echo "Existing ${APP_NAME}.app found at: $APP_PATH"
+            echo "Removing old ${APP_NAME}.app..."
+            rm -rf "$APP_PATH"
+            NEW_APP_PATH=$(find ~/temp_base -maxdepth 2 -name "${APP_NAME}.app" -type d | head -n 1)
+            if [ -z "$NEW_APP_PATH" ]; then
+              echo "Error: Could not find new ${APP_NAME}.app in temp_base"
+              exit 1
+            fi
+            echo "Copying new ${APP_NAME}.app from $NEW_APP_PATH to $APP_PATH..."
+            cp -r "$NEW_APP_PATH" "$APP_PATH"
+            echo "Creating new DMG..."
+            ~/tools/dmg/dmg create -o ~/codesign/macos/floorp-macOS-universal.dmg -s 500M -v "Floorp Installer" ~/temp_mnt --format=UDZO
+            rm -rf ~/temp_mnt ~/temp_base ~/extracted_output
+            mv ~/codesign/macos/floorp-macOS-universal.dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            echo "Installer renamed and moved to ~/noraneko-installer/$OUTPUT_INSTALLER_NAME"
+          fi
 
       - name: Download artifact of MAR tools (Actions)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -324,9 +366,9 @@ jobs:
 
           const version_txt = await $`cat ~/noraneko-mar/version.txt`
 
-            await $`touch "${path_obj}/dist/floorp/precomplete"`
-            const channelId = "${{ inputs.beta }}" === "true" ? "beta" : "release";
-            await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
+          await $`touch "${path_obj}/dist/floorp/precomplete"`
+          const channelId = "${{ inputs.beta }}" === "true" ? "beta" : "release";
+          await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
 
           await $`cp floorp/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt`
           await $`cp floorp/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt`

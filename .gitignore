@@ -3,10 +3,10 @@
 **/node_modules/
 **/.turbo
 
-*.tar.zst
-*.tar.xz
-*.zip
-*.dmg
+/*.tar.zst
+/*.tar.xz
+/*.zip
+/*.dmg
 
 .idea/
 
