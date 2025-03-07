@@ -275,23 +275,15 @@ jobs:
       - name: Rename and move installer
         run: |
           mkdir -p ~/noraneko-installer
-          mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
 
-      - name: Add background image to macOS DMG
-        if: ${{ inputs.platform == 'macOS-x64' }}
-        run: |
-          unzip "./floorp/.github/workflows/assets/dmg-Floorp-base.zip"
-
-          mkdir -p /tmp/dmg-work
-          ~/tools/dmg/dmg extract ~/noraneko-installer/$OUTPUT_INSTALLER_NAME /tmp/dmg-work
-          ~/tools/dmg/dmg extract ./base.dmg /tmp/base-work
-
-          APP_NAME="Floorp"
-          mkdir -p /tmp/merged-dmg
-          cp -r /tmp/base-work/* /tmp/merged-dmg/
-          cp -r /tmp/dmg-work/${APP_NAME}.app /tmp/merged-dmg/
-
-          ~/tools/dmg/dmg build /tmp/merged-dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME -compression ZLIB -compressionlevel 9
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            ./mach python -m mozbuild.action.make_dmg --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ./obj-artifact-build-output/dist/Floorp.app $OUTPUT_INSTALLER_NAME
+            mv $OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          fi
 
       - name: Download artifact of MAR tools (Actions)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
