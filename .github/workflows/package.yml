@@ -310,6 +310,11 @@ jobs:
             fi
 
             ./mach python -m mozbuild.action.make_dmg --dsstore $DS_STORE_PATH --background $BACKGROUND_PATH --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+            echo "${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}" > ~/mac-code-signing/key.json
+            rcodesign notary-submit \
+              --api-key-file ~/mac-code-signing/key.json \
+              --wait \
+              ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
             mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
 
