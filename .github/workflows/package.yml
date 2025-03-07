@@ -281,10 +281,11 @@ jobs:
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
-            mkdir -p ~/mac-code-signing
-            ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/
-            ./mach python -m mozbuild.action.make_dmg --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ~/mac-code-signing/ $OUTPUT_INSTALLER_NAME
-            mv $OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
+            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
+            ./mach python -m mozbuild.action.make_dmg --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+            mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
 
       - name: Download artifact of MAR tools (Actions)
