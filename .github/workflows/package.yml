@@ -284,7 +284,7 @@ jobs:
             mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
-            ./mach python -m mozbuild.action.make_dmg --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+            ./mach python -m mozbuild.action.make_dmg --dsstore ./floorp/.github/workflows/assets/mac/DS_Store --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
             mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
 
