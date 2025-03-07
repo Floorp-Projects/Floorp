@@ -282,8 +282,7 @@ jobs:
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
             mkdir -p ~/mac-code-signing
-            cp -RL obj-*/dist/*.app ~/mac-code-signing/
-
+            ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/
             ./mach python -m mozbuild.action.make_dmg --background ./floorp/.github/workflows/assets/mac/background.tiff --volume-name "Floorp 12 Installer" ~/mac-code-signing/ $OUTPUT_INSTALLER_NAME
             mv $OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
