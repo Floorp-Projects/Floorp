@@ -48,8 +48,9 @@ jobs:
         - name:  Unpack artifact
           run: |
             cd C:\artifact
-            zstd -d floorp-*.tar.zst
-            7z x floorp-*.tar
+            ren floorp-*.tar.zst floorp.tar.zst
+            zstd -d floorp.tar.zst
+            7z x floorp.tar
 
         - uses: actions/checkout@v4
           name: Clone 🧬

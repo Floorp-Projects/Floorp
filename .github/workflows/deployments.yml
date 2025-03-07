@@ -142,7 +142,6 @@ jobs:
 #----------------------------------------- macOS -----------------------------------------#
 
   Part1-macOS-Universal-build-with-profgen:
-    needs: Part3-win-x86_64-build-with-profdata-and-jarlog
     uses: ./.github/workflows/macOS-Universal.yml
     with:
       profgen: true
@@ -151,7 +150,7 @@ jobs:
       PAT: ${{ secrets.PAT }}
 
   Part2-macOS-Universal-gen-profdata-and-jarlog:
-    needs: [Part1-macOS-Universal-build-with-profgen]
+    needs: Part1-macOS-Universal-build-with-profgen
     uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
     secrets:
       PAT: ${{ secrets.PAT }}

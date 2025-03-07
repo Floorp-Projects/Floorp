@@ -2,6 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+);
+
 const ADDON_ID = "policytest@mozilla.com";
 const BASE_URL =
   "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser";
@@ -17,6 +21,59 @@ async function isExtensionLockedAndUpdateDisabled(win, addonID) {
   let updateRow = addonCard.querySelector(".addon-detail-row-updates");
   is(updateRow.hidden, true, "Update row should be hidden");
 }
+
+add_task(async function test_addon_private_browser_access_locked() {
+  async function installWithExtensionSettings(extensionSettings = {}) {
+    let installPromise = waitForAddonInstall(ADDON_ID);
+    await setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "policytest@mozilla.com": {
+            install_url: `${BASE_URL}/policytest_v0.1.xpi`,
+            installation_mode: "force_installed",
+            updates_disabled: true,
+            ...extensionSettings,
+          },
+        },
+      },
+    });
+    await installPromise;
+    let addon = await AddonManager.getAddonByID(ADDON_ID);
+    isnot(addon, null, "Addon not installed.");
+    is(addon.version, "0.1", "Addon version is correct");
+    return addon;
+  }
+
+  let addon = await installWithExtensionSettings();
+  is(
+    Boolean(
+      addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+    ),
+    true,
+    "Addon should be able to change private browsing setting (not set in policy)."
+  );
+  await addon.uninstall();
+
+  addon = await installWithExtensionSettings({ private_browsing: true });
+  is(
+    Boolean(
+      addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+    ),
+    false,
+    "Addon should NOT be able to change private browsing setting (set to true in policy)."
+  );
+  await addon.uninstall();
+
+  addon = await installWithExtensionSettings({ private_browsing: false });
+  is(
+    Boolean(
+      addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+    ),
+    false,
+    "Addon should NOT be able to change private browsing setting (set to false in policy)."
+  );
+  await addon.uninstall();
+});
 
 add_task(async function test_addon_install() {
   let installPromise = waitForAddonInstall(ADDON_ID);

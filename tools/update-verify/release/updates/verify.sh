@@ -203,7 +203,10 @@ do
         esac
 
         rm -rf updater/*
-        cached_download "${updater_package_filename}" "${updater_package_url}"
+        if ! cached_download "${updater_package_filename}" "${updater_package_url}"; then
+          echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] couldn't download updater package"
+          continue
+        fi
         unpack_build "$updater_platform" updater "$updater_package_filename" "$locale" "$product"
 
         # Even on Windows, we want Unix-style paths for the updater, because of MSYS.

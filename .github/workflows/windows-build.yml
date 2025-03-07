@@ -441,7 +441,7 @@ jobs:
         MAR="$GITHUB_WORKSPACE/obj-${arch}-pc-windows-msvc/dist/host/bin/mar" \
         MOZ_PRODUCT_VERSION=$(cat $GITHUB_WORKSPACE/browser/config/version_display.txt) \
         MAR_CHANNEL_ID=release \
-        $GITHUB_WORKSPACE/tools/update-packaging/make_full_update.sh $GITHUB_WORKSPACE/signed_installers/WINNT-x86_64.mar "$GITHUB_WORKSPACE/obj-${arch}-pc-windows-msvc/dist/floorp"
+        $GITHUB_WORKSPACE/tools/update-packaging/make_full_update.sh $GITHUB_WORKSPACE/signed_installers/WINNT-x86_64.mar "Floorp-work/core"
       env:
         GHA_aarch64: ${{inputs.aarch64}}
 

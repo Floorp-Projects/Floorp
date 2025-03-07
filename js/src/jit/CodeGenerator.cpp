@@ -12047,7 +12047,7 @@ void CodeGenerator::visitCompareSSingle(LCompareSSingle* lir) {
   // Compare the string length to compute the overall result.
   masm.bind(&compareLength);
   masm.cmp32Set(JSOpToCondition(op, /* isSigned = */ false),
-                Address(temp, JSString::offsetOfLength()), Imm32(1), output);
+                Address(input, JSString::offsetOfLength()), Imm32(1), output);
 
   masm.bind(&done);
 }
