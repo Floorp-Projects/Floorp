@@ -272,7 +272,7 @@ jobs:
         run: |
           ./mach package
 
-      - name: Rename and move installer
+      - name: Prepare installer with codesigning and re-packaging
         run: |
           mkdir -p ~/noraneko-installer
 
@@ -287,10 +287,16 @@ jobs:
             ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
 
             # Codesign
+            # Install apple-codesign
+            cargo install apple-codesign
+
             echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
-            base64 --decode -i floorp-cert.txt -o floorpCert.p12
+            base64 --decode floorp-cert.txt > floorpCert.p12
             echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
-           ./mach macos-sign -v -r -c "release" -a "~/mac-code-signing/old/*.app" --rcodesign-p12-file floorpCert.p12 --rcodesign-p12-password-file floorpCertPassword.passwd
+            APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
+            echo "Found app file: $APP_FILE"
+
+            ./mach macos-sign -v -r -c "release" -a "$APP_FILE" --rcodesign-p12-file floorpCert.p12 --rcodesign-p12-password-file floorpCertPassword.passwd
 
             # Re-package DMG
             if [ "${{inputs.beta}}" == "true" ]; then
