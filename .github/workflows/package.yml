@@ -299,7 +299,14 @@ jobs:
             # ./mach macos-sign can be used on macOS, We should use ubuntu-latest for this action.
             # So, we need to use python script to codesign the app.
             # ./mach macos-sign -v -r -c "release" -a "$APP_FILE" --rcodesign-p12-file floorpCert.p12 --rcodesign-p12-password-file floorpCertPassword.passwd
-            # python ./floorp/scripts/codesign/mac/linux_codesign_macos_app.py "$APP_FILE" ./floorpCert.p12 ./floorpCertPassword.passwd
+
+            pip install pyyaml
+            python3 ./floorp/scripts/codesign/mac/linux_codesign_macos_app.py "$APP_FILE" \
+              --entitlements production \
+              --channel release \
+              --p12-file floorpCert.p12 \
+              --p12-password-file floorpCertPassword.passwd \
+              --verbose
 
             # Re-package DMG
             if [ "${{inputs.beta}}" == "true" ]; then

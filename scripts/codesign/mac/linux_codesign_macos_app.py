@@ -3,215 +3,88 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""
-macOS App Signing Script for Linux - Production Version
-
-This script signs a macOS application bundle (.app) using rcodesign on Linux.
-
-Requirements:
-- rcodesign must be installed (https://github.com/indygreg/apple-platform-rs)
-- P12 certificate and password file
-
-Usage:
-  python linux_sign_macos_app.py APP_PATH P12_FILE P12_PASSWORD_FILE
-"""
-
+import argparse
+import glob
 import logging
 import os
 import platform
 import plistlib
-import shutil
 import subprocess
 import sys
 import tempfile
-import glob
+from pathlib import Path
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger("linux-macos-sign")
+import yaml
 
-KNOWN_EXECUTABLES = [
-    "Contents/Library/LaunchServices/org.mozilla.updater",
-    "Contents/MacOS/nmhproxy",
-    "Contents/MacOS/pingsender",
-    "Contents/MacOS/media-plugin-helper.app/Contents/MacOS/Floorp Daylight Media Plugin Helper",
-]
+def setup_logging(verbose):
+    """Set up logging configuration"""
+    logging_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=logging_level,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    return logging.getLogger(__name__)
 
 def check_platform():
-    """Ensure running on Linux"""
+    """Verify that we're running on Linux"""
     if platform.system() != "Linux":
-        logger.error("This script must run on Linux")
+        logging.error("This script must be run on Linux")
         sys.exit(1)
 
 def check_rcodesign():
-    """Check if rcodesign is available"""
-    if shutil.which("rcodesign") is None:
-        logger.error("rcodesign not found. Install from https://github.com/indygreg/apple-platform-rs")
+    """Verify that rcodesign is installed"""
+    if not subprocess.run(["which", "rcodesign"], capture_output=True).returncode == 0:
+        logging.error("rcodesign is not installed. Please install it first.")
         sys.exit(1)
 
-def run_command(cmd, verbose=False):
-    """Execute a command with error handling"""
-    cmd_str = " ".join(cmd)
-    logger.debug(f"Running: {cmd_str}")
+def auto_detect_channel(app_path):
+    """Detect the channel (nightly, release, etc.) from the app bundle"""
+    NIGHTLY_BUNDLEID = "org.mozilla.nightly"
+    DEVEDITION_BUNDLEID = "org.mozilla.firefoxdeveloperedition"
+    RELEASE_BUNDLEID = "org.mozilla.firefox"
 
-    try:
-        result = subprocess.run(cmd, capture_output=not verbose, text=True, check=True)
-        return result
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Command failed: {cmd_str}")
-        if not verbose:
-            logger.error(f"stdout: {e.stdout}")
-            logger.error(f"stderr: {e.stderr}")
-        sys.exit(e.returncode)
-
-def get_app_id(app_path):
-    """Extract bundle ID from Info.plist"""
-    info_plist = os.path.join(app_path, "Contents", "Info.plist")
+    info_plist = os.path.join(app_path, "Contents/Info.plist")
 
     if not os.path.exists(info_plist):
-        logger.warning(f"Info.plist not found at {info_plist}")
-        return "org.mozilla.firefox"
+        logging.error(f"Info.plist not found at {info_plist}")
+        sys.exit(1)
 
-    try:
-        with open(info_plist, 'rb') as f:
-            data = plistlib.load(f)
-            return data.get("CFBundleIdentifier", "org.mozilla.firefox")
-    except Exception as e:
-        logger.warning(f"Error reading Info.plist: {e}")
-        return "org.mozilla.firefox"
+    with open(info_plist, 'rb') as f:
+        plist_data = plistlib.load(f)
+        bundle_id = plist_data.get('CFBundleIdentifier')
 
-def create_entitlements(app_id):
-    """Create production entitlements file"""
-    entitlements = {
-        "com.apple.security.app-sandbox": True,
-        "com.apple.security.cs.allow-jit": True,
-        "com.apple.security.cs.allow-unsigned-executable-memory": True,
-        "com.apple.security.cs.disable-library-validation": True,
-        "com.apple.security.network.client": True,
-        "com.apple.security.network.server": True,
-        "com.apple.application-identifier": app_id,
-        "com.apple.developer.web-browser.public-key-credential": True,
-        "com.apple.security.cs.debugger": True,
-    }
+        if bundle_id == NIGHTLY_BUNDLEID:
+            return "nightly"
+        elif bundle_id == DEVEDITION_BUNDLEID:
+            return "devedition"
+        elif bundle_id == RELEASE_BUNDLEID:
+            return "release"
+        else:
+            logging.error(f"Unknown bundle ID: {bundle_id}")
+            sys.exit(1)
 
-    fd, temp_path = tempfile.mkstemp(prefix="entitlements-", suffix=".plist")
-    with os.fdopen(fd, 'wb') as f:
-        plistlib.dump(entitlements, f)
-
-    return temp_path
-
-def find_nested_apps(app_path):
-    """Find all nested .app bundles within the main app"""
-    nested_apps = []
-
-    macos_dir = os.path.join(app_path, "Contents/MacOS")
-    if os.path.exists(macos_dir):
-        for item in os.listdir(macos_dir):
-            item_path = os.path.join(macos_dir, item)
-            if os.path.isdir(item_path) and item.endswith('.app'):
-                nested_apps.append(item_path)
-
-    for root, dirs, files in os.walk(app_path):
-        for dir_name in dirs:
-            if dir_name.endswith('.app') and os.path.join(root, dir_name) not in nested_apps:
-                nested_apps.append(os.path.join(root, dir_name))
-
-    logger.info(f"Found {len(nested_apps)} nested application bundles")
-    return nested_apps
-
-def find_all_executables(app_path):
-    """Find all executable files within the app bundle"""
-    executables = []
-
-    macos_dir = os.path.join(app_path, "Contents/MacOS")
-    if os.path.exists(macos_dir):
-        for item in os.listdir(macos_dir):
-            item_path = os.path.join(macos_dir, item)
-            if os.path.isfile(item_path) and os.access(item_path, os.X_OK):
-                executables.append(item_path)
-
-    launch_services_dir = os.path.join(app_path, "Contents/Library/LaunchServices")
-    if os.path.exists(launch_services_dir):
-        for item in os.listdir(launch_services_dir):
-            item_path = os.path.join(launch_services_dir, item)
-            if os.path.isfile(item_path) and os.access(item_path, os.X_OK):
-                executables.append(item_path)
-
-    for known_exe in KNOWN_EXECUTABLES:
-        exe_path = os.path.join(app_path, known_exe)
-        if os.path.exists(exe_path) and exe_path not in executables:
-            executables.append(exe_path)
-
-    logger.info(f"Found {len(executables)} executable files")
-    return executables
-
-def prepare_signing_command(app_path, p12_file, p12_password_file, entitlements_file):
-    """Prepare the base signing command"""
-    cmd = [
-        "rcodesign", "sign",
-        "--p12-file", p12_file,
-        "--p12-password-file", p12_password_file,
-        "--entitlements-xml-path", entitlements_file,
-        "--code-signature-flags", "runtime",
+def strip_restricted_entitlements(plist_file):
+    """Remove restricted entitlements from the plist file"""
+    restricted_entitlements = [
+        "com.apple.developer.web-browser.public-key-credential",
+        "com.apple.application-identifier",
     ]
 
-    return cmd
+    with open(plist_file, "rb") as f:
+        plist_data = plistlib.load(f, fmt=plistlib.FMT_XML)
+        for entitlement in restricted_entitlements:
+            if entitlement in plist_data:
+                del plist_data[entitlement]
 
-def add_nested_app_arguments(cmd, app_path, nested_app_path, entitlements_file):
-    """Add arguments for a nested app"""
-    relative_path = os.path.relpath(nested_app_path, app_path)
+    _, temp_file_path = tempfile.mkstemp(prefix="linux-macos-sign.")
+    with open(temp_file_path, "wb") as f:
+        plistlib.dump(plist_data, f)
 
-    # For each nested app bundle, add the runtime flag and entitlements
-    cmd.append("--code-signature-flags")
-    cmd.append(f"{relative_path}:runtime")
-    cmd.append("--entitlements-xml-path")
-    cmd.append(f"{relative_path}:{entitlements_file}")
+    return temp_file_path
 
-def add_executable_arguments(cmd, app_path, executable_path, entitlements_file):
-    """Add arguments for individual executables"""
-    relative_path = os.path.relpath(executable_path, app_path)
-
-    cmd.append("--code-signature-flags")
-    cmd.append(f"{relative_path}:runtime")
-    cmd.append("--entitlements-xml-path")
-    cmd.append(f"{relative_path}:{entitlements_file}")
-
-def sign_app(app_path, p12_file, p12_password_file, entitlements_file):
-    """Sign the app with nested bundles and all executables properly handled"""
-    logger.info(f"Preparing to sign {app_path}")
-
-    nested_apps = find_nested_apps(app_path)
-    logger.info(f"Found {len(nested_apps)} nested app bundles to sign")
-
-    executables = find_all_executables(app_path)
-    logger.info(f"Found {len(executables)} executables to sign")
-
-    cmd = prepare_signing_command(app_path, p12_file, p12_password_file, entitlements_file)
-
-    for nested_app in nested_apps:
-        logger.info(f"Adding signing configuration for nested app: {nested_app}")
-        add_nested_app_arguments(cmd, app_path, nested_app, entitlements_file)
-
-        nested_executables = find_all_executables(nested_app)
-        for nested_exe in nested_executables:
-            logger.info(f"Adding signing configuration for nested executable: {nested_exe}")
-            add_executable_arguments(cmd, app_path, nested_exe, entitlements_file)
-
-    for executable in executables:
-        logger.info(f"Adding signing configuration for executable: {executable}")
-        add_executable_arguments(cmd, app_path, executable, entitlements_file)
-
-    cmd.append(app_path)
-
-    logger.info("Executing signing command")
-    run_command(cmd, verbose=True)
-
-def verify_signature(app_path):
-    """Verify the signature"""
-    logger.info("Verifying signatures")
-
+def verify_signature(logger, app_path, verbose=False):
+    """Verify the signature of the app bundle using rcodesign"""
+    # Find main executable
     app_name = os.path.basename(app_path)
     if app_name.endswith('.app'):
         app_name = app_name[:-4]
@@ -221,98 +94,198 @@ def verify_signature(app_path):
     if not os.path.exists(main_executable):
         macos_dir = os.path.join(app_path, "Contents/MacOS")
         if os.path.isdir(macos_dir):
-            executables = [f for f in os.listdir(macos_dir)
-                          if os.path.isfile(os.path.join(macos_dir, f))]
+            executables = [f for f in os.listdir(macos_dir) if os.path.isfile(os.path.join(macos_dir, f))]
             if executables:
                 main_executable = os.path.join(macos_dir, executables[0])
 
     if not os.path.exists(main_executable):
-        logger.error(f"Main executable not found in {app_path}")
+        logger.error(f"Could not find main executable in {app_path}")
         sys.exit(1)
 
+    # Verify main executable
     logger.info(f"Verifying main executable: {main_executable}")
-    cmd = ["rcodesign", "verify", main_executable, "--verbose"]
-    run_command(cmd)
+    try:
+        cmd = ["rcodesign", "verify", main_executable, "--verbose"]
+        subprocess.run(cmd, check=True, capture_output=not verbose)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Verification failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
 
-    for known_exe in KNOWN_EXECUTABLES:
-        exe_path = os.path.join(app_path, known_exe)
-        if os.path.exists(exe_path):
-            logger.info(f"👀 Verifying known executable: {exe_path}")
-            cmd = ["rcodesign", "verify", exe_path, "--verbose"]
-            try:
-                run_command(cmd)
-                logger.info(f"👌 Verification successful for {exe_path}")
-            except Exception as e:
-                logger.error(f"❌ Failed to verify {exe_path}: {e}")
+    # Verify frameworks
+    frameworks_dir = os.path.join(app_path, "Contents/Frameworks")
+    if os.path.isdir(frameworks_dir):
+        logger.info(f"Verifying frameworks in {frameworks_dir}")
+        for framework in ["XUL.framework"]:
+            framework_path = os.path.join(frameworks_dir, framework)
+            if os.path.exists(framework_path):
+                versions_dir = os.path.join(framework_path, "Versions")
+                if os.path.isdir(versions_dir):
+                    for version in os.listdir(versions_dir):
+                        if version != "Current":
+                            bin_path = os.path.join(versions_dir, version, framework[:-10])
+                            if os.path.exists(bin_path) and os.path.isfile(bin_path):
+                                try:
+                                    cmd = ["rcodesign", "verify", bin_path, "--verbose"]
+                                    subprocess.run(cmd, check=True, capture_output=not verbose)
+                                    logger.info(f"Successfully verified {bin_path}")
+                                except subprocess.CalledProcessError as e:
+                                    logger.warning(f"Verification of {bin_path} failed with exit code {e.returncode}")
 
-    nested_apps = find_nested_apps(app_path)
-    for nested_app in nested_apps:
-        nested_app_name = os.path.basename(nested_app)
-        if nested_app_name.endswith('.app'):
-            nested_app_name = nested_app_name[:-4]
+def sign_app(app_path, channel, entitlements_type, p12_file=None, p12_password_file=None, verbose=False):
+    """Sign the macOS app bundle using rcodesign"""
+    logger = setup_logging(verbose)
 
-        nested_executable = os.path.join(nested_app, "Contents/MacOS", nested_app_name)
-        if not os.path.exists(nested_executable):
-            macos_dir = os.path.join(nested_app, "Contents/MacOS")
-            if os.path.isdir(macos_dir):
-                executables = [f for f in os.listdir(macos_dir)
-                              if os.path.isfile(os.path.join(macos_dir, f))]
-                if executables:
-                    nested_executable = os.path.join(macos_dir, executables[0])
-
-        if os.path.exists(nested_executable):
-            logger.info(f"👀 verifying nested executable: {nested_executable}")
-            cmd = ["rcodesign", "verify", nested_executable, "--verbose"]
-            try:
-                run_command(cmd)
-                logger.info(f"👌 Verification successful for {nested_executable}")
-            except Exception as e:
-                logger.error(f"❌ Failed to verify {nested_executable}: {e}")
-
-    logger.info("ℹ️ Signature verification completed")
-
-def main():
-    if len(sys.argv) != 4:
-        logger.error("Usage: python linux_sign_macos_app.py APP_PATH P12_FILE P12_PASSWORD_FILE")
-        sys.exit(1)
-
-    app_path = os.path.realpath(sys.argv[1])
-    p12_file = sys.argv[2]
-    p12_password_file = sys.argv[3]
-
-    if not os.path.isdir(app_path):
-        logger.error(f"🍎 App path is not a directory: {app_path}")
-        sys.exit(1)
-
-    if not os.path.isfile(p12_file):
-        logger.error(f"🔓 P12 file not found: {p12_file}")
-        sys.exit(1)
-
-    if not os.path.isfile(p12_password_file):
-        logger.error(f"📃 P12 password file not found: {p12_password_file}")
-        sys.exit(1)
-
+    # Initial checks
     check_platform()
     check_rcodesign()
 
+    # Normalize app path (remove trailing slashes)
+    app_path = app_path.rstrip('/')
+
+    if not os.path.isdir(app_path):
+        logger.error(f"App bundle not found: {app_path}")
+        sys.exit(1)
+
+    # Remove existing signatures
+    # logger.info("Removing existing signatures...")
+    # subprocess.run(["rcodesign", "remove-signature", app_path, "--recursive"], check=True)
+
+    # Load signing configuration
+    config_path = os.path.join(os.getcwd(), "taskcluster/config.yml")
+    if not os.path.exists(config_path):
+        logger.error(f"Config file not found: {config_path}")
+        sys.exit(1)
+
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    # Get signing configuration based on entitlements type
+    entitlements_key = "production" if entitlements_type in ["production", "production-without-restricted"] else "default"
+    signing_groups = config["mac-signing"]["hardened-sign-config"]["by-hardened-signing-type"][entitlements_key]
+
+    # Additional executables that need hardened runtime
+    additional_executables = [
+        "Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater",
+        "Contents/Library/LaunchServices/org.mozilla.updater",
+        "Contents/MacOS/nmhproxy",
+        "Contents/MacOS/pingsender",
+        "Contents/MacOS/floorp",
+    ]
+
+    binary_paths = []
+    entitlements_map = {}
+    runtime_flags = set()
     temp_files = []
+
+    # Process signing groups
+    for group in signing_groups:
+        if "entitlements" in group:
+            entitlement_file = None
+
+            # Get entitlements file path
+            if isinstance(group["entitlements"], str):
+                entitlement_file = group["entitlements"]
+            elif isinstance(group["entitlements"], dict):
+                if channel == "nightly":
+                    entitlement_file = group["entitlements"]["by-build-platform"]["default"]["by-project"]["mozilla-central"]
+                elif channel == "devedition":
+                    entitlement_file = group["entitlements"]["by-build-platform"][".*devedition.*"]
+                elif channel in ["release", "beta"]:
+                    entitlement_file = group["entitlements"]["by-build-platform"]["default"]["by-project"]["default"]
+                else:
+                    raise ValueError(f"Unexpected channel: {channel}")
+
+            # Strip restricted entitlements if needed
+            if entitlements_type == "production-without-restricted":
+                entitlement_file = strip_restricted_entitlements(entitlement_file)
+                temp_files.append(entitlement_file)
+
+            # Process paths for this signing group
+            for pathglob in group["globs"]:
+                matched_paths = glob.glob(os.path.join(app_path, pathglob.strip("/")), recursive=True)
+
+                # Add additional executables if this is the root signing group
+                if pathglob == "/":
+                    for exe in additional_executables:
+                        exe_path = os.path.join(app_path, exe)
+                        if os.path.exists(exe_path):
+                            matched_paths.append(exe_path)
+
+                for path in matched_paths:
+                    binary_paths.append(path)
+                    if entitlement_file:
+                        rel_path = os.path.relpath(path, app_path)
+                        entitlements_map[rel_path] = entitlement_file
+                    if "runtime" in group and group["runtime"]:
+                        runtime_flags.add(os.path.relpath(path, app_path))
+
+    # Prepare rcodesign command
+    cmd = ["rcodesign", "sign"]
+    
+    # Add signing credentials if provided
+    if p12_file and p12_password_file:
+        cmd.extend(["--p12-file", p12_file, "--p12-password-file", p12_password_file])
+
+    # Add hardened runtime flags
+    for path in runtime_flags:
+        cmd.extend(["--code-signature-flags", f"{path}:runtime"])
+
+    # Add entitlements
+    for path, entitlement in entitlements_map.items():
+        cmd.extend(["--entitlements-xml-path", f"{path}:{entitlement}"])
+
+    # Add the app bundle as the main input path
+    cmd.append(app_path)
+
+    # Execute signing
+    logger.info("Signing app bundle...")
+    logger.debug(f"Executing command: {' '.join(cmd)}")
     try:
-        app_id = get_app_id(app_path)
-        logger.info(f"App ID: {app_id}")
+        subprocess.run(cmd, check=True, capture_output=not verbose)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Signing failed with exit code {e.returncode}")
+        if verbose:
+            logger.error(f"Command output: {e.output.decode('utf-8')}")
+        sys.exit(e.returncode)
 
-        entitlements_file = create_entitlements(app_id)
-        temp_files.append(entitlements_file)
-        logger.info(f"Created entitlements file: {entitlements_file}")
+    # Clean up temporary files
+    for temp_file in temp_files:
+        os.unlink(temp_file)
 
-        sign_app(app_path, p12_file, p12_password_file, entitlements_file)
-        verify_signature(app_path)
+    # Verify signature
+    logger.info("Verifying signatures...")
+    verify_signature(logger, app_path, verbose)
+    logger.info("Signing completed successfully!")
 
-        logger.info(f"Successfully signed {app_path}")
+def main():
+    parser = argparse.ArgumentParser(description="Sign macOS Firefox/Floorp app bundle on Linux using rcodesign")
+    parser.add_argument("app_path", help="Path to the .app bundle to sign")
+    parser.add_argument("--channel", choices=["auto", "nightly", "devedition", "beta", "release"],
+                      default="auto", help="Channel of the build (default: auto-detect)")
+    parser.add_argument("--entitlements", choices=["developer", "production", "production-without-restricted"],
+                      default="developer", help="Type of entitlements to use (default: developer)")
+    parser.add_argument("--p12-file", help="Path to PKCS#12 certificate file")
+    parser.add_argument("--p12-password-file", help="Path to PKCS#12 password file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
-    finally:
-        for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+    args = parser.parse_args()
+
+    # Auto-detect channel if needed
+    if args.channel == "auto":
+        args.channel = auto_detect_channel(args.app_path)
+
+    # Validate p12 file arguments
+    if bool(args.p12_file) != bool(args.p12_password_file):
+        parser.error("Both --p12-file and --p12-password-file must be provided together")
+
+    sign_app(
+        args.app_path,
+        args.channel,
+        args.entitlements,
+        args.p12_file,
+        args.p12_password_file,
+        args.verbose
+    )
 
 if __name__ == "__main__":
     main()
