@@ -296,9 +296,10 @@ jobs:
             APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
             echo "Found app file: $APP_FILE"
 
-            # ./mach macos-sign can be used on macOS, We should use ubuntu-latest for this action.
-            # So, we need to use python script to codesign the app.
-            ./mach macos-sign -v -r -c "release" -a "$APP_FILE" --rcodesign-p12-file floorpCert.p12 --rcodesign-p12-password-file floorpCertPassword.passwd
+            ./mach macos-sign -v -r -c "release" \
+              -a "$APP_FILE" \
+              --rcodesign-p12-file floorpCert.p12 \
+              --rcodesign-p12-password-file floorpCertPassword.passwd
 
             # Re-package DMG
             if [ "${{inputs.beta}}" == "true" ]; then
