@@ -375,6 +375,15 @@ jobs:
 
           cd ..
 
+      - name: Replace RC Icon
+        run: |
+          if [ "${{inputs.platform}}" == "Windows-x64" ] && [ "${{inputs.beta}}" == "true" ]; then
+            sudo apt update
+            sudo apt install -y wine winetricks
+            curl -Lo ./rcedit-x64.exe https://github.com/electron/rcedit/releases/latest/download/rcedit-x64.exe
+            wine ./rcedit-x64.exe ./obj-artifact-build-output/dist/bin/floorp.exe --set-icon ./browser/branding/floorp-daylight/firefox.ico
+          fi
+
       - name: Package noraneko
         run: |
           ./mach package
