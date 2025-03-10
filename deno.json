@@ -20,6 +20,11 @@
       "ESNext"
     ]
   },
+  "lint": {
+    "rules": {
+      "no-namespace": "off"
+    }
+  },
   "unstable": [
     "sloppy-imports"
   ],

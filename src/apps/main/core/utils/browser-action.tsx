@@ -95,10 +95,10 @@ export namespace BrowserActionUtils {
       label: (document?.l10n?.formatValue(l10nId)) ?? "",
       removable: true,
       onCreated: (aNode: XULElement) => {
-        createRoot(()=>onCreatedFunc?.(aNode),owner);
+        createRoot(() => onCreatedFunc?.(aNode), owner);
       },
       onViewShowing: (event: Event) => {
-        createRoot(()=>onViewShowingFunc?.(event),owner);
+        createRoot(() => onViewShowingFunc?.(event), owner);
       },
     });
     CustomizableUI.addWidgetToArea(

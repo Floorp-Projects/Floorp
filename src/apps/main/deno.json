@@ -11,6 +11,11 @@
     "jsx": "react-jsx",
     "jsxImportSource": "solid-js"
   },
+  "lint": {
+    "rules": {
+      "no-namespace": "off"
+    }
+  },
   "imports": {
     "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
     "@nora/skin/": "../../packages/skin/",

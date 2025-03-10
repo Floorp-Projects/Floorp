@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { noraComponent, NoraComponentBase } from "../../utils/base.ts";
 import { createRootHMR } from "@nora/solid-xul";
-import { addI18nObserver } from "../../../i18n/config";
-import { StyleElement } from "./styleElem";
-import { BrowserActionUtils } from "@core/utils/browser-action";
+import { addI18nObserver } from "../../../i18n/config.ts";
+import { StyleElement } from "./styleElem.tsx";
+import { BrowserActionUtils } from "../../utils/browser-action.tsx";
 import i18next from "i18next";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
@@ -21,7 +21,7 @@ export default class UndoClosedTab extends NoraComponentBase {
       "undo-closed-tab",
       null,
       () => {
-        window.undoCloseTab();
+        globalThis.undoCloseTab();
       },
       StyleElement(),
       CustomizableUI.AREA_NAVBAR,
@@ -40,11 +40,11 @@ export default class UndoClosedTab extends NoraComponentBase {
             addI18nObserver((locale) => {
               aNode.label = i18next.t("undo-closed-tab.label", {
                 lng: locale,
-                ns: "undo"
+                ns: "undo",
               });
               tooltip.label = i18next.t("undo-closed-tab.tooltiptext", {
                 lng: locale,
-                ns: "undo"
+                ns: "undo",
               });
             });
           },
@@ -54,4 +54,3 @@ export default class UndoClosedTab extends NoraComponentBase {
     );
   }
 }
-
