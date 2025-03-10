@@ -3,8 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect } from "solid-js";
-import { panelSidebarConfig, setIsFloatingDragging } from "../data/data";
+import { createEffect, createSignal } from "solid-js";
+import { panelSidebarConfig, setIsFloatingDragging } from "../data/data.ts";
+
+export const [isResizeCooldown, setIsResizeCooldown] = createSignal<boolean>(
+  false,
+);
+let resizeCooldownTimer: number | null = null;
 
 export function FloatingSplitter() {
   const onMouseDown = (e: MouseEvent) => {
@@ -42,6 +47,17 @@ export function FloatingSplitter() {
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
+
+      setIsResizeCooldown(true);
+
+      if (resizeCooldownTimer !== null) {
+        clearTimeout(resizeCooldownTimer);
+      }
+
+      resizeCooldownTimer = globalThis.setTimeout(() => {
+        setIsResizeCooldown(false);
+        resizeCooldownTimer = null;
+      }, 1000);
     };
 
     document?.addEventListener("mousemove", onMouseMove);

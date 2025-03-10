@@ -33,6 +33,7 @@ interface CSSStyleDeclaration {
   order: string;
   flexDirection: string;
   flexTemplateAreas: string;
+  height: string;
 }
 
 interface nsIXPCComponents extends nsISupports {

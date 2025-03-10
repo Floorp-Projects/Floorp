@@ -4,8 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect } from "solid-js";
-import { isFloating, panelSidebarConfig, setSelectedPanelId } from "../data/data";
-import { STATIC_PANEL_DATA } from "../data/static-panels";
+import {
+  isFloating,
+  panelSidebarConfig,
+  setSelectedPanelId,
+} from "../data/data.ts";
+import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
+import { isResizeCooldown } from "./floating-splitter.tsx";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -92,6 +97,10 @@ export class PanelSidebarFloating {
       return;
     }
 
+    if (isResizeCooldown()) {
+      return;
+    }
+
     const sidebarBox = document?.getElementById("panel-sidebar-box");
     const selectBox = document?.getElementById("panel-sidebar-select-box");
     const splitter = document?.getElementById("panel-sidebar-splitter");
@@ -109,8 +118,7 @@ export class PanelSidebarFloating {
     const clickedElementIsWebTypeBrowser = clickedBrowser?.baseURI?.startsWith(
       `${AppConstants.BROWSER_CHROME_URL}?floorpWebPanelId`,
     );
-    const insideSidebar =
-      sidebarBox?.contains(event.target as Node) ||
+    const insideSidebar = sidebarBox?.contains(event.target as Node) ||
       clickedBrowserIsSidebarBrowser;
     const insideSelectBox = selectBox?.contains(event.target as Node);
     const insideSplitter = splitter?.contains(event.target as Node);

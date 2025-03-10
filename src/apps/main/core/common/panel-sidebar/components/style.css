@@ -253,7 +253,7 @@
 #floating-splitter-side {
   position: absolute;
   top: 0;
-  width: 4px;
+  width: 10px;
   height: 100%;
   cursor: ew-resize;
   z-index: 1000;
