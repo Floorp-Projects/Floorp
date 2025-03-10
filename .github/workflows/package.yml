@@ -174,7 +174,7 @@ jobs:
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT_x86_64-msvc-x64.`,
               'Linux-x64': `${baseUrl}Linux_x86_64.`,
-              'macOS-x64': `${baseUrl}Darwin_x86_64.`
+              'macOS-x64': `${baseUrl}Darwin_Universal.`
             };
 
             if (platformUrls[process.env.BUILD_PLATFORM]) {
