@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-03-05_07-06-32_UTC
-// COMMIT: b5aa82bff01b7f9ebd61ab118a224ad8ca57bf43
+// VERSION: 2025-03-06_21-53-02_UTC
+// COMMIT: 76dbfcab5c3f0b1ac4e78ebeb6273a8b4db74ab7
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -13771,6 +13771,10 @@ in-vpn.net
 in-dsl.org
 in-vpn.org
 
+// Inferno Communications : https://inferno.co.uk
+// Submitted by Connor McFarlane <noc@inferno.co.uk>
+oninferno.net
+
 // info.at : http://www.info.at/
 biz.at
 info.at
@@ -15562,6 +15566,10 @@ router.management
 // Virtual-Info : https://www.virtual-info.info/
 // Submitted by Adnan RIHAN <hostmaster@v-info.info>
 v-info.info
+
+// Viva Republica, Inc. : https://toss.im/
+// Submitted by Deus Team <deus@toss.im>
+deus-canvas.com
 
 // Voorloper.com : https://voorloper.com
 // Submitted by Nathan van Bakel <info@voorloper.com>
