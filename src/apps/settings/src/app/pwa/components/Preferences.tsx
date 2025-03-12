@@ -62,10 +62,10 @@ export function Preferences() {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div>
           <a
             href="https://docs.floorp.app/docs/features/how-to-use-pwa"
-            className="link link-primary text-sm"
+            className="text-[var(--link-text-color)] hover:underline"
           >
             {t("progressiveWebApp.learnMore")}
           </a>

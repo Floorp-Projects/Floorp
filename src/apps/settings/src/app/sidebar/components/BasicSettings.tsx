@@ -8,6 +8,7 @@ import { Input } from "@/components/common/input.tsx";
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
+import { InfoTip } from "@/components/common/infotip.tsx";
 
 export function BasicSettings() {
   const { t } = useTranslation();
@@ -21,9 +22,14 @@ export function BasicSettings() {
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <h3 className="text-base font-medium mb-2">
-            {t("panelSidebar.enableOrDisable")}
-          </h3>
+          <div className="mb-2 inline-flex items-center gap-2">
+            <h3 className="text-base font-medium">
+              {t("panelSidebar.enableOrDisable")}
+            </h3>
+            <InfoTip
+              description={t("panelSidebar.enableDescription")}
+            />
+          </div>
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
               <label
@@ -32,9 +38,6 @@ export function BasicSettings() {
               >
                 {t("panelSidebar.enablePanelSidebar")}
               </label>
-              <p className="text-sm text-base-content/70">
-                {t("panelSidebar.enableDescription")}
-              </p>
             </div>
             <Switch
               id="enable-panel"

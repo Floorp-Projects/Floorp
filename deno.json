@@ -22,7 +22,9 @@
   },
   "lint": {
     "rules": {
-      "no-namespace": "off"
+      "exclude": [
+        "no-namespace"
+      ]
     }
   },
   "unstable": [

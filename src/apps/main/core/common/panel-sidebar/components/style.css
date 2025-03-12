@@ -305,3 +305,13 @@
 #browser[data-is-child] > #panel-sidebar-select-box {
   display: none;
 }
+
+#browser[data-is-child] {
+  & > #panel-sidebar-box {
+    display: none;
+  }
+
+  & > #sidebar-main {
+    display: none;
+  }
+}

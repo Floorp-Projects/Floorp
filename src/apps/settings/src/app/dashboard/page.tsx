@@ -32,7 +32,7 @@ export default function Page() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pl-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 pl-6">
         <Card>
           <CardHeader>
             <CardTitle>{t("home.setup.title")}</CardTitle>
