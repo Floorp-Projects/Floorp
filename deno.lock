@@ -6478,7 +6478,7 @@
           ]
         }
       },
-      "src/apps/main/core/utils/modal": {
+      "src/apps/main/core/utils/modal-child": {
         "packageJson": {
           "dependencies": [
             "npm:@icons-pack/react-simple-icons@^11.2.0",

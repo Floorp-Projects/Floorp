@@ -17,9 +17,9 @@ self.onmessage = async (e) => {
 const rootDir = await rootDirPromise;
 const projectDir = resolve(
   rootDir,
-  "src/apps/main/core/utils/modal",
+  "src/apps/main/core/utils/modal-child",
 );
-console.info("[worker:modal] Setting working directory to:", projectDir);
+console.info("[worker:modal-child] Setting working directory to:", projectDir);
 
 const server = await createServer({
   configFile: resolve(projectDir, "vite.config.ts"),

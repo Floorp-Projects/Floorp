@@ -39,7 +39,7 @@ resource noraneko resource/ contentaccessible=yes
 ${
       mode !== "dev"
         ? `\ncontent noraneko-settings settings/ contentaccessible=yes
-content noraneko-modal modal/ contentaccessible=yes`
+content noraneko-modal-child modal-child/ contentaccessible=yes`
         : ""
     }`,
   );
@@ -81,8 +81,8 @@ content noraneko-modal modal/ contentaccessible=yes`
       option,
     );
     await symlink(
-      r("../../src/apps/main/core/utils/modal/_dist"),
-      `${binPath}/${dirName}/modal`,
+      r("../../src/apps/main/core/utils/modal-child/_dist"),
+      `${binPath}/${dirName}/modal-child`,
       option,
     );
   }
