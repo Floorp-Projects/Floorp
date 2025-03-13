@@ -11,6 +11,7 @@
 #include "ImageContainer.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
+#include "VALibWrapper.h"
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
@@ -213,15 +214,14 @@ class VAAPIDisplayHolder<LIBAV_VER>;
 template <>
 class VAAPIDisplayHolder<LIBAV_VER> {
  public:
-  VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay, int aDRMFd)
-      : mLib(aLib), mDisplay(aDisplay), mDRMFd(aDRMFd) {};
+  VAAPIDisplayHolder(VADisplay aDisplay, int aDRMFd)
+      : mDisplay(aDisplay), mDRMFd(aDRMFd) {};
   ~VAAPIDisplayHolder() {
-    mLib->vaTerminate(mDisplay);
+    VALibWrapper::sFuncs.vaTerminate(mDisplay);
     close(mDRMFd);
   }
 
  private:
-  FFmpegLibWrapper* mLib;
   VADisplay mDisplay;
   int mDRMFd;
 };
@@ -246,17 +246,17 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
   int drmFd = widget::GetDMABufDevice()->OpenDRMFd();
-  mDisplay = mLib->vaGetDisplayDRM(drmFd);
+  mDisplay = VALibWrapper::sFuncs.vaGetDisplayDRM(drmFd);
   if (!mDisplay) {
     FFMPEG_LOG("  Can't get DRM VA-API display.");
     return false;
   }
 
-  hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mLib, mDisplay, drmFd);
+  hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mDisplay, drmFd);
   hwctx->free = VAAPIDisplayReleaseCallback;
 
   int major, minor;
-  int status = mLib->vaInitialize(mDisplay, &major, &minor);
+  int status = VALibWrapper::sFuncs.vaInitialize(mDisplay, &major, &minor);
   if (status != VA_STATUS_SUCCESS) {
     FFMPEG_LOG("  vaInitialize failed.");
     return false;
@@ -1516,13 +1516,13 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
 bool FFmpegVideoDecoder<LIBAV_VER>::GetVAAPISurfaceDescriptor(
     VADRMPRIMESurfaceDescriptor* aVaDesc) {
   VASurfaceID surface_id = (VASurfaceID)(uintptr_t)mFrame->data[3];
-  VAStatus vas = mLib->vaExportSurfaceHandle(
+  VAStatus vas = VALibWrapper::sFuncs.vaExportSurfaceHandle(
       mDisplay, surface_id, VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
       VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS, aVaDesc);
   if (vas != VA_STATUS_SUCCESS) {
     return false;
   }
-  vas = mLib->vaSyncSurface(mDisplay, surface_id);
+  vas = VALibWrapper::sFuncs.vaSyncSurface(mDisplay, surface_id);
   if (vas != VA_STATUS_SUCCESS) {
     NS_WARNING("vaSyncSurface() failed.");
   }
