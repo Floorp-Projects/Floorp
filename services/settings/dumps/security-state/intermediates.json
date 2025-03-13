@@ -17999,24 +17999,6 @@
       "last_modified": 1666727868055
     },
     {
-      "schema": 1666727381345,
-      "derHash": "8wHcxRgblBCQqRd+n/q0eVt66afSNg6m/aPM4M8N5Jo=",
-      "subject": "CN=TrustAsia RSA DV SSL Server CA,O=TrustAsia Technologies\\, Inc.,ST=Shanghai,C=CN",
-      "subjectDN": "MHAxCzAJBgNVBAYTAkNOMREwDwYDVQQIEwhTaGFuZ2hhaTElMCMGA1UEChMcVHJ1c3RBc2lhIFRlY2hub2xvZ2llcywgSW5jLjEnMCUGA1UEAxMeVHJ1c3RBc2lhIFJTQSBEViBTU0wgU2VydmVyIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d55aa58afdb470a7526b55f4c89dd6aa075d835ddb25b7666f716a3dc686e0bc",
-        "size": 2133,
-        "filename": "tBDWSaHOpgXo2ifK2nGQRAAdZWCfbS8D7IHof7Oj_VA=.pem",
-        "location": "security-state-staging/intermediates/13ba631b-2142-426f-81ac-5609bb202501.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tBDWSaHOpgXo2ifK2nGQRAAdZWCfbS8D7IHof7Oj/VA=",
-      "crlite_enrolled": false,
-      "id": "7c9d8f42-4058-482d-98a9-e4d088da5752",
-      "last_modified": 1666727868041
-    },
-    {
       "schema": 1666727346452,
       "derHash": "umub+7+WmK+R60xpNGZBQYGgACrVKP8VSUbVhqpdlEU=",
       "subject": "CN=GoGetSSL ECC EV CA,OU=Controlled by COMODO CA exclusively for GoGetSSL,O=GoGetSSL,L=Riga,C=LV",
@@ -23759,24 +23741,6 @@
       "last_modified": 1663786625528
     },
     {
-      "schema": 1663786256282,
-      "derHash": "jNlTxQYii/HXTWBi6R5+CHPq67sZ+/IArK3CODAAa4M=",
-      "subject": "CN=TrustAsia RSA EV SSL Server CA,OU=Controlled by COMODO exclusively for TrustAsia Technologies,O=TrustAsia Technologies\\, Inc.,ST=Shanghai,C=CN",
-      "subjectDN": "MIG2MQswCQYDVQQGEwJDTjERMA8GA1UECBMIU2hhbmdoYWkxJTAjBgNVBAoTHFRydXN0QXNpYSBUZWNobm9sb2dpZXMsIEluYy4xRDBCBgNVBAsTO0NvbnRyb2xsZWQgYnkgQ09NT0RPIGV4Y2x1c2l2ZWx5IGZvciBUcnVzdEFzaWEgVGVjaG5vbG9naWVzMScwJQYDVQQDEx5UcnVzdEFzaWEgUlNBIEVWIFNTTCBTZXJ2ZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c2efa4fc4ae5ff682bde526938082f043757f4778d42af29365e4dfb24909daa",
-        "size": 2263,
-        "filename": "GxkkcEUvgSYWq0Iy2T9NnbqmBzYGl6Xday5FGhp66kM=.pem",
-        "location": "security-state-staging/intermediates/c3e6686e-c252-4c57-8d5a-6d3e19c03ece.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "GxkkcEUvgSYWq0Iy2T9NnbqmBzYGl6Xday5FGhp66kM=",
-      "crlite_enrolled": false,
-      "id": "c378b647-3422-49bf-8425-2d7c89cad3af",
-      "last_modified": 1663786625494
-    },
-    {
       "schema": 1663786255420,
       "derHash": "dCZArGf41xssR3dQdK2MYLriwBI6sYNUwkwXGTLYYYM=",
       "subject": "CN=eMudhra ECC Organization Validation Secure Server CA,O=eMudhra Technologies Limited,L=Bengaluru,ST=Karnataka,C=IN",
@@ -24495,24 +24459,6 @@
       "crlite_enrolled": false,
       "id": "9df71874-f7d5-4b9d-988f-3fc447e9ad82",
       "last_modified": 1663786624796
-    },
-    {
-      "schema": 1663786254555,
-      "derHash": "0tfUvuj/G33rpCd0AIHAf3sYai8poSNg1T+MINRVU40=",
-      "subject": "CN=TrustAsia RSA OV SSL Server CA,O=TrustAsia Technologies\\, Inc.,ST=Shanghai,C=CN",
-      "subjectDN": "MHAxCzAJBgNVBAYTAkNOMREwDwYDVQQIEwhTaGFuZ2hhaTElMCMGA1UEChMcVHJ1c3RBc2lhIFRlY2hub2xvZ2llcywgSW5jLjEnMCUGA1UEAxMeVHJ1c3RBc2lhIFJTQSBPViBTU0wgU2VydmVyIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d2859475c5a274222e80c88a79ecbbd4b359956c1266cb22f4b9ebeac0090f22",
-        "size": 2133,
-        "filename": "ZyqPojkZzOKu3M2n4NkoNEh6f1YBTiJm2DtfHJroAWA=.pem",
-        "location": "security-state-staging/intermediates/ba87cd52-2a75-4061-97d5-1f128a3e849d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ZyqPojkZzOKu3M2n4NkoNEh6f1YBTiJm2DtfHJroAWA=",
-      "crlite_enrolled": false,
-      "id": "9412c58c-b477-40c8-9dc1-d802d8e4d797",
-      "last_modified": 1663786624789
     },
     {
       "schema": 1663786251995,
@@ -31139,5 +31085,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1741186622488
+  "timestamp": 1741622222541
 }
