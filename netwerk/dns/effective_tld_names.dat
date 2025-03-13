@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-03-06_21-53-02_UTC
-// COMMIT: 76dbfcab5c3f0b1ac4e78ebeb6273a8b4db74ab7
+// VERSION: 2025-03-11_13-50-55_UTC
+// COMMIT: 3dc28d7389f45a20dfca36284b84fae9d472c01c
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -15479,7 +15479,7 @@ diskstation.org
 typedream.app
 
 // Typeform : https://www.typeform.com
-// Submitted by Sergi Ferriz <sergi.ferriz@typeform.com>
+// Submitted by Typeform <ops@typeform.com>
 pro.typeform.com
 
 // Uberspace : https://uberspace.de
