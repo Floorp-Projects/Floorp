@@ -8,15 +8,14 @@ if (Deno.build.os === "windows") {
 }
 
 let pDevVite: ViteDevServer[] = [];
-let pSettings: ProcessPromise | null = null;
 const workers: Worker[] = [];
 
 const r = (value: string): string => {
-  return resolve(import.meta.dirname, "../..", value);
+  return resolve(import.meta.dirname as string, "../..", value);
 };
 
 async function launchDev(mode: string, buildid2: string) {
-  const rootDir = resolve(import.meta.dirname, "../..");
+  const rootDir = resolve(import.meta.dirname as string, "../..");
   console.log(`[child-dev] Root directory: ${rootDir}`);
 
   pDevVite = [
@@ -36,7 +35,7 @@ async function launchDev(mode: string, buildid2: string) {
     }),
   ];
 
-  const workersDir = resolve(import.meta.dirname, "workers");
+  const workersDir = resolve(import.meta.dirname as string, "workers");
 
   try {
     for await (const entry of Deno.readDir(workersDir)) {
@@ -53,8 +52,9 @@ async function launchDev(mode: string, buildid2: string) {
         workers.push(worker);
       }
     }
-  } catch (err) {
-    console.error(`[child-dev] Error loading workers: ${err.message}`);
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error(`[child-dev] Error loading workers: ${error.message}`);
   }
 
   for (const i of pDevVite) {

@@ -3,8 +3,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import { generateJarManifest } from "../../../../common/scripts/gen_jarmanifest.ts";
-import { join } from "node:path";
-import { dirname } from "node:path";
+import { fileURLToPath, URL as NodeURL } from "node:url";
 
 export default defineConfig({
   server: {
@@ -19,7 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@/": join(dirname(import.meta.url), "src"),
+      "@": fileURLToPath(new NodeURL("./src", import.meta.url)),
     },
   },
   plugins: [
@@ -29,7 +28,7 @@ export default defineConfig({
     {
       name: "gen_jarmn",
       enforce: "post",
-      async generateBundle(options, bundle, isWrite) {
+      async generateBundle(_options, bundle, _isWrite) {
         this.emitFile({
           type: "asset",
           fileName: "jar.mn",

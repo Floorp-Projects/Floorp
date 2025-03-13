@@ -6502,7 +6502,6 @@
             "npm:react-hook-form@^7.54.2",
             "npm:react-i18next@^15.4.1",
             "npm:react-refresh@0.16",
-            "npm:react-router-dom@^7.1.5",
             "npm:react@19",
             "npm:recharts@^2.15.1",
             "npm:tailwind-merge@^3.0.1",
