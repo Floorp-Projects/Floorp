@@ -7,10 +7,19 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
+#include "nsISupportsImpl.h"
 
 struct PRLibrary;
 
 #ifdef MOZ_WIDGET_GTK
+
+// Forward declare from va.h
+typedef void* VADisplay;
+typedef int VAStatus;
+#  define VA_EXPORT_SURFACE_READ_ONLY 0x0001
+#  define VA_EXPORT_SURFACE_SEPARATE_LAYERS 0x0004
+#  define VA_STATUS_SUCCESS 0x00000000
+
 namespace mozilla {
 
 class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS VALibWrapper {
@@ -39,13 +48,29 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS VALibWrapper {
  public:
   int (*vaExportSurfaceHandle)(void*, unsigned int, uint32_t, uint32_t, void*);
   int (*vaSyncSurface)(void*, unsigned int);
-  int (*vaInitialize)(void* dpy, int* major_version, int* minor_version);
-  int (*vaTerminate)(void* dpy);
-  void* (*vaGetDisplayDRM)(int fd);
 
  private:
   PRLibrary* mVALib;
   PRLibrary* mVALibDrm;
+};
+
+class VADisplayHolder {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(VADisplayHolder,
+                                                     MaybeDestroy())
+
+  static RefPtr<VADisplayHolder> GetSingleton();
+
+  const VADisplay mDisplay;
+
+ private:
+  VADisplayHolder(VADisplay aDisplay, int aDRMFd)
+      : mDisplay(aDisplay), mDRMFd(aDRMFd) {};
+  ~VADisplayHolder();
+
+  void MaybeDestroy();
+
+  const int mDRMFd;
 };
 
 }  // namespace mozilla

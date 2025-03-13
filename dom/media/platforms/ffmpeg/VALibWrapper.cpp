@@ -8,10 +8,17 @@
 #include "PlatformDecoderModule.h"
 #include "prlink.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/widget/DMABufLibWrapper.h"
 
 namespace mozilla {
 
 VALibWrapper VALibWrapper::sFuncs;
+static int (*vaInitialize)(void* dpy, int* major_version, int* minor_version);
+static int (*vaTerminate)(void* dpy);
+static void* (*vaGetDisplayDRM)(int fd);
+
+static VADisplayHolder* sDisplayHolder;
+static StaticMutex sDisplayHolderMutex;
 
 void VALibWrapper::Link() {
 #define VA_FUNC_OPTION_SILENT(func)                               \
@@ -85,6 +92,50 @@ bool VALibWrapper::IsVAAPIAvailable() {
   (void)once;
 
   return sFuncs.AreVAAPIFuncsAvailable();
+}
+
+/* static */
+RefPtr<VADisplayHolder> VADisplayHolder::GetSingleton() {
+  StaticMutexAutoLock lock(sDisplayHolderMutex);
+
+  if (sDisplayHolder) {
+    return RefPtr{sDisplayHolder};
+  }
+
+  int drmFd = widget::GetDMABufDevice()->OpenDRMFd();
+  VADisplay display = vaGetDisplayDRM(drmFd);
+  if (!display) {
+    FFMPEGP_LOG("  Can't get DRM VA-API display.");
+    return nullptr;
+  }
+
+  RefPtr displayHolder = new VADisplayHolder(display, drmFd);
+
+  int major, minor;
+  VAStatus status = vaInitialize(display, &major, &minor);
+  if (status != VA_STATUS_SUCCESS) {
+    FFMPEGP_LOG("  vaInitialize failed.");
+    return nullptr;
+  }
+
+  sDisplayHolder = displayHolder;
+
+  return displayHolder;
+}
+
+void VADisplayHolder::MaybeDestroy() {
+  StaticMutexAutoLock lock(sDisplayHolderMutex);
+  MOZ_ASSERT(int32_t(mRefCnt) >= 0, "dup release");
+  if (mRefCnt == 0) {
+    // No new reference added before the lock was taken.
+    sDisplayHolder = nullptr;
+    delete this;
+  }
+}
+
+VADisplayHolder::~VADisplayHolder() {
+  vaTerminate(mDisplay);
+  close(mDRMFd);
 }
 
 }  // namespace mozilla
