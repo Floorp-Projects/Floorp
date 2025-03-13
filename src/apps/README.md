@@ -14,6 +14,9 @@
 - settings
   port: 5183
 
+- modal
+  port: 5185
+
 - tests
   port: 5191
 

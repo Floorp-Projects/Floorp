@@ -4,7 +4,8 @@
   ],
   "workspace": [
     "./src/packages/*",
-    "./src/apps/*"
+    "./src/apps/*",
+    "./src/apps/main/core/utils/modal"
   ],
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.7",

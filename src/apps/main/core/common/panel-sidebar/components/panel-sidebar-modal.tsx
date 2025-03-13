@@ -5,7 +5,6 @@
 
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { render } from "@nora/solid-xul";
-import { ShareModal } from "@core/utils/modal";
 import type { Panel } from "../utils/type";
 import modalStyle from "./modal-style.css?inline";
 import { getFirefoxSidebarPanels } from "../extension-panels";
@@ -80,8 +79,7 @@ export class PanelSidebarAddModal {
             id="type"
             class="form-control"
             onChange={(e) =>
-              setType((e.target as HTMLSelectElement).value as Panel["type"])
-            }
+              setType((e.target as HTMLSelectElement).value as Panel["type"])}
           >
             <option value="web">ウェブページ</option>
             <option value="static">ツールサイドバー</option>

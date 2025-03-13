@@ -3,9 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Accessor, createResource, createSignal, For, Setter, Show } from "solid-js";
+import {
+  Accessor,
+  createResource,
+  createSignal,
+  For,
+  Setter,
+  Show,
+} from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
-import { ShareModal } from "@core/utils/modal";
 import { WorkspaceIcons } from "./utils/workspace-icons.js";
 import type { TWorkspace, TWorkspaceID } from "./utils/type.js";
 import { WorkspacesService } from "./workspacesService";
@@ -25,16 +31,21 @@ type Container = {
 type ModalState = {
   show: boolean;
   targetWorkspaceID: TWorkspaceID | null;
-}
+};
 
-export const [workspaceModalState, setWorkspaceModalState] = createRootHMR<[Accessor<ModalState>,Setter<ModalState>]>(()=>createSignal<ModalState>({ show: false, targetWorkspaceID: null }),import.meta.hot);
+export const [workspaceModalState, setWorkspaceModalState] = createRootHMR<
+  [Accessor<ModalState>, Setter<ModalState>]
+>(
+  () => createSignal<ModalState>({ show: false, targetWorkspaceID: null }),
+  import.meta.hot,
+);
 
 export class WorkspaceManageModal {
-  ctx:WorkspacesService
-  iconCtx:WorkspaceIcons
-  constructor(ctx:WorkspacesService,iconCtx:WorkspaceIcons) {
-    this.ctx=ctx;
-    this.iconCtx=iconCtx;
+  ctx: WorkspacesService;
+  iconCtx: WorkspaceIcons;
+  constructor(ctx: WorkspacesService, iconCtx: WorkspaceIcons) {
+    this.ctx = ctx;
+    this.iconCtx = iconCtx;
     render(
       () => this.WorkspaceManageModal(),
       document?.getElementById("fullscreen-and-pointerlock-wrapper"),
@@ -61,8 +72,8 @@ export class WorkspaceManageModal {
   }
 
   private ContentElement(workspace: TWorkspace | null) {
-    const targetWorkspace =
-      workspace ?? this.ctx.getRawWorkspace(this.ctx.getSelectedWorkspaceID());
+    const targetWorkspace = workspace ??
+      this.ctx.getRawWorkspace(this.ctx.getSelectedWorkspaceID());
 
     return (
       <>
@@ -89,13 +100,15 @@ export class WorkspaceManageModal {
               <For each={this.iconCtx.workspaceIconsArray}>
                 {(_icon) => {
                   const icon = () => this.iconCtx.getWorkspaceIconUrl(_icon);
-                  return <xul:menuitem
-                    value={_icon}
-                    label={_icon}
-                    style={{
-                      "list-style-image": `url(${icon()})`,
-                    }}
-                  />
+                  return (
+                    <xul:menuitem
+                      value={_icon}
+                      label={_icon}
+                      style={{
+                        "list-style-image": `url(${icon()})`,
+                      }}
+                    />
+                  );
                 }}
               </For>
             </xul:menupopup>
@@ -114,11 +127,10 @@ export class WorkspaceManageModal {
               {(container) => (
                 <option
                   value={container.userContextId}
-                  selected={
-                    targetWorkspace.userContextId === container.userContextId
-                      ? true
-                      : undefined
-                  }
+                  selected={targetWorkspace.userContextId ===
+                      container.userContextId
+                    ? true
+                    : undefined}
                 >
                   {this.getContainerName(container)}
                 </option>
@@ -135,16 +147,15 @@ export class WorkspaceManageModal {
       <ShareModal
         name="Manage Workspace"
         ContentElement={() =>
-            this.ContentElement(this.ctx.getRawWorkspace(workspaceModalState().targetWorkspaceID!))
-        }
+          this.ContentElement(
+            this.ctx.getRawWorkspace(workspaceModalState().targetWorkspaceID!),
+          )}
         StyleElement={() => this.StyleElement}
         onClose={() =>
-          setWorkspaceModalState({ show: false, targetWorkspaceID: null })
-        }
+          setWorkspaceModalState({ show: false, targetWorkspaceID: null })}
         onSave={(formControls) => {
           console.log(formControls);
-          const targetWorkspace =
-            workspaceModalState().targetWorkspaceID ??
+          const targetWorkspace = workspaceModalState().targetWorkspaceID ??
             this.ctx.getSelectedWorkspaceID()!;
           const newData = {
             ...this.ctx.getRawWorkspace(targetWorkspace),
@@ -152,7 +163,10 @@ export class WorkspaceManageModal {
             icon: formControls[1].value,
             userContextId: Number(formControls[2].value),
           };
-          setWorkspacesDataStore("data",(prev)=>{prev.set(targetWorkspace,newData);return new Map(prev);})
+          setWorkspacesDataStore("data", (prev) => {
+            prev.set(targetWorkspace, newData);
+            return new Map(prev);
+          });
           setWorkspaceModalState({ show: false, targetWorkspaceID: null });
         }}
       />

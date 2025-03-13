@@ -15,12 +15,15 @@ self.onmessage = async (e) => {
 };
 
 const rootDir = await rootDirPromise;
-const settingsDir = resolve(rootDir, "src/apps/settings");
-console.info("[worker:settings] Setting working directory to:", settingsDir);
+const projectDir = resolve(
+  rootDir,
+  "src/apps/main/core/utils/modal",
+);
+console.info("[worker:modal] Setting working directory to:", projectDir);
 
 const server = await createServer({
-  configFile: resolve(settingsDir, "vite.config.ts"),
-  root: settingsDir,
+  configFile: resolve(projectDir, "vite.config.ts"),
+  root: projectDir,
 });
 
 await server.listen();
