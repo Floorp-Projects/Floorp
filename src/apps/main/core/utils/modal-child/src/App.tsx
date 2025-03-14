@@ -1,31 +1,68 @@
-import { useState } from "react";
+import { ClassUtilityComponent } from "@/components/tailwind-hack.tsx";
+import { FormProvider, useForm } from "react-hook-form";
+import { useEffect } from "react";
+
+declare global {
+  var appendChildToform: (stringElement: string) => void;
+}
 
 function App() {
-  const [count, setCount] = useState(0);
+  const methods = useForm();
+  const onSubmit = (data: any) => {
+    globalThis.dispatchEvent(
+      new CustomEvent("form-submit", {
+        detail: data,
+      }),
+    );
+  };
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if (e instanceof CustomEvent) {
+        const form = document.getElementById("dynamic-form");
+        methods.reset(e.detail);
+      }
+    };
+
+    globalThis.addEventListener("form-update", handler);
+    return () => globalThis.removeEventListener("form-update", handler);
+  }, [methods]);
+
+  globalThis.appendChildToform = (stringElement: string) => {
+    const form = document.getElementById("dynamic-form");
+    if (form) {
+      while (form.firstChild) {
+        form.removeChild(form.firstChild);
+      }
+      const element = createElmFromStr(stringElement);
+      if (element) {
+        const importedElement = document.importNode(element, true);
+        form.appendChild(importedElement);
+      }
+    }
+  };
+
+  function createElmFromStr(str: string): Element | null {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(str, "text/html");
+    return doc.body.firstElementChild;
+  }
 
   return (
     <>
-      <img src="/vite-deno.svg" alt="Vite with Deno" />
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={"reactLogo"} className="logo react" alt="React logo" />
-        </a>
+      <ClassUtilityComponent />
+      {/* Tailwind CSS Utility Component for Hack. Please do not remove it*/}
+      <div className="min-h-screen w-full bg-base-100 flex items-center justify-center p-4">
+        <FormProvider {...methods}>
+          <form
+            id="dynamic-form"
+            className="w-full h-full flex flex-col items-center justify-center gap-4 max-w-4xl mx-auto"
+            onSubmit={methods.handleSubmit(onSubmit)}
+          >
+            {/* 動的なフォーム要素がここに挿入されます */}
+          </form>
+        </FormProvider>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }

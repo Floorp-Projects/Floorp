@@ -6,14 +6,26 @@
 import { createRootHMR, render } from "@nora/solid-xul";
 import { Modal } from "./components/modal.tsx";
 import style from "./style.css?inline";
-import { ModalManager } from "./modalManager.ts";
+import { ModalManager } from "./modalManager.tsx";
 
 export class ModalElement {
-  constructor() {
-    this.initializeModal();
+  private static instance: ModalElement;
+  private initialized: boolean = false;
+
+  private constructor() {
+    // Private constructor for singleton
   }
 
-  private initializeModal(): void {
+  public static getInstance(): ModalElement {
+    if (!ModalElement.instance) {
+      ModalElement.instance = new ModalElement();
+    }
+    return ModalElement.instance;
+  }
+
+  public initializeModal(): void {
+    if (this.initialized) return;
+
     const ModalManagerInstance = new ModalManager();
     createRootHMR(() => {
       render(() => <style>{style}</style>, document?.head);
@@ -30,5 +42,7 @@ export class ModalElement {
         ModalManager.parentElement,
       );
     }, import.meta.hot);
+
+    this.initialized = true;
   }
 }

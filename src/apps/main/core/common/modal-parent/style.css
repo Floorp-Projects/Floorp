@@ -16,7 +16,7 @@
   display: flex;
 }
 
-#modal-child-browser {
+#modal-parent-browser {
   width: 100%;
   max-width: 600px;
   margin: 16px;

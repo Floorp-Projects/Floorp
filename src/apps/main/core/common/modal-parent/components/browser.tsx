@@ -26,6 +26,9 @@ export function ModalBrowser() {
         "max-height": modalSize().maxHeight
           ? `${modalSize().maxHeight}px`
           : "none",
+        "position": "fixed",
+        "top": "125px",
+        "border-radius": "10px",
       }}
     />
   );

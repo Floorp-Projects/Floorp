@@ -192,7 +192,7 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-modal/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-modal-child/*"],
   },
   NRProfileManager: {
     parent: {

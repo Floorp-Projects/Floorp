@@ -9,13 +9,11 @@ import { createRootHMR } from "@nora/solid-xul";
 export type ModalSize = {
   width?: number;
   height?: number;
-  maxWidth?: number;
-  maxHeight?: number;
 };
 
 const defaultModalSize: ModalSize = {
-  maxWidth: 600,
-  maxHeight: 800,
+  width: 600,
+  height: 800,
 };
 
 function createModalVisibility(): [Accessor<boolean>, Setter<boolean>] {

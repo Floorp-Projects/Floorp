@@ -10,10 +10,11 @@ import {
   setModalSize,
   setModalVisible,
 } from "./data/data.ts";
+import { render } from "@nora/solid-xul";
 
 export class ModalManager {
   private static readonly targetParent = document?.getElementById(
-    "tabbrowser-tabbox",
+    "main-window",
   ) as HTMLElement;
 
   constructor() {
@@ -26,40 +27,55 @@ export class ModalManager {
     onCleanup(() => globalThis.removeEventListener("keydown", handleKeydown));
   }
 
-  public show(): void {
-    const browser = document?.getElementById(
-      "modal-child-browser",
+  public async show(
+    jsx: Element,
+    options: { width: number; height: number },
+  ): Promise<void> {
+    const container = document?.getElementById(
+      "modal-parent-container",
     ) as XULElement;
-    if (browser) {
+    if (container) {
       setModalVisible(true);
+      setModalSize({
+        width: options.width,
+        height: options.height,
+      });
+      container.focus();
 
-      if (
-        browser.getAttribute("src") !==
-          "chrome://noraneko-modal-child/content/index.html"
-      ) {
-        browser.setAttribute(
-          "src",
-          "chrome://noraneko-modal-child/content/index.html",
-        );
-      }
+      const browser = document?.getElementById(
+        "modal-child-browser",
+      ) as any;
 
-      browser.focus();
+      const actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "NRChromeModal",
+      );
+
+      actor.sendQuery(
+        "NRChromeModal:show",
+        this.jsxToString(jsx),
+      );
     }
   }
 
   public hide(): void {
     const browser = document?.getElementById(
-      "modal-child-browser",
+      "modal-parent-container",
     ) as XULElement;
     if (browser) {
       setModalVisible(false);
-
-      browser.setAttribute("src", "about:blank");
-
-      setModalSize({ maxWidth: 600, maxHeight: 800 });
-
+      setModalSize({ width: 600, height: 800 });
       globalThis.focus();
+      Services.obs.notifyObservers({}, "nora:modal:hide", "");
     }
+  }
+
+  private jsxToString(jsx: any): string {
+    const container = document?.createElement("div");
+    render(
+      () => jsx,
+      container,
+    );
+    return container?.innerHTML || "";
   }
 
   public setModalSize(newSize: ModalSize): void {
@@ -67,10 +83,11 @@ export class ModalManager {
   }
 
   public handleBackdropClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (target.id === "modal-parent-container") {
-      this.hide();
-    }
+    //TODO: Make more stable
+    // const target = event.target as HTMLElement;
+    // if (target.id === "modal-parent-container") {
+    //   this.hide();
+    // }
   }
 
   public static get parentElement(): HTMLElement {

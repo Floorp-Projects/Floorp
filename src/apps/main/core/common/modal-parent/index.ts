@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
-import { ModalManager } from "./modalManager.ts";
+import { ModalManager } from "./modalManager.tsx";
 import { ModalElement } from "./modalElement.tsx";
 import type { ModalSize } from "./data/data.ts";
 
 @noraComponent(import.meta.hot)
 export default class ModalParent extends NoraComponentBase {
   private static instance: ModalParent;
-  private modalManager: ModalManager;
+  private modalManager: ModalManager | null = null;
 
   public static getInstance(): ModalParent {
     if (!ModalParent.instance) {
@@ -22,24 +22,34 @@ export default class ModalParent extends NoraComponentBase {
 
   constructor() {
     super();
-    this.modalManager = new ModalManager();
   }
 
   init(): void {
-    new ModalElement();
-    globalThis.showNoraModal = this.show.bind(this);
-    globalThis.hideNoraModal = this.hide.bind(this);
+    this.modalManager = new ModalManager();
+    ModalElement.getInstance().initializeModal();
   }
 
-  public show(): void {
-    this.modalManager.show();
+  public async showNoraModal(
+    jsx: Element,
+    options: { width: number; height: number },
+  ): Promise<void> {
+    if (!this.modalManager) {
+      throw new Error("ModalManager not initialized. Call init() first.");
+    }
+    await this.modalManager.show(jsx, options);
   }
 
-  public hide(): void {
+  public async hideNoraModal(): Promise<void> {
+    if (!this.modalManager) {
+      throw new Error("ModalManager not initialized. Call init() first.");
+    }
     this.modalManager.hide();
   }
 
   public setModalSize(newSize: ModalSize): void {
+    if (!this.modalManager) {
+      throw new Error("ModalManager not initialized. Call init() first.");
+    }
     this.modalManager.setModalSize(newSize);
   }
 }

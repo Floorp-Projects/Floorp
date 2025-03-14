@@ -8,7 +8,6 @@ type ModuleStrings = {
 };
 
 export class WorkspaceIcons {
-
   private moduleStrings: ModuleStrings;
   private resolvedIcons: { [key: string]: string } = {};
   public workspaceIcons = new Set([
@@ -56,10 +55,16 @@ export class WorkspaceIcons {
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
       query: "?url",
       import: "default",
-      eager:true
+      eager: true,
     }) as ModuleStrings;
+
+    const isDevelopment = import.meta.env?.MODE === "dev" || false;
     for (const path in this.moduleStrings) {
-      const iconUrl = this.moduleStrings[path];
+      const iconUrl = isDevelopment
+        ? `http://localhost:5181/core/common/workspaces/icons/${
+          path.split("/").pop()
+        }`
+        : this.moduleStrings[path];
       const iconName = path.split("/").pop()?.replace(".svg", "") || "";
       this.resolvedIcons[iconName] = iconUrl;
     }
