@@ -135,7 +135,7 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code and other open-source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
+- Floorp uses Mozilla Firefox's source code and other open-source projects. See [Floorp License Notices](https://github.com/floorp-Projects/floorp/?tab=License-1-ov-file#readme)
 
 ### 📧 Contact
 
