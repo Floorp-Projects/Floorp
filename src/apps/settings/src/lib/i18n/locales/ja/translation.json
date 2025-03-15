@@ -46,7 +46,7 @@
         "description": "アカウント、プライバシー、セキュリティを管理して、{{productName}} の体験を便利で安全にします。",
         "setup": {
             "title": "セットアップ",
-            "footerLinkText": "Mozilla & Ablaze アカウントにログイン",
+            "footerLinkText": "アカウントにログイン",
             "setupDescription": "{{productName}} の最大の利点を得るためにセットアップを完了します。",
             "setupProgressTitle": "セットアップの進捗",
             "step": "ステップ：{{step}} / {{total}}"
@@ -172,7 +172,9 @@
         "browser": "{{productName}}",
         "copyright": "© 2024 {{productName}} Project. All rights reserved.",
         "openSourceLicense": "{{productName}} は、Firefox オープンソースプロジェクトと他のオープンソースソフトウェアによって支えられている、Mozilla Public License 2.0 の下で誰でも利用可能なオープンソースソフトウェアです。",
-        "openSourceLicenseNotice": "オープンソースライセンス"
+        "openSourceLicenseNotice": "オープンソースライセンス",
+        "versionInfo": "バージョン情報",
+        "license": "ライセンス"
     },
     "search": {
         "title": "設定を検索",

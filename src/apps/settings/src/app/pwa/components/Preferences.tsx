@@ -7,6 +7,7 @@ import {
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
+import { ExternalLink, Settings } from "lucide-react";
 
 export function Preferences() {
   const { t } = useTranslation();
@@ -15,7 +16,10 @@ export function Preferences() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("progressiveWebApp.basicSettings")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="size-5" />
+          {t("progressiveWebApp.basicSettings")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -38,8 +42,6 @@ export function Preferences() {
             />
           </div>
         </div>
-
-        <div className="divider my-2"></div>
 
         <div>
           <h3 className="text-base font-medium mb-2">
@@ -65,9 +67,12 @@ export function Preferences() {
         <div>
           <a
             href="https://docs.floorp.app/docs/features/how-to-use-pwa"
-            className="text-[var(--link-text-color)] hover:underline"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
           >
             {t("progressiveWebApp.learnMore")}
+            <ExternalLink className="size-4" />
           </a>
         </div>
       </CardContent>

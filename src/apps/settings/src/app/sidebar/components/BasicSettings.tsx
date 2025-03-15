@@ -9,6 +9,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import { InfoTip } from "@/components/common/infotip.tsx";
+import { ExternalLink, Sliders } from "lucide-react";
 
 export function BasicSettings() {
   const { t } = useTranslation();
@@ -18,7 +19,10 @@ export function BasicSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("panelSidebar.basicSettings")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Sliders className="size-5" />
+          {t("panelSidebar.basicSettings")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>

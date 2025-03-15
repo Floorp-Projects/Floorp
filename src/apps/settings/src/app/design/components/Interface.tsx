@@ -8,6 +8,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
+import { ExternalLink, Palette } from "lucide-react";
 
 export function Interface() {
   const { t } = useTranslation();
@@ -17,7 +18,10 @@ export function Interface() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("design.interface")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Palette className="size-5" />
+          {t("design.interface")}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -59,12 +63,15 @@ export function Interface() {
           ) && (
             <div className="mt-4 p-3 bg-base-200 rounded-lg">
               <p className="text-sm">
-                {t("design.advancedLeptonThemeSettingsDescription")}
+                {t("design.advancedLeptonThemeSettingsDescription")}{" "}
                 <a
                   href="https://docs.floorp.app/docs/features/design-customization"
-                  className="text-[var(--link-text-color)] hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
                 >
                   {t("design.advancedLeptonThemeSettings")}
+                  <ExternalLink className="size-4" />
                 </a>
               </p>
             </div>

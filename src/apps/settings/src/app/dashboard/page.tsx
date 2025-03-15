@@ -8,11 +8,33 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
+import { useHomeData } from "./dataManager.ts";
+import { useEffect, useState } from "react";
+import type { HomeData } from "@/types/pref";
+import {
+  ExternalLink,
+  HelpCircle,
+  PuzzleIcon,
+  Rocket,
+  Shield,
+  UserRound,
+} from "lucide-react";
 
 export default function Page() {
   const { t } = useTranslation();
-  const accountImage = "https://example.com/avatar.png";
-  const accountName = "User";
+  const [homeData, setHomeData] = useState<HomeData | null>(null);
+
+  useEffect(() => {
+    async function fetchHomeData() {
+      const data = await useHomeData();
+      setHomeData(data);
+    }
+    fetchHomeData();
+  }, []);
+
+  function isLoggedInToMozillaAccount() {
+    return homeData?.accountName !== null;
+  }
 
   return (
     <div className="py-2 space-y-3">
@@ -20,12 +42,17 @@ export default function Page() {
         <div className="m-5 p-1 rounded-full bg-gradient-to-tr from-blue-600 via-pink-600 to-orange-400">
           <div className="p-1 rounded-full bg-white">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={accountImage} fallback={accountName} />
+              <AvatarImage
+                src={homeData?.accountImage}
+                fallback={homeData?.accountName ?? t("home.defaultAccountName")}
+              />
             </Avatar>
           </div>
         </div>
         <h1 className="text-3xl font-bold">
-          {t("home.welcome", { name: accountName })}
+          {t("home.welcome", {
+            name: homeData?.accountName ?? t("home.defaultAccountName"),
+          })}
         </h1>
         <p className="text-left text-sm mt-2">
           {t("home.description")}
@@ -35,7 +62,10 @@ export default function Page() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 pl-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t("home.setup.title")}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Rocket className="size-5 text-blue-500" />
+              {t("home.setup.title")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm mb-2">
@@ -54,8 +84,12 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="https://support.ablaze.one/setup">
+              <a
+                href="https://support.ablaze.one/setup"
+                className="flex items-center gap-2"
+              >
                 {t("home.setup.footerLinkText")}
+                <ExternalLink className="size-4" />
               </a>
             </Button>
           </CardFooter>
@@ -63,7 +97,8 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="size-5 text-emerald-600" />
               {t("home.privacyAndTrackingProtection.title")}
             </CardTitle>
           </CardHeader>
@@ -74,8 +109,12 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop">
+              <a
+                href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
+                className="flex items-center gap-2"
+              >
                 {t("home.privacyAndTrackingProtection.footerLinkText")}
+                <ExternalLink className="size-4" />
               </a>
             </Button>
           </CardFooter>
@@ -83,7 +122,10 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("home.ablazeAccount.title")}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <UserRound className="size-5 text-orange-500" />
+              {t("home.ablazeAccount.title")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
@@ -92,8 +134,12 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="https://accounts.ablaze.one/signin">
+              <a
+                href="https://accounts.ablaze.one/signin"
+                className="flex items-center gap-2"
+              >
                 {t("home.ablazeAccount.footerLinkText")}
+                <ExternalLink className="size-4" />
               </a>
             </Button>
           </CardFooter>
@@ -101,7 +147,10 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("home.manageExtensions.title")}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <PuzzleIcon className="size-5 text-purple-500" />
+              {t("home.manageExtensions.title")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
@@ -110,8 +159,9 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="about:addons">
+              <a href="about:addons" className="flex items-center gap-2">
                 {t("home.manageExtensions.footerLinkText")}
+                <ExternalLink className="size-4" />
               </a>
             </Button>
           </CardFooter>
@@ -119,7 +169,10 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("home.browserSupport.title")}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <HelpCircle className="size-5 text-blue-500" />
+              {t("home.browserSupport.title")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
@@ -128,8 +181,12 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="https://docs.floorp.app/docs/features/">
+              <a
+                href="https://docs.floorp.app/docs/features/"
+                className="flex items-center gap-2"
+              >
                 {t("home.browserSupport.footerLinkText")}
+                <ExternalLink className="size-4" />
               </a>
             </Button>
           </CardFooter>

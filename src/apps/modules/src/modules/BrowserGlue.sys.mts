@@ -111,7 +111,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
   NRRestartBrowser: {
     parent: {
@@ -193,6 +193,22 @@ const JS_WINDOW_ACTORS: {
       },
     },
     matches: ["*://localhost/*", "chrome://noraneko-modal/*"],
+  },
+  NRProfileManager: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProfileManagerParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProfileManagerChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
   },
 };
 

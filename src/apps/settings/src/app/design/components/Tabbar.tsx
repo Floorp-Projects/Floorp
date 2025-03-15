@@ -6,6 +6,7 @@ import {
 } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
+import { ExternalLink, Rows } from "lucide-react";
 
 export function Tabbar() {
   const { t } = useTranslation();
@@ -14,7 +15,10 @@ export function Tabbar() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("design.tabBar")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Rows className="size-5" />
+          {t("design.tabBar")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
@@ -87,15 +91,18 @@ export function Tabbar() {
           </div>
         </div>
 
-        {getValues("position") === "optimise-to-vertical-tabbar" && (
-          <div className="mt-4 p-3 bg-muted rounded-lg">
+        {getValues("position") === "hide-horizontal-tabbar" && (
+          <div className="p-3 bg-base-200 rounded-lg">
             <p className="text-sm">
-              {t("design.verticalTabIsRemovedFromBrowser")}{" "}
+              {t("design.verticalTabsDescription")}{" "}
               <a
-                href="https://docs.floorp.app/docs/features/tab-bar-customization/#vertical-tabs"
-                className="text-[var(--link-text-color)] hover:underline"
+                href="https://docs.floorp.app/docs/features/vertical-tabs"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
               >
                 {t("design.learnMore")}
+                <ExternalLink className="size-4" />
               </a>
             </p>
           </div>

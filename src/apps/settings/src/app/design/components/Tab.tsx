@@ -7,6 +7,7 @@ import {
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
+import { LayoutGrid } from "lucide-react";
 
 export function Tab() {
   const { t } = useTranslation();
@@ -15,7 +16,10 @@ export function Tab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("design.tab.title")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <LayoutGrid className="size-5" />
+          {t("design.tab.title")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>

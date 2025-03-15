@@ -70,6 +70,7 @@ export type ConstantsData = {
 /* Accounts */
 export const zAccountsFormData = z.object({
   accountInfo: zAccountInfo,
+  accountImage: z.string(),
   profileDir: z.string(),
   profileName: z.string(),
   asyncNoesViaMozillaAccount: z.boolean(),

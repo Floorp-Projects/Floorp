@@ -38,7 +38,7 @@
         "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
         "setup": {
             "title": "Setup",
-            "footerLinkText": "Log in to Mozilla & Ablaze Account",
+            "footerLinkText": "Log in to Accounts",
             "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
             "setupProgressTitle": "Setup Progress",
             "step": "Step {{step}} of {{total}}"
@@ -164,7 +164,9 @@
         "browser": "{{productName}}",
         "copyright": "© 2024 {{productName}} Project. All rights reserved.",
         "openSourceLicense": "{{productName}} is open-source software available under the Mozilla Public License 2.0, made possible by the Firefox open-source project and other open-source software.",
-        "openSourceLicenseNotice": "Open Source License"
+        "openSourceLicenseNotice": "Open Source License",
+        "versionInfo": "Version",
+        "license": "License"
     },
     "search": {
         "title": "Search Settings",

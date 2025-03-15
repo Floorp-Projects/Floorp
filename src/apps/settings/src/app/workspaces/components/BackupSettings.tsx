@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
+import { SaveAll } from "lucide-react";
 
 export function BackupSettings() {
   const { t } = useTranslation();
@@ -12,7 +13,10 @@ export function BackupSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("workspaces.backup")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <SaveAll className="size-5" />
+          {t("workspaces.backup")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>

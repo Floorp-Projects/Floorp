@@ -9,6 +9,7 @@ import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import About from "./app/about/noraneko.tsx";
+import ProfileAndAccount from "@/app/accounts/page.tsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
@@ -31,10 +32,14 @@ export default function App() {
               <Route path="/features/sidebar" element={<PanelSidebar />} />
               <Route path="/features/workspaces" element={<Workspaces />} />
               <Route path="/features/webapps" element={<ProgressiveWebApp />} />
+              <Route
+                path="/features/accounts"
+                element={<ProfileAndAccount />}
+              />
               <Route path="/about/browser" element={<About />} />
+
               {
                 /*
-                  <Route path="/accounts" element={<ProfileAndAccount />} />
                   <Route path="/search" element={<SearchResults />} />
                  */
               }

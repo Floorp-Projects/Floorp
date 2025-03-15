@@ -15,9 +15,9 @@ export default function Page() {
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
       const values = await getPwaSettings();
-      for (const key in values) {
-        setValue(key as keyof TProgressiveWebAppFormData, values[key]);
-      }
+      Object.entries(values).forEach(([key, value]) => {
+        setValue(key as keyof TProgressiveWebAppFormData, value);
+      });
     };
     fetchDefaultValues();
     document.documentElement.addEventListener("onfocus", fetchDefaultValues);
@@ -34,19 +34,23 @@ export default function Page() {
   }, [watchAll]);
 
   return (
-    <div className="p-6 space-y-3 container mx-auto max-w-3xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">{t("progressiveWebApp.title")}</h1>
-        <p className="text-lg text-muted-foreground">
-          {t("progressiveWebApp.description")}
-        </p>
-      </header>
-      <FormProvider {...methods}>
-        <form className="space-y-3">
-          <Preferences />
-          <InstalledApps />
-        </form>
-      </FormProvider>
+    <div className="p-6">
+      <div className="flex flex-col items-start pl-6">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            {t("progressiveWebApp.title")}
+          </h1>
+          <p className="text-sm">
+            {t("progressiveWebApp.description")}
+          </p>
+        </header>
+        <FormProvider {...methods}>
+          <form className="space-y-3 w-full">
+            <Preferences />
+            <InstalledApps />
+          </form>
+        </FormProvider>
+      </div>
     </div>
   );
 }

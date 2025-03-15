@@ -9,6 +9,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import { InfoTip } from "@/components/common/infotip.tsx";
+import { ExternalLink, Settings } from "lucide-react";
 
 export function BasicSettings() {
   const { t } = useTranslation();
@@ -17,13 +18,17 @@ export function BasicSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("workspaces.basicSettings")}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="size-5" />
+          {t("workspaces.basicSettings")}
+        </CardTitle>
         <CardDescription>
           <a
             href="https://docs.floorp.app/docs/features/how-to-use-workspaces"
-            className="text-[var(--link-text-color)] hover:underline"
+            className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
           >
             {t("workspaces.howToUseAndCustomize")}
+            <ExternalLink className="size-4" />
           </a>
         </CardDescription>
       </CardHeader>
@@ -55,8 +60,6 @@ export function BasicSettings() {
             </div>
           </div>
         </div>
-
-        <hr />
 
         <h3 className="text-base font-medium">
           {t("workspaces.otherSettings")}

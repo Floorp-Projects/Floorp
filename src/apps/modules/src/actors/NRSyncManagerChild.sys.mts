@@ -7,8 +7,11 @@ export class NRSyncManagerChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRSyncManagerChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRSyncManager 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.href.startsWith("chrome://")
+    ) {
+      console.debug("NRSyncManager 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRGetAccountInfo.bind(this), window, {
         defineAs: "NRGetAccountInfo",
       });

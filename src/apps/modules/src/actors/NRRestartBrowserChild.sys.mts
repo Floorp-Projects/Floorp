@@ -2,8 +2,11 @@ export class NRRestartBrowserChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRRestartBrowserChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRRestartBrowser 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.href.startsWith("chrome://")
+    ) {
+      console.debug("NRRestartBrowser 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRRestartBrowser.bind(this), window, {
         defineAs: "NRRestartBrowser",
       });

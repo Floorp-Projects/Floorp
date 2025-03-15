@@ -12,6 +12,7 @@ import {
   renamePwaApp,
   uninstallPwaApp,
 } from "../dataManager.ts";
+import { LayoutGrid } from "lucide-react";
 
 export function InstalledApps() {
   const { t } = useTranslation();
@@ -93,7 +94,10 @@ export function InstalledApps() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{t("progressiveWebApp.installedApps")}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <LayoutGrid className="size-5" />
+            {t("progressiveWebApp.installedApps")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {error && <p className="text-error mb-4">{error}</p>}

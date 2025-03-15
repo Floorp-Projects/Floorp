@@ -7,8 +7,11 @@ export class NRAppConstantsChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRAppConstantsChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRAppConstants 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.href.startsWith("chrome://")
+    ) {
+      console.debug("NRAppConstants 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRGetConstants.bind(this), window, {
         defineAs: "NRGetConstants",
       });
@@ -34,4 +37,3 @@ export class NRAppConstantsChild extends JSWindowActorChild {
     }
   }
 }
-
