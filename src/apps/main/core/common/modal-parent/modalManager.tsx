@@ -11,6 +11,7 @@ import {
   setModalVisible,
 } from "./data/data.ts";
 import { render } from "@nora/solid-xul";
+import { TForm } from "./utils/type";
 
 export class ModalManager {
   private static readonly targetParent = document?.getElementById(
@@ -27,10 +28,10 @@ export class ModalManager {
     onCleanup(() => globalThis.removeEventListener("keydown", handleKeydown));
   }
 
-  public async show(
-    jsx: Element,
+  public show(
+    form: TForm,
     options: { width: number; height: number },
-  ): Promise<void> {
+  ): void {
     const container = document?.getElementById(
       "modal-parent-container",
     ) as XULElement;
@@ -44,7 +45,7 @@ export class ModalManager {
 
       const browser = document?.getElementById(
         "modal-child-browser",
-      ) as any;
+      ) as XULElement & { browsingContext: any };
 
       const actor = browser.browsingContext.currentWindowGlobal.getActor(
         "NRChromeModal",
@@ -52,7 +53,7 @@ export class ModalManager {
 
       actor.sendQuery(
         "NRChromeModal:show",
-        this.jsxToString(jsx),
+        form,
       );
     }
   }
@@ -67,15 +68,6 @@ export class ModalManager {
       globalThis.focus();
       Services.obs.notifyObservers({}, "nora:modal:hide", "");
     }
-  }
-
-  private jsxToString(jsx: any): string {
-    const container = document?.createElement("div");
-    render(
-      () => jsx,
-      container,
-    );
-    return container?.innerHTML || "";
   }
 
   public setModalSize(newSize: ModalSize): void {

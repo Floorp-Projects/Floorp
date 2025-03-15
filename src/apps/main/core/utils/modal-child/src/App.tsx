@@ -1,14 +1,182 @@
 import { ClassUtilityComponent } from "@/components/tailwind-hack.tsx";
-import { FormProvider, useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { Control, Controller, FormProvider, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import type {
+  TForm,
+  TFormItem,
+} from "../../../common/modal-parent/utils/type.ts";
 
-declare global {
-  var appendChildToform: (stringElement: string) => void;
+interface FormValues {
+  [key: string]: string;
 }
 
+declare global {
+  var buildFormFromConfig: (config: TForm) => void;
+}
+
+interface FormFieldProps {
+  item: TFormItem;
+  control: Control<FormValues>;
+}
+
+const FormField = ({ item, control }: FormFieldProps) => {
+  switch (item.type) {
+    case "text":
+    case "number":
+      return (
+        <div className="form-control w-full">
+          {item.label && (
+            <label className="label">
+              <span className="label-text">{item.label}</span>
+            </label>
+          )}
+          <Controller
+            name={item.id}
+            control={control}
+            defaultValue={String(item.value || "")}
+            rules={{ required: item.required }}
+            render={({ field }) => (
+              <input
+                {...field}
+                type={item.type}
+                className={`input input-bordered w-full ${
+                  item.classList || ""
+                }`}
+                placeholder={item.placeholder || ""}
+                maxLength={item.maxLength}
+              />
+            )}
+          />
+        </div>
+      );
+
+    case "textarea":
+      return (
+        <div className="form-control w-full">
+          {item.label && (
+            <label className="label">
+              <span className="label-text">{item.label}</span>
+            </label>
+          )}
+          <Controller
+            name={item.id}
+            control={control}
+            defaultValue={String(item.value || "")}
+            rules={{ required: item.required }}
+            render={({ field }) => (
+              <textarea
+                {...field}
+                className={`textarea textarea-bordered w-full ${
+                  item.classList || ""
+                }`}
+                placeholder={item.placeholder || ""}
+                rows={item.rows || 4}
+              />
+            )}
+          />
+        </div>
+      );
+
+    case "select":
+    case "dropdown":
+      return (
+        <div className="form-control w-full">
+          {item.label && (
+            <label className="label">
+              <span className="label-text">{item.label}</span>
+            </label>
+          )}
+          <Controller
+            name={item.id}
+            control={control}
+            defaultValue={String(item.value || "")}
+            rules={{ required: item.required }}
+            render={({ field }) => (
+              <select
+                {...field}
+                className={`select select-bordered w-full ${
+                  item.classList || ""
+                }`}
+              >
+                {item.options?.map((opt: { label: string; value: string }) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div>
+      );
+
+    case "checkbox":
+      return (
+        <div className="form-control">
+          <label className="label cursor-pointer">
+            <span className="label-text">{item.label}</span>
+            <Controller
+              name={item.id}
+              control={control}
+              defaultValue={String(item.value || "false")}
+              render={({ field: { onChange, value } }) => (
+                <input
+                  type="checkbox"
+                  className={`checkbox ${item.classList || ""}`}
+                  checked={value === "true"}
+                  onChange={(e) => onChange(String(e.target.checked))}
+                />
+              )}
+            />
+          </label>
+        </div>
+      );
+
+    case "radio":
+      return (
+        <div className="form-control">
+          {item.label && (
+            <label className="label">
+              <span className="label-text">{item.label}</span>
+            </label>
+          )}
+          <div className="flex gap-4">
+            <Controller
+              name={item.id}
+              control={control}
+              defaultValue={String(item.value || "")}
+              render={({ field: { onChange, value } }) => (
+                <>
+                  {item.options?.map((
+                    opt: { label: string; value: string },
+                  ) => (
+                    <label key={opt.value} className="label cursor-pointer">
+                      <span className="label-text mr-2">{opt.label}</span>
+                      <input
+                        type="radio"
+                        className={`radio ${item.classList || ""}`}
+                        value={opt.value}
+                        checked={value === opt.value}
+                        onChange={(e) => onChange(e.target.value)}
+                      />
+                    </label>
+                  ))}
+                </>
+              )}
+            />
+          </div>
+        </div>
+      );
+
+    default:
+      return null;
+  }
+};
+
 function App() {
-  const methods = useForm();
-  const onSubmit = (data: any) => {
+  const methods = useForm<FormValues>();
+  const [formConfig, setFormConfig] = useState<TForm | null>(null);
+
+  const onSubmit = (data: FormValues) => {
     globalThis.dispatchEvent(
       new CustomEvent("form-submit", {
         detail: data,
@@ -19,7 +187,6 @@ function App() {
   useEffect(() => {
     const handler = (e: Event) => {
       if (e instanceof CustomEvent) {
-        const form = document.getElementById("dynamic-form");
         methods.reset(e.detail);
       }
     };
@@ -28,30 +195,14 @@ function App() {
     return () => globalThis.removeEventListener("form-update", handler);
   }, [methods]);
 
-  globalThis.appendChildToform = (stringElement: string) => {
-    const form = document.getElementById("dynamic-form");
-    if (form) {
-      while (form.firstChild) {
-        form.removeChild(form.firstChild);
-      }
-      const element = createElmFromStr(stringElement);
-      if (element) {
-        const importedElement = document.importNode(element, true);
-        form.appendChild(importedElement);
-      }
-    }
+  // グローバル関数の定義
+  globalThis.buildFormFromConfig = (config: TForm) => {
+    setFormConfig(config);
   };
-
-  function createElmFromStr(str: string): Element | null {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(str, "text/html");
-    return doc.body.firstElementChild;
-  }
 
   return (
     <>
       <ClassUtilityComponent />
-      {/* Tailwind CSS Utility Component for Hack. Please do not remove it*/}
       <div className="min-h-screen w-full bg-base-100 flex items-center justify-center p-4">
         <FormProvider {...methods}>
           <form
@@ -59,7 +210,25 @@ function App() {
             className="w-full h-full flex flex-col items-center justify-center gap-4 max-w-4xl mx-auto"
             onSubmit={methods.handleSubmit(onSubmit)}
           >
-            {/* 動的なフォーム要素がここに挿入されます */}
+            {formConfig?.forms.map((item: TFormItem) => (
+              <FormField key={item.id} item={item} control={methods.control} />
+            ))}
+            {formConfig && (
+              <div className="flex gap-4 mt-4">
+                <button type="submit" className="btn btn-primary">
+                  {formConfig.submitLabel || "Submit"}
+                </button>
+                {formConfig.cancelLabel && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => self.close()}
+                  >
+                    {formConfig.cancelLabel}
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </FormProvider>
       </div>

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { TForm } from "../../../main/core/common/modal-parent/utils/type.ts";
 export class NRChromeModalChild extends JSWindowActorChild {
   actorCreated() {
     console.log("NRChromeModalChild actor created");
@@ -12,6 +13,7 @@ export class NRChromeModalChild extends JSWindowActorChild {
     const window = this.contentWindow as Window;
     switch (message.name) {
       case "NRChromeModal:show": {
+        console.log("appendChildToform", window.appendChildToform);
         await this.renderContent(window, message.data);
         break;
       }
@@ -19,28 +21,7 @@ export class NRChromeModalChild extends JSWindowActorChild {
     return null;
   }
 
-  renderContent(win: Window, jsx: string) {
-    try {
-      win.appendChildToform(jsx);
-      return;
-    } catch (_e) {
-      const element = this.createElmFromStr(win, jsx);
-      const modal = element;
-      if (modal) {
-        const form = win.document?.querySelector("#dynamic-form");
-        if (form) {
-          while (form.firstChild) {
-            form.removeChild(form.firstChild);
-          }
-          form.appendChild(modal);
-        }
-        win.document?.querySelector("#dynamic-form")?.appendChild(modal);
-      }
-    }
-  }
-
-  createElmFromStr(win: Window, str: string) {
-    return new win.DOMParser().parseFromString(str, "text/html").body
-      .firstElementChild;
+  renderContent(win: Window, from: TForm) {
+    win.buildFormFromConfig(from);
   }
 }
