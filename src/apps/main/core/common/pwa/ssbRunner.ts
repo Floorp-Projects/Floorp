@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { DataManager } from "./dataStore";
-import type { Manifest } from "./type";
-import { SiteSpecificBrowserManager } from "./ssbManager";
+import type { DataManager } from "./dataStore.ts";
+import type { Manifest } from "./type.ts";
+import { SiteSpecificBrowserManager } from "./ssbManager.ts";
+import { WindowsSupport } from "./supports/windows.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -16,7 +17,7 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 export class SsbRunner {
   constructor(
     private dataManager: DataManager,
-    private ssbManager: SiteSpecificBrowserManager
+    private ssbManager: SiteSpecificBrowserManager,
   ) {}
 
   public async runSsbById(id: string) {
@@ -32,7 +33,6 @@ export class SsbRunner {
   public openSsbWindow(ssb: Manifest) {
     const browserWindowFeatures =
       "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
-    //"chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
     const args = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString,
@@ -41,17 +41,27 @@ export class SsbRunner {
     // URL
     args.data = `${ssb.start_url},${ssb.id},?FloorpEnableSSBWindow=true`;
 
-    Services.ww.openWindow(
+    const win = Services.ww.openWindow(
       null as unknown as mozIDOMWindowProxy,
       AppConstants.BROWSER_CHROME_URL,
       "_blank",
       browserWindowFeatures,
       args,
-    );
+    ) as nsIDOMWindow;
+
+    win.focus();
+
+    if (Services.appinfo.OS === "WINNT") {
+      const winsupport = new WindowsSupport(this.ssbManager);
+      winsupport.applyOSIntegration(ssb, win);
+    }
   }
 }
 
-async function startSSBFromCmdLine(id: string, ssbManager: SiteSpecificBrowserManager) {
+async function startSSBFromCmdLine(
+  id: string,
+  ssbManager: SiteSpecificBrowserManager,
+) {
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.

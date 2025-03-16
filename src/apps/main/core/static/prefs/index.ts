@@ -8,15 +8,16 @@ export function initBeforeSessionStoreInit() {
 
   //https://searchfox.org/mozilla-central/rev/e24277e20c492b4a785b4488af02cca062ec7c2c/remote/cdp/JSONHandler.sys.mjs#60
 
-  const {userAgent} = Cc[
+  const { userAgent } = Cc[
     "@mozilla.org/network/protocol;1?name=http"
   ].getService(Ci.nsIHttpProtocolHandler);
-  prefs.setStringPref("general.useragent.override",
-   userAgent.replace("Noraneko","Firefox")
-  )
+  prefs.setStringPref(
+    "general.useragent.override",
+    userAgent.replace("Floorp", "Firefox"),
+  );
   prefs.setBoolPref("browser.preferences.moreFromMozilla", false);
 }
 
 export function init() {
-  
+  // nothing
 }
