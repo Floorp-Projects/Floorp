@@ -94,6 +94,7 @@ export class WorkspaceManageModal {
           classList: "form-control select select-bordered w-full",
         },
       ],
+      title: "Edit Workspace",
       submitLabel: "Save Changes",
       cancelLabel: "Cancel",
     };
@@ -106,8 +107,8 @@ export class WorkspaceManageModal {
 
     const formConfig = this.createFormConfig(workspace);
     this.modalParent.showNoraModal(formConfig, {
-      width: 700,
-      height: 600,
+      width: 540,
+      height: 460,
     });
   }
 }

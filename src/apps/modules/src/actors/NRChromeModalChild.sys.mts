@@ -13,7 +13,6 @@ export class NRChromeModalChild extends JSWindowActorChild {
     const window = this.contentWindow as Window;
     switch (message.name) {
       case "NRChromeModal:show": {
-        console.log("appendChildToform", window.appendChildToform);
         await this.renderContent(window, message.data);
         break;
       }

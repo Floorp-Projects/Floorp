@@ -1,4 +1,3 @@
-import { ClassUtilityComponent } from "@/components/tailwind-hack.tsx";
 import { Control, Controller, FormProvider, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import type {
@@ -24,10 +23,10 @@ const FormField = ({ item, control }: FormFieldProps) => {
     case "text":
     case "number":
       return (
-        <div className="form-control w-full">
+        <div className="mb-4 w-full">
           {item.label && (
-            <label className="label">
-              <span className="label-text">{item.label}</span>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
             </label>
           )}
           <Controller
@@ -39,7 +38,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
               <input
                 {...field}
                 type={item.type}
-                className={`input input-bordered w-full ${
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
                   item.classList || ""
                 }`}
                 placeholder={item.placeholder || ""}
@@ -52,10 +51,10 @@ const FormField = ({ item, control }: FormFieldProps) => {
 
     case "textarea":
       return (
-        <div className="form-control w-full">
+        <div className="mb-4 w-full">
           {item.label && (
-            <label className="label">
-              <span className="label-text">{item.label}</span>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
             </label>
           )}
           <Controller
@@ -66,7 +65,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <textarea
                 {...field}
-                className={`textarea textarea-bordered w-full ${
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
                   item.classList || ""
                 }`}
                 placeholder={item.placeholder || ""}
@@ -80,10 +79,10 @@ const FormField = ({ item, control }: FormFieldProps) => {
     case "select":
     case "dropdown":
       return (
-        <div className="form-control w-full">
+        <div className="mb-4 w-full">
           {item.label && (
-            <label className="label">
-              <span className="label-text">{item.label}</span>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
             </label>
           )}
           <Controller
@@ -94,7 +93,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <select
                 {...field}
-                className={`select select-bordered w-full ${
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
                   item.classList || ""
                 }`}
               >
@@ -111,9 +110,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
 
     case "checkbox":
       return (
-        <div className="form-control">
-          <label className="label cursor-pointer">
-            <span className="label-text">{item.label}</span>
+        <div className="mb-4 w-full">
+          <label className="flex items-center cursor-pointer">
             <Controller
               name={item.id}
               control={control}
@@ -121,25 +119,30 @@ const FormField = ({ item, control }: FormFieldProps) => {
               render={({ field: { onChange, value } }) => (
                 <input
                   type="checkbox"
-                  className={`checkbox ${item.classList || ""}`}
+                  className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] rounded focus:ring-[#0061E0] ${
+                    item.classList || ""
+                  }`}
                   checked={value === "true"}
                   onChange={(e) => onChange(String(e.target.checked))}
                 />
               )}
             />
+            <span className="text-sm text-gray-900 dark:text-white">
+              {item.label}
+            </span>
           </label>
         </div>
       );
 
     case "radio":
       return (
-        <div className="form-control">
+        <div className="mb-4 w-full">
           {item.label && (
-            <label className="label">
-              <span className="label-text">{item.label}</span>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
             </label>
           )}
-          <div className="flex gap-4">
+          <div className="space-y-2">
             <Controller
               name={item.id}
               control={control}
@@ -149,15 +152,22 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   {item.options?.map((
                     opt: { label: string; value: string },
                   ) => (
-                    <label key={opt.value} className="label cursor-pointer">
-                      <span className="label-text mr-2">{opt.label}</span>
+                    <label
+                      key={opt.value}
+                      className="flex items-center cursor-pointer mb-2"
+                    >
                       <input
                         type="radio"
-                        className={`radio ${item.classList || ""}`}
+                        className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${
+                          item.classList || ""
+                        }`}
                         value={opt.value}
                         checked={value === opt.value}
                         onChange={(e) => onChange(e.target.value)}
                       />
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {opt.label}
+                      </span>
                     </label>
                   ))}
                 </>
@@ -195,33 +205,39 @@ function App() {
     return () => globalThis.removeEventListener("form-update", handler);
   }, [methods]);
 
-  // グローバル関数の定義
   globalThis.buildFormFromConfig = (config: TForm) => {
     setFormConfig(config);
   };
 
   return (
     <>
-      <ClassUtilityComponent />
-      <div className="min-h-screen w-full bg-base-100 flex items-center justify-center p-4">
+      <div className="min-h-screen w-full bg-white dark:bg-[#2B2A33] text-gray-900 dark:text-white flex items-center justify-center p-2">
         <FormProvider {...methods}>
           <form
             id="dynamic-form"
-            className="w-full h-full flex flex-col items-center justify-center gap-4 max-w-4xl mx-auto"
+            className="w-full h-full flex flex-col gap-4 bg-white dark:bg-[#2B2A33] rounded-md p-4"
             onSubmit={methods.handleSubmit(onSubmit)}
           >
+            {formConfig?.title && (
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                {formConfig.title}
+              </h1>
+            )}
             {formConfig?.forms.map((item: TFormItem) => (
               <FormField key={item.id} item={item} control={methods.control} />
             ))}
             {formConfig && (
-              <div className="flex gap-4 mt-4">
-                <button type="submit" className="btn btn-primary">
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#0061E0] hover:bg-[#0250BC] rounded-md shadow-sm transition duration-150 ease-in-out"
+                >
                   {formConfig.submitLabel || "Submit"}
                 </button>
                 {formConfig.cancelLabel && (
                   <button
                     type="button"
-                    className="btn"
+                    className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-[#42414D] hover:bg-gray-300 dark:hover:bg-[#53525C] rounded-md transition duration-150 ease-in-out"
                     onClick={() => self.close()}
                   >
                     {formConfig.cancelLabel}
