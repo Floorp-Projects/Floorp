@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { ManifestProcesser } from "./manifestProcesser.js";
-import type { DataManager } from "./dataStore.js";
-import type { Browser, Manifest } from "./type.js";
-import { SsbRunner } from "./ssbRunner.js";
-import { WindowsSupport } from "./supports/windows.js";
+import type { ManifestProcesser } from "./manifestProcesser.ts";
+import type { DataManager } from "./dataStore.ts";
+import type { Browser, Manifest } from "./type.ts";
+import { SsbRunner } from "./ssbRunner.ts";
+import { WindowsSupport } from "./supports/windows.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -24,10 +24,9 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    //TODO: Replace Actor and Sbs.Observer
-    setInterval(() => {
+    document?.addEventListener("floorpOnLocationChangeEvent", () => {
       this.onCurrentTabChangedOrLoaded();
-    }, 3000);
+    });
 
     Services.obs.addObserver(async (subject: any) => {
       await this.renameSsb(

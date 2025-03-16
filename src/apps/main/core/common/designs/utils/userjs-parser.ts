@@ -7,6 +7,8 @@ const regex =
   /\/\/.*?$|\/\*[\s\S]*?\*\/|^(?:[\t ]*(?:\r?\n|\r))+|\/\/\s*user_pref\(.*?\);\s*$/gm;
 
 export async function applyUserJS(userjs: string) {
+  console.log("Applying userjs", userjs);
+
   const p_userjs = userjs.replace(regex, "\n");
   for (const line of p_userjs.split("\n")) {
     if (line.includes("user_pref")) {

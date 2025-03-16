@@ -8,7 +8,7 @@ import {
 } from "@/components/common/card.tsx";
 import { Separator } from "@/components/common/separator.tsx";
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { Scale, ExternalLink } from "lucide-react";
+import { ExternalLink, Scale } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useConstantsData } from "./dataManager";
 import { useTranslation } from "react-i18next";
@@ -49,12 +49,12 @@ export default function Page() {
               />
               <p className="text-xl">
                 {t("about.browserVersion", {
-                  browserVersion: constantsData?.MOZ_APP_VERSION ?? "unknown",
-                  firefoxVersion: constantsData?.MOZ_APP_VERSION_DISPLAY ??
-                    "unknown",
-                  isOfficialBuild: constantsData?.MOZ_OFFICIAL_BRANDING
-                    ? t("about.isOfficialBuild")
-                    : "",
+                  browserVersion:
+                    constantsData?.MOZ_APP_VERSION.split("@")[1] ??
+                      "unknown",
+                  firefoxVersion:
+                    constantsData?.MOZ_APP_VERSION.split("@")[0] ??
+                      "unknown",
                 })}
               </p>
             </div>
@@ -63,7 +63,10 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <Button asChild>
-              <a href="https://noraneko.example.com/about" className="flex items-center gap-2">
+              <a
+                href="https://noraneko.example.com/about"
+                className="flex items-center gap-2"
+              >
                 {t("about.releaseNotes")}
                 <ExternalLink className="size-4" />
               </a>

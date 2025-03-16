@@ -14,7 +14,6 @@ import { $, type ProcessPromise } from "zx";
 import { usePwsh } from "zx";
 import chalk from "chalk";
 import process from "node:process";
-import { ensureSymlink } from "@std/fs";
 
 switch (process.platform) {
   case "win32":
@@ -32,8 +31,8 @@ const binDir = process.platform !== "darwin"
   ? `_dist/bin/${brandingBaseName}`
   : `_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/Resources`;
 
-const r = (dir: string) => {
-  return pathe.resolve(import.meta.dirname, dir);
+const _r = (dir: string) => {
+  return pathe.resolve(import.meta.dirname as string, dir);
 };
 
 const isExists = async (path: string) => {
@@ -43,7 +42,7 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const getBinArchive = async () => {
+const getBinArchive = () => {
   const arch = process.arch;
   if (process.platform === "win32") {
     return `${brandingBaseName}-win-amd64-moz-artifact.zip`;
@@ -64,7 +63,9 @@ const binArchive = await getBinArchive();
 try {
   await fs.access("dist");
   await fs.rename("dist", "_dist");
-} catch {}
+} catch {
+  console.log("dist not found");
+}
 
 const binPath = pathe.join(binDir, brandingBaseName);
 const binPathExe = process.platform !== "darwin"
@@ -171,10 +172,10 @@ async function downloadBinArchive() {
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
     console.log("Download complete from origin!");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       "Origin download failed, falling back to upstream:",
-      error.stderr,
+      (error as { stderr: string }).stderr,
     );
     const upstreamUrl =
       `https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${fileName}`;
@@ -182,9 +183,12 @@ async function downloadBinArchive() {
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
       console.log("Download complete from upstream!");
-    } catch (error2: any) {
-      console.error("Upstream download failed:", error2.stderr);
-      throw error2.stderr;
+    } catch (error2: unknown) {
+      console.error(
+        "Upstream download failed:",
+        (error2 as { stderr: string }).stderr,
+      );
+      throw (error2 as { stderr: string }).stderr;
     }
   }
   await decompressBin();
@@ -251,7 +255,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   try {
     await fs.access("_dist/buildid2");
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
-  } catch {}
+  } catch {
+    console.warn("buildid2 not found");
+  }
   console.log(`[dev] buildid2: ${buildid2}`);
 
   // env
@@ -269,7 +275,8 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
         buildid2 ?? ""
       }`.stdio("pipe").nothrow();
 
-      let resolve: Function | undefined = undefined;
+      let resolve: ((value: void | PromiseLike<void>) => void) | undefined =
+        undefined;
       const temp_prm = new Promise<void>((rs, _rj) => {
         resolve = rs;
       });
@@ -278,7 +285,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
           if (
             temp.includes("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-dev")
           ) {
-            if (resolve) (resolve as Function)();
+            if (resolve) (resolve as () => void)();
           }
           process.stdout.write(temp);
         }
@@ -302,9 +309,11 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, {
         recursive: true,
       });
-    } catch {}
+    } catch {
+      // ignore
+    }
     await Deno.symlink(
-      pathe.resolve(import.meta.dirname, "_dist/noraneko"),
+      pathe.resolve(import.meta.dirname as string, "_dist/noraneko"),
       `_dist/bin/${brandingBaseName}/noraneko-dev`,
       { type: "junction" },
     );
@@ -338,7 +347,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   (async () => {
     try {
       await browserProcess;
-    } catch {}
+    } catch {
+      console.error("browserProcess error");
+    }
     exit();
   })();
 }
@@ -384,7 +395,9 @@ async function release(mode: "before" | "after") {
   try {
     await fs.access("_dist/buildid2");
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
-  } catch {}
+  } catch {
+    console.warn("buildid2 not found");
+  }
   console.log(`[build] buildid2: ${buildid2}`);
   if (mode === "before") {
     console.log(
@@ -422,7 +435,9 @@ async function release(mode: "before" | "after") {
     try {
       await fs.access("_dist/buildid2");
       buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
-    } catch {}
+    } catch {
+      console.warn("buildid2 not found");
+    }
     await writeBuildid2(`${binPath}/browser`, buildid2 ?? "");
   }
 }
