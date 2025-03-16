@@ -40,7 +40,7 @@ export default defineConfig({
           needsCodeReference: false,
           source: await generateJarManifest(bundle, {
             prefix: "skin",
-            namespace: "noraneko",
+            namespace: "noraneko-skin",
             register_type: "skin",
           }),
         });
