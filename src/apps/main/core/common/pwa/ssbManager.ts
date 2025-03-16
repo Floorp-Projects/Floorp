@@ -71,7 +71,7 @@ export class SiteSpecificBrowserManager {
       const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
 
       if (ssbObj) {
-        await this.runSsbByUrl(ssbObj.start_url);
+        await this.runSsbByUrl(window.gBrowser.selectedBrowser.currentURI.spec);
       }
     } else {
       const manifest = await this.createFromBrowser(browser, {
