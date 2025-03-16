@@ -6527,8 +6527,7 @@
             "npm:tailwind-merge@^3.0.1",
             "npm:tailwindcss@4",
             "npm:vite-tsconfig-paths@^5.1.4",
-            "npm:vite@^6.0.11",
-            "npm:zod@^3.24.2"
+            "npm:vite@^6.0.11"
           ]
         }
       },

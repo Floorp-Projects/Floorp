@@ -109,9 +109,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * Open manage workspace dialog. This function should not be called directly on Preferences page.
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
-  public manageWorkspaceFromDialog(id?: TWorkspaceID) {
+  public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
-    this.modalCtx.showWorkspacesModal(targetWorkspaceID);
+    const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
+    console.log(result);
+    return result;
   }
 
   public changeWorkspace(id: TWorkspaceID) {

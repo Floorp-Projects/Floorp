@@ -187,6 +187,7 @@ function App() {
   const [formConfig, setFormConfig] = useState<TForm | null>(null);
 
   const onSubmit = (data: FormValues) => {
+    console.log("Form submitted", data);
     globalThis.dispatchEvent(
       new CustomEvent("form-submit", {
         detail: data,
@@ -238,7 +239,6 @@ function App() {
                   <button
                     type="button"
                     className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-[#42414D] hover:bg-gray-300 dark:hover:bg-[#53525C] rounded-md transition duration-150 ease-in-out"
-                    onClick={() => self.close()}
                   >
                     {formConfig.cancelLabel}
                   </button>

@@ -13,8 +13,8 @@ export class NRChromeModalChild extends JSWindowActorChild {
     const window = this.contentWindow as Window;
     switch (message.name) {
       case "NRChromeModal:show": {
-        await this.renderContent(window, message.data);
-        break;
+        this.renderContent(window, message.data);
+        return await this.waitForUserInput(window);
       }
     }
     return null;
@@ -22,5 +22,14 @@ export class NRChromeModalChild extends JSWindowActorChild {
 
   renderContent(win: Window, from: TForm) {
     win.buildFormFromConfig(from);
+  }
+
+  private waitForUserInput(win: Window): Promise<Record<string, unknown>> {
+    return new Promise((resolve) => {
+      win.document.addEventListener("form-submit", (event: CustomEvent) => {
+        console.log("NRChromeModalChild form-submit", event.detail);
+        resolve(event.detail);
+      }, { once: true });
+    });
   }
 }

@@ -10,7 +10,7 @@ import type { TWorkspace, TWorkspaceID } from "./utils/type.js";
 import { WorkspacesService } from "./workspacesService";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.js";
 import ModalParent from "../modal-parent/index.ts";
-import { TForm } from "@core/common/modal-parent/utils/type.ts";
+import { TForm, TFormResult } from "@core/common/modal-parent/utils/type.ts";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
@@ -100,15 +100,18 @@ export class WorkspaceManageModal {
     };
   }
 
-  public showWorkspacesModal(workspaceID: TWorkspaceID | null): void {
+  public async showWorkspacesModal(
+    workspaceID: TWorkspaceID | null,
+  ): Promise<TFormResult> {
     const workspace = this.ctx.getRawWorkspace(
       workspaceID ?? this.ctx.getSelectedWorkspaceID(),
     );
-
     const formConfig = this.createFormConfig(workspace);
-    this.modalParent.showNoraModal(formConfig, {
-      width: 540,
-      height: 460,
+    return await new Promise((resolve) => {
+      this.modalParent.showNoraModal(formConfig, {
+        width: 540,
+        height: 460,
+      }, (result: TFormResult) => resolve(result));
     });
   }
 }

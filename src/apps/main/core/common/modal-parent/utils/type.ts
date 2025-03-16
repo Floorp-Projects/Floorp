@@ -27,3 +27,9 @@ export interface TForm {
   submitLabel?: string;
   cancelLabel?: string;
 }
+
+export interface TFormResult {
+  success: boolean;
+  error?: string;
+  data: { [key: string]: string | number };
+}

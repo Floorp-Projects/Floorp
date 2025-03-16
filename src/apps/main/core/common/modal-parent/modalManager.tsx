@@ -10,8 +10,7 @@ import {
   setModalSize,
   setModalVisible,
 } from "./data/data.ts";
-import { render } from "@nora/solid-xul";
-import { TForm } from "./utils/type";
+import { TForm, TFormResult } from "./utils/type";
 
 export class ModalManager {
   private static readonly targetParent = document?.getElementById(
@@ -28,10 +27,10 @@ export class ModalManager {
     onCleanup(() => globalThis.removeEventListener("keydown", handleKeydown));
   }
 
-  public show(
+  public async show(
     form: TForm,
     options: { width: number; height: number },
-  ): void {
+  ): Promise<TFormResult | undefined> {
     const container = document?.getElementById(
       "modal-parent-container",
     ) as XULElement;
@@ -51,10 +50,15 @@ export class ModalManager {
         "NRChromeModal",
       );
 
-      actor.sendQuery(
-        "NRChromeModal:show",
-        form,
-      );
+      return new Promise((resolve) => {
+        actor.sendQuery(
+          "NRChromeModal:show",
+          form,
+        ).then((response: TFormResult) => {
+          console.log("NRChromeModal:show response", response);
+          resolve(response);
+        });
+      });
     }
   }
 

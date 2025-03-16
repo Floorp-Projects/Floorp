@@ -1,15 +1,13 @@
-import { Button } from "@/components/common/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/common/card";
-import { Separator } from "@/components/common/separator";
-import { Switch } from "@/components/common/switch";
-import { Avatar, AvatarImage } from "@/components/common/avatar";
+} from "@/components/common/card.tsx";
+import { Switch } from "@/components/common/switch.tsx";
+import { Avatar, AvatarImage } from "@/components/common/avatar.tsx";
 import { useTranslation } from "react-i18next";
-import type { AccountsFormData } from "@/types/pref";
+import type { AccountsFormData } from "@/types/pref.ts";
 import { ExternalLink, Settings } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 

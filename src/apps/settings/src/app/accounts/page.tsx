@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Profile } from "./components/profile";
-import { Accounts } from "./components/accounts";
+import { Accounts } from "./components/Accounts.tsx";
+import { Profile } from "./components/Profile.tsx";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
-import { useAccountAndProfileData } from "./dataManager";
-import type { AccountsFormData } from "@/types/pref";
+import { useAccountAndProfileData } from "./dataManager.ts";
+import type { AccountsFormData } from "@/types/pref.ts";
 
 export default function Page() {
   const { t } = useTranslation();
