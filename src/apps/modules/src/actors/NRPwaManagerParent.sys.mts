@@ -11,18 +11,26 @@ export class NRPwaManagerParent extends JSWindowActorParent {
           "PwaManager:GetInstalledApps",
           await this.getInstalledApps(),
         );
+        break;
       }
       case "PwaManager:RenameSsb": {
         Services.obs.notifyObservers(
-          { wrappedJSObject: { id: message.data.id, newName: message.data.newName } },
+          {
+            wrappedJSObject: {
+              id: message.data.id,
+              newName: message.data.newName,
+            },
+          },
           "nora-ssb-rename",
         );
+        break;
       }
       case "PwaManager:UninstallSsb": {
         Services.obs.notifyObservers(
           { wrappedJSObject: { id: message.data.id } },
           "nora-ssb-uninstall",
         );
+        break;
       }
     }
   }

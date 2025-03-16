@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup, createRoot } from "solid-js";
-import { zPwaConfig, type TPwaConfig } from "./type";
+import { createEffect, createRoot, createSignal, onCleanup } from "solid-js";
+import { type TPwaConfig, zPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
 
 // Initialize default preferences if they don't exist
@@ -18,14 +18,19 @@ if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.config")) {
 
 class PwaConfig {
   private static instance: PwaConfig;
-  public enabled: ReturnType<typeof createSignal<boolean>> =
-    createSignal(false);
-  public config: ReturnType<typeof createSignal<TPwaConfig>> =
-    createSignal<TPwaConfig>({ showToolbar: false });
+  public enabled: ReturnType<typeof createSignal<boolean>> = createSignal(
+    defaultEnabled,
+  );
+  public config: ReturnType<typeof createSignal<TPwaConfig>> = createSignal<
+    TPwaConfig
+  >({ showToolbar: false });
   private constructor() {
     createRoot(() => {
       this.enabled = createSignal(
-        Services.prefs.getBoolPref("floorp.browser.ssb.enabled", defaultEnabled)
+        Services.prefs.getBoolPref(
+          "floorp.browser.ssb.enabled",
+          defaultEnabled,
+        ),
       );
 
       this.config = createSignal<TPwaConfig>(
@@ -33,10 +38,10 @@ class PwaConfig {
           JSON.parse(
             Services.prefs.getStringPref(
               "floorp.browser.ssb.config",
-              strDefaultConfig
-            )
-          )
-        )
+              strDefaultConfig,
+            ),
+          ),
+        ),
       );
 
       const [enabled] = this.enabled;
@@ -49,19 +54,19 @@ class PwaConfig {
       createEffect(() => {
         Services.prefs.setStringPref(
           "floorp.browser.ssb.config",
-          JSON.stringify(config())
+          JSON.stringify(config()),
         );
       });
 
       const enabledObserver = () =>
         this.enabled[1](
-          Services.prefs.getBoolPref("floorp.browser.ssb.enabled")
+          Services.prefs.getBoolPref("floorp.browser.ssb.enabled"),
         );
       Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
       onCleanup(() => {
         Services.prefs.removeObserver(
           "floorp.browser.ssb.enabled",
-          enabledObserver
+          enabledObserver,
         );
       });
 
@@ -71,17 +76,17 @@ class PwaConfig {
             JSON.parse(
               Services.prefs.getStringPref(
                 "floorp.browser.ssb.config",
-                strDefaultConfig
-              )
-            )
-          )
+                strDefaultConfig,
+              ),
+            ),
+          ),
         );
 
       Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
       onCleanup(() => {
         Services.prefs.removeObserver(
           "floorp.browser.ssb.config",
-          configObserver
+          configObserver,
         );
       });
     });
