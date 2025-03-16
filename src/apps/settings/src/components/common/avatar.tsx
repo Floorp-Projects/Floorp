@@ -43,7 +43,7 @@ export function AvatarImage({
             src={src}
             alt={alt}
             className={cn(
-              "aspect-square h-full w-full object-cover transition-opacity",
+              "aspect-square h-full w-full object-cover transition-opacity rounded-full",
               className,
             )}
             onError={() => setError(true)}
