@@ -37,3 +37,5 @@ support-files = ["file_pdf.pdf"]
 ["browser_usercharacteristics.js"]
 
 ["browser_canvas_randomization_permission.js"]
+
+["browser_canvas_randomization_permission_background_load.js"]
