@@ -25,8 +25,8 @@ async function launchBuild(mode: string, buildid2: string) {
         },
       }),
       build({
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
+        configFile: r("./src/apps/newtab/vite.config.ts"),
+        root: r("./src/apps/newtab"),
       }),
     ]);
   } else {
@@ -51,8 +51,9 @@ async function launchBuild(mode: string, buildid2: string) {
         base: "resource://noraneko",
       }),
       build({
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
+        configFile: r("./src/apps/newtab/vite.config.ts"),
+        root: r("./src/apps/newtab"),
+        base: "chrome://noraneko-newtab/content",
       }),
       build({
         configFile: r("./src/apps/settings/vite.config.ts"),

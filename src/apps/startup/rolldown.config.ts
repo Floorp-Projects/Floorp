@@ -1,27 +1,25 @@
 import { defineConfig } from "rolldown";
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
-import {resolve} from "pathe"
+import { resolve } from "pathe";
 
-const r = (subpath: string): string =>
-  resolve(import.meta.dirname, subpath);
+const r = (subpath: string): string => resolve(import.meta.dirname, subpath);
 
 console.log(Deno.args);
 
 let mode = "";
-if (!process.argv.at(-1).includes(".")) mode = process.argv.at(-1)
+if (!process.argv.at(-1).includes(".")) mode = process.argv.at(-1);
 
 export default defineConfig({
   input: [
     r("src/chrome_root.ts"),
     r("src/about-preferences.ts"),
-    r("src/about-newtab.ts")
   ],
   output: {
-    "dir":"_dist",
-    chunkFileNames:"[name].js"
+    "dir": "_dist",
+    chunkFileNames: "[name].js",
   },
   define: {
-    "import.meta.env.MODE": `"${mode}"`
+    "import.meta.env.MODE": `"${mode}"`,
   },
   external(source, importer, isResolved) {
     if (source.startsWith("chrome://")) {

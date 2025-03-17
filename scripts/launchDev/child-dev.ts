@@ -28,11 +28,6 @@ async function launchDev(mode: string, buildid2: string) {
         "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
       },
     }),
-    await createServer({
-      mode,
-      configFile: r("./src/apps/designs/vite.config.ts"),
-      root: r("./src/apps/designs"),
-    }),
   ];
 
   const workersDir = resolve(import.meta.dirname as string, "workers");

@@ -38,8 +38,11 @@ skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
 ${
       mode !== "dev"
-        ? `\ncontent noraneko-settings settings/ contentaccessible=yes
-content noraneko-modal-child modal-child/ contentaccessible=yes`
+        ? `
+content noraneko-settings settings/ contentaccessible=yes
+content noraneko-modal-child modal-child/ contentaccessible=yes
+content noraneko-newtab newtab/ contentaccessible=yes
+`
         : ""
     }`,
   );
@@ -64,8 +67,8 @@ content noraneko-modal-child modal-child/ contentaccessible=yes`
     option,
   );
   await symlink(
-    r("../../src/apps/designs/_dist"),
-    `${binPath}/${dirName}/skin`,
+    r("../../src/apps/newtab/_dist"),
+    `${binPath}/${dirName}/newtab`,
     option,
   );
   await symlink(
