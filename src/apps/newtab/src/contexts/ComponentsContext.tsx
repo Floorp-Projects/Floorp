@@ -10,7 +10,7 @@ import { getNewTabSettings, saveNewTabSettings } from "../utils/dataManager.ts";
 interface ComponentsState {
   topSites: boolean;
   clock: boolean;
-  weather: boolean;
+  dashboard: boolean;
 }
 
 interface ComponentsContextType {
@@ -26,7 +26,7 @@ export function ComponentsProvider(
   const [components, setComponents] = useState<ComponentsState>({
     topSites: true,
     clock: true,
-    weather: true,
+    dashboard: true,
   });
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -59,8 +59,7 @@ export function ComponentsProvider(
 
       setComponents(newComponents);
     } catch (e) {
-      console.error("Failed to save component settings:", e);
-      throw e;
+      console.error(`Failed to toggle ${key}:`, e);
     }
   }, []);
 
@@ -69,12 +68,7 @@ export function ComponentsProvider(
   }
 
   return (
-    <ComponentsContext.Provider
-      value={{
-        components,
-        toggleComponent,
-      }}
-    >
+    <ComponentsContext.Provider value={{ components, toggleComponent }}>
       {children}
     </ComponentsContext.Provider>
   );

@@ -83,12 +83,14 @@ export function Settings(
             <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                checked={components.weather}
-                onChange={() => toggleComponent("weather")}
+                checked={components.dashboard}
+                onChange={() => toggleComponent("dashboard")}
                 disabled={isSubmitting}
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">天気</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                ダッシュボード
+              </span>
             </label>
           </div>
         </section>

@@ -1,13 +1,11 @@
 import { type ReactNode } from "react";
 
-interface GridProps {
-  children: ReactNode;
-}
-
-export function Grid({ children }: GridProps) {
+export function Grid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {children}
+    <div className="container mx-auto max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {children}
+      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ export interface NewTabSettings {
   components: {
     topSites: boolean;
     clock: boolean;
-    weather: boolean;
+    dashboard: boolean;
   };
   background: {
     type: "none" | "random" | "custom";
@@ -16,7 +16,7 @@ const DEFAULT_SETTINGS: NewTabSettings = {
   components: {
     topSites: true,
     clock: true,
-    weather: true,
+    dashboard: true,
   },
   background: {
     type: "none",

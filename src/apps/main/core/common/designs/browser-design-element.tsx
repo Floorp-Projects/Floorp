@@ -37,15 +37,20 @@ export function BrowserDesignElement() {
   if (import.meta.env.DEV) {
     createEffect(async () => {
       const arr: string[] = [];
-      // from CSS, icons folder is at ../icons
-      const iconsDirPath = getCSS().styles[0].replace(
-        "css/leptonChrome.css",
-        "icons",
-      );
+      const styles = getCSS().styles;
+      if (!styles.length) return;
+
+      const rawPath = styles[0].replace("css/leptonChrome.css", "icons");
+      const iconsDirPath = rawPath.startsWith("/@fs/")
+        ? `file://${rawPath.slice(4)}`
+        : `/src/${rawPath}`;
       console.log(iconsDirPath);
-      for (const link of getCSS().styles) {
+      for (const link of styles) {
         arr.push(
-          (await import(/* @vite-ignore */ `${link}?raw`)).default.replaceAll(),
+          (await import(/* @vite-ignore */ `${link}?raw`)).default.replaceAll(
+            "../icons",
+            iconsDirPath,
+          ),
         );
       }
 
