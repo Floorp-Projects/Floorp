@@ -434,6 +434,11 @@ jobs:
               --api-key-file ~/mac-code-signing/key.json \
               --wait \
               ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+
+            # remove old .app
+            rm -rf obj-*/dist/floorp/*.app
+            cp -r ~/mac-code-signing/old/*.app obj-*/dist/floorp
+
             mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
 
