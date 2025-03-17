@@ -6,7 +6,7 @@ import {
 } from "../common/defines.ts";
 
 export class NRSettingsChild extends JSWindowActorChild {
-  rpc;
+  rpc: ReturnType<typeof createBirpc> | null = null;
   constructor() {
     super();
   }
@@ -15,6 +15,7 @@ export class NRSettingsChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5183" ||
+      window?.location.port === "5186" ||
       window?.location.href.startsWith("chrome://")
     ) {
       console.debug("NRSettingsChild 5183 ! or Chrome Page!");

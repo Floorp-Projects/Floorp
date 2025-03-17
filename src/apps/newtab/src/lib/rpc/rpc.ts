@@ -1,6 +1,7 @@
 import { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
 import { createBirpc } from "birpc";
 
+// deno-lint-ignore no-explicit-any
 declare const Services: any;
 declare global {
   interface Window {
@@ -11,7 +12,7 @@ declare global {
   }
 }
 
-const isLocalhost5183 = import.meta.url?.includes("localhost:5183");
+const isLocalhost5186 = import.meta.url?.includes("localhost:5186");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -46,7 +47,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5183
+export const rpc = isLocalhost5186
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

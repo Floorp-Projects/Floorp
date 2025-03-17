@@ -30,21 +30,26 @@ export async function injectManifest(
 
   await ensureDir(`${binPath}/${dirName}`);
 
-  await Deno.writeTextFile(
-    `${binPath}/${dirName}/noraneko.manifest`,
-    `content noraneko content/ contentaccessible=yes
+  const baseManifestContent = `
+content noraneko content/ contentaccessible=yes
 content noraneko-startup startup/ contentaccessible=yes
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
-${
-      mode !== "dev"
-        ? `
+`;
+
+  const prodOnlyContent = `
 content noraneko-settings settings/ contentaccessible=yes
 content noraneko-modal-child modal-child/ contentaccessible=yes
 content noraneko-newtab newtab/ contentaccessible=yes
-`
-        : ""
-    }`,
+`;
+
+  const manifestContent = mode !== "dev"
+    ? `${baseManifestContent}${prodOnlyContent}`
+    : baseManifestContent;
+
+  await Deno.writeTextFile(
+    `${binPath}/${dirName}/noraneko.manifest`,
+    manifestContent,
   );
 
   const r = (v: string) => {

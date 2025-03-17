@@ -1,25 +1,52 @@
 import { useState } from "react";
+import { Grid } from "./components/Grid.tsx";
+import { TopSites } from "./components/TopSites/index.tsx";
+import { Clock } from "./components/Clock/index.tsx";
+import { Background } from "./components/Background/index.tsx";
+import { BackgroundProvider } from "./contexts/BackgroundContext.tsx";
+import { ComponentsProvider } from "./contexts/ComponentsContext.tsx";
+import { Settings } from "./components/Settings/index.tsx";
+import { SettingsButton } from "./components/SettingsButton/index.tsx";
 import "./globals.css";
+import { useComponents } from "./contexts/ComponentsContext.tsx";
 
-function App() {
-  const [count, setCount] = useState(0);
+function NewTabContent() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { components } = useComponents();
 
   return (
     <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <Background />
+      <div className="relative w-full min-h-screen p-8">
+        <Grid>
+          {components.topSites && (
+            <div className="grid-item col-span-2">
+              <TopSites />
+            </div>
+          )}
+          {components.clock && (
+            <div className="grid-item">
+              <Clock />
+            </div>
+          )}
+        </Grid>
+
+        <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+        <Settings
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ComponentsProvider>
+      <BackgroundProvider>
+        <NewTabContent />
+      </BackgroundProvider>
+    </ComponentsProvider>
+  );
+}
