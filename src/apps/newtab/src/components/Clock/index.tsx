@@ -15,24 +15,25 @@ export function Clock() {
   const minutes = time.getMinutes().toString().padStart(2, "0");
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-lg shadow-lg p-6 h-full flex flex-col items-center justify-center transition-all duration-200 hover:bg-white/80 dark:hover:bg-gray-700/80">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="text-5xl font-bold text-gray-800 dark:text-gray-100 tracking-widest">
-          <span className="inline-block w-[1.1em] text-center">{hours}</span>
-          <span className="animate-pulse">:</span>
-          <span className="inline-block w-[1.1em] text-center">{minutes}</span>
+    <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-3">
+      <div className="flex items-center gap-3">
+        <div className="text-2xl font-medium text-gray-900 dark:text-white tabular-nums tracking-wide">
+          {hours}
+          <span className="animate-pulse mx-0.5">:</span>
+          {minutes}
         </div>
-        <div className="text-base font-medium text-gray-600 dark:text-gray-300">
-          {time.toLocaleDateString(undefined, {
-            weekday: "long",
-          })}
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          {time.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+        <div className="flex flex-col text-right">
+          <div className="text-sm font-medium text-gray-800 dark:text-gray-200">
+            {time.toLocaleDateString(undefined, {
+              weekday: "short",
+            })}
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            {time.toLocaleDateString(undefined, {
+              month: "numeric",
+              day: "numeric",
+            })}
+          </div>
         </div>
       </div>
     </div>

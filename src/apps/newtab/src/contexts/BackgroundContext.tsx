@@ -12,8 +12,12 @@ export type BackgroundType = "none" | "random" | "custom";
 interface BackgroundContextType {
   type: BackgroundType;
   customImage: string | null;
+  fileName: string | null;
   setType: (type: BackgroundType) => Promise<void>;
-  setCustomImage: (image: string | null) => Promise<void>;
+  setCustomImage: (
+    image: string | null,
+    fileName: string | null,
+  ) => Promise<void>;
 }
 
 const BackgroundContext = createContext<BackgroundContextType | null>(null);
@@ -23,6 +27,7 @@ export function BackgroundProvider(
 ) {
   const [type, setType] = useState<BackgroundType>("none");
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -31,6 +36,7 @@ export function BackgroundProvider(
         const settings = await getNewTabSettings();
         setType(settings.background.type);
         setCustomImage(settings.background.customImage);
+        setFileName(settings.background.fileName);
       } catch (e) {
         console.error("Failed to load background settings:", e);
       } finally {
@@ -57,23 +63,28 @@ export function BackgroundProvider(
     }
   }, []);
 
-  const handleSetCustomImage = useCallback(async (image: string | null) => {
-    try {
-      const settings = await getNewTabSettings();
-      await saveNewTabSettings({
-        ...settings,
-        background: {
-          type: "custom",
-          customImage: image,
-        },
-      });
-      setType("custom");
-      setCustomImage(image);
-    } catch (e) {
-      console.error("Failed to save custom image:", e);
-      throw e;
-    }
-  }, []);
+  const handleSetCustomImage = useCallback(
+    async (image: string | null, newFileName: string | null) => {
+      try {
+        const settings = await getNewTabSettings();
+        await saveNewTabSettings({
+          ...settings,
+          background: {
+            type: "custom",
+            customImage: image,
+            fileName: newFileName,
+          },
+        });
+        setType("custom");
+        setCustomImage(image);
+        setFileName(newFileName);
+      } catch (e) {
+        console.error("Failed to save custom image:", e);
+        throw e;
+      }
+    },
+    [],
+  );
 
   if (!isInitialized) {
     return null;
@@ -84,6 +95,7 @@ export function BackgroundProvider(
       value={{
         type,
         customImage,
+        fileName,
         setType: handleSetType,
         setCustomImage: handleSetCustomImage,
       }}

@@ -16,7 +16,6 @@ export function Dashboard() {
   });
 
   useEffect(() => {
-    // ブラウザーの統計情報を取得・更新する
     const updateStats = async () => {
       try {
         const tabs = 123; // 仮の実装
@@ -35,60 +34,39 @@ export function Dashboard() {
     };
 
     updateStats();
-    const interval = setInterval(updateStats, 5000); // 5秒ごとに更新
-
+    const interval = setInterval(updateStats, 5000);
     return () => clearInterval(interval);
   }, []);
 
+  const stats_items = [
+    { label: "トラッカー", value: stats.trackerBlockCount, unit: "件" },
+    { label: "タブ", value: stats.tabCount, unit: "個" },
+    { label: "メモリ", value: stats.memoryUsage, unit: "MB" },
+    { label: "プライベート", value: stats.isPrivateMode ? "オン" : "オフ" },
+  ];
+
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-lg shadow-lg p-4">
-      <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-        ブラウザーの状態
-      </h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              ブロックされたトラッカー
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {stats.trackerBlockCount}
-            </span>
+    <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm">
+      <div className="grid grid-cols-2 gap-px bg-gray-200/20 dark:bg-gray-700/20 rounded-lg overflow-hidden">
+        {stats_items.map((item, index) => (
+          <div
+            key={index}
+            className="flex flex-col items-center bg-white/50 dark:bg-gray-800/50 p-3 hover:bg-white/60 dark:hover:bg-gray-700/60 transition-colors"
+          >
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {item.value}
+              {item.unit}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {item.label}
+            </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              開いているタブ
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {stats.tabCount}
-            </span>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              メモリ使用量
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {stats.memoryUsage} MB
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              プライベートモード
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {stats.isPrivateMode ? "オン" : "オフ"}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// トラッカーのブロック数を取得する関数
-// この実装はダミーで、実際にはブラウザーAPIを使用して取得する必要があります
 async function getTrackerCount(): Promise<number> {
-  return 0; // 仮の実装
+  return 0;
 }

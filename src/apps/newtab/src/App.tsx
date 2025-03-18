@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Grid } from "./components/Grid.tsx";
 import { TopSites } from "./components/TopSites/index.tsx";
 import { Clock } from "./components/Clock/index.tsx";
 import { Dashboard } from "./components/Dashboard/index.tsx";
@@ -18,24 +17,13 @@ function NewTabContent() {
   return (
     <>
       <Background />
-      <div className="relative w-full min-h-screen p-8">
-        <Grid>
-          {components.dashboard && (
-            <div className="col-span-full lg:col-span-2">
-              <Dashboard />
-            </div>
-          )}
-          {components.topSites && (
-            <div className="col-span-full lg:col-span-2 lg:row-start-2">
-              <TopSites />
-            </div>
-          )}
-          {components.clock && (
-            <div className="lg:row-span-2">
-              <Clock />
-            </div>
-          )}
-        </Grid>
+      <div className="relative w-full min-h-screen">
+        {components.topSites && <TopSites />}
+
+        <div className="fixed top-4 right-4 flex flex-col gap-4 max-w-sm">
+          {components.clock && <Clock />}
+          {components.dashboard && <Dashboard />}
+        </div>
 
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
         <Settings

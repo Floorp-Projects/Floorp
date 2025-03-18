@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "../Modal/index.tsx";
 import { useBackground } from "@/contexts/BackgroundContext.tsx";
 import { useComponents } from "@/contexts/ComponentsContext.tsx";
@@ -7,10 +7,23 @@ import { getBackgroundImageCount } from "@/utils/backgroundImages.ts";
 export function Settings(
   { isOpen, onClose }: { isOpen: boolean; onClose: () => void },
 ) {
-  const { type: backgroundType, setType: setBackgroundType, setCustomImage } =
-    useBackground();
+  const {
+    type: backgroundType,
+    fileName,
+    setType: setBackgroundType,
+    setCustomImage,
+  } = useBackground();
   const { components, toggleComponent } = useComponents();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentFileName, setCurrentFileName] = useState<string>("");
+
+  useEffect(() => {
+    if (backgroundType === "custom" && fileName) {
+      setCurrentFileName(fileName);
+    } else {
+      setCurrentFileName("");
+    }
+  }, [backgroundType, fileName]);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -26,7 +39,8 @@ export function Settings(
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      await setCustomImage(imageData);
+      await setCustomImage(imageData, file.name);
+      setCurrentFileName(file.name);
     } catch (error) {
       console.error("Failed to load image:", error);
     } finally {
@@ -38,7 +52,7 @@ export function Settings(
     setIsSubmitting(true);
     try {
       if (type === "none") {
-        await setCustomImage(null);
+        await setCustomImage(null, null);
       }
       await setBackgroundType(type);
     } catch (error) {
@@ -67,7 +81,7 @@ export function Settings(
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
               <span className="text-gray-700 dark:text-gray-200">
-                よく訪れるサイト
+                トップサイト
               </span>
             </label>
             <label className="flex items-center space-x-3">
@@ -141,6 +155,11 @@ export function Settings(
 
             {backgroundType === "custom" && (
               <div className="mt-4 pl-8">
+                {currentFileName && (
+                  <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                    現在の画像: {currentFileName}
+                  </div>
+                )}
                 <input
                   type="file"
                   accept="image/*"
@@ -152,7 +171,7 @@ export function Settings(
                     file:text-sm file:font-semibold
                     file:bg-primary/10 file:text-primary
                     hover:file:bg-primary/20
-                    cursor-pointer"
+                    file:cursor-pointer"
                 />
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   推奨: 1920x1080以上の画像
