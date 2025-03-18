@@ -2,7 +2,8 @@ import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
 
 export async function injectXHTML(binPath: string) {
-  const path_browserxhtml = `${binPath}/browser/chrome/browser/content/browser/browser.xhtml`;
+  const path_browserxhtml =
+    `${binPath}/browser/chrome/browser/content/browser/browser.xhtml`;
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_browserxhtml)).toString(),
@@ -13,23 +14,41 @@ export async function injectXHTML(binPath: string) {
       elem.remove();
     }
 
-    const script = document.createElement("script");
-    script.setAttribute("type", "module");
-    script.setAttribute(
-      "src",
-      "chrome://noraneko-startup/content/chrome_root.js",
-    );
-    script.setAttribute("async", "async");
+    const scriptConfigs = [
+      {
+        src: "chrome://noraneko-startup/content/chrome_root.js",
+      },
+      {
+        src: "chrome://noraneko-startup/content/override_newtab.js",
+      },
+    ];
+
+    const scripts = [];
+    for (const config of scriptConfigs) {
+      const script = document.createElement("script");
+      script.setAttribute("type", "module");
+      script.setAttribute("src", config.src);
+      script.setAttribute("async", "async");
+      script.dataset.geckomixin = "";
+
+      document.querySelector("head").appendChild(script);
+      scripts.push(script);
+    }
+
+    const [script, aboutSupportScript] = scripts;
+
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);
+    document.querySelector("head").appendChild(aboutSupportScript);
 
     await fs.writeFile(path_browserxhtml, document.toString());
   }
 }
 
 export async function injectXHTMLDev(binPath: string) {
-  const path_preferencesxhtml = `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.xhtml`;
+  const path_preferencesxhtml =
+    `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.xhtml`;
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_preferencesxhtml)).toString(),
