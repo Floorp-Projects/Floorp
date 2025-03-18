@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "lex.50.50.enar.s2t.bin",
+      "schema": 1741888152113,
+      "toLang": "ar",
+      "version": "2.0",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "ac28575c27b29839009c67ccadb3968c2bf15638dc077bbfe6b042b4e5506a6c",
+        "size": 3129264,
+        "filename": "lex.50.50.enar.s2t.bin",
+        "location": "main-workspace/translations-models/11dd101f-8baf-4c42-9e00-d7c5af722fdb.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "e07e1a99-b814-457e-a3ca-938d10d654fb",
+      "last_modified": 1741889766341
+    },
+    {
+      "name": "model.enar.intgemm.alphas.bin",
+      "schema": 1741888155908,
+      "toLang": "ar",
+      "version": "2.0",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "988c78be70a37ae8a63eb8e8ecbef5fc6854522a6f3275a08e2c693e261f8518",
+        "size": 42992955,
+        "filename": "model.enar.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/aa0e27b0-fd7f-46e9-b554-9f7a883005c7.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "d0129411-d7d3-40e0-b869-4e4f1bdf8324",
+      "last_modified": 1741889766338
+    },
+    {
+      "name": "vocab.enar.spm",
+      "schema": 1741887927636,
+      "toLang": "ar",
+      "version": "2.0",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "8d93c54aa5e2044c416ec680b5ff9af0227bd698521666e8b1a1ea1b041fbae8",
+        "size": 863591,
+        "filename": "vocab.enar.spm",
+        "location": "main-workspace/translations-models/0677b22b-4896-4ef0-bb61-1a0199c27a3d.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "env.appinfo.OS != 'Android' || env.channel != 'release'",
+      "id": "69d6fed6-8c00-44ad-a460-ab5023b49652",
+      "last_modified": 1741889766334
+    },
+    {
       "name": "vocab.enar.spm",
       "schema": 1741815053747,
       "toLang": "ar",
@@ -6259,5 +6313,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1741815180532
+  "timestamp": 1741889766341
 }
