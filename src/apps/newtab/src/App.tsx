@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TopSites } from "./components/TopSites/index.tsx";
 import { Clock } from "./components/Clock/index.tsx";
 import { Dashboard } from "./components/Dashboard/index.tsx";

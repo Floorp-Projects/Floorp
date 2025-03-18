@@ -9,7 +9,7 @@ export interface NewTabSettings {
   background: {
     type: "none" | "random" | "custom";
     customImage: string | null;
-    fileName: string | null; // ファイル名を保存するフィールドを追加
+    fileName: string | null;
   };
 }
 
@@ -20,9 +20,9 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     dashboard: true,
   },
   background: {
-    type: "none",
+    type: "random",
     customImage: null,
-    fileName: null, // デフォルト値を設定
+    fileName: null,
   },
 };
 
