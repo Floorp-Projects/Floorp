@@ -10,7 +10,7 @@ import { getNewTabSettings, saveNewTabSettings } from "../utils/dataManager.ts";
 interface ComponentsState {
   topSites: boolean;
   clock: boolean;
-  dashboard: boolean;
+  searchBar: boolean;
 }
 
 interface ComponentsContextType {
@@ -26,7 +26,7 @@ export function ComponentsProvider(
   const [components, setComponents] = useState<ComponentsState>({
     topSites: true,
     clock: true,
-    dashboard: true,
+    searchBar: true,
   });
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -34,7 +34,10 @@ export function ComponentsProvider(
     const loadSettings = async () => {
       try {
         const settings = await getNewTabSettings();
-        setComponents(settings.components);
+        setComponents({
+          ...components,
+          ...settings.components,
+        });
       } catch (e) {
         console.error("Failed to load component settings:", e);
       } finally {
@@ -49,7 +52,7 @@ export function ComponentsProvider(
       const settings = await getNewTabSettings();
       const newComponents = {
         ...settings.components,
-        [key]: !settings.components[key],
+        [key]: !settings.components[key as keyof typeof settings.components],
       };
 
       await saveNewTabSettings({
@@ -57,7 +60,7 @@ export function ComponentsProvider(
         components: newComponents,
       });
 
-      setComponents(newComponents);
+      setComponents(newComponents as ComponentsState);
     } catch (e) {
       console.error(`Failed to toggle ${key}:`, e);
     }

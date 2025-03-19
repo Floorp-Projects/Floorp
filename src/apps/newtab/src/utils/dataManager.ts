@@ -4,12 +4,15 @@ export interface NewTabSettings {
   components: {
     topSites: boolean;
     clock: boolean;
-    dashboard: boolean;
+    searchBar?: boolean;
   };
   background: {
     type: "none" | "random" | "custom";
     customImage: string | null;
     fileName: string | null;
+  };
+  searchBar: {
+    searchEngine: string;
   };
 }
 
@@ -17,12 +20,15 @@ const DEFAULT_SETTINGS: NewTabSettings = {
   components: {
     topSites: true,
     clock: true,
-    dashboard: true,
+    searchBar: true,
   },
   background: {
     type: "random",
     customImage: null,
     fileName: null,
+  },
+  searchBar: {
+    searchEngine: "default",
   },
 };
 
