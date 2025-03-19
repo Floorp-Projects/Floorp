@@ -1,6 +1,6 @@
 interface TopSite {
   url: string;
-  title: string;
+  label: string;
   favicon?: string;
 }
 
@@ -18,47 +18,10 @@ export class TopSitesManager {
 
   // deno-lint-ignore require-await
   async getTopSites(): Promise<TopSite[]> {
-    return [
-      {
-        url: "https://www.google.com",
-        title: "Google",
-        favicon: "https://www.google.com/favicon.ico",
-      },
-      {
-        url: "https://www.youtube.com",
-        title: "YouTube",
-        favicon: "https://www.youtube.com/favicon.ico",
-      },
-      {
-        url: "https://github.com",
-        title: "GitHub",
-        favicon: "https://github.com/favicon.ico",
-      },
-      {
-        url: "https://www.wikipedia.org",
-        title: "Wikipedia",
-        favicon: "https://www.wikipedia.org/favicon.ico",
-      },
-      {
-        url: "https://twitter.com",
-        title: "Twitter",
-        favicon: "https://twitter.com/favicon.ico",
-      },
-      {
-        url: "https://www.amazon.com",
-        title: "Amazon",
-        favicon: "https://www.amazon.com/favicon.ico",
-      },
-      {
-        url: "https://www.reddit.com",
-        title: "Reddit",
-        favicon: "https://www.reddit.com/favicon.ico",
-      },
-      {
-        url: "https://www.netflix.com",
-        title: "Netflix",
-        favicon: "https://www.netflix.com/favicon.ico",
-      },
-    ];
+    return new Promise<TopSite[]>((resolve) => {
+      window.GetCurrentTopSites((sites: string) => {
+        resolve(JSON.parse(sites).topsites as TopSite[]);
+      });
+    });
   }
 }

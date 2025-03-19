@@ -3,7 +3,8 @@ import { TopSitesManager } from "./dataManager.ts";
 
 interface TopSite {
   url: string;
-  title: string;
+  label?: string;
+  title?: string;
   favicon?: string;
 }
 
@@ -14,7 +15,7 @@ export function TopSites() {
     const loadTopSites = async () => {
       const manager = TopSitesManager.getInstance();
       const topSites = await manager.getTopSites();
-      setSites(topSites.slice(0, 8)); // 最大8サイトまで表示
+      setSites(topSites.slice(0, 8));
     };
 
     loadTopSites();
@@ -34,16 +35,18 @@ export function TopSites() {
                 ? (
                   <img
                     src={site.favicon}
-                    alt={site.title}
+                    alt={site.label}
                     className="w-6 h-6 object-contain"
                   />
                 )
                 : (
-                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-full" />
+                  <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    {(site.label || site.title || "?")[0]}
+                  </span>
                 )}
             </div>
             <span className="text-xs text-center text-gray-700 dark:text-gray-300 line-clamp-2 leading-tight">
-              {site.title}
+              {site.label || site.title}
             </span>
           </a>
         ))}
