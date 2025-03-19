@@ -2,6 +2,7 @@ import { resolve } from "pathe";
 import { build } from "vite";
 import packageJson from "../../package.json" with { type: "json" };
 import { $, usePwsh } from "zx";
+import process from "node:process";
 
 switch (process.platform) {
   case "win32":
@@ -9,7 +10,7 @@ switch (process.platform) {
 }
 
 const r = (value: string): string => {
-  return resolve(import.meta.dirname, "../..", value);
+  return resolve(import.meta.dirname as string, "../..", value);
 };
 
 async function launchBuild(mode: string, buildid2: string) {

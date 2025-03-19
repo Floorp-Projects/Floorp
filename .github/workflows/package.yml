@@ -491,7 +491,14 @@ jobs:
 
           await $`touch "${path_obj}/dist/floorp/precomplete"`
           const channelId = "${{ inputs.beta }}" === "true" ? "beta" : "release";
-          await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
+
+            if ("${{ inputs.platform }}" === "macOS-x64") {
+            const appFile = await $`find "${path_obj}/dist/floorp" -name "*.app" -type d | head -n 1`;
+            // Use the app path directly without $ character
+            await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar ${appFile.toString().trim()}`;
+          } else {
+            await $`MAR="${path_obj}/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${version_txt} MAR_CHANNEL_ID=${channelId} ./tools/update-packaging/make_full_update.sh ~/noraneko-mar/floorp-${{ env.OUTPUT_NAME }}-full.mar "${path_obj}/dist/floorp"`;
+          }
 
           await $`cp floorp/gecko/config/version.txt ~/noraneko-mar/noraneko_version.txt`
           await $`cp floorp/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt`
