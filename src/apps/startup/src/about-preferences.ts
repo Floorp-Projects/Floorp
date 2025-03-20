@@ -31,11 +31,11 @@ const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
       id="category-nora-link"
       class="category"
       align="center"
-      tooltiptext="Nora Settings Link"
+      tooltiptext="Floorp"
     >
-      <image class="category-icon" />
+      <image class="category-icon" src="chrome://branding/content/icon64.png" />
       <label class="category-name" flex="1">
-        Nora Settings Link
+        Floorp
       </label>
     </richlistitem>
   `);
@@ -50,8 +50,8 @@ document.querySelector("#category-nora-link").addEventListener("click", () => {
       "chrome://noraneko-settings/content/index.html",
       {
         relatedToCurrent: true,
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       },
     );
   }
