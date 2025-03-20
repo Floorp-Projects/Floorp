@@ -2,6 +2,7 @@ interface TopSite {
   url: string;
   label: string;
   favicon?: string;
+  smallFavicon?: string | null;
 }
 
 export class TopSitesManager {
@@ -19,9 +20,43 @@ export class TopSitesManager {
   // deno-lint-ignore require-await
   async getTopSites(): Promise<TopSite[]> {
     return new Promise<TopSite[]>((resolve) => {
-      window.GetCurrentTopSites((sites: string) => {
-        resolve(JSON.parse(sites).topsites as TopSite[]);
+      globalThis.GetCurrentTopSites((sites: string) => {
+        resolve(
+          JSON.parse(sites).topsites.map((site: TopSite) => ({
+            ...site,
+            smallFavicon: site.smallFavicon || "",
+          })) as TopSite[],
+        );
       });
     });
+  }
+
+  saveUserAddedSites(sites: TopSite[]): void {
+    try {
+      const sanitizedSites = sites.map((site) => ({
+        ...site,
+        label: site.label || "",
+        smallFavicon: site.smallFavicon || "",
+      }));
+      localStorage.setItem("userAddedTopSites", JSON.stringify(sanitizedSites));
+    } catch (error) {
+      console.error("Failed to save user-added top sites:", error);
+    }
+  }
+
+  getUserAddedSites(): TopSite[] {
+    try {
+      const sites = localStorage.getItem("userAddedTopSites");
+      return sites
+        ? JSON.parse(sites).map((site: TopSite) => ({
+          ...site,
+          label: site.label || "",
+          smallFavicon: site.smallFavicon || "",
+        }))
+        : [];
+    } catch (error) {
+      console.error("Failed to retrieve user-added top sites:", error);
+      return [];
+    }
   }
 }

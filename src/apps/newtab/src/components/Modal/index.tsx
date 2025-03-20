@@ -31,23 +31,21 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
 
   return (
     <div
+      className="modal modal-open"
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h2>
+      <div className="modal-box">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-lg">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+            className="btn btn-sm btn-circle btn-ghost"
           >
             <span className="sr-only">閉じる</span>
             <svg
-              className="h-6 w-6"
+              className="h-5 w-5"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -59,8 +57,11 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
             </svg>
           </button>
         </div>
-        <div className="p-6">
+        <div className="py-4">
           {children}
+        </div>
+        <div className="modal-action">
+          <button onClick={onClose} className="btn">閉じる</button>
         </div>
       </div>
     </div>
