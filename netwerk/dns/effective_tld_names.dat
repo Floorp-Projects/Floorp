@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-03-17_11-12-32_UTC
-// COMMIT: 7b9b3a0dff84cff9da97d8cab1b67ecc37e6f88d
+// VERSION: 2025-03-18_07-22-26_UTC
+// COMMIT: 2c960dac3d39ba521eb5db9da192968f5be0aded
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -12681,6 +12681,7 @@ ondigitalocean.app
 // DigitalPlat : https://www.digitalplat.org/
 // Submitted by Edward Hsing <contact@digitalplat.org>
 us.kg
+dpdns.org
 
 // Discord Inc : https://discord.com
 // Submitted by Sahn Lam <slam@discordapp.com>
@@ -15574,10 +15575,6 @@ now.sh
 // VeryPositive SIA : http://very.lv
 // Submitted by Danko Aleksejevs <danko@very.lv>
 2038.io
-
-// Viprinet Europe GmbH : http://www.viprinet.com
-// Submitted by Simon Kissel <hostmaster@viprinet.com>
-router.management
 
 // Virtual-Info : https://www.virtual-info.info/
 // Submitted by Adnan RIHAN <hostmaster@v-info.info>
