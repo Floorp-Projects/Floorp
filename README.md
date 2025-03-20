@@ -165,37 +165,29 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 🧰 How to Start Development
 
-1. Run `pnpm install`
-
-You can run `pnpm build` and `pnpm dev`.
-`pnpm build` outputs files, while `pnpm dev` is used for debugging the code with file watch.
-Refer to "How to Debug" for instructions on using `pnpm dev`.
-
-### 🧰 How to Debug
-
 #### Windows
 
-1. Install `gh cli` from [https://cli.github.com/]
-2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
-3. Go to latest successful build and check the id in url.
-   It is run_id and is number.
-   the `Release` version is recommended.
-4. Run `gh run download -R nyanrus/noraneko-runtime -n noraneko-win-amd64-dev [run_id]`
-5. Run `pnpm dev`.
-6. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Install `Power Shell 7` from any source. recommended [Winget](https://winget.run/pkg/Microsoft/PowerShell)
+3. Clone repository and run `deno install` in the root directory.
+4. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
+5. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
    If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 #### GNU/Linux
 
-1. Install `gh cli` from [https://cli.github.com/] and `lbzip2` from your package manager.
-2. Visit [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_linux_build.yml).
-3. Go to latest successful build and check the id in url.
-   It is run_id and is number.
-4. Run `gh run download -R nyanrus/noraneko-runtime -n noraneko-linux-amd64-dev [run_id]`
-5. Run `mkdir -p _dist/bin`
-6. Run `tar --strip-components=1 -xvf ./noraneko-*.tar.bz2 -C _dist/bin`
-7. Run `pnpm dev`
-8. The browser will launch, and if you change some files, you could rerun `pnpm dev`.
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Clone repository and run `deno install` in the root directory.
+3. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
+4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
+   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
+
+#### macOS
+
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Clone repository and run `deno install` in the root directory.
+3. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
+4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
    If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
 
 ### 🐛 Reporting Bugs
@@ -216,7 +208,7 @@ Please note that while some of the software listed below is not included in Floo
 - [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
 - Authors: [Mozilla & Contributors](https://www.mozilla.org/credits/)
 
-### 🐈 NyanRus Noraneko
+### 🐈 NyanRus Noraneko (Testhead of Floorp 12)
 
 - [Noraneko](https://github.com/nyanrus/noraneko-runtime)
 - [Mozilla Public License 2.0](https://github.com/nyanrus/noraneko-runtime/blob/main/LICENSE)
@@ -241,14 +233,6 @@ Notice: if you are a developer of "userChromeCSS Loader", please contact us so t
 - [Paxmod](https://github.com/numirias/paxmod)
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
-
-Notice: Paxmod is used as reference material and for the multi-level tab implementation of vertical tabs.
-
-### 📦 showdown
-
-- [showdown](https://github.com/showdownjs/showdown)
-- [MIT](https://github.com/showdownjs/showdown/blob/master/LICENSE)
-- Author: [SyntaxRules](https://github.com/SyntaxRules)
 
 Notice: If you are a developer of "showdown" and your name is not listed, please contact us so that we can add your name and website to the list.
 
