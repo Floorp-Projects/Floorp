@@ -205,7 +205,7 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-startpage/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-newtab/*"],
   },
 };
 

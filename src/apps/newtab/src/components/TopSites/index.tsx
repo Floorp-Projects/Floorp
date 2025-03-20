@@ -6,6 +6,8 @@ interface TopSite {
   label?: string;
   title?: string;
   favicon?: string;
+  tippyTopIcon?: string;
+  smallFavicon: string;
 }
 
 export function TopSites() {
@@ -35,6 +37,14 @@ export function TopSites() {
                 ? (
                   <img
                     src={site.favicon}
+                    alt={site.label}
+                    className="w-6 h-6 object-contain"
+                  />
+                )
+                : site.smallFavicon
+                ? (
+                  <img
+                    src={site.smallFavicon}
                     alt={site.label}
                     className="w-6 h-6 object-contain"
                   />
