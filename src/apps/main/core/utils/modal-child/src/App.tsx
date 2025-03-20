@@ -14,6 +14,8 @@ declare global {
   var buildFormFromConfig: (config: TForm) => void;
   // deno-lint-ignore no-var
   var sendForm: (data: FormValues | null) => void;
+  // deno-lint-ignore no-var
+  var removeForm: () => void;
 }
 
 interface FormFieldProps {
@@ -299,6 +301,10 @@ function App() {
 
   globalThis.buildFormFromConfig = (config: TForm) => {
     setFormConfig(config);
+  };
+
+  globalThis.removeForm = () => {
+    setFormConfig(null);
   };
 
   return (

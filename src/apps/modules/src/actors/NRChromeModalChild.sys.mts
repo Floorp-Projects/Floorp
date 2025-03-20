@@ -32,7 +32,13 @@ export class NRChromeModalChild extends JSWindowActorChild {
         if (originalSendForm) {
           return originalSendForm.call(win, data);
         }
+        this.removeContent(win);
+        return null;
       };
     });
+  }
+
+  private removeContent(win: Window) {
+    win.removeForm();
   }
 }
