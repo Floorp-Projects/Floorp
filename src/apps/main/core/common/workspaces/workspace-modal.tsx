@@ -62,7 +62,6 @@ export class WorkspaceManageModal {
           value: workspace.name,
           required: true,
           placeholder: "Enter a name for this workspace",
-          classList: "form-control input input-bordered w-full",
         },
         {
           id: "icon",
@@ -75,7 +74,6 @@ export class WorkspaceManageModal {
             label: iconName,
             icon: this.iconCtx.getWorkspaceIconUrl(iconName),
           })),
-          classList: "form-control select select-bordered w-full",
         },
         {
           id: "userContextId",
@@ -91,7 +89,6 @@ export class WorkspaceManageModal {
               icon: "",
             })),
           ],
-          classList: "form-control select select-bordered w-full",
         },
       ],
       title: "Edit Workspace",

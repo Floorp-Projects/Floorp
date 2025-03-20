@@ -7,7 +7,7 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
 import { ModalManager } from "./modalManager.tsx";
 import { ModalElement } from "./modalElement.tsx";
 import type { ModalSize } from "./data/data.ts";
-import { TForm, TFormResult } from "./utils/type";
+import { TForm, TFormResult } from "./utils/type.ts";
 
 @noraComponent(import.meta.hot)
 export default class ModalParent extends NoraComponentBase {
@@ -39,11 +39,11 @@ export default class ModalParent extends NoraComponentBase {
       throw new Error("ModalManager not initialized. Call init() first.");
     }
     const result = await this.modalManager.show(forms, options);
-    console.log("showNoraModal result", result);
     callback(result as TFormResult);
+    this.modalManager.hide();
   }
 
-  public async hideNoraModal(): Promise<void> {
+  public hideNoraModal(): void {
     if (!this.modalManager) {
       throw new Error("ModalManager not initialized. Call init() first.");
     }

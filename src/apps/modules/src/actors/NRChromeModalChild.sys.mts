@@ -26,10 +26,13 @@ export class NRChromeModalChild extends JSWindowActorChild {
 
   private waitForUserInput(win: Window): Promise<Record<string, unknown>> {
     return new Promise((resolve) => {
-      win.document.addEventListener("form-submit", (event: CustomEvent) => {
-        console.log("NRChromeModalChild form-submit", event.detail);
-        resolve(event.detail);
-      }, { once: true });
+      const originalSendForm = win.sendForm;
+      win.sendForm = (data: Record<string, unknown>) => {
+        resolve(data);
+        if (originalSendForm) {
+          return originalSendForm.call(win, data);
+        }
+      };
     });
   }
 }

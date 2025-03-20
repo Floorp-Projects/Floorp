@@ -55,7 +55,6 @@ export class ModalManager {
           "NRChromeModal:show",
           form,
         ).then((response: TFormResult) => {
-          console.log("NRChromeModal:show response", response);
           resolve(response);
         });
       });

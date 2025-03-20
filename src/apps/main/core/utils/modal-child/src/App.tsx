@@ -10,7 +10,10 @@ interface FormValues {
 }
 
 declare global {
+  // deno-lint-ignore no-var
   var buildFormFromConfig: (config: TForm) => void;
+  // deno-lint-ignore no-var
+  var sendForm: (data: FormValues) => void;
 }
 
 interface FormFieldProps {
@@ -187,12 +190,7 @@ function App() {
   const [formConfig, setFormConfig] = useState<TForm | null>(null);
 
   const onSubmit = (data: FormValues) => {
-    console.log("Form submitted", data);
-    globalThis.dispatchEvent(
-      new CustomEvent("form-submit", {
-        detail: data,
-      }),
-    );
+    globalThis.sendForm(data);
   };
 
   useEffect(() => {

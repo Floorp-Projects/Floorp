@@ -159,11 +159,6 @@ const JS_WINDOW_ACTORS: {
     matches: ["https://*/*", "http://*/*"],
   },
   NRChromeModal: {
-    parent: {
-      esModuleURI: localPathToResourceURI(
-        "../actors/NRChromeModalParent.sys.mts",
-      ),
-    },
     child: {
       esModuleURI: localPathToResourceURI(
         "../actors/NRChromeModalChild.sys.mts",

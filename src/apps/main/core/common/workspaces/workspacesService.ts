@@ -112,7 +112,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
     const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
-    console.log(result);
+    console.log("Workspace Modal:", result);
     return result;
   }
 
