@@ -32,6 +32,12 @@
 // Add-on signing Certificates
 #include "addons-public.inc"
 #include "addons-public-intermediate.inc"
+#include "addons-public-2018-intermediate.inc"
+const mozilla::Span<const uint8_t> addonsPublicIntermediates[] = {
+    mozilla::Span(addonsPublicIntermediate, sizeof(addonsPublicIntermediate)),
+    mozilla::Span(addonsPublic2018Intermediate,
+                  sizeof(addonsPublic2018Intermediate)),
+};
 #include "addons-stage.inc"
 #include "addons-stage-intermediate.inc"
 // Content signature root certificates
@@ -90,12 +96,15 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
   // The intermediate bundled with signed XPI files may have expired and be
   // considered invalid, which can result in bug 1548973.
   if (trustedRoot == nsIX509CertDB::AddonsPublicRoot) {
-    mAddonsIntermediate = {addonsPublicIntermediate};
+    mAddonsIntermediates.AppendElements(
+        addonsPublicIntermediates, MOZ_ARRAY_LENGTH(addonsPublicIntermediates));
   }
   // Similarly to the above logic for production, we hardcode the intermediate
   // stage certificate here, so that stage is equivalent to production.
   if (trustedRoot == nsIX509CertDB::AddonsStageRoot) {
-    mAddonsIntermediate = {addonsStageIntermediate};
+    Span<const uint8_t> addonsStageIntermediateSpan = {
+        addonsStageIntermediate, sizeof(addonsStageIntermediate)};
+    mAddonsIntermediates.AppendElement(std::move(addonsStageIntermediateSpan));
   }
 
   return NS_OK;
@@ -118,10 +127,10 @@ pkix::Result AppTrustDomain::FindIssuer(Input encodedIssuerName,
     return rv;
   }
   candidates.AppendElement(std::move(rootInput));
-  if (!mAddonsIntermediate.IsEmpty()) {
+  for (const auto& intermediate : mAddonsIntermediates) {
     Input intermediateInput;
-    rv = intermediateInput.Init(mAddonsIntermediate.Elements(),
-                                mAddonsIntermediate.Length());
+    pkix::Result rv =
+        intermediateInput.Init(intermediate.Elements(), intermediate.Length());
     // Again, this should never fail for the same reason as above.
     if (rv != Success) {
       return rv;
