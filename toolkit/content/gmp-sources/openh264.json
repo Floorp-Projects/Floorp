@@ -1,54 +1,54 @@
 {
   "hashFunction": "sha512",
-  "name": "OpenH264-2.3.2",
+  "name": "OpenH264-2.6.0",
   "schema_version": 1000,
   "vendors": {
     "gmp-gmpopenh264": {
       "platforms": {
         "Darwin_aarch64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-aarch64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 477938,
-          "hashValue": "391efb184373d533713a9e99a9e63c3bbaf614e8d8bdfdd84d4d5e53b9a737e75032187309dd00e58b58bb1033ab68d199f994744f6add57dd08f5fbb654d2f3"
+          "filesize": 475261,
+          "hashValue": "d69514fa5a04483674b9d5a9c2ab0c1736db6363f1afc83bad4e54f0c155949e34cdf9746e07f9d855b3fcad16da8b9e8d79b2707fa1ae1e9aaeaaab620d1026"
         },
         "Darwin_x86_64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 552074,
-          "hashValue": "c649bfa20c48406ccbae1917d7478773cd5250ef995828b58cc56cc4db0a3c7ce3f89eb187bd1b3d26cda0e5e65322b710cfd66a2953adeea0e4361c51488add"
+          "filesize": 558324,
+          "hashValue": "a7ede806e842b153bc78d73834fb73bece4db09421850e4fddcbde420b9885012819534cee4a0f3d3e9633d0bc1e066f6d8362030f04b96fd661aa6283dae32d"
         },
         "Linux_aarch64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-aarch64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 537296,
-          "hashValue": "eab3fca253c10739c4930bdaf83ca7a9a0a3580937e0e945dde3a45bcdb39b6240ae0d7133ebfb10029442322f4ce6e8647917d15afea601351dc8a5f0dbf3ec"
+          "filesize": 533329,
+          "hashValue": "d2a6596f61d5efa0d206675dae99da3985ff96b4cbc6bdee86e9f9b082f25a356750fbc269a07eedcf0f9501bfcaba11938d8aac6134f5c69d5f675e2c4f3551"
         },
         "Linux_x86-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 623151,
-          "hashValue": "d80508260c6419acc09c9fde539b18e9231899786df549bc8c86e564d1fb8c500327adb96bba204a386326dd5213ae907108c9ca4fc64ae385fbb2291e0e8cc5"
+          "filesize": 628016,
+          "hashValue": "05f8f333b50d37c75c4cb9d2dfd1997fd687e9ec3a772a4535b0aabbfbe97a01bfa9b6b666d1065bb47d0cd127822d4aa2edd3f5c2d2079a3b6128e33072d034"
         },
         "Linux_x86_64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 583674,
-          "hashValue": "53a58bfb4c8124ad4f7655b99bfdea290033a085e0796b19245b33b91c0948fdac9f0c3e817130b352493a65d9a7a0fc8a7c1eedc618cdaa2b4580734a11cd9c"
+          "filesize": 589006,
+          "hashValue": "f5246bf14d038adf4ce0c4360262ab722bc3de4220f047c3d542b4c564074b4877dc8659e3125c5171c749e7ce93f20cc63777eb5e1539e960670cbc5f30ac85"
         },
         "Linux_x86_64-gcc3-asan": {
           "alias": "Linux_x86_64-gcc3"
         },
         "WINNT_aarch64-msvc-aarch64": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 412806,
-          "hashValue": "cc3306873d6ad8ea6a27096c8ce75831463633a530d8f1794ae3eba3efd4a572459b6b0f3ac73f46552a7d6c7a29b152e299d862a2f76420eee07d1d39979182"
+          "filesize": 430834,
+          "hashValue": "6d7e6a41204063ccf7aee78d23b780cdd0d745040594af94234dd09969b6bc219e9d5c4e69235ed04f1ca5532711bed2bca744b1c0565ffc626bf8ed6e691368"
         },
         "WINNT_x86-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 472465,
-          "hashValue": "b5c8290bbee9503b6f9d2fcc3cbcf94f9b2d4e8ee143e37cfc8c68de593c8189aecfe447b811accecdb564c8788bd05e116f4eda62ac29b3c6b8a6fa5f564ee0"
+          "filesize": 490937,
+          "hashValue": "a7ffc522c12fd8d5c0659f07e87f11246ae9bc4edcc0cf89b980ed9bff4739d543a1f32f4b6e224a93f6b8faa8696b26fc678d6d3e8ce1b316f9d653549e03c7"
         },
         "WINNT_x86-msvc-x64": {
           "alias": "WINNT_x86-msvc"
@@ -57,10 +57,10 @@
           "alias": "WINNT_x86-msvc"
         },
         "WINNT_x86_64-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-652bdb7719f30b52b08e506645a7322ff1b2cc6f.zip",
           "mirrorUrls": [],
-          "filesize": 491284,
-          "hashValue": "b667086ed49579592d435df2b486fe30ba1b62ddd169f19e700cd079239747dd3e20058c285fa9c10a533e34f22b5198ed9b1f92ae560a3067f3e3feacc724f1"
+          "filesize": 514215,
+          "hashValue": "77991110c1d195616e936d27151d02e4d957be6c20a4f3b3511567868b5ddffc6abbfdc668d17672f5d681f12b20237c7905f9b0daaa6d71dcdac4b38f2448b2"
         },
         "WINNT_x86_64-msvc-x64": {
           "alias": "WINNT_x86_64-msvc"
@@ -69,7 +69,7 @@
           "alias": "WINNT_x86_64-msvc"
         }
       },
-      "version": "2.3.2"
+      "version": "2.6.0"
     }
   }
 }
