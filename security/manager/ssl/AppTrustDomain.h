@@ -83,7 +83,7 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
 
  private:
   Span<const uint8_t> mTrustedRoot;
-  Span<const uint8_t> mAddonsIntermediate;
+  nsTArray<Span<const uint8_t>> mAddonsIntermediates;
   nsTArray<Span<const uint8_t>> mIntermediates;
   nsCOMPtr<nsICertStorage> mCertBlocklist;
 };
