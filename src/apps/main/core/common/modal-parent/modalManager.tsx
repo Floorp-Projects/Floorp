@@ -30,7 +30,7 @@ export class ModalManager {
   public async show(
     form: TForm,
     options: { width: number; height: number },
-  ): Promise<TFormResult | undefined> {
+  ): Promise<TFormResult | null | undefined> {
     const container = document?.getElementById(
       "modal-parent-container",
     ) as XULElement;
@@ -54,7 +54,7 @@ export class ModalManager {
         actor.sendQuery(
           "NRChromeModal:show",
           form,
-        ).then((response: TFormResult) => {
+        ).then((response: TFormResult | null) => {
           resolve(response);
         });
       });

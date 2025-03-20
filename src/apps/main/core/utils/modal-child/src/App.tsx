@@ -1,5 +1,5 @@
 import { Control, Controller, FormProvider, useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type {
   TForm,
   TFormItem,
@@ -13,7 +13,7 @@ declare global {
   // deno-lint-ignore no-var
   var buildFormFromConfig: (config: TForm) => void;
   // deno-lint-ignore no-var
-  var sendForm: (data: FormValues) => void;
+  var sendForm: (data: FormValues | null) => void;
 }
 
 interface FormFieldProps {
@@ -22,6 +22,40 @@ interface FormFieldProps {
 }
 
 const FormField = ({ item, control }: FormFieldProps) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  useLayoutEffect(() => {
+    if (dropdownOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const dropdownMaxHeight = 240;
+      const availableBelow = window.innerHeight - rect.bottom;
+      let offset = 0;
+      if (availableBelow < dropdownMaxHeight) {
+        offset = availableBelow - dropdownMaxHeight;
+      }
+      setDropdownStyle({ marginTop: offset });
+    } else {
+      setDropdownStyle({});
+    }
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    if (item.type !== "dropdown" || !dropdownOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [dropdownOpen, item.type]);
+
   switch (item.type) {
     case "text":
     case "number":
@@ -80,7 +114,6 @@ const FormField = ({ item, control }: FormFieldProps) => {
       );
 
     case "select":
-    case "dropdown":
       return (
         <div className="mb-4 w-full">
           {item.label && (
@@ -106,6 +139,62 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   </option>
                 ))}
               </select>
+            )}
+          />
+        </div>
+      );
+
+    case "dropdown":
+      return (
+        <div className="mb-4 w-full" ref={dropdownRef}>
+          {item.label && (
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
+            </label>
+          )}
+          <Controller
+            key={`${item.id}-${String(item.value)}`}
+            name={item.id}
+            control={control}
+            defaultValue={String(item.value)}
+            rules={{ required: item.required }}
+            render={({ field: { onChange, value } }) => (
+              <div className="relative">
+                <button
+                  type="button"
+                  className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
+                    item.classList || ""
+                  }`}
+                  onClick={() => setDropdownOpen(true)}
+                >
+                  {item.options?.find((opt) => opt.value === value)?.label ||
+                    value}
+                </button>
+                {dropdownOpen && (
+                  <ul
+                    style={dropdownStyle}
+                    className="absolute z-10 w-full bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {item.options?.map(
+                      (opt) => (
+                        <li
+                          key={opt.value}
+                          className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                          onClick={() => {
+                            onChange(opt.value);
+                            setDropdownOpen(false);
+                          }}
+                        >
+                          {opt.icon
+                            ? <img src={opt.icon} className="w-4 h-4 mr-2" />
+                            : null}
+                          <span>{opt.label}</span>
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                )}
+              </div>
             )}
           />
         </div>
@@ -193,6 +282,10 @@ function App() {
     globalThis.sendForm(data);
   };
 
+  const handleCancel = () => {
+    globalThis.sendForm(null);
+  };
+
   useEffect(() => {
     const handler = (e: Event) => {
       if (e instanceof CustomEvent) {
@@ -236,6 +329,7 @@ function App() {
                 {formConfig.cancelLabel && (
                   <button
                     type="button"
+                    onClick={handleCancel}
                     className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-[#42414D] hover:bg-gray-300 dark:hover:bg-[#53525C] rounded-md transition duration-150 ease-in-out"
                   >
                     {formConfig.cancelLabel}

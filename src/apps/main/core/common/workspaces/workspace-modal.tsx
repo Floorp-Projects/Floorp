@@ -64,20 +64,8 @@ export class WorkspaceManageModal {
           placeholder: "Enter a name for this workspace",
         },
         {
-          id: "icon",
-          type: "select",
-          label: "Icon",
-          value: workspace.icon || "tab",
-          required: true,
-          options: this.iconCtx.workspaceIconsArray.map((iconName) => ({
-            value: iconName,
-            label: iconName,
-            icon: this.iconCtx.getWorkspaceIconUrl(iconName),
-          })),
-        },
-        {
           id: "userContextId",
-          type: "select",
+          type: "dropdown",
           label: "Container",
           value: workspace.userContextId?.toString() || "0",
           required: true,
@@ -90,6 +78,18 @@ export class WorkspaceManageModal {
             })),
           ],
         },
+        {
+          id: "icon",
+          type: "dropdown",
+          label: "Icon",
+          value: workspace.icon || "article",
+          required: true,
+          options: this.iconCtx.workspaceIconsArray.map((iconName) => ({
+            value: iconName,
+            label: iconName,
+            icon: this.iconCtx.getWorkspaceIconUrl(iconName),
+          })),
+        },
       ],
       title: "Edit Workspace",
       submitLabel: "Save Changes",
@@ -99,7 +99,7 @@ export class WorkspaceManageModal {
 
   public async showWorkspacesModal(
     workspaceID: TWorkspaceID | null,
-  ): Promise<TFormResult> {
+  ): Promise<TFormResult | null> {
     const workspace = this.ctx.getRawWorkspace(
       workspaceID ?? this.ctx.getSelectedWorkspaceID(),
     );
@@ -108,7 +108,7 @@ export class WorkspaceManageModal {
       this.modalParent.showNoraModal(formConfig, {
         width: 540,
         height: 460,
-      }, (result: TFormResult) => resolve(result));
+      }, (result: TFormResult | null) => resolve(result));
     });
   }
 }

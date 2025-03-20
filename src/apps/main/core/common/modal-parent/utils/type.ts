@@ -18,6 +18,7 @@ export interface TFormItem {
   options?: Array<{
     label: string;
     value: string;
+    icon?: string;
   }>;
 }
 
