@@ -30,7 +30,5 @@ export interface TForm {
 }
 
 export interface TFormResult {
-  success: boolean;
-  error?: string;
-  data: { [key: string]: string | number };
+  [key: string]: string | number;
 }

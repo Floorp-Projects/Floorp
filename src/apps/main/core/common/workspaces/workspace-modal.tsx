@@ -82,7 +82,7 @@ export class WorkspaceManageModal {
           id: "icon",
           type: "dropdown",
           label: "Icon",
-          value: workspace.icon || "article",
+          value: workspace.icon || "fingerprint",
           required: true,
           options: this.iconCtx.workspaceIconsArray.map((iconName) => ({
             value: iconName,

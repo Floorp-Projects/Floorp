@@ -55,6 +55,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   getDefaultWorkspaceID(): TWorkspaceID {
     return this.dataManagerCtx.getDefaultWorkspaceID();
   }
+  // for override
+  getCurrentWorkspaceUserContextId(): number {
+    const id = this.getSelectedWorkspaceID();
+    return this.getRawWorkspace(id).userContextId ?? 0;
+  }
 
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
@@ -112,7 +117,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
     const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
-    console.log("Workspace Modal:", result);
+    if (result === null) return;
+    const { name, icon, userContextId } = result;
+    const workspace = this.getRawWorkspace(targetWorkspaceID);
+    const newWorkspace: TWorkspace = {
+      ...workspace,
+      name: name as string,
+      icon: icon as string,
+      userContextId: Number(userContextId),
+    };
+    setWorkspacesDataStore("data", (prev) => {
+      const temp = new Map(prev);
+      temp.set(targetWorkspaceID, newWorkspace);
+      return temp;
+    });
+    this.tabManagerCtx.updateTabsVisibility();
     return result;
   }
 

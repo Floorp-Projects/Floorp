@@ -16,8 +16,8 @@ export const overrides = [
     } = {}) => {
       const werePassedURL = !!url;
       url ??= window.BROWSER_NEW_TAB_URL;
-      const searchClipboard =
-        window.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
+      const searchClipboard = window.gMiddleClickNewTabUsesPasteboard &&
+        event?.button === 1;
 
       let relatedToCurrent = false;
       let where = "tab";
@@ -62,6 +62,7 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = Workspaces.ctx!;
+      console.log(gWorkspacesServices.getCurrentWorkspaceUserContextId());
 
       Services.obs.notifyObservers(
         {
@@ -70,13 +71,14 @@ export const overrides = [
             const options: any = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
-              userContextId:
-                gWorkspacesServices.getCurrentWorkspaceUserContextId,
+              userContextId: gWorkspacesServices
+                .getCurrentWorkspaceUserContextId(),
             };
             if (!werePassedURL && searchClipboard) {
               let clipboard = window.readFromClipboard();
-              clipboard =
-                window.UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
+              clipboard = window.UrlbarUtils.stripUnsafeProtocolOnPaste(
+                clipboard,
+              ).trim();
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;
