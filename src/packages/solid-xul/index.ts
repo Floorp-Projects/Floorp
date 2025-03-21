@@ -5,7 +5,7 @@ import type { ViteHotContext } from "vite/types/hot.js";
 import { z } from "zod";
 
 // Import the JSX definitions
-import "./jsx-runtime";
+import "./jsx-runtime.ts";
 
 //TODO: test required
 const eventListener = z
