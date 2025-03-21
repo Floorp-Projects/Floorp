@@ -12,6 +12,9 @@ export type Manifest = {
   start_url: string;
   icon: string;
   scope?: string;
+  display?: string;
+  theme_color?: string;
+  background_color?: string;
 };
 
 export type Icon = {

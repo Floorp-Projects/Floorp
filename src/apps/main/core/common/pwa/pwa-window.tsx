@@ -13,6 +13,11 @@ import type { PwaService } from "./pwaService";
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
 
+  private async getSsb() {
+    const [ssbId] = this.ssbId;
+    return ssbId ? await this.pwaService.getSsbObj(ssbId() as string) : null;
+  }
+
   constructor(private pwaService: PwaService) {
     const uri = window.arguments?.[0];
     if (!uri?.endsWith("?FloorpEnableSSBWindow=true")) {
@@ -21,9 +26,13 @@ export class PwaWindowSupport {
 
     this.initializeWindow();
     this.setupSignals();
-    this.renderStyles();
-    this.setupPageActions();
-    this.setupTabs();
+    this.initBrowser();
+  }
+
+  private async initBrowser() {
+    await this.renderStyles();
+    await this.setupPageActions();
+    await this.setupTabs();
   }
 
   private initializeWindow(): void {
