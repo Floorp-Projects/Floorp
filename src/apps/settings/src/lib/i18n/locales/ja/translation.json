@@ -167,7 +167,7 @@
     "about": {
         "aboutBrowser": "{{productName}} について",
         "releaseNotes": "リリースノートと詳細情報",
-        "browserVersion": "{{productName}} バージョン: {{browserVersion}} Firefox バージョン: {{firefoxVersion}} {{isOfficialBuild}}",
+        "browserVersion": "{{productName}} バージョン: {{browserVersion}} Firefox バージョン: {{firefoxVersion}}",
         "isOfficialBuild": "(Official Build)",
         "browserDescription": "{{productName}} は日本国内で開発されたブラウザの1つです。ウェブをより良くするために、Firefox をベースに Ablaze の下で開発されています。",
         "browser": "{{productName}}",
