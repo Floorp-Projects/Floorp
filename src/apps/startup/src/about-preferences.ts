@@ -26,6 +26,7 @@ type MozXULElement = {
   parseXULToFragment(str: string, entities?: Array<string>): DocumentFragment;
 };
 const nav_root = document.querySelector("#categories");
+const before_fragment = document.querySelector("#category-sync");
 const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
     <richlistitem
       id="category-nora-link"
@@ -39,7 +40,7 @@ const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
       </label>
     </richlistitem>
   `);
-nav_root.appendChild(fragment);
+nav_root.insertBefore(fragment, before_fragment);
 document.querySelector("#category-nora-link").addEventListener("click", () => {
   if (import.meta.env.MODE === "dev") {
     window.location.href = "http://localhost:5183/";
