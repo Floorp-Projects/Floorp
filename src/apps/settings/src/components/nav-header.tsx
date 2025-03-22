@@ -15,7 +15,7 @@ export function NavHeader() {
           </div>
           <div className="text-sm">
             <span className="truncate font-semibold">
-              Floorp Settings
+              Floorp Hub
             </span>
           </div>
         </SidebarMenuButton>
