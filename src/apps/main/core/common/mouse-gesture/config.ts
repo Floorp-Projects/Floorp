@@ -42,7 +42,7 @@ export const defaultConfig: MouseGestureConfig = {
   sensitivity: 20,
   showTrail: true,
   trailColor: "#37ff00",
-  trailWidth: 2,
+  trailWidth: 6,
   actions: [
     {
       name: "Back",

@@ -10,6 +10,7 @@ import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import About from "./app/about/noraneko.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
+import MouseGesture from "@/app/gesture/page.tsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
@@ -36,6 +37,7 @@ export default function App() {
                 path="/features/accounts"
                 element={<ProfileAndAccount />}
               />
+              <Route path="/features/gesture" element={<MouseGesture />} />
               <Route path="/about/browser" element={<About />} />
 
               {

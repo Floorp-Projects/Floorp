@@ -31,7 +31,8 @@
         "webApps": "ウェブアプリ",
         "profileAndAccount": "プロファイルとアカウント",
         "aboutBrowser": "{{productName}} について",
-        "debug": "デバッグ"
+        "debug": "デバッグ",
+        "mouseGesture": "マウスジェスチャー"
     },
     "designs": {
         "proton": "Proton",
@@ -226,5 +227,50 @@
         "cancel": "キャンセル",
         "rename": "名前を変更",
         "uninstall": "アンインストール"
+    },
+    "mouseGesture": {
+        "description": "マウスの動きでブラウザを操作できる機能です。",
+        "generalSettings": "一般設定",
+        "generalSettingsDescription": "マウスジェスチャーの基本設定",
+        "enabled": "マウスジェスチャーを有効にする",
+        "showTrail": "ジェスチャーの軌跡を表示",
+        "sensitivity": "感度",
+        "low": "低",
+        "high": "高",
+        "trailWidth": "軌跡の太さ",
+        "trailColor": "軌跡の色",
+        "actionsSettings": "ジェスチャー設定",
+        "actionsSettingsDescription": "マウスジェスチャーの動作設定",
+        "name": "名前",
+        "pattern": "パターン",
+        "action": "アクション",
+        "actionDescription": "ジェスチャーの説明",
+        "actions": {
+            "goBack": "戻る",
+            "goForward": "進む",
+            "reload": "更新",
+            "closeTab": "タブを閉じる",
+            "newTab": "新規タブ",
+            "duplicateTab": "タブを複製",
+            "reloadAllTabs": "全タブ更新",
+            "reopenClosedTab": "閉じたタブを開く"
+        },
+        "edit": "編集",
+        "duplicate": "複製",
+        "delete": "削除",
+        "noActions": "ジェスチャーが設定されていません",
+        "addAction": "ジェスチャーを追加",
+        "editAction": "ジェスチャーを編集",
+        "duplicateAction": "ジェスチャーを複製",
+        "namePlaceholder": "ジェスチャー名を入力",
+        "noPattern": "パターンが設定されていません",
+        "reset": "リセット",
+        "selectAction": "アクションを選択",
+        "descriptionPlaceholder": "説明を入力（任意）",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "copy": "のコピー",
+        "defaultName": "新しいジェスチャー",
+        "emptyPatternError": "ジェスチャーパターンを設定してください"
     }
 }

@@ -16,11 +16,13 @@ export function GestureDisplayUI(props: {
     directions?: GestureDirection[];
 }) {
     const getTrailElements = () => {
-        if (props.trail.length < 2) return null;
+        if (props.trail.length < 2 || !getConfig().showTrail) {
+            return null;
+        }
 
         const config = getConfig();
-        const trailColor = config.trailColor || "#FF0000";
-        const trailWidth = config.trailWidth || 2;
+        const trailColor = config.trailColor || "#37ff00";
+        const trailWidth = config.trailWidth || 6;
 
         // eslint-disable-next-line jsx-key
         return props.trail.map((point, index) => {
@@ -214,6 +216,7 @@ export class GestureDisplay {
     public updateTrail(points: { x: number; y: number }[]): void {
         const newPoints = [...points];
 
+        //TODO: Performance optimization
         // if (newPoints.length > 100) {
         //     const stride = Math.ceil(newPoints.length);
         //     const optimizedPoints = [];

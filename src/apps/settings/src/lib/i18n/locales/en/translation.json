@@ -30,7 +30,8 @@
         "webApps": "Web Apps",
         "profileAndAccount": "Profile and Account",
         "aboutBrowser": "About {{productName}}",
-        "debug": "Debug"
+        "debug": "Debug",
+        "mouseGesture": "Mouse Gestures"
     },
     "home": {
         "welcome": "Welcome, {{name}} 👋",
@@ -218,5 +219,50 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall"
+    },
+    "mouseGesture": {
+        "description": "Control your browser with mouse movements.",
+        "generalSettings": "General Settings",
+        "generalSettingsDescription": "Basic mouse gesture settings",
+        "enabled": "Enable mouse gestures",
+        "showTrail": "Show gesture trail",
+        "sensitivity": "Sensitivity",
+        "low": "Low",
+        "high": "High",
+        "trailWidth": "Trail width",
+        "trailColor": "Trail color",
+        "actionsSettings": "Gesture Actions",
+        "actionsSettingsDescription": "Configure mouse gesture actions",
+        "name": "Name",
+        "pattern": "Pattern",
+        "action": "Action",
+        "actionDescription": "Description of the gesture",
+        "actions": {
+            "goBack": "Go Back",
+            "goForward": "Go Forward",
+            "reload": "Reload",
+            "closeTab": "Close Tab",
+            "newTab": "New Tab",
+            "duplicateTab": "Duplicate Tab",
+            "reloadAllTabs": "Reload All Tabs",
+            "reopenClosedTab": "Reopen Closed Tab"
+        },
+        "edit": "Edit",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "noActions": "No gestures configured",
+        "addAction": "Add Gesture",
+        "editAction": "Edit Gesture",
+        "duplicateAction": "Duplicate Gesture",
+        "namePlaceholder": "Enter gesture name",
+        "noPattern": "No pattern set",
+        "reset": "Reset",
+        "selectAction": "Select an action",
+        "descriptionPlaceholder": "Enter description (optional)",
+        "cancel": "Cancel",
+        "save": "Save",
+        "copy": "Copy",
+        "defaultName": "New Gesture",
+        "emptyPatternError": "Please set a gesture pattern"
     }
 }

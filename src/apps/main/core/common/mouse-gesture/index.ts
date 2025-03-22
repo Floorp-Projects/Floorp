@@ -5,7 +5,6 @@
 
 import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
 import { mouseGestureService } from "./service.ts";
-import { isEnabled } from "./config.ts";
 export { mouseGestureService } from "./service.ts";
 export type {
   GestureAction,
@@ -27,7 +26,6 @@ export { GestureDisplay } from "./components/GestureDisplay.tsx";
 export default class MouseGesture extends NoraComponentBase {
   static ctx: typeof mouseGestureService | null = null;
   init(): void {
-    if (!isEnabled()) return;
     const ctx = mouseGestureService;
     ctx.setEnabled(true);
     MouseGesture.ctx = ctx;
