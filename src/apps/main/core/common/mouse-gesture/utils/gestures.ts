@@ -7,7 +7,6 @@ export type GestureActionFn = () => void;
 export interface GestureActionRegistration {
   name: string;
   fn: GestureActionFn;
-  description: string;
 }
 class GestureActionsRegistry {
   private static instance: GestureActionsRegistry;
@@ -18,42 +17,34 @@ class GestureActionsRegistry {
       {
         name: "goBack",
         fn: goBack,
-        description: "Navigate back to the previous page",
       },
       {
         name: "goForward",
         fn: goForward,
-        description: "Navigate forward to the next page",
       },
       {
         name: "reload",
         fn: reload,
-        description: "Reload the current page",
       },
       {
         name: "closeTab",
         fn: closeTab,
-        description: "Close the current tab",
       },
       {
         name: "newTab",
         fn: newTab,
-        description: "Open a new tab",
       },
       {
         name: "duplicateTab",
         fn: duplicateTab,
-        description: "Duplicate the current tab",
       },
       {
         name: "reloadAllTabs",
         fn: reloadAllTabs,
-        description: "Reload all tabs",
       },
       {
         name: "reopenClosedTab",
         fn: reopenClosedTab,
-        description: "Reopen the last closed tab",
       },
     ]);
   }
@@ -89,14 +80,6 @@ class GestureActionsRegistry {
 }
 
 export const gestureActions = GestureActionsRegistry.getInstance();
-
-export function registerGestureAction(
-  name: string,
-  fn: GestureActionFn,
-  description: string,
-): void {
-  gestureActions.registerAction({ name, fn, description });
-}
 
 export function getAllGestureActions(): GestureActionRegistration[] {
   return gestureActions.getActionsList();

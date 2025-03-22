@@ -4,78 +4,81 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  _setConfig,
   type GesturePattern,
   getConfig,
   isEnabled,
   type MouseGestureConfig,
   setEnabled,
-} from "./config";
-import { MouseGestureController } from "./controller";
+} from "./config.ts";
+import { MouseGestureController } from "./controller.ts";
+import { createRootHMR } from "@nora/solid-xul";
+import { createEffect } from "solid-js";
+
+let globalController: MouseGestureController | null = null;
 
 export class MouseGestureService {
-  private static instance: MouseGestureService;
   private controller: MouseGestureController | null = null;
+  private lastConfigString = "";
 
-  private constructor() {
-    this.initialize();
-  }
-
-  /**
-   * Get the singleton instance of the service
-   */
-  public static getInstance(): MouseGestureService {
-    if (!MouseGestureService.instance) {
-      MouseGestureService.instance = new MouseGestureService();
+  constructor() {
+    if (globalController) {
+      globalController.destroy();
+      globalController = null;
     }
-    return MouseGestureService.instance;
+
+    this.initialize();
+
+    createEffect(() => {
+      const config = getConfig();
+      const configString = JSON.stringify(config);
+
+      if (this.lastConfigString && this.lastConfigString !== configString) {
+        console.log("Mouse gesture config changed, recreating controller");
+        this.destroyController();
+        if (isEnabled()) {
+          this.createController();
+        }
+      }
+
+      this.lastConfigString = configString;
+    });
   }
 
-  /**
-   * Initialize the service
-   */
   private initialize(): void {
-    // Initialize the controller if enabled
+    this.lastConfigString = JSON.stringify(getConfig());
     if (isEnabled()) {
       this.createController();
     }
   }
 
-  /**
-   * Create the controller
-   */
   private createController(): void {
-    if (!this.controller) {
-      this.controller = new MouseGestureController();
-    }
+    this.destroyController();
+
+    this.controller = new MouseGestureController();
+    globalController = this.controller;
   }
 
-  /**
-   * Destroy the controller
-   */
   private destroyController(): void {
     if (this.controller) {
       this.controller.destroy();
       this.controller = null;
+
+      if (globalController === this.controller) {
+        globalController = null;
+      }
     }
   }
 
-  /**
-   * Check if mouse gestures are enabled
-   */
   public isEnabled(): boolean {
     return isEnabled();
   }
 
-  /**
-   * Enable or disable mouse gestures
-   */
   public setEnabled(value: boolean): void {
     const currentState = isEnabled();
 
-    // Update preference
     setEnabled(value);
 
-    // Create or destroy controller as needed
     if (value && !currentState) {
       this.createController();
     } else if (!value && currentState) {
@@ -83,16 +86,19 @@ export class MouseGestureService {
     }
   }
 
-  /**
-   * Get the current configuration
-   */
   public getConfig(): MouseGestureConfig {
     return getConfig();
   }
 
-  /**
-   * Convert a gesture pattern to a human-readable string
-   */
+  public updateConfig(newConfig: MouseGestureConfig): void {
+    setConfig(newConfig);
+
+    if (isEnabled()) {
+      this.destroyController();
+      this.createController();
+    }
+  }
+
   public patternToDisplayString(pattern: GesturePattern): string {
     const directionSymbols: Record<string, string> = {
       up: "↑",
@@ -105,5 +111,15 @@ export class MouseGestureService {
   }
 }
 
-// Export the service instance
-export const mouseGestureService = MouseGestureService.getInstance();
+function setConfig(config: MouseGestureConfig) {
+  _setConfig(config);
+}
+
+function createMouseGestureService() {
+  return new MouseGestureService();
+}
+
+export const mouseGestureService = createRootHMR(
+  createMouseGestureService,
+  import.meta.hot,
+);

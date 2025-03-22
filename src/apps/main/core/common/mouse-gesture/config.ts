@@ -3,17 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, createSignal, onCleanup } from "solid-js";
+import {
+  type Accessor,
+  createEffect,
+  createSignal,
+  onCleanup,
+  type Setter,
+} from "solid-js";
+import { createRootHMR } from "@nora/solid-xul";
 import { z } from "zod";
 
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 export const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
-// Define the gesture direction types
 export type GestureDirection = "up" | "down" | "left" | "right";
 export type GesturePattern = GestureDirection[];
 
-// Define the gesture action schema
 export const zGestureAction = z.object({
   name: z.string(),
   pattern: z.array(z.enum(["up", "down", "left", "right"])),
@@ -22,7 +27,6 @@ export const zGestureAction = z.object({
 });
 export type GestureAction = z.infer<typeof zGestureAction>;
 
-// Define the config schema
 export const zMouseGestureConfig = z.object({
   enabled: z.boolean().default(true),
   sensitivity: z.number().min(1).max(100).default(20),
@@ -33,7 +37,6 @@ export const zMouseGestureConfig = z.object({
 });
 export type MouseGestureConfig = z.infer<typeof zMouseGestureConfig>;
 
-// Default configuration
 export const defaultConfig: MouseGestureConfig = {
   enabled: true,
   sensitivity: 20,
@@ -76,42 +79,60 @@ export const defaultConfig: MouseGestureConfig = {
 
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
-// Singleton class to manage mouse gesture configuration
-class MouseGestureConfigManager {
-  private static instance: MouseGestureConfigManager;
-
-  public enabled: ReturnType<typeof createSignal<boolean>> = createSignal(
-    defaultConfig.enabled,
+function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
+  const [enabled, setEnabled] = createSignal(
+    Services.prefs.getBoolPref(
+      MOUSE_GESTURE_ENABLED_PREF,
+      defaultConfig.enabled,
+    ),
   );
-  public config: ReturnType<typeof createSignal<MouseGestureConfig>> =
-    createSignal<MouseGestureConfig>(defaultConfig);
 
-  private constructor() {
-    createRoot(() => {
-      // Initialize preferences if they don't exist
-      if (!Services.prefs.prefHasUserValue(MOUSE_GESTURE_ENABLED_PREF)) {
-        Services.prefs.setBoolPref(
-          MOUSE_GESTURE_ENABLED_PREF,
-          defaultConfig.enabled,
-        );
-      }
+  createEffect(() => {
+    Services.prefs.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, enabled());
+  });
 
-      if (!Services.prefs.prefHasUserValue(MOUSE_GESTURE_CONFIG_PREF)) {
-        Services.prefs.setStringPref(
+  const enabledObserver = () => {
+    setEnabled(
+      Services.prefs.getBoolPref(
+        MOUSE_GESTURE_ENABLED_PREF,
+        defaultConfig.enabled,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
+  });
+
+  return [enabled, setEnabled];
+}
+
+function createConfig(): [
+  Accessor<MouseGestureConfig>,
+  Setter<MouseGestureConfig>,
+] {
+  const [config, setConfig] = createSignal<MouseGestureConfig>(
+    zMouseGestureConfig.parse(
+      JSON.parse(
+        Services.prefs.getStringPref(
           MOUSE_GESTURE_CONFIG_PREF,
           strDefaultConfig,
-        );
-      }
-
-      // Initialize signals with values from preferences
-      this.enabled = createSignal(
-        Services.prefs.getBoolPref(
-          MOUSE_GESTURE_ENABLED_PREF,
-          defaultConfig.enabled,
         ),
-      );
+      ),
+    ),
+  );
 
-      this.config = createSignal<MouseGestureConfig>(
+  createEffect(() => {
+    Services.prefs.setStringPref(
+      MOUSE_GESTURE_CONFIG_PREF,
+      JSON.stringify(config()),
+    );
+  });
+
+  const configObserver = () => {
+    try {
+      setConfig(
         zMouseGestureConfig.parse(
           JSON.parse(
             Services.prefs.getStringPref(
@@ -121,90 +142,35 @@ class MouseGestureConfigManager {
           ),
         ),
       );
-
-      const [enabled] = this.enabled;
-      const [config] = this.config;
-
-      // Save changes to preferences
-      createEffect(() => {
-        Services.prefs.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, enabled());
-      });
-
-      createEffect(() => {
-        Services.prefs.setStringPref(
-          MOUSE_GESTURE_CONFIG_PREF,
-          JSON.stringify(config()),
-        );
-      });
-
-      // Set up observers for preference changes
-      const enabledObserver = () => {
-        this.enabled[1](
-          Services.prefs.getBoolPref(
-            MOUSE_GESTURE_ENABLED_PREF,
-            defaultConfig.enabled,
-          ),
-        );
-      };
-
-      Services.prefs.addObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          MOUSE_GESTURE_ENABLED_PREF,
-          enabledObserver,
-        );
-      });
-
-      const configObserver = () => {
-        try {
-          this.config[1](
-            zMouseGestureConfig.parse(
-              JSON.parse(
-                Services.prefs.getStringPref(
-                  MOUSE_GESTURE_CONFIG_PREF,
-                  strDefaultConfig,
-                ),
-              ),
-            ),
-          );
-        } catch (e) {
-          console.error("Failed to parse mouse gesture configuration:", e);
-          // Reset to default if parsing fails
-          this.config[1](defaultConfig);
-          Services.prefs.setStringPref(
-            MOUSE_GESTURE_CONFIG_PREF,
-            strDefaultConfig,
-          );
-        }
-      };
-
-      Services.prefs.addObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          MOUSE_GESTURE_CONFIG_PREF,
-          configObserver,
-        );
-      });
-    });
-  }
-
-  public static getInstance(): MouseGestureConfigManager {
-    if (!MouseGestureConfigManager.instance) {
-      MouseGestureConfigManager.instance = new MouseGestureConfigManager();
+    } catch (e) {
+      console.error("Failed to parse mouse gesture configuration:", e);
+      setConfig(defaultConfig);
+      Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig);
     }
-    return MouseGestureConfigManager.instance;
-  }
+  };
+
+  Services.prefs.addObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
+  });
+
+  return [config, setConfig];
 }
 
-// Export public API
-const configManager = MouseGestureConfigManager.getInstance();
-export const isEnabled = () => configManager.enabled[0]();
-export const setEnabled = (value: boolean) => configManager.enabled[1](value);
-export const getConfig = () => configManager.config[0]();
-export const setConfig = (value: MouseGestureConfig) =>
-  configManager.config[1](value);
+export const [_enabled, _setEnabled] = createRootHMR(
+  createEnabled,
+  import.meta.hot,
+);
+export const [_config, _setConfig] = createRootHMR(
+  createConfig,
+  import.meta.hot,
+);
 
-// Utility functions for pattern matching
+export const isEnabled = () => _enabled();
+export const setEnabled = (value: boolean) => _setEnabled(value);
+export const getConfig = () => _config();
+export const setConfig = (value: MouseGestureConfig) => _setConfig(value);
+
 export function patternToString(pattern: GesturePattern): string {
   return pattern.join("-");
 }

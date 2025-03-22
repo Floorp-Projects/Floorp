@@ -12,19 +12,15 @@ import {
 import { GestureDisplay } from "./components/GestureDisplay.tsx";
 import { executeGestureAction } from "./utils/gestures.ts";
 
-/**
- * Controller for mouse gesture functionality
- */
 export class MouseGestureController {
   private isGestureActive = false;
   private gesturePattern: GestureDirection[] = [];
   private lastX = 0;
   private lastY = 0;
-  private startX = 0;
-  private startY = 0;
   private mouseTrail: { x: number; y: number }[] = [];
   private display: GestureDisplay;
   private activeActionName = "";
+  private eventListenersAttached = false;
 
   constructor() {
     this.display = new GestureDisplay();
@@ -32,18 +28,19 @@ export class MouseGestureController {
   }
 
   private init(): void {
-    // Add global event listeners
+    if (this.eventListenersAttached) return;
+
     if (typeof globalThis !== "undefined") {
       globalThis.addEventListener("mousedown", this.handleMouseDown);
       globalThis.addEventListener("mousemove", this.handleMouseMove);
       globalThis.addEventListener("mouseup", this.handleMouseUp);
       globalThis.addEventListener("contextmenu", this.handleContextMenu, true);
+      this.eventListenersAttached = true;
     }
   }
 
   public destroy(): void {
-    // Remove global event listeners
-    if (typeof globalThis !== "undefined") {
+    if (typeof globalThis !== "undefined" && this.eventListenersAttached) {
       globalThis.removeEventListener("mousedown", this.handleMouseDown);
       globalThis.removeEventListener("mousemove", this.handleMouseMove);
       globalThis.removeEventListener("mouseup", this.handleMouseUp);
@@ -52,21 +49,31 @@ export class MouseGestureController {
         this.handleContextMenu,
         true,
       );
+      this.eventListenersAttached = false;
     }
+    this.resetGestureState();
     this.display.destroy();
   }
 
+  private getAdjustedClientCoords(event: MouseEvent): { x: number; y: number } {
+    return {
+      x: event.clientX,
+      y: event.clientY,
+    };
+  }
+
   private handleMouseDown = (event: MouseEvent): void => {
-    // right mouse button
-    if (event.button !== 2 || !isEnabled()) return;
+    if (event.button !== 2 || !isEnabled()) {
+      return;
+    }
 
     this.isGestureActive = true;
     this.gesturePattern = [];
-    this.lastX = event.clientX;
-    this.lastY = event.clientY;
-    this.startX = event.clientX;
-    this.startY = event.clientY;
-    this.mouseTrail = [{ x: event.clientX, y: event.clientY }];
+
+    const coords = this.getAdjustedClientCoords(event);
+    this.lastX = coords.x;
+    this.lastY = coords.y;
+    this.mouseTrail = [coords];
     this.activeActionName = "";
 
     this.display.show();
@@ -74,15 +81,16 @@ export class MouseGestureController {
   };
 
   private handleMouseMove = (event: MouseEvent): void => {
-    if (!this.isGestureActive || !isEnabled()) return;
+    if (!this.isGestureActive || !isEnabled()) {
+      return;
+    }
 
     const config = getConfig();
     const { sensitivity } = config;
-
-    this.mouseTrail.push({ x: event.clientX, y: event.clientY });
-
-    const dx = event.clientX - this.lastX;
-    const dy = event.clientY - this.lastY;
+    const coords = this.getAdjustedClientCoords(event);
+    this.mouseTrail.push(coords);
+    const dx = coords.x - this.lastX;
+    const dy = coords.y - this.lastY;
 
     if (Math.abs(dx) > sensitivity || Math.abs(dy) > sensitivity) {
       let direction: GestureDirection | null = null;
@@ -111,8 +119,8 @@ export class MouseGestureController {
         }
       }
 
-      this.lastX = event.clientX;
-      this.lastY = event.clientY;
+      this.lastX = coords.x;
+      this.lastY = coords.y;
     }
 
     this.display.updateTrail(this.mouseTrail);
@@ -138,7 +146,6 @@ export class MouseGestureController {
       }
     }
 
-    // Reset if no matching action
     this.resetGestureState();
   };
 

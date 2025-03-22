@@ -3,36 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, onCleanup, createRoot, Show } from "solid-js";
+import { createSignal, createRoot, Show } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { GestureDirection } from "../config.ts";
+import { getConfig } from "../config.ts";
 
 export function GestureDisplayUI(props: {
     trail: { x: number; y: number }[];
     actionName: string;
     isVisible: boolean;
-    feedbackText?: string;
     feedbackVisible?: boolean;
     directions?: GestureDirection[];
 }) {
-    const directionSymbols = () => {
-        if (!props.directions || props.directions.length === 0) return "";
-
-        const directionSymbols: Record<GestureDirection, string> = {
-            up: "↑",
-            down: "↓",
-            left: "←",
-            right: "→",
-        };
-
-        return props.directions
-            .map((dir) => directionSymbols[dir] || dir)
-            .join(" ");
-    };
-
     const getTrailElements = () => {
         if (props.trail.length < 2) return null;
 
+        const config = getConfig();
+        const trailColor = config.trailColor || "#FF0000";
+        const trailWidth = config.trailWidth || 2;
+
+        // eslint-disable-next-line jsx-key
         return props.trail.map((point, index) => {
             if (index === 0) return null;
 
@@ -47,15 +37,15 @@ export function GestureDisplayUI(props: {
             return (
                 <div
                     style={{
-                        position: "absolute",
-                        height: "3px",
+                        position: "fixed",
+                        height: `${trailWidth}px`,
                         width: `${length}px`,
-                        "background-color": "#FF0000",
+                        "background-color": trailColor,
                         left: `${prevPoint.x}px`,
                         top: `${prevPoint.y}px`,
                         transform: `rotate(${angle}deg)`,
                         "transform-origin": "left center",
-                        "border-radius": "1.5px",
+                        "pointer-events": "none",
                     }}
                 />
             );
@@ -78,7 +68,7 @@ export function GestureDisplayUI(props: {
                 >
                     <div
                         style={{
-                            position: "absolute",
+                            position: "fixed",
                             top: "0",
                             left: "0",
                             width: "100%",
@@ -94,16 +84,15 @@ export function GestureDisplayUI(props: {
                         <div
                             style={{
                                 position: "fixed",
-                                bottom: "20px",
+                                bottom: "50%",
                                 left: "50%",
                                 transform: "translateX(-50%)",
                                 "background-color": "rgba(0, 0, 0, 0.7)",
                                 color: "white",
                                 padding: "8px 16px",
-                                "border-radius": "4px",
-                                "font-size": "16px",
                                 "font-weight": "bold",
                                 "z-index": "1000000",
+                                "font-size": "50px",
                             }}
                         >
                             {props.actionName}
@@ -111,56 +100,12 @@ export function GestureDisplayUI(props: {
                     </Show>
                 </div>
             </Show>
-
-            <Show when={props.feedbackVisible}>
-                <div
-                    style={{
-                        position: "fixed",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        "background-color": "rgba(38, 38, 38, 0.95)",
-                        color: "white",
-                        padding: "16px 24px",
-                        "border-radius": "4px",
-                        "font-size": "16px",
-                        "font-weight": "500",
-                        "z-index": "10000",
-                        "box-shadow": "0 4px 16px rgba(0, 0, 0, 0.5)",
-                        "text-align": "center",
-                        border: "1px solid rgba(82, 82, 82, 0.5)",
-                        animation: "mouseGestureFeedbackIn 0.2s forwards",
-                    }}
-                >
-                    {props.feedbackText}
-                    <Show when={directionSymbols()}>
-                        <div
-                            style={{
-                                "font-size": "14px",
-                                color: "rgba(255, 255, 255, 0.8)",
-                                "margin-top": "8px",
-                            }}
-                        >
-                            {directionSymbols()}
-                        </div>
-                    </Show>
-                </div>
-                <style>
-                    {`
-                    @keyframes mouseGestureFeedbackIn {
-                        from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-                        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                    }
-                    @keyframes mouseGestureFeedbackOut {
-                        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                        to { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
-                    }
-                    `}
-                </style>
-            </Show>
         </>
     );
 }
+
+let gestureDisplayInstance: GestureDisplay | null = null;
+let styleAdded = false;
 
 export class GestureDisplay {
     private mountContainer: HTMLDivElement | null = null;
@@ -170,11 +115,44 @@ export class GestureDisplay {
     private feedbackTextSignal = createSignal<string>("");
     private feedbackVisibleSignal = createSignal<boolean>(false);
     private directionsSignal = createSignal<GestureDirection[]>([]);
-    private feedbackElement: HTMLElement | null = null;
+    private disposeFn: (() => void) | null = null;
 
     constructor() {
+        if (gestureDisplayInstance) {
+            gestureDisplayInstance.destroy();
+        }
+
+        // eslint-disable-next-line no-this-alias
+        gestureDisplayInstance = this;
+        this.addGlobalStyles();
         this.createMountPoint();
         this.initializeComponent();
+    }
+
+    private addGlobalStyles(): void {
+        if (styleAdded || !document || !document.head) return;
+
+        const styleElement = document.createElement('style');
+        styleElement.id = 'mouse-gesture-global-styles';
+        styleElement.textContent = `
+            #mouse-gesture-display-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                pointer-events: none;
+                z-index: 999999;
+                overflow: visible;
+            }
+
+            #mouse-gesture-display-container * {
+                position: fixed;
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(styleElement);
+        styleAdded = true;
     }
 
     private createMountPoint(): void {
@@ -185,36 +163,25 @@ export class GestureDisplay {
             existingContainer.parentNode.removeChild(existingContainer);
         }
 
+        const existingStyle = document.getElementById("mouse-gesture-global-styles");
+        if (existingStyle && existingStyle.parentNode) {
+            existingStyle.parentNode.removeChild(existingStyle);
+            styleAdded = false;
+            this.addGlobalStyles();
+        }
+
         this.mountContainer = document.createElement("div");
         this.mountContainer.id = "mouse-gesture-display-container";
         document.body.appendChild(this.mountContainer);
-
-        render(() => (
-            <div
-                style={{
-                    position: "fixed",
-                    top: "0",
-                    left: "0",
-                    width: "100%",
-                    height: "100%",
-                    "pointer-events": "none",
-                    "z-index": "99999",
-                    overflow: "visible",
-                }}
-            />
-        ), this.mountContainer, {
-            hotCtx: import.meta.hot,
-        });
     }
 
     private initializeComponent(): void {
         if (!this.mountContainer) return;
 
-        createRoot((dispose) => {
+        const dispose = createRoot((dispose) => {
             const [trail] = this.trailSignal;
             const [actionName] = this.actionSignal;
             const [isVisible] = this.visibleSignal;
-            const [feedbackText] = this.feedbackTextSignal;
             const [feedbackVisible] = this.feedbackVisibleSignal;
             const [directions] = this.directionsSignal;
 
@@ -223,7 +190,6 @@ export class GestureDisplay {
                     trail={trail()}
                     actionName={actionName()}
                     isVisible={isVisible()}
-                    feedbackText={feedbackText()}
                     feedbackVisible={feedbackVisible()}
                     directions={directions()}
                 />
@@ -231,35 +197,41 @@ export class GestureDisplay {
                 hotCtx: import.meta.hot,
             });
 
-            onCleanup(() => dispose());
+            return dispose;
         });
+
+        this.disposeFn = dispose;
     }
 
     public show(): void {
         this.visibleSignal[1](true);
     }
+
     public hide(): void {
         this.visibleSignal[1](false);
     }
+
     public updateTrail(points: { x: number; y: number }[]): void {
         const newPoints = [...points];
 
-        if (newPoints.length > 100) {
-            const stride = Math.ceil(newPoints.length / 100);
-            const optimizedPoints = [];
+        // if (newPoints.length > 100) {
+        //     const stride = Math.ceil(newPoints.length);
+        //     const optimizedPoints = [];
 
-            for (let i = 0; i < newPoints.length; i += stride) {
-                optimizedPoints.push(newPoints[i]);
-            }
+        //     for (let i = 0; i < newPoints.length; i += stride) {
+        //         optimizedPoints.push(newPoints[i]);
+        //     }
 
-            if (optimizedPoints[optimizedPoints.length - 1] !== newPoints[newPoints.length - 1]) {
-                optimizedPoints.push(newPoints[newPoints.length - 1]);
-            }
+        //     if (optimizedPoints[optimizedPoints.length - 1] !== newPoints[newPoints.length - 1]) {
+        //         optimizedPoints.push(newPoints[newPoints.length - 1]);
+        //     }
 
-            this.trailSignal[1](optimizedPoints);
-        } else {
-            this.trailSignal[1](newPoints);
-        }
+        //     this.trailSignal[1](optimizedPoints);
+        // } else {
+        //     this.trailSignal[1](newPoints);
+        // }
+
+        this.trailSignal[1](newPoints);
 
         if (!this.visibleSignal[0]()) {
             this.visibleSignal[1](true);
@@ -283,9 +255,19 @@ export class GestureDisplay {
     }
 
     public destroy(): void {
+        if (this.disposeFn) {
+            this.disposeFn();
+            this.disposeFn = null;
+        }
+
         if (this.mountContainer && this.mountContainer.parentNode) {
             this.mountContainer.parentNode.removeChild(this.mountContainer);
         }
+
         this.mountContainer = null;
+
+        if (gestureDisplayInstance === this) {
+            gestureDisplayInstance = null;
+        }
     }
 }
