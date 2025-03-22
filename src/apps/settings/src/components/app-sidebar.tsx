@@ -9,7 +9,6 @@ import {
   PanelLeft,
   PencilRuler,
   UserRoundPen,
-  Wrench,
   MousePointer,
 } from "lucide-react";
 import { NavHeader } from "@/components/nav-header.tsx";
@@ -40,6 +39,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: PanelLeft,
     },
     {
+      title: t("pages.mouseGesture"),
+      url: "#/features/gesture",
+      icon: MousePointer,
+    },
+    {
       title: t("pages.workspaces"),
       url: "#/features/workspaces",
       icon: Briefcase,
@@ -55,16 +59,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "#/features/accounts",
       icon: UserRoundPen,
     },
-    {
-      title: t("pages.mouseGesture"),
-      url: "#/features/gesture",
-      icon: MousePointer,
-    },
   ];
 
   const about = [
     { title: t("pages.aboutBrowser"), url: "#/about/browser", icon: BadgeInfo },
-    { title: t("pages.debug"), url: "#/debug", icon: Wrench },
   ];
 
   return (
