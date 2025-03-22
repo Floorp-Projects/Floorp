@@ -15,6 +15,7 @@ export class SsbPageAction {
   private description = createSignal("");
   private canBeInstallAsPwa = createSignal(false);
   private isInstalled = createSignal(false);
+  private shouldShowPageAction = createSignal(false);
 
   constructor(private pwaService: PwaService) {
     const starButtonBox = document?.getElementById("star-button-box");
@@ -48,6 +49,7 @@ export class SsbPageAction {
       browser,
     );
     this.isInstalled[1](isInstalled);
+    this.shouldShowPageAction[1](canBeInstallAsPwa || isInstalled);
     this.pwaService.updateUIElements(isInstalled);
   }
 
@@ -94,8 +96,8 @@ export class SsbPageAction {
     const [icon] = this.icon;
     const [title] = this.title;
     const [description] = this.description;
-    const [canBeInstallAsPwa] = this.canBeInstallAsPwa;
     const [isInstalled] = this.isInstalled;
+    const [shouldShowPageAction] = this.shouldShowPageAction;
 
     return (
       <xul:hbox
@@ -103,7 +105,7 @@ export class SsbPageAction {
         data-l10n-id="ssb-page-action"
         class="urlbar-page-action"
         popup="ssb-panel"
-        hidden={!canBeInstallAsPwa() && !isInstalled()}
+        hidden={!shouldShowPageAction()}
       >
         <xul:image
           id="ssbPageAction-image"

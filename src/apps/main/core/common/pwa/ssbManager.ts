@@ -197,6 +197,10 @@ export class SiteSpecificBrowserManager {
 
     // Update UI elements
     this.updateUIElements(currentPageIsInstalled);
+    Services.obs.notifyObservers(
+      {} as nsISupports,
+      "nora-pwa-check-page-has-manifest",
+    );
   }
 
   public updateUIElements(isInstalled: boolean) {
@@ -204,7 +208,6 @@ export class SiteSpecificBrowserManager {
     const image = document?.getElementById("ssbPageAction-image");
 
     if (installButton && image) {
-      installButton.removeAttribute("hidden");
       if (isInstalled) {
         image.setAttribute("open-ssb", "true");
       } else {
