@@ -1,4 +1,4 @@
-import { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
+import type { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
 import { createBirpc } from "birpc";
 
 // deno-lint-ignore no-explicit-any
@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-const isLocalhost5186 = import.meta.url?.includes("localhost:5186");
+const isLocalhost5187 = import.meta.url?.includes("localhost:5187");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -47,7 +47,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5186
+export const rpc = isLocalhost5187
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

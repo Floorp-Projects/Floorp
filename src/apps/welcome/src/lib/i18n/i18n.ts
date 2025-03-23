@@ -15,7 +15,7 @@ i18n
     debug: false,
     "defaultNS": "translations",
     detection: {
-      order: ["navigator", "querystring", "cookie", "localStorage", "htmlTag"],
+      order: ["navigator", "querystring", "htmlTag"],
       caches: [],
     },
     interpolation: {

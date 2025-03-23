@@ -13,15 +13,19 @@ export class NRWelcomePageChild extends JSWindowActorChild {
     ) {
       console.debug("NRWelcomePage 5187 ! or Chrome Page!");
       Cu.exportFunction(this.getLocaleInfo.bind(this), window, {
-        defineAs: "getLocaleInfo",
+        defineAs: "NRGetLocaleInfo",
       });
 
       Cu.exportFunction(this.setAppLocale.bind(this), window, {
-        defineAs: "setAppLocale",
+        defineAs: "NRSetAppLocale",
       });
 
       Cu.exportFunction(this.installLangPack.bind(this), window, {
-        defineAs: "installLangPack",
+        defineAs: "NRInstallLangPack",
+      });
+
+      Cu.exportFunction(this.getNativeNames.bind(this), window, {
+        defineAs: "NRGetNativeNames",
       });
     }
   }
@@ -62,6 +66,19 @@ export class NRWelcomePageChild extends JSWindowActorChild {
 
   resolveInstallLangPack: ((response: string) => void) | null = null;
 
+  getNativeNames(
+    langCodes: string[],
+    callback: (localeInfo: string) => void = () => {},
+  ) {
+    const promise = new Promise<string>((resolve, _reject) => {
+      this.resolveGetNativeNames = resolve;
+    });
+    this.sendAsyncMessage("WelcomePage:getNativeNames", { langCodes });
+    promise.then((localeInfo) => callback(localeInfo));
+  }
+
+  resolveGetNativeNames: ((localeInfo: string) => void) | null = null;
+
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "WelcomePage:localeInfoResponse": {
@@ -79,6 +96,12 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       case "WelcomePage:installLangPackResponse": {
         this.resolveInstallLangPack?.(message.data);
         this.resolveInstallLangPack = null;
+        break;
+      }
+
+      case "WelcomePage:getNativeNamesResponse": {
+        this.resolveGetNativeNames?.(message.data);
+        this.resolveGetNativeNames = null;
         break;
       }
 

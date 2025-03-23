@@ -6,7 +6,7 @@
 
 pref("startup.homepage_override_url", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 pref("floorp.startup.homepage_override_url.ja", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/#ja");
-pref("startup.homepage_welcome_url", "about:setup | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+pref("startup.homepage_welcome_url", "chrome://noraneko-welcome/content/index.html | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 pref("startup.homepage_welcome_url.additional", "https://docs.ablaze.one/floorp_privacy_policy/");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
@@ -19,18 +19,11 @@ pref("app.update.promptWaitTime", 691200);
 // wizard.
 
 
-// wizard.
-#if MOZ_UPDATE_CHANNEL == beta
-  pref("app.update.url.manual", "https://floorp.app");
-  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-#else
-  pref("app.update.url.manual", "https://floorp.app");
-  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-#endif
+pref("app.update.url.manual", "https://floorp.app");
+pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that
 // app.update.checkInstallTime is true.

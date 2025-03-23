@@ -12,7 +12,9 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         );
 
         const localeInfo = LangPackMatcher.getAppAndSystemLocaleInfo();
-        const availableLocales = await LangPackMatcher.getAvailableLocales();
+        const availableLocales = await LangPackMatcher.mockable
+          .getAvailableLangpacks();
+        const installedLocales = await LangPackMatcher.getAvailableLocales();
         let langPackInfo = null;
         if (localeInfo.matchType !== "match") {
           langPackInfo = await LangPackMatcher
@@ -23,6 +25,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
           JSON.stringify({
             localeInfo,
             availableLocales,
+            installedLocales,
             langPackInfo,
           }),
         );
@@ -93,6 +96,29 @@ export class NRWelcomePageParent extends JSWindowActorParent {
             }),
           );
         }
+        break;
+      }
+
+      case "WelcomePage:getNativeNames": {
+        const { MozIntl } = ChromeUtils.importESModule(
+          "resource://gre/modules/mozIntl.sys.mjs",
+        );
+
+        console.log("WelcomePage:getNativeNames");
+
+        const IntilSupprt = new MozIntl();
+        const { langCodes } = message.data;
+        const nativeNames = IntilSupprt.getLocaleDisplayNames(
+          undefined,
+          langCodes,
+          { preferNative: true },
+        );
+
+        this.sendAsyncMessage(
+          "WelcomePage:getNativeNamesResponse",
+          JSON.stringify(nativeNames),
+        );
+        break;
       }
     }
   }
