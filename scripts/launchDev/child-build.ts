@@ -25,10 +25,6 @@ async function launchBuild(mode: string, buildid2: string) {
           "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
         },
       }),
-      build({
-        configFile: r("./src/apps/newtab/vite.config.ts"),
-        root: r("./src/apps/newtab"),
-      }),
     ]);
   } else {
     await Promise.all([
@@ -60,6 +56,21 @@ async function launchBuild(mode: string, buildid2: string) {
         configFile: r("./src/apps/settings/vite.config.ts"),
         root: r("./src/apps/settings"),
         base: "chrome://noraneko-settings/content",
+      }),
+      build({
+        configFile: r("./src/apps/newtab/vite.config.ts"),
+        root: r("./src/apps/newtab"),
+        base: "chrome://noraneko-newtab/content",
+      }),
+      build({
+        configFile: r("./src/apps/welcome/vite.config.ts"),
+        root: r("./src/apps/welcome"),
+        base: "chrome://noraneko-welcome/content",
+      }),
+      build({
+        configFile: r("./src/apps/notes/vite.config.ts"),
+        root: r("./src/apps/notes"),
+        base: "chrome://noraneko-notes/content",
       }),
       build({
         configFile: r("./src/apps/main/core/utils/modal-child/vite.config.ts"),

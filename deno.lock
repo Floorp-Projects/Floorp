@@ -70,6 +70,7 @@
     "npm:cmdk@^1.0.4": "1.0.4_react@19.0.0_react-dom@19.0.0__react@19.0.0_@types+react@19.0.8_@types+react-dom@19.0.3__@types+react@19.0.8",
     "npm:consola@^3.4.0": "3.4.0",
     "npm:create-vite-extra@latest": "3.0.1",
+    "npm:create-vite@latest": "6.3.1",
     "npm:daisyui@5": "5.0.0",
     "npm:es-toolkit@^1.32.0": "1.32.0",
     "npm:fast-glob@^3.3.3": "3.3.3",
@@ -2919,6 +2920,9 @@
         "picocolors",
         "prompts"
       ]
+    },
+    "create-vite@6.3.1": {
+      "integrity": "sha512-kI3S6OgiBYnRlmhr4gNY76Fj62fMh+KukEd2PSAvMPdnY95rHhJCjCoUlt4BuHVNjfmRMbsFBBtO5dryFoSyUw=="
     },
     "cross-spawn@7.0.6": {
       "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
@@ -6584,6 +6588,39 @@
           ]
         }
       },
+      "src/apps/notes": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@icons-pack/react-simple-icons@^11.2.0",
+            "npm:@tailwindcss/vite@^4.0.6",
+            "npm:@types/react-dom@19",
+            "npm:@types/react@19",
+            "npm:@vitejs/plugin-react-swc@^3.7.2",
+            "npm:autoprefixer@^10.4.20",
+            "npm:birpc@^2.2.0",
+            "npm:clsx@^2.1.1",
+            "npm:cmdk@^1.0.4",
+            "npm:daisyui@5",
+            "npm:i18next-browser-languagedetector@^8.0.3",
+            "npm:i18next@^24.2.2",
+            "npm:lucide-react@0.475",
+            "npm:next-themes@~0.4.4",
+            "npm:postcss@^8.5.1",
+            "npm:react-dom@19",
+            "npm:react-hook-form@^7.54.2",
+            "npm:react-i18next@^15.4.1",
+            "npm:react-refresh@0.16",
+            "npm:react-router-dom@^7.1.5",
+            "npm:react@19",
+            "npm:recharts@^2.15.1",
+            "npm:tailwind-merge@^3.0.1",
+            "npm:tailwindcss@4",
+            "npm:vite-tsconfig-paths@^5.1.4",
+            "npm:vite@^6.0.11",
+            "npm:zod@^3.24.2"
+          ]
+        }
+      },
       "src/apps/settings": {
         "packageJson": {
           "dependencies": [
@@ -6624,6 +6661,39 @@
           "dependencies": [
             "npm:pathe@^2.0.2",
             "npm:rolldown@1.0.0-beta.3"
+          ]
+        }
+      },
+      "src/apps/welcome": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@icons-pack/react-simple-icons@^11.2.0",
+            "npm:@tailwindcss/vite@^4.0.6",
+            "npm:@types/react-dom@19",
+            "npm:@types/react@19",
+            "npm:@vitejs/plugin-react-swc@^3.7.2",
+            "npm:autoprefixer@^10.4.20",
+            "npm:birpc@^2.2.0",
+            "npm:clsx@^2.1.1",
+            "npm:cmdk@^1.0.4",
+            "npm:daisyui@5",
+            "npm:i18next-browser-languagedetector@^8.0.3",
+            "npm:i18next@^24.2.2",
+            "npm:lucide-react@0.475",
+            "npm:next-themes@~0.4.4",
+            "npm:postcss@^8.5.1",
+            "npm:react-dom@19",
+            "npm:react-hook-form@^7.54.2",
+            "npm:react-i18next@^15.4.1",
+            "npm:react-refresh@0.16",
+            "npm:react-router-dom@^7.1.5",
+            "npm:react@19",
+            "npm:recharts@^2.15.1",
+            "npm:tailwind-merge@^3.0.1",
+            "npm:tailwindcss@4",
+            "npm:vite-tsconfig-paths@^5.1.4",
+            "npm:vite@^6.0.11",
+            "npm:zod@^3.24.2"
           ]
         }
       },

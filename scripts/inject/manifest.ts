@@ -1,7 +1,7 @@
 import { symlink } from "@std/fs/unstable-symlink";
 import { emptyDir } from "@std/fs/empty-dir";
 import { relative, resolve } from "npm:pathe@^2.0.2";
-import { SymlinkOptions } from "@std/fs/unstable-types";
+import type { SymlinkOptions } from "@std/fs/unstable-types";
 import { ensureDir } from "@std/fs/ensure-dir";
 
 export async function injectManifest(
@@ -41,6 +41,8 @@ resource noraneko resource/ contentaccessible=yes
 content noraneko-settings settings/ contentaccessible=yes
 content noraneko-modal-child modal-child/ contentaccessible=yes
 content noraneko-newtab newtab/ contentaccessible=yes
+content noraneko-welcome welcome/ contentaccessible=yes
+content noraneko-notes notes/ contentaccessible=yes
 `;
 
   const manifestContent = mode !== "dev"
@@ -74,6 +76,16 @@ content noraneko-newtab newtab/ contentaccessible=yes
   await symlink(
     r("../../src/apps/newtab/_dist"),
     `${binPath}/${dirName}/newtab`,
+    option,
+  );
+  await symlink(
+    r("../../src/apps/welcome/_dist"),
+    `${binPath}/${dirName}/welcome`,
+    option,
+  );
+  await symlink(
+    r("../../src/apps/notes/_dist"),
+    `${binPath}/${dirName}/notes`,
     option,
   );
   await symlink(

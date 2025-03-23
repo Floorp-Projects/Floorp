@@ -202,6 +202,23 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*", "chrome://noraneko-newtab/*"],
   },
+
+  NRWelcomePage: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWelcomePageParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWelcomePageChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-welcome/*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
