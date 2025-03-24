@@ -31,7 +31,7 @@ export default function Navigation() {
         <>
             <button
                 type="button"
-                className="btn btn-circle btn-outline fixed left-50 top-1/2 transform  z-20"
+                className="btn btn-circle btn-outline fixed left-4 lg:left-6 top-1/6 lg:top-1/2 transform z-20 bg-base-100"
                 onClick={goToPrevious}
                 disabled={currentIndex === 0}
                 aria-label={t("navigation.previous")}
@@ -42,7 +42,7 @@ export default function Navigation() {
             </button>
             <button
                 type="button"
-                className="btn btn-circle btn-primary fixed right-50 top-1/2 transform  z-20"
+                className="btn btn-circle btn-primary fixed right-4 lg:right-6 top-1/6 lg:top-1/2 transform z-20"
                 onClick={goToNext}
                 disabled={currentIndex === navigationItems.length - 1}
                 aria-label={t("navigation.next")}

@@ -84,7 +84,7 @@ function App() {
         <header className="container mx-auto px-4 pt-8 relative z-10">
           <ProgressBar />
         </header>
-        <main className="flex-1 container mx-auto max-w-6xl px-4 py-4 relative z-10">
+        <main className="flex-1 container mx-auto max-w-6xl px-4 py-4 md:px-8 lg:px-12 xl:px-0 relative z-10">
           <Suspense fallback={<div className="loading loading-spinner loading-lg"></div>}>
             <Routes>
               <Route path="/" element={<WelcomePage />} />
