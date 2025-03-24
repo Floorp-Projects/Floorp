@@ -10,7 +10,6 @@ export default function LocalizationPage() {
     const [loading, setLoading] = useState(true);
     const [selectedLocale, setSelectedLocale] = useState<string>("");
     const [installingLanguage, setInstallingLanguage] = useState(false);
-    const [installResult, setInstallResult] = useState<{ success: boolean; message: string } | null>(null);
     const [nativeLanguageNames, setNativeLanguageNames] = useState<Record<string, string>>({});
 
     useEffect(() => {
@@ -71,14 +70,12 @@ export default function LocalizationPage() {
             await setAppLocale(locale);
             await i18n.changeLanguage(locale);
 
-            setInstallResult({ success: true, message: t('localizationPage.languageChanged') });
             setInstallingLanguage(false);
             setSelectedLocale(locale);
 
         } catch (error) {
             console.error("Failed to change locale:", error);
             setInstallingLanguage(false);
-            setInstallResult({ success: false, message: "Failed to change language" });
         }
     };
 
@@ -123,19 +120,6 @@ export default function LocalizationPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2"><circle cx="12" cy="12" r="10" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /><path d="M2 12h20" /></svg>
                             {t('localizationPage.languageSettings')}
                         </h2>
-
-                        {installResult && (
-                            <div className={`alert ${installResult.success ? 'alert-success' : 'alert-error'}`}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                    {installResult.success ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    )}
-                                </svg>
-                                <span>{installResult.message}</span>
-                            </div>
-                        )}
 
                         <div className="flex flex-row gap-4 mt-2">
                             <div className="flex justify-center items-center w-2/5">
