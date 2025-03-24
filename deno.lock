@@ -75,6 +75,7 @@
     "npm:daisyui@5": "5.0.0",
     "npm:es-toolkit@^1.32.0": "1.32.0",
     "npm:fast-glob@^3.3.3": "3.3.3",
+    "npm:flag-icons@^7.3.2": "7.3.2",
     "npm:floating-ui@^5.2.8": "5.2.8",
     "npm:framer-motion@^12.4.10": "12.4.10_react@18.3.1_react-dom@19.0.0__react@19.0.0_react@19.0.0",
     "npm:hookable@^5.5.3": "5.5.3",
@@ -3563,6 +3564,9 @@
       "dependencies": [
         "semver-regex"
       ]
+    },
+    "flag-icons@7.3.2": {
+      "integrity": "sha512-QkaZ6Zvai8LIjx+UNAHUJ5Dhz9OLZpBDwCRWxF6YErxIcR16jTkIFm3bFu54EkvKQy4+wicW+Gm7/0631wVQyQ=="
     },
     "flatted@3.3.2": {
       "integrity": "sha512-AiwGJM8YcNOaobumgtng+6NHuOqC3A7MixFeDafM3X9cIUM+xUXoS5Vfgf+OihAYe20fxqNM9yPBXJzRtZ/4eA=="

@@ -1,0 +1,6 @@
+{
+    "undo-closed-tab": {
+        "label": "Undo Closed Tab",
+        "tooltiptext": "Reopen the last closed tab"
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "undo-closed-tab": {
+        "label": "閉じたタブを開く",
+        "tooltiptext": "最後に閉じたタブを開きます"
+    }
+}
