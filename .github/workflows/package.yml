@@ -404,7 +404,7 @@ jobs:
 
             # Codesign
             # Install apple-codesign
-            cargo install apple-codesign
+            cargo install apple-codesign --locked
 
             echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
             base64 --decode floorp-cert.txt > floorpCert.p12
