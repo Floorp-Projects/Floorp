@@ -49,14 +49,15 @@
     "welcomePage": {
         "welcome": "Welcome to Floorp!",
         "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the arrow on the right side of the screen to proceed.",
+        "readyToStart": "When you're ready, click the below button to proceed.",
         "features": "Floorp Features",
         "privacy": "Privacy",
         "privacyDesc": "Protects your data",
         "speed": "Speed",
         "speedDesc": "Optimized performance",
         "customization": "Customization",
-        "customizationDesc": "Arrange to your preference"
+        "customizationDesc": "Arrange to your preference",
+        "start": "Get Started"
     },
     "localizationPage": {
         "title": "Floorp speaks your language",

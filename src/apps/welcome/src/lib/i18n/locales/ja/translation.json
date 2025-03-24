@@ -49,14 +49,15 @@
     "welcomePage": {
         "welcome": "Floorpへようこそ！",
         "description": "Floorpは、プライバシーとセキュリティを重視した高速でユーザーフレンドリーなWebブラウザです。このガイドではFloorpの主な機能と設定をご紹介します。",
-        "readyToStart": "準備ができたら、画面右側の矢印をクリックして進んでください。",
+        "readyToStart": "準備ができたら、下のボタンをクリックして進んでください。",
         "features": "Floorpの機能",
         "privacy": "プライバシー",
         "privacyDesc": "データを保護",
         "speed": "スピード",
         "speedDesc": "最適化されたパフォーマンス",
         "customization": "カスタマイズ",
-        "customizationDesc": "お好みに合わせて調整"
+        "customizationDesc": "お好みに合わせて調整",
+        "start": "始める"
     },
     "localizationPage": {
         "title": "Floorpはあなたの言語を話します",

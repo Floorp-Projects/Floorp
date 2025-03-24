@@ -3,6 +3,7 @@ import Navigation from "../../components/Navigation.tsx";
 import { getLocaleData, installLangPack, setAppLocale, getNativeNames } from "./dataManager.ts";
 import type { LangPack, LocaleData } from "./type.ts";
 import { useTranslation } from "react-i18next";
+import { Globe, ChevronDown, AlertCircle, Languages } from "lucide-react";
 
 export default function LocalizationPage() {
     const { t, i18n } = useTranslation();
@@ -117,19 +118,14 @@ export default function LocalizationPage() {
                 <div className="card bg-base-200 shadow-xl">
                     <div className="card-body">
                         <h2 className="card-title">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2"><circle cx="12" cy="12" r="10" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /><path d="M2 12h20" /></svg>
+                            <Globe className="text-primary mr-2" size={24} />
                             {t('localizationPage.languageSettings')}
                         </h2>
 
                         <div className="flex flex-row gap-4 mt-2">
                             <div className="flex justify-center items-center w-2/5">
                                 <div className="text-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary mx-auto mb-4">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                                        <path d="M2 12h20" />
-                                        <path d="M12 2v20" />
-                                    </svg>
+                                    <Languages size={160} className="text-primary mx-auto mb-4" />
                                     <div className="font-semibold text-lg">{t('localizationPage.multilingual')}</div>
                                     <p className="text-sm mt-2">{t('localizationPage.chooseLanguage')}</p>
                                 </div>
@@ -170,7 +166,7 @@ export default function LocalizationPage() {
                                             <span className="flex items-center">
                                                 <span className="truncate">{getLanguageName(selectedLocale)}</span>
                                             </span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                            <ChevronDown size={16} />
                                         </label>
                                         <div tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box max-h-70 w-full overflow-y-auto flex flex-col flex-nowrap">
                                             {getSortedLanguages().map((langPack) => {
@@ -201,7 +197,7 @@ export default function LocalizationPage() {
                                 </div>
 
                                 <div className="alert bg-base-100">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-info shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <AlertCircle className="stroke-info shrink-0 w-6 h-6" />
                                     <div className="text-sm">
                                         {t('localizationPage.languageChangeNotice')}
                                     </div>

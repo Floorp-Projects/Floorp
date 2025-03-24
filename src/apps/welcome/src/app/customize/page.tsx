@@ -3,14 +3,15 @@ import { useTranslation } from "react-i18next";
 import Navigation from "../../components/Navigation.tsx";
 import { getSearchEngines, getDefaultEngine, setDefaultEngine, getThemeSetting, setThemeSetting } from "./dataManager.ts";
 import type { SearchEngine } from "./types.ts";
+import { Sun, Moon, Monitor, Search } from "lucide-react";
 
 export default function CustomizePage() {
     const { t } = useTranslation();
 
     const themes = [
-        { id: "light", name: t("customize.themes.light"), icon: "☀️" },
-        { id: "dark", name: t("customize.themes.dark"), icon: "🌙" },
-        { id: "system", name: t("customize.themes.system"), icon: "🖥️" }
+        { id: "light", name: t("customize.themes.light"), icon: <Sun size={20} /> },
+        { id: "dark", name: t("customize.themes.dark"), icon: <Moon size={20} /> },
+        { id: "system", name: t("customize.themes.system"), icon: <Monitor size={20} /> }
     ];
 
     const [selectedTheme, setSelectedTheme] = useState<"system" | "light" | "dark">("system");
@@ -107,8 +108,8 @@ export default function CustomizePage() {
             return <img src={engine.iconURL} alt={engine.name} className="w-5 h-5 mr-2 object-contain" />;
         }
         return (
-            <div className="w-5 h-5 mr-2 flex items-center justify-center bg-base-300 rounded">
-                <span className="text-xs">🔍</span>
+            <div className="w-5 h-5 mr-2 flex items-center justify-center rounded">
+                <Search fill="none" size={16} />
             </div>
         );
     };
@@ -210,11 +211,11 @@ export default function CustomizePage() {
                 <div className="card-body p-0 overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2">
                         <div className="p-6 flex flex-col justify-center">
-                            <div className="flex items-centermb-6 gap-2">
-                                <div className="mb-4 text-primary">
+                            <div className="flex items-center mb-6 gap-2">
+                                <div className="text-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>
                                 </div>
-                                <h2 className="text-2xl font-bold mb-4">{t("customize.appearance.title")}</h2>
+                                <h2 className="text-2xl font-bold">{t("customize.appearance.title")}</h2>
                             </div>
                             <p className="mb-6">
                                 {t("customize.appearance.description")}
