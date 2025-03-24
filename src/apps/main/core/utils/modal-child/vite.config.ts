@@ -34,8 +34,8 @@ export default defineConfig({
           fileName: "jar.mn",
           needsCodeReference: false,
           source: await generateJarManifest(bundle, {
-            prefix: "content-modal",
-            namespace: "noraneko-modal",
+            prefix: "content-modal-child",
+            namespace: "noraneko-modal-child",
             register_type: "content",
           }),
         });
