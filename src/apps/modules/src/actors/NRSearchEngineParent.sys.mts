@@ -37,7 +37,6 @@ export class NRSearchEngineParent extends JSWindowActorParent {
               try {
                 iconURL = await engine.getIconURL();
 
-                // blob:URLやmoz-extension:URLをdata:URLに変換
                 if (
                   iconURL &&
                   (iconURL.startsWith("blob:") ||
@@ -52,9 +51,12 @@ export class NRSearchEngineParent extends JSWindowActorParent {
                 console.error("Failed to get icon URL:", error);
               }
 
+              console.log("engine", engine);
+
               return {
                 name: engine.name,
                 iconURL: iconURL,
+                searchUrl: engine.searchURLWithNoTerms.spec,
                 identifier: engine.identifier,
                 id: engine.id || engine.identifier,
                 telemetryId: engine.telemetryId || "",

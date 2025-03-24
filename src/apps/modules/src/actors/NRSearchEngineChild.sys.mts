@@ -9,31 +9,27 @@ export class NRSearchEngineChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5187" ||
+      window?.location.port === "5186" ||
       window?.location.href.startsWith("chrome://")
     ) {
       console.debug("NRSearchEngine 5187 ! or Chrome Page!");
 
-      // 検索エンジンの一覧を取得するメソッド
       Cu.exportFunction(this.getSearchEngines.bind(this), window, {
         defineAs: "NRGetSearchEngines",
       });
 
-      // デフォルト検索エンジンを取得するメソッド
       Cu.exportFunction(this.getDefaultEngine.bind(this), window, {
         defineAs: "NRGetDefaultEngine",
       });
 
-      // デフォルト検索エンジンを設定するメソッド
       Cu.exportFunction(this.setDefaultEngine.bind(this), window, {
         defineAs: "NRSetDefaultEngine",
       });
 
-      // プライベートブラウジング用のデフォルト検索エンジンを取得するメソッド
       Cu.exportFunction(this.getDefaultPrivateEngine.bind(this), window, {
         defineAs: "NRGetDefaultPrivateEngine",
       });
 
-      // プライベートブラウジング用のデフォルト検索エンジンを設定するメソッド
       Cu.exportFunction(this.setDefaultPrivateEngine.bind(this), window, {
         defineAs: "NRSetDefaultPrivateEngine",
       });

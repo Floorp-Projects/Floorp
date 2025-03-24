@@ -236,7 +236,11 @@ const JS_WINDOW_ACTORS: {
       },
     },
 
-    matches: ["*://localhost/*", "chrome://noraneko-welcome/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-welcome/*",
+      "chrome://noraneko-newtab/*",
+    ],
   },
 };
 
