@@ -1,6 +1,51 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1742601903701,
+      "status": "planned",
+      "version": "137",
+      "browserid": "edge",
+      "id": "fd0c0e43-c139-4526-8f78-16d479f71267",
+      "last_modified": 1742798647607
+    },
+    {
+      "name": "Opera Android",
+      "schema": 1742601903817,
+      "status": "current",
+      "version": "88",
+      "browserid": "opera_android",
+      "id": "6a520373-3a14-4d5d-a82b-f77cf4e88800",
+      "last_modified": 1742798647604
+    },
+    {
+      "name": "Edge",
+      "schema": 1742601903639,
+      "status": "nightly",
+      "version": "136",
+      "browserid": "edge",
+      "id": "debb081e-a0a2-45ed-9431-605493ad9400",
+      "last_modified": 1742798647600
+    },
+    {
+      "name": "Edge",
+      "schema": 1742579553355,
+      "status": "beta",
+      "version": "135",
+      "browserid": "edge",
+      "id": "2966c2e2-2f1a-4ccc-a0e9-5f14fe995f08",
+      "last_modified": 1742798647597
+    },
+    {
+      "name": "Edge",
+      "schema": 1741392303516,
+      "status": "current",
+      "version": "134",
+      "browserid": "edge",
+      "id": "d23388fd-74d6-41d4-af81-5dbd58e6ca92",
+      "last_modified": 1742798647591
+    },
+    {
       "name": "Chrome",
       "schema": 1741133103738,
       "status": "planned",
@@ -217,51 +262,6 @@
       "last_modified": 1740474638731
     },
     {
-      "name": "Edge",
-      "schema": 1740182703018,
-      "status": "planned",
-      "version": "136",
-      "browserid": "edge",
-      "id": "debb081e-a0a2-45ed-9431-605493ad9400",
-      "last_modified": 1740474638728
-    },
-    {
-      "name": "Edge",
-      "schema": 1740182702958,
-      "status": "nightly",
-      "version": "135",
-      "browserid": "edge",
-      "id": "2966c2e2-2f1a-4ccc-a0e9-5f14fe995f08",
-      "last_modified": 1740474638724
-    },
-    {
-      "name": "Edge",
-      "schema": 1740182702899,
-      "status": "beta",
-      "version": "134",
-      "browserid": "edge",
-      "id": "d23388fd-74d6-41d4-af81-5dbd58e6ca92",
-      "last_modified": 1740474638719
-    },
-    {
-      "name": "Edge",
-      "schema": 1738973106600,
-      "status": "current",
-      "version": "133",
-      "browserid": "edge",
-      "id": "a4608ee5-515c-4a4b-8080-7173eedbeb64",
-      "last_modified": 1739195819802
-    },
-    {
-      "name": "Opera Android",
-      "schema": 1738368304131,
-      "status": "current",
-      "version": "87",
-      "browserid": "opera_android",
-      "id": "6b0e38f2-3ece-4c54-b541-ff257473ae94",
-      "last_modified": 1738569469684
-    },
-    {
       "name": "Opera",
       "schema": 1738368303957,
       "status": "nightly",
@@ -370,5 +370,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1741164215357
+  "timestamp": 1742798647607
 }
