@@ -122,6 +122,8 @@
         "support": "Support",
         "documentation": "Documentation",
         "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
+        "resourcesLabel": "Resources",
+        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
     }
 }

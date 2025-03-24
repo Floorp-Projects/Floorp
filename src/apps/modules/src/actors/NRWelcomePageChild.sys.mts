@@ -27,6 +27,9 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       Cu.exportFunction(this.getNativeNames.bind(this), window, {
         defineAs: "NRGetNativeNames",
       });
+      Cu.exportFunction(this.setDefaultBrowser.bind(this), window, {
+        defineAs: "NRSetDefaultBrowser",
+      });
     }
   }
 
@@ -79,6 +82,16 @@ export class NRWelcomePageChild extends JSWindowActorChild {
 
   resolveGetNativeNames: ((localeInfo: string) => void) | null = null;
 
+  setDefaultBrowser(callback: (response: string) => void = () => {}) {
+    const promise = new Promise<string>((resolve, _reject) => {
+      this.resolveSetDefaultBrowser = resolve;
+    });
+    this.sendAsyncMessage("WelcomePage:setDefaultBrowser");
+    promise.then((response) => callback(response));
+  }
+
+  resolveSetDefaultBrowser: ((response: string) => void) | null = null;
+
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "WelcomePage:localeInfoResponse": {
@@ -105,21 +118,9 @@ export class NRWelcomePageChild extends JSWindowActorChild {
         break;
       }
 
-      case "AppConstants:GetConstants": {
-        const window = this.contentWindow;
-        if (window) {
-          try {
-            const constants = JSON.parse(message.data);
-            Object.defineProperty(window, "AppConstants", {
-              value: constants,
-              writable: false,
-              enumerable: true,
-              configurable: true,
-            });
-          } catch (e) {
-            console.error("Failed to parse AppConstants:", e);
-          }
-        }
+      case "WelcomePage:setDefaultBrowserResponse": {
+        this.resolveSetDefaultBrowser?.(message.data);
+        this.resolveSetDefaultBrowser = null;
         break;
       }
     }

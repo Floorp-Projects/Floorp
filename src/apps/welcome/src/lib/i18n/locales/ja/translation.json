@@ -122,6 +122,8 @@
         "support": "サポート",
         "documentation": "ドキュメント",
         "getStarted": "Floorpを始める",
-        "hint": "より詳細な設定は、右上のメニューボタンから設定オプションでカスタマイズできます。"
+        "hint": "より詳細な設定は、右上のメニューボタンから設定オプションでカスタマイズできます。",
+        "resourcesLabel": "リソース",
+        "defaultBrowserSuccess": "Floorp がデフォルトのブラウザーに設定されました！"
     }
 }

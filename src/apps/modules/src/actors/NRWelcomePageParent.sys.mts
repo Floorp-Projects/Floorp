@@ -120,6 +120,20 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         );
         break;
       }
+
+      case "WelcomePage:setDefaultBrowser": {
+        const { ShellService } = ChromeUtils.importESModule(
+          "resource:///modules/ShellService.sys.mjs",
+        );
+
+        await ShellService.setDefaultBrowser();
+
+        this.sendAsyncMessage(
+          "WelcomePage:setDefaultBrowserResponse",
+          JSON.stringify({ success: true }),
+        );
+        break;
+      }
     }
   }
 }
