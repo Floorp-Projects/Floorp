@@ -31,18 +31,18 @@ export async function injectManifest(
   await ensureDir(`${binPath}/${dirName}`);
 
   const baseManifestContent = `
-content noraneko content/ contentaccessible=yes
-content noraneko-startup startup/ contentaccessible=yes
-skin noraneko classic/1.0 skin/
-resource noraneko resource/ contentaccessible=yes
+content     noraneko                              content/     contentaccessible=yes
+content     noraneko-startup                      startup/     contentaccessible=yes
+skin        noraneko                classic/1.0   skin/
+resource    noraneko                              resource/    contentaccessible=yes
 `;
 
   const prodOnlyContent = `
-content noraneko-settings settings/ contentaccessible=yes
-content noraneko-modal-child modal-child/ contentaccessible=yes
-content noraneko-newtab newtab/ contentaccessible=yes
-content noraneko-welcome welcome/ contentaccessible=yes
-content noraneko-notes notes/ contentaccessible=yes
+content     noraneko-settings       settings/     contentaccessible=yes
+content     noraneko-modal-child    modal-child/  contentaccessible=yes
+content     noraneko-newtab         newtab/       contentaccessible=yes
+content     noraneko-welcome        welcome/      contentaccessible=yes
+content     noraneko-notes          notes/        contentaccessible=yes
 `;
 
   const manifestContent = mode !== "dev"
