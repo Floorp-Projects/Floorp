@@ -69,6 +69,7 @@
     "npm:clsx@^2.1.1": "2.1.1",
     "npm:cmdk@^1.0.4": "1.0.4_react@19.0.0_react-dom@19.0.0__react@19.0.0_@types+react@19.0.8_@types+react-dom@19.0.3__@types+react@19.0.8",
     "npm:consola@^3.4.0": "3.4.0",
+    "npm:country-flag-icons@^1.5.18": "1.5.18",
     "npm:create-vite-extra@latest": "3.0.1",
     "npm:create-vite@latest": "6.3.1",
     "npm:daisyui@5": "5.0.0",
@@ -98,6 +99,7 @@
     "npm:puppeteer-core@^24.1.1": "24.2.0_devtools-protocol@0.0.1402036",
     "npm:react-dom@19": "19.0.0_react@19.0.0",
     "npm:react-element-to-jsx-string@17": "17.0.0_react@19.0.0_react-dom@19.0.0__react@19.0.0_react-is@19.0.0",
+    "npm:react-flagpack@^2.0.6": "2.0.6_react@18.3.1",
     "npm:react-hook-form@^7.54.2": "7.54.2_react@19.0.0",
     "npm:react-i18next@^15.4.1": "15.4.1_i18next@24.2.2__typescript@5.7.3_react@19.0.0_typescript@5.7.3",
     "npm:react-refresh@0.16": "0.16.0",
@@ -2913,6 +2915,9 @@
         "typescript"
       ]
     },
+    "country-flag-icons@1.5.18": {
+      "integrity": "sha512-z+Uzesi8u8IdkViqqbzzbkf3+a7WJpcET5B7sPwTg7GXqPYpVEgNlZ/FC3l8KO4mEf+mNkmzKLppKTN4PlCJEQ=="
+    },
     "create-vite-extra@3.0.1": {
       "integrity": "sha512-f0paw5hoOdFUp/E88J47XXALXIWb6nsRrr+ykwbUHlsGpagtSaQC/xZJ6348NzH5M53okd0JMdii9BGM1juI5Q==",
       "dependencies": [
@@ -4300,6 +4305,9 @@
     "media-typer@0.3.0": {
       "integrity": "sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ=="
     },
+    "meow@13.2.0": {
+      "integrity": "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="
+    },
     "merge-anything@5.1.7": {
       "integrity": "sha512-eRtbOb1N5iyH0tkQDAoQ4Ipsp/5qSR79Dzrz8hEPxRX10RWWR/iQXdoKmBSRCThY1Fh5EhISDtpSc93fpxUniQ==",
       "dependencies": [
@@ -4882,6 +4890,15 @@
         "react@19.0.0",
         "react-dom",
         "react-is@19.0.0"
+      ]
+    },
+    "react-flagpack@2.0.6_react@18.3.1": {
+      "integrity": "sha512-ZLRC6u/d6AVTpMcFKZf2aSYPDmesPEzU084I99sU/Bcg32Jux6acE2bfHQnW2P/HYfSzx9YWwiNjJKxiW8OTGQ==",
+      "dependencies": [
+        "chalk@5.4.1",
+        "fs-extra@11.3.0",
+        "meow",
+        "react@18.3.1"
       ]
     },
     "react-hook-form@7.54.2_react@19.0.0": {
