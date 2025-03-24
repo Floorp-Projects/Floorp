@@ -1,6 +1,8 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import ProgressBar from "./components/ProgressBar.tsx";
+import { getLocaleData } from "./app/localization/dataManager.ts";
+import { useTranslation } from "react-i18next";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
 const LocalizationPage = lazy(() => import("./app/localization/page.tsx"));
@@ -9,6 +11,22 @@ const CustomizePage = lazy(() => import("./app/customize/page.tsx"));
 const FinishPage = lazy(() => import("./app/finish/page.tsx"));
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const initializeLanguage = async () => {
+      try {
+        const localeData = await getLocaleData();
+        const systemLanguage = localeData.localeInfo.systemLocale.language;
+        await i18n.changeLanguage(systemLanguage);
+      } catch (error) {
+        console.error("Failed to initialize language:", error);
+      }
+    };
+
+    initializeLanguage();
+  }, [i18n]);
+
   return (
     <HashRouter>
       <div className="min-h-screen bg-base-100 text-base-content flex flex-col relative overflow-hidden">
