@@ -424,6 +424,7 @@ const CurlUtils = {
           .replace(/\n/g, "\\n")
           .replace(/\r/g, "\\r")
           .replace(/!/g, "\\041")
+          .replace(/&/g, "^&")
           .replace(/[^\x20-\x7E]/g, escapeCharacter) +
         "'"
       );
