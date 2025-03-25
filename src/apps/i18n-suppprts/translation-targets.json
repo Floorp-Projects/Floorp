@@ -1,0 +1,22 @@
+{
+  "description": "This file contains the list of translation targets. I will used by f18n repository GitHub Actions.",
+  "source_file": "en-US.json",
+  "targets": [
+    {
+      "source_path": "src/apps/main/i18n/locales",
+      "f18n_path": "main/"
+    },
+    {
+      "source_path": "src/apps/settings/src/lib/i18n/locales",
+      "f18n_path": "settings/"
+    },
+    {
+      "source_path": "src/apps/newtab/src/lib/i18n/locales",
+      "f18n_path": "newtab/"
+    },
+    {
+      "source_path": "src/apps/welcome/src/lib/i18n/locales",
+      "f18n_path": "welcome/"
+    }
+  ]
+}
