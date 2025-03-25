@@ -3,18 +3,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createMemo, For } from "solid-js";
-import { WorkspacesService } from "../workspacesService";
-import { PopupToolbarElement } from "./popup-block-element";
-import { configStore } from "../data/config";
-import { workspacesDataStore } from "../data/data.js";
+import { For } from "solid-js";
+import { WorkspacesService } from "../workspacesService.ts";
+import { PopupToolbarElement } from "./popup-block-element.tsx";
+import { configStore } from "../data/config.ts";
+import { workspacesDataStore } from "../data/data.ts";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
+import { addI18nObserver } from "../../../../i18n/config.ts";
 
-export function PopupElement(props:{ctx:WorkspacesService}) {
+const translationKeys = {
+  createNew: "workspaces.popup.create-new",
+  manage: "workspaces.popup.manage"
+};
+
+const getTranslations = () => ({
+  createNew: i18next.t(translationKeys.createNew),
+  manage: i18next.t(translationKeys.manage)
+});
+
+export function PopupElement(props: { ctx: WorkspacesService }) {
+  const [texts, setTexts] = createSignal(getTranslations());
+  addI18nObserver(() => {
+    setTexts(getTranslations());
+  });
+
   return (
     <xul:panelview
       id="workspacesToolbarButtonPanel"
       type="arrow"
-      position={"bottomleft topleft"}
+      position="bottomleft topleft"
     >
       <xul:vbox id="workspacesToolbarButtonPanelBox">
         <xul:arrowscrollbox id="workspacesPopupBox" flex="1">
@@ -44,7 +62,7 @@ export function PopupElement(props:{ctx:WorkspacesService}) {
             id="workspacesCreateNewWorkspaceButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-create-new-workspace-button"
-            label="Create New Workspace..."
+            label={texts().createNew}
             context="tab-stacks-toolbar-item-context-menu"
             onCommand={() => props.ctx.createNoNameWorkspace()}
           />
@@ -52,6 +70,7 @@ export function PopupElement(props:{ctx:WorkspacesService}) {
             id="workspacesManageworkspacesServicesButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             data-l10n-id="workspaces-manage-workspaces-button"
+            label={texts().manage}
             context="tab-stacks-toolbar-item-context-menu"
             onCommand={() => props.ctx.manageWorkspaceFromDialog()}
           />

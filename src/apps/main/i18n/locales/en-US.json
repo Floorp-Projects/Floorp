@@ -1,6 +1,67 @@
 {
     "undo-closed-tab": {
         "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab"
+        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Name",
+            "name-placeholder": "Enter a name for this workspace",
+            "container": "Container",
+            "no-container": "No Container",
+            "icon": "Icon",
+            "edit-title": "Edit Workspace",
+            "save": "Save Changes",
+            "cancel": "Cancel"
+        },
+        "icons": {
+            "article": "Article",
+            "book": "Book",
+            "briefcase": "Briefcase",
+            "cart": "Shopping Cart",
+            "chat": "Chat",
+            "chill": "Chill",
+            "circle": "Circle",
+            "compass": "Compass",
+            "code": "Code",
+            "dollar": "Dollar",
+            "fence": "Fence",
+            "fingerprint": "Fingerprint",
+            "food": "Food",
+            "fruit": "Fruit",
+            "game": "Game",
+            "gear": "Settings",
+            "gift": "Gift",
+            "key": "Key",
+            "lightning": "Lightning",
+            "network": "Network",
+            "notes": "Notes",
+            "paint": "Paint",
+            "photo": "Photo",
+            "pin": "Pin",
+            "pet": "Pet",
+            "question": "Question",
+            "smartphone": "Smartphone",
+            "star": "Star",
+            "tree": "Tree",
+            "vacation": "Vacation",
+            "love": "Love",
+            "moon": "Moon",
+            "music": "Music",
+            "user": "User"
+        },
+        "service": {
+            "new-workspace": "New Workspace ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Move this Workspace Up",
+            "move-down": "Move this Workspace Down",
+            "delete": "Delete Workspace",
+            "manage": "Manage Workspace"
+        },
+        "popup": {
+            "create-new": "Create New Workspace...",
+            "manage": "Manage Workspaces"
+        }
     }
 }

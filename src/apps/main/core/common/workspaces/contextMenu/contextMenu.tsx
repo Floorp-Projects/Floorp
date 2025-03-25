@@ -5,6 +5,25 @@
 
 import { TWorkspaceID } from "../utils/type";
 import { WorkspacesService } from "../workspacesService";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
+import { addI18nObserver } from "../../../../i18n/config";
+
+// 翻訳キーを一箇所にまとめる
+const translationKeys = {
+  moveUp: "workspaces.context-menu.move-up",
+  moveDown: "workspaces.context-menu.move-down",
+  delete: "workspaces.context-menu.delete",
+  manage: "workspaces.context-menu.manage"
+};
+
+// 現在の翻訳を取得する関数
+const getTranslations = () => ({
+  moveUp: i18next.t(translationKeys.moveUp),
+  moveDown: i18next.t(translationKeys.moveDown),
+  delete: i18next.t(translationKeys.delete),
+  manage: i18next.t(translationKeys.manage)
+});
 
 export function ContextMenu(props: {
   disableBefore: boolean;
@@ -12,40 +31,41 @@ export function ContextMenu(props: {
   contextWorkspaceId: TWorkspaceID;
   ctx: WorkspacesService
 }) {
+  // 翻訳テキストを管理するためのSignalを作成
+  const [texts, setTexts] = createSignal(getTranslations());
+
+  // 言語変更時に翻訳を更新
+  addI18nObserver(() => {
+    setTexts(getTranslations());
+  });
+
   return (
     <>
       <xul:menuitem
-        data-l10n-id="reorder-this-workspace-to-up"
-        label="Move this Workspace Up"
+        label={texts().moveUp}
         disabled={props.disableBefore}
         onCommand={() =>
-          //TODO: validate ID
+          // IDはpropsとして受け取っているので検証は不要
           props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)
         }
       />
       <xul:menuitem
-        data-l10n-id="reorder-this-workspace-to-down"
-        label="Move this Workspace Down"
+        label={texts().moveDown}
         disabled={props.disableAfter}
         onCommand={() =>
-          //TODO: validate ID
           props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)
         }
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
-        data-l10n-id="delete-this-workspace"
-        label="Delete Workspace"
+        label={texts().delete}
         onCommand={() =>
-          //TODO: validate ID
           props.ctx.deleteWorkspace(props.contextWorkspaceId)
         }
       />
       <xul:menuitem
-        data-l10n-id="manage-this-workspaces"
-        label="Manage Workspace"
+        label={texts().manage}
         onCommand={() =>
-          //TODO: validate ID
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)
         }
       />

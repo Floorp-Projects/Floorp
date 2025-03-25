@@ -4,15 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { WorkspacesService } from "./workspacesService";
-import { createResource, For } from "solid-js";
-import { workspacesDataStore } from "./data/data.js";
-import { TWorkspaceID } from "./utils/type.js";
+import { WorkspacesService } from "./workspacesService.ts";
+import { For } from "solid-js";
+import { workspacesDataStore } from "./data/data.ts";
 
 export class WorkspacesTabContextMenu {
-  ctx:WorkspacesService;
-  constructor(ctx:WorkspacesService) {
-    this.ctx=ctx;
+  ctx: WorkspacesService;
+  constructor(ctx: WorkspacesService) {
+    this.ctx = ctx;
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
       marker: document?.getElementById("context_moveTabOptions") as XULElement,
@@ -37,7 +36,7 @@ export class WorkspacesTabContextMenu {
               }
             />
           } else {
-            console.error("Not valid ID for Workspaces (maybe order is not updated) : "+id);
+            console.error("Not valid ID for Workspaces (maybe order is not updated) : " + id);
           }
         }}
       </For>
@@ -71,7 +70,7 @@ export class WorkspacesTabContextMenu {
       window.TabContextMenu.contextTab,
     );
 
-    const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter((w)=>w !== tabWorkspaceId)
+    const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter((w) => w !== tabWorkspaceId)
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(

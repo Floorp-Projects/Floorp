@@ -8,6 +8,7 @@ import {
 import { WorkspacesTabManager } from "./workspacesTabManager";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspaceManageModal } from "./workspace-modal";
+import i18next from "i18next";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
   dataManagerCtx: WorkspacesDataManager;
@@ -76,12 +77,20 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * @returns The new workspace id.
    */
   public createNoNameWorkspace(): TWorkspaceID {
-    //TODO: i18n support
-    return this.createWorkspace(
-      `New Workspaces (${workspacesDataStore.data.size})`,
-    );
+    const count = workspacesDataStore.data.size;
+    const workspaceName = i18next.t("workspaces.service.new-workspace", {
+      count,
+    });
+
+    const id = this.dataManagerCtx.createWorkspace(workspaceName);
+    setWorkspacesDataStore("order", (prev) => [...prev, id]);
+    this.changeWorkspace(id);
+    return id;
   }
 
+  /**
+   * @deprecated Use WorkspacesServices.createWorkspace instead.
+   */
   createWorkspace(name: string): TWorkspaceID {
     //This function is deprecated because WorkspacesService is wrapping this function
     const id = this.dataManagerCtx.createWorkspace(name);

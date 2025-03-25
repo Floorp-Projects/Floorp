@@ -68,7 +68,9 @@ export function initI18N() {
 
 export function getRequestedLang() {
   const requestedLang =
-    Services.prefs.getStringPref("intl.locale.requested").split(",")[0];
+    Services.prefs.getStringPref("intl.locale.requested", "en-US").split(
+      ",",
+    )[0];
   return languageMappings[requestedLang] || requestedLang;
 }
 
