@@ -1,4 +1,5 @@
 import i18next from "i18next";
+import { LANGUAGE_MAPPINGS } from "../../i18n-suppprts/languageMappings.ts";
 
 const _modules = import.meta.glob("./locales/*.json", { eager: true });
 const modules: Record<string, Record<string, object>> = {};
@@ -12,24 +13,6 @@ for (const [idx, m] of Object.entries(_modules)) {
 
 export const resources = modules;
 
-// This is a mapping of language codes to i18next language codes.
-// If you redirect a language code to another language code, you should add it here.
-export const languageMappings: Record<string, string> = {
-  "en": "en-US",
-  "fr": "fr-FR",
-  "de": "de-DE",
-  "zh": "zh-CN",
-  "es": "es-ES",
-  "it": "it-IT",
-  "ru": "ru-RU",
-  "pt": "pt-BR",
-  "nl": "nl-NL",
-  "pl": "pl-PL",
-  "ko": "ko-KR",
-  "ja-jp": "ja",
-  "ja-JP": "ja",
-};
-
 export function initI18N() {
   const availableLangs = Object.keys(resources);
 
@@ -40,8 +23,8 @@ export function initI18N() {
     fallbackLng: ["en-US"],
     supportedLngs: [
       ...new Set([
-        ...Object.values(languageMappings),
-        ...Object.keys(languageMappings),
+        ...Object.values(LANGUAGE_MAPPINGS),
+        ...Object.keys(LANGUAGE_MAPPINGS),
         ...availableLangs,
       ]),
     ],
@@ -58,9 +41,13 @@ export function initI18N() {
     ...args: Parameters<typeof originalLookupFunction>
   ) {
     if (
-      Object.hasOwn(languageMappings, code) && languageMappings[code] !== code
+      Object.hasOwn(LANGUAGE_MAPPINGS, code) && LANGUAGE_MAPPINGS[code] !== code
     ) {
-      return originalLookupFunction.call(this, languageMappings[code], ...args);
+      return originalLookupFunction.call(
+        this,
+        LANGUAGE_MAPPINGS[code],
+        ...args,
+      );
     }
     return originalLookupFunction.call(this, code, ...args);
   };
@@ -71,7 +58,7 @@ export function getRequestedLang() {
     Services.prefs.getStringPref("intl.locale.requested", "en-US").split(
       ",",
     )[0];
-  return languageMappings[requestedLang] || requestedLang;
+  return LANGUAGE_MAPPINGS[requestedLang] || requestedLang;
 }
 
 export function addI18nObserver(observer: () => void) {

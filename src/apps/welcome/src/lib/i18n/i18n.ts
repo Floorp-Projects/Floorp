@@ -1,10 +1,17 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { LANGUAGE_MAPPINGS } from "../../../../i18n-suppprts/languageMappings.ts";
 
 const translations = import.meta.glob("./locales/*.json", {
   eager: true,
   import: "default",
+});
+
+i18n.on("languageChanged", function (lng) {
+  if (LANGUAGE_MAPPINGS[lng]) {
+    i18n.changeLanguage(LANGUAGE_MAPPINGS[lng]);
+  }
 });
 
 i18n
