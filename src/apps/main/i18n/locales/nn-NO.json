@@ -1,0 +1,124 @@
+{
+    "undo-closed-tab": {
+        "label": "Undo Closed Tab",
+        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Name",
+            "name-placeholder": "Enter a name for this workspace",
+            "container": "Container",
+            "no-container": "No Container",
+            "icon": "Icon",
+            "edit-title": "Edit Workspace",
+            "save": "Save Changes",
+            "cancel": "Cancel"
+        },
+        "icons": {
+            "article": "Article",
+            "book": "Book",
+            "briefcase": "Briefcase",
+            "cart": "Shopping Cart",
+            "chat": "Chat",
+            "chill": "Chill",
+            "circle": "Circle",
+            "compass": "Compass",
+            "code": "Code",
+            "dollar": "Dollar",
+            "fence": "Fence",
+            "fingerprint": "Fingerprint",
+            "food": "Food",
+            "fruit": "Fruit",
+            "game": "Game",
+            "gear": "Settings",
+            "gift": "Gift",
+            "key": "Key",
+            "lightning": "Lightning",
+            "network": "Network",
+            "notes": "Notes",
+            "paint": "Paint",
+            "photo": "Photo",
+            "pin": "Pin",
+            "pet": "Pet",
+            "question": "Question",
+            "smartphone": "Smartphone",
+            "star": "Star",
+            "tree": "Tree",
+            "vacation": "Vacation",
+            "love": "Love",
+            "moon": "Moon",
+            "music": "Music",
+            "user": "User"
+        },
+        "service": {
+            "new-workspace": "New Workspace ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Move this Workspace Up",
+            "move-down": "Move this Workspace Down",
+            "delete": "Delete Workspace",
+            "manage": "Manage Workspace"
+        },
+        "popup": {
+            "create-new": "Create New Workspace...",
+            "manage": "Manage Workspaces"
+        }
+    },
+    "statusbar": {
+        "toggle": "Status Bar{{mark}}"
+    },
+    "splitview": {
+        "title": "Split View",
+        "position": "Position",
+        "position-left": "Left",
+        "position-right": "Right",
+        "flex-row": "Row",
+        "flex-column": "Column",
+        "remove-button": "Remove Current View",
+        "tab-context": {
+            "split-tabs": "Split Tabs",
+            "split-fixed-tab": "Split to Fixed Tab"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Web Apps",
+            "install-current": "Install Current Page as Progressive Web App",
+            "open-installed": "Open Installed Apps"
+        },
+        "page-action": {
+            "title": "Open Application",
+            "install": "Install Application",
+            "open": "Open Application",
+            "cancel": "Cancel",
+            "site-icon": "Site icon",
+            "installing": "Installing indicator"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Open in Private Container",
+        "name": "Private Container"
+    },
+    "mouseGesture": {
+        "actions": {
+            "goBack": "Back",
+            "goForward": "Forward",
+            "reload": "Reload",
+            "closeTab": "Close Tab",
+            "newTab": "New Tab",
+            "duplicateTab": "Duplicate Tab",
+            "reloadAllTabs": "Reload All Tabs",
+            "reopenClosedTab": "Reopen Closed Tab"
+        },
+        "descriptions": {
+            "goBack": "Navigate back to the previous page",
+            "goForward": "Navigate forward to the next page",
+            "reload": "Reload the current page",
+            "closeTab": "Close the current tab",
+            "newTab": "Open a new tab",
+            "duplicateTab": "Duplicate the current tab",
+            "reloadAllTabs": "Reload all tabs",
+            "reopenClosedTab": "Reopen the last closed tab"
+        }
+    }
+}
