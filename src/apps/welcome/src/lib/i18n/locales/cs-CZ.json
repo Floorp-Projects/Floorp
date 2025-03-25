@@ -1,0 +1,130 @@
+{
+    "navigation": {
+        "welcome": "Welcome",
+        "language": "Language",
+        "languageSupport": "Language Support",
+        "features": "Features",
+        "featureIntroduction": "Feature Introduction",
+        "customize": "Customize",
+        "initialSettings": "Initial Settings",
+        "complete": "Complete",
+        "previous": "Previous",
+        "next": "Next"
+    },
+    "customize": {
+        "title": "Customize Floorp",
+        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "appearance": {
+            "title": "Appearance Settings",
+            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+        },
+        "themes": {
+            "light": "Light",
+            "dark": "Dark",
+            "system": "Follow system settings"
+        },
+        "themeInfo": {
+            "light": "Light theme",
+            "dark": "Dark theme",
+            "system": "System preference"
+        },
+        "searchEngine": {
+            "title": "Default Search Engine",
+            "default": "Default",
+            "search": "Search",
+            "noEnginesFound": "No search engines found."
+        }
+    },
+    "finish": {
+        "title": "Setup Complete!",
+        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "nextSteps": {
+            "title": "Next Steps (Optional)",
+            "setDefault": "Set as Default Browser",
+            "documentation": "Documentation"
+        },
+        "getStarted": "Get Started with Floorp",
+        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+    },
+    "welcomePage": {
+        "welcome": "Welcome to Floorp!",
+        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
+        "readyToStart": "When you're ready, click the below button to proceed.",
+        "features": "Floorp Features",
+        "privacy": "Privacy",
+        "privacyDesc": "Protects your data",
+        "speed": "Speed",
+        "speedDesc": "Optimized performance",
+        "customization": "Customization",
+        "customizationDesc": "Arrange to your preference",
+        "start": "Get Started"
+    },
+    "localizationPage": {
+        "title": "Floorp speaks your language",
+        "subtitle": "Check language settings and change if needed",
+        "languageSettings": "Language Settings",
+        "languageChanged": "Language Changed!",
+        "currentLanguageInfo": "Current Language Information",
+        "systemLanguage": "System Language",
+        "floorpLanguage": "Floorp Language",
+        "selectLanguage": "Select Language",
+        "useSystemLanguage": "Use System Language",
+        "multilingual": "Multilingual Support",
+        "chooseLanguage": "Choose from a wide range of languages",
+        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+    },
+    "featuresPage": {
+        "title": "Main Floorp Features",
+        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "panelSidebar": {
+            "title": "Panel Sidebar",
+            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "features": [
+                "Pin websites to the sidebar",
+                "Quickly take notes with Floorp Notes while browsing",
+                "Supports containers"
+            ]
+        },
+        "workspaces": {
+            "title": "Workspaces",
+            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "features": [
+                "Categorize by purpose: work, personal, etc.",
+                "Visually identify with custom icons",
+                "Easily manage tabs"
+            ]
+        },
+        "pwa": {
+            "title": "Progressive Web Applications Support",
+            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "features": [
+                "Run independently as desktop apps",
+                "Can be pinned to the taskbar",
+                "Firefox add-ons work too"
+            ]
+        },
+        "mouseGesture": {
+            "title": "Mouse Gestures",
+            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "features": [
+                "Operate without keyboard shortcuts",
+                "Fully customizable gestures",
+                "Quickly navigate pages and history"
+            ]
+        },
+        "notebook": "Notebook",
+        "nextTab": "Go to Next Tab"
+    },
+    "finishPage": {
+        "title": "Setup Complete!",
+        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
+        "nextSteps": "Next Steps (Optional)",
+        "defaultBrowser": "Set as Default Browser",
+        "support": "Support",
+        "documentation": "Documentation",
+        "getStarted": "Get Started with Floorp",
+        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
+        "resourcesLabel": "Resources",
+        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+    }
+}
