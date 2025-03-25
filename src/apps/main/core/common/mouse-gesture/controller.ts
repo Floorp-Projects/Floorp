@@ -10,7 +10,10 @@ import {
   patternToString,
 } from "./config.ts";
 import { GestureDisplay } from "./components/GestureDisplay.tsx";
-import { executeGestureAction } from "./utils/gestures.ts";
+import {
+  executeGestureAction,
+  getActionDisplayName,
+} from "./utils/gestures.ts";
 
 export class MouseGestureController {
   private isGestureActive = false;
@@ -113,7 +116,7 @@ export class MouseGestureController {
         );
 
         if (matchingAction) {
-          this.activeActionName = matchingAction.name;
+          this.activeActionName = getActionDisplayName(matchingAction.action);
         } else {
           this.activeActionName = "";
         }

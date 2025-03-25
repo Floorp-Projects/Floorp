@@ -117,10 +117,8 @@ export type InstalledApp = TProgressiveWebAppObject[string];
 export const zGestureDirection = z.enum(["up", "down", "left", "right"]);
 
 export const zGestureAction = z.object({
-  name: z.string(),
   pattern: z.array(zGestureDirection),
   action: z.string(),
-  description: z.string().optional(),
 });
 
 export const zMouseGestureConfig = z.object({

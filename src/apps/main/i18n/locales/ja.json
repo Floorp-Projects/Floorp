@@ -63,5 +63,62 @@
             "create-new": "新しいワークスペースを作成...",
             "manage": "ワークスペースを管理"
         }
+    },
+    "statusbar": {
+        "toggle": "ステータスバー{{mark}}"
+    },
+    "splitview": {
+        "title": "分割表示",
+        "position": "位置",
+        "position-left": "左",
+        "position-right": "右",
+        "flex-row": "行",
+        "flex-column": "列",
+        "remove-button": "現在の表示を削除",
+        "tab-context": {
+            "split-tabs": "タブを分割",
+            "split-fixed-tab": "固定タブに分割"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Webアプリ",
+            "install-current": "現在のページをPWAとしてインストール",
+            "open-installed": "インストール済みアプリを開く"
+        },
+        "page-action": {
+            "title": "アプリケーションを開く",
+            "install": "アプリケーションをインストール",
+            "open": "アプリケーションを開く",
+            "cancel": "キャンセル",
+            "site-icon": "サイトアイコン",
+            "installing": "インストール中"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "プライベートコンテナーで開く",
+        "name": "プライベート"
+    },
+    "mouseGesture": {
+        "actions": {
+            "goBack": "戻る",
+            "goForward": "進む",
+            "reload": "再読み込み",
+            "closeTab": "タブを閉じる",
+            "newTab": "新しいタブ",
+            "duplicateTab": "タブを複製",
+            "reloadAllTabs": "すべてのタブを再読み込み",
+            "reopenClosedTab": "閉じたタブを開き直す"
+        },
+        "descriptions": {
+            "goBack": "前のページに戻る",
+            "goForward": "次のページに進む",
+            "reload": "現在のページを再読み込み",
+            "closeTab": "現在のタブを閉じる",
+            "newTab": "新しいタブを開く",
+            "duplicateTab": "現在のタブを複製する",
+            "reloadAllTabs": "すべてのタブを再読み込みする",
+            "reopenClosedTab": "最後に閉じたタブを開き直す"
+        }
     }
 }

@@ -12,6 +12,7 @@ import {
 } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import { z } from "zod";
+import { getActionDisplayName } from "./utils/gestures";
 
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 export const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
@@ -20,10 +21,8 @@ export type GestureDirection = "up" | "down" | "left" | "right";
 export type GesturePattern = GestureDirection[];
 
 export const zGestureAction = z.object({
-  name: z.string(),
   pattern: z.array(z.enum(["up", "down", "left", "right"])),
   action: z.string(),
-  description: z.string().optional(),
 });
 export type GestureAction = z.infer<typeof zGestureAction>;
 
@@ -45,34 +44,24 @@ export const defaultConfig: MouseGestureConfig = {
   trailWidth: 6,
   actions: [
     {
-      name: "Back",
       pattern: ["left"],
       action: "goBack",
-      description: "Navigate back to the previous page",
     },
     {
-      name: "Forward",
       pattern: ["right"],
       action: "goForward",
-      description: "Navigate forward to the next page",
     },
     {
-      name: "Reload",
       pattern: ["up", "down"],
       action: "reload",
-      description: "Reload the current page",
     },
     {
-      name: "Close Tab",
       pattern: ["down", "right"],
       action: "closeTab",
-      description: "Close the current tab",
     },
     {
-      name: "New Tab",
       pattern: ["down", "up"],
       action: "newTab",
-      description: "Open a new tab",
     },
   ],
 };
@@ -177,4 +166,8 @@ export function patternToString(pattern: GesturePattern): string {
 
 export function stringToPattern(str: string): GesturePattern {
   return str.split("-") as GesturePattern;
+}
+
+export function getGestureActionName(gestureAction: GestureAction): string {
+  return getActionDisplayName(gestureAction.action);
 }

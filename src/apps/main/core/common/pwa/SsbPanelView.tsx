@@ -8,6 +8,8 @@ import type { JSX } from "solid-js";
 import { render, createRootHMR } from "@nora/solid-xul";
 import type { Manifest } from "./type";
 import type { PwaService } from "./pwaService";
+import i18next from "i18next";
+import { addI18nObserver } from "../../../i18n/config.ts";
 
 export class SsbPanelView {
   private static installedApps = createSignal<Manifest[]>([]);
@@ -117,13 +119,26 @@ export class SsbPanelView {
   }
 
   public static Render(): JSX.Element {
+    const [translations, setTranslations] = createSignal({
+      webapps: i18next.t("ssb.menu.webapps"),
+      installCurrent: i18next.t("ssb.menu.install-current"),
+      openInstalled: i18next.t("ssb.menu.open-installed")
+    });
+
+    addI18nObserver(() => {
+      setTranslations({
+        webapps: i18next.t("ssb.menu.webapps"),
+        installCurrent: i18next.t("ssb.menu.install-current"),
+        openInstalled: i18next.t("ssb.menu.open-installed")
+      });
+    });
+
     return (
       <>
         <xul:toolbarbutton
           id="appMenu-ssb-button"
           class="subviewbutton subviewbutton-nav"
-          data-l10n-id="appmenuitem-webapps"
-          label="Web Apps"
+          label={translations().webapps}
           closemenu="none"
           onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
@@ -132,18 +147,16 @@ export class SsbPanelView {
             <xul:toolbarbutton
               id="appMenu-install-or-open-ssb-current-page-button"
               class="subviewbutton"
-              data-l10n-id="appmenuitem-install-current-page"
-              label="Install Current Page as Progressive Web App"
+              label={translations().installCurrent}
               onCommand={() => SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
             />
             <xul:toolbarseparator />
             <h2
               id="panelMenu_openInstalledApps"
-              data-l10n-id="appmenu-open-installed-apps-subheader"
               class="subview-subheader"
-              aria-label="Open Installed Apps"
+              aria-label={translations().openInstalled}
             >
-              Installed Apps
+              {translations().openInstalled}
             </h2>
             <xul:toolbaritem
               id="panelMenu_installedSsbMenu"
@@ -161,7 +174,6 @@ export class SsbPanelView {
           <xul:toolbarbutton
             id="PanelUI-openManageSsbPage"
             class="subviewbutton panel-subview-footer-button"
-            data-l10n-id="floorp-open-manage-ssb-page"
             hidden={true}
           />
         </xul:panelview>

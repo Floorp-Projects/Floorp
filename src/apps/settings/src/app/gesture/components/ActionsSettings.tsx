@@ -41,7 +41,6 @@ export function ActionsSettings({
     const duplicateAction = (action: GestureAction) => {
         setEditingAction({
             ...action,
-            name: `${action.name} ${t("mouseGesture.copy")}`,
         });
         setEditingMode("duplicate");
         setIsDialogOpen(true);
@@ -49,10 +48,8 @@ export function ActionsSettings({
 
     const newAction = () => {
         setEditingAction({
-            name: "",
             pattern: [],
             action: availableActions[0]?.id || "",
-            description: "",
         });
         setEditingIndex(null);
         setEditingMode("new");
@@ -95,16 +92,18 @@ export function ActionsSettings({
                     <table className="table w-full">
                         <thead>
                             <tr>
-                                <th className="text-base-content/70">{t("mouseGesture.name")}</th>
-                                <th className="text-base-content/70">{t("mouseGesture.pattern")}</th>
                                 <th className="text-base-content/70">{t("mouseGesture.action")}</th>
+                                <th className="text-base-content/70">{t("mouseGesture.pattern")}</th>
                                 <th className="text-base-content/70 w-[140px]" />
                             </tr>
                         </thead>
                         <tbody>
                             {config.actions.map((action, index) => (
                                 <tr key={index} className="hover:bg-base-200/50">
-                                    <td className="font-medium">{action.name}</td>
+                                    <td>
+                                        {availableActions.find((a) => a.id === action.action)
+                                            ?.name || action.action}
+                                    </td>
                                     <td className="font-mono">
                                         <div className="flex flex-wrap gap-1">
                                             {action.pattern.map((direction, i) => (
@@ -117,10 +116,6 @@ export function ActionsSettings({
                                                 </span>
                                             ))}
                                         </div>
-                                    </td>
-                                    <td>
-                                        {availableActions.find((a) => a.id === action.action)
-                                            ?.name || action.action}
                                     </td>
                                     <td>
                                         <div className="flex space-x-1">

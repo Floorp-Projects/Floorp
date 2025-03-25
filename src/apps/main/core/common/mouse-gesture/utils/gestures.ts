@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import i18next from "i18next";
+
 export type GestureActionFn = () => void;
 export interface GestureActionRegistration {
   name: string;
@@ -92,6 +94,18 @@ export function executeGestureAction(name: string): boolean {
     return true;
   }
   return false;
+}
+
+export function getActionDisplayName(actionId: string): string {
+  return i18next.t(`mouseGesture.actions.${actionId}`, {
+    defaultValue: actionId,
+  });
+}
+
+export function getActionDescription(actionId: string): string {
+  return i18next.t(`mouseGesture.descriptions.${actionId}`, {
+    defaultValue: "",
+  });
 }
 
 export function goBack(): void {

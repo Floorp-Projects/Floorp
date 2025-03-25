@@ -5,39 +5,61 @@
 
 import { render } from "@nora/solid-xul";
 import { CSplitView } from "./splitView";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
+import { addI18nObserver } from "../../../i18n/config";
+
+const translationKeys = {
+  splitTabs: "splitview.tab-context.split-tabs",
+  splitFixedTab: "splitview.tab-context.split-fixed-tab"
+};
 
 export class SplitViewContextMenu {
+  private ctx: CSplitView;
+
+  constructor(ctx: CSplitView) {
+    this.ctx = ctx;
+    const parentElem = document?.getElementById("tabContextMenu");
+    if (!parentElem) return;
+
+    const marker = document?.getElementById("context_closeDuplicateTabs");
+    render(() => this.contextMenu(), parentElem, {
+      marker: marker as XULElement,
+    });
+  }
 
   private contextMenu() {
     const gSplitView = this.ctx;
+
+    const [texts, setTexts] = createSignal({
+      splitTabs: i18next.t(translationKeys.splitTabs),
+      splitFixedTab: i18next.t(translationKeys.splitFixedTab)
+    });
+
+    addI18nObserver(() => {
+      setTexts({
+        splitTabs: i18next.t(translationKeys.splitTabs),
+        splitFixedTab: i18next.t(translationKeys.splitFixedTab)
+      });
+    });
+
     return (
       <>
         <xul:menuseparator />
         <xul:menuitem
           id="context_splittabs"
-          data-l10n-id="floorp-split-view-open-menu"
-          label="Split Tabs"
+          data-l10n-id="split-view-tab-context-split-tabs"
+          label={texts().splitTabs}
           onCommand={() => gSplitView.contextSplitTabs()}
         />
         <xul:menuitem
           id="context_split_fixedtab"
-          data-l10n-id="floorp-split-view-fixed-menu"
-          label="Split to Fixed Tab"
+          data-l10n-id="split-view-tab-context-split-fixed-tab"
+          label={texts().splitFixedTab}
           onCommand={() => gSplitView.splitContextFixedTab()}
         />
         <xul:menuseparator />
       </>
     );
-  }
-
-  ctx:CSplitView;
-  constructor(ctx:CSplitView) {
-    this.ctx=ctx;
-    const parentElem = document?.getElementById("tabContextMenu");
-    render(() => this.contextMenu(), parentElem, {
-      marker: document?.getElementById(
-        "context_closeDuplicateTabs",
-      ) as XULElement,
-    });
   }
 }

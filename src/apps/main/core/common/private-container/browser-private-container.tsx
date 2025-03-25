@@ -10,10 +10,10 @@ import { createRootHMR } from "@nora/solid-xul";
 export class FloorpPrivateContainer {
 
   private get privateContainerMenuItem() {
-    return document.querySelector("#open_in_private_container") as XULElement;
+    return document?.querySelector("#open_in_private_container") as XULElement;
   }
   private get openLinkMenuItem() {
-    return document.querySelector("#context-openlink") as XULElement;
+    return document?.querySelector("#context-openlink") as XULElement;
   }
 
   constructor() {
@@ -32,11 +32,11 @@ export class FloorpPrivateContainer {
         FloorpPrivateContainer.handleTabModifications,
       );
 
-      createRootHMR(()=>{
+      createRootHMR(() => {
         // add URL link a context menu to open in private container.
         ContextMenuUtils.addContextBox(
           "open_in_private_container",
-          "open-in_private-container",
+          "privateContainer.openInPrivateContainer",
           "context-openlink",
           () =>
             FloorpPrivateContainer.openWithPrivateContainer(
@@ -47,7 +47,7 @@ export class FloorpPrivateContainer {
             this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
           },
         );
-      },import.meta.hot)
+      }, import.meta.hot)
     });
   }
 

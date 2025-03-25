@@ -4,9 +4,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { CSplitView } from "./splitView";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
+import { addI18nObserver } from "../../../i18n/config";
 
-export function Popup(props:{ctx:CSplitView}) {
+const translationKeys = {
+  title: "splitview.title",
+  position: "splitview.position",
+  positionLeft: "splitview.position-left",
+  positionRight: "splitview.position-right",
+  flexRow: "splitview.flex-row",
+  flexColumn: "splitview.flex-column",
+  removeButton: "splitview.remove-button"
+};
+
+export function Popup(props: { ctx: CSplitView }) {
   const gSplitView = props.ctx;
+  const [texts, setTexts] = createSignal({
+    title: i18next.t(translationKeys.title),
+    position: i18next.t(translationKeys.position),
+    positionLeft: i18next.t(translationKeys.positionLeft),
+    positionRight: i18next.t(translationKeys.positionRight),
+    flexRow: i18next.t(translationKeys.flexRow),
+    flexColumn: i18next.t(translationKeys.flexColumn),
+    removeButton: i18next.t(translationKeys.removeButton)
+  });
+
+  addI18nObserver(() => {
+    setTexts({
+      title: i18next.t(translationKeys.title),
+      position: i18next.t(translationKeys.position),
+      positionLeft: i18next.t(translationKeys.positionLeft),
+      positionRight: i18next.t(translationKeys.positionRight),
+      flexRow: i18next.t(translationKeys.flexRow),
+      flexColumn: i18next.t(translationKeys.flexColumn),
+      removeButton: i18next.t(translationKeys.removeButton)
+    });
+  });
 
   return (
     <xul:panel
@@ -18,14 +52,14 @@ export function Popup(props:{ctx:CSplitView}) {
       <xul:vbox id="splitView-box">
         <xul:vbox class="panel-header">
           <h1>
-            Split View
+            {texts().title}
             <span data-l10n-id="split-view-title" />
           </h1>
         </xul:vbox>
         <xul:toolbarseparator />
         <xul:vbox id="splitView-vbox">
           <h3 class="splitView-title">
-            Position
+            {texts().position}
             <span data-l10n-id="split-view-position" />
           </h3>
           <xul:hbox id="splitView-position-selector">
@@ -41,7 +75,7 @@ export function Popup(props:{ctx:CSplitView}) {
                 class="splitView-select-label"
                 for="splitView-position-selector-content-left"
               >
-                Left
+                {texts().positionLeft}
               </label>
               <xul:hbox
                 id="splitView-position-selector-content-left"
@@ -63,7 +97,7 @@ export function Popup(props:{ctx:CSplitView}) {
                 class="splitView-select-label"
                 for="splitView-position-selector-content-right"
               >
-                Right
+                {texts().positionRight}
               </label>
               <xul:hbox
                 id="splitView-position-selector-content-right"
@@ -75,7 +109,7 @@ export function Popup(props:{ctx:CSplitView}) {
             </xul:vbox>
           </xul:hbox>
           <xul:toolbarseparator />
-          <h3 class="splitView-title">Split View</h3>
+          <h3 class="splitView-title">{texts().title}</h3>
           <xul:hbox id="splitView-flex-selector">
             <xul:vbox
               id="splitView-flex-selector-row"
@@ -89,7 +123,7 @@ export function Popup(props:{ctx:CSplitView}) {
                 class="splitView-select-label"
                 for="splitView-flex-selector-content-row"
               >
-                Row
+                {texts().flexRow}
               </label>
               <xul:hbox
                 id="splitView-flex-selector-content-row"
@@ -111,7 +145,7 @@ export function Popup(props:{ctx:CSplitView}) {
                 class="splitView-select-label"
                 for="splitView-flex-selector-content-column"
               >
-                Column
+                {texts().flexColumn}
               </label>
               <xul:vbox
                 id="splitView-flex-selector-content-column"
@@ -129,7 +163,7 @@ export function Popup(props:{ctx:CSplitView}) {
             type="button"
             onClick={() => gSplitView.unsplitCurrentView()}
           >
-            Remove Current View
+            {texts().removeButton}
           </button>
         </xul:vbox>
       </xul:vbox>

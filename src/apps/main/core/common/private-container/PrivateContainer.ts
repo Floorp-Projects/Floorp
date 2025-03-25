@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import i18next from "i18next";
+
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
 );
@@ -49,7 +51,7 @@ export namespace PrivateContainer {
       public: true,
       icon: "chill",
       color: "purple",
-      name: "Private Container",
+      name: i18next.t("privateContainer.name"),
       floorpPrivateContainer: true,
     };
 

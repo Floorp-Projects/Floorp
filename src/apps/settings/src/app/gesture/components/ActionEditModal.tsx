@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import type { GestureAction, GestureDirection } from "@/types/pref.ts";
 import { patternToString } from "../dataManager.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
+import { getActionDisplayName } from "../../../../../main/core/common/mouse-gesture/utils/gestures.ts";
 
 interface ActionEditModalProps {
     action: GestureAction;
@@ -52,10 +53,6 @@ export function ActionEditModal({
     const handleSave = async () => {
         const finalAction = { ...action };
 
-        if (!finalAction.name.trim()) {
-            finalAction.name = t("mouseGesture.defaultName");
-        }
-
         if (finalAction.pattern.length === 0) {
             alert(t("mouseGesture.emptyPatternError"));
             return;
@@ -75,32 +72,43 @@ export function ActionEditModal({
         }
     };
 
+    const getDisplayName = () => {
+        return getActionDisplayName(action.action);
+    };
+
     return (
         <div className="modal modal-open">
             <div className="modal-box max-w-md">
                 <h3 className="font-bold text-lg mb-4">{getModalTitle()}</h3>
 
-                <div className="py-4 space-y-4">
-                    <div className="form-control w-full">
-                        <label className="mb-2">
-                            <span className="text-base-content/90">
-                                {t("mouseGesture.name")}
-                            </span>
-                        </label>
-                        <input
-                            type="text"
-                            className="input input-bordered w-full"
-                            value={action.name}
-                            onChange={(e) =>
-                                setAction({
-                                    ...action,
-                                    name: e.target.value,
-                                })
-                            }
-                            placeholder={t("mouseGesture.namePlaceholder")}
-                        />
-                    </div>
+                <div className="form-control w-full">
+                    <label className="mb-2">
+                        <span className="text-base-content/90">
+                            {t("mouseGesture.action")}
+                        </span>
+                    </label>
+                    <select
+                        className="select select-bordered w-full"
+                        value={action.action}
+                        onChange={(e) =>
+                            setAction({
+                                ...action,
+                                action: e.target.value,
+                            })
+                        }
+                    >
+                        <option disabled value="">
+                            {t("mouseGesture.selectAction")}
+                        </option>
+                        {availableActions.map((availableAction) => (
+                            <option key={availableAction.id} value={availableAction.id}>
+                                {availableAction.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
+                <div className="py-4 space-y-4">
                     <div className="form-control w-full">
                         <label className="mb-2">
                             <span className="text-base-content/90">
@@ -166,53 +174,6 @@ export function ActionEditModal({
                                 {t("mouseGesture.reset")}
                             </button>
                         </div>
-                    </div>
-
-                    <div className="form-control w-full">
-                        <label className="mb-2">
-                            <span className="text-base-content/90">
-                                {t("mouseGesture.action")}
-                            </span>
-                        </label>
-                        <select
-                            className="select select-bordered w-full"
-                            value={action.action}
-                            onChange={(e) =>
-                                setAction({
-                                    ...action,
-                                    action: e.target.value,
-                                })
-                            }
-                        >
-                            <option disabled value="">
-                                {t("mouseGesture.selectAction")}
-                            </option>
-                            {availableActions.map((availableAction) => (
-                                <option key={availableAction.id} value={availableAction.id}>
-                                    {availableAction.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="form-control w-full">
-                        <label className="mb-2">
-                            <span className="text-base-content/90">
-                                {t("mouseGesture.actionDescription")}
-                            </span>
-                        </label>
-                        <input
-                            type="text"
-                            className="input input-bordered w-full"
-                            value={action.description || ""}
-                            onChange={(e) =>
-                                setAction({
-                                    ...action,
-                                    description: e.target.value,
-                                })
-                            }
-                            placeholder={t("mouseGesture.descriptionPlaceholder")}
-                        />
                     </div>
                 </div>
 

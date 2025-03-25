@@ -7,6 +7,8 @@ import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService";
+import i18next from "i18next";
+import { addI18nObserver } from "../../../i18n/config.ts";
 
 export class SsbPageAction {
   private isInstalling = createSignal(false);
@@ -16,6 +18,14 @@ export class SsbPageAction {
   private canBeInstallAsPwa = createSignal(false);
   private isInstalled = createSignal(false);
   private shouldShowPageAction = createSignal(false);
+  private translations = createSignal({
+    title: i18next.t("ssb.page-action.title"),
+    install: i18next.t("ssb.page-action.install"),
+    open: i18next.t("ssb.page-action.open"),
+    cancel: i18next.t("ssb.page-action.cancel"),
+    siteIcon: i18next.t("ssb.page-action.site-icon"),
+    installing: i18next.t("ssb.page-action.installing")
+  });
 
   constructor(private pwaService: PwaService) {
     const starButtonBox = document?.getElementById("star-button-box");
@@ -34,6 +44,17 @@ export class SsbPageAction {
       "TabSelect",
       () => this.onCheckPageHasManifest(),
     );
+
+    addI18nObserver(() => {
+      this.translations[1]({
+        title: i18next.t("ssb.page-action.title"),
+        install: i18next.t("ssb.page-action.install"),
+        open: i18next.t("ssb.page-action.open"),
+        cancel: i18next.t("ssb.page-action.cancel"),
+        siteIcon: i18next.t("ssb.page-action.site-icon"),
+        installing: i18next.t("ssb.page-action.installing")
+      });
+    });
 
     this.onCheckPageHasManifest();
   }
@@ -98,11 +119,11 @@ export class SsbPageAction {
     const [description] = this.description;
     const [isInstalled] = this.isInstalled;
     const [shouldShowPageAction] = this.shouldShowPageAction;
+    const [translations] = this.translations;
 
     return (
       <xul:hbox
         id="ssbPageAction"
-        data-l10n-id="ssb-page-action"
         class="urlbar-page-action"
         popup="ssb-panel"
         hidden={!shouldShowPageAction()}
@@ -121,10 +142,7 @@ export class SsbPageAction {
           <xul:vbox id="ssb-box">
             <xul:vbox class="panel-header">
               <h1>
-                <span data-l10n-id="ssb-page-action-title" />
-                {isInstalled()
-                  ? "アプリケーションを開く"
-                  : "アプリケーションをインストール"}
+                {isInstalled() ? translations().open : translations().install}
               </h1>
             </xul:vbox>
             <xul:toolbarseparator />
@@ -134,7 +152,7 @@ export class SsbPageAction {
                   id="ssb-content-icon"
                   width="48"
                   height="48"
-                  alt="Site icon"
+                  alt={translations().siteIcon}
                   src={icon()}
                 />
               </xul:vbox>
@@ -156,7 +174,7 @@ export class SsbPageAction {
                   src="chrome://floorp/skin/icons/installing.gif"
                   width="48"
                   height="48"
-                  alt="Installing indicator"
+                  alt={translations().installing}
                 />
               </xul:vbox>
               <xul:button
@@ -164,17 +182,14 @@ export class SsbPageAction {
                 class="panel-button ssb-install-buttons footer-button primary"
                 hidden={isInstalling()}
                 onClick={this.onCommand}
-                label={isInstalled()
-                  ? "アプリケーションを開く"
-                  : "インストール"}
+                label={isInstalled() ? translations().open : translations().install}
               />
               <xul:button
                 id="ssb-app-cancel-button"
                 class="panel-button ssb-install-buttons footer-button"
-                data-l10n-id="ssb-app-cancel-button"
                 hidden={isInstalling()}
                 onClick={this.closePopup}
-                label="キャンセル"
+                label={translations().cancel}
               />
             </xul:hbox>
           </xul:vbox>

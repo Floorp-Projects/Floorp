@@ -1,5 +1,9 @@
 import { render } from "@nora/solid-xul";
 import type { JSXElement } from "solid-js";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
+import { addI18nObserver } from "../../i18n/config.ts";
+import { createRootHMR } from "@nora/solid-xul";
 
 export namespace ContextMenuUtils {
   const checkItems: (() => void)[] = [];
@@ -33,13 +37,13 @@ export namespace ContextMenuUtils {
 
   export function addContextBox(
     id: string,
-    l10n: string,
+    translationKey: string,
     renderElementId: string,
     runFunction: () => void,
     checkID: string,
     checkedFunction: () => void,
   ) {
-    const contextMenu = ContextMenu(id, l10n, runFunction);
+    const contextMenu = ContextMenu(id, translationKey, runFunction);
     const targetNode = document?.getElementById(checkID) as XULElement;
     const renderElement = document?.getElementById(
       renderElementId,
@@ -81,7 +85,7 @@ export namespace ContextMenuUtils {
     (async () => {
       for (const contextMenuSeparator of contextMenuSeparators()) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
-        
+
         if (
           nextSibling?.hidden &&
           contextMenuSeparator.id !== "context-sep-navigation" &&
@@ -94,13 +98,33 @@ export namespace ContextMenuUtils {
   }
 }
 
-export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
-  return (
-    <xul:menuitem
-      data-l10n-id={l10n}
-      label={l10n}
-      id={id}
-      onCommand={runFunction}
-    />
+type ContextMenuText = {
+  label: string;
+};
+
+export function ContextMenu(id: string, translationKey: string, runFunction: () => void) {
+  return createRootHMR(
+    () => {
+      const defaultText: ContextMenuText = {
+        label: translationKey
+      };
+
+      const [text, setText] = createSignal<ContextMenuText>(defaultText);
+
+      addI18nObserver(() => {
+        setText({
+          label: i18next.t(translationKey)
+        });
+      });
+
+      return (
+        <xul:menuitem
+          label={text().label}
+          id={id}
+          onCommand={runFunction}
+        />
+      );
+    },
+    import.meta.hot,
   );
 }
