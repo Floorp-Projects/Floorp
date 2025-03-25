@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { LANGUAGE_MAPPINGS } from "../../i18n-suppprts/languageMappings.ts";
+import { LANGUAGE_MAPPINGS } from "../../i18n-supports/languageMappings.ts";
 
 const _modules = import.meta.glob("./locales/*.json", { eager: true });
 const modules: Record<string, Record<string, object>> = {};

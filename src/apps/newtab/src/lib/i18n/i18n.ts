@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import { LANGUAGE_MAPPINGS } from "../../../../i18n-suppprts/languageMappings.ts";
+import { LANGUAGE_MAPPINGS } from "../../../../i18n-supports/languageMappings.ts";
 
 const translations = import.meta.glob("./locales/*.json", {
   eager: true,
