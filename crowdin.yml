@@ -1,0 +1,9 @@
+files:
+  - source: /src/apps/main/i18n/locales/en-US.json
+    translation: /src/apps/main/i18n/locales/%locale%.json
+
+  - source: /src/apps/settings/src/lib/i18n/locales/en-US.json
+    translation: /src/apps/settings/src/lib/i18n/locales/%locale%.json
+
+  - source: /src/apps/welcome/src/lib/i18n/locales/en-US.json
+    translation: /src/apps/welcome/src/lib/i18n/locales/%locale%.json
