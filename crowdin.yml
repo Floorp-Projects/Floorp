@@ -7,3 +7,6 @@ files:
 
   - source: /src/apps/welcome/src/lib/i18n/locales/en-US.json
     translation: /src/apps/welcome/src/lib/i18n/locales/%locale%.json
+
+  - source: /src/apps/newtab/src/lib/i18n/locales/en-US.json
+    translation: /src/apps/newtab/src/lib/i18n/locales/%locale%.json
