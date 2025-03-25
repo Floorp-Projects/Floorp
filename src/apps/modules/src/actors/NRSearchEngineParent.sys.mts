@@ -51,8 +51,6 @@ export class NRSearchEngineParent extends JSWindowActorParent {
                 console.error("Failed to get icon URL:", error);
               }
 
-              console.log("engine", engine);
-
               return {
                 name: engine.name,
                 iconURL: iconURL,
@@ -150,8 +148,6 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           await Services.search.promiseInitialized;
 
           const { engineId } = message.data;
-
-          console.log("setDefaultEngine", engineId);
 
           const engines = await Services.search.getVisibleEngines();
           const targetEngine = engines.find((engine: nsISearchEngine) =>

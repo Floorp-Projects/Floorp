@@ -63,7 +63,6 @@ export async function applyMixin(binPath: string) {
     const module = await import(`../../_dist/temp/mixins/${file}`);
     for (const i in module) {
       const meta = new module[i]().__meta__;
-      console.log(JSON.stringify(meta));
       const source = (
         await fs.readFile(`${binPath}/${meta.meta.path}`)
       ).toString();

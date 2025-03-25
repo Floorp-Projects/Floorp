@@ -18,7 +18,7 @@ export function initI18N() {
 
   i18next.init({
     lng: "en-US",
-    debug: true,
+    debug: false,
     resources,
     fallbackLng: ["en-US"],
     supportedLngs: [

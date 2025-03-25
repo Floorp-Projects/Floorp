@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, children, title }: ModalProps) {
+  const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
             onClick={onClose}
             className="btn btn-sm btn-circle btn-ghost"
           >
-            <span className="sr-only">閉じる</span>
+            <span className="sr-only">{t("modal.close")}</span>
             <svg
               className="h-5 w-5"
               fill="none"
@@ -61,7 +63,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
           {children}
         </div>
         <div className="modal-action">
-          <button onClick={onClose} className="btn">閉じる</button>
+          <button onClick={onClose} className="btn">{t("modal.close")}</button>
         </div>
       </div>
     </div>

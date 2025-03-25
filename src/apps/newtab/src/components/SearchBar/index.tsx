@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, Search } from "lucide-react";
 import {
   getNewTabSettings,
@@ -11,6 +12,7 @@ import {
 } from "./dataManager.ts";
 
 export function SearchBar() {
+  const { t } = useTranslation();
   const [query,
     setQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -122,7 +124,7 @@ export function SearchBar() {
     return (
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 w-full max-w-xl">
         <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 justify-center">
-          <div className="animate-pulse">検索エンジンを読み込み中...</div>
+          <div className="animate-pulse">{t("searchBar.loadingSearchEngines")}</div>
         </div>
       </div>
     );
@@ -184,7 +186,7 @@ export function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="検索またはURLを入力"
+          placeholder={t("searchBar.searchOrEnterUrl")}
           className="flex-1 bg-transparent border-none outline-none px-2 py-1 text-gray-900 dark:text-gray-100"
           autoFocus
         />

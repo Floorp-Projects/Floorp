@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { TopSitesManager } from "./dataManager.ts";
+import { useTranslation } from "react-i18next";
 
 interface CustomTopSite {
   url: string;
@@ -11,6 +12,7 @@ interface CustomTopSite {
 }
 
 export function TopSites() {
+  const { t } = useTranslation();
   const [sites, setSites] = useState<CustomTopSite[]>([]);
   const [userAddedSites, setUserAddedSites] = useState<CustomTopSite[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,13 +91,13 @@ export function TopSites() {
         >
           <div className="modal-box">
             <div className="flex justify-between items-center">
-              <h3 className="font-bold text-lg">Add a New Site</h3>
+              <h3 className="font-bold text-lg">{t("topSites.addNewSite")}</h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
-                <span className="sr-only">閉じる</span>
+                <span className="sr-only">{t("topSites.close")}</span>
                 <svg
                   className="h-5 w-5"
                   fill="none"
@@ -112,11 +114,11 @@ export function TopSites() {
             <div className="py-4">
               <div className="form-control w-full">
                 <label className="label">
-                  <span className="label-text">URL</span>
+                  <span className="label-text">{t("topSites.url")}</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="https://example.com"
+                  placeholder="https://floorp.app"
                   value={newSite.url}
                   onChange={(e) =>
                     setNewSite({ ...newSite, url: e.target.value })}
@@ -125,11 +127,11 @@ export function TopSites() {
               </div>
               <div className="form-control w-full mt-2">
                 <label className="label">
-                  <span className="label-text">Label</span>
+                  <span className="label-text">{t("topSites.label")}</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Website Name"
+                  placeholder={t("topSites.labelPlaceholder")}
                   value={newSite.label}
                   onChange={(e) =>
                     setNewSite({ ...newSite, label: e.target.value })}
@@ -143,14 +145,14 @@ export function TopSites() {
                 onClick={() => setIsModalOpen(false)}
                 className="btn btn-ghost"
               >
-                Cancel
+                {t("topSites.cancel")}
               </button>
               <button
                 type="button"
                 onClick={handleAddSite}
                 className="btn btn-primary"
               >
-                Add
+                {t("topSites.add")}
               </button>
             </div>
           </div>
@@ -174,18 +176,18 @@ export function TopSites() {
                     />
                   )
                   : site.smallFavicon
-                  ? (
-                    <img
-                      src={site.smallFavicon}
-                      alt={site.label}
-                      className="w-6 h-6 object-contain"
-                    />
-                  )
-                  : (
-                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                      {(site.label || site.title || "?")[0]}
-                    </span>
-                  )}
+                    ? (
+                      <img
+                        src={site.smallFavicon}
+                        alt={site.label}
+                        className="w-6 h-6 object-contain"
+                      />
+                    )
+                    : (
+                      <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                        {(site.label || site.title || "?")[0]}
+                      </span>
+                    )}
               </div>
               <span className="text-xs text-center text-gray-700 dark:text-gray-300 line-clamp-2 leading-tight">
                 {site.label || site.title}
@@ -203,7 +205,7 @@ export function TopSites() {
               </span>
             </div>
             <span className="text-xs text-center text-gray-700 dark:text-gray-300 line-clamp-2 leading-tight">
-              Add Site
+              {t("topSites.addSite")}
             </span>
           </button>
         </div>

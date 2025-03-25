@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from "../Modal/index.tsx";
 import { useBackground } from "@/contexts/BackgroundContext.tsx";
 import { useComponents } from "@/contexts/ComponentsContext.tsx";
@@ -7,6 +8,7 @@ import { getBackgroundImageCount } from "@/utils/backgroundImages.ts";
 export function Settings(
   { isOpen, onClose }: { isOpen: boolean; onClose: () => void },
 ) {
+  const { t } = useTranslation();
   const {
     type: backgroundType,
     fileName,
@@ -65,11 +67,11 @@ export function Settings(
   const imageCount = getBackgroundImageCount();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="新しいタブの設定">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("settings.newTabSettings")}>
       <div className="space-y-6">
         <section>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            表示コンポーネント
+            {t("settings.displayComponents")}
           </h3>
           <div className="space-y-4">
             <label className="flex items-center space-x-3">
@@ -81,7 +83,7 @@ export function Settings(
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
               <span className="text-gray-700 dark:text-gray-200">
-                トップサイト
+                {t("settings.topSites")}
               </span>
             </label>
             <label className="flex items-center space-x-3">
@@ -92,7 +94,7 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">時計</span>
+              <span className="text-gray-700 dark:text-gray-200">{t("settings.clock")}</span>
             </label>
             <label className="flex items-center space-x-3">
               <input
@@ -103,7 +105,7 @@ export function Settings(
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
               <span className="text-gray-700 dark:text-gray-200">
-                検索バー
+                {t("settings.searchBar")}
               </span>
             </label>
           </div>
@@ -111,7 +113,7 @@ export function Settings(
 
         <section>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            背景設定
+            {t("settings.backgroundSettings")}
           </h3>
           <div className="space-y-4">
             <label className="flex items-center space-x-3">
@@ -124,7 +126,7 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">背景なし</span>
+              <span className="text-gray-700 dark:text-gray-200">{t("settings.noBackground")}</span>
             </label>
             <label className="flex items-center space-x-3">
               <input
@@ -137,7 +139,7 @@ export function Settings(
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
               <span className="text-gray-700 dark:text-gray-200">
-                ランダム画像 ({imageCount}枚)
+                {t("settings.randomImage")} ({imageCount}枚)
               </span>
             </label>
             <label className="flex items-center space-x-3">
@@ -150,14 +152,14 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">指定画像</span>
+              <span className="text-gray-700 dark:text-gray-200">{t("settings.customImage")}</span>
             </label>
 
             {backgroundType === "custom" && (
               <div className="mt-4 pl-8">
                 {currentFileName && (
                   <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                    現在の画像: {currentFileName}
+                    {t("settings.currentImage")} {currentFileName}
                   </div>
                 )}
                 <input
@@ -174,7 +176,7 @@ export function Settings(
                     file:cursor-pointer"
                 />
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  推奨: 1920x1080以上の画像
+                  {t("settings.imageRecommendation")}
                 </p>
               </div>
             )}

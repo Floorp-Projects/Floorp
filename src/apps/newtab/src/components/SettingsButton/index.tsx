@@ -1,10 +1,14 @@
+import { useTranslation } from "react-i18next";
+
 export function SettingsButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <button
       type="button"
       onClick={onClick}
       className="fixed bottom-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-200 group"
-      aria-label="設定"
+      aria-label={t("settingsButton.settings")}
     >
       <svg
         className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"
