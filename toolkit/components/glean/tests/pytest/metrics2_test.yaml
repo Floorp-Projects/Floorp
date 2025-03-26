@@ -1,0 +1,435 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+# Semi-copy of metrics_test.yaml, only that this uses test2 and that uses test.
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+test2:
+  boolean_metric:
+    type: boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  labeled_boolean_metric:
+    type: labeled_boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  labeled_boolean_metric_labels:
+    type: labeled_boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+      - three_labels
+      - four_labels
+      - five_labels
+      - six_labels
+      - seven_labels
+      - eight_labels
+      - nine_labels
+      - ten_labels
+    telemetry_mirror: SOME_OTHER_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  counter_metric:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  labeled_counter_metric:
+    type: labeled_counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_KEYED_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  labeled_counter_metric_labels:
+    type: labeled_counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+    telemetry_mirror: SOME_OTHER_KEYED_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  string_metric:
+    type: string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  labeled_string_metric:
+    type: labeled_string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_string_metric_labels:
+    type: labeled_string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+
+  string_list_metric:
+    type: string_list
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: YET_ANOTHER_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  text_metric:
+    type: text
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828528
+    data_reviews:
+      - https://example.com
+
+
+  timespan_metric:
+    type: timespan
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_OTHER_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  timing_distribution_metric:
+    type: timing_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_TIME_HISTOGRAM_MS
+
+  memory_distribution_metric:
+    type: memory_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    memory_unit: kilobyte
+    telemetry_mirror: SOME_MEM_HISTOGRAM_KB
+
+  custom_distribution_metric:
+    type: custom_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    range_min: 0
+    range_max: 100
+    bucket_count: 100
+    histogram_type: linear
+    telemetry_mirror: SOME_LINEAR_HISTOGRAM
+
+test2.nested:
+  uuid_metric:
+    type: uuid
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_OTHER_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  datetime_metric:
+    type: datetime
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: SOME_STILL_OTHER_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
+
+  event_metric:
+    type: event
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: EventMetric_EnumNames_AreStrange
+
+  event_metric_with_extra:
+    type: event
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    extra_keys:
+      an_extra_key:
+        type: string
+        description: An extra key description
+      another_extra_key:
+        type: string
+        description: Another extra key description
+    telemetry_mirror: EventMetric_EnumName_WithExtra
+
+  quantity_metric:
+    type: quantity
+    unit: someunit
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_QUANTITY
+
+  rate_metric:
+    type: rate
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+
+  rate_with_external_denominator:
+    type: rate
+    denominator_metric: test.nested.external_denominator
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+
+  external_denominator:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+
+  optimizable_counter_metric:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  an_object:
+    type: object
+    description: An example object
+    bugs:
+      - https://bugzilla.mozilla.org/1839640
+    data_reviews:
+      - http://example.com/reviews
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: never
+    structure:
+      type: array
+      items:
+        type: object
+        properties:
+          colour:
+            type: string
+          diameter:
+            type: number
+          CamelCasedParameter:
+            type: number
