@@ -282,6 +282,268 @@ namespace test_nested {
   constexpr impl::UuidMetric uuid_metric(25);
 
 }
+namespace test2 {
+  /**
+   * generated from test2.boolean_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::BooleanMetric boolean_metric(26);
+
+  /**
+   * generated from test2.counter_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::CounterMetric counter_metric(27);
+
+  /**
+   * generated from test2.custom_distribution_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::CustomDistributionMetric custom_distribution_metric(28);
+
+  /**
+   * generated from test2.labeled_boolean_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::BooleanMetric, DynamicLabel> labeled_boolean_metric(29);
+
+  /**
+   * generated from test2.labeled_boolean_metric_labels
+   */
+  enum class LabeledBooleanMetricLabelsLabel: uint16_t {
+      eOneLabel = 0,
+      eTwoLabels = 1,
+      eThreeLabels = 2,
+      eFourLabels = 3,
+      eFiveLabels = 4,
+      eSixLabels = 5,
+      eSevenLabels = 6,
+      eEightLabels = 7,
+      eNineLabels = 8,
+      eTenLabels = 9,
+      e__Other__,
+    };
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::BooleanMetric, LabeledBooleanMetricLabelsLabel> labeled_boolean_metric_labels(30);
+
+  /**
+   * generated from test2.labeled_counter_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::CounterMetric, DynamicLabel> labeled_counter_metric(31);
+
+  /**
+   * generated from test2.labeled_counter_metric_labels
+   */
+  enum class LabeledCounterMetricLabelsLabel: uint16_t {
+      eOneLabel = 0,
+      eTwoLabels = 1,
+      e__Other__,
+    };
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::CounterMetric, LabeledCounterMetricLabelsLabel> labeled_counter_metric_labels(32);
+
+  /**
+   * generated from test2.labeled_string_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::StringMetric, DynamicLabel> labeled_string_metric(33);
+
+  /**
+   * generated from test2.labeled_string_metric_labels
+   */
+  enum class LabeledStringMetricLabelsLabel: uint16_t {
+      eOneLabel = 0,
+      eTwoLabels = 1,
+      e__Other__,
+    };
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::Labeled<impl::StringMetric, LabeledStringMetricLabelsLabel> labeled_string_metric_labels(34);
+
+  /**
+   * generated from test2.memory_distribution_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::MemoryDistributionMetric memory_distribution_metric(35);
+
+  /**
+   * generated from test2.string_list_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::StringListMetric string_list_metric(36);
+
+  /**
+   * generated from test2.string_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::StringMetric string_metric(37);
+
+  /**
+   * generated from test2.text_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::TextMetric text_metric(38);
+
+  /**
+   * generated from test2.timespan_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::TimespanMetric timespan_metric(39);
+
+  /**
+   * generated from test2.timing_distribution_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::TimingDistributionMetric timing_distribution_metric(40);
+
+}
+namespace test2_nested {
+
+  /**
+   * generated from test2.nested.datetime_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::DatetimeMetric datetime_metric(42);
+
+  /**
+   * generated from test2.nested.event_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::EventMetric<NoExtraKeys> event_metric(43);
+
+  /**
+   * generated from test2.nested.event_metric_with_extra
+   */
+    struct EventMetricWithExtraExtra {
+      mozilla::Maybe<nsCString> anExtraKey;
+      mozilla::Maybe<nsCString> anotherExtraKey;
+
+      std::tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+        nsTArray<nsCString> extraKeys;
+        nsTArray<nsCString> extraValues;
+        if (anExtraKey) {
+          extraKeys.AppendElement()->AssignASCII("an_extra_key");
+          extraValues.EmplaceBack(anExtraKey.value());
+        }
+        if (anotherExtraKey) {
+          extraKeys.AppendElement()->AssignASCII("another_extra_key");
+          extraValues.EmplaceBack(anotherExtraKey.value());
+        }
+        return std::make_tuple(std::move(extraKeys), std::move(extraValues));
+      }
+    };
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::EventMetric<EventMetricWithExtraExtra> event_metric_with_extra(44);
+
+  /**
+   * generated from test2.nested.external_denominator
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::CounterMetric external_denominator(45);
+
+  /**
+   * generated from test2.nested.optimizable_counter_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::CounterMetric optimizable_counter_metric(46);
+
+  /**
+   * generated from test2.nested.quantity_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::QuantityMetric quantity_metric(47);
+
+  /**
+   * generated from test2.nested.rate_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::RateMetric rate_metric(48);
+
+  /**
+   * generated from test2.nested.rate_with_external_denominator
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::NumeratorMetric rate_with_external_denominator(49);
+
+  /**
+   * generated from test2.nested.uuid_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::UuidMetric uuid_metric(50);
+
+}
 
 } // namespace mozilla::glean
 

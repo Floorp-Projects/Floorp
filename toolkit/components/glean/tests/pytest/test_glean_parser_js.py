@@ -31,7 +31,15 @@ def test_all_metric_types():
     """
 
     options = {"allow_reserved": False}
-    input_files = [Path(path.join(path.dirname(__file__), "metrics_test.yaml"))]
+    input_files = [
+        Path(path.join(path.dirname(__file__), x))
+        for x in ["metrics_test.yaml", "metrics2_test.yaml"]
+    ]
+
+    interesting = [
+        Path(path.join(path.dirname(__file__), x)) for x in ["metrics_test.yaml"]
+    ]
+    options.update({"interesting": interesting})
 
     all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 

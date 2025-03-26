@@ -13,6 +13,7 @@ import cpp
 import jinja2
 import jog
 import rust
+from buildconfig import topsrcdir
 from glean_parser import lint, metrics, parser, translate, util
 from mozbuild.util import FileAvoidWrite, memoize
 from util import generate_metric_ids
@@ -63,10 +64,14 @@ def get_parser_options(moz_app_version):
     }
 
 
-def parse(args):
+def parse(args, interesting_yamls=None):
     """
     Parse and lint the input files,
     then return the parsed objects for further processing.
+
+    :param interesting_yamls: If set, the "opt-in" list of metrics to actually
+      collect. Other metrics not listed in files in this list will be marked
+      disabled and thus not collected (only built).
     """
 
     if len(args) == 2 and args[0].endswith(".cached"):
@@ -78,10 +83,14 @@ def parse(args):
     # instead of listifying either, so we need to pull stuff from a *args.
     yaml_array = args[:-1]
     moz_app_version = args[-1]
-
     input_files = [Path(x) for x in yaml_array]
 
     options = get_parser_options(moz_app_version)
+    if interesting_yamls:
+        # We need to make these paths absolute here. They are used from at least
+        # two different contexts.
+        interesting = [Path(os.path.join(topsrcdir, x)) for x in interesting_yamls]
+        options.update({"interesting": interesting})
 
     return parse_with_options(input_files, options)
 
@@ -124,10 +133,7 @@ def main(cpp_fd, *args):
     # We only need this info if we're dealing with pings.
     ping_names_by_app_id = {}
     if "pings" in all_objs:
-        import sys
         from os import path
-
-        from buildconfig import topsrcdir
 
         sys.path.append(path.join(path.dirname(__file__), path.pardir, path.pardir))
         from metrics_index import pings_by_app_id

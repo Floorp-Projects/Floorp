@@ -114,6 +114,8 @@ SOURCES += [
 include("metrics_index.py")
 
 # Allow defining metrics/pings/tags elsewhere (like for Thunderbird).
+# See https://source-docs.thunderbird.net/en/latest/telemetry/index.html
+# See also: MOZ_GLEAN_INTERESTING_METRICS_FILES
 if CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"]:
     metrics_yamls.extend(CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"])
     metrics_yamls = sorted(metrics_yamls)
