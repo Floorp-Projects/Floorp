@@ -242,6 +242,16 @@ if CONFIG["MOZ_ARTIFACT_BUILDS"]:
     # Once generated, it needs to be placed in GreD so it can be found.
     FINAL_TARGET_FILES += ["!jogfile.json"]
 
+if CONFIG["MOZ_GLEAN_INTERESTING_METRICS_FILES"]:
+    GeneratedFile(
+        "interesting_serverknobs.json",
+        script="build_scripts/glean_parser_ext/interesting_serverknobs.py",
+        flags=[CONFIG["MOZ_APP_VERSION"]],
+        inputs=["!metrics_yamls.cached"],
+    )
+    # Once generated, it needs to be placed in GreD so it can be found.
+    FINAL_TARGET_FILES += ["!interesting_serverknobs.json"]
+
 # OHTTP support requires the fog_control crate know which pings wish to be sent
 # using OHTTP. fog_control has no access to the firefox_on_glean crate, so it
 # needs its own codegen.
