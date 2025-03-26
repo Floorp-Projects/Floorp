@@ -1,4 +1,4 @@
-import { createEffect, createResource } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
 import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
@@ -6,26 +6,87 @@ import { configStore } from "./data/config";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
+interface TabEvent extends Event {
+  target: XULElement;
+  forUnsplit?: boolean;
+}
+
 export class WorkspacesTabManager {
   dataManagerCtx: WorkspacesDataManager;
   iconCtx: WorkspaceIcons
-  constructor(iconCtx:WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
+  constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
+
     createEffect(() => {
       if (workspacesDataStore.selectedID) {
         this.updateTabsVisibility()
       }
     })
+
+    this.boundHandleTabClose = this.handleTabClose.bind(this);
+
+    window.addEventListener("TabClose", this.boundHandleTabClose);
+
+    onCleanup(() => {
+      this.cleanup();
+    });
   }
-  /**
-   * Check Tabs visibility.
-   * @returns void
-   */
-  public updateTabsVisibility() {
-    // Get Current Workspace & Workspace Id
+
+  private boundHandleTabClose: (event: TabEvent) => void;
+
+  public cleanup() {
+    window.removeEventListener("TabClose", this.boundHandleTabClose);
+  }
+
+  private handleTabClose = (event: TabEvent) => {
+    const tab = event.target as XULElement;
+    const workspaceId = this.getWorkspaceIdFromAttribute(tab);
+
+    if (!workspaceId) return;
+
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
-    // Last Show Workspace Attribute
+    const isCurrentWorkspace = workspaceId === currentWorkspaceId;
+    const workspaceTabs = Array.from(document?.querySelectorAll(
+      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
+    ) as NodeListOf<XULElement>).filter(t => t !== tab);
+
+    if (workspaceTabs.length === 0 && isCurrentWorkspace) {
+      try {
+        const defaultId = this.dataManagerCtx.getDefaultWorkspaceID();
+
+        if (defaultId !== workspaceId) {
+          const newTab = this.createTabForWorkspace(defaultId, false);
+
+          setTimeout(() => {
+            window.gBrowser.selectedTab = newTab;
+            setWorkspacesDataStore("selectedID", defaultId);
+            this.updateTabsVisibility();
+          }, 0);
+        } else {
+          setTimeout(() => {
+            this.createTabForWorkspace(defaultId, true);
+          }, 0);
+        }
+      } catch (e) {
+        console.error("Error handling last tab close in workspace:", e);
+        setTimeout(() => {
+          try {
+            const newTab = window.gBrowser.addTab("about:newtab", {
+              skipAnimation: true,
+              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            });
+            window.gBrowser.selectedTab = newTab;
+          } catch (innerError) {
+            console.error("Critical error handling tab close:", innerError);
+          }
+        }, 0);
+      }
+    }
+  };
+
+  public updateTabsVisibility() {
+    const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const selectedTab = window.gBrowser.selectedTab;
     if (
       selectedTab &&
@@ -107,9 +168,44 @@ export class WorkspacesTabManager {
    */
   public removeTabByWorkspaceId(workspaceId: TWorkspaceID) {
     const tabs = window.gBrowser.tabs;
+    const tabsToRemove = [];
+
     for (const tab of tabs) {
       if (this.getWorkspaceIdFromAttribute(tab) === workspaceId) {
-        window.gBrowser.removeTab(tab);
+        tabsToRemove.push(tab);
+      }
+    }
+
+    if (tabsToRemove.length === 0) return;
+
+    const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
+    if (workspaceId === currentWorkspaceId) {
+      const defaultId = this.dataManagerCtx.getDefaultWorkspaceID();
+
+      if (defaultId !== workspaceId) {
+        const defaultTabs = document?.querySelectorAll(
+          `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${defaultId}"]`,
+        ) as NodeListOf<XULElement>;
+
+        if (defaultTabs?.length > 0) {
+          window.gBrowser.selectedTab = defaultTabs[0];
+          setWorkspacesDataStore("selectedID", defaultId);
+        } else {
+          this.createTabForWorkspace(defaultId, true);
+          setWorkspacesDataStore("selectedID", defaultId);
+        }
+
+        this.updateTabsVisibility();
+      } else {
+        this.createTabForWorkspace(defaultId, true);
+      }
+    }
+
+    for (let i = tabsToRemove.length - 1; i >= 0; i--) {
+      try {
+        window.gBrowser.removeTab(tabsToRemove[i]);
+      } catch (e) {
+        console.error("Error removing tab:", e);
       }
     }
   }
@@ -149,21 +245,63 @@ export class WorkspacesTabManager {
       this.panelUITargetElement?.hidePopup();
     }
 
-    const willChangeWorkspaceLastShowTab = document?.querySelector(
-      `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
-    );
+    try {
+      const willChangeWorkspaceLastShowTab = document?.querySelector(
+        `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
+      ) as XULElement;
 
-    if (willChangeWorkspaceLastShowTab) {
-      window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
-    } else if (this.workspaceHasTabs(workspaceId)) {
-      window.gBrowser.selectedTab = this.workspaceHasTabs(workspaceId);
-    } else if (this.isThereNoWorkspaceTabs() !== true) {
-      window.gBrowser.selectedTab = this.isThereNoWorkspaceTabs();
-    } else {
-      this.createTabForWorkspace(workspaceId, true);
+      if (willChangeWorkspaceLastShowTab) {
+        window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+      }
+      else {
+        const tabToSelect = this.workspaceHasTabs(workspaceId);
+        if (tabToSelect) {
+          window.gBrowser.selectedTab = tabToSelect;
+        }
+        else {
+          const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
+          if (nonWorkspaceTab !== true) {
+            window.gBrowser.selectedTab = nonWorkspaceTab;
+            this.setWorkspaceIdToAttribute(nonWorkspaceTab, workspaceId);
+          }
+          else {
+            this.createTabForWorkspace(workspaceId, true);
+          }
+        }
+      }
+
+      setWorkspacesDataStore("selectedID", workspaceId);
+      this.updateTabsVisibility();
+    } catch (e) {
+      console.error("Failed to change workspace:", e);
+
+      try {
+        const defaultId = this.dataManagerCtx.getDefaultWorkspaceID();
+
+        if (defaultId !== workspaceId) {
+          this.createTabForWorkspace(defaultId, true);
+          setWorkspacesDataStore("selectedID", defaultId);
+          this.updateTabsVisibility();
+        }
+        else {
+          this.createTabForWorkspace(workspaceId, true);
+          setWorkspacesDataStore("selectedID", workspaceId);
+          this.updateTabsVisibility();
+        }
+      } catch (innerError) {
+        console.error("Critical error handling workspace change:", innerError);
+
+        try {
+          const newTab = window.gBrowser.addTab("about:newtab", {
+            skipAnimation: true,
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          });
+          window.gBrowser.selectedTab = newTab;
+        } catch (finalError) {
+          console.error("Fatal error creating new tab:", finalError);
+        }
+      }
     }
-
-    setWorkspacesDataStore("selectedID",workspaceId)
   }
 
 
@@ -178,9 +316,17 @@ export class WorkspacesTabManager {
     ) as XULElement[];
 
     if (!workspaceTabs?.length) {
-      const tab = this.createTabForWorkspace(workspaceId);
-      this.moveTabToWorkspace(workspaceId, tab);
-      window.gBrowser.selectedTab = tab;
+      try {
+        const tab = this.createTabForWorkspace(workspaceId);
+        this.moveTabToWorkspace(workspaceId, tab);
+        window.gBrowser.selectedTab = tab;
+      } catch (e) {
+        console.error("Failed to create tab for workspace:", e);
+        const defaultWorkspaceId = this.dataManagerCtx.getDefaultWorkspaceID();
+        if (defaultWorkspaceId !== workspaceId) {
+          this.changeWorkspace(defaultWorkspaceId);
+        }
+      }
     } else {
       window.gBrowser.selectedTab = workspaceTabs[0];
     }
@@ -222,10 +368,18 @@ export class WorkspacesTabManager {
   async moveTabToWorkspace(workspaceId: TWorkspaceID, tab: XULElement) {
     const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
     this.setWorkspaceIdToAttribute(tab, workspaceId);
-    if (tab === window.gBrowser.selectedTab) {
-      this.switchToAnotherWorkspaceTab(
-        oldWorkspaceId ?? workspacesDataStore.defaultID,
-      );
+
+    if (tab === window.gBrowser.selectedTab && oldWorkspaceId) {
+      const oldWorkspaceTabs = document?.querySelectorAll(
+        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${oldWorkspaceId}"]`,
+      ) as XULElement[];
+
+      if (oldWorkspaceTabs && oldWorkspaceTabs.length > 0) {
+        this.switchToAnotherWorkspaceTab(oldWorkspaceId);
+      } else {
+        const defaultWorkspaceId = this.dataManagerCtx.getDefaultWorkspaceID();
+        this.changeWorkspace(defaultWorkspaceId);
+      }
     }
   }
 
