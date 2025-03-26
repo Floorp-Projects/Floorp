@@ -14,6 +14,16 @@ i18n.on("languageChanged", function (lng) {
   }
 });
 
+const jsonLanguages = Object.keys(translations).map((path) => {
+  return path.match(/locales\/(.*)\.json/)![1];
+});
+
+const supportedLanguages = [
+  ...Object.keys(LANGUAGE_MAPPINGS),
+  ...Object.values(LANGUAGE_MAPPINGS),
+  ...jsonLanguages,
+].filter((value, index, self) => self.indexOf(value) === index);
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -34,6 +44,7 @@ i18n
     react: {
       useSuspense: false,
     },
+    supportedLngs: supportedLanguages,
   });
 
 for (const [path, resources] of Object.entries(translations)) {
