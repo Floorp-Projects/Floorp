@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import pickle
 import sys
 from pathlib import Path
 
@@ -67,6 +68,11 @@ def parse(args):
     Parse and lint the input files,
     then return the parsed objects for further processing.
     """
+
+    if len(args) == 2 and args[0].endswith(".cached"):
+        cache_file, _ = args
+        with open(cache_file, "rb") as cache:
+            return pickle.load(cache)
 
     # Unfortunately, GeneratedFile appends `flags` directly after `inputs`
     # instead of listifying either, so we need to pull stuff from a *args.
