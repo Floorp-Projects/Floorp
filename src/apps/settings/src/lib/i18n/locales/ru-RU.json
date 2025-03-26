@@ -1,23 +1,23 @@
 {
     "title": {
-        "default": "{{productName}} Settings"
+        "default": "{{productName}} Настройки"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Настройки",
+        "searchPlaceholder": "Настройки поиска",
+        "darkMode": "Тёмный режим"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
-        "description": "After restarting, the opened private windows and tabs will be lost.",
-        "cancel": "Later",
-        "restart": "Restart Now"
+        "title": "Требуется перезапуск",
+        "description": "После перезапуска, открытые приватные окна и вкладки будут утеряны.",
+        "cancel": "Позже",
+        "restart": "Перезапустить сейчас"
     },
     "sidebar": {
-        "firefoxSettings": "Firefox Settings",
+        "firefoxSettings": "Настройки Firefox",
         "about": "About",
         "aboutNoraneko": "About Noraneko",
-        "debug": "Debug",
+        "debug": "Отладка",
         "overview": "Overview",
         "features": "Features"
     },
@@ -25,24 +25,24 @@
         "home": "Home",
         "tabAndAppearance": "Tab & Appearance",
         "browserSidebar": "Panel Sidebar",
-        "workspaces": "Workspaces",
-        "keyboardShortcuts": "Keyboard Shortcuts",
-        "webApps": "Web Apps",
-        "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}",
-        "debug": "Debug",
-        "mouseGesture": "Mouse Gestures"
+        "workspaces": "Рабочие пространства",
+        "keyboardShortcuts": "Горячие клавиши",
+        "webApps": "Веб приложения",
+        "profileAndAccount": "Профиль и учетная запись",
+        "aboutBrowser": "О {{productName}}",
+        "debug": "Отладка",
+        "mouseGesture": "Жесты мышью"
     },
     "home": {
         "welcome": "Добро пожаловать, {{name}} 👋",
-        "defaultAccountName": "{{productName}} User",
+        "defaultAccountName": "{{productName}} Пользователь",
         "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
         "setup": {
             "title": "Setup",
             "footerLinkText": "Log in to Accounts",
             "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
             "setupProgressTitle": "Setup Progress",
-            "step": "Step {{step}} of {{total}}"
+            "step": "Шаг {{step}} из {{total}}"
         },
         "privacyAndTrackingProtection": {
             "title": "Privacy and Tracking Protection",
@@ -50,14 +50,14 @@
             "description": "{{productName}} protects your data and privacy by default, but you can also manage these settings manually."
         },
         "ablazeAccount": {
-            "title": "Ablaze Account (Coming Soon)",
-            "footerLinkText": "Ablaze Account",
+            "title": "Аккаунт Ablaze (Скоро)",
+            "footerLinkText": "Аккаунт Ablaze",
             "description": "Use a Mozilla Account to sync some data with other devices. Ablaze Account syncs data that can't be synced with a Mozilla Account."
         },
         "manageExtensions": {
-            "title": "Manage Extensions",
+            "title": "Управление расширениями",
             "description": "{{productName}} allows you to manage extensions available on addons.mozilla.org.",
-            "footerLinkText": "Manage Extensions"
+            "footerLinkText": "Управление расширениями"
         },
         "browserSupport": {
             "title": "{{productName}} Support",
@@ -68,8 +68,8 @@
     "design": {
         "tabAndAppearance": "Tab & Appearance",
         "customizePositionOfToolbars": "Customize toolbar positions, tab bar style, and {{productName}}'s appearance.",
-        "interface": "Interface",
-        "aboutInterfaceDesign": "About Interface Design",
+        "interface": "Интерфейс",
+        "aboutInterfaceDesign": "О дизайне интерфейса",
         "proton": "Proton",
         "lepton": "Lepton",
         "photon": "Photon",
@@ -91,12 +91,12 @@
         "position": "Position",
         "positionDescription": "Choose the tab bar position.",
         "default": "Default",
-        "hideTabBar": "Hide Tab Bar",
+        "hideTabBar": "Скрыть панель вкладок",
         "hideTabBarAndTitleBar": "Hide Tab Bar & Title Bar",
         "showTabBarOnBottomOfNavigationBar": "Show Tab Bar at Bottom of Navigation Bar",
         "showTabBarOnBottomOfWindow": "Show Tab Bar at Bottom of Window",
         "tab": {
-            "title": "Tabs",
+            "title": "Вкладки",
             "footerLinkText": "About Tab Settings",
             "scroll": "Scroll",
             "scrollDescription": "Choose whether to use scrolling for tab switching and select scrolling behavior.",

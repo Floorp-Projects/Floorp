@@ -1,77 +1,77 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "label": "閉じたタブを元に戻す",
+        "tooltiptext": "最後に閉じたタブを再度開く {{shortcut}}"
     },
     "workspaces": {
         "modal": {
-            "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
-            "container": "Container",
-            "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "name": "名前",
+            "name-placeholder": "このワークスペースの名前を入力",
+            "container": "コンテナー",
+            "no-container": "コンテナーなし",
+            "icon": "アイコン",
+            "edit-title": "ワークスペースを編集",
+            "save": "保存",
+            "cancel": "キャンセル"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Circle",
-            "compass": "Compass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "article": "記事",
+            "book": "本",
+            "briefcase": "ブリーフケース",
+            "cart": "カート",
+            "chat": "チャット",
+            "chill": "チル",
+            "circle": "サークル",
+            "compass": "コンパス",
+            "code": "コード",
+            "dollar": "ドル",
+            "fence": "フェンス",
+            "fingerprint": "フィンガープリント",
+            "food": "食べ物",
+            "fruit": "フルーツ",
+            "game": "ゲーム",
+            "gear": "設定",
+            "gift": "ギフト",
+            "key": "キー",
+            "lightning": "稲妻",
+            "network": "ネットワーク",
+            "notes": "メモ",
+            "paint": "ペイント",
+            "photo": "写真",
+            "pin": "ピン",
+            "pet": "ペット",
+            "question": "問題",
+            "smartphone": "スマートフォン",
+            "star": "スター",
+            "tree": "ツリー",
+            "vacation": "休暇",
+            "love": "ハート",
+            "moon": "月",
+            "music": "音楽",
+            "user": "ユーザー"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "新しいワークスペース ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "このワークスペースを上に移動",
+            "move-down": "このワークスペースを下に移動",
+            "delete": "ワークスペースを削除",
+            "manage": "ワークスペースを管理"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "新規ワークスペースを作成...",
+            "manage": "ワークスペースを管理"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "ステータスバー{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
+        "title": "分割ビュー",
+        "position": "位置",
+        "position-left": "左",
+        "position-right": "右",
         "flex-row": "Row",
         "flex-column": "Column",
         "remove-button": "Remove Current View",

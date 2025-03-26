@@ -1,13 +1,13 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
+        "welcome": "Добро пожаловать",
+        "language": "Язык",
         "languageSupport": "Language Support",
         "features": "Features",
         "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
+        "customize": "Настроить",
+        "initialSettings": "Начальные настройки",
+        "complete": "Готово",
         "previous": "Previous",
         "next": "Next"
     },
@@ -19,35 +19,35 @@
             "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Светлая",
+            "dark": "Тёмная",
+            "system": "Использовать настройки системы"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
+            "light": "Светлая тема",
+            "dark": "Тёмная тема",
             "system": "System preference"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Поисковая система по умолчанию",
+            "default": "По умолчанию",
+            "search": "Поиск",
+            "noEnginesFound": "Поисковые системы не найдены."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
+        "title": "Настройка завершена!",
         "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
         "nextSteps": {
             "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "setDefault": "Сделать браузером по умолчанию",
+            "documentation": "Документация"
         },
         "getStarted": "Get Started with Floorp",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
+        "welcome": "Добро пожаловать в Floorp!",
         "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
         "readyToStart": "When you're ready, click the below button to proceed.",
         "features": "Floorp Features",
@@ -67,7 +67,7 @@
         "currentLanguageInfo": "Current Language Information",
         "systemLanguage": "System Language",
         "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
+        "selectLanguage": "Выбрать язык",
         "useSystemLanguage": "Use System Language",
         "multilingual": "Multilingual Support",
         "chooseLanguage": "Choose from a wide range of languages",
@@ -104,7 +104,7 @@
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
+            "title": "Жесты мышью",
             "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
             "features": [
                 "Operate without keyboard shortcuts",

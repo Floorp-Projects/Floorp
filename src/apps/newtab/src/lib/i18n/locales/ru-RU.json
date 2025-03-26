@@ -1,37 +1,37 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "addSite": "Добавить сайт",
+        "addNewSite": "Добавить новый сайт",
+        "url": "URL-адрес",
+        "label": "Метка",
+        "cancel": "Отменить",
+        "add": "Добавить",
+        "close": "Закрыть",
+        "labelPlaceholder": "Имя веб сайта"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "newTabSettings": "Настройки новой вкладки",
+        "displayComponents": "Показывать компоненты",
+        "topSites": "Популярные сайты",
+        "clock": "Часы",
+        "searchBar": "Поисковая строка",
+        "backgroundSettings": "Настройки фона",
+        "noBackground": "Без фона",
+        "randomImage": "Случайное изображение",
+        "customImage": "Пользовательское изображение",
+        "currentImage": "Текущее изображение:",
+        "imageRecommendation": "Рекомендуется: изображение размером 1920x1080 или больше",
+        "close": "Закрыть"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Поиск или ввод URL-адреса",
+        "loadingSearchEngines": "Загрузка поисковых систем..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Настройки"
     },
     "modal": {
-        "close": "Close"
+        "close": "Закрыть"
     }
 }

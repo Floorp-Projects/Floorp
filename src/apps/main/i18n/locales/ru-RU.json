@@ -7,8 +7,8 @@
         "modal": {
             "name": "Название",
             "name-placeholder": "Введите название для рабочего пространства",
-            "container": "Container",
-            "no-container": "No Container",
+            "container": "Контейнер",
+            "no-container": "Нет контейнера",
             "icon": "Значок",
             "edit-title": "Редактировать рабочее пространство",
             "save": "Сохранить изменения",
@@ -17,108 +17,108 @@
         "icons": {
             "article": "Статья",
             "book": "Книга",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Circle",
+            "briefcase": "Дипломат",
+            "cart": "Корзина для покупок",
+            "chat": "Чат",
+            "chill": "Холод",
+            "circle": "Круг",
             "compass": "Компас",
-            "code": "Code",
-            "dollar": "Dollar",
+            "code": "Код",
+            "dollar": "Доллар",
             "fence": "Забор",
-            "fingerprint": "Fingerprint",
+            "fingerprint": "Отпечаток пальца",
             "food": "Еда",
             "fruit": "Фрукт",
             "game": "Игра",
             "gear": "Настройки",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
+            "gift": "Подарок",
+            "key": "Ключ",
+            "lightning": "Молния",
+            "network": "Сеть",
+            "notes": "Заметки",
+            "paint": "Краска",
+            "photo": "Фото",
+            "pin": "Кнопка",
+            "pet": "Питомец",
+            "question": "Вопросительный знак",
+            "smartphone": "Смартфон",
+            "star": "Звезда",
+            "tree": "Дерево",
+            "vacation": "Отпуск",
             "love": "Любовь",
             "moon": "Луна",
             "music": "Музыка",
-            "user": "User"
+            "user": "Пользователь"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Новое рабочее пространство ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "Переместить это рабочее пространство вверх",
+            "move-down": "Переместить это рабочее пространство вниз",
+            "delete": "Удалить рабочее пространство",
+            "manage": "Управление рабочим пространством"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "Создать новое рабочее пространство...",
+            "manage": "Управление рабочими пространствами"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "Строка состояния{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "title": "Разделённый вид",
+        "position": "Расположение",
+        "position-left": "Слева",
+        "position-right": "Справа",
+        "flex-row": "Строка",
+        "flex-column": "Столбец",
+        "remove-button": "Удалить текущий вид",
         "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
+            "split-tabs": "Разделить вкладки",
+            "split-fixed-tab": "Разделить на фиксированную вкладку"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "Веб-приложения",
+            "install-current": "Установить текущую страницу как прогрессивное веб-приложение",
+            "open-installed": "Открыть установленные приложения"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "title": "Открыть приложение",
+            "install": "Установить приложение",
+            "open": "Открыть приложение",
+            "cancel": "Отменить",
+            "site-icon": "Значок сайта",
+            "installing": "Установка индикатора"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "Открыть в приватном контейнере",
+        "name": "Приватный контейнер"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "Назад",
+            "goForward": "Вперёд",
+            "reload": "Обновить",
+            "closeTab": "Закрыть вкладку",
+            "newTab": "Новая вкладка",
+            "duplicateTab": "Дублировать вкладку",
+            "reloadAllTabs": "Перезагрузить все вкладки",
+            "reopenClosedTab": "Открыть закрытые вкладки"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "Перейти назад на предыдущую страницу",
+            "goForward": "Перейти вперед к следующей странице",
+            "reload": "Обновить текущую страницу",
+            "closeTab": "Закрыть текущую вкладку",
+            "newTab": "Открыть новую вкладку",
+            "duplicateTab": "Дублировать текущую вкладку",
+            "reloadAllTabs": "Перезагрузите все вкладки",
+            "reopenClosedTab": "Открыть последнюю закрытую вкладку"
         }
     }
 }
