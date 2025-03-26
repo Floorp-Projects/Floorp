@@ -7,11 +7,18 @@ import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
-import { WindowsSupport } from "./supports/windows.ts";
+import type { WindowsSupport } from "./supports/windows.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
+
+let WindowsSupportClass: typeof WindowsSupport | null = null;
+if (AppConstants.platform === "win") {
+  import("./supports/windows.ts").then((module) => {
+    WindowsSupportClass = module.WindowsSupport;
+  });
+}
 
 export class SiteSpecificBrowserManager {
   private ssbRunner: SsbRunner;
@@ -134,8 +141,8 @@ export class SiteSpecificBrowserManager {
   }
 
   private async install(manifest: Manifest) {
-    if (AppConstants.platform === "win") {
-      const windowsSupport = new WindowsSupport(this);
+    if (AppConstants.platform === "win" && WindowsSupportClass) {
+      const windowsSupport = new WindowsSupportClass(this);
       await windowsSupport.install(manifest);
     }
 
@@ -143,8 +150,8 @@ export class SiteSpecificBrowserManager {
   }
 
   private async uninstall(manifest: Manifest) {
-    if (AppConstants.platform === "win") {
-      const windowsSupport = new WindowsSupport(this);
+    if (AppConstants.platform === "win" && WindowsSupportClass) {
+      const windowsSupport = new WindowsSupportClass(this);
       await windowsSupport.uninstall(manifest);
     }
     await this.dataManager.removeSsbData(manifest.start_url);

@@ -6,11 +6,18 @@
 import type { DataManager } from "./dataStore.ts";
 import type { Manifest } from "./type.ts";
 import { SiteSpecificBrowserManager } from "./ssbManager.ts";
-import { WindowsSupport } from "./supports/windows.ts";
+import type { WindowsSupport } from "./supports/windows.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
+
+let WindowsSupportClass: typeof WindowsSupport | null = null;
+if (AppConstants.platform === "win") {
+  import("./supports/windows.ts").then((module) => {
+    WindowsSupportClass = module.WindowsSupport;
+  });
+}
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
@@ -51,8 +58,9 @@ export class SsbRunner {
 
     win.focus();
 
-    if (Services.appinfo.OS === "WINNT") {
-      const winsupport = new WindowsSupport(this.ssbManager);
+    // Windows固有のコードは Windows 環境でのみ実行する
+    if (AppConstants.platform === "win" && WindowsSupportClass) {
+      const winsupport = new WindowsSupportClass(this.ssbManager);
       winsupport.applyOSIntegration(ssb, win);
     }
   }
