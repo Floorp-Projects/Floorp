@@ -1,3 +1,37 @@
 {
-    "title": "Floorp Start"
+    "title": "Início do Floorp",
+    "topSites": {
+        "addSite": "Add Site",
+        "addNewSite": "Add a New Site",
+        "url": "URL",
+        "label": "Label",
+        "cancel": "Cancel",
+        "add": "Add",
+        "close": "Close",
+        "labelPlaceholder": "Website Name"
+    },
+    "settings": {
+        "newTabSettings": "New Tab Settings",
+        "displayComponents": "Display Components",
+        "topSites": "Top Sites",
+        "clock": "Clock",
+        "searchBar": "Search Bar",
+        "backgroundSettings": "Background Settings",
+        "noBackground": "No Background",
+        "randomImage": "Random Image",
+        "customImage": "Custom Image",
+        "currentImage": "Current Image:",
+        "imageRecommendation": "Recommended: 1920x1080 or larger image",
+        "close": "Close"
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "Search or enter URL",
+        "loadingSearchEngines": "Loading search engines..."
+    },
+    "settingsButton": {
+        "settings": "Settings"
+    },
+    "modal": {
+        "close": "Close"
+    }
 }

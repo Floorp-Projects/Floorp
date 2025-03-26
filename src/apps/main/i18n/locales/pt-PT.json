@@ -46,79 +46,79 @@
             "tree": "Árvore",
             "vacation": "Férias",
             "love": "Amor",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "moon": "Lua",
+            "music": "Música",
+            "user": "Utilizador"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Novo espaço de trabalho ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "Mover este espaço de trabalho para cima",
+            "move-down": "Mover este espaço de trabalho para baixo",
+            "delete": "Eliminar espaço de trabalho",
+            "manage": "Gerir o espaço de trabalho"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "Criar novo espaço de trabalho...",
+            "manage": "Gerir espaços de trabalho"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "Barra de estado{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "title": "Vista dividida",
+        "position": "Posição",
+        "position-left": "Esquerda",
+        "position-right": "Certo",
+        "flex-row": "Fila",
+        "flex-column": "Coluna",
+        "remove-button": "Remover vista atual",
         "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
+            "split-tabs": "Separadores divididos",
+            "split-fixed-tab": "Dividir em separador fixo"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "Aplicações Web",
+            "install-current": "Instalar a página atual como Aplicação Web Progressiva",
+            "open-installed": "Abrir aplicações instaladas"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "title": "Abrir aplicação",
+            "install": "Instalar a aplicação",
+            "open": "Abrir aplicação",
+            "cancel": "Cancelar",
+            "site-icon": "Ícone do sítio",
+            "installing": "Instalação do indicador"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "Abrir num contentor privado",
+        "name": "Contentor privado"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "Voltar",
+            "goForward": "Avançar",
+            "reload": "Recarregar",
+            "closeTab": "Fechar separador",
+            "newTab": "Novo separador",
+            "duplicateTab": "Duplicar Separador",
+            "reloadAllTabs": "Recarregar todos os separadores",
+            "reopenClosedTab": "Reabrir separador fechado"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "Navegar de volta para a página anterior",
+            "goForward": "Avançar para a página seguinte",
+            "reload": "Recarregar a página atual",
+            "closeTab": "Fechar o separador atual",
+            "newTab": "Abrir um novo separador",
+            "duplicateTab": "Duplicar o separador atual",
+            "reloadAllTabs": "Recarregar todos os separadores",
+            "reopenClosedTab": "Reabrir o último separador fechado"
         }
     }
 }

@@ -34,7 +34,7 @@
         "mouseGesture": "Mouse Gestures"
     },
     "home": {
-        "welcome": "Welcome, {{name}} 👋",
+        "welcome": "Добро пожаловать, {{name}} 👋",
         "defaultAccountName": "{{productName}} User",
         "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
         "setup": {

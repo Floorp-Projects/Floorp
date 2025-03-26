@@ -1,36 +1,36 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "label": "Вернуть закрытую вкладку",
+        "tooltiptext": "Переоткрыть последнюю закрытую вкладку {{shortcut}}"
     },
     "workspaces": {
         "modal": {
-            "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
+            "name": "Название",
+            "name-placeholder": "Введите название для рабочего пространства",
             "container": "Container",
             "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "icon": "Значок",
+            "edit-title": "Редактировать рабочее пространство",
+            "save": "Сохранить изменения",
+            "cancel": "Отменить"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
+            "article": "Статья",
+            "book": "Книга",
             "briefcase": "Briefcase",
             "cart": "Shopping Cart",
             "chat": "Chat",
             "chill": "Chill",
             "circle": "Circle",
-            "compass": "Compass",
+            "compass": "Компас",
             "code": "Code",
             "dollar": "Dollar",
-            "fence": "Fence",
+            "fence": "Забор",
             "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
+            "food": "Еда",
+            "fruit": "Фрукт",
+            "game": "Игра",
+            "gear": "Настройки",
             "gift": "Gift",
             "key": "Key",
             "lightning": "Lightning",
@@ -45,9 +45,9 @@
             "star": "Star",
             "tree": "Tree",
             "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
+            "love": "Любовь",
+            "moon": "Луна",
+            "music": "Музыка",
             "user": "User"
         },
         "service": {
