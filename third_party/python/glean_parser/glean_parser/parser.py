@@ -444,6 +444,8 @@ def parse_objects(
           the metric expires.
         - `allow_missing_files`: Do not raise a `FileNotFoundError` if any of
           the input `filepaths` do not exist.
+        - `interesting`: Contains an array of interesting metrics/ping files.
+          Probes not included in these files will be marked as disabled.
     """
     if config is None:
         config = {}
@@ -465,4 +467,40 @@ def parse_objects(
             yield from _instantiate_tags(
                 all_objects, sources, content, filepath, config
             )
+
+    if config.get("interesting"):
+        # We're configured to disable probes not included in the interesting list.
+        filepaths = util.ensure_list(config.get("interesting"))
+        interesting_metrics_dict: Dict[str, Dict[str, Any]] = dict()
+        interesting_metrics_dict.setdefault("metrics", DictWrapper())
+        interesting_metrics_dict.setdefault("pings", DictWrapper())
+        for filepath in filepaths:
+            content, filetype = yield from _load_file(filepath, config)
+
+            if not isinstance(content, dict):
+                raise TypeError(f"Invalid content for {filepath}")
+
+            for category_key, category_val in sorted(content.items()):
+              if category_key.startswith("$"):
+                  continue
+
+              interesting_metrics_dict.setdefault(category_key, DictWrapper())
+
+              if not isinstance(category_val, dict):
+                  raise TypeError(f"Invalid category_val for {category_key}")
+
+              for metric_key, metric_val in sorted(category_val.items()):
+                  interesting_metrics_dict[category_key][metric_key] = metric_val
+
+        for category_key, category_val in all_objects.items():
+            if category_key == "tags":
+                continue
+
+            for metric_key, metric_val in sorted(category_val.items()):
+                category_dict = interesting_metrics_dict.get(category_key, {})
+                if metric_key not in category_dict:
+                    obj = all_objects[category_key][metric_key]
+                    if hasattr(obj, "disabled"):
+                        obj.disabled = True
+
     return _preprocess_objects(all_objects, config)
