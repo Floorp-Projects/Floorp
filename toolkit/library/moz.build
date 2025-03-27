@@ -228,7 +228,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework AVFoundation",
         "-framework CoreMedia",
         "-framework IOKit",
-        "-framework ScreenCaptureKit",
+        "-weak_framework ScreenCaptureKit",
         "-F%s" % CONFIG["MACOS_PRIVATE_FRAMEWORKS_DIR"],
         "-framework CoreUI",
         "-framework CoreSymbolication",

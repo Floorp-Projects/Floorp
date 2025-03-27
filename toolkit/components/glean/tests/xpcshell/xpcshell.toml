@@ -5,6 +5,7 @@ head = "head.js"
 ["test_FOGIPCLimit.js"]
 
 ["test_FOGInit.js"]
+skip-if = ["appname == 'thunderbird'"] # Won't run on thunderbird due to a race condition with the generated serverknobs conf.
 
 ["test_FOGPrefs.js"]
 skip-if = ["os == 'android'"] # FOG isn't responsible for monitoring prefs and controlling upload on Android
@@ -26,11 +27,15 @@ skip-if = ["os == 'android'"] # FOG isn't responsible for experiment annotations
 skip-if = ["os == 'android'"] # Server Knobs on mobile will be handled by the specific app
 
 ["test_JOG.js"]
+skip-if = ["appname == 'thunderbird'"] # Won't run on thunderbird due to a race condition with the generated serverknobs conf.
 
 ["test_JOGIPC.js"]
 
 ["test_MillionQ.js"]
-skip-if = ["os == 'android'"] # Android inits its own FOG, so the test won't work.
+skip-if = [
+  "os == 'android'", # Android inits its own FOG, so the test won't work.
+  "appname == 'thunderbird'" # interesting_serverknobs.json isn't applied before init.
+]
 
 ["test_OHTTP.js"]
 skip-if = ["os == 'android'"] # FOG isn't responsible for monitoring prefs and controlling upload on Android

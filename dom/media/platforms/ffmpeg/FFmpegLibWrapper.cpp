@@ -14,6 +14,7 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
+#  include "VALibWrapper.h"
 #endif
 
 #define AV_LOG_INFO 32
@@ -288,33 +289,6 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
 
-#ifdef MOZ_WIDGET_GTK
-#  define VA_FUNC_OPTION_SILENT(func)                               \
-    if (!((func) = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
-      (func) = (decltype(func))nullptr;                             \
-    }
-
-  // mVALib is optional and may not be present.
-  if (mVALib) {
-    VA_FUNC_OPTION_SILENT(vaExportSurfaceHandle)
-    VA_FUNC_OPTION_SILENT(vaSyncSurface)
-    VA_FUNC_OPTION_SILENT(vaInitialize)
-    VA_FUNC_OPTION_SILENT(vaTerminate)
-  }
-#  undef VA_FUNC_OPTION_SILENT
-
-#  define VAD_FUNC_OPTION_SILENT(func)                                 \
-    if (!((func) = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
-      FFMPEGP_LOG("Couldn't load function " #func);                    \
-    }
-
-  // mVALibDrm is optional and may not be present.
-  if (mVALibDrm) {
-    VAD_FUNC_OPTION_SILENT(vaGetDisplayDRM)
-  }
-#  undef VAD_FUNC_OPTION_SILENT
-#endif
-
   if (avcodec_register_all) {
     avcodec_register_all();
   }
@@ -351,46 +325,8 @@ void FFmpegLibWrapper::Unlink() {
     PR_UnloadLibrary(mAVCodecLib);
   }
 #endif
-#ifdef MOZ_WIDGET_GTK
-  if (mVALib) {
-    PR_UnloadLibrary(mVALib);
-  }
-  if (mVALibDrm) {
-    PR_UnloadLibrary(mVALibDrm);
-  }
-#endif
   PodZero(this);
 }
-
-#ifdef MOZ_WIDGET_GTK
-void FFmpegLibWrapper::LinkVAAPILibs() {
-  if (!gfx::gfxVars::CanUseHardwareVideoDecoding() || !XRE_IsRDDProcess()) {
-    return;
-  }
-
-  PRLibSpec lspec;
-  lspec.type = PR_LibSpec_Pathname;
-  const char* libDrm = "libva-drm.so.2";
-  lspec.value.pathname = libDrm;
-  mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-  if (!mVALibDrm) {
-    FFMPEGP_LOG("VA-API support: Missing or old %s library.\n", libDrm);
-    return;
-  }
-
-  const char* lib = "libva.so.2";
-  lspec.value.pathname = lib;
-  mVALib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-  // Don't use libva when it's missing vaExportSurfaceHandle.
-  if (mVALib && !PR_FindSymbol(mVALib, "vaExportSurfaceHandle")) {
-    PR_UnloadLibrary(mVALib);
-    mVALib = nullptr;
-  }
-  if (!mVALib) {
-    FFMPEGP_LOG("VA-API support: Missing or old %s library.\n", lib);
-  }
-}
-#endif
 
 #ifdef MOZ_WIDGET_GTK
 bool FFmpegLibWrapper::IsVAAPIAvailable() {
@@ -407,9 +343,7 @@ bool FFmpegLibWrapper::IsVAAPIAvailable() {
          VA_FUNC_LOADED(av_hwframe_ctx_alloc) && VA_FUNC_LOADED(av_dict_set) &&
          VA_FUNC_LOADED(av_dict_free) && VA_FUNC_LOADED(avcodec_get_name) &&
          VA_FUNC_LOADED(av_get_pix_fmt_string) &&
-         VA_FUNC_LOADED(vaExportSurfaceHandle) &&
-         VA_FUNC_LOADED(vaSyncSurface) && VA_FUNC_LOADED(vaInitialize) &&
-         VA_FUNC_LOADED(vaTerminate) && VA_FUNC_LOADED(vaGetDisplayDRM);
+         VALibWrapper::IsVAAPIAvailable();
 }
 #endif
 

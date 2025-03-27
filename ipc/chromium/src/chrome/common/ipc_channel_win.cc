@@ -30,6 +30,34 @@
 
 using namespace mozilla::ipc;
 
+namespace {
+
+// This logic is borrowed from Chromium's `base/win/win_util.h`. It allows us
+// to distinguish pseudo-handle values, such as returned by GetCurrentProcess()
+// (-1), GetCurrentThread() (-2), and potentially more. The code there claims
+// that fuzzers have found issues up until -12 with DuplicateHandle.
+//
+// https://source.chromium.org/chromium/chromium/src/+/36dbbf38697dd1e23ef8944bb9e57f6e0b3d41ec:base/win/win_util.h
+inline bool IsPseudoHandle(HANDLE handle) {
+  auto handleValue = static_cast<int32_t>(reinterpret_cast<uintptr_t>(handle));
+  return -12 <= handleValue && handleValue < 0;
+}
+
+// A real handle is a handle that is not a pseudo-handle. Always preferably use
+// this variant over ::DuplicateHandle. Only use stock ::DuplicateHandle if you
+// explicitly need the ability to duplicate a pseudo-handle.
+inline bool DuplicateRealHandle(HANDLE source_process, HANDLE source_handle,
+                                HANDLE target_process, LPHANDLE target_handle,
+                                DWORD desired_access, BOOL inherit_handle,
+                                DWORD options) {
+  MOZ_RELEASE_ASSERT(!IsPseudoHandle(source_handle));
+  return static_cast<bool>(::DuplicateHandle(
+      source_process, source_handle, target_process, target_handle,
+      desired_access, inherit_handle, options));
+}
+
+}  // namespace
+
 namespace IPC {
 //------------------------------------------------------------------------------
 
@@ -595,7 +623,7 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
   nsTArray<mozilla::UniqueFileHandle> handles(num_handles);
   for (uint32_t handleValue : payload) {
     HANDLE ipc_handle = Uint32ToHandle(handleValue);
-    if (!ipc_handle || ipc_handle == INVALID_HANDLE_VALUE) {
+    if (!ipc_handle || IsPseudoHandle(ipc_handle)) {
       CHROMIUM_LOG(ERROR)
           << "Attempt to accept invalid or null handle from process "
           << other_pid_ << " for message " << msg.name() << " in AcceptHandles";
@@ -613,9 +641,10 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
         CHROMIUM_LOG(ERROR) << "other_process_ is invalid in AcceptHandles";
         return false;
       }
-      if (!::DuplicateHandle(other_process_, ipc_handle, GetCurrentProcess(),
-                             getter_Transfers(local_handle), 0, FALSE,
-                             DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
+      if (!DuplicateRealHandle(
+              other_process_, ipc_handle, GetCurrentProcess(),
+              getter_Transfers(local_handle), 0, FALSE,
+              DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
         DWORD err = GetLastError();
         // Don't log out a scary looking error if this failed due to the target
         // process terminating.
@@ -688,9 +717,9 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
         CHROMIUM_LOG(ERROR) << "other_process_ is invalid in TransferHandles";
         return false;
       }
-      if (!::DuplicateHandle(GetCurrentProcess(), local_handle.get(),
-                             other_process_, &ipc_handle, 0, FALSE,
-                             DUPLICATE_SAME_ACCESS)) {
+      if (!DuplicateRealHandle(GetCurrentProcess(), local_handle.get(),
+                               other_process_, &ipc_handle, 0, FALSE,
+                               DUPLICATE_SAME_ACCESS)) {
         DWORD err = GetLastError();
         // Don't log out a scary looking error if this failed due to the target
         // process terminating.

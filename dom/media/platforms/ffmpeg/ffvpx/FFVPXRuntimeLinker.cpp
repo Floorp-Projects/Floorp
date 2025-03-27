@@ -76,10 +76,6 @@ bool FFVPXRuntimeLinker::Init() {
 
   sLinkStatus = LinkStatus_FAILED;
 
-#ifdef MOZ_WIDGET_GTK
-  sFFVPXLib.LinkVAAPILibs();
-#endif
-
 #ifdef XP_WIN
   PathString path =
       GetLibraryFilePathname(LXUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Init);

@@ -1458,6 +1458,24 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1950282 - UA override for formula1.com
+     * Webcompat issue #149085 - https://webcompat.com/issues/149085
+     *
+     * Site blocks Firefox, but works with a UA spoof.
+     */
+    id: "1950282",
+    platform: "all",
+    domain: "formula1.com",
+    bug: "1950282",
+    config: {
+      matches: ["*://*.formula1.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 module.exports = AVAILABLE_UA_OVERRIDES;

@@ -114,6 +114,8 @@ SOURCES += [
 include("metrics_index.py")
 
 # Allow defining metrics/pings/tags elsewhere (like for Thunderbird).
+# See https://source-docs.thunderbird.net/en/latest/telemetry/index.html
+# See also: MOZ_GLEAN_INTERESTING_METRICS_FILES
 if CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"]:
     metrics_yamls.extend(CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"])
     metrics_yamls = sorted(metrics_yamls)
@@ -133,6 +135,33 @@ pings_yamls = ["../../../" + x for x in pings_yamls]
 tags_yamls = ["../../../" + x for x in tags_yamls]
 
 GeneratedFile(
+    "metrics_yamls.cached",
+    script="build_scripts/glean_parser_ext/cache_yaml.py",
+    flags=[
+        CONFIG["MOZ_APP_VERSION"],
+    ],
+    inputs=metrics_yamls + tags_yamls,
+)
+
+GeneratedFile(
+    "pings_yamls.cached",
+    script="build_scripts/glean_parser_ext/cache_yaml.py",
+    flags=[
+        CONFIG["MOZ_APP_VERSION"],
+    ],
+    inputs=pings_yamls + tags_yamls,
+)
+
+GeneratedFile(
+    "metrics_n_pings_yamls.cached",
+    script="build_scripts/glean_parser_ext/cache_yaml.py",
+    flags=[
+        CONFIG["MOZ_APP_VERSION"],
+    ],
+    inputs=metrics_yamls + pings_yamls + tags_yamls,
+)
+
+GeneratedFile(
     "GleanMetrics.h",
     "GleanJSMetricsLookup.h",
     "GleanJSMetricsLookup.cpp",
@@ -144,7 +173,7 @@ GeneratedFile(
         "GleanJSMetricsLookup.cpp",
         "api/src/metrics.rs",
     ],
-    inputs=metrics_yamls + tags_yamls,
+    inputs=["!metrics_yamls.cached"],
 )
 
 GeneratedFile(
@@ -159,7 +188,7 @@ GeneratedFile(
         "GleanJSPingsLookup.cpp",
         "api/src/pings.rs",
     ],
-    inputs=pings_yamls + tags_yamls,
+    inputs=["!pings_yamls.cached"],
 )
 
 # Glean Interface For Firefox Telemetry Maps from Glean MetricId to Telemetry ProbeId
@@ -169,7 +198,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Event"],
-    inputs=metrics_yamls + tags_yamls,
+    inputs=["!metrics_yamls.cached"],
 )
 
 GeneratedFile(
@@ -177,7 +206,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Histogram"],
-    inputs=metrics_yamls + tags_yamls,
+    inputs=["!metrics_yamls.cached"],
 )
 
 GeneratedFile(
@@ -185,7 +214,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
-    inputs=metrics_yamls + tags_yamls,
+    inputs=["!metrics_yamls.cached"],
 )
 
 # JOG provides both the Rust factory for building runtime-registered metrics
@@ -197,7 +226,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="jog_factory",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=pings_yamls + metrics_yamls + tags_yamls,
+    inputs=["!metrics_n_pings_yamls.cached"],
 )
 
 # Only generate jogfile.json in Artifact Builds since
@@ -208,10 +237,20 @@ if CONFIG["MOZ_ARTIFACT_BUILDS"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="jog_file",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=pings_yamls + metrics_yamls + tags_yamls,
+        inputs=["!metrics_n_pings_yamls.cached"],
     )
     # Once generated, it needs to be placed in GreD so it can be found.
     FINAL_TARGET_FILES += ["!jogfile.json"]
+
+if CONFIG["MOZ_GLEAN_INTERESTING_METRICS_FILES"]:
+    GeneratedFile(
+        "interesting_serverknobs.json",
+        script="build_scripts/glean_parser_ext/interesting_serverknobs.py",
+        flags=[CONFIG["MOZ_APP_VERSION"]],
+        inputs=["!metrics_yamls.cached"],
+    )
+    # Once generated, it needs to be placed in GreD so it can be found.
+    FINAL_TARGET_FILES += ["!interesting_serverknobs.json"]
 
 # OHTTP support requires the fog_control crate know which pings wish to be sent
 # using OHTTP. fog_control has no access to the firefox_on_glean crate, so it
@@ -221,7 +260,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="ohttp_pings",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=pings_yamls + tags_yamls,
+    inputs=["!pings_yamls.cached"],
 )
 
 DIRS += [

@@ -23,8 +23,8 @@
 #include <stdint.h>
 #include <algorithm>
 
+using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::Maybe;
 
 txXPathTreeWalker::txXPathTreeWalker(const txXPathTreeWalker& aOther) = default;
 
@@ -228,24 +228,6 @@ bool txXPathTreeWalker::moveToParent() {
   return true;
 }
 
-txXPathNode::txXPathNode(const txXPathNode& aNode)
-    : mNode(aNode.mNode),
-      mRefCountRoot(aNode.mRefCountRoot),
-      mIndex(aNode.mIndex) {
-  MOZ_COUNT_CTOR(txXPathNode);
-  if (mRefCountRoot) {
-    NS_ADDREF(Root());
-  }
-}
-
-txXPathNode::~txXPathNode() {
-  MOZ_COUNT_DTOR(txXPathNode);
-  if (mRefCountRoot) {
-    nsINode* root = Root();
-    NS_RELEASE(root);
-  }
-}
-
 /* static */
 bool txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsAtom* aLocalName,
                                int32_t aNSID, nsAString& aValue) {
@@ -443,8 +425,8 @@ bool txXPathNodeUtils::isWhitespace(const txXPathNode& aNode) {
 }
 
 /* static */
-txXPathNode* txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode) {
-  return new txXPathNode(aNode.mNode->OwnerDoc());
+txXPathNode txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode) {
+  return txXPathNode(aNode.mNode->OwnerDoc());
 }
 
 const char gPrintfFmt[] = "id0x%" PRIxPTR;
@@ -454,7 +436,8 @@ const char gPrintfFmtAttr[] = "id0x%" PRIxPTR "-%010i";
 nsresult txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
                                      const txXPathNode& aBase,
                                      nsAString& aResult) {
-  uintptr_t nodeid = ((uintptr_t)aNode.mNode) - ((uintptr_t)aBase.mNode);
+  uintptr_t nodeid =
+      ((uintptr_t)aNode.mNode.get()) - ((uintptr_t)aBase.mNode.get());
   if (!aNode.isAttribute()) {
     CopyASCIItoUTF16(nsPrintfCString(gPrintfFmt, nodeid), aResult);
   } else {
@@ -585,16 +568,7 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
 }
 
 /* static */
-txXPathNode* txXPathNativeNode::createXPathNode(nsIContent* aContent,
-                                                bool aKeepRootAlive) {
-  nsINode* root = aKeepRootAlive ? txXPathNode::RootOf(aContent) : nullptr;
-
-  return new txXPathNode(aContent, txXPathNode::eContent, root);
-}
-
-/* static */
-txXPathNode* txXPathNativeNode::createXPathNode(nsINode* aNode,
-                                                bool aKeepRootAlive) {
+Maybe<txXPathNode> txXPathNativeNode::createXPathNode(nsINode* aNode) {
   uint16_t nodeType = aNode->NodeType();
   if (nodeType == nsINode::ATTRIBUTE_NODE) {
     auto* attr = static_cast<Attr*>(aNode);
@@ -602,42 +576,30 @@ txXPathNode* txXPathNativeNode::createXPathNode(nsINode* aNode,
     NodeInfo* nodeInfo = attr->NodeInfo();
     Element* parent = attr->GetElement();
     if (!parent) {
-      return nullptr;
+      return Nothing();
     }
-
-    nsINode* root = aKeepRootAlive ? txXPathNode::RootOf(parent) : nullptr;
 
     uint32_t i, total = parent->GetAttrCount();
     for (i = 0; i < total; ++i) {
       const nsAttrName* name = parent->GetAttrNameAt(i);
       if (nodeInfo->Equals(name->LocalName(), name->NamespaceID())) {
-        return new txXPathNode(parent, i, root);
+        return Some(txXPathNode(parent, i));
       }
     }
 
     NS_ERROR("Couldn't find the attribute in its parent!");
 
-    return nullptr;
+    return Nothing();
   }
 
   uint32_t index;
-  nsINode* root = aKeepRootAlive ? aNode : nullptr;
-
   if (nodeType == nsINode::DOCUMENT_NODE) {
     index = txXPathNode::eDocument;
   } else {
     index = txXPathNode::eContent;
-    if (root) {
-      root = txXPathNode::RootOf(root);
-    }
   }
 
-  return new txXPathNode(aNode, index, root);
-}
-
-/* static */
-txXPathNode* txXPathNativeNode::createXPathNode(Document* aDocument) {
-  return new txXPathNode(aDocument);
+  return Some(txXPathNode(aNode, index));
 }
 
 /* static */

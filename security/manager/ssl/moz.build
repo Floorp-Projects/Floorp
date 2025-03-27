@@ -239,6 +239,11 @@ headers_arrays_certs = [
     ),
     ("addons-public.inc", "addonsPublicRoot", "addons-public.crt"),
     (
+        "addons-public-2018-intermediate.inc",
+        "addonsPublic2018Intermediate",
+        "addons-public-2018-intermediate.crt",
+    ),
+    (
         "addons-public-intermediate.inc",
         "addonsPublicIntermediate",
         "addons-public-intermediate.crt",

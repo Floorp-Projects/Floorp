@@ -329,12 +329,11 @@ void txIdPattern::toString(nsAString& aDest) {
 nsresult txKeyPattern::matches(const txXPathNode& aNode,
                                txIMatchContext* aContext, bool& aMatched) {
   txExecutionState* es = (txExecutionState*)aContext->getPrivateContext();
-  UniquePtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
-  NS_ENSURE_TRUE(contextDoc, NS_ERROR_FAILURE);
+  txXPathNode contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
 
   RefPtr<txNodeSet> nodes;
   nsresult rv =
-      es->getKeyNodes(mName, *contextDoc, mValue, true, getter_AddRefs(nodes));
+      es->getKeyNodes(mName, contextDoc, mValue, true, getter_AddRefs(nodes));
   NS_ENSURE_SUCCESS(rv, rv);
 
   aMatched = nodes->contains(aNode);

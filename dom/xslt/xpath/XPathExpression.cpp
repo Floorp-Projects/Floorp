@@ -21,7 +21,7 @@
 
 namespace mozilla::dom {
 
-class EvalContextImpl : public txIEvalContext {
+class MOZ_STACK_CLASS EvalContextImpl : public txIEvalContext {
  public:
   EvalContextImpl(const txXPathNode& aContextNode, uint32_t aContextPosition,
                   uint32_t aContextSize, txResultRecycler* aRecycler)
@@ -121,8 +121,8 @@ already_AddRefed<XPathResult> XPathExpression::EvaluateWithContext(
     return nullptr;
   }
 
-  UniquePtr<txXPathNode> contextNode(
-      txXPathNativeNode::createXPathNode(&aContextNode));
+  Maybe<txXPathNode> contextNode =
+      txXPathNativeNode::createXPathNode(&aContextNode);
   if (!contextNode) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

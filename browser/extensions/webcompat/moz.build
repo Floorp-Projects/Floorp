@@ -120,6 +120,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1898952-digits.t-mobile.com.js",
     "injections/js/bug1899937-plus.nhk.jp-request-picture-in-picture.js",
     "injections/js/bug1924500-www.tiktok.com-fix-captcha-slider.js",
+    "injections/js/bug1950282-formula1.com-platform-linux-fix.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

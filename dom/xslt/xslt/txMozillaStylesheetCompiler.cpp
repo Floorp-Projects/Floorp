@@ -479,7 +479,7 @@ static nsresult handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler) {
     // explicitly destroy the attrs here since we no longer need it
     atts = nullptr;
 
-    for (nsIContent* child = element->GetFirstChild(); child;
+    for (nsCOMPtr<nsIContent> child = element->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       rv = handleNode(child, aCompiler);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -493,7 +493,7 @@ static nsresult handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler) {
     rv = aCompiler->characters(chars);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (aNode->IsDocument()) {
-    for (nsIContent* child = aNode->GetFirstChild(); child;
+    for (nsCOMPtr<nsIContent> child = aNode->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       rv = handleNode(child, aCompiler);
       NS_ENSURE_SUCCESS(rv, rv);

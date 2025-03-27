@@ -82,12 +82,12 @@ txNodeSet::~txNodeSet() {
   }
 }
 
-nsresult txNodeSet::add(const txXPathNode& aNode) {
+nsresult txNodeSet::add(txXPathNode&& aNode) {
   NS_ASSERTION(mDirection == kForward,
                "only append(aNode) is supported on reversed nodesets");
 
   if (isEmpty()) {
-    return append(aNode);
+    return append(std::move(aNode));
   }
 
   bool dupe;
@@ -111,7 +111,7 @@ nsresult txNodeSet::add(const txXPathNode& aNode) {
     memmove(pos + 1, pos, moveSize * sizeof(txXPathNode));
   }
 
-  new (pos) txXPathNode(aNode);
+  new (pos) txXPathNode(std::move(aNode));
   ++mEnd;
 
   return NS_OK;
@@ -293,19 +293,19 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer,
  * order info operations will be performed.
  */
 
-nsresult txNodeSet::append(const txXPathNode& aNode) {
+nsresult txNodeSet::append(txXPathNode&& aNode) {
   if (!ensureGrowSize(1)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (mDirection == kForward) {
-    new (mEnd) txXPathNode(aNode);
+    new (mEnd) txXPathNode(std::move(aNode));
     ++mEnd;
 
     return NS_OK;
   }
 
-  new (--mStart) txXPathNode(aNode);
+  new (--mStart) txXPathNode(std::move(aNode));
 
   return NS_OK;
 }

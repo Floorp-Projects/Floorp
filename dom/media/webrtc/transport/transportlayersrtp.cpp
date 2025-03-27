@@ -124,7 +124,7 @@ void TransportLayerSrtp::StateChange(TransportLayer* layer, State state) {
     MOZ_ASSERT(master_key_size <= SRTP_MAX_KEY_LENGTH);
 
     // SRTP Key Exporter as per RFC 5764 S 4.2
-    unsigned char srtp_block[SRTP_MAX_KEY_LENGTH * 2];
+    unsigned char srtp_block[master_key_size * 2];
     res = dtls->ExportKeyingMaterial(kDTLSExporterLabel, false, "", srtp_block,
                                      sizeof(srtp_block));
     if (NS_FAILED(res)) {
@@ -134,8 +134,8 @@ void TransportLayerSrtp::StateChange(TransportLayer* layer, State state) {
     }
 
     // Slice and dice as per RFC 5764 S 4.2
-    unsigned char client_write_key[SRTP_MAX_KEY_LENGTH];
-    unsigned char server_write_key[SRTP_MAX_KEY_LENGTH];
+    unsigned char client_write_key[master_key_size];
+    unsigned char server_write_key[master_key_size];
     unsigned int offset = 0;
     memcpy(client_write_key, srtp_block + offset, key_size);
     offset += key_size;

@@ -24,6 +24,7 @@ class FOG final : public nsIFOG, public nsIObserver, public nsIMemoryReporter {
 
  private:
   ~FOG() = default;
+  static bool ApplyInterestingServerKnobs();
   void Shutdown();
 };
 

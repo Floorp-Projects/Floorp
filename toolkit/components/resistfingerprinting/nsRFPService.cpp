@@ -1823,8 +1823,22 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
 }
 
 /* static */ void nsRFPService::MaybeReportFontFingerprinter(
-    nsIChannel* aChannel, nsACString& aOriginNoSuffix) {
+    nsIChannel* aChannel, const nsACString& aOriginNoSuffix) {
   if (!aChannel) {
+    return;
+  }
+
+  // The logging of the event will access nsLoadGroup which is main-thread only.
+  // So we need to dispatch the task to the main thread if we are reporting
+  // the event off-main-thread.
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "nsRFPService::MaybeReportFontFingerprinter",
+        [channel = nsCOMPtr{aChannel},
+         originNoSuffix = nsCString(aOriginNoSuffix)]() {
+          nsRFPService::MaybeReportFontFingerprinter(channel, originNoSuffix);
+        }));
+
     return;
   }
 
