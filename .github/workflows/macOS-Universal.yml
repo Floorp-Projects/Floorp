@@ -236,8 +236,40 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        export MOZ_NUM_JOBS=$(echo "$(nproc) * 0.65" | bc | xargs printf "%.0f")
-        nice -n 19 ./mach build --jobs=$MOZ_NUM_JOBS
+        # より安定した方法でCPU使用率を制限
+        # 全コアを使用するが、少ないジョブ数に設定
+        export MOZ_NUM_JOBS=$(nproc)
+        
+        # CPU使用率を制限するためのバックグラウンドスクリプト
+        cat > cpu_limiter.sh << 'EOF'
+        #!/bin/bash
+        # ビルドプロセスが使用するリソースを間接的に制限
+        while true; do
+          CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+          
+          # CPU使用率が80%を超えたら一時停止
+          if (( $(echo "$CPU_USAGE > 80" | bc -l) )); then
+            echo "CPU使用率: $CPU_USAGE% - 一時停止"
+            pkill -STOP -f "./mach build"
+            sleep 3
+            pkill -CONT -f "./mach build"
+            sleep 1
+          fi
+          sleep 2
+        done
+        EOF
+        
+        chmod +x cpu_limiter.sh
+        
+        # バックグラウンドでCPU制限スクリプトを実行
+        ./cpu_limiter.sh &
+        LIMITER_PID=$!
+        
+        # 低い優先度でビルド実行
+        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS
+        
+        # CPU制限スクリプトを終了
+        kill $LIMITER_PID 2>/dev/null || true
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
@@ -248,7 +280,11 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        export MOZ_NUM_JOBS=$(echo "$(nproc) * 0.65" | bc | xargs printf "%.0f")
+        # より安定した方法でビルド
+        # ジョブ数を大幅に減らして最も安全な設定で実行
+        export MOZ_NUM_JOBS=$(echo "$(nproc) * 0.3" | bc | xargs printf "%.0f")
+        
+        # 最低優先度でビルド実行
         nice -n 19 ./mach build --jobs=$MOZ_NUM_JOBS
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
