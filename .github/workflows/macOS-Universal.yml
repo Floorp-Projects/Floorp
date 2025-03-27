@@ -236,8 +236,21 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        export MOZ_NUM_JOBS=$(( $(nproc) * 3 / 4 ))
-        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS
+        if ! command -v cpulimit &> /dev/null; then
+          sudo apt-get update && sudo apt-get install -y cpulimit
+        fi
+
+        export MOZ_NUM_JOBS=$(nproc)
+
+        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS &
+        BUILD_PID=$!
+
+        cpulimit -p $BUILD_PID -l 65 &
+        CPULIMIT_PID=$!
+
+        wait $BUILD_PID
+
+        kill $CPULIMIT_PID 2>/dev/null || true
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
@@ -248,8 +261,19 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        export MOZ_NUM_JOBS=$(( $(nproc) * 3 / 4 ))
-        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS
+        # CPU使用率を75%に制限
+        # 並列ジョブ数を設定
+        export MOZ_NUM_JOBS=$(nproc)
+        # バックグラウンドでビルドを開始
+        nice -n 10 ./mach build --jobs=$MOZ_NUM_JOBS &
+        BUILD_PID=$!
+        # CPU使用率を75%に制限
+        cpulimit -p $BUILD_PID -l 75 &
+        CPULIMIT_PID=$!
+        # ビルドプロセスの完了を待機
+        wait $BUILD_PID
+        # cpulimitを終了
+        kill $CPULIMIT_PID 2>/dev/null || true
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
