@@ -1,37 +1,37 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "addSite": "添加网站",
+        "addNewSite": "添加新网站",
+        "url": "网址链接",
+        "label": "标签",
+        "cancel": "取消",
+        "add": "添加",
+        "close": "关闭",
+        "labelPlaceholder": "网站名称"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "newTabSettings": "新标签设置",
+        "displayComponents": "显示组件",
+        "topSites": "常用网站",
+        "clock": "时钟",
+        "searchBar": "搜索栏",
+        "backgroundSettings": "背景设置",
+        "noBackground": "无背景",
+        "randomImage": "随机图像",
+        "customImage": "自定义图像",
+        "currentImage": "当前图片：",
+        "imageRecommendation": "建议使用 1920x1080 或更大的图像",
+        "close": "关闭"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "搜索或输入网址",
+        "loadingSearchEngines": "正在加载搜索引擎……"
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "设置"
     },
     "modal": {
-        "close": "Close"
+        "close": "关闭"
     }
 }

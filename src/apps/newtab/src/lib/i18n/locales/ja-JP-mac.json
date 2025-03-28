@@ -1,37 +1,37 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "サイトを追加",
+        "addNewSite": "新規サイトを追加",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "label": "表示名",
+        "cancel": "キャンセル",
+        "add": "追加",
+        "close": "閉じる",
+        "labelPlaceholder": "ウェブサイト名"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "newTabSettings": "新規タブの設定",
+        "displayComponents": "表示する要素",
+        "topSites": "トップサイト",
+        "clock": "時計",
+        "searchBar": "検索バー",
+        "backgroundSettings": "背景画像の設定",
+        "noBackground": "背景なし",
+        "randomImage": "ランダム画像",
+        "customImage": "カスタム画像",
+        "currentImage": "現在の画像:",
+        "imageRecommendation": "推奨: 1920x1080 以上",
+        "close": "閉じる"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "検索または URL を入力",
+        "loadingSearchEngines": "検索エンジンを読み込み中..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "設定"
     },
     "modal": {
-        "close": "Close"
+        "close": "閉じる"
     }
 }

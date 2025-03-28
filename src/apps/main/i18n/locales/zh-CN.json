@@ -1,71 +1,71 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "label": "恢复关闭的标签页",
+        "tooltiptext": "重新打开上次关闭的选项卡 {{shortcut}}"
     },
     "workspaces": {
         "modal": {
-            "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
-            "container": "Container",
-            "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "name": "名称",
+            "name-placeholder": "输入此工作区的名称",
+            "container": "容器",
+            "no-container": "无容器",
+            "icon": "图标",
+            "edit-title": "编辑工作区",
+            "save": "保存更改",
+            "cancel": "取消"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
+            "article": "文章",
+            "book": "书籍",
+            "briefcase": "公文包",
+            "cart": "购物车",
+            "chat": "聊天",
             "chill": "Chill",
-            "circle": "Circle",
-            "compass": "Compass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "circle": "圆圈",
+            "compass": "指南针",
+            "code": "代码",
+            "dollar": "美元",
+            "fence": "围栏",
+            "fingerprint": "指纹",
+            "food": "食物",
+            "fruit": "水果",
+            "game": "游戏",
+            "gear": "设置",
+            "gift": "礼物",
+            "key": "钥匙",
+            "lightning": "闪电",
+            "network": "网络",
+            "notes": "便笺",
+            "paint": "画图",
+            "photo": "照片",
+            "pin": "大头针",
+            "pet": "宠物",
+            "question": "疑问",
+            "smartphone": "手机",
+            "star": "星星",
+            "tree": "树木",
+            "vacation": "假期",
+            "love": "爱恋",
+            "moon": "月亮",
+            "music": "音乐",
+            "user": "用户"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "新工作区 ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "上移此工作区",
+            "move-down": "下移此工作区",
+            "delete": "删除工作区",
+            "manage": "管理工作区"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "创建新工作区……",
+            "manage": "管理工作区"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "状态栏{{mark}}"
     },
     "splitview": {
         "title": "Split View",
@@ -76,49 +76,49 @@
         "flex-column": "Column",
         "remove-button": "Remove Current View",
         "tab-context": {
-            "split-tabs": "Split Tabs",
+            "split-tabs": "拆分标签",
             "split-fixed-tab": "Split to Fixed Tab"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "应用",
+            "install-current": "将当前页面安装为应用",
+            "open-installed": "打开已安装的 Web App"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
+            "title": "打开应用",
+            "install": "安装应用",
+            "open": "打开应用",
+            "cancel": "取消",
+            "site-icon": "网站图标",
             "installing": "Installing indicator"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "在私密容器打开",
+        "name": "私密容器"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
+            "goBack": "后退",
+            "goForward": "前进",
+            "reload": "刷新",
+            "closeTab": "关闭标签页",
+            "newTab": "新标签页",
+            "duplicateTab": "复制标签页",
+            "reloadAllTabs": "重新加载全部标签页",
             "reopenClosedTab": "Reopen Closed Tab"
         },
         "descriptions": {
             "goBack": "Navigate back to the previous page",
             "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "reload": "刷新当前页面",
+            "closeTab": "关闭当前标签页",
+            "newTab": "打开一个新标签页",
+            "duplicateTab": "复制当前标签页",
+            "reloadAllTabs": "重新加载所有标签页",
+            "reopenClosedTab": "重新打开上次关闭的标签页"
         }
     }
 }

@@ -1,130 +1,130 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "ようこそ",
+        "language": "言語",
+        "languageSupport": "言語サポート",
+        "features": "機能",
+        "featureIntroduction": "機能の紹介",
+        "customize": "カスタマイズ",
+        "initialSettings": "初期設定",
+        "complete": "完了",
+        "previous": "前へ",
+        "next": "次へ"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Floorp をカスタマイズ",
+        "description": "お好きな設定にカスタマイズしましょう。 Floorp Hub や設定ページからいつでも変更できます。",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "外観の設定",
+            "description": "Floorp の外観はお好みに合わせてカスタマイズできます。ライトテーマやダークテーマを選択したり、システム設定に基づいて自動的に切り替えたりできます。"
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "ライト",
+            "dark": "ダーク",
+            "system": "システム設定に従う"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "ライトテーマ",
+            "dark": "ダークテーマ",
+            "system": "システム環境設定"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "デフォルトの検索エンジン",
+            "default": "デフォルト",
+            "search": "検索",
+            "noEnginesFound": "検索エンジンが見つかりませんでした。"
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "設定完了！",
+        "subtitle": "おめでとうございます！ Floorp の設定が完了しました。快適で安全なインターネットブラウジングをお楽しみください。",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "次のステップ (オプション)",
+            "setDefault": "デフォルトウェブブラウザーに設定",
+            "documentation": "ドキュメント"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "Floorp に飛び込もう",
+        "hint": "より詳細な設定は、右上のメニューボタンの中にある \"設定\" からカスタマイズできます。"
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Floorp へようこそ！",
+        "description": "Floorp は、プライバシーとセキュリティに配慮した、高速でユーザーフレンドリーなウェブブラウザーです。このガイドでは、 Floorp の主な機能と設定をご紹介します。",
+        "readyToStart": "準備ができたら、下のボタンをクリックして進みましょう。",
+        "features": "Floorp の機能",
+        "privacy": "プライバシー",
+        "privacyDesc": "データを保護",
+        "speed": "速度",
+        "speedDesc": "最適化されたパフォーマンス",
+        "customization": "カスタマイズ",
+        "customizationDesc": "お好みに合わせて調整",
+        "start": "はじめましょう！"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Floorp はあなたの言語を話します",
+        "subtitle": "言語設定を確認し、必要に応じて変更しましょう",
+        "languageSettings": "言語の設定",
+        "languageChanged": "言語を変更しました！",
+        "currentLanguageInfo": "現在の言語情報",
+        "systemLanguage": "システムの言語",
+        "floorpLanguage": "Floorp の言語",
+        "selectLanguage": "言語を選択",
+        "useSystemLanguage": "システムの言語を使用",
+        "multilingual": "多言語サポート",
+        "chooseLanguage": "幅広い言語から選択できます",
+        "languageChangeNotice": "言語を変更すると、 Floorp を再起動する必要なく新しい言語が適用されます。アドオンによっては言語の変更に対応していない場合があります。"
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "主な Floorp の機能",
+        "subtitle": "Floorp には便利な機能がたくさんあります。機能の概要をご覧ください！",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "パネルサイドバー",
+            "description": "ブラウジング中、右側のサイドバーから便利な機能にアクセス。サイドバーには、ウェブパネル、メモ機能、アドオン、ブックマークなどを配置できます。",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "ウェブサイトをサイドバーにピン留め",
+                "ブラウジング中に Floorp Notes で素早くメモを取る",
+                "コンテナーをサポート"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "ワークスペース",
+            "description": "複数のタブセットを整理して作業を効率化。特徴的なアイコンと名前でワークスペースを素早く切り替え。左上のワークスペースボタンからアクセスできます。",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "仕事、プライベートなど、目的別に分類",
+                "カスタムアイコンで視覚的に識別",
+                "タブを簡単に管理"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "プログレッシブウェブアプリをサポート",
+            "description": "Windows では、 PWA 対応のサイトをデスクトップアプリとして使用することができます。通常のウェブサイトもインストールできます。",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "デスクトップアプリとして独立して動作",
+                "タスクバーにピン留め可能",
+                "Firefox のアドオンも動作"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "マウスジェスチャー",
+            "description": "ネイティブに実装されたマウスジェスチャー機能で、ブラウザをより直感的に操作しましょう。右クリックしたままマウスを動かすと、ジェスチャーを実行できます。",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "キーボードショートカットなしで操作",
+                "完全にカスタマイズ可能なジェスチャー",
+                "ページと履歴を素早くナビゲート"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "ノートブック",
+        "nextTab": "次のタブに移動"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "title": "設定完了！",
+        "subtitle": "おめでとうございます！ Floorp の設定が完了しました。快適で安全なネットサーフィンをお楽しみください。",
+        "nextSteps": "次のステップ (任意)",
+        "defaultBrowser": "デフォルトウェブブラウザーに設定",
+        "support": "サポート",
+        "documentation": "ドキュメント",
+        "getStarted": "Floorp に飛び込もう",
+        "hint": "より詳細な設定は、右上のメニューボタンの中にある \"設定\" からカスタマイズできます。",
+        "resourcesLabel": "リソース",
+        "defaultBrowserSuccess": "Floorp がデフォルトウェブブラウザーに設定されました！"
     }
 }

@@ -83,8 +83,8 @@
     "ssb": {
         "menu": {
             "webapps": "ウェブアプリ",
-            "install-current": "現在のページをプログレッシブウェブアプリとしてインストール",
-            "open-installed": "インストールしたウェブアプリを開く"
+            "install-current": "現在のページをウェブアプリとしてインストール",
+            "open-installed": "インストールしたアプリを開く"
         },
         "page-action": {
             "title": "アプリを開く",
@@ -92,17 +92,17 @@
             "open": "アプリを開く",
             "cancel": "キャンセル",
             "site-icon": "サイトのアイコン",
-            "installing": "インストールインジケーター"
+            "installing": "インストール中の表示"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "プライベート/コンテナなしで再度開く",
+        "openInPrivateContainer": "プライベートコンテナーで開く",
         "name": "プライベートコンテナー"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "前のページに戻る",
-            "goForward": "ページを進める",
+            "goBack": "戻る",
+            "goForward": "進む",
             "reload": "再読み込み",
             "closeTab": "タブを閉じる",
             "newTab": "新しいタブ",
@@ -116,9 +116,9 @@
             "reload": "現在のページを再読み込み",
             "closeTab": "現在のタブを閉じる",
             "newTab": "新しいタブを開く",
-            "duplicateTab": "現在のタブを複製します",
-            "reloadAllTabs": "すべてのタブをリロード",
-            "reopenClosedTab": "最後の閉じたタブを再度開く"
+            "duplicateTab": "現在のタブを複製",
+            "reloadAllTabs": "すべてのタブを再読み込み",
+            "reopenClosedTab": "最後に閉じたタブを再度開く"
         }
     }
 }

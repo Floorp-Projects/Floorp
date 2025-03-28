@@ -72,53 +72,53 @@
         "position": "位置",
         "position-left": "左",
         "position-right": "右",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "flex-row": "横並び",
+        "flex-column": "縦並び",
+        "remove-button": "現在のビューを解除",
         "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
+            "split-tabs": "これらのタブを分割",
+            "split-fixed-tab": "分割して固定表示"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "ウェブアプリ",
+            "install-current": "現在のページをウェブアプリとしてインストール",
+            "open-installed": "インストールしたアプリを開く"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "title": "アプリケーションを開く",
+            "install": "アプリケーションをインストール",
+            "open": "アプリケーションを開く",
+            "cancel": "キャンセル",
+            "site-icon": "サイトアイコン",
+            "installing": "インストールインジケーター"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "プライベートコンテナーで開く",
+        "name": "プライベートコンテナー"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "戻る",
+            "goForward": "進む",
+            "reload": "再読み込み",
+            "closeTab": "タブを閉じる",
+            "newTab": "新規タブ",
+            "duplicateTab": "タブを複製",
+            "reloadAllTabs": "すべてのタブを再読み込み",
+            "reopenClosedTab": "閉じたタブを再度開く"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "前のページに戻る",
+            "goForward": "次のページに進む",
+            "reload": "現在のページを再読み込み",
+            "closeTab": "現在のタブを閉じる",
+            "newTab": "新規タブを開く",
+            "duplicateTab": "現在のタブを複製",
+            "reloadAllTabs": "すべてのタブを再読み込み",
+            "reopenClosedTab": "最後に閉じたタブを再度開く"
         }
     }
 }

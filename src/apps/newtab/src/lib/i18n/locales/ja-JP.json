@@ -2,9 +2,9 @@
     "title": "Floorp Start",
     "topSites": {
         "addSite": "サイトを追加",
-        "addNewSite": "新しいサイトを追加する",
+        "addNewSite": "新しいサイトを追加",
         "url": "URL",
-        "label": "ラベル",
+        "label": "表示名",
         "cancel": "キャンセル",
         "add": "追加",
         "close": "閉じる",
@@ -12,7 +12,7 @@
     },
     "settings": {
         "newTabSettings": "新しいタブの設定",
-        "displayComponents": "表示するコンポーネント",
+        "displayComponents": "表示する要素",
         "topSites": "トップサイト",
         "clock": "時計",
         "searchBar": "検索バー",
@@ -21,12 +21,12 @@
         "randomImage": "ランダム画像",
         "customImage": "カスタム画像",
         "currentImage": "現在の画像:",
-        "imageRecommendation": "推奨：1920x1080以上",
+        "imageRecommendation": "推奨: 1920x1080 以上",
         "close": "閉じる"
     },
     "searchBar": {
         "searchOrEnterUrl": "検索またはURLを入力",
-        "loadingSearchEngines": "検索エンジンの読み込み..."
+        "loadingSearchEngines": "検索エンジンを読み込み中..."
     },
     "settingsButton": {
         "settings": "設定"
