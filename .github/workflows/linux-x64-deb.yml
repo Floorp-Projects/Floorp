@@ -87,7 +87,6 @@ jobs:
         sudo touch floorp-$DISPVER.deb
         sudo chmod +r floorp-$DISPVER.deb
         zip -r dist.zip floorp-$DISPVER.deb
-
     - name: Update PPA 👻
       if: inputs.ppa
       run: |
@@ -96,8 +95,20 @@ jobs:
         mkdir publish
         echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
         gpg --import Floorp_sec.asc
-        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
-        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
+        echo "open ${{ secrets.PPA_FTP_URL }}" | tee -a init_script.txt finish_script.txt > /dev/null
+        echo "user ${{ secrets.PPA_FTP_USER }} ${{ secrets.PPA_FTP_PASS }}" | tee -a init_script.txt finish_script.txt > /dev/null
+        echo "prompt" | tee -a init_script.txt finish_script.txt > /dev/null
+        echo "cd amd64" | tee -a init_script.txt finish_script.txt > /dev/null
+
+        echo "mget *" >> init_script.txt
+
+        echo "put floorp-$DISPVER.deb" >> finish_script.txt
+        echo "put Packages.gz" >> finish_script.txt
+        echo "put Packages" >> finish_script.txt
+        echo "put Release" >> finish_script.txt
+        echo "put Release.gpg" >> finish_script.txt
+        echo "put InRelease" >> finish_script.txt
+
         cd publish
         ftp -n -p < ../init_script.txt
         cp ../floorp-$DISPVER.deb ./
