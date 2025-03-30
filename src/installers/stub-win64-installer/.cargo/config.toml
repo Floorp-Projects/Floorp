@@ -1,0 +1,17 @@
+[unstable]
+build-std = ["std", "panic_abort"]
+build-std-features = ["panic_immediate_abort"]
+
+[build]
+rustflags = [
+  "-C", "link-arg=-fuse-ld=lld",
+  "-C", "debuginfo=0"
+]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+debug = false

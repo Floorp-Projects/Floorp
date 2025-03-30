@@ -1,0 +1,98 @@
+{
+    "app": {
+        "status": {
+            "installing": "バックグラウンドでインストール中...",
+            "installComplete": "インストールが完了しました"
+        },
+        "installer": {
+            "title": "Floorp インストーラー",
+            "description": "Floorp ブラウザをインストールして、プライバシー重視で高速、カスタマイズ性に優れたブラウジング体験を始めましょう。",
+            "adminRights": "管理者権限でインストール",
+            "adminRightsEnabled": "管理者権限を使用して全ユーザー用にインストールします。",
+            "adminRightsDisabled": "現在のユーザーアカウント用のみにインストールします。",
+            "customPathRequired": "カスタムインストールパスを使用するには管理者権限が必要です。",
+            "installLocation": "インストール先",
+            "change": "変更",
+            "installButton": "インストールを開始",
+            "retryButton": "再試行"
+        },
+        "progress": {
+            "installing": "インストール中...",
+            "slideCounter": "スライド {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "インストール先を選択",
+            "installPath": "インストールパス",
+            "browse": "参照",
+            "resetDefault": "デフォルトに戻す",
+            "cancel": "キャンセル",
+            "save": "設定を保存",
+            "close": "閉じる"
+        },
+        "exitConfirmation": {
+            "title": "インストールを中止しますか？",
+            "message": "インストールプロセスを中止すると、Floorpのインストールは完了しません。",
+            "cancelButton": "キャンセル",
+            "confirmButton": "インストールを中止"
+        },
+        "complete": {
+            "success": "インストールが成功しました",
+            "error": "インストールに失敗しました",
+            "launchCheckbox": "インストール後にFloorp ブラウザを起動する",
+            "closeButton": "インストーラーを閉じる",
+            "countdownMessage": "インストーラーは {{count}} 秒後に閉じられます"
+        }
+    },
+    "slides": {
+        "privacy": {
+            "title": "プライバシー保護",
+            "description": "Floorpはユーザーのプライバシーを最優先に考えた設計です。トラッキング防止機能や安全な閲覧モードで、あなたのオンラインプライバシーを保護します。"
+        },
+        "performance": {
+            "title": "高速パフォーマンス",
+            "description": "最適化されたエンジンで、ページの読み込みからタブの切り替えまで、すべてが高速に動作します。あなたのブラウジング体験をスムーズにします。"
+        },
+        "customization": {
+            "title": "豊富なカスタマイズ",
+            "description": "Floorpは豊富なカスタマイズ機能を提供します。ユーザーインターフェースから機能まで、あなた好みにカスタマイズできます。"
+        },
+        "extensions": {
+            "title": "豊富な拡張機能",
+            "description": "Firefox互換の拡張機能を利用できるため、お気に入りのツールやサービスをブラウザに追加できます。"
+        },
+        "multiplatform": {
+            "title": "マルチプラットフォーム対応",
+            "description": "Windows、macOS、Linuxなど、様々なプラットフォームで利用できます。どこでも同じ体験を。"
+        },
+        "navigation": {
+            "previous": "前へ",
+            "next": "次へ",
+            "goto": "スライド{{number}}へ"
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "Floorpインストーラーをダウンロードしました（開発モード）",
+            "installation_complete": "Floorpのインストールが正常に完了しました。"
+        },
+        "errors": {
+            "installer_not_found": "Floorpインストーラーの取得に失敗しました。",
+            "download_failed": "ダウンロード中にエラーが発生しました: {{0}}",
+            "signature_verification_failed": "インストーラーの署名検証に失敗しました。安全のため実行を中止します。",
+            "signature_verification_error": "署名検証中にエラーが発生しました: {{0}}",
+            "installer_exit_code": "インストーラーが終了コード {{0}} で終了しました。",
+            "installer_execution": "インストーラーの実行中にエラーが発生しました: {{0}}",
+            "browser_not_found": "Floorpブラウザーが見つかりませんでした。インストールは成功しましたが、ブラウザーの実行ファイルが見つかりません。",
+            "browser_launch_failed": "ブラウザーの起動に失敗しました: {{0}}",
+            "file_not_found": "ファイルが見つかりません: {{0}}",
+            "not_a_file": "パスがファイルではありません: {{0}}",
+            "admin_rights_denied": "管理者権限が拒否されました。管理者権限モードを選択していますが、権限の付与が拒否されました。",
+            "exit_code_not_found": "インストーラーの終了コードを取得できませんでした。管理者権限が拒否された可能性があります。",
+            "powershell_script_creation": "PowerShellスクリプトの作成に失敗しました: {{0}}",
+            "powershell_process": "PowerShellプロセスの起動に失敗しました: {{0}}",
+            "admin_install_failed": "管理者権限でのインストールが失敗しました。終了コード: {{0}}",
+            "user_installer_launch": "ユーザー権限でのインストーラープロセスの起動に失敗しました: {{0}}",
+            "user_installer_execution": "ユーザー権限でのインストーラーの実行中に問題が発生しました: {{0}}"
+        }
+    }
+}
