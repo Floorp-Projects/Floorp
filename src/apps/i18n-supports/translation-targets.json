@@ -17,6 +17,10 @@
     {
       "source_path": "src/apps/welcome/src/lib/i18n/locales",
       "f18n_path": "welcome/"
+    },
+    {
+      "source_path": "src/installers/stub-win64-installer/src/lib/i18n/locales",
+      "f18n_path": "stub-win64-installer/"
     }
   ]
 }
