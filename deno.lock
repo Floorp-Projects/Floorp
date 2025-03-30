@@ -149,6 +149,7 @@
     "npm:tinyrainbow@2": "2.0.0",
     "npm:tinyspy@^3.0.2": "3.0.2",
     "npm:tsdown@~0.5.6": "0.5.8_rollup@4.34.5_typescript@5.7.3_@swc+core@1.10.14",
+    "npm:typescript@5.7.3": "5.7.3",
     "npm:typescript@^5.7.3": "5.7.3",
     "npm:typescript@~5.6.2": "5.6.3",
     "npm:unplugin-swc@^1.5.1": "1.5.1_@swc+core@1.10.14",
