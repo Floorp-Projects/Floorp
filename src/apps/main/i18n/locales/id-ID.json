@@ -1,124 +1,124 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "label": "Urungkan Tutup Tab",
+        "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
     },
     "workspaces": {
         "modal": {
-            "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
-            "container": "Container",
+            "name": "Nama",
+            "name-placeholder": "Masukkan nama untuk ruang kerja ini",
+            "container": "Kontainer",
             "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "icon": "Ikon",
+            "edit-title": "Sunting Ruang Kerja",
+            "save": "Simpan Perubahan",
+            "cancel": "Batal"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Circle",
-            "compass": "Compass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
+            "article": "Artikel",
+            "book": "Buku",
+            "briefcase": "Tas Kerja",
+            "cart": "Troli Belanja",
+            "chat": "Obrolan",
+            "chill": "Santai",
+            "circle": "Lingkaran",
+            "compass": "Kompas",
+            "code": "Kode",
+            "dollar": "Dolar",
+            "fence": "Pagar",
+            "fingerprint": "Sidik Jari",
+            "food": "Makanan",
+            "fruit": "Buah",
+            "game": "Permainan",
+            "gear": "Pengaturan",
+            "gift": "Kado",
+            "key": "Kunci",
+            "lightning": "Petir",
+            "network": "Jaringan",
+            "notes": "Catatan",
             "paint": "Paint",
-            "photo": "Photo",
+            "photo": "Foto",
             "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
+            "pet": "Peliharaan",
+            "question": "Pertanyaan",
+            "smartphone": "Ponsel",
+            "star": "Bintang",
+            "tree": "Pohon",
+            "vacation": "Liburan",
             "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "moon": "Bulan",
+            "music": "Musik",
+            "user": "Pengguna"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Ruang Kerja Baru ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "Pindahkan Ruang Kerja ini ke atas",
+            "move-down": "Pindahkan Ruang Kerja ini ke bawah",
+            "delete": "Hapus Ruang Kerja",
+            "manage": "Kelola Ruang Kerja"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "Buat Ruang Kerja Baru …",
+            "manage": "Kelola Ruang Kerja"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "Bilah Status{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "title": "Tampilan Belah",
+        "position": "Posisi",
+        "position-left": "Kiri",
+        "position-right": "Kanan",
+        "flex-row": "Baris",
+        "flex-column": "Kolom",
+        "remove-button": "Hapus Tampilan Saat Ini",
         "tab-context": {
-            "split-tabs": "Split Tabs",
+            "split-tabs": "Tab Belah",
             "split-fixed-tab": "Split to Fixed Tab"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "Aplikasi Web",
+            "install-current": "Pasang Halaman Saat Ini sebagai Aplikasi Web Progresif",
+            "open-installed": "Buka Aplikasi Terpasang"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
+            "title": "Buka Aplikasi",
+            "install": "Pasang Aplikasi",
+            "open": "Buka Aplikasi",
+            "cancel": "Batal",
+            "site-icon": "Ikon situs",
             "installing": "Installing indicator"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "Buka di Kontainer Pribadi",
+        "name": "Kontainer Pribadi"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "Kembali",
+            "goForward": "Maju",
+            "reload": "Muat Ulang",
+            "closeTab": "Tutup Tab",
+            "newTab": "Tab Baru",
+            "duplicateTab": "Gandakan Tab",
+            "reloadAllTabs": "Muat Ulang Semua Tab",
+            "reopenClosedTab": "Buka Kembali Tab Tertutup"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "Kembali ke halaman sebelumnya",
+            "goForward": "Maju ke halaman selanjutnya",
+            "reload": "Muat ulang halaman saat ini",
+            "closeTab": "Tutup tab saat ini",
+            "newTab": "Buka tab baru",
+            "duplicateTab": "Gandakan tab saat ini",
+            "reloadAllTabs": "Muat ulang semua tab",
+            "reopenClosedTab": "Buka kembali tab yang baru ditutup"
         }
     }
 }

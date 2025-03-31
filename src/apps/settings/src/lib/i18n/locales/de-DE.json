@@ -1,11 +1,11 @@
 {
     "title": {
-        "default": "{{productName}} Settings"
+        "default": "{{productName}}-Einstellungen"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Einstellungen",
+        "searchPlaceholder": "In Einstellungen suchen",
+        "darkMode": "Dunkel-Modus"
     },
     "restartWarningDialog": {
         "title": "Restart Required",

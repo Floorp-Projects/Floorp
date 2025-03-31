@@ -1,16 +1,16 @@
 {
     "title": {
-        "default": "{{productName}} Settings"
+        "default": "„{{productName}}“ nustatymai"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Nustatymai",
+        "searchPlaceholder": "Paieškos nustatymai",
+        "darkMode": "Tamsusis režimas"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
-        "description": "After restarting, the opened private windows and tabs will be lost.",
-        "cancel": "Later",
+        "title": "Privalomas paleidimas iš naujo",
+        "description": "Paleidus iš naujo, atvertos privačios langos ir kortelės bus prarastos.",
+        "cancel": "Vėliau",
         "restart": "Restart Now"
     },
     "sidebar": {

@@ -1,37 +1,37 @@
 {
-    "title": "Floorp Start",
+    "title": "Punca Floorp",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "Tambahkan Situs",
+        "addNewSite": "Tambahkan Situs Baru",
         "url": "URL",
         "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "cancel": "Batal",
+        "add": "Tambah",
+        "close": "Tutup",
+        "labelPlaceholder": "Nama Situs"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
+        "newTabSettings": "Pengaturan Tab Baru",
         "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "topSites": "Situs Teratas",
+        "clock": "Jam",
+        "searchBar": "Bilah Pencarian",
+        "backgroundSettings": "Pengaturan Latar Belakang",
+        "noBackground": "Latar Kosong",
+        "randomImage": "Gambar Acak",
+        "customImage": "Gambar Suaian",
+        "currentImage": "Gambar Saat Ini:",
+        "imageRecommendation": "Saran: gambar berukuran 1920×1080 atau lebih",
+        "close": "Tutup"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Cari atau masukkan URL",
+        "loadingSearchEngines": "Memuat mesin pencari …"
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Pengaturan"
     },
     "modal": {
-        "close": "Close"
+        "close": "Tutup"
     }
 }

@@ -38,87 +38,87 @@
             "notes": "Užrašai",
             "paint": "Dažai",
             "photo": "Nuotrauka",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "pin": "Segtukas",
+            "pet": "Augintinis",
+            "question": "Klaustukas",
+            "smartphone": "Išmanusis telefonas",
+            "star": "Žvaigždė",
+            "tree": "Medis",
+            "vacation": "Atostogos",
+            "love": "Meilė",
+            "moon": "Mėnulis",
+            "music": "Muzika",
+            "user": "Naudotojas"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Nauja darbo sritis ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "Perkelti šią darbo sritį aukščiau",
+            "move-down": "Perkelti šią darbo sritį žemyn",
+            "delete": "Ištrinti darbo sritį",
+            "manage": "Tvarkyti darbo sritį"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "Kurti naują darbo sritį...",
+            "manage": "Tvarkyti darbo sritis"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "Būsenos juosta{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "title": "Skaidymo rodinys",
+        "position": "Vieta",
+        "position-left": "Kairėje",
+        "position-right": "Dešinėje",
+        "flex-row": "Eilutė",
+        "flex-column": "Stulpelis",
+        "remove-button": "Šalinti dabartinį rodinį",
         "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
+            "split-tabs": "Skaidyti korteles",
+            "split-fixed-tab": "Skaidyti į fiksuotą kortelę"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "Internetinės programos",
+            "install-current": "Diegti dabartinį puslapį kaip progresyvųjį internetinę programą",
+            "open-installed": "Atverti įdiegtas programas"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "title": "Atverti programą",
+            "install": "Diegti programą",
+            "open": "Atverti programą",
+            "cancel": "Atšaukti",
+            "site-icon": "Svetainės piktograma",
+            "installing": "Diegimo indikatorius"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "Atverti privačiame konteineryje",
+        "name": "Privatus konteineris"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "Atgal",
+            "goForward": "Pirmyn",
+            "reload": "Įkelti iš naujo",
+            "closeTab": "Užverti kortelę",
+            "newTab": "Nauja kortelė",
+            "duplicateTab": "Dubliuoti kortelę",
+            "reloadAllTabs": "Iš naujo įkelti visas korteles",
+            "reopenClosedTab": "Iš naujo atverti užverstą kortelę"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "Naršykite atgal į ankstesnį puslapį",
+            "goForward": "Naršykite pirmyn į tolesnį puslapį",
+            "reload": "Iš naujo įkelti dabartinį puslapį",
+            "closeTab": "Užverti dabartinę kortelę",
+            "newTab": "Atverti naują kortelę",
+            "duplicateTab": "Dubliuoti dabartinę kortelę",
+            "reloadAllTabs": "Iš naujo įkelti visas korteles",
+            "reopenClosedTab": "Atverti iš naujo paskutinį užverstą kortelę"
         }
     }
 }

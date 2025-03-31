@@ -99,7 +99,7 @@
             "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
             "features": [
                 "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
+                "可以固定到任务栏",
                 "Firefox add-ons work too"
             ]
         },
@@ -109,7 +109,7 @@
             "features": [
                 "Operate without keyboard shortcuts",
                 "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "快速浏览页面和历史记录"
             ]
         },
         "notebook": "Notebook",

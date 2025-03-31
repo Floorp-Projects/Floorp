@@ -21,15 +21,15 @@
         "randomImage": "Random Image",
         "customImage": "Custom Image",
         "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
+        "imageRecommendation": "Khuyến nghị: 1920x1080 hoặc lớn hơn",
         "close": "Close"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
+        "searchOrEnterUrl": "Tìm kiếm hoặc nhập địa chỉ",
         "loadingSearchEngines": "Loading search engines..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Cài đặt"
     },
     "modal": {
         "close": "Close"

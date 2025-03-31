@@ -1,0 +1,98 @@
+{
+    "app": {
+        "status": {
+            "installing": "Instalação em segundo plano...",
+            "installComplete": "Instalação concluída"
+        },
+        "installer": {
+            "title": "Instalador do Floorp",
+            "description": "Instale o navegador Floorp e comece uma experiência de navegação focada na privacidade, rápida e personalizável.",
+            "adminRights": "Instalar com direitos de administrador",
+            "adminRightsEnabled": "Instalar para todos os utilizadores com direitos de administrador.",
+            "adminRightsDisabled": "Instalar apenas para o utilizador atual.",
+            "customPathRequired": "O caminho de instalação personalizado requer direitos de administrador.",
+            "installLocation": "Local de instalação",
+            "change": "Alterar",
+            "installButton": "Iniciar a instalação",
+            "retryButton": "Repetir"
+        },
+        "progress": {
+            "installing": "Instalando...",
+            "slideCounter": "Diapositivo {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "Selecionar o local de instalação",
+            "installPath": "Caminho de instalação",
+            "browse": "Navegar",
+            "resetDefault": "Repor a predefinição",
+            "cancel": "Cancelar",
+            "save": "Guardar definições",
+            "close": "Fechar"
+        },
+        "exitConfirmation": {
+            "title": "Cancelar a instalação?",
+            "message": "O cancelamento do processo de instalação impedirá a instalação do Floorp.",
+            "cancelButton": "Cancelar",
+            "confirmButton": "Cancelar instalação"
+        },
+        "complete": {
+            "success": "Instalação bem-sucedida",
+            "error": "Falha na instalação",
+            "launchCheckbox": "Iniciar o navegador Floorp após a instalação",
+            "closeButton": "Fechar o instalador",
+            "countdownMessage": "O instalador fechará em {{count}} segundos"
+        }
+    },
+    "slides": {
+        "privacy": {
+            "title": "Proteção da privacidade",
+            "description": "O Floorp foi concebido tendo como principal prioridade a privacidade do utilizador. Proteja a sua privacidade online com funcionalidades de prevenção de rastreio e modo de navegação segura."
+        },
+        "performance": {
+            "title": "Desempenho rápido",
+            "description": "O motor otimizado fornece velocidade para tudo, desde o carregamento da página até à mudança de separador, tornando a sua experiência de navegação suave."
+        },
+        "customization": {
+            "title": "Personalização rica",
+            "description": "O Floorp oferece opções de personalização ricas. Pode personalizar tudo, desde a interface do utilizador até às funcionalidades, de acordo com as suas preferências."
+        },
+        "extensions": {
+            "title": "Extensões extensivas",
+            "description": "Compatível com as extensões do Firefox, permitindo-lhe adicionar as suas ferramentas e serviços favoritos ao seu browser."
+        },
+        "multiplatform": {
+            "title": "Suporte multiplataforma",
+            "description": "Disponível em várias plataformas, incluindo Windows, macOS e Linux. Desfrute da mesma experiência em todo o lado."
+        },
+        "navigation": {
+            "previous": "Anterior",
+            "next": "Seguinte",
+            "goto": "Ir para o diapositivo {{number}}"
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "O instalador do Floorp foi descarregado (modo de desenvolvimento)",
+            "installation_complete": "A instalação do Floorp foi concluída com êxito."
+        },
+        "errors": {
+            "installer_not_found": "Falha ao recuperar o instalador do Floorp.",
+            "download_failed": "Ocorreu um erro durante a transferência: {{0}}",
+            "signature_verification_failed": "Falha na verificação da assinatura do instalador. A execução foi abortada por motivos de segurança.",
+            "signature_verification_error": "Ocorreu um erro durante a verificação da assinatura: {{0}}",
+            "installer_exit_code": "O instalador foi encerrado com o código {{0}}.",
+            "installer_execution": "Ocorreu um erro durante a execução do instalador: {{0}}",
+            "browser_not_found": "O browser Floorp não foi encontrado. A instalação foi bem sucedida, mas não foi possível encontrar o executável do navegador.",
+            "browser_launch_failed": "Falha ao iniciar o navegador: {{0}}",
+            "file_not_found": "Ficheiro não encontrado: {{0}}",
+            "not_a_file": "O caminho não é um ficheiro: {{0}}",
+            "admin_rights_denied": "Os direitos de administrador foram negados. Selecionou o modo de direitos de administrador, mas a permissão foi negada.",
+            "exit_code_not_found": "Não foi possível obter o código de saída do instalador. Os direitos de administrador podem ter sido negados.",
+            "powershell_script_creation": "Falha ao criar o script do PowerShell: {{0}}",
+            "powershell_process": "Falha ao iniciar o processo do PowerShell: {{0}}",
+            "admin_install_failed": "A instalação com direitos de administrador falhou. Código de saída: {{0}}",
+            "user_installer_launch": "Falha ao iniciar o processo de instalação com direitos de utilizador: {{0}}",
+            "user_installer_execution": "Ocorreu um problema ao executar o instalador com direitos de utilizador: {{0}}"
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "undo-closed-tab": {
         "label": "閉じたタブを元に戻す",
-        "tooltiptext": "最後に閉じたタブを再度開く {{shortcut}}"
+        "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
     },
     "workspaces": {
         "modal": {
@@ -43,7 +43,7 @@
             "question": "ハテナ",
             "smartphone": "スマートフォン",
             "star": "星",
-            "tree": "ツリー",
+            "tree": "木",
             "vacation": "休暇",
             "love": "ハート",
             "moon": "月",
@@ -83,7 +83,7 @@
     "ssb": {
         "menu": {
             "webapps": "ウェブアプリ",
-            "install-current": "現在のページをウェブアプリとしてインストール",
+            "install-current": "現在のページをプログレッシブウェブアプリとしてインストール",
             "open-installed": "インストールしたアプリを開く"
         },
         "page-action": {
@@ -92,7 +92,7 @@
             "open": "アプリを開く",
             "cancel": "キャンセル",
             "site-icon": "サイトのアイコン",
-            "installing": "インストール中の表示"
+            "installing": "インストールインジケーター"
         }
     },
     "privateContainer": {
@@ -108,7 +108,7 @@
             "newTab": "新しいタブ",
             "duplicateTab": "タブを複製",
             "reloadAllTabs": "すべてのタブを再読み込み",
-            "reopenClosedTab": "閉じたタブを再度開く"
+            "reopenClosedTab": "閉じたタブを開きなおす"
         },
         "descriptions": {
             "goBack": "前のページに戻る",
@@ -118,7 +118,7 @@
             "newTab": "新しいタブを開く",
             "duplicateTab": "現在のタブを複製",
             "reloadAllTabs": "すべてのタブを再読み込み",
-            "reopenClosedTab": "最後に閉じたタブを再度開く"
+            "reopenClosedTab": "最後に閉じたタブを開きなおす"
         }
     }
 }

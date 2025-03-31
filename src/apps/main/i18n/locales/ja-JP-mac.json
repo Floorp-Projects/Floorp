@@ -1,7 +1,7 @@
 {
     "undo-closed-tab": {
         "label": "閉じたタブを元に戻す",
-        "tooltiptext": "最後に閉じたタブを再度開く {{shortcut}}"
+        "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
     },
     "workspaces": {
         "modal": {
@@ -21,18 +21,18 @@
             "cart": "カート",
             "chat": "チャット",
             "chill": "チル",
-            "circle": "サークル",
+            "circle": "丸",
             "compass": "コンパス",
             "code": "コード",
             "dollar": "ドル",
             "fence": "フェンス",
-            "fingerprint": "フィンガープリント",
+            "fingerprint": "指紋",
             "food": "食べ物",
-            "fruit": "フルーツ",
+            "fruit": "果物",
             "game": "ゲーム",
             "gear": "設定",
             "gift": "ギフト",
-            "key": "キー",
+            "key": "鍵",
             "lightning": "稲妻",
             "network": "ネットワーク",
             "notes": "メモ",
@@ -40,10 +40,10 @@
             "photo": "写真",
             "pin": "ピン",
             "pet": "ペット",
-            "question": "問題",
+            "question": "ハテナ",
             "smartphone": "スマートフォン",
-            "star": "スター",
-            "tree": "ツリー",
+            "star": "星",
+            "tree": "木",
             "vacation": "休暇",
             "love": "ハート",
             "moon": "月",
@@ -51,7 +51,7 @@
             "user": "ユーザー"
         },
         "service": {
-            "new-workspace": "新しいワークスペース ({{count}})"
+            "new-workspace": "新規ワークスペース ({{count}})"
         },
         "context-menu": {
             "move-up": "このワークスペースを上に移動",
@@ -83,15 +83,15 @@
     "ssb": {
         "menu": {
             "webapps": "ウェブアプリ",
-            "install-current": "現在のページをウェブアプリとしてインストール",
+            "install-current": "現在のページをプログレッシブウェブアプリとしてインストール",
             "open-installed": "インストールしたアプリを開く"
         },
         "page-action": {
-            "title": "アプリケーションを開く",
-            "install": "アプリケーションをインストール",
-            "open": "アプリケーションを開く",
+            "title": "アプリを開く",
+            "install": "アプリをインストール",
+            "open": "アプリを開く",
             "cancel": "キャンセル",
-            "site-icon": "サイトアイコン",
+            "site-icon": "サイトのアイコン",
             "installing": "インストールインジケーター"
         }
     },
@@ -108,7 +108,7 @@
             "newTab": "新規タブ",
             "duplicateTab": "タブを複製",
             "reloadAllTabs": "すべてのタブを再読み込み",
-            "reopenClosedTab": "閉じたタブを再度開く"
+            "reopenClosedTab": "閉じたタブを開きなおす"
         },
         "descriptions": {
             "goBack": "前のページに戻る",

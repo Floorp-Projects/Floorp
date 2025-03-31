@@ -1,124 +1,124 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "label": "닫은 탭 되돌리기",
+        "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
     },
     "workspaces": {
         "modal": {
-            "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
-            "container": "Container",
-            "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "name": "이름",
+            "name-placeholder": "이 워크스페이스의 이름을 입력",
+            "container": "컨테이너",
+            "no-container": "컨테이너 없음",
+            "icon": "아이콘",
+            "edit-title": "워크스페이스 편집",
+            "save": "저장",
+            "cancel": "취소"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Circle",
-            "compass": "Compass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "article": "기사",
+            "book": "책",
+            "briefcase": "서류 가방",
+            "cart": "쇼핑 카트",
+            "chat": "채팅",
+            "chill": "칠",
+            "circle": "원",
+            "compass": "나침반",
+            "code": "코드",
+            "dollar": "달러",
+            "fence": "울타리",
+            "fingerprint": "지문",
+            "food": "음식",
+            "fruit": "과일",
+            "game": "게임",
+            "gear": "설정",
+            "gift": "선물",
+            "key": "열쇠",
+            "lightning": "번개",
+            "network": "네트워크",
+            "notes": "메모",
+            "paint": "페인트",
+            "photo": "사진",
+            "pin": "핀",
+            "pet": "반려동물",
+            "question": "질문",
+            "smartphone": "스마트폰",
+            "star": "별",
+            "tree": "나무",
+            "vacation": "휴가",
+            "love": "하트",
+            "moon": "달",
+            "music": "음악",
+            "user": "사용자"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "새 워크스페이스 ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "이 워크스페이스를 위로 옮기기",
+            "move-down": "이 워크스페이스를 아래로 옮기기",
+            "delete": "워크스페이스 삭제",
+            "manage": "워크스페이스 관리"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "create-new": "새로운 워크스페이스 만들기...",
+            "manage": "워크스페이스 관리"
         }
     },
     "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+        "toggle": "상태 표시줄{{mark}}"
     },
     "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
+        "title": "분할 보기",
+        "position": "위치",
+        "position-left": "왼쪽",
+        "position-right": "오른쪽",
+        "flex-row": "평행",
+        "flex-column": "수직",
+        "remove-button": "현재 보기 제거",
         "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
+            "split-tabs": "탭 분할",
+            "split-fixed-tab": "분할하여 고정 표시"
         }
     },
     "ssb": {
         "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
+            "webapps": "웹 앱",
+            "install-current": "현재 페이지를 프로그레시브 웹 앱으로서 설치",
+            "open-installed": "설치된 웹 앱 열기"
         },
         "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "title": "애플리케이션 열기",
+            "install": "애플리케이션 설치",
+            "open": "애플리케이션 열기",
+            "cancel": "취소",
+            "site-icon": "사이트 아이콘",
+            "installing": "설치 표시기"
         }
     },
     "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+        "openInPrivateContainer": "사생활 보호 컨테이너으로 열기",
+        "name": "사생활 보호 컨테이너"
     },
     "mouseGesture": {
         "actions": {
-            "goBack": "Back",
-            "goForward": "Forward",
-            "reload": "Reload",
-            "closeTab": "Close Tab",
-            "newTab": "New Tab",
-            "duplicateTab": "Duplicate Tab",
-            "reloadAllTabs": "Reload All Tabs",
-            "reopenClosedTab": "Reopen Closed Tab"
+            "goBack": "뒤로가기",
+            "goForward": "앞으로 가기",
+            "reload": "새로고침",
+            "closeTab": "탭 닫기",
+            "newTab": "새 탭",
+            "duplicateTab": "탭 복제",
+            "reloadAllTabs": "모든 탭 새로 고침",
+            "reopenClosedTab": "닫힌 탭 다시 열기"
         },
         "descriptions": {
-            "goBack": "Navigate back to the previous page",
-            "goForward": "Navigate forward to the next page",
-            "reload": "Reload the current page",
-            "closeTab": "Close the current tab",
-            "newTab": "Open a new tab",
-            "duplicateTab": "Duplicate the current tab",
-            "reloadAllTabs": "Reload all tabs",
-            "reopenClosedTab": "Reopen the last closed tab"
+            "goBack": "이전 페이지로 돌아가기",
+            "goForward": "다음 페이지로 이동",
+            "reload": "현재 페이지 갱신",
+            "closeTab": "현재 탭 닫기",
+            "newTab": "새 탭 열기",
+            "duplicateTab": "현재 탭을 복제",
+            "reloadAllTabs": "모든 탭 새로 고침",
+            "reopenClosedTab": "마지막으로 닫은 탭을 다시 열기"
         }
     }
 }

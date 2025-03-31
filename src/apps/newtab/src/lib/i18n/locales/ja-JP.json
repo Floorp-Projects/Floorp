@@ -25,7 +25,7 @@
         "close": "閉じる"
     },
     "searchBar": {
-        "searchOrEnterUrl": "検索またはURLを入力",
+        "searchOrEnterUrl": "検索または URL を入力",
         "loadingSearchEngines": "検索エンジンを読み込み中..."
     },
     "settingsButton": {

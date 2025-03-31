@@ -1,130 +1,130 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "Selamat Datang",
+        "language": "Bahasa",
+        "languageSupport": "Dukungan Bahasa",
+        "features": "Fitur",
+        "featureIntroduction": "Pengenalan Fitur",
+        "customize": "Sesuaikan",
+        "initialSettings": "Pengaturan Awal",
+        "complete": "Selesai",
+        "previous": "Sebelumnya",
+        "next": "Selanjutnya"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Sesuaikan Floorp",
+        "description": "Sesuaikan dengan kemauan Anda. Penyesuaian dapat diubah kapan pun melalui Floorp Hub atau halaman pengaturan.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "Pengaturan Tampilan",
+            "description": "Anda dapat menyesuaikan tampilan Floorp sesuai keinginan Anda. Pilih tema tema atau gelap, atau jadikan tema menyesuaikan pengaturan sistem."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Terang",
+            "dark": "Gelap",
+            "system": "Ikuti sistem"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "Tema terang",
+            "dark": "Tema gelap",
+            "system": "Preferensi sistem"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Mesin Pencari Bawaan",
+            "default": "Bawaan",
+            "search": "Cari",
+            "noEnginesFound": "Tidak ada mesin pencari."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "Penyiapan Selesai!",
+        "subtitle": "Selamat! Anda telah selesai menyiapkan Floorp. Selamat meramban dengan aman dan nyaman!",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "Langkah Selanjutnya (Tak Wajib)",
+            "setDefault": "Atur sebagai Peramban Utama",
+            "documentation": "Dokumentasi"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "Memulai dengan Floorp",
+        "hint": "Untuk pengaturan yang lebih rinci, Anda dapat mengunjungi Pengaturan melalui tombol menu di kanan atas."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Selamat datang di Floorp!",
+        "description": "Floorp adalah peramban web yang cepat dan ramah pengguna yang menekankan privasi dan keamanan. Panduan ini akan memperkenalkan Anda dengan fitur-fitur dan pengaturan utama Floorp.",
+        "readyToStart": "Jika siap, klik tombol di bawah untuk melanjutkan.",
+        "features": "Fitur Floorp",
+        "privacy": "Privasi",
+        "privacyDesc": "Melindungi data Anda",
+        "speed": "Cepat",
+        "speedDesc": "Performa teroptimasi",
+        "customization": "Kustomisasi",
+        "customizationDesc": "Atur sesuai kemauan Anda",
+        "start": "Memulai"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Floorp dalam bahasa Anda",
+        "subtitle": "Cek pengaturan bahasa dan ubahlah bila perlu",
+        "languageSettings": "Pengaturan Bahasa",
+        "languageChanged": "Bahasa Diubah!",
+        "currentLanguageInfo": "Informasi Bahasa Saat Ini",
+        "systemLanguage": "Bahasa Sistem",
+        "floorpLanguage": "Bahasa Floorp",
+        "selectLanguage": "Pilih Bahasa",
+        "useSystemLanguage": "Gunakan Bahasa Sistem",
+        "multilingual": "Dukungan Multibahasa",
+        "chooseLanguage": "Pilih dari berbagai macam bahasa",
+        "languageChangeNotice": "Mengubah bahasa akan menerapkan bahasa baru tersebut tanpa memulai ulang Floorp. Beberapa pengaya mungkin tidak mendukung perubahan bahasa."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Fitur Utama Floorp",
+        "subtitle": "Floorp hadir dengan banyak fitur berguna. Lihat ringkasan fiturnya!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "Bilah Sisi",
+            "description": "Akses fitur-fitur dari bilah samping di sisi kanan selagi meramban. Anda bisa meletakkan panel web, pencatat, pengaya, markah, dll. di bilah samping.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "Sematkan situs ke bilah sisi",
+                "Buat catatan dengan cepat menggunakan Catatan Floorp selagi meramban",
+                "Mendukung kontainer"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "Ruang Kerja",
+            "description": "Kelola set tab jamak untuk menjitukan pekerjaan Anda. Anda dapat beralih cepat antarruang kerja dengan ikon dan nama yang khas. Anda dapat mengaksesnya melalui tombol ruang kerja di kiri atas.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Kategorikan berdasarkan tujuan: kerja, pribadi, dll.",
+                "Buat unik dengan ikon khusus",
+                "Kelola tab dengan mudah"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "Dukungan Aplikasi Web Progresif (PWA)",
+            "description": "Di Windows, Anda dapat menambahkan situs kompatibel PWA sebagai aplikasi desktop saat mengunjungi situs tersebut. Situs web biasa juga dapat diinstal demikian.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "Jalankan secara mandiri sebagai aplikasi desktop",
+                "Bisa disematkan di bilah tugas",
+                "Pengaya Firefox juga bisa digunakan"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "Gestur Tetikus",
+            "description": "Kendalikan peramban Anda dengan lebih intuitif dengan fungsionalitas gestur tetikus bawaan. Jalankan gestur dengan menahan tombol klik kanan lalu menggerakkan tetikus.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "Operasikan tanpa pintasan kibor",
+                "Gestur dapat disesuaikan sepenuhnya",
+                "Navigasi halaman dan riwayat secara cepat"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "Buku Catatan",
+        "nextTab": "Buka Tab Berikutnya"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "title": "Penyiapan Selesai!",
+        "subtitle": "Selamat! Anda telah selesai menyiapkan Floorp. Selamat meramban dengan aman dan nyaman!",
+        "nextSteps": "Langkah Selanjutnya (Tak Wajib)",
+        "defaultBrowser": "Atur sebagai Peramban Utama",
+        "support": "Dukungan",
+        "documentation": "Dokumentasi",
+        "getStarted": "Memulai dengan Floorp",
+        "hint": "Untuk pengaturan yang lebih rinci, Anda dapat mengunjungi Pengaturan melalui tombol menu di kanan atas.",
+        "resourcesLabel": "Sumber-Sumber",
+        "defaultBrowserSuccess": "Floorp telah dijadikan peramban utama Anda!"
     }
 }

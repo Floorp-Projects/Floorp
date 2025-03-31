@@ -1,37 +1,37 @@
 {
     "title": "Início do Floorp",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "Adicionar site",
+        "addNewSite": "Adicionar um novo site",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "label": "Etiqueta",
+        "cancel": "Cancelar",
+        "add": "Adicionar",
+        "close": "Fechar",
+        "labelPlaceholder": "Nome do site"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "newTabSettings": "Definições do novo separador",
+        "displayComponents": "Componentes do ecrã",
+        "topSites": "Principais sites",
+        "clock": "Relógio",
+        "searchBar": "Barra de pesquisa",
+        "backgroundSettings": "Definições de fundo",
+        "noBackground": "Sem fundo",
+        "randomImage": "Imagem aleatória",
+        "customImage": "Imagem personalizada",
+        "currentImage": "Imagem atual:",
+        "imageRecommendation": "Recomendado: Imagem de 1920x1080 ou maior",
+        "close": "Fechar"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Pesquisar ou introduzir URL",
+        "loadingSearchEngines": "A carregar motores de busca..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Definições"
     },
     "modal": {
-        "close": "Close"
+        "close": "Fechar"
     }
 }
