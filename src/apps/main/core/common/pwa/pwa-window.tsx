@@ -6,9 +6,10 @@
 
 import { createRootHMR, render } from "@nora/solid-xul";
 import { createSignal } from "solid-js";
-import { config } from "./config";
+import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
-import type { PwaService } from "./pwaService";
+import type { PwaService } from "./pwaService.ts";
+import { PWA_WINDOW_NAME } from "./ssbRunner.ts";
 
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
@@ -19,8 +20,7 @@ export class PwaWindowSupport {
   }
 
   constructor(private pwaService: PwaService) {
-    const uri = window.arguments?.[0];
-    if (!uri?.endsWith("?FloorpEnableSSBWindow=true")) {
+    if (window.name !== PWA_WINDOW_NAME) {
       return;
     }
 
@@ -42,10 +42,8 @@ export class PwaWindowSupport {
   }
 
   private setupSignals(): void {
-    const ssbIdAttr = document?.documentElement?.getAttribute("FloorpSSBId") ??
-      null;
     const [, setSsbId] = this.ssbId;
-    setSsbId(ssbIdAttr);
+    setSsbId(window.name);
   }
 
   private setupPageActions(): void {
@@ -69,10 +67,12 @@ export class PwaWindowSupport {
   }
 
   private createStyleElement() {
+    const showToolbar = config().showToolbar !== false;
+
     return (
       <style>
         {PwaWindowStyle}
-        {!config().showToolbar
+        {!showToolbar
           ? `
            #nav-bar, #status-bar, #PersonalToolbar, #titlebar {
              display: none;
