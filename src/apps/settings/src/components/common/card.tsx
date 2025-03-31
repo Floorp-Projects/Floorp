@@ -10,7 +10,7 @@ export function Card({ children, className }: CardProps) {
   return (
     <div
       className={cn(
-        "flex flex-col bg-base-100/30 shadow-md border rounded border-base-300/20 dark:bg-base-300/40 mb-8 z-10",
+        "flex flex-col bg-base-200 shadow-md border rounded border-base-300/20 dark:bg-base-600 mb-8 z-1000",
         className,
       )}
     >

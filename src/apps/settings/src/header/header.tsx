@@ -49,15 +49,6 @@ export function Header() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <select
-        value={i18n.language}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-          i18n.changeLanguage(e.currentTarget.value)}
-        className="p-2 ml-auto mr-4 rounded-md bg-base-200 dark:bg-base-300 text-base-content"
-      >
-        <option value="en">English</option>
-        <option value="ja">日本語</option>
-      </select>
     </header>
   );
 }
