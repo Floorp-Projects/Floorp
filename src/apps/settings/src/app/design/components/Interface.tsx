@@ -33,11 +33,10 @@ export function Interface() {
               {interfaceOptions.map((option) => (
                 <label
                   key={option.value}
-                  className={`flex flex-col items-center rounded p-2 cursor-pointer relative hover:bg-base-200 ${
-                    getValues("design") === option.value
-                      ? "bg-base-200 text-base-content dark:bg-base-200 dark:text-base-content border-1 border-base-300"
-                      : "border-1 border-base-300"
-                  }`}
+                  className={`flex flex-col items-center rounded p-2 cursor-pointer relative hover:bg-base-200 ${getValues("design") === option.value
+                    ? "bg-primary/10 text-base-content dark:bg-primary/15 dark:text-base-content border-1 border-primary/30"
+                    : "border-1 border-secondary/10"
+                    }`}
                 >
                   <img
                     src={option.image}
@@ -61,21 +60,21 @@ export function Interface() {
           {["lepton", "photon", "protonfix"].includes(
             getValues("design") || "",
           ) && (
-            <div className="mt-4 p-3 bg-base-200 rounded-lg">
-              <p className="text-sm">
-                {t("design.advancedLeptonThemeSettingsDescription")}{" "}
-                <a
-                  href="https://docs.floorp.app/docs/features/design-customization"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
-                >
-                  {t("design.advancedLeptonThemeSettings")}
-                  <ExternalLink className="size-4" />
-                </a>
-              </p>
-            </div>
-          )}
+              <div className="mt-4 p-3 bg-base-200 rounded-lg">
+                <p className="text-sm">
+                  {t("design.advancedLeptonThemeSettingsDescription")}{" "}
+                  <a
+                    href="https://docs.floorp.app/docs/features/design-customization"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+                  >
+                    {t("design.advancedLeptonThemeSettings")}
+                    <ExternalLink className="size-4" />
+                  </a>
+                </p>
+              </div>
+            )}
 
           <div className="mt-6">
             <h3 className="text-base font-medium mb-2">

@@ -26,7 +26,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-base-content/20",
           "disabled:pointer-events-none disabled:opacity-50",
           {
-            "bg-primary/90 text-primary-content hover:bg-primary/80 active:bg-primary/70":
+            "bg-primary/70 text-primary-content hover:bg-primary/80 active:bg-primary/70":
               variant === "primary",
             "bg-secondary/90 text-secondary-content hover:bg-secondary/80 active:bg-secondary/70":
               variant === "secondary",

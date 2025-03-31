@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MousePointer, PlusCircle, Edit, Copy, Trash2 } from "lucide-react";
-import type { GestureAction, MouseGestureConfig } from "@/types/pref.ts";
+import type { GestureAction, GestureDirection, MouseGestureConfig } from "@/types/pref.ts";
 import { patternToString } from "../dataManager.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
 import { ActionEditModal } from "./ActionEditModal.tsx";
@@ -30,6 +30,20 @@ export function ActionsSettings({
     const [editingMode, setEditingMode] = useState<"new" | "edit" | "duplicate">("new");
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const availableActions = useAvailableActions();
+
+    const isPatternDuplicate = (pattern: GestureDirection[], currentIndex: number | null): boolean => {
+        return config.actions.some((action, index) => {
+            if (currentIndex !== null && index === currentIndex) {
+                return false;
+            }
+
+            if (action.pattern.length !== pattern.length) {
+                return false;
+            }
+
+            return action.pattern.every((direction, i) => direction === pattern[i]);
+        });
+    };
 
     const editAction = (action: GestureAction, index: number) => {
         setEditingAction({ ...action });
@@ -177,6 +191,7 @@ export function ActionsSettings({
                     mode={editingMode}
                     onSave={handleSaveAction}
                     onClose={handleCloseModal}
+                    isPatternDuplicate={(pattern) => isPatternDuplicate(pattern, editingIndex)}
                 />
             )}
         </div>

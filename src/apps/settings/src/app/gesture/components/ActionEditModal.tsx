@@ -8,13 +8,13 @@ import { useTranslation } from "react-i18next";
 import type { GestureAction, GestureDirection } from "@/types/pref.ts";
 import { patternToString } from "../dataManager.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
-import { getActionDisplayName } from "../../../../../main/core/common/mouse-gesture/utils/gestures.ts";
 
 interface ActionEditModalProps {
     action: GestureAction;
     mode: "new" | "edit" | "duplicate";
     onSave: (action: GestureAction) => Promise<void>;
     onClose: () => void;
+    isPatternDuplicate: (pattern: GestureDirection[]) => boolean;
 }
 
 export function ActionEditModal({
@@ -22,12 +22,20 @@ export function ActionEditModal({
     mode,
     onSave,
     onClose,
+    isPatternDuplicate,
 }: ActionEditModalProps) {
     const { t } = useTranslation();
     const [action, setAction] = useState<GestureAction>(initialAction);
+    const [error, setError] = useState<string | null>(null);
     const availableActions = useAvailableActions();
 
     const updatePattern = (direction: GestureDirection) => {
+        setError(null);
+
+        if (action.pattern.length > 0 && action.pattern[action.pattern.length - 1] === direction) {
+            return;
+        }
+
         setAction({
             ...action,
             pattern: [...action.pattern, direction],
@@ -35,6 +43,8 @@ export function ActionEditModal({
     };
 
     const resetPattern = () => {
+        setError(null);
+
         setAction({
             ...action,
             pattern: [],
@@ -42,6 +52,8 @@ export function ActionEditModal({
     };
 
     const removeDirection = (index: number) => {
+        setError(null);
+
         const newPattern = [...action.pattern];
         newPattern.splice(index, 1);
         setAction({
@@ -54,7 +66,12 @@ export function ActionEditModal({
         const finalAction = { ...action };
 
         if (finalAction.pattern.length === 0) {
-            alert(t("mouseGesture.emptyPatternError"));
+            setError(t("mouseGesture.emptyPatternError"));
+            return;
+        }
+
+        if (isPatternDuplicate(finalAction.pattern)) {
+            setError(t("mouseGesture.duplicatePatternError"));
             return;
         }
 
@@ -72,14 +89,17 @@ export function ActionEditModal({
         }
     };
 
-    const getDisplayName = () => {
-        return getActionDisplayName(action.action);
-    };
-
     return (
         <div className="modal modal-open">
             <div className="modal-box max-w-md">
                 <h3 className="font-bold text-lg mb-4">{getModalTitle()}</h3>
+
+                {error && (
+                    <div className="alert alert-error mb-4 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>{error}</span>
+                    </div>
+                )}
 
                 <div className="form-control w-full">
                     <label className="mb-2">

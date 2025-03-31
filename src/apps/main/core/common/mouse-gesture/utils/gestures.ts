@@ -4,51 +4,45 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import i18next from "i18next";
+import { actions } from "./actions.ts";
 
 export type GestureActionFn = () => void;
 export interface GestureActionRegistration {
   name: string;
   fn: GestureActionFn;
 }
+
+export function getAllGestureActions(): GestureActionRegistration[] {
+  return gestureActions.getActionsList();
+}
+
+export function executeGestureAction(name: string): boolean {
+  const action = gestureActions.getAction(name);
+  if (action) {
+    action();
+    return true;
+  }
+  return false;
+}
+
+export function getActionDisplayName(actionId: string): string {
+  return i18next.t(`mouseGesture.actions.${actionId}`, {
+    defaultValue: actionId,
+  });
+}
+
+export function getActionDescription(actionId: string): string {
+  return i18next.t(`mouseGesture.descriptions.${actionId}`, {
+    defaultValue: "",
+  });
+}
+
 class GestureActionsRegistry {
   private static instance: GestureActionsRegistry;
   private actions: Map<string, GestureActionRegistration> = new Map();
 
   private constructor() {
-    this.registerActions([
-      {
-        name: "goBack",
-        fn: goBack,
-      },
-      {
-        name: "goForward",
-        fn: goForward,
-      },
-      {
-        name: "reload",
-        fn: reload,
-      },
-      {
-        name: "closeTab",
-        fn: closeTab,
-      },
-      {
-        name: "newTab",
-        fn: newTab,
-      },
-      {
-        name: "duplicateTab",
-        fn: duplicateTab,
-      },
-      {
-        name: "reloadAllTabs",
-        fn: reloadAllTabs,
-      },
-      {
-        name: "reopenClosedTab",
-        fn: reopenClosedTab,
-      },
-    ]);
+    this.registerActions(actions);
   }
 
   public static getInstance(): GestureActionsRegistry {
@@ -82,64 +76,3 @@ class GestureActionsRegistry {
 }
 
 export const gestureActions = GestureActionsRegistry.getInstance();
-
-export function getAllGestureActions(): GestureActionRegistration[] {
-  return gestureActions.getActionsList();
-}
-
-export function executeGestureAction(name: string): boolean {
-  const action = gestureActions.getAction(name);
-  if (action) {
-    action();
-    return true;
-  }
-  return false;
-}
-
-export function getActionDisplayName(actionId: string): string {
-  return i18next.t(`mouseGesture.actions.${actionId}`, {
-    defaultValue: actionId,
-  });
-}
-
-export function getActionDescription(actionId: string): string {
-  return i18next.t(`mouseGesture.descriptions.${actionId}`, {
-    defaultValue: "",
-  });
-}
-
-export function goBack(): void {
-  globalThis.gBrowser.goBack();
-}
-
-export function goForward(): void {
-  globalThis.gBrowser.goForward();
-}
-
-export function reload(): void {
-  globalThis.gBrowser.reload();
-}
-
-export function closeTab(): void {
-  globalThis.gBrowser.removeCurrentTab();
-}
-
-export function newTab(): void {
-  globalThis.gBrowser.addTab("about:newtab", {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
-}
-
-export function duplicateTab(): void {
-  globalThis.gBrowser.duplicateTab(globalThis.gBrowser.selectedTab);
-}
-
-export function reloadAllTabs(): void {
-  for (const tab of globalThis.gBrowser.tabs) {
-    globalThis.gBrowser.reloadTab(tab);
-  }
-}
-
-export function reopenClosedTab(): void {
-  Services.obs.notifyObservers({}, "Browser:RestoreLastSession");
-}

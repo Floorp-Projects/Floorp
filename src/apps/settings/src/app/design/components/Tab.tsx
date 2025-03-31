@@ -8,6 +8,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import { LayoutGrid } from "lucide-react";
+import { Input } from "@/components/common/input.tsx";
 
 export function Tab() {
   const { t } = useTranslation();
@@ -63,16 +64,16 @@ export function Tab() {
 
         {!getValues("tabScroll") &&
           (getValues("tabScrollReverse") || getValues("tabScrollWrap")) && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm">
-              {t("design.tab.scrollPrefInfo", {
-                reverseScrollPrefName: t("design.tab.reverseScroll"),
-                scrollWrapPrefName: t("design.tab.scrollWrap"),
-                scrollPrefName: t("design.tab.scrollTab"),
-              })}
-            </p>
-          </div>
-        )}
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm">
+                {t("design.tab.scrollPrefInfo", {
+                  reverseScrollPrefName: t("design.tab.reverseScroll"),
+                  scrollWrapPrefName: t("design.tab.scrollWrap"),
+                  scrollPrefName: t("design.tab.scrollTab"),
+                })}
+              </p>
+            </div>
+          )}
 
         <div>
           <h3 className="text-base font-medium mb-2">
@@ -127,7 +128,7 @@ export function Tab() {
             <label htmlFor="tab-min-width">{t("design.tab.minWidth")}</label>
             <span className="text-sm text-muted-foreground">60px - 300px</span>
           </div>
-          <input
+          <Input
             id="tab-min-width"
             type="number"
             value={getValues("tabMinWidth") || ""}
@@ -148,7 +149,7 @@ export function Tab() {
             <label htmlFor="tab-min-height">{t("design.tab.minHeight")}</label>
             <span className="text-sm text-muted-foreground">20px - 100px</span>
           </div>
-          <input
+          <Input
             id="tab-min-height"
             type="number"
             value={getValues("tabMinHeight") || ""}
@@ -158,10 +159,10 @@ export function Tab() {
           />
           {(getValues("tabMinHeight") < 20 ||
             getValues("tabMinHeight") > 100) && (
-            <p className="text-destructive text-sm mt-1">
-              {t("design.tab.minHeightError", { min: 20, max: 100 })}
-            </p>
-          )}
+              <p className="text-destructive text-sm mt-1">
+                {t("design.tab.minHeightError", { min: 20, max: 100 })}
+              </p>
+            )}
         </div>
       </CardContent>
     </Card>

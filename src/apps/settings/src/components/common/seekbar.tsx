@@ -41,9 +41,9 @@ const Seekbar = forwardRef<HTMLInputElement, SeekbarProps>(
         ref,
     ) => {
         const sizeStyles = {
-            sm: "h-1",
-            md: "h-2",
-            lg: "h-3",
+            sm: "h-4",
+            md: "h-5",
+            lg: "h-6",
         };
 
         return (
@@ -65,7 +65,7 @@ const Seekbar = forwardRef<HTMLInputElement, SeekbarProps>(
                     type="range"
                     ref={ref}
                     className={cn(
-                        "range range-primary w-full",
+                        "range range-primary w-full range-thumb-rounded",
                         disabled && "opacity-50 cursor-not-allowed",
                         sizeStyles[size],
                     )}
