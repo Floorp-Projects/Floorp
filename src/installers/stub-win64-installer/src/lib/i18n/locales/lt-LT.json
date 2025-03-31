@@ -1,13 +1,13 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Diegiama fone...",
+            "installComplete": "Diegimas baigtas"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
+            "title": "„Floorp“ diegyklė",
+            "description": "Įdiekite „Floorp“ naršyklę ir pradėkite į privatumą orientuotą, spartų bei tinkinimą naršymą.",
+            "adminRights": "Diegti su administratoriaus teisėmis",
             "adminRightsEnabled": "Install for all users with admin rights.",
             "adminRightsDisabled": "Install for current user only.",
             "customPathRequired": "Custom installation path requires admin rights.",

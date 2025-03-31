@@ -1,73 +1,73 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "Hoş geldiniz",
+        "language": "Dil",
+        "languageSupport": "Dil Desteği",
+        "features": "Özellikler",
+        "featureIntroduction": "Özellik Tanıtımı",
+        "customize": "Kişiselleştir",
+        "initialSettings": "İlk Ayarlar",
+        "complete": "Tamamla",
+        "previous": "Önceki",
+        "next": "Sıradaki"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Floorp'u Kişiselleştirin",
+        "description": "Tercih ettiğiniz ayarlara göre kişiselleştirin. Bunları daha sonra Floorp Hub veya ayarlar sayfasından her zaman değiştirebilirsiniz.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "Görünüm Ayarları",
+            "description": "Floorp'un görünümünü tercihinize göre kişiselleştirebilirsiniz. Açık veya koyu bir tema seçin ya da sistem ayarlarınıza göre otomatik olarak geçiş yapmasını sağlayın."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Aydınlık",
+            "dark": "Koyu",
+            "system": "Sistem ayarlarını takip edin"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "Aydınlık tema",
+            "dark": "Koyu tema",
+            "system": "Sistem tercihleri"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Varsayılan Arama Motoru",
+            "default": "Varsayılan",
+            "search": "Ara",
+            "noEnginesFound": "Arama motoru bulunamadı."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "Kurulum Tamamlandı!",
+        "subtitle": "Tebrikler! Floorp kurulumunu tamamladınız. Rahat ve güvenli bir internet tarama deneyiminin keyfini çıkarın.",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "Sonraki Adımlar (İsteğe Bağlı)",
+            "setDefault": "Varsayılan Tarayıcı Olarak Ayarla",
+            "documentation": "Dokümantasyon"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "Floorp ile Başlayın",
+        "hint": "Daha ayrıntılı ayarlar için, sağ üstteki menü düğmesindeki Ayarlar seçeneği aracılığıyla özelleştirebilirsiniz."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Floorp'a hoş geldiniz!",
+        "description": "Floorp, gizlilik ve güvenliği vurgulayan hızlı ve kullanıcı dostu bir web tarayıcısıdır. Bu kılavuz size Floorp'un ana özelliklerini ve ayarlarını tanıtacaktır.",
+        "readyToStart": "Hazır olduğunuzda, devam etmek için aşağıdaki düğmeyi tıklayın.",
+        "features": "Floorp Özellikleri",
+        "privacy": "Gizlilik",
+        "privacyDesc": "Verilerinizi korur",
+        "speed": "Hız",
+        "speedDesc": "Optimize edilmiş performans",
+        "customization": "Kişiselleştirme",
+        "customizationDesc": "Tercihinize göre düzenleyin",
+        "start": "Başlayın"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
+        "title": "Floorp sizin dilinizi konuşur",
+        "subtitle": "Dil ayarlarını kontrol edin ve gerekirse değiştirin",
+        "languageSettings": "Dil Ayarları",
+        "languageChanged": "Dil Değişti!",
+        "currentLanguageInfo": "Güncel Dil Bilgileri",
+        "systemLanguage": "Sistem Dili",
+        "floorpLanguage": "Floorp Dili",
+        "selectLanguage": "Dil Seçiniz",
         "useSystemLanguage": "Use System Language",
         "multilingual": "Multilingual Support",
         "chooseLanguage": "Choose from a wide range of languages",
