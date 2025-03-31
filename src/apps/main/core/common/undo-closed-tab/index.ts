@@ -28,7 +28,7 @@ type UndoClosedTabTexts = {
 
 const defaultTexts: UndoClosedTabTexts = {
   buttonLabel: "Undo Closed Tab",
-  tooltipText: "Reopen the last closed tab (Ctrl+Shift+T)"
+  tooltipText: "Reopen the last closed tab (Ctrl+Shift+T)",
 };
 
 @noraComponent(import.meta.hot)
@@ -38,7 +38,8 @@ export default class UndoClosedTab extends NoraComponentBase {
       "undo-closed-tab",
       null,
       () => {
-        (globalThis as unknown as Window).undoCloseTab();
+        (document?.getElementById("toolbar-context-undoCloseTab") as XULElement)
+          ?.doCommand();
       },
       StyleElement(),
       CustomizableUI.AREA_NAVBAR,
@@ -54,18 +55,19 @@ export default class UndoClosedTab extends NoraComponentBase {
 
         createRootHMR(
           () => {
-            const [texts, setTexts] = createSignal<UndoClosedTabTexts>(defaultTexts);
+            const [texts, setTexts] = createSignal<UndoClosedTabTexts>(
+              defaultTexts,
+            );
 
             aNode.setAttribute("label", texts().buttonLabel);
             tooltip.setAttribute("label", texts().tooltipText);
 
             addI18nObserver(() => {
-
               setTexts({
                 buttonLabel: i18next.t("undo-closed-tab.label"),
                 tooltipText: i18next.t("undo-closed-tab.tooltiptext", {
                   shortcut: "(Ctrl+Shift+T)",
-                })
+                }),
               });
               aNode.setAttribute("label", texts().buttonLabel);
               tooltip.setAttribute("label", texts().tooltipText);

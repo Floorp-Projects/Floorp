@@ -1,8 +1,8 @@
 diff --git a/browser/modules/sessionstore/SessionStore.sys.mjs b/browser/modules/sessionstore/SessionStore.sys.mjs
-index 1b986ca..fda81da 100644
+index 6e2973a..2e0a510 100644
 --- ./browser/modules/sessionstore/SessionStore.sys.mjs
 +++ ./browser/modules/sessionstore/SessionStore.sys.mjs
-@@ -1089,6 +1089,27 @@ var SessionStoreInternal = {
+@@ -1211,6 +1211,27 @@ var SessionStoreInternal = {
      );
  
      if (state) {
@@ -26,11 +26,11 @@ index 1b986ca..fda81da 100644
 +          }
 +        }
 +      }
-+      /*@nora:inject:end*/
++     /*@nora:inject:end*/
        try {
          // If we're doing a DEFERRED session, then we want to pull pinned tabs
-         // out so they can be restored.
-@@ -4567,6 +4588,30 @@ var SessionStoreInternal = {
+         // out so they can be restored, and save any open groups so they are
+@@ -5193,6 +5214,30 @@ var SessionStoreInternal = {
        winData.sizemodeBeforeMinimized = winData.sizemode;
      }
  

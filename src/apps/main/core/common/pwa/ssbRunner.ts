@@ -12,6 +12,10 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
+const { executeOnce } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/NoranekoStartup.sys.mjs",
+);
+
 let WindowsSupportClass: typeof WindowsSupport | null = null;
 if (AppConstants.platform === "win") {
   import("./supports/windows.ts").then((module) => {
@@ -20,6 +24,8 @@ if (AppConstants.platform === "win") {
 }
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
+
+export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 
 export class SsbRunner {
   constructor(
@@ -45,20 +51,18 @@ export class SsbRunner {
       Ci.nsISupportsString,
     );
 
-    // URL
-    args.data = `${ssb.start_url},${ssb.id},?FloorpEnableSSBWindow=true`;
+    args.data = ssb.start_url;
 
     const win = Services.ww.openWindow(
       null as unknown as mozIDOMWindowProxy,
       AppConstants.BROWSER_CHROME_URL,
-      "_blank",
+      PWA_WINDOW_NAME,
       browserWindowFeatures,
       args,
     ) as nsIDOMWindow;
 
     win.focus();
 
-    // Windows固有のコードは Windows 環境でのみ実行する
     if (AppConstants.platform === "win" && WindowsSupportClass) {
       const winsupport = new WindowsSupportClass(this.ssbManager);
       winsupport.applyOSIntegration(ssb, win);
@@ -114,25 +118,28 @@ class CSSB implements nsIFactory, nsICommandLineHandler {
 
 const SSB = new CSSB();
 
-try {
-  // biome-ignore lint/style/noNonNullAssertion: <explanation>
-  const registrar = Components.manager.QueryInterface!(
-    Ci.nsIComponentRegistrar,
-  );
-  registrar.registerFactory(
-    SSB.classID,
-    SSB.classDescription,
-    SSB.contractID,
-    SSB,
-  );
+executeOnce("registerSsbCommandLine", () => {
+  try {
+    const registrar = Components.manager.QueryInterface!(
+      Ci.nsIComponentRegistrar,
+    );
+    registrar.registerFactory(
+      SSB.classID,
+      SSB.classDescription,
+      SSB.contractID,
+      SSB,
+    );
 
-  Services.catMan.addCategoryEntry(
-    "command-line-handler",
-    "e-ssb",
-    SSB.contractID,
-    false,
-    true,
-  );
-} catch (e) {
-  console.error(e);
-}
+    Services.catMan.addCategoryEntry(
+      "command-line-handler",
+      "e-ssb",
+      SSB.contractID,
+      false,
+      true,
+    );
+
+    console.log("SSB command line handler registered successfully");
+  } catch (e) {
+    console.error("Failed to register SSB command line handler:", e);
+  }
+});
