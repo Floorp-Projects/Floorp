@@ -17,11 +17,13 @@ import { config } from "./configs.ts";
 import { getCSSFromConfig } from "./utils/css.ts";
 
 export function BrowserDesignElement() {
-  [100, 500].forEach((time) => {
-    setTimeout(() => {
-      window.gURLBar.updateLayoutBreakout();
-    }, time);
-  });
+  // [100, 500].forEach((time) => {
+  //   setTimeout(() => {
+  //     const { UrlbarInput } = ChromeUtils.importESModule("resource:///modules/UrlbarInput.sys.mjs");
+
+
+  //   }, time);
+  // });
 
   const getCSS = createMemo(() => {
     return getCSSFromConfig(config());
