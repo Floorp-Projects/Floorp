@@ -166,7 +166,13 @@
             "showSyncedTabsSidebar": "Show Synced Tabs Sidebar",
             "reverseSidebarPosition": "Reverse Sidebar Position",
             "hideSidebar": "Hide Sidebar",
-            "toggleSidebar": "Toggle Sidebar"
+            "toggleSidebar": "Toggle Sidebar",
+            "scrollUp": "Scroll Up",
+            "scrollDown": "Scroll Down",
+            "scrollRight": "Scroll Right",
+            "scrollLeft": "Scroll Left",
+            "scrollToTop": "Scroll to Top",
+            "scrollToBottom": "Scroll to Bottom"
         },
         "descriptions": {
             "goBack": "Navigate back to the previous page",

@@ -136,3 +136,31 @@ export type GestureDirection = z.infer<typeof zGestureDirection>;
 
 export const zMouseGestureFormData = zMouseGestureConfig;
 export type MouseGestureFormData = z.infer<typeof zMouseGestureFormData>;
+
+/* Keyboard Shortcut */
+export const zShortcutModifiers = z.object({
+  alt: z.boolean(),
+  ctrl: z.boolean(),
+  meta: z.boolean(),
+  shift: z.boolean(),
+});
+
+export const zShortcutConfig = z.object({
+  modifiers: zShortcutModifiers,
+  key: z.string(),
+  action: z.string(),
+});
+
+export const zKeyboardShortcutConfig = z.object({
+  enabled: z.boolean(),
+  shortcuts: z.record(zShortcutConfig),
+});
+
+export type ShortcutModifiers = z.infer<typeof zShortcutModifiers>;
+export type ShortcutConfig = z.infer<typeof zShortcutConfig>;
+export type KeyboardShortcutConfig = z.infer<typeof zKeyboardShortcutConfig>;
+
+export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
+export type KeyboardShortcutFormData = z.infer<
+  typeof zKeyboardShortcutFormData
+>;

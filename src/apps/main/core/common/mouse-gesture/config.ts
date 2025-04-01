@@ -63,6 +63,14 @@ export const defaultConfig: MouseGestureConfig = {
       pattern: ["down", "up"],
       action: "newTab",
     },
+    {
+      pattern: ["up"],
+      action: "scrollToTop",
+    },
+    {
+      pattern: ["down"],
+      action: "scrollToBottom",
+    },
   ],
 };
 

@@ -209,7 +209,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "openBookmarksManager",
-    fn: () => window.SidebarUI.toggle("viewBookmarksSidebar"),
+    fn: () => window.SidebarController.toggle("viewBookmarksSidebar"),
   },
   {
     name: "toggleBookmarkToolbar",
@@ -273,26 +273,50 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "showBookmarkSidebar",
-    fn: () => window.SidebarUI.show("viewBookmarksSidebar"),
+    fn: () => window.SidebarController.show("viewBookmarksSidebar"),
   },
   {
     name: "showHistorySidebar",
-    fn: () => window.SidebarUI.show("viewHistorySidebar"),
+    fn: () => window.SidebarController.show("viewHistorySidebar"),
   },
   {
     name: "showSyncedTabsSidebar",
-    fn: () => window.SidebarUI.show("viewTabsSidebar"),
+    fn: () => window.SidebarController.show("viewTabsSidebar"),
   },
   {
     name: "reverseSidebarPosition",
-    fn: () => window.SidebarUI.reversePosition(),
+    fn: () => window.SidebarController.reversePosition(),
   },
   {
     name: "hideSidebar",
-    fn: () => window.SidebarUI.hide(),
+    fn: () => window.SidebarController.hide(),
   },
   {
     name: "toggleSidebar",
-    fn: () => window.SidebarUI.toggle(),
+    fn: () => window.SidebarController.toggle(),
+  },
+  {
+    name: "scrollUp",
+    fn: () => window.goDoCommand("cmd_scrollPageUp"),
+  },
+  {
+    name: "scrollDown",
+    fn: () => window.goDoCommand("cmd_scrollPageDown"),
+  },
+  {
+    name: "scrollRight",
+    fn: () => window.goDoCommand("cmd_scrollRight"),
+  },
+  {
+    name: "scrollLeft",
+    fn: () => window.goDoCommand("cmd_scrollLeft"),
+  },
+  {
+    name: "scrollToTop",
+    fn: () => window.goDoCommand("cmd_scrollTop"),
+  },
+  {
+    name: "scrollToBottom",
+    fn: () => window.goDoCommand("cmd_scrollBottom"),
   },
 ];

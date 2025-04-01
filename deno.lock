@@ -9525,13 +9525,6 @@
           ]
         }
       },
-      "src/packages/shared": {
-        "packageJson": {
-          "dependencies": [
-            "npm:zod@^3.24.1"
-          ]
-        }
-      },
       "src/packages/solid-xul": {
         "packageJson": {
           "dependencies": [

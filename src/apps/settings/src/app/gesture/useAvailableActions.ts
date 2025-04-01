@@ -11,7 +11,7 @@ interface ActionOption {
   name: string;
 }
 
-const GESTURE_ACTIONS = [
+export const GESTURE_ACTIONS = [
   "goBack",
   "goForward",
   "reload",
@@ -78,6 +78,12 @@ const GESTURE_ACTIONS = [
   "reverseSidebarPosition",
   "hideSidebar",
   "toggleSidebar",
+  "scrollUp",
+  "scrollDown",
+  "scrollRight",
+  "scrollLeft",
+  "scrollToTop",
+  "scrollToBottom",
 ] as const;
 
 export const useAvailableActions = () => {
