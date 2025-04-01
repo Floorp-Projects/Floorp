@@ -54,7 +54,7 @@ export default function Page() {
       <FormProvider {...methods}>
         <form className="space-y-3 pl-6">
           <BasicSettings />
-          <BackupSettings />
+          {/* <BackupSettings /> */}
         </form>
       </FormProvider>
     </div>

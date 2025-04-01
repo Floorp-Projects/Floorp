@@ -10,6 +10,13 @@ import type { GestureAction, GestureDirection, MouseGestureConfig } from "@/type
 import { patternToString } from "../dataManager.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
 import { ActionEditModal } from "./ActionEditModal.tsx";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+} from "@/components/common/card.tsx";
 
 interface ActionsSettingsProps {
     config: MouseGestureConfig;
@@ -92,16 +99,17 @@ export function ActionsSettings({
     };
 
     return (
-        <div className="card w-full bg-base-100 shadow-md border border-base-300/20 dark:bg-base-300/40 mb-6">
-            <div className="card-body">
-                <h2 className="card-title text-base-content/90 font-medium flex items-center gap-2">
-                    <MousePointer className="h-5 w-5 text-purple-500" />
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <MousePointer className="size-5" />
                     {t("mouseGesture.actionsSettings")}
-                </h2>
-                <p className="text-base-content/60 text-sm mb-4">
+                </CardTitle>
+                <CardDescription>
                     {t("mouseGesture.actionsSettingsDescription")}
-                </p>
-
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
                 <div>
                     <table className="table w-full">
                         <thead>
@@ -139,7 +147,7 @@ export function ActionsSettings({
                                                 onClick={() => editAction(action, index)}
                                                 title={t("mouseGesture.edit")}
                                             >
-                                                <Edit className="h-4 w-4" />
+                                                <Edit className="size-4" />
                                             </button>
                                             <button
                                                 type="button"
@@ -147,7 +155,7 @@ export function ActionsSettings({
                                                 onClick={() => duplicateAction(action)}
                                                 title={t("mouseGesture.duplicate")}
                                             >
-                                                <Copy className="h-4 w-4" />
+                                                <Copy className="size-4" />
                                             </button>
                                             <button
                                                 type="button"
@@ -155,7 +163,7 @@ export function ActionsSettings({
                                                 onClick={() => handleDeleteAction(index)}
                                                 title={t("mouseGesture.delete")}
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="size-4" />
                                             </button>
                                         </div>
                                     </td>
@@ -179,11 +187,11 @@ export function ActionsSettings({
                         onClick={newAction}
                         disabled={!config.enabled}
                     >
-                        <PlusCircle className="h-4 w-4" />
+                        <PlusCircle className="size-4" />
                         {t("mouseGesture.addAction")}
                     </button>
                 </div>
-            </div>
+            </CardContent>
 
             {isDialogOpen && editingAction && (
                 <ActionEditModal
@@ -194,6 +202,6 @@ export function ActionsSettings({
                     isPatternDuplicate={(pattern) => isPatternDuplicate(pattern, editingIndex)}
                 />
             )}
-        </div>
+        </Card>
     );
 } 

@@ -25,29 +25,29 @@ export default function Page() {
     }
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col items-start">
-                <header className="mb-6">
-                    <h1 className="text-3xl font-bold mb-2">{t("pages.keyboardShortcut")}</h1>
-                    <p className="text-base-content/70 text-sm">
-                        {t("keyboardShortcut.description")}
-                    </p>
-                </header>
+        <div className="p-6 space-y-3">
+            <div className="flex flex-col items-start pl-6">
+                <h1 className="text-3xl font-bold mb-2">
+                    {t("pages.keyboardShortcut")}
+                </h1>
+                <p className="text-sm mb-8">
+                    {t("keyboardShortcut.description")}
+                </p>
+            </div>
 
-                <div className="w-full space-y-6">
-                    <GeneralSettings
-                        config={config}
-                        toggleEnabled={toggleEnabled}
-                        updateConfig={updateConfig}
-                    />
+            <div className="space-y-3 pl-6">
+                <GeneralSettings
+                    config={config}
+                    toggleEnabled={toggleEnabled}
+                    updateConfig={updateConfig}
+                />
 
-                    <ShortcutsSettings
-                        config={config}
-                        addShortcut={addShortcut}
-                        updateShortcut={updateShortcut}
-                        deleteShortcut={deleteShortcut}
-                    />
-                </div>
+                <ShortcutsSettings
+                    config={config}
+                    addShortcut={addShortcut}
+                    updateShortcut={updateShortcut}
+                    deleteShortcut={deleteShortcut}
+                />
             </div>
         </div>
     );

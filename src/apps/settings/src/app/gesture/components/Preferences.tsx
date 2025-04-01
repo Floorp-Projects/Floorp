@@ -9,6 +9,13 @@ import { Settings } from "lucide-react";
 import { Switch } from "@/components/common/switch.tsx";
 import { Seekbar } from "@/components/common/seekbar.tsx";
 import type { MouseGestureConfig } from "@/types/pref.ts";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+} from "@/components/common/card.tsx";
 
 interface GeneralSettingsProps {
     config: MouseGestureConfig;
@@ -46,16 +53,17 @@ export function GeneralSettings({
     };
 
     return (
-        <div className="card w-full bg-base-100 shadow-md border border-base-300/20 dark:bg-base-300/40 mb-6">
-            <div className="card-body">
-                <h2 className="card-title text-base-content/90 font-medium flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-blue-500" />
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Settings className="size-5" />
                     {t("mouseGesture.generalSettings")}
-                </h2>
-                <p className="text-base-content/60 text-sm mb-4">
+                </CardTitle>
+                <CardDescription>
                     {t("mouseGesture.generalSettingsDescription")}
-                </p>
-
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
                 <div className="space-y-4">
                     <div className="flex items-center justify-between py-2">
                         <span className="text-base-content/90">
@@ -129,7 +137,7 @@ export function GeneralSettings({
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }

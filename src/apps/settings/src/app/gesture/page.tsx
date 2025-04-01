@@ -27,13 +27,15 @@ export default function Page() {
     return (
         <div className="p-6 space-y-3">
             <div className="flex flex-col items-start pl-6">
-                <header className="mb-6">
-                    <h1 className="text-3xl font-bold mb-2">{t("pages.mouseGesture")}</h1>
-                    <p className="text-base-content/70 text-sm">
-                        {t("mouseGesture.description")}
-                    </p>
-                </header>
+                <h1 className="text-3xl font-bold mb-2">
+                    {t("pages.mouseGesture")}
+                </h1>
+                <p className="text-sm mb-8">
+                    {t("mouseGesture.description")}
+                </p>
+            </div>
 
+            <div className="space-y-3 pl-6">
                 <GeneralSettings
                     config={config}
                     toggleEnabled={toggleEnabled}
