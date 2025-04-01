@@ -52,6 +52,7 @@ export function onFinalUIStartup(): void {
   createDefaultUserChromeFiles().catch((error) => {
     console.error("Failed to create default userChrome files:", error);
   });
+  setNoranekoNewTab();
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
@@ -121,10 +122,52 @@ NOTE: You can use the userContent.css file without change preferences (about:con
   }
 }
 
+function setupNoranekoNewTab(): void {
+  const { AboutNewTab } = ChromeUtils.importESModule(
+    "resource:///modules/AboutNewTab.sys.mjs",
+  );
+
+  updateNewTabURL();
+
+  Services.prefs.addObserver("floorp.isnewtab.floorpstart", () => {
+    updateNewTabURL();
+  });
+
+  function updateNewTabURL(): void {
+    if (Services.prefs.getBoolPref("floorp.isnewtab.floorpstart", false)) {
+      (async () => {
+        try {
+          await fetch("chrome://noraneko-newtab/content/index.html");
+          AboutNewTab.newTabURL = "chrome://noraneko-newtab/content/index.html";
+        } catch (error) {
+          console.error("Failed to set new tab URL:", error);
+          AboutNewTab.newTabURL = "http://localhost:5186/";
+        }
+      })();
+    } else {
+      AboutNewTab.resetNewTabURL();
+    }
+  }
+}
+
+function setNoranekoNewTab(): void {
+  const response = fetch("chrome://noraneko-newtab/content/index.html");
+  response.then(() => {
+    Services.prefs.setStringPref(
+      "browser.startup.homepage",
+      "chrome://noraneko-newtab/content/index.html",
+    );
+  }).catch(() => {
+    Services.prefs.setStringPref(
+      "browser.startup.homepage",
+      "http://localhost:5186/",
+    );
+  });
+}
+
 initializeVersionInfo();
+setupNoranekoNewTab();
 
 if (isMainBrowser) {
   Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
 }
-
-console.log("NoranekoStartup loaded");

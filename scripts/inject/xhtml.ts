@@ -18,12 +18,8 @@ export async function injectXHTML(binPath: string) {
       {
         src: "chrome://noraneko-startup/content/chrome_root.js",
       },
-      {
-        src: "chrome://noraneko-startup/content/override_newtab.js",
-      },
     ];
 
-    const scripts = [];
     for (const config of scriptConfigs) {
       const script = document.createElement("script");
       script.setAttribute("type", "module");
@@ -32,16 +28,7 @@ export async function injectXHTML(binPath: string) {
       script.dataset.geckomixin = "";
 
       document.querySelector("head").appendChild(script);
-      scripts.push(script);
     }
-
-    const [script, aboutSupportScript] = scripts;
-
-    script.dataset.geckomixin = "";
-
-    document.querySelector("head").appendChild(script);
-    document.querySelector("head").appendChild(aboutSupportScript);
-
     await fs.writeFile(path_browserxhtml, document.toString());
   }
 }

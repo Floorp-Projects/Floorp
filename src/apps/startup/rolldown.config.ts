@@ -13,7 +13,6 @@ export default defineConfig({
   input: [
     r("src/chrome_root.ts"),
     r("src/about-preferences.ts"),
-    r("src/override_newtab.ts"),
   ],
   output: {
     "dir": "_dist",
