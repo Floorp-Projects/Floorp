@@ -781,7 +781,9 @@ void WebGLContext::DrawArraysInstanced(const GLenum mode, const GLint first,
       driverFirst = 0;
     }
   }
-  if (driverFirst != first) {
+  const bool needsFix_InstancedUserAttribFetch = (driverFirst != first);
+
+  if (needsFix_InstancedUserAttribFetch) {
     for (const auto& a : activeAttribs) {
       if (a.location == -1) continue;
       const auto& binding = mBoundVertexArray->AttribBinding(a.location);
@@ -792,6 +794,21 @@ void WebGLContext::DrawArraysInstanced(const GLenum mode, const GLint first,
 
     gl->fUniform1i(mActiveProgramLinkInfo->webgl_gl_VertexID_Offset, first);
   }
+  const auto undoFix_InstancedUserAttribFetch = MakeScopeExit([&]() {
+    if (needsFix_InstancedUserAttribFetch) {
+      gl->fUniform1i(mActiveProgramLinkInfo->webgl_gl_VertexID_Offset, 0);
+
+      for (const auto& a : activeAttribs) {
+        if (a.location == -1) continue;
+        const auto& binding = mBoundVertexArray->AttribBinding(a.location);
+        if (binding.layout.divisor) continue;
+
+        mBoundVertexArray->DoVertexAttrib(a.location, 0);
+      }
+    }
+  });
+
+  // -
 
   {
     const auto whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
@@ -803,22 +820,20 @@ void WebGLContext::DrawArraysInstanced(const GLenum mode, const GLint first,
       fakeVertCount = 0;
     }
 
-    auto undoAttrib0 = MakeScopeExit([&]() {
-      MOZ_RELEASE_ASSERT(whatDoesAttrib0Need !=
-                         WebGLVertexAttrib0Status::Default);
-      UndoFakeVertexAttrib0();
-    });
-    if (fakeVertCount) {
-      if (!DoFakeVertexAttrib0(fakeVertCount, whatDoesAttrib0Need)) {
-        error = true;
-        undoAttrib0.release();
+    const bool needsFix_FakeVertexAttrib0 = bool(fakeVertCount);
+    const auto undoFix_FakeVertexAttrib0 = MakeScopeExit([&]() {
+      if (needsFix_FakeVertexAttrib0) {
+        mBoundVertexArray->DoVertexAttrib(0);
       }
-    } else {
-      // No fake-verts needed.
-      undoAttrib0.release();
+    });
+    if (needsFix_FakeVertexAttrib0) {
+      // fmt::println(FMT_STRING("DoFakeVertexAttrib0(fakeVertCount: {},
+      // whatDoesAttrib0Need: {})"), fakeVertCount, (int)whatDoesAttrib0Need);
+      if (!DoFakeVertexAttrib0(fakeVertCount, whatDoesAttrib0Need)) return;
     }
 
     ScopedDrawCallWrapper wrapper(*this);
+
     if (vertCount && instanceCount) {
       if (HasInstancedDrawing(*this)) {
         gl->fDrawArraysInstanced(mode, driverFirst, vertCount, instanceCount);
@@ -826,18 +841,6 @@ void WebGLContext::DrawArraysInstanced(const GLenum mode, const GLint first,
         MOZ_ASSERT(instanceCount == 1);
         gl->fDrawArrays(mode, driverFirst, vertCount);
       }
-    }
-  }
-
-  if (driverFirst != first) {
-    gl->fUniform1i(mActiveProgramLinkInfo->webgl_gl_VertexID_Offset, 0);
-
-    for (const auto& a : activeAttribs) {
-      if (a.location == -1) continue;
-      const auto& binding = mBoundVertexArray->AttribBinding(a.location);
-      if (binding.layout.divisor) continue;
-
-      mBoundVertexArray->DoVertexAttrib(a.location, 0);
     }
   }
 
@@ -1031,27 +1034,19 @@ void WebGLContext::DrawElementsInstanced(const GLenum mode,
 
   // -
 
-  bool error = false;
-
-  // -
-
-  auto undoAttrib0 = MakeScopeExit([&]() {
-    MOZ_RELEASE_ASSERT(whatDoesAttrib0Need !=
-                       WebGLVertexAttrib0Status::Default);
-    UndoFakeVertexAttrib0();
-  });
-  if (fakeVertCount) {
-    if (!DoFakeVertexAttrib0(fakeVertCount, whatDoesAttrib0Need)) {
-      error = true;
-      undoAttrib0.release();
+  const bool needsFix_FakeVertexAttrib0 = bool(fakeVertCount);
+  const auto undoFix_FakeVertexAttrib0 = MakeScopeExit([&]() {
+    if (needsFix_FakeVertexAttrib0) {
+      mBoundVertexArray->DoVertexAttrib(0);
     }
-  } else {
-    // No fake-verts needed.
-    undoAttrib0.release();
+  });
+  if (needsFix_FakeVertexAttrib0) {
+    if (!DoFakeVertexAttrib0(fakeVertCount, whatDoesAttrib0Need)) return;
   }
 
   // -
 
+  bool error = false;
   const ScopedResolveTexturesForDraw scopedResolve(this, &error);
   if (error) return;
 
@@ -1189,35 +1184,10 @@ bool WebGLContext::DoFakeVertexAttrib0(
     mAlreadyWarnedAboutFakeVertexAttrib0 = true;
   }
 
-  gl->fEnableVertexAttribArray(0);
-  {
-    const auto& attrib0 = mBoundVertexArray->AttribBinding(0);
-    if (attrib0.layout.divisor) {
-      gl->fVertexAttribDivisor(0, 0);
-    }
-  }
-
   if (!mFakeVertexAttrib0BufferObject) {
     gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
-    mFakeVertexAttrib0BufferObjectSize = 0;
-  }
-  gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
-
-  ////
-
-  switch (mGenericVertexAttribTypes[0]) {
-    case webgl::AttribBaseType::Boolean:
-    case webgl::AttribBaseType::Float:
-      gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, false, 0, 0);
-      break;
-
-    case webgl::AttribBaseType::Int:
-      gl->fVertexAttribIPointer(0, 4, LOCAL_GL_INT, 0, 0);
-      break;
-
-    case webgl::AttribBaseType::Uint:
-      gl->fVertexAttribIPointer(0, 4, LOCAL_GL_UNSIGNED_INT, 0, 0);
-      break;
+    mFakeVertexAttrib0BufferAllocSize = 0;
+    mFakeVertexAttrib0BufferInitializedSize = 0;
   }
 
   ////
@@ -1245,71 +1215,104 @@ bool WebGLContext::DoFakeVertexAttrib0(
   }
   const auto dataSize = checked_dataSize.value();
 
-  if (mFakeVertexAttrib0BufferObjectSize < dataSize) {
+  if (mFakeVertexAttrib0BufferAllocSize < dataSize) {
+    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
     gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr,
-                    LOCAL_GL_DYNAMIC_DRAW);
+                    LOCAL_GL_STATIC_DRAW);
 
     const auto err = errorScope.GetError();
     if (err) {
       ErrorOutOfMemory(
-          "Failed to allocate fake vertex attrib 0 data: %zi bytes", dataSize);
+          "Failed to allocate fake vertex attrib 0 buffer: %zi bytes",
+          dataSize);
       return false;
     }
 
-    mFakeVertexAttrib0BufferObjectSize = dataSize;
-    mFakeVertexAttrib0DataDefined = false;
+    mFakeVertexAttrib0BufferAllocSize = dataSize;
+    mFakeVertexAttrib0BufferInitializedSize = 0;
   }
+
+  ////
+
+  const auto FillWithGenericVertexAttrib0Data = [&]() {
+    if (dataSize <= mFakeVertexAttrib0BufferInitializedSize &&
+        memcmp(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data,
+               bytesPerVert) == 0) {
+      return true;
+    }
+    memcpy(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data, bytesPerVert);
+    mFakeVertexAttrib0BufferInitializedSize = 0;
+
+    using DataPerVertT = decltype(mFakeVertexAttrib0Data);
+    static_assert(sizeof(DataPerVertT) == 4 * sizeof(float));
+    MOZ_RELEASE_ASSERT(dataSize % sizeof(DataPerVertT) == 0);
+    const size_t vertCount = dataSize / sizeof(DataPerVertT);
+    const auto uploadData = std::unique_ptr<DataPerVertT[]>{
+        new (std::nothrow) DataPerVertT[vertCount]};
+    if (!uploadData) {
+      ErrorOutOfMemory("Failed to allocate fake vertex attrib 0 upload data.");
+      return false;
+    }
+    const auto uploadMutSpan = Span{uploadData.get(), vertCount};
+    for (auto& vert : uploadMutSpan) {
+      memcpy(&vert, mFakeVertexAttrib0Data, bytesPerVert);
+    }
+
+    {
+      gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
+      gl::GLContext::LocalErrorScope errorScope(*gl);
+
+      const auto uploadBytes = AsBytes(uploadMutSpan);
+      MOZ_ASSERT(uploadBytes.size() == (size_t)dataSize);
+      gl->fBufferSubData(LOCAL_GL_ARRAY_BUFFER, 0, uploadBytes.size(),
+                         uploadBytes.data());
+
+      const auto err = errorScope.GetError();
+      if (err) {
+        ErrorOutOfMemory("Failed to upload fake vertex attrib 0 data.");
+        return false;
+      }
+    }
+
+    mFakeVertexAttrib0BufferInitializedSize = dataSize;
+    return true;
+  };
 
   if (whatDoesAttrib0Need ==
-      WebGLVertexAttrib0Status::EmulatedUninitializedArray)
-    return true;
-
-  ////
-
-  if (mFakeVertexAttrib0DataDefined &&
-      memcmp(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data, bytesPerVert) ==
-          0) {
-    return true;
+      WebGLVertexAttrib0Status::EmulatedInitializedArray) {
+    if (!FillWithGenericVertexAttrib0Data()) return false;
   }
 
   ////
 
-  const auto data = UniqueBuffer::Take(malloc(dataSize));
-  if (!data) {
-    ErrorOutOfMemory("Failed to allocate fake vertex attrib 0 array.");
-    return false;
-  }
-  auto itr = (uint8_t*)data.get();
-  const auto itrEnd = itr + dataSize;
-  while (itr != itrEnd) {
-    memcpy(itr, mGenericVertexAttrib0Data, bytesPerVert);
-    itr += bytesPerVert;
+  const auto& attrib0 = mBoundVertexArray->AttribBinding(0);
+  if (attrib0.layout.divisor) {
+    gl->fVertexAttribDivisor(0, 0);
   }
 
-  {
-    gl::GLContext::LocalErrorScope errorScope(*gl);
+  gl->fEnableVertexAttribArray(0);
 
-    gl->fBufferSubData(LOCAL_GL_ARRAY_BUFFER, 0, dataSize, data.get());
+  gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
+  switch (mGenericVertexAttribTypes[0]) {
+    case webgl::AttribBaseType::Boolean:
+    case webgl::AttribBaseType::Float:
+      gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, false, 0, 0);
+      break;
 
-    const auto err = errorScope.GetError();
-    if (err) {
-      ErrorOutOfMemory("Failed to upload fake vertex attrib 0 data.");
-      return false;
-    }
+    case webgl::AttribBaseType::Int:
+      gl->fVertexAttribIPointer(0, 4, LOCAL_GL_INT, 0, 0);
+      break;
+
+    case webgl::AttribBaseType::Uint:
+      gl->fVertexAttribIPointer(0, 4, LOCAL_GL_UNSIGNED_INT, 0, 0);
+      break;
   }
 
   ////
 
-  memcpy(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data, bytesPerVert);
-  mFakeVertexAttrib0DataDefined = true;
   return true;
-}
-
-void WebGLContext::UndoFakeVertexAttrib0() {
-  static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
-  mBoundVertexArray->DoVertexAttrib(0);
 }
 
 }  // namespace mozilla
