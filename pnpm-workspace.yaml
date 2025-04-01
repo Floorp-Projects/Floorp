@@ -1,7 +1,0 @@
-packages:
-- 'src/apps/*'
-- 'src/packages/*'
-- 'crates/*'
-options:
- prefer-workspace-packages: true
- strict-peer-dependencies: false
