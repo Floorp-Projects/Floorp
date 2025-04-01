@@ -914,7 +914,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
   bool DoFakeVertexAttrib0(uint64_t fakeVertexCount,
                            WebGLVertexAttrib0Status whatDoesAttrib0Need);
-  void UndoFakeVertexAttrib0();
 
   bool mResetLayer = true;
   bool mOptionsFrozen = false;
@@ -1205,8 +1204,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   CacheInvalidator mGenericVertexAttribTypeInvalidator;
 
   GLuint mFakeVertexAttrib0BufferObject = 0;
-  intptr_t mFakeVertexAttrib0BufferObjectSize = 0;
-  bool mFakeVertexAttrib0DataDefined = false;
+  intptr_t mFakeVertexAttrib0BufferAllocSize = 0;
+  intptr_t mFakeVertexAttrib0BufferInitializedSize = 0;
   alignas(alignof(float)) uint8_t
       mGenericVertexAttrib0Data[sizeof(float) * 4] = {};
   alignas(alignof(float)) uint8_t
