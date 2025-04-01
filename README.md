@@ -115,6 +115,8 @@ brew install --cask floorp
 4. AUR bin (Arch-based Distributions)        "https://aur.archlinux.org/packages/floorp-bin/" **Unofficial**
 
 5. AUR (Arch-based Distributions)        "https://aur.archlinux.org/packages/floorp/" **Unofficial**
+
+6. SBo bin (Slackware-based Distributions)  "https://slackbuilds.org/repository/15.0/network/floorp-bin/" **Unofficial**
 ```
 
 ### 📥 Download & 📦 Install
