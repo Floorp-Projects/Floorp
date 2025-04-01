@@ -83,15 +83,15 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild>
-              <a
-                href="https://support.ablaze.one/setup"
-                className="flex items-center gap-2"
-              >
+            <a
+              href="https://support.ablaze.one/setup"
+              className="flex items-center gap-2"
+            >
+              <Button>
                 {t("home.setup.footerLinkText")}
                 <ExternalLink className="size-4" />
-              </a>
-            </Button>
+              </Button>
+            </a>
           </CardFooter>
         </Card>
 
@@ -108,15 +108,15 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild>
-              <a
-                href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
-                className="flex items-center gap-2"
-              >
+            <a
+              href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
+              className="flex items-center gap-2"
+            >
+              <Button>
                 {t("home.privacyAndTrackingProtection.footerLinkText")}
                 <ExternalLink className="size-4" />
-              </a>
-            </Button>
+              </Button>
+            </a>
           </CardFooter>
         </Card>
 
@@ -133,15 +133,15 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild>
-              <a
-                href="https://accounts.ablaze.one/signin"
-                className="flex items-center gap-2"
-              >
+            <a
+              href="https://accounts.ablaze.one/signin"
+              className="flex items-center gap-2"
+            >
+              <Button>
                 {t("home.ablazeAccount.footerLinkText")}
                 <ExternalLink className="size-4" />
-              </a>
-            </Button>
+              </Button>
+            </a>
           </CardFooter>
         </Card>
 
@@ -158,12 +158,12 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild>
-              <a href="about:addons" className="flex items-center gap-2">
+            <a href="about:addons" className="flex items-center gap-2">
+              <Button>
                 {t("home.manageExtensions.footerLinkText")}
                 <ExternalLink className="size-4" />
-              </a>
-            </Button>
+              </Button>
+            </a>
           </CardFooter>
         </Card>
 
@@ -180,15 +180,15 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild>
-              <a
-                href="https://docs.floorp.app/docs/features/"
-                className="flex items-center gap-2"
-              >
+            <a
+              href="https://docs.floorp.app/docs/features/"
+              className="flex items-center gap-2"
+            >
+              <Button>
                 {t("home.browserSupport.footerLinkText")}
                 <ExternalLink className="size-4" />
-              </a>
-            </Button>
+              </Button>
+            </a>
           </CardFooter>
         </Card>
       </div>

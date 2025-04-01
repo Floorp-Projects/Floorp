@@ -13,16 +13,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       variant = "primary",
       size = "default",
-      asChild = false,
       ...props
     },
     ref,
   ) => {
-    const Comp = asChild ? "span" : "button";
+    const Comp = "button";
     return (
       <Comp
         className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200",
+          "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 w-full",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-base-content/20",
           "disabled:pointer-events-none disabled:opacity-50",
           {
