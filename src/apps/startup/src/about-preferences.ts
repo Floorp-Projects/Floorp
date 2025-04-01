@@ -1,3 +1,37 @@
+declare global {
+  interface Window {
+    MozXULElement: MozXULElement;
+  }
+
+  namespace Services {
+    const wm: {
+      getMostRecentWindow(windowType: string): FirefoxWindow;
+    };
+    const prefs: {
+      getStringPref(prefName: string): string;
+      setStringPref(prefName: string, value: string): void;
+      getBoolPref(prefName: string, defaultValue?: boolean): boolean;
+      setBoolPref(prefName: string, value: boolean): void;
+    };
+    const scriptSecurityManager: {
+      getSystemPrincipal(): unknown;
+    };
+  }
+
+  interface ImportMeta {
+    env: {
+      MODE: string;
+    };
+  }
+}
+
+interface FirefoxWindow extends Window {
+  gBrowser: {
+    selectedTab: unknown;
+    addTab(url: string, options: unknown): unknown;
+  };
+}
+
 type MozXULElement = {
   //https://searchfox.org/mozilla-central/rev/dbac9a2afcc5b1f112ed9b812d3daa7cbe71f951/toolkit/content/customElements.js#528
   /**
@@ -25,9 +59,20 @@ type MozXULElement = {
    */
   parseXULToFragment(str: string, entities?: Array<string>): DocumentFragment;
 };
-const nav_root = document.querySelector("#categories");
-const before_fragment = document.querySelector("#category-sync");
-const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
+
+/**
+ * Add Floorp Hub category element
+ */
+function addFloorpHubCategory(): void {
+  const nav_root = document.querySelector("#categories");
+  const before_fragment = document.querySelector("#category-sync");
+
+  if (!nav_root || !before_fragment) {
+    console.error("Category elements not found");
+    return;
+  }
+
+  const fragment = window.MozXULElement.parseXULToFragment(`
     <richlistitem
       id="category-nora-link"
       class="category"
@@ -40,20 +85,148 @@ const fragment = (window.MozXULElement as MozXULElement).parseXULToFragment(`
       </label>
     </richlistitem>
   `);
-nav_root.insertBefore(fragment, before_fragment);
-document.querySelector("#category-nora-link").addEventListener("click", () => {
-  if (import.meta.env.MODE === "dev") {
-    window.location.href = "http://localhost:5183/";
-  } else {
-    const win = Services.wm.getMostRecentWindow("navigator:browser") as Window;
 
-    win.gBrowser.selectedTab = win.gBrowser.addTab(
-      "chrome://noraneko-settings/content/index.html",
-      {
-        relatedToCurrent: true,
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
-      },
-    );
+  nav_root.insertBefore(fragment, before_fragment);
+
+  const hubLink = document.querySelector("#category-nora-link");
+  if (!hubLink) {
+    console.error("Failed to create Floorp Hub element");
+    return;
   }
-});
+
+  hubLink.addEventListener("click", () => {
+    if (import.meta.env.MODE === "dev") {
+      window.location.href = "http://localhost:5183/";
+    } else {
+      const win = Services.wm.getMostRecentWindow(
+        "navigator:browser",
+      ) as FirefoxWindow;
+      win.gBrowser.selectedTab = win.gBrowser.addTab(
+        "chrome://noraneko-settings/content/index.html",
+        {
+          relatedToCurrent: true,
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+        },
+      );
+    }
+  });
+}
+
+/**
+ * Setup Floorp Start settings for homepage and new tab
+ */
+function setupFloorpStartSettings(): void {
+  setTimeout(() => {
+    console.log("DOMContentLoaded");
+    const homeMenuPopup = document.querySelector("#homeMode > menupopup");
+    const newTabMenuPopup = document.querySelector("#newTabMode > menupopup");
+
+    if (!homeMenuPopup || !newTabMenuPopup) {
+      console.error("Menu popup elements not found");
+      return;
+    }
+
+    const homeUrl = import.meta.env.MODE === "dev"
+      ? "http://localhost:5186/"
+      : "chrome://noraneko-newtab/content/index.html";
+
+    const homeFragment = window.MozXULElement.parseXULToFragment(`
+      <menuitem
+        value="1201"
+        id="homeMode-nora"
+        label="Floorp Start"
+      />
+    `);
+    homeMenuPopup.appendChild(homeFragment.cloneNode(true));
+
+    const newTabFragment = window.MozXULElement.parseXULToFragment(`
+      <menuitem
+        value="1201"
+        id="newTabMode-nora"
+        label="Floorp Start"
+      />
+    `);
+    newTabMenuPopup.appendChild(newTabFragment);
+
+    const homeMenuItem = document.querySelector("#homeMode-nora");
+    if (homeMenuItem) {
+      homeMenuItem.addEventListener("command", () => {
+        console.log(`Floorp Start selected for home: setting to ${homeUrl}`);
+        Services.prefs.setStringPref("browser.startup.homepage", homeUrl);
+      });
+    }
+
+    const newTabMenuItem = document.querySelector("#newTabMode-nora");
+    if (newTabMenuItem) {
+      newTabMenuItem.addEventListener("command", () => {
+        console.log(`Floorp Start selected for new tab: setting to ${homeUrl}`);
+        Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", true);
+      });
+    }
+
+    setupNewTabModeObserver();
+    loadCurrentSettings(homeUrl);
+  }, 200);
+}
+
+function setupNewTabModeObserver(): void {
+  const newTabMode = document.getElementById("newTabMode");
+  if (!newTabMode) return;
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === "value") {
+        const value = newTabMode.getAttribute("value");
+        console.log(`newTabMode value changed to: ${value}`);
+
+        if (value === "1201") {
+          console.log("Setting floorp.isnewtab.floorpstart to true");
+          Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", true);
+        } else {
+          console.log("Setting floorp.isnewtab.floorpstart to false");
+          Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", false);
+        }
+      }
+    });
+  });
+
+  observer.observe(newTabMode, {
+    attributes: true,
+    attributeFilter: ["value"],
+  });
+}
+
+function loadCurrentSettings(homeUrl: string): void {
+  try {
+    const currentHomepage = Services.prefs.getStringPref(
+      "browser.startup.homepage",
+    );
+    console.log(`Current homepage setting: ${currentHomepage}`);
+
+    if (currentHomepage === homeUrl) {
+      console.log("Floorp Start is currently set as homepage");
+      document.getElementById("homeMode-nora")?.click();
+    }
+
+    try {
+      const isFloorpStart = Services.prefs.getBoolPref(
+        "floorp.isnewtab.floorpstart",
+        false,
+      );
+
+      if (isFloorpStart) {
+        console.log("Floorp Start is currently set as newtab");
+        document.getElementById("newTabMode-nora")?.click();
+        Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", true);
+      }
+    } catch (e) {
+      console.error("Error checking newtab preferences:", e);
+    }
+  } catch (e) {
+    console.error("Error checking preferences:", e);
+  }
+}
+
+addFloorpHubCategory();
+setupFloorpStartSettings();
