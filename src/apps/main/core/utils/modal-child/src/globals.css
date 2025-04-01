@@ -1,9 +1,7 @@
 @import "tailwindcss";
-@plugin 'tailwindcss-animate';
 @plugin "daisyui" {
   themes: lofi --default, business --prefersdark;
 }
-
 
 /* DaisyUIプラグイン */
 @layer base {
