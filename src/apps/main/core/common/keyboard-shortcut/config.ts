@@ -11,7 +11,6 @@ import {
   type Setter,
 } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
-import { actions } from "../mouse-gesture/utils/actions.ts";
 import {
   type KeyboardShortcutConfig,
   type ShortcutConfig,
@@ -23,50 +22,7 @@ export const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
 
 const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
-  const defaultShortcuts: Record<string, ShortcutConfig> = {};
-
-  actions.forEach((action) => {
-    switch (action.name) {
-      case "newTab":
-        defaultShortcuts[action.name] = {
-          modifiers: {
-            alt: true,
-            ctrl: false,
-            meta: false,
-            shift: false,
-          },
-          key: "T",
-          action: action.name,
-        };
-        break;
-      case "closeTab":
-        defaultShortcuts[action.name] = {
-          modifiers: {
-            alt: true,
-            ctrl: false,
-            meta: false,
-            shift: false,
-          },
-          key: "W",
-          action: action.name,
-        };
-        break;
-      case "reload":
-        defaultShortcuts[action.name] = {
-          modifiers: {
-            alt: true,
-            ctrl: false,
-            meta: false,
-            shift: false,
-          },
-          key: "R",
-          action: action.name,
-        };
-        break;
-    }
-  });
-
-  return defaultShortcuts;
+  return {};
 };
 
 export const defaultConfig: KeyboardShortcutConfig = {

@@ -4,88 +4,88 @@ import { type GestureActionRegistration } from "./gestures.ts";
 
 export const actions: GestureActionRegistration[] = [
   {
-    name: "goBack",
+    name: "gecko-back",
     fn: () =>
       (document?.getElementById("back-button") as XULElement).doCommand(),
   },
   {
-    name: "goForward",
+    name: "gecko-forward",
     fn: () =>
       (document?.getElementById("forward-button") as XULElement).doCommand(),
   },
   {
-    name: "reload",
+    name: "gecko-reload",
     fn: () =>
       (document?.getElementById("reload-button") as XULElement).doCommand(),
   },
   {
-    name: "closeTab",
+    name: "gecko-close-tab",
     fn: () => window.gBrowser.removeTab(window.gBrowser.selectedTab),
   },
   {
-    name: "newTab",
+    name: "gecko-open-new-tab",
     fn: () =>
       (document?.getElementById("tabs-newtab-button") as XULElement)
         .doCommand(),
   },
   {
-    name: "duplicateTab",
+    name: "gecko-duplicate-tab",
     fn: () => window.gBrowser.duplicateTab(window.gBrowser.selectedTab),
   },
   {
-    name: "reloadAllTabs",
+    name: "gecko-reload-all-tabs",
     fn: () => window.gBrowser.reloadAllTabs(),
   },
   {
-    name: "reopenClosedTab",
+    name: "gecko-restore-last-tab",
     fn: () => window.undoCloseTab(),
   },
   {
-    name: "openNewWindow",
+    name: "gecko-open-new-window",
     fn: () => window.OpenBrowserWindow(),
   },
   {
-    name: "openNewPrivateWindow",
+    name: "gecko-open-new-private-window",
     fn: () => window.OpenBrowserWindow({ private: true }),
   },
   {
-    name: "closeWindow",
+    name: "gecko-close-window",
     fn: () => window.BrowserTryToCloseWindow(),
   },
   {
-    name: "restoreLastWindow",
+    name: "gecko-restore-last-window",
     fn: () => window.undoCloseWindow(),
   },
   {
-    name: "showNextTab",
+    name: "gecko-show-next-tab",
     fn: () => window.gBrowser.tabContainer.advanceSelectedTab(1, true),
   },
   {
-    name: "showPreviousTab",
+    name: "gecko-show-previous-tab",
     fn: () => window.gBrowser.tabContainer.advanceSelectedTab(-1, true),
   },
   {
-    name: "showAllTabsPanel",
+    name: "gecko-show-all-tabs-panel",
     fn: () => window.gTabsPanel.showAllTabsPanel(),
   },
   {
-    name: "forceReload",
+    name: "gecko-force-reload",
     fn: () => window.BrowserReloadSkipCache(),
   },
   {
-    name: "zoomIn",
+    name: "gecko-zoom-in",
     fn: () => window.FullZoom.enlarge(),
   },
   {
-    name: "zoomOut",
+    name: "gecko-zoom-out",
     fn: () => window.FullZoom.reduce(),
   },
   {
-    name: "resetZoom",
+    name: "gecko-reset-zoom",
     fn: () => window.FullZoom.reset(),
   },
   {
-    name: "bookmarkThisPage",
+    name: "gecko-bookmark-this-page",
     fn: () =>
       window.BrowserPageActions.doCommandForAction(
         window.PageActions.actionForID("bookmark"),
@@ -94,229 +94,229 @@ export const actions: GestureActionRegistration[] = [
       ),
   },
   {
-    name: "openHomePage",
+    name: "gecko-open-home-page",
     fn: () => window.BrowserHome(),
   },
   {
-    name: "openAddonsManager",
+    name: "gecko-open-addons-manager",
     fn: () => window.BrowserOpenAddonsMgr(),
   },
   {
-    name: "restoreLastTab",
+    name: "gecko-restore-last-tab",
     fn: () => window.undoCloseTab(),
   },
   {
-    name: "sendWithMail",
+    name: "gecko-send-with-mail",
     fn: () =>
       window.MailIntegration.sendLinkForBrowser(
         window.gBrowser.selectedBrowser,
       ),
   },
   {
-    name: "savePage",
+    name: "gecko-save-page",
     fn: () => window.saveBrowser(window.gBrowser.selectedBrowser),
   },
   {
-    name: "printPage",
+    name: "gecko-print-page",
     fn: () =>
       window.PrintUtils.startPrintWindow(
         window.gBrowser.selectedBrowser.browsingContext,
       ),
   },
   {
-    name: "muteCurrentTab",
+    name: "gecko-mute-current-tab",
     fn: () =>
       window.gBrowser.toggleMuteAudioOnMultiSelectedTabs(
         window.gBrowser.selectedTab,
       ),
   },
   {
-    name: "showSourceOfPage",
+    name: "gecko-show-source-of-page",
     fn: () => window.BrowserViewSource(window.gBrowser.selectedBrowser),
   },
   {
-    name: "showPageInfo",
+    name: "gecko-show-page-info",
     fn: () => window.BrowserPageInfo(),
   },
   {
-    name: "EnableRestMode",
+    name: "floorp-rest-mode",
     fn: () => window.gFloorpCommands.enableRestMode(),
   },
   {
-    name: "hideInterface",
+    name: "floorp-hide-user-interface",
     fn: () => window.gFloorpDesign.hideUserInterface(),
   },
   {
-    name: "toggleNavigationPanel",
+    name: "floorp-toggle-navigation-panel",
     fn: () => window.gFloorpDesign.toggleNavigationPanel(),
   },
   {
-    name: "stop",
+    name: "gecko-stop",
     fn: () => window.BrowserStop(),
   },
   {
-    name: "searchInThisPage",
+    name: "gecko-search-in-this-page",
     fn: () => window.gLazyFindCommand("onFindCommand"),
   },
   {
-    name: "showNextSearchResult",
+    name: "gecko-show-next-search-result",
     fn: () => window.gLazyFindCommand("onFindAgainCommand", false),
   },
   {
-    name: "showPreviousSearchResult",
+    name: "gecko-show-previous-search-result",
     fn: () => window.gLazyFindCommand("onFindAgainCommand", true),
   },
   {
-    name: "searchTheWeb",
+    name: "gecko-search-the-web",
     fn: () => window.BrowserSearch.webSearch(),
   },
   {
-    name: "openMigrationWizard",
+    name: "gecko-open-migration-wizard",
     fn: () =>
       window.MigrationUtils.showMigrationWizard(window, {
         entrypoint: window.MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU,
       }),
   },
   {
-    name: "quitFromApplication",
+    name: "gecko-quit-from-application",
     fn: () => window.Services.startup.quit(window.Ci.nsIAppStartup.eForceQuit),
   },
   {
-    name: "enterIntoCustomizeMode",
+    name: "gecko-enter-into-customize-mode",
     fn: () => window.gCustomizeMode.enter(),
   },
   {
-    name: "enterIntoOfflineMode",
+    name: "gecko-enter-into-offline-mode",
     fn: () => window.BrowserOffline.toggleOfflineStatus(),
   },
   {
-    name: "openScreenCapture",
+    name: "gecko-open-screen-capture",
     fn: () => window.ScreenshotsUtils.notify(window, "shortcut"),
   },
   {
-    name: "showPIP",
+    name: "floorp-show-pip",
     fn: () =>
       window.gFloorpCSKActionFunctions.PictureInPicture.togglePictureInPicture(
         null,
       ),
   },
   {
-    name: "openBookmarkAddTool",
+    name: "gecko-open-bookmark-add-tool",
     fn: () =>
       window.PlacesUIUtils.showBookmarkPagesDialog(
         window.PlacesCommandHook.uniqueCurrentPages,
       ),
   },
   {
-    name: "openBookmarksManager",
+    name: "gecko-open-bookmarks-manager",
     fn: () => window.SidebarController.toggle("viewBookmarksSidebar"),
   },
   {
-    name: "toggleBookmarkToolbar",
+    name: "gecko-toggle-bookmark-toolbar",
     fn: () => window.BookmarkingUI.toggleBookmarksToolbar("bookmark-tools"),
   },
   {
-    name: "openGeneralPreferences",
+    name: "gecko-open-general-preferences",
     fn: () => window.openPreferences(),
   },
   {
-    name: "openPrivacyPreferences",
+    name: "gecko-open-privacy-preferences",
     fn: () => window.openPreferences("panePrivacy"),
   },
   {
-    name: "openWorkspacesPreferences",
+    name: "gecko-open-workspaces-preferences",
     fn: () => window.openPreferences("paneWorkspaces"),
   },
   {
-    name: "openContainersPreferences",
+    name: "gecko-open-containers-preferences",
     fn: () => window.openPreferences("paneContainers"),
   },
   {
-    name: "openSearchPreferences",
+    name: "gecko-open-search-preferences",
     fn: () => window.openPreferences("paneSearch"),
   },
   {
-    name: "openSyncPreferences",
+    name: "gecko-open-sync-preferences",
     fn: () => window.openPreferences("paneSync"),
   },
   {
-    name: "openTaskManager",
+    name: "gecko-open-task-manager",
     fn: () => window.switchToTabHavingURI("about:processes", true),
   },
   {
-    name: "forgetHistory",
+    name: "gecko-forget-history",
     fn: () => window.Sanitizer.showUI(window),
   },
   {
-    name: "quickForgetHistory",
+    name: "gecko-quick-forget-history",
     fn: () => window.PlacesUtils.history.clear(true),
   },
   {
-    name: "clearRecentHistory",
+    name: "gecko-clear-recent-history",
     fn: () => window.BrowserTryToCloseWindow(),
   },
   {
-    name: "restoreLastSession",
+    name: "gecko-restore-last-session",
     fn: () => window.SessionStore.restoreLastSession(),
   },
   {
-    name: "searchHistory",
+    name: "gecko-search-history",
     fn: () => window.PlacesCommandHook.searchHistory(),
   },
   {
-    name: "manageHistory",
+    name: "gecko-manage-history",
     fn: () => window.PlacesCommandHook.showPlacesOrganizer("History"),
   },
   {
-    name: "openDownloads",
+    name: "gecko-open-downloads",
     fn: () => window.DownloadsPanel.showDownloadsHistory(),
   },
   {
-    name: "showBookmarkSidebar",
+    name: "gecko-show-bookmark-sidebar",
     fn: () => window.SidebarController.show("viewBookmarksSidebar"),
   },
   {
-    name: "showHistorySidebar",
+    name: "gecko-show-history-sidebar",
     fn: () => window.SidebarController.show("viewHistorySidebar"),
   },
   {
-    name: "showSyncedTabsSidebar",
+    name: "gecko-show-synced-tabs-sidebar",
     fn: () => window.SidebarController.show("viewTabsSidebar"),
   },
   {
-    name: "reverseSidebarPosition",
+    name: "gecko-reverse-sidebar",
     fn: () => window.SidebarController.reversePosition(),
   },
   {
-    name: "hideSidebar",
+    name: "gecko-hide-sidebar",
     fn: () => window.SidebarController.hide(),
   },
   {
-    name: "toggleSidebar",
+    name: "gecko-toggle-sidebar",
     fn: () => window.SidebarController.toggle(),
   },
   {
-    name: "scrollUp",
+    name: "gecko-scroll-up",
     fn: () => window.goDoCommand("cmd_scrollPageUp"),
   },
   {
-    name: "scrollDown",
+    name: "gecko-scroll-down",
     fn: () => window.goDoCommand("cmd_scrollPageDown"),
   },
   {
-    name: "scrollRight",
+    name: "gecko-scroll-right",
     fn: () => window.goDoCommand("cmd_scrollRight"),
   },
   {
-    name: "scrollLeft",
+    name: "gecko-scroll-left",
     fn: () => window.goDoCommand("cmd_scrollLeft"),
   },
   {
-    name: "scrollToTop",
+    name: "gecko-scroll-to-top",
     fn: () => window.goDoCommand("cmd_scrollTop"),
   },
   {
-    name: "scrollToBottom",
+    name: "gecko-scroll-to-bottom",
     fn: () => window.goDoCommand("cmd_scrollBottom"),
   },
 ];

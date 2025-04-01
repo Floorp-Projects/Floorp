@@ -69,11 +69,26 @@ export class KeyboardShortcutController {
       return;
     }
 
-    if (this.checkAndExecuteShortcut()) {
+    if (this.shouldPreventDefault()) {
       event.preventDefault();
       event.stopPropagation();
+
+      this.checkAndExecuteShortcut();
     }
   };
+
+  private shouldPreventDefault(): boolean {
+    const config = getConfig();
+    const shortcuts = config.shortcuts;
+
+    for (const [_id, shortcut] of Object.entries(shortcuts)) {
+      if (this.isShortcutMatch(shortcut)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   private handleKeyUp = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
@@ -95,7 +110,6 @@ export class KeyboardShortcutController {
 
     for (const [_id, shortcut] of Object.entries(shortcuts)) {
       if (this.isShortcutMatch(shortcut)) {
-        console.log("Shortcut matched and executed:", shortcut);
         this.executeShortcut(shortcut);
         return true;
       }
@@ -104,17 +118,7 @@ export class KeyboardShortcutController {
     return false;
   }
 
-  private tryMatchShortcut(): void {
-    this.checkAndExecuteShortcut();
-  }
-
   private isShortcutMatch(shortcut: ShortcutConfig): boolean {
-    console.log("Checking shortcut match:", {
-      shortcut,
-      pressedModifiers: this.pressedModifiers,
-      pressedKeys: Array.from(this.pressedKeys),
-    });
-
     if (
       shortcut.modifiers.alt !== this.pressedModifiers.alt ||
       shortcut.modifiers.ctrl !== this.pressedModifiers.ctrl ||
@@ -130,7 +134,6 @@ export class KeyboardShortcutController {
   private executeShortcut(shortcut: ShortcutConfig): void {
     const action = actions.find((a) => a.name === shortcut.action);
     if (action) {
-      console.log("executeShortcut", shortcut);
       action.fn();
     }
   }

@@ -64,7 +64,7 @@ try {
   await fs.access("dist");
   await fs.rename("dist", "_dist");
 } catch {
-  console.log("dist not found");
+  // ignore
 }
 
 const binPath = pathe.join(binDir, brandingBaseName);
