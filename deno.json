@@ -41,6 +41,5 @@
     "create-patches": "deno run -A ./scripts/git-patches/git-patches-manager.ts --create",
     "installer-win64-stub-dev": "cd ./src/installers/stub-win64-installer && pnpm tauri dev",
     "installer-win64-stub-build": "cd ./src/installers/stub-win64-installer && pnpm tauri build"
-  },
-  "nodeModulesDir": "auto"
+  }
 }
