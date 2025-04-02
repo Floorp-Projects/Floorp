@@ -45,31 +45,31 @@ export const defaultConfig: MouseGestureConfig = {
   actions: [
     {
       pattern: ["left"],
-      action: "goBack",
+      action: "gecko-back",
     },
     {
       pattern: ["right"],
-      action: "goForward",
+      action: "gecko-forward",
     },
     {
       pattern: ["up", "down"],
-      action: "reload",
+      action: "gecko-reload",
     },
     {
       pattern: ["down", "right"],
-      action: "closeTab",
+      action: "gecko-close-tab",
     },
     {
       pattern: ["down", "up"],
-      action: "newTab",
+      action: "gecko-open-new-tab",
     },
     {
       pattern: ["up"],
-      action: "scrollToTop",
+      action: "gecko-scroll-to-top",
     },
     {
       pattern: ["down"],
-      action: "scrollToBottom",
+      action: "gecko-scroll-to-bottom",
     },
   ],
 };
