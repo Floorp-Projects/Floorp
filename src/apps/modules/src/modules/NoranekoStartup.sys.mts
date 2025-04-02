@@ -134,7 +134,8 @@ function setupNoranekoNewTab(): void {
   });
 
   function updateNewTabURL(): void {
-    if (Services.prefs.getBoolPref("floorp.isnewtab.floorpstart", false)) {
+    if (Services.prefs.getBoolPref("floorp.isnewtab.floorpstart", true)) {
+      Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", true);
       (async () => {
         try {
           await fetch("chrome://noraneko-newtab/content/index.html");

@@ -27,7 +27,7 @@ const oldObjectConfigs: TFloorpDesignConfigs = {
     userInterface: getOldInterfaceConfig(),
     faviconColor: Services.prefs.getBoolPref(
       "floorp.titlebar.favicon.color",
-      true,
+      false,
     ),
     appliedUserJs: "",
   },

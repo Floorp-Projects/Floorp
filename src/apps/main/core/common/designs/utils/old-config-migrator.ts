@@ -18,7 +18,7 @@ export const getOldInterfaceConfig = () => {
       return "fluerial";
   }
 
-  return "proton";
+  return "lepton";
 };
 
 export const getOldTabbarStyleConfig = () => {

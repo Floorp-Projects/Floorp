@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- .tab-background {
+.tab-background {
   &:is([selected], [multiselected]) {
     background: var(--toolbar-bgcolor);
   }
@@ -155,67 +155,4 @@ browser[type="content"] > html {
 
 #QRCodeGeneratePageAction-image {
   list-style-image: url("chrome://floorp/skin/icons/floorp-share.svg");
-}
-
-/* Progressive Web Apps */
-
-#ssb-box {
-  min-width: 350px;
-}
-
-#ssb-content-description {
-  color: var(--menu-disabled-color) !important;
-}
-
-#ssb-content-hbox {
-  display: flex;
-}
-
-#ssb-content-icon {
-  width: 32px !important;
-  height: 32px !important;
-}
-
-#ssb-content-icon-vbox {
-  margin: 30px 20px;
-  flex: 1;
-}
-
-#ssb-button-hbox {
-  margin-top: 15px;
-  height: 35px;
-  margin-bottom: 5px;
-}
-
-.ssb-app-info-button > .toolbarbutton-icon {
-  width: 20px;
-}
-
-#ssb-installing-vbox {
-  min-width: 70px;
-  flex: 2;
-}
-
-#ssb-content-label-vbox {
-  flex: 6;
-}
-
-#ssb-installing-icon {
-  margin: auto;
-}
-
-#ssbPageAction-image {
-  list-style-image: url("chrome://branding/content/about-logo-private.png");
-}
-
-#ssbPageAction-image[open-ssb="true"] {
-  list-style-image: url("chrome://branding/content/icon32.png");
-}
-
-#run-ssb-contextmenu {
-  --menuitem-image: url("chrome://branding/content/about-logo-private.png");
-}
-
-#uninstall-ssb-contextmenu {
-  --menuitem-image: url("chrome://branding/content/about-logo-private.png");
 }

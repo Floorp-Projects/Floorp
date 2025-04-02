@@ -6,9 +6,13 @@
 import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
-import type { PwaService } from "./pwaService";
+import type { PwaService } from "./pwaService.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "../../../i18n/config.ts";
+import { iconUrlParser } from "@core/utils/iconUrlParser.ts";
+import style from "./style.css?inline";
+import PWAINSTALL_SVG from "./icons/pwa-install.svg";
+import PWALAUNCH_SVG from "./icons/pwa-launch.svg";
 
 export class SsbPageAction {
   private isInstalling = createSignal(false);
@@ -35,6 +39,8 @@ export class SsbPageAction {
     render(() => this.Render(), ssbPageAction, {
       marker: starButtonBox,
     });
+
+    render(() => this.Style(), document?.head);
 
     Services.obs.addObserver(
       () => this.onCheckPageHasManifest(),
@@ -130,7 +136,7 @@ export class SsbPageAction {
       >
         <xul:image
           id="ssbPageAction-image"
-          class={`urlbar-icon ${isInstalled() ? "open-ssb" : ""}`}
+          class={`urlbar-icon${isInstalled() ? " open-ssb" : ""}`}
         />
         <xul:panel
           id="ssb-panel"
@@ -195,6 +201,25 @@ export class SsbPageAction {
           </xul:vbox>
         </xul:panel>
       </xul:hbox>
+    );
+  }
+
+  private Style(): JSX.Element {
+    return (
+      <>
+        <style>{style}</style>
+        <style>
+          {`
+        #ssbPageAction-image {
+          list-style-image: url("${iconUrlParser(PWAINSTALL_SVG)}");
+        }
+
+        #ssbPageAction-image[open-ssb="true"] {
+          list-style-image: url("${iconUrlParser(PWALAUNCH_SVG)}");
+        }
+      `}
+        </style>
+      </>
     );
   }
 }
