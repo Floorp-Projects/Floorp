@@ -28,7 +28,6 @@ export class SsbPageAction {
     open: i18next.t("ssb.page-action.open"),
     cancel: i18next.t("ssb.page-action.cancel"),
     siteIcon: i18next.t("ssb.page-action.site-icon"),
-    installing: i18next.t("ssb.page-action.installing")
   });
 
   constructor(private pwaService: PwaService) {
@@ -58,7 +57,6 @@ export class SsbPageAction {
         open: i18next.t("ssb.page-action.open"),
         cancel: i18next.t("ssb.page-action.cancel"),
         siteIcon: i18next.t("ssb.page-action.site-icon"),
-        installing: i18next.t("ssb.page-action.installing")
       });
     });
 
@@ -180,7 +178,6 @@ export class SsbPageAction {
                   src="chrome://floorp/skin/icons/installing.gif"
                   width="48"
                   height="48"
-                  alt={translations().installing}
                 />
               </xul:vbox>
               <xul:button

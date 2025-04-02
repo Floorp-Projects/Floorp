@@ -71,6 +71,14 @@ export const defaultConfig: MouseGestureConfig = {
       pattern: ["down"],
       action: "gecko-scroll-to-bottom",
     },
+    {
+      pattern: ["left", "down"],
+      action: "gecko-scroll-up",
+    },
+    {
+      pattern: ["right", "down"],
+      action: "gecko-scroll-down",
+    },
   ],
 };
 

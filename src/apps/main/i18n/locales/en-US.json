@@ -91,8 +91,7 @@
             "install": "Install Application",
             "open": "Open Application",
             "cancel": "Cancel",
-            "site-icon": "Site icon",
-            "installing": "Installing indicator"
+            "site-icon": "Site icon"
         }
     },
     "privateContainer": {
