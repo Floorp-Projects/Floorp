@@ -77,9 +77,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
               <input
                 {...field}
                 type={item.type}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
-                  item.classList || ""
-                }`}
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
+                  }`}
                 placeholder={item.placeholder || ""}
                 maxLength={item.maxLength}
               />
@@ -104,9 +103,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <textarea
                 {...field}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
-                  item.classList || ""
-                }`}
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
+                  }`}
                 placeholder={item.placeholder || ""}
                 rows={item.rows || 4}
               />
@@ -131,9 +129,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <select
                 {...field}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
-                  item.classList || ""
-                }`}
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
+                  }`}
               >
                 {item.options?.map((opt: { label: string; value: string }) => (
                   <option key={opt.value} value={opt.value}>
@@ -155,18 +152,16 @@ const FormField = ({ item, control }: FormFieldProps) => {
             </label>
           )}
           <Controller
-            key={`${item.id}-${String(item.value)}`}
             name={item.id}
             control={control}
-            defaultValue={String(item.value)}
+            defaultValue={String(item.value || "")}
             rules={{ required: item.required }}
             render={({ field: { onChange, value } }) => (
               <div className="relative">
                 <button
                   type="button"
-                  className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
-                    item.classList || ""
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
+                    }`}
                   onClick={() => setDropdownOpen(true)}
                 >
                   {item.options?.find((opt) => opt.value === value)?.label ||
@@ -213,9 +208,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
               render={({ field: { onChange, value } }) => (
                 <input
                   type="checkbox"
-                  className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] rounded focus:ring-[#0061E0] ${
-                    item.classList || ""
-                  }`}
+                  className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] rounded focus:ring-[#0061E0] ${item.classList || ""
+                    }`}
                   checked={value === "true"}
                   onChange={(e) => onChange(String(e.target.checked))}
                 />
@@ -252,9 +246,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
                     >
                       <input
                         type="radio"
-                        className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${
-                          item.classList || ""
-                        }`}
+                        className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${item.classList || ""
+                          }`}
                         value={opt.value}
                         checked={value === opt.value}
                         onChange={(e) => onChange(e.target.value)}
@@ -301,6 +294,11 @@ function App() {
 
   globalThis.buildFormFromConfig = (config: TForm) => {
     setFormConfig(config);
+    const initialValues: FormValues = {};
+    config.forms.forEach(item => {
+      initialValues[item.id] = String(item.value || "");
+    });
+    methods.reset(initialValues);
   };
 
   globalThis.removeForm = () => {

@@ -17,10 +17,10 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 @noraComponent(import.meta.hot)
 export default class PanelSidebar extends NoraComponentBase {
   init(): void {
-    migratePanelSidebarData()
+    migratePanelSidebarData();
     const ctx = new CPanelSidebar();
     WebsitePanelWindowChild.getInstance();
-    new PanelSidebarElem(ctx)
+    new PanelSidebarElem(ctx);
     new SidebarContextMenuElem(ctx);
     PanelSidebarAddModal.getInstance();
     PanelSidebarFloating.getInstance();
