@@ -20,7 +20,7 @@ export class PwaWindowSupport {
   }
 
   constructor(private pwaService: PwaService) {
-    if (window.name !== PWA_WINDOW_NAME) {
+    if (!window.name.startsWith(PWA_WINDOW_NAME)) {
       return;
     }
 

@@ -53,10 +53,12 @@ export class SsbRunner {
 
     args.data = ssb.start_url;
 
+    const uniqueWindowName = `${PWA_WINDOW_NAME}_${ssb.id}_${Date.now()}`;
+
     const win = Services.ww.openWindow(
       null as unknown as mozIDOMWindowProxy,
       AppConstants.BROWSER_CHROME_URL,
-      PWA_WINDOW_NAME,
+      uniqueWindowName,
       browserWindowFeatures,
       args,
     ) as nsIDOMWindow;
