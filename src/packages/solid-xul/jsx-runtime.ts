@@ -125,8 +125,7 @@ declare module "solid-js" {
     }
 
     interface XULTabElement
-      extends XULElementBase,
-        HTMLAttributes<HTMLElement> {
+      extends XULElementBase, HTMLAttributes<HTMLElement> {
       onwheel?: EventHandlerUnion<HTMLElement, WheelEvent>;
     }
 
@@ -156,7 +155,9 @@ declare module "solid-js" {
       "xul:menulist": XULMenuListElement;
       "xul:vbox": XULBoxElement;
       "xul:hbox": XULBoxElement;
-      "xul:box": XULElementBase;
+      "xul:box": XULElementBase & {
+        context?: string;
+      };
       "xul:toolbar": {
         id?: string;
         toolbarname?: string;

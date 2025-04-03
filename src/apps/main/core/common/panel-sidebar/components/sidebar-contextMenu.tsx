@@ -3,25 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
 import { CPanelSidebar } from "./panel-sidebar";
 import { createSignal, Show } from "solid-js";
 import type { Panel } from "../utils/type";
+import { ContextMenuUtils } from "@core/utils/context-menu.tsx";
 
 export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
 
 export class SidebarContextMenuElem {
 
   ctx: CPanelSidebar
-  constructor(ctx:CPanelSidebar) {
+  constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    const parentElem = document?.body;
-    const beforeElem = document?.getElementById("window-modal-dialog");
-    render(() => this.sidebarContextMenu(), parentElem, {
-      marker: beforeElem as XULElement,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      hotCtx: (import.meta as any).hot,
-    });
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.sidebarContextMenu());
   }
 
   public contextPanelId: string | null = null;
@@ -31,16 +25,34 @@ export class SidebarContextMenuElem {
       return;
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const panelId = (target.dataset as any).panelId;
+    let currentElement: Element | null = target as unknown as Element;
+    let panelId: string | undefined;
+
+    for (let i = 0; i < 10 && currentElement && !panelId; i++) {
+      panelId = currentElement.getAttribute('data-panel-id') || undefined;
+
+      if (!panelId && currentElement.parentElement) {
+        currentElement = currentElement.parentElement;
+      }
+    }
+
+    if (!panelId) {
+      return;
+    }
+
     const gPanelSidebar = this.ctx;
     return gPanelSidebar.getPanelData(panelId);
   }
 
   private handlePopupShowing(e: Event) {
+    if (!e.explicitOriginalTarget) {
+      return;
+    }
+
     const panel = this.getPanelByOriginalTarget(
       e.explicitOriginalTarget as XULElement,
     );
+
     if (!panel) {
       return;
     }
@@ -49,14 +61,34 @@ export class SidebarContextMenuElem {
   }
 
   private handlePopupHiding() {
-    setContextPanel(null);
+    setTimeout(() => {
+      setContextPanel(null);
+    }, 0);
+  }
+
+  private safeExecuteCommand(callback: () => void) {
+    try {
+      callback();
+    } catch (error) {
+      console.error("コマンド実行エラー:", error);
+    } finally {
+      if (typeof document !== 'undefined' && document) {
+        const contextMenu = document.getElementById("webpanel-context");
+        if (contextMenu) {
+          // @ts-ignore - Firefox特有のXUL APIなのでTypeScriptの型定義にない
+          contextMenu.hidePopup();
+        }
+      }
+    }
   }
 
   private handleUnloadCommand() {
     const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
-      gPanelSidebar.unloadPanel(panelId);
+      this.safeExecuteCommand(() => {
+        gPanelSidebar.unloadPanel(panelId);
+      });
     }
   }
 
@@ -64,7 +96,9 @@ export class SidebarContextMenuElem {
     const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
-      gPanelSidebar.deletePanel(panelId);
+      this.safeExecuteCommand(() => {
+        gPanelSidebar.deletePanel(panelId);
+      });
     }
   }
 
@@ -72,7 +106,9 @@ export class SidebarContextMenuElem {
     const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
-      gPanelSidebar.mutePanel(panelId);
+      this.safeExecuteCommand(() => {
+        gPanelSidebar.mutePanel(panelId);
+      });
     }
   }
 
@@ -80,67 +116,94 @@ export class SidebarContextMenuElem {
     const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
-      gPanelSidebar.changeZoomLevel(panelId, type);
+      this.safeExecuteCommand(() => {
+        gPanelSidebar.changeZoomLevel(panelId, type);
+      });
+    }
+  }
+
+  private handleChangeUserAgentCommand() {
+    const gPanelSidebar = this.ctx;
+    const panelId = contextPanel()?.id;
+    if (panelId) {
+      this.safeExecuteCommand(() => {
+        // UAの変更処理を実装する必要がある
+        // gPanelSidebar.changeUserAgent(panelId);
+      });
     }
   }
 
   private sidebarContextMenu() {
-    const gPanelSidebar = this.ctx;
     return (
       <xul:popupset>
         <xul:menupopup
-          id="panel-sidebar-panel-context"
+          id="webpanel-context"
           onPopupShowing={(e) => this.handlePopupShowing(e)}
           onPopupHiding={() => this.handlePopupHiding()}
         >
           <xul:menuitem
-            id="panel-sidebar-unload"
+            id="unloadWebpanelMenu"
+            class="needLoadedWebpanel"
+            data-l10n-id="sidebar2-unload-panel"
             label="Unload this webpanel"
+            accesskey="U"
             onCommand={() => this.handleUnloadCommand()}
           />
-          <xul:menuitem
-            id="panel-sidebar-keeppanelwidth"
-            label="Keep panel width"
-            onCommand={() => gPanelSidebar.saveCurrentSidebarWidth()}
-          />
           <Show when={contextPanel()?.type === "web"}>
+            <xul:menuseparator class="context-webpanel-separator" />
             <xul:menuitem
-              id="panel-sidebar-panel-mute"
+              id="muteMenu"
+              class="needLoadedWebpanel"
+              data-l10n-id="sidebar2-mute-and-unmute"
               label="Mute/Unmute this webpanel"
+              accesskey="M"
               onCommand={() => this.handleMuteCommand()}
             />
             <xul:menu
-              id="panel-sidebar-change-zoom-level"
+              id="changeZoomLevelMenu"
+              class="needLoadedWebpanel needRunningExtensionsPanel"
+              data-l10n-id="sidebar2-change-zoom-level"
               label="Change zoom level"
+              accesskey="Z"
             >
-              <xul:menupopup id="panel-sidebar-change-zoom-level-popup">
+              <xul:menupopup id="changeZoomLevelPopup">
                 <xul:menuitem
-                  id="panel-sidebar-zoom-in"
+                  id="zoomInMenu"
+                  data-l10n-id="sidebar2-zoom-in"
                   label="Zoom in"
+                  accesskey="I"
                   onCommand={() => this.handleChangeZoomLevelCommand("in")}
                 />
                 <xul:menuitem
-                  id="panel-sidebar-zoom-out"
+                  id="zoomOutMenu"
+                  data-l10n-id="sidebar2-zoom-out"
                   label="Zoom out"
+                  accesskey="O"
                   onCommand={() => this.handleChangeZoomLevelCommand("out")}
                 />
                 <xul:menuitem
-                  id="panel-sidebar-reset-zoom"
+                  id="resetZoomMenu"
+                  data-l10n-id="sidebar2-reset-zoom"
                   label="Reset zoom"
+                  accesskey="R"
                   onCommand={() => this.handleChangeZoomLevelCommand("reset")}
                 />
               </xul:menupopup>
             </xul:menu>
             <xul:menuitem
-              id="panel-sidebar-change-ua"
+              id="changeUAWebpanelMenu"
+              data-l10n-id="sidebar2-change-ua-panel"
               label="Switch User agent to Mobile/Desktop Version at this Webpanel"
               accesskey="R"
+              onCommand={() => this.handleChangeUserAgentCommand()}
             />
           </Show>
-          <xul:menuseparator />
+          <xul:menuseparator class="context-webpanel-separator" />
           <xul:menuitem
-            id="panel-sidebar-delete"
+            id="deleteWebpanelMenu"
+            data-l10n-id="sidebar2-delete-panel"
             label="Delete this panel"
+            accesskey="D"
             onCommand={() => this.handleDeleteCommand()}
           />
         </xul:menupopup>

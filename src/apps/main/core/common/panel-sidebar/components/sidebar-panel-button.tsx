@@ -10,12 +10,13 @@ import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/
 import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
+import { setContextPanel } from "./sidebar-contextMenu";
 
 
-export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
+export function PanelSidebarButton(props: { panel: Panel, ctx: CPanelSidebar }) {
   const gPanelSidebar = props.ctx;
 
-  const [faviconURL] = createResource(()=>props.panel,getFaviconURLForPanel);
+  const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/plain", props.panel.id);
@@ -54,6 +55,16 @@ export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
     setPanelSidebarData(panels);
   };
 
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    setContextPanel(props.panel);
+
+    const contextMenu = document?.getElementById("webpanel-context") as XULPopupElement;
+    if (contextMenu) {
+      contextMenu.openPopupAtScreen(e.screenX, e.screenY, true);
+    }
+  };
+
   if (
     props.panel.type === "extension" &&
     !isExtensionExist(props.panel.extensionId as string)
@@ -69,6 +80,7 @@ export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onContextMenu={handleContextMenu}
     >
       <div
         id={props.panel.id}
@@ -78,10 +90,10 @@ export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
         }}
-        style={{display:"flex","align-items":"center","justify-content":"center"}}
+        style={{ display: "flex", "align-items": "center", "justify-content": "center" }}
       >
-      <Suspense>
-        <img src={faviconURL()} width="16" height="16" />
+        <Suspense>
+          <img src={faviconURL()} width="16" height="16" />
         </Suspense>
       </div>
       <Show

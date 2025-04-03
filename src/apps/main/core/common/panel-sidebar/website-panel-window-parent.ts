@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { setPanelSidebarData } from "./data/data.js";
+import { setPanelSidebarData } from "./data/data.ts";
 
 type XULBrowserElement = XULElement & {
   browsingContext: {
@@ -13,6 +13,7 @@ type XULBrowserElement = XULElement & {
 
 export class WebsitePanel {
   private static instance: WebsitePanel;
+
   static getInstance() {
     if (!WebsitePanel.instance) {
       WebsitePanel.instance = new WebsitePanel();
@@ -33,54 +34,64 @@ export class WebsitePanel {
     return webpanelBrowser.browsingContext.associatedWindow;
   }
 
-  /* Mute/Unmute */
   public toggleMutePanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const tab = targetPanelWindow.gBrowser.selectedTab;
-    const audioMuted = tab.linkedBrowser.audioMuted;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
+      const tab = targetPanelWindow.gBrowser.selectedTab;
 
-    if (audioMuted) {
-      tab.linkedBrowser.unmute();
-    } else {
-      tab.linkedBrowser.mute();
+      const audioMuted = tab.linkedBrowser.audioMuted;
+      tab.linkedBrowser.audioMuted = !audioMuted;
+    } catch (e) {
+      console.error("Failed to toggle mute for webpanel", e);
     }
   }
 
-  /* Reload */
   public reloadPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const tab = targetPanelWindow.gBrowser.selectedTab;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
+      const tab = targetPanelWindow.gBrowser.selectedTab;
 
-    tab.linkedBrowser.reload();
+      tab.linkedBrowser.reload();
+    } catch (e) {
+      console.error("Failed to reload webpanel", e);
+    }
   }
 
-  /* Forward */
   public goForwardPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const tab = targetPanelWindow.gBrowser.selectedTab;
-
-    tab.linkedBrowser.goForward();
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
+      const tab = targetPanelWindow.gBrowser.selectedTab;
+      tab.linkedBrowser.goForward();
+    } catch (e) {
+      console.error("Failed to go forward in webpanel", e);
+    }
   }
 
-  /* Back */
   public goBackPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const tab = targetPanelWindow.gBrowser.selectedTab;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
+      const tab = targetPanelWindow.gBrowser.selectedTab;
 
-    tab.linkedBrowser.goBack();
+      tab.linkedBrowser.goBack();
+    } catch (e) {
+      console.error("Failed to go back in webpanel", e);
+    }
   }
 
-  /* Go Index Page */
   public goIndexPagePanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const uri = targetPanelWindow.bmsLoadedURI;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
+      const uri = targetPanelWindow.bmsLoadedURI;
 
-    targetPanelWindow.gBrowser.loadURI(Services.io.newURI(uri), {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+      targetPanelWindow.gBrowser.loadURI(Services.io.newURI(uri), {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+    } catch (e) {
+      console.error("Failed to go to index page in webpanel", e);
+    }
   }
 
-  /* Zoom Level */
   private saveZoomLevel(webpanelId: string, zoomLevel: number) {
     setPanelSidebarData((prev) => {
       Object.values(prev).forEach((panel) => {
@@ -93,26 +104,37 @@ export class WebsitePanel {
   }
 
   public zoomInPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const zoomLevel = targetPanelWindow.ZoomManager.zoom;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
 
-    targetPanelWindow.ZoomManager.enlarge();
-    this.saveZoomLevel(webpanelId, zoomLevel);
+      targetPanelWindow.ZoomManager.enlarge();
+      const newZoomLevel = targetPanelWindow.ZoomManager.zoom;
+      this.saveZoomLevel(webpanelId, newZoomLevel);
+    } catch (e) {
+      console.error("Failed to zoom in webpanel", e);
+    }
   }
 
   public zoomOutPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const zoomLevel = targetPanelWindow.ZoomManager.zoom;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
 
-    targetPanelWindow.ZoomManager.reduce();
-    this.saveZoomLevel(webpanelId, zoomLevel);
+      targetPanelWindow.ZoomManager.reduce();
+      const newZoomLevel = targetPanelWindow.ZoomManager.zoom;
+      this.saveZoomLevel(webpanelId, newZoomLevel);
+    } catch (e) {
+      console.error("Failed to zoom out webpanel", e);
+    }
   }
 
   public resetZoomLevelPanel(webpanelId: string) {
-    const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-    const zoomLevel = targetPanelWindow.ZoomManager.zoom;
+    try {
+      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
 
-    targetPanelWindow.ZoomManager.zoom = 1;
-    this.saveZoomLevel(webpanelId, zoomLevel);
+      targetPanelWindow.ZoomManager.zoom = 1;
+      this.saveZoomLevel(webpanelId, 1);
+    } catch (e) {
+      console.error("Failed to reset zoom in webpanel", e);
+    }
   }
 }
