@@ -145,6 +145,16 @@ export function SearchBar() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (showSuggestions && suggestions.length > 0 && selectedSuggestionIndex >= 0) {
+        handleSuggestionClick(suggestions[selectedSuggestionIndex]);
+      } else {
+        handleSearch(e);
+      }
+      return;
+    }
+
     if (!showSuggestions || suggestions.length === 0) return;
 
     switch (e.key) {
@@ -159,12 +169,6 @@ export function SearchBar() {
         setSelectedSuggestionIndex(prev =>
           prev > 0 ? prev - 1 : suggestions.length - 1
         );
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (selectedSuggestionIndex >= 0) {
-          handleSuggestionClick(suggestions[selectedSuggestionIndex]);
-        }
         break;
       case "Escape":
         setShowSuggestions(false);
