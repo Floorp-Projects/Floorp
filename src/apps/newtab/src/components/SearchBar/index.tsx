@@ -17,6 +17,7 @@ export function SearchBar() {
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownButtonRef = useRef<HTMLButtonElement>(null);
@@ -97,7 +98,7 @@ export function SearchBar() {
       }
     } else {
       console.log("selectedEngine", selectedEngine.searchUrl);
-      url = selectedEngine.searchUrl + query;
+      url = selectedEngine.searchUrl + encodeURIComponent(query);
     }
     globalThis.location.href = url;
   };
@@ -110,6 +111,7 @@ export function SearchBar() {
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
+    setSelectedSuggestionIndex(-1);
 
     if (value.trim() && selectedEngine) {
       try {
@@ -139,6 +141,37 @@ export function SearchBar() {
     if (selectedEngine) {
       const url = selectedEngine.searchUrl + encodeURIComponent(suggestion);
       globalThis.location.href = url;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          handleSuggestionClick(suggestions[selectedSuggestionIndex]);
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+      default:
+        break;
     }
   };
 
@@ -210,6 +243,7 @@ export function SearchBar() {
               type="text"
               value={query}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder={t("searchBar.searchOrEnterUrl")}
               className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-900 dark:text-gray-100"
               autoFocus
@@ -237,7 +271,11 @@ export function SearchBar() {
                   <button
                     type="button"
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full px-3 py-2 text-left text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    className={`w-full px-3 py-2 text-left text-gray-100 flex items-center transition-colors ${selectedSuggestionIndex === index
+                      ? 'bg-gray-600'
+                      : 'hover:bg-gray-600 active:bg-gray-500'
+                      }`}
+                    onMouseEnter={() => setSelectedSuggestionIndex(index)}
                   >
                     <Search size={16} className="text-gray-400 mr-2 flex-shrink-0" />
                     {suggestion}
