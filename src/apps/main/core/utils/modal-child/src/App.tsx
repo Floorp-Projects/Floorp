@@ -58,8 +58,23 @@ const FormField = ({ item, control }: FormFieldProps) => {
     };
   }, [dropdownOpen, item.type]);
 
+  const validateAndFormatUrl = (url: string): string => {
+    if (!url) return url;
+
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    };
+
+    if (/^[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+$/.test(url)) {
+      return `https://${url}`;
+    }
+
+    return url;
+  };
+
   switch (item.type) {
     case "text":
+    case "url":
     case "number":
       return (
         <div className="mb-4 w-full">
@@ -76,11 +91,18 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <input
                 {...field}
-                type={item.type}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
+                type={item.type === "url" ? "text" : item.type}
+                className={`w-full px-4 py-2
+                ${item.type === "url" ? "need-url-validation" : ""}
+                  text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
                   }`}
                 placeholder={item.placeholder || ""}
                 maxLength={item.maxLength}
+                onBlur={item.type === "url" ? (e) => {
+                  const formattedUrl = validateAndFormatUrl(e.target.value);
+                  field.onChange(formattedUrl);
+                  e.target.value = formattedUrl;
+                } : field.onBlur}
               />
             )}
           />

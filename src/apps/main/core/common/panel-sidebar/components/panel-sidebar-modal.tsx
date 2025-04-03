@@ -10,7 +10,7 @@ import { getFirefoxSidebarPanels } from "../extension-panels.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import { setPanelSidebarData } from "../data/data.ts";
 import ModalParent from "../../../common/modal-parent/index.ts";
-import { TForm, TFormResult } from "@core/common/modal-parent/utils/type.ts";
+import { TForm, TFormItem, TFormResult } from "@core/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "../../../../i18n/config.ts";
 
@@ -150,7 +150,7 @@ export class PanelSidebarAddModal {
     const commonForms = [
       {
         id: "type",
-        type: "dropdown" as const,
+        type: "dropdown",
         label: texts.type,
         value: type,
         required: true,
@@ -162,7 +162,7 @@ export class PanelSidebarAddModal {
       },
       {
         id: "width",
-        type: "number" as const,
+        type: "number",
         label: texts.width,
         value: 450,
         required: true,
@@ -175,7 +175,7 @@ export class PanelSidebarAddModal {
       typeForms = [
         {
           id: "url",
-          type: "text" as const,
+          type: "url",
           label: texts.url,
           value: window.gBrowser.currentURI.spec,
           required: true,
@@ -183,7 +183,7 @@ export class PanelSidebarAddModal {
         },
         {
           id: "userContextId",
-          type: "dropdown" as const,
+          type: "dropdown",
           label: texts.container,
           value: "0",
           required: true,
@@ -191,7 +191,7 @@ export class PanelSidebarAddModal {
         },
         {
           id: "userAgent",
-          type: "checkbox" as const,
+          type: "checkbox",
           label: texts.userAgent,
           value: "false",
         },
@@ -200,7 +200,7 @@ export class PanelSidebarAddModal {
       typeForms = [
         {
           id: "extension",
-          type: "dropdown" as const,
+          type: "dropdown",
           label: texts.extension,
           value: extensions.length > 0 ? extensions[0].extensionId : "",
           required: true,
@@ -211,7 +211,7 @@ export class PanelSidebarAddModal {
       typeForms = [
         {
           id: "sideBarTool",
-          type: "dropdown" as const,
+          type: "dropdown",
           label: texts.sideBarTool,
           value: Object.keys(STATIC_PANEL_DATA)[0] || "",
           required: true,
@@ -219,9 +219,8 @@ export class PanelSidebarAddModal {
         },
       ];
     }
-
     return {
-      forms: [...commonForms, ...typeForms],
+      forms: [...commonForms, ...typeForms] as TFormItem[],
       title: texts.title,
       submitLabel: texts.add,
       cancelLabel: texts.cancel,
