@@ -649,6 +649,23 @@ class CueStyleBox extends StyleBoxBase {
     // spec 7.2.2 ~ 7.2.7, calculate 'width', 'height', 'left' and 'top'.
     const {width, height, left, top} = this._getCueSizeAndPosition();
 
+    // TODO: https://github.com/w3c/webvtt/issues/530 for potentially making
+    // the cue container's font-size 0.
+    //
+    // The inline cue element cannot make the size of the parent element, this
+    // container, smaller. If the inline cue element is larger, the line height
+    // grows. If it's smaller than the container, it's stuck with the
+    // container's height. This becomes a problem when the container's font-size
+    // is large and a site wants to style the ::cue pseudo element significantly
+    // smaller. This is less of a problem when using the equivalent of 5vmin
+    // instead of 5vh of course, but it's still a problem. It would be most
+    // visible in large videos with 1:1 aspect ratio that a site tries to scale
+    // down.
+    //
+    // All WebVTT use videos with min(width, height) 180, 5% of which is 9px.
+    // 9px font-size keeps tests passing.
+    const fontSize = "9px";
+
     this.applyStyles({
       "position": "absolute",
       // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
@@ -660,7 +677,7 @@ class CueStyleBox extends StyleBoxBase {
       "overflow-wrap": "break-word",
       // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
       "white-space": "pre-line",
-      "font": this.fontSize + " sans-serif",
+      "font": `${fontSize} sans-serif`,
       "color": "rgba(255, 255, 255, 1)",
       "white-space": "pre-line",
       "text-align": this.cue.align,
