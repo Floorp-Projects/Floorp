@@ -1,6 +1,162 @@
 {
   "data": [
     {
+      "schema": 1743127073678,
+      "derHash": "kB28sW22R1XVxPuJM/VbtFlxDLUvutrNWqEKrruRKsI=",
+      "attachment": {
+        "hash": "9cc74e1bbf3a0546bd5bdb47291e51c96aa3d6ef3eb74639beedc244e1a0acef",
+        "size": 2219,
+        "filename": "j0RomALkLFR_NJKgyNJiNsEuj7f8gTaJN-LmBskO_34=.pem",
+        "location": "security-state-staging/intermediates/f2504da4-ed00-49d5-a6d1-41f8dd93167b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "46606148-ae2e-4f79-9efc-9335d7217179",
+      "last_modified": 1743130622826
+    },
+    {
+      "schema": 1743127073997,
+      "derHash": "94NBmZWWcrcGIrYBmz1CpGpavMALWadwcgqBiAnxgvM=",
+      "attachment": {
+        "hash": "237336ceec27ed2262203ed60efbed6825b8c4e7008ed89bbff314ba577cf6a8",
+        "size": 1175,
+        "filename": "35OGu8W_ydR1QYMMAqgraZ0PZUDnKZvraIu1mN789-c=.pem",
+        "location": "security-state-staging/intermediates/d12ffc68-4006-4d21-85e8-dc12d1faf55d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "bdd1cf45-cdae-441f-af96-d4e4e5170cc3",
+      "last_modified": 1743130622824
+    },
+    {
+      "schema": 1743127073346,
+      "derHash": "6j/yOdQiPuQw0/lunhBG0ldxM4RnNTR/o83fQkEh1Zw=",
+      "attachment": {
+        "hash": "600ce8b71ac24ba4c81dd9fbfee97496540e337093f2651a7c19df016cee73b2",
+        "size": 1171,
+        "filename": "H_JDK4RCn1ON5-JhG84Im0ifJEdnYu6gV6VM2gFIkQM=.pem",
+        "location": "security-state-staging/intermediates/0fc146d5-20ca-43ae-b9f3-e64b53388e5b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "0b8c56d3-da30-4af1-b638-db1e0494e5d4",
+      "last_modified": 1743130622821
+    },
+    {
+      "schema": 1743127072688,
+      "derHash": "B4XIep7JA9j14nITNonbDzaON0xa6z/jPR8Qvl9BMfI=",
+      "attachment": {
+        "hash": "edd93ea2f86bdf3e37ee2051561741d6872a76bbff6131bc8b824fe31147cb67",
+        "size": 2182,
+        "filename": "V0iwcumAD8xCydQmFimkNLaLFIzZbCqqMnDSWrxEV70=.pem",
+        "location": "security-state-staging/intermediates/ee8f281b-ea27-49a4-bb22-01dc1c1c80ad.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "0399845b-6e87-4684-8c5e-1de1fca80288",
+      "last_modified": 1743130622819
+    },
+    {
+      "schema": 1743127071226,
+      "derHash": "tViYlVTY1F/exegH5F/YSIRGZh+iiXGU1sTCrFGksao=",
+      "attachment": {
+        "hash": "b374f901249070868e70ddf31d08ccb2c2e8f137244456587e53eb353df71e7f",
+        "size": 1207,
+        "filename": "D50wiWF2vz5GUxozRCECcWfaf2QSpMpht0dD_iVCDDI=.pem",
+        "location": "security-state-staging/intermediates/b5fc3e06-c43b-449c-80d0-6685f8a954c4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "693c1d5c-2fe0-43f6-9553-b92096d1035e",
+      "last_modified": 1743130622817
+    },
+    {
+      "schema": 1743127073015,
+      "derHash": "zfu0eIKBi2lKrYGM2AQN0RBQGX9R3b88LrCYEuSiXfU=",
+      "attachment": {
+        "hash": "4f82696c986e60f2d8879c842283c707a4c1967e6f394fc72a01b105e5773aa3",
+        "size": 2186,
+        "filename": "TGZO5B59e9UQLg9WswLbdwFjMR9EaO5MZgYZZiZfa8E=.pem",
+        "location": "security-state-staging/intermediates/5d33f08d-8cc2-4e8c-b2b3-e3d373d5a317.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "3a321399-81f8-49c9-b3bd-65140f8b7576",
+      "last_modified": 1743130622814
+    },
+    {
+      "schema": 1743127072360,
+      "derHash": "623gZ7SYrgqiM5hPL+oAM3XvEWy2S/aa8bKBfZWrJPk=",
+      "attachment": {
+        "hash": "423ce7920772ce48d2ab0086408aa08f187ebf18eec76223a7a7597149805bca",
+        "size": 1199,
+        "filename": "393kLFfE9ROfrryNLtJE2759mBnU4x_IIbRe1WucoTo=.pem",
+        "location": "security-state-staging/intermediates/402e63d3-f4cf-4bad-a270-7b8764858e25.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "ac8c1f6d-4a29-4d4b-87d6-358af2b616be",
+      "last_modified": 1743130622812
+    },
+    {
+      "schema": 1743127071576,
+      "derHash": "6r/Kv8t3GK2WKtgQ9Wg3MO+WfEqc9Yncvay4Fngxnl0=",
+      "attachment": {
+        "hash": "5d4e5473e54ecf3d84babd6a612638aa550931578ab7089d12eef80d56e7825d",
+        "size": 1171,
+        "filename": "FsrEuAHrRYcVDNc-sPm5kgJtIGBqsCysK-zI2a-ox7c=.pem",
+        "location": "security-state-staging/intermediates/877db0fe-64ea-4fdb-8730-98a7ad0ee97c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "eb2cee03-d913-44e5-a287-cc62b5b1241a",
+      "last_modified": 1743130622810
+    },
+    {
+      "schema": 1743127072026,
+      "derHash": "1652jLm0dQ/tZKVw8bEeKOzYaE6CCMuMdBg2QOgimZw=",
+      "attachment": {
+        "hash": "3c60ebb96ae93054e0c4d6180367a540e818eb0ff30d1ceb1e003a2b8aa451ab",
+        "size": 2211,
+        "filename": "uH5u9mSk4znmN8oB5MIQ3x08wMer88PiOy98k7G6K5c=.pem",
+        "location": "security-state-staging/intermediates/283e7cf6-1065-42ee-afff-7c969b5c15b5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "60c5deac-65bf-4f9b-a772-753cec2693a1",
+      "last_modified": 1743130622807
+    },
+    {
+      "schema": 1743127070782,
+      "derHash": "Q8bVa8+folOi6SY5CsWxc/OYhG+hT1iNgr2k/yxxgkQ=",
+      "attachment": {
+        "hash": "ac9520f39a6767976151262362938ca33b8b6f3cbd9d3783be31ae07103278b8",
+        "size": 2182,
+        "filename": "eZLXH2HT8aJXbQMR9hmD1YmOXy2L2qYAisb2UmBgDvk=.pem",
+        "location": "security-state-staging/intermediates/fcf32910-2d01-49f6-9cb7-84b4ee34be80.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "6a6d608b-2203-4a38-83c9-b558b058e2be",
+      "last_modified": 1743130622804
+    },
+    {
+      "schema": 1743127070488,
+      "derHash": "BssopHkSzkF5qNsDEYhfNh2Fw2vKgkWcWYBRbiyugSg=",
+      "attachment": {
+        "hash": "4934820aa2b2933ce865fc44a0dc03fd02d97319953742e06763406f44ddd159",
+        "size": 1199,
+        "filename": "rZ0EUkwE69D9bTVNtsrhhnl5W1kn6ESdEyPNEWYNVis=.pem",
+        "location": "security-state-staging/intermediates/e6b8795c-eb98-4b2b-a713-4dc463001211.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "8d57d911-8aed-4a2c-b879-bdb30f05698d",
+      "last_modified": 1743130622802
+    },
+    {
+      "schema": 1743127070044,
+      "derHash": "LFtWr/2kw4fVtHWk2RPFQ+epvjf7Ay+bI7fRaJnXzv4=",
+      "attachment": {
+        "hash": "f3b19dff76a89b1a98307aa17fbd78bcc2d0a7f7ccc2bf74cd015592a504d94f",
+        "size": 2211,
+        "filename": "7-8d3lMraDztfdgsmN2OjMiZjWtULT6H_ifckW5f9Yk=.pem",
+        "location": "security-state-staging/intermediates/e3eb7951-67fc-4bdb-a74d-9cd74367471b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "dda4ba42-0779-42f5-8f5c-07a852c2e48e",
+      "last_modified": 1743130622798
+    },
+    {
       "schema": 1742565482010,
       "derHash": "etrcDbpbmpe+sVgJR7BzhTfJI5k06IxnUStdItnUf/c=",
       "attachment": {
@@ -14870,24 +15026,6 @@
       "last_modified": 1666727871472
     },
     {
-      "schema": 1666727449176,
-      "derHash": "i2zMO+kvASHmSUrHBL8Lm5zrui42PI6BItkJhNPr84Y=",
-      "subject": "CN=Aetna Inc. Secure EV CA,O=Aetna Inc,C=US",
-      "subjectDN": "MEMxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlBZXRuYSBJbmMxIDAeBgNVBAMTF0FldG5hIEluYy4gU2VjdXJlIEVWIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "153fc69ce23adaf4f6e523b0d02cdfe58c1b6f81b54754c9650869d207c3df57",
-        "size": 1727,
-        "filename": "0rv4XQwSpZni_0C8FcOJhSJNEzvghB5GUVNKhM-UmQE=.pem",
-        "location": "security-state-staging/intermediates/462c6883-febc-43cb-a54c-b1a9342fa047.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0rv4XQwSpZni/0C8FcOJhSJNEzvghB5GUVNKhM+UmQE=",
-      "crlite_enrolled": false,
-      "id": "5d664e66-02e9-432b-b133-0fb68b6e65ef",
-      "last_modified": 1666727871457
-    },
-    {
       "schema": 1666727408742,
       "derHash": "NFC204KQw8pde7OLcUlbv3LG0MRNuikiRfm8qYQ6n/8=",
       "subject": "CN=Actalis Domain Validation Server CA G3,O=Actalis S.p.A.,L=Ponte San Pietro,ST=Bergamo,C=IT",
@@ -15210,24 +15348,6 @@
       "crlite_enrolled": false,
       "id": "63d718c2-bafa-4fbc-849e-d91646caaedc",
       "last_modified": 1666727871018
-    },
-    {
-      "schema": 1666727412530,
-      "derHash": "QouHuAYaeaunWHf9A4OtuDGhRZuGvECM59jReylbdbs=",
-      "subject": "CN=Aetna Inc. Secure CA2,O=Aetna Inc,C=US",
-      "subjectDN": "MEExCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlBZXRuYSBJbmMxHjAcBgNVBAMTFUFldG5hIEluYy4gU2VjdXJlIENBMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a58ea3a319c970a4e047ee2377bfe5c443ccc58cfa59814ccf05e2d54f5fbd07",
-        "size": 1723,
-        "filename": "NIgvyyhcGFo7vlL_K_w6cn8iFWO9ftJXWrIU77O5hMI=.pem",
-        "location": "security-state-staging/intermediates/8cf1b54e-cf3b-494c-b0a2-0ed470316bd4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NIgvyyhcGFo7vlL/K/w6cn8iFWO9ftJXWrIU77O5hMI=",
-      "crlite_enrolled": false,
-      "id": "683cede4-7626-4358-b2eb-145dd74960f4",
-      "last_modified": 1666727870998
     },
     {
       "schema": 1666727439208,
@@ -27344,24 +27464,6 @@
       "last_modified": 1645578267362
     },
     {
-      "schema": 1645577515699,
-      "derHash": "ExbtQqhJIX1Rz7TeGhQYqNOneQL7MF0wJPctRja4L/A=",
-      "subject": "CN=Plex Devices High Assurance CA3,O=Plex\\, Inc.,C=US",
-      "subjectDN": "MEwxCzAJBgNVBAYTAlVTMRMwEQYDVQQKEwpQbGV4LCBJbmMuMSgwJgYDVQQDEx9QbGV4IERldmljZXMgSGlnaCBBc3N1cmFuY2UgQ0Ez",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e9cd49fd61bad66c4ff0edce99bee5694563718e5f3bf588c6893ae9da66bd4f",
-        "size": 1739,
-        "filename": "7vFogPWQjRRrBULu9CTSZG05Zp5wI5psu-SVeew9nqo=.pem",
-        "location": "security-state-staging/intermediates/cfae80ee-4477-4d1f-b7ad-5fd2bb30c24f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "7vFogPWQjRRrBULu9CTSZG05Zp5wI5psu+SVeew9nqo=",
-      "crlite_enrolled": false,
-      "id": "e1650d9b-9a18-4002-af70-d3ba0ea2c74c",
-      "last_modified": 1645578267342
-    },
-    {
       "schema": 1645577517042,
       "derHash": "QtyCf0b7XoXf+uR9PGkPUB7OJdV11ZelDY+Hj6Qq/Oo=",
       "subject": "CN=e-Szigno Class2 CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -31124,5 +31226,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1742569022823
+  "timestamp": 1743260222858
 }

@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-03-18_07-22-26_UTC
-// COMMIT: 2c960dac3d39ba521eb5db9da192968f5be0aded
+// VERSION: 2025-03-28_19-52-32_UTC
+// COMMIT: b39e35ef3835c5db7aaf311c179fc1f6d92b92d5
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -6749,7 +6749,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-02-28T15:18:00Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-03-28T15:18:17Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -9087,7 +9087,7 @@ marriott
 // https://www.iana.org/domains/root/db/marshalls.html
 marshalls
 
-// mattel : Mattel Sites, Inc.
+// mattel : Mattel IT Services, Inc.
 // https://www.iana.org/domains/root/db/mattel.html
 mattel
 
@@ -12000,6 +12000,11 @@ analytics-gateway.eu-west-1.amazonaws.com
 analytics-gateway.us-east-1.amazonaws.com
 analytics-gateway.us-east-2.amazonaws.com
 analytics-gateway.us-west-2.amazonaws.com
+
+// Appwrite : https://appwrite.io
+// Submitted by Steven Nguyen <security@appwrite.io>
+appwrite.global
+*.appwrite.run
 
 // AWS Amplify
 // Submitted by AWS Security <psl-maintainers@amazon.com>
@@ -15290,6 +15295,11 @@ quizzes.cx
 researched.cx
 tests.cx
 surveys.so
+
+// Storacha Network : https://storacha.network
+// Submitted by Alan Shaw <support@storacha.network>
+ipfs.storacha.link
+ipfs.w3s.link
 
 // Storebase : https://www.storebase.io
 // Submitted by Tony Schirmer <tony@storebase.io>
