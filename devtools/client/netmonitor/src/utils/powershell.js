@@ -86,7 +86,7 @@ const PowerShell = {
     parameters.push(`-Uri ${escapeStr(url)}`);
 
     if (method !== "GET") {
-      parameters.push(`-Method ${method}`);
+      parameters.push(`-Method ${escapeStr(method)}`);
     }
 
     if (session.length) {
