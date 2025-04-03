@@ -18,21 +18,29 @@ function NewTabContent() {
     <>
       <Background />
       <div className="relative w-full min-h-screen">
-        {components.topSites && <TopSites />}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 w-full">
+          <div className="lg:col-span-2 mb-10">
+            {components.topSites && <TopSites />}
+          </div>
 
-        <div className="fixed top-40 left-1/2 transform -translate-x-1/2 w-full max-w-xl">
-          {components.searchBar && <SearchBar />}
+          <div className="flex justify-center lg:justify-end h-fit">
+            {components.clock && <Clock />}
+          </div>
         </div>
 
-        <div className="fixed top-4 right-4 flex flex-col gap-4 max-w-sm">
-          {components.clock && <Clock />}
+        <div className="w-full flex justify-center px-4">
+          <div className="w-full max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl mt-8 md:mt-16">
+            {components.searchBar && <SearchBar />}
+          </div>
         </div>
 
-        <SettingsButton onClick={() => setIsSettingsOpen(true)} />
-        <Settings
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-        />
+        <div className="fixed bottom-4 right-4">
+          <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+          <Settings
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        </div>
       </div>
     </>
   );

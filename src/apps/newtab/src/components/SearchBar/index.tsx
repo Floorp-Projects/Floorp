@@ -186,106 +186,104 @@ export function SearchBar() {
   }
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 w-full max-w-xl">
-      <div className="relative">
-        <form
-          onSubmit={handleSearch}
-          className={`bg-gray-700 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 ${showSuggestions && suggestions.length > 0 ? 'rounded-b-none' : ''}`}
-        >
-          <div className="relative">
-            <button
-              type="button"
-              ref={dropdownButtonRef}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-1 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            >
-              {selectedEngine.iconURL && (
-                <img
-                  src={selectedEngine.iconURL}
-                  alt={selectedEngine.name}
-                  className="w-4 h-4"
-                />
-              )}
-              <ChevronDown size={16} className="text-gray-500" />
-            </button>
-
-            {isDropdownOpen && (
-              <div
-                ref={dropdownRef}
-                className="absolute top-full left-0 mt-2 bg-gray-800 rounded-lg shadow-md overflow-hidden z-10 w-48"
-              >
-                {searchEngines.map((engine) => (
-                  <button
-                    key={engine.identifier}
-                    type="button"
-                    onClick={() => selectSearchEngine(engine)}
-                    className={`flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${selectedEngine.identifier === engine.identifier
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                      }`}
-                  >
-                    {engine.iconURL && (
-                      <img
-                        src={engine.iconURL}
-                        alt={engine.name}
-                        className="w-4 h-4"
-                      />
-                    )}
-                    <span>{engine.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={query}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={t("searchBar.searchOrEnterUrl")}
-              className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-900 dark:text-gray-100"
-              autoFocus
-              ref={inputRef}
-            />
-          </div>
-
+    <div className="relative">
+      <form
+        onSubmit={handleSearch}
+        className={`bg-gray-700 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 ${showSuggestions && suggestions.length > 0 ? 'rounded-b-none' : ''}`}
+      >
+        <div className="relative">
           <button
-            type="submit"
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            type="button"
+            ref={dropdownButtonRef}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-1 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
-            <Search size={18} />
+            {selectedEngine.iconURL && (
+              <img
+                src={selectedEngine.iconURL}
+                alt={selectedEngine.name}
+                className="w-4 h-4"
+              />
+            )}
+            <ChevronDown size={16} className="text-gray-500" />
           </button>
-        </form>
 
-        {showSuggestions && suggestions.length > 0 && (
-          <div
-            ref={suggestionsRef}
-            className="absolute top-full left-0 w-full bg-gray-700 rounded-b-lg z-10 overflow-hidden"
-            style={{ width: '100%' }}
-          >
-            <ul>
-              {suggestions.map((suggestion, index) => (
-                <li key={index} className="">
-                  <button
-                    type="button"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full px-3 py-2 text-left text-gray-100 flex items-center transition-colors ${selectedSuggestionIndex === index
-                      ? 'bg-gray-600'
-                      : 'hover:bg-gray-600 active:bg-gray-500'
-                      }`}
-                    onMouseEnter={() => setSelectedSuggestionIndex(index)}
-                  >
-                    <Search size={16} className="text-gray-400 mr-2 flex-shrink-0" />
-                    {suggestion}
-                  </button>
-                </li>
+          {isDropdownOpen && (
+            <div
+              ref={dropdownRef}
+              className="absolute top-full left-0 mt-2 bg-gray-800 rounded-lg shadow-md overflow-hidden z-10 w-48"
+            >
+              {searchEngines.map((engine) => (
+                <button
+                  key={engine.identifier}
+                  type="button"
+                  onClick={() => selectSearchEngine(engine)}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${selectedEngine.identifier === engine.identifier
+                    ? "bg-gray-100 dark:bg-gray-700"
+                    : ""
+                    }`}
+                >
+                  {engine.iconURL && (
+                    <img
+                      src={engine.iconURL}
+                      alt={engine.name}
+                      className="w-4 h-4"
+                    />
+                  )}
+                  <span>{engine.name}</span>
+                </button>
               ))}
-            </ul>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={query}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={t("searchBar.searchOrEnterUrl")}
+            className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-900 dark:text-gray-100"
+            autoFocus
+            ref={inputRef}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          <Search size={18} />
+        </button>
+      </form>
+
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          ref={suggestionsRef}
+          className="absolute top-full left-0 w-full bg-gray-700 rounded-b-lg z-10 overflow-hidden"
+          style={{ width: '100%' }}
+        >
+          <ul>
+            {suggestions.map((suggestion, index) => (
+              <li key={index} className="">
+                <button
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className={`w-full px-3 py-2 text-left text-gray-100 flex items-center transition-colors ${selectedSuggestionIndex === index
+                    ? 'bg-gray-600'
+                    : 'hover:bg-gray-600 active:bg-gray-500'
+                    }`}
+                  onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                >
+                  <Search size={16} className="text-gray-400 mr-2 flex-shrink-0" />
+                  {suggestion}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

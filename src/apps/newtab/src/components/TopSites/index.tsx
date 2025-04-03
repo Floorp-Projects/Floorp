@@ -35,7 +35,7 @@ export function TopSites() {
 
     const loadTopSites = async () => {
       const topSites = await manager.getTopSites();
-      const remainingSlots = 8 - savedUserAddedSites.length;
+      const remainingSlots = 30 - savedUserAddedSites.length;
       setSites(
         topSites.slice(0, remainingSlots).map((site) => ({
           ...site,
@@ -158,8 +158,8 @@ export function TopSites() {
           </div>
         </div>
       )}
-      <div className="fixed top-4 left-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-2">
-        <div className="flex gap-3">
+      <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-3 inline-block">
+        <div className="flex flex-wrap gap-x-0.5">
           {[...userAddedSites, ...sites].map((site, index) => (
             <a
               key={index}
