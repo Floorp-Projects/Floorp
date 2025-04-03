@@ -1,92 +1,92 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
+        "welcome": "Velkommen",
+        "language": "Sprog",
+        "languageSupport": "Sprogunderstøttelse",
+        "features": "Funktioner",
         "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "customize": "Tilpas",
+        "initialSettings": "Oprindelige indstillinger",
+        "complete": "Fuldført",
+        "previous": "Forrige",
+        "next": "Næste"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Tilpas Floorp",
+        "description": "Tilpas til dine foretrukne indstillinger. Du kan altid ændre dem senere fra Floorp Hub eller indstillingssiden.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "Indstillinger for udseende",
+            "description": "Du kan tilpasse Floorp's udseende til dine præferencer. Vælg et lys eller mørkt tema, eller skift det automatisk baseret på dine systemindstillinger."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Lys",
+            "dark": "Mørk",
+            "system": "Følg systemindstillinger"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "Lyst tema",
+            "dark": "Mørkt tema",
+            "system": "Systempræference"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Standardsøgemaskine",
+            "default": "Standard",
+            "search": "Søgning",
+            "noEnginesFound": "Ingen søgemaskiner fundet."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "Opsætning fuldført!",
+        "subtitle": "Tillykke! Du har fuldført Floorp-opsætningen. Nyd en behagelig og sikker browseroplevelse.",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "Næste trin (valgfrit)",
+            "setDefault": "Indstil som standardbrowser",
+            "documentation": "Dokumentation"
         },
-        "getStarted": "Get Started with Floorp",
+        "getStarted": "Kom i gang med Floorp",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Velkommen til Floorp!",
+        "description": "Floorp er en hurtig og brugervenlig webbrowser med fokus på privatliv og sikkerhed. Denne guide introducerer dig til de vigtigste funktioner og indstillinger i Floorp.",
+        "readyToStart": "Når du er klar, så klik på knappen nedenfor for at fortsætte.",
+        "features": "Floorp-funktioner",
+        "privacy": "Privatliv",
+        "privacyDesc": "Beskytter dine data",
+        "speed": "Hastighed",
+        "speedDesc": "Optimeret ydeevne",
+        "customization": "Tilpasning",
+        "customizationDesc": "Arranger efter dine præferencer",
+        "start": "Kom i gang"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Floorp taler dit sprog",
+        "subtitle": "Tjek sprogindstillinger og skift om nødvendigt",
+        "languageSettings": "Sprogindstillinger",
+        "languageChanged": "Sprog ændret!",
+        "currentLanguageInfo": "Aktuelle sprogoplysninger",
+        "systemLanguage": "Systemsprog",
+        "floorpLanguage": "Floorp-sprog",
+        "selectLanguage": "Vælg sprog",
+        "useSystemLanguage": "Brug systemsprog",
+        "multilingual": "Understøttelse af flere sprog",
+        "chooseLanguage": "Vælg mellem en bred vifte af sprog",
+        "languageChangeNotice": "Når du skifter sprog, anvendes det nye uden at genstarte Floorp. Nogle tilføjelser understøtter muligvis ikke sprogændringer."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Primære Floorp-funktioner",
+        "subtitle": "Floorp leveres med mange nyttige funktioner. Tjek funktionsoversigten!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "Sidepanel",
+            "description": "Få adgang til praktiske funktioner fra sidepanelet til højre, mens du browser. Du kan placere webpaneler, notefunktioner, tilføjelser, bogmærker m.m. i sidepanelet.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "Fastgør websteder til sidepanelet",
+                "Tag hurtigt noter med Floorp Noter, mens du browser",
+                "Understøtter beholdere"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
+            "title": "Arbejdsområder",
             "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
             "features": [
                 "Categorize by purpose: work, personal, etc.",
@@ -104,7 +104,7 @@
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
+            "title": "Musebevægelser",
             "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
             "features": [
                 "Operate without keyboard shortcuts",
@@ -112,19 +112,19 @@
                 "Quickly navigate pages and history"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "Notesbog",
+        "nextTab": "Gå til næste fane"
     },
     "finishPage": {
-        "title": "Setup Complete!",
+        "title": "Opsætning fuldført!",
         "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
+        "nextSteps": "Næste trin (valgfrit)",
+        "defaultBrowser": "Indstil som standardbrowser",
         "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
+        "documentation": "Dokumentation",
+        "getStarted": "Kom i gang med Floorp",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "resourcesLabel": "Ressourcer",
+        "defaultBrowserSuccess": "Floorp er blevet indstillet som din standardbrowser!"
     }
 }

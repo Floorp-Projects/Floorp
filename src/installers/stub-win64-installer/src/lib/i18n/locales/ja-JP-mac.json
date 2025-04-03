@@ -9,7 +9,7 @@
             "description": "Floorp ブラウザーをインストールして、プライバシーに配慮した、高速でカスタマイズ可能なブラウジング体験を始めましょう。",
             "adminRights": "管理者権限でインストール",
             "adminRightsEnabled": "管理者権限を持つすべてのユーザーにインストールします。",
-            "adminRightsDisabled": "現在のユーザーのみにインストールする。",
+            "adminRightsDisabled": "現在のユーザーのみにインストールします。",
             "customPathRequired": "インストール先の指定には管理者権限が必要です。",
             "installLocation": "インストール先",
             "change": "変更",

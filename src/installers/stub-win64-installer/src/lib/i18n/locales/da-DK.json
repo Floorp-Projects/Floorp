@@ -1,30 +1,30 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Installerer i baggrunden...",
+            "installComplete": "Installation fuldført"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "title": "Floorp-installation",
+            "description": "Installer Floorp-browseren og få en privatlivsfokuseret, hurtig og tilpasningsvenlig browseroplevelse.",
+            "adminRights": "Installer med administratorrettigheder",
+            "adminRightsEnabled": "Installer for alle brugere med administratorrettigheder.",
+            "adminRightsDisabled": "Installer kun for den aktuelle bruger.",
+            "customPathRequired": "Brugerdefineret installationssti kræver administratorrettigheder.",
+            "installLocation": "Installationsplacering",
+            "change": "Skift",
+            "installButton": "Start installationen",
+            "retryButton": "Prøv igen"
         },
         "progress": {
-            "installing": "Installing...",
+            "installing": "Installerer...",
             "slideCounter": "Slide {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
+            "selectLocation": "Vælg installationsplacering",
+            "installPath": "Installationssti",
+            "browse": "Gennemse",
+            "resetDefault": "Nulstil til standard",
             "cancel": "Cancel",
             "save": "Save Settings",
             "close": "Close"
@@ -79,20 +79,20 @@
             "installer_not_found": "Failed to retrieve Floorp installer.",
             "download_failed": "An error occurred during download: {{0}}",
             "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "signature_verification_error": "Der opstod en fejl under signaturbekræftelse: {{0}}",
+            "installer_exit_code": "Installationen afsluttede med kode {{0}}.",
+            "installer_execution": "Der opstod en fejl under kørsel af installationen: {{0}}",
+            "browser_not_found": "Floorp-browser ikke fundet. Installationen lykkedes, men den eksekverbare browser kunne ikke findes.",
+            "browser_launch_failed": "Kunne ikke starte browser: {{0}}",
+            "file_not_found": "Fil ikke fundet: {{0}}",
+            "not_a_file": "Sti er ikke en fil: {{0}}",
+            "admin_rights_denied": "Administratorrettigheder blev nægtet. Du valgte administratorrettighedstilstand, men tilladelse blev nægtet.",
+            "exit_code_not_found": "Kunne ikke hente installationens exit-kode. Administratorrettigheder er muligvis blevet nægtet.",
+            "powershell_script_creation": "Kunne ikke oprette PowerShell-script: {{0}}",
+            "powershell_process": "Kunne ikke starte PowerShell-process: {{0}}",
+            "admin_install_failed": "Installation med administratorrettigheder mislykkedes. Exit-kode: {{0}}",
+            "user_installer_launch": "Kunne ikke starte installationsprocessen med brugerrettigheder: {{0}}",
+            "user_installer_execution": "Der opstod et problem under kørsel af installationen med brugerrettigheder: {{0}}"
         }
     }
 }

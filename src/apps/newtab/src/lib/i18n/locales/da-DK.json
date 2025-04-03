@@ -1,37 +1,37 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "Tilføj websted",
+        "addNewSite": "Tilføj et nyt websted",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "label": "Etiket",
+        "cancel": "Annuller",
+        "add": "Tilføj",
+        "close": "Luk",
+        "labelPlaceholder": "Webstedsnavn"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
+        "newTabSettings": "Indstillinger for ny fane",
         "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommended: 1920x1080 or larger image",
-        "close": "Close"
+        "topSites": "Top sider",
+        "clock": "Ur",
+        "searchBar": "Søgefelt",
+        "backgroundSettings": "Baggrundsindstillinger",
+        "noBackground": "Ingen baggrund",
+        "randomImage": "Tilfældigt billede",
+        "customImage": "Brugerdefineret billede",
+        "currentImage": "Nuværende billede:",
+        "imageRecommendation": "Anbefalet: 1920x1080 eller større",
+        "close": "Luk"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Søg eller indtast URL",
+        "loadingSearchEngines": "Indlæser søgemaskiner..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Indstillinger"
     },
     "modal": {
-        "close": "Close"
+        "close": "Luk"
     }
 }
