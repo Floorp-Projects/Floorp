@@ -621,7 +621,13 @@ class CueStyleBox extends StyleBoxBase {
     // However, if we use 'vh' as a basic unit, it would eventually become
     // 5% of screen height, instead of video's viewport height. Therefore, we
     // have to use 'px' here to make sure we have the correct font size.
-    return containerBox.height * 0.05 + "px";
+    //
+    // Note Chromium uses min(width, height) instead of just height, to not
+    // make the font unexpectedly large on portrait videos. This matches that
+    // behavior.
+    // TODO: Update this when the spec has settled
+    //       https://github.com/w3c/webvtt/issues/529.
+    return Math.min(containerBox.width, containerBox.height) * 0.05 + "px";
   }
 
   _applyDefaultStylesOnBackgroundNode() {
@@ -745,7 +751,9 @@ class CueStyleBox extends StyleBoxBase {
 function RegionNodeBox(window, region, container) {
   StyleBox.call(this);
 
-  let boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
+  // TODO: Update this when the spec has settled
+  //       https://github.com/w3c/webvtt/issues/529.
+  let boxLineHeight = Math.min(container.width, container.height) * 0.0533 // 0.0533vh ? 5.33vh
   let boxHeight = boxLineHeight * region.lines;
   let boxWidth = container.width * region.width / 100; // convert percentage to px
 
