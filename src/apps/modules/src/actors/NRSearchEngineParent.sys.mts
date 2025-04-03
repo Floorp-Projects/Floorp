@@ -3,22 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// nsISearchEngine IDLに基づいた型定義
-interface nsISearchEngine {
-  name: string;
-  iconURI?: { spec: string };
-  identifier: string;
-  isAppProvided: boolean;
-  id: string;
-  telemetryId: string;
-  description: string;
-  hidden: boolean;
-  alias: string;
-  aliases: string[];
-  searchUrlDomain: string;
-  getIconURL(preferredWidth?: number): Promise<string>;
-}
-
 export class NRSearchEngineParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -32,43 +16,47 @@ export class NRSearchEngineParent extends JSWindowActorParent {
             .getDefaultPrivate();
 
           const engineList = await Promise.all(
-            engines.map(async (engine: nsISearchEngine) => {
-              let iconURL = null;
-              try {
-                iconURL = await engine.getIconURL();
+            engines.map(
+              async (
+                engine: nsISearchEngine,
+              ) => {
+                let iconURL = null;
+                try {
+                  iconURL = await engine.getIconURL();
 
-                if (
-                  iconURL &&
-                  (iconURL.startsWith("blob:") ||
-                    iconURL.startsWith("moz-extension:"))
-                ) {
-                  const { ExtensionUtils } = ChromeUtils.importESModule(
-                    "resource://gre/modules/ExtensionUtils.sys.mjs",
-                  );
-                  iconURL = await ExtensionUtils.makeDataURI(iconURL);
+                  if (
+                    iconURL &&
+                    (iconURL.startsWith("blob:") ||
+                      iconURL.startsWith("moz-extension:"))
+                  ) {
+                    const { ExtensionUtils } = ChromeUtils.importESModule(
+                      "resource://gre/modules/ExtensionUtils.sys.mjs",
+                    );
+                    iconURL = await ExtensionUtils.makeDataURI(iconURL);
+                  }
+                } catch (error) {
+                  console.error("Failed to get icon URL:", error);
                 }
-              } catch (error) {
-                console.error("Failed to get icon URL:", error);
-              }
-
-              return {
-                name: engine.name,
-                iconURL: iconURL,
-                searchUrl: engine.searchURLWithNoTerms.spec,
-                identifier: engine.identifier,
-                id: engine.id || engine.identifier,
-                telemetryId: engine.telemetryId || "",
-                description: engine.description || "",
-                hidden: !!engine.hidden,
-                alias: engine.alias || "",
-                aliases: Array.isArray(engine.aliases) ? engine.aliases : [],
-                domain: engine.searchUrlDomain || "",
-                isAppProvided: !!engine.isAppProvided,
-                isDefault: defaultEngine && defaultEngine.name === engine.name,
-                isPrivateDefault: defaultPrivateEngine &&
-                  defaultPrivateEngine.name === engine.name,
-              };
-            }),
+                return {
+                  name: engine.name,
+                  iconURL: iconURL,
+                  searchUrl: engine.searchURLWithNoTerms.spec,
+                  identifier: engine.identifier,
+                  id: engine.id || engine.identifier,
+                  telemetryId: engine.telemetryId || "",
+                  description: engine.description || "",
+                  hidden: !!engine.hidden,
+                  alias: engine.alias || "",
+                  aliases: Array.isArray(engine.aliases) ? engine.aliases : [],
+                  domain: engine.searchUrlDomain || "",
+                  isAppProvided: !!engine.isAppProvided,
+                  isDefault: defaultEngine &&
+                    defaultEngine.name === engine.name,
+                  isPrivateDefault: defaultPrivateEngine &&
+                    defaultPrivateEngine.name === engine.name,
+                };
+              },
+            ),
           );
 
           this.sendAsyncMessage(
@@ -114,6 +102,7 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           const engineData = {
             name: defaultEngine.name,
             iconURL: iconURL,
+            searchUrl: defaultEngine.searchURLWithNoTerms.spec,
             identifier: defaultEngine.identifier,
             id: defaultEngine.id || defaultEngine.identifier,
             telemetryId: defaultEngine.telemetryId || "",
@@ -210,6 +199,7 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           const engineData = {
             name: defaultPrivateEngine.name,
             iconURL: iconURL,
+            searchUrl: defaultPrivateEngine.searchURLWithNoTerms.spec,
             identifier: defaultPrivateEngine.identifier,
             id: defaultPrivateEngine.id || defaultPrivateEngine.identifier,
             telemetryId: defaultPrivateEngine.telemetryId || "",
@@ -269,6 +259,79 @@ export class NRSearchEngineParent extends JSWindowActorParent {
         } catch (error) {
           this.sendAsyncMessage(
             "SearchEngine:setDefaultPrivateEngineResponse",
+            JSON.stringify({
+              success: false,
+              error: String(error),
+            }),
+          );
+        }
+        break;
+      }
+
+      case "SearchEngine:getSuggestions": {
+        try {
+          const { query, engineId } = message.data;
+
+          const engines = await Services.search.getVisibleEngines();
+          const targetEngine = engines.find((engine: nsISearchEngine) =>
+            engine.id === engineId || engine.name === engineId
+          );
+
+          if (!targetEngine) {
+            throw new Error(`Engine with ID ${engineId} not found`);
+          }
+
+          if (
+            !targetEngine.supportsResponseType("application/x-suggestions+json")
+          ) {
+            throw new Error(
+              `Engine with ID ${engineId} does not support suggestions`,
+            );
+          }
+
+          const submission = targetEngine.getSubmission(
+            query,
+            "application/x-suggestions+json",
+            null,
+          );
+
+          if (!submission) {
+            throw new Error(
+              `Failed to get submission for engine with ID ${engineId}`,
+            );
+          }
+
+          const response = await fetch(submission.uri.spec, {
+            method: submission.postData ? "POST" : "GET",
+            headers: submission.postData
+              ? { "Content-Type": "application/x-www-form-urlencoded" }
+              : undefined,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to get response: ${response.status}`);
+          }
+
+          const suggestionsResponse = await response.json();
+          const suggestions = (suggestionsResponse as any).suggestions ||
+            (suggestionsResponse as any)[1] ||
+            (suggestionsResponse as any).suggestions?.map((
+              suggestion: string,
+            ) => ({
+              text: suggestion,
+            })) ||
+            [];
+
+          this.sendAsyncMessage(
+            "SearchEngine:getSuggestionsResponse",
+            JSON.stringify({
+              success: true,
+              suggestions,
+            }),
+          );
+        } catch (error) {
+          this.sendAsyncMessage(
+            "SearchEngine:getSuggestionsResponse",
             JSON.stringify({
               success: false,
               error: String(error),

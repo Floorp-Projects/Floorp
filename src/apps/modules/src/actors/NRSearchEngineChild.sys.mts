@@ -33,6 +33,10 @@ export class NRSearchEngineChild extends JSWindowActorChild {
       Cu.exportFunction(this.setDefaultPrivateEngine.bind(this), window, {
         defineAs: "NRSetDefaultPrivateEngine",
       });
+
+      Cu.exportFunction(this.getSuggestions.bind(this), window, {
+        defineAs: "NRGetSuggestions",
+      });
     }
   }
 
@@ -92,6 +96,20 @@ export class NRSearchEngineChild extends JSWindowActorChild {
 
   resolveSetDefaultPrivateEngine: ((response: string) => void) | null = null;
 
+  getSuggestions(
+    query: string,
+    engineId: string,
+    callback: (data: string) => void = () => {},
+  ) {
+    const promise = new Promise<string>((resolve, _reject) => {
+      this.resolveGetSuggestions = resolve;
+    });
+    this.sendAsyncMessage("SearchEngine:getSuggestions", { query, engineId });
+    promise.then((data) => callback(data));
+  }
+
+  resolveGetSuggestions: ((data: string) => void) | null = null;
+
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "SearchEngine:searchEnginesResponse": {
@@ -121,6 +139,12 @@ export class NRSearchEngineChild extends JSWindowActorChild {
       case "SearchEngine:setDefaultPrivateEngineResponse": {
         this.resolveSetDefaultPrivateEngine?.(message.data);
         this.resolveSetDefaultPrivateEngine = null;
+        break;
+      }
+
+      case "SearchEngine:getSuggestionsResponse": {
+        this.resolveGetSuggestions?.(message.data);
+        this.resolveGetSuggestions = null;
         break;
       }
     }
