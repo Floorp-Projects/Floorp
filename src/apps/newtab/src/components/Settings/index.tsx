@@ -139,7 +139,7 @@ export function Settings(
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
               <span className="text-gray-700 dark:text-gray-200">
-                {t("settings.randomImage")} ({imageCount}枚)
+                {t("settings.randomImage")}
               </span>
             </label>
             <label className="flex items-center space-x-3">

@@ -63,7 +63,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
           {children}
         </div>
         <div className="modal-action">
-          <button onClick={onClose} className="btn">{t("modal.close")}</button>
+          <button onClick={onClose} className="btn bg-primary">{t("modal.close")}</button>
         </div>
       </div>
     </div>
