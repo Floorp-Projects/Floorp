@@ -9,7 +9,9 @@ import { createSignal } from "solid-js";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
-import { PWA_WINDOW_NAME } from "./ssbRunner.ts";
+const { PWA_WINDOW_NAME } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/SsbCommandLineHandler.sys.mjs",
+);
 
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);

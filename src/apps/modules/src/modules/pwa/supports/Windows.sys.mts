@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { SiteSpecificBrowserManager } from "../ssbManager";
-import { ImageTools } from "../imageTools";
-import type { Manifest } from "../type";
+import type { Manifest } from "../Type.sys.mjs";
+
+const { ImageTools } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
+);
 
 export class WindowsSupport {
   private static shellService = Cc["@mozilla.org/browser/shell-service;1"]
@@ -27,17 +29,11 @@ export class WindowsSupport {
     "initWithPath",
   );
 
-  constructor(private ssbManager: SiteSpecificBrowserManager) {}
-
   private buildGroupId(id: string) {
     return `ablaze.floorp.ssb.${id}`;
   }
 
   async install(ssb: Manifest) {
-    if (!this.ssbManager.useOSIntegration()) {
-      return;
-    }
-
     const dir = PathUtils.join(PathUtils.profileDir, "ssb", ssb.id);
     await IOUtils.makeDirectory(dir, {
       ignoreExisting: true,
@@ -73,10 +69,6 @@ export class WindowsSupport {
    * @param {SiteSpecificBrowser} ssb the SSB to uninstall.
    */
   async uninstall(ssb: Manifest) {
-    if (!this.ssbManager.useOSIntegration()) {
-      return;
-    }
-
     try {
       const startMenu = `${
         Services.dirsvc.get("Home", Ci.nsIFile).path
@@ -122,16 +114,10 @@ export class WindowsSupport {
       }
     };
 
-    if (this.ssbManager.useOSIntegration()) {
-      return;
-    }
-
     const icons = await Promise.all([
       getIcon(WindowsSupport.uiUtils.systemSmallIconSize),
       getIcon(WindowsSupport.uiUtils.systemLargeIconSize),
     ]);
-
-    console.log(icons);
 
     if (icons[0] || icons[1]) {
       WindowsSupport.uiUtils.setWindowIcon(aWindow, icons[0], icons[1]);

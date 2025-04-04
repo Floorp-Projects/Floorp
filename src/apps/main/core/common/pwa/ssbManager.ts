@@ -7,17 +7,17 @@ import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
-import type { WindowsSupport } from "./supports/windows.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-let WindowsSupportClass: typeof WindowsSupport | null = null;
+let WindowsSupportClass: any | null = null;
 if (AppConstants.platform === "win") {
-  import("./supports/windows.ts").then((module) => {
-    WindowsSupportClass = module.WindowsSupport;
-  });
+  const { WindowsSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/windows.sys.mjs",
+  );
+  WindowsSupportClass = WindowsSupport;
 }
 
 export class SiteSpecificBrowserManager {
