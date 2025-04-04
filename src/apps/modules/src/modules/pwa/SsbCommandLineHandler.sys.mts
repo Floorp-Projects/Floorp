@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Manifest } from "../../../main/core/common/pwa/type.ts";
+import type { Manifest } from "../../../../main/core/common/pwa/type.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -35,8 +35,6 @@ export class SsbRunnerUtils {
     ) as nsIDOMWindow;
 
     win.focus();
-
-    // OS統合は呼び出し元で処理してもらう
     return win;
   }
 

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Manifest } from "../Type.sys.mjs";
+import type { Manifest } from "../type.ts";
 
 const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
