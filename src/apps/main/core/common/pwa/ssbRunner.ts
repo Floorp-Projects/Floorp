@@ -8,7 +8,7 @@ import type { Manifest } from "./type.ts";
 import { SiteSpecificBrowserManager } from "./ssbManager.ts";
 
 const { SsbRunnerUtils } = ChromeUtils.importESModule(
-  "resource://noraneko/modules/SsbCommandLineHandler.sys.mjs",
+  "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
 );
 
 export class SsbRunner {

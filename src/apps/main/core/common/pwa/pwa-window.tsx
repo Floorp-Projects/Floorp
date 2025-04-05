@@ -10,7 +10,7 @@ import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
 const { PWA_WINDOW_NAME } = ChromeUtils.importESModule(
-  "resource://noraneko/modules/SsbCommandLineHandler.sys.mjs",
+  "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
 );
 
 export class PwaWindowSupport {
