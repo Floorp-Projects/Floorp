@@ -15,7 +15,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 let WindowsSupportClass: any | null = null;
 if (AppConstants.platform === "win") {
   const { WindowsSupport } = ChromeUtils.importESModule(
-    "resource://noraneko/modules/pwa/supports/windows.sys.mjs",
+    "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
   );
   WindowsSupportClass = WindowsSupport;
 }

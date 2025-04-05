@@ -1,0 +1,7 @@
+#new-tab-button {
+    display: flex !important;
+}
+
+#tabs-newtab-button {
+    display: none !important;
+}

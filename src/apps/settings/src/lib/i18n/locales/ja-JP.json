@@ -117,6 +117,46 @@
             "minWidthError": "タブの幅は、 {{min}} から {{max}} ピクセルの間でなければなりません。",
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
+        },
+        "uiCustomization": {
+            "title": "UI カスタマイズ",
+            "navbar": {
+                "title": "ナビゲーションバー",
+                "position": "位置",
+                "top": "上部",
+                "bottom": "下部",
+                "searchBarTop": "検索バー内にページを表示"
+            },
+            "bookmarksBar": {
+                "title": "ブックマークバー",
+                "focusMode": "フォーカスモード（自動非表示）",
+                "statusMode": "ステータスバーモード"
+            },
+            "display": {
+                "title": "表示",
+                "disableFullscreenNotification": "フルスクリーン通知を無効化",
+                "deleteBrowserBorder": "ブラウザーの境界線を削除",
+                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを非表示"
+            },
+            "download": {
+                "title": "ダウンロード",
+                "legacyUI": "レガシーダウンロードUIを使用",
+                "redColor": "ダウンロード中に赤色を使用"
+            },
+            "special": {
+                "title": "特殊機能",
+                "optimizeForTreeStyleTab": "Tree Style Tab 向けに最適化",
+                "optimizedMsButtonOpe": "MSボタン操作を最適化",
+                "stgLikeWorkspaces": "Simple Tab Groups 風のワークスペース"
+            },
+            "verticaltab": {
+                "title": "垂直タブ",
+                "showNewtabButton": "タブバー内に新しいタブボタンを表示"
+            },
+            "multirowTab": {
+                "title": "マルチロータブ",
+                "newtabInsideEnabled": "タブバー内に新しいタブボタンを表示"
+            }
         }
     },
     "workspaces": {

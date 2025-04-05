@@ -57,25 +57,6 @@ export function Interface() {
             </div>
           </div>
 
-          {["lepton", "photon", "protonfix"].includes(
-            getValues("design") || "",
-          ) && (
-              <div className="mt-4 p-3 bg-base-200 rounded-lg">
-                <p className="text-sm">
-                  {t("design.advancedLeptonThemeSettingsDescription")}{" "}
-                  <a
-                    href="https://docs.floorp.app/docs/features/design-customization"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
-                  >
-                    {t("design.advancedLeptonThemeSettings")}
-                    <ExternalLink className="size-4" />
-                  </a>
-                </p>
-              </div>
-            )}
-
           <div className="mt-6">
             <h3 className="text-base font-medium mb-2">
               {t("design.otherInterfaceSettings")}

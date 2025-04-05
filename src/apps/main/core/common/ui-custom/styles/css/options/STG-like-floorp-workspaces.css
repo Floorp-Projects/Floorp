@@ -1,0 +1,39 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP {
+  border-radius: unset !important;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP > .toolbarbutton-text {
+  display: inherit !important;
+  background: none !important;
+  font-weight: bold;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP {
+  height: 100% !important;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP:hover {
+  background-color: var(--toolbarbutton-hover-background) !important;
+  color: inherit !important;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP:hover:active {
+  background-color: var(--toolbarbutton-active-background) !important;
+  color: inherit !important;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: var(--tab-border-radius) !important;
+}
+
+.customization-target > #simple-tab-groups_drive4ik-browser-action > #simple-tab-groups_drive4ik-BAP > .toolbarbutton-badge-stack {
+  background: none !important;
+  padding: 5px;
+  scale: 1.2;
+}

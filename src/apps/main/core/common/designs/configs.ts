@@ -22,6 +22,73 @@ import {
 import {} from "@core/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 
+// 古い設定から UI カスタマイズ設定を取得
+function getOldUICustomizationConfig() {
+  const navbarBottom = Services.prefs.getBoolPref(
+    "floorp.navbar.bottom",
+    false,
+  );
+  const navPosition = navbarBottom ? "bottom" : "top";
+
+  return {
+    navbar: {
+      position: navPosition as "bottom" | "top",
+      searchBarTop: Services.prefs.getBoolPref("floorp.search.top.mode", false),
+    },
+    bookmarksBar: {
+      focusMode: Services.prefs.getBoolPref(
+        "floorp.bookmarks.bar.focus.mode",
+        false,
+      ),
+      statusBarMode: Services.prefs.getBoolPref(
+        "floorp.bookmarks.fakestatus.mode",
+        false,
+      ),
+    },
+    display: {
+      disableFullscreenNotification: Services.prefs.getBoolPref(
+        "floorp.disable.fullscreen.notification",
+        false,
+      ),
+      deleteBrowserBorder: Services.prefs.getBoolPref(
+        "floorp.delete.browser.border",
+        false,
+      ),
+      hideUnifiedExtensionsButton: Services.prefs.getBoolPref(
+        "floorp.hide.unifiedExtensionsButtton",
+        false,
+      ),
+    },
+    download: {
+      legacyUI: Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false),
+      redColor: Services.prefs.getBoolPref(
+        "floorp.downloading.red.color",
+        false,
+      ),
+    },
+    special: {
+      optimizeForTreeStyleTab: Services.prefs.getBoolPref(
+        "floorp.Tree-type.verticaltab.optimization",
+        false,
+      ),
+      optimizedMsButtonOpe: Services.prefs.getBoolPref(
+        "floorp.optimized.msbutton.ope",
+        false,
+      ),
+      stgLikeWorkspaces: Services.prefs.getBoolPref(
+        "floorp.extensions.STG.like.floorp.workspaces.enabled",
+        false,
+      ),
+    },
+    multirowTab: {
+      newtabInsideEnabled: Services.prefs.getBoolPref(
+        "floorp.browser.tabbar.multirow.newtab-inside.enabled",
+        false,
+      ),
+    },
+  };
+}
+
 const oldObjectConfigs: TFloorpDesignConfigs = {
   globalConfigs: {
     userInterface: getOldInterfaceConfig(),
@@ -32,10 +99,6 @@ const oldObjectConfigs: TFloorpDesignConfigs = {
     appliedUserJs: "",
   },
   tabbar: {
-    paddingEnabled: Services.prefs.getBoolPref(
-      "floorp.verticaltab.paddingtop.enabled",
-      false,
-    ),
     tabbarStyle: getOldTabbarStyleConfig(),
     tabbarPosition: getOldTabbarPositionConfig(),
     multiRowTabBar: {
@@ -73,6 +136,7 @@ const oldObjectConfigs: TFloorpDesignConfigs = {
       -1,
     ),
   },
+  uiCustomization: getOldUICustomizationConfig(),
 };
 
 export const getOldConfigs = JSON.stringify(oldObjectConfigs);
@@ -89,11 +153,15 @@ function createConfig(): [
     ),
   );
   function updateConfigFromPref() {
-    setConfig(
-      zFloorpDesignConfigs.parse(
-        JSON.parse(Services.prefs.getStringPref("floorp.design.configs")),
-      ),
-    );
+    try {
+      const configStr = Services.prefs.getStringPref("floorp.design.configs");
+      const parsedConfig = JSON.parse(configStr);
+      setConfig(zFloorpDesignConfigs.parse(parsedConfig));
+    } catch (e) {
+      console.error("Failed to parse design configs:", e);
+      // エラーが発生した場合は古い設定を使用
+      setConfig(zFloorpDesignConfigs.parse(JSON.parse(getOldConfigs)));
+    }
   }
 
   createEffect(() => {
@@ -124,20 +192,92 @@ window.gFloorp.designs = {
 };
 
 function setGlobalDesignConfig<
-  C extends TFloorpDesignConfigs["globalConfigs"],
-  K extends keyof C,
->(key: K, value: C[K]) {
-  setConfig((prev) => ({
-    ...prev,
-    globalConfigs: {
-      ...prev.globalConfigs,
-      [key]: value,
-    },
-  }));
+  K extends keyof TFloorpDesignConfigs["globalConfigs"],
+>(key: K, value: TFloorpDesignConfigs["globalConfigs"][K]) {
+  setConfig((prev) => {
+    const newConfig = Object.assign({}, prev);
+    newConfig.globalConfigs = Object.assign({}, prev.globalConfigs);
+    newConfig.globalConfigs[key] = value;
+    return newConfig;
+  });
 }
 
 function setBrowserInterface(
   value: TFloorpDesignConfigs["globalConfigs"]["userInterface"],
 ) {
   setGlobalDesignConfig("userInterface", value);
+}
+
+export function setUICustomizationConfig<
+  K extends keyof TFloorpDesignConfigs["uiCustomization"],
+>(category: K, value: TFloorpDesignConfigs["uiCustomization"][K]) {
+  setConfig((prev) => {
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+    newConfig.uiCustomization[category] = value;
+    return newConfig;
+  });
+}
+
+export function updateUICustomizationSetting<
+  K extends keyof TFloorpDesignConfigs["uiCustomization"],
+  SK extends keyof TFloorpDesignConfigs["uiCustomization"][K],
+>(
+  category: K,
+  setting: SK,
+  value: TFloorpDesignConfigs["uiCustomization"][K][SK],
+) {
+  setConfig((prev) => {
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+
+    newConfig.uiCustomization[category] = Object.assign(
+      {},
+      prev.uiCustomization[category],
+    );
+    newConfig.uiCustomization[category][setting] = value;
+
+    return newConfig;
+  });
+}
+
+export function addUICustomizationCategory<T extends Record<string, unknown>>(
+  categoryName: string,
+  categorySettings: T,
+) {
+  setConfig((prev) => {
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+    newConfig.uiCustomization[categoryName] = categorySettings;
+    return newConfig;
+  });
+}
+
+export function getUICustomizationSetting<T>(
+  categoryName: string,
+  settingName: string,
+  defaultValue: T,
+): T {
+  try {
+    const currentConfig = config();
+    const uiCustomization = currentConfig.uiCustomization as Record<
+      string,
+      Record<string, unknown>
+    >;
+
+    if (
+      categoryName in uiCustomization &&
+      settingName in uiCustomization[categoryName]
+    ) {
+      return uiCustomization[categoryName][settingName] as T;
+    }
+
+    return defaultValue;
+  } catch (e) {
+    console.error(
+      `Error getting UI customization setting ${categoryName}.${settingName}:`,
+      e,
+    );
+    return defaultValue;
+  }
 }

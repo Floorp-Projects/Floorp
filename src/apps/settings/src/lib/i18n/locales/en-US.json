@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Firefox UI Fix",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "The selected theme uses Lepton design. Additional customization options are available.",
-        "advancedLeptonThemeSettings": "Advanced Lepton Theme Settings",
         "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
         "otherInterfaceSettings": "Other Interface Settings",
         "useFaviconColorToBackgroundOfNavigationBar": "Use Favicon Color for Navigation Bar Background",
@@ -117,6 +115,42 @@
             "minWidthError": "Tab width must be between {{min}} and {{max}} pixels.",
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
+        },
+        "uiCustomization": {
+            "title": "UI Customization",
+            "navbar": {
+                "title": "Navigation Bar",
+                "position": "Position",
+                "top": "Top",
+                "bottom": "Bottom",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "bookmarksBar": {
+                "title": "Bookmarks Bar",
+                "focusMode": "Focus mode (auto-hide)",
+                "statusMode": "Status bar mode"
+            },
+            "display": {
+                "title": "Display",
+                "disableFullscreenNotification": "Disable fullscreen notification",
+                "deleteBrowserBorder": "Remove browser border",
+                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+            },
+            "download": {
+                "title": "Download",
+                "legacyUI": "Use legacy download UI",
+                "redColor": "Use red color for downloading"
+            },
+            "special": {
+                "title": "Special Features",
+                "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
+                "optimizedMsButtonOpe": "Optimize MS button operation",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Multirow Tab",
+                "newtabInsideEnabled": "Show new tab button inside tab bar"
+            }
         }
     },
     "workspaces": {
