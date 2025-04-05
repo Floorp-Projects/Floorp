@@ -8,7 +8,7 @@ import { PopupElement } from "./popup-element.tsx";
 import workspacesStyles from "./styles.css?inline";
 import { createEffect, type JSX } from "solid-js";
 import { WorkspacesService } from "../workspacesService.ts";
-import { configStore } from "../data/config.ts";
+import { configStore, enabled } from "../data/config.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -39,6 +39,12 @@ export class WorkspacesToolbarButton {
             aNode?.setAttribute("label", workspace().name);
           } else {
             aNode?.removeAttribute("label");
+          }
+
+          if (!enabled()) {
+            aNode?.setAttribute("hidden", "true");
+          } else {
+            aNode?.removeAttribute("hidden");
           }
         });
       },

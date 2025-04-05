@@ -6,11 +6,16 @@ import { WorkspaceManageModal } from "./workspace-modal.tsx";
 import { WorkspacesToolbarButton } from "./toolbar/toolbar-element.tsx";
 import { WorkspacesPopupContxtMenu } from "./contextMenu/popupSet.tsx";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
+import { enabled } from "@core/common/workspaces/data/config.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
   static ctx: WorkspacesService | null = null;
   init(): void {
+    if (!enabled()) {
+      return;
+    }
+
     const iconCtx = new WorkspaceIcons();
     const dataManagerCtx = new WorkspacesDataManager();
     const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);

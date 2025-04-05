@@ -92,7 +92,7 @@ export function BasicSettings() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2">
+          {/* <div className="flex items-center justify-between gap-2">
             <label htmlFor="manage-bms" className="flex flex-col gap-1.5">
               <span>{t("workspaces.manageOnBms")}</span>
               <span className="font-normal text-sm text-base-content/70">
@@ -104,7 +104,7 @@ export function BasicSettings() {
               checked={getValues("manageOnBms")}
               onChange={(e) => setValue("manageOnBms", e.target.checked)}
             />
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

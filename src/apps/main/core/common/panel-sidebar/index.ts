@@ -11,6 +11,7 @@ import { WebsitePanelWindowChild } from "./website-panel-window-child";
 import { PanelSidebarAddModal } from "./components/panel-sidebar-modal";
 import { PanelSidebarFloating } from "./components/floating";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { isPanelSidebarEnabled } from "./data/data";
 
 //TODO: refactor needed
 
@@ -18,6 +19,11 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 export default class PanelSidebar extends NoraComponentBase {
   init(): void {
     migratePanelSidebarData();
+
+    if (!isPanelSidebarEnabled()) {
+      return;
+    }
+
     const ctx = new CPanelSidebar();
     WebsitePanelWindowChild.getInstance();
     new PanelSidebarElem(ctx);

@@ -6,6 +6,8 @@
 import { createRootHMR, render } from "@nora/solid-xul";
 import { createSignal, onCleanup } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
+// @ts-types="solid-js"
+import { createEffect } from "solid-js";
 
 type Orders = {
   fxSidebar: number,
@@ -26,21 +28,42 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   const browserBoxId = "tabbrowser-tabbox";
 
-  const [orders,setOrders] = createRootHMR(()=>createSignal<Orders>({fxSidebar:-1,fxSidebarSplitter:-1,browserBox:-1,floorpSidebarSplitter:-1,floorpSidebar:-1,floorpSidebarSelectBox:-1}),import.meta.hot)
+  const [orders, setOrders] = createRootHMR(() => createSignal<Orders>({ fxSidebar: -1, fxSidebarSplitter: -1, browserBox: -1, floorpSidebarSplitter: -1, floorpSidebar: -1, floorpSidebarSelectBox: -1 }), import.meta.hot)
 
   export function init() {
-    applyFlexOrder();
-    renderOrderStyle()
-    Services.prefs.addObserver(fxSidebarPosition, applyFlexOrder);
+    const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+    const floorpSidebarPositionPref = panelSidebarConfig().position_start;
 
-    onCleanup(()=>{
-      Services.prefs.removeObserver(fxSidebarPosition, applyFlexOrder);
+    applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+    renderOrderStyle()
+    Services.prefs.addObserver(fxSidebarPosition, () => {
+      const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+
+      applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+      renderOrderStyle();
+    });
+
+    onCleanup(() => {
+      Services.prefs.removeObserver(fxSidebarPosition, () => {
+        const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+        const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+        applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+        renderOrderStyle();
+      });
+    });
+
+    createEffect(() => {
+      const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+
+      applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+      renderOrderStyle();
     });
   }
 
-  export function applyFlexOrder() {
-    const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
-    const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+  export function applyFlexOrder(fxSidebarPositionPref: boolean, floorpSidebarPositionPref: boolean) {
+    console.log(fxSidebarPositionPref, floorpSidebarPositionPref);
 
     if (fxSidebarPositionPref && floorpSidebarPositionPref) {
       // Fx's sidebar -> browser -> Floorp's sidebar

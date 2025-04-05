@@ -26,7 +26,7 @@ export class PanelSidebarElem {
     return document?.documentElement as XULElement;
   }
 
-  constructor(ctx:CPanelSidebar) {
+  constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
     if (!isPanelSidebarEnabled()) {
       return;
@@ -60,7 +60,7 @@ export class PanelSidebarElem {
 
   private sidebar() {
     return (
-      <>
+      <Show when={isPanelSidebarEnabled()}>
         <xul:vbox
           id="panel-sidebar-box"
           class="chromeclass-extrachrome"
@@ -76,7 +76,7 @@ export class PanelSidebarElem {
           <SidebarSplitter />
         </Show>
         <SidebarSelectbox ctx={this.ctx} />
-      </>
+      </Show>
     );
   }
 }

@@ -2,7 +2,7 @@ import { createEffect, onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
 import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
-import { configStore } from "./data/config";
+import { configStore, enabled } from "./data/config";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
@@ -20,6 +20,10 @@ export class WorkspacesTabManager {
 
     createEffect(() => {
       if (workspacesDataStore.selectedID) {
+        if (!enabled()) {
+          return;
+        }
+
         this.updateTabsVisibility()
       }
     })
