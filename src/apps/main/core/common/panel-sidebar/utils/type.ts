@@ -31,6 +31,10 @@ export const zPanelSidebarConfig = z.object({
   position_start: z.boolean(),
   displayed: z.boolean(),
   webExtensionRunningEnabled: z.boolean(),
+  floatingWidth: z.number().optional(),
+  floatingHeight: z.number().optional(),
+  floatingPositionLeft: z.number().optional(),
+  floatingPositionTop: z.number().optional(),
 });
 
 export const zPanelSidebarData = z.object({

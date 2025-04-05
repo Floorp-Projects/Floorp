@@ -250,9 +250,8 @@
   z-index: 9999;
 }
 
-#floating-splitter-side {
+.floating-splitter-side {
   position: absolute;
-  top: 0;
   width: 10px;
   height: 100%;
   cursor: ew-resize;
@@ -260,12 +259,74 @@
   background: transparent;
 }
 
-#floating-splitter-side[data-floating-splitter-side="start"] {
+.floating-splitter-side:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+}
+
+.floating-splitter-left {
   left: 0;
 }
 
-#floating-splitter-side[data-floating-splitter-side="end"] {
+.floating-splitter-right {
   right: 0;
+}
+
+.floating-splitter-vertical {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  cursor: ns-resize;
+  z-index: 1000;
+  background: transparent;
+}
+
+.floating-splitter-vertical:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+}
+
+.floating-splitter-top {
+  top: 0;
+}
+
+.floating-splitter-bottom {
+  bottom: 0;
+}
+
+.floating-splitter-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  z-index: 1001;
+  background: transparent;
+}
+
+.floating-splitter-corner:hover {
+  background-color: rgba(128, 128, 128, 0.3);
+}
+
+.floating-splitter-corner-topleft {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.floating-splitter-corner-topright {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.floating-splitter-corner-bottomleft {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.floating-splitter-corner-bottomright {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
 }
 
 /* Icons */
