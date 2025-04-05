@@ -61,8 +61,7 @@ export const overrides = [
       // Note 2: This is also used to notify a user that an extension has changed
       //         the New Tab page.
 
-      const gWorkspacesServices = Workspaces.ctx!;
-      console.log(gWorkspacesServices.getCurrentWorkspaceUserContextId());
+      const gWorkspacesServices = Workspaces?.ctx!;
 
       Services.obs.notifyObservers(
         {
@@ -72,7 +71,7 @@ export const overrides = [
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
               userContextId: gWorkspacesServices
-                .getCurrentWorkspaceUserContextId(),
+                ?.getCurrentWorkspaceUserContextId() ?? 0,
             };
             if (!werePassedURL && searchClipboard) {
               let clipboard = window.readFromClipboard();
