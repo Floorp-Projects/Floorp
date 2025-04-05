@@ -3,10 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { CPanelSidebar } from "./panel-sidebar";
+import { CPanelSidebar } from "./panel-sidebar.tsx";
 import { createSignal, Show } from "solid-js";
-import type { Panel } from "../utils/type";
+import type { Panel } from "../utils/type.ts";
 import { ContextMenuUtils } from "@core/utils/context-menu.tsx";
+import i18next from "i18next";
+import { addI18nObserver } from "../../../../i18n/config.ts";
+
+const translationKeys = {
+  unload: "panelSidebar.contextMenu.unload",
+  mute: "panelSidebar.contextMenu.mute",
+  changeZoom: "panelSidebar.contextMenu.changeZoom",
+  zoomIn: "panelSidebar.contextMenu.zoomIn",
+  zoomOut: "panelSidebar.contextMenu.zoomOut",
+  resetZoom: "panelSidebar.contextMenu.resetZoom",
+  changeUA: "panelSidebar.contextMenu.changeUA",
+  delete: "panelSidebar.contextMenu.delete"
+};
+
+const getTranslations = () => ({
+  unload: i18next.t(translationKeys.unload),
+  mute: i18next.t(translationKeys.mute),
+  changeZoom: i18next.t(translationKeys.changeZoom),
+  zoomIn: i18next.t(translationKeys.zoomIn),
+  zoomOut: i18next.t(translationKeys.zoomOut),
+  resetZoom: i18next.t(translationKeys.resetZoom),
+  changeUA: i18next.t(translationKeys.changeUA),
+  delete: i18next.t(translationKeys.delete)
+});
 
 export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
 
@@ -123,7 +147,6 @@ export class SidebarContextMenuElem {
   }
 
   private handleChangeUserAgentCommand() {
-    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
@@ -134,6 +157,12 @@ export class SidebarContextMenuElem {
   }
 
   private sidebarContextMenu() {
+    const [texts, setTexts] = createSignal(getTranslations());
+
+    addI18nObserver(() => {
+      setTexts(getTranslations());
+    });
+
     return (
       <xul:popupset>
         <xul:menupopup
@@ -144,8 +173,7 @@ export class SidebarContextMenuElem {
           <xul:menuitem
             id="unloadWebpanelMenu"
             class="needLoadedWebpanel"
-            data-l10n-id="sidebar2-unload-panel"
-            label="Unload this webpanel"
+            label={texts().unload}
             accesskey="U"
             onCommand={() => this.handleUnloadCommand()}
           />
@@ -154,37 +182,32 @@ export class SidebarContextMenuElem {
             <xul:menuitem
               id="muteMenu"
               class="needLoadedWebpanel"
-              data-l10n-id="sidebar2-mute-and-unmute"
-              label="Mute/Unmute this webpanel"
+              label={texts().mute}
               accesskey="M"
               onCommand={() => this.handleMuteCommand()}
             />
             <xul:menu
               id="changeZoomLevelMenu"
               class="needLoadedWebpanel needRunningExtensionsPanel"
-              data-l10n-id="sidebar2-change-zoom-level"
-              label="Change zoom level"
+              label={texts().changeZoom}
               accesskey="Z"
             >
               <xul:menupopup id="changeZoomLevelPopup">
                 <xul:menuitem
                   id="zoomInMenu"
-                  data-l10n-id="sidebar2-zoom-in"
-                  label="Zoom in"
+                  label={texts().zoomIn}
                   accesskey="I"
                   onCommand={() => this.handleChangeZoomLevelCommand("in")}
                 />
                 <xul:menuitem
                   id="zoomOutMenu"
-                  data-l10n-id="sidebar2-zoom-out"
-                  label="Zoom out"
+                  label={texts().zoomOut}
                   accesskey="O"
                   onCommand={() => this.handleChangeZoomLevelCommand("out")}
                 />
                 <xul:menuitem
                   id="resetZoomMenu"
-                  data-l10n-id="sidebar2-reset-zoom"
-                  label="Reset zoom"
+                  label={texts().resetZoom}
                   accesskey="R"
                   onCommand={() => this.handleChangeZoomLevelCommand("reset")}
                 />
@@ -192,8 +215,7 @@ export class SidebarContextMenuElem {
             </xul:menu>
             <xul:menuitem
               id="changeUAWebpanelMenu"
-              data-l10n-id="sidebar2-change-ua-panel"
-              label="Switch User agent to Mobile/Desktop Version at this Webpanel"
+              label={texts().changeUA}
               accesskey="R"
               onCommand={() => this.handleChangeUserAgentCommand()}
             />
@@ -201,8 +223,7 @@ export class SidebarContextMenuElem {
           <xul:menuseparator class="context-webpanel-separator" />
           <xul:menuitem
             id="deleteWebpanelMenu"
-            data-l10n-id="sidebar2-delete-panel"
-            label="Delete this panel"
+            label={texts().delete}
             accesskey="D"
             onCommand={() => this.handleDeleteCommand()}
           />

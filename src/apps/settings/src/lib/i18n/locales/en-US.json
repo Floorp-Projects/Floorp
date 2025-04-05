@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "Restart Required",
-        "description": "After restarting, the opened private windows and tabs will be lost.",
+        "description": "After restarting, the opened private windows and private tabs will be lost.",
         "cancel": "Later",
         "restart": "Restart Now"
     },
@@ -205,7 +205,7 @@
         "enableDisable": "Enable/Disable",
         "enablePwa": "Enable Progressive Web Apps",
         "enablePwaDescription": "Allow websites to be installed as desktop apps",
-        "needRestartDescriptionForEnableAndDisable": "You need to restart {{productName}} to apply this change",
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
         "otherSettings": "Other Settings",
         "showToolbar": "Show Toolbar",
         "showToolbarDescription": "Display the toolbar in Progressive Web App windows",
@@ -261,7 +261,6 @@
             "gecko-bookmark-this-page": "Bookmark This Page",
             "gecko-open-home-page": "Open Home Page",
             "gecko-open-addons-manager": "Open Addons Manager",
-            "gecko-restore-last-tab": "Restore Last Tab",
             "gecko-send-with-mail": "Send With Mail",
             "gecko-save-page": "Save Page",
             "gecko-print-page": "Print Page",
