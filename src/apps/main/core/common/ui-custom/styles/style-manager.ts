@@ -4,20 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect } from "solid-js";
-import { config } from "@core/common/designs/configs";
+import { config } from "@core/common/designs/configs.ts";
 
-// CSSファイルのインポート
 import navbarBottomCSS from "./css/options/navbar-botttom.css?inline";
-import bookmarkbarAutohideCSS from "./css/options/bookmarkbar_autohide.css?inline";
 import movePageInsideSearchbarCSS from "./css/options/move_page_inside_searchbar.css?inline";
-import legacyDlmgrCSS from "./css/options/browser-custom-dlmgr.css?inline";
-import downloadingRedcolorCSS from "./css/options/downloading-redcolor.css?inline";
 import treestyletabCSS from "./css/options/treestyletab.css?inline";
 import msbuttonCSS from "./css/options/msbutton.css?inline";
 import disableFullScreenNotificationCSS from "./css/options/disableFullScreenNotification.css?inline";
 import deleteBorderCSS from "./css/options/delete-border.css?inline";
 import stgLikeFloorpWorkspacesCSS from "./css/options/STG-like-floorp-workspaces.css?inline";
-import verticaltabShowNewtabButtonCSS from "./css/options/verticaltab-show-newtab-button-in-tabbar.css?inline";
 import multirowTabShowNewtabInTabbarCSS from "./css/options/multirowtab-show-newtab-button-in-tabbar.css?inline";
 import multirowTabShowNewtabAtEndCSS from "./css/options/multirowtab-show-newtab-button-at-end.css?inline";
 
@@ -26,9 +21,7 @@ export class StyleManager {
 
   setupStyleEffects() {
     this.setupNavbarEffects();
-    this.setupBookmarksBarEffects();
     this.setupDisplayEffects();
-    this.setupDownloadEffects();
     this.setupSpecialEffects();
     this.setupMultirowTabEffects();
   }
@@ -45,16 +38,6 @@ export class StyleManager {
         "floorp-searchbartop",
         movePageInsideSearchbarCSS,
         config().uiCustomization.navbar.searchBarTop,
-      );
-    });
-  }
-
-  private setupBookmarksBarEffects() {
-    createEffect(() => {
-      this.applyStyle(
-        "floorp-bookmarkbarfocus",
-        bookmarkbarAutohideCSS,
-        config().uiCustomization.bookmarksBar.focusMode,
       );
     });
   }
@@ -84,22 +67,6 @@ export class StyleManager {
     });
   }
 
-  private setupDownloadEffects() {
-    createEffect(() => {
-      this.applyStyle(
-        "floorp-dlmgrcss",
-        legacyDlmgrCSS,
-        config().uiCustomization.download.legacyUI,
-      );
-
-      this.applyStyle(
-        "floorp-dlredcolor",
-        downloadingRedcolorCSS,
-        config().uiCustomization.download.redColor,
-      );
-    });
-  }
-
   private setupSpecialEffects() {
     createEffect(() => {
       this.applyStyle(
@@ -109,9 +76,9 @@ export class StyleManager {
       );
 
       this.applyStyle(
-        "floorp-optimizedmsbuttonope",
+        "floorp-hideForwardBackwardButton",
         msbuttonCSS,
-        config().uiCustomization.special.optimizedMsButtonOpe,
+        config().uiCustomization.special.hideForwardBackwardButton,
       );
 
       this.applyStyle(
@@ -144,6 +111,7 @@ export class StyleManager {
 
   applyStyle(id: string, cssContent: string, condition: boolean) {
     if (condition) {
+      console.log("applyStyle", id);
       this.createStyle(id, cssContent);
     } else {
       this.removeStyle(id);

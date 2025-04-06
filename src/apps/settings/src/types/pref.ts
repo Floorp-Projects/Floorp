@@ -49,15 +49,11 @@ export const zDesignFormData = z.object({
   // UI customization
   navbarPosition: z.enum(["top", "bottom"]),
   searchBarTop: z.boolean(),
-  bookmarksBarFocusMode: z.boolean(),
-  bookmarksBarStatusMode: z.boolean(),
   disableFullscreenNotification: z.boolean(),
   deleteBrowserBorder: z.boolean(),
   hideUnifiedExtensionsButton: z.boolean(),
-  legacyDlUI: z.boolean(),
-  downloadingRedColor: z.boolean(),
   optimizeForTreeStyleTab: z.boolean(),
-  optimizedMsButtonOpe: z.boolean(),
+  hideForwardBackwardButton: z.boolean(),
   stgLikeWorkspaces: z.boolean(),
   multirowTabNewtabInside: z.boolean(),
 });

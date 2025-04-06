@@ -120,15 +120,10 @@
             "title": "UI Customization",
             "navbar": {
                 "title": "Navigation Bar",
-                "position": "Position",
+                "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
                 "searchBarTop": "Move page inside search bar"
-            },
-            "bookmarksBar": {
-                "title": "Bookmarks Bar",
-                "focusMode": "Focus mode (auto-hide)",
-                "statusMode": "Status bar mode"
             },
             "display": {
                 "title": "Display",
@@ -136,15 +131,10 @@
                 "deleteBrowserBorder": "Remove browser border",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button"
             },
-            "download": {
-                "title": "Download",
-                "legacyUI": "Use legacy download UI",
-                "redColor": "Use red color for downloading"
-            },
             "special": {
                 "title": "Special Features",
                 "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
-                "optimizedMsButtonOpe": "Optimize MS button operation",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "multirowTab": {

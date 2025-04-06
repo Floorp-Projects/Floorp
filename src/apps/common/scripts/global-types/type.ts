@@ -49,22 +49,14 @@ export const zFloorpDesignConfigs = z.object({
       position: z.enum(["top", "bottom"]).default("top"),
       searchBarTop: z.boolean().default(false),
     }).passthrough(),
-    bookmarksBar: z.object({
-      focusMode: z.boolean().default(false),
-      statusBarMode: z.boolean().default(false),
-    }).passthrough(),
     display: z.object({
       disableFullscreenNotification: z.boolean().default(false),
       deleteBrowserBorder: z.boolean().default(false),
       hideUnifiedExtensionsButton: z.boolean().default(false),
     }).passthrough(),
-    download: z.object({
-      legacyUI: z.boolean().default(false),
-      redColor: z.boolean().default(false),
-    }).passthrough(),
     special: z.object({
       optimizeForTreeStyleTab: z.boolean().default(false),
-      optimizedMsButtonOpe: z.boolean().default(false),
+      hideForwardBackwardButton: z.boolean().default(false),
       stgLikeWorkspaces: z.boolean().default(false),
     }).passthrough(),
     multirowTab: z.object({

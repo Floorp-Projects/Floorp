@@ -2,15 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#urlbar {
-  transform: scale(1, -1) !important;
-}
-
+/* reverse the urlbar and menubar */
 #urlbar-container {
-  transform: scale(1, -1) !important;
+  transform: scale(-1, -1) !important;
 }
 
-#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container, #TabsToolbar > .titlebar-buttonbox-container {
+#urlbar {
+  transform: scaleX(-1) !important;
+}
+
+#urlbar > * {
+  transform: scaleY(-1);
+}
+
+/* This is a workaround for the fact that the urlbar and menubar are not
+   flipped when the browser is flipped. */
+#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
+#TabsToolbar > .titlebar-buttonbox-container {
   top: auto !important;
   right: auto !important;
   height: auto !important;
@@ -23,7 +31,16 @@
   border-right-width: 0 !important;
 }
 
-.tabbrowser-tab{
+#urlbar {
+  top: 0 !important;
+  z-index: 1000 !important;
+}
+
+#browser {
+  z-index: 0 !important;
+}
+
+.tabbrowser-tab {
   z-index: 0 !important;
 }
 

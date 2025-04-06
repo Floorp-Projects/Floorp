@@ -46,22 +46,14 @@ export async function saveDesignSettings(
         position: settings.navbarPosition,
         searchBarTop: settings.searchBarTop,
       },
-      bookmarksBar: {
-        focusMode: settings.bookmarksBarFocusMode,
-        statusBarMode: settings.bookmarksBarStatusMode,
-      },
       display: {
         disableFullscreenNotification: settings.disableFullscreenNotification,
         deleteBrowserBorder: settings.deleteBrowserBorder,
         hideUnifiedExtensionsButton: settings.hideUnifiedExtensionsButton,
       },
-      download: {
-        legacyUI: settings.legacyDlUI,
-        redColor: settings.downloadingRedColor,
-      },
       special: {
         optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
-        optimizedMsButtonOpe: settings.optimizedMsButtonOpe,
+        hideForwardBackwardButton: settings.hideForwardBackwardButton,
         stgLikeWorkspaces: settings.stgLikeWorkspaces,
       },
       multirowTab: {
@@ -92,21 +84,17 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     tabScroll: data.tab.tabScroll.enabled,
     faviconColor: data.globalConfigs.faviconColor,
 
-    // UI カスタマイズ設定
     navbarPosition: data.uiCustomization.navbar.position,
     searchBarTop: data.uiCustomization.navbar.searchBarTop,
-    bookmarksBarFocusMode: data.uiCustomization.bookmarksBar.focusMode,
-    bookmarksBarStatusMode: data.uiCustomization.bookmarksBar.statusBarMode,
     disableFullscreenNotification:
       data.uiCustomization.display.disableFullscreenNotification,
     deleteBrowserBorder: data.uiCustomization.display.deleteBrowserBorder,
     hideUnifiedExtensionsButton:
       data.uiCustomization.display.hideUnifiedExtensionsButton,
-    legacyDlUI: data.uiCustomization.download.legacyUI,
-    downloadingRedColor: data.uiCustomization.download.redColor,
     optimizeForTreeStyleTab:
       data.uiCustomization.special.optimizeForTreeStyleTab,
-    optimizedMsButtonOpe: data.uiCustomization.special.optimizedMsButtonOpe,
+    hideForwardBackwardButton:
+      data.uiCustomization.special.hideForwardBackwardButton,
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,

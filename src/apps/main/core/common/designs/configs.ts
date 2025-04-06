@@ -22,7 +22,6 @@ import {
 import {} from "@core/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 
-// 古い設定から UI カスタマイズ設定を取得
 function getOldUICustomizationConfig() {
   const navbarBottom = Services.prefs.getBoolPref(
     "floorp.navbar.bottom",
@@ -34,16 +33,6 @@ function getOldUICustomizationConfig() {
     navbar: {
       position: navPosition as "bottom" | "top",
       searchBarTop: Services.prefs.getBoolPref("floorp.search.top.mode", false),
-    },
-    bookmarksBar: {
-      focusMode: Services.prefs.getBoolPref(
-        "floorp.bookmarks.bar.focus.mode",
-        false,
-      ),
-      statusBarMode: Services.prefs.getBoolPref(
-        "floorp.bookmarks.fakestatus.mode",
-        false,
-      ),
     },
     display: {
       disableFullscreenNotification: Services.prefs.getBoolPref(
@@ -59,19 +48,12 @@ function getOldUICustomizationConfig() {
         false,
       ),
     },
-    download: {
-      legacyUI: Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false),
-      redColor: Services.prefs.getBoolPref(
-        "floorp.downloading.red.color",
-        false,
-      ),
-    },
     special: {
       optimizeForTreeStyleTab: Services.prefs.getBoolPref(
         "floorp.Tree-type.verticaltab.optimization",
         false,
       ),
-      optimizedMsButtonOpe: Services.prefs.getBoolPref(
+      hideForwardBackwardButton: Services.prefs.getBoolPref(
         "floorp.optimized.msbutton.ope",
         false,
       ),
@@ -159,7 +141,6 @@ function createConfig(): [
       setConfig(zFloorpDesignConfigs.parse(parsedConfig));
     } catch (e) {
       console.error("Failed to parse design configs:", e);
-      // エラーが発生した場合は古い設定を使用
       setConfig(zFloorpDesignConfigs.parse(JSON.parse(getOldConfigs)));
     }
   }

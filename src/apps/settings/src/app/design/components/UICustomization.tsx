@@ -32,7 +32,7 @@ export function UICustomization() {
                     <div className="space-y-4">
                         <div>
                             <label className="block mb-2">
-                                {t("design.uiCustomization.navbar.position")}
+                                {t("design.uiCustomization.navbar.positionWithExperiment")}
                             </label>
                             <div className="flex space-x-4">
                                 <label className="flex items-center space-x-2">
@@ -66,36 +66,6 @@ export function UICustomization() {
                                 id="search-bar-top"
                                 checked={!!getValues("searchBarTop")}
                                 onChange={(e) => setValue("searchBarTop", e.target.checked)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* ブックマークバーカスタマイズ */}
-                <div>
-                    <h3 className="text-base font-medium mb-2">
-                        {t("design.uiCustomization.bookmarksBar.title")}
-                    </h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <label htmlFor="bookmarks-focus-mode">
-                                {t("design.uiCustomization.bookmarksBar.focusMode")}
-                            </label>
-                            <Switch
-                                id="bookmarks-focus-mode"
-                                checked={!!getValues("bookmarksBarFocusMode")}
-                                onChange={(e) => setValue("bookmarksBarFocusMode", e.target.checked)}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2">
-                            <label htmlFor="bookmarks-status-mode">
-                                {t("design.uiCustomization.bookmarksBar.statusMode")}
-                            </label>
-                            <Switch
-                                id="bookmarks-status-mode"
-                                checked={!!getValues("bookmarksBarStatusMode")}
-                                onChange={(e) => setValue("bookmarksBarStatusMode", e.target.checked)}
                             />
                         </div>
                     </div>
@@ -142,36 +112,6 @@ export function UICustomization() {
                     </div>
                 </div>
 
-                {/* ダウンロード関連 */}
-                <div>
-                    <h3 className="text-base font-medium mb-2">
-                        {t("design.uiCustomization.download.title")}
-                    </h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <label htmlFor="legacy-dl-ui">
-                                {t("design.uiCustomization.download.legacyUI")}
-                            </label>
-                            <Switch
-                                id="legacy-dl-ui"
-                                checked={!!getValues("legacyDlUI")}
-                                onChange={(e) => setValue("legacyDlUI", e.target.checked)}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2">
-                            <label htmlFor="downloading-red-color">
-                                {t("design.uiCustomization.download.redColor")}
-                            </label>
-                            <Switch
-                                id="downloading-red-color"
-                                checked={!!getValues("downloadingRedColor")}
-                                onChange={(e) => setValue("downloadingRedColor", e.target.checked)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
                 {/* 特殊機能 */}
                 <div>
                     <h3 className="text-base font-medium mb-2">
@@ -190,13 +130,13 @@ export function UICustomization() {
                         </div>
 
                         <div className="flex items-center justify-between gap-2">
-                            <label htmlFor="optimized-ms-button-ope">
-                                {t("design.uiCustomization.special.optimizedMsButtonOpe")}
+                            <label htmlFor="hide-forward-backward-button">
+                                {t("design.uiCustomization.special.hideForwardBackwardButton")}
                             </label>
                             <Switch
-                                id="optimized-ms-button-ope"
-                                checked={!!getValues("optimizedMsButtonOpe")}
-                                onChange={(e) => setValue("optimizedMsButtonOpe", e.target.checked)}
+                                id="hide-forward-backward-button"
+                                checked={!!getValues("hideForwardBackwardButton")}
+                                onChange={(e) => setValue("hideForwardBackwardButton", e.target.checked)}
                             />
                         </div>
 
