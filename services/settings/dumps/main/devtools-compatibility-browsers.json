@@ -1,6 +1,114 @@
 {
   "data": [
     {
+      "name": "WebView on iOS",
+      "schema": 1743811504360,
+      "status": "beta",
+      "version": "18.5",
+      "browserid": "webview_ios",
+      "id": "6825f615-9f79-4745-a3be-b104b9248e42",
+      "last_modified": 1744003666413
+    },
+    {
+      "name": "Safari",
+      "schema": 1743811504249,
+      "status": "beta",
+      "version": "18.5",
+      "browserid": "safari",
+      "id": "eecb087c-5690-4874-a579-6ec0e2a0284d",
+      "last_modified": 1744003666410
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1743811504196,
+      "status": "planned",
+      "version": "140",
+      "browserid": "firefox_android",
+      "id": "29671e58-5233-4969-8f3a-b3208e3b8f17",
+      "last_modified": 1744003666407
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1743811504305,
+      "status": "beta",
+      "version": "18.5",
+      "browserid": "safari_ios",
+      "id": "a9289b33-c6cc-4993-aa89-ce04acaef875",
+      "last_modified": 1744003666405
+    },
+    {
+      "name": "Firefox",
+      "schema": 1743811503905,
+      "status": "planned",
+      "version": "140",
+      "browserid": "firefox",
+      "id": "9949da65-f6be-41f4-9c9d-73bc27b4d2a0",
+      "last_modified": 1744003666402
+    },
+    {
+      "name": "Firefox",
+      "schema": 1743811503845,
+      "status": "nightly",
+      "version": "139",
+      "browserid": "firefox",
+      "id": "5135fcdf-d80b-4297-a169-8a0670ec43ea",
+      "last_modified": 1744003666398
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1743811504136,
+      "status": "nightly",
+      "version": "139",
+      "browserid": "firefox_android",
+      "id": "9cb04ffb-8d53-4c9b-87bf-4fef786c727f",
+      "last_modified": 1744003666396
+    },
+    {
+      "name": "Edge",
+      "schema": 1743811503597,
+      "status": "current",
+      "version": "135",
+      "browserid": "edge",
+      "id": "2966c2e2-2f1a-4ccc-a0e9-5f14fe995f08",
+      "last_modified": 1744003666393
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1743811504023,
+      "status": "current",
+      "version": "137",
+      "browserid": "firefox_android",
+      "id": "8cd76e6f-52a6-4a36-8593-6e253492282e",
+      "last_modified": 1744003666391
+    },
+    {
+      "name": "Firefox",
+      "schema": 1743811503716,
+      "status": "current",
+      "version": "137",
+      "browserid": "firefox",
+      "id": "257cad93-7ab8-463d-b40f-6d654de9c486",
+      "last_modified": 1744003666388
+    },
+    {
+      "name": "Firefox",
+      "schema": 1743811503785,
+      "status": "beta",
+      "version": "138",
+      "browserid": "firefox",
+      "id": "3e7e41f6-e4ec-44d6-8111-d8416c5d68eb",
+      "last_modified": 1744003666378
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1743811504080,
+      "status": "beta",
+      "version": "138",
+      "browserid": "firefox_android",
+      "id": "565c0c7b-74a7-4c24-947d-24ec5403cfc7",
+      "last_modified": 1744003666376
+    },
+    {
       "name": "WebView Android",
       "schema": 1743638704605,
       "status": "planned",
@@ -163,96 +271,6 @@
       "last_modified": 1742798647600
     },
     {
-      "name": "Edge",
-      "schema": 1742579553355,
-      "status": "beta",
-      "version": "135",
-      "browserid": "edge",
-      "id": "2966c2e2-2f1a-4ccc-a0e9-5f14fe995f08",
-      "last_modified": 1742798647597
-    },
-    {
-      "name": "Edge",
-      "schema": 1741392303516,
-      "status": "current",
-      "version": "134",
-      "browserid": "edge",
-      "id": "d23388fd-74d6-41d4-af81-5dbd58e6ca92",
-      "last_modified": 1742798647591
-    },
-    {
-      "name": "Firefox",
-      "schema": 1741133104353,
-      "status": "planned",
-      "version": "139",
-      "browserid": "firefox",
-      "id": "5135fcdf-d80b-4297-a169-8a0670ec43ea",
-      "last_modified": 1741164215351
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1741133104668,
-      "status": "planned",
-      "version": "139",
-      "browserid": "firefox_android",
-      "id": "9cb04ffb-8d53-4c9b-87bf-4fef786c727f",
-      "last_modified": 1741164215348
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1741133104546,
-      "status": "beta",
-      "version": "137",
-      "browserid": "firefox_android",
-      "id": "8cd76e6f-52a6-4a36-8593-6e253492282e",
-      "last_modified": 1741164215311
-    },
-    {
-      "name": "Firefox",
-      "schema": 1741133104231,
-      "status": "beta",
-      "version": "137",
-      "browserid": "firefox",
-      "id": "257cad93-7ab8-463d-b40f-6d654de9c486",
-      "last_modified": 1741164215308
-    },
-    {
-      "name": "Firefox",
-      "schema": 1741133104170,
-      "status": "current",
-      "version": "136",
-      "browserid": "firefox",
-      "id": "87f08750-577a-46be-8dc1-19074b5195c9",
-      "last_modified": 1741164215305
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1741133104476,
-      "status": "current",
-      "version": "136",
-      "browserid": "firefox_android",
-      "id": "146488cb-e09d-45a5-8ba7-98b3015616c5",
-      "last_modified": 1741164215302
-    },
-    {
-      "name": "Firefox",
-      "schema": 1741133104290,
-      "status": "nightly",
-      "version": "138",
-      "browserid": "firefox",
-      "id": "3e7e41f6-e4ec-44d6-8111-d8416c5d68eb",
-      "last_modified": 1741164215291
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1741133104606,
-      "status": "nightly",
-      "version": "138",
-      "browserid": "firefox_android",
-      "id": "565c0c7b-74a7-4c24-947d-24ec5403cfc7",
-      "last_modified": 1741164215288
-    },
-    {
       "name": "Deno",
       "schema": 1740182702831,
       "status": "current",
@@ -343,5 +361,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1743663287878
+  "timestamp": 1744003666413
 }

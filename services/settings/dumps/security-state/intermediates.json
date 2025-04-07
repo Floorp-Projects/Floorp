@@ -7574,60 +7574,6 @@
       "last_modified": 1693105023357
     },
     {
-      "schema": 1692910086131,
-      "derHash": "AmCeiJefxoYuoVcfO8bfbHDy/pJ3Rz5D/gTDWXxDQx0=",
-      "subject": "CN=GTS CA 1D9,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUQ5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d44fe24100e78a1699cb4766985db89ddd82c97eb1d2f7d5cbc6c7d0fa9bdf59",
-        "size": 1987,
-        "filename": "VhionU4ApKSODjkwxSzRGaien1cg3KhOAaTX0sEzqA4=.pem",
-        "location": "security-state-staging/intermediates/f02c6bb6-5014-4963-a200-4062712233bd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "VhionU4ApKSODjkwxSzRGaien1cg3KhOAaTX0sEzqA4=",
-      "crlite_enrolled": false,
-      "id": "f850e310-6786-40c0-86b7-56b717fc241a",
-      "last_modified": 1692910623870
-    },
-    {
-      "schema": 1692910086775,
-      "derHash": "7bzdAWmNg+r6Hj048BezrZay2NiOdGxYARzuDvEGk5w=",
-      "subject": "CN=GTS CA 2D5,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQ1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ceaac730634820c4595c9b174b9bf271cc07f2fd81a0105a5358e73c275ab68a",
-        "size": 1114,
-        "filename": "ahc0N7bGYyDMmxgBgeh3thoK90J-_LSNwxbG-EnqfU0=.pem",
-        "location": "security-state-staging/intermediates/86022f5c-03d1-41c9-91f6-6fd7edb68eb0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ahc0N7bGYyDMmxgBgeh3thoK90J+/LSNwxbG+EnqfU0=",
-      "crlite_enrolled": false,
-      "id": "ba3f498c-afb5-4773-9d62-c76498a15062",
-      "last_modified": 1692910623867
-    },
-    {
-      "schema": 1692910087070,
-      "derHash": "9dEkFaEsB/3pO9b55ORYjgPSBZbk+KXp0hOoM2S87nE=",
-      "subject": "CN=GTS CA 2D6,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQ2",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4f5acb34ad2db0121e100e350ec7414b51fb7d8b4ab658accc1e30881d887d08",
-        "size": 1150,
-        "filename": "mGJygqQlaAdWTKB8W35Jg_xbYW_7zpL45PiiDd1w0qE=.pem",
-        "location": "security-state-staging/intermediates/4a0ac7d9-fa09-455a-bfca-a6ea4a6e575a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mGJygqQlaAdWTKB8W35Jg/xbYW/7zpL45PiiDd1w0qE=",
-      "crlite_enrolled": false,
-      "id": "377d9ef0-09a3-4298-947f-880fa1460cbf",
-      "last_modified": 1692910623864
-    },
-    {
       "schema": 1692715688843,
       "derHash": "xulqF0VwcJnwInlHL6KKmbrkR9d1EeGehrrzBHZRwes=",
       "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
@@ -10560,78 +10506,6 @@
       "crlite_enrolled": false,
       "id": "eddcc056-16e1-46d1-b6c3-4a86ea59aa4a",
       "last_modified": 1674831423067
-    },
-    {
-      "schema": 1674787701762,
-      "derHash": "I+ywPuwXM4xOM6a0ikHcPNoSKBu8P/gTwFidbMI4dSI=",
-      "subject": "CN=GTS CA 1C3,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUMz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "88a6ecb70d888765711d7b8ea76f793d4b228fedad48e215e01fc948196b7baf",
-        "size": 1995,
-        "filename": "zCTnfLwLKbS9S2sbp-uFz4KZOocFvXxkV06Ce9O5M2w=.pem",
-        "location": "security-state-staging/intermediates/eec3a261-928a-474b-a9db-297e4d855111.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zCTnfLwLKbS9S2sbp+uFz4KZOocFvXxkV06Ce9O5M2w=",
-      "crlite_enrolled": false,
-      "id": "92f275a2-aac5-4159-bb64-fa9324986d7a",
-      "last_modified": 1674788223239
-    },
-    {
-      "schema": 1674787700915,
-      "derHash": "ZOKGt2BjYCo3Lv1gzejbJlaknuFehCVLPW61/jj0KIs=",
-      "subject": "CN=GTS CA 1D4,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUQ0",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3eeab8b593f9b526e5e441336b3c99ef183d6618c02890e5bab1825e1a95744b",
-        "size": 1983,
-        "filename": "cXjPgKdVe6iojP8s0YQJ3rtmDFHTnYZxcYvmYGFiYME=.pem",
-        "location": "security-state-staging/intermediates/2ff09e25-9b47-4a3a-9759-af5ca75012da.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "cXjPgKdVe6iojP8s0YQJ3rtmDFHTnYZxcYvmYGFiYME=",
-      "crlite_enrolled": false,
-      "id": "ea3a64a9-15b0-4050-98b9-d20a4a168573",
-      "last_modified": 1674788223231
-    },
-    {
-      "schema": 1674787698322,
-      "derHash": "l9QgA+EyVSlGCX8g75VfWxzVcKpDcteAAzpl775pdY0=",
-      "subject": "CN=GTS CA 1P5,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMVA1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6d39d26fa45c2aea9f3ecfb72ba0887e152ffd6f6a6dc6e197c57cefd4030fa0",
-        "size": 1983,
-        "filename": "81Wf12bcLlFHQAfJluxnzZ6Frg-oJ9PWY_Wrwur8viQ=.pem",
-        "location": "security-state-staging/intermediates/bceea9fa-e4b3-4241-b6a6-400d7eff3735.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "81Wf12bcLlFHQAfJluxnzZ6Frg+oJ9PWY/Wrwur8viQ=",
-      "crlite_enrolled": false,
-      "id": "532667c0-63b1-489e-b811-2addd1bc4e5d",
-      "last_modified": 1674788223200
-    },
-    {
-      "schema": 1674787700063,
-      "derHash": "EcaXh4cyBW3hfB2hNOnSttI88d6Vs/sKTRilF6tjIwo=",
-      "subject": "CN=GTS CA 2A1,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "66c35c0df4a124a571526bb96130bec322a6f7500769403d0c068726f5bf3b3c",
-        "size": 1130,
-        "filename": "dEp_Gc3Me0g2QnAtpHNcs692NFByRfF7Od0K2TuwG1Y=.pem",
-        "location": "security-state-staging/intermediates/607f27bf-2819-4878-b856-10593b911305.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "dEp/Gc3Me0g2QnAtpHNcs692NFByRfF7Od0K2TuwG1Y=",
-      "crlite_enrolled": false,
-      "id": "7e85fc12-49ef-46b5-b15d-3fce25360ce3",
-      "last_modified": 1674788223192
     },
     {
       "schema": 1674182897507,
@@ -21236,24 +21110,6 @@
       "last_modified": 1665665823381
     },
     {
-      "schema": 1665168564306,
-      "derHash": "NkeqwrKCvJQf56ZC49y5nPxbPG3OlEoelvgCjom3sJA=",
-      "subject": "CN=GTS CA 2P2,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMlAy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3d6c30b5ecd86000cf065014ec131cec711a8b846d98e249cb208c6c92a3c220",
-        "size": 1146,
-        "filename": "dVRFNZcK5NW65k3TVPqCdirBZSLZbQ8FI7w4pg9zcWM=.pem",
-        "location": "security-state-staging/intermediates/b0684b44-214a-4a04-9507-dc9307ca21d7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "dVRFNZcK5NW65k3TVPqCdirBZSLZbQ8FI7w4pg9zcWM=",
-      "crlite_enrolled": false,
-      "id": "a7696b55-65d3-4838-b71b-8a845e20e08c",
-      "last_modified": 1665169023249
-    },
-    {
       "schema": 1664891326687,
       "derHash": "2FmCjk6MNezDjkFeHQz/1KnfwRYgVAHRKY/BM0fcAYc=",
       "subject": "CN=SSL Secure Site CA,O=SSL Limited,C=GB",
@@ -31226,5 +31082,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1743260222858
+  "timestamp": 1743821823270
 }
