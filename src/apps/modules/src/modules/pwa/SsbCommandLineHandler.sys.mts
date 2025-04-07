@@ -14,7 +14,18 @@ export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
-  static openSsbWindow(ssb: Manifest) {
+  static openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+    let initialLaunchWin: nsIDOMWindow | null = null;
+    if (initialLaunch) {
+      initialLaunchWin = Services.ww.openWindow(
+        null as unknown as mozIDOMWindowProxy,
+        AppConstants.BROWSER_CHROME_URL,
+        "_blank",
+        "",
+        {},
+      ) as nsIDOMWindow;
+    }
+
     const browserWindowFeatures =
       "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
@@ -35,6 +46,7 @@ export class SsbRunnerUtils {
     ) as nsIDOMWindow;
 
     win.focus();
+    initialLaunchWin?.close();
     return win;
   }
 
