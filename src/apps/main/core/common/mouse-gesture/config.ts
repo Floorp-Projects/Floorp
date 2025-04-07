@@ -27,7 +27,7 @@ export const zGestureAction = z.object({
 export type GestureAction = z.infer<typeof zGestureAction>;
 
 export const zMouseGestureConfig = z.object({
-  enabled: z.boolean().default(true),
+  enabled: z.boolean().default(false),
   sensitivity: z.number().min(1).max(100).default(40),
   showTrail: z.boolean().default(true),
   trailColor: z.string().default("#37ff00"),

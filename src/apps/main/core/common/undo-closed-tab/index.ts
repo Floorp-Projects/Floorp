@@ -43,7 +43,7 @@ export default class UndoClosedTab extends NoraComponentBase {
       },
       StyleElement(),
       CustomizableUI.AREA_NAVBAR,
-      2,
+      3,
       (aNode: XULElement) => {
         const tooltip = document?.createXULElement("tooltip") as XULElement;
         tooltip.id = "undo-closed-tab-tooltip";
