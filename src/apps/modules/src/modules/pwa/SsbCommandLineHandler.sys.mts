@@ -9,6 +9,10 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
+const { SessionStore } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionStore.sys.mjs",
+);
+
 export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
@@ -46,7 +50,9 @@ export class SsbRunnerUtils {
     ) as nsIDOMWindow;
 
     win.focus();
-    initialLaunchWin?.close();
+    SessionStore.promiseAllWindowsRestored.then(() => {
+      initialLaunchWin?.close();
+    });
     return win;
   }
 
@@ -62,6 +68,11 @@ export class SsbRunnerUtils {
 }
 
 async function startSSBFromCmdLine(id: string) {
+  // Loading the SSB is async. Until that completes and launches we will
+  // be without an open window and the platform will not continue startup
+  // in that case. Flag that a window is coming.
+  Services.startup.enterLastWindowClosingSurvivalArea();
+
   // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
   try {
     const { DataStoreProvider } = ChromeUtils.importESModule(
@@ -74,13 +85,13 @@ async function startSSBFromCmdLine(id: string) {
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         const ssb = value as Manifest;
-        const win = SsbRunnerUtils.openSsbWindow(ssb);
+        const win = SsbRunnerUtils.openSsbWindow(ssb, true);
         await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
         break;
       }
     }
   } finally {
-    // Services.startup.exitLastWindowClosingSurvivalArea();
+    Services.startup.exitLastWindowClosingSurvivalArea();
   }
 }
 
