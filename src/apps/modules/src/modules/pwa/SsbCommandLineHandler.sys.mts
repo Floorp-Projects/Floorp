@@ -62,11 +62,6 @@ export class SsbRunnerUtils {
 }
 
 async function startSSBFromCmdLine(id: string) {
-  // Loading the SSB is async. Until that completes and launches we will
-  // be without an open window and the platform will not continue startup
-  // in that case. Flag that a window is coming.
-  Services.startup.enterLastWindowClosingSurvivalArea();
-
   // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
   try {
     const { DataStoreProvider } = ChromeUtils.importESModule(
@@ -85,7 +80,7 @@ async function startSSBFromCmdLine(id: string) {
       }
     }
   } finally {
-    Services.startup.exitLastWindowClosingSurvivalArea();
+    // Services.startup.exitLastWindowClosingSurvivalArea();
   }
 }
 
