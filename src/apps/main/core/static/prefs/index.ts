@@ -13,7 +13,10 @@ export function initBeforeSessionStoreInit() {
   ].getService(Ci.nsIHttpProtocolHandler);
   prefs.setStringPref(
     "general.useragent.override",
-    userAgent.replace("Floorp", "Firefox"),
+    userAgent.replace("Floorp", "Firefox").replace(
+      /(Firefox\/\d+\.\d+)\..*/,
+      "$1",
+    ),
   );
   prefs.setBoolPref("browser.preferences.moreFromMozilla", false);
 }
