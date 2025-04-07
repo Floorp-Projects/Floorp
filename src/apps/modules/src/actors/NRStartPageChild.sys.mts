@@ -13,10 +13,13 @@ export class NRStartPageChild extends JSWindowActorChild {
     ) {
       console.debug("NRStartPage 5186 ! or Chrome Page!");
       Cu.exportFunction(this.GetCurrentTopSites.bind(this), window, {
-        defineAs: "GetCurrentTopSites",
+        defineAs: "NRGetCurrentTopSites",
       });
-      Cu.exportFunction(this.GetCurrentBrowsingData.bind(this), window, {
-        defineAs: "GetCurrentBrowsingData",
+      Cu.exportFunction(this.GetFolderPathFromDialog.bind(this), window, {
+        defineAs: "NRGetFolderPathFromDialog",
+      });
+      Cu.exportFunction(this.GetRandomImageFromFolder.bind(this), window, {
+        defineAs: "NRGetRandomImageFromFolder",
       });
     }
   }
@@ -31,17 +34,30 @@ export class NRStartPageChild extends JSWindowActorChild {
 
   resolveGetCurrentTopSites: ((topSites: string) => void) | null = null;
 
-  async GetCurrentBrowsingData(
-    callback: (browsingData: string) => void = () => {},
-  ) {
+  GetFolderPathFromDialog(callback: (folderPath: string) => void = () => {}) {
     const promise = new Promise<string>((resolve, _reject) => {
-      this.resolveGetCurrentBrowsingData = resolve;
+      this.resolveGetFolderPathFromDialog = resolve;
     });
-    await this.sendAsyncMessage("NRStartPage:GetCurrentBrowsingData");
-    promise.then((topSites) => callback(topSites));
+    this.sendAsyncMessage("NRStartPage:GetFolderPathFromDialog");
+    promise.then((folderPath) => callback(folderPath));
   }
 
-  resolveGetCurrentBrowsingData: ((browsingData: string) => void) | null = null;
+  resolveGetFolderPathFromDialog: ((folderPath: string) => void) | null = null;
+
+  GetRandomImageFromFolder(
+    folderPath: string,
+    callback: (image: string) => void = () => {},
+  ) {
+    const promise = new Promise<string>((resolve, _reject) => {
+      this.resolveGetRandomImageFromFolder = resolve;
+    });
+    this.sendAsyncMessage("NRStartPage:GetRandomImageFromFolder", {
+      folderPath,
+    });
+    promise.then((image) => callback(image));
+  }
+
+  resolveGetRandomImageFromFolder: ((image: string) => void) | null = null;
 
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -50,9 +66,14 @@ export class NRStartPageChild extends JSWindowActorChild {
         this.resolveGetCurrentTopSites = null;
         break;
       }
-      case "NRStartPage:GetCurrentBrowsingData": {
-        this.resolveGetCurrentBrowsingData?.(message.data);
-        this.resolveGetCurrentBrowsingData = null;
+      case "NRStartPage:GetFolderPathFromDialog": {
+        this.resolveGetFolderPathFromDialog?.(message.data);
+        this.resolveGetFolderPathFromDialog = null;
+        break;
+      }
+      case "NRStartPage:GetRandomImageFromFolder": {
+        this.resolveGetRandomImageFromFolder?.(message.data);
+        this.resolveGetRandomImageFromFolder = null;
         break;
       }
     }

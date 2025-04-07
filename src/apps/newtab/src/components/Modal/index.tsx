@@ -37,7 +37,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
       ref={overlayRef}
       onClick={handleOverlayClick}
     >
-      <div className="modal-box">
+      <div className="modal-box max-w-2xl">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-lg">{title}</h3>
           <button
@@ -63,7 +63,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
           {children}
         </div>
         <div className="modal-action">
-          <button onClick={onClose} className="btn bg-primary">{t("modal.close")}</button>
+          <button onClick={onClose} className="btn bg-primary text-primary-content">{t("modal.close")}</button>
         </div>
       </div>
     </div>

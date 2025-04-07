@@ -4,6 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class NRSearchEngineParent extends JSWindowActorParent {
+  _ensureSearchUrlHasQueryParam(url: string): string {
+    if (url && !url.endsWith("=")) {
+      return url.includes("?") ? `${url}&q=` : `${url}?q=`;
+    }
+    return url;
+  }
+
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "SearchEngine:getSearchEngines": {
@@ -40,7 +47,9 @@ export class NRSearchEngineParent extends JSWindowActorParent {
                 return {
                   name: engine.name,
                   iconURL: iconURL,
-                  searchUrl: engine.searchURLWithNoTerms.spec,
+                  searchUrl: this._ensureSearchUrlHasQueryParam(
+                    engine.getSubmission("", "text/html").uri.spec,
+                  ),
                   identifier: engine.identifier,
                   id: engine.id || engine.identifier,
                   telemetryId: engine.telemetryId || "",
@@ -102,7 +111,9 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           const engineData = {
             name: defaultEngine.name,
             iconURL: iconURL,
-            searchUrl: defaultEngine.searchURLWithNoTerms.spec,
+            searchUrl: this._ensureSearchUrlHasQueryParam(
+              defaultEngine.getSubmission("", "text/html").uri.spec,
+            ),
             identifier: defaultEngine.identifier,
             id: defaultEngine.id || defaultEngine.identifier,
             telemetryId: defaultEngine.telemetryId || "",
@@ -199,7 +210,9 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           const engineData = {
             name: defaultPrivateEngine.name,
             iconURL: iconURL,
-            searchUrl: defaultPrivateEngine.searchURLWithNoTerms.spec,
+            searchUrl: this._ensureSearchUrlHasQueryParam(
+              defaultPrivateEngine.getSubmission("", "text/html").uri.spec,
+            ),
             identifier: defaultPrivateEngine.identifier,
             id: defaultPrivateEngine.id || defaultPrivateEngine.identifier,
             telemetryId: defaultPrivateEngine.telemetryId || "",

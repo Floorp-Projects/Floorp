@@ -5,6 +5,12 @@ interface TopSite {
   smallFavicon?: string | null;
 }
 
+declare global {
+  interface Window {
+    NRGetCurrentTopSites: (callback: (data: string) => void) => void;
+  }
+}
+
 export class TopSitesManager {
   private static instance: TopSitesManager;
 
@@ -20,7 +26,7 @@ export class TopSitesManager {
   // deno-lint-ignore require-await
   async getTopSites(): Promise<TopSite[]> {
     return new Promise<TopSite[]>((resolve) => {
-      globalThis.GetCurrentTopSites((sites: string) => {
+      globalThis.NRGetCurrentTopSites((sites: string) => {
         resolve(
           JSON.parse(sites).topsites.map((site: TopSite) => ({
             ...site,

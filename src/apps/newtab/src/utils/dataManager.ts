@@ -1,5 +1,15 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
 
+declare global {
+  interface Window {
+    NRGetFolderPathFromDialog: (callback: (data: string) => void) => void;
+    NRGetRandomImageFromFolder: (
+      folderPath: string,
+      callback: (data: string) => void,
+    ) => void;
+  }
+}
+
 export interface NewTabSettings {
   components: {
     topSites: boolean;
@@ -7,13 +17,26 @@ export interface NewTabSettings {
     searchBar?: boolean;
   };
   background: {
-    type: "none" | "random" | "custom";
+    type: "none" | "random" | "custom" | "folderPath" | "floorp";
     customImage: string | null;
     fileName: string | null;
+    folderPath?: string | null;
+    selectedFloorp?: string | null;
   };
   searchBar: {
     searchEngine: string;
   };
+}
+
+export interface FolderPathResult {
+  path: string | null;
+  success: boolean;
+}
+
+export interface RandomImageResult {
+  image: string | null;
+  fileName: string | null;
+  success: boolean;
 }
 
 const DEFAULT_SETTINGS: NewTabSettings = {
@@ -26,6 +49,8 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     type: "random",
     customImage: null,
     fileName: null,
+    folderPath: null,
+    selectedFloorp: null,
   },
   searchBar: {
     searchEngine: "default",
@@ -81,4 +106,24 @@ export async function getNewTabSettings(): Promise<NewTabSettings> {
     console.error("Failed to load newtab settings:", e);
     return DEFAULT_SETTINGS;
   }
+}
+
+export async function getFolderPathFromDialog(): Promise<FolderPathResult> {
+  return await new Promise((resolve) => {
+    window.NRGetFolderPathFromDialog((data: string) => {
+      const result = JSON.parse(data);
+      resolve(result);
+    });
+  });
+}
+
+export async function getRandomImageFromFolder(
+  folderPath: string,
+): Promise<RandomImageResult> {
+  return await new Promise((resolve) => {
+    window.NRGetRandomImageFromFolder(folderPath, (data: string) => {
+      const result = JSON.parse(data);
+      resolve(result);
+    });
+  });
 }

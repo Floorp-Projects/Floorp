@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "../Modal/index.tsx";
 import { useBackground } from "@/contexts/BackgroundContext.tsx";
 import { useComponents } from "@/contexts/ComponentsContext.tsx";
-import { getBackgroundImageCount } from "@/utils/backgroundImages.ts";
+import { getFloorpImages } from "@/utils/backgroundImages.ts";
+import { getFolderPathFromDialog } from "@/utils/dataManager.ts";
 
 export function Settings(
   { isOpen, onClose }: { isOpen: boolean; onClose: () => void },
@@ -12,12 +13,18 @@ export function Settings(
   const {
     type: backgroundType,
     fileName,
+    folderPath,
+    selectedFloorp,
     setType: setBackgroundType,
     setCustomImage,
+    setFolderPath,
+    setSelectedFloorp,
   } = useBackground();
   const { components, toggleComponent } = useComponents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentFileName, setCurrentFileName] = useState<string>("");
+  const [currentFolderPath, setCurrentFolderPath] = useState<string>("");
+  const [floorpImages, setFloorpImages] = useState<{ name: string; url: string }[]>([]);
 
   useEffect(() => {
     if (backgroundType === "custom" && fileName) {
@@ -25,7 +32,15 @@ export function Settings(
     } else {
       setCurrentFileName("");
     }
-  }, [backgroundType, fileName]);
+
+    if (backgroundType === "folderPath" && folderPath) {
+      setCurrentFolderPath(folderPath);
+    } else {
+      setCurrentFolderPath("");
+    }
+
+    setFloorpImages(getFloorpImages());
+  }, [backgroundType, fileName, folderPath]);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -50,6 +65,29 @@ export function Settings(
     }
   };
 
+  const handleFolderSelect = async () => {
+    setIsSubmitting(true);
+    try {
+      const folderPath = await getFolderPathFromDialog();
+      if (folderPath) {
+        await setFolderPath(folderPath.path);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFloorpImageSelect = async (imageName: string) => {
+    setIsSubmitting(true);
+    try {
+      await setSelectedFloorp(imageName);
+    } catch (error) {
+      console.error("Failed to select Floorp image:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleBackgroundTypeChange = async (type: typeof backgroundType) => {
     setIsSubmitting(true);
     try {
@@ -63,8 +101,6 @@ export function Settings(
       setIsSubmitting(false);
     }
   };
-
-  const imageCount = getBackgroundImageCount();
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t("settings.newTabSettings")}>
@@ -155,6 +191,32 @@ export function Settings(
               <span className="text-gray-700 dark:text-gray-200">{t("settings.customImage")}</span>
             </label>
 
+            <label className="flex items-center space-x-3">
+              <input
+                type="radio"
+                name="background"
+                value="folderPath"
+                checked={backgroundType === "folderPath"}
+                onChange={() => handleBackgroundTypeChange("folderPath")}
+                disabled={isSubmitting}
+                className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
+              />
+              <span className="text-gray-700 dark:text-gray-200">{t("settings.folderImages")}</span>
+            </label>
+
+            <label className="flex items-center space-x-3">
+              <input
+                type="radio"
+                name="background"
+                value="floorp"
+                checked={backgroundType === "floorp"}
+                onChange={() => handleBackgroundTypeChange("floorp")}
+                disabled={isSubmitting}
+                className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
+              />
+              <span className="text-gray-700 dark:text-gray-200">{t("settings.floorpImages")}</span>
+            </label>
+
             {backgroundType === "custom" && (
               <div className="mt-4 pl-8">
                 {currentFileName && (
@@ -178,6 +240,53 @@ export function Settings(
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   {t("settings.imageRecommendation")}
                 </p>
+              </div>
+            )}
+
+            {backgroundType === "folderPath" && (
+              <div className="mt-4 pl-8">
+                {currentFolderPath && (
+                  <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                    {t("settings.currentFolder")} {currentFolderPath}
+                  </div>
+                )}
+                <button
+                  onClick={handleFolderSelect}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold hover:bg-primary/20 transition-colors"
+                >
+                  {t("settings.selectFolder")}
+                </button>
+              </div>
+            )}
+
+            {backgroundType === "floorp" && (
+              <div className="mt-4 pl-8">
+                <div className="grid grid-cols-3 gap-4">
+                  {floorpImages.map((image) => (
+                    <div
+                      key={image.name}
+                      className={`
+                        relative cursor-pointer rounded-lg overflow-hidden border-2
+                        ${selectedFloorp === image.name ? 'border-primary' : 'border-transparent'}
+                      `}
+                      onClick={() => handleFloorpImageSelect(image.name)}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-auto aspect-video object-cover"
+                      />
+                      {selectedFloorp === image.name && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <span className="bg-primary text-white px-2 py-1 rounded text-xs">
+                            {t("settings.selected")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

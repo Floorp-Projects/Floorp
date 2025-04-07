@@ -200,7 +200,7 @@ export function SearchBar() {
             type="button"
             ref={dropdownButtonRef}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="flex items-center gap-1 p-2 hover:bg-gray-400 rounded-lg"
           >
             {selectedEngine.iconURL && (
               <img
@@ -222,8 +222,8 @@ export function SearchBar() {
                   key={engine.identifier}
                   type="button"
                   onClick={() => selectSearchEngine(engine)}
-                  className={`flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${selectedEngine.identifier === engine.identifier
-                    ? "bg-gray-100 dark:bg-gray-700"
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-gray-700 text-white transition-colors ${selectedEngine.identifier === engine.identifier
+                    ? "bg-gray-700"
                     : ""
                     }`}
                 >
@@ -248,7 +248,7 @@ export function SearchBar() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={t("searchBar.searchOrEnterUrl")}
-            className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-900 dark:text-gray-100"
+            className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-100"
             autoFocus
             ref={inputRef}
           />
@@ -256,7 +256,7 @@ export function SearchBar() {
 
         <button
           type="submit"
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="p-2 text-gray-400 hover:text-gray-200"
         >
           <Search size={18} />
         </button>
