@@ -17,7 +17,7 @@ function getTimeZoneOnTab(tab) {
       </xsl:template>
     </xsl:stylesheet>`;
 
-    SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
+    SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("JST");
 
     const parser = new DOMParser();
     const xsltProcessor = new XSLTProcessor();
@@ -52,7 +52,7 @@ async function getTimeZone(enabled) {
     ],
   });
 
-  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
+  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("JST");
 
   // Open a tab for extracting the time zone from XSLT.
   const tab = await BrowserTestUtils.openNewForegroundTab({
@@ -78,6 +78,7 @@ async function run_test(enabled) {
   const timeZone = await getTimeZone(enabled);
   const expected = enabled ? "+00:00" : realTimeZone;
 
+  info(`Timezone is ${timeZone}. Expected: ${expected}`);
   ok(timeZone.endsWith(expected), `Timezone is ${expected}.`);
 }
 
