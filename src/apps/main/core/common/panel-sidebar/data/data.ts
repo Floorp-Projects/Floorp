@@ -170,7 +170,12 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
   const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
     boolean
-  >(defaultEnabled);
+  >(
+    Services.prefs.getBoolPref(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      defaultEnabled,
+    ),
+  );
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
