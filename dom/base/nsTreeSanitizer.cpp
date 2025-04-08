@@ -2308,7 +2308,7 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
 
 void nsTreeSanitizer::RemoveAllAttributes(Element* aElement) {
   const nsAttrName* attrName;
-  while ((attrName = aElement->GetAttrNameAt(0))) {
+  while (aElement->GetAttrNameAt(0, &attrName)) {
     int32_t attrNs = attrName->NamespaceID();
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
     aElement->UnsetAttr(attrNs, attrLocal, false);
