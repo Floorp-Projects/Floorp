@@ -32,6 +32,13 @@ export const zMouseGestureConfig = z.object({
   showTrail: z.boolean().default(true),
   trailColor: z.string().default("#37ff00"),
   trailWidth: z.number().min(1).max(10).default(2),
+  contextMenu: z.object({
+    minDistance: z.number().min(1).max(50).default(5),
+    preventionTimeout: z.number().min(0).max(1000).default(200),
+  }).default({
+    minDistance: 5,
+    preventionTimeout: 200,
+  }),
   actions: z.array(zGestureAction).default([]),
 });
 export type MouseGestureConfig = z.infer<typeof zMouseGestureConfig>;
@@ -42,6 +49,10 @@ export const defaultConfig: MouseGestureConfig = {
   showTrail: true,
   trailColor: "#37ff00",
   trailWidth: 6,
+  contextMenu: {
+    minDistance: 5,
+    preventionTimeout: 200,
+  },
   actions: [
     {
       pattern: ["left"],
