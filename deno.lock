@@ -9,6 +9,10 @@
     "npm:@bytecodealliance/jco@^1.9.1": "1.10.2",
     "npm:@bytecodealliance/preview2-shim@~0.17.1": "0.17.2",
     "npm:@deno/vite-plugin@^1.0.3": "1.0.4_vite@6.0.11__@types+node@22.13.17__lightningcss@1.29.3_@types+node@22.13.17_lightningcss@1.29.3",
+    "npm:@dnd-kit/core@^6.3.1": "6.3.1_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@dnd-kit/modifiers@9": "9.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@dnd-kit/sortable@10": "10.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@dnd-kit/utilities@^3.2.2": "3.2.2_react@19.1.0",
     "npm:@icons-pack/react-simple-icons@^11.2.0": "11.2.0_react@19.1.0",
     "npm:@jsr/std__assert@^1.0.11": "1.0.12",
     "npm:@jsr/std__internal@^1.0.5": "1.0.6",
@@ -386,6 +390,48 @@
       "integrity": "sha512-xg8YT8Wn2sGXSnJgiGTpBGX1Dov0c6fd1rAp8VsfrCUtyBRRWzwVMAnd3fQ4yq8h7LSVvJUxEFN4U421k/DQLA==",
       "dependencies": [
         "vite@6.0.11_@types+node@22.13.17_lightningcss@1.29.3"
+      ]
+    },
+    "@dnd-kit/accessibility@3.1.1_react@19.1.0": {
+      "integrity": "sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==",
+      "dependencies": [
+        "react@19.1.0",
+        "tslib"
+      ]
+    },
+    "@dnd-kit/core@6.3.1_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
+      "integrity": "sha512-xkGBRQQab4RLwgXxoqETICr6S5JlogafbhNsidmrkVv2YRs5MLwpjoF2qpiGjQt8S9AoxtIV603s0GIUpY5eYQ==",
+      "dependencies": [
+        "@dnd-kit/accessibility",
+        "@dnd-kit/utilities",
+        "react@19.1.0",
+        "react-dom",
+        "tslib"
+      ]
+    },
+    "@dnd-kit/modifiers@9.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
+      "integrity": "sha512-ybiLc66qRGuZoC20wdSSG6pDXFikui/dCNGthxv4Ndy8ylErY0N3KVxY2bgo7AWwIbxDmXDg3ylAFmnrjcbVvw==",
+      "dependencies": [
+        "@dnd-kit/core",
+        "@dnd-kit/utilities",
+        "react@19.1.0",
+        "tslib"
+      ]
+    },
+    "@dnd-kit/sortable@10.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
+      "integrity": "sha512-+xqhmIIzvAYMGfBYYnbKuNicfSsk4RksY2XdmJhT+HAC01nix6fHCztU68jooFiMUB01Ky3F0FyOvhG/BZrWkg==",
+      "dependencies": [
+        "@dnd-kit/core",
+        "@dnd-kit/utilities",
+        "react@19.1.0",
+        "tslib"
+      ]
+    },
+    "@dnd-kit/utilities@3.2.2_react@19.1.0": {
+      "integrity": "sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg==",
+      "dependencies": [
+        "react@19.1.0",
+        "tslib"
       ]
     },
     "@emnapi/core@1.4.0": {
@@ -5365,6 +5411,10 @@
       "src/apps/notes": {
         "packageJson": {
           "dependencies": [
+            "npm:@dnd-kit/core@^6.3.1",
+            "npm:@dnd-kit/modifiers@9",
+            "npm:@dnd-kit/sortable@10",
+            "npm:@dnd-kit/utilities@^3.2.2",
             "npm:@icons-pack/react-simple-icons@^11.2.0",
             "npm:@tailwindcss/vite@^4.0.6",
             "npm:@types/react-dom@19",
