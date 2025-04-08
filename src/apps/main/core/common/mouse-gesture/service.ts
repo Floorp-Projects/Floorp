@@ -15,11 +15,16 @@ import { MouseGestureController } from "./controller.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
 
+interface nsIObserver {
+  observe(subject: unknown, topic: string, data: string): void;
+}
+
 let globalController: MouseGestureController | null = null;
 
 export class MouseGestureService {
   private controller: MouseGestureController | null = null;
   private lastConfigString = "";
+  private configObserver: nsIObserver | null = null;
 
   constructor() {
     if (globalController) {
@@ -32,24 +37,70 @@ export class MouseGestureService {
     createEffect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
+      const enabled = isEnabled();
 
       if (this.lastConfigString && this.lastConfigString !== configString) {
-        console.log("Mouse gesture config changed, recreating controller");
         this.destroyController();
-        if (isEnabled()) {
+        if (enabled) {
           this.createController();
         }
+
+        handleContextMenuAfterMouseUp(enabled);
       }
 
       this.lastConfigString = configString;
     });
+
+    this.setupEnabledObserver();
+  }
+
+  private setupEnabledObserver(): void {
+    if (this.configObserver) {
+      try {
+        Services.prefs.removeObserver(
+          "floorp.mousegesture.enabled",
+          this.configObserver,
+        );
+      } catch (e) {
+        console.error("[MouseGestureService] Error removing observer:", e);
+      }
+    }
+
+    this.configObserver = {
+      observe: (_subject: unknown, topic: string, data: string) => {
+        if (
+          topic === "nsPref:changed" && data === "floorp.mousegesture.enabled"
+        ) {
+          const enabled = Services.prefs.getBoolPref(
+            "floorp.mousegesture.enabled",
+            false,
+          );
+
+          if (enabled && !this.controller) {
+            this.createController();
+          } else if (!enabled && this.controller) {
+            this.destroyController();
+          }
+
+          handleContextMenuAfterMouseUp(enabled);
+        }
+      },
+    };
+
+    Services.prefs.addObserver(
+      "floorp.mousegesture.enabled",
+      this.configObserver,
+    );
   }
 
   private initialize(): void {
     this.lastConfigString = JSON.stringify(getConfig());
-    if (isEnabled()) {
+    const enabled = isEnabled();
+
+    if (enabled) {
       this.createController();
     }
+    handleContextMenuAfterMouseUp(enabled);
   }
 
   private createController(): void {
@@ -75,15 +126,15 @@ export class MouseGestureService {
   }
 
   public setEnabled(value: boolean): void {
-    const currentState = isEnabled();
-
     setEnabled(value);
 
-    if (value && !currentState) {
+    if (value && !this.controller) {
       this.createController();
-    } else if (!value && currentState) {
+    } else if (!value && this.controller) {
       this.destroyController();
     }
+
+    handleContextMenuAfterMouseUp(value);
   }
 
   public getConfig(): MouseGestureConfig {
@@ -117,6 +168,10 @@ function setConfig(config: MouseGestureConfig) {
 
 function createMouseGestureService() {
   return new MouseGestureService();
+}
+
+function handleContextMenuAfterMouseUp(enabled: boolean) {
+  Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
 }
 
 export const mouseGestureService = createRootHMR(
