@@ -1037,12 +1037,12 @@ class Element : public FragmentOrElement {
    * Get the namespace / name / prefix of a given attribute.
    *
    * @param   aIndex the index of the attribute name
-   * @returns The name at the given index, or null if the index is
-   *          out-of-bounds.
+   * @returns The name at the given index.
    * @note    The document returned by NodeInfo()->GetDocument() (if one is
    *          present) is *not* necessarily the owner document of the element.
    * @note    The pointer returned by this function is only valid until the
    *          next call of either GetAttrNameAt or SetAttr on the element.
+   * @note    This will crash if the index is invalid.
    */
   const nsAttrName* GetAttrNameAt(uint32_t aIndex) const {
     return mAttrs.GetSafeAttrNameAt(aIndex);
@@ -1053,6 +1053,14 @@ class Element : public FragmentOrElement {
    */
   const nsAttrName* GetUnsafeAttrNameAt(uint32_t aIndex) const {
     return mAttrs.AttrNameAt(aIndex);
+  }
+
+  /**
+   * A fallible overload of GetAttrNameAt.
+   */
+  [[nodiscard]] bool GetAttrNameAt(uint32_t aIndex,
+                                   const nsAttrName** aResult) const {
+    return mAttrs.GetSafeAttrNameAt(aIndex, aResult);
   }
 
   /**

@@ -1095,7 +1095,7 @@ uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
 
       uint32_t i;
       const nsAttrName* attrName;
-      for (i = 0; (attrName = elem->GetAttrNameAt(i)); ++i) {
+      for (i = 0; elem->GetAttrNameAt(i, &attrName); ++i) {
         if (attrName->Equals(attr1->NodeInfo())) {
           NS_ASSERTION(!attrName->Equals(attr2->NodeInfo()),
                        "Different attrs at same position");

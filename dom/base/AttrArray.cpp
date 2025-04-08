@@ -183,11 +183,21 @@ const nsAttrName* AttrArray::AttrNameAt(uint32_t aPos) const {
   return &mImpl->mBuffer[aPos].mName;
 }
 
-const nsAttrName* AttrArray::GetSafeAttrNameAt(uint32_t aPos) const {
+[[nodiscard]] bool AttrArray::GetSafeAttrNameAt(
+    uint32_t aPos, const nsAttrName** aResult) const {
   if (aPos >= AttrCount()) {
-    return nullptr;
+    return false;
   }
-  return &mImpl->mBuffer[aPos].mName;
+  *aResult = &mImpl->mBuffer[aPos].mName;
+  return true;
+}
+
+const nsAttrName* AttrArray::GetSafeAttrNameAt(uint32_t aPos) const {
+  const nsAttrName* name;
+  if (!GetSafeAttrNameAt(aPos, &name)) {
+    MOZ_CRASH("aPos out of bounds");
+  }
+  return name;
 }
 
 const nsAttrName* AttrArray::GetExistingAttrNameFromQName(
