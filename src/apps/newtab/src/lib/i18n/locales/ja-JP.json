@@ -20,12 +20,7 @@
         "noBackground": "背景なし",
         "randomImage": "ランダム画像",
         "customImage": "カスタム画像",
-        "folderImages": "フォルダから画像",
-        "floorpImages": "Floorpの画像",
         "currentImage": "現在の画像:",
-        "currentFolder": "現在のフォルダ:",
-        "selectFolder": "フォルダを選択",
-        "selected": "選択中",
         "imageRecommendation": "推奨: 1920x1080 以上",
         "close": "閉じる"
     },
