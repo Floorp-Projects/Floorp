@@ -58,11 +58,6 @@ async function launchBuild(mode: string, buildid2: string) {
         base: "chrome://noraneko-settings/content",
       }),
       build({
-        configFile: r("./src/apps/newtab/vite.config.ts"),
-        root: r("./src/apps/newtab"),
-        base: "chrome://noraneko-newtab/content",
-      }),
-      build({
         configFile: r("./src/apps/welcome/vite.config.ts"),
         root: r("./src/apps/welcome"),
         base: "chrome://noraneko-welcome/content",

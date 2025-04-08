@@ -1,1 +1,11 @@
-DIRS += ["_dist/noraneko/content","_dist/noraneko/startup","_dist/noraneko/resource", "_dist/noraneko/settings", "_dist/noraneko/modal-child", "_dist/noraneko/newtab", "_dist/noraneko/welcome"]
+
+DIRS += [
+    "_dist/noraneko/content",
+    "_dist/noraneko/startup",
+    "_dist/noraneko/resource",
+    "_dist/noraneko/settings",
+    "_dist/noraneko/modal-child",
+    "_dist/noraneko/newtab",
+    "_dist/noraneko/welcome",
+    "_dist/noraneko/notes",
+]

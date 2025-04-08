@@ -25,7 +25,7 @@ export default defineConfig({
   plugins: [
     tsconfigPaths() as PluginOption,
     react(),
-    tailwindcss(),
+    tailwindcss() as PluginOption,
     {
       name: "gen_jarmn",
       enforce: "post",
