@@ -118,6 +118,7 @@
         },
         "uiCustomization": {
             "title": "UI Customization",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
                 "title": "Navigation Bar",
                 "positionWithExperiment": "Position (Experiment)",

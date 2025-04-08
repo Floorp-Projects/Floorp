@@ -9,6 +9,15 @@
   --panel-sidebar-touch-width: 60px;
   --panel-icon-size: 16px;
   --panel-touch-icon-size: 20px;
+  --panel-sidebar-panel-size: 36px;
+  --panel-sidebar-actions-size: 32px;
+  --panel-sidebar-header-height: 38px;
+  --panel-sidebar-splitter-width: 4px;
+  --panel-sidebar-floating-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --panel-sidebar-floating-radius: 8px;
+  --panel-sidebar-floating-margin: 10px 15px;
+  --panel-sidebar-floating-splitter-size: 10px;
+  --panel-sidebar-floating-corner-size: 16px;
 }
 
 /* Panel Sidebar Select Box */
@@ -23,12 +32,11 @@
   color: var(--toolbar-color);
   background-color: var(--toolbar-bgcolor);
   background-image: var(--lwt-additional-images);
-  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
   scrollbar-width: thin;
-  border-left: 1px solid var(--chrome-content-separator-color);
-  border-right: 1px solid var(--chrome-content-separator-color);
+  border-inline: 1px solid var(--chrome-content-separator-color);
 }
 
 #panel-sidebar-select-box:-moz-lwtheme {
@@ -38,16 +46,13 @@
 /* Panel Sidebar Box */
 #panel-sidebar-box {
   background: var(--toolbar-bgcolor);
+  min-width: 225px;
 }
 
 /* Panel Sidebar Splitter */
 #panel-sidebar-splitter {
   margin-inline: 0;
   border-color: transparent;
-}
-
-#panel-sidebar-box {
-  min-width: 225px;
 }
 
 #panel-sidebar-box[positionend] + .panel-sidebar-splitter {
@@ -63,8 +68,7 @@
 .webpanel-icon::before {
   content: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
   position: fixed;
-  top: 3px;
-  left: 3px;
+  inset: 3px 3px auto auto;
   opacity: 0.5;
   fill: inherit;
   background: none;
@@ -89,10 +93,9 @@
 /* Panel Sidebar Panel */
 .panel-sidebar-panel {
   scale: 1;
-  min-width: 36px;
-  min-height: 36px;
-  margin: 0 1px;
-  margin-top: 5px;
+  min-width: var(--panel-sidebar-panel-size);
+  min-height: var(--panel-sidebar-panel-size);
+  margin: 5px 1px 0;
 }
 
 .panel-sidebar-panel.dragging {
@@ -113,8 +116,7 @@
 
 .panel-sidebar-user-context-border {
   width: 2px;
-  margin-top: 9px;
-  margin-bottom: 3px;
+  margin: 9px 0 3px;
   height: inherit;
   border-radius: 4px;
 }
@@ -125,7 +127,7 @@
 }
 
 :root[uidensity="compact"] .panel-sidebar-panel {
-  margin: 3.5px 3.5px 4.5px 3.5px;
+  margin: 3.5px;
   padding: 5px;
 }
 
@@ -134,7 +136,7 @@
 }
 
 :root[uidensity="touch"] .panel-sidebar-panel {
-  margin: 1px 3px 2px 3px;
+  margin: 1px 3px 2px;
   padding: 16px;
 }
 
@@ -144,10 +146,10 @@
 
 /* Header */
 #panel-sidebar-header {
-  height: 38px;
+  height: var(--panel-sidebar-header-height);
   background-color: var(--toolbar-bgcolor);
   background-image: var(--lwt-additional-images);
-  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
   padding: 0 6px;
@@ -156,8 +158,8 @@
 /* Action Buttons */
 .panel-sidebar-actions {
   padding: 8px;
-  width: 32px;
-  height: 32px;
+  width: var(--panel-sidebar-actions-size);
+  height: var(--panel-sidebar-actions-size);
 }
 
 /* Interactive States */
@@ -205,9 +207,9 @@
 #panel-sidebar-box[data-floating="true"] {
   position: fixed;
   z-index: 999;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  margin: 10px 15px;
+  box-shadow: var(--panel-sidebar-floating-shadow);
+  border-radius: var(--panel-sidebar-floating-radius);
+  margin: var(--panel-sidebar-floating-margin);
   overflow: hidden;
 }
 
@@ -243,16 +245,13 @@
 
 #panel-sidebar-browser-box-wrapper.warp {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 9999;
 }
 
 .floating-splitter-side {
   position: absolute;
-  width: 10px;
+  width: var(--panel-sidebar-floating-splitter-size);
   height: 100%;
   cursor: ew-resize;
   z-index: 1000;
@@ -275,7 +274,7 @@
   position: absolute;
   left: 0;
   width: 100%;
-  height: 10px;
+  height: var(--panel-sidebar-floating-splitter-size);
   cursor: ns-resize;
   z-index: 1000;
   background: transparent;
@@ -295,8 +294,8 @@
 
 .floating-splitter-corner {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: var(--panel-sidebar-floating-corner-size);
+  height: var(--panel-sidebar-floating-corner-size);
   z-index: 1001;
   background: transparent;
 }
@@ -306,26 +305,22 @@
 }
 
 .floating-splitter-corner-topleft {
-  top: 0;
-  left: 0;
+  inset: 0 auto auto 0;
   cursor: nwse-resize;
 }
 
 .floating-splitter-corner-topright {
-  top: 0;
-  right: 0;
+  inset: 0 0 auto auto;
   cursor: nesw-resize;
 }
 
 .floating-splitter-corner-bottomleft {
-  bottom: 0;
-  left: 0;
+  inset: auto auto 0 0;
   cursor: nesw-resize;
 }
 
 .floating-splitter-corner-bottomright {
-  bottom: 0;
-  right: 0;
+  inset: auto 0 0 auto;
   cursor: nwse-resize;
 }
 
@@ -363,20 +358,12 @@
 }
 
 /* Child Windows */
-#browser[data-is-child] > #panel-sidebar-select-box {
+#browser[data-is-child] > #panel-sidebar-select-box,
+#browser[data-is-child] > #panel-sidebar-box,
+#browser[data-is-child] > #sidebar-main {
   display: none;
 }
 
-#browser[data-is-child] {
-  & > #panel-sidebar-box {
-    display: none;
-  }
-
-  & > #sidebar-main {
-    display: none;
-  }
-}
-
 #after-splitter {
-  max-width: 4px;
+  max-width: var(--panel-sidebar-splitter-width);
 }

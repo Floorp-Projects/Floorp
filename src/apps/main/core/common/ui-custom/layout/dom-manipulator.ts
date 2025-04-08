@@ -4,19 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect } from "solid-js";
-import { config } from "@core/common/designs/configs";
+import { config } from "@core/common/designs/configs.ts";
 
 export class DOMLayoutManager {
   private get navBar(): Element {
     return document?.getElementById("nav-bar") as Element;
-  }
-
-  private get personalToolbar(): Element {
-    return document?.getElementById("PersonalToolbar") as Element;
-  }
-
-  private get navigatorToolbox(): Element {
-    return document?.getElementById("navigator-toolbox") as Element;
   }
 
   setupDOMEffects() {
@@ -27,8 +19,6 @@ export class DOMLayoutManager {
     createEffect(() => {
       if (config().uiCustomization.navbar.position === "bottom") {
         this.moveNavbarToBottom();
-      } else {
-        this.restoreNavbarPosition();
       }
     });
   }
@@ -37,16 +27,6 @@ export class DOMLayoutManager {
 
     if (navbar) {
       document?.body?.appendChild(navbar);
-    }
-  }
-
-  private restoreNavbarPosition() {
-    const navbar = this.navBar;
-    const toolbox = this.navigatorToolbox;
-    const personalToolbar = this.personalToolbar;
-
-    if (navbar && toolbox && personalToolbar) {
-      toolbox.insertBefore(navbar, personalToolbar);
     }
   }
 }
