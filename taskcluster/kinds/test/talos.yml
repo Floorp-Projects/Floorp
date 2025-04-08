@@ -806,12 +806,9 @@ talos-pdfpaint:
                 win.*:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
-                    - talos-pdfs
                 macosx1015.*:
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
-                    - talos-pdfs
                 default:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
-                    - talos-pdfs
