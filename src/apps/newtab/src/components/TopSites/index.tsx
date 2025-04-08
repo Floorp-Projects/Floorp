@@ -158,7 +158,7 @@ export function TopSites() {
           </div>
         </div>
       )}
-      <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-3 inline-block">
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-3 inline-block">
         <div className="flex flex-wrap gap-x-0.5">
           {[...userAddedSites, ...sites].map((site, index) => (
             <a
@@ -166,7 +166,7 @@ export function TopSites() {
               href={site.url}
               className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/80 dark:bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
                 {site.favicon
                   ? (
                     <img
@@ -184,12 +184,12 @@ export function TopSites() {
                       />
                     )
                     : (
-                      <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                      <span className="text-lg font-semibold text-gray-300">
                         {(site.label || site.title || "?")[0]}
                       </span>
                     )}
               </div>
-              <span className="text-xs text-center text-gray-700 dark:text-gray-300 line-clamp-2 leading-tight">
+              <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
                 {site.label || site.title}
               </span>
             </a>
@@ -197,14 +197,14 @@ export function TopSites() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+            className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-gray-700/50"
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-300 dark:bg-gray-600 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-              <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-600 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+              <span className="text-lg font-semibold text-gray-300">
                 +
               </span>
             </div>
-            <span className="text-xs text-center text-gray-700 dark:text-gray-300 line-clamp-2 leading-tight">
+            <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
               {t("topSites.addSite")}
             </span>
           </button>

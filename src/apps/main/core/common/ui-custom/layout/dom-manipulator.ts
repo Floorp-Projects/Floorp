@@ -11,16 +11,12 @@ export class DOMLayoutManager {
     return document?.getElementById("nav-bar") as Element;
   }
 
+  private get personalToolbar(): Element {
+    return document?.getElementById("PersonalToolbar") as Element;
+  }
+
   private get navigatorToolbox(): Element {
     return document?.getElementById("navigator-toolbox") as Element;
-  }
-
-  private get urlbarInputContainer(): Element {
-    return document?.querySelector(".urlbar-input-container") as Element;
-  }
-
-  private get urlbarView(): Element {
-    return document?.querySelector(".urlbarView") as Element;
   }
 
   setupDOMEffects() {
@@ -32,7 +28,6 @@ export class DOMLayoutManager {
       if (config().uiCustomization.navbar.position === "bottom") {
         this.moveNavbarToBottom();
       } else {
-        console.log("restoreNavbarPosition");
         this.restoreNavbarPosition();
       }
     });
@@ -48,7 +43,10 @@ export class DOMLayoutManager {
   private restoreNavbarPosition() {
     const navbar = this.navBar;
     const toolbox = this.navigatorToolbox;
-    const urlbarInputContainer = this.urlbarInputContainer;
-    const urlbarView = this.urlbarView;
+    const personalToolbar = this.personalToolbar;
+
+    if (navbar && toolbox && personalToolbar) {
+      toolbox.insertBefore(navbar, personalToolbar);
+    }
   }
 }
