@@ -684,7 +684,10 @@ nsresult txMozillaXSLTProcessor::TransformToDoc(Document** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  txExecutionState es(mStylesheet, IsLoadDisabled());
+  // We enable loads if we're called because of a stylesheet PI (so we have an
+  // mObserver) and loads weren't explicitly disabled.
+  txExecutionState es(mStylesheet,
+                      /* aDisableLoads = */ !mObserver || IsLoadDisabled());
 
   Document* sourceDoc = mSource->OwnerDoc();
   nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
@@ -792,7 +795,7 @@ already_AddRefed<DocumentFragment> txMozillaXSLTProcessor::TransformToFragment(
     return nullptr;
   }
 
-  txExecutionState es(mStylesheet, IsLoadDisabled());
+  txExecutionState es(mStylesheet, /* aDisableLoads = */ true);
 
   // XXX Need to add error observers
 
