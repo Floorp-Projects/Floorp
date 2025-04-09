@@ -100,7 +100,7 @@ function App() {
 
         <div className="flex-1 flex flex-col p-4 overflow-hidden border-t border-base-content/20">
           {selectedNote ? (
-            <div className="flex flex-1 gap-4">
+            <div className="flex flex-1 gap-4 overflow-y-auto">
               <div className="flex-1 flex flex-col">
                 <input
                   type="text"

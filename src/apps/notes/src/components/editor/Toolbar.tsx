@@ -143,115 +143,118 @@ export const Toolbar = () => {
 
     return (
         <>
-            <div className="flex flex-wrap gap-1 p-1">
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.heading === 'h1' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatHeading('h1')}
-                    aria-label="見出し1"
-                >
-                    <Heading1 className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.heading === 'h2' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatHeading('h2')}
-                    aria-label="見出し2"
-                >
-                    <Heading2 className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.heading === 'h3' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatHeading('h3')}
-                    aria-label="見出し3"
-                >
-                    <Heading3 className="h-4 w-4" />
-                </button>
-                <div className="divider divider-horizontal mx-0"></div>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.bold ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatText('bold')}
-                    aria-label="太字"
-                >
-                    <Bold className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.italic ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatText('italic')}
-                    aria-label="斜体"
-                >
-                    <Italic className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.underline ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatText('underline')}
-                    aria-label="下線"
-                >
-                    <Underline className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.strikethrough ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatText('strikethrough')}
-                    aria-label="取り消し線"
-                >
-                    <Strikethrough className="h-4 w-4" />
-                </button>
-                <div className="divider divider-horizontal mx-0"></div>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.list === 'bullet' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={toggleUnOrderList}
-                    aria-label="箇条書き"
-                >
-                    <List className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.list === 'number' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={toggleOrderList}
-                    aria-label="番号付きリスト"
-                >
-                    <ListOrdered className="h-4 w-4" />
-                </button>
-                <div className="divider divider-horizontal mx-0"></div>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.align === 'left' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatElement('left')}
-                    aria-label="左揃え"
-                >
-                    <AlignLeft className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.align === 'center' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatElement('center')}
-                    aria-label="中央揃え"
-                >
-                    <AlignCenter className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.align === 'right' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => formatElement('right')}
-                    aria-label="右揃え"
-                >
-                    <AlignRight className="h-4 w-4" />
-                </button>
-                <div className="divider divider-horizontal mx-0"></div>
-                <button
-                    type="button"
-                    className={`btn btn-sm ${activeFormats.quote ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={toggleQuote}
-                    aria-label="引用"
-                >
-                    <Quote className="h-4 w-4" />
-                </button>
+            <div className="flex flex-col gap-1 p-1">
+                <div className="flex flex-wrap gap-1">
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.heading === 'h1' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatHeading('h1')}
+                        aria-label="見出し1"
+                    >
+                        <Heading1 className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.heading === 'h2' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatHeading('h2')}
+                        aria-label="見出し2"
+                    >
+                        <Heading2 className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.heading === 'h3' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatHeading('h3')}
+                        aria-label="見出し3"
+                    >
+                        <Heading3 className="h-4 w-4" />
+                    </button>
+                    <div className="divider divider-horizontal mx-0"></div>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.bold ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatText('bold')}
+                        aria-label="太字"
+                    >
+                        <Bold className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.italic ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatText('italic')}
+                        aria-label="斜体"
+                    >
+                        <Italic className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.underline ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatText('underline')}
+                        aria-label="下線"
+                    >
+                        <Underline className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.strikethrough ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatText('strikethrough')}
+                        aria-label="取り消し線"
+                    >
+                        <Strikethrough className="h-4 w-4" />
+                    </button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.list === 'bullet' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={toggleUnOrderList}
+                        aria-label="箇条書き"
+                    >
+                        <List className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.list === 'number' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={toggleOrderList}
+                        aria-label="番号付きリスト"
+                    >
+                        <ListOrdered className="h-4 w-4" />
+                    </button>
+                    <div className="divider divider-horizontal mx-0"></div>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.align === 'left' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatElement('left')}
+                        aria-label="左揃え"
+                    >
+                        <AlignLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.align === 'center' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatElement('center')}
+                        aria-label="中央揃え"
+                    >
+                        <AlignCenter className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.align === 'right' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => formatElement('right')}
+                        aria-label="右揃え"
+                    >
+                        <AlignRight className="h-4 w-4" />
+                    </button>
+                    <div className="divider divider-horizontal mx-0"></div>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${activeFormats.quote ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={toggleQuote}
+                        aria-label="引用"
+                    >
+                        <Quote className="h-4 w-4" />
+                    </button>
+                </div>
             </div>
             <div className="divider my-0"></div>
         </>
