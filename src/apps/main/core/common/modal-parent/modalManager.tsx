@@ -10,7 +10,7 @@ import {
   setModalSize,
   setModalVisible,
 } from "./data/data.ts";
-import { TForm, TFormResult } from "./utils/type";
+import type { TForm, TFormResult } from "./utils/type";
 
 export class ModalManager {
   private static readonly targetParent = document?.getElementById(
@@ -46,17 +46,15 @@ export class ModalManager {
         "modal-child-browser",
       ) as XULElement & { browsingContext: any };
 
-      const actor = browser.browsingContext.currentWindowGlobal.getActor(
-        "NRChromeModal",
-      );
+      const actor =
+        browser.browsingContext.currentWindowGlobal.getActor("NRChromeModal");
 
       return new Promise((resolve) => {
-        actor.sendQuery(
-          "NRChromeModal:show",
-          form,
-        ).then((response: TFormResult | null) => {
-          resolve(response);
-        });
+        actor
+          .sendQuery("NRChromeModal:show", form)
+          .then((response: TFormResult | null) => {
+            resolve(response);
+          });
       });
     }
   }

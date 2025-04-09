@@ -10,7 +10,11 @@ import { getFirefoxSidebarPanels } from "../extension-panels.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import { setPanelSidebarData } from "../data/data.ts";
 import ModalParent from "../../../common/modal-parent/index.ts";
-import { TForm, TFormItem, TFormResult } from "@core/common/modal-parent/utils/type.ts";
+import type {
+  TForm,
+  TFormItem,
+  TFormResult,
+} from "@core/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "../../../../i18n/config.ts";
 
@@ -55,7 +59,7 @@ const translationKeys = {
   sideBarTool: "panelSidebar.modal.sideBarTool",
   title: "panelSidebar.modal.title",
   add: "panelSidebar.modal.add",
-  cancel: "panelSidebar.modal.cancel"
+  cancel: "panelSidebar.modal.cancel",
 };
 
 const getTranslatedTexts = (): I18nTextValues => {
@@ -73,7 +77,7 @@ const getTranslatedTexts = (): I18nTextValues => {
     sideBarTool: i18next.t(translationKeys.sideBarTool),
     title: i18next.t(translationKeys.title),
     add: i18next.t(translationKeys.add),
-    cancel: i18next.t(translationKeys.cancel)
+    cancel: i18next.t(translationKeys.cancel),
   };
 };
 
@@ -95,15 +99,20 @@ export class PanelSidebarAddModal {
     this.modalParent = ModalParent.getInstance();
     this.modalParent.init();
 
-    createRootHMR(() => {
-      const [texts, setTexts] = createSignal<I18nTextValues>(getTranslatedTexts());
-      this.texts = texts;
-      this.setTexts = setTexts;
+    createRootHMR(
+      () => {
+        const [texts, setTexts] = createSignal<I18nTextValues>(
+          getTranslatedTexts(),
+        );
+        this.texts = texts;
+        this.setTexts = setTexts;
 
-      addI18nObserver(() => {
-        setTexts(getTranslatedTexts());
-      });
-    }, import.meta.hot);
+        addI18nObserver(() => {
+          setTexts(getTranslatedTexts());
+        });
+      },
+      import.meta.hot,
+    );
   }
 
   private get containers(): Container[] {
@@ -122,11 +131,13 @@ export class PanelSidebarAddModal {
   private createFormConfig(type: Panel["type"] = "web"): TForm {
     const extensions = getFirefoxSidebarPanels();
     const texts = this.texts();
-    const staticPanelOptions = Object.entries(STATIC_PANEL_DATA).map(([key, panel]) => ({
-      value: key,
-      label: panel.l10n,
-      icon: "",
-    }));
+    const staticPanelOptions = Object.entries(STATIC_PANEL_DATA).map(
+      ([key, panel]) => ({
+        value: key,
+        label: panel.l10n,
+        icon: "",
+      }),
+    );
 
     const containerOptions = [
       {
@@ -147,7 +158,7 @@ export class PanelSidebarAddModal {
       icon: extension.iconUrl,
     }));
 
-    const commonForms = [
+    const commonForms: TFormItem[] = [
       {
         id: "type",
         type: "dropdown",
@@ -169,58 +180,70 @@ export class PanelSidebarAddModal {
       },
     ];
 
-    let typeForms: TForm["forms"] = [];
+    const webForms: TFormItem[] = [
+      {
+        id: "url",
+        type: "url",
+        label: texts.url,
+        value: window.gBrowser.currentURI.spec,
+        required: true,
+        placeholder: "https://floorp.app",
+        when: { id: "type", value: "web" },
+      },
+      {
+        id: "userContextId",
+        type: "dropdown",
+        label: texts.container,
+        value: "0",
+        required: true,
+        options: containerOptions,
+        when: { id: "type", value: "web" },
+      },
+      {
+        id: "userAgent",
+        type: "checkbox",
+        label: texts.userAgent,
+        value: "false",
+        when: { id: "type", value: "web" },
+      },
+    ];
 
-    if (type === "web") {
-      typeForms = [
-        {
-          id: "url",
-          type: "url",
-          label: texts.url,
-          value: window.gBrowser.currentURI.spec,
-          required: true,
-          placeholder: "https://floorp.app",
-        },
-        {
-          id: "userContextId",
-          type: "dropdown",
-          label: texts.container,
-          value: "0",
-          required: true,
-          options: containerOptions,
-        },
-        {
-          id: "userAgent",
-          type: "checkbox",
-          label: texts.userAgent,
-          value: "false",
-        },
-      ];
-    } else if (type === "extension") {
-      typeForms = [
-        {
-          id: "extension",
-          type: "dropdown",
-          label: texts.extension,
-          value: extensions.length > 0 ? extensions[0].extensionId : "",
-          required: true,
-          options: extensionOptions,
-        },
-      ];
-    } else if (type === "static") {
-      typeForms = [
-        {
-          id: "sideBarTool",
-          type: "dropdown",
-          label: texts.sideBarTool,
-          value: Object.keys(STATIC_PANEL_DATA)[0] || "",
-          required: true,
-          options: staticPanelOptions,
-        },
-      ];
-    }
+    // 拡張機能パネル用のフォーム項目
+    const extensionForms: TFormItem[] = [
+      {
+        id: "extension",
+        type: "dropdown",
+        label: texts.extension,
+        value: extensions.length > 0 ? extensions[0].extensionId : "",
+        required: true,
+        options: extensionOptions,
+        when: { id: "type", value: "extension" },
+      },
+    ];
+
+    // 静的パネル用のフォーム項目
+    const staticForms: TFormItem[] = [
+      {
+        id: "sideBarTool",
+        type: "dropdown",
+        label: texts.sideBarTool,
+        value: Object.keys(STATIC_PANEL_DATA)[0] || "",
+        required: true,
+        options: staticPanelOptions,
+        when: { id: "type", value: "static" },
+      },
+    ];
+
+    // タイプに関係なく全てのフォーム項目を結合
+    const allForms = [
+      ...commonForms,
+      ...webForms,
+      ...extensionForms,
+      ...staticForms,
+    ];
+
     return {
-      forms: [...commonForms, ...typeForms] as TFormItem[],
+      forms: allForms,
       title: texts.title,
       submitLabel: texts.add,
       cancelLabel: texts.cancel,
@@ -230,47 +253,52 @@ export class PanelSidebarAddModal {
   public async showAddPanelModal(): Promise<TFormResult | null> {
     const formConfig = this.createFormConfig();
     return await new Promise((resolve) => {
-      this.modalParent.showNoraModal(formConfig, {
-        width: 600,
-        height: 620,
-      }, (result: TFormResult | null) => {
-        if (result) {
-          const type = result.type as Panel["type"];
-          let panel: Panel = {
-            type,
-            id: crypto.randomUUID(),
-            width: Number(result.width) || 450,
-          };
-
-          if (type === "web") {
-            panel = {
-              ...panel,
-              url: result.url as string,
-              userContextId: Number(result.userContextId),
-              userAgent: result.userAgent === "true",
+      this.modalParent.showNoraModal(
+        formConfig,
+        {
+          width: 600,
+          height: 620,
+        },
+        (result: TFormResult | null) => {
+          if (result) {
+            const type = result.type as Panel["type"];
+            let panel: Panel = {
+              type,
+              id: crypto.randomUUID(),
+              width: Number(result.width) || 450,
             };
-          }
 
-          if (type === "extension") {
-            panel = {
-              ...panel,
-              extensionId: result.extension as string,
-            };
-          }
+            if (type === "web") {
+              panel = {
+                ...panel,
+                url: result.url as string,
+                userContextId: Number(result.userContextId),
+                userAgent: result.userAgent === "true",
+              };
+            }
 
-          if (type === "static") {
-            const sideBarToolKey = result.sideBarTool as keyof typeof STATIC_PANEL_DATA;
-            panel = {
-              ...panel,
-              icon: STATIC_PANEL_DATA[sideBarToolKey].icon,
-              url: sideBarToolKey,
-            };
-          }
+            if (type === "extension") {
+              panel = {
+                ...panel,
+                extensionId: result.extension as string,
+              };
+            }
 
-          setPanelSidebarData((prev) => [...prev, panel]);
-        }
-        resolve(result);
-      });
+            if (type === "static") {
+              const sideBarToolKey =
+                result.sideBarTool as keyof typeof STATIC_PANEL_DATA;
+              panel = {
+                ...panel,
+                icon: STATIC_PANEL_DATA[sideBarToolKey].icon,
+                url: sideBarToolKey,
+              };
+            }
+
+            setPanelSidebarData((prev) => [...prev, panel]);
+          }
+          resolve(result);
+        },
+      );
     });
   }
 }

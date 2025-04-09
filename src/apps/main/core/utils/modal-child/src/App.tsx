@@ -1,5 +1,11 @@
-import { Control, Controller, FormProvider, useForm } from "react-hook-form";
+import {
+  type Control,
+  Controller,
+  FormProvider,
+  useForm,
+} from "react-hook-form";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type {
   TForm,
   TFormItem,
@@ -26,20 +32,51 @@ interface FormFieldProps {
 const FormField = ({ item, control }: FormFieldProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setPortalContainer(document.body);
+  }, []);
 
   useLayoutEffect(() => {
-    if (dropdownOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
+    if (dropdownOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const windowWidth = globalThis.innerWidth;
+      const windowHeight = globalThis.innerHeight;
+      const scrollY = globalThis.scrollY;
+      const scrollX = globalThis.scrollX;
+
       const dropdownMaxHeight = 240;
-      const availableBelow = window.innerHeight - rect.bottom;
-      let offset = 0;
-      if (availableBelow < dropdownMaxHeight) {
-        offset = availableBelow - dropdownMaxHeight;
+      const buttonWidth = rect.width;
+
+      let top = rect.bottom + scrollY;
+      let left = rect.left + scrollX;
+
+      const spaceBelow = windowHeight - rect.bottom;
+
+      if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
+        top = rect.top + scrollY - dropdownMaxHeight;
       }
-      setDropdownStyle({ marginTop: offset });
-    } else {
-      setDropdownStyle({});
+
+      const spaceRight = windowWidth - rect.left;
+
+      if (spaceRight < buttonWidth) {
+        left = rect.right + scrollX - buttonWidth;
+        if (left < scrollX) {
+          left = scrollX + 10;
+        }
+      }
+
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${buttonWidth}px`,
+        maxHeight: `${dropdownMaxHeight}px`,
+        zIndex: 1000
+      });
     }
   }, [dropdownOpen]);
 
@@ -47,7 +84,10 @@ const FormField = ({ item, control }: FormFieldProps) => {
     if (item.type !== "dropdown" || !dropdownOpen) return;
     const handleOutsideClick = (e: MouseEvent) => {
       if (
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
       ) {
         setDropdownOpen(false);
       }
@@ -63,7 +103,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
 
     if (/^https?:\/\//i.test(url)) {
       return url;
-    };
+    }
 
     if (/^[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+$/.test(url)) {
       return `https://${url}`;
@@ -98,11 +138,17 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   }`}
                 placeholder={item.placeholder || ""}
                 maxLength={item.maxLength}
-                onBlur={item.type === "url" ? (e) => {
-                  const formattedUrl = validateAndFormatUrl(e.target.value);
-                  field.onChange(formattedUrl);
-                  e.target.value = formattedUrl;
-                } : field.onBlur}
+                onBlur={
+                  item.type === "url"
+                    ? (e) => {
+                      const formattedUrl = validateAndFormatUrl(
+                        e.target.value,
+                      );
+                      field.onChange(formattedUrl);
+                      e.target.value = formattedUrl;
+                    }
+                    : field.onBlur
+                }
               />
             )}
           />
@@ -167,7 +213,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
 
     case "dropdown":
       return (
-        <div className="mb-4 w-full" ref={dropdownRef}>
+        <div className="mb-4 w-full">
           {item.label && (
             <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
               {item.label}
@@ -181,21 +227,23 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field: { onChange, value } }) => (
               <div className="relative">
                 <button
+                  ref={buttonRef}
                   type="button"
                   className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
                     }`}
-                  onClick={() => setDropdownOpen(true)}
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
                   {item.options?.find((opt) => opt.value === value)?.label ||
                     value}
                 </button>
-                {dropdownOpen && (
-                  <ul
+                {dropdownOpen && portalContainer && createPortal(
+                  <div
+                    ref={dropdownRef}
                     style={dropdownStyle}
-                    className="absolute z-10 w-full bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto"
+                    className="fixed bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md shadow-lg overflow-y-auto"
                   >
-                    {item.options?.map(
-                      (opt) => (
+                    <ul>
+                      {item.options?.map((opt) => (
                         <li
                           key={opt.value}
                           className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
@@ -204,14 +252,15 @@ const FormField = ({ item, control }: FormFieldProps) => {
                             setDropdownOpen(false);
                           }}
                         >
-                          {opt.icon
-                            ? <img src={opt.icon} className="w-4 h-4 mr-2" />
-                            : null}
+                          {opt.icon ? (
+                            <img src={opt.icon} className="w-4 h-4 mr-2" alt="" />
+                          ) : null}
                           <span>{opt.label}</span>
                         </li>
-                      ),
-                    )}
-                  </ul>
+                      ))}
+                    </ul>
+                  </div>,
+                  portalContainer
                 )}
               </div>
             )}
@@ -259,26 +308,26 @@ const FormField = ({ item, control }: FormFieldProps) => {
               defaultValue={String(item.value || "")}
               render={({ field: { onChange, value } }) => (
                 <>
-                  {item.options?.map((
-                    opt: { label: string; value: string },
-                  ) => (
-                    <label
-                      key={opt.value}
-                      className="flex items-center cursor-pointer mb-2"
-                    >
-                      <input
-                        type="radio"
-                        className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${item.classList || ""
-                          }`}
-                        value={opt.value}
-                        checked={value === opt.value}
-                        onChange={(e) => onChange(e.target.value)}
-                      />
-                      <span className="text-sm text-gray-900 dark:text-white">
-                        {opt.label}
-                      </span>
-                    </label>
-                  ))}
+                  {item.options?.map(
+                    (opt: { label: string; value: string }) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center cursor-pointer mb-2"
+                      >
+                        <input
+                          type="radio"
+                          className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${item.classList || ""
+                            }`}
+                          value={opt.value}
+                          checked={value === opt.value}
+                          onChange={(e) => onChange(e.target.value)}
+                        />
+                        <span className="text-sm text-gray-900 dark:text-white">
+                          {opt.label}
+                        </span>
+                      </label>
+                    ),
+                  )}
                 </>
               )}
             />
@@ -293,7 +342,27 @@ const FormField = ({ item, control }: FormFieldProps) => {
 
 function App() {
   const methods = useForm<FormValues>();
+  const { control, watch } = methods;
   const [formConfig, setFormConfig] = useState<TForm | null>(null);
+
+  const values = watch();
+
+  const getVisibleFormItems = (items: TFormItem[]): TFormItem[] => {
+    if (!items) return [];
+
+    return items.filter(item => {
+      if (!item.when) return true;
+
+      const { id, value } = item.when;
+      const currentValue = values[id];
+
+      if (Array.isArray(value)) {
+        return value.includes(currentValue);
+      }
+
+      return currentValue === value;
+    });
+  };
 
   const onSubmit = (data: FormValues) => {
     globalThis.sendForm(data);
@@ -329,26 +398,33 @@ function App() {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-white dark:bg-[#2B2A33] text-gray-900 dark:text-white flex items-center justify-center p-2">
+      <div className="w-full h-screen flex bg-white dark:bg-[#2B2A33] text-gray-900 dark:text-white">
         <FormProvider {...methods}>
           <form
             id="dynamic-form"
-            className="w-full h-full flex flex-col gap-4 bg-white dark:bg-[#2B2A33] rounded-md p-4"
+            className="w-full flex flex-col bg-white dark:bg-[#2B2A33] p-4"
             onSubmit={methods.handleSubmit(onSubmit)}
           >
             {formConfig?.title && (
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {formConfig.title}
-              </h1>
+              <div className="flex-none py-3 px-1 border-b border-gray-200 dark:border-gray-700">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {formConfig.title}
+                </h1>
+              </div>
             )}
-            {formConfig?.forms.map((item: TFormItem) => (
-              <FormField key={item.id} item={item} control={methods.control} />
-            ))}
+
+            <div className="flex-grow overflow-y-auto py-4 px-1 flex flex-col gap-4">
+              {formConfig &&
+                getVisibleFormItems(formConfig.forms).map((item: TFormItem) => (
+                  <FormField key={item.id} item={item} control={control} />
+                ))}
+            </div>
+
             {formConfig && (
-              <div className="flex justify-end gap-3 mt-4">
+              <div className="flex-none pt-3 pb-1 px-1 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#0061E0] hover:bg-[#0250BC] rounded-md shadow-sm transition duration-150 ease-in-out"
+                  className="px-5 py-2 text-sm font-medium text-white bg-[#0061E0] hover:bg-[#0250BC] rounded-md shadow-sm transition duration-150 ease-in-out"
                 >
                   {formConfig.submitLabel || "Submit"}
                 </button>
@@ -356,7 +432,7 @@ function App() {
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-[#42414D] hover:bg-gray-300 dark:hover:bg-[#53525C] rounded-md transition duration-150 ease-in-out"
+                    className="px-5 py-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-[#42414D] hover:bg-gray-300 dark:hover:bg-[#53525C] rounded-md transition duration-150 ease-in-out"
                   >
                     {formConfig.cancelLabel}
                   </button>

@@ -21,6 +21,10 @@ export interface TFormItem {
     value: string;
     icon?: string;
   }>;
+  when?: {
+    id: string;
+    value: string | string[];
+  };
 }
 
 export interface TForm {
