@@ -78,7 +78,19 @@ check_updates () {
     cd_dir=$(ls -d ${PWD}/source/${platform_dirname})
     cd "${cd_dir}" || (echo "TEST-UNEXPECTED-FAIL: couldn't cd to ${cd_dir}" && return 1)
     set -x
-    "$updater" "$update_abspath" "$cwd" "$cwd" 0
+    # Decide if we should use alternative argument list added in
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1923376
+    if $updater --help 2>&1 | grep which-invocation; then
+      echo "Using v3 arguments to updater..."
+      echo "Calling updater:" "$updater" "3" "$update_abspath" "$cwd" "$cwd" "first" 0
+      # Note: argument quoting here is important!
+      "$updater" "3" "$update_abspath" "$cwd" "$cwd" "first" 0
+    else
+      echo "Using v2 arguments to updater..."
+      echo "Calling updater:" "$updater" "$update_abspath" "$cwd" "$cwd" 0
+      # Note: argument quoting here is important!
+      "$updater" "$update_abspath" "$cwd" "$cwd" 0
+    fi
     set +x
     cd ../..
   else
