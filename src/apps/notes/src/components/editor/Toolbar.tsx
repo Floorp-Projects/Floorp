@@ -9,15 +9,12 @@ import {
     $isElementNode,
 } from "lexical";
 import {
-    $createQuoteNode,
-    $isQuoteNode,
     $createHeadingNode,
     $isHeadingNode,
     type HeadingTagType,
 } from "@lexical/rich-text";
 import {
     $isListNode,
-    type ListNode,
     INSERT_UNORDERED_LIST_COMMAND,
     INSERT_ORDERED_LIST_COMMAND,
 } from "@lexical/list";
@@ -81,8 +78,6 @@ export const Toolbar = () => {
                     anchorNode.getKey() === "root"
                         ? anchorNode
                         : anchorNode.getTopLevelElementOrThrow();
-                const elementKey = element.getKey();
-                const elementDOM = editor.getElementByKey(elementKey);
 
                 const listNode = $isListNode(element) ? element : null;
                 const listType = listNode ? listNode.getListType() : null;
@@ -170,11 +165,31 @@ export const Toolbar = () => {
     );
 
     const toggleUnOrderList = useCallback(() => {
-        editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+        editor.update(() => {
+            const selection = $getSelection();
+            if (!$isRangeSelection(selection)) return;
+
+            const element = selection.anchor.getNode().getTopLevelElementOrThrow();
+            if ($isListNode(element) && element.getListType() === 'bullet') {
+                $setBlocksType(selection, () => $createParagraphNode());
+            } else {
+                editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+            }
+        });
     }, [editor]);
 
     const toggleOrderList = useCallback(() => {
-        editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+        editor.update(() => {
+            const selection = $getSelection();
+            if (!$isRangeSelection(selection)) return;
+
+            const element = selection.anchor.getNode().getTopLevelElementOrThrow();
+            if ($isListNode(element) && element.getListType() === 'number') {
+                $setBlocksType(selection, () => $createParagraphNode());
+            } else {
+                editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+            }
+        });
     }, [editor]);
 
     return (
