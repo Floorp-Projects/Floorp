@@ -16,6 +16,7 @@
     "npm:@icons-pack/react-simple-icons@^11.2.0": "11.2.0_react@19.1.0",
     "npm:@jsr/std__assert@^1.0.11": "1.0.12",
     "npm:@jsr/std__internal@^1.0.5": "1.0.6",
+    "npm:@lexical/code@0.30": "0.30.0",
     "npm:@lexical/list@0.30": "0.30.0",
     "npm:@lexical/react@0.30": "0.30.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@lexical/rich-text@0.30": "0.30.0",

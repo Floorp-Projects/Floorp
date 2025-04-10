@@ -18,6 +18,12 @@ export const editorConfig = {
       ul: "list-disc pl-4 mb-2",
       ol: "list-decimal pl-4 mb-2",
     },
+    text: {
+      bold: "font-bold",
+      italic: "italic",
+      underline: "underline",
+      strikethrough: "line-through",
+    },
   },
   nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode],
 };

@@ -1,8 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, $createParagraphNode } from "lexical";
-import { $createQuoteNode, $isQuoteNode, $createHeadingNode, $isHeadingNode, HeadingTagType } from "@lexical/rich-text";
-import { $isListNode, ListNode, INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from "@lexical/list";
+import {
+    $getSelection,
+    $isRangeSelection,
+    FORMAT_TEXT_COMMAND,
+    FORMAT_ELEMENT_COMMAND,
+    $createParagraphNode,
+    $isElementNode,
+} from "lexical";
+import {
+    $createQuoteNode,
+    $isQuoteNode,
+    $createHeadingNode,
+    $isHeadingNode,
+    type HeadingTagType,
+} from "@lexical/rich-text";
+import {
+    $isListNode,
+    type ListNode,
+    INSERT_UNORDERED_LIST_COMMAND,
+    INSERT_ORDERED_LIST_COMMAND,
+} from "@lexical/list";
 import { $setBlocksType } from "@lexical/selection";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,10 +33,9 @@ import {
     AlignLeft,
     AlignCenter,
     AlignRight,
-    Quote,
     Heading1,
     Heading2,
-    Heading3
+    Heading3,
 } from "lucide-react";
 
 export const Toolbar = () => {
@@ -29,19 +46,17 @@ export const Toolbar = () => {
         italic: boolean;
         underline: boolean;
         strikethrough: boolean;
-        align: 'left' | 'center' | 'right' | null;
-        list: 'bullet' | 'number' | null;
+        list: "bullet" | "number" | null;
+        align: "left" | "center" | "right" | null;
         heading: HeadingTagType | null;
-        quote: boolean;
     }>({
         bold: false,
         italic: false,
         underline: false,
         strikethrough: false,
-        align: null,
         list: null,
+        align: null,
         heading: null,
-        quote: false,
     });
 
     useEffect(() => {
@@ -54,86 +69,105 @@ export const Toolbar = () => {
                         italic: false,
                         underline: false,
                         strikethrough: false,
-                        align: null,
                         list: null,
+                        align: null,
                         heading: null,
-                        quote: false,
                     });
                     return;
                 }
 
-                const format = selection.format;
-                const element = selection.anchor.getNode().getParent();
-                const listNode = element ? $isListNode(element) : false;
-                const listType = listNode ? (element as ListNode).getListType() : null;
-                const headingNode = element ? $isHeadingNode(element) : false;
-                const headingType = headingNode ? (element as any).getTag() : null;
-                const quoteNode = element ? $isQuoteNode(element) : false;
+                const anchorNode = selection.anchor.getNode();
+                const element =
+                    anchorNode.getKey() === "root"
+                        ? anchorNode
+                        : anchorNode.getTopLevelElementOrThrow();
+                const elementKey = element.getKey();
+                const elementDOM = editor.getElementByKey(elementKey);
+
+                const listNode = $isListNode(element) ? element : null;
+                const listType = listNode ? listNode.getListType() : null;
+
+                const headingNode = $isHeadingNode(element) ? element : null;
+                const headingType = headingNode ? headingNode.getTag() : null;
+
+                const isBold = selection.hasFormat("bold");
+                const isItalic = selection.hasFormat("italic");
+                const isUnderline = selection.hasFormat("underline");
+                const isStrikethrough = selection.hasFormat("strikethrough");
+
+                const align = $isElementNode(element) ? element.getFormatType() : null;
 
                 setActiveFormats({
-                    bold: (format & 1) === 1,
-                    italic: (format & 2) === 2,
-                    underline: (format & 4) === 4,
-                    strikethrough: (format & 8) === 8,
-                    align: element?.getFormatType() as 'left' | 'center' | 'right' | null,
-                    list: listType === 'bullet' || listType === 'number' ? listType : null,
+                    bold: isBold,
+                    italic: isItalic,
+                    underline: isUnderline,
+                    strikethrough: isStrikethrough,
+                    list:
+                        listType === "bullet" || listType === "number" ? listType : null,
+                    align: align as "left" | "center" | "right" | null,
                     heading: headingType,
-                    quote: quoteNode,
                 });
             });
         });
     }, [editor]);
 
-    const formatText = useCallback((command: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection) && !selection.isCollapsed()) {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, command);
-            }
-        });
-    }, [editor]);
+    const formatText = useCallback(
+        (command: "bold" | "italic" | "underline" | "strikethrough") => {
+            editor.update(() => {
+                const selection = $getSelection();
+                if (!$isRangeSelection(selection)) {
+                    return;
+                }
 
-    const formatElement = useCallback((command: 'left' | 'center' | 'right') => {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection) && !selection.isCollapsed()) {
-                editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, command);
-            }
-        });
-    }, [editor]);
+                if (command === "underline") {
+                    if (selection.hasFormat("strikethrough")) {
+                        editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
+                    }
+                    editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline");
+                } else if (command === "strikethrough") {
+                    if (selection.hasFormat("underline")) {
+                        editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline");
+                    }
+                    editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
+                } else {
+                    editor.dispatchCommand(FORMAT_TEXT_COMMAND, command);
+                }
+            });
+        },
+        [editor],
+    );
 
-    const formatHeading = useCallback((type: HeadingTagType) => {
-        editor.update(() => {
-            const selection = $getSelection();
-            if (!$isRangeSelection(selection)) return;
+    const formatElement = useCallback(
+        (command: "left" | "center" | "right") => {
+            editor.update(() => {
+                const selection = $getSelection();
+                if ($isRangeSelection(selection)) {
+                    editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, command);
+                }
+            });
+        },
+        [editor],
+    );
 
-            const element = selection.anchor.getNode().getParent();
-            const isHeading = element ? $isHeadingNode(element) : false;
-            const currentType = isHeading ? (element as any).getTag() : null;
+    const formatHeading = useCallback(
+        (type: HeadingTagType) => {
+            editor.update(() => {
+                const selection = $getSelection();
+                if (!$isRangeSelection(selection)) return;
 
-            if (isHeading && currentType === type) {
-                $setBlocksType(selection, () => $createParagraphNode());
-            } else {
-                $setBlocksType(selection, () => $createHeadingNode(type));
-            }
-        });
-    }, [editor]);
+                const element = selection.anchor.getNode().getTopLevelElementOrThrow();
+                const isHeading = $isHeadingNode(element);
+                const currentType = isHeading ? element.getTag() : null;
 
-    const toggleQuote = useCallback(() => {
-        editor.update(() => {
-            const selection = $getSelection();
-            if (!$isRangeSelection(selection)) return;
-
-            const element = selection.anchor.getNode().getParent();
-            const isQuote = element ? $isQuoteNode(element) : false;
-
-            if (isQuote) {
-                $setBlocksType(selection, () => $createParagraphNode());
-            } else {
-                $setBlocksType(selection, () => $createQuoteNode());
-            }
-        });
-    }, [editor]);
+                if (isHeading && currentType === type) {
+                    $setBlocksType(selection, () => $createParagraphNode());
+                } else {
+                    $setBlocksType(selection, () => $createHeadingNode(type));
+                }
+            });
+        },
+        [editor],
+    );
 
     const toggleUnOrderList = useCallback(() => {
         editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
@@ -145,70 +179,72 @@ export const Toolbar = () => {
 
     return (
         <>
-            <div className="flex flex-col gap-1 p-1">
-                <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-0.5 p-1">
+                <div className="flex flex-wrap gap-0.5">
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.heading === 'h1' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatHeading('h1')}
+                        className={`btn btn-sm ${activeFormats.heading === "h1" ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatHeading("h1")}
                         aria-label={t("editor.heading1")}
                     >
                         <Heading1 className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.heading === 'h2' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatHeading('h2')}
+                        className={`btn btn-sm ${activeFormats.heading === "h2" ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatHeading("h2")}
                         aria-label={t("editor.heading2")}
                     >
                         <Heading2 className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.heading === 'h3' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatHeading('h3')}
+                        className={`btn btn-sm ${activeFormats.heading === "h3" ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatHeading("h3")}
                         aria-label={t("editor.heading3")}
                     >
                         <Heading3 className="h-4 w-4" />
                     </button>
-                    <div className="divider divider-horizontal mx-0"></div>
+                </div>
+                <div className="divider divider-horizontal mx-0"></div>
+                <div className="flex flex-wrap gap-0.5">
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.bold ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatText('bold')}
+                        className={`btn btn-sm ${activeFormats.bold ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatText("bold")}
                         aria-label={t("editor.bold")}
                     >
                         <Bold className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.italic ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatText('italic')}
+                        className={`btn btn-sm ${activeFormats.italic ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatText("italic")}
                         aria-label={t("editor.italic")}
                     >
                         <Italic className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.underline ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatText('underline')}
+                        className={`btn btn-sm ${activeFormats.underline ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatText("underline")}
                         aria-label={t("editor.underline")}
                     >
                         <Underline className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.strikethrough ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatText('strikethrough')}
+                        className={`btn btn-sm ${activeFormats.strikethrough ? "btn-active" : "btn-ghost"}`}
+                        onClick={() => formatText("strikethrough")}
                         aria-label={t("editor.strikethrough")}
                     >
                         <Strikethrough className="h-4 w-4" />
                     </button>
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-0.5">
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.list === 'bullet' ? 'btn-primary' : 'btn-ghost'}`}
+                        className={`btn btn-sm ${activeFormats.list === "bullet" ? "btn-active" : "btn-ghost"}`}
                         onClick={toggleUnOrderList}
                         aria-label={t("editor.bulletList")}
                     >
@@ -216,47 +252,38 @@ export const Toolbar = () => {
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-sm ${activeFormats.list === 'number' ? 'btn-primary' : 'btn-ghost'}`}
+                        className={`btn btn-sm ${activeFormats.list === "number" ? "btn-active" : "btn-ghost"}`}
                         onClick={toggleOrderList}
                         aria-label={t("editor.numberedList")}
                     >
                         <ListOrdered className="h-4 w-4" />
                     </button>
-                    <div className="divider divider-horizontal mx-0"></div>
-                    <button
-                        type="button"
-                        className={`btn btn-sm ${activeFormats.align === 'left' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatElement('left')}
-                        aria-label={t("editor.alignLeft")}
-                    >
-                        <AlignLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn btn-sm ${activeFormats.align === 'center' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatElement('center')}
-                        aria-label={t("editor.alignCenter")}
-                    >
-                        <AlignCenter className="h-4 w-4" />
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn btn-sm ${activeFormats.align === 'right' ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={() => formatElement('right')}
-                        aria-label={t("editor.alignRight")}
-                    >
-                        <AlignRight className="h-4 w-4" />
-                    </button>
-                    <div className="divider divider-horizontal mx-0"></div>
-                    <button
-                        type="button"
-                        className={`btn btn-sm ${activeFormats.quote ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={toggleQuote}
-                        aria-label={t("editor.quote")}
-                    >
-                        <Quote className="h-4 w-4" />
-                    </button>
                 </div>
+                <div className="divider divider-horizontal mx-0"></div>
+                <button
+                    type="button"
+                    className={`btn btn-sm ${activeFormats.align === "left" ? "btn-active" : "btn-ghost"}`}
+                    onClick={() => formatElement("left")}
+                    aria-label={t("editor.alignLeft")}
+                >
+                    <AlignLeft className="h-4 w-4" />
+                </button>
+                <button
+                    type="button"
+                    className={`btn btn-sm ${activeFormats.align === "center" ? "btn-active" : "btn-ghost"}`}
+                    onClick={() => formatElement("center")}
+                    aria-label={t("editor.alignCenter")}
+                >
+                    <AlignCenter className="h-4 w-4" />
+                </button>
+                <button
+                    type="button"
+                    className={`btn btn-sm ${activeFormats.align === "right" ? "btn-active" : "btn-ghost"}`}
+                    onClick={() => formatElement("right")}
+                    aria-label={t("editor.alignRight")}
+                >
+                    <AlignRight className="h-4 w-4" />
+                </button>
             </div>
             <div className="divider my-0"></div>
         </>
