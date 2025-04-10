@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { For, } from "solid-js";
+import { For } from "solid-js";
 import { panelSidebarData } from "../data/data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { showPanelSidebarAddModal } from "./panel-sidebar-modal";
-import { CPanelSidebar } from "./panel-sidebar";
-
-
+import type { CPanelSidebar } from "./panel-sidebar";
 
 export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
   return (
@@ -18,11 +16,7 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
       class="webpanel-box chromeclass-extrachrome"
     >
       <For each={panelSidebarData()}>
-        {(panel) =>
-
-          <PanelSidebarButton panel={panel} ctx={props.ctx} />
-        }
-
+        {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
       </For>
       <xul:toolbarbutton
         id="panel-sidebar-add"
@@ -33,14 +27,6 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
       />
       <xul:spacer flex="1" />
       <xul:vbox id="panel-sidebar-bottomButtonBox">
-        <xul:toolbarbutton
-          class="panel-sidebar-panel"
-          data-l10n-id="sidebar2-hide-sidebar"
-          onCommand={() =>
-            Services.prefs.setBoolPref("floorp.browser.sidebar.enable", false)
-          }
-          id="panel-sidebar-hide-icon"
-        />
         <xul:toolbarbutton
           class="panel-sidebar-panel"
           data-l10n-id="sidebar-addons-button"

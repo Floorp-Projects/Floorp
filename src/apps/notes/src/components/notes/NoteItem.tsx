@@ -118,8 +118,8 @@ export const NoteItem = ({ note, isSelected, onSelect, onDelete, isReorderMode }
                         </button>
                     )}
                 </div>
-                <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-base-content/70 truncate">{extractContent(note.content)}</span>
+                <div className="flex justify-between flex-row items-center overflow-y-hidden">
+                    <span className="text-xs flex-1 text-base-content/70 truncate text-left">{extractContent(note.content)}</span>
                     <span className="text-xs text-base-content/70">{formatDate(note.updatedAt)}</span>
                 </div>
             </button>
