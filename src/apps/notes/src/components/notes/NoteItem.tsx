@@ -1,6 +1,7 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { MoveVertical, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Note {
     id: string;
@@ -18,7 +19,14 @@ interface NoteItemProps {
     isReorderMode: boolean;
 }
 
+interface LexicalNode {
+    text?: string;
+    children?: LexicalNode[];
+    [key: string]: any;
+}
+
 export const NoteItem = ({ note, isSelected, onSelect, onDelete, isReorderMode }: NoteItemProps) => {
+    const { t } = useTranslation();
     const {
         attributes,
         listeners,
@@ -42,20 +50,33 @@ export const NoteItem = ({ note, isSelected, onSelect, onDelete, isReorderMode }
         }).format(date);
     };
 
-    const extractContent = (root: any) => {
-        function extractFromNestedObject(obj: any) {
-            if (obj.text !== undefined) {
-                return obj.text;
-            }
-
-            if (!obj.children) {
-                return "内容なし"
-            }
-
-            return obj.children.map((child: any) => extractFromNestedObject(child)).join("");
+    function extractFromNestedObject(obj: LexicalNode): string {
+        if (obj.text !== undefined) {
+            return obj.text;
         }
-        return extractFromNestedObject(root);
+
+        if (!obj.children) {
+            return "";
+        }
+        return obj.children.map((child: LexicalNode) => extractFromNestedObject(child)).join("");
     }
+
+    const extractContent = (content: string): string => {
+        if (!content || content.length === 0) {
+            return t("notes.emptyContent");
+        }
+
+        try {
+            const parsed = JSON.parse(content);
+            if (parsed.root) {
+                return extractFromNestedObject(parsed.root);
+            }
+            return String(parsed);
+        } catch (e) {
+            console.error("Failed to parse content:", e);
+            return content;
+        }
+    };
 
     return (
         <div
@@ -91,13 +112,14 @@ export const NoteItem = ({ note, isSelected, onSelect, onDelete, isReorderMode }
                                 e.stopPropagation();
                                 onDelete(note.id);
                             }}
+                            aria-label={t("notes.delete")}
                         >
                             <X className="h-3 w-3" />
                         </button>
                     )}
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-base-content/70 truncate">{note.content.length !== 0 ? extractContent(JSON.parse(note.content).root) : "内容なし"}</span>
+                    <span className="text-xs text-base-content/70 truncate">{extractContent(note.content)}</span>
                     <span className="text-xs text-base-content/70">{formatDate(note.updatedAt)}</span>
                 </div>
             </button>

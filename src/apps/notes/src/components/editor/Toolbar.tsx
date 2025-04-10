@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, $createParagraphNode } from "lexical";
 import { $createQuoteNode, $isQuoteNode, $createHeadingNode, $isHeadingNode, HeadingTagType } from "@lexical/rich-text";
-import { $createListNode, $isListNode, ListNode, ListType, INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from "@lexical/list";
+import { $isListNode, ListNode, INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from "@lexical/list";
 import { $setBlocksType } from "@lexical/selection";
+import { useTranslation } from "react-i18next";
 import {
     Bold,
     Italic,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 export const Toolbar = () => {
+    const { t } = useTranslation();
     const [editor] = useLexicalComposerContext();
     const [activeFormats, setActiveFormats] = useState<{
         bold: boolean;
@@ -149,7 +151,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.heading === 'h1' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatHeading('h1')}
-                        aria-label="見出し1"
+                        aria-label={t("editor.heading1")}
                     >
                         <Heading1 className="h-4 w-4" />
                     </button>
@@ -157,7 +159,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.heading === 'h2' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatHeading('h2')}
-                        aria-label="見出し2"
+                        aria-label={t("editor.heading2")}
                     >
                         <Heading2 className="h-4 w-4" />
                     </button>
@@ -165,7 +167,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.heading === 'h3' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatHeading('h3')}
-                        aria-label="見出し3"
+                        aria-label={t("editor.heading3")}
                     >
                         <Heading3 className="h-4 w-4" />
                     </button>
@@ -174,7 +176,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.bold ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatText('bold')}
-                        aria-label="太字"
+                        aria-label={t("editor.bold")}
                     >
                         <Bold className="h-4 w-4" />
                     </button>
@@ -182,7 +184,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.italic ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatText('italic')}
-                        aria-label="斜体"
+                        aria-label={t("editor.italic")}
                     >
                         <Italic className="h-4 w-4" />
                     </button>
@@ -190,7 +192,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.underline ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatText('underline')}
-                        aria-label="下線"
+                        aria-label={t("editor.underline")}
                     >
                         <Underline className="h-4 w-4" />
                     </button>
@@ -198,7 +200,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.strikethrough ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatText('strikethrough')}
-                        aria-label="取り消し線"
+                        aria-label={t("editor.strikethrough")}
                     >
                         <Strikethrough className="h-4 w-4" />
                     </button>
@@ -208,7 +210,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.list === 'bullet' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={toggleUnOrderList}
-                        aria-label="箇条書き"
+                        aria-label={t("editor.bulletList")}
                     >
                         <List className="h-4 w-4" />
                     </button>
@@ -216,7 +218,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.list === 'number' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={toggleOrderList}
-                        aria-label="番号付きリスト"
+                        aria-label={t("editor.numberedList")}
                     >
                         <ListOrdered className="h-4 w-4" />
                     </button>
@@ -225,7 +227,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.align === 'left' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatElement('left')}
-                        aria-label="左揃え"
+                        aria-label={t("editor.alignLeft")}
                     >
                         <AlignLeft className="h-4 w-4" />
                     </button>
@@ -233,7 +235,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.align === 'center' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatElement('center')}
-                        aria-label="中央揃え"
+                        aria-label={t("editor.alignCenter")}
                     >
                         <AlignCenter className="h-4 w-4" />
                     </button>
@@ -241,7 +243,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.align === 'right' ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => formatElement('right')}
-                        aria-label="右揃え"
+                        aria-label={t("editor.alignRight")}
                     >
                         <AlignRight className="h-4 w-4" />
                     </button>
@@ -250,7 +252,7 @@ export const Toolbar = () => {
                         type="button"
                         className={`btn btn-sm ${activeFormats.quote ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={toggleQuote}
-                        aria-label="引用"
+                        aria-label={t("editor.quote")}
                     >
                         <Quote className="h-4 w-4" />
                     </button>

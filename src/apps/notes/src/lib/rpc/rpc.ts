@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-const isLocalhost5186 = import.meta.url?.includes("localhost:5186");
+const isLocalhost5188 = import.meta.url?.includes("localhost:5188");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -47,7 +47,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5186
+export const rpc = isLocalhost5188
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

@@ -11,6 +11,7 @@ import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { SerializedEditorState, SerializedLexicalNode } from "lexical";
 import { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $getRoot, $createParagraphNode, $createTextNode } from "lexical";
 
 interface RichTextEditorProps {
     onChange: (editorState: SerializedEditorState<SerializedLexicalNode>) => void;
@@ -31,11 +32,29 @@ const EditorContent = ({ onChange, initialContent }: RichTextEditorProps) => {
 
     useEffect(() => {
         if (initialContent && !isInitialized.current) {
-            const parsedContent = JSON.parse(initialContent);
-            editor.setEditorState(editor.parseEditorState(parsedContent));
+            try {
+                const parsedContent = JSON.parse(initialContent);
+                editor.setEditorState(editor.parseEditorState(parsedContent));
+            } catch (e) {
+                console.log("Failed to parse initial content:", e);
+                editor.update(() => {
+                    const root = $getRoot();
+                    root.clear();
+
+                    const lines = initialContent.split("\n");
+
+                    for (const line of lines) {
+                        const paragraphNode = $createParagraphNode();
+                        if (line.length > 0) {
+                            paragraphNode.append($createTextNode(line));
+                        }
+                        root.append(paragraphNode);
+                    }
+                });
+            }
             isInitialized.current = true;
         }
-    }, [editor]);
+    }, [editor, initialContent]);
 
     return (
         <div className="flex flex-col h-full">

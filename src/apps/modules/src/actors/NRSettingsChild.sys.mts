@@ -17,6 +17,7 @@ export class NRSettingsChild extends JSWindowActorChild {
       window?.location.port === "5183" ||
       window?.location.port === "5186" ||
       window?.location.port === "5187" ||
+      window?.location.port === "5188" ||
       window?.location.href.startsWith("chrome://")
     ) {
       console.debug("NRSettingsChild 5183 ! or Chrome Page!");
