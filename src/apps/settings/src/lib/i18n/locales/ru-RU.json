@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "Требуется перезапуск",
-        "description": "После перезапуска, открытые приватные окна и вкладки будут утеряны.",
+        "description": "After restarting, the opened private windows and private tabs will be lost.",
         "cancel": "Позже",
         "restart": "Перезапустить сейчас"
     },
@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Исправление пользовательского интерфейса Firefox",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "Выбранная тема использует дизайн Lepton. Доступны дополнительные параметры настройки.",
-        "advancedLeptonThemeSettings": "Расширенные настройки темы Lepton",
         "interfaceDescription": "Выберите дизайн интерфейса. По умолчанию используется \"Lepton\".",
         "otherInterfaceSettings": "Другие настройки интерфейса",
         "useFaviconColorToBackgroundOfNavigationBar": "Использовать цвет Favicon для фона панели навигации",
@@ -117,6 +115,33 @@
             "minWidthError": "Ширина вкладки должна быть от {{min}} до {{max}} пикселей.",
             "minHeight": "Минимальная высота вкладки",
             "minHeightError": "Высота вкладки должна быть от {{min}} до {{max}} пикселей."
+        },
+        "uiCustomization": {
+            "title": "UI Customization",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "navbar": {
+                "title": "Navigation Bar",
+                "positionWithExperiment": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "Bottom",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "display": {
+                "title": "Display",
+                "disableFullscreenNotification": "Disable fullscreen notification",
+                "deleteBrowserBorder": "Remove browser border",
+                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+            },
+            "special": {
+                "title": "Special Features",
+                "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Multirow Tab",
+                "newtabInsideEnabled": "Show new tab button inside tab bar"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "Включить/выключить",
         "enablePwa": "Включите прогрессивные веб-приложения",
         "enablePwaDescription": "Позволяет устанавливать веб-сайты в качестве декстопных приложений",
-        "needRestartDescriptionForEnableAndDisable": "Вам нужно перезапустить {{productName}} , чтобы применить это изменение",
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
         "otherSettings": "Прочие настройки",
         "showToolbar": "Показать панель инструментов",
         "showToolbarDescription": "Отображение панели инструментов в окнах Прогрессивных Веб-приложений",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Restore Last Tab",
+            "gecko-restore-last-tab": "Reopen Closed Tab",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

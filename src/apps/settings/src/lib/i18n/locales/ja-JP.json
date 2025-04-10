@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "再起動が必要です",
-        "description": "再起動後、開いていたプライベートウィンドウとタブは失われます。",
+        "description": "再起動後、開いていたプライベートウィンドウとプライベートタブは失われます。",
         "cancel": "後で",
         "restart": "今すぐ再起動"
     },
@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Firefox UI Fix",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "選択されたテーマは Lepton デザインを使用しています。追加のカスタマイズ設定が利用可能です。",
-        "advancedLeptonThemeSettings": "Lepton テーマの詳細設定",
         "interfaceDescription": "インターフェイスのデザインを選択します。 既定は [Lepton] です。",
         "otherInterfaceSettings": "その他のインターフェイス設定",
         "useFaviconColorToBackgroundOfNavigationBar": "ナビゲーションバーの背景にファビコンの色を使用",
@@ -117,6 +115,33 @@
             "minWidthError": "タブの幅は、 {{min}} から {{max}} ピクセルの間でなければなりません。",
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
+        },
+        "uiCustomization": {
+            "title": "UI をカスタマイズ",
+            "needRestartDescriptionForEnableAndDisable": "この UI カスタマイズ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
+            "navbar": {
+                "title": "ナビゲーションバー",
+                "positionWithExperiment": "位置 (実験的)",
+                "top": "上",
+                "bottom": "下",
+                "searchBarTop": "ページ内検索バーを移動"
+            },
+            "display": {
+                "title": "表示",
+                "disableFullscreenNotification": "フルスクリーン通知を無効にする",
+                "deleteBrowserBorder": "ブラウザーの境界線を削除",
+                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す"
+            },
+            "special": {
+                "title": "特別な機能",
+                "optimizeForTreeStyleTab": "ツリー型タブに最適化",
+                "hideForwardBackwardButton": "進む/戻るボタンを隠す",
+                "stgLikeWorkspaces": "Simple Tab Groups をワークスペースのように使用"
+            },
+            "multirowTab": {
+                "title": "多段タブ",
+                "newtabInsideEnabled": "タブバーの中に [新しいタブ] ボタンを表示"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "有効化/無効化",
         "enablePwa": "プログレッシブウェブアプリを有効にする",
         "enablePwaDescription": "ウェブサイトをデスクトップアプリとしてインストール可能にする",
-        "needRestartDescriptionForEnableAndDisable": "この変更を適用するには、 {{productName}} の再起動が必要です",
+        "needRestartDescriptionForEnableAndDisable": "プログレッシブウェブアプリ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウィンドウにツールバーを表示します",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "新しいタブ",
             "gecko-duplicate-tab": "タブを複製",
             "gecko-reload-all-tabs": "すべてのタブを再読み込み",
-            "gecko-restore-last-tab": "最後に閉じたタブを復元",
+            "gecko-restore-last-tab": "閉じたタブを開きなおす",
             "gecko-open-new-window": "新しいウィンドウを開く",
             "gecko-open-new-private-window": "新しいプライベートウィンドウを開く",
             "gecko-close-window": "ウィンドウを閉じる",

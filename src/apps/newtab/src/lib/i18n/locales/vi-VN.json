@@ -1,14 +1,14 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "Add site",
+        "addNewSite": "Add new site",
         "url": "URL",
         "label": "Label",
         "cancel": "Cancel",
         "add": "Add",
         "close": "Close",
-        "labelPlaceholder": "Website Name"
+        "labelPlaceholder": "Website name"
     },
     "settings": {
         "newTabSettings": "New Tab Settings",
@@ -20,8 +20,13 @@
         "noBackground": "No Background",
         "randomImage": "Random Image",
         "customImage": "Custom Image",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Khuyến nghị: 1920x1080 hoặc lớn hơn",
+        "folderImages": "Images from Folder",
+        "floorpImages": "Floorp Images",
+        "currentImage": "Current image:",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Select Folder",
+        "selected": "Selected",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
         "close": "Close"
     },
     "searchBar": {

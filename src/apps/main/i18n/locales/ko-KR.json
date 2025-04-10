@@ -100,18 +100,18 @@
     },
     "mouseGesture": {
         "actions": {
-            "gecko-back": "Back",
-            "gecko-forward": "Forward",
-            "gecko-reload": "Reload",
-            "gecko-close-tab": "Close Tab",
-            "gecko-open-new-tab": "New Tab",
-            "gecko-duplicate-tab": "Duplicate Tab",
-            "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
-            "gecko-open-new-window": "Open New Window",
-            "gecko-open-new-private-window": "Open New Private Window",
-            "gecko-close-window": "Close Window",
-            "gecko-restore-last-window": "Restore Last Window",
+            "gecko-back": "뒤로 가기",
+            "gecko-forward": "앞으로 가기",
+            "gecko-reload": "새로 고침",
+            "gecko-close-tab": "탭 닫기",
+            "gecko-open-new-tab": "새 탭 열기",
+            "gecko-duplicate-tab": "탭 복제",
+            "gecko-reload-all-tabs": "모든 탭 새로 고침",
+            "gecko-restore-last-tab": "닫힌 탭 다시 열기",
+            "gecko-open-new-window": "새 창 열기",
+            "gecko-open-new-private-window": "새 사생활 보호 창 열기",
+            "gecko-close-window": "창 닫기",
+            "gecko-restore-last-window": "마지막 창 복원",
             "gecko-show-next-tab": "Show Next Tab",
             "gecko-show-previous-tab": "Show Previous Tab",
             "gecko-show-all-tabs-panel": "Show All Tabs Panel",
@@ -201,6 +201,16 @@
             "title": "Add Panel",
             "add": "Add",
             "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Unload this webpanel",
+            "mute": "Mute/Unmute this webpanel",
+            "changeZoom": "Change zoom level",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "resetZoom": "Reset zoom",
+            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+            "delete": "Delete this panel"
         }
     }
 }

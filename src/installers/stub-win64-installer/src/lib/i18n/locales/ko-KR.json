@@ -1,98 +1,98 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "백그라운드에서 설치 중입니다...",
+            "installComplete": "설치가 완료되었습니다"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "title": "Floorp 설치 관리자",
+            "description": "Floorp 브라우저를 설치하고 개인 정보 보호에 중점을 둔 빠르고 맞춤 설정이 가능한 브라우징 환경을 시작하세요.",
+            "adminRights": "관리자 권한으로 설치",
+            "adminRightsEnabled": "관리자 권한이 있는 모든 사용자에게 설치합니다.",
+            "adminRightsDisabled": "현재 사용자만 설치합니다.",
+            "customPathRequired": "사용자 지정 설치 경로에는 관리자 권한이 필요합니다.",
+            "installLocation": "설치 위치",
+            "change": "변경",
+            "installButton": "설치 시작",
+            "retryButton": "다시 시도"
         },
         "progress": {
-            "installing": "Installing...",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "installing": "설치 중입니다...",
+            "slideCounter": "슬라이드 {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "selectLocation": "설치 위치 선택",
+            "installPath": "설치 경로",
+            "browse": "찾아보기",
+            "resetDefault": "기본 설정으로 초기화",
+            "cancel": "취소",
+            "save": "설정 변경",
+            "close": "닫기"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "설치를 취소하시겠습니까?",
+            "message": "설치를 취소하면 Floorp가 설치되지 않습니다.",
+            "cancelButton": "취소",
+            "confirmButton": "설치 취소"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds"
+            "success": "설치 성공",
+            "error": "설치에 실패했습니다",
+            "launchCheckbox": "설치 후 Floorp 브라우저 실행",
+            "closeButton": "설치 관리자 닫기",
+            "countdownMessage": "{{count}}초 후 설치 프로그램이 닫힙니다"
         }
     },
     "slides": {
         "privacy": {
-            "title": "Privacy Protection",
-            "description": "Floorp is designed with user privacy as the top priority. Protect your online privacy with tracking prevention features and secure browsing mode."
+            "title": "개인정보 보호",
+            "description": "Floorp는 사용자의 개인 정보 보호를 최우선으로 고려하여 설계되었습니다. 추적 방지 기능과 보안 브라우징 모드로 온라인 개인 정보를 보호하세요."
         },
         "performance": {
-            "title": "Fast Performance",
-            "description": "Optimized engine provides speed for everything from page loading to tab switching, making your browsing experience smooth."
+            "title": "빠른 성능",
+            "description": "최적화된 엔진은 페이지 불러오기부터 탭 전환까지 모든 작업에서 빠른 속도를 제공하여 원활한 브라우징 환경을 제공합니다."
         },
         "customization": {
-            "title": "Rich Customization",
-            "description": "Floorp offers rich customization options. You can customize everything from the user interface to features to suit your preferences."
+            "title": "풍부한 맞춤 설정",
+            "description": "Floorp는 다양한 맞춤 설정을 제공합니다. 사용자 인터페이스부터 기능까지 모든 것을 원하는 대로 맞춤 설정할 수 있습니다."
         },
         "extensions": {
-            "title": "Extensive Extensions",
-            "description": "Compatible with Firefox extensions, allowing you to add your favorite tools and services to your browser."
+            "title": "광범위한 확장 기능",
+            "description": "Firefox에서 사용하는 확장 기능과 호환되어 즐겨 사용하는 도구와 서비스를 브라우저에 추가할 수 있습니다."
         },
         "multiplatform": {
-            "title": "Multi-Platform Support",
-            "description": "Available on various platforms including Windows, macOS, and Linux. Enjoy the same experience everywhere."
+            "title": "다중 플랫폼 지원",
+            "description": "Windows, macOS, Linux 등 다양한 플랫폼에서 사용할 수 있습니다. 언제 어디서나 동일한 경험을 즐겨보세요."
         },
         "navigation": {
-            "previous": "Previous",
-            "next": "Next",
-            "goto": "Go to slide {{number}}"
+            "previous": "이전",
+            "next": "다음",
+            "goto": "{{number}}번째 슬라이드로 이동"
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "Floorp 설치 관리자가 다운로드 되었습니다 (개발자 모드)",
+            "installation_complete": "Floorp 설치가 성공적으로 완료되었습니다."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "installer_not_found": "Floorp 설치 관리자를 찾지 못했습니다.",
+            "download_failed": "다운로드하는 동안 오류가 발생했습니다: {{0}}",
+            "signature_verification_failed": "설치 관리자 서명 확인에 실패했습니다. 보안상의 이유로 실행이 중단되었습니다.",
+            "signature_verification_error": "서명 확인 중 오류가 발생했습니다: {{0}}",
+            "installer_exit_code": "설치 관리자가 {{0}} 코드와 함께 종료되었습니다.",
+            "installer_execution": "설치 관리자를 실행하는 동안 오류가 발생했습니다: {{0}}",
+            "browser_not_found": "Floorp 브라우저를 찾을 수 없습니다. 설치는 성공했지만 브라우저 실행 파일을 찾을 수 없습니다.",
+            "browser_launch_failed": "브라우저를 시작하지 못했습니다: {{0}}",
+            "file_not_found": "파일을 찾을 수 없습니다: {{0}}",
+            "not_a_file": "경로에 파일이 없습니다: {{0}}",
+            "admin_rights_denied": "관리자 권한이 거부되었습니다. 관리자 권한 모드를 선택했지만 권한이 거부되었습니다.",
+            "exit_code_not_found": "설치 프로그램의 종료 코드를 가져올 수 없습니다. 관리자 권한이 거부되었을 수 있습니다.",
+            "powershell_script_creation": "PowerShell 스크립트를 만들지 못했습니다: {{0}}",
+            "powershell_process": "PowerShell 프로세스를 시작하지 못했습니다: {{0}}",
+            "admin_install_failed": "관리자 권한으로 설치하지 못했습니다. 종료 코드: {{0}}",
+            "user_installer_launch": "사용자 권한으로 인해 설치 관리자 프로세스를 시작하지 못했습니다: {{0}}",
+            "user_installer_execution": "사용자 권한으로 설치 프로그램을 실행하는 동안 문제가 발생했습니다: {{0}}"
         }
     }
 }

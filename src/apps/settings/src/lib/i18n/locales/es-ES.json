@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "Restart Required",
-        "description": "After restarting, the opened private windows and tabs will be lost.",
+        "description": "After restarting, the opened private windows and private tabs will be lost.",
         "cancel": "Later",
         "restart": "Restart Now"
     },
@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Firefox UI Fix",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "The selected theme uses Lepton design. Additional customization options are available.",
-        "advancedLeptonThemeSettings": "Advanced Lepton Theme Settings",
         "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
         "otherInterfaceSettings": "Other Interface Settings",
         "useFaviconColorToBackgroundOfNavigationBar": "Use Favicon Color for Navigation Bar Background",
@@ -117,6 +115,33 @@
             "minWidthError": "Tab width must be between {{min}} and {{max}} pixels.",
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
+        },
+        "uiCustomization": {
+            "title": "UI Customization",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "navbar": {
+                "title": "Navigation Bar",
+                "positionWithExperiment": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "Bottom",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "display": {
+                "title": "Display",
+                "disableFullscreenNotification": "Disable fullscreen notification",
+                "deleteBrowserBorder": "Remove browser border",
+                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+            },
+            "special": {
+                "title": "Special Features",
+                "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Multirow Tab",
+                "newtabInsideEnabled": "Show new tab button inside tab bar"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "Enable/Disable",
         "enablePwa": "Enable Progressive Web Apps",
         "enablePwaDescription": "Allow websites to be installed as desktop apps",
-        "needRestartDescriptionForEnableAndDisable": "You need to restart {{productName}} to apply this change",
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
         "otherSettings": "Other Settings",
         "showToolbar": "Show Toolbar",
         "showToolbarDescription": "Display the toolbar in Progressive Web App windows",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Restore Last Tab",
+            "gecko-restore-last-tab": "Reabrir pestaña cerrada",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

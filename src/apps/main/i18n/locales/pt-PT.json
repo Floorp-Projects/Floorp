@@ -201,6 +201,16 @@
             "title": "Add Panel",
             "add": "Add",
             "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Descarregar este painel Web",
+            "mute": "Silenciar/Ativar este painel Web",
+            "changeZoom": "Alterar o nível de zoom",
+            "zoomIn": "Ampliar",
+            "zoomOut": "Reduzir",
+            "resetZoom": "Repor o zoom",
+            "changeUA": "Mudar o agente do utilizador para a versão móvel/desktop neste Webpanel",
+            "delete": "Eliminar este painel"
         }
     }
 }

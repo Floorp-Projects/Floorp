@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "Genstart påkrævet",
-        "description": "Efter genstart går de åbne private vinduer og faner tabt.",
+        "description": "After restarting, the opened private windows and private tabs will be lost.",
         "cancel": "Senere",
         "restart": "Genstart nu"
     },
@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Firefox UI-rettelse",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "Det valgte tema bruger Lepton-design. Flere tilpasningsmuligheder er tilgængelige.",
-        "advancedLeptonThemeSettings": "Avancerede indstillinger for Lepton-tema",
         "interfaceDescription": "Vælg brugerfladedesignet. \"Lepton\" er standard.",
         "otherInterfaceSettings": "Andre brugerfladeindstillinger",
         "useFaviconColorToBackgroundOfNavigationBar": "Brug faviconfarve som baggrund for navigationslinjen",
@@ -117,6 +115,33 @@
             "minWidthError": "Fanebredde skal være mellem {{min}} og {{max}} pixels.",
             "minHeight": "Minimum fanehøjde",
             "minHeightError": "Fanehøjde skal være mellem {{min}} og {{max}} pixels."
+        },
+        "uiCustomization": {
+            "title": "UI Customization",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "navbar": {
+                "title": "Navigation Bar",
+                "positionWithExperiment": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "Bottom",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "display": {
+                "title": "Display",
+                "disableFullscreenNotification": "Disable fullscreen notification",
+                "deleteBrowserBorder": "Remove browser border",
+                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+            },
+            "special": {
+                "title": "Special Features",
+                "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Multirow Tab",
+                "newtabInsideEnabled": "Show new tab button inside tab bar"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "Aktivér/deaktivér",
         "enablePwa": "Aktivér Progressive Webapps",
         "enablePwaDescription": "Tillad websteder at blive installeret som computerapps",
-        "needRestartDescriptionForEnableAndDisable": "Du skal genstarte {{productName}} for at anvende denne ændring.",
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
         "otherSettings": "Andre indstillinger",
         "showToolbar": "Vis værktøjslinje",
         "showToolbarDescription": "Vis værktøjslinjen i Progressive Webapp-vinduer",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "Ny fane",
             "gecko-duplicate-tab": "Dupliker fane",
             "gecko-reload-all-tabs": "Genindlæs alle faner",
-            "gecko-restore-last-tab": "Gendan sidste fane",
+            "gecko-restore-last-tab": "Genåbn lukket fane",
             "gecko-open-new-window": "Åbn nyt vindue",
             "gecko-open-new-private-window": "Åbn nyt privat vindue",
             "gecko-close-window": "Luk vindue",

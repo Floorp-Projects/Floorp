@@ -201,6 +201,16 @@
             "title": "Tambahkan Panel",
             "add": "Tambah",
             "cancel": "Batal"
+        },
+        "contextMenu": {
+            "unload": "Bongkar panel ini",
+            "mute": "Senyapkan/Suarakan panel ini",
+            "changeZoom": "Ubah tingkat zum",
+            "zoomIn": "Zum masuk",
+            "zoomOut": "Zum keluar",
+            "resetZoom": "Ukuran semula",
+            "changeUA": "Ganti agen Pengguna ke versi Seluler/Desktop pada panel ini",
+            "delete": "Hapus panel ini"
         }
     }
 }

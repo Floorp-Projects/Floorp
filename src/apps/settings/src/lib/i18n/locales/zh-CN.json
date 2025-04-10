@@ -9,7 +9,7 @@
     },
     "restartWarningDialog": {
         "title": "需要重启",
-        "description": "重启后，打开的隐私窗口和标签将丢失。",
+        "description": "重新启动后，已打开的私人窗口和私人标签页将丢失。",
         "cancel": "稍后",
         "restart": "立即重启"
     },
@@ -24,7 +24,7 @@
     "pages": {
         "home": "主页",
         "tabAndAppearance": "标签页和外观",
-        "browserSidebar": "Panel Sidebar",
+        "browserSidebar": "面板侧边栏",
         "workspaces": "工作区",
         "keyboardShortcuts": "键盘快捷键",
         "webApps": "应用",
@@ -36,8 +36,8 @@
     },
     "home": {
         "welcome": "欢迎您， {{name}}👋",
-        "defaultAccountName": "{{productName}} User",
-        "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
+        "defaultAccountName": "{{productName}} 用户",
+        "description": "管理您的账户、隐私和安全，提升您的 {{productName}} 体验。",
         "setup": {
             "title": "Setup",
             "footerLinkText": "登录账户",
@@ -74,10 +74,8 @@
         "proton": "Proton",
         "lepton": "Lepton",
         "photon": "Photon",
-        "protonfix": "Firefox UI Fix",
+        "protonfix": "Firefox UI 修复",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "The selected theme uses Lepton design. Additional customization options are available.",
-        "advancedLeptonThemeSettings": "Lepton 主题高级设置",
         "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
         "otherInterfaceSettings": "其他界面设置",
         "useFaviconColorToBackgroundOfNavigationBar": "将 Favicon 颜色用于导航栏背景",
@@ -117,6 +115,33 @@
             "minWidthError": "Tab width must be between {{min}} and {{max}} pixels.",
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
+        },
+        "uiCustomization": {
+            "title": "UI Customization",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "navbar": {
+                "title": "Navigation Bar",
+                "positionWithExperiment": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "底部",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "display": {
+                "title": "显示",
+                "disableFullscreenNotification": "Disable fullscreen notification",
+                "deleteBrowserBorder": "Remove browser border",
+                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+            },
+            "special": {
+                "title": "Special Features",
+                "optimizeForTreeStyleTab": "Optimize for Tree Style Tab",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Multirow Tab",
+                "newtabInsideEnabled": "Show new tab button inside tab bar"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "启用/禁用",
         "enablePwa": "启用渐进式 Web App（PWA）",
         "enablePwaDescription": "Allow websites to be installed as desktop apps",
-        "needRestartDescriptionForEnableAndDisable": "You need to restart {{productName}} to apply this change",
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
         "otherSettings": "其它设置",
         "showToolbar": "显示工具栏",
         "showToolbarDescription": "Display the toolbar in Progressive Web App windows",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Restore Last Tab",
+            "gecko-restore-last-tab": "重新打开关闭的标签页",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

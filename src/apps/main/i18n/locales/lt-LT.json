@@ -201,6 +201,16 @@
             "title": "Add Panel",
             "add": "Add",
             "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Unload this webpanel",
+            "mute": "Mute/Unmute this webpanel",
+            "changeZoom": "Change zoom level",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "resetZoom": "Reset zoom",
+            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+            "delete": "Delete this panel"
         }
     }
 }

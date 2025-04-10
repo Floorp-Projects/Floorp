@@ -76,8 +76,6 @@
         "photon": "Photon",
         "protonfix": "Firefox UI Fix",
         "fluerial": "Fluerial",
-        "advancedLeptonThemeSettingsDescription": "Tema terpilih menggunakan desain Lepton. Tersedia opsi penyesuaian tambahan.",
-        "advancedLeptonThemeSettings": "Pengaturan Tema Lepton Lebih Lanjut",
         "interfaceDescription": "Pilih desain antarmuka. Bawaannya adalah \"Lepton\".",
         "otherInterfaceSettings": "Pengaturan Antarmuka Lainnya",
         "useFaviconColorToBackgroundOfNavigationBar": "Gunakan Warna Favicon untuk Latar Belakang Bilah Navigasi",
@@ -117,6 +115,33 @@
             "minWidthError": "Lebar tab harus di antara {{min}} dan {{max}} piksel.",
             "minHeight": "Tinggi tab minimal",
             "minHeightError": "Tinggi tab harus di antara {{min}} dan {{max}} piksel."
+        },
+        "uiCustomization": {
+            "title": "Kustomisasi UI",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "navbar": {
+                "title": "Bilah Navigasi",
+                "positionWithExperiment": "Position (Experiment)",
+                "top": "Atas",
+                "bottom": "Bawah",
+                "searchBarTop": "Move page inside search bar"
+            },
+            "display": {
+                "title": "Display",
+                "disableFullscreenNotification": "Nonaktifkan notifikasi layar penuh",
+                "deleteBrowserBorder": "Hapus batas peramban",
+                "hideUnifiedExtensionsButton": "Sembunyikan tombol pengaya terpadu"
+            },
+            "special": {
+                "title": "Fitur Istimewa",
+                "optimizeForTreeStyleTab": "Optimalkan untuk Tree Style Tab",
+                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "multirowTab": {
+                "title": "Tab Multibaris",
+                "newtabInsideEnabled": "Tampilkan tombol tab baru dalam bilah tab"
+            }
         }
     },
     "workspaces": {
@@ -205,7 +230,7 @@
         "enableDisable": "(Non)Aktifkan",
         "enablePwa": "Aktifkan Aplikasi Web Progresif",
         "enablePwaDescription": "Izinkan situs web dipasang sebagai aplikasi desktop",
-        "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk menerapkan perubahan ini",
+        "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur aplikasi web progresif.",
         "otherSettings": "Pengaturan Lainnya",
         "showToolbar": "Tampilkan Bilah Alat",
         "showToolbarDescription": "Tampilkan bilah alat di jendela Aplikasi Web Progresif",
@@ -246,7 +271,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Restore Last Tab",
+            "gecko-restore-last-tab": "Buka Kembali Tab Tertutup",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

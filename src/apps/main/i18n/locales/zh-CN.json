@@ -128,14 +128,14 @@
             "gecko-mute-current-tab": "静音当前标签页",
             "gecko-show-source-of-page": "显示页面源码",
             "gecko-show-page-info": "显示页面信息",
-            "floorp-rest-mode": "Enable Rest Mode",
+            "floorp-rest-mode": "启用休息模式",
             "floorp-hide-user-interface": "隐藏界面",
             "floorp-toggle-navigation-panel": "切换导航栏",
             "gecko-stop": "停止",
             "gecko-search-in-this-page": "页内搜索",
             "gecko-show-next-search-result": "查找下一个",
             "gecko-show-previous-search-result": "查找上一个",
-            "gecko-search-the-web": "Search The Web",
+            "gecko-search-the-web": "搜索网页",
             "gecko-open-migration-wizard": "打开迁移向导",
             "gecko-quit-from-application": "退出程序",
             "gecko-enter-into-customize-mode": "进入自定义模式",
@@ -196,11 +196,21 @@
             "container": "容器",
             "noContainer": "无容器",
             "userAgent": "使用手机UserAgent",
-            "extension": "Display Extension",
+            "extension": "显示扩展",
             "sideBarTool": "显示侧边栏工具",
             "title": "添加面板",
             "add": "添加",
             "cancel": "取消"
+        },
+        "contextMenu": {
+            "unload": "卸载此面板",
+            "mute": "静音/取消静音此面板",
+            "changeZoom": "调整缩放",
+            "zoomIn": "放大",
+            "zoomOut": "缩小",
+            "resetZoom": "重置缩放",
+            "changeUA": "在该网络面板上将用户代理切换为移动/桌面版本",
+            "delete": "删除此面板"
         }
     }
 }

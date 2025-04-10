@@ -1,14 +1,14 @@
 {
     "title": "Floorp 起始页",
     "topSites": {
-        "addSite": "添加网站",
-        "addNewSite": "添加新网站",
+        "addSite": "Add site",
+        "addNewSite": "Add new site",
         "url": "网址链接",
         "label": "标签",
         "cancel": "取消",
         "add": "添加",
         "close": "关闭",
-        "labelPlaceholder": "网站名称"
+        "labelPlaceholder": "Website name"
     },
     "settings": {
         "newTabSettings": "新标签设置",
@@ -20,8 +20,13 @@
         "noBackground": "无背景",
         "randomImage": "随机图像",
         "customImage": "自定义图像",
-        "currentImage": "当前图片：",
-        "imageRecommendation": "建议使用 1920x1080 或更大的图像",
+        "folderImages": "Images from Folder",
+        "floorpImages": "Floorp Images",
+        "currentImage": "Current image:",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Select Folder",
+        "selected": "Selected",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
         "close": "关闭"
     },
     "searchBar": {

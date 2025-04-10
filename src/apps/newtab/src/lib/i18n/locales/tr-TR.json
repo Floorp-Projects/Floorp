@@ -1,14 +1,14 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add Site",
-        "addNewSite": "Add a New Site",
+        "addSite": "Add site",
+        "addNewSite": "Add new site",
         "url": "Adres",
         "label": "Etiket",
         "cancel": "İptal",
         "add": "Ekle",
         "close": "Kapat",
-        "labelPlaceholder": "Web Sitesi Adı"
+        "labelPlaceholder": "Website name"
     },
     "settings": {
         "newTabSettings": "Yeni Sekme Ayarları",
@@ -20,8 +20,13 @@
         "noBackground": "Arka Plan Yok",
         "randomImage": "Rastgele Görsel",
         "customImage": "Özel Görsel",
-        "currentImage": "Geçerli Görsel:",
-        "imageRecommendation": "Önerilen: 1920x1080 veya daha büyük görsel",
+        "folderImages": "Images from Folder",
+        "floorpImages": "Floorp Images",
+        "currentImage": "Current image:",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Select Folder",
+        "selected": "Selected",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
         "close": "Kapat"
     },
     "searchBar": {

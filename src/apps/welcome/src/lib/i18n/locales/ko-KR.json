@@ -1,42 +1,42 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "환영합니다",
+        "language": "언어",
+        "languageSupport": "언어 지원",
+        "features": "기능",
+        "featureIntroduction": "기능 소개",
+        "customize": "맞춤 설정",
+        "initialSettings": "초기 설정",
+        "complete": "완료",
+        "previous": "이전",
+        "next": "다음"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Floorp 맞춤 설정",
+        "description": "원하는 설정으로 맞춤 설정합니다. 나중에 Floorp 허브 또는 설정 페이지에서 언제든지 변경할 수 있습니다.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "모양 설정",
+            "description": "원하는 대로 Floorp의 모양을 맞춤 설정할 수 있습니다. 밝거나 어두운 테마를 선택하거나 시스템 설정에 따라 자동으로 전환되도록 설정할 수 있습니다."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "밝음",
+            "dark": "어두움",
+            "system": "시스템 설정에 따르기"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "밝은 테마",
+            "dark": "어두운 테마",
+            "system": "시스템 기본 설정"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "기본 검색 엔진",
+            "default": "기본",
+            "search": "검색",
+            "noEnginesFound": "검색 엔진을 찾을 수 없습니다."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
+        "title": "설정이 완료되었습니다!",
         "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
         "nextSteps": {
             "title": "Next Steps (Optional)",
@@ -65,9 +65,9 @@
         "languageSettings": "Language Settings",
         "languageChanged": "Language Changed!",
         "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
+        "systemLanguage": "시스템 언어",
+        "floorpLanguage": "Floorp 언어",
+        "selectLanguage": "언어 선택",
         "useSystemLanguage": "Use System Language",
         "multilingual": "Multilingual Support",
         "chooseLanguage": "Choose from a wide range of languages",

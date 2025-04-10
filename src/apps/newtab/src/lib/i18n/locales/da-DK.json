@@ -1,14 +1,14 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Tilføj websted",
-        "addNewSite": "Tilføj et nyt websted",
+        "addSite": "Add site",
+        "addNewSite": "Add new site",
         "url": "URL",
         "label": "Etiket",
         "cancel": "Annuller",
         "add": "Tilføj",
         "close": "Luk",
-        "labelPlaceholder": "Webstedsnavn"
+        "labelPlaceholder": "Website name"
     },
     "settings": {
         "newTabSettings": "Indstillinger for ny fane",
@@ -20,8 +20,13 @@
         "noBackground": "Ingen baggrund",
         "randomImage": "Tilfældigt billede",
         "customImage": "Brugerdefineret billede",
-        "currentImage": "Nuværende billede:",
-        "imageRecommendation": "Anbefalet: 1920x1080 eller større",
+        "folderImages": "Images from Folder",
+        "floorpImages": "Floorp Images",
+        "currentImage": "Current image:",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Select Folder",
+        "selected": "Selected",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
         "close": "Luk"
     },
     "searchBar": {

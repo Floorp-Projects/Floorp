@@ -20,8 +20,13 @@
         "noBackground": "Sem fundo",
         "randomImage": "Imagem aleatória",
         "customImage": "Imagem personalizada",
+        "folderImages": "Imagens da pasta",
+        "floorpImages": "Imagens de Floorp",
         "currentImage": "Imagem atual:",
-        "imageRecommendation": "Recomendado: Imagem de 1920x1080 ou maior",
+        "currentFolder": "Pasta atual:",
+        "selectFolder": "Selecionar pasta",
+        "selected": "Selecionado",
+        "imageRecommendation": "Recomendado: 1920x1080 ou superior",
         "close": "Fechar"
     },
     "searchBar": {
