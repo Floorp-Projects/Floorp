@@ -75,7 +75,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
                     get_artifact_path(dep_job, "SHA256SUMS"),
                     get_artifact_path(dep_job, "SHA512SUMS"),
                 ],
-                "formats": ["autograph_gpg"],
+                "formats": ["gcp_prod_autograph_gpg"],
             }
         ]
 

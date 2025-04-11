@@ -78,7 +78,7 @@ def set_detached_signature_artifacts(config, tasks):
 def set_signing_format(config, tasks):
     for task in tasks:
         for upstream_artifact in task["worker"]["upstream-artifacts"]:
-            upstream_artifact["formats"] = ["autograph_gpg"]
+            upstream_artifact["formats"] = ["gcp_prod_autograph_gpg"]
 
         yield task
 

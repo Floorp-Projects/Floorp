@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 
 SIGNING_FORMATS = {
     "mar-signing-autograph-stage": {
-        "target.complete.mar": ["autograph_stage_mar384"],
+        "target.complete.mar": ["gcp_prod_autograph_stage_mar384"],
     },
     "default": {
-        "target.complete.mar": ["autograph_hash_only_mar384"],
+        "target.complete.mar": ["gcp_prod_autograph_hash_only_mar384"],
     },
 }
 
@@ -48,7 +48,7 @@ def generate_partials_artifacts(job, release_history, platform, locale=None):
             "taskId": {"task-reference": "<partials>"},
             "taskType": "partials",
             "paths": [f"{artifact_prefix}/{path}" for path, version in artifacts],
-            "formats": ["autograph_hash_only_mar384"],
+            "formats": ["gcp_prod_autograph_hash_only_mar384"],
         }
     ]
 
