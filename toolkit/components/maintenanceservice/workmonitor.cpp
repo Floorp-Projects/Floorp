@@ -16,11 +16,14 @@
 #  pragma comment(lib, "rpcrt4.lib")
 #endif
 
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "nsWindowsHelpers.h"
-#include "mozilla/UniquePtr.h"
 
-using mozilla::UniquePtr;
+#include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
+
+using namespace mozilla;
 
 #include "workmonitor.h"
 #include "serviceinstall.h"
@@ -39,6 +42,192 @@ static const int TIME_TO_WAIT_ON_UPDATER = 15 * 60 * 1000;
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
                             LPCWSTR newFileName);
 BOOL DoesFallbackKeyExist();
+
+/**
+ * The updater is always the same version as the application, so there is no
+ * need for it to keep track of argument versioning. But the Maintenance
+ * Service may be called upon to update old versions of the application that are
+ * also installed. So it has to be able to handle any past argument format
+ * version.
+ */
+enum UpdaterArgVersion {
+  // The version 1 format looks like
+  // updater patch-dir apply-to-dir wait-pid [callback-working-dir callback-path
+  // args...]
+  Version1,
+  // The version 2 format looks like
+  // updater patch-dir install-dir apply-to-dir [wait-pid [callback-working-dir
+  // callback-path args...]]
+  Version2,
+  // The version 3 format looks like
+  // updater 3 patch-dir install-dir apply-to-dir which-invocation [wait-pid
+  // [callback-working-dir callback-path args...]]
+  Version3,
+};
+
+/**
+ * Represents the arguments passed to the MMS symbolically rather than
+ * numerically so that we don't have to do a bunch of version checking and
+ * index juggling every time we want a value.
+ *
+ * Should only be instantiated via `parseUpdaterArgs`.
+ *
+ * Raw character pointers will be references to within `argv` and are guaranteed
+ * not to be `null`.
+ *
+ * It's very intentional that the only non-optional raw argument pointers are
+ * the updater and the patch directory. It is important that `parseUpdaterArgs`
+ * be as permissive as possible by always making a best effort attempt to return
+ * at least the patch directory so that we can write a failure status there,
+ * even if none of the other arguments are valid.
+ */
+struct UpdaterArgs {
+  UpdaterArgVersion version;
+  UniquePtr<wchar_t[]> fullCommandLine;
+  NotNull<wchar_t*> updaterBin;
+  NotNull<wchar_t*> patchDirPath;
+  Maybe<NotNull<wchar_t*>> installDirPath;
+  Maybe<NotNull<wchar_t*>> applyToDirPath;
+  Maybe<NotNull<wchar_t*>> whichInvocation;
+  Maybe<NotNull<wchar_t*>> waitPid;
+  Maybe<NotNull<wchar_t*>> callbackWorkingDir;
+  Maybe<NotNull<wchar_t*>> callbackBinPath;
+  // The callback arguments are currently not included here (other than in
+  // `fullCommandLine`) simply because we do not need them in the Maintenance
+  // Service (other than to pass unmodified to the updater).
+};
+
+Maybe<NotNull<wchar_t*>> optionalArg(int argc, wchar_t** argv, int index) {
+  if (argc > index) {
+    return Some(WrapNotNull(argv[index]));
+  }
+  return Nothing();
+}
+
+/**
+ * Determines whether the param only contains digits.
+ *
+ * @param str     The string to check
+ * @param boolean True if the param only contains digits
+ */
+static bool isDigits(wchar_t* str) {
+  while (*str) {
+    if (!iswdigit(*str++)) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+void logParam(const char* name, Maybe<NotNull<wchar_t*>>& maybeValue) {
+  if (maybeValue) {
+    LOG(("Loaded param %s as \"%S\"", name, maybeValue.value().get()));
+  } else {
+    LOG(("Loaded param %s as Nothing", name));
+  }
+}
+
+/**
+ * See `UpdaterArgs`.
+ * Returns `Nothing` if the arguments can't be parsed at all.
+ */
+Maybe<UpdaterArgs> parseUpdaterArgs(int argc, wchar_t** argv) {
+  if (argc < 1) {
+    LOG_WARN(("Argument parsing failed: No arguments!"));
+    return Nothing();
+  }
+  Maybe<NotNull<wchar_t*>> updaterBin = Some(WrapNotNull(argv[0]));
+
+  UniquePtr<wchar_t[]> fullCommandLine = mozilla::MakeCommandLine(argc, argv);
+  LOG(("Command Line: %S", fullCommandLine.get()));
+
+  UpdaterArgVersion version;
+  Maybe<NotNull<wchar_t*>> patchDirPath = Nothing();
+  Maybe<NotNull<wchar_t*>> installDirPath = Nothing();
+  Maybe<NotNull<wchar_t*>> applyToDirPath = Nothing();
+  Maybe<NotNull<wchar_t*>> whichInvocation = Nothing();
+  Maybe<NotNull<wchar_t*>> waitPid = Nothing();
+  Maybe<NotNull<wchar_t*>> callbackWorkingDir = Nothing();
+  Maybe<NotNull<wchar_t*>> callbackBinPath = Nothing();
+  if (argc > 1 && wcscmp(argv[1], L"3") == 0) {
+    LOG(("Identified argument format version 3"));
+    version = UpdaterArgVersion::Version3;
+
+    // The version 3 format looks like
+    // index   0    1     2         3            4              5
+    //      updater 3 patch-dir install-dir apply-to-dir which-invocation
+    // index    6            7                    8         9+
+    //      [wait-pid [callback-working-dir callback-path args...]]
+    if (argc < 3) {
+      LOG_WARN(("No arguments for version 3"));
+      return Nothing();
+    }
+    patchDirPath = Some(WrapNotNull(argv[2]));
+    installDirPath = optionalArg(argc, argv, 3);
+    applyToDirPath = optionalArg(argc, argv, 4);
+    whichInvocation = optionalArg(argc, argv, 5);
+    waitPid = optionalArg(argc, argv, 6);
+    callbackWorkingDir = optionalArg(argc, argv, 7);
+    callbackBinPath = optionalArg(argc, argv, 8);
+  } else if ((argc == 4 && wcscmp(argv[3], L"-1") == 0) ||
+             (argc >= 4 &&
+              (wcsstr(argv[3], L"/replace") != nullptr || isDigits(argv[3])))) {
+    LOG(("Identified argument format version 1"));
+    version = UpdaterArgVersion::Version1;
+
+    // The version 1 format looks like
+    // index   0         1          2          3              4
+    //      updater patch-dir apply-to-dir wait-pid [callback-working-dir
+    // index      5         6+
+    //      callback-path args...]
+    patchDirPath = Some(WrapNotNull(argv[1]));
+    applyToDirPath = Some(WrapNotNull(argv[2]));
+    waitPid = Some(WrapNotNull(argv[3]));
+    callbackWorkingDir = optionalArg(argc, argv, 4);
+    callbackBinPath = optionalArg(argc, argv, 5);
+  } else {
+    LOG(("Identified argument format version 2"));
+    version = UpdaterArgVersion::Version2;
+
+    // The version 2 format looks like
+    // index   0         1         2            3          4
+    //      updater patch-dir install-dir apply-to-dir [wait-pid
+    // index       5                    6         7+
+    //      [callback-working-dir callback-path args...]]
+    if (argc < 2) {
+      LOG_WARN(("No arguments for version 2"));
+      return Nothing();
+    }
+    patchDirPath = Some(WrapNotNull(argv[1]));
+    installDirPath = optionalArg(argc, argv, 2);
+    applyToDirPath = optionalArg(argc, argv, 3);
+    waitPid = optionalArg(argc, argv, 4);
+    callbackWorkingDir = optionalArg(argc, argv, 5);
+    callbackBinPath = optionalArg(argc, argv, 6);
+  }
+
+  logParam("updaterBin", updaterBin);
+  logParam("patchDirPath", patchDirPath);
+  logParam("installDirPath", installDirPath);
+  logParam("applyToDirPath", applyToDirPath);
+  logParam("whichInvocation", whichInvocation);
+  logParam("waitPid", waitPid);
+  logParam("callbackWorkingDir", callbackWorkingDir);
+  logParam("callbackBinPath", callbackBinPath);
+
+  return Some(UpdaterArgs{
+      .version = version,
+      .fullCommandLine = std::move(fullCommandLine),
+      .updaterBin = updaterBin.value(),
+      .patchDirPath = patchDirPath.value(),
+      .installDirPath = installDirPath,
+      .applyToDirPath = applyToDirPath,
+      .whichInvocation = whichInvocation,
+      .waitPid = waitPid,
+      .callbackWorkingDir = callbackWorkingDir,
+      .callbackBinPath = callbackBinPath,
+  });
+}
 
 /*
  * Reads the secure update status file and sets isApplying to true if the status
@@ -83,78 +272,59 @@ static BOOL IsStatusApplying(LPCWSTR patchDirPath, BOOL& isApplying) {
 /**
  * Determines whether we're staging an update.
  *
- * @param  argc    The argc value normally sent to updater.exe
- * @param  argv    The argv value normally sent to updater.exe
+ * @param  args    The updater arguments.
  * @return boolean True if we're staging an update
  */
-static bool IsUpdateBeingStaged(int argc, LPWSTR* argv) {
+static bool IsUpdateBeingStaged(const UpdaterArgs& args) {
   // PID will be set to -1 if we're supposed to stage an update.
-  return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
-         (argc == 5 && !wcscmp(argv[4], L"-1"));
+  return args.waitPid && wcscmp(args.waitPid.value(), L"-1") == 0;
 }
 
 /**
- * Determines whether the param only contains digits.
+ * Determines whether the update request we are servicing is a replace request.
  *
- * @param str     The string to check
- * @param boolean True if the param only contains digits
+ * @param  args    The updater arguments.
+ * @return boolean True if this is a replace request
  */
-static bool IsDigits(WCHAR* str) {
-  while (*str) {
-    if (!iswdigit(*str++)) {
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-/**
- * Determines whether the command line contains just the directory to apply the
- * update to (old command line) or if it contains the installation directory and
- * the directory to apply the update to.
- *
- * @param argc    The argc value normally sent to updater.exe
- * @param argv    The argv value normally sent to updater.exe
- * @param boolean True if the command line contains just the directory to apply
- *                the update to
- */
-static bool IsOldCommandline(int argc, LPWSTR* argv) {
-  return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
-         (argc >= 4 && (wcsstr(argv[3], L"/replace") || IsDigits(argv[3])));
+static bool IsUpdateAReplaceRequest(const UpdaterArgs& args) {
+  return args.waitPid && wcsstr(args.waitPid.value(), L"/replace");
 }
 
 /**
  * Gets the installation directory from the arguments passed to updater.exe.
  *
- * @param argcTmp    The argc value normally sent to updater.exe
- * @param argvTmp    The argv value normally sent to updater.exe
+ * @param args       The updater arguments.
  * @param aResultDir Buffer to hold the installation directory.
  */
-static BOOL GetInstallationDir(int argcTmp, LPWSTR* argvTmp,
+static BOOL GetInstallationDir(const UpdaterArgs& args,
                                WCHAR aResultDir[MAX_PATH + 1]) {
-  int index = 3;
-  if (IsOldCommandline(argcTmp, argvTmp)) {
-    index = 2;
-  }
-
-  if (argcTmp < index) {
+  if (args.installDirPath) {
+    wcsncpy(aResultDir, args.installDirPath.value(), MAX_PATH);
+  } else if (args.applyToDirPath) {
+    if (args.version != UpdaterArgVersion::Version1) {
+      // In version 1, we infer the install directory from the "apply to"
+      // directory (i.e. using it directly or converting "dir\Firefox\updated"
+      // to "dir\Firefox"). But this is only an appropriate conversion to make
+      // in version 1, when (a) the arguments were guaranteed to have
+      // a format that would work like this, and (b) it was valid to not specify
+      // the install directory as an argument.
+      return FALSE;
+    }
+    wcsncpy(aResultDir, args.applyToDirPath.value(), MAX_PATH);
+  } else {
     return FALSE;
   }
 
-  wcsncpy(aResultDir, argvTmp[2], MAX_PATH);
   WCHAR* backSlash = wcsrchr(aResultDir, L'\\');
   // Make sure that the path does not include trailing backslashes
   if (backSlash && (backSlash[1] == L'\0')) {
     *backSlash = L'\0';
   }
 
-  // The new command line's argv[2] is always the installation directory.
-  if (index == 2) {
-    bool backgroundUpdate = IsUpdateBeingStaged(argcTmp, argvTmp);
-    bool replaceRequest = (argcTmp >= 4 && wcsstr(argvTmp[3], L"/replace"));
-    if (backgroundUpdate || replaceRequest) {
-      return PathRemoveFileSpecW(aResultDir);
-    }
+  // Handle the version 1 "dir\Firefox\updated" to "dir\Firefox" conversion.
+  if (!args.installDirPath &&
+      (IsUpdateBeingStaged(args) || IsUpdateAReplaceRequest(args))) {
+    return PathRemoveFileSpecW(aResultDir);
   }
   return TRUE;
 }
@@ -162,13 +332,11 @@ static BOOL GetInstallationDir(int argcTmp, LPWSTR* argvTmp,
 /**
  * Runs an update process as the service using the SYSTEM account.
  *
- * @param  argc           The number of arguments in argv
- * @param  argv           The arguments normally passed to updater.exe
- *                        argv[0] must be the path to updater.exe
+ * @param  args           The updater arguments.
  * @param  processStarted Set to TRUE if the process was started.
  * @return TRUE if the update process was run had a return code of 0.
  */
-BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
+BOOL StartUpdateProcess(const UpdaterArgs& args, LPCWSTR installDir,
                         BOOL& processStarted) {
   processStarted = FALSE;
 
@@ -179,37 +347,19 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
   ZeroMemory(&si, sizeof(si));
   ZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\Default");  // -Wwritable-strings
-
-  // The updater command line is of the form:
-  // updater.exe update-dir apply [wait-pid [callback-dir callback-path args]]
-  auto cmdLine = mozilla::MakeCommandLine(argc, argv);
-
-  int index = 3;
-  if (IsOldCommandline(argc, argv)) {
-    index = 2;
-  }
-
-  // If we're about to start the update process from session 0,
-  // then we should not show a GUI.  This only really needs to be done
-  // on Vista and higher, but it's better to keep everything consistent
-  // across all OS if it's of no harm.
-  if (argc >= index) {
-    // Setting the desktop to blank will ensure no GUI is displayed
-    si.lpDesktop = const_cast<LPWSTR>(L"");  // -Wwritable-strings
-    si.dwFlags |= STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
-  }
+  si.lpDesktop = const_cast<LPWSTR>(L"");  // -Wwritable-strings
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = SW_HIDE;
 
   // Add an env var for MOZ_USING_SERVICE so the updater.exe can
   // do anything special that it needs to do for service updates.
   // Search in updater.cpp for more info on MOZ_USING_SERVICE.
   putenv(const_cast<char*>("MOZ_USING_SERVICE=1"));
 
-  LOG(("Starting service with cmdline: %ls", cmdLine.get()));
-  processStarted =
-      CreateProcessW(argv[0], cmdLine.get(), nullptr, nullptr, FALSE,
-                     CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi);
+  LOG(("Starting service with cmdline: %ls", args.fullCommandLine.get()));
+  processStarted = CreateProcessW(
+      args.updaterBin, args.fullCommandLine.get(), nullptr, nullptr, FALSE,
+      CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi);
 
   BOOL updateWasSuccessful = FALSE;
   if (processStarted) {
@@ -241,12 +391,13 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
     // Check just in case updater.exe didn't change the status from
     // applying.  If this is the case we report an error.
     BOOL isApplying = FALSE;
-    if (IsStatusApplying(argv[1], isApplying) && isApplying) {
+    if (IsStatusApplying(args.patchDirPath, isApplying) && isApplying) {
       if (updateWasSuccessful) {
         LOG(
             ("update.status is still applying even though update was "
              "successful."));
-        if (!WriteStatusFailure(argv[1], SERVICE_STILL_APPLYING_ON_SUCCESS)) {
+        if (!WriteStatusFailure(args.patchDirPath,
+                                SERVICE_STILL_APPLYING_ON_SUCCESS)) {
           LOG_WARN(
               ("Could not write update.status still applying on "
                "success error."));
@@ -263,7 +414,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
         } else if (processTerminated) {
           failcode = SERVICE_STILL_APPLYING_TERMINATED;
         }
-        if (!WriteStatusFailure(argv[1], failcode)) {
+        if (!WriteStatusFailure(args.patchDirPath, failcode)) {
           LOG_WARN(
               ("Could not write update.status still applying on "
                "failure error."));
@@ -275,7 +426,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
     LOG_WARN(
         ("Could not create process as current user, "
          "updaterPath: %ls; cmdLine: %ls.  (%lu)",
-         argv[0], cmdLine.get(), lastError));
+         args.updaterBin.get(), args.fullCommandLine.get(), lastError));
   }
 
   // Empty value on putenv is how you remove an env variable in Windows
@@ -290,8 +441,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
  * @param updater     Path to the updater to validate
  * @param installDir  Path to the application installation
  *                    being updated
- * @param updateDir   Update applyTo direcotry,
- *                    where logs will be written
+ * @param updateDir   Patch directory, where the update status file is.
  *
  * @return true if updater is the path to a valid updater
  */
@@ -404,23 +554,19 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir,
 /**
  * Processes a software update command
  *
- * @param  argc           The number of arguments in argv
- * @param  argv           The arguments normally passed to updater.exe
- *                        argv[0] must be the path to updater.exe
+ * @param  args           The updater arguments.
  *
  * @return TRUE if the update was successful.
  */
-BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR* argv) {
+BOOL ProcessSoftwareUpdateCommand(const UpdaterArgs& args) {
   BOOL result = TRUE;
-  if (argc < 3) {
+  if (!args.installDirPath && !args.applyToDirPath) {
     LOG_WARN(
         ("Not enough command line parameters specified. "
          "Updating update.status."));
 
-    // We can only update update.status if argv[1] exists.  argv[1] is
-    // the directory where the update.status file exists.
-    if (argc < 2 ||
-        !WriteStatusFailure(argv[1], SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS)) {
+    if (!WriteStatusFailure(args.patchDirPath,
+                            SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS)) {
       LOG_WARN(("Could not write update.status service update failure.  (%lu)",
                 GetLastError()));
     }
@@ -428,23 +574,23 @@ BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR* argv) {
   }
 
   WCHAR installDir[MAX_PATH + 1] = {L'\0'};
-  if (!GetInstallationDir(argc, argv, installDir)) {
+  if (!GetInstallationDir(args, installDir)) {
     LOG_WARN(("Could not get the installation directory"));
-    if (!WriteStatusFailure(argv[1], SERVICE_INSTALLDIR_ERROR)) {
+    if (!WriteStatusFailure(args.patchDirPath, SERVICE_INSTALLDIR_ERROR)) {
       LOG_WARN(
           ("Could not write update.status for GetInstallationDir failure."));
     }
     return FALSE;
   }
 
-  if (UpdaterIsValid(argv[0], installDir, argv[1])) {
+  if (UpdaterIsValid(args.updaterBin, installDir, args.patchDirPath)) {
     BOOL updateProcessWasStarted = FALSE;
-    if (StartUpdateProcess(argc, argv, installDir, updateProcessWasStarted)) {
+    if (StartUpdateProcess(args, installDir, updateProcessWasStarted)) {
       LOG(("updater.exe was launched and run successfully!"));
       LogFlush();
 
       // Don't attempt to update the service when the update is being staged.
-      if (!IsUpdateBeingStaged(argc, argv)) {
+      if (!IsUpdateBeingStaged(args)) {
         // We might not execute code after StartServiceUpdate because
         // the service installer will stop the service if it is running.
         StartServiceUpdate(installDir);
@@ -461,7 +607,7 @@ BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR* argv) {
       // so that the app.update.service.errors pref can be updated when
       // the callback app restarts.
       if (!updateProcessWasStarted) {
-        if (!WriteStatusFailure(argv[1],
+        if (!WriteStatusFailure(args.patchDirPath,
                                 SERVICE_UPDATER_COULD_NOT_BE_STARTED)) {
           LOG_WARN(
               ("Could not write update.status service update failure.  (%lu)",
@@ -478,7 +624,7 @@ BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR* argv) {
 
     // When there is a certificate check error on the updater.exe application,
     // we want to write out the error.
-    if (!WriteStatusFailure(argv[1], SERVICE_UPDATER_SIGN_ERROR)) {
+    if (!WriteStatusFailure(args.patchDirPath, SERVICE_UPDATER_SIGN_ERROR)) {
       LOG_WARN(("Could not write pending state to update.status.  (%lu)",
                 GetLastError()));
     }
@@ -575,27 +721,42 @@ BOOL DeleteSecureUpdater(WCHAR serviceUpdaterPath[MAX_PATH + 1]) {
  * @return FALSE if there was an error executing the service command.
  */
 BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
-  if (argc < 3) {
+  const int serviceArgCount = 3;
+  if (argc < serviceArgCount) {
     LOG_WARN(
         ("Not enough command line arguments to execute a service command"));
     return FALSE;
   }
 
+  const wchar_t* serviceName = argv[1];
+  const wchar_t* serviceCommand = argv[2];
+
   // The tests work by making sure the log has changed, so we put a
   // unique ID in the log.
   WCHAR uuidString[MAX_PATH + 1] = {L'\0'};
   if (GetUUIDString(uuidString)) {
-    LOG(("Executing service command %ls, ID: %ls", argv[2], uuidString));
+    LOG(("Executing service command %ls, ID: %ls", serviceCommand, uuidString));
   } else {
     // The ID is only used by tests, so failure to allocate it isn't fatal.
-    LOG(("Executing service command %ls", argv[2]));
+    LOG(("Executing service command %ls", serviceCommand));
   }
 
   BOOL result = FALSE;
-  if (!lstrcmpi(argv[2], L"software-update")) {
+  if (!lstrcmpi(serviceCommand, L"software-update")) {
+    Maybe<UpdaterArgs> maybeArgs =
+        parseUpdaterArgs(argc - serviceArgCount, argv + serviceArgCount);
+    if (!maybeArgs) {
+      // Not really much we can do here. `parseUpdaterArgs` is extremely
+      // permissive. If it failed, we don't even have a patch directory to write
+      // an error to.
+      LOG_WARN(("Unable to parse updater arguments!"));
+      return FALSE;
+    }
+    UpdaterArgs args = maybeArgs.extract();
+
     // This check is also performed in updater.cpp and is performed here
     // as well since the maintenance service can be called directly.
-    if (argc <= 4 || !IsValidFullPath(argv[4])) {
+    if (!IsValidFullPath(args.patchDirPath)) {
       // Since the status file is written to the patch directory and the patch
       // directory is invalid don't write the status file.
       LOG_WARN(("The patch directory path is not valid for this application."));
@@ -604,7 +765,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
     // The patch directory path must end with updates\0 to use the maintenance
     // service.
-    size_t fullPathLen = NS_tstrlen(argv[4]);
+    size_t fullPathLen = NS_tstrlen(args.patchDirPath);
     size_t relPathLen = NS_tstrlen(PATCH_DIR_PATH);
     if (relPathLen > fullPathLen) {
       LOG_WARN(
@@ -613,7 +774,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
       return FALSE;
     }
 
-    if (_wcsnicmp(argv[4] + fullPathLen - relPathLen, PATCH_DIR_PATH,
+    if (_wcsnicmp(args.patchDirPath + fullPathLen - relPathLen, PATCH_DIR_PATH,
                   relPathLen) != 0) {
       LOG_WARN(
           ("The patch directory path subdirectory is not valid for this "
@@ -623,39 +784,60 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
     // Remove the secure output files so it is easier to determine when new
     // files are created in the unelevated updater.
-    RemoveSecureOutputFiles(argv[4]);
+    RemoveSecureOutputFiles(args.patchDirPath);
 
     // Create a new secure ID for this update.
-    if (!WriteSecureIDFile(argv[4])) {
+    if (!WriteSecureIDFile(args.patchDirPath)) {
       LOG_WARN(("Unable to write to secure ID file."));
       return FALSE;
     }
 
-    // This check is also performed in updater.cpp and is performed here
-    // as well since the maintenance service can be called directly.
-    if (argc <= 5 || !IsValidFullPath(argv[5])
-    // This build flag is used as a handy proxy to tell when we're a build made
-    // for local testing, because there isn't much other reason to set it.
-#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
-        || !IsProgramFilesPath(argv[5])
-#endif
-    ) {
-      LOG_WARN(
-          ("The install directory path is not valid for this application."));
-      if (!WriteStatusFailure(argv[4],
-                              SERVICE_INVALID_INSTALL_DIR_PATH_ERROR)) {
-        LOG_WARN(("Could not write update.status for previous failure."));
-      }
-      return FALSE;
-    }
-
-    if (!IsOldCommandline(argc - 3, argv + 3)) {
+    if (args.version == UpdaterArgVersion::Version1) {
       // This check is also performed in updater.cpp and is performed here
       // as well since the maintenance service can be called directly.
-      if (argc <= 6 || !IsValidFullPath(argv[6])) {
+      if (!args.applyToDirPath || !IsValidFullPath(args.applyToDirPath.value())
+      // This build flag is used as a handy proxy to tell when we're a build
+      // made for local testing, because there isn't much other reason to set
+      // it.
+#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
+          || !IsProgramFilesPath(args.applyToDirPath.value())
+#endif
+      ) {
+        LOG_WARN(
+            ("The apply-to directory path is not valid for this application."));
+        if (!WriteStatusFailure(args.patchDirPath,
+                                SERVICE_INVALID_INSTALL_DIR_PATH_ERROR)) {
+          LOG_WARN(("Could not write update.status for previous failure."));
+        }
+        return FALSE;
+      }
+    } else {
+      // This check is also performed in updater.cpp and is performed here
+      // as well since the maintenance service can be called directly.
+      if (!args.installDirPath || !IsValidFullPath(args.installDirPath.value())
+      // This build flag is used as a handy proxy to tell when we're a build
+      // made for local testing, because there isn't much other reason to set
+      // it.
+#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
+          || !IsProgramFilesPath(args.installDirPath.value())
+#endif
+      ) {
+        LOG_WARN(
+            ("The install directory path is not valid for this application."));
+        if (!WriteStatusFailure(args.patchDirPath,
+                                SERVICE_INVALID_INSTALL_DIR_PATH_ERROR)) {
+          LOG_WARN(("Could not write update.status for previous failure."));
+        }
+        return FALSE;
+      }
+
+      // This check is also performed in updater.cpp and is performed here
+      // as well since the maintenance service can be called directly.
+      if (!args.applyToDirPath ||
+          !IsValidFullPath(args.applyToDirPath.value())) {
         LOG_WARN(
             ("The working directory path is not valid for this application."));
-        if (!WriteStatusFailure(argv[4],
+        if (!WriteStatusFailure(args.patchDirPath,
                                 SERVICE_INVALID_WORKING_DIR_PATH_ERROR)) {
           LOG_WARN(("Could not write update.status for previous failure."));
         }
@@ -664,13 +846,14 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
       // These checks are also performed in updater.cpp and is performed here
       // as well since the maintenance service can be called directly.
-      if (_wcsnicmp(argv[6], argv[5], MAX_PATH) != 0) {
-        if (argc <= 7 ||
-            (wcscmp(argv[7], L"-1") != 0 && !wcsstr(argv[7], L"/replace"))) {
+      if (_wcsnicmp(args.applyToDirPath.value(), args.installDirPath.value(),
+                    MAX_PATH) != 0) {
+        if (!IsUpdateBeingStaged(args) && !IsUpdateAReplaceRequest(args)) {
           LOG_WARN(
               ("Installation directory and working directory must be the "
                "same for non-staged updates. Exiting."));
-          if (!WriteStatusFailure(argv[4], SERVICE_INVALID_APPLYTO_DIR_ERROR)) {
+          if (!WriteStatusFailure(args.patchDirPath,
+                                  SERVICE_INVALID_APPLYTO_DIR_ERROR)) {
             LOG_WARN(("Could not write update.status for previous failure."));
           }
           return FALSE;
@@ -679,23 +862,24 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
         NS_tchar workingDirParent[MAX_PATH];
         NS_tsnprintf(workingDirParent,
                      sizeof(workingDirParent) / sizeof(workingDirParent[0]),
-                     NS_T("%s"), argv[6]);
+                     NS_T("%s"), args.applyToDirPath.value().get());
         if (!PathRemoveFileSpecW(workingDirParent)) {
           LOG_WARN(
               ("Couldn't remove file spec when attempting to verify the "
                "working directory path.  (%lu)",
                GetLastError()));
-          if (!WriteStatusFailure(argv[4], REMOVE_FILE_SPEC_ERROR)) {
+          if (!WriteStatusFailure(args.patchDirPath, REMOVE_FILE_SPEC_ERROR)) {
             LOG_WARN(("Could not write update.status for previous failure."));
           }
           return FALSE;
         }
 
-        if (_wcsnicmp(workingDirParent, argv[5], MAX_PATH) != 0) {
+        if (_wcsnicmp(workingDirParent, args.installDirPath.value(),
+                      MAX_PATH) != 0) {
           LOG_WARN(
               ("The apply-to directory must be the same as or "
-               "a child of the installation directory! Exiting."));
-          if (!WriteStatusFailure(argv[4],
+               "the direct child of the installation directory! Exiting."));
+          if (!WriteStatusFailure(args.patchDirPath,
                                   SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR)) {
             LOG_WARN(("Could not write update.status for previous failure."));
           }
@@ -711,9 +895,9 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
     // replace the updater.exe at any point and use that for the update.
     // It also makes DLL injection attacks harder.
     WCHAR installDir[MAX_PATH + 1] = {L'\0'};
-    if (!GetInstallationDir(argc - 3, argv + 3, installDir)) {
+    if (!GetInstallationDir(args, installDir)) {
       LOG_WARN(("Could not get the installation directory"));
-      if (!WriteStatusFailure(argv[4], SERVICE_INSTALLDIR_ERROR)) {
+      if (!WriteStatusFailure(args.patchDirPath, SERVICE_INSTALLDIR_ERROR)) {
         LOG_WARN(("Could not write update.status for previous failure."));
       }
       return FALSE;
@@ -730,14 +914,16 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
                           KEY_READ | KEY_WOW64_64KEY,
                           &baseKey) != ERROR_SUCCESS) {
           LOG_WARN(("The maintenance service registry key does not exist."));
-          if (!WriteStatusFailure(argv[4], SERVICE_INSTALL_DIR_REG_ERROR)) {
+          if (!WriteStatusFailure(args.patchDirPath,
+                                  SERVICE_INSTALL_DIR_REG_ERROR)) {
             LOG_WARN(("Could not write update.status for previous failure."));
           }
           return FALSE;
         }
         RegCloseKey(baseKey);
       } else {
-        if (!WriteStatusFailure(argv[4], SERVICE_CALC_REG_PATH_ERROR)) {
+        if (!WriteStatusFailure(args.patchDirPath,
+                                SERVICE_CALC_REG_PATH_ERROR)) {
           LOG_WARN(("Could not write update.status for previous failure."));
         }
         return FALSE;
@@ -746,12 +932,14 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
     WCHAR installDirUpdater[MAX_PATH + 1] = {L'\0'};
     wcsncpy(installDirUpdater, installDir, MAX_PATH);
-    if (!PathAppendSafe(installDirUpdater, L"updater.exe")) {
+    result = PathAppendSafe(installDirUpdater, L"updater.exe");
+    if (!result) {
       LOG_WARN(("Install directory updater could not be determined."));
-      result = FALSE;
     }
 
-    result = UpdaterIsValid(installDirUpdater, installDir, argv[4]);
+    if (result) {
+      result = UpdaterIsValid(installDirUpdater, installDir, args.patchDirPath);
+    }
 
     WCHAR secureUpdaterPath[MAX_PATH + 1] = {L'\0'};
     if (result) {
@@ -762,7 +950,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
           ("Passed in path: '%ls' (ignored); "
            "Install dir has: '%ls'; "
            "Using this path for updating: '%ls'.",
-           argv[3], installDirUpdater, secureUpdaterPath));
+           args.updaterBin.get(), installDirUpdater, secureUpdaterPath));
       DeleteSecureUpdater(secureUpdaterPath);
       result = CopyFileW(installDirUpdater, secureUpdaterPath, FALSE);
     }
@@ -770,14 +958,15 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
     if (!result) {
       LOG_WARN(
           ("Could not copy path to secure location.  (%lu)", GetLastError()));
-      if (!WriteStatusFailure(argv[4], SERVICE_COULD_NOT_COPY_UPDATER)) {
+      if (!WriteStatusFailure(args.patchDirPath,
+                              SERVICE_COULD_NOT_COPY_UPDATER)) {
         LOG_WARN(
             ("Could not write update.status could not copy updater error"));
       }
     } else {
       // We obtained the path and copied it successfully, update the path to
       // use for the service update.
-      argv[3] = secureUpdaterPath;
+      args.updaterBin = WrapNotNull(secureUpdaterPath);
 
       WCHAR installDirUpdaterINIPath[MAX_PATH + 1] = {L'\0'};
       WCHAR secureUpdaterINIPath[MAX_PATH + 1] = {L'\0'};
@@ -793,20 +982,19 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
         }
       }
 
-      result = ProcessSoftwareUpdateCommand(argc - 3, argv + 3);
+      result = ProcessSoftwareUpdateCommand(args);
       DeleteSecureUpdater(secureUpdaterPath);
     }
 
     // We might not reach here if the service install succeeded
     // because the service self updates itself and the service
     // installer will stop the service.
-    LOG(("Service command %ls complete.", argv[2]));
   } else {
-    LOG_WARN(("Service command not recognized: %ls.", argv[2]));
+    LOG_WARN(("Service command not recognized: %ls.", serviceCommand));
     // result is already set to FALSE
   }
 
-  LOG(("service command %ls complete with result: %ls.", argv[1],
-       (result ? L"Success" : L"Failure")));
+  LOG(("%ls service command %ls complete with result: %ls.", serviceName,
+       serviceCommand, result ? L"Success" : L"Failure"));
   return result;
 }
