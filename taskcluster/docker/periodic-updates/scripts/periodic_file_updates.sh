@@ -349,11 +349,7 @@ function compare_remote_settings_files {
     # If they are around as untracked files when `arc diff` runs, that command will fail.
     # (We explicitly don't want to use `arc diff --allow-untracked` to avoid accidentally
     # missing files from other updates - we'd rather the job fail.)
-    if [ "${USE_GIT}" == "true" ]; then
-      ${GIT} -C "${TOPSRCDIR}" clean -f -d services/settings/dumps/main/search-config-icons
-    else
-      ${HG} --cwd "${TOPSRCDIR}" purge services/settings/dumps/main/search-config-icons
-    fi
+    ${HG} --cwd "${REPODIR}" purge services/settings/dumps/main/search-config-icons
   done
 
   echo "INFO: diffing old/new remote settings dumps..."
