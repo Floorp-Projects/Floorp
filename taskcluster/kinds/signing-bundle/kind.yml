@@ -24,8 +24,8 @@ tasks:
             implementation: scriptworker-signing
         signing-format:
             by-build-type:
-                (focus-.*|klar-.*): autograph_focus
-                default: autograph_apk
+                (focus-.*|klar-.*): gcp_prod_autograph_focus
+                default: gcp_prod_autograph_apk
         run-on-projects: []
         treeherder:
             symbol:

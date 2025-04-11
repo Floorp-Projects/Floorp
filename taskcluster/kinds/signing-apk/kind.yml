@@ -24,9 +24,9 @@ tasks:
             implementation: scriptworker-signing
         signing-format:
             by-build-type:
-                (focus-.*|klar-.*): autograph_focus
-                fenix-(beta|release)-mozillaonline: autograph_apk_mozillaonline
-                default: autograph_apk
+                (focus-.*|klar-.*): gcp_prod_autograph_focus
+                fenix-(beta|release)-mozillaonline: gcp_prod_autograph_apk_mozillaonline
+                default: gcp_prod_autograph_apk
         index:
             by-build-type:
                 (focus-nightly|focus-release|klar-release|focus-beta|fenix-nightly|fenix-debug|fenix-nightly-simulation|fenix-beta|fenix-beta-mozillaonline|fenix-release|fenix-release-mozillaonline):

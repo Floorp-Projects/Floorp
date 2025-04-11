@@ -73,7 +73,7 @@ def make_checksums_signing_description(config, jobs):
                 "paths": [
                     "public/target-source.checksums",
                 ],
-                "formats": ["autograph_gpg"],
+                "formats": ["gcp_prod_autograph_gpg"],
             }
         ]
 
