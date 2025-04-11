@@ -3687,13 +3687,6 @@ int NS_main(int argc, NS_tchar** argv) {
            (noServiceFallback || forceServiceFallback))) {
         LOG(("Can't open lock file - seems like we need elevation"));
 
-        auto cmdLine = mozilla::MakeCommandLine(suiArgc - 1, suiArgv.get() + 1);
-        if (!cmdLine) {
-          LOG(("Failed to make command line! Exiting"));
-          output_finish();
-          return 1;
-        }
-
 #  ifdef MOZ_MAINTENANCE_SERVICE
 // Only invoke the service for installations in Program Files.
 // This check is duplicated in workmonitor.cpp because the service can
@@ -3923,13 +3916,23 @@ int NS_main(int argc, NS_tchar** argv) {
                         SEE_MASK_NOCLOSEPROCESS;
           sinfo.hwnd = nullptr;
           sinfo.lpFile = argv[0];
-          sinfo.lpParameters = cmdLine.get();
           if (forceServiceFallback) {
             // In testing, we don't actually want a UAC prompt. We should
             // already have the permissions such that we shouldn't need it.
             // And we don't have a good way of accepting the prompt in
             // automation.
             sinfo.lpVerb = L"open";
+            // This argument is what lets the updater that we spawn below know
+            // that it's the second updater invocation. We are going to change
+            // it so that it doesn't know that it runs as the first updater
+            // invocation would. Doing this makes this an imperfect test of
+            // the service fallback functionality because it changes how the
+            // second updater invocation runs. One of the effects of this is
+            // that the secure output files will not be used. So that
+            // functionality won't really be covered by testing. But writing to
+            // those files would require that the updater run with actual
+            // elevation, which we have no way to do with in automation.
+            suiArgv.get()[kWhichInvocationIndex] = firstUpdateInvocationArg;
             // We need to let go of the update lock to let the un-elevated
             // updater we are about to spawn update.
             if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
@@ -3939,6 +3942,16 @@ int NS_main(int argc, NS_tchar** argv) {
             sinfo.lpVerb = L"runas";
           }
           sinfo.nShow = SW_SHOWNORMAL;
+
+          auto cmdLine =
+              mozilla::MakeCommandLine(suiArgc - 1, suiArgv.get() + 1);
+          if (!cmdLine) {
+            LOG(("Failed to make command line! Exiting"));
+            output_finish();
+            return 1;
+          }
+          sinfo.lpParameters = cmdLine.get();
+          LOG(("Using UAC to launch \"%S\"", sinfo.lpParameters));
 
           bool result = ShellExecuteEx(&sinfo);
 
