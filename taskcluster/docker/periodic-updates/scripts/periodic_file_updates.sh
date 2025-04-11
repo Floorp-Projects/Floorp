@@ -343,13 +343,6 @@ function compare_remote_settings_files {
       done
     fi
     # NOTE: The downloaded data is not validated. xpcshell should be used for that.
-    
-    # bug 1959683: remote settings update can add untracked search-config-icons
-    # It is not safe to take these (see https://bugzilla.mozilla.org/show_bug.cgi?id=1873448)
-    # If they are around as untracked files when `arc diff` runs, that command will fail.
-    # (We explicitly don't want to use `arc diff --allow-untracked` to avoid accidentally
-    # missing files from other updates - we'd rather the job fail.)
-    ${HG} --cwd "${REPODIR}" purge services/settings/dumps/main/search-config-icons
   done
 
   echo "INFO: diffing old/new remote settings dumps..."
@@ -639,6 +632,12 @@ if [ "${REMOTE_SETTINGS_UPDATED}" == "true" ]
 then
   stage_remote_settings_files
   COMMIT_MESSAGE="${COMMIT_MESSAGE} remote-settings"
+  # bug 1959683: remote settings update can add untracked search-config-icons
+  # It is not safe to take these (see https://bugzilla.mozilla.org/show_bug.cgi?id=1873448)
+  # If they are around as untracked files when `arc diff` runs, that command will fail.
+  # (We explicitly don't want to use `arc diff --allow-untracked` to avoid accidentally
+  # missing files from other updates - we'd rather the job fail.)
+  ${HG} --cwd "${REPODIR}" purge services/settings/dumps/main/search-config-icons
 fi
 
 if [ "${SUFFIX_LIST_UPDATED}" == "true" ]
