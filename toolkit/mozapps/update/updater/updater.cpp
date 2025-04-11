@@ -128,17 +128,22 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
                             LPCWSTR newFileName);
 #  include "updatehelper.h"
 
-// Closes the handle if valid and if the updater is elevated returns with the
-// return code specified. This prevents multiple launches of the callback
-// application by preventing the elevated process from launching the callback.
-#  define EXIT_WHEN_ELEVATED(handle, retCode) \
-    {                                         \
-      if (handle != INVALID_HANDLE_VALUE) {   \
-        CloseHandle(handle);                  \
-      }                                       \
-      if (gIsElevated) {                      \
-        return retCode;                       \
-      }                                       \
+// Closes the handle if valid and if this is the second updater instance,
+// return with the return code specified. As `gIsSecondInvocation` alludes to,
+// this is used to guard things like launching the callback application, since
+// only the first updater invocation should do that.
+// The passed handle is meant to be the handle to the "update in progress" lock
+// so that we close it when we are done updating.
+#  define EXIT_IF_SECOND_UPDATER_INSTANCE(handle, retCode)                    \
+    {                                                                         \
+      if (handle != INVALID_HANDLE_VALUE) {                                   \
+        CloseHandle(handle);                                                  \
+      }                                                                       \
+      if (gInvocation == UpdaterInvocation::Second) {                         \
+        LOG(("%s:%d - Returning early. This is the second updater instance.", \
+             __func__, __LINE__));                                            \
+        return retCode;                                                       \
+      }                                                                       \
     }
 #endif
 
@@ -337,10 +342,6 @@ static bool gSucceeded = false;
 static bool sStagedUpdate = false;
 static bool sReplaceRequest = false;
 static bool sUsingService = false;
-// The updater binary can potentially run twice. It will always initially run
-// with `gIsElevated == false`. If it is run an additional time with elevation,
-// that iteration will run with `gIsElevated == true`.
-static bool gIsElevated = false;
 // When the updater needs to elevate, we generally run the updater again with
 // elevation. These two invocations differ in many important ways. The elevated
 // updater doesn't touch any files that don't require that elevation, it
@@ -395,9 +396,6 @@ static NS_tchar gDeleteDirPath[MAXPATHLEN];
 // Whether to copy the update-elevated.log and update.status file to the update
 // patch directory from a secure directory.
 static bool gCopyOutputFiles = false;
-// Whether to write the update-elevated.log and update.status file to a secure
-// directory.
-static bool gUseSecureOutputPath = false;
 #endif
 
 static const NS_tchar kWhitespace[] = NS_T(" \t");
@@ -453,7 +451,7 @@ static bool EnvHasValue(const char* name) {
 #endif
 
 static const NS_tchar* UpdateLogFilename() {
-  if (gIsElevated) {
+  if (gInvocation == UpdaterInvocation::Second) {
     return NS_T("update-elevated.log");
   }
   return NS_T("update.log");
@@ -2253,7 +2251,7 @@ static bool WriteToFile(const NS_tchar* aFilename, const char* aStatus) {
 
   NS_tchar statusFilePath[MAXPATHLEN + 1] = {NS_T('\0')};
 #if defined(XP_WIN)
-  if (gUseSecureOutputPath) {
+  if (gInvocation == UpdaterInvocation::Second) {
     if (!GetSecureOutputFilePath(gPatchDirPath, L".status", statusFilePath)) {
       LOG(("WriteToFile failed to get secure output path"));
       return false;
@@ -2286,7 +2284,7 @@ static bool WriteToFile(const NS_tchar* aFilename, const char* aStatus) {
   }
 
 #if defined(XP_WIN)
-  if (gUseSecureOutputPath) {
+  if (gInvocation == UpdaterInvocation::Second) {
     // This is done after the update status file has been written so if the
     // write to the update status file fails an existing update status file
     // won't be used.
@@ -2779,7 +2777,7 @@ static int ReadMARChannelIDsFromBuffer(char* aChannels,
 static int PopulategMARStrings() {
   int rv = UPDATE_SETTINGS_FILE_CHANNEL;
 #  ifdef XP_MACOSX
-  if (gIsElevated) {
+  if (gInvocation == UpdaterInvocation::Second) {
     // An elevated update process will have already populated gMARStrings when
     // it connected to the unelevated update process to obtain the command line
     // args. See `ObtainUpdaterArguments`.
@@ -3005,9 +3003,9 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv
       LOG(("Not launching Windows post update process because !gSucceeded"));
     }
 
-    EXIT_WHEN_ELEVATED(updateLockFileHandle, 0);
+    EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 0);
 #elif XP_MACOSX
-    if (!gIsElevated) {
+    if (gInvocation == UpdaterInvocation::First) {
       if (gSucceeded) {
         LOG(("Launching macOS post update process"));
         LaunchMacPostProcess(gInstallDirPath);
@@ -3022,7 +3020,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv
 #ifdef XP_MACOSX
   } else {  // isElevated
     LOG(
-        ("Not elevated. Skipping LaunchMacPostProcess and "
+        ("This is the second instance. Skipping LaunchMacPostProcess and "
          "LaunchCallbackApp"));
   }
 #endif /* XP_MACOSX */
@@ -3100,12 +3098,51 @@ int NS_main(int argc, NS_tchar** argv) {
   // umask to 0 for all file creations below and reset it on exit. See Bug
   // 1337007
   mozilla::UniquePtr<UmaskContext> umaskContext(new UmaskContext(0));
+#endif
 
-  // This will be used to set `gIsElevated`, but we are going to do it later
-  // when we are ready to set it for every OS to avoid inconsistency.
+#ifdef XP_WIN
+  auto isAdmin = mozilla::UserHasAdminPrivileges();
+  if (isAdmin.isErr()) {
+    fprintf(stderr,
+            "Failed to query if the current process has admin privileges.\n");
+    return 1;
+  }
+  auto isLocalSystem = mozilla::UserIsLocalSystem();
+  if (isLocalSystem.isErr()) {
+    fprintf(
+        stderr,
+        "Failed to query if the current process has LocalSystem privileges.\n");
+    return 1;
+  }
+#endif
+
+  // Indicates that we are running with elevated privileges.
+  // This is only ever true on macOS and Windows. We don't currently have a
+  // way of elevating on other platforms.
+  // Note that this should not be used to determine whether this is the first or
+  // second invocation of the updater, even though the first invocation will
+  // _usually_ be unelevated and the second invocation should always be
+  // elevated. `gInvocation` can be used for that purpose.
   bool isElevated =
-      strstr(argv[0], "/Library/PrivilegedHelperTools/org.mozilla.updater") !=
-      0;
+#ifdef XP_WIN
+      // While is it technically redundant to check LocalSystem in addition to
+      // Admin given the former contains privileges of the latter, we have opt
+      // to verify both. A few reasons for this decision include the off chance
+      // that the Windows security model changes in the future and weird system
+      // setups where someone has modified the group lists in surprising ways.
+      //
+      // We use this to detect if we were launched from the Maintenance Service
+      // under LocalSystem or UAC under the user's account, and therefore can
+      // proceed with an install to `Program Files` or `Program Files(x86)`.
+      isAdmin.unwrap() || isLocalSystem.unwrap();
+#elif defined(XP_MACOSX)
+        strstr(argv[0], "/Library/PrivilegedHelperTools/org.mozilla.updater") !=
+        0;
+#else
+      false;
+#endif
+
+#ifdef XP_MACOSX
   if (isElevated) {
     if (!ObtainUpdaterArguments(&argc, &argv, &gMARStrings)) {
       // Won't actually get here because ObtainUpdaterArguments will terminate
@@ -3203,38 +3240,6 @@ int NS_main(int argc, NS_tchar** argv) {
   // The directory containing the update information.
   NS_tstrncpy(gPatchDirPath, argv[kPatchDirIndex], MAXPATHLEN);
   gPatchDirPath[MAXPATHLEN - 1] = NS_T('\0');
-
-#ifdef XP_WIN
-  auto isAdmin = mozilla::UserHasAdminPrivileges();
-  if (isAdmin.isErr()) {
-    fprintf(stderr,
-            "Failed to query if the current process has admin privileges.\n");
-    return 1;
-  }
-  auto isLocalSystem = mozilla::UserIsLocalSystem();
-  if (isLocalSystem.isErr()) {
-    fprintf(
-        stderr,
-        "Failed to query if the current process has LocalSystem privileges.\n");
-    return 1;
-  }
-
-  // While is it technically redundant to check LocalSystem in addition to Admin
-  // given the former contains privileges of the latter, we have opt to verify
-  // both. A few reasons for this decision include the off chance that the
-  // Windows security model changes in the future and weird system setups where
-  // someone has modified the group lists in surprising ways.
-  //
-  // We use this to detect if we were launched from the Maintenance Service
-  // under LocalSystem or UAC under the user's account, and therefore can
-  // proceed with an install to `Program Files` or `Program Files(x86)`.
-  gIsElevated = isAdmin.unwrap() || isLocalSystem.unwrap();
-  gUseSecureOutputPath = sUsingService || gIsElevated;
-#elif defined(XP_MACOSX)
-    // This is only ever true on macOS and Windows. We don't currently have a
-    // way of elevating on other platforms.
-    gIsElevated = isElevated;
-#endif
 
   if (!isDMGInstall) {
     // This check is also performed in workmonitor.cpp since the maintenance
@@ -3478,7 +3483,7 @@ int NS_main(int argc, NS_tchar** argv) {
   if (!isDMGInstall) {
     NS_tchar logFilePath[MAXPATHLEN + 1] = {L'\0'};
 #ifdef XP_WIN
-    if (gUseSecureOutputPath) {
+    if (gInvocation == UpdaterInvocation::Second) {
       // Remove the secure output files so it is easier to determine when new
       // files are created in the unelevated updater.
       RemoveSecureOutputFiles(gPatchDirPath);
@@ -3497,11 +3502,10 @@ int NS_main(int argc, NS_tchar** argv) {
     LOG(("sUsingService=%s", sUsingService ? "true" : "false"));
     LOG(("sUpdateSilently=%s", sUpdateSilently ? "true" : "false"));
 #ifdef XP_WIN
-    LOG(("gUseSecureOutputPath=%s", gUseSecureOutputPath ? "true" : "false"));
     // Note that this is not the final value of useService
     LOG(("useService=%s", useService ? "true" : "false"));
 #endif
-    LOG(("gIsElevated=%s", gIsElevated ? "true" : "false"));
+    LOG(("isElevated=%s", isElevated ? "true" : "false"));
     LOG(("gInvocation=%s", getUpdaterInvocationString(gInvocation)));
 
     if (!WriteStatusFile("applying")) {
@@ -3656,6 +3660,18 @@ int NS_main(int argc, NS_tchar** argv) {
         return 1;
       }
 
+      // If we're running from the service, then we were started with the same
+      // token as the service so the permissions are already dropped.  If we're
+      // running from an elevated updater that was started from an unelevated
+      // updater, then we drop the permissions here. We do not drop the
+      // permissions on the originally called updater because we use its token
+      // to start the callback application.
+      if (isElevated) {
+        // Disable every privilege we don't need. Processes started using
+        // CreateProcess will use the same token as this process.
+        UACHelper::DisablePrivileges(nullptr);
+      }
+
       updateLockFileHandle =
           CreateFileW(updateLockFilePath, GENERIC_READ | GENERIC_WRITE, 0,
                       nullptr, OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, nullptr);
@@ -3664,18 +3680,6 @@ int NS_main(int argc, NS_tchar** argv) {
         LOG(("Failed to open update lock file: %lu", GetLastError()));
       } else {
         LOG(("Successfully opened lock file"));
-      }
-
-      // If we're running from the service, then we were started with the same
-      // token as the service so the permissions are already dropped.  If we're
-      // running from an elevated updater that was started from an unelevated
-      // updater, then we drop the permissions here. We do not drop the
-      // permissions on the originally called updater because we use its token
-      // to start the callback application.
-      if (gIsElevated) {
-        // Disable every privilege we don't need. Processes started using
-        // CreateProcess will use the same token as this process.
-        UACHelper::DisablePrivileges(nullptr);
       }
 
       if (updateLockFileHandle == INVALID_HANDLE_VALUE ||
@@ -4084,7 +4088,7 @@ int NS_main(int argc, NS_tchar** argv) {
       WriteStatusFile(WRITE_ERROR_APPLY_DIR_PATH);
       LOG(("NS_main: unable to find apply to dir: " LOG_S, gWorkingDirPath));
       output_finish();
-      EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
+      EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 1);
       if (argc > kCallbackIndex) {
         LaunchCallbackApp(argv[kCallbackWorkingDirIndex], argc - kCallbackIndex,
                           argv + kCallbackIndex, sUsingService);
@@ -4138,7 +4142,7 @@ int NS_main(int argc, NS_tchar** argv) {
         WriteStatusFile(WRITE_ERROR_CALLBACK_PATH);
         LOG(("NS_main: unable to find callback file: " LOG_S, targetPath));
         output_finish();
-        EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
+        EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 1);
         if (argc > kCallbackIndex) {
           LaunchCallbackApp(argv[kCallbackWorkingDirIndex],
                             argc - kCallbackIndex, argv + kCallbackIndex,
@@ -4188,7 +4192,7 @@ int NS_main(int argc, NS_tchar** argv) {
 
           // Don't attempt to launch the callback when the callback path is
           // longer than expected.
-          EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
+          EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 1);
           return 1;
         }
 
@@ -4205,7 +4209,7 @@ int NS_main(int argc, NS_tchar** argv) {
                " into place at " LOG_S,
                argv[kCallbackIndex], gCallbackBackupPath));
           output_finish();
-          EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
+          EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 1);
           LaunchCallbackApp(argv[kCallbackWorkingDirIndex],
                             argc - kCallbackIndex, argv + kCallbackIndex,
                             sUsingService);
@@ -4281,7 +4285,7 @@ int NS_main(int argc, NS_tchar** argv) {
                    gCallbackBackupPath));
             }
             output_finish();
-            EXIT_WHEN_ELEVATED(updateLockFileHandle, 1);
+            EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 1);
             LaunchCallbackApp(argv[kCallbackWorkingDirIndex],
                               argc - kCallbackIndex, argv + kCallbackIndex,
                               sUsingService);
