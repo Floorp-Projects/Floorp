@@ -144,6 +144,60 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
 
 //-----------------------------------------------------------------------------
 
+/**
+ * This enum and its related functions are intended for interpreting the passed
+ * parameter and using it to determine whether this is the first or second
+ * invocation of the updater.
+ */
+enum class UpdaterInvocation {
+  // The initial invocation of the updater. This may apply the update, or it may
+  // start the second invocation of the updater to update depending on whether
+  // elevation is required.
+  // This invocation always does all modifications of the update directory and
+  // calls the callback application, even if another updater is launched.
+  First,
+  // The second invocation of the updater. This basically applies the update to
+  // the installation directory, calls PostUpdate (on Windows) and exits.
+  Second,
+  // It cannot be determined that we are doing either of the above invocations.
+  // This generally represents an uninitialized value or an error.
+  Unknown,
+};
+
+/**
+ * Returns a human-readable representation of an `UpdaterInvocation`.
+ */
+const char* getUpdaterInvocationString(UpdaterInvocation value) {
+  switch (value) {
+    case UpdaterInvocation::First:
+      return "UpdaterInvocation::First";
+    case UpdaterInvocation::Second:
+      return "UpdaterInvocation::Second";
+    case UpdaterInvocation::Unknown:
+      return "UpdaterInvocation::Unknown";
+  }
+  MOZ_CRASH("impossible value for UpdaterInvocation");
+}
+
+const NS_tchar* firstUpdateInvocationArg = NS_T("first");
+const NS_tchar* secondUpdateInvocationArg = NS_T("second");
+
+/**
+ * Gets which updater invocation this is based on the value passed to this
+ * function by the caller.
+ */
+static UpdaterInvocation getUpdaterInvocationFromArg(const NS_tchar* argument) {
+  if (NS_tstrcmp(argument, firstUpdateInvocationArg) == 0) {
+    return UpdaterInvocation::First;
+  }
+  if (NS_tstrcmp(argument, secondUpdateInvocationArg) == 0) {
+    return UpdaterInvocation::Second;
+  }
+  return UpdaterInvocation::Unknown;
+}
+
+//-----------------------------------------------------------------------------
+
 // This BZ2_crc32Table variable lives in libbz2. We just took the
 // data structure from bz2 and created crctables.h
 
@@ -287,18 +341,30 @@ static bool sUsingService = false;
 // with `gIsElevated == false`. If it is run an additional time with elevation,
 // that iteration will run with `gIsElevated == true`.
 static bool gIsElevated = false;
+// When the updater needs to elevate, we generally run the updater again with
+// elevation. These two invocations differ in many important ways. The elevated
+// updater doesn't touch any files that don't require that elevation, it
+// basically just changes the installation directory, runs PostUpdate
+// (on Windows), and exits to let the first updater invocation finalize the
+// update (write its own logs, conditionally move the elevated updater
+// logs/status to the update directory, call the callback application, etc).
+static UpdaterInvocation gInvocation = UpdaterInvocation::Unknown;
 
 // `argv` indices for standard invocation. Does not apply to other methods of
 // invocation including when `--openAppBundle`, or `-dmgInstall` are used.
-static const int kPatchDirIndex = 1;
-static const int kInstallDirIndex = 2;
-static const int kApplyToDirIndex = 3;
+// Note that `argv[1]` is the argument version, which is needed by the MMS, but
+// not by the updater since it is guaranteed to be the same version as the
+// application launching it.
+static const int kPatchDirIndex = 2;
+static const int kInstallDirIndex = 3;
+static const int kApplyToDirIndex = 4;
+static const int kWhichInvocationIndex = 5;
 // Note that this is the first optional argument.
-static const int kWaitPidIndex = 4;
-static const int kCallbackWorkingDirIndex = 5;
+static const int kWaitPidIndex = 6;
+static const int kCallbackWorkingDirIndex = 7;
 // This indicates the entry in `argv` that is the callback binary path. All
 // arguments after this one are treated as arguments to the callback.
-static const int kCallbackIndex = 6;
+static const int kCallbackIndex = 8;
 
 // This string contains the MAR channel IDs that are later extracted by one of
 // the `ReadMARChannelIDsFrom` variants.
@@ -2994,6 +3060,16 @@ bool ShouldRunSilently(int argc, NS_tchar** argv) {
 }
 
 int NS_main(int argc, NS_tchar** argv) {
+  // We may need to tweak our argument list when we launch the Second Updater
+  // Invocation (SUI), so we are going to make a copy of our arguments to
+  // modify.
+  int suiArgc = argc;
+  mozilla::UniquePtr<const NS_tchar*[]> suiArgv =
+      mozilla::MakeUnique<const NS_tchar*[]>(suiArgc);
+  for (int argIndex = 0; argIndex < suiArgc; argIndex++) {
+    suiArgv.get()[argIndex] = argv[argIndex];
+  }
+
 #ifdef MOZ_MAINTENANCE_SERVICE
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
@@ -3064,23 +3140,25 @@ int NS_main(int argc, NS_tchar** argv) {
 #endif
 
     // To process an update the updater command line must at a minimum have the
-    // directory path containing the updater.mar file to process as the first
-    // argument, the install directory as the second argument, and the directory
-    // to apply the update to as the third argument. When the updater is
-    // launched by another process the PID of the parent process should be
-    // provided in the optional fourth argument and the updater will wait on the
-    // parent process to exit if the value is non-zero and the process is
-    // present. This is necessary due to not being able to update files that are
-    // in use on Windows. The optional fifth argument is the callback's working
-    // directory and the optional sixth argument is the callback path. The
-    // callback is the application to launch after updating and it will be
-    // launched when these arguments are provided whether the update was
-    // successful or not. All remaining arguments are optional and are passed to
-    // the callback when it is launched.
+    // argument version as the first argument, the directory path containing the
+    // updater.mar file to process as the second argument, the install directory
+    // as the third argument, the directory to apply the update to as the fourth
+    // argument, and which updater invocation this is as the fifth argument.
+    // When the updater is launched by another process, the PID of the parent
+    // process should be provided in the optional sixth argument and the updater
+    // will wait on the parent process to exit if the value is non-zero and the
+    // process is present. This is necessary due to not being able to update
+    // files that are in use on Windows. The optional seventh argument is the
+    // callback's working directory and the optional eighth argument is the
+    // callback path. The callback is the application to launch after updating
+    // and it will be launched when these arguments are provided whether the
+    // update was successful or not. All remaining arguments are optional and
+    // are passed to the callback when it is launched.
     if (argc < kWaitPidIndex) {
       fprintf(stderr,
-              "Usage: updater patch-dir install-dir apply-to-dir [wait-pid "
-              "[callback-working-dir callback-path args...]]\n");
+              "Usage: updater arg-version patch-dir install-dir apply-to-dir "
+              "which-invocation [wait-pid [callback-working-dir callback-path "
+              "args...]]\n");
 #ifdef XP_MACOSX
       if (isElevated) {
         freeArguments(argc, argv);
@@ -3101,7 +3179,26 @@ int NS_main(int argc, NS_tchar** argv) {
     }
 #endif
 
-  }  // if (!isDMGInstall)
+    gInvocation = getUpdaterInvocationFromArg(argv[kWhichInvocationIndex]);
+    switch (gInvocation) {
+      case UpdaterInvocation::Unknown:
+        fprintf(stderr, "Invalid which-invocation value: " LOG_S "\n",
+                argv[kWhichInvocationIndex]);
+        return 1;
+      case UpdaterInvocation::First:
+        suiArgv.get()[kWhichInvocationIndex] = secondUpdateInvocationArg;
+        break;
+      default:
+        // There is no good reason we should be launching a third updater, but
+        // assign something recognizable and unlikely to be used in the future
+        // to make any bugs here a bit easier to understand.
+        suiArgv.get()[kWhichInvocationIndex] = NS_T("third???");
+        break;
+    }
+  } else { /* else if (isDMGInstall) */
+    // We already exited in the other case.
+    gInvocation = UpdaterInvocation::First;
+  }
 
   // The directory containing the update information.
   NS_tstrncpy(gPatchDirPath, argv[kPatchDirIndex], MAXPATHLEN);
@@ -3405,6 +3502,7 @@ int NS_main(int argc, NS_tchar** argv) {
     LOG(("useService=%s", useService ? "true" : "false"));
 #endif
     LOG(("gIsElevated=%s", gIsElevated ? "true" : "false"));
+    LOG(("gInvocation=%s", getUpdaterInvocationString(gInvocation)));
 
     if (!WriteStatusFile("applying")) {
       LOG(("failed setting status to 'applying'"));
@@ -3585,7 +3683,7 @@ int NS_main(int argc, NS_tchar** argv) {
            (noServiceFallback || forceServiceFallback))) {
         LOG(("Can't open lock file - seems like we need elevation"));
 
-        auto cmdLine = mozilla::MakeCommandLine(argc - 1, argv + 1);
+        auto cmdLine = mozilla::MakeCommandLine(suiArgc - 1, suiArgv.get() + 1);
         if (!cmdLine) {
           LOG(("Failed to make command line! Exiting"));
           output_finish();
@@ -3676,18 +3774,18 @@ int NS_main(int argc, NS_tchar** argv) {
           WriteStatusFile(SERVICE_UPDATE_STATUS_UNCHANGED);
 
           int serviceArgc = argc;
-          if (forceServiceFallback && serviceArgc > 2) {
+          if (forceServiceFallback && serviceArgc > kPatchDirIndex) {
             // To force the service to fail, we can just pass it too few
             // arguments. However, we don't want to pass it no arguments,
             // because then it won't have enough information to write out the
             // update status file telling us that it failed.
-            serviceArgc = 2;
+            serviceArgc = kPatchDirIndex + 1;
           }
 
           // If the update couldn't be started, then set useService to false so
           // we do the update the old way.
-          DWORD ret =
-              LaunchServiceSoftwareUpdateCommand(serviceArgc, (LPCWSTR*)argv);
+          DWORD ret = LaunchServiceSoftwareUpdateCommand(
+              serviceArgc, (LPCWSTR*)suiArgv.get());
           useService = (ret == ERROR_SUCCESS);
           // If the command was launched then wait for the service to be done.
           if (useService) {

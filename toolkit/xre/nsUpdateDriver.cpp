@@ -507,9 +507,10 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     pid.AssignLiteral("-1");
   }
 
-  int argc = 5;
+  int argc = 7;
   if (restart) {
-    argc = appArgc + 6;
+    argc += 1;  // callback working directory
+    argc += appArgc;
     if (gRestartedByOS) {
       argc += 1;
     }
@@ -519,20 +520,22 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     return;
   }
   argv[0] = (char*)updaterPath.get();
-  argv[1] = (char*)updateDirPath.get();
-  argv[2] = (char*)installDirPath.get();
-  argv[3] = (char*)applyToDirPath.get();
-  argv[4] = (char*)pid.get();
+  argv[1] = const_cast<char*>("3");
+  argv[2] = (char*)updateDirPath.get();
+  argv[3] = (char*)installDirPath.get();
+  argv[4] = (char*)applyToDirPath.get();
+  argv[5] = const_cast<char*>("first");
+  argv[6] = (char*)pid.get();
   if (restart && appArgc) {
-    argv[5] = (char*)workingDirPath.get();
-    argv[6] = (char*)appFilePath.get();
+    argv[7] = (char*)workingDirPath.get();
+    argv[8] = (char*)appFilePath.get();
     for (int i = 1; i < appArgc; ++i) {
-      argv[6 + i] = appArgv[i];
+      argv[8 + i] = appArgv[i];
     }
     if (gRestartedByOS) {
       // We haven't truly started up, restore this argument so that we will have
       // it upon restart.
-      argv[6 + appArgc] = const_cast<char*>("-os-restarted");
+      argv[8 + appArgc] = const_cast<char*>("-os-restarted");
     }
   }
   argv[argc] = nullptr;
