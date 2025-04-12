@@ -1,24 +1,464 @@
 {
   "data": [
     {
-      "schema": 1719499481119,
-      "imageSize": 24,
+      "schema": 1743687934706,
+      "imageSize": 96,
       "attachment": {
-        "hash": "fd9539fe7f711e5174917605a638868b065773622803d270128dc89cd28e13a7",
-        "size": 1054,
-        "filename": "Icon%2024x24.svg",
-        "location": "main-workspace/search-config-icons/c88379f9-f020-47a2-9ef8-c7699d65e410.svg",
-        "mimetype": "image/svg+xml"
+        "hash": "c2718c5e416670426475dd8cc496f5464bf95224e8f8f0a72b695360ddc917c0",
+        "size": 344,
+        "filename": "daum-kr_mobile.png",
+        "location": "main-workspace/search-config-icons/d992fe72-6c09-4fb4-aec3-97206bb906c1.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "daum-kr"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "41135a88-093d-4077-873b-9de1ae133427",
+      "last_modified": 1744118264981
+    },
+    {
+      "schema": 1743687941442,
+      "imageSize": 48,
+      "attachment": {
+        "hash": "755b8939c63b1fcc9acd05cd33ffed675397516d37b5bd8f3a03875e25d3fb43",
+        "size": 1070,
+        "filename": "reddit.png",
+        "location": "main-workspace/search-config-icons/3f1e8b4b-0328-4247-bb3f-e190472e794f.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "reddit"
+      ],
+      "id": "41f0d805-3775-4988-8d8c-5ad8ccd86d1c",
+      "last_modified": 1744118264979
+    },
+    {
+      "schema": 1743687927700,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "97a68f0b948b68bbf389a9ef43e2fe6c31ff8dc7889c939fdfdea79378576c67",
+        "size": 3211,
+        "filename": "leo_ende_de_mobile.png",
+        "location": "main-workspace/search-config-icons/b23b1194-59af-4e91-9b44-2a887d27220b.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "leo_ende_de"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "db0e1627-ae89-4c25-8944-a9481d8512d9",
+      "last_modified": 1744118264976
+    },
+    {
+      "schema": 1743687926793,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "92da7ef030e1d3ed97235748156383e5d75fa6d2744bd124334ab47dc0b689a1",
+        "size": 984,
+        "filename": "mapy-cz_mobile.png",
+        "location": "main-workspace/search-config-icons/63c435c1-78a4-49cb-8e03-79d9595d2d3b.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "mapy-cz"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "48c72361-cd67-412e-bd7f-f81a43c10791",
+      "last_modified": 1744118264974
+    },
+    {
+      "schema": 1743687971186,
+      "imageSize": 48,
+      "attachment": {
+        "hash": "6b1b073183eb0012daea0dce351a94d395c8a0b531b610e56eac52b3d1d1da0e",
+        "size": 420,
+        "filename": "youtube.png",
+        "location": "main-workspace/search-config-icons/4e534ddf-5fc9-4913-9994-dacd80b2b3d6.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "youtube"
+      ],
+      "id": "9802e63d-05ec-48ba-93f9-746e0981ad98",
+      "last_modified": 1744118264972
+    },
+    {
+      "schema": 1743687922382,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "e988445d87afe0d285bea251705fc23eb70ac42426ab0d7a69d9276585c5573c",
+        "size": 3322,
+        "filename": "salidzinilv_mobile.png",
+        "location": "main-workspace/search-config-icons/79622d89-5cdc-445b-91b4-dc56307e93b2.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "salidzinilv"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "7c81cf98-7c11-4afd-8279-db89118a6dfb",
+      "last_modified": 1744118264969
+    },
+    {
+      "schema": 1743687939650,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "076352591c7077af4af5771918f80b5da9c6bf479327cc68390abdb158f3ec03",
+        "size": 1261,
+        "filename": "amazon_mobile.png",
+        "location": "main-workspace/search-config-icons/6343f182-d4ca-4865-a12c-62f3861524b9.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "amazon*"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "b882b24d-1776-4ef9-9016-0bdbd935eda3",
+      "last_modified": 1744118264967
+    },
+    {
+      "schema": 1743687897341,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "4f1bfbfec1441bd9a304ca7f3b8fd54130e94df185f7b28bb17c86ba517e13b7",
+        "size": 1021,
+        "filename": "wiktionary_mobile.png",
+        "location": "main-workspace/search-config-icons/a38c58c7-8ea3-4532-b120-64dc0654a96c.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "wiktionary*"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "6644f26f-28ea-4222-929d-5d43a02dae05",
+      "last_modified": 1744118264964
+    },
+    {
+      "schema": 1743687938695,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "3426b5100a6bdb45f8039f0c71a6b68193750ba7bae5b36e5ed31b2b7f372cda",
+        "size": 1357,
+        "filename": "azerdict_mobile.png",
+        "location": "main-workspace/search-config-icons/1229ffe4-7a6f-46d7-b664-5596df0aa730.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "azerdict"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "95ed201d-4ab8-4cb8-831d-454f53cab0f8",
+      "last_modified": 1744118264962
+    },
+    {
+      "schema": 1743687936599,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "a7493c6a9d70d60acccf73f62dcbc127a580469570aee60b7482cd42cdb59f69",
+        "size": 724,
+        "filename": "ceneji_mobile.png",
+        "location": "main-workspace/search-config-icons/47936bf8-71bd-4c9a-9a00-58920177458b.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "ceneji"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "0a57b0cf-34f0-4d09-96e4-dbd6e3355410",
+      "last_modified": 1744118264959
+    },
+    {
+      "schema": 1743687931932,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "adb29f6fd95956401630d94967381ac473f57215d96a5bcf500a00e747731380",
+        "size": 3393,
+        "filename": "faclair-beag_mobile.png",
+        "location": "main-workspace/search-config-icons/6c6e0ca2-8870-423e-ac7c-1abae0b71fdf.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "faclair-beag"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "5203dd03-2c55-4b53-9c60-58258d587be1",
+      "last_modified": 1744118264956
+    },
+    {
+      "schema": 1743687846822,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "3a9d06951c7c9d2c19cd00533a760b0f8755b1e2e718af81c710297d030fbe44",
+        "size": 972,
+        "filename": "yahoo-jp_mobile.png",
+        "location": "main-workspace/search-config-icons/3a69bfc6-9d32-4d30-981e-96b83d26e8a7.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "yahoo-jp"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "fe75ce3f-1545-400c-b28c-ad771054e69f",
+      "last_modified": 1744118264953
+    },
+    {
+      "schema": 1743687932852,
+      "imageSize": 48,
+      "attachment": {
+        "hash": "774f0a7a613c6c5bea642e3628fa7436851de79e7da9713ad0c96d5db7f44300",
+        "size": 694,
+        "filename": "ecosia_mobile.png",
+        "location": "main-workspace/search-config-icons/f58670d9-93b2-413e-a2fa-ba29c401d669.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "ecosia"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "2ecca3f8-c1ef-43cc-b053-886d1ae46c36",
+      "last_modified": 1744118264951
+    },
+    {
+      "schema": 1743687921559,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "66612f999921d892645c8a2b37aa5dad17b134e7fdaed375a683baec7fc10697",
+        "size": 902,
+        "filename": "seznam-cz_mobile.png",
+        "location": "main-workspace/search-config-icons/30e08748-6ddf-47ec-928d-f50e2d90d1de.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "seznam-cz"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "a83f24e4-602c-47bd-930c-ad0947ee1adf",
+      "last_modified": 1744118264948
+    },
+    {
+      "schema": 1743687928614,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "0a653ea57472694ac05623d9b237e479232a0d65683d05f89661f996054e3276",
+        "size": 409,
+        "filename": "gulesider-NO_mobile.png",
+        "location": "main-workspace/search-config-icons/3481d42d-8933-4ea7-a84e-84fc1090762c.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "gulesider-NO"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "7072564d-a573-4750-bf33-f0a07631c9eb",
+      "last_modified": 1744118264946
+    },
+    {
+      "schema": 1743687924094,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "f8780adb4d7b28f2f881db4ca7b697d8fc916cd9fa834ccc445fe7d4b72a6cc7",
+        "size": 4919,
+        "filename": "odpiralni_mobile.png",
+        "location": "main-workspace/search-config-icons/de273151-2a00-42f7-9970-3989866429ba.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "odpiralni"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "8abb10a7-212f-46b5-a7b4-244f414e3810",
+      "last_modified": 1744118264944
+    },
+    {
+      "schema": 1743687940531,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "98dca7e24cad0a1be96ef2c323e9759beb63c72440756f887e2482d9ce8e8969",
+        "size": 2871,
+        "filename": "pazaruvaj_mobile.png",
+        "location": "main-workspace/search-config-icons/280984aa-729a-46c8-b019-4f6b1e4146a5.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "pazaruvaj"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "94a84724-c30f-4767-ba42-01cc37fc31a4",
+      "last_modified": 1744118264941
+    },
+    {
+      "schema": 1743687937748,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "601d72e7abde5ec864b3d8ca0031896f769107670b84c66053062481a56d8665",
+        "size": 3107,
+        "filename": "baidu_mobile.png",
+        "location": "main-workspace/search-config-icons/e771d394-309f-43e4-9f60-0ae8cef96662.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "baidu"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "b9424309-f601-4a69-98ca-ca68e65633e6",
+      "last_modified": 1744118264939
+    },
+    {
+      "schema": 1743687933774,
+      "imageSize": 68,
+      "attachment": {
+        "hash": "aa46b3d1ed8557e5bc7e71988cc6c46b00363b890d2a781973f9dc9073f8dd31",
+        "size": 2465,
+        "filename": "ebay_mobile.jpg",
+        "location": "main-workspace/search-config-icons/2c3520e6-a54b-490f-84bc-fb759f7f0e79.jpg",
+        "mimetype": "image/jpeg"
+      },
+      "engineIdentifiers": [
+        "ebay*"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "eb62e768-151b-45d1-9fe5-9e1d2a5991c5",
+      "last_modified": 1744118264936
+    },
+    {
+      "schema": 1743688004947,
+      "imageSize": 16,
+      "attachment": {
+        "hash": "02f54211387baa59e4246356dc7344e48f39a412f2e5993d7f403aa538df7276",
+        "size": 4172,
+        "filename": "qwant-16.pdf",
+        "location": "main-workspace/search-config-icons/b407dc78-50ae-41c4-95d2-25a442c4bd59.pdf",
+        "mimetype": "application/pdf"
       },
       "engineIdentifiers": [
         "qwant"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\" && env.version|versionCompare(\"128.0a1\") > 0",
-      "id": "39979158-80cf-4f0c-8bd6-9220eb09e751",
-      "last_modified": 1719504277655
+      "filter_expression": "env.appinfo.OS == \"iOS\"",
+      "id": "5914932e-66ba-4126-8be5-d37beadd9532",
+      "last_modified": 1744118264933
     },
     {
-      "schema": 1719499575129,
+      "schema": 1743687935690,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "71413ef23ac14ce2b7bb76f7f5d16b2df267239841a88ddab36b129481e00616",
+        "size": 2533,
+        "filename": "coccoc_mobile.png",
+        "location": "main-workspace/search-config-icons/48ee1c5c-9251-4ee2-af65-52eed830812e.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "coccoc"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "764e3b14-fe16-4feb-8384-124c516a5afa",
+      "last_modified": 1744118264931
+    },
+    {
+      "schema": 1743687925793,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "8dc2e75e6792b8374b20621fa2151ac24b4626e5c1f6a1abec4f912746441859",
+        "size": 3202,
+        "filename": "mercadoli_mobile.png",
+        "location": "main-workspace/search-config-icons/5ce8899a-56a5-4e20-a84d-8010bf48c898.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "mercadoli*"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "7cb4d88a-d4df-45b2-87e4-f896eaf1bbdb",
+      "last_modified": 1744118264929
+    },
+    {
+      "schema": 1743687920664,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "3376e14529ed2e96c7dc491b3bf11914d7c8ff47a068311b2432c086c2ae0f28",
+        "size": 1490,
+        "filename": "vatera_mobile.png",
+        "location": "main-workspace/search-config-icons/afe38f84-b99d-418b-b721-9a9615e7f2a0.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "vatera"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "74f94dc2-caf6-4b90-b3d2-f3e2f7714d88",
+      "last_modified": 1744118264926
+    },
+    {
+      "schema": 1743687919606,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "e9849089ffced59563896974afee0fceedac7fc8455bbeaa5bae230f54c933d9",
+        "size": 1100,
+        "filename": "wikipedia_mobile.png",
+        "location": "main-workspace/search-config-icons/38dc27d1-ee3d-4f69-b74c-ee9b90b7c936.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "wikipedia*"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "6e36a151-e4f4-4117-9067-1ca82c47d01a",
+      "last_modified": 1744118264924
+    },
+    {
+      "schema": 1743687924936,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "5aad083bfcef256d433c1ffa571b814d16f61832bcd7565bf03909011f6a0bfc",
+        "size": 2350,
+        "filename": "naver-kr_mobile.png",
+        "location": "main-workspace/search-config-icons/35e03899-b7d2-446e-87fb-c721f97c0227.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "naver-kr"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "71f41a0c-5b70-4116-b30f-e62089083522",
+      "last_modified": 1744118264921
+    },
+    {
+      "schema": 1743687930970,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "27541cb376bdda829a6cf9cefd13da112728881e3daa4ac3c1178d4ce15f1e8b",
+        "size": 1571,
+        "filename": "google_mobile.png",
+        "location": "main-workspace/search-config-icons/d9917c97-4593-4596-8ef0-cf0635e8aa36.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "google"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "7edaf4fe-a8a0-432b-86d2-bf75ebe80851",
+      "last_modified": 1744118264918
+    },
+    {
+      "schema": 1743687923256,
+      "imageSize": 96,
+      "attachment": {
+        "hash": "4f409c3ffc67cfa870b05e4089b6ffc3fc81448fa60afba447f0177cd1192b1e",
+        "size": 3370,
+        "filename": "prisjakt-sv-SE_mobile.png",
+        "location": "main-workspace/search-config-icons/02277a17-bb75-4e5f-94a8-abb34005298c.png",
+        "mimetype": "image/png"
+      },
+      "engineIdentifiers": [
+        "prisjakt-sv-SE"
+      ],
+      "filter_expression": "env.appinfo.OS == \"iOS\" || env.appinfo.OS == \"Android\"",
+      "id": "39d0b17d-c020-4890-932f-83c0f6ed130b",
+      "last_modified": 1744118264916
+    },
+    {
+      "schema": 1743687972090,
       "imageSize": 16,
       "attachment": {
         "hash": "912d20feefcba57d43bffff5e245b8c1e3865155ed686d8ad253bbab71116e83",
@@ -30,46 +470,12 @@
       "engineIdentifiers": [
         "qwant"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\" && env.version|versionCompare(\"128.0a1\") > 0",
+      "filter_expression": "env.appinfo.OS != \"iOS\"",
       "id": "7bf4ca37-e2b8-4d31-a1c3-979bc0e85131",
-      "last_modified": 1719504277653
+      "last_modified": 1744118264912
     },
     {
-      "schema": 1719398670645,
-      "imageSize": 16,
-      "attachment": {
-        "hash": "eab887d630aef83a06bdcc6af914eccc7e7d9bccb4bd5e0d120f8a26f2cfbe79",
-        "size": 970,
-        "filename": "qwant-16-firefox.png",
-        "location": "main-workspace/search-config-icons/46a495f4-9091-42c5-b7f7-a24d59477ae5.png",
-        "mimetype": "image/png"
-      },
-      "engineIdentifiers": [
-        "qwant"
-      ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\" && env.version|versionCompare(\"128.0a1\") <= 0",
-      "id": "6a83583a-f0ba-fd39-2fdb-fd2b6990ea3b",
-      "last_modified": 1719504277650
-    },
-    {
-      "schema": 1707265339663,
-      "imageSize": 16,
-      "attachment": {
-        "hash": "617dec5d635efb0a12d0de935c6999ef0249f4a63c62bdcb96551518bc3d1812",
-        "size": 2672,
-        "filename": "yahoo-jp-auctions-16-firefox.ico",
-        "location": "main-workspace/search-config-icons/d424ae0b-82e7-42fc-a10a-a607bba3642a.ico",
-        "mimetype": "image/x-icon"
-      },
-      "engineIdentifiers": [
-        "yahoo-jp-auctions"
-      ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
-      "id": "a06db97d-1210-ea2e-5474-0e2f7d295bfd",
-      "last_modified": 1707330724491
-    },
-    {
-      "schema": 1707265325417,
+      "schema": 1743687739689,
       "imageSize": 16,
       "attachment": {
         "hash": "ca8f102ac4f35189ebcb786d080843b603b234f89b8d8b1c0ef27a0ab7148182",
@@ -81,12 +487,12 @@
       "engineIdentifiers": [
         "yahoo-jp"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "74793ce1-a918-a5eb-d3c0-2aadaff3c88c",
-      "last_modified": 1707330724489
+      "last_modified": 1744118264908
     },
     {
-      "schema": 1707265314687,
+      "schema": 1743687680020,
       "imageSize": 16,
       "attachment": {
         "hash": "809697f48848e7c3638d5f3e0b224ea60b3800504e7bd8417854d55989b85196",
@@ -98,12 +504,11 @@
       "engineIdentifiers": [
         "wolnelektury-pl"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "e718e983-09aa-e8f6-b25f-cd4b395d4785",
-      "last_modified": 1707330724487
+      "last_modified": 1744118264906
     },
     {
-      "schema": 1707265299492,
+      "schema": 1743687818052,
       "imageSize": 16,
       "attachment": {
         "hash": "5d53ef1866a08cc29011f5f2a9ce99bbf37cf42e80de7f0e8cc30d13337e8187",
@@ -115,12 +520,12 @@
       "engineIdentifiers": [
         "wiktionary*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "91a9672d-e945-8e1e-0996-aefdb0190716",
-      "last_modified": 1707330724485
+      "last_modified": 1744118264904
     },
     {
-      "schema": 1707265280786,
+      "schema": 1743687826368,
       "imageSize": 16,
       "attachment": {
         "hash": "62d2faa3a8322b1f643aab6e045837500ebe3049c5cb140cb44c4dfc7290337a",
@@ -132,12 +537,12 @@
       "engineIdentifiers": [
         "wikipedia*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "101ce01d-2691-b729-7f16-9d389803384b",
-      "last_modified": 1707330724482
+      "last_modified": 1744118264902
     },
     {
-      "schema": 1707265270195,
+      "schema": 1743687697875,
       "imageSize": 16,
       "attachment": {
         "hash": "dd5cab3711f778677859e86000a127ed07a6175e8e58aecb0fba71b825ce76d7",
@@ -149,12 +554,11 @@
       "engineIdentifiers": [
         "webde"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "6f4da442-d31e-28f8-03af-797d16bbdd27",
-      "last_modified": 1707330724480
+      "last_modified": 1744118264900
     },
     {
-      "schema": 1707265259585,
+      "schema": 1743687827197,
       "imageSize": 16,
       "attachment": {
         "hash": "9cd3da38e3938549434d1c3cba6fed249ffa7d91d9a6d7ffb5f4184f527cac76",
@@ -166,12 +570,28 @@
       "engineIdentifiers": [
         "vatera"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "5e03d6f4-6ee9-8bc8-cf22-7a5f2cf55c41",
-      "last_modified": 1707330724478
+      "last_modified": 1744118264898
     },
     {
-      "schema": 1707265244672,
+      "schema": 1743687505962,
+      "imageSize": 16,
+      "attachment": {
+        "hash": "617dec5d635efb0a12d0de935c6999ef0249f4a63c62bdcb96551518bc3d1812",
+        "size": 2672,
+        "filename": "yahoo-jp-auctions-16-firefox.ico",
+        "location": "main-workspace/search-config-icons/d424ae0b-82e7-42fc-a10a-a607bba3642a.ico",
+        "mimetype": "image/x-icon"
+      },
+      "engineIdentifiers": [
+        "yahoo-jp-auctions"
+      ],
+      "id": "a06db97d-1210-ea2e-5474-0e2f7d295bfd",
+      "last_modified": 1744118264896
+    },
+    {
+      "schema": 1743687702309,
       "imageSize": 16,
       "attachment": {
         "hash": "1bf68aca7bfc75ca8485c3dac9a1daa13c1a3eb480688c32262096af6076adfa",
@@ -183,12 +603,11 @@
       "engineIdentifiers": [
         "tyda-sv-SE"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "a2c7d4e9-f770-51e1-0963-3c2c8401631d",
-      "last_modified": 1707330724476
+      "last_modified": 1744118264895
     },
     {
-      "schema": 1707265228699,
+      "schema": 1743687827516,
       "imageSize": 16,
       "attachment": {
         "hash": "a1fd5d127a5f2590ddcd439b7a2abb3456b48217ea11daf0345b26e108f520e6",
@@ -200,12 +619,12 @@
       "engineIdentifiers": [
         "seznam-cz"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "84bb4962-e571-227a-9ef6-2ac5f2aac361",
-      "last_modified": 1707330724473
+      "last_modified": 1744118264893
     },
     {
-      "schema": 1707265210999,
+      "schema": 1743687827915,
       "imageSize": 16,
       "attachment": {
         "hash": "c4d88cfa5262f6d2cf76b167281d25821c9e1770684b739ed6ad3cf7277a121b",
@@ -217,12 +636,12 @@
       "engineIdentifiers": [
         "salidzinilv"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "fca3e3ee-56cd-f474-dc31-307fd24a891d",
-      "last_modified": 1707330724471
+      "last_modified": 1744118264891
     },
     {
-      "schema": 1707265199776,
+      "schema": 1743687711996,
       "imageSize": 16,
       "attachment": {
         "hash": "247aa26993083705ce99a8e5612cdf262aca98cde86ba19afc964329ba95986a",
@@ -234,12 +653,11 @@
       "engineIdentifiers": [
         "readmoo"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "e02f23df-8d48-2b1b-3b5c-6dd27302c61c",
-      "last_modified": 1707330724468
+      "last_modified": 1744118264888
     },
     {
-      "schema": 1707265187818,
+      "schema": 1743687716567,
       "imageSize": 16,
       "attachment": {
         "hash": "b75ef04a805325e303c4195833cdd077d3d406f360b25b72502fc55880b9150b",
@@ -251,12 +669,11 @@
       "engineIdentifiers": [
         "rakuten"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "06cf7432-efd7-f244-927b-5e423005e1ea",
-      "last_modified": 1707330724466
+      "last_modified": 1744118264886
     },
     {
-      "schema": 1707265170689,
+      "schema": 1743687728916,
       "imageSize": 16,
       "attachment": {
         "hash": "91d17ba44192a6430ffdb447ff3a11533ef964628f67c13480cc9470212d3d65",
@@ -268,12 +685,11 @@
       "engineIdentifiers": [
         "qwantjr"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "f312610a-ebfb-a106-ea92-fd643c5d3636",
-      "last_modified": 1707330724464
+      "last_modified": 1744118264884
     },
     {
-      "schema": 1707265148215,
+      "schema": 1743687828800,
       "imageSize": 16,
       "attachment": {
         "hash": "3b88f3ef3cbfaed127d679ec7e44a44fe8dcad688feb89a70a1a9447c1460d15",
@@ -285,12 +701,12 @@
       "engineIdentifiers": [
         "prisjakt-sv-SE"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "177aba42-9bed-4078-e36b-580e8794cd7f",
-      "last_modified": 1707330724459
+      "last_modified": 1744118264882
     },
     {
-      "schema": 1707265137087,
+      "schema": 1743687730153,
       "imageSize": 16,
       "attachment": {
         "hash": "64800e32b24b2c8c0582750e1657426d56abd74b65682e20e892f82710d120b6",
@@ -302,12 +718,11 @@
       "engineIdentifiers": [
         "priberam"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "0eec5640-6fde-d6fe-322a-c72c6d5bd5a2",
-      "last_modified": 1707330724457
+      "last_modified": 1744118264880
     },
     {
-      "schema": 1707265120610,
+      "schema": 1743687829547,
       "imageSize": 16,
       "attachment": {
         "hash": "b0c6d1850265e3c946917232ca6c6ace3dad23347bfab4f81351eac569326d34",
@@ -319,12 +734,12 @@
       "engineIdentifiers": [
         "pazaruvaj"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "7efbed51-813c-581d-d8d3-f8758434e451",
-      "last_modified": 1707330724454
+      "last_modified": 1744118264878
     },
     {
-      "schema": 1707265108111,
+      "schema": 1743687830257,
       "imageSize": 16,
       "attachment": {
         "hash": "189ed3031a2cefd3150c9e5b37bee1ffbc1f7850f7ac0621e4b8d262f2c1048c",
@@ -336,12 +751,12 @@
       "engineIdentifiers": [
         "odpiralni"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "4e271681-3e0f-91ac-9750-03f665efc171",
-      "last_modified": 1707330724452
+      "last_modified": 1744118264876
     },
     {
-      "schema": 1707265094264,
+      "schema": 1743687830946,
       "imageSize": 16,
       "attachment": {
         "hash": "723ac3228124926537d5a61284d60e198a52895195f9f69b967c578ef7a012ad",
@@ -353,12 +768,12 @@
       "engineIdentifiers": [
         "naver-kr"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "2bbe48f4-d3b8-c9e0-86e3-a54c37ec3335",
-      "last_modified": 1707330724449
+      "last_modified": 1744118264874
     },
     {
-      "schema": 1707265073846,
+      "schema": 1743687832067,
       "imageSize": 16,
       "attachment": {
         "hash": "d7fdfd971d874f2ec6f209df6f6b8173d126cd3f7a25daacb94de4259efbcf16",
@@ -370,12 +785,12 @@
       "engineIdentifiers": [
         "mercadolivre"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "fed4f021-ff3e-942a-010e-afa43fda2136",
-      "last_modified": 1707330724446
+      "last_modified": 1744118264872
     },
     {
-      "schema": 1707265061966,
+      "schema": 1743687832901,
       "imageSize": 16,
       "attachment": {
         "hash": "d7fdfd971d874f2ec6f209df6f6b8173d126cd3f7a25daacb94de4259efbcf16",
@@ -387,12 +802,12 @@
       "engineIdentifiers": [
         "mercadolibre*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "47da97b5-600f-c450-fd15-a52bb2169c11",
-      "last_modified": 1707330724443
+      "last_modified": 1744118264870
     },
     {
-      "schema": 1707265027259,
+      "schema": 1743687833772,
       "imageSize": 16,
       "attachment": {
         "hash": "1474c93e49c209aca2a2df2acb61b64574805106bead6edebd67287de21920e0",
@@ -404,12 +819,12 @@
       "engineIdentifiers": [
         "mapy-cz"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "b8ca5a94-8fff-27ad-6e00-96e244a32e21",
-      "last_modified": 1707330724440
+      "last_modified": 1744118264868
     },
     {
-      "schema": 1707265012766,
+      "schema": 1743687731350,
       "imageSize": 16,
       "attachment": {
         "hash": "33ca72f1eac56793d1fd811189cedef98004a067c85b1143083b564814a4b0db",
@@ -421,12 +836,11 @@
       "engineIdentifiers": [
         "mailcom"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "87ac4cde-f581-398b-1e32-eb4079183b36",
-      "last_modified": 1707330724438
+      "last_modified": 1744118264866
     },
     {
-      "schema": 1707264998628,
+      "schema": 1743687732245,
       "imageSize": 16,
       "attachment": {
         "hash": "a64f553b79fbb8c45734310dac401ad253ccd05aeabfa58bb5541daa6d8caf70",
@@ -438,12 +852,11 @@
       "engineIdentifiers": [
         "longdo"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "32d26d19-aeb0-5c01-32e8-f8970be9246f",
-      "last_modified": 1707330724435
+      "last_modified": 1744118264864
     },
     {
-      "schema": 1707264911347,
+      "schema": 1743687834703,
       "imageSize": 16,
       "attachment": {
         "hash": "c3e8300801c5c585662f14fd8e819d635efd9830783dc3c631212927866e9898",
@@ -455,12 +868,12 @@
       "engineIdentifiers": [
         "leo_ende_de"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "b64f09fd-52d1-c48e-af23-4ce918e7bf3b",
-      "last_modified": 1707330724432
+      "last_modified": 1744118264861
     },
     {
-      "schema": 1707264735197,
+      "schema": 1743687835622,
       "imageSize": 16,
       "attachment": {
         "hash": "c971ee33b8c0a57349669d957bf73070b0632b128c94748e845b57d5e15221a4",
@@ -472,12 +885,12 @@
       "engineIdentifiers": [
         "gulesider-NO"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "e7547f62-187b-b641-d462-e54a3f813d9a",
-      "last_modified": 1707330724429
+      "last_modified": 1744118264859
     },
     {
-      "schema": 1707264399810,
+      "schema": 1743687836435,
       "imageSize": 16,
       "attachment": {
         "hash": "6da5620880159634213e197fafca1dde0272153be3e4590818533fab8d040770",
@@ -489,12 +902,12 @@
       "engineIdentifiers": [
         "google"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "fa0fc42c-d91d-fca7-34eb-806ff46062dc",
-      "last_modified": 1707330724427
+      "last_modified": 1744118264857
     },
     {
-      "schema": 1707264398352,
+      "schema": 1743687733779,
       "imageSize": 16,
       "attachment": {
         "hash": "828c3ca82e9be483ae583e5a705dde57b24fd8431e192e3a2d0809871992afa5",
@@ -506,12 +919,11 @@
       "engineIdentifiers": [
         "gmx*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "25de0352-aabb-d31f-15f7-bf9299fb004c",
-      "last_modified": 1707330724424
+      "last_modified": 1744118264855
     },
     {
-      "schema": 1707264396942,
+      "schema": 1743687837216,
       "imageSize": 16,
       "attachment": {
         "hash": "f895a965b68d02e7391cc4504d9be75e1ba7f9b50a1dd59af77bb44a7769c08c",
@@ -523,12 +935,12 @@
       "engineIdentifiers": [
         "faclair-beag"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "6d10d702-7bd6-1452-90a5-3df665a38f66",
-      "last_modified": 1707330724421
+      "last_modified": 1744118264853
     },
     {
-      "schema": 1707264395634,
+      "schema": 1743687734735,
       "imageSize": 16,
       "attachment": {
         "hash": "150765e8e9b985ba5b820ac9b8e7623023d5a0e24f94663d5e9203d8d7598059",
@@ -540,12 +952,11 @@
       "engineIdentifiers": [
         "eudict"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "c411adc1-9661-4fb5-a4c1-8cfe74911943",
-      "last_modified": 1707330724418
+      "last_modified": 1744118264851
     },
     {
-      "schema": 1707264394199,
+      "schema": 1743687838278,
       "imageSize": 16,
       "attachment": {
         "hash": "fdadf15c6eae7933c3d254ae6311112e0bc8a422c38c758189dbe6a4d7f6b718",
@@ -557,12 +968,12 @@
       "engineIdentifiers": [
         "ecosia"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "001500a9-1a6c-3f5a-ba15-a5f5a075d256",
-      "last_modified": 1707330724415
+      "last_modified": 1744118264849
     },
     {
-      "schema": 1707264392809,
+      "schema": 1743687839058,
       "imageSize": 16,
       "attachment": {
         "hash": "31a793dad95b5ffd02d39ebf14fc40877596f418f5926247487265034181dc8f",
@@ -574,12 +985,12 @@
       "engineIdentifiers": [
         "ebay*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "70fdd651-6c50-b7bb-09ec-7e85da259173",
-      "last_modified": 1707330724412
+      "last_modified": 1744118264847
     },
     {
-      "schema": 1707264391458,
+      "schema": 1743687735700,
       "imageSize": 16,
       "attachment": {
         "hash": "d994f806b1e4225b50be5ab681b2cecf845cc216a19a432d878cea3cb815bafd",
@@ -591,12 +1002,11 @@
       "engineIdentifiers": [
         "ddg"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "a06dc3fd-4bdb-41f3-2ebc-4cbed06a9bd3",
-      "last_modified": 1707330724410
+      "last_modified": 1744118264845
     },
     {
-      "schema": 1707264390072,
+      "schema": 1743687839798,
       "imageSize": 16,
       "attachment": {
         "hash": "ca3cc8786977f6ffeb0546ff8f3bb2b7fd240d1956fbf86777dbf0e8bec9c03b",
@@ -608,12 +1018,12 @@
       "engineIdentifiers": [
         "daum-kr"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "8831ce10-b1e4-6eb4-4975-83c67457288e",
-      "last_modified": 1707330724407
+      "last_modified": 1744118264843
     },
     {
-      "schema": 1707264388636,
+      "schema": 1743687840864,
       "imageSize": 16,
       "attachment": {
         "hash": "7042293af6b04e421cb7b68dc599ac644b76939cdcf5970159e44f658dd6a0cc",
@@ -625,12 +1035,12 @@
       "engineIdentifiers": [
         "coccoc"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "0d7668a8-c3f4-cfee-cbc8-536511528937",
-      "last_modified": 1707330724404
+      "last_modified": 1744118264841
     },
     {
-      "schema": 1707264387232,
+      "schema": 1743687841692,
       "imageSize": 16,
       "attachment": {
         "hash": "9140bd1b30953f41bc758d2c0ecc873f5163e4f51126c278991eccd38589c541",
@@ -642,12 +1052,12 @@
       "engineIdentifiers": [
         "ceneji"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "50f6171f-8e7a-b41b-862e-f97397038fb2",
-      "last_modified": 1707330724401
+      "last_modified": 1744118264839
     },
     {
-      "schema": 1707264385889,
+      "schema": 1743687736535,
       "imageSize": 16,
       "attachment": {
         "hash": "6ba1f0fd1d12014cab32f74daab24dfa16fb26613ace20a1e595267621038a07",
@@ -659,12 +1069,11 @@
       "engineIdentifiers": [
         "bok-NO"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "890de5c4-0941-a116-473a-5d240e79497a",
-      "last_modified": 1707330724398
+      "last_modified": 1744118264837
     },
     {
-      "schema": 1707264384393,
+      "schema": 1743687737308,
       "imageSize": 16,
       "attachment": {
         "hash": "5b2c34b3c4e8dd898b664dba6c3786e2ff9869eff55d673aa48361f11325ed07",
@@ -676,12 +1085,11 @@
       "engineIdentifiers": [
         "bing"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "cbf9e891-d079-2b28-5617-283450d463dd",
-      "last_modified": 1707330724395
+      "last_modified": 1744118264835
     },
     {
-      "schema": 1707264382904,
+      "schema": 1743687842467,
       "imageSize": 16,
       "attachment": {
         "hash": "877fb3aca13d2a7c656df1f94df3fa052afbb40b65c99ba5382392ff5499016e",
@@ -693,12 +1101,12 @@
       "engineIdentifiers": [
         "baidu"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "5ded611d-44b2-dc46-fd67-fb116888d75d",
-      "last_modified": 1707330724392
+      "last_modified": 1744118264833
     },
     {
-      "schema": 1707264381509,
+      "schema": 1743687843227,
       "imageSize": 16,
       "attachment": {
         "hash": "24daa27a3234d01b5add42e027b0a34000d0ab47c17fe3924c2ca267b7b61c19",
@@ -710,12 +1118,12 @@
       "engineIdentifiers": [
         "azerdict"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "7bbe6c5c-fdb8-2845-a4f4-e1382e708a0e",
-      "last_modified": 1707330724389
+      "last_modified": 1744118264831
     },
     {
-      "schema": 1707264380172,
+      "schema": 1743687843968,
       "imageSize": 16,
       "attachment": {
         "hash": "16ea89d4baa39529d7a84d5152867a4c6ed6867198c4dfa1648b1f43ce6a3f6f",
@@ -727,12 +1135,12 @@
       "engineIdentifiers": [
         "amazon*"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
+      "filter_expression": "env.appinfo.OS != \"iOS\" && env.appinfo.OS != \"Android\"",
       "id": "2e835b0e-9709-d1bb-9725-87f59f3445ca",
-      "last_modified": 1707330724387
+      "last_modified": 1744118264829
     },
     {
-      "schema": 1707264378878,
+      "schema": 1743687738096,
       "imageSize": 16,
       "attachment": {
         "hash": "ca6e972004f62355c1ea97656bc2328e1643971bdecab9c6b563d45593b8122e",
@@ -744,12 +1152,11 @@
       "engineIdentifiers": [
         "allegro-pl"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "96327a73-c433-5eb4-a16d-b090cadfb80b",
-      "last_modified": 1707330724384
+      "last_modified": 1744118264827
     },
     {
-      "schema": 1707264328903,
+      "schema": 1743687738876,
       "imageSize": 16,
       "attachment": {
         "hash": "865d76c8175a8f11dedc93f0bc212242a97a8a76adac870e8249368cecc81402",
@@ -761,10 +1168,9 @@
       "engineIdentifiers": [
         "1und1"
       ],
-      "filter_expression": "env.appinfo.ID == \"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\"",
       "id": "d87f251c-3e12-a8bf-e2d0-afd43d36c5f9",
-      "last_modified": 1707330724381
+      "last_modified": 1744118264825
     }
   ],
-  "timestamp": 1719504277655
+  "timestamp": 1744118264981
 }
