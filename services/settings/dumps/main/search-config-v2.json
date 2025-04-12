@@ -178,63 +178,6 @@
           "amazon"
         ],
         "classification": "unknown",
-        "name": "Amazon.co.jp",
-        "partnerCode": "mozillajapan-fx-22",
-        "urls": {
-          "search": {
-            "base": "https://www.amazon.co.jp/exec/obidos/external-search/",
-            "params": [
-              {
-                "name": "mode",
-                "value": "blended"
-              },
-              {
-                "name": "tag",
-                "value": "{partnerCode}"
-              },
-              {
-                "name": "sourceid",
-                "value": "Mozilla-search"
-              }
-            ],
-            "searchTermParamName": "field-keywords"
-          }
-        }
-      },
-      "id": "9d089e46-dc94-4d4f-8f17-cc07b59aa9e4",
-      "identifier": "amazon-jp",
-      "last_modified": 1718719100309,
-      "recordType": "engine",
-      "schema": 1718637175117,
-      "variants": [
-        {
-          "environment": {
-            "regions": [
-              "jp"
-            ]
-          },
-          "subVariants": [
-            {
-              "environment": {
-                "applications": [
-                  "firefox-android",
-                  "focus-android",
-                  "firefox-ios",
-                  "focus-ios"
-                ]
-              },
-              "partnerCode": "moz-jp-mbl-22"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "base": {
-        "aliases": [
-          "amazon"
-        ],
-        "classification": "unknown",
         "name": "Amazon.com",
         "urls": {
           "search": {
@@ -8106,5 +8049,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1742996759044
+  "timestamp": 1744212474334
 }

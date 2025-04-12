@@ -1,6 +1,91 @@
 {
   "data": [
     {
+      "url": "http://tagesschau.de/",
+      "order": 30,
+      "title": "Tagesschau",
+      "schema": 1744139458883,
+      "exclude_locales": [],
+      "exclude_regions": [],
+      "include_locales": [],
+      "include_regions": [
+        "DE"
+      ],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "21f784bb-c8a5-4b4a-b6f1-b40ef2611561",
+      "last_modified": 1744205351122
+    },
+    {
+      "url": "http://lemonde.fr/",
+      "order": 30,
+      "title": "Le Monde",
+      "schema": 1744139543826,
+      "exclude_locales": [],
+      "exclude_regions": [],
+      "include_locales": [],
+      "include_regions": [
+        "FR"
+      ],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "c1f45f82-9e1a-4f43-ae87-7f8afebd259f",
+      "last_modified": 1744205351119
+    },
+    {
+      "url": "https://addons.mozilla.org/",
+      "order": 50,
+      "title": "Add-ons for Firefox",
+      "schema": 1744009544308,
+      "exclude_locales": [],
+      "exclude_regions": [
+        "CN",
+        "US",
+        "DE",
+        "FR",
+        "GB",
+        "IN"
+      ],
+      "include_locales": [],
+      "include_regions": [],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "8501fc16-ab6c-4c11-b92d-7b9dcf07d927",
+      "last_modified": 1744205351116
+    },
+    {
+      "url": "http://ndtv.com/",
+      "order": 30,
+      "title": "NDTV",
+      "schema": 1744139692856,
+      "exclude_locales": [],
+      "exclude_regions": [],
+      "include_locales": [],
+      "include_regions": [
+        "IN"
+      ],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "66464512-677d-4f1c-9205-123d47a8928c",
+      "last_modified": 1744205351112
+    },
+    {
+      "url": "https://apnews.com/",
+      "order": 30,
+      "title": "AP News",
+      "schema": 1744139364000,
+      "exclude_locales": [],
+      "exclude_regions": [],
+      "include_locales": [],
+      "include_regions": [
+        "US"
+      ],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "ba9f60f9-21a4-421b-b951-fabbccaee17a",
+      "last_modified": 1744205351109
+    },
+    {
       "url": "https://www.bbc.co.uk/",
       "order": 30,
       "title": "BBC",
@@ -121,5 +206,5 @@
       "last_modified": 1599146777370
     }
   ],
-  "timestamp": 1741633408486
+  "timestamp": 1744205351122
 }
