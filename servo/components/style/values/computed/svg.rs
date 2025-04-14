@@ -10,7 +10,7 @@ use crate::values::computed::{LengthPercentage, NonNegativeLengthPercentage, Opa
 use crate::values::generics::svg as generic;
 use crate::Zero;
 
-pub use crate::values::specified::{DProperty, MozContextProperties, SVGPaintOrder};
+pub use crate::values::specified::{DProperty, MozContextProperties, SVGPaintOrder, VectorEffect};
 
 /// Computed SVG Paint value
 pub type SVGPaint = generic::GenericSVGPaint<Color, ComputedUrl>;

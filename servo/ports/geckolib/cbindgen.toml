@@ -300,6 +300,7 @@ include = [
   "ComputedLinearStop",
   "PiecewiseLinearFunction",
   "BeforeFlag",
+  "VectorEffect",
   "XTextScale",
   "Zoom",
   "TransitionProperty",
@@ -545,6 +546,10 @@ renaming_overrides_prefixing = true
   inline bool IsUnder() const;
   inline bool IsLeft() const;
   inline bool IsRight() const;
+"""
+
+"VectorEffect" = """
+  bool HasNonScalingStroke() const { return bool(*this & StyleVectorEffect::NON_SCALING_STROKE); }
 """
 
 # TODO(emilio): Add hooks to cbindgen to be able to generate [[nodiscard]]

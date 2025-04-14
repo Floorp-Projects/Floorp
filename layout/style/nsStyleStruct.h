@@ -1910,7 +1910,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
   bool HasMask() const;
 
   bool HasNonScalingStroke() const {
-    return mVectorEffect == mozilla::StyleVectorEffect::NonScalingStroke;
+    return mVectorEffect.HasNonScalingStroke();
   }
 
   // geometry properties

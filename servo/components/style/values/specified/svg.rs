@@ -402,3 +402,39 @@ impl Parse for DProperty {
         Ok(DProperty::Path(path_data))
     }
 }
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[css(bitflags(single = "none", mixed = "non-scaling-stroke"))]
+#[repr(C)]
+/// https://svgwg.org/svg2-draft/coords.html#VectorEffects
+pub struct VectorEffect(u8);
+bitflags! {
+    impl VectorEffect: u8 {
+        /// `none`
+        const NONE = 0;
+        /// `non-scaling-stroke`
+        const NON_SCALING_STROKE = 1 << 0;
+    }
+}
+
+impl VectorEffect {
+    /// Returns the initial value of vector-effect
+    #[inline]
+    pub fn none() -> Self {
+        Self::NONE
+    }
+}
