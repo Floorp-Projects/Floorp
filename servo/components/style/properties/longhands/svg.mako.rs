@@ -4,11 +4,11 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-${helpers.single_keyword(
+${helpers.predefined_type(
     "vector-effect",
-    "none non-scaling-stroke",
+    "VectorEffect",
+    "computed::VectorEffect::none()",
     engines="gecko",
-    gecko_enum_prefix="StyleVectorEffect",
     animation_value_type="discrete",
     spec="https://svgwg.org/svg2-draft/coords.html#VectorEffects",
     affects="layout",

@@ -907,7 +907,7 @@ nsStyleSVGReset::nsStyleSVGReset()
       mLightingColor(StyleColor::White()),
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
-      mVectorEffect(StyleVectorEffect::None),
+      mVectorEffect(StyleVectorEffect::NONE),
       mMaskType(StyleMaskType::Luminance),
       mD(StyleDProperty::None()) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);

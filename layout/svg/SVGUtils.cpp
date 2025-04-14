@@ -1078,8 +1078,9 @@ bool SVGUtils::GetNonScalingStrokeTransform(const nsIFrame* aFrame,
 
   MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "should be an SVG element");
 
-  *aUserToOuterSVG = ThebesMatrix(
-      SVGContentUtils::GetCTM(static_cast<SVGElement*>(aFrame->GetContent())));
+  SVGElement* content = static_cast<SVGElement*>(aFrame->GetContent());
+  *aUserToOuterSVG =
+      ThebesMatrix(SVGContentUtils::GetOuterViewportCTM(content));
 
   return aUserToOuterSVG->HasNonTranslation() && !aUserToOuterSVG->IsSingular();
 }

@@ -489,7 +489,9 @@ SVGViewportElement* SVGContentUtils::GetNearestViewportElement(
   return nullptr;
 }
 
-static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
+enum class CTMType { NearestViewport, OuterViewport, Screen };
+
+static gfx::Matrix GetCTMInternal(SVGElement* aElement, CTMType aCTMType,
                                   bool aHaveRecursed) {
   auto getLocalTransformHelper =
       [](SVGElement const* e, bool shouldIncludeChildToUserSpace) -> gfxMatrix {
@@ -530,7 +532,8 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
          !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
     element = static_cast<SVGElement*>(ancestor);
     matrix *= getLocalTransformHelper(element, true);
-    if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
+    if (aCTMType == CTMType::NearestViewport &&
+        SVGContentUtils::EstablishesViewport(element)) {
       if (!element->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
         NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
         return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
@@ -540,7 +543,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }
-  if (!aScreenCTM) {
+  if (aCTMType == CTMType::NearestViewport) {
     // didn't find a nearestViewportElement
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
@@ -568,13 +571,16 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     int32_t appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
     tm.PostTranslate(NSAppUnitsToFloatPixels(bp.left, appUnitsPerCSSPixel),
                      NSAppUnitsToFloatPixels(bp.top, appUnitsPerCSSPixel));
+    if (aCTMType == CTMType::OuterViewport) {
+      return tm;
+    }
   }
 
   if (!ancestor || !ancestor->IsElement()) {
     return tm;
   }
   if (auto* ancestorSVG = SVGElement::FromNode(ancestor)) {
-    return tm * GetCTMInternal(ancestorSVG, true, true);
+    return tm * GetCTMInternal(ancestorSVG, aCTMType, true);
   }
   nsIFrame* parentFrame = frame->GetParent();
   if (!parentFrame) {
@@ -612,16 +618,20 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
   }
   return nearestSVGAncestor
              ? tm * GetCTMInternal(static_cast<SVGElement*>(nearestSVGAncestor),
-                                   true, true)
+                                   aCTMType, true)
              : tm;
 }
 
 gfx::Matrix SVGContentUtils::GetCTM(SVGElement* aElement) {
-  return GetCTMInternal(aElement, false, false);
+  return GetCTMInternal(aElement, CTMType::NearestViewport, false);
+}
+
+gfx::Matrix SVGContentUtils::GetOuterViewportCTM(SVGElement* aElement) {
+  return GetCTMInternal(aElement, CTMType::OuterViewport, false);
 }
 
 gfx::Matrix SVGContentUtils::GetScreenCTM(SVGElement* aElement) {
-  return GetCTMInternal(aElement, true, false);
+  return GetCTMInternal(aElement, CTMType::Screen, false);
 }
 
 void SVGContentUtils::RectilinearGetStrokeBounds(
