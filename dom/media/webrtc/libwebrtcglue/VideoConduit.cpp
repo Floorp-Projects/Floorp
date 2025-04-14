@@ -512,7 +512,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
         mRecvStreamConfig.rtp);
     MOZ_ASSERT(newRtp == mRecvStreamConfig.rtp);
     newRtp.rtx_associated_payload_types.clear();
-    newRtp.rtx_ssrc = 0;
     newRtp.rtcp_mode = rtpRtcpConfig->GetRtcpMode();
     newRtp.nack.rtp_history_ms = 0;
     newRtp.remb = false;
@@ -621,6 +620,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
 
     if (mRecvStreamConfig.rtp != newRtp) {
       mRecvStreamConfig.rtp = newRtp;
+      remoteSsrcUpdateNeeded = true;
     }
   }
 
