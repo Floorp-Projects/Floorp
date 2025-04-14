@@ -201,7 +201,7 @@ bool SVGGeometryElement::IsPointInStroke(const DOMPointInit& aPoint) {
   SVGGeometryProperty::DoForComputedStyle(this, [&](const ComputedStyle* s) {
     // Per spec, we should take vector-effect into account.
     if (s->StyleSVGReset()->HasNonScalingStroke()) {
-      auto mat = SVGContentUtils::GetOuterViewportCTM(this);
+      auto mat = SVGContentUtils::GetNonScalingStrokeCTM(this);
       if (mat.HasNonTranslation()) {
         // We have non-scaling-stroke as well as a non-translation transform.
         // We should transform the path first then apply the stroke on the
