@@ -95,11 +95,6 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
   void ImportStylesheet(nsINode& aStylesheet, mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> TransformToFragment(
       nsINode& aSource, mozilla::dom::Document& aOutput,
-      mozilla::ErrorResult& aRv) {
-    return TransformToFragment(aSource, true, aOutput, aRv);
-  }
-  already_AddRefed<mozilla::dom::DocumentFragment> TransformToFragment(
-      nsINode& aSource, bool aCloneSource, mozilla::dom::Document& aOutput,
       mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Document> TransformToDocument(
       nsINode& aSource, mozilla::ErrorResult& aRv);
