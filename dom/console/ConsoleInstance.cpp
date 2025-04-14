@@ -162,6 +162,9 @@ JSObject* ConsoleInstance::WrapObject(JSContext* aCx,
   void ConsoleInstance::name(JSContext* aCx,                     \
                              const Sequence<JS::Value>& aData) { \
     RefPtr<Console> console(mConsole);                           \
+    if (MOZ_UNLIKELY(!console)) {                                \
+      return;                                                    \
+    }                                                            \
     console->MethodInternal(aCx, Console::Method##name,          \
                             nsLiteralString(string), aData);     \
   }
