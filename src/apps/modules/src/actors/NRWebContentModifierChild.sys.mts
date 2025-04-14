@@ -6,8 +6,12 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+// Define a type for the Gmail callback
+type GmailCallback = (result: { success: boolean; message?: string }) => void;
+
 export class NRWebContentModifierChild extends JSWindowActorChild {
   private oneDriveFileListCallback: ((data: string) => void) | null = null;
+  private gmailCallbacks: Map<string, GmailCallback> = new Map(); // Map to store Gmail callbacks
   private callbackTabId: string | null = null;
   private extractionAttempts: number = 0;
 
@@ -18,6 +22,10 @@ export class NRWebContentModifierChild extends JSWindowActorChild {
     if (window) {
       Cu.exportFunction(this.NRGetOneDriveFileNameList.bind(this), window, {
         defineAs: "NRGetOneDriveFileNameList",
+      });
+      // Export NRSendGmail
+      Cu.exportFunction(this.NRSendGmail.bind(this), window, {
+        defineAs: "NRSendGmail",
       });
     }
   }
@@ -94,12 +102,33 @@ export class NRWebContentModifierChild extends JSWindowActorChild {
         // 別のタブから送られてきたファイルデータを処理
         if (this.oneDriveFileListCallback) {
           console.log(
-            "NRWebContentModifier: Executing callback with file data from another tab",
+            "NRWebContentModifier: Executing OneDrive callback with file data from another tab",
           );
           this.oneDriveFileListCallback(message.data.fileListJson);
           return { success: true };
         }
-        return { success: false, reason: "No callback registered in this tab" };
+        return {
+          success: false,
+          reason: "No OneDrive callback registered in this tab",
+        };
+
+      // Handle message to fill and send Gmail
+      case "WebContentModifier:FillAndSendGmail":
+        console.log("NRWebContentModifier: Received FillAndSendGmail message");
+        this.fillAndSendGmail(
+          message.data.to,
+          message.data.subject,
+          message.data.body,
+          message.data.callbackId,
+        );
+        return null;
+
+      // Handle result callback from Gmail tab
+      // Asynchronous operation
+      case "WebContentModifier:GmailResult":
+        console.log("NRWebContentModifier: Received GmailResult message");
+        this.handleGmailResult(message.data.callbackId, message.data.result);
+        return null;
     }
     return null;
   }
@@ -476,6 +505,166 @@ export class NRWebContentModifierChild extends JSWindowActorChild {
         success: false,
         error: e instanceof Error ? e.toString() : String(e),
       };
+    }
+  }
+
+  // Function called from settings page to initiate Gmail sending
+  NRSendGmail(
+    to: string,
+    subject: string,
+    body: string,
+    callback: GmailCallback,
+  ): void {
+    console.log("NRWebContentModifier: NRSendGmail called", {
+      to,
+      subject,
+      body,
+    });
+    const callbackId = `gmail_${Date.now()}_${Math.random()}`;
+    this.gmailCallbacks.set(callbackId, callback);
+    console.log(
+      `NRWebContentModifier: Registered Gmail callback with ID: ${callbackId}`,
+    );
+
+    this.sendAsyncMessage("WebContentModifier:OpenGmailCompose", {
+      to,
+      subject,
+      body,
+      callbackId, // Send the callback ID to the parent
+    });
+  }
+
+  // Handles the result message from the parent actor
+  handleGmailResult(
+    callbackId: string,
+    result: { success: boolean; message?: string },
+  ): void {
+    const callback = this.gmailCallbacks.get(callbackId);
+    if (callback) {
+      console.log(
+        `NRWebContentModifier: Executing Gmail callback for ID: ${callbackId}`,
+        result,
+      );
+      try {
+        callback(result);
+      } catch (e) {
+        console.error(
+          "NRWebContentModifier: Error executing Gmail callback:",
+          e,
+        );
+      }
+      this.gmailCallbacks.delete(callbackId); // Clean up the callback
+    } else {
+      console.warn(
+        `NRWebContentModifier: No Gmail callback found for ID: ${callbackId}`,
+      );
+    }
+  }
+
+  // This function runs in the Gmail compose tab
+  async fillAndSendGmail(
+    to: string,
+    subject: string,
+    body: string,
+    callbackId: string,
+  ): Promise<void> {
+    console.log("NRWebContentModifier: Attempting to fill and send Gmail", {
+      to,
+      subject,
+      /* body shortened */ body: body.substring(0, 50) + "...",
+      callbackId,
+    });
+
+    // --- SELECTORS TO BE DEFINED LATER ---  // <<< EDIT ME: Replace with actual selectors when known
+    const toSelector = "input[aria-expanded='false']";
+    const subjectSelector = "input[name='subjectbox']";
+    const bodySelector = "div[writingsuggestions='false']";
+    const sendButtonSelector = "[jslog^='32601;']";
+    // --- END OF SELECTORS --- //
+
+    try {
+      // Wait for elements to appear (simple delay for now, robust checking needed)
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds for compose window
+
+      console.log("NRWebContentModifier: Looking for Gmail fields...");
+
+      const toElement = this.document?.querySelector(
+        toSelector,
+      ) as HTMLTextAreaElement;
+      const subjectElement = this.document?.querySelector(
+        subjectSelector,
+      ) as HTMLInputElement;
+      const bodyElement = this.document?.querySelector(
+        bodySelector,
+      ) as HTMLDivElement;
+      const sendButtonElement = this.document?.querySelector(
+        sendButtonSelector,
+      ) as HTMLDivElement;
+
+      if (!toElement || !subjectElement || !bodyElement || !sendButtonElement) {
+        console.error(
+          "NRWebContentModifier: Could not find all Gmail elements.",
+          {
+            toElement: !!toElement,
+            subjectElement: !!subjectElement,
+            bodyElement: !!bodyElement,
+            sendButtonElement: !!sendButtonElement,
+          },
+        );
+        throw new Error("Could not find all required Gmail compose elements.");
+      }
+
+      console.log(
+        "NRWebContentModifier: Found Gmail elements, filling fields...",
+      );
+
+      // Fill the fields
+      // For 'To', directly setting value might work, or might need input simulation
+      toElement.value = to;
+      // Dispatch input event if needed
+      toElement.dispatchEvent(new Event("input", { bubbles: true }));
+      toElement.dispatchEvent(new Event("change", { bubbles: true }));
+
+      subjectElement.value = subject;
+      subjectElement.dispatchEvent(new Event("input", { bubbles: true }));
+
+      // Body might be a contentEditable div
+      bodyElement.focus(); // Ensure focus before manipulating
+      // Clear existing content if necessary
+      // bodyElement.innerHTML = '';
+      // Set new content - plain text for now
+      bodyElement.textContent = body;
+      // Dispatch input event to simulate typing
+      bodyElement.dispatchEvent(new Event("input", { bubbles: true }));
+
+      // Short delay before clicking send
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log("NRWebContentModifier: Clicking send button...");
+      sendButtonElement.click();
+
+      console.log(
+        "NRWebContentModifier: Send button clicked. Assuming success for now.",
+      );
+
+      // Send success result back to parent
+      this.sendAsyncMessage("WebContentModifier:GmailSent", {
+        callbackId: callbackId,
+        result: { success: true },
+      });
+    } catch (error) {
+      console.error(
+        "NRWebContentModifier: Error filling or sending Gmail:",
+        error,
+      );
+      // Send failure result back to parent
+      this.sendAsyncMessage("WebContentModifier:GmailSent", {
+        callbackId: callbackId,
+        result: {
+          success: false,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      });
     }
   }
 }

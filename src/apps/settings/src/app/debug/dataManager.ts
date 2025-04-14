@@ -47,8 +47,56 @@ export async function getOneDriveFileNameList(): Promise<string[]> {
   });
 }
 
+// Gmail送信を開始
+export async function sendGmailViaActor(
+  to: string,
+  subject: string,
+  body: string,
+): Promise<void> {
+  console.log("dataManager: sendGmailViaActor called with:", {
+    to,
+    subject,
+    body,
+  });
+
+  return await new Promise((resolve, reject) => {
+    // タイムアウトを設定 (例: 60秒)
+    const timeoutId = setTimeout(() => {
+      console.error("dataManager: Timeout waiting for Gmail send result");
+      reject(new Error("Timeout waiting for Gmail send result"));
+    }, 60000);
+
+    if (window.NRSendGmail) {
+      console.log("dataManager: NRSendGmail is available, calling it");
+      window.NRSendGmail(to, subject, body, (result) => {
+        clearTimeout(timeoutId);
+        console.log(
+          "dataManager: Received result from Gmail callback:",
+          result,
+        );
+        if (result.success) {
+          resolve();
+        } else {
+          reject(new Error(result.message || "Gmail sending failed"));
+        }
+      });
+    } else {
+      clearTimeout(timeoutId);
+      console.error("dataManager: NRSendGmail is not available");
+      // 開発用のダミー処理やエラーハンドリング
+      reject(new Error("NRSendGmail function is not available"));
+    }
+  });
+}
+
 declare global {
   interface Window {
     NRGetOneDriveFileNameList?: (callback: (data: string) => void) => void;
+    NRSendGmail?: (
+      to: string,
+      subject: string,
+      body: string,
+      callback: (result: { success: boolean; message?: string }) => void,
+    ) => void;
   }
 }
