@@ -41,9 +41,9 @@ void net_ShutdownURLHelperOSX();
 #endif
 
 /* access URL parsers */
-nsIURLParser* net_GetAuthURLParser();
-nsIURLParser* net_GetNoAuthURLParser();
-nsIURLParser* net_GetStdURLParser();
+already_AddRefed<nsIURLParser> net_GetAuthURLParser();
+already_AddRefed<nsIURLParser> net_GetNoAuthURLParser();
+already_AddRefed<nsIURLParser> net_GetStdURLParser();
 
 /* convert between nsIFile and file:// URL spec
  * net_GetURLSpecFromFile does an extra stat, so callers should

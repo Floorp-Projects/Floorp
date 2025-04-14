@@ -6,7 +6,9 @@
 
 #include "nsURLHelper.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
 
@@ -34,61 +36,81 @@ using namespace mozilla;
 // Init/Shutdown
 //----------------------------------------------------------------------------
 
-static bool gInitialized = false;
+// We protect only the initialization with the mutex, such that we cannot
+// annotate the following static variables.
+static StaticMutex gInitLock MOZ_UNANNOTATED;
+// The relaxed memory ordering is fine here as we write this only when holding
+// gInitLock and only ever set it true once during EnsureGlobalsAreInited.
+static Atomic<bool, MemoryOrdering::Relaxed> gInitialized(false);
 static StaticRefPtr<nsIURLParser> gNoAuthURLParser;
 static StaticRefPtr<nsIURLParser> gAuthURLParser;
 static StaticRefPtr<nsIURLParser> gStdURLParser;
 
-static void InitGlobals() {
-  nsCOMPtr<nsIURLParser> parser;
+static void EnsureGlobalsAreInited() {
+  if (!gInitialized) {
+    StaticMutexAutoLock lock(gInitLock);
+    // Taking the lock will sync us with any other thread's write in case we
+    // saw a stale value above, thus we need to check again.
+    if (gInitialized) {
+      return;
+    }
 
-  parser = do_GetService(NS_NOAUTHURLPARSER_CONTRACTID);
-  NS_ASSERTION(parser, "failed getting 'noauth' url parser");
-  if (parser) {
-    gNoAuthURLParser = parser;
+    nsCOMPtr<nsIURLParser> parser;
+
+    parser = do_GetService(NS_NOAUTHURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'noauth' url parser");
+    if (parser) {
+      gNoAuthURLParser = parser.forget();
+    }
+
+    parser = do_GetService(NS_AUTHURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'auth' url parser");
+    if (parser) {
+      gAuthURLParser = parser.forget();
+    }
+
+    parser = do_GetService(NS_STDURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'std' url parser");
+    if (parser) {
+      gStdURLParser = parser.forget();
+    }
+
+    gInitialized = true;
   }
-
-  parser = do_GetService(NS_AUTHURLPARSER_CONTRACTID);
-  NS_ASSERTION(parser, "failed getting 'auth' url parser");
-  if (parser) {
-    gAuthURLParser = parser;
-  }
-
-  parser = do_GetService(NS_STDURLPARSER_CONTRACTID);
-  NS_ASSERTION(parser, "failed getting 'std' url parser");
-  if (parser) {
-    gStdURLParser = parser;
-  }
-
-  gInitialized = true;
 }
 
 void net_ShutdownURLHelper() {
   if (gInitialized) {
-    gInitialized = false;
+    // We call this late in XPCOM shutdown when there is only the main thread
+    // left, so we can safely release the static pointers here.
+    MOZ_ASSERT(AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal));
+    gNoAuthURLParser = nullptr;
+    gAuthURLParser = nullptr;
+    gStdURLParser = nullptr;
+    // We keep gInitialized true to protect us from resurrection.
   }
-  gNoAuthURLParser = nullptr;
-  gAuthURLParser = nullptr;
-  gStdURLParser = nullptr;
 }
 
 //----------------------------------------------------------------------------
 // nsIURLParser getters
 //----------------------------------------------------------------------------
 
-nsIURLParser* net_GetAuthURLParser() {
-  if (!gInitialized) InitGlobals();
-  return gAuthURLParser;
+already_AddRefed<nsIURLParser> net_GetAuthURLParser() {
+  EnsureGlobalsAreInited();
+  RefPtr<nsIURLParser> keepMe = gAuthURLParser;
+  return keepMe.forget();
 }
 
-nsIURLParser* net_GetNoAuthURLParser() {
-  if (!gInitialized) InitGlobals();
-  return gNoAuthURLParser;
+already_AddRefed<nsIURLParser> net_GetNoAuthURLParser() {
+  EnsureGlobalsAreInited();
+  RefPtr<nsIURLParser> keepMe = gNoAuthURLParser;
+  return keepMe.forget();
 }
 
-nsIURLParser* net_GetStdURLParser() {
-  if (!gInitialized) InitGlobals();
-  return gStdURLParser;
+already_AddRefed<nsIURLParser> net_GetStdURLParser() {
+  EnsureGlobalsAreInited();
+  RefPtr<nsIURLParser> keepMe = gStdURLParser;
+  return keepMe.forget();
 }
 
 //---------------------------------------------------------------------------
@@ -157,7 +179,7 @@ nsresult net_ParseFileURL(const nsACString& inURL, nsACString& outDirectory,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsIURLParser* parser = net_GetNoAuthURLParser();
+  nsCOMPtr<nsIURLParser> parser = net_GetNoAuthURLParser();
   NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
 
   uint32_t pathPos, filepathPos, directoryPos, basenamePos, extensionPos;
