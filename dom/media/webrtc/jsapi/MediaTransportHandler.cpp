@@ -360,9 +360,10 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
       path.SetLength(questionmark);
     }
 
-    rv = net_GetAuthURLParser()->ParseAuthority(
-        path.get(), static_cast<int>(path.Length()), nullptr, nullptr, nullptr,
-        nullptr, &hostPos, &hostLen, &port);
+    nsCOMPtr<nsIURLParser> parser = net_GetAuthURLParser();
+    rv = parser->ParseAuthority(path.get(), static_cast<int>(path.Length()),
+                                nullptr, nullptr, nullptr, nullptr, &hostPos,
+                                &hostLen, &port);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!hostLen) {
       return NS_ERROR_FAILURE;
