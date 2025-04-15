@@ -12,7 +12,9 @@
 #define nsLanguageAtomService_h_
 
 #include "mozilla/NotNull.h"
-#include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/RWLock.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAtomHashKeys.h"
 #include "nsTHashMap.h"
 
@@ -54,8 +56,12 @@ class nsLanguageAtomService final {
   nsStaticAtom* GetUncachedLanguageGroup(nsAtom* aLanguage) const;
 
  private:
-  nsTHashMap<RefPtr<nsAtom>, nsStaticAtom*> mLangToGroup;
-  RefPtr<nsAtom> mLocaleLanguage;
+  static mozilla::StaticAutoPtr<nsLanguageAtomService> sLangAtomService;
+
+  nsTHashMap<RefPtr<nsAtom>, nsStaticAtom*> mLangToGroup MOZ_GUARDED_BY(mLock);
+  RefPtr<nsAtom> mLocaleLanguage MOZ_GUARDED_BY(mLock);
+
+  mozilla::RWLock mLock{"LanguageAtomService"};
 };
 
 #endif

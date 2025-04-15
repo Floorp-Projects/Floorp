@@ -4,18 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsLanguageAtomService.h"
-#include "nsUConvPropertySearch.h"
-#include "nsUnicharUtils.h"
-#include "nsAtom.h"
-#include "nsGkAtoms.h"
+
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/OSPreferences.h"
-#include "mozilla/ServoBindings.h"
-#include "mozilla/ServoUtils.h"
-#include "mozilla/StaticPtr.h"
+#include "nsGkAtoms.h"
+#include "nsUConvPropertySearch.h"
+#include "nsUnicharUtils.h"
+
+#include <mutex>  // for call_once
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;
@@ -82,18 +80,24 @@ static constexpr struct {
     {"Thai", nsGkAtoms::th},
     {"Tibt", nsGkAtoms::x_tibt}};
 
-static StaticAutoPtr<nsLanguageAtomService> gLangAtomService;
+StaticAutoPtr<nsLanguageAtomService> nsLanguageAtomService::sLangAtomService;
 
 // static
 nsLanguageAtomService* nsLanguageAtomService::GetService() {
-  if (!gLangAtomService) {
-    gLangAtomService = new nsLanguageAtomService();
-  }
-  return gLangAtomService.get();
+  static std::once_flag sOnce;
+
+  std::call_once(sOnce,
+                 []() { sLangAtomService = new nsLanguageAtomService(); });
+
+  return sLangAtomService.get();
 }
 
 // static
-void nsLanguageAtomService::Shutdown() { gLangAtomService = nullptr; }
+void nsLanguageAtomService::Shutdown() {
+  // We only expect to be shut down by the main thread.
+  MOZ_ASSERT(NS_IsMainThread());
+  sLangAtomService = nullptr;
+}
 
 nsStaticAtom* nsLanguageAtomService::LookupLanguage(
     const nsACString& aLanguage) {
@@ -117,23 +121,34 @@ already_AddRefed<nsAtom> nsLanguageAtomService::LookupCharSet(
 }
 
 nsAtom* nsLanguageAtomService::GetLocaleLanguage() {
-  do {
-    if (!mLocaleLanguage) {
-      AutoTArray<nsCString, 10> regionalPrefsLocales;
-      if (NS_SUCCEEDED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(
-              regionalPrefsLocales))) {
-        // use lowercase for all language atoms
-        ToLowerCase(regionalPrefsLocales[0]);
-        mLocaleLanguage = NS_Atomize(regionalPrefsLocales[0]);
-      } else {
-        nsAutoCString locale;
-        OSPreferences::GetInstance()->GetSystemLocale(locale);
-
-        ToLowerCase(locale);  // use lowercase for all language atoms
-        mLocaleLanguage = NS_Atomize(locale);
-      }
+  {
+    AutoReadLock lock(mLock);
+    if (mLocaleLanguage) {
+      return mLocaleLanguage;
     }
-  } while (0);
+  }
+
+  AutoWriteLock lock(mLock);
+  if (!mLocaleLanguage) {
+    AutoTArray<nsCString, 10> regionalPrefsLocales;
+    // XXX Are the OSPreferences calls here safe to call from any thread?
+    // In practice GetLocaleLanguage will be called early on the main thread
+    // (e.g. by nsFontCache), so mLocaleLanguage should be safely initialized
+    // before we try to use it from worker threads, but that may not be fully
+    // guaranteed.
+    if (NS_SUCCEEDED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(
+            regionalPrefsLocales))) {
+      // use lowercase for all language atoms
+      ToLowerCase(regionalPrefsLocales[0]);
+      mLocaleLanguage = NS_Atomize(regionalPrefsLocales[0]);
+    } else {
+      nsAutoCString locale;
+      OSPreferences::GetInstance()->GetSystemLocale(locale);
+
+      ToLowerCase(locale);  // use lowercase for all language atoms
+      mLocaleLanguage = NS_Atomize(locale);
+    }
+  }
 
   return mLocaleLanguage;
 }
@@ -141,6 +156,7 @@ nsAtom* nsLanguageAtomService::GetLocaleLanguage() {
 nsStaticAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
                                                       bool* aNeedsToCache) {
   if (aNeedsToCache) {
+    AutoReadLock lock(mLock);
     if (nsStaticAtom* atom = mLangToGroup.Get(aLanguage)) {
       return atom;
     }
@@ -148,10 +164,9 @@ nsStaticAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
     return nullptr;
   }
 
-  return mLangToGroup.LookupOrInsertWith(aLanguage, [&] {
-    AssertIsMainThreadOrServoFontMetricsLocked();
-    return GetUncachedLanguageGroup(aLanguage);
-  });
+  AutoWriteLock lock(mLock);
+  return mLangToGroup.LookupOrInsertWith(
+      aLanguage, [&] { return GetUncachedLanguageGroup(aLanguage); });
 }
 
 nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
