@@ -102,14 +102,14 @@ RefPtr<VADisplayHolder> VADisplayHolder::GetSingleton() {
     return RefPtr{sDisplayHolder};
   }
 
-  int drmFd = widget::GetDMABufDevice()->OpenDRMFd();
-  VADisplay display = vaGetDisplayDRM(drmFd);
+  UniqueFileHandle drmFd{widget::GetDMABufDevice()->OpenDRMFd()};
+  VADisplay display = vaGetDisplayDRM(drmFd.get());
   if (!display) {
     FFMPEGP_LOG("  Can't get DRM VA-API display.");
     return nullptr;
   }
 
-  RefPtr displayHolder = new VADisplayHolder(display, drmFd);
+  RefPtr displayHolder = new VADisplayHolder(display, std::move(drmFd));
 
   int major, minor;
   VAStatus status = vaInitialize(display, &major, &minor);
@@ -133,9 +133,6 @@ void VADisplayHolder::MaybeDestroy() {
   }
 }
 
-VADisplayHolder::~VADisplayHolder() {
-  vaTerminate(mDisplay);
-  close(mDRMFd);
-}
+VADisplayHolder::~VADisplayHolder() { vaTerminate(mDisplay); }
 
 }  // namespace mozilla

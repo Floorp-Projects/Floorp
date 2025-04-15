@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsISupportsImpl.h"
 
 struct PRLibrary;
@@ -64,13 +65,13 @@ class VADisplayHolder {
   const VADisplay mDisplay;
 
  private:
-  VADisplayHolder(VADisplay aDisplay, int aDRMFd)
-      : mDisplay(aDisplay), mDRMFd(aDRMFd) {};
+  VADisplayHolder(VADisplay aDisplay, UniqueFileHandle aDRMFd)
+      : mDisplay(aDisplay), mDRMFd(std::move(aDRMFd)) {};
   ~VADisplayHolder();
 
   void MaybeDestroy();
 
-  const int mDRMFd;
+  const UniqueFileHandle mDRMFd;
 };
 
 }  // namespace mozilla
