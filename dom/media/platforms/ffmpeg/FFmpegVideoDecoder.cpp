@@ -220,7 +220,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
     return false;
   }
 
-  mDisplay = displayHolder->mDisplay;
+  mDisplay = displayHolder->Display();
   hwctx->user_opaque = displayHolder.forget().take();
   hwctx->free = VAAPIDisplayReleaseCallback;
 
