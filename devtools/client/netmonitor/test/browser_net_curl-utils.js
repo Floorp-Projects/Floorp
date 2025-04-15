@@ -269,7 +269,7 @@ function testEscapeStringPosix() {
   const escapeChar = "'!ls:q:gs|ls|;ping 8.8.8.8;|";
   is(
     CurlUtils.escapeStringPosix(escapeChar),
-    "$'\\'\\041ls:q:gs|ls|;ping 8.8.8.8;|'",
+    "$'\\'\\041ls:q:gs^|ls^|;ping 8.8.8.8;^|'",
     "'!' should be escaped."
   );
 
