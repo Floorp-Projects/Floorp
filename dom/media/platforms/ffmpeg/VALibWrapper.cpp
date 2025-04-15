@@ -94,6 +94,12 @@ bool VALibWrapper::IsVAAPIAvailable() {
   return sFuncs.AreVAAPIFuncsAvailable();
 }
 
+VADisplayHolder::VADisplayHolder(UniqueVADisplay aDisplay,
+                                 UniqueFileHandle aDRMFd)
+    : mDRMFd(std::move(aDRMFd)), mDisplay(std::move(aDisplay)) {};
+
+VADisplayHolder::~VADisplayHolder() = default;
+
 /* static */
 RefPtr<VADisplayHolder> VADisplayHolder::GetSingleton() {
   StaticMutexAutoLock lock(sDisplayHolderMutex);
@@ -103,21 +109,24 @@ RefPtr<VADisplayHolder> VADisplayHolder::GetSingleton() {
   }
 
   UniqueFileHandle drmFd{widget::GetDMABufDevice()->OpenDRMFd()};
-  VADisplay display = vaGetDisplayDRM(drmFd.get());
+  UniqueVADisplay display{vaGetDisplayDRM(drmFd.get())};
   if (!display) {
     FFMPEGP_LOG("  Can't get DRM VA-API display.");
     return nullptr;
   }
 
-  RefPtr displayHolder = new VADisplayHolder(display, std::move(drmFd));
-
   int major, minor;
-  VAStatus status = vaInitialize(display, &major, &minor);
+  VAStatus status = vaInitialize(display.get(), &major, &minor);
   if (status != VA_STATUS_SUCCESS) {
     FFMPEGP_LOG("  vaInitialize failed.");
+    // |display| is destroyed while sDisplayHolderMutex is still held, to
+    // vaTerminate() before another VADisplay might be accessed.
+    // See Bug 1850615.
     return nullptr;
   }
 
+  RefPtr displayHolder =
+      new VADisplayHolder(std::move(display), std::move(drmFd));
   sDisplayHolder = displayHolder;
 
   return displayHolder;
@@ -133,6 +142,8 @@ void VADisplayHolder::MaybeDestroy() {
   }
 }
 
-VADisplayHolder::~VADisplayHolder() { vaTerminate(mDisplay); }
+void VADisplayHolder::VADisplayDeleter::operator()(VADisplay aDisplay) {
+  vaTerminate(aDisplay);
+}
 
 }  // namespace mozilla

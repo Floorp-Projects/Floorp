@@ -62,16 +62,24 @@ class VADisplayHolder {
 
   static RefPtr<VADisplayHolder> GetSingleton();
 
-  const VADisplay mDisplay;
+  VADisplay Display() const { return mDisplay.get(); }
 
  private:
-  VADisplayHolder(VADisplay aDisplay, UniqueFileHandle aDRMFd)
-      : mDisplay(aDisplay), mDRMFd(std::move(aDRMFd)) {};
+  struct VADisplayDeleter {
+    using pointer = VADisplay;
+    void operator()(VADisplay aDisplay);
+  };
+  using UniqueVADisplay = std::unique_ptr<VADisplay, VADisplayDeleter>;
+
+  VADisplayHolder(UniqueVADisplay aDisplay, UniqueFileHandle aDRMFd);
   ~VADisplayHolder();
 
   void MaybeDestroy();
 
+  // mDRMFd is declared before mDisplay, so that mDRMFd is closed after
+  // mDisplay is terminated.
   const UniqueFileHandle mDRMFd;
+  const UniqueVADisplay mDisplay;
 };
 
 }  // namespace mozilla
