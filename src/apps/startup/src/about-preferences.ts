@@ -102,7 +102,7 @@ function addFloorpHubCategory(): void {
         "navigator:browser",
       ) as FirefoxWindow;
       win.gBrowser.selectedTab = win.gBrowser.addTab(
-        "chrome://noraneko-settings/content/index.html",
+        "about:hub",
         {
           relatedToCurrent: true,
           triggeringPrincipal: Services.scriptSecurityManager
