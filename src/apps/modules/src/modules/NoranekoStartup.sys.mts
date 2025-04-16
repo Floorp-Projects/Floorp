@@ -176,6 +176,7 @@ function setNoranekoNewTab(): void {
 
 const customAboutPages: Record<string, string> = {
   "hub" : "chrome://noraneko-settings/content/index.html",
+  "welcome" : "chrome://noraneko-welcome/content/index.html",
 };
 
 class CustomAboutPage {
