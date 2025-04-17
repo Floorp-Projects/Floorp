@@ -62,7 +62,7 @@ export async function getThemeSetting(): Promise<number | null> {
 export async function setThemeSetting(
   theme: "system" | "light" | "dark",
 ): Promise<void> {
-  const themeValue = theme === "light" ? 1 : theme === "dark" ? 2 : 0;
+  const themeValue = theme === "light" ? 1 : theme === "dark" ? 0 : 2;
   await rpc.setIntPref(
     "layout.css.prefers-color-scheme.content-override",
     themeValue,
