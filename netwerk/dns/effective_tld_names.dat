@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-04-11_07-34-31_UTC
-// COMMIT: 54ed390e7c41b363942c07a19b8d456d4ca6aa13
+// VERSION: 2025-04-15_21-29-38_UTC
+// COMMIT: b1d38256593253c7b333958910661e16234565cb
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -13734,10 +13734,6 @@ gen.ng
 ltd.ng
 ngo.ng
 plc.ng
-
-// HostFly : https://www.ie.ua
-// Submitted by Bohdan Dub <support@hostfly.com.ua>
-ie.ua
 
 // HostyHosting : https://hostyhosting.com
 hostyhosting.io
