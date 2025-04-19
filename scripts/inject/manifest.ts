@@ -43,6 +43,7 @@ content     noraneko-modal-child    modal-child/  contentaccessible=yes
 content     noraneko-newtab         newtab/       contentaccessible=yes
 content     noraneko-welcome        welcome/      contentaccessible=yes
 content     noraneko-notes          notes/        contentaccessible=yes
+content     noraneko-os             os/           contentaccessible=yes
 `;
 
   const manifestContent = mode !== "dev"
@@ -91,6 +92,11 @@ content     noraneko-notes          notes/        contentaccessible=yes
   await symlink(
     r("../../src/apps/modules/_dist"),
     `${binPath}/${dirName}/resource`,
+    option,
+  );
+  await symlink(
+    r("../../src/apps/os/_dist"),
+    `${binPath}/${dirName}/os`,
     option,
   );
 

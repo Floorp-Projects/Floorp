@@ -21,5 +21,7 @@
   port: 5191
 
 - middleware-settings
-  port:
-  - 5192
+  port: 5192
+
+- os
+  port: 5193
