@@ -138,6 +138,10 @@
                 "hideForwardBackwardButton": "Hide Forward/Backward Button",
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
+            "newtab": {
+                "title" : "New Tab",
+                "disableFloorpStart" : "Disable Floorp Start"
+            },
             "multirowTab": {
                 "title": "Multirow Tab",
                 "newtabInsideEnabled": "Show new tab button inside tab bar"

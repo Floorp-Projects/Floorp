@@ -59,6 +59,7 @@ export async function saveDesignSettings(
       multirowTab: {
         newtabInsideEnabled: settings.multirowTabNewtabInside,
       },
+      disableFloorpStart: settings.disableFloorpStart,
     },
   };
   rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
@@ -98,6 +99,7 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,
+    disableFloorpStart: data.uiCustomization.disableFloorpStart,
   };
   return formData;
 }

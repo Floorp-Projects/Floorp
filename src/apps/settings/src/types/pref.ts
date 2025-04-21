@@ -56,6 +56,7 @@ export const zDesignFormData = z.object({
   hideForwardBackwardButton: z.boolean(),
   stgLikeWorkspaces: z.boolean(),
   multirowTabNewtabInside: z.boolean(),
+  disableFloorpStart: z.boolean(),
 });
 
 export type DesignFormData = z.infer<typeof zDesignFormData>;

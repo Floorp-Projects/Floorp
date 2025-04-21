@@ -128,6 +128,27 @@ export function UICustomization() {
                     {/* 特殊機能 */}
                     <div>
                         <h3 className="text-base font-medium mb-2">
+                            {t("design.uiCustomization.newtab.title")}
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between gap-2">
+                                <label htmlFor="optimize-for-tree-style-tab">
+                                    {t("design.uiCustomization.newtab.disableFloorpStart")}
+                                </label>
+                                <Switch
+                                    id="disable-floorp-start"
+                                    checked={!!getValues("disableFloorpStart")}
+                                    onChange={(e) => {
+                                        setValue("disableFloorpStart", e.target.checked)
+                                        setShowRestartModal(true);
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-base font-medium mb-2">
                             {t("design.uiCustomization.special.title")}
                         </h3>
                         <div className="space-y-4">
@@ -190,4 +211,4 @@ export function UICustomization() {
             </Card>
         </>
     );
-} 
+}

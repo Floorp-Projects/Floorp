@@ -52,7 +52,6 @@ export function onFinalUIStartup(): void {
   createDefaultUserChromeFiles().catch((error) => {
     console.error("Failed to create default userChrome files:", error);
   });
-  setNoranekoNewTab();
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
@@ -122,48 +121,37 @@ NOTE: You can use the userContent.css file without change preferences (about:con
   }
 }
 
+
+// Only for dev build
 function setupNoranekoNewTab(): void {
   const { AboutNewTab } = ChromeUtils.importESModule(
     "resource:///modules/AboutNewTab.sys.mjs",
   );
 
-  updateNewTabURL();
-
-  Services.prefs.addObserver("floorp.isnewtab.floorpstart", () => {
-    updateNewTabURL();
-  });
-
-  function updateNewTabURL(): void {
-    if (Services.prefs.getBoolPref("floorp.isnewtab.floorpstart", true)) {
-      Services.prefs.setBoolPref("floorp.isnewtab.floorpstart", true);
-      (async () => {
-        try {
-          await fetch("chrome://noraneko-newtab/content/index.html");
-          AboutNewTab.newTabURL = "chrome://noraneko-newtab/content/index.html";
-        } catch (error) {
-          console.error("Failed to set new tab URL:", error);
-          AboutNewTab.newTabURL = "http://localhost:5186/";
-        }
-      })();
-    } else {
-      AboutNewTab.resetNewTabURL();
-    }
+  if (!isNewTabFileAvailable()) {
+    AboutNewTab.newTabURL = "http://localhost:5186/";
+    Services.prefs.setStringPref("browser.startup.homepage", "http://localhost:5186/");
   }
 }
 
-function setNoranekoNewTab(): void {
+function isNewTabFileAvailable(): boolean {
   const response = fetch("chrome://noraneko-newtab/content/index.html");
   response.then(() => {
-    Services.prefs.setStringPref(
-      "browser.startup.homepage",
-      "chrome://noraneko-newtab/content/index.html",
-    );
-  }).catch(() => {
-    Services.prefs.setStringPref(
-      "browser.startup.homepage",
-      "http://localhost:5186/",
-    );
-  });
+    return true;
+  })
+  return false;
+}
+
+function checkNewtabUserPreference(): boolean {
+  const result = Services.prefs.getStringPref("floorp.design.configs");
+
+  if (!result) {
+    return true;
+  }
+
+  const data = JSON.parse(result);
+
+  return !data.uiCustomization.disableFloorpStart
 }
 
 /* Register Custom About Pages
@@ -177,6 +165,10 @@ function setNoranekoNewTab(): void {
 const customAboutPages: Record<string, string> = {
   "hub" : "chrome://noraneko-settings/content/index.html",
   "welcome" : "chrome://noraneko-welcome/content/index.html",
+  ...(checkNewtabUserPreference() && {
+    "newtab" : isNewTabFileAvailable() ? "chrome://noraneko-newtab/content/index.html" : "http://localhost:5186",
+    "home" : isNewTabFileAvailable() ? "chrome://noraneko-newtab/content/index.html" : "http://localhost:5186",
+  }),
 };
 
 class CustomAboutPage {
@@ -214,7 +206,7 @@ function registerCustomAboutPages(): void {
         return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(aIID);
       }
     };
-  
+
     Components.manager.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
       Components.ID(Services.uuid.generateUUID().toString()),
       `about:${aboutKey}`,
