@@ -27,6 +27,11 @@ export default class StatusBar extends NoraComponentBase {
 }
 
 function onPopupShowing(event: Event) {
+  if (document.getElementById("toggle_statusBar")) {
+    console.log(document.getElementById("toggle_statusBar"))
+    return;
+  }
+
   switch (event.target.id) {
     case "toolbar-context-menu":
       render(

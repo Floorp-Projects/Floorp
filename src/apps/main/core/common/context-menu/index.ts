@@ -10,13 +10,11 @@ import { onCleanup } from "solid-js";
 @noraComponent(import.meta.hot)
 export default class ContextMenu extends NoraComponentBase {
   init() {
-    this.logger.debug("init");
     ContextMenuUtils.contentAreaContextMenu()?.addEventListener(
       "popupshowing",
       ContextMenuUtils.onPopupShowing,
     );
     onCleanup(() => {
-      this.logger.debug("onCleanup");
       ContextMenuUtils.contentAreaContextMenu()?.removeEventListener(
         "popupshowing",
         ContextMenuUtils.onPopupShowing,
