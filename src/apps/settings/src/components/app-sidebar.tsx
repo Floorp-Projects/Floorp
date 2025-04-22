@@ -5,11 +5,11 @@ import {
   Briefcase,
   Grip,
   House,
+  MousePointer,
   Option,
   PanelLeft,
   PencilRuler,
   UserRoundPen,
-  MousePointer,
 } from "lucide-react";
 import { NavHeader } from "@/components/nav-header.tsx";
 import {
@@ -24,45 +24,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
 
   const overview = [
-    { title: t("pages.home"), url: "#/overview/home", icon: House },
+    { title: t("pages.home"), url: "/overview/home", icon: House },
   ];
 
   const features = [
     {
       title: t("pages.tabAndAppearance"),
-      url: "#/features/design",
+      url: "/features/design",
       icon: PencilRuler,
     },
     {
       title: t("pages.browserSidebar"),
-      url: "#/features/sidebar",
+      url: "/features/sidebar",
       icon: PanelLeft,
     },
     {
       title: t("pages.mouseGesture"),
-      url: "#/features/gesture",
+      url: "/features/gesture",
       icon: MousePointer,
     },
     {
       title: t("pages.workspaces"),
-      url: "#/features/workspaces",
+      url: "/features/workspaces",
       icon: Briefcase,
     },
     {
       title: t("pages.keyboardShortcuts"),
-      url: "#/features/shortcuts",
+      url: "/features/shortcuts",
       icon: Option,
     },
-    { title: t("pages.webApps"), url: "#/features/webapps", icon: Grip },
+    { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
     {
       title: t("pages.profileAndAccount"),
-      url: "#/features/accounts",
+      url: "/features/accounts",
       icon: UserRoundPen,
     },
   ];
 
   const about = [
-    { title: t("pages.aboutBrowser"), url: "#/about/browser", icon: BadgeInfo },
+    { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
   ];
 
   return (

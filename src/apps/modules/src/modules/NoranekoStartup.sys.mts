@@ -121,28 +121,33 @@ NOTE: You can use the userContent.css file without change preferences (about:con
   }
 }
 
-
 // Only for dev build
-function setupNoranekoNewTab(): void {
+async function setupNoranekoNewTab(): Promise<void> {
   const { AboutNewTab } = ChromeUtils.importESModule(
     "resource:///modules/AboutNewTab.sys.mjs",
   );
 
-  if (!isNewTabFileAvailable()) {
+  if (await isNewTabFileAvailable() === false) {
+    // Fallback for dev build about:newtab if file doesn't exist
     AboutNewTab.newTabURL = "http://localhost:5186/";
-    Services.prefs.setStringPref("browser.startup.homepage", "http://localhost:5186/");
   }
 }
 
-function isNewTabFileAvailable(): boolean {
-  const response = fetch("chrome://noraneko-newtab/content/index.html");
-  response.then(() => {
-    return true;
-  })
-  return false;
+async function isNewTabFileAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch("chrome://noraneko-newtab/content/index.html");
+    return response.ok;
+  } catch (error) {
+    console.error("[noraneko] Failed to check newtab file:", error);
+    return false;
+  }
 }
 
-function checkNewtabUserPreference(): boolean {
+async function checkNewtabUserPreference(): Promise<boolean> {
+  if (await isNewTabFileAvailable() === false) {
+    return false;
+  }
+
   const result = Services.prefs.getStringPref("floorp.design.configs");
 
   if (!result) {
@@ -151,7 +156,7 @@ function checkNewtabUserPreference(): boolean {
 
   const data = JSON.parse(result);
 
-  return !data.uiCustomization.disableFloorpStart
+  return !data.uiCustomization.disableFloorpStart;
 }
 
 /* Register Custom About Pages
@@ -162,13 +167,18 @@ function checkNewtabUserPreference(): boolean {
  * File referred: https://github.com/angelbruni/Geckium/blob/main/Profile%20Folder/chrome/JS/Geckium_aboutPageRegisterer.uc.js
  */
 
-const customAboutPages: Record<string, string> = {
-  "hub" : "chrome://noraneko-settings/content/index.html",
-  "welcome" : "chrome://noraneko-welcome/content/index.html",
-  ...(checkNewtabUserPreference() && {
-    "newtab" : isNewTabFileAvailable() ? "chrome://noraneko-newtab/content/index.html" : "http://localhost:5186",
-    "home" : isNewTabFileAvailable() ? "chrome://noraneko-newtab/content/index.html" : "http://localhost:5186",
-  }),
+const getCustomAboutPages = async (): Promise<Record<string, string>> => {
+  const customAboutPages: Record<string, string> = {
+    "hub": "chrome://noraneko-settings/content/index.html",
+    "welcome": "chrome://noraneko-welcome/content/index.html",
+  };
+
+  if (await checkNewtabUserPreference()) {
+    customAboutPages["newtab"] = "chrome://noraneko-newtab/content/index.html";
+    customAboutPages["home"] = "chrome://noraneko-newtab/content/index.html";
+  }
+
+  return customAboutPages;
 };
 
 class CustomAboutPage {
@@ -183,13 +193,17 @@ class CustomAboutPage {
   }
 
   newChannel(_uri: nsIURI, loadInfo: nsILoadInfo): nsIChannel {
-    const new_ch = Services.io.newChannelFromURIWithLoadInfo(this.uri, loadInfo);
+    const new_ch = Services.io.newChannelFromURIWithLoadInfo(
+      this.uri,
+      loadInfo,
+    );
     new_ch.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return new_ch;
   }
 
   getURIFlags(_uri: nsIURI): number {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI;
+    return Ci.nsIAboutModule.ALLOW_SCRIPT |
+      Ci.nsIAboutModule.IS_SECURE_CHROME_UI;
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {
@@ -199,25 +213,38 @@ class CustomAboutPage {
   QueryInterface = ChromeUtils.generateQI(["nsIAboutModule"]);
 }
 
-function registerCustomAboutPages(): void {
+async function registerCustomAboutPages(): Promise<void> {
+  const customAboutPages = await getCustomAboutPages();
+
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
-      createInstance(aIID: nsIID): MozQueryInterface {
-        return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(aIID);
-      }
+      createInstance(aIID: nsIID): any {
+        return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
+          aIID,
+        );
+      },
     };
 
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
-      Components.ID(Services.uuid.generateUUID().toString()),
+    const registrar = Components.manager.QueryInterface(
+      Ci.nsIComponentRegistrar,
+    );
+    if (!registrar) {
+      console.error("Failed to get nsIComponentRegistrar");
+      continue;
+    }
+    registrar.registerFactory(
+      Services.uuid.generateUUID(),
       `about:${aboutKey}`,
       `@mozilla.org/network/protocol/about;1?what=${aboutKey}`,
-      AboutModuleFactory
+      AboutModuleFactory,
     );
   }
 }
 
 initializeVersionInfo();
-setupNoranekoNewTab();
+(async () => {
+  await setupNoranekoNewTab();
+})().catch(console.error);
 registerCustomAboutPages();
 
 if (isMainBrowser) {

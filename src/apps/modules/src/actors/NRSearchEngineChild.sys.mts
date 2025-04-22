@@ -10,7 +10,8 @@ export class NRSearchEngineChild extends JSWindowActorChild {
     if (
       window?.location.port === "5187" ||
       window?.location.port === "5186" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRSearchEngine 5187 ! or Chrome Page!");
 

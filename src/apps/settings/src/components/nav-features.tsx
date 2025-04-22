@@ -6,7 +6,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/common/sidebar.tsx";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export function NavFeatures({
   title,
@@ -35,16 +35,17 @@ export function NavFeatures({
             : currentRoute.startsWith(featurePath);
 
           return (
-            <SidebarMenuItem key={feature.title} href={feature.url}>
-              <SidebarMenuButton
-                asChild
-                className={isActive ? "bg-base-300" : ""}
-              >
-                <a className="flex items-center gap-2">
+            <SidebarMenuItem key={feature.title}>
+              <Link to={feature.url} className="block w-full">
+                <SidebarMenuButton
+                  className={`${
+                    isActive ? "bg-base-300" : ""
+                  } w-full flex items-center gap-2`}
+                >
                   <feature.icon className="size-4" />
                   <span>{feature.title}</span>
-                </a>
-              </SidebarMenuButton>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           );
         })}

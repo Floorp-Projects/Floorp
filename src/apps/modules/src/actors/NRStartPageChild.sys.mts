@@ -9,7 +9,8 @@ export class NRStartPageChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5186" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRStartPage 5186 ! or Chrome Page!");
       Cu.exportFunction(this.GetCurrentTopSites.bind(this), window, {

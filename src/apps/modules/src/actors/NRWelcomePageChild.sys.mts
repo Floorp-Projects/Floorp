@@ -9,7 +9,8 @@ export class NRWelcomePageChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5187" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRWelcomePage 5187 ! or Chrome Page!");
       Cu.exportFunction(this.getLocaleInfo.bind(this), window, {

@@ -9,7 +9,8 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5183" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRPwaManager 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRGetInstalledApps.bind(this), window, {

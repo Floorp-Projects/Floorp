@@ -9,7 +9,8 @@ export class NRProfileManagerChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5183" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRProfileManager 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRGetCurrentProfile.bind(this), window, {

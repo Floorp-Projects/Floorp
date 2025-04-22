@@ -43,7 +43,11 @@ const JS_WINDOW_ACTORS: {
     //* port seems to not be supported
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/JSWindowActor.webidl#99
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   NRTabManager: {
     parent: {
@@ -59,7 +63,11 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   NRSyncManager: {
     parent: {
@@ -75,7 +83,11 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   NRAppConstants: {
     parent: {
@@ -91,7 +103,11 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   NRRestartBrowser: {
     parent: {
@@ -107,7 +123,11 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   NRProgressiveWebApp: {
     parent: {
@@ -139,7 +159,11 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
   // Floorp 13 test
   NRWebContentModifier: {
@@ -183,7 +207,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
 
   NRStartPage: {
@@ -200,7 +224,11 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-newtab/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-newtab/*",
+      "about:*",
+    ],
   },
 
   NRWelcomePage: {
@@ -217,7 +245,11 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-welcome/*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-welcome/*",
+      "about:*",
+    ],
   },
 
   NRSearchEngine: {
@@ -240,6 +272,7 @@ const JS_WINDOW_ACTORS: {
       "*://localhost/*",
       "chrome://noraneko-welcome/*",
       "chrome://noraneko-newtab/*",
+      "about:*",
     ],
   },
 };

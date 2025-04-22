@@ -9,7 +9,8 @@ export class NRTabManagerChild extends JSWindowActorChild {
     const window = this.contentWindow;
     if (
       window?.location.port === "5183" ||
-      window?.location.href.startsWith("chrome://")
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
     ) {
       console.debug("NRTabManager 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRAddTab.bind(this), window, {

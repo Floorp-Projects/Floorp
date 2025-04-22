@@ -41,7 +41,7 @@ export default function App() {
                 path="/features/accounts"
                 element={<ProfileAndAccount />}
               />
-              <Route path="/features/gesture" element={<MouseGesture />} />
+              <Route path="features/gesture" element={<MouseGesture />} />
               <Route
                 path="/features/shortcuts"
                 element={<KeyboardShortcut />}
