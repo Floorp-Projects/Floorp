@@ -5,7 +5,6 @@
 MOZ_APP_DISPLAYNAME="Floorp Daylight"
 MOZ_APP_NAME="Floorp"
 MOZ_APP_PROFILE="Floorp"
-MOZ_APP_UA_NAME="Firefox"
 
 MOZ_APP_REMOTINGNAME="floorp-daylight"
 
