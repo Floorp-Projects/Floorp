@@ -2393,7 +2393,7 @@ export class ExtensionData {
 
       // Privileged extensions may request access to "about:"-URLs, such as
       // about:reader.
-      let match = /^([a-z*]+):\/\/([^/]*)\/|^about:/.exec(permission);
+      let match = /^([a-z\-*]+):\/\/([^/]*)\/|^about:/.exec(permission);
       if (!match) {
         throw new Error(`Unparseable host permission ${permission}`);
       }
@@ -3788,6 +3788,17 @@ export class Extension extends ExtensionData {
           origins: [],
         });
         this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
+      }
+
+      // Floorp Injections
+      // We automatically add permissions to "Gesturefy" and "uBlock Origin" extensions.
+      // However, User check the "Allow this extension to run in Private Windows" option on installed prompt.
+      if (this.id === "uBlock0@raymondhill.net" || this.id === "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
+        lazy.ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
       }
     }
 

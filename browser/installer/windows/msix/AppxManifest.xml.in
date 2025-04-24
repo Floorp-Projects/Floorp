@@ -67,6 +67,7 @@
               <uap:FileType>.xhtml</uap:FileType>
               <uap:FileType>.svg</uap:FileType>
               <uap:FileType>.webp</uap:FileType>
+              <uap:FileType>.jxl</uap:FileType>
             </uap:SupportedFileTypes>
             <uap:Logo>Assets\Document44x44.png</uap:Logo>
             <uap2:SupportedVerbs>

@@ -1,0 +1,24 @@
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+
+ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
+ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
+ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
+
+ac_add_options --with-l10n-base="$PWD/floorp/browser/locales/l10n-central"
+
+ac_add_options --disable-crashreporter
+ac_add_options --enable-unverified-updates
+ac_add_options --enable-update-channel=release
+ac_add_options --disable-tests
+ac_add_options --enable-rust-simd
+ac_add_options --enable-release
+ac_add_options --enable-bootstrap
+ac_add_options --enable-updater
+
+MOZ_REQUIRE_SIGNING=
+MOZ_DATA_REPORTING=
+MOZ_TELEMETRY_REPORTING=
+
+export CROSS_SYSROOT=/home/runner/cross-tools/macOS-SDK
+export MACOS_SDK_DIR=/home/runner/cross-tools/macOS-SDK
