@@ -2333,4 +2333,63 @@ TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
   }
 }
 
+TEST_F(VideoConduitTest, TestRemoteRtxSsrc) {
+  // Verify RTX is configured.
+  mControl.Update([&](auto& aControl) {
+    VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+    codecConfig.mEncodings.emplace_back();
+    codecConfig.mRTXPayloadType = 121;
+    aControl.mVideoRecvCodecs = {codecConfig};
+    aControl.mVideoRecvRtpRtcpConfig =
+        Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+    aControl.mReceiving = true;
+    aControl.mRemoteSsrc = 2;
+    aControl.mRemoteVideoRtxSsrc = 43;
+  });
+
+  EXPECT_THAT(Call()->mVideoReceiveConfig->rtp.rtx_associated_payload_types,
+              UnorderedElementsAre(Pair(121, 120)));
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.remote_ssrc, 2U);
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.rtx_ssrc, 43U);
+
+  // Bug 1956426 verify, if the recv codecs change but signaled SSRC has not,
+  // that RTX is still configured.
+  mControl.Update([&](auto& aControl) {
+    VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+    VideoCodecConfig codecConfig264(96, "H264", EncodingConstraints());
+    codecConfig.mEncodings.emplace_back();
+    codecConfig.mRTXPayloadType = 121;
+    codecConfig264.mRTXPayloadType = 97;
+    aControl.mVideoRecvCodecs = {codecConfig, codecConfig264};
+    aControl.mVideoRecvRtpRtcpConfig =
+        Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+    aControl.mReceiving = true;
+    aControl.mRemoteSsrc = 2;
+    aControl.mRemoteVideoRtxSsrc = 43;
+  });
+
+  EXPECT_THAT(Call()->mVideoReceiveConfig->rtp.rtx_associated_payload_types,
+              UnorderedElementsAre(Pair(121, 120), Pair(97, 96)));
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.remote_ssrc, 2U);
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.rtx_ssrc, 43U);
+
+  // Verify, if there is no RTX PT, we will unset the SSRC.
+  mControl.Update([&](auto& aControl) {
+    VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+    VideoCodecConfig codecConfig264(96, "H264", EncodingConstraints());
+    codecConfig.mEncodings.emplace_back();
+    aControl.mVideoRecvCodecs = {codecConfig, codecConfig264};
+    aControl.mVideoRecvRtpRtcpConfig =
+        Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+    aControl.mReceiving = true;
+    aControl.mRemoteSsrc = 2;
+    aControl.mRemoteVideoRtxSsrc = 43;
+  });
+
+  EXPECT_EQ(
+      Call()->mVideoReceiveConfig->rtp.rtx_associated_payload_types.size(), 0U);
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.remote_ssrc, 2U);
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.rtx_ssrc, 0U);
+}
+
 }  // End namespace test.

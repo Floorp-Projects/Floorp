@@ -549,9 +549,6 @@ enum class StyleColorInterpolation : uint8_t {
   Linearrgb = 2,
 };
 
-// vector-effect
-enum class StyleVectorEffect : uint8_t { None = 0, NonScalingStroke = 1 };
-
 // 3d Transforms - Backface visibility
 enum class StyleBackfaceVisibility : uint8_t { Hidden = 0, Visible = 1 };
 

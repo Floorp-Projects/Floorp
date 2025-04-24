@@ -68,6 +68,10 @@ function installPromptHandler(info) {
     return Promise.resolve();
   }
 
+  if (info.existingAddon.isInstalledByEnterprisePolicy) {
+    return Promise.resolve();
+  }
+
   let newPerms = info.addon.userPermissions;
 
   let difference = Extension.comparePermissions(oldPerms, newPerms);

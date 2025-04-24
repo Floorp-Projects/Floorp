@@ -577,10 +577,7 @@ already_AddRefed<Document> txMozillaXSLTProcessor::TransformToDocument(
   mozilla::AutoRestore<State> restore(mState);
   mState = State::Transforming;
 
-  mSource = aSource.CloneNode(true, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  mSource = &aSource;
 
   nsCOMPtr<Document> doc;
   rv = TransformToDoc(getter_AddRefs(doc), true);
@@ -684,7 +681,10 @@ nsresult txMozillaXSLTProcessor::TransformToDoc(Document** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  txExecutionState es(mStylesheet, IsLoadDisabled());
+  // We enable loads if we're called because of a stylesheet PI (so we have an
+  // mObserver) and loads weren't explicitly disabled.
+  txExecutionState es(mStylesheet,
+                      /* aDisableLoads = */ !mObserver || IsLoadDisabled());
 
   Document* sourceDoc = mSource->OwnerDoc();
   nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
@@ -747,7 +747,7 @@ nsresult txMozillaXSLTProcessor::TransformToDoc(Document** aResult,
 }
 
 already_AddRefed<DocumentFragment> txMozillaXSLTProcessor::TransformToFragment(
-    nsINode& aSource, bool aCloneSource, Document& aOutput, ErrorResult& aRv) {
+    nsINode& aSource, Document& aOutput, ErrorResult& aRv) {
   if (NS_WARN_IF(NS_FAILED(mCompileResult))) {
     aRv.Throw(mCompileResult);
     return nullptr;
@@ -776,23 +776,13 @@ already_AddRefed<DocumentFragment> txMozillaXSLTProcessor::TransformToFragment(
   mozilla::AutoRestore<State> restore(mState);
   mState = State::Transforming;
 
-  nsCOMPtr<nsINode> source;
-  if (aCloneSource) {
-    source = aSource.CloneNode(true, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  } else {
-    source = &aSource;
-  }
-
-  Maybe<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(source));
+  Maybe<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(&aSource));
   if (!sourceNode) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
-  txExecutionState es(mStylesheet, IsLoadDisabled());
+  txExecutionState es(mStylesheet, /* aDisableLoads = */ true);
 
   // XXX Need to add error observers
 

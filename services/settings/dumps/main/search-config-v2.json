@@ -178,63 +178,6 @@
           "amazon"
         ],
         "classification": "unknown",
-        "name": "Amazon.co.jp",
-        "partnerCode": "mozillajapan-fx-22",
-        "urls": {
-          "search": {
-            "base": "https://www.amazon.co.jp/exec/obidos/external-search/",
-            "params": [
-              {
-                "name": "mode",
-                "value": "blended"
-              },
-              {
-                "name": "tag",
-                "value": "{partnerCode}"
-              },
-              {
-                "name": "sourceid",
-                "value": "Mozilla-search"
-              }
-            ],
-            "searchTermParamName": "field-keywords"
-          }
-        }
-      },
-      "id": "9d089e46-dc94-4d4f-8f17-cc07b59aa9e4",
-      "identifier": "amazon-jp",
-      "last_modified": 1718719100309,
-      "recordType": "engine",
-      "schema": 1718637175117,
-      "variants": [
-        {
-          "environment": {
-            "regions": [
-              "jp"
-            ]
-          },
-          "subVariants": [
-            {
-              "environment": {
-                "applications": [
-                  "firefox-android",
-                  "focus-android",
-                  "firefox-ios",
-                  "focus-ios"
-                ]
-              },
-              "partnerCode": "moz-jp-mbl-22"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "base": {
-        "aliases": [
-          "amazon"
-        ],
-        "classification": "unknown",
         "name": "Amazon.com",
         "urls": {
           "search": {
@@ -397,9 +340,9 @@
       },
       "id": "05645095-d26e-4f20-9137-f24a14a23f28",
       "identifier": "bing",
-      "last_modified": 1718719100291,
+      "last_modified": 1742996759040,
       "recordType": "engine",
-      "schema": 1718698353718,
+      "schema": 1742810344329,
       "variants": [
         {
           "environment": {
@@ -460,6 +403,62 @@
                     {
                       "name": "form",
                       "value": "MOZWSB"
+                    }
+                  ],
+                  "searchTermParamName": "q"
+                }
+              }
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ],
+                "distributions": [
+                  "dt-001"
+                ]
+              },
+              "partnerCode": "MZTOF",
+              "telemetrySuffix": "MZTOF",
+              "urls": {
+                "search": {
+                  "params": [
+                    {
+                      "name": "pc",
+                      "value": "{partnerCode}"
+                    },
+                    {
+                      "name": "form",
+                      "value": "MZTOFO"
+                    }
+                  ],
+                  "searchTermParamName": "q"
+                }
+              }
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ],
+                "distributions": [
+                  "vivo-001"
+                ]
+              },
+              "partnerCode": "MZCP",
+              "telemetrySuffix": "MZCP",
+              "urls": {
+                "search": {
+                  "params": [
+                    {
+                      "name": "pc",
+                      "value": "{partnerCode}"
+                    },
+                    {
+                      "name": "form",
+                      "value": "MZVIVO"
                     }
                   ],
                   "searchTermParamName": "q"
@@ -2478,9 +2477,9 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1738595538915,
+      "last_modified": 1742996759044,
       "recordType": "engine",
-      "schema": 1738577315091,
+      "schema": 1742915469472,
       "variants": [
         {
           "environment": {
@@ -2650,12 +2649,29 @@
         },
         {
           "environment": {
+            "applications": [
+              "firefox-android",
+              "focus-android"
+            ],
             "distributions": [
               "vivo-001"
             ]
           },
           "partnerCode": "firefox-b-vv",
           "telemetrySuffix": "b-vv"
+        },
+        {
+          "environment": {
+            "applications": [
+              "firefox-android",
+              "focus-android"
+            ],
+            "distributions": [
+              "dt-001"
+            ]
+          },
+          "partnerCode": "firefox-b-tf",
+          "telemetrySuffix": "b-tf"
         }
       ]
     },
@@ -8033,5 +8049,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1738595538915
+  "timestamp": 1744212474334
 }

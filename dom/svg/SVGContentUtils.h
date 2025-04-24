@@ -197,6 +197,8 @@ class SVGContentUtils {
 
   static Matrix GetCTM(dom::SVGElement* aElement);
 
+  static Matrix GetNonScalingStrokeCTM(dom::SVGElement* aElement);
+
   static Matrix GetScreenCTM(dom::SVGElement* aElement);
 
   /**

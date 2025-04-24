@@ -183,7 +183,7 @@ int16_t MouseEvent::Button() {
   }
 }
 
-uint16_t MouseEvent::Buttons() {
+uint16_t MouseEvent::Buttons() const {
   switch (mEvent->mClass) {
     case eMouseEventClass:
     case eMouseScrollEventClass:
@@ -302,7 +302,7 @@ float MouseEvent::MozPressure(CallerType aCallerType) const {
   if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
                                                  RFPTarget::PointerEvents)) {
     // Use the spoofed value from PointerEvent::Pressure
-    return 0.5;
+    return Buttons() == 0 ? 0.0f : 0.5f;
   }
 
   return mEvent->AsMouseEventBase()->mPressure;

@@ -83,7 +83,13 @@ class AttrArray {
   // Returns the attribute info at a given position, *not* out-of-bounds safe
   BorrowedAttrInfo AttrInfoAt(uint32_t aPos) const;
 
-  // Returns attribute name at given position or null if aPos is out-of-bounds
+  // If aPos is in bounds, set aResult to the attribute at the given position
+  // without AddRefing it and return true. Otherwise, return false.
+  [[nodiscard]] bool GetSafeAttrNameAt(uint32_t aPos,
+                                       const nsAttrName** aResult) const;
+
+  // If aPos is in bounds, return the attribute at the given position.
+  // Otherwise, crash.
   const nsAttrName* GetSafeAttrNameAt(uint32_t aPos) const;
 
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;

@@ -333,10 +333,12 @@ nssPKIObject_GetInstances(
 {
     nssCryptokiObject **instances = NULL;
     PRUint32 i;
+
+    nssPKIObject_Lock(object);
     if (object->numInstances == 0) {
+        nssPKIObject_Unlock(object);
         return (nssCryptokiObject **)NULL;
     }
-    nssPKIObject_Lock(object);
     instances = nss_ZNEWARRAY(NULL, nssCryptokiObject *,
                               object->numInstances + 1);
     if (instances) {

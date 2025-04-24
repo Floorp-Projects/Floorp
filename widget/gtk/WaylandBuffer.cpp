@@ -99,9 +99,14 @@ void WaylandBuffer::AttachAndCommit(wl_surface* aSurface) {
       (void*)GetWlBuffer(),
       GetWlBuffer() ? wl_proxy_get_id((struct wl_proxy*)GetWlBuffer()) : -1);
 
+  MOZ_ASSERT(!mAttached, "Already attached?");
+
   wl_buffer* buffer = GetWlBuffer();
   if (buffer) {
     mAttached = true;
+    // We're expecting to get BufferReleaseCallbackHandler after attach
+    // so add ref here.
+    AddRef();
     wl_surface_attach(aSurface, buffer, 0, 0);
     wl_surface_commit(aSurface);
   }
@@ -117,7 +122,8 @@ void WaylandBuffer::BufferReleaseCallbackHandler(wl_buffer* aBuffer) {
 
 void WaylandBuffer::BufferReleaseCallbackHandler(void* aData,
                                                  wl_buffer* aBuffer) {
-  auto* buffer = reinterpret_cast<WaylandBuffer*>(aData);
+  // The unref here matches AddRef at AttachAndCommit().
+  RefPtr buffer = dont_AddRef(static_cast<WaylandBuffer*>(aData));
   buffer->BufferReleaseCallbackHandler(aBuffer);
 }
 

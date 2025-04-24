@@ -1236,8 +1236,11 @@ var AddonManagerInternal = {
       return Promise.resolve();
     }
 
-    let newPerms = info.addon.userPermissions;
+    if (info.existingAddon.isInstalledByEnterprisePolicy) {
+      return Promise.resolve();
+    }
 
+    let newPerms = info.addon.userPermissions;
     let difference = lazy.Extension.comparePermissions(oldPerms, newPerms);
 
     // If there are no new permissions, just go ahead with the update

@@ -288,7 +288,7 @@ class nsContextMenu {
         );
     }
 
-    this.remoteType = this.actor?.domProcess?.remoteType;
+    this.remoteType = this.actor.manager.domProcess.remoteType;
 
     const { gBrowser } = this.browser.ownerGlobal;
 

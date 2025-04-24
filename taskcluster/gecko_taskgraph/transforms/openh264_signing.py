@@ -81,14 +81,14 @@ def make_signing_description(config, jobs):
         }
 
         if "win" in build_platform:
-            upstream_artifact["formats"] = ["autograph_authenticode_202404"]
+            upstream_artifact["formats"] = ["gcp_prod_autograph_authenticode_202412"]
         elif "mac" in build_platform:
             upstream_artifact["formats"] = ["mac_single_file"]
             upstream_artifact["singleFileGlobs"] = ["libgmpopenh264.dylib"]
             worker_type = "mac-signing"
             worker["mac-behavior"] = "mac_notarize_single_file"
         else:
-            upstream_artifact["formats"] = ["autograph_gpg"]
+            upstream_artifact["formats"] = ["gcp_prod_autograph_gpg"]
 
         upstream_artifact["paths"] = [
             f"private/openh264/openh264-{build_platform}-{rev}.zip",

@@ -9788,7 +9788,7 @@ var gCSSProperties = {
     applies_to_first_line: true,
     initial_values: ["none"],
     other_values: ["non-scaling-stroke"],
-    invalid_values: [],
+    invalid_values: ["none non-scaling-stroke"],
   },
   "-moz-window-dragging": {
     domProp: "MozWindowDragging",

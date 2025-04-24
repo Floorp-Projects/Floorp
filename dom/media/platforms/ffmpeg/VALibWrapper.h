@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsISupportsImpl.h"
 
 struct PRLibrary;
@@ -61,16 +62,24 @@ class VADisplayHolder {
 
   static RefPtr<VADisplayHolder> GetSingleton();
 
-  const VADisplay mDisplay;
+  VADisplay Display() const { return mDisplay.get(); }
 
  private:
-  VADisplayHolder(VADisplay aDisplay, int aDRMFd)
-      : mDisplay(aDisplay), mDRMFd(aDRMFd) {};
+  struct VADisplayDeleter {
+    using pointer = VADisplay;
+    void operator()(VADisplay aDisplay);
+  };
+  using UniqueVADisplay = std::unique_ptr<VADisplay, VADisplayDeleter>;
+
+  VADisplayHolder(UniqueVADisplay aDisplay, UniqueFileHandle aDRMFd);
   ~VADisplayHolder();
 
   void MaybeDestroy();
 
-  const int mDRMFd;
+  // mDRMFd is declared before mDisplay, so that mDRMFd is closed after
+  // mDisplay is terminated.
+  const UniqueFileHandle mDRMFd;
+  const UniqueVADisplay mDisplay;
 };
 
 }  // namespace mozilla

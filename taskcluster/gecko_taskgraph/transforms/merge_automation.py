@@ -18,6 +18,7 @@ def handle_keyed_by(config, tasks):
         return
     merge_config = config.params["merge_config"]
     fields = [
+        "routes",
         "worker.push",
         "worker-type",
         "worker.l10n-bump-info",
@@ -33,6 +34,7 @@ def handle_keyed_by(config, tasks):
                     "project": config.params["project"],
                     "release-type": config.params["release_type"],
                     "behavior": merge_config["behavior"],
+                    "level": config.params["level"],
                 }
             )
         yield task
