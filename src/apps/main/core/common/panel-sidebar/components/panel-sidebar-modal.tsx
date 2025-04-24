@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, type Accessor } from "solid-js";
+import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import type { Panel } from "../utils/type.ts";
 import { getFirefoxSidebarPanels } from "../extension-panels.ts";
@@ -86,7 +86,7 @@ export class PanelSidebarAddModal {
   private modalParent: ModalParent;
 
   private texts: Accessor<I18nTextValues> = () => getTranslatedTexts();
-  private setTexts: (value: I18nTextValues) => void = () => { };
+  private setTexts: (value: I18nTextValues) => void = () => {};
 
   public static getInstance() {
     if (!PanelSidebarAddModal.instance) {
@@ -285,11 +285,10 @@ export class PanelSidebarAddModal {
             }
 
             if (type === "static") {
-              const sideBarToolKey =
-                result.sideBarTool as keyof typeof STATIC_PANEL_DATA;
+              const sideBarToolKey = result
+                .sideBarTool as keyof typeof STATIC_PANEL_DATA;
               panel = {
                 ...panel,
-                icon: STATIC_PANEL_DATA[sideBarToolKey].icon,
                 url: sideBarToolKey,
               };
             }
