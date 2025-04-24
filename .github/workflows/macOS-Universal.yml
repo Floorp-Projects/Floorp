@@ -105,12 +105,12 @@ jobs:
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh
 
-    - name: Configure sccache
-      uses: actions/github-script@v7
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+    # - name: Configure sccache
+    #   uses: actions/github-script@v7
+    #   with:
+    #     script: |
+    #       core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+    #       core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - uses: actions/download-artifact@v4
       name: Download artifact if use profdata📥
@@ -170,10 +170,10 @@ jobs:
         fi
 
         # SCCACHE START
-        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
-        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
-        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
-        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        # echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        # echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        # echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
         # SCCACHE END
 
         ./mach --no-interactive bootstrap --application-choice browser
@@ -198,7 +198,7 @@ jobs:
         fi
 
         #? https://github.com/mozilla/sccache#known-caveats
-        export CARGO_INCREMENTAL=0
+        # export CARGO_INCREMENTAL=0
       env:
         GHA_ARCH: ${{matrix.arch}}
 
