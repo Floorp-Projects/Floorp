@@ -156,3 +156,7 @@ browser[type="content"] > html {
 #QRCodeGeneratePageAction-image {
   list-style-image: url("chrome://floorp/skin/icons/floorp-share.svg");
 }
+
+#identity-icon-label[value="Firefox"] {
+  display: none !important;
+}
