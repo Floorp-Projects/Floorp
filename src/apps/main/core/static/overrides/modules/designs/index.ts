@@ -7,7 +7,6 @@ export const overrides = [
   () => {
     // Override the identity-icon value for replace "Firefox" with "Floorp"
     window.SessionStore.promiseAllWindowsRestored.then(() => {
-      document?.getElementById("bundle_brand")?.remove();
       const IdentityIconLabel = document?.getElementById(
         "identity-icon-label",
       ) as XULElement;
