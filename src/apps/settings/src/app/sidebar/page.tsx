@@ -2,6 +2,7 @@ import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
+import { PanelList } from "./components/PanelList.tsx";
 import {
   getPanelSidebarSettings,
   savePanelSidebarSettings,
@@ -40,17 +41,19 @@ export default function Page() {
   }, [watchAll]);
 
   return (
-    <div className="p-6 space-y-3">
+    <div className="p-6 space-y-6">
       <div className="flex flex-col items-start pl-6">
         <h1 className="text-3xl font-bold mb-2">{t("panelSidebar.title")}</h1>
         <p className="text-sm mb-8">{t("panelSidebar.description")}</p>
       </div>
 
+      <div className="space-y-8 pl-6" />
       <FormProvider {...methods}>
-        <form className="space-y-3 pl-6">
+        <form>
           <BasicSettings />
         </form>
       </FormProvider>
+      <PanelList />
     </div>
   );
 }

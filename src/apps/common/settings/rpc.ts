@@ -9,4 +9,9 @@ export interface NRSettingsParentFunctions {
   // settings
   selectFolder(): Promise<string | null>;
   getRandomImageFromFolder(path: string): Promise<string | null>;
+  // panel sidebar
+  sendToNRPanelSidebarChild<T = any>(
+    method: string,
+    ...args: any[]
+  ): Promise<T>;
 }
