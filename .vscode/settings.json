@@ -17,8 +17,12 @@
   ],
   "deno.enable": true,
   "deno.lint": true,
+  "deno.unstable": ["sloppy-imports"],
   "editor.formatOnSave": true,
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "yaml.schemas": {
+    "https://www.artillery.io/schema.json": []
   },
 }

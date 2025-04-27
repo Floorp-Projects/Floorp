@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "build": "deno run -A npm:tsdown"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "pathe": "npm:pathe@^2.0.3",
+    "tsdown": "npm:tsdown@^0.9.8"
+  }
+}

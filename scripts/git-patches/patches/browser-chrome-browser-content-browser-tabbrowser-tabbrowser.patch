@@ -21,8 +21,8 @@ index ce68c33..47ccc30 100644
 +
 +        floorpWorkspaceId = tabData.floorpWorkspaceId
 +          ? tabData.floorpWorkspaceId
-+          : JSON.parse(Services.prefs.getStringPref("floorp.workspaces.v3.data"))
-+              .workspaces[0].id;
++          : JSON.parse(Services.prefs.getStringPref("floorp.workspaces.v4.store"))
++              .defaultID;
 +        floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
 +        floorpSSB = tabData.floorpSSB;
 +

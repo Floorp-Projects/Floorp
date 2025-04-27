@@ -1,22 +1,17 @@
 {
-  "patch": [
-    "@types/gecko/dom"
-  ],
-  "workspace": [
-    "./src/packages/*",
-    "./src/apps/*"
-  ],
+  "patch": ["libs/@types/gecko/dom"],
+  "unstable": ["npm-patch"],
+  "workspace": ["./libs/*", "./apps/*", "./apps/system/*"],
   "imports": {
-    "@std/encoding": "jsr:@std/encoding@^1.0.7",
-    "@std/fs": "jsr:@std/fs@^1.0.11"
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "@std/fs": "jsr:@std/fs@^1.0.17",
+    "#i18n/": "./i18n/",
+    "#apps/": "./apps/",
+    "#libs/": "./libs/",
+    "#features-chrome/": "./apps/features-chrome/"
   },
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.asynciterable",
-      "deno.ns",
-      "ESNext"
-    ]
+    "lib": ["dom", "dom.asynciterable", "deno.ns", "ESNext"]
   },
   "tasks": {
     "build": "deno run -A build.ts",

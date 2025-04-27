@@ -165,7 +165,8 @@ async function downloadBinArchive() {
   if (originUrl.endsWith("/")) {
     originUrl = originUrl.slice(0, -1);
   }
-  const originDownloadUrl = `${originUrl}-runtime/releases/latest/download/${fileName}`;
+  const originDownloadUrl =
+    `${originUrl}-runtime/releases/latest/download/${fileName}`;
   console.log(`Downloading from origin: ${originDownloadUrl}`);
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
@@ -290,7 +291,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     await release("before");
     await injectManifest(binDir, "run-prod", "noraneko-dev");
     try {
-      await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, { recursive: true });
+      await Deno.remove(`_dist/bin/${brandingBaseName}/noraneko-dev`, {
+        recursive: true,
+      });
     } catch {}
     await Deno.symlink(
       pathe.resolve(import.meta.dirname, "_dist/noraneko"),
@@ -366,9 +369,9 @@ async function exit() {
   process.exit(0);
 }
 
-process.on("SIGINT", async () => {
-  await exit();
-});
+// process.on("SIGINT", async () => {
+//   await exit();
+// });
 
 /**
  * * Please run with NODE_ENV='production'
@@ -401,7 +404,9 @@ async function release(mode: "before" | "after") {
         const appFile = appFiles[0];
         const appPath = `${baseDir}/${appFile}`;
         binPath = `${appPath}/Contents/Resources`;
-        console.log(`Using app bundle directory: ${appPath}/Contents/Resources`);
+        console.log(
+          `Using app bundle directory: ${appPath}/Contents/Resources`,
+        );
       } else {
         binPath = `${baseDir}/bin`;
         console.log(`Using bin directory: ${baseDir}/bin`);

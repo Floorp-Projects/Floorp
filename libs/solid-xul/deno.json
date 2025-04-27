@@ -1,0 +1,7 @@
+{
+  "name": "@nora/solid-xul",
+  "exports": {
+    ".": "./index.ts",
+    "./jsx-runtime.ts": "./jsx-runtime.ts"
+  }
+}

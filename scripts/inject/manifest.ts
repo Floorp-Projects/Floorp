@@ -52,32 +52,32 @@ ${
   };
 
   await symlink(
-    r("../../src/apps/main/_dist"),
+    r("../../apps/system/loader-features/_dist"),
     `${binPath}/${dirName}/content`,
     option,
   );
 
   await symlink(
-    r("../../src/apps/startup/_dist"),
+    r("../../apps/system/startup/_dist"),
     `${binPath}/${dirName}/startup`,
     option,
   );
   await symlink(
-    r("../../src/apps/designs/_dist"),
+    r("../../apps/designs/_dist"),
     `${binPath}/${dirName}/skin`,
     option,
   );
   await symlink(
-    r("../../src/apps/modules/_dist"),
+    r("../../apps/system/loader-modules/_dist"),
     `${binPath}/${dirName}/resource`,
     option,
   );
 
-  if (mode !== "dev") {
-    await symlink(
-      r("../../src/apps/settings/_dist"),
-      `${binPath}/${dirName}/settings`,
-      option,
-    );
-  }
+  // if (mode !== "dev") {
+  //   await symlink(
+  //     r("../../src/apps/settings/_dist"),
+  //     `${binPath}/${dirName}/settings`,
+  //     option,
+  //   );
+  // }
 }

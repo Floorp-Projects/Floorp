@@ -1,0 +1,10 @@
+{
+  "name": "@nora/shared",
+  "private": true,
+  "dependencies": {
+    "zod": "^3.24.3"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  }
+}

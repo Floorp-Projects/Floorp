@@ -15,50 +15,43 @@ const r = (value: string): string => {
 async function launchBuild(mode: string, buildid2: string) {
   if (mode.startsWith("dev")) {
     await Promise.all([
-      $({ cwd: r("./src/apps/startup") })`deno task build ${mode}`,
-      build({
-        configFile: r("./src/apps/modules/vite.config.ts"),
-        root: r("./src/apps/modules"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-          "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
-        },
-      }),
-      build({
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
-      }),
+      $({
+        cwd: r("./apps/system/startup"),
+      })`deno task build --env.MODE ${mode}`,
+      $({
+        cwd: r("./apps/system/loader-modules"),
+      })`deno task build --env.__BUILDID2__=${buildid2} --env.__VERSION2__=${packageJson.version}`,
+      // build({
+      //   configFile: r("./src/apps/designs/vite.config.ts"),
+      //   root: r("./src/apps/designs"),
+      // }),
     ]);
   } else {
     await Promise.all([
-      $({ cwd: r("./src/apps/startup") })`deno task build ${mode}`,
+      $({
+        cwd: r("./apps/system/startup"),
+      })`deno task build --env.MODE ${mode}`,
       build({
-        root: r("./src/apps/main"),
-        configFile: r("./src/apps/main/vite.config.ts"),
+        root: r("./apps/system/loader-features"),
+        configFile: r("./apps/system/loader-features/vite.config.ts"),
         define: {
           "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
           "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
         },
         base: "chrome://noraneko/content",
       }),
-      build({
-        root: r("./src/apps/modules"),
-        configFile: r("./src/apps/modules/vite.config.ts"),
-        define: {
-          "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
-          "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
-        },
-        base: "resource://noraneko",
-      }),
-      build({
-        configFile: r("./src/apps/designs/vite.config.ts"),
-        root: r("./src/apps/designs"),
-      }),
-      build({
-        configFile: r("./src/apps/settings/vite.config.ts"),
-        root: r("./src/apps/settings"),
-        base: "chrome://noraneko-settings/content",
-      }),
+      $({
+        cwd: r("./apps/system/loader-modules"),
+      })`deno task build --env.__BUILDID2__=${buildid2} --env.__VERSION2__=${packageJson.version}`,
+      // build({
+      //   configFile: r("./src/apps/designs/vite.config.ts"),
+      //   root: r("./src/apps/designs"),
+      // }),
+      // build({
+      //   configFile: r("./src/apps/settings/vite.config.ts"),
+      //   root: r("./src/apps/settings"),
+      //   base: "chrome://noraneko-settings/content",
+      // }),
     ]);
   }
 }

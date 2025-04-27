@@ -37,7 +37,7 @@ export async function initializeBinGit() {
   console.log("[git-patches] Initializing git repository in _dist/bin");
 
   // create .gitignore
-  await fs.writeFile(
+  await Deno.writeTextFile(
     path.join(BIN_DIR, ".gitignore"),
     [
       `./noraneko-dev/*`,
@@ -61,7 +61,9 @@ export function checkPatchIsNeeded() {
   const patches_dir = Deno.readDirSync(PATCHES_DIR);
 
   const patches_tmp_filenames = Array.from(patches_tmp.map((p) => p.name));
-  const filenames_eq = patches_dir.map((p) => p.name).every((p) => {
+  const filenames_eq = patches_dir.map((p) => p.name).filter((v) =>
+    v.endsWith(".patch")
+  ).every((p) => {
     return patches_tmp_filenames.includes(p);
   });
 
@@ -182,7 +184,7 @@ export async function createPatches() {
 
       const patchPath = path.join(PATCHES_DIR, patchName);
 
-      await fs.writeFile(patchPath, modifiedDiff);
+      await Deno.writeTextFile(patchPath, modifiedDiff);
       console.log(`[git-patches] Created/Updated patch: ${patchPath}`);
     } catch (e) {
       console.warn(`[git-patches] Failed to create patch: ${file}`);

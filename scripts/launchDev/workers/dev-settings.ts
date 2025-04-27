@@ -1,4 +1,4 @@
-import { createServer } from "npm:vite@6.0.11";
+import { createServer } from "npm:vite@6.3.3";
 
 Deno.chdir("./src/apps/settings");
 

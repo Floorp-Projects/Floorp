@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@nora/modules/*": ["../../modules/*"]
+    },
+    "types": ["vite/client"],
+  }
+}
