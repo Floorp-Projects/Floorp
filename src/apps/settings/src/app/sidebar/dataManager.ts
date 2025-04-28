@@ -281,11 +281,16 @@ export async function getStaticPanels() {
           const panels = JSON.parse(panelsStr);
           console.log(`Parsed ${panels.length} static panels`);
 
-          // キャッシュに保存
-          staticPanelsCache = panels;
+          const formattedPanels = panels.map((panel: any) => ({
+            value: panel.id,
+            label: panel.title,
+            icon: panel.icon || "",
+          }));
+
+          staticPanelsCache = formattedPanels;
           isGettingStaticPanels = false;
 
-          resolve(panels);
+          resolve(formattedPanels);
         } catch (error) {
           console.error("Failed to parse static panels:", error);
           isGettingStaticPanels = false;
@@ -310,15 +315,12 @@ export async function getStaticPanels() {
 export async function getExtensionPanels() {
   console.log("getExtensionPanels called");
 
-  // すでにキャッシュがあれば返す
   if (extensionPanelsCache.length > 0) {
     console.log("Using extension panels cache", extensionPanelsCache.length);
     return extensionPanelsCache;
   }
 
-  // 重複実行防止
   if (isGettingExtensionPanels) {
-    console.log("Already getting extension panels, waiting...");
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (!isGettingExtensionPanels && extensionPanelsCache.length > 0) {
@@ -340,7 +342,6 @@ export async function getExtensionPanels() {
 
   try {
     return new Promise((resolve) => {
-      // タイムアウト処理を追加
       const timeoutId = setTimeout(() => {
         console.warn("getExtensionPanels timed out");
         isGettingExtensionPanels = false;
@@ -349,19 +350,15 @@ export async function getExtensionPanels() {
 
       const callback = (extensionsStr: string) => {
         clearTimeout(timeoutId);
-        console.log("Extension panels callback received data");
         try {
           const extensions = JSON.parse(extensionsStr);
-          console.log(`Parsed ${extensions.length} extension panels`);
 
-          // 形式変換: {value, label, icon} → {extensionId, title, iconUrl}
           const formattedExtensions = extensions.map((ext: any) => ({
             extensionId: ext.value,
             title: ext.label,
             iconUrl: ext.icon || "",
           }));
 
-          // キャッシュに保存
           extensionPanelsCache = formattedExtensions;
           isGettingExtensionPanels = false;
 

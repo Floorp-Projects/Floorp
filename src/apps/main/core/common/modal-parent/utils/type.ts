@@ -25,6 +25,7 @@ export interface TFormItem {
     id: string;
     value: string | string[];
   };
+  onInput?: (value: string) => string;
 }
 
 export interface TForm {

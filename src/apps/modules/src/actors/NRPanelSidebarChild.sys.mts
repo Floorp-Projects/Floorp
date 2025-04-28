@@ -49,24 +49,29 @@ export class NRPanelSidebarChild extends JSWindowActorChild {
     // 静的パネルの情報を手動で定義
     const staticPanels = [
       {
-        id: "sidebar",
-        title: "サイドバー",
-        icon: "chrome://browser/skin/sidebars.svg",
-      },
-      {
-        id: "bookmarks",
+        id: "floorp//bmt",
         title: "ブックマーク",
         icon: "chrome://browser/skin/bookmark.svg",
       },
       {
-        id: "history",
+        id: "floorp//bookmarks",
+        title: "ブックマーク",
+        icon: "chrome://browser/skin/bookmark.svg",
+      },
+      {
+        id: "floorp//history",
         title: "履歴",
         icon: "chrome://browser/skin/history.svg",
       },
       {
-        id: "synced-tabs",
-        title: "同期したタブ",
-        icon: "chrome://browser/skin/tab.svg",
+        id: "floorp//downloads",
+        title: "ダウンロード",
+        icon: "chrome://browser/skin/downloads/downloads.svg",
+      },
+      {
+        id: "floorp//notes",
+        title: "ノート",
+        icon: "chrome://browser/skin/notes.svg",
       },
     ];
     // 直接コールバックを呼び出し

@@ -24,8 +24,8 @@ type Container = {
 };
 
 type StaticPanel = {
-  id: string;
-  title: string;
+  value: string;
+  label: string;
   icon: string;
 };
 
@@ -72,8 +72,17 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
         setContainers([]);
       }
 
-      setStaticPanels(staticPanelsData || []);
-      setExtensionPanels(extensionPanelsData || []);
+      if (staticPanelsData && Array.isArray(staticPanelsData)) {
+        setStaticPanels(staticPanelsData);
+      } else {
+        setStaticPanels([]);
+      }
+
+      if (extensionPanelsData && Array.isArray(extensionPanelsData)) {
+        setExtensionPanels(extensionPanelsData);
+      } else {
+        setExtensionPanels([]);
+      }
     } catch (error) {
       console.error("Failed to fetch panel data:", error);
     } finally {
@@ -96,6 +105,16 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
   const shouldShowStaticFields = editedPanel.type === "static";
   const shouldShowExtensionFields = editedPanel.type === "extension";
 
+  const validateAndFormatUrl = (url: string): string => {
+    if (!url) return "";
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+
+    return `https://${url}`;
+  };
+
   // フォームの入力値が変更された時の処理
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -115,26 +134,28 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
         newPanel.url = "";
         newPanel.userAgent = null;
         newPanel.userContextId = null;
+      } else if (value === "static") {
+        newPanel.extensionId = null;
+        newPanel.url = "";
+        newPanel.userAgent = null;
+        newPanel.userContextId = null;
       }
 
       setEditedPanel(newPanel);
+    } else if (name === "url") {
+      const formattedUrl = validateAndFormatUrl(value);
+      setEditedPanel({ ...editedPanel, [name]: formattedUrl });
     } else if (name === "width") {
       setEditedPanel({ ...editedPanel, [name]: Number(value) });
     } else if (name === "zoomLevel") {
       setEditedPanel({ ...editedPanel, [name]: value ? Number(value) : null });
     } else if (name === "userContextId") {
-      // コンテナーID変換のデバッグ出力
-      console.log(
-        `Setting userContextId: Raw value = "${value}", type = ${typeof value}`,
-      );
       const numericValue = value ? Number(value) : null;
-      console.log(
-        `Converted userContextId = ${numericValue}, type = ${typeof numericValue}`,
-      );
-
       setEditedPanel({ ...editedPanel, [name]: numericValue });
     } else if (name === "userAgent") {
       setEditedPanel({ ...editedPanel, [name]: value === "true" });
+    } else if (name === "extensionId") {
+      setEditedPanel({ ...editedPanel, [name]: value || null });
     } else {
       setEditedPanel({ ...editedPanel, [name]: value });
     }
@@ -146,7 +167,6 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     setEditedPanel({ ...editedPanel, [name]: checked });
   };
 
-  // フォームの検証
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -154,8 +174,16 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
       newErrors.type = t("panelSidebar.errors.typeRequired");
     }
 
-    if (editedPanel.type === "web" && !editedPanel.url) {
-      newErrors.url = t("panelSidebar.errors.urlRequired");
+    if (editedPanel.type === "web") {
+      if (!editedPanel.url) {
+        newErrors.url = t("panelSidebar.errors.urlRequired");
+      } else {
+        try {
+          new URL(editedPanel.url);
+        } catch (e) {
+          newErrors.url = t("panelSidebar.errors.invalidUrl");
+        }
+      }
     }
 
     if (editedPanel.type === "extension" && !editedPanel.extensionId) {
@@ -240,14 +268,23 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
               <label className="label">
                 <span className="label-text">{t("panelSidebar.url")}</span>
               </label>
-              <input
-                type="text"
-                name="url"
-                value={editedPanel.url || ""}
-                onChange={handleChange}
-                placeholder="https://example.com"
-                className="input input-bordered w-full"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="url"
+                  value={editedPanel.url || ""}
+                  onChange={handleChange}
+                  placeholder="example.com"
+                  className="input input-bordered w-full pr-8"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-base-content/50">
+                  {editedPanel.url && (
+                    <span className="text-xs">
+                      {editedPanel.url.startsWith("https://") ? "🔒" : "⚠️"}
+                    </span>
+                  )}
+                </div>
+              </div>
               {errors.url && (
                 <label className="label">
                   <span className="label-text-alt text-error">
@@ -271,16 +308,20 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
                 onChange={handleChange}
                 className="select select-bordered w-full"
               >
-                {staticPanels.length === 0
-                  ? <option value="">{t("panelSidebar.noStaticPanels")}</option>
-                  : (
-                    staticPanels.map((panel) => (
-                      <option key={panel.id} value={panel.id}>
-                        {panel.title}
-                      </option>
-                    ))
-                  )}
+                <option value="">{t("panelSidebar.selectStaticPanel")}</option>
+                {staticPanels.map((panel) => (
+                  <option key={panel.value} value={panel.value}>
+                    {panel.label}
+                  </option>
+                ))}
               </select>
+              {errors.url && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {errors.url}
+                  </span>
+                </label>
+              )}
             </div>
           )}
 
@@ -297,19 +338,12 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
                 onChange={handleChange}
                 className="select select-bordered w-full"
               >
-                {extensionPanels.length === 0
-                  ? (
-                    <option value="">
-                      {t("panelSidebar.noExtensionPanels")}
-                    </option>
-                  )
-                  : (
-                    extensionPanels.map((panel) => (
-                      <option key={panel.extensionId} value={panel.extensionId}>
-                        {panel.title}
-                      </option>
-                    ))
-                  )}
+                <option value="">{t("panelSidebar.selectExtension")}</option>
+                {extensionPanels.map((panel) => (
+                  <option key={panel.extensionId} value={panel.extensionId}>
+                    {panel.title}
+                  </option>
+                ))}
               </select>
               {errors.extensionId && (
                 <label className="label">

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import {
@@ -114,8 +115,7 @@ export const PanelList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <span className="loading loading-spinner loading-md text-primary">
-        </span>
+        <span className="loading loading-spinner loading-md text-primary"></span>
       </div>
     );
   }
@@ -135,94 +135,93 @@ export const PanelList: React.FC = () => {
       </div>
 
       <div className="card bg-base-100 shadow-sm">
-        {panels.length === 0
-          ? (
-            <div className="card-body items-center text-center text-base-content/70">
-              <p>{t("panelSidebar.noPanels")}</p>
-            </div>
-          )
-          : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="panels">
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="divide-y divide-base-300 rounded-box overflow-hidden"
-                  >
-                    {panels.map((panel, index) => (
-                      <Draggable
-                        key={panel.id}
-                        draggableId={panel.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="bg-base-100 hover:bg-base-200 p-4 flex items-center justify-between transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                {...provided.dragHandleProps}
-                                className="cursor-grab text-base-content/50 hover:text-base-content/70"
-                                aria-label="Drag to reorder"
-                              >
-                                <GripVertical size={20} />
-                              </div>
-                              <div>
-                                <div className="font-medium flex items-center gap-2">
-                                  {panel.icon && (
-                                    <img
-                                      src={panel.icon}
-                                      alt=""
-                                      className="w-5 h-5 rounded-full"
-                                    />
-                                  )}
-                                  <span className="max-w-md truncate">
-                                    {panel.url || panel.extensionId ||
-                                      t("panelSidebar.untitled")}
-                                  </span>
-                                </div>
-                                <div className="text-sm text-base-content/60 mt-1">
-                                  <div className="badge badge-sm">
-                                    {t(`panelSidebar.type.${panel.type}`)}
-                                  </div>
-                                  {panel.width > 0 && (
-                                    <span className="ml-2 text-xs">
-                                      {panel.width}px
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+        {panels.length === 0 ? (
+          <div className="card-body items-center text-center text-base-content/70">
+            <p>{t("panelSidebar.noPanels")}</p>
+          </div>
+        ) : (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="panels">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="divide-y divide-base-300 rounded-box overflow-hidden"
+                >
+                  {panels.map((panel, index) => (
+                    <Draggable
+                      key={panel.id}
+                      draggableId={panel.id}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="bg-base-100 hover:bg-base-200 p-4 flex items-center justify-between transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              {...provided.dragHandleProps}
+                              className="cursor-grab text-base-content/50 hover:text-base-content/70"
+                              aria-label="Drag to reorder"
+                            >
+                              <GripVertical size={20} />
                             </div>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleEditPanel(panel)}
-                                className="btn btn-ghost btn-sm btn-square text-blue-600"
-                                aria-label={t("common.edit")}
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDeletePanel(panel.id)}
-                                className="btn btn-ghost btn-sm btn-square text-error"
-                                aria-label={t("common.delete")}
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {panel.icon && (
+                                  <img
+                                    src={panel.icon}
+                                    alt=""
+                                    className="w-5 h-5 rounded-full"
+                                  />
+                                )}
+                                <span className="max-w-md truncate">
+                                  {panel.url ||
+                                    panel.extensionId ||
+                                    t("panelSidebar.untitled")}
+                                </span>
+                              </div>
+                              <div className="text-sm text-base-content/60 mt-1">
+                                <div className="badge badge-sm">
+                                  {t(`panelSidebar.type.${panel.type}`)}
+                                </div>
+                                {panel.width > 0 && (
+                                  <span className="ml-2 text-xs">
+                                    {panel.width}px
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditPanel(panel)}
+                              className="btn btn-ghost btn-sm btn-square text-blue-600"
+                              aria-label={t("common.edit")}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePanel(panel.id)}
+                              className="btn btn-ghost btn-sm btn-square text-error"
+                              aria-label={t("common.delete")}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
       </div>
 
       {isModalOpen && currentPanel && (
