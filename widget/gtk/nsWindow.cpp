@@ -224,6 +224,7 @@ static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
                              gpointer aPointer);
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent);
 static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent);
+static void widget_destroy_cb(GtkWidget* widget, gpointer user_data);
 
 static nsWindow* GetFirstNSWindowForGDKWindow(GdkWindow* aGdkWindow);
 
@@ -6324,6 +6325,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   g_signal_connect(mContainer, "key_release_event",
                    G_CALLBACK(key_release_event_cb), nullptr);
 
+  g_signal_connect(mShell, "destroy", G_CALLBACK(widget_destroy_cb), nullptr);
+
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
     gtk_widget_set_double_buffered(GTK_WIDGET(mContainer), FALSE);
@@ -8711,6 +8714,25 @@ static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent) {
     return FALSE;
   }
   return window->OnTouchpadPinchEvent(event);
+}
+
+void nsWindow::GtkWidgetDestroyHandler(GtkWidget* aWidget) {
+  if (!mIsDestroyed) {
+    NS_WARNING("GtkWidgetDestroyHandler called for live nsWindow!");
+    Destroy();
+  }
+  if (aWidget == mShell) {
+    mShell = nullptr;
+    return;
+  }
+}
+
+void widget_destroy_cb(GtkWidget* widget, gpointer user_data) {
+  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+  if (!window) {
+    return;
+  }
+  window->GtkWidgetDestroyHandler(widget);
 }
 
 //////////////////////////////////////////////////////////////////////

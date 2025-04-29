@@ -472,6 +472,8 @@ class nsWindow final : public nsBaseWidget {
 
   static nsWindow* GetWindow(GdkWindow* window);
 
+  void GtkWidgetDestroyHandler(GtkWidget* aWidget);
+
  protected:
   virtual ~nsWindow();
 
