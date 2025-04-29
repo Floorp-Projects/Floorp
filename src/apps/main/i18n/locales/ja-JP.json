@@ -187,8 +187,8 @@
         "modal": {
             "type": "パネルの種類",
             "typeOptions": {
-                "web": "ウェブページ",
-                "static": "ツールサイドバー",
+                "web": "Webページ",
+                "sidebar-tool": "ツールサイドバー",
                 "extension": "拡張機能サイドバー"
             },
             "width": "パネルの幅",

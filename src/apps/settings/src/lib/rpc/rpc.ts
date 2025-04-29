@@ -1,7 +1,9 @@
-import { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
+import type { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
 import { createBirpc } from "birpc";
 
 declare const Services: any;
+declare const ChromeUtils: any;
+declare const Cu: any;
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -43,6 +45,29 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   setStringPref: (prefName, value) => {
     Services.prefs.setStringPref(prefName, value);
     return Promise.resolve();
+  },
+  // フォルダ選択関連のメソッド
+  selectFolder: async () => {
+    return Promise.resolve(null);
+  },
+  getRandomImageFromFolder: async (path) => {
+    return Promise.resolve(null);
+  },
+  // Actor通信用メソッド
+  sendToNRPanelSidebarChild: async (method, ...args) => {
+    try {
+      // NRPanelSidebarParentアクターを取得
+      const windowGlobal = Cu.getGlobalForObject(Services);
+      const actor = windowGlobal.browsingContext.currentWindowGlobal.getActor(
+        "NRPanelSidebar",
+      );
+
+      // メソッドを実行
+      return await actor[method](...args);
+    } catch (error) {
+      console.error(`Error calling NRPanelSidebarChild.${method}:`, error);
+      throw error;
+    }
   },
 };
 

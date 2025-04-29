@@ -81,12 +81,22 @@ const getTranslatedTexts = (): I18nTextValues => {
   };
 };
 
+function completeUrl(url: string): string {
+  if (!url) return url;
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  return `https://${url}`;
+}
+
 export class PanelSidebarAddModal {
   private static instance: PanelSidebarAddModal;
   private modalParent: ModalParent;
 
   private texts: Accessor<I18nTextValues> = () => getTranslatedTexts();
-  private setTexts: (value: I18nTextValues) => void = () => {};
+  private setTexts: (value: I18nTextValues) => void = () => { };
 
   public static getInstance() {
     if (!PanelSidebarAddModal.instance) {
@@ -189,6 +199,12 @@ export class PanelSidebarAddModal {
         required: true,
         placeholder: "https://floorp.app",
         when: { id: "type", value: "web" },
+        onInput: (value: string) => {
+          if (value) {
+            return completeUrl(value);
+          }
+          return value;
+        },
       },
       {
         id: "userContextId",
@@ -271,7 +287,7 @@ export class PanelSidebarAddModal {
             if (type === "web") {
               panel = {
                 ...panel,
-                url: result.url as string,
+                url: completeUrl(result.url as string),
                 userContextId: Number(result.userContextId),
                 userAgent: result.userAgent === "true",
               };

@@ -14,11 +14,25 @@ import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
 import Debug from "./app/debug/page.tsx";
 import { AppBackground } from "@/components/app-background.tsx";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
+import { useEffect } from "react";
+
+function useHashSync() {
+  const location = useLocation();
+  useEffect(() => {
+    if (location.pathname) {
+      const currentHash = globalThis.location.hash.slice(1);
+      if (currentHash !== location.pathname) {
+        globalThis.history.replaceState(null, "", `#${location.pathname}`);
+      }
+    }
+  }, [location.pathname]);
+}
 
 export default function App() {
+  useHashSync();
   return (
     <div className="flex flex-col w-screen">
       <AppBackground />

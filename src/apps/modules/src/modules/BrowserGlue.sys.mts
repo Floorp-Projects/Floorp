@@ -49,6 +49,26 @@ const JS_WINDOW_ACTORS: {
       "about:*",
     ],
   },
+  NRPanelSidebar: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPanelSidebarParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPanelSidebarChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
+  },
   NRTabManager: {
     parent: {
       esModuleURI: localPathToResourceURI(
@@ -166,22 +186,22 @@ const JS_WINDOW_ACTORS: {
     ],
   },
   // Floorp 13 test
-  NRWebContentModifier: {
-    parent: {
-      esModuleURI: localPathToResourceURI(
-        "../actors/NRWebContentModifierParent.sys.mts",
-      ),
-    },
-    child: {
-      esModuleURI: localPathToResourceURI(
-        "../actors/NRWebContentModifierChild.sys.mts",
-      ),
-      events: {
-        DOMContentLoaded: {},
-      },
-    },
-    matches: ["https://*/*", "http://*/*"],
-  },
+  // NRWebContentModifier: {
+  //   parent: {
+  //     esModuleURI: localPathToResourceURI(
+  //       "../actors/NRWebContentModifierParent.sys.mts",
+  //     ),
+  //   },
+  //   child: {
+  //     esModuleURI: localPathToResourceURI(
+  //       "../actors/NRWebContentModifierChild.sys.mts",
+  //     ),
+  //     events: {
+  //       DOMContentLoaded: {},
+  //     },
+  //   },
+  //   matches: ["https://*/*", "http://*/*"],
+  // },
   NRChromeModal: {
     child: {
       esModuleURI: localPathToResourceURI(

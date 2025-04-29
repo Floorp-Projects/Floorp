@@ -5,15 +5,21 @@
 
 import { Show, createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
-import { CPanelSidebar } from "./panel-sidebar";
-import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/data";
+import type { CPanelSidebar } from "./panel-sidebar";
+import {
+  selectedPanelId,
+  panelSidebarData,
+  setPanelSidebarData,
+} from "../data/data";
 import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
 import { setContextPanel } from "./sidebar-contextMenu";
 
-
-export function PanelSidebarButton(props: { panel: Panel, ctx: CPanelSidebar }) {
+export function PanelSidebarButton(props: {
+  panel: Panel;
+  ctx: CPanelSidebar;
+}) {
   const gPanelSidebar = props.ctx;
 
   const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
@@ -29,15 +35,19 @@ export function PanelSidebarButton(props: { panel: Panel, ctx: CPanelSidebar }) 
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     (e.target as HTMLElement).classList.add("drag-over");
   };
 
   const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     (e.target as HTMLElement).classList.remove("drag-over");
   };
 
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     (e.target as HTMLElement).classList.remove("drag-over");
 
     const sourceId = e.dataTransfer?.getData("text/plain");
@@ -49,6 +59,8 @@ export function PanelSidebarButton(props: { panel: Panel, ctx: CPanelSidebar }) 
     const sourceIndex = panels.findIndex((p) => p.id === sourceId);
     const targetIndex = panels.findIndex((p) => p.id === targetId);
 
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
     const [movedPanel] = panels.splice(sourceIndex, 1);
     panels.splice(targetIndex, 0, movedPanel);
 
@@ -59,7 +71,9 @@ export function PanelSidebarButton(props: { panel: Panel, ctx: CPanelSidebar }) 
     e.preventDefault();
     setContextPanel(props.panel);
 
-    const contextMenu = document?.getElementById("webpanel-context") as XULPopupElement;
+    const contextMenu = document?.getElementById(
+      "webpanel-context",
+    ) as XULPopupElement;
     if (contextMenu) {
       contextMenu.openPopupAtScreen(e.screenX, e.screenY, true);
     }

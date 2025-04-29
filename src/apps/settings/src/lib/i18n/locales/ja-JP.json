@@ -206,21 +206,21 @@
     },
     "panelSidebar": {
         "title": "パネルサイドバー",
-        "description": "パネルサイドバーは、さまざまなツール、ウェブサイト、および拡張機能をウィンドウの端に表示することができる機能です。 ここでは、パネルのカスタマイズ、追加、削除、管理を行うことができます。",
+        "description": "パネルサイドバーは、ウィンドウの側面に様々なツール、ウェブサイト、拡張機能を表示できる機能です。ここでパネルのカスタマイズ、追加、削除、管理ができます。",
         "basicSettings": "基本設定",
-        "howToUseAndCustomize": "使い方とパネルサイドバーのカスタマイズ",
-        "enableOrDisable": "有効化/無効化",
+        "howToUseAndCustomize": "パネルサイドバーの使い方とカスタマイズ",
+        "enableOrDisable": "有効/無効",
         "enablePanelSidebar": "パネルサイドバーを有効にする",
-        "enableDescription": "パネルサイドバーは Firefox のサイドバーとは別の機能です。 Firefox のサイドバーとは異なり、ウェブページを表示することができます。また、サイドバーでワークスペースを管理することもできます。",
+        "enableDescription": "パネルサイドバーはFirefoxのサイドバーとは異なり、干渉しません。Firefoxのサイドバーとは違い、パネルサイドバーはWebページを表示できます。また、サイドバーでワークスペースを管理することもできます。",
         "otherSettings": "その他のパネルサイドバー設定",
-        "autoUnloadOnClose": "閉じる操作をしたパネルの読み込みを停止",
+        "autoUnloadOnClose": "パネルを閉じる時にアンロードする",
         "position": "サイドバーの位置",
         "positionLeft": "左",
         "positionRight": "右",
-        "globalWidth": "ウェブパネル共通の幅",
-        "globalWidthDescription": "パネルの幅が 0 に設定されている場合は、共通の幅を使用します。",
-        "iconProviderRemoved": "{{productName}} は可能な限りウェブページから直接パネルアイコンを取得するようになったため、アイコンプロバイダー設定は削除されました。",
-        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。"
+        "globalWidth": "グローバルWebパネル幅",
+        "globalWidthDescription": "グローバル幅は、パネル幅が0に設定されている場合に適用されます。",
+        "iconProviderRemoved": "アイコンプロバイダー設定は削除されました。{{productName}}は可能な場合、Webページから直接パネルアイコンを取得します。",
+        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、{{productName}}の再起動が必要です。"
     },
     "progressiveWebApp": {
         "title": "ウェブアプリ",
@@ -408,5 +408,12 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "common": {
+        "edit": "編集",
+        "delete": "削除",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "loading": "読み込み中..."
     }
 }
