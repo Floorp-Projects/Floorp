@@ -1,9 +1,39 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
-import type { PanelSidebarFormData } from "@/types/pref";
+import type { PanelSidebarFormData } from "@/types/pref.ts";
 import type {
   Panel,
   Panels,
-} from "../../../../main/core/common/panel-sidebar/utils/type";
+} from "../../../../main/core/common/panel-sidebar/utils/type.ts";
+
+type Container = {
+  id: number | string;
+  name: string;
+  label: string;
+  icon: string;
+  color: string;
+};
+
+type StaticPanel = {
+  value: string;
+  label: string;
+  icon: string;
+};
+
+type ExtensionPanel = {
+  extensionId: string;
+  title: string;
+  iconUrl: string;
+};
+
+export function getStaticPanelDisplayName(
+  value: string | null,
+  t: Function,
+): string {
+  if (!value) return t("panelSidebar.untitled");
+
+  const staticPanelKey = value.replace("floorp//", "");
+  return t(`panelSidebar.staticPanels.${staticPanelKey}`) || value;
+}
 
 export async function savePanelSidebarSettings(
   data: PanelSidebarFormData,
@@ -39,10 +69,6 @@ export async function getPanelSidebarSettings(): Promise<
   };
 }
 
-/**
- * パネルの一覧データを取得します
- * @returns パネルの配列
- */
 export async function getPanelsList(): Promise<Panels | null> {
   const result = await rpc.getStringPref("floorp.panelSidebar.data");
   if (!result) {
@@ -58,10 +84,6 @@ export async function getPanelsList(): Promise<Panels | null> {
   }
 }
 
-/**
- * パネルの一覧を保存します
- * @param panels パネルの配列
- */
 export async function savePanelsList(panels: Panels): Promise<void> {
   await rpc.setStringPref(
     "floorp.panelSidebar.data",
@@ -69,10 +91,6 @@ export async function savePanelsList(panels: Panels): Promise<void> {
   );
 }
 
-/**
- * 新しいパネルを追加します
- * @param panel 追加するパネル
- */
 export async function addPanel(panel: Panel): Promise<void> {
   const panels = await getPanelsList();
   if (!panels) {
@@ -82,10 +100,6 @@ export async function addPanel(panel: Panel): Promise<void> {
   await savePanelsList([...panels, panel]);
 }
 
-/**
- * 既存のパネルを更新します
- * @param updatedPanel 更新するパネル
- */
 export async function updatePanel(updatedPanel: Panel): Promise<void> {
   const panels = await getPanelsList();
   if (!panels) {
@@ -99,10 +113,6 @@ export async function updatePanel(updatedPanel: Panel): Promise<void> {
   await savePanelsList(updatedPanels);
 }
 
-/**
- * パネルを削除します
- * @param panelId 削除するパネルのID
- */
 export async function deletePanel(panelId: string): Promise<void> {
   const panels = await getPanelsList();
   if (!panels) {
@@ -113,35 +123,25 @@ export async function deletePanel(panelId: string): Promise<void> {
   await savePanelsList(filteredPanels);
 }
 
-// データ取得の重複防止用フラグ
-let isGettingContainers = false;
-let isGettingStaticPanels = false;
-let isGettingExtensionPanels = false;
+const containersCache: Container[] = [];
+const staticPanelsCache: StaticPanel[] = [];
+const extensionPanelsCache: ExtensionPanel[] = [];
 
-// キャッシュ用変数
-let containersCache: any[] = [];
-let staticPanelsCache: any[] = [];
-let extensionPanelsCache: any[] = [];
+const fetchState = {
+  isGettingContainers: false,
+  isGettingStaticPanels: false,
+  isGettingExtensionPanels: false,
+};
 
-/**
- * コンテナーの一覧を取得します
- * @returns コンテナーのリスト
- */
-export async function getContainers() {
-  console.log("getContainers called");
-
-  // すでにキャッシュがあれば返す
+export async function getContainers(): Promise<Container[]> {
   if (containersCache.length > 0) {
-    console.log("Using containers cache", containersCache.length);
     return containersCache;
   }
 
-  // 重複実行防止
-  if (isGettingContainers) {
-    console.log("Already getting containers, waiting...");
+  if (fetchState.isGettingContainers) {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (!isGettingContainers && containersCache.length > 0) {
+        if (!fetchState.isGettingContainers && containersCache.length > 0) {
           clearInterval(checkInterval);
           resolve(containersCache);
         }
@@ -149,106 +149,90 @@ export async function getContainers() {
     });
   }
 
-  isGettingContainers = true;
+  fetchState.isGettingContainers = true;
 
-  // windowオブジェクトのNRGetContainerContextsが存在するか確認
   if (typeof (window as any).NRGetContainerContexts !== "function") {
     console.error("NRGetContainerContexts is not available");
-    isGettingContainers = false;
+    fetchState.isGettingContainers = false;
     return [];
   }
 
   try {
-    return new Promise((resolve) => {
-      // タイムアウト処理を追加
+    return new Promise<Container[]>((resolve) => {
       const timeoutId = setTimeout(() => {
-        console.warn("getContainers timed out");
-        isGettingContainers = false;
+        console.error("Containers fetch timed out");
+        fetchState.isGettingContainers = false;
         resolve([]);
       }, 5000);
 
-      const callback = (containersStr: string) => {
+      const callback = (dataStr: string) => {
         clearTimeout(timeoutId);
-        console.log("Container callback received data");
         try {
-          const containers = JSON.parse(containersStr);
-          console.log(`Parsed ${containers.length} containers`, containers);
+          const parsedData = JSON.parse(dataStr);
+          const formattedData = Array.isArray(parsedData)
+            ? parsedData.map((container: any) => {
+              let containerId: number | string = 0;
 
-          // 形式変換: {id, label, icon} → {id, name, label, icon, color}
-          const formattedContainers = containers.map((container: any) => {
-            // IDの変換処理を修正
-            let containerId = 0;
-            if (container.id === "0") {
-              containerId = 0;
-            } else {
-              try {
-                containerId = Number.parseInt(container.id, 10);
-                // 数値に変換できない場合は元の文字列を保持
-                if (isNaN(containerId)) {
-                  console.warn(
-                    `Invalid container ID: ${container.id}, using original string`,
+              if (container.id === "0") {
+                containerId = 0;
+              } else {
+                try {
+                  containerId = Number.parseInt(container.id, 10);
+                  if (isNaN(containerId)) {
+                    console.error(
+                      `Invalid container ID: ${container.id}, using original string`,
+                    );
+                    containerId = container.id;
+                  }
+                } catch (error) {
+                  console.error(
+                    `Error parsing container ID: ${container.id}`,
+                    error,
                   );
                   containerId = container.id;
                 }
-              } catch (error) {
-                console.error(
-                  `Error parsing container ID: ${container.id}`,
-                  error,
-                );
-                containerId = container.id;
               }
-            }
 
-            return {
-              id: containerId,
-              name: container.label,
-              label: container.label,
-              icon: container.icon || "",
-              color: container.color || "",
-            };
-          });
+              return {
+                id: containerId,
+                name: container.label,
+                label: container.label,
+                icon: container.icon || "",
+                color: container.color || "",
+              };
+            })
+            : [];
 
-          // キャッシュに保存
-          containersCache = formattedContainers;
-          isGettingContainers = false;
+          containersCache.length = 0;
+          containersCache.push(...formattedData);
+          fetchState.isGettingContainers = false;
 
-          resolve(formattedContainers);
+          resolve(formattedData);
         } catch (error) {
-          console.error("Failed to parse containers:", error);
-          isGettingContainers = false;
+          console.error("Failed to parse containers data:", error);
+          fetchState.isGettingContainers = false;
           resolve([]);
         }
       };
 
-      console.log("Calling NRGetContainerContexts");
       (window as any).NRGetContainerContexts(callback);
     });
   } catch (error) {
     console.error("Failed to get containers:", error);
-    isGettingContainers = false;
+    fetchState.isGettingContainers = false;
     return [];
   }
 }
 
-/**
- * 静的パネルの一覧を取得します
- * @returns 静的パネルのリスト
- */
-export async function getStaticPanels() {
-  console.log("getStaticPanels called");
-
-  // すでにキャッシュがあれば返す
+export async function getStaticPanels(): Promise<StaticPanel[]> {
   if (staticPanelsCache.length > 0) {
-    console.log("Using static panels cache", staticPanelsCache.length);
     return staticPanelsCache;
   }
 
-  // 重複実行防止
-  if (isGettingStaticPanels) {
-    console.log("Already getting static panels, waiting...");
+  if (fetchState.isGettingStaticPanels) {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (!isGettingStaticPanels && staticPanelsCache.length > 0) {
+        if (!fetchState.isGettingStaticPanels && staticPanelsCache.length > 0) {
           clearInterval(checkInterval);
           resolve(staticPanelsCache);
         }
@@ -256,74 +240,67 @@ export async function getStaticPanels() {
     });
   }
 
-  isGettingStaticPanels = true;
+  fetchState.isGettingStaticPanels = true;
 
-  // windowオブジェクトのNRGetStaticPanelsが存在するか確認
   if (typeof (window as any).NRGetStaticPanels !== "function") {
     console.error("NRGetStaticPanels is not available");
-    isGettingStaticPanels = false;
+    fetchState.isGettingStaticPanels = false;
     return [];
   }
 
   try {
-    return new Promise((resolve) => {
-      // タイムアウト処理を追加
+    return new Promise<StaticPanel[]>((resolve) => {
       const timeoutId = setTimeout(() => {
-        console.warn("getStaticPanels timed out");
-        isGettingStaticPanels = false;
+        console.error("Static panels fetch timed out");
+        fetchState.isGettingStaticPanels = false;
         resolve([]);
       }, 5000);
 
-      const callback = (panelsStr: string) => {
+      const callback = (dataStr: string) => {
         clearTimeout(timeoutId);
-        console.log("Static panels callback received data");
         try {
-          const panels = JSON.parse(panelsStr);
-          console.log(`Parsed ${panels.length} static panels`);
+          const parsedData = JSON.parse(dataStr);
+          const formattedData = Array.isArray(parsedData)
+            ? parsedData.map((panel: any) => ({
+              value: panel.id,
+              label: panel.title,
+              icon: panel.icon || "",
+            }))
+            : [];
 
-          const formattedPanels = panels.map((panel: any) => ({
-            value: panel.id,
-            label: panel.title,
-            icon: panel.icon || "",
-          }));
+          staticPanelsCache.length = 0;
+          staticPanelsCache.push(...formattedData);
+          fetchState.isGettingStaticPanels = false;
 
-          staticPanelsCache = formattedPanels;
-          isGettingStaticPanels = false;
-
-          resolve(formattedPanels);
+          resolve(formattedData);
         } catch (error) {
-          console.error("Failed to parse static panels:", error);
-          isGettingStaticPanels = false;
+          console.error("Failed to parse static panels data:", error);
+          fetchState.isGettingStaticPanels = false;
           resolve([]);
         }
       };
 
-      console.log("Calling NRGetStaticPanels");
       (window as any).NRGetStaticPanels(callback);
     });
   } catch (error) {
     console.error("Failed to get static panels:", error);
-    isGettingStaticPanels = false;
+    fetchState.isGettingStaticPanels = false;
     return [];
   }
 }
 
-/**
- * 拡張機能パネルの一覧を取得します
- * @returns 拡張機能パネルのリスト
- */
-export async function getExtensionPanels() {
-  console.log("getExtensionPanels called");
-
+export async function getExtensionPanels(): Promise<ExtensionPanel[]> {
   if (extensionPanelsCache.length > 0) {
-    console.log("Using extension panels cache", extensionPanelsCache.length);
     return extensionPanelsCache;
   }
 
-  if (isGettingExtensionPanels) {
+  if (fetchState.isGettingExtensionPanels) {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (!isGettingExtensionPanels && extensionPanelsCache.length > 0) {
+        if (
+          !fetchState.isGettingExtensionPanels &&
+          extensionPanelsCache.length > 0
+        ) {
           clearInterval(checkInterval);
           resolve(extensionPanelsCache);
         }
@@ -331,51 +308,51 @@ export async function getExtensionPanels() {
     });
   }
 
-  isGettingExtensionPanels = true;
+  fetchState.isGettingExtensionPanels = true;
 
-  // windowオブジェクトのNRGetExtensionPanelsが存在するか確認
   if (typeof (window as any).NRGetExtensionPanels !== "function") {
     console.error("NRGetExtensionPanels is not available");
-    isGettingExtensionPanels = false;
+    fetchState.isGettingExtensionPanels = false;
     return [];
   }
 
   try {
-    return new Promise((resolve) => {
+    return new Promise<ExtensionPanel[]>((resolve) => {
       const timeoutId = setTimeout(() => {
-        console.warn("getExtensionPanels timed out");
-        isGettingExtensionPanels = false;
+        console.error("Extension panels fetch timed out");
+        fetchState.isGettingExtensionPanels = false;
         resolve([]);
       }, 5000);
 
-      const callback = (extensionsStr: string) => {
+      const callback = (dataStr: string) => {
         clearTimeout(timeoutId);
         try {
-          const extensions = JSON.parse(extensionsStr);
+          const parsedData = JSON.parse(dataStr);
+          const formattedData = Array.isArray(parsedData)
+            ? parsedData.map((ext: any) => ({
+              extensionId: ext.value,
+              title: ext.label,
+              iconUrl: ext.icon || "",
+            }))
+            : [];
 
-          const formattedExtensions = extensions.map((ext: any) => ({
-            extensionId: ext.value,
-            title: ext.label,
-            iconUrl: ext.icon || "",
-          }));
+          extensionPanelsCache.length = 0;
+          extensionPanelsCache.push(...formattedData);
+          fetchState.isGettingExtensionPanels = false;
 
-          extensionPanelsCache = formattedExtensions;
-          isGettingExtensionPanels = false;
-
-          resolve(formattedExtensions);
+          resolve(formattedData);
         } catch (error) {
-          console.error("Failed to parse extension panels:", error);
-          isGettingExtensionPanels = false;
+          console.error("Failed to parse extension panels data:", error);
+          fetchState.isGettingExtensionPanels = false;
           resolve([]);
         }
       };
 
-      console.log("Calling NRGetExtensionPanels");
       (window as any).NRGetExtensionPanels(callback);
     });
   } catch (error) {
     console.error("Failed to get extension panels:", error);
-    isGettingExtensionPanels = false;
+    fetchState.isGettingExtensionPanels = false;
     return [];
   }
 }

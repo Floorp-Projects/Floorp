@@ -33,12 +33,9 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
   }
 
   receiveMessage(message: { name: string; data?: any }) {
-    console.log("NRPanelSidebarParent receiveMessage:", message.name);
-
     switch (message.name) {
       case "NRPanelSidebar:GetContainerContexts": {
         const containers = this.getContainerContextsData();
-        console.log("Sending containers to child:", containers.length);
         this.sendAsyncMessage(
           "NRPanelSidebar:GetContainerContexts",
           JSON.stringify(containers),
@@ -47,7 +44,6 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
       }
       case "NRPanelSidebar:GetExtensionPanels": {
         const extensions = this.getExtensionPanelsData();
-        console.log("Sending extensions to child:", extensions.length);
         this.sendAsyncMessage(
           "NRPanelSidebar:GetExtensionPanels",
           JSON.stringify(extensions),
@@ -86,8 +82,6 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
       })),
     ];
 
-    console.log(containerOptions);
-
     return containerOptions;
   }
 
@@ -110,8 +104,6 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
       label: extension.title,
       icon: extension.iconUrl,
     }));
-
-    console.log(extensionPanels);
 
     return extensionPanels;
   }

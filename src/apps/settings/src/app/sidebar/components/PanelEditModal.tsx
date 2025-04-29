@@ -1,13 +1,14 @@
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Panel } from "../../../../../main/core/common/panel-sidebar/utils/type";
+import type { Panel } from "../../../../../main/core/common/panel-sidebar/utils/type.ts";
 import { X } from "lucide-react";
 import {
   getContainers,
   getExtensionPanels,
+  getStaticPanelDisplayName,
   getStaticPanels,
-} from "../dataManager";
+} from "../dataManager.ts";
 
 interface PanelEditModalProps {
   panel: Panel;
@@ -48,7 +49,6 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
   const [extensionPanels, setExtensionPanels] = useState<ExtensionPanel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // データの取得処理をuseCallbackでメモ化
   const fetchPanelData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -59,14 +59,8 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
           getExtensionPanels(),
         ]);
 
-      console.log("Loaded containers:", containersData?.length);
-      console.log("Loaded static panels:", staticPanelsData?.length);
-      console.log("Loaded extension panels:", extensionPanelsData?.length);
-
-      // コンテナーのデータ形式を検証
       if (containersData && Array.isArray(containersData)) {
-        console.log("Container sample:", containersData[0]);
-        setContainers(containersData);
+        setContainers(containersData as any);
       } else {
         console.error("Invalid containers data", containersData);
         setContainers([]);
@@ -90,17 +84,13 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     }
   }, []);
 
-  // 初回マウント時にのみデータ取得を実行
   useEffect(() => {
     fetchPanelData();
 
-    // クリーンアップ関数
     return () => {
-      // キャンセル処理があれば実装
     };
   }, [fetchPanelData]);
 
-  // パネルのタイプに応じて適切なコンポーネントの表示を制御
   const shouldShowWebFields = editedPanel.type === "web";
   const shouldShowStaticFields = editedPanel.type === "static";
   const shouldShowExtensionFields = editedPanel.type === "extension";
@@ -115,14 +105,12 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     return `https://${url}`;
   };
 
-  // フォームの入力値が変更された時の処理
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
 
     if (name === "type") {
-      // パネルタイプが変更された場合、不要なフィールドをリセットする
       const newPanel = {
         ...editedPanel,
         [name]: value as "web" | "static" | "extension",
@@ -143,8 +131,12 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
 
       setEditedPanel(newPanel);
     } else if (name === "url") {
-      const formattedUrl = validateAndFormatUrl(value);
-      setEditedPanel({ ...editedPanel, [name]: formattedUrl });
+      if (editedPanel.type === "web") {
+        const formattedUrl = validateAndFormatUrl(value);
+        setEditedPanel({ ...editedPanel, [name]: formattedUrl });
+      } else {
+        setEditedPanel({ ...editedPanel, [name]: value });
+      }
     } else if (name === "width") {
       setEditedPanel({ ...editedPanel, [name]: Number(value) });
     } else if (name === "zoomLevel") {
@@ -161,7 +153,6 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     }
   };
 
-  // チェックボックスの変更処理
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setEditedPanel({ ...editedPanel, [name]: checked });
@@ -181,6 +172,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
         try {
           new URL(editedPanel.url);
         } catch (e) {
+          console.error("Invalid URL:", e);
           newErrors.url = t("panelSidebar.errors.invalidUrl");
         }
       }
@@ -190,21 +182,14 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
       newErrors.extensionId = t("panelSidebar.errors.extensionIdRequired");
     }
 
-    if (!editedPanel.width || editedPanel.width < 100) {
-      newErrors.width = t("panelSidebar.errors.invalidWidth");
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // 保存処理
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
-      // 保存前にパネルデータの整合性を確認
-      console.log("Saving panel:", editedPanel);
       onSave(editedPanel);
     }
   };
@@ -311,7 +296,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
                 <option value="">{t("panelSidebar.selectStaticPanel")}</option>
                 {staticPanels.map((panel) => (
                   <option key={panel.value} value={panel.value}>
-                    {panel.label}
+                    {getStaticPanelDisplayName(panel.value, t)}
                   </option>
                 ))}
               </select>
@@ -376,7 +361,6 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
             <input
               type="number"
               name="width"
-              min="100"
               value={editedPanel.width}
               onChange={handleChange}
               className="input input-bordered w-full"
@@ -449,10 +433,10 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
 
           <div className="modal-action mt-6">
             <button type="button" onClick={onClose} className="btn btn-outline">
-              {t("common.cancel")}
+              {t("panelSidebar.cancel")}
             </button>
             <button type="submit" className="btn btn-primary">
-              {t("common.save")}
+              {t("panelSidebar.save")}
             </button>
           </div>
         </form>

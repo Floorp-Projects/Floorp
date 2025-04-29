@@ -220,32 +220,7 @@
         "globalWidth": "グローバルWebパネル幅",
         "globalWidthDescription": "グローバル幅は、パネル幅が0に設定されている場合に適用されます。",
         "iconProviderRemoved": "アイコンプロバイダー設定は削除されました。{{productName}}は可能な場合、Webページから直接パネルアイコンを取得します。",
-        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、{{productName}}の再起動が必要です。",
-        "panelList": "パネル一覧",
-        "addPanel": "パネルを追加",
-        "editPanel": "パネルを編集",
-        "noPanels": "パネルがありません",
-        "confirmDelete": "このパネルを削除してもよろしいですか？",
-        "untitled": "名称未設定",
-        "type": {
-            "web": "Webパネル",
-            "static": "静的パネル",
-            "extension": "拡張機能パネル"
-        },
-        "panelType": "パネルタイプ",
-        "url": "URL",
-        "extensionId": "拡張機能ID",
-        "icon": "アイコン",
-        "width": "幅",
-        "zoomLevel": "ズームレベル",
-        "userContextId": "コンテナID",
-        "useUserAgent": "ユーザーエージェントを使用",
-        "errors": {
-            "typeRequired": "パネルタイプは必須です",
-            "urlRequired": "URLは必須です",
-            "extensionIdRequired": "拡張機能IDは必須です",
-            "invalidWidth": "幅は100px以上である必要があります"
-        }
+        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、{{productName}}の再起動が必要です。"
     },
     "progressiveWebApp": {
         "title": "ウェブアプリ",

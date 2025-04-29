@@ -5,14 +5,12 @@
 
 export class NRPanelSidebarChild extends JSWindowActorChild {
   actorCreated() {
-    console.debug("NRPanelSidebarChild created!");
     const window = this.contentWindow;
     if (
       window?.location.port === "5183" ||
       window?.location.href.startsWith("chrome://noraneko-settings") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRPanelSidebarChild activated for settings page!");
       Cu.exportFunction(this.GetContainerContexts.bind(this), window, {
         defineAs: "NRGetContainerContexts",
       });
@@ -25,73 +23,56 @@ export class NRPanelSidebarChild extends JSWindowActorChild {
     }
   }
 
-  // コンテナー情報を取得
   GetContainerContexts(callback: (containers: string) => void = () => {}) {
-    console.log("GetContainerContexts called");
     const promise = new Promise<string>((resolve, _reject) => {
       this.resolveGetContainerContexts = resolve;
     });
     this.sendAsyncMessage("NRPanelSidebar:GetContainerContexts");
     promise.then((containers) => {
-      console.log(
-        "Received container data:",
-        containers.substring(0, 100) + "...",
-      );
       callback(containers);
     });
   }
 
   resolveGetContainerContexts: ((containers: string) => void) | null = null;
 
-  // 静的パネル情報を取得（手打ちデータ）
   GetStaticPanels(callback: (panels: string) => void = () => {}) {
-    console.log("GetStaticPanels called");
-    // 静的パネルの情報を手動で定義
     const staticPanels = [
       {
         id: "floorp//bmt",
-        title: "ブックマーク",
+        title: "bookmark",
         icon: "chrome://browser/skin/bookmark.svg",
       },
       {
         id: "floorp//bookmarks",
-        title: "ブックマーク",
+        title: "bookmark",
         icon: "chrome://browser/skin/bookmark.svg",
       },
       {
         id: "floorp//history",
-        title: "履歴",
+        title: "history",
         icon: "chrome://browser/skin/history.svg",
       },
       {
         id: "floorp//downloads",
-        title: "ダウンロード",
+        title: "downloads",
         icon: "chrome://browser/skin/downloads/downloads.svg",
       },
       {
         id: "floorp//notes",
-        title: "ノート",
+        title: "notes",
         icon: "chrome://browser/skin/notes.svg",
       },
     ];
-    // 直接コールバックを呼び出し
     const panelsStr = JSON.stringify(staticPanels);
-    console.log("Static panels data:", panelsStr.substring(0, 100) + "...");
     callback(panelsStr);
   }
 
-  // 拡張機能パネル情報を取得
   GetExtensionPanels(callback: (extensions: string) => void = () => {}) {
-    console.log("GetExtensionPanels called");
     const promise = new Promise<string>((resolve, _reject) => {
       this.resolveGetExtensionPanels = resolve;
     });
     this.sendAsyncMessage("NRPanelSidebar:GetExtensionPanels");
     promise.then((extensions) => {
-      console.log(
-        "Received extensions data:",
-        extensions.substring(0, 100) + "...",
-      );
       callback(extensions);
     });
   }
@@ -99,17 +80,13 @@ export class NRPanelSidebarChild extends JSWindowActorChild {
   resolveGetExtensionPanels: ((extensions: string) => void) | null = null;
 
   receiveMessage(message: { name: string; data: any }) {
-    console.log("NRPanelSidebarChild receiveMessage:", message.name);
-
     switch (message.name) {
       case "NRPanelSidebar:GetContainerContexts": {
-        console.log("Resolving container contexts with data");
         this.resolveGetContainerContexts?.(message.data);
         this.resolveGetContainerContexts = null;
         break;
       }
       case "NRPanelSidebar:GetExtensionPanels": {
-        console.log("Resolving extension panels with data");
         this.resolveGetExtensionPanels?.(message.data);
         this.resolveGetExtensionPanels = null;
         break;

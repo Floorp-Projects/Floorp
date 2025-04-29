@@ -225,21 +225,29 @@
         "globalWidthDescription": "Global width is applied when panel width is set to 0.",
         "iconProviderRemoved": "The icon provider setting has been removed as {{productName}} now tries to get panel icons directly from web pages when possible.",
         "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the panel sidebar feature.",
-        "staticPanel": "Static Panel",
+        "staticPanel": "Sidebar Tool Panel",
         "extensionPanel": "Extension Panel",
-        "selectStaticPanel": "Select a static panel",
+        "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
         "noContainer": "No Container",
-        "useUserAgent": "Use User Agent",
+        "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
+        "panelList": "Panel List",
         "type": {
             "web": "Web",
-            "static": "Static",
+            "static": "Sidebar Tool",
             "extension": "Extension"
+        },
+        "staticPanels": {
+            "bmt": "Unified Tools",
+            "bookmarks": "Bookmarks",
+            "history": "History",
+            "downloads": "Downloads",
+            "notes": "Notes"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -252,7 +260,9 @@
             "invalidUrl": "Please enter a valid URL",
             "extensionIdRequired": "Extension ID is required for extension panels",
             "invalidWidth": "Width must be at least 100 pixels"
-        }
+        },
+        "save": "Save",
+        "cancel": "Cancel"
     },
     "progressiveWebApp": {
         "title": "Web Apps",
