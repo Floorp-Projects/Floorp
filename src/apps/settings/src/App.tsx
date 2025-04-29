@@ -25,7 +25,8 @@ function useHashSync() {
     if (location.pathname) {
       const currentHash = globalThis.location.hash.slice(1);
       if (currentHash !== location.pathname) {
-        globalThis.history.replaceState(null, "", `#${location.pathname}`);
+        globalThis.location.hash = location.pathname;
+        document.documentElement.dataset.isRouteChanged = "true";
       }
     }
   }, [location.pathname]);

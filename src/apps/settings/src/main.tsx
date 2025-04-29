@@ -12,6 +12,11 @@ const getInitialEntry = () => {
 };
 
 globalThis.addEventListener("hashchange", () => {
+  if (document.documentElement.dataset.isRouteChanged === "true") {
+    document.documentElement.dataset.isRouteChanged = "false";
+    return;
+  }
+
   const hash = globalThis.location.hash.slice(1);
   if (hash && hash.startsWith("/")) {
     globalThis.location.reload();
