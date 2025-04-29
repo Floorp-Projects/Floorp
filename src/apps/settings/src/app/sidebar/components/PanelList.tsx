@@ -36,7 +36,14 @@ import type {
   Panels,
 } from "../../../../../../apps/main/core/common/panel-sidebar/utils/type.ts";
 import { PanelEditModal } from "./PanelEditModal.tsx";
-import { Edit, GripVertical, List, Plus, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Edit,
+  GripVertical,
+  List,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -131,6 +138,45 @@ const restrictToVerticalAxis: Modifier = ({ transform }) => {
   };
 };
 
+const DeleteConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  panelName,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  panelName: string;
+}) => {
+  const { t } = useTranslation();
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-warning" />
+          {t("panelSidebar.confirmDeleteTitle")}
+        </h3>
+        <p className="py-4">
+          {t("panelSidebar.confirmDelete", { name: panelName })}
+        </p>
+        <div className="modal-action">
+          <button onClick={onClose} className="btn btn-outline">
+            {t("panelSidebar.cancel")}
+          </button>
+          <button onClick={onConfirm} className="btn btn-error">
+            {t("panelSidebar.delete")}
+          </button>
+        </div>
+      </div>
+      <div className="modal-backdrop" onClick={onClose}></div>
+    </div>
+  );
+};
+
 export const PanelList: React.FC = () => {
   const { t } = useTranslation();
   const [panels, setPanels] = useState<Panels>([]);
@@ -138,6 +184,8 @@ export const PanelList: React.FC = () => {
   const [currentPanel, setCurrentPanel] = useState<Panel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [panelToDelete, setPanelToDelete] = useState<Panel | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -202,14 +250,27 @@ export const PanelList: React.FC = () => {
     }
   };
 
-  const handleDeletePanel = async (panelId: string) => {
-    if (window.confirm(t("panelSidebar.confirmDelete"))) {
-      await deletePanel(panelId);
-      const updatedPanels = await getPanelsList();
-      if (updatedPanels) {
-        setPanels(updatedPanels);
-      }
+  const handleShowDeleteModal = (panel: Panel) => {
+    setPanelToDelete(panel);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeletePanel = async () => {
+    if (!panelToDelete) return;
+
+    await deletePanel(panelToDelete.id);
+    const updatedPanels = await getPanelsList();
+    if (updatedPanels) {
+      setPanels(updatedPanels);
     }
+
+    setIsDeleteModalOpen(false);
+    setPanelToDelete(null);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentPanel(null);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -231,9 +292,9 @@ export const PanelList: React.FC = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentPanel(null);
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setPanelToDelete(null);
   };
 
   if (isLoading) {
@@ -288,7 +349,7 @@ export const PanelList: React.FC = () => {
                       key={panel.id}
                       panel={panel}
                       onEdit={handleEditPanel}
-                      onDelete={handleDeletePanel}
+                      onDelete={() => handleShowDeleteModal(panel)}
                     />
                   ))}
                 </div>
@@ -301,7 +362,10 @@ export const PanelList: React.FC = () => {
                     <SortablePanel
                       panel={panels.find((p) => p.id === activeId)!}
                       onEdit={handleEditPanel}
-                      onDelete={handleDeletePanel}
+                      onDelete={() =>
+                        handleShowDeleteModal(
+                          panels.find((p) => p.id === activeId)!,
+                        )}
                     />
                   )
                   : null}
@@ -317,6 +381,18 @@ export const PanelList: React.FC = () => {
           onClose={handleCloseModal}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeletePanel}
+        panelName={panelToDelete
+          ? panelToDelete.type === "static"
+            ? getStaticPanelDisplayName(panelToDelete.url as string, t)
+            : (panelToDelete.url || panelToDelete.extensionId ||
+              t("panelSidebar.untitled"))
+          : ""}
+      />
     </Card>
   );
 };

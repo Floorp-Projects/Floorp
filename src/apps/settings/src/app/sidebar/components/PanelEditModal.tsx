@@ -178,6 +178,10 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
       }
     }
 
+    if (editedPanel.type === "static" && !editedPanel.url) {
+      newErrors.url = t("panelSidebar.errors.staticPanelRequired");
+    }
+
     if (editedPanel.type === "extension" && !editedPanel.extensionId) {
       newErrors.extensionId = t("panelSidebar.errors.extensionIdRequired");
     }
