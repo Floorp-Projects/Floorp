@@ -48,7 +48,7 @@ export default function CustomizePage() {
                 let currentTheme: "system" | "light" | "dark" = "system";
                 if (themePref === 1) {
                     currentTheme = "light";
-                } else if (themePref === 2) {
+                } else if (themePref === 0) {
                     currentTheme = "dark";
                 } else {
                     currentTheme = "system";
@@ -246,4 +246,4 @@ export default function CustomizePage() {
             <Navigation />
         </div>
     );
-} 
+}
