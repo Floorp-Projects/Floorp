@@ -16,11 +16,10 @@ import {
 } from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
-import { CPanelSidebar } from "./panel-sidebar";
+import type { CPanelSidebar } from "./panel-sidebar";
 
 export class PanelSidebarElem {
-
-  ctx: CPanelSidebar
+  ctx: CPanelSidebar;
 
   private get documentElement() {
     return document?.documentElement as XULElement;
@@ -63,7 +62,7 @@ export class PanelSidebarElem {
       <Show when={isPanelSidebarEnabled()}>
         <xul:vbox
           id="panel-sidebar-box"
-          class="chromeclass-extrachrome"
+          class="chromeclass-extrachrome chromeclass-directories instant customization-target"
           data-floating={isFloating().toString()}
         >
           <SidebarHeader ctx={this.ctx} />

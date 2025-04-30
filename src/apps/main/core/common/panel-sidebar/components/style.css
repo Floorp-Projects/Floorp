@@ -361,8 +361,19 @@
 /* Child Windows */
 #browser[data-is-child] > #panel-sidebar-select-box,
 #browser[data-is-child] > #panel-sidebar-box,
-#browser[data-is-child] > #sidebar-main {
+#browser[data-is-child] > #sidebar-main,
+#browser[data-is-child] > #sidebar-wrapper {
   display: none;
+}
+
+:root[chromehidden~="menubar"] .chromeclass-menubar,
+:root[chromehidden~="directories"] .chromeclass-directories,
+:root[chromehidden~="status"] .chromeclass-status,
+:root[chromehidden~="extrachrome"] .chromeclass-extrachrome,
+:root[chromehidden~="location"] .chromeclass-location,
+:root[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
+:root[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
+  display: none !important;
 }
 
 #after-splitter {

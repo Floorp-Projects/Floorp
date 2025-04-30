@@ -13,7 +13,7 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
   return (
     <xul:vbox
       id="panel-sidebar-select-box"
-      class="webpanel-box chromeclass-extrachrome"
+      class="webpanel-box chromeclass-extrachrome chromeclass-directories instant customization-target"
     >
       <For each={panelSidebarData()}>
         {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
