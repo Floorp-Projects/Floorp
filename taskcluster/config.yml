@@ -837,6 +837,25 @@ workers:
             implementation: treescript
             os: scriptworker
             worker-type: '{trust-domain}-1-tree-dev'
+        lando:
+            provisioner: scriptworker-k8s
+            implementation: landoscript
+            os: linux
+            worker-type:
+                by-project:
+                    # Autoland is treated specially here because any landoscript
+                    # tasks that run on it must be done on level 3 workers
+                    # (so they can actually push changes). On other projects
+                    # `release-level` would handle this just fine, but
+                    # `autoland` is considered a "staging" release level for
+                    # historical reasons.
+                    # https://bugzilla.mozilla.org/show_bug.cgi?id=1960918
+                    # seeks to improve this situation.
+                    autoland: '{trust-domain}-3-lando'
+                    default:
+                        by-release-level:
+                            production: '{trust-domain}-3-lando'
+                            staging: '{trust-domain}-1-lando'
         t-bitbar-gw.*:
             provisioner: proj-autophone
             implementation: generic-worker

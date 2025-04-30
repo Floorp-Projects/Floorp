@@ -1499,6 +1499,11 @@ def build_treescript_payload(config, task, task_def):
         task_def["payload"]["ssh_user"] = worker["ssh-user"]
 
 
+@payload_builder("landoscript", schema={})
+def build_landoscript_payload(config, task, task_def):
+    pass
+
+
 @payload_builder(
     "invalid",
     schema={
