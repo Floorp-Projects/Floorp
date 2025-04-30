@@ -1,5 +1,5 @@
---- ./browser/modules/AsyncTabSwitcher.sys.mjs
-+++ ./browser/modules/AsyncTabSwitcher.sys.mjs
+--- ./moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs
++++ ./moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs
 @@ -77,6 +77,11 @@
   * actually takes place. Therefore, we don't unload the old tab
   * until the next MozAfterPaint event.
