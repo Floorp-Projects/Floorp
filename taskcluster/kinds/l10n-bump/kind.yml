@@ -9,29 +9,51 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 task-defaults:
-    worker-type: tree
+    worker-type: lando
+    scopes:
+        by-project:
+            mozilla-beta:
+                - project:releng:lando:repo:firefox-beta
+                - project:releng:lando:action:l10n_bump
+            mozilla-central:
+                - project:releng:lando:repo:firefox-main
+                - project:releng:lando:action:l10n_bump
+            autoland:
+                - project:releng:lando:repo:firefox-autoland
+                - project:releng:lando:action:l10n_bump
+            mozilla-release:
+                - project:releng:lando:repo:firefox-release
+                - project:releng:lando:action:l10n_bump
+            mozilla-esr128:
+                - project:releng:lando:repo:firefox-esr128
+                - project:releng:lando:action:l10n_bump
+            try:
+                - project:releng:lando:repo:ff-test-dev
+                - project:releng:lando:action:l10n_bump
+            # set a default to avoid failing tgdiff tests on other branches
+            # even though this doesn't run there
+            default: []
     worker:
-        implementation: treescript
-        tags: []
-        bump: false
+        implementation: landoscript
         dontbuild:
             by-project:
                 mozilla-beta: false
                 default: true
         ignore-closed-tree:
             by-project:
-                autoland: true
-                default: false
-        push:
+                mozilla-beta: false
+                default: true
+        lando-repo:
             by-project:
-                mozilla-(central|beta): true
-                autoland: true
-                default: false
-        source-repo:
-            by-release-type:
-                beta: https://hg.mozilla.org/releases/mozilla-beta
-                nightly: https://hg.mozilla.org/mozilla-central
-                default: https://hg.mozilla.org/integration/autoland
+                mozilla-central: main
+                mozilla-beta: firefox-beta
+                mozilla-release: firefox-release
+                mozilla-esr128: firefox-esr128
+                autoland: firefox-autoland
+                try: ff-test-dev
+                # set a default to avoid failing tgdiff tests on other branches
+                # even though this doesn't run there
+                default: ''
         l10n-bump-info:
             by-release-type:
                 # XXX whenever the `beta` config changes, make sure to make
@@ -39,7 +61,6 @@ task-defaults:
                 beta:
                     - name: Firefox l10n changesets
                       path: browser/locales/l10n-changesets.json
-                      version-path: browser/config/version.txt
                       l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                       l10n-repo-target-branch: main
                       ignore-config:
@@ -84,7 +105,6 @@ task-defaults:
                       path: mobile/locales/l10n-changesets.json
                       l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                       l10n-repo-target-branch: main
-                      version-path: mobile/android/version.txt
                       platform-configs:
                           [
                               {
@@ -102,7 +122,6 @@ task-defaults:
                       path: browser/locales/l10n-changesets.json
                       l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                       l10n-repo-target-branch: main
-                      version-path: browser/config/version.txt
                       ignore-config:
                           ja:
                               - macosx64
@@ -145,7 +164,6 @@ task-defaults:
                       path: mobile/locales/l10n-changesets.json
                       l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                       l10n-repo-target-branch: main
-                      version-path: mobile/android/version.txt
                       platform-configs:
                           [
                               {
