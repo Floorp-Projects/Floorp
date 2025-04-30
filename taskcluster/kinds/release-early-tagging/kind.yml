@@ -1,5 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 loader: taskgraph.loader.transform:loader
@@ -13,18 +11,45 @@ task-defaults:
     description: Release Promotion version tag for buildN
     run-on-projects: []
     shipping-phase: promote
-    worker-type: tree
+    worker-type: lando
+    scopes:
+        by-project:
+            mozilla-beta:
+                - project:releng:lando:repo:firefox-beta
+                - project:releng:lando:action:tag
+            mozilla-release:
+                - project:releng:lando:repo:firefox-release
+                - project:releng:lando:action:tag
+            mozilla-esr115:
+                - project:releng:lando:repo:firefox-esr115
+                - project:releng:lando:action:tag
+            mozilla-esr128:
+                - project:releng:lando:repo:firefox-esr128
+                - project:releng:lando:action:tag
+            try:
+                - project:releng:lando:repo:ff-test-dev
+                - project:releng:lando:action:tag
+            default: []
     worker:
-        implementation: treescript
+        implementation: landoscript
         tags: ['buildN']
-        bump: false
-        dontbuild: true
-        push:
+        lando-repo:
             by-project:
-                mozilla-(beta|release|esr.*): true
-                maple: true
-                default: false
-
+                mozilla-beta: firefox-beta
+                mozilla-release: firefox-release
+                mozilla-esr115: firefox-esr115
+                mozilla-esr128: firefox-esr128
+                try: ff-test-dev
+                default: ""
+        # used to map hg revisions to the git revisions that landoscript needs
+        hg-repo-url:
+            by-project:
+                mozilla-beta: https://hg.mozilla.org/releases/mozilla-beta
+                mozilla-release: https://hg.mozilla.org/releases/mozilla-release
+                mozilla-esr115: https://hg.mozilla.org/releases/mozilla-esr115
+                mozilla-esr128: https://hg.mozilla.org/releases/mozilla-esr128
+                try: https://hg.mozilla.org/try
+                default: ""
 
 tasks:
     firefox:

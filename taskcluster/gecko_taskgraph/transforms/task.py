@@ -1503,8 +1503,10 @@ def build_treescript_payload(config, task, task_def):
     "landoscript",
     schema={
         Required("lando-repo"): str,
+        Optional("hg-repo-url"): str,
         Optional("ignore-closed-tree"): bool,
         Optional("dontbuild"): bool,
+        Optional("tags"): [Any("buildN", "release", None)],
         Optional("android-l10n-import-info"): {
             Required("from-repo-url"): str,
             Required("toml-info"): [
@@ -1542,6 +1544,7 @@ def build_treescript_payload(config, task, task_def):
 )
 def build_landoscript_payload(config, task, task_def):
     worker = task["worker"]
+    release_config = get_release_config(config)
     task_def["payload"] = {"actions": [], "lando_repo": worker["lando-repo"]}
     actions = task_def["payload"]["actions"]
 
@@ -1601,6 +1604,29 @@ def build_landoscript_payload(config, task, task_def):
             )
         elif len(l10n_repo_urls) == 1:
             actions.append("l10n_bump")
+
+    if worker.get("tags"):
+        tag_names = []
+        product = task["shipping-product"].upper()
+        version = release_config["version"].replace(".", "_")
+        buildnum = release_config["build_number"]
+        if "buildN" in worker["tags"]:
+            tag_names.extend(
+                [
+                    f"{product}_{version}_BUILD{buildnum}",
+                ]
+            )
+        if "release" in worker["tags"]:
+            tag_names.extend([f"{product}_{version}_RELEASE"])
+        tag_info = {
+            "tags": tag_names,
+            "hg_repo_url": worker["hg-repo-url"],
+            "revision": config.params[
+                "{}head_rev".format(worker.get("repo-param-prefix", ""))
+            ],
+        }
+        task_def["payload"]["tag_info"] = tag_info
+        actions.append("tag")
 
 
 @payload_builder(

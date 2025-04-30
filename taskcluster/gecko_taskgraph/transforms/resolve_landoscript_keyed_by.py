@@ -26,6 +26,7 @@ def handle_keyed_by(config, tasks):
             "l10n-bump-info",
             "source-repo",
             "lando-repo",
+            "hg-repo-url",
             "dontbuild",
             "ignore-closed-tree",
         ):
