@@ -1,10 +1,13 @@
 import { createEffect, onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
-import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
-import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
+import type { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
+import {
+  WORKSPACE_LAST_SHOW_ID,
+  WORKSPACE_TAB_ATTRIBUTION_ID,
+} from "./utils/workspaces-static-names";
 import { configStore, enabled } from "./data/config";
-import { WorkspaceIcons } from "./utils/workspace-icons";
-import { WorkspacesDataManager } from "./workspacesDataManagerBase";
+import type { WorkspaceIcons } from "./utils/workspace-icons";
+import type { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
 interface TabEvent extends Event {
   target: XULElement;
@@ -13,7 +16,7 @@ interface TabEvent extends Event {
 
 export class WorkspacesTabManager {
   dataManagerCtx: WorkspacesDataManager;
-  iconCtx: WorkspaceIcons
+  iconCtx: WorkspaceIcons;
   constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
@@ -24,9 +27,9 @@ export class WorkspacesTabManager {
           return;
         }
 
-        this.updateTabsVisibility()
+        this.updateTabsVisibility();
       }
-    })
+    });
 
     this.boundHandleTabClose = this.handleTabClose.bind(this);
 
@@ -51,9 +54,11 @@ export class WorkspacesTabManager {
 
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const isCurrentWorkspace = workspaceId === currentWorkspaceId;
-    const workspaceTabs = Array.from(document?.querySelectorAll(
-      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
-    ) as NodeListOf<XULElement>).filter(t => t !== tab);
+    const workspaceTabs = Array.from(
+      document?.querySelectorAll(
+        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
+      ) as NodeListOf<XULElement>,
+    ).filter((t) => t !== tab);
 
     if (workspaceTabs.length === 0 && isCurrentWorkspace) {
       try {
@@ -78,7 +83,8 @@ export class WorkspacesTabManager {
           try {
             const newTab = window.gBrowser.addTab("about:newtab", {
               skipAnimation: true,
-              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.getSystemPrincipal(),
             });
             window.gBrowser.selectedTab = newTab;
           } catch (innerError) {
@@ -94,12 +100,9 @@ export class WorkspacesTabManager {
     const selectedTab = window.gBrowser.selectedTab;
     if (
       selectedTab &&
-      !selectedTab.hasAttribute(
-        WORKSPACE_LAST_SHOW_ID,
-      ) &&
-      selectedTab.getAttribute(
-        WORKSPACE_TAB_ATTRIBUTION_ID
-      ) === currentWorkspaceId
+      !selectedTab.hasAttribute(WORKSPACE_LAST_SHOW_ID) &&
+      selectedTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
+      currentWorkspaceId
     ) {
       const lastShowWorkspaceTabs = document?.querySelectorAll(
         `[${WORKSPACE_LAST_SHOW_ID}="${currentWorkspaceId}"]`,
@@ -107,16 +110,11 @@ export class WorkspacesTabManager {
 
       if (lastShowWorkspaceTabs) {
         for (const lastShowWorkspaceTab of lastShowWorkspaceTabs) {
-          lastShowWorkspaceTab.removeAttribute(
-            WORKSPACE_LAST_SHOW_ID,
-          );
+          lastShowWorkspaceTab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
         }
       }
 
-      selectedTab.setAttribute(
-        WORKSPACE_LAST_SHOW_ID,
-        currentWorkspaceId,
-      );
+      selectedTab.setAttribute(WORKSPACE_LAST_SHOW_ID, currentWorkspaceId);
     }
 
     // Check Tabs visibility
@@ -143,9 +141,7 @@ export class WorkspacesTabManager {
    * @returns The workspace id.
    */
   getWorkspaceIdFromAttribute(tab: XULElement): TWorkspaceID | null {
-    const workspaceId = tab.getAttribute(
-      WORKSPACE_TAB_ATTRIBUTION_ID,
-    );
+    const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
 
     if (workspaceId && this.dataManagerCtx.isWorkspaceID(workspaceId)) {
       return workspaceId;
@@ -160,10 +156,7 @@ export class WorkspacesTabManager {
    * @param workspaceId The workspace id.
    */
   setWorkspaceIdToAttribute(tab: XULElement, workspaceId: TWorkspaceID) {
-    tab.setAttribute(
-      WORKSPACE_TAB_ATTRIBUTION_ID,
-      workspaceId,
-    );
+    tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, workspaceId);
   }
 
   /**
@@ -221,7 +214,11 @@ export class WorkspacesTabManager {
    * @param select will select tab if true.
    * @returns The created tab.
    */
-  createTabForWorkspace(workspaceId: TWorkspaceID, select = false, url?: string) {
+  createTabForWorkspace(
+    workspaceId: TWorkspaceID,
+    select = false,
+    url?: string,
+  ) {
     const targetURL =
       url ?? Services.prefs.getStringPref("browser.startup.homepage");
     const tab = window.gBrowser.addTab(targetURL, {
@@ -256,19 +253,16 @@ export class WorkspacesTabManager {
 
       if (willChangeWorkspaceLastShowTab) {
         window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
-      }
-      else {
+      } else {
         const tabToSelect = this.workspaceHasTabs(workspaceId);
         if (tabToSelect) {
           window.gBrowser.selectedTab = tabToSelect;
-        }
-        else {
+        } else {
           const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
           if (nonWorkspaceTab !== true) {
             window.gBrowser.selectedTab = nonWorkspaceTab;
             this.setWorkspaceIdToAttribute(nonWorkspaceTab, workspaceId);
-          }
-          else {
+          } else {
             this.createTabForWorkspace(workspaceId, true);
           }
         }
@@ -286,8 +280,7 @@ export class WorkspacesTabManager {
           this.createTabForWorkspace(defaultId, true);
           setWorkspacesDataStore("selectedID", defaultId);
           this.updateTabsVisibility();
-        }
-        else {
+        } else {
           this.createTabForWorkspace(workspaceId, true);
           setWorkspacesDataStore("selectedID", workspaceId);
           this.updateTabsVisibility();
@@ -298,7 +291,8 @@ export class WorkspacesTabManager {
         try {
           const newTab = window.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
           window.gBrowser.selectedTab = newTab;
         } catch (finalError) {
@@ -307,7 +301,6 @@ export class WorkspacesTabManager {
       }
     }
   }
-
 
   /**
    * Switch to another workspace tab.
@@ -354,11 +347,7 @@ export class WorkspacesTabManager {
    */
   public isThereNoWorkspaceTabs() {
     for (const tab of window.gBrowser.tabs as XULElement[]) {
-      if (
-        !tab.hasAttribute(
-          WORKSPACE_TAB_ATTRIBUTION_ID,
-        )
-      ) {
+      if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
       }
     }
@@ -402,6 +391,7 @@ export class WorkspacesTabManager {
         this.switchToAnotherWorkspaceTab(workspaceId);
       }
     }
+    this.updateTabsVisibility();
   }
 
   /**
