@@ -9,7 +9,7 @@ import { createEffect } from "solid-js";
 export class MultirowTabbarClass {
 
   private get arrowScrollbox(): XULElement | null {
-    return document.querySelector("#tabbrowser-arrowscrollbox");
+    return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
   }
 
   private get scrollboxPart(): XULElement | null {
@@ -20,7 +20,7 @@ export class MultirowTabbarClass {
 
   private get aTabHeight(): number {
     return (
-      document.querySelector(".tabbrowser-tab:not([hidden='true'])")
+      document?.querySelector(".tabbrowser-tab:not([hidden='true'])")
         ?.clientHeight || 30
     );
   }
