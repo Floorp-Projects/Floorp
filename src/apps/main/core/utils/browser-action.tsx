@@ -40,21 +40,37 @@ export namespace BrowserActionUtils {
     if (widget && widget.type !== "custom") {
       return;
     }
+
+    // 非同期処理を改善し、ウィジェット作成と位置設定を確実に行う
     (async () => {
+      const tooltiptext = l10nId ? await document?.l10n?.formatValue(l10nId) : null;
+      const label = l10nId ? await document?.l10n?.formatValue(l10nId) : null;
+
+      // 先にウィジェットを作成
       CustomizableUI.createWidget({
         id: widgetId,
         type: "button",
-        tooltiptext: l10nId ? await document.l10n?.formatValue(l10nId) : null,
-        label: l10nId ? await document.l10n?.formatValue(l10nId) : null,
+        tooltiptext,
+        label,
         removable: true,
         onCommand: () => {
           onCommandFunc?.();
         },
         onCreated: (aNode: XULElement) => {
+          // 作成完了時にコールバックを実行
           onCreatedFunc?.(aNode);
+
+          // 確実にウィジェットが作成された後に位置を指定
+          if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+            CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+          }
         },
       });
-      CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+
+      // 初期配置（既存の配置がない場合のみ）
+      if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+        CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+      }
     })();
   }
 
@@ -87,24 +103,41 @@ export namespace BrowserActionUtils {
     }
 
     const owner = getOwner();
-    CustomizableUI.createWidget({
-      id: widgetId,
-      type: "view",
-      viewId: targetViewId,
-      tooltiptext: (document?.l10n?.formatValue(l10nId)) ?? "",
-      label: (document?.l10n?.formatValue(l10nId)) ?? "",
-      removable: true,
-      onCreated: (aNode: XULElement) => {
-        createRoot(() => onCreatedFunc?.(aNode), owner);
-      },
-      onViewShowing: (event: Event) => {
-        createRoot(() => onViewShowingFunc?.(event), owner);
-      },
-    });
-    CustomizableUI.addWidgetToArea(
-      widgetId,
-      area as TCustomizableUIArea,
-      position ?? 0,
-    );
+    (async () => {
+      const tooltiptext = await document?.l10n?.formatValue(l10nId) ?? "";
+      const label = await document?.l10n?.formatValue(l10nId) ?? "";
+
+      CustomizableUI.createWidget({
+        id: widgetId,
+        type: "view",
+        viewId: targetViewId,
+        tooltiptext,
+        label,
+        removable: true,
+        onCreated: (aNode: XULElement) => {
+          createRoot(() => onCreatedFunc?.(aNode), owner);
+
+          // 作成完了時に位置を確認して設定
+          if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+            CustomizableUI.addWidgetToArea(
+              widgetId,
+              area as TCustomizableUIArea,
+              position ?? 0,
+            );
+          }
+        },
+        onViewShowing: (event: Event) => {
+          createRoot(() => onViewShowingFunc?.(event), owner);
+        },
+      });
+
+      if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+        CustomizableUI.addWidgetToArea(
+          widgetId,
+          area as TCustomizableUIArea,
+          position ?? 0,
+        );
+      }
+    })();
   }
 }
