@@ -18,12 +18,50 @@ task-defaults:
     description: Release Promotion version bump/tag
     run-on-projects: []
     shipping-phase: ship
-    worker-type: tree
+    worker-type: lando
+    scopes:
+        by-project:
+            mozilla-beta:
+                - project:releng:lando:repo:firefox-beta
+                - project:releng:lando:action:tag
+                - project:releng:lando:action:version_bump
+            mozilla-release:
+                - project:releng:lando:repo:firefox-release
+                - project:releng:lando:action:tag
+                - project:releng:lando:action:version_bump
+            mozilla-esr115:
+                - project:releng:lando:repo:firefox-esr115
+                - project:releng:lando:action:tag
+                - project:releng:lando:action:version_bump
+            mozilla-esr128:
+                - project:releng:lando:repo:firefox-esr128
+                - project:releng:lando:action:tag
+                - project:releng:lando:action:version_bump
+            try:
+                - project:releng:lando:repo:ff-test-dev
+                - project:releng:lando:action:tag
+                - project:releng:lando:action:version_bump
+            default: []
     worker:
-        implementation: treescript
-        dontbuild: true
+        implementation: landoscript
         tags: ['release']
-        bump: true
+        lando-repo:
+            by-project:
+                mozilla-beta: firefox-beta
+                mozilla-release: firefox-release
+                mozilla-esr115: firefox-esr115
+                mozilla-esr128: firefox-esr128
+                try: ff-test-dev
+                default: ""
+        # used to map hg revisions to the git revisions that landoscript needs
+        hg-repo-url:
+            by-project:
+                mozilla-beta: https://hg.mozilla.org/releases/mozilla-beta
+                mozilla-release: https://hg.mozilla.org/releases/mozilla-release
+                mozilla-esr115: https://hg.mozilla.org/releases/mozilla-esr115
+                mozilla-esr128: https://hg.mozilla.org/releases/mozilla-esr128
+                try: https://hg.mozilla.org/try
+                default: ""
         # We're bumping both desktop and mobile version regardless of which product is getting
         # released, to avoid confusion from them getting out of sync.
         bump-files:
@@ -40,11 +78,6 @@ task-defaults:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
-        push:
-            by-project:
-                mozilla-(beta|release|esr.*): true
-                maple: true
-                default: false
 
 tasks:
     firefox:
