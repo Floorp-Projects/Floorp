@@ -37,6 +37,7 @@
   background-size: cover;
   scrollbar-width: thin;
   border-inline: 1px solid var(--chrome-content-separator-color);
+  overflow-y: auto;
 }
 
 #panel-sidebar-select-box:-moz-lwtheme {
