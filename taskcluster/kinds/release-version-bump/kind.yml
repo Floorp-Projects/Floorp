@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
-    - gecko_taskgraph.transforms.release_version_bump:transforms
+    - gecko_taskgraph.transforms.resolve_landoscript_keyed_by:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
