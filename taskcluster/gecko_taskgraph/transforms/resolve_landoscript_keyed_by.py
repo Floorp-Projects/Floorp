@@ -15,6 +15,7 @@ transforms = TransformSequence()
 def handle_keyed_by(config, tasks):
     """Resolve fields that can be keyed by platform, etc."""
     default_fields = [
+        "scopes",
         "worker.push",
         "worker.bump-files",
         "worker-type",
@@ -24,6 +25,7 @@ def handle_keyed_by(config, tasks):
         for additional_field in (
             "l10n-bump-info",
             "source-repo",
+            "lando-repo",
             "dontbuild",
             "ignore-closed-tree",
         ):

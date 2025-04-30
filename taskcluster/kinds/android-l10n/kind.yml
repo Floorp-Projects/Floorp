@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - gecko_taskgraph.transforms.resolve_landoscript_keyed_by:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 task-defaults:
@@ -13,13 +14,9 @@ task-defaults:
         kind: build
         platform: fenix-android-all/opt
         tier: 1
-    worker-type: tree
+    worker-type: lando
     worker:
-        implementation: treescript
-        tags: []
-        bump: false
-        dontbuild: false
-        push: true
+        implementation: landoscript
 
 tasks:
     import:
@@ -27,9 +24,19 @@ tasks:
         description: Import strings from android-l10n repo
         treeherder:
             symbol: android-l10n(I)
+        scopes:
+            by-project:
+                try:
+                    - project:releng:lando:repo:ff-test-dev
+                    - project:releng:lando:action:android_l10n_import
+                default:
+                    - project:releng:lando:repo:firefox-autoland
+                    - project:releng:lando:action:android_l10n_import
         worker:
-            ignore-closed-tree: true
-            source-repo: https://hg.mozilla.org/integration/autoland
+            lando-repo:
+                by-project:
+                    try: ff-test-dev
+                    default: firefox-autoland
             android-l10n-import-info:
                 from-repo-url: https://github.com/mozilla-l10n/android-l10n
                 toml-info:
@@ -42,14 +49,25 @@ tasks:
 
     sync:
         name: android_l10n_sync
-        description: Sync android-l10n strings from central to beta
+        description: Sync android-l10n strings from main to beta
         treeherder:
             symbol: android-l10n(S)
+        scopes:
+            by-project:
+                try:
+                    - project:releng:lando:repo:ff-test-dev
+                    - project:releng:lando:action:android_l10n_sync
+                default:
+                    - project:releng:lando:repo:firefox-beta
+                    - project:releng:lando:action:android_l10n_sync
         worker:
-            ignore-closed-tree: false
-            source-repo: https://hg.mozilla.org/releases/mozilla-beta
+            lando-repo:
+                by-project:
+                    try: ff-test-dev
+                    default: firefox-beta
+            ignore-closed-tree: true
             android-l10n-sync-info:
-                from-repo-url: https://hg.mozilla.org/mozilla-central
+                from-branch: main
                 toml-info:
                     - toml-path: mobile/android/fenix/l10n.toml
                     - toml-path: mobile/android/focus-android/l10n.toml
