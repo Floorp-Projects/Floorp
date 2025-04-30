@@ -15,5 +15,6 @@ index b8b6d30..4bec173 100644
 +/*@ NORA INJECT END @*/
 +
  ChromeUtils.defineESModuleGetters(lazy, {
+   AboutHomeStartupCache: "resource:///modules/AboutHomeStartupCache.sys.mjs",
    AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
    AccountsGlue: "resource:///modules/AccountsGlue.sys.mjs",
