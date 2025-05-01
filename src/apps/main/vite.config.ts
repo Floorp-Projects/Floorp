@@ -6,11 +6,13 @@ import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import NoranekoTestPlugin from "vitest-noraneko/plugin.ts";
 import deno from "@deno/vite-plugin";
+import postcssPlugin from "npm:@tailwindcss/postcss";
+import autoprefixer from "npm:autoprefixer";
 
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
 const r = (dir: string) => {
-  return path.resolve(import.meta.dirname, dir);
+  return path.resolve(path.dirname(import.meta.url.replace("file:", "")), dir);
 };
 
 export default defineConfig({
@@ -22,6 +24,15 @@ export default defineConfig({
   define: {
     "import.meta.env.__BUILDID2__": '"placeholder"',
   },
+  css: {
+    postcss: {
+      plugins: [
+        postcssPlugin,
+        autoprefixer,
+      ],
+    },
+    devSourcemap: true,
+  },
   build: {
     sourcemap: true,
     reportCompressedSize: false,
@@ -30,16 +41,15 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 0,
     target: "firefox133",
+    cssCodeSplit: true,
 
     rollupOptions: {
-      //https://github.com/vitejs/vite/discussions/14454
       preserveEntrySignatures: "allow-extension",
 
       input: {
         core: r("./core/index.ts"),
         "about-preferences": r("./about/preferences/index.ts"),
         "about-newtab": r("./about/newtab/index.ts"),
-        //env: "./experiment/env.ts",
       },
       output: {
         esModule: true,
@@ -84,13 +94,6 @@ export default defineConfig({
     outDir: r("_dist"),
   },
 
-  //? https://github.com/parcel-bundler/lightningcss/issues/685
-  //? lepton uses System Color and that occurs panic.
-  //? when the issue resolved, gladly we can use lightningcss
-  // css: {
-  //   transformer: "lightningcss",
-  // },
-
   plugins: [
     tsconfigPaths(),
     {
@@ -101,7 +104,6 @@ export default defineConfig({
       },
     },
     solidPlugin({
-      // dev:true,
       solid: {
         generate: "universal",
         moduleName: "@nora/solid-xul",
@@ -146,7 +148,7 @@ export default defineConfig({
         });
       },
     },
-    istanbulPlugin({}),
+    (istanbulPlugin as any)({}),
     {
       name: "noraneko_component_hmr_support",
       enforce: "pre",

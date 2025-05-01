@@ -2,6 +2,7 @@ import "vite/modulepreload-polyfill";
 
 import { initI18N } from "../i18n/config.ts";
 import "./test/index.ts";
+import "./index.css";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
 import {
