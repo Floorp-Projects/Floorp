@@ -6807,10 +6807,8 @@ void PresShell::nsSynthMouseMoveEvent::Revoke() {
   }
 }
 
-// static
-nsIFrame* PresShell::EventHandler::GetNearestFrameContainingPresShell(
-    PresShell* aPresShell) {
-  nsViewManager* vm = aPresShell->GetViewManager();
+nsIFrame* PresShell::GetClosestAncestorFrameForAncestorView() const {
+  nsViewManager* vm = GetViewManager();
   if (!vm) {
     return nullptr;
   }
@@ -6905,6 +6903,9 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
                                 bool aDontRetargetEvents,
                                 nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
+
+  AutoWeakFrame weakFrameForPresShell(aFrameForPresShell);
+
   // Running tests must not expect that some mouse boundary events are fired
   // when something occurs in the parent process, e.g., when a popup is
   // opened/closed at the last mouse cursor position in the parent process (the
@@ -6972,7 +6973,6 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
         RefPtr<PresShell> rootPresShell =
             mPresContext->IsRoot() ? this : GetRootPresShell();
         if (rootPresShell && rootPresShell->mSynthMouseMoveEvent.IsPending()) {
-          AutoWeakFrame frameForPresShellWeak(aFrameForPresShell);
           RefPtr<nsSynthMouseMoveEvent> synthMouseMoveEvent =
               rootPresShell->mSynthMouseMoveEvent.get();
           synthMouseMoveEvent->Run();
@@ -6983,7 +6983,7 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
           // recompute the frame.  However, it could treat the user input on
           // unexpected element.  Therefore, we should not do that until we'd
           // get a bug report caused by that.
-          if (MOZ_UNLIKELY(!frameForPresShellWeak.IsAlive())) {
+          if (MOZ_UNLIKELY(!weakFrameForPresShell.IsAlive())) {
             return NS_OK;
           }
         }
@@ -6995,19 +6995,19 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
   }
 
   EventHandler eventHandler(*this);
-  return eventHandler.HandleEvent(aFrameForPresShell, aGUIEvent,
+  return eventHandler.HandleEvent(weakFrameForPresShell, aGUIEvent,
                                   aDontRetargetEvents, aEventStatus);
 }
 
-nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
-                                              WidgetGUIEvent* aGUIEvent,
-                                              bool aDontRetargetEvents,
-                                              nsEventStatus* aEventStatus) {
+nsresult PresShell::EventHandler::HandleEvent(
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    bool aDontRetargetEvents, nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_DIAGNOSTIC_ASSERT(aGUIEvent->IsTrusted());
   MOZ_ASSERT(aEventStatus);
 
-  NS_ASSERTION(aFrameForPresShell, "aFrameForPresShell should be not null");
+  NS_ASSERTION(aWeakFrameForPresShell.IsAlive(),
+               "aWeakFrameForPresShell should refer a frame");
 
   // Update the latest focus sequence number with this new sequence number;
   // the next transasction that gets sent to the compositor will carry this over
@@ -7024,7 +7024,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
 
   mPresShell->RecordPointerLocation(aGUIEvent);
 
-  if (MaybeHandleEventWithAccessibleCaret(aFrameForPresShell, aGUIEvent,
+  const bool wasFrameForPresShellNull = !aWeakFrameForPresShell.GetFrame();
+  if (MaybeHandleEventWithAccessibleCaret(aWeakFrameForPresShell, aGUIEvent,
                                           aEventStatus)) {
     // Handled by AccessibleCaretEventHub.
     return NS_OK;
@@ -7036,14 +7037,19 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
   }
 
   if (!aDontRetargetEvents) {
+    const DebugOnly<bool> wasFrameForPresShellAlive =
+        aWeakFrameForPresShell.IsAlive();
     // If aGUIEvent should be handled in another PresShell, we should call its
     // HandleEvent() and do nothing here.
     nsresult rv = NS_OK;
-    if (MaybeHandleEventWithAnotherPresShell(aFrameForPresShell, aGUIEvent,
+    if (MaybeHandleEventWithAnotherPresShell(aWeakFrameForPresShell, aGUIEvent,
                                              aEventStatus, &rv)) {
       // Handled by another PresShell or nobody can handle the event.
       return rv;
     }
+    // If MaybeHandleEventWithAnotherPresShell() returns false, it shouldn't
+    // have run any script.  So, aWeakFrameForPresShell must be alive.
+    MOZ_ASSERT_IF(wasFrameForPresShellAlive, aWeakFrameForPresShell.IsAlive());
   }
 
   if (MaybeDiscardOrDelayKeyboardEvent(aGUIEvent)) {
@@ -7052,13 +7058,13 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
   }
 
   if (aGUIEvent->IsUsingCoordinates()) {
-    return HandleEventUsingCoordinates(aFrameForPresShell, aGUIEvent,
+    return HandleEventUsingCoordinates(aWeakFrameForPresShell, aGUIEvent,
                                        aEventStatus, aDontRetargetEvents);
   }
 
   // Activation events need to be dispatched even if no frame was found, since
   // we don't want the focus to be out of sync.
-  if (!aFrameForPresShell) {
+  if (MOZ_UNLIKELY(wasFrameForPresShellNull)) {
     if (!NS_EVENT_NEEDS_FRAME(aGUIEvent)) {
       // Push nullptr for both current event target content and frame since
       // there is no frame but the event does not require a frame.
@@ -7080,12 +7086,12 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
     return HandleEventAtFocusedContent(aGUIEvent, aEventStatus);
   }
 
-  return HandleEventWithFrameForPresShell(aFrameForPresShell, aGUIEvent,
+  return HandleEventWithFrameForPresShell(aWeakFrameForPresShell, aGUIEvent,
                                           aEventStatus);
 }
 
 nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsEventStatus* aEventStatus, bool aDontRetargetEvents) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aGUIEvent->IsUsingCoordinates());
@@ -7094,9 +7100,8 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // Flush pending notifications to handle the event with the latest layout.
   // But if it causes destroying the frame for mPresShell, stop handling the
   // event. (why?)
-  AutoWeakFrame weakFrame(aFrameForPresShell);
   MaybeFlushPendingNotifications(aGUIEvent);
-  if (!weakFrame.IsAlive()) {
+  if (MOZ_UNLIKELY(!aWeakFrameForPresShell.IsAlive())) {
     *aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
@@ -7111,16 +7116,16 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
     PointerLockManager::Unlock();
   }
 
-  nsIFrame* frameForPresShell = MaybeFlushThrottledStyles(aFrameForPresShell);
-  if (NS_WARN_IF(!frameForPresShell)) {
+  MaybeFlushThrottledStyles(aWeakFrameForPresShell);
+  if (MOZ_UNLIKELY(!aWeakFrameForPresShell.IsAlive())) {
     return NS_OK;
   }
 
   bool isCapturingContentIgnored = false;
   bool isCaptureRetargeted = false;
-  nsIFrame* rootFrameToHandleEvent = ComputeRootFrameToHandleEvent(
-      frameForPresShell, aGUIEvent, capturingContent,
-      &isCapturingContentIgnored, &isCaptureRetargeted);
+  AutoWeakFrame weakRootFrameToHandleEvent(ComputeRootFrameToHandleEvent(
+      aWeakFrameForPresShell.GetFrame(), aGUIEvent, capturingContent,
+      &isCapturingContentIgnored, &isCaptureRetargeted));
   if (isCapturingContentIgnored) {
     capturingContent = nullptr;
   }
@@ -7136,14 +7141,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
 
   // Try to keep frame for following check, because frame can be damaged
   // during MaybeProcessPointerCapture.
-  {
-    AutoWeakFrame frameKeeper(rootFrameToHandleEvent);
-    PointerEventHandler::MaybeProcessPointerCapture(aGUIEvent);
-    // Prevent application crashes, in case damaged frame.
-    if (!frameKeeper.IsAlive()) {
-      NS_WARNING("Nothing to handle this event!");
-      return NS_OK;
-    }
+  PointerEventHandler::MaybeProcessPointerCapture(aGUIEvent);
+  // Prevent application crashes, in case damaged frame.
+  if (MOZ_UNLIKELY(!weakRootFrameToHandleEvent.IsAlive())) {
+    NS_WARNING("Nothing to handle this event!");
+    return NS_OK;
   }
 
   // Only capture mouse events and pointer events.
@@ -7151,10 +7153,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
       PointerEventHandler::GetPointerCapturingElement(aGUIEvent);
 
   if (pointerCapturingElement) {
-    rootFrameToHandleEvent = pointerCapturingElement->GetPrimaryFrame();
-    if (!rootFrameToHandleEvent) {
+    weakRootFrameToHandleEvent = pointerCapturingElement->GetPrimaryFrame();
+    if (!weakRootFrameToHandleEvent.IsAlive()) {
       return HandleEventWithPointerCapturingContentWithoutItsFrame(
-          aFrameForPresShell, aGUIEvent, pointerCapturingElement, aEventStatus);
+          aWeakFrameForPresShell, aGUIEvent, pointerCapturingElement,
+          aEventStatus);
     }
   }
 
@@ -7170,11 +7173,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // be used instead below. Also keep using the root frame if we're dealing
   // with a window-level mouse exit event since we want to start sending
   // mouse out events at the root EventStateManager.
-  EventTargetData eventTargetData(rootFrameToHandleEvent);
+  EventTargetData eventTargetData(weakRootFrameToHandleEvent.GetFrame());
   if (!isCaptureRetargeted && !isWindowLevelMouseExit &&
       !pointerCapturingElement) {
     if (!ComputeEventTargetFrameAndPresShellAtEventPoint(
-            rootFrameToHandleEvent, aGUIEvent, &eventTargetData)) {
+            weakRootFrameToHandleEvent, aGUIEvent, &eventTargetData)) {
       *aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
@@ -7234,7 +7237,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // pointer event listeners change the layout, eventTargetData is
   // automatically updated.
   if (!DispatchPrecedingPointerEvent(
-          aFrameForPresShell, aGUIEvent, pointerCapturingElement,
+          aWeakFrameForPresShell, aGUIEvent, pointerCapturingElement,
           aDontRetargetEvents, &eventTargetData, aEventStatus)) {
     return NS_OK;
   }
@@ -7306,20 +7309,24 @@ static ViewportType ViewportTypeForInputEventsRelativeToRoot() {
 }
 
 nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
-    nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent) {
+    AutoWeakFrame& aWeakRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aGUIEvent->mClass != eTouchEventClass);
 
+  if (MOZ_UNLIKELY(!aWeakRootFrameToHandleEvent.GetFrame())) {
+    return nullptr;
+  }
+
   ViewportType viewportType = ViewportType::Layout;
-  if (aRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport) {
-    nsPresContext* pc = aRootFrameToHandleEvent->PresContext();
+  if (aWeakRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport) {
+    nsPresContext* pc = aWeakRootFrameToHandleEvent->PresContext();
     if (pc->IsChrome()) {
       viewportType = ViewportType::Visual;
     } else if (pc->IsRootContentDocumentCrossProcess()) {
       viewportType = ViewportTypeForInputEventsRelativeToRoot();
     }
   }
-  RelativeTo relativeTo{aRootFrameToHandleEvent, viewportType};
+  RelativeTo relativeTo{aWeakRootFrameToHandleEvent.GetFrame(), viewportType};
   nsPoint eventPoint =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
 
@@ -7334,7 +7341,7 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   nsIFrame* targetFrame =
       FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
   if (!targetFrame) {
-    return aRootFrameToHandleEvent;
+    return aWeakRootFrameToHandleEvent.GetFrame();
   }
 
   if (targetFrame->PresShell() == mPresShell) {
@@ -7346,10 +7353,9 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   // If target is in a child document, we've not flushed its layout yet.
   PresShell* childPresShell = targetFrame->PresShell();
   EventHandler childEventHandler(*childPresShell);
-  AutoWeakFrame weakFrame(aRootFrameToHandleEvent);
   bool layoutChanged =
       childEventHandler.MaybeFlushPendingNotifications(aGUIEvent);
-  if (!weakFrame.IsAlive()) {
+  if (!aWeakRootFrameToHandleEvent.IsAlive()) {
     // Stop handling the event if the root frame to handle event is destroyed
     // by the reflow. (but why?)
     return nullptr;
@@ -7364,34 +7370,32 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   targetFrame =
       FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
 
-  return targetFrame ? targetFrame : aRootFrameToHandleEvent;
+  return targetFrame ? targetFrame : aWeakRootFrameToHandleEvent.GetFrame();
 }
 
 bool PresShell::EventHandler::ComputeEventTargetFrameAndPresShellAtEventPoint(
-    nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent,
     EventTargetData* aEventTargetData) {
-  MOZ_ASSERT(aRootFrameToHandleEvent);
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventTargetData);
 
   if (aGUIEvent->mClass == eTouchEventClass) {
     nsIFrame* targetFrameAtTouchEvent = TouchManager::SetupTarget(
-        aGUIEvent->AsTouchEvent(), aRootFrameToHandleEvent);
+        aGUIEvent->AsTouchEvent(), aWeakRootFrameToHandleEvent.GetFrame());
     aEventTargetData->SetFrameAndComputePresShell(targetFrameAtTouchEvent);
     return true;
   }
 
   nsIFrame* targetFrame =
-      GetFrameToHandleNonTouchEvent(aRootFrameToHandleEvent, aGUIEvent);
+      GetFrameToHandleNonTouchEvent(aWeakRootFrameToHandleEvent, aGUIEvent);
   aEventTargetData->SetFrameAndComputePresShell(targetFrame);
   return !!aEventTargetData->GetFrame();
 }
 
 bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsIContent* aPointerCapturingContent, bool aDontRetargetEvents,
     EventTargetData* aEventTargetData, nsEventStatus* aEventStatus) {
-  MOZ_ASSERT(aFrameForPresShell);
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventTargetData);
   MOZ_ASSERT(aEventStatus);
@@ -7407,13 +7411,30 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
   // events from touch can be dispatched to different documents. We Pass the
   // original frame to PointerEventHandler, reentry PresShell::HandleEvent,
   // and do hit test for each point.
-  nsIFrame* targetFrame = aGUIEvent->mClass == eTouchEventClass
-                              ? aFrameForPresShell
-                              : aEventTargetData->GetFrame();
+  auto targetFrameOrError = [&]() -> Result<nsIFrame*, nsresult> {
+    if (aGUIEvent->mClass == eTouchEventClass) {
+      // If aWeakFrameForPresShell has already been reframed before this is
+      // called, we don't need to handle the event.
+      if (MOZ_UNLIKELY(!aWeakFrameForPresShell.GetFrame())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      return aWeakFrameForPresShell.GetFrame();
+    }
+    return aEventTargetData->GetFrame();
+  }();
+  if (MOZ_UNLIKELY(targetFrameOrError.isErr())) {
+    return false;
+  }
+  nsIFrame* targetFrame = targetFrameOrError.unwrap();
 
   if (aPointerCapturingContent) {
+    Result<nsIContent*, nsresult> overrideClickTargetOrError =
+        GetOverrideClickTarget(aGUIEvent, aWeakFrameForPresShell.GetFrame());
+    if (MOZ_UNLIKELY(overrideClickTargetOrError.isErr())) {
+      return false;
+    }
     aEventTargetData->mOverrideClickTarget =
-        GetOverrideClickTarget(aGUIEvent, aFrameForPresShell);
+        overrideClickTargetOrError.unwrap();
     aEventTargetData->mPresShell =
         PresShell::GetShellForEventTarget(nullptr, aPointerCapturingContent);
     if (!aEventTargetData->mPresShell) {
@@ -7511,7 +7532,7 @@ class AutoEventTargetPointResetter {
 };
 
 bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventStatus);
@@ -7541,7 +7562,7 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
   do {
     EventTargetData eventTargetData(nullptr);
     if (!ComputeEventTargetFrameAndPresShellAtEventPoint(
-            aFrameForPresShell, aGUIEvent, &eventTargetData)) {
+            aWeakFrameForPresShell, aGUIEvent, &eventTargetData)) {
       break;
     }
 
@@ -7632,7 +7653,8 @@ void PresShell::EventHandler::MaybeSynthesizeCompatMouseEventsForTouchEnd(
     if (MOZ_UNLIKELY(presShell->IsDestroying())) {
       break;
     }
-    nsIFrame* frameForPresShell = GetNearestFrameContainingPresShell(presShell);
+    nsIFrame* const frameForPresShell =
+        presShell->GetClosestAncestorFrameForAncestorView();
     if (!frameForPresShell) {
       break;
     }
@@ -7801,11 +7823,11 @@ nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
   }
 
   // Otherwise, use nearest ancestor frame which includes the PresShell.
-  return GetNearestFrameContainingPresShell(retargetPresShell);
+  return retargetPresShell->GetClosestAncestorFrameForAncestorView();
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsEventStatus* aEventStatus, nsresult* aRv) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventStatus);
@@ -7826,17 +7848,22 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
     return false;
   }
 
-  nsIFrame* frame = GetFrameForHandlingEventWith(aGUIEvent, retargetEventDoc,
-                                                 aFrameForPresShell);
+  nsIFrame* frame = GetFrameForHandlingEventWith(
+      aGUIEvent, retargetEventDoc, aWeakFrameForPresShell.GetFrame());
   if (!frame) {
     // Nobody can handle this event.  So, treat as handled by somebody to make
     // caller do nothing anymore.
+    // NOTE: If aWeakFrameForPresShell does not refer to a frame (i.e., it's
+    // already been reframed) and aGUIEvent needs to be handled in mPresShell,
+    // we are here because GetFrameForHandlingEventWith() returns
+    // aWeakFrameForPresShell.GetFrame() as-is. In the case, we don't need to
+    // handle aGUIEvent, so, it's fine to return true from this method.
     return true;
   }
 
   // If we reached same frame as set to HandleEvent(), the caller should handle
   // the event by itself.
-  if (frame == aFrameForPresShell) {
+  if (frame == aWeakFrameForPresShell.GetFrame()) {
     return false;
   }
 
@@ -7934,35 +7961,34 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
   return true;
 }
 
-nsIFrame* PresShell::EventHandler::MaybeFlushThrottledStyles(
-    nsIFrame* aFrameForPresShell) {
+void PresShell::EventHandler::MaybeFlushThrottledStyles(
+    AutoWeakFrame& aWeakFrameForPresShell) {
   if (!GetDocument()) {
-    // XXX Only when mPresShell has document, we'll try to look for a frame
-    //     containing mPresShell even if given frame is nullptr.  Does this
-    //     make sense?
-    return aFrameForPresShell;
+    return;
   }
 
   PresShell* rootPresShell = mPresShell->GetRootPresShell();
   if (NS_WARN_IF(!rootPresShell)) {
-    return nullptr;
+    return;
   }
   Document* rootDocument = rootPresShell->GetDocument();
   if (NS_WARN_IF(!rootDocument)) {
-    return nullptr;
+    return;
   }
 
-  AutoWeakFrame weakFrameForPresShell(aFrameForPresShell);
   {  // scope for scriptBlocker.
     nsAutoScriptBlocker scriptBlocker;
     FlushThrottledStyles(*rootDocument);
   }
 
-  if (weakFrameForPresShell.IsAlive()) {
-    return aFrameForPresShell;
+  if (MOZ_UNLIKELY(!aWeakFrameForPresShell.IsAlive()) &&
+      MOZ_LIKELY(!mPresShell->IsDestroying())) {
+    // FIXME: aWeakFrameForPresShell may be target content's frame if aGUIEvent
+    // of the caller is a touch event.  So, we need to use different computation
+    // for such cases.
+    aWeakFrameForPresShell =
+        mPresShell->GetClosestAncestorFrameForAncestorView();
   }
-
-  return GetNearestFrameContainingPresShell(mPresShell);
 }
 
 nsIFrame* PresShell::EventHandler::ComputeRootFrameToHandleEvent(
@@ -8091,7 +8117,7 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
 
 nsresult
 PresShell::EventHandler::HandleEventWithPointerCapturingContentWithoutItsFrame(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsIContent* aPointerCapturingContent, nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aPointerCapturingContent);
@@ -8112,8 +8138,13 @@ PresShell::EventHandler::HandleEventWithPointerCapturingContentWithoutItsFrame(
     return NS_OK;
   }
 
+  Result<nsIContent*, nsresult> overrideClickTargetOrError =
+      GetOverrideClickTarget(aGUIEvent, aWeakFrameForPresShell.GetFrame());
+  if (MOZ_UNLIKELY(overrideClickTargetOrError.isErr())) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIContent> overrideClickTarget =
-      GetOverrideClickTarget(aGUIEvent, aFrameForPresShell);
+      overrideClickTargetOrError.unwrap();
 
   // Dispatch events to the capturing content even it's frame is
   // destroyed.
@@ -8250,15 +8281,15 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
 }
 
 nsresult PresShell::EventHandler::HandleEventWithFrameForPresShell(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    AutoWeakFrame& aWeakFrameForPresShell, WidgetGUIEvent* aGUIEvent,
     nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(!aGUIEvent->IsUsingCoordinates());
   MOZ_ASSERT(!aGUIEvent->IsTargetedAtFocusedContent());
   MOZ_ASSERT(aEventStatus);
 
-  AutoCurrentEventInfoSetter eventInfoSetter(*this, aFrameForPresShell,
-                                             nullptr);
+  AutoCurrentEventInfoSetter eventInfoSetter(
+      *this, aWeakFrameForPresShell.GetFrame(), nullptr);
 
   nsresult rv = NS_OK;
   if (mPresShell->GetCurrentEventFrame()) {
@@ -11744,17 +11775,23 @@ void PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
   mDocument->ApplicableStylesChanged();
 }
 
-nsIContent* PresShell::EventHandler::GetOverrideClickTarget(
-    WidgetGUIEvent* aGUIEvent, nsIFrame* aFrame) {
+Result<nsIContent*, nsresult> PresShell::EventHandler::GetOverrideClickTarget(
+    WidgetGUIEvent* aGUIEvent, nsIFrame* aFrameForPresShell) {
   if (aGUIEvent->mMessage != eMouseUp) {
     return nullptr;
+  }
+
+  // If aFrameForPresShell has already been reframed before this is called,
+  // we cannot keep handling aGUIEvent.
+  if (MOZ_UNLIKELY(!aFrameForPresShell)) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   MOZ_ASSERT(aGUIEvent->mClass == eMouseEventClass);
   WidgetMouseEvent* mouseEvent = aGUIEvent->AsMouseEvent();
 
   uint32_t flags = 0;
-  RelativeTo relativeTo{aFrame};
+  RelativeTo relativeTo{aFrameForPresShell};
   nsPoint eventPoint =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
   if (mouseEvent->mIgnoreRootScrollFrame) {
