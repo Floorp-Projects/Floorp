@@ -141,11 +141,10 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 📧 Contact
 
-- [Official Support Site](https://support.ablaze.one)
+- [Official Floorp Twitter](https://twitter.com/Floorp_Browser)
 
-- [Official Floorp Twitter](https://twitter.com/Floorp_Browser) or [Official Ablaze Twitter](https://twitter.com/Ablaze_MIRAI)
+- [Official Floorp Projects Discord](https://discord.floorp.app)
 
-- [Official Ablaze Community Discord Server](https://discord.com/invite/f8NFWjx6Rt)
 
 ### 📜 Privacy Policy
 
