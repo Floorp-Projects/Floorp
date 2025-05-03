@@ -3,18 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { config } from "../../designs/configs";
+import { config } from "../../designs/configs.ts";
 import { createEffect } from "solid-js";
 
 export class MultirowTabbarClass {
-
   private get arrowScrollbox(): XULElement | null {
     return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
   }
 
   private get scrollboxPart(): XULElement | null {
     return this.arrowScrollbox
-      ? this.arrowScrollbox.querySelector("[part=scrollbox]")
+      ? this.arrowScrollbox.shadowRoot?.querySelector(
+        "[part='items-wrapper']",
+      ) || null
       : null;
   }
 
@@ -33,6 +34,8 @@ export class MultirowTabbarClass {
   }
 
   private setMultirowTabMaxHeight() {
+    console.log("setMultirowTabMaxHeight", this.isMaxRowEnabled);
+
     if (!this.isMaxRowEnabled) {
       return;
     }
@@ -42,7 +45,7 @@ export class MultirowTabbarClass {
     );
     this.arrowScrollbox?.style.setProperty(
       "max-height",
-      `${this.getMultirowTabMaxHeight}px`
+      `${this.getMultirowTabMaxHeight}px`,
     );
   }
 
@@ -51,11 +54,25 @@ export class MultirowTabbarClass {
     this.arrowScrollbox?.style.removeProperty("max-height");
   }
 
+  private enableMultirowTabbar() {
+    console.log("Enabling multirow tabbar");
+    this.scrollboxPart?.setAttribute("style", "flex-wrap: wrap;");
+  }
+
+  private disableMultirowTabbar() {
+    console.log("Disabling multirow tabbar");
+    this.scrollboxPart?.removeAttribute("style");
+  }
+
   constructor() {
     createEffect(() => {
-      config().tabbar.tabbarStyle === "multirow"
-        ? this.setMultirowTabMaxHeight()
-        : this.removeMultirowTabMaxHeight();
+      if (config().tabbar.tabbarStyle === "multirow") {
+        this.enableMultirowTabbar();
+        this.setMultirowTabMaxHeight();
+      } else {
+        this.disableMultirowTabbar();
+        this.removeMultirowTabMaxHeight();
+      }
     });
   }
 }
