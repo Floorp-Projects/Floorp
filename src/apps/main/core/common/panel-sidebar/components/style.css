@@ -18,6 +18,14 @@
   --panel-sidebar-floating-margin: 10px 15px;
   --panel-sidebar-floating-splitter-size: 10px;
   --panel-sidebar-floating-corner-size: 16px;
+
+  &[uidensity="compact"] {
+    --panel-sidebar-panel-size: unset;
+  }
+
+  &[uidensity="touch"] {
+    --panel-sidebar-panel-size: 55px;
+  }
 }
 
 /* Panel Sidebar Select Box */
@@ -134,15 +142,6 @@
 
 :root[uidensity="touch"] {
   --panel-sidebar-width: var(--panel-sidebar-touch-width);
-}
-
-:root[uidensity="touch"] .panel-sidebar-panel {
-  margin: 1px 3px 2px;
-  padding: 16px;
-}
-
-:root[uidensity="touch"] .panel-sidebar-panel > .toolbarbutton-icon {
-  width: var(--panel-touch-icon-size);
 }
 
 /* Header */
