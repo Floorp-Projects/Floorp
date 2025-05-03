@@ -160,3 +160,7 @@ browser[type="content"] > html {
 #identity-icon-label[value="Firefox"] {
   display: none !important;
 }
+
+#tabbrowser-tabbox {
+  outline: none !important;
+}
