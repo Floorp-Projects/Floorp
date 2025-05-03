@@ -163,4 +163,8 @@ browser[type="content"] > html {
 
 #tabbrowser-tabbox {
   outline: none !important;
+
+  & > * {
+    outline: none !important;
+  }
 }
