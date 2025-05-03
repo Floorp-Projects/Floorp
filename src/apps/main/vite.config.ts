@@ -12,7 +12,7 @@ import autoprefixer from "npm:autoprefixer";
 import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
 
 const r = (dir: string) => {
-  return path.resolve(path.dirname(import.meta.url.replace("file:", "")), dir);
+  return path.resolve(import.meta.dirname, dir);
 };
 
 export default defineConfig({
