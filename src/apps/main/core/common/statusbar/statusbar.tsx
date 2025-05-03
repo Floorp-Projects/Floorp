@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { manager } from "./";
-import statusbarStyle from "./statusbar.css?inline";
+import statusbarUtilsStyle from "./statusbar-utils.css?inline";
 
 export function StatusBarElem() {
   return (
@@ -13,10 +13,9 @@ export function StatusBarElem() {
         id="nora-statusbar"
         toolbarname="Status bar"
         customizable="true"
-        style="border-top: 1px solid var(--chrome-content-separator-color)"
-        class={`nora-statusbar browser-toolbar ${
-          manager.showStatusBar() ? "" : "collapsed"
-        } hidden`}
+        class={`border-t border-[var(--chrome-content-separator-color)] ${
+          manager.showStatusBar() ? "flex items-center" : "hidden"
+        } browser-toolbar w-full`}
         mode="icons"
         context="toolbar-context-menu"
         accesskey="A"
@@ -25,11 +24,11 @@ export function StatusBarElem() {
           id="status-text"
           align="center"
           flex="1"
-          class="statusbar-padding"
+          class="px-2 overflow-hidden"
         />
       </xul:toolbar>
-      <style class="nora-statusbar" jsx>
-        {statusbarStyle}
+      <style class="nora-statusbar-utils" jsx>
+        {statusbarUtilsStyle}
       </style>
     </>
   );
