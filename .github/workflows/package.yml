@@ -278,7 +278,7 @@ jobs:
             case "Linux-x64":
               await addToENV("ARTIFACT_FROM_RELEASE_NAME","floorp-linux-amd64-moz-artifact.tar.xz");
               await addToENV("OUTPUT_NAME","linux-amd64");
-              await $`echo "INSTALLER_PATH=Floorp*tar.xz" >> $GITHUB_ENV`;
+              await $`echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV`;
               await addToENV("OUTPUT_INSTALLER_NAME","floorp-linux-amd64.tar.xz");
               break;
             case "macOS-x64":
