@@ -31,9 +31,7 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    document?.addEventListener("floorpOnLocationChangeEvent", () => {
-      this.onCurrentTabChangedOrLoaded();
-    });
+    window.gBrowser.addProgressListener(this.listener);
 
     Services.obs.addObserver(async (subject: any) => {
       await this.renameSsb(
@@ -46,6 +44,12 @@ export class SiteSpecificBrowserManager {
       await this.uninstallById(subject?.wrappedJSObject?.id as string);
     }, "nora-ssb-uninstall");
   }
+
+  private listener = {
+    onLocationChange: () => {
+      this.onCurrentTabChangedOrLoaded();
+    },
+  };
 
   async onCommand() {
     this.installOrRunCurrentPageAsSsb(window.gBrowser.selectedBrowser, true);
