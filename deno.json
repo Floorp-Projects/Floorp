@@ -1,5 +1,5 @@
 {
-  "patch": ["libs/@types/gecko/dom"],
+  "patch": ["libs/@types/gecko"],
   "unstable": ["npm-patch"],
   "workspace": ["./libs/*", "./apps/*", "./apps/system/*"],
   "imports": {
@@ -8,10 +8,13 @@
     "#i18n/": "./i18n/",
     "#apps/": "./apps/",
     "#libs/": "./libs/",
-    "#features-chrome/": "./apps/features-chrome/"
+    "#features-chrome/": "./apps/features-chrome/",
+    "@std/streams": "jsr:@std/streams@^1.0.9"
   },
   "compilerOptions": {
-    "lib": ["dom", "dom.asynciterable", "deno.ns", "ESNext"]
+    "lib": ["deno.ns", "ESNext", "dom"],
+    "allowJs": true,
+    "checkJs": true
   },
   "tasks": {
     "build": "deno run -A build.ts",

@@ -49,9 +49,9 @@ async function launchDev(mode: string, buildid2: string) {
 }
 
 async function shutdownDev() {
-  for (const i of pDevVite) {
-    await i.close();
-  }
+  // for (const i of pDevVite) {
+  //   await i.close();
+  // }
   if (worker) {
     worker.postMessage("");
   }

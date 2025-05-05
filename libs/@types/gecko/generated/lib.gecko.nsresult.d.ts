@@ -369,6 +369,9 @@ interface nsIXPCComponents_Results {
   /** User refused navigation to potentially unsafe URL with embedded credentials/superfluos authentication */
   NS_ERROR_SUPERFLUOS_AUTH: 0x804b005b;
 
+  /** User attempted basic HTTP authentication when it is disabled */
+  NS_ERROR_BASIC_HTTP_AUTH_DISABLED: 0x804b005c;
+
   // Error codes return from the proxy
 
   /** The connection to the proxy server was refused */
@@ -412,6 +415,9 @@ interface nsIXPCComponents_Results {
 
   /** The connection was established, but no data was ever received */
   NS_ERROR_NET_RESET: 0x804b0014;
+
+  /** The connection was established, but the browser received an empty page with an error response */
+  NS_ERROR_NET_EMPTY_RESPONSE: 0x804b0024;
 
   /** The connection was established, but the browser received an error response from the server */
   NS_ERROR_NET_ERROR_RESPONSE: 0x804b0023;

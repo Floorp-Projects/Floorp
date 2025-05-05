@@ -20,10 +20,28 @@ interface Document {
   createXULElement(name: "browser"): XULBrowserElement;
 }
 
+type nsIGleanPingNoReason = {
+  [K in keyof nsIGleanPing]: K extends "submit"
+    ? (_?: never) => void
+    : nsIGleanPing[K];
+};
+
+type nsIGleanPingWithReason<T> = {
+  [K in keyof nsIGleanPing]: K extends "submit"
+    ? (reason: T) => void
+    : nsIGleanPing[K];
+};
+
 interface MessageListenerManagerMixin {
   // Overloads that define `data` arg as required, since it's ~always expected.
-  addMessageListener(msg: string, listener: { receiveMessage(_: ReceiveMessageArgument & { data })});
-  removeMessageListener(msg: string, listener: { receiveMessage(_: ReceiveMessageArgument & { data })});
+  addMessageListener(
+    msg: string,
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+  );
+  removeMessageListener(
+    msg: string,
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+  );
 }
 
 interface MozQueryInterface {
@@ -44,25 +62,46 @@ interface nsISupports {
 }
 
 interface nsIXPCComponents_Constructor {
-  <const T, IIDs = nsIXPCComponents_Interfaces>(cid, id: T, init?): {
+  <const T, IIDs = nsIXPCComponents_Interfaces>(
+    cid,
+    id: T,
+    init?
+  ): {
     new (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
     (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
-  }
+  };
 }
 
+interface ComponentsExceptionOptions {
+  result?: number;
+  stack?: nsIStackFrame;
+  data?: object;
+}
+
+interface nsIException extends Exception {}
+
 interface nsIXPCComponents_Exception {
-  (...args: ConstructorParameters<typeof Error>): Error;
+  (
+    message?: string,
+    resultOrOptions?: number | ComponentsExceptionOptions,
+    stack?: nsIStackFrame,
+    data?: object
+  ): nsIException;
+}
+
+interface nsIXPCComponents_ID {
+  (uuid: string): nsID;
 }
 
 interface nsIXPCComponents_utils_Sandbox {
-  (principal: nsIPrincipal | nsIPrincipal[], options: object): typeof globalThis;
+  (principal: nsIPrincipal | nsIPrincipal[], options: object): Sandbox;
 }
 
 interface nsXPCComponents_Classes {
   [cid: string]: {
     createInstance<T>(aID: T): nsQIResult<T>;
     getService<T>(aID?: T): unknown extends T ? nsISupports : nsQIResult<T>;
-  }
+  };
 }
 
 // Generic overloads.
@@ -74,13 +113,10 @@ interface nsXPCComponents_Utils {
   waiveXrays<T>(object: T): T;
 }
 
-// TODO: remove after next TS update.
-interface PromiseConstructor {
-  withResolvers<T>(): {
-    promise: Promise<T>;
-    resolve: (value: T | PromiseLike<T>) => void;
-    reject: (reason?: any) => void;
-  };
+type Sandbox = typeof globalThis & nsISupports;
+
+interface WindowGlobalParent extends WindowContext {
+  readonly browsingContext: CanonicalBrowsingContext;
 }
 
 // Hand-crafted artisanal types.

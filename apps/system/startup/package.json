@@ -1,8 +1,0 @@
-{
-  "name": "@nora/system-startup",
-  "dependencies": {
-    "pathe": "^2.0.3",
-    "rolldown": "^1.0.0-beta.8",
-    "tsdown": "^0.9.8"
-  }
-}

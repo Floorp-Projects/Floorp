@@ -1,5 +1,5 @@
-import { getFeaturesCommonEntries } from "@nora/features-chrome/common/mod.ts";
-import { getFeaturesStaticEntries } from "@nora/features-chrome/static/mod.ts";
+import { getFeaturesCommonEntries } from "#features-chrome/common/mod.ts";
+import { getFeaturesStaticEntries } from "#features-chrome/static/mod.ts";
 
 export const MODULES = {
   common: {} as Record<string, () => Promise<unknown>>,

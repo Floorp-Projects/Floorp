@@ -5,6 +5,7 @@ import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import NoranekoTestPlugin from "vitest-noraneko/plugin.ts";
 import deno from "@deno/vite-plugin";
+import { relative, resolve } from "pathe";
 
 import { generateJarManifest } from "../../common/scripts/gen_jarmanifest.ts";
 
@@ -202,8 +203,11 @@ export default defineConfig({
     alias: [
       { find: "@nora/skin", replacement: r("../../../libs/skin") },
       { "find": "#apps", "replacement": r("../..") },
-      // { "find": "#i18n","replacement":r("../../../i18n")}
-      { "find": "#features-chrome", "replacement": r("../../features-chrome") },
+      {
+        "find": "#i18n-features-chrome",
+        "replacement": r("./i18n-features-chrome"),
+      },
+      { "find": "#features-chrome", "replacement": r("./features-chrome") },
     ],
   },
 });

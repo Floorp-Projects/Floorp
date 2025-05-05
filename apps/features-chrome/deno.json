@@ -3,8 +3,6 @@
   "imports": {
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
     "@types/uuid": "npm:@types/uuid@^10.0.0",
-    "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
-    "@nora/skin/": "../../libs/skin",
 
     "es-toolkit": "npm:es-toolkit@^1.36.0",
     "i18next": "npm:i18next@^25.0.1",
@@ -17,11 +15,12 @@
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",
     "vitest": "npm:vitest@^3.1.2",
     "chroma-js": "npm:chroma-js@^3.1.1",
-    "@types/chroma-js": "npm:@types/chroma-js@^3.1.1"
+    "@types/chroma-js": "npm:@types/chroma-js@^3.1.1",
+    "@types/gecko": "jsr:@types/gecko"
   },
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "types": ["npm:vite/client", "jsr:@nora/lib-dom-gecko"]
+    "types": ["npm:vite/client", "jsr:@types/gecko"]
   },
   "lint": {
     "rules": {

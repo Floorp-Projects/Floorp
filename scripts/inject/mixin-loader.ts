@@ -1,75 +1,93 @@
 import fg from "fast-glob";
-import path from "node:path";
-import fs from "node:fs/promises";
+import { join, resolve } from "pathe";
 import { transform } from "./wasm/nora-inject.js";
-import {transformFileSync} from "@swc/core"
+import { transformFileSync } from "@swc/core";
 
+const mixinsDir = join(import.meta.dirname!, "mixins");
 const fileList = await fg("*", {
-  cwd: import.meta.dirname + "/mixins",
+  cwd: mixinsDir,
   onlyFiles: true,
 });
 
-export async function applyMixin(binPath: string) {
-  const result = transformFileSync(
-    path.resolve(import.meta.dirname, `./shared/define.ts`),
-    {
-      "jsc":{
-        "parser":{
-          syntax:"typescript",
-        }
-      }
-    }
-  );
-  await fs.mkdir(
-    `${path.relative(process.cwd(), import.meta.dirname)}/../../_dist/temp/mixins`,
-    {
-      recursive: true,
-    },
-  );
-  await fs.mkdir(
-    `${path.relative(process.cwd(), import.meta.dirname)}/../../_dist/temp/shared`,
-    {
-      recursive: true,
-    },
-  );
-  await fs.writeFile(
-    `${path.relative(process.cwd(), import.meta.dirname)}/../../_dist/temp/shared/define.js`,
-    result.code,
-  );
+const tempDistDir = join(
+  import.meta.dirname!,
+  "../../_dist/temp",
+);
+const tempMixinsDir = join(tempDistDir, "mixins");
+const tempSharedDir = join(tempDistDir, "shared");
 
-  for (const file of fileList) {
-    const result = transformFileSync(
-      path.resolve(import.meta.dirname, `./mixins/${file}`),
-      {
-        "jsc":{
-          "parser":{
-            syntax:"typescript",
-            decorators:true
+export async function applyMixin(binPath: string) {
+  try {
+    // Ensure temporary directories exist
+    await Deno.mkdir(tempMixinsDir, { recursive: true });
+    await Deno.mkdir(tempSharedDir, { recursive: true });
+
+    // Transform and write shared define file
+    const defineFilePath = resolve(
+      import.meta.dirname!,
+      "./shared/define.ts",
+    );
+    const defineResult = transformFileSync(defineFilePath, {
+      jsc: {
+        parser: {
+          syntax: "typescript",
+        },
+      },
+    });
+    const tempDefinePath = join(tempSharedDir, "define.js");
+    await Deno.writeTextFile(tempDefinePath, defineResult.code);
+
+    // Process mixin files
+    for (const file of fileList) {
+      const mixinFilePath = join(mixinsDir, file);
+      const mixinResult = transformFileSync(mixinFilePath, {
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            decorators: true,
           },
           transform: {
             decoratorMetadata: true,
             decoratorVersion: "2022-03",
+          },
+        },
+      });
+
+      const tempMixinPath = join(tempMixinsDir, file);
+      await Deno.writeTextFile(tempMixinPath, mixinResult.code);
+
+      // Dynamically import and apply mixin after transformation.
+      // This is necessary to execute the transformed code.
+      const module = await import(
+        `../../_dist/temp/mixins/${file}`
+      );
+      for (const i in module) {
+        try {
+          const instance = new module[i]();
+          if (instance && instance.__meta__) {
+            const meta = instance.__meta__;
+            console.log(JSON.stringify(meta));
+
+            const sourceFilePath = join(binPath, meta.meta.path);
+            const source = await Deno.readTextFile(sourceFilePath);
+            const ret = transform(source, JSON.stringify(meta));
+
+            await Deno.writeTextFile(sourceFilePath, ret);
+          } else {
+            console.warn(
+              `Mixin module ${file} property ${i} does not have a __meta__ property.`,
+            );
           }
+        } catch (error) {
+          console.error(
+            `Error processing mixin ${file}, property ${i}:`,
+            error,
+          );
         }
       }
-    );
-
-    await fs.writeFile(
-      `${path.relative(process.cwd(), import.meta.dirname)}/../../_dist/temp/mixins/${file}`,
-
-      result.code,
-    );
-    //result.code;
-    const module = await import(`../../_dist/temp/mixins/${file}`);
-    for (const i in module) {
-      const meta = new module[i]().__meta__;
-      console.log(JSON.stringify(meta));
-      const source = (
-        await fs.readFile(`${binPath}/${meta.meta.path}`)
-      ).toString();
-      const ret = transform(source, JSON.stringify(meta));
-
-      await fs.writeFile(`${binPath}/${meta.meta.path}`, ret);
     }
+  } catch (error) {
+    console.error("Error during mixin application:", error);
+    throw error; // Re-throw to indicate failure
   }
 }

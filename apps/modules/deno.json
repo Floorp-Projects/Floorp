@@ -3,8 +3,7 @@
   "imports": {
     "@jsr/std__fs": "npm:@jsr/std__fs@^1.0.17",
     "birpc": "npm:birpc@^2.3.0",
-    "pathe": "npm:pathe@^2.0.3",
-    "tsdown": "npm:tsdown@^0.9.8"
+    "pathe": "npm:pathe@^2.0.3"
   },
   "exports": {
     ".": "./*"
