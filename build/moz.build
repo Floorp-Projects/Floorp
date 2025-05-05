@@ -91,7 +91,7 @@ if CONFIG["MOZ_APP_BASENAME"]:
         if CONFIG[var]:
             appini_defines[var] = True
 
-    appini_defines["MOZ_APPUPDATE_HOST"] = "floorp-update.ablaze.one"
+    appini_defines["MOZ_APPUPDATE_HOST"] = "updates.floorp.app"
     if CONFIG["MOZ_APPUPDATE_HOST"]:
         appini_defines["MOZ_APPUPDATE_HOST"] = CONFIG["MOZ_APPUPDATE_HOST"]
 
