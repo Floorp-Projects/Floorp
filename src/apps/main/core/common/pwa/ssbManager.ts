@@ -12,12 +12,17 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-let WindowsSupportClass: any | null = null;
+let SupportClass: any | null = null;
 if (AppConstants.platform === "win") {
   const { WindowsSupport } = ChromeUtils.importESModule(
     "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
   );
-  WindowsSupportClass = WindowsSupport;
+  SupportClass = WindowsSupport;
+} else if (AppConstants.platform === "linux") {
+  const { LinuxSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+  );
+  SupportClass = LinuxSupport;
 }
 
 export class SiteSpecificBrowserManager {
@@ -145,19 +150,30 @@ export class SiteSpecificBrowserManager {
   }
 
   private async install(manifest: Manifest) {
-    if (AppConstants.platform === "win" && WindowsSupportClass) {
-      const windowsSupport = new WindowsSupportClass(this);
-      await windowsSupport.install(manifest);
+    if (SupportClass) {
+      if (AppConstants.platform === "win") {
+        const windowsSupport = new SupportClass(this);
+        await windowsSupport.install(manifest);
+      } else if (AppConstants.platform === "linux") {
+        const linuxSupport = new SupportClass(this);
+        await linuxSupport.install(manifest);
+      }
     }
 
     await this.dataManager.saveSsbData(manifest);
   }
 
   private async uninstall(manifest: Manifest) {
-    if (AppConstants.platform === "win" && WindowsSupportClass) {
-      const windowsSupport = new WindowsSupportClass(this);
-      await windowsSupport.uninstall(manifest);
+    if (SupportClass) {
+      if (AppConstants.platform === "win") {
+        const windowsSupport = new SupportClass(this);
+        await windowsSupport.uninstall(manifest);
+      } else if (AppConstants.platform === "linux") {
+        const linuxSupport = new SupportClass(this);
+        await linuxSupport.uninstall(manifest);
+      }
     }
+
     await this.dataManager.removeSsbData(manifest.start_url);
   }
 
