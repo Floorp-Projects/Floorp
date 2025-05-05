@@ -475,7 +475,13 @@ class UpdateVerifyConfigCreator(BaseScript):
                 path,
             ),
         )
-        ret = self._retry_download(url, "WARNING")
+        ret = self._retry_download(
+            url, "WARNING", retry_config={"sleeptime": 5, "max_sleeptime": 5}
+        )
+        if not ret:
+            git_url = f"https://raw.githubusercontent.com/mozilla-firefox/firefox/refs/tags/{rev}/{path}"
+            ret = self._retry_download(git_url, "WARNING")
+
         return ret.read().strip().decode("utf-8")
 
     def gather_info(self):
