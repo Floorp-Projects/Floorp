@@ -11,6 +11,10 @@ export class MultirowTabbarClass {
     return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
   }
 
+  private get tabsToolbar(): XULElement | null {
+    return document?.getElementById("TabsToolbar") as XULElement | null;
+  }
+
   private get scrollboxPart(): XULElement | null {
     return this.arrowScrollbox
       ? this.arrowScrollbox.shadowRoot?.querySelector(
@@ -57,11 +61,13 @@ export class MultirowTabbarClass {
   private enableMultirowTabbar() {
     console.log("Enabling multirow tabbar");
     this.scrollboxPart?.setAttribute("style", "flex-wrap: wrap;");
+    this.tabsToolbar?.setAttribute("multibar", "true");
   }
 
   private disableMultirowTabbar() {
     console.log("Disabling multirow tabbar");
     this.scrollboxPart?.removeAttribute("style");
+    this.tabsToolbar?.removeAttribute("multibar");
   }
 
   constructor() {
