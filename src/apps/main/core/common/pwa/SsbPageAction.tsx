@@ -126,78 +126,90 @@ export class SsbPageAction {
     const [translations] = this.translations;
 
     return (
-      <xul:hbox
-        id="ssbPageAction"
-        class="urlbar-page-action"
-        popup="ssb-panel"
-        hidden={!shouldShowPageAction()}
-      >
-        <xul:image
-          id="ssbPageAction-image"
-          class={`urlbar-icon${isInstalled() ? " open-ssb" : ""}`}
-        />
-        <xul:panel
-          id="ssb-panel"
-          type="arrow"
-          position="bottomright topright"
-          onPopupShowing={this.onPopupShowing}
-          onPopupHiding={this.onPopupHiding}
-        >
-          <xul:vbox id="ssb-box">
-            <xul:vbox class="panel-header">
-              <h1>
-                {isInstalled() ? translations().open : translations().install}
-              </h1>
-            </xul:vbox>
-            <xul:toolbarseparator />
-            <xul:hbox id="ssb-content-hbox">
-              <xul:vbox id="ssb-content-icon-vbox">
-                <img
-                  id="ssb-content-icon"
-                  width="48"
-                  height="48"
-                  alt={translations().siteIcon}
-                  src={icon()}
-                />
+      <>
+        {shouldShowPageAction() && (
+          <xul:hbox
+            id="ssbPageAction"
+            class="urlbar-page-action"
+            popup="ssb-panel"
+          >
+            <xul:image
+              id="ssbPageAction-image"
+              class={`urlbar-icon${isInstalled() ? " open-ssb" : ""}`}
+            />
+            <xul:panel
+              id="ssb-panel"
+              type="arrow"
+              position="bottomright topright"
+              onPopupShowing={this.onPopupShowing}
+              onPopupHiding={this.onPopupHiding}
+            >
+              <xul:vbox id="ssb-box">
+                <xul:vbox class="panel-header">
+                  <h1>
+                    {isInstalled()
+                      ? translations().open
+                      : translations().install}
+                  </h1>
+                </xul:vbox>
+                <xul:toolbarseparator />
+                <xul:hbox id="ssb-content-hbox" class="items-center">
+                  <xul:vbox id="ssb-content-icon-vbox">
+                    <img
+                      id="ssb-content-icon"
+                      width="48"
+                      height="48"
+                      alt={translations().siteIcon}
+                      src={icon()}
+                    />
+                  </xul:vbox>
+                  <xul:vbox id="ssb-content-label-vbox">
+                    <xul:label
+                      id="ssb-content-label"
+                      class="text-2xl font-bold"
+                    >
+                      {title()}
+                    </xul:label>
+                    <xul:description id="ssb-content-description">
+                      {description()}
+                    </xul:description>
+                  </xul:vbox>
+                </xul:hbox>
+                <xul:hbox id="ssb-button-hbox" class="justify-end space-x-2">
+                  {isInstalling() && (
+                    <xul:vbox id="ssb-installing-vbox">
+                      <img
+                        id="ssb-installing-icon"
+                        src="chrome://floorp/skin/icons/installing.gif"
+                        width="48"
+                        height="48"
+                      />
+                    </xul:vbox>
+                  )}
+                  {!isInstalling() && (
+                    <>
+                      <xul:button
+                        id="ssb-app-install-button"
+                        class="panel-button ssb-install-buttons footer-button primary"
+                        onClick={this.onCommand}
+                        label={isInstalled()
+                          ? translations().open
+                          : translations().install}
+                      />
+                      <xul:button
+                        id="ssb-app-cancel-button"
+                        class="panel-button ssb-install-buttons footer-button"
+                        onClick={this.closePopup}
+                        label={translations().cancel}
+                      />
+                    </>
+                  )}
+                </xul:hbox>
               </xul:vbox>
-              <xul:vbox id="ssb-content-label-vbox">
-                <h2>
-                  <xul:label id="ssb-content-label" />
-                  {title()}
-                </h2>
-                <xul:description id="ssb-content-description">
-                  {description()}
-                </xul:description>
-              </xul:vbox>
-            </xul:hbox>
-            <xul:hbox id="ssb-button-hbox">
-              <xul:vbox id="ssb-installing-vbox">
-                <img
-                  id="ssb-installing-icon"
-                  hidden={!isInstalling()}
-                  src="chrome://floorp/skin/icons/installing.gif"
-                  width="48"
-                  height="48"
-                />
-              </xul:vbox>
-              <xul:button
-                id="ssb-app-install-button"
-                class="panel-button ssb-install-buttons footer-button primary"
-                hidden={isInstalling()}
-                onClick={this.onCommand}
-                label={isInstalled() ? translations().open : translations().install}
-              />
-              <xul:button
-                id="ssb-app-cancel-button"
-                class="panel-button ssb-install-buttons footer-button"
-                hidden={isInstalling()}
-                onClick={this.closePopup}
-                label={translations().cancel}
-              />
-            </xul:hbox>
-          </xul:vbox>
-        </xul:panel>
-      </xul:hbox>
+            </xul:panel>
+          </xul:hbox>
+        )}
+      </>
     );
   }
 
