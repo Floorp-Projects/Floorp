@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "support.firefox@beamy.io:4.8.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1746113766826,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1746210907325,
+      "id": "71c304f8-95eb-403d-8ba4-33021d6af9cb",
+      "last_modified": 1746210984035
+    },
+    {
+      "stash": {
+        "blocked": [
           "coldturkey@getcoldturkey.com:4.6.2"
         ],
         "unblocked": [],
@@ -244,5 +258,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1745606180658
+  "timestamp": 1746210984035
 }
