@@ -118,10 +118,10 @@
         },
         "uiCustomization": {
             "title": "Kustomisasi UI",
-            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur kustomisasi antarmuka ini.",
             "navbar": {
                 "title": "Bilah Navigasi",
-                "positionWithExperiment": "Position (Experiment)",
+                "positionWithExperiment": "Posisi (Eksperimen)",
                 "top": "Atas",
                 "bottom": "Bawah",
                 "searchBarTop": "Move page inside search bar"
@@ -135,8 +135,12 @@
             "special": {
                 "title": "Fitur Istimewa",
                 "optimizeForTreeStyleTab": "Optimalkan untuk Tree Style Tab",
-                "hideForwardBackwardButton": "Hide Forward/Backward Button",
+                "hideForwardBackwardButton": "Sembunyikan Tombol Maju/Mundur",
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
+            },
+            "newtab": {
+                "title": "Tab Baru",
+                "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
                 "title": "Tab Multibaris",
@@ -220,7 +224,48 @@
         "globalWidth": "Lebar Umum Panel Web",
         "globalWidthDescription": "Lebar umum diterapkan apabila lebar panel ditulis 0.",
         "iconProviderRemoved": "Pengaturan penyedia ikon telah dihapus karena {{productName}} sekarang selalu mencoba sebisa mungkin mendapat ikon panel secara langsung dari halaman web.",
-        "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur bilah sisi."
+        "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur bilah sisi.",
+        "staticPanel": "Sidebar Tool Panel",
+        "extensionPanel": "Panel Ekstensi",
+        "selectStaticPanel": "Select a Sidebar Tool",
+        "selectExtension": "Pilih ekstensi",
+        "icon": "Ikon",
+        "width": "Lebar",
+        "zoomLevel": "Tingkat Zum",
+        "container": "Kontainer",
+        "noContainer": "Tanpa Kontainer",
+        "useUserAgent": "Gunakan Agen Pengguna Seluler",
+        "panelType": "Panel Type",
+        "panelList": "Panel List",
+        "type": {
+            "web": "Web",
+            "static": "Sidebar Tool",
+            "extension": "Ekstensi"
+        },
+        "staticPanels": {
+            "bmt": "Browser Manager Tool",
+            "bookmarks": "Markah",
+            "history": "Riwayat",
+            "downloads": "Unduhan",
+            "notes": "Catatan"
+        },
+        "url": "URL",
+        "untitled": "Nirjudul",
+        "confirmDeleteTitle": "Hapus Panel",
+        "confirmDelete": "Anda yakin ingin menghapus panel ini?",
+        "delete": "Hapus",
+        "addPanel": "Tambah Panel",
+        "editPanel": "Sunting Panel",
+        "errors": {
+            "typeRequired": "Panel type is required",
+            "urlRequired": "URL wajib untuk panel web",
+            "invalidUrl": "Masukkan URL yang valid",
+            "extensionIdRequired": "ID ekstensi wajib untuk panel ekstensi",
+            "staticPanelRequired": "Please select a sidebar tool",
+            "invalidWidth": "Lebar minimal 100 piksel"
+        },
+        "save": "Simpan",
+        "cancel": "Batal"
     },
     "progressiveWebApp": {
         "title": "Aplikasi Web",

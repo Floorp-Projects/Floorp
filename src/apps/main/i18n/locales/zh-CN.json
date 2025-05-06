@@ -20,7 +20,7 @@
             "briefcase": "公文包",
             "cart": "购物车",
             "chat": "聊天",
-            "chill": "Chill",
+            "chill": "冷酷",
             "circle": "圆圈",
             "compass": "指南针",
             "code": "代码",
@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "创建新工作区……",
             "manage": "管理工作区"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "移动标签到另一个工作区"
+        },
+        "error": {
+            "invalidWorkspaceID": "工作区 ID 无效（可能请求未更新）"
         }
     },
     "statusbar": {
@@ -188,7 +194,7 @@
             "type": "面板类型",
             "typeOptions": {
                 "web": "网页",
-                "static": "工具侧边栏",
+                "sidebar-tool": "Tool Sidebar",
                 "extension": "扩展侧边栏"
             },
             "width": "面板宽度",

@@ -1,14 +1,14 @@
 {
     "title": "Punca Floorp",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
+        "addSite": "Tambahkan situs",
+        "addNewSite": "Tambah situs baru",
         "url": "URL",
         "label": "Label",
         "cancel": "Batal",
         "add": "Tambah",
         "close": "Tutup",
-        "labelPlaceholder": "Website name"
+        "labelPlaceholder": "Nama situs web"
     },
     "settings": {
         "newTabSettings": "Pengaturan Tab Baru",
@@ -20,13 +20,13 @@
         "noBackground": "Latar Kosong",
         "randomImage": "Gambar Acak",
         "customImage": "Gambar Suaian",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
+        "folderImages": "Gambar dari Folder",
+        "floorpImages": "Gambar Floorp",
+        "currentImage": "Gambar saat ini:",
+        "currentFolder": "Folder saat ini:",
+        "selectFolder": "Pilih Folder",
+        "selected": "Terpilih",
+        "imageRecommendation": "Saran: gambar berukuran 1920×1080 atau lebih",
         "close": "Tutup"
     },
     "searchBar": {

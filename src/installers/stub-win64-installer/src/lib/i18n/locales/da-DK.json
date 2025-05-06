@@ -25,60 +25,55 @@
             "installPath": "Installationssti",
             "browse": "Gennemse",
             "resetDefault": "Nulstil til standard",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "cancel": "Annuller",
+            "save": "Gem indstillinger",
+            "close": "Luk"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "Afbryd installation?",
+            "message": "Hvis du afbryder installationsprocessen, bliver Floorp ikke installeret.",
+            "cancelButton": "Afbryd",
+            "confirmButton": "Afbryd installation"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds"
+            "success": "Installation lykkedes",
+            "error": "Installation mislykkedes",
+            "launchCheckbox": "Start Floorp-browseren efter installation",
+            "closeButton": "Luk installationsprogram",
+            "countdownMessage": "Installationsprogram lukker om {{count}} sekunder"
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Privacy Protection",
-            "description": "Floorp is designed with user privacy as the top priority. Protect your online privacy with tracking prevention features and secure browsing mode."
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
-        "performance": {
-            "title": "Fast Performance",
-            "description": "Optimized engine provides speed for everything from page loading to tab switching, making your browsing experience smooth."
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
-        "customization": {
-            "title": "Rich Customization",
-            "description": "Floorp offers rich customization options. You can customize everything from the user interface to features to suit your preferences."
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
-        "extensions": {
-            "title": "Extensive Extensions",
-            "description": "Compatible with Firefox extensions, allowing you to add your favorite tools and services to your browser."
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
         },
-        "multiplatform": {
-            "title": "Multi-Platform Support",
-            "description": "Available on various platforms including Windows, macOS, and Linux. Enjoy the same experience everywhere."
-        },
-        "navigation": {
-            "previous": "Previous",
-            "next": "Next",
-            "goto": "Go to slide {{number}}"
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "Floorp-installationsprogrammet er blevet hentet (udviklingstilstand)",
+            "installation_complete": "Floorp-installation gennemført."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
+            "installer_not_found": "Kunne ikke hente Floorp-installationsprogram.",
+            "download_failed": "En fejl opstod under download: {{0}}",
+            "signature_verification_failed": "Signaturverificering mislykkedes. Udførelse afbrudt af sikkerhedshensyn.",
             "signature_verification_error": "Der opstod en fejl under signaturbekræftelse: {{0}}",
             "installer_exit_code": "Installationen afsluttede med kode {{0}}.",
             "installer_execution": "Der opstod en fejl under kørsel af installationen: {{0}}",

@@ -44,30 +44,25 @@
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Защита конфиденциальности",
-            "description": "Floorp разработан с приоритетом конфиденциальности пользователя. Защитите вашу приватность с помощью функций блокировки отслеживания и режимом безопасного просмотра."
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
-        "performance": {
-            "title": "Высокая производительность",
-            "description": "Оптимизированный движок обеспечивает скорость во всём: от загрузки страниц до переключения вкладок, делая ваш просмотр плавным."
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
-        "customization": {
-            "title": "Широкие возможности настройки",
-            "description": "Floorp предлагает богатые возможности настройки. Вы можете настроить всё: от интерфейса до функций под ваши предпочтения."
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
-        "extensions": {
-            "title": "Расширенная поддержка дополнений",
-            "description": "Совместим с расширениями Firefox, позволяя вам добавлять ваши любимые инструменты и сервисы в ваш браузер."
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
         },
-        "multiplatform": {
-            "title": "Мультиплатформенная поддержка",
-            "description": "Совместим с расширениями Firefox, позволяя вам добавлять ваши любимые инструменты и сервисы в ваш браузер."
-        },
-        "navigation": {
-            "previous": "Назад",
-            "next": "Далее",
-            "goto": "Перейти к слайду {{number}}"
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
         }
     },
     "rust": {

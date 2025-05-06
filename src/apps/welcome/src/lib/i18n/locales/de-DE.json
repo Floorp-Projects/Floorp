@@ -1,130 +1,130 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "Willkommen",
+        "language": "Sprache",
+        "languageSupport": "Sprachunterstützung",
+        "features": "Funktionen",
+        "featureIntroduction": "Funktionseinführung",
+        "customize": "Anpassen",
+        "initialSettings": "Standardeinstellungen",
+        "complete": "Abgeschlossen",
+        "previous": "Zurück",
+        "next": "Weiter"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Floorp anpassen",
+        "description": "Passen Sie die Einstellungen nach Ihren Wünschen an. Sie können sie später jederzeit über den Floorp Hub oder die Einstellungsseite ändern.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "Anzeigeneinstellungen",
+            "description": "Sie können das Aussehen von Floorp nach Ihren Wünschen anpassen. Wählen Sie ein helles oder dunkles Design oder lassen Sie es automatisch auf Basis Ihrer Systemeinstellungen wechseln."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Hell",
+            "dark": "Dunkel",
+            "system": "Systemeinstellungen übernehmen"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "Helles Design",
+            "dark": "Dunkles Design",
+            "system": "Systemeinstellungen"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Standardsuchmaschine",
+            "default": "Standard",
+            "search": "Suchen",
+            "noEnginesFound": "Keine Suchmaschinen gefunden."
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "Konfiguration abgeschlossen!",
+        "subtitle": "Herzlichen Glückwunsch! Sie haben die Einrichtung von Floorp abgeschlossen. Genießen Sie ein komfortables und sicheres Internet-Browsing-Erlebnis.",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "Nächste Schritte (optional)",
+            "setDefault": "Als Standardbrowser festlegen",
+            "documentation": "Dokumentation"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "Erste Schritte mit Floorp",
+        "hint": "Für detailliertere Einstellungen können Sie über die Option Einstellungen in der Menü-Taste oben rechts anpassen."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Willkommen bei Floorp!",
+        "description": "Floorp ist ein schneller und benutzerfreundlicher Webbrowser, bei dem Privatsphäre und Sicherheit im Vordergrund steht. Diese Anleitung führt Sie zu den wichtigsten Funktionen und Einstellungen von Floorp.",
+        "readyToStart": "Wenn Sie bereit sind, klicken Sie auf die Schaltfläche unten, um fortzufahren.",
+        "features": "Floorp Funktionen",
+        "privacy": "Privatsphäre",
+        "privacyDesc": "Schützen Sie Ihre Daten",
+        "speed": "Geschwindigkeit",
+        "speedDesc": "Optimierte Performance",
+        "customization": "Anpassung",
+        "customizationDesc": "Ordnen Sie nach Ihren Wünschen",
+        "start": "Erste Schritte"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Floorp spricht Ihre Sprache",
+        "subtitle": "Spracheinstellungen überprüfen und bei Bedarf ändern",
+        "languageSettings": "Spracheinstellungen",
+        "languageChanged": "Sprache geändert!",
+        "currentLanguageInfo": "Aktuelle Sprachinformationen",
+        "systemLanguage": "Systemsprache",
+        "floorpLanguage": "Floorp Sprache",
+        "selectLanguage": "Sprache auswählen",
+        "useSystemLanguage": "Systemsprache verwenden",
+        "multilingual": "Mehrsprachige Unterstützung",
+        "chooseLanguage": "Wählen Sie aus einer Vielzahl von Sprachen",
+        "languageChangeNotice": "Wenn Sie die Sprache ändern, wird die neue Sprache übernommen, ohne dass Floorp neu gestartet werden muss. Einige Add-ons unterstützen möglicherweise keine Sprachänderungen."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Floorp Hauptfunktionen",
+        "subtitle": "Floorp verfügt über viele nützliche Funktionen. Sehen Sie sich die Funktionsübersicht an!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "Panel Seitenleiste",
+            "description": "Greifen Sie beim Surfen über die rechte Seitenleiste auf praktische Funktionen zu. Sie können Webpanels, Notizfunktionen, Add-ons, Lesezeichen usw. in der Seitenleiste platzieren.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "Websites an die Seitenleiste anheften",
+                "Schreibe schnell Notizen mit Floorp Notizen beim Surfen",
+                "Unterstützt Container"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "Arbeitsbereiche",
+            "description": "Organisieren Sie mehrere Tabs, um Ihre Arbeit zu rationalisieren. Wechseln Sie schnell zwischen Arbeitsbereichen mit unverwechselbare Symbolen und Namen. Zugriff über die Schaltfläche Arbeitsbereich oben links.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Kategorisieren Sie nach Zweck: Arbeit, Privat, usw.",
+                "Sichtbar mit eigenen Symbolen identifizieren",
+                "Einfache Verwaltung von Tabs"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "Unterstützung progressiver Webanwendungen",
+            "description": "Unter Windows können Sie PWA-kompatible Websites als Desktop-Anwendungen hinzufügen, wenn Sie sie besuchen. Es können auch normale Websites installiert werden.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "Unabhängig als Desktop-Anwendungen laufen",
+                "Kann an die Taskleiste angeheftet werden",
+                "Firefox-Add-ons funktionieren auch"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "Mausgesten",
+            "description": "Steuern Sie Ihren Browser intuitiver mit der nativ implementierten Mausgestenfunktion. Führen Sie Gesten aus, indem Sie die Rechtsklick-Taste gedrückt halten und die Maus bewegen.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "Bedienung ohne Tastaturkürzel",
+                "Vollständig anpassbare Gesten",
+                "Schnelles Navigieren durch Seiten und Verlauf"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "Notizbuch",
+        "nextTab": "Zum nächsten Tab gehen"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
+        "title": "Konfiguration abgeschlossen!",
+        "subtitle": "Herzlichen Glückwunsch! Sie haben die Einrichtung von Floorp abgeschlossen. Genießen Sie ein komfortables und sicheres Internet-Browsing-Erlebnis.",
+        "nextSteps": "Nächste Schritte (optional)",
+        "defaultBrowser": "Als Standardbrowser festlegen",
         "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "documentation": "Dokumentation",
+        "getStarted": "Erste Schritte mit Floorp",
+        "hint": "Für detailliertere Einstellungen können Sie über die Option Einstellungen in der Menü-Taste oben rechts anpassen.",
+        "resourcesLabel": "Ressourcen",
+        "defaultBrowserSuccess": "Floorp wurde als Ihr Standardbrowser festgelegt!"
     }
 }

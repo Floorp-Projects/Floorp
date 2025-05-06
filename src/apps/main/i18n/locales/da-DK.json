@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "Opret nyt arbejdsområde...",
             "manage": "Administrer arbejdsområder"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+        },
+        "error": {
+            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
         }
     },
     "statusbar": {
@@ -114,19 +120,19 @@
             "gecko-restore-last-window": "Gendan sidste vindue",
             "gecko-show-next-tab": "Vis næste fane",
             "gecko-show-previous-tab": "Vis forrige fane",
-            "gecko-show-all-tabs-panel": "Show All Tabs Panel",
+            "gecko-show-all-tabs-panel": "Vis panelet for alle faner",
             "gecko-force-reload": "Tving genindlæsning",
             "gecko-zoom-in": "Zoom ind",
             "gecko-zoom-out": "Zoom ud",
             "gecko-reset-zoom": "Nulstil zoom",
             "gecko-bookmark-this-page": "Bogmærk denne side",
-            "gecko-open-home-page": "Open Home Page",
-            "gecko-open-addons-manager": "Open Addons Manager",
+            "gecko-open-home-page": "Åbn startside",
+            "gecko-open-addons-manager": "Åbn tilføjelsesadministrator",
             "gecko-send-with-mail": "Send med mail",
             "gecko-save-page": "Gem side",
             "gecko-print-page": "Udskriv side",
-            "gecko-mute-current-tab": "Mute Current Tab",
-            "gecko-show-source-of-page": "Show Source Of Page",
+            "gecko-mute-current-tab": "Slå lyden fra på aktuel fane",
+            "gecko-show-source-of-page": "Vis sidens kildekode",
             "gecko-show-page-info": "Vis sideoplysninger",
             "floorp-rest-mode": "Aktivér hviletilstand",
             "floorp-hide-user-interface": "Skjul brugerflade",
@@ -142,7 +148,7 @@
             "gecko-enter-into-offline-mode": "Gå ind i offline-tilstand",
             "gecko-open-screen-capture": "Åbn skærmoptagelse",
             "floorp-show-pip": "Vis billede-i-billede",
-            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+            "gecko-open-bookmark-add-tool": "Åbn værktøj til bogmærketilføjelse",
             "gecko-open-bookmarks-manager": "Åbn bogmærkehåndtering",
             "gecko-toggle-bookmark-toolbar": "Vis/skjul bogmærkelinje",
             "gecko-open-general-preferences": "Åbn generelle indstillinger",
@@ -158,7 +164,7 @@
             "gecko-restore-last-session": "Gendan sidste session",
             "gecko-search-history": "Søg i historik",
             "gecko-manage-history": "Administrer historik",
-            "gecko-open-downloads": "Open Downloads",
+            "gecko-open-downloads": "Åbn downloads",
             "gecko-show-bookmark-sidebar": "Vis Bogmærker-sidepanel",
             "gecko-show-history-sidebar": "Vis Historik-sidepanel",
             "gecko-show-synced-tabs-sidebar": "Vis Synkroniserede Faner-sidepanel",
@@ -188,7 +194,7 @@
             "type": "Paneltype",
             "typeOptions": {
                 "web": "Webside",
-                "static": "Værktøjssidepanel",
+                "sidebar-tool": "Tool Sidebar",
                 "extension": "Udvidelsessidepanel"
             },
             "width": "Panelbredde",
@@ -197,20 +203,20 @@
             "noContainer": "Ingen beholder",
             "userAgent": "Brug mobil brugeragent",
             "extension": "Vis udvidelse",
-            "sideBarTool": "Display Sidebar Tool",
+            "sideBarTool": "Vis værktøjssidepanel",
             "title": "Tilføj panel",
             "add": "Tilføj",
             "cancel": "Annuller"
         },
         "contextMenu": {
-            "unload": "Unload this webpanel",
-            "mute": "Mute/Unmute this webpanel",
-            "changeZoom": "Change zoom level",
-            "zoomIn": "Zoom in",
-            "zoomOut": "Zoom out",
-            "resetZoom": "Reset zoom",
-            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
-            "delete": "Delete this panel"
+            "unload": "Stop indlæsning af dette webpanel",
+            "mute": "Slå lyden fra/til på dette webpanel",
+            "changeZoom": "Skift zoomniveau",
+            "zoomIn": "Zoom ind",
+            "zoomOut": "Zoom ud",
+            "resetZoom": "Nulstil zoom",
+            "changeUA": "Skift brugeragent til mobil-/computerversion på dette webpanel",
+            "delete": "Slet dette panel"
         }
     }
 }

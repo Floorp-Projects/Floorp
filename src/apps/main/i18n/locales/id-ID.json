@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "Buat Ruang Kerja Baru …",
             "manage": "Kelola Ruang Kerja"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain"
+        },
+        "error": {
+            "invalidWorkspaceID": "ID Ruang Kerja tidak valid (mungkin urutan belum diperbarui)"
         }
     },
     "statusbar": {
@@ -188,7 +194,7 @@
             "type": "Jenis Panel",
             "typeOptions": {
                 "web": "Halaman Web",
-                "static": "Bilah Sisi Alat",
+                "sidebar-tool": "Bilah Sisi Alat",
                 "extension": "Bilah Sisi Ekstensi"
             },
             "width": "Lebar Panel",

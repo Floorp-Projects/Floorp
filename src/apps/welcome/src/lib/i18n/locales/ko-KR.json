@@ -37,17 +37,17 @@
     },
     "finish": {
         "title": "설정이 완료되었습니다!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 빠르고 안전한 인터넷 브라우저 환경을 즐기세요.",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
+            "title": "다음 단계 (선택적)",
+            "setDefault": "기본 브라우저로 설정",
             "documentation": "Documentation"
         },
-        "getStarted": "Get Started with Floorp",
+        "getStarted": "Floorp 시작하기",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
+        "welcome": "Floorp에 오신 것을 환영합니다!",
         "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
         "readyToStart": "When you're ready, click the below button to proceed.",
         "features": "Floorp Features",

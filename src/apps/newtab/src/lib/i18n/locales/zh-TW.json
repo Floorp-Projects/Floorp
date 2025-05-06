@@ -1,42 +1,42 @@
 {
-    "title": "Floorp Start",
+    "title": "Floorp 起始頁",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name"
+        "addSite": "添加站點",
+        "addNewSite": "新增網站",
+        "url": "網址",
+        "label": "標籤",
+        "cancel": "取消",
+        "add": "添加",
+        "close": "關閉",
+        "labelPlaceholder": "網站名稱"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "close": "Close"
+        "newTabSettings": "新分頁設定",
+        "displayComponents": "顯示組件",
+        "topSites": "熱門網站",
+        "clock": "時鐘",
+        "searchBar": "搜尋列",
+        "backgroundSettings": "背景設定",
+        "noBackground": "無背景",
+        "randomImage": "隨機圖像",
+        "customImage": "自訂圖像",
+        "folderImages": "資料夾中的圖像",
+        "floorpImages": "Floorp 圖像",
+        "currentImage": "目前的图像:",
+        "currentFolder": "目前的資料夾:",
+        "selectFolder": "選擇資料夾",
+        "selected": "已選取",
+        "imageRecommendation": "建議: 1920x1080 及以上",
+        "close": "關閉"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "搜尋或輸入網址",
+        "loadingSearchEngines": "載入搜尋引擎中..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "設定"
     },
     "modal": {
-        "close": "Close"
+        "close": "關閉"
     }
 }

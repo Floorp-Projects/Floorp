@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "Criar novo espaço de trabalho...",
             "manage": "Gerir espaços de trabalho"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho"
+        },
+        "error": {
+            "invalidWorkspaceID": "ID não válido para espaços de trabalho (talvez a ordem não esteja atualizada)"
         }
     },
     "statusbar": {
@@ -188,7 +194,7 @@
             "type": "Panel Type",
             "typeOptions": {
                 "web": "Web Page",
-                "static": "Tool Sidebar",
+                "sidebar-tool": "Barra lateral de ferramentas",
                 "extension": "Extension Sidebar"
             },
             "width": "Panel Width",

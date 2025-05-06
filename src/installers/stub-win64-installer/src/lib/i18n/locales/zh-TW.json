@@ -1,98 +1,93 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "正在背景安裝中...",
+            "installComplete": "安裝已完成"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "title": "Floorp 安裝程式",
+            "description": "安裝 Floorp 瀏覽器，開啟一份注重隱私、快速且可自由客製化的瀏覽體驗。",
+            "adminRights": "使用管理員權限安裝",
+            "adminRightsEnabled": "為所有具有管理權限的使用者安裝。",
+            "adminRightsDisabled": "僅為目前使用者安裝。",
+            "customPathRequired": "自訂安裝路徑需要管理員權限。",
+            "installLocation": "安裝位置",
+            "change": "變更",
+            "installButton": "開始安裝",
+            "retryButton": "重試"
         },
         "progress": {
-            "installing": "Installing...",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "installing": "正在安裝中...",
+            "slideCounter": "滑動 {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "selectLocation": "選擇安裝位置",
+            "installPath": "安裝路徑",
+            "browse": "瀏覽",
+            "resetDefault": "重設為預設值",
+            "cancel": "取消",
+            "save": "儲存設定",
+            "close": "關閉"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "要取消安裝嗎？",
+            "message": "取消安裝程序意味著將會取消安裝 Floorp。",
+            "cancelButton": "取消",
+            "confirmButton": "取消安裝"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds"
+            "success": "安裝成功",
+            "error": "安裝失敗",
+            "launchCheckbox": "安裝後啟動 Floorp 瀏覽器",
+            "closeButton": "關閉安裝程式",
+            "countdownMessage": "安裝程式會在 {{count}} 秒後關閉"
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Privacy Protection",
-            "description": "Floorp is designed with user privacy as the top priority. Protect your online privacy with tracking prevention features and secure browsing mode."
+        "slide1": {
+            "title": "歡迎使用 Floorp",
+            "description": "歡迎來的最新版本的 Floorp，在日本研發的一款瀏覽器。接下來介紹的內容僅是此企劃的一部分。"
         },
-        "performance": {
-            "title": "Fast Performance",
-            "description": "Optimized engine provides speed for everything from page loading to tab switching, making your browsing experience smooth."
+        "slide2": {
+            "title": "定期更新",
+            "description": "即使 Floorp 只是一個由社群愛好者運作的企劃，我們仍然會持續的維護與更新。以堅信每個人都有權利自由的存取網路為原則，提供一份安全的瀏覽體驗。"
         },
-        "customization": {
-            "title": "Rich Customization",
-            "description": "Floorp offers rich customization options. You can customize everything from the user interface to features to suit your preferences."
+        "slide3": {
+            "title": "最新功能",
+            "description": "最新版本的 Floorp 運用著由 Mozilla Firefox 研發的最先進的網路功能。並在其基礎上重新設計，讓每個人都能輕鬆的使用各種功能。"
         },
-        "extensions": {
-            "title": "Extensive Extensions",
-            "description": "Compatible with Firefox extensions, allowing you to add your favorite tools and services to your browser."
+        "slide4": {
+            "title": "高度客製化",
+            "description": "比您預設的瀏覽器更能保護隱私，且配備有多種客製化選項。Floorp 允許您按照自己的喜好調整。"
         },
-        "multiplatform": {
-            "title": "Multi-Platform Support",
-            "description": "Available on various platforms including Windows, macOS, and Linux. Enjoy the same experience everywhere."
-        },
-        "navigation": {
-            "previous": "Previous",
-            "next": "Next",
-            "goto": "Go to slide {{number}}"
+        "slide5": {
+            "title": "為了您而戰鬥著",
+            "description": "Floorp 能夠阻擋有害的追蹤。我們在網站運作和用戶權利之間找尋平衡點，努力爭取網路功能及隱私保障之間的相容，以改善網路。"
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "已下載 Floorp 安裝程式 (開發模式)",
+            "installation_complete": "Floorp 安裝完成。"
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "installer_not_found": "擷取 Floorp 安裝程式失敗。",
+            "download_failed": "下載過程中發生錯誤： {{0}}",
+            "signature_verification_failed": "安裝程式簽名驗證失敗。由於安全原因而中止執行。",
+            "signature_verification_error": "簽名驗證時發生錯誤： {{0}}",
+            "installer_exit_code": "安裝程式退出，代碼為 {{0}}。",
+            "installer_execution": "執行安裝程式時發生錯誤： {{0}}",
+            "browser_not_found": "找不到 Floorp 瀏覽器。安裝成功，但無法找到瀏覽器可執行檔。",
+            "browser_launch_failed": "無法啟動瀏覽器： {{0}}",
+            "file_not_found": "找不到檔案： {{0}}",
+            "not_a_file": "路徑不是檔案： {{0}}",
+            "admin_rights_denied": "管理員權限被拒絕。雖然您已選擇了管理員權限模式，但權限被拒絕。",
+            "exit_code_not_found": "無法取得安裝程式的退出代碼。管理員權限可能已被拒絕。",
+            "powershell_script_creation": "建立 PowerShell 指令腳本失敗： {{0}}",
+            "powershell_process": "啟動 PowerShell 程序失敗： {{0}}",
+            "admin_install_failed": "使用管理員權限安裝失敗。退出代碼： {{0}}",
+            "user_installer_launch": "以使用者權限啟動安裝程式程序失敗： {{0}}",
+            "user_installer_execution": "以使用者權限執行安裝程式時發生問題： {{0}}"
         }
     }
 }

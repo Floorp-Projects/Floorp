@@ -44,30 +44,25 @@
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Privacy Protection",
-            "description": "Floorp is designed with user privacy as the top priority. Protect your online privacy with tracking prevention features and secure browsing mode."
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
-        "performance": {
-            "title": "Fast Performance",
-            "description": "Optimized engine provides speed for everything from page loading to tab switching, making your browsing experience smooth."
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
-        "customization": {
-            "title": "Rich Customization",
-            "description": "Floorp offers rich customization options. You can customize everything from the user interface to features to suit your preferences."
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
-        "extensions": {
-            "title": "Extensive Extensions",
-            "description": "Compatible with Firefox extensions, allowing you to add your favorite tools and services to your browser."
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
         },
-        "multiplatform": {
-            "title": "Multi-Platform Support",
-            "description": "Available on various platforms including Windows, macOS, and Linux. Enjoy the same experience everywhere."
-        },
-        "navigation": {
-            "previous": "Previous",
-            "next": "Next",
-            "goto": "Go to slide {{number}}"
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
         }
     },
     "rust": {

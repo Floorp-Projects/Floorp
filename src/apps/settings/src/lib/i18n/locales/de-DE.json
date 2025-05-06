@@ -138,6 +138,10 @@
                 "hideForwardBackwardButton": "Hide Forward/Backward Button",
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
+            "newtab": {
+                "title": "New Tab",
+                "disableFloorpStart": "Disable Floorp Start"
+            },
             "multirowTab": {
                 "title": "Multirow Tab",
                 "newtabInsideEnabled": "Show new tab button inside tab bar"
@@ -220,7 +224,48 @@
         "globalWidth": "Global Web Panel Width",
         "globalWidthDescription": "Global width is applied when panel width is set to 0.",
         "iconProviderRemoved": "The icon provider setting has been removed as {{productName}} now tries to get panel icons directly from web pages when possible.",
-        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the panel sidebar feature."
+        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the panel sidebar feature.",
+        "staticPanel": "Sidebar Tool Panel",
+        "extensionPanel": "Extension Panel",
+        "selectStaticPanel": "Select a Sidebar Tool",
+        "selectExtension": "Select an extension",
+        "icon": "Icon",
+        "width": "Width",
+        "zoomLevel": "Zoom Level",
+        "container": "Container",
+        "noContainer": "No Container",
+        "useUserAgent": "Use Mobile User Agent",
+        "panelType": "Panel Type",
+        "panelList": "Panel List",
+        "type": {
+            "web": "Web",
+            "static": "Sidebar Tool",
+            "extension": "Extension"
+        },
+        "staticPanels": {
+            "bmt": "Browser Manager Tool",
+            "bookmarks": "Bookmarks",
+            "history": "History",
+            "downloads": "Downloads",
+            "notes": "Notes"
+        },
+        "url": "URL",
+        "untitled": "Untitled",
+        "confirmDeleteTitle": "Delete Panel",
+        "confirmDelete": "Are you sure you want to delete this panel?",
+        "delete": "Delete",
+        "addPanel": "Add Panel",
+        "editPanel": "Edit Panel",
+        "errors": {
+            "typeRequired": "Panel type is required",
+            "urlRequired": "URL is required for web panels",
+            "invalidUrl": "Please enter a valid URL",
+            "extensionIdRequired": "Extension ID is required for extension panels",
+            "staticPanelRequired": "Please select a sidebar tool",
+            "invalidWidth": "Width must be at least 100 pixels"
+        },
+        "save": "Save",
+        "cancel": "Cancel"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

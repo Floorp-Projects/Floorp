@@ -89,27 +89,27 @@
             "title": "Arbejdsområder",
             "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Kategoriser efter formål: arbejde, privat osv.",
+                "Visuel identifikation med brugerdefinerede ikoner",
+                "Administrer nemt faner"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
+            "title": "Understøttelse af progressive webapplikationer",
             "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "Kører selvstændigt som skrivebordsapps",
+                "Kan fastgøres til proceslinjen",
+                "Firefox-tilføjelser virker også"
             ]
         },
         "mouseGesture": {
             "title": "Musebevægelser",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "description": "Styr din browser mere intuitivt med indbygget understøttelse af musebevægelser. Udfør bevægelser ved at holde højre museknap nede og bevæge musen.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "Brug uden tastaturgenveje",
+                "Fuldt tilpasningsvenlige bevægelser",
+                "Naviger hurtigt mellem sider og historik"
             ]
         },
         "notebook": "Notesbog",
@@ -117,13 +117,13 @@
     },
     "finishPage": {
         "title": "Opsætning fuldført!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
+        "subtitle": "Tillykke! Du har gennemført Floorp-opsætningen. Du kan nu nyde behagelig og sikker internetbrowsing.",
         "nextSteps": "Næste trin (valgfrit)",
         "defaultBrowser": "Indstil som standardbrowser",
         "support": "Support",
         "documentation": "Dokumentation",
         "getStarted": "Kom i gang med Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
+        "hint": "Du kan tilpasse mere detaljerede indstillinger via Indstillinger i menuknappen øverst til højre.",
         "resourcesLabel": "Ressourcer",
         "defaultBrowserSuccess": "Floorp er blevet indstillet som din standardbrowser!"
     }
