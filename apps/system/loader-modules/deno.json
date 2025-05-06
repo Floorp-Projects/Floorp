@@ -9,7 +9,7 @@
     "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
     "birpc": "npm:birpc@^2.3.0",
     "oxlint": "npm:oxlint@^0.16.7",
-    "tsdown": "npm:tsdown@^0.11.0-beta.2"
+    "tsdown": "npm:tsdown@^0.11.0"
   },
   "tasks": {
     "build": "deno run -A npm:tsdown"

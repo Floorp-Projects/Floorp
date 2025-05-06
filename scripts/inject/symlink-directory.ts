@@ -8,7 +8,7 @@ export async function symlinkDirectory(
 ) {
   const symlinkPath = resolve(targetDirpath, symlinkName);
   try {
-    const _stats = await Deno.lstat(symlinkPath);
+    await Deno.lstat(symlinkPath);
     await Deno.remove(symlinkPath, { recursive: true });
   } catch (err) {
     if (!(err instanceof Deno.errors.NotFound)) throw err;

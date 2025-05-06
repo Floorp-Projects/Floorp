@@ -1,10 +1,15 @@
 import { defineConfig } from "tsdown";
 import { relative } from "pathe";
 import { generateJarManifest } from "../../common/scripts/gen_jarmanifest.ts";
-import { getEntries } from "../../modules/mod.ts";
+import { expandGlobSync } from "@std/fs";
+
+const entry = [...expandGlobSync("./link-modules/**/*.mts")].map((v) =>
+  relative(import.meta.dirname!, v.path)
+);
+// console.log(entry);
 
 export default defineConfig({
-  entry: await getEntries(),
+  entry,
   target: "esnext",
   outDir: "_dist",
   external: /^resource:\/\/|^chrome:\/\//g,

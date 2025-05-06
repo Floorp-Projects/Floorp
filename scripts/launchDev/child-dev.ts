@@ -20,26 +20,14 @@ async function launchDev(mode: string, buildid2: string) {
   pDevVite = [
     await createServer({
       mode,
-      configFile: r("././apps/system/loader-features/vite.config.ts"),
+      configFile: r("./apps/system/loader-features/vite.config.ts"),
       root: r("./apps/system/loader-features"),
       define: {
         "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
         "import.meta.env.__VERSION2__": `"${packageJson.version}"`,
       },
     }),
-    // await createServer({
-    //   mode,
-    //   configFile: r("./src/apps/designs/vite.config.ts"),
-    //   root: r("./src/apps/designs"),
-    // }),
   ];
-
-  // worker = new Worker(
-  //   new URL("./workers/dev-settings.ts", import.meta.url).href,
-  //   {
-  //     type: "module",
-  //   },
-  // );
 
   for (const i of pDevVite) {
     await i.listen();
@@ -49,9 +37,9 @@ async function launchDev(mode: string, buildid2: string) {
 }
 
 async function shutdownDev() {
-  // for (const i of pDevVite) {
-  //   await i.close();
-  // }
+  for (const i of pDevVite) {
+    await i.close();
+  }
   if (worker) {
     worker.postMessage("");
   }

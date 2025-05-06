@@ -1,4 +1,3 @@
-import AdmZip from "adm-zip";
 import chalk from "chalk";
 import * as pathe from "pathe";
 import { $, type ProcessPromise } from "zx";
@@ -25,6 +24,8 @@ import {
   getBinArchive,
   VERSION,
 } from "./scripts/defines.ts";
+import { TextEncoder } from "node:util";
+import { symlinkDirectory } from "./scripts/inject/symlink-directory.ts";
 
 // Platform specific configurations
 switch (Deno.build.os) {
@@ -59,11 +60,11 @@ const binArchive = getBinArchive();
  */
 async function decompressBin() {
   try {
-    console.log(`decompressing ${binArchive}`);
+    console.log(`[dev] decompressing ${binArchive}`);
 
     if (!(await isExists(binArchive))) {
       console.log(
-        `${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`,
+        `[dev] ${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`,
       );
       await downloadBinArchive();
       return;
@@ -72,8 +73,7 @@ async function decompressBin() {
     switch (Deno.build.os) {
       case "windows":
         // Windows
-        new AdmZip(binArchive).extractAllTo(binExtractDir);
-        await Deno.writeTextFile(binVersion, VERSION);
+        await $`Expand-Archive -LiteralPath ${binArchive} -DestinationPath ${binExtractDir}`;
         break;
 
       case "darwin":
@@ -89,9 +89,11 @@ async function decompressBin() {
         break;
     }
 
-    console.log("decompress complete!");
+    await Deno.writeTextFile(binVersion, VERSION);
+
+    console.log("[dev] decompress complete!");
   } catch (error: any) {
-    console.error("Error during decompression:", error);
+    console.error("[dev] Error during decompression:", error);
     Deno.exit(1);
   }
 }
@@ -150,7 +152,6 @@ async function decompressBinMacOS() {
         }
       }
 
-      await Deno.writeTextFile(pathe.join(binDir, "nora.version.txt"), VERSION);
       await Promise.all([
         $`chmod ${["-R", "777", appDestBase]}`,
         $`xattr ${["-rc", appDestBase]}`,
@@ -160,8 +161,8 @@ async function decompressBinMacOS() {
       await Deno.remove(mountDir, { recursive: true });
     }
   } catch (error) {
-    console.error("Error during macOS decompression:", error);
-    process.exit(1);
+    console.error("[dev] Error during macOS decompression:", error);
+    Deno.exit(1);
   }
 }
 
@@ -177,25 +178,25 @@ async function downloadBinArchive() {
   const originDownloadUrl =
     `${originUrl}-runtime/releases/latest/download/${fileName}`;
 
-  console.log(`Downloading from origin: ${originDownloadUrl}`);
+  console.log(`[dev] Downloading from origin: ${originDownloadUrl}`);
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
-    console.log("Download complete from origin!");
+    console.log("[dev] Download complete from origin!");
   } catch (error: any) {
     console.error(
-      "Origin download failed, falling back to upstream:",
+      "[dev] Origin download failed, falling back to upstream:",
       error.stderr,
     );
 
     const upstreamUrl =
       `https://github.com/nyanrus/noraneko-runtime/releases/latest/download/${fileName}`;
-    console.log(`Downloading from upstream: ${upstreamUrl}`);
+    console.log(`[dev] Downloading from upstream: ${upstreamUrl}`);
 
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
-      console.log("Download complete from upstream!");
+      console.log("[dev] Download complete from upstream!");
     } catch (error2: any) {
-      console.error("Upstream download failed:", error2.stderr);
+      console.error("[dev] Upstream download failed:", error2.stderr);
       throw error2.stderr;
     }
   }
@@ -215,33 +216,33 @@ async function initBin() {
     const mismatch = VERSION !== version.trim();
 
     if (mismatch) {
-      console.log(`version mismatch ${version.trim()} !== ${VERSION}`);
+      console.log(`[dev] version mismatch ${version.trim()} !== ${VERSION}`);
       console.log(
-        "Removing existing binary directory and decompressing new binary.",
+        "[dev] Removing existing binary directory and decompressing new binary.",
       );
       await Deno.remove(binDir, { recursive: true });
       await Deno.mkdir(binDir, { recursive: true });
       await decompressBin();
       return;
     }
-    console.log("Binary version matches. Initialization complete.");
+    console.log("[dev] Binary version matches. Initialization complete.");
     return;
   }
 
   if (hasBin) {
     console.log(
-      `Binary exists, but version file not found. Writing ${VERSION} to version file.`,
+      `[dev] Binary exists, but version file not found. Writing ${VERSION} to version file.`,
     );
     await Deno.mkdir(binDir, { recursive: true });
     await Deno.writeTextFile(binVersion, VERSION);
-    console.log("Initialization complete.");
+    console.log("[dev] Initialization complete.");
     return;
   }
 
-  console.log("No binary found. Decompressing binary.");
+  console.log("[dev] No binary found. Decompressing binary.");
   await Deno.mkdir(binDir, { recursive: true });
   await decompressBin();
-  console.log("Initialization complete.");
+  console.log("[dev] Initialization complete.");
 }
 
 /**
@@ -342,10 +343,25 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
  */
 async function runDevMode(mode: string, buildid2: string | null) {
   if (!devInit) {
+    await symlinkDirectory(
+      `apps/system/loader-features`,
+      "apps/features-chrome",
+      "link-features-chrome",
+    );
+    await symlinkDirectory(
+      `apps/system/loader-features`,
+      "i18n/features-chrome",
+      "link-i18n-features-chrome",
+    );
+    await symlinkDirectory(
+      `apps/system/loader-modules`,
+      "apps/modules",
+      "link-modules",
+    );
     await $`deno run -A ./scripts/launchDev/child-build.ts ${mode} ${
       buildid2 ?? ""
     }`;
-    console.log("run dev servers");
+    console.log("[dev] run dev servers");
     devViteProcess = $`deno run -A ./scripts/launchDev/child-dev.ts ${mode} ${
       buildid2 ?? ""
     }`.stdio("pipe").nothrow();
@@ -361,12 +377,12 @@ async function runDevMode(mode: string, buildid2: string | null) {
         ) {
           if (resolve) (resolve as () => void)();
         }
-        process.stdout.write(temp);
+        await Deno.stdout.write(new TextEncoder().encode(temp));
       }
     })();
     (async () => {
       for await (const temp of devViteProcess.stderr) {
-        process.stdout.write(temp);
+        await Deno.stdout.write(new TextEncoder().encode(temp));
       }
     })();
     await temp_prm;
@@ -391,10 +407,10 @@ async function runReleaseMode() {
   } catch {
     // Ignore if the directory does not exist
   }
-  await Deno.symlink(
-    pathe.resolve(import.meta.dirname, "_dist/noraneko"),
-    `_dist/bin/${brandingBaseName}/noraneko-dev`,
-    { type: "junction" },
+  await symlinkDirectory(
+    `_dist/bin/${brandingBaseName}`,
+    "_dist/noraneko",
+    "noraneko-dev",
   );
 }
 
@@ -408,35 +424,87 @@ async function exit() {
   runningExit = true;
 
   if (browserProcess) {
-    console.log("[build] Start Shutdown browserProcess");
+    console.log("[dev] Start Shutdown browserProcess");
     browserProcess.stdin.write("q");
     try {
       await browserProcess;
     } catch (error) {
-      console.error(error);
+      console.error("[dev]", error);
     }
-    console.log("[build] End Shutdown browserProcess");
+    console.log("[dev] End Shutdown browserProcess");
   }
 
   if (devViteProcess) {
-    console.log("[build] Start Shutdown devViteProcess");
+    console.log("[dev] Start Shutdown devViteProcess");
     devViteProcess.stdin.write("q");
     try {
       await devViteProcess;
     } catch (error) {
-      console.error(error);
+      console.error("[dev]", error);
     }
-    console.log("[build] End Shutdown devViteProcess");
+    console.log("[dev] End Shutdown devViteProcess");
   }
 
-  console.log(chalk.green("[build] Cleanup Complete!"));
+  console.log(chalk.green("[dev] Cleanup Complete!"));
   Deno.exit(0);
 }
 
-// Handle SIGINT signal
-process.on("SIGINT", async () => {
-  await exit();
-});
+/**
+ * * Please run with NODE_ENV='production'
+ * @param mode
+ */
+async function release(mode: "before" | "after") {
+  let buildid2: string | null = null;
+  try {
+    await Deno.stat("_dist/buildid2");
+    buildid2 = await Deno.readTextFile("_dist/buildid2");
+  } catch {}
+  console.log(`[dev] buildid2: ${buildid2}`);
+  if (mode === "before") {
+    console.log(
+      `[dev] deno run -A ./scripts/launchDev/child-build.ts production ${
+        buildid2 ?? ""
+      }`,
+    );
+    await $`deno run -A ./scripts/launchDev/child-build.ts production ${
+      buildid2 ?? ""
+    }`;
+    await injectManifest("./_dist", "prod");
+  } else if (mode === "after") {
+    let binPath: string;
+    const baseDir = "../obj-artifact-build-output/dist";
+    try {
+      const files = await Deno.readDir(baseDir);
+      const appFiles = [];
+      for await (const file of files) {
+        if (file.name.endsWith(".app")) {
+          appFiles.push(file.name);
+        }
+      }
+      if (appFiles.length > 0) {
+        const appFile = appFiles[0];
+        const appPath = `${baseDir}/${appFile}`;
+        binPath = `${appPath}/Contents/Resources`;
+        console.log(
+          `[dev] Using app bundle directory: ${appPath}/Contents/Resources`,
+        );
+      } else {
+        binPath = `${baseDir}/bin`;
+        console.log(`[dev] Using bin directory: ${baseDir}/bin`);
+      }
+    } catch (error) {
+      console.warn("[dev] Error reading output directory:", error);
+      binPath = `${baseDir}/bin`;
+    }
+    injectXHTML(binPath);
+    let buildid2: string | null = null;
+    try {
+      await Deno.stat("_dist/buildid2");
+      buildid2 = await Deno.readTextFile("_dist/buildid2");
+    } catch {}
+    await writeBuildid2(`${binPath}/browser`, buildid2 ? buildid2 : "");
+  }
+}
 
 if (Deno.args[0]) {
   switch (Deno.args[0]) {
@@ -461,62 +529,5 @@ if (Deno.args[0]) {
     case "--write-version":
       await genVersion();
       break;
-  }
-}
-
-/**
- * * Please run with NODE_ENV='production'
- * @param mode
- */
-async function release(mode: "before" | "after") {
-  let buildid2: string | null = null;
-  try {
-    await Deno.stat("_dist/buildid2");
-    buildid2 = await Deno.readTextFile("_dist/buildid2");
-  } catch {}
-  console.log(`[build] buildid2: ${buildid2}`);
-  if (mode === "before") {
-    console.log(
-      `deno run -A ./scripts/launchDev/child-build.ts production ${
-        buildid2 ?? ""
-      }`,
-    );
-    await $`deno run -A ./scripts/launchDev/child-build.ts production ${
-      buildid2 ?? ""
-    }`;
-    await injectManifest("./_dist", "prod");
-  } else if (mode === "after") {
-    let binPath: string;
-    const baseDir = "../obj-artifact-build-output/dist";
-    try {
-      const files = await Deno.readDir(baseDir);
-      const appFiles = [];
-      for await (const file of files) {
-        if (file.name.endsWith(".app")) {
-          appFiles.push(file.name);
-        }
-      }
-      if (appFiles.length > 0) {
-        const appFile = appFiles[0];
-        const appPath = `${baseDir}/${appFile}`;
-        binPath = `${appPath}/Contents/Resources`;
-        console.log(
-          `Using app bundle directory: ${appPath}/Contents/Resources`,
-        );
-      } else {
-        binPath = `${baseDir}/bin`;
-        console.log(`Using bin directory: ${baseDir}/bin`);
-      }
-    } catch (error) {
-      console.warn("Error reading output directory:", error);
-      binPath = `${baseDir}/bin`;
-    }
-    injectXHTML(binPath);
-    let buildid2: string | null = null;
-    try {
-      await Deno.stat("_dist/buildid2");
-      buildid2 = await Deno.readTextFile("_dist/buildid2");
-    } catch {}
-    await writeBuildid2(`${binPath}/browser`, buildid2 ? buildid2 : "");
   }
 }

@@ -205,9 +205,12 @@ export default defineConfig({
       { "find": "#apps", "replacement": r("../..") },
       {
         "find": "#i18n-features-chrome",
-        "replacement": r("./i18n-features-chrome"),
+        "replacement": r("./link-i18n-features-chrome"),
       },
-      { "find": "#features-chrome", "replacement": r("./features-chrome") },
+      {
+        "find": "#features-chrome",
+        "replacement": r("./link-features-chrome"),
+      },
     ],
   },
 });

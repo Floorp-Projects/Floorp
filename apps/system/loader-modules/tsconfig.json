@@ -10,9 +10,6 @@
     "noUnusedParameters": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "paths": {
-      "@nora/modules/*": ["../../modules/*"]
-    },
     "types": ["vite/client"],
   }
 }

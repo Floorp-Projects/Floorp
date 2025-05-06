@@ -3,10 +3,12 @@ import { build } from "vite";
 import packageJson from "../../package.json" with { type: "json" };
 import { $, usePwsh } from "zx";
 
-switch (process.platform) {
-  case "win32":
+switch (Deno.build.os) {
+  case "windows":
     usePwsh();
 }
+
+$.verbose = true;
 
 const r = (value: string): string => {
   return resolve(import.meta.dirname, "../..", value);
@@ -14,22 +16,21 @@ const r = (value: string): string => {
 
 async function launchBuild(mode: string, buildid2: string) {
   if (mode.startsWith("dev")) {
-    $({
-      cwd: r("./apps/system/loader-features"),
-    })`deno run -A npm:vite`;
     await Promise.all([
       $({
         cwd: r("./apps/system/startup"),
-      })`deno task build --env.MODE ${mode}`,
-
+      })`deno task build --env.MODE=${mode}`,
       $({
         cwd: r("./apps/system/loader-modules"),
       })`deno task build --env.__BUILDID2__=${buildid2} --env.__VERSION2__=${packageJson.version}`,
-      // build({
-      //   configFile: r("./src/apps/designs/vite.config.ts"),
-      //   root: r("./src/apps/designs"),
-      // }),
     ]);
+
+    // await Promise.all([
+    //   // build({
+    //   //   configFile: r("./src/apps/designs/vite.config.ts"),
+    //   //   root: r("./src/apps/designs"),
+    //   // }),
+    // ]);
   } else {
     await Promise.all([
       $({
