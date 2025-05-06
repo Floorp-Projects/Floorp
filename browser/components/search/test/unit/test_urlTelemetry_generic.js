@@ -199,6 +199,44 @@ const TESTS = [
     setUp() {
       Services.cookies.removeAll();
       Services.cookies.add(
+        "www.example3.com",
+        "/",
+        "_dummyCookieName",
+        "def=ghi&abc=tb",
+        false,
+        false,
+        false,
+        Date.now() + 1000 * 60 * 60,
+        {},
+        Ci.nsICookie.SAMESITE_NONE,
+        Ci.nsICookie.SCHEME_HTTPS
+      );
+    },
+    tearDown() {
+      Services.cookies.removeAll();
+    },
+    title: "Tagged follow-on with cookie param at end",
+    trackingUrl:
+      "https://www.example3.com/search?q=test&a=next&dummyExtraCodeParamName=xyz",
+    expectedSearchCountEntry: "example3:tagged-follow-on:tb",
+    expectedAdKey: "example3:tagged-follow-on",
+    adUrls: ["https://www.example.com/ad2"],
+    nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example3",
+      tagged: "true",
+      partner_code: "tb",
+      source: "unknown",
+      is_shopping_page: "false",
+      is_private: "false",
+      shopping_tab_displayed: "false",
+      is_signed_in: "false",
+    },
+  },
+  {
+    setUp() {
+      Services.cookies.removeAll();
+      Services.cookies.add(
         "www.example4.com",
         "/",
         "_dummyCookieName",

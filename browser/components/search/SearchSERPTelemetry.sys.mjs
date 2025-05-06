@@ -1012,17 +1012,17 @@ class TelemetryHandler {
             }
 
             // Cookie values may take the form of "foo=bar&baz=1".
-            let [cookieParam, cookieValue] = cookie.value
-              .split("&")[0]
-              .split("=")
-              .map(p => p.trim());
-            if (
-              cookieParam == followOnCookie.codeParamName &&
-              searchProviderInfo.taggedCodes.includes(cookieValue)
-            ) {
-              type = "tagged-follow-on";
-              code = cookieValue;
-              break;
+            let cookieItems = cookie.value
+              ?.split("&")
+              .map(p => p.split("="))
+              .filter(p => p[0] == followOnCookie.codeParamName);
+            if (cookieItems.length == 1) {
+              let cookieValue = cookieItems[0][1];
+              if (searchProviderInfo.taggedCodes.includes(cookieValue)) {
+                type = "tagged-follow-on";
+                code = cookieValue;
+                break;
+              }
             }
           }
         }
