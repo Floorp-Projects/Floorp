@@ -25,7 +25,7 @@ export function BrowserDesignElement() {
     if (userjs) applyUserJS(userjs);
   });
 
-  let [devStyle,setDevStyle] = createSignal([] as string[]);
+  const [devStyle,setDevStyle] = createSignal([] as string[]);
 
   if (import.meta.env.DEV) {
     createEffect(async ()=>{

@@ -4209,8 +4209,14 @@
       ]
     },
     "members": {
+      "apps/features-about": {
+        "dependencies": [
+          "jsr:@nora/solid-xul@*"
+        ]
+      },
       "apps/features-chrome": {
         "dependencies": [
+          "jsr:@nora/solid-xul@*",
           "jsr:@types/gecko@*",
           "npm:@deno/vite-plugin@^1.0.4",
           "npm:@types/chroma-js@^3.1.1",
@@ -4231,14 +4237,16 @@
       },
       "apps/modules": {
         "dependencies": [
+          "jsr:@types/gecko@*",
           "npm:@jsr/std__fs@^1.0.17",
           "npm:birpc@^2.3.0",
-          "npm:pathe@^2.0.3"
+          "npm:pathe@^2.0.3",
+          "npm:vite@*"
         ]
       },
       "apps/system/loader-features": {
         "dependencies": [
-          "jsr:@nora/lib-dom-gecko@*",
+          "jsr:@types/gecko@*",
           "npm:@deno/vite-plugin@^1.0.4",
           "npm:@types/chroma-js@^3.1.1",
           "npm:@types/uuid@10",
@@ -4259,8 +4267,8 @@
       },
       "apps/system/loader-modules": {
         "dependencies": [
-          "jsr:@nora/lib-dom-gecko@*",
           "jsr:@std/fs@^1.0.17",
+          "jsr:@types/gecko@*",
           "npm:@deno/vite-plugin@^1.0.4",
           "npm:birpc@^2.3.0",
           "npm:oxlint@~0.16.7",

@@ -1,5 +1,5 @@
 import { render } from "@nora/solid-xul";
-import { NoraSettingsLink } from "./nora-settings-link";
+import { NoraSettingsLink } from "./nora-settings-link.tsx";
 
 document?.addEventListener("DOMContentLoaded", () => {
   const nav_root = document.querySelector("#categories");

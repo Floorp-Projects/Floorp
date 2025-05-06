@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "deno.ns"],
-    "types": ["npm:vite/client", "jsr:@nora/lib-dom-gecko"]
+    "types": ["npm:vite/client", "jsr:@types/gecko"]
   },
   "imports": {
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
     "@std/fs": "jsr:@std/fs@^1.0.17",
-    "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
     "birpc": "npm:birpc@^2.3.0",
     "oxlint": "npm:oxlint@^0.16.7",
     "tsdown": "npm:tsdown@^0.11.0"

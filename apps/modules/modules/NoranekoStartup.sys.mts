@@ -202,8 +202,8 @@ class CustomAboutPage {
   }
 
   getURIFlags(_uri: nsIURI): number {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT |
-      Ci.nsIAboutModule.IS_SECURE_CHROME_UI;
+    return Ci.nsIAboutModule.ALLOW_SCRIPT! |
+      Ci.nsIAboutModule.IS_SECURE_CHROME_UI!;
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {
@@ -225,7 +225,7 @@ async function registerCustomAboutPages(): Promise<void> {
       },
     };
 
-    const registrar = Components.manager.QueryInterface(
+    const registrar = Components.manager.QueryInterface!(
       Ci.nsIComponentRegistrar,
     );
     if (!registrar) {

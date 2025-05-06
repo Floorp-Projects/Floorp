@@ -20,7 +20,9 @@
   },
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "types": ["npm:vite/client", "jsr:@types/gecko"]
+    "types": ["npm:vite/client", "jsr:@types/gecko"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "jsr:@nora/solid-xul"
   },
   "lint": {
     "rules": {
