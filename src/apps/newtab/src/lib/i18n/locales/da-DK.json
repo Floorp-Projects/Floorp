@@ -1,5 +1,5 @@
 {
-    "title": "Floorp Start",
+    "title": "Floorp start",
     "topSites": {
         "addSite": "Add site",
         "addNewSite": "Add new site",
@@ -20,13 +20,13 @@
         "noBackground": "Ingen baggrund",
         "randomImage": "Tilfældigt billede",
         "customImage": "Brugerdefineret billede",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
+        "folderImages": "Billeder fra mappe",
+        "floorpImages": "Floorp-billeder",
+        "currentImage": "Nuværende billede:",
+        "currentFolder": "Nuværende mappe:",
+        "selectFolder": "Vælg mappe",
+        "selected": "Valgt",
+        "imageRecommendation": "Anbefalet: 1920x1080 eller højere",
         "close": "Luk"
     },
     "searchBar": {

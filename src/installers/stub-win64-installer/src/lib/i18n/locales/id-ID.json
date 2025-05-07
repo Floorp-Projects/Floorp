@@ -44,30 +44,25 @@
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Perlindungan Privasi",
-            "description": "Floorp dirancang dengan privasi pengguna sebagai prioritas utama. Lindungi privasi daring Anda dengan fitur pencegahan pelacakan dan mode perambanan aman."
+        "slide1": {
+            "title": "Selamat Datang di Floorp",
+            "description": "Selamat datang di versi terbaru Floorp, sebuah peramban web yang dikembangkan di Jepang dengan fokus pada pengembangan dan penelitian. Konten yang diperkenalkan selanjutnya hanyalah sebagian dari proyek ini."
         },
-        "performance": {
-            "title": "Kinerja Kilat",
-            "description": "Mesin peramban yang dioptimalkan memberikan kecepatan untuk semua aktivitas, mulai pemuatan halaman hingga peralihan tab, menjadikan pengalaman berinternet yang mulus."
+        "slide2": {
+            "title": "Pembaruan Teratur",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
-        "customization": {
-            "title": "Kustomisasi Kaya",
-            "description": "Floorp menyediakan banyak opsi kustomisasi. Anda dapat menyesuaikan segalanya dari antarmuka pengguna hingga fitur-fitur yang sesuai dengan kemauan Anda."
+        "slide3": {
+            "title": "Fitur-Fitur Terkini",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
-        "extensions": {
-            "title": "Ekstensi Ekstensif",
-            "description": "Kompatibel dengan ekstensi Firefox, Floorp memungkinkan Anda menambah alat-alat dan layanan favorit Anda ke peramban."
+        "slide4": {
+            "title": "Kustomisasi Tingkat Lanjut",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
         },
-        "multiplatform": {
-            "title": "Dukungan Multiplatform",
-            "description": "Tersedia di berbagai platform, termasuk Windows, macOS, dan Linux. Nikmati pengalaman yang sama di mana saja."
-        },
-        "navigation": {
-            "previous": "Sebelumnya",
-            "next": "Berikutnya",
-            "goto": "Menuju salindia {{number}}"
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
         }
     },
     "rust": {

@@ -138,6 +138,10 @@
                 "hideForwardBackwardButton": "Ocultar o botão de avançar/retroceder",
                 "stgLikeWorkspaces": "Grupos de separadores simples como espaços de trabalho"
             },
+            "newtab": {
+                "title": "Novo separador",
+                "disableFloorpStart": "Desativar início do Floorp"
+            },
             "multirowTab": {
                 "title": "Separador de várias linhas",
                 "newtabInsideEnabled": "Mostrar o botão do novo separador na barra de separadores"
@@ -220,7 +224,48 @@
         "globalWidth": "Largura global do painel Web",
         "globalWidthDescription": "A largura global é aplicada quando a largura do painel é definida para 0.",
         "iconProviderRemoved": "A definição do fornecedor de ícones foi removida, uma vez que {{productName}} tenta agora obter os ícones do painel diretamente das páginas Web, sempre que possível.",
-        "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o {{productName}} para ativar ou desativar completamente a funcionalidade da barra lateral do painel."
+        "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o {{productName}} para ativar ou desativar completamente a funcionalidade da barra lateral do painel.",
+        "staticPanel": "Painel de ferramentas da barra lateral",
+        "extensionPanel": "Painel de extensão",
+        "selectStaticPanel": "Selecionar uma ferramenta da barra lateral",
+        "selectExtension": "Selecionar uma extensão",
+        "icon": "Ícone",
+        "width": "Largura",
+        "zoomLevel": "Nível de zoom",
+        "container": "Contentor",
+        "noContainer": "Sem contentor",
+        "useUserAgent": "Utilizar o Mobile User Agent",
+        "panelType": "Tipo de painel",
+        "panelList": "Lista de painéis",
+        "type": {
+            "web": "Web",
+            "static": "Ferramenta da barra lateral",
+            "extension": "Extensão"
+        },
+        "staticPanels": {
+            "bmt": "Ferramenta de gestão do navegador",
+            "bookmarks": "Favoritos",
+            "history": "Histórico",
+            "downloads": "Transferências",
+            "notes": "Notas"
+        },
+        "url": "URL",
+        "untitled": "Sem título",
+        "confirmDeleteTitle": "Eliminar o painel",
+        "confirmDelete": "Tem a certeza de que pretende eliminar este painel?",
+        "delete": "Eliminar",
+        "addPanel": "Adicionar painel",
+        "editPanel": "Editar painel",
+        "errors": {
+            "typeRequired": "O tipo de painel é necessário",
+            "urlRequired": "O URL é necessário para os painéis Web",
+            "invalidUrl": "Introduzir um URL válido",
+            "extensionIdRequired": "O ID de extensão é necessário para os painéis de extensão",
+            "staticPanelRequired": "Selecione uma ferramenta da barra lateral",
+            "invalidWidth": "A largura deve ser de, pelo menos, 100 píxeis"
+        },
+        "save": "Guardar",
+        "cancel": "Cancelar"
     },
     "progressiveWebApp": {
         "title": "Aplicações Web",

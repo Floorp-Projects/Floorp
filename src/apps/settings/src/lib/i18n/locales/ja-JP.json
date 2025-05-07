@@ -138,6 +138,10 @@
                 "hideForwardBackwardButton": "進む/戻るボタンを隠す",
                 "stgLikeWorkspaces": "Simple Tab Groups をワークスペースのように使用"
             },
+            "newtab": {
+                "title": "新しいタブ",
+                "disableFloorpStart": "Floorp Start を無効にする"
+            },
             "multirowTab": {
                 "title": "多段タブ",
                 "newtabInsideEnabled": "タブバーの中に [新しいタブ] ボタンを表示"
@@ -220,7 +224,48 @@
         "globalWidth": "ウェブパネル共通の幅",
         "globalWidthDescription": "パネルの幅が 0 に設定されている場合は、共通の幅を使用します。",
         "iconProviderRemoved": "{{productName}} は可能な限りウェブページから直接パネルアイコンを取得するようになったため、アイコンプロバイダー設定は削除されました。",
-        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。"
+        "needRestartDescriptionForEnableAndDisable": "パネルサイドバー機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
+        "staticPanel": "サイドバーツールパネル",
+        "extensionPanel": "拡張機能パネル",
+        "selectStaticPanel": "サイドバーツールを選択",
+        "selectExtension": "拡張機能を選択",
+        "icon": "アイコン",
+        "width": "幅",
+        "zoomLevel": "拡大率",
+        "container": "コンテナー",
+        "noContainer": "コンテナーなし",
+        "useUserAgent": "モバイル版のユーザーエージェントを使用",
+        "panelType": "パネルの種類",
+        "panelList": "パネル一覧",
+        "type": {
+            "web": "ウェブ",
+            "static": "サイドバーツール",
+            "extension": "拡張機能"
+        },
+        "staticPanels": {
+            "bmt": "ブラウザー管理ツール",
+            "bookmarks": "ブックマーク",
+            "history": "履歴",
+            "downloads": "ダウンロード",
+            "notes": "Notes"
+        },
+        "url": "URL",
+        "untitled": "無題",
+        "confirmDeleteTitle": "パネルを削除",
+        "confirmDelete": "本当にこのパネルを削除してもよろしいですか？",
+        "delete": "削除",
+        "addPanel": "パネルを追加",
+        "editPanel": "パネルを編集",
+        "errors": {
+            "typeRequired": "パネルの種類が必要です",
+            "urlRequired": "ウェブパネルには URL が必要です",
+            "invalidUrl": "有効な URL を入力してください",
+            "extensionIdRequired": "拡張機能パネルには拡張機能 ID が必要です",
+            "staticPanelRequired": "サイドバーツールを選択してください",
+            "invalidWidth": "少なくとも 100 ピクセルの幅が必要です"
+        },
+        "save": "保存",
+        "cancel": "キャンセル"
     },
     "progressiveWebApp": {
         "title": "ウェブアプリ",

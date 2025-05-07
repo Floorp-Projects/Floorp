@@ -1,130 +1,130 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "welcome": "歡迎！",
+        "language": "語言",
+        "languageSupport": "語言支援",
+        "features": "功能",
+        "featureIntroduction": "功能介紹",
+        "customize": "客製化",
+        "initialSettings": "初始設定",
+        "complete": "完成",
+        "previous": "前一頁",
+        "next": "下一頁"
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "客製化 Floorp",
+        "description": "客製化為您喜好的設定。今後您也可以在 Floorp Hub 或設定頁面再次變更設定。",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "外觀設定",
+            "description": "您可以依照自己喜好客製化 Floorp 的外觀。選擇亮色或是暗色的佈景主題，或根據您的系統設定自動切換。"
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "亮色",
+            "dark": "暗色",
+            "system": "遵循系統設定"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "亮色佈景主题",
+            "dark": "暗色佈景主題",
+            "system": "系統設定"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "預設搜尋引擎",
+            "default": "預設",
+            "search": "搜尋",
+            "noEnginesFound": "未找到搜尋引擎。"
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "設定完成！",
+        "subtitle": "恭喜！您已完成 Floorp 設定。享受舒適安全的網路瀏覽體驗。",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "下一步 (可選)",
+            "setDefault": "設定為預設瀏覽器",
+            "documentation": "文檔"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "開始使用 Floorp",
+        "hint": "如需更詳細的設定，您可以透過右上方選單按鈕中的設定選項進行調整。"
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "歡迎來到 Floorp！",
+        "description": "Floorp 是一個重視隱私及安全，兼具速度及易用性的網頁瀏覽器。此指南將會介紹 Floorp 的主要功能及設定。",
+        "readyToStart": "準備就緒後，請按下面的按鈕繼續。",
+        "features": "Floorp 的功能",
+        "privacy": "隱私",
+        "privacyDesc": "保護您的數據",
+        "speed": "速度",
+        "speedDesc": "效能最佳化",
+        "customization": "客製化",
+        "customizationDesc": "依照您的喜好安排",
+        "start": "開始使用吧！"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Floorp 可使用您的語言",
+        "subtitle": "檢查語言設定，並視需要變更",
+        "languageSettings": "語言設定",
+        "languageChanged": "語言已變更！",
+        "currentLanguageInfo": "目前的語言資訊",
+        "systemLanguage": "系統語言",
+        "floorpLanguage": "Floorp 語言",
+        "selectLanguage": "選擇語言",
+        "useSystemLanguage": "使用系統語言",
+        "multilingual": "多語言支援",
+        "chooseLanguage": "從多種語言中選擇",
+        "languageChangeNotice": "變更語言將套用新的語言，而無需重新啟動 Floorp。某些附加元件可能不支援語言變更。"
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Floorp 的主要功能",
+        "subtitle": "Floorp 具有許多便利的功能。請查看功能概述！",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "面板側邊欄",
+            "description": "在瀏覽時可在右側的側邊欄使用便利的功能。您可以在側邊欄中放置如網頁面板、筆記功能、附加元件、書籤等便利功能。",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "將網站釘選到側邊欄",
+                "瀏覽時使用 Floorp Notes 快速記筆記",
+                "支援容器"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "工作空間",
+            "description": "管理多個分頁，提升您的工作效率。使用顯眼的圖標及名稱快速切換工作空間。點擊左上方的工作空間按鈕進入。",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "依目的分類：工作、個人等。",
+                "使用自訂圖示以便視覺識別",
+                "輕鬆管理分頁"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "PWA 應用程式支援",
+            "description": "在 Windows 系統上，當您在造訪與 PWA 應用程式相容的網站時，可將其新增為桌面應用程式。一般網站也可以安裝。",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "可作為桌面應用程式獨立運行",
+                "可固定至工作列",
+                "也可在 PWA 應用程式中使用 Firefox 附加元件"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "滑鼠手勢",
+            "description": "使用原生實作的滑鼠手勢功能，更直覺地控制瀏覽器。按住右鍵並移動滑鼠即可執行手勢。",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "無需鍵盤快捷鍵即可操作",
+                "可完全客製化的手勢",
+                "快速瀏覽頁面和歷史記錄"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "筆記",
+        "nextTab": "轉至下一分頁"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "title": "設定完成！",
+        "subtitle": "恭喜！您已完成 Floorp 設定。現在您可以舒適安全的享受網路瀏覽。",
+        "nextSteps": "下一步 (可選)",
+        "defaultBrowser": "設定為預設瀏覽器",
+        "support": "支援",
+        "documentation": "文檔",
+        "getStarted": "開始使用 Floorp",
+        "hint": "如需更詳細的設定，您可以透過右上方選單按鈕中的設定選項進行調整。",
+        "resourcesLabel": "資源",
+        "defaultBrowserSuccess": "Floorp 已設定為您的預設瀏覽器！"
     }
 }

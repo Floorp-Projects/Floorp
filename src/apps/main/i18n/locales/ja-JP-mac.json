@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "新規ワークスペースを作成...",
             "manage": "ワークスペースを管理"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"
+        },
+        "error": {
+            "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
         }
     },
     "statusbar": {
@@ -188,7 +194,7 @@
             "type": "パネルの種類",
             "typeOptions": {
                 "web": "ウェブページ",
-                "static": "ツールサイドバー",
+                "sidebar-tool": "ツールサイドバー",
                 "extension": "拡張機能サイドバー"
             },
             "width": "パネルの幅",

@@ -44,30 +44,25 @@
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Proteção da privacidade",
-            "description": "O Floorp foi concebido tendo como principal prioridade a privacidade do utilizador. Proteja a sua privacidade online com funcionalidades de prevenção de rastreio e modo de navegação segura."
+        "slide1": {
+            "title": "Bem-vindo ao Floorp",
+            "description": "Bem-vindo à última versão do Floorp, um navegador desenvolvido com foco no desenvolvimento e na investigação no Japão. O conteúdo apresentado a seguir é apenas uma parte do projeto."
         },
-        "performance": {
-            "title": "Desempenho rápido",
-            "description": "O motor otimizado fornece velocidade para tudo, desde o carregamento da página até à mudança de separador, tornando a sua experiência de navegação suave."
+        "slide2": {
+            "title": "Atualizações regulares",
+            "description": "O Floorp é mantido e atualizado continuamente, mesmo sendo um projeto baseado na comunidade. Proporcionamos uma navegação segura, conforme o princípio de que a Web deve ser acessível gratuitamente a todos."
         },
-        "customization": {
-            "title": "Personalização rica",
-            "description": "O Floorp oferece opções de personalização ricas. Pode personalizar tudo, desde a interface do utilizador até às funcionalidades, de acordo com as suas preferências."
+        "slide3": {
+            "title": "Caraterísticas mais recentes",
+            "description": "A versão mais recente do Floorp tira partido das funcionalidades Web de ponta desenvolvidas pelo Firefox da Mozilla. Também foi redesenhado para tornar as ferramentas que todos desejam facilmente acessíveis."
         },
-        "extensions": {
-            "title": "Extensões extensivas",
-            "description": "Compatível com as extensões do Firefox, permitindo-lhe adicionar as suas ferramentas e serviços favoritos ao seu browser."
+        "slide4": {
+            "title": "Personalização avançada",
+            "description": "Equipado com inúmeras opções de personalização para manter a privacidade melhor do que o seu navegador padrão. O Floorp permite-lhe realizar a sua configuração preferida."
         },
-        "multiplatform": {
-            "title": "Suporte multiplataforma",
-            "description": "Disponível em várias plataformas, incluindo Windows, macOS e Linux. Desfrute da mesma experiência em todo o lado."
-        },
-        "navigation": {
-            "previous": "Anterior",
-            "next": "Seguinte",
-            "goto": "Ir para o diapositivo {{number}}"
+        "slide5": {
+            "title": "Lutando por ti",
+            "description": "A Floorp bloqueia o rastreio nocivo. Equilibramos o funcionamento do sítio Web e os direitos do utilizador, trabalhando para melhorar a Web tanto em termos de funcionalidade como de privacidade."
         }
     },
     "rust": {

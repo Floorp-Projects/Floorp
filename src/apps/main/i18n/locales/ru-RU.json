@@ -62,6 +62,12 @@
         "popup": {
             "create-new": "Создать новое рабочее пространство...",
             "manage": "Управление рабочими пространствами"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+        },
+        "error": {
+            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
         }
     },
     "statusbar": {
@@ -188,7 +194,7 @@
             "type": "Panel Type",
             "typeOptions": {
                 "web": "Web Page",
-                "static": "Tool Sidebar",
+                "sidebar-tool": "Tool Sidebar",
                 "extension": "Extension Sidebar"
             },
             "width": "Panel Width",

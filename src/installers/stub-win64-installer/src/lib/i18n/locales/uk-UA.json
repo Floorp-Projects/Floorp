@@ -44,30 +44,25 @@
         }
     },
     "slides": {
-        "privacy": {
-            "title": "Захист конфіденційності",
-            "description": "Floorp розроблений з пріоритетом конфіденційності користувача. Захистіть вашу онлайн-приватність за допомогою функцій блокування відстеження та безпечного перегляду."
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
-        "performance": {
-            "title": "Висока продуктивність",
-            "description": "Оптимізований рушій забезпечує швидкість у всьому: від завантаження сторінок до перемикання вкладок, роблячи ваш перегляд плавним."
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
-        "customization": {
-            "title": "Широкі можливості налаштування",
-            "description": "Floorp пропонує широкі можливості налаштування. Ви можете налаштувати все: від інтерфейсу до функцій під ваші вподобання."
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
-        "extensions": {
-            "title": "Розширена підтримка додатків",
-            "description": "Сумісний з розширеннями Firefox, дозволяючи додавати ваші улюблені інструменти та сервіси до вашого браузера."
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
         },
-        "multiplatform": {
-            "title": "Багатоплатформна підтримка",
-            "description": "Доступний на різних платформах, включаючи Windows, macOS та Linux. Насолоджуйтесь однаковим досвідом усюди."
-        },
-        "navigation": {
-            "previous": "Назад",
-            "next": "Далі",
-            "goto": "Перейти до слайду {{number}}"
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
         }
     },
     "rust": {

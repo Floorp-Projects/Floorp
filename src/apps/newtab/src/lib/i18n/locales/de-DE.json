@@ -1,42 +1,42 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name"
+        "addSite": "Seite hinzufügen",
+        "addNewSite": "Neue Seite hinzufügen",
+        "url": "Url",
+        "label": "Titel",
+        "cancel": "Abbrechen",
+        "add": "Neu",
+        "close": "Schließen",
+        "labelPlaceholder": "Webseitenname"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "close": "Close"
+        "newTabSettings": "Neue Tab Einstellungen",
+        "displayComponents": "Komponenten anzeigen",
+        "topSites": "Top-Seiten",
+        "clock": "Uhr",
+        "searchBar": "Suchleiste",
+        "backgroundSettings": "Hintergrund Einstellungen",
+        "noBackground": "Ohne Hintergrund",
+        "randomImage": "Zufallsbild",
+        "customImage": "Benutzerdefiniertes Bild",
+        "folderImages": "Bilder aus einem Ordner",
+        "floorpImages": "Floorp Bilder",
+        "currentImage": "Aktuelles Bild:",
+        "currentFolder": "Aktueller Ordner:",
+        "selectFolder": "Ordner auswählen",
+        "selected": "Ausgewählt",
+        "imageRecommendation": "Empfohlen: 1920x1080 oder höher",
+        "close": "Beenden"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Suchen oder Url eingeben",
+        "loadingSearchEngines": "Suchmaschinen werden geladen..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Einstellungen"
     },
     "modal": {
-        "close": "Close"
+        "close": "Beenden"
     }
 }

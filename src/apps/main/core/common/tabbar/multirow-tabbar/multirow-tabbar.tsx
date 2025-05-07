@@ -11,6 +11,10 @@ export class MultirowTabbarClass {
     return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
   }
 
+  private get tabsToolbar(): XULElement | null {
+    return document?.getElementById("TabsToolbar") as XULElement | null;
+  }
+
   private get scrollboxPart(): XULElement | null {
     return this.arrowScrollbox
       ? this.arrowScrollbox.shadowRoot?.querySelector(
