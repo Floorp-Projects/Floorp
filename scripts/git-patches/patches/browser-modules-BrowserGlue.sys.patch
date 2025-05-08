@@ -1,5 +1,5 @@
 diff --git a/browser/modules/BrowserGlue.sys.mjs b/browser/modules/BrowserGlue.sys.mjs
-index b8b6d30..4bec173 100644
+index a6a7f91..3c1bb95 100644
 --- ./browser/modules/BrowserGlue.sys.mjs
 +++ ./browser/modules/BrowserGlue.sys.mjs
 @@ -7,6 +7,14 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -17,5 +17,3 @@ index b8b6d30..4bec173 100644
  ChromeUtils.defineESModuleGetters(lazy, {
    AboutHomeStartupCache: "resource:///modules/AboutHomeStartupCache.sys.mjs",
    AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
-   AWToolbarButton: "resource:///modules/aboutwelcome/AWToolbarUtils.sys.mjs",
- 
