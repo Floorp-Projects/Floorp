@@ -5,23 +5,25 @@
 
 import { createEffect, onCleanup } from "solid-js";
 import {
-  TWorkspacesStoreData,
+  type TWorkspacesStoreData,
   zWorkspaceID,
   zWorkspacesServicesStoreData,
-} from "../utils/type.js";
-import { WORKSPACE_DATA_PREF_NAME } from "../utils/workspaces-static-names.js";
+} from "../utils/type.ts";
+import { WORKSPACE_DATA_PREF_NAME } from "../utils/workspaces-static-names.ts";
 import { createRootHMR } from "@nora/solid-xul";
-import { createStore, SetStoreFunction, Store, unwrap } from "solid-js/store";
+import {
+  createStore,
+  type SetStoreFunction,
+  type Store,
+  unwrap,
+} from "solid-js/store";
 import { trackStore } from "@solid-primitives/deep";
 
 function getDefaultStore() {
   const result = zWorkspacesServicesStoreData.safeParse(
     JSON.parse(
-      Services.prefs.getStringPref(
-        WORKSPACE_DATA_PREF_NAME,
-        "{}",
-      ),
-      (k, v) => k == "data" ? new Map(v) : v,
+      Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
+      (k, v) => (k == "data" ? new Map(v) : v),
     ),
   );
   if (result.success) {
@@ -59,10 +61,8 @@ function createWorkspacesData(): [
   const observer = () => {
     const result = zWorkspacesServicesStoreData.safeParse(
       JSON.parse(
-        Services.prefs.getStringPref(
-          WORKSPACE_DATA_PREF_NAME,
-          "{}",
-        ),
+        Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
+        (k, v) => (k == "data" ? new Map(v) : v),
       ),
     );
     if (result.success) {
@@ -70,6 +70,7 @@ function createWorkspacesData(): [
       setWorkspacesDataStore("data", _storedData.data);
       setWorkspacesDataStore("defaultID", _storedData.defaultID);
       setWorkspacesDataStore("selectedID", _storedData.selectedID);
+      setWorkspacesDataStore("order", _storedData.order);
     }
   };
   Services.prefs.addObserver(WORKSPACE_DATA_PREF_NAME, observer);
