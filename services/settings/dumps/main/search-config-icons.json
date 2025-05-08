@@ -1,6 +1,23 @@
 {
   "data": [
     {
+      "schema": 1746437702969,
+      "imageSize": 16,
+      "attachment": {
+        "hash": "6a743574353de0ec7c85b49f46b2b554caa0fc1d064b90544c5dea0fea2b8901",
+        "size": 2015,
+        "filename": "perplexity.svg",
+        "location": "main-workspace/search-config-icons/8d95238a-e1ac-42f1-995e-85db180f413d.svg",
+        "mimetype": "image/svg+xml"
+      },
+      "engineIdentifiers": [
+        "perplexity"
+      ],
+      "filter_expression": "env.appinfo.OS != \"iOS\"",
+      "id": "9d96547d-7575-49ca-8908-1e046b8ea90e",
+      "last_modified": 1746562822691
+    },
+    {
       "schema": 1743687934706,
       "imageSize": 96,
       "attachment": {
@@ -1172,5 +1189,5 @@
       "last_modified": 1744118264825
     }
   ],
-  "timestamp": 1744118264981
+  "timestamp": 1746562822691
 }

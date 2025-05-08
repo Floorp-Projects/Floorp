@@ -5009,42 +5009,6 @@
       "last_modified": 1712311023716
     },
     {
-      "schema": 1711724029289,
-      "derHash": "yh/1TgMRhvkAa7FI+M5qU/BXQqS2zo/+ed/SrkceuqU=",
-      "subject": "CN=Certigna Server Authentication ACME FR CA G1,O=Certigna,C=FR",
-      "subjectDN": "MHYxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNTAzBgNVBAMMLENlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENBIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "661792dc63ededccb7dc2dfcd2918e5d8236c2dedcce5f8da637be0e28481a61",
-        "size": 2052,
-        "filename": "OQzKIkNRq8kQgHkelHOGFIGYVop2_zdqAGChunarhRQ=.pem",
-        "location": "security-state-staging/intermediates/728c8635-f40a-4594-87cd-5740ebcc5aab.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OQzKIkNRq8kQgHkelHOGFIGYVop2/zdqAGChunarhRQ=",
-      "crlite_enrolled": false,
-      "id": "f14d65ec-1130-46a3-b84f-246c756cb63b",
-      "last_modified": 1711724223128
-    },
-    {
-      "schema": 1711724028964,
-      "derHash": "scjkcMofSIXd3uD+gLgF8sqCN3DsYHHBzOt39woPtsI=",
-      "subject": "CN=Certigna Server Authentication ACME CA G1,O=Certigna,C=FR",
-      "subjectDN": "MHMxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxMjAwBgNVBAMMKUNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENBIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6808866c9da6c164a23ade7632d0cce4a43b5740def835d4020636b892aa342f",
-        "size": 2048,
-        "filename": "rvK65wj_zEVuddzfsGOjD135Wh2MILoAbXu7kKxNwoM=.pem",
-        "location": "security-state-staging/intermediates/e4364543-7c84-43b9-a09d-e59d2930b628.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rvK65wj/zEVuddzfsGOjD135Wh2MILoAbXu7kKxNwoM=",
-      "crlite_enrolled": false,
-      "id": "8046050c-57cc-44c2-8341-e1801f5dde99",
-      "last_modified": 1711724223126
-    },
-    {
       "schema": 1711079327797,
       "derHash": "GnD+GCdR5jfA5dPVU+db26HWVf/lQR2bOQtzyDePpyw=",
       "subject": "CN=Leocert TLS Issuing RSA CA 1,O=Leocert LLC,C=US",
@@ -29129,5 +29093,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1746370623111
+  "timestamp": 1746500222556
 }

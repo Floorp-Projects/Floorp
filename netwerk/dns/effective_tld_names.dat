@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-02_08-05-58_UTC
-// COMMIT: 38015c25a1ecd231d411f599248563da3d64289a
+// VERSION: 2025-05-08_00-52-22_UTC
+// COMMIT: 0c4a8de420882c00af48602dd104adcb4150bbca
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -13645,10 +13645,6 @@ günstigliefern.de
 // Submitted by Eero Häkkinen <Eero+psl@Häkkinen.fi>
 häkkinen.fi
 
-// Harrison Network : https://hrsn.net
-// Submitted by William Harrison <psl@hrsn.net>
-hrsn.dev
-
 // Hashbang : https://hashbang.sh
 hashbang.sh
 
@@ -13881,7 +13877,7 @@ ir.md
 is-a-good.dev
 
 // is-a.dev : https://is-a.dev
-// Submitted by William Harrison <psl@is-a.dev>
+// Submitted by William Harrison <security@is-a.dev>
 is-a.dev
 
 // IServ GmbH : https://iserv.de
@@ -14097,9 +14093,8 @@ ggff.net
 *.user.localcert.dev
 
 // LocalCert : https://localcert.net
-// Submitted by William Harrison <psl@localcert.net>
+// Submitted by William Harrison <security@localcert.net>
 localcert.net
-localhostcert.net
 
 // Localtonet : https://localtonet.com/
 // Submitted by Burak Isleyici <support@localtonet.com>
@@ -14778,14 +14773,6 @@ dev.project-study.com
 // Protonet GmbH : http://protonet.io
 // Submitted by Martin Meier <admin@protonet.io>
 protonet.io
-
-// PSL Sandbox : https://psl.hrsn.dev
-// Submitted by William Harrison <psl@hrsn.net>
-sub.psl.hrsn.dev
-*.wc.psl.hrsn.dev
-!ignored.wc.psl.hrsn.dev
-*.sub.wc.psl.hrsn.dev
-!ignored.sub.wc.psl.hrsn.dev
 
 // Publication Presse Communication SARL : https://ppcom.fr
 // Submitted by Yaacov Akiba Slama <admin@chirurgiens-dentistes-en-france.fr>
@@ -15674,8 +15661,9 @@ wmcloud.org
 wmflabs.org
 
 // William Harrison : https://wharrison.com.au
-// Submitted by William Harrison <psl@wharrison.com.au>
+// Submitted by William Harrison <security@wharrison.com.au>
 wdh.app
+hrsn.dev
 
 // Windsurf : https://windsurf.com
 // Submitted by Douglas Chen <psl@windsurf.com>

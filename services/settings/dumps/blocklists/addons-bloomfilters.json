@@ -3,6 +3,55 @@
     {
       "stash": {
         "blocked": [
+          "coral@testnet:2025.1",
+          "whopple@pro:1.0.0",
+          "whopple@pro:1.0.1",
+          "whopple@pro:1.0.2",
+          "muxx@stable:1.0.0",
+          "muxx@stable:1.0.1",
+          "beta@bree:1.0.0",
+          "beta@bree:1.0.1",
+          "beta@bree:1.0.2",
+          "beta@whoop:1.0.0",
+          "beta@whoop:1.0.1",
+          "beta@whoop:1.0.2",
+          "beta@whoop:1.0.3",
+          "beta@whoop:1.0.4",
+          "beta@whoop:1.0.5",
+          "official@inspirodev:1.0.0",
+          "official@inspirodev:1.0.1",
+          "official@inspirodev:1.0.2",
+          "official@inspirodev:1.0.3",
+          "official@appsm:1.0.0",
+          "official@appsm:1.1.0",
+          "official@appsm:1.1.1",
+          "official@appsm:1.1.2",
+          "test@twtr:2024.3.27.1",
+          "test@twtr:2024.4.19.1",
+          "test@twtr:2024.4.22.1",
+          "test@twtr:2024.4.24.1",
+          "earnof@official:2024.1.1",
+          "{d64b7c69-2d93-4536-b885-45df44ea375c}:2.2.0",
+          "{d64b7c69-2d93-4536-b885-45df44ea375c}:2.2.1",
+          "daniesl37@gmail.com:1.4.0",
+          "{7a74d83d-4017-404d-a7d2-91c9181bbf1f}:1.2",
+          "{7a74d83d-4017-404d-a7d2-91c9181bbf1f}:1.3",
+          "pardeshiyogesh.930@gmail.com:1.2.0",
+          "pardeshiyogesh930@gmail.com:1.0.0",
+          "{fdd45ac6-9557-4b8c-aa71-cc8ff6dc7204}:1.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1746437704849,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1746556506569,
+      "id": "f0ba085f-5864-4945-9384-37af961c5faf",
+      "last_modified": 1746556589509
+    },
+    {
+      "stash": {
+        "blocked": [
           "support.firefox@beamy.io:4.8.2"
         ],
         "unblocked": [],
@@ -258,5 +307,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1746210984035
+  "timestamp": 1746556589509
 }
