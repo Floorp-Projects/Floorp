@@ -6,7 +6,7 @@
 
 pref("startup.homepage_override_url", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 pref("startup.homepage_welcome_url", "about:welcome | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("startup.homepage_welcome_url.additional", "https://docs.ablaze.one/floorp_privacy_policy/");
+pref("startup.homepage_welcome_url.additional", "https://floorp.app/privacy");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
 // Give the user x seconds to react before showing the big UI. default=192 hours
