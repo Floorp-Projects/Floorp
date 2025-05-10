@@ -147,9 +147,7 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 📜 Privacy Policy
 
-- [Ablaze Privacy Policy](https://docs.ablaze.one/privacy_policy)
-
-- [Floorp Privacy Policy](https://docs.ablaze.one/floorp_privacy_policy)
+- [Floorp Privacy Policy](https://floorp.app/privacy)
 
 ### 📜 About Forks
 

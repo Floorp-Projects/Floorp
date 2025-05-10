@@ -84,7 +84,7 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <a
-              href="https://support.ablaze.one/setup"
+              href="https://docs.floorp.app/docs/features/"
               className="flex items-center gap-2"
             >
               <Button>
@@ -120,7 +120,7 @@ export default function Page() {
           </CardFooter>
         </Card>
 
-        <Card className="z-1">
+        <Card className="z-1 hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserRound className="size-5 text-orange-500" />

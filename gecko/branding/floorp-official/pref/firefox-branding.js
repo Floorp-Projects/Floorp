@@ -4,10 +4,10 @@
 
 // This file contains branding-specific prefs.
 
-pref("startup.homepage_override_url", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("floorp.startup.homepage_override_url.ja", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/#ja");
-pref("startup.homepage_welcome_url", "about:welcome | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("startup.homepage_welcome_url.additional", "https://docs.ablaze.one/floorp_privacy_policy/");
+pref("startup.homepage_override_url", "https://blog.floorp.app");
+pref("floorp.startup.homepage_override_url.ja", "https://blog.floorp.app/ja");
+pref("startup.homepage_welcome_url", "about:welcome | https://blog.floorp.app");
+pref("startup.homepage_welcome_url.additional", "https://floorp.app/privacy");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
 // Give the user x seconds to react before showing the big UI. default=192 hours
@@ -20,9 +20,9 @@ pref("app.update.promptWaitTime", 691200);
 
 
 pref("app.update.url.manual", "https://floorp.app");
-pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+pref("app.update.url.details", "https://blog.floorp.app/categories/release");
+pref("app.releaseNotesURL", "https://blog.floorp.app/categories/release");
+pref("app.releaseNotesURL.aboutDialog", "https://blog.floorp.app/categories/release");
 
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that
