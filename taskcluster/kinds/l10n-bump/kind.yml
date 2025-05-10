@@ -10,29 +10,6 @@ transforms:
 
 task-defaults:
     worker-type: lando
-    scopes:
-        by-project:
-            mozilla-beta:
-                - project:releng:lando:repo:firefox-beta
-                - project:releng:lando:action:l10n_bump
-            mozilla-central:
-                - project:releng:lando:repo:firefox-main
-                - project:releng:lando:action:l10n_bump
-            autoland:
-                - project:releng:lando:repo:firefox-autoland
-                - project:releng:lando:action:l10n_bump
-            mozilla-release:
-                - project:releng:lando:repo:firefox-release
-                - project:releng:lando:action:l10n_bump
-            mozilla-esr128:
-                - project:releng:lando:repo:firefox-esr128
-                - project:releng:lando:action:l10n_bump
-            try:
-                - project:releng:lando:repo:ff-test-dev
-                - project:releng:lando:action:l10n_bump
-            # set a default to avoid failing tgdiff tests on other branches
-            # even though this doesn't run there
-            default: []
     worker:
         implementation: landoscript
         dontbuild:

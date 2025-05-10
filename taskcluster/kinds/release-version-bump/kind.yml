@@ -19,29 +19,6 @@ task-defaults:
     run-on-projects: []
     shipping-phase: ship
     worker-type: lando
-    scopes:
-        by-project:
-            mozilla-beta:
-                - project:releng:lando:repo:firefox-beta
-                - project:releng:lando:action:tag
-                - project:releng:lando:action:version_bump
-            mozilla-release:
-                - project:releng:lando:repo:firefox-release
-                - project:releng:lando:action:tag
-                - project:releng:lando:action:version_bump
-            mozilla-esr115:
-                - project:releng:lando:repo:firefox-esr115
-                - project:releng:lando:action:tag
-                - project:releng:lando:action:version_bump
-            mozilla-esr128:
-                - project:releng:lando:repo:firefox-esr128
-                - project:releng:lando:action:tag
-                - project:releng:lando:action:version_bump
-            try:
-                - project:releng:lando:repo:ff-test-dev
-                - project:releng:lando:action:tag
-                - project:releng:lando:action:version_bump
-            default: []
     worker:
         implementation: landoscript
         tags: ['release']

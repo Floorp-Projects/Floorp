@@ -12,24 +12,6 @@ task-defaults:
     run-on-projects: []
     shipping-phase: promote
     worker-type: lando
-    scopes:
-        by-project:
-            mozilla-beta:
-                - project:releng:lando:repo:firefox-beta
-                - project:releng:lando:action:tag
-            mozilla-release:
-                - project:releng:lando:repo:firefox-release
-                - project:releng:lando:action:tag
-            mozilla-esr115:
-                - project:releng:lando:repo:firefox-esr115
-                - project:releng:lando:action:tag
-            mozilla-esr128:
-                - project:releng:lando:repo:firefox-esr128
-                - project:releng:lando:action:tag
-            try:
-                - project:releng:lando:repo:ff-test-dev
-                - project:releng:lando:action:tag
-            default: []
     worker:
         implementation: landoscript
         tags: ['buildN']
