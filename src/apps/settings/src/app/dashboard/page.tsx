@@ -84,7 +84,7 @@ export default function Page() {
           </CardContent>
           <CardFooter>
             <a
-              href="https://support.ablaze.one/setup"
+              href="https://docs.floorp.app/docs/features/"
               className="flex items-center gap-2"
             >
               <Button>
