@@ -56,6 +56,7 @@ vendoring:
     - arm_cpu_runtime_detection_code_on_openbsd.patch
     - input_frame_validation.patch
     - input_frame_validation_vp9.patch
+    - vpx_codec_enc_init_multi_fix__cherry_pick_1c7587.patch
 
   update-actions:
     - action: move-file
