@@ -1,13 +1,16 @@
 import { createEffect, onCleanup } from "solid-js";
-import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
-import type { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
+import { selectedWorkspaceID } from "./data/data.ts";
+import type {
+  PanelMultiViewParentElement,
+  TWorkspaceID,
+} from "./utils/type.ts";
 import {
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
-} from "./utils/workspaces-static-names";
-import { configStore, enabled } from "./data/config";
-import type { WorkspaceIcons } from "./utils/workspace-icons";
-import type { WorkspacesDataManager } from "./workspacesDataManagerBase";
+} from "./utils/workspaces-static-names.ts";
+import { configStore, enabled } from "./data/config.ts";
+import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
+import type { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
 
 interface TabEvent extends Event {
   target: XULElement;
@@ -20,30 +23,55 @@ export class WorkspacesTabManager {
   constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
+    this.boundHandleTabClose = this.handleTabClose.bind(this);
+
+    const initWorkspace = () => {
+      globalThis.SessionStore.promiseAllWindowsRestored.then(() => {
+        this.initializeWorkspace();
+        globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+      }).catch((error: Error) => {
+        console.error("Error waiting for windows restore:", error);
+        this.initializeWorkspace();
+        globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+      });
+    };
+
+    initWorkspace();
 
     createEffect(() => {
-      if (workspacesDataStore.selectedID) {
-        if (!enabled()) {
-          return;
-        }
+      if (!enabled()) {
+        return;
+      }
 
+      if (selectedWorkspaceID()) {
         this.updateTabsVisibility();
       }
     });
-
-    this.boundHandleTabClose = this.handleTabClose.bind(this);
-
-    window.addEventListener("TabClose", this.boundHandleTabClose);
 
     onCleanup(() => {
       this.cleanup();
     });
   }
 
+  private initializeWorkspace() {
+    const maybeSelectedWorkspace = this
+      .getMaybeSelectedWorkspacebyVisibleTabs();
+    if (maybeSelectedWorkspace) {
+      this.changeWorkspace(maybeSelectedWorkspace);
+    } else {
+      try {
+        const defaultWorkspaceId = this.dataManagerCtx.getDefaultWorkspaceID();
+        this.changeWorkspace(defaultWorkspaceId);
+      } catch (e) {
+        console.error("Failed to change workspace:", e);
+      }
+    }
+  }
+
   private boundHandleTabClose: (event: TabEvent) => void;
 
   public cleanup() {
-    window.removeEventListener("TabClose", this.boundHandleTabClose);
+    globalThis.removeEventListener("TabClose", this.boundHandleTabClose);
   }
 
   private handleTabClose = (event: TabEvent) => {
@@ -68,8 +96,8 @@ export class WorkspacesTabManager {
           const newTab = this.createTabForWorkspace(defaultId, false);
 
           setTimeout(() => {
-            window.gBrowser.selectedTab = newTab;
-            setWorkspacesDataStore("selectedID", defaultId);
+            globalThis.gBrowser.selectedTab = newTab;
+            this.dataManagerCtx.setCurrentWorkspaceID(defaultId);
             this.updateTabsVisibility();
           }, 0);
         } else {
@@ -81,12 +109,12 @@ export class WorkspacesTabManager {
         console.error("Error handling last tab close in workspace:", e);
         setTimeout(() => {
           try {
-            const newTab = window.gBrowser.addTab("about:newtab", {
+            const newTab = globalThis.gBrowser.addTab("about:newtab", {
               skipAnimation: true,
-              triggeringPrincipal:
-                Services.scriptSecurityManager.getSystemPrincipal(),
+              triggeringPrincipal: Services.scriptSecurityManager
+                .getSystemPrincipal(),
             });
-            window.gBrowser.selectedTab = newTab;
+            globalThis.gBrowser.selectedTab = newTab;
           } catch (innerError) {
             console.error("Critical error handling tab close:", innerError);
           }
@@ -97,12 +125,12 @@ export class WorkspacesTabManager {
 
   public updateTabsVisibility() {
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
-    const selectedTab = window.gBrowser.selectedTab;
+    const selectedTab = globalThis.gBrowser.selectedTab;
     if (
       selectedTab &&
       !selectedTab.hasAttribute(WORKSPACE_LAST_SHOW_ID) &&
       selectedTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
-      currentWorkspaceId
+        currentWorkspaceId
     ) {
       const lastShowWorkspaceTabs = document?.querySelectorAll(
         `[${WORKSPACE_LAST_SHOW_ID}="${currentWorkspaceId}"]`,
@@ -118,7 +146,7 @@ export class WorkspacesTabManager {
     }
 
     // Check Tabs visibility
-    const tabs = window.gBrowser.tabs;
+    const tabs = globalThis.gBrowser.tabs;
     for (const tab of tabs) {
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
@@ -128,9 +156,9 @@ export class WorkspacesTabManager {
 
       const chackedWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
       if (chackedWorkspaceId === currentWorkspaceId) {
-        window.gBrowser.showTab(tab);
+        globalThis.gBrowser.showTab(tab);
       } else {
-        window.gBrowser.hideTab(tab);
+        globalThis.gBrowser.hideTab(tab);
       }
     }
   }
@@ -164,7 +192,7 @@ export class WorkspacesTabManager {
    * @param workspaceId The workspace id.
    */
   public removeTabByWorkspaceId(workspaceId: TWorkspaceID) {
-    const tabs = window.gBrowser.tabs;
+    const tabs = globalThis.gBrowser.tabs;
     const tabsToRemove = [];
 
     for (const tab of tabs) {
@@ -185,13 +213,12 @@ export class WorkspacesTabManager {
         ) as NodeListOf<XULElement>;
 
         if (defaultTabs?.length > 0) {
-          window.gBrowser.selectedTab = defaultTabs[0];
-          setWorkspacesDataStore("selectedID", defaultId);
+          globalThis.gBrowser.selectedTab = defaultTabs[0];
         } else {
           this.createTabForWorkspace(defaultId, true);
-          setWorkspacesDataStore("selectedID", defaultId);
         }
 
+        this.dataManagerCtx.setCurrentWorkspaceID(defaultId);
         this.updateTabsVisibility();
       } else {
         this.createTabForWorkspace(defaultId, true);
@@ -200,7 +227,7 @@ export class WorkspacesTabManager {
 
     for (let i = tabsToRemove.length - 1; i >= 0; i--) {
       try {
-        window.gBrowser.removeTab(tabsToRemove[i]);
+        globalThis.gBrowser.removeTab(tabsToRemove[i]);
       } catch (e) {
         console.error("Error removing tab:", e);
       }
@@ -219,9 +246,9 @@ export class WorkspacesTabManager {
     select = false,
     url?: string,
   ) {
-    const targetURL =
-      url ?? Services.prefs.getStringPref("browser.startup.homepage");
-    const tab = window.gBrowser.addTab(targetURL, {
+    const targetURL = url ??
+      Services.prefs.getStringPref("browser.startup.homepage");
+    const tab = globalThis.gBrowser.addTab(targetURL, {
       skipAnimation: true,
       inBackground: false,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -229,7 +256,7 @@ export class WorkspacesTabManager {
     this.setWorkspaceIdToAttribute(tab, workspaceId);
 
     if (select) {
-      window.gBrowser.selectedTab = tab;
+      globalThis.gBrowser.selectedTab = tab;
     }
     return tab;
   }
@@ -252,23 +279,22 @@ export class WorkspacesTabManager {
       ) as XULElement;
 
       if (willChangeWorkspaceLastShowTab) {
-        window.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+        globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
       } else {
         const tabToSelect = this.workspaceHasTabs(workspaceId);
         if (tabToSelect) {
-          window.gBrowser.selectedTab = tabToSelect;
+          globalThis.gBrowser.selectedTab = tabToSelect;
         } else {
           const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
           if (nonWorkspaceTab !== true) {
-            window.gBrowser.selectedTab = nonWorkspaceTab;
+            globalThis.gBrowser.selectedTab = nonWorkspaceTab;
             this.setWorkspaceIdToAttribute(nonWorkspaceTab, workspaceId);
           } else {
             this.createTabForWorkspace(workspaceId, true);
           }
         }
       }
-
-      setWorkspacesDataStore("selectedID", workspaceId);
+      this.dataManagerCtx.setCurrentWorkspaceID(workspaceId);
       this.updateTabsVisibility();
     } catch (e) {
       console.error("Failed to change workspace:", e);
@@ -278,23 +304,23 @@ export class WorkspacesTabManager {
 
         if (defaultId !== workspaceId) {
           this.createTabForWorkspace(defaultId, true);
-          setWorkspacesDataStore("selectedID", defaultId);
+          this.dataManagerCtx.setCurrentWorkspaceID(defaultId);
           this.updateTabsVisibility();
         } else {
           this.createTabForWorkspace(workspaceId, true);
-          setWorkspacesDataStore("selectedID", workspaceId);
+          this.dataManagerCtx.setCurrentWorkspaceID(workspaceId);
           this.updateTabsVisibility();
         }
       } catch (innerError) {
         console.error("Critical error handling workspace change:", innerError);
 
         try {
-          const newTab = window.gBrowser.addTab("about:newtab", {
+          const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
           });
-          window.gBrowser.selectedTab = newTab;
+          globalThis.gBrowser.selectedTab = newTab;
         } catch (finalError) {
           console.error("Fatal error creating new tab:", finalError);
         }
@@ -316,7 +342,7 @@ export class WorkspacesTabManager {
       try {
         const tab = this.createTabForWorkspace(workspaceId);
         this.moveTabToWorkspace(workspaceId, tab);
-        window.gBrowser.selectedTab = tab;
+        globalThis.gBrowser.selectedTab = tab;
       } catch (e) {
         console.error("Failed to create tab for workspace:", e);
         const defaultWorkspaceId = this.dataManagerCtx.getDefaultWorkspaceID();
@@ -325,7 +351,7 @@ export class WorkspacesTabManager {
         }
       }
     } else {
-      window.gBrowser.selectedTab = workspaceTabs[0];
+      globalThis.gBrowser.selectedTab = workspaceTabs[0];
     }
   }
 
@@ -346,7 +372,7 @@ export class WorkspacesTabManager {
    * @returns true if there is no workspace tabs if false, return tab.
    */
   public isThereNoWorkspaceTabs() {
-    for (const tab of window.gBrowser.tabs as XULElement[]) {
+    for (const tab of globalThis.gBrowser.tabs as XULElement[]) {
       if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
       }
@@ -362,7 +388,7 @@ export class WorkspacesTabManager {
     const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
     this.setWorkspaceIdToAttribute(tab, workspaceId);
 
-    if (tab === window.gBrowser.selectedTab && oldWorkspaceId) {
+    if (tab === globalThis.gBrowser.selectedTab && oldWorkspaceId) {
       const oldWorkspaceTabs = document?.querySelectorAll(
         `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${oldWorkspaceId}"]`,
       ) as XULElement[];
@@ -381,13 +407,13 @@ export class WorkspacesTabManager {
    * @param workspaceId The workspace id.
    */
   public moveTabsToWorkspaceFromTabContextMenu(workspaceId: TWorkspaceID) {
-    const reopenedTabs = window.TabContextMenu.contextTab.multiselected
-      ? window.gBrowser.selectedTabs
-      : [window.TabContextMenu.contextTab];
+    const reopenedTabs = globalThis.TabContextMenu.contextTab.multiselected
+      ? globalThis.gBrowser.selectedTabs
+      : [globalThis.TabContextMenu.contextTab];
 
     for (const tab of reopenedTabs) {
       this.moveTabToWorkspace(workspaceId, tab);
-      if (tab === window.gBrowser.selectedTab) {
+      if (tab === globalThis.gBrowser.selectedTab) {
         this.switchToAnotherWorkspaceTab(workspaceId);
       }
     }
@@ -411,5 +437,32 @@ export class WorkspacesTabManager {
     | undefined
     | null {
     return document?.querySelector("#customizationui-widget-panel");
+  }
+
+  private getMaybeSelectedWorkspacebyVisibleTabs(): TWorkspaceID | null {
+    const tabs = (globalThis.gBrowser.visibleTabs as XULElement[]).slice(0, 10);
+    const workspaceIdCounts = new Map<TWorkspaceID, number>();
+
+    for (const tab of tabs) {
+      const workspaceId = this.getWorkspaceIdFromAttribute(tab);
+      if (workspaceId) {
+        workspaceIdCounts.set(
+          workspaceId,
+          (workspaceIdCounts.get(workspaceId) || 0) + 1,
+        );
+      }
+    }
+
+    let mostFrequentId: TWorkspaceID | null = null;
+    let maxCount = 0;
+
+    workspaceIdCounts.forEach((count, id) => {
+      if (count > maxCount) {
+        maxCount = count;
+        mostFrequentId = id;
+      }
+    });
+
+    return mostFrequentId;
   }
 }

@@ -3,8 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
+import type { Accessor, Setter } from "solid-js";
 import {
+  type TWorkspaceID,
   type TWorkspacesStoreData,
   zWorkspaceID,
   zWorkspacesServicesStoreData,
@@ -32,7 +34,6 @@ function getDefaultStore() {
     const stubID = zWorkspaceID.parse("00000000-0000-0000-0000-000000000000");
     return {
       defaultID: stubID,
-      selectedID: stubID,
       data: new Map(),
       order: [],
     } satisfies TWorkspacesStoreData;
@@ -69,7 +70,6 @@ function createWorkspacesData(): [
       const _storedData = result.data;
       setWorkspacesDataStore("data", _storedData.data);
       setWorkspacesDataStore("defaultID", _storedData.defaultID);
-      setWorkspacesDataStore("selectedID", _storedData.selectedID);
       setWorkspacesDataStore("order", _storedData.order);
     }
   };
@@ -85,3 +85,22 @@ export const [workspacesDataStore, setWorkspacesDataStore] = createRootHMR(
   createWorkspacesData,
   import.meta.hot,
 );
+
+/**
+ * A Signal that holds the selected workspace ID.
+ * Selected Workspace ID should not be stored in the store,
+ * a Window should have only one selected workspace ID. Not need to track this value in Preferences.
+ */
+function signalSelectedWorkspaceID(): [
+  Accessor<TWorkspaceID | null>,
+  Setter<TWorkspaceID | null>,
+] {
+  const [selectedWorkspaceID, setSelectedWorkspaceID] = createSignal<
+    TWorkspaceID | null
+  >(null);
+  return [selectedWorkspaceID, setSelectedWorkspaceID];
+}
+
+/** Selected workspace ID */
+export const [selectedWorkspaceID, setSelectedWorkspaceID] =
+  signalSelectedWorkspaceID();

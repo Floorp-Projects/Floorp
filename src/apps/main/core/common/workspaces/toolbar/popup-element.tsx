@@ -4,22 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { WorkspacesService } from "../workspacesService.ts";
+import type { WorkspacesService } from "../workspacesService.ts";
 import { PopupToolbarElement } from "./popup-block-element.tsx";
 import { configStore } from "../data/config.ts";
-import { workspacesDataStore } from "../data/data.ts";
+import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import i18next from "i18next";
 import { createSignal } from "solid-js";
 import { addI18nObserver } from "../../../../i18n/config.ts";
 
 const translationKeys = {
   createNew: "workspaces.popup.create-new",
-  manage: "workspaces.popup.manage"
+  manage: "workspaces.popup.manage",
 };
 
 const getTranslations = () => ({
   createNew: i18next.t(translationKeys.createNew),
-  manage: i18next.t(translationKeys.manage)
+  manage: i18next.t(translationKeys.manage),
 });
 
 export function PopupElement(props: { ctx: WorkspacesService }) {
@@ -46,12 +46,14 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
           >
             <For each={workspacesDataStore.order}>
               {(id) => {
-                return <PopupToolbarElement
-                  workspaceId={id}
-                  isSelected={id === workspacesDataStore.selectedID}
-                  bmsMode={configStore.manageOnBms}
-                  ctx={props.ctx}
-                />
+                return (
+                  <PopupToolbarElement
+                    workspaceId={id}
+                    isSelected={id === selectedWorkspaceID()}
+                    bmsMode={configStore.manageOnBms}
+                    ctx={props.ctx}
+                  />
+                );
               }}
             </For>
           </xul:vbox>

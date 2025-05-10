@@ -1,16 +1,21 @@
-import { TWorkspace, zWorkspaceID } from "./utils/type";
-import { workspacesDataStore, setWorkspacesDataStore } from "./data/data";
-import { TWorkspaceID } from "./utils/type";
+import { type TWorkspace, zWorkspaceID } from "./utils/type";
+import {
+  selectedWorkspaceID,
+  setSelectedWorkspaceID,
+  setWorkspacesDataStore,
+  workspacesDataStore,
+} from "./data/data";
+import type { TWorkspaceID } from "./utils/type";
 
 export interface WorkspacesDataManagerBase {
-  createWorkspace(name: string): TWorkspaceID
-  deleteWorkspace(id: TWorkspaceID): void
-  setCurrentWorkspaceID(id: TWorkspaceID): void
-  setDefaultWorkspace(id: TWorkspaceID): void
-  isWorkspaceID(id: string): id is TWorkspaceID
-  getRawWorkspace(id: TWorkspaceID): TWorkspace
-  getSelectedWorkspaceID(): TWorkspaceID
-  getDefaultWorkspaceID(): TWorkspaceID
+  createWorkspace(name: string): TWorkspaceID;
+  deleteWorkspace(id: TWorkspaceID): void;
+  setCurrentWorkspaceID(id: TWorkspaceID): void;
+  setDefaultWorkspace(id: TWorkspaceID): void;
+  isWorkspaceID(id: string): id is TWorkspaceID;
+  getRawWorkspace(id: TWorkspaceID): TWorkspace;
+  getSelectedWorkspaceID(): TWorkspaceID;
+  getDefaultWorkspaceID(): TWorkspaceID;
 }
 
 export class WorkspacesDataManager implements WorkspacesDataManagerBase {
@@ -21,7 +26,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @deprecated Use WorkspacesServices.createWorkspace
    */
   public createWorkspace(name: string): TWorkspaceID {
-    const id = zWorkspaceID.parse(Services.uuid.generateUUID().toString().replaceAll(/[{}]/g, ""));
+    const id = zWorkspaceID.parse(
+      Services.uuid.generateUUID().toString().replaceAll(/[{}]/g, ""),
+    );
     const workspace: TWorkspace = {
       name,
       icon: null,
@@ -30,7 +37,7 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     //TODO: If the id is duplicated, regenerate with limit to try
     setWorkspacesDataStore("data", (prev) => {
       const temp = new Map(prev);
-      temp.set(id, workspace)
+      temp.set(id, workspace);
       return temp;
     });
     return id;
@@ -41,22 +48,20 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(id: TWorkspaceID): void {
-    this.setCurrentWorkspaceID(
-      workspacesDataStore.defaultID as TWorkspaceID,
-    );
+    this.setCurrentWorkspaceID(workspacesDataStore.defaultID as TWorkspaceID);
 
     setWorkspacesDataStore("data", (prev) => {
-      prev.delete(id)
-      return new Map(prev)
+      prev.delete(id);
+      return new Map(prev);
     });
   }
 
   public setCurrentWorkspaceID(id: TWorkspaceID): void {
-    setWorkspacesDataStore("selectedID", id)
+    setSelectedWorkspaceID(id);
   }
 
   public setDefaultWorkspace(id: TWorkspaceID): void {
-    setWorkspacesDataStore("defaultID", id)
+    setWorkspacesDataStore("defaultID", id);
   }
 
   public isWorkspaceID(id: string): id is TWorkspaceID {
@@ -68,16 +73,23 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
   }
 
   public getSelectedWorkspaceID(): TWorkspaceID {
-    if (this.isWorkspaceID(workspacesDataStore.selectedID)) {
-      return workspacesDataStore.selectedID
+    const selected = selectedWorkspaceID();
+    if (selected === null) {
+      return this.getDefaultWorkspaceID();
     }
-    throw Error("Not Valid Selected Workspace ID : " + workspacesDataStore.selectedID)
+
+    if (this.isWorkspaceID(selected)) {
+      return selected;
+    }
+    throw Error("Not Valid Selected Workspace ID : " + selected);
   }
 
   public getDefaultWorkspaceID(): TWorkspaceID {
     if (this.isWorkspaceID(workspacesDataStore.defaultID)) {
       return workspacesDataStore.defaultID;
     }
-    throw Error("Not Valid Default Workspace ID : " + workspacesDataStore.defaultID)
+    throw Error(
+      "Not Valid Default Workspace ID : " + workspacesDataStore.defaultID,
+    );
   }
 }

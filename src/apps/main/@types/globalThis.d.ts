@@ -4,8 +4,9 @@ declare global {
       setEnable: (value: boolean) => void;
     };
   };
-
   var gBrowser: any;
+  var TabContextMenu: any;
+  var SessionStore: any;
 }
 
 export {};
