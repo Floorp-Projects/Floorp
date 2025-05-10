@@ -550,12 +550,13 @@ merge-automation:
                 - - browser/config/mozconfigs/macosx64/l10n-mozconfig
                   - ac_add_options --with-branding=browser/branding/nightly
                   - ac_add_options --enable-official-branding
+                - - .arcconfig
+                  - FIREFOXAUTOLAND
+                  - FIREFOXBETA
             merge-old-head: true
             base-tag: 'FIREFOX_BETA_{major_version}_BASE'
             end-tag: 'FIREFOX_BETA_{major_version}_END'
-            from-repo: 'https://hg.mozilla.org/mozilla-central'
-            from-branch: 'central'
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
+            from-branch: 'main'
             to-branch: 'beta'
         early-to-late-beta:
             fetch-version-from: "browser/config/version.txt"
@@ -565,7 +566,6 @@ merge-automation:
                   - EARLY_BETA_OR_EARLIER=1
                   - EARLY_BETA_OR_EARLIER=
             merge-old-head: false
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
             to-branch: 'beta'
         beta-to-release:
             fetch-version-from: "browser/config/version.txt"
@@ -574,23 +574,26 @@ merge-automation:
                   new-suffix: ''
                 - filename: "mobile/android/version.txt"
                   new-suffix: ''
-            replacements: []
+            replacements:
+                - - .arcconfig
+                  - FIREFOXBETA
+                  - FIREFOXRELEASE
             merge-old-head: true
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
             end-tag: 'FIREFOX_RELEASE_{major_version}_END'
-            from-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
             from-branch: 'beta'
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             to-branch: 'release'
         release-to-esr:
             fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: 'esr'
-            replacements: []
+            replacements:
+                - - .arcconfig
+                  - FIREFOXRELEASE
+                  - FIREFOXESRONETWOEIGHT
             merge-old-head: false
             end-tag: "FIREFOX_ESR_{major_version}_BASE"
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr128'
             to-branch: 'esr128'
         bump-central:
             fetch-version-from: "browser/config/version.txt"
@@ -613,8 +616,7 @@ merge-automation:
                   - 'WEAVE_VERSION = "1.{next_weave_version}.0"'
             merge-old-head: false
             end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
-            to-repo: 'https://hg.mozilla.org/mozilla-central'
-            to-branch: 'central'
+            to-branch: 'main'
         bump-esr128:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -624,9 +626,9 @@ merge-automation:
                   version-bump: "minor"
                 - filename: "browser/config/version_display.txt"
                   version-bump: "minor"
+                  new-suffix: "esr"
             replacements: []
             merge-old-head: false
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr128'
             to-branch: 'esr128'
 
 scriptworker:

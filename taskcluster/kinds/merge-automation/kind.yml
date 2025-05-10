@@ -19,20 +19,28 @@ tasks:
             kind: build
             platform: firefox-release/opt
         description: Merge repositories for release management.
-        worker-type: tree
+        scopes:
+            - "queue:route:notify.matrix-room.*"
+        worker-type: lando
         worker:
-            implementation: treescript
-            tags: []
-            bump: false
+            implementation: landoscript
+            # lando-repo is the _destination_ repository; not the one
+            # the task runs on. For this reason it is keyed on behavior
+            # instead of project.
+            lando-repo:
+                by-behavior:
+                    central-to-beta: firefox-beta
+                    early-to-late-beta: firefox-beta
+                    beta-to-release: firefox-release
+                    release-to-esr: firefox-esr128
+                    bump-central: firefox-main
+                    bump-esr128: firefox-esr128
             dontbuild: false
-            ignore-closed-tree: true
-            push: false
             l10n-bump-info:
                 by-behavior:
                     central-to-beta:
                         - name: Firefox l10n changesets
                           path: browser/locales/l10n-changesets.json
-                          version-path: browser/config/version.txt
                           l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                           l10n-repo-target-branch: main
                           ignore-config:
@@ -69,7 +77,6 @@ tasks:
                           }]
                         - name: mobile l10n changesets
                           path: mobile/locales/l10n-changesets.json
-                          version-path: mobile/android/version.txt
                           l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
                           l10n-repo-target-branch: main
                           platform-configs: [
@@ -96,8 +103,6 @@ tasks:
                     # #releaseduty-dev
                     - "notify.matrix-room.!wGgsWXnVncJLSBYmuf:mozilla.org.on-pending"
                     - "notify.matrix-room.!wGgsWXnVncJLSBYmuf:mozilla.org.on-resolved"
-        scopes:
-            - "queue:route:notify.matrix-room.*"
         extra:
             notify:
                 matrixBody:
