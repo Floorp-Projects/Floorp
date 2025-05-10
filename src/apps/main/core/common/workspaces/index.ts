@@ -11,7 +11,16 @@ import { WorkspacesTabContextMenu } from "./tabContextMenu.tsx";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
-  static ctx: WorkspacesService | null = null;
+  static windowWorkspacesMap: WeakMap<Window, WorkspacesService> =
+    new WeakMap();
+
+  static getCtx(): WorkspacesService | null {
+    if (!window || !enabled()) {
+      return null;
+    }
+    return this.windowWorkspacesMap.get(window) || null;
+  }
+
   init(): void {
     if (!enabled()) {
       return;
@@ -21,10 +30,10 @@ export default class Workspaces extends NoraComponentBase {
     const dataManagerCtx = new WorkspacesDataManager();
     const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
     const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
+    Workspaces.windowWorkspacesMap.set(window, ctx);
     new WorkspaceManageModal(ctx, iconCtx);
     new WorkspacesToolbarButton(ctx);
     new WorkspacesPopupContxtMenu(ctx);
     new WorkspacesTabContextMenu(ctx);
-    Workspaces.ctx = ctx;
   }
 }

@@ -18,7 +18,7 @@ export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
 
   init() {
-    if (!enabled()) return;
+    if (!enabled() || true) return;
     const manifestProcesser = new ManifestProcesser();
     const dataManager = new DataManager();
     const ssbManager = new SiteSpecificBrowserManager(
