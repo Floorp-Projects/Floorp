@@ -28,7 +28,14 @@ task-defaults:
                 mozilla-release: firefox-release
                 mozilla-esr115: firefox-esr115
                 mozilla-esr128: firefox-esr128
-                try: ff-test-dev
+                try:
+                    by-release-type:
+                        beta: staging-firefox-beta
+                        release: staging-firefox-release
+                        release-rc: staging-firefox-release
+                        esr115: staging-firefox-esr115
+                        esr128: staging-firefox-esr128
+                        default: ""
                 default: ""
         # used to map hg revisions to the git revisions that landoscript needs
         hg-repo-url:

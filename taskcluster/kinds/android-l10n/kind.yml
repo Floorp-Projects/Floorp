@@ -27,7 +27,7 @@ tasks:
         worker:
             lando-repo:
                 by-project:
-                    try: ff-test-dev
+                    try: staging-firefox-autoland
                     default: firefox-autoland
             android-l10n-import-info:
                 from-repo-url: https://github.com/mozilla-l10n/android-l10n
@@ -47,7 +47,7 @@ tasks:
         worker:
             lando-repo:
                 by-project:
-                    try: ff-test-dev
+                    try: staging-firefox-beta
                     default: firefox-beta
             ignore-closed-tree: true
             android-l10n-sync-info:

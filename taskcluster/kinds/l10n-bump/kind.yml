@@ -27,7 +27,9 @@ task-defaults:
                 mozilla-release: firefox-release
                 mozilla-esr128: firefox-esr128
                 autoland: firefox-autoland
-                try: ff-test-dev
+                # change this if you want to test esr bumps against other
+                # branches on try; there's rarely a need though.
+                try: staging-firefox-autoland
                 # set a default to avoid failing tgdiff tests on other branches
                 # even though this doesn't run there
                 default: ''
