@@ -28,13 +28,23 @@ tasks:
             # the task runs on. For this reason it is keyed on behavior
             # instead of project.
             lando-repo:
-                by-behavior:
-                    central-to-beta: firefox-beta
-                    early-to-late-beta: firefox-beta
-                    beta-to-release: firefox-release
-                    release-to-esr: firefox-esr128
-                    bump-central: firefox-main
-                    bump-esr128: firefox-esr128
+                by-project:
+                    try:
+                        by-behavior:
+                            central-to-beta: staging-firefox-beta
+                            early-to-late-beta: staging-firefox-beta
+                            beta-to-release: staging-firefox-release
+                            release-to-esr: staging-firefox-esr128
+                            bump-central: staging-firefox-main
+                            bump-esr128: staging-firefox-esr128
+                    default:
+                        by-behavior:
+                            central-to-beta: firefox-beta
+                            early-to-late-beta: firefox-beta
+                            beta-to-release: firefox-release
+                            release-to-esr: firefox-esr128
+                            bump-central: firefox-main
+                            bump-esr128: firefox-esr128
             dontbuild: false
             l10n-bump-info:
                 by-behavior:
