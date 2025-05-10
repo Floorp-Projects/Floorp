@@ -114,6 +114,9 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(
           ctx->priv = NULL;
           ctx->init_flags = flags;
           ctx->config.enc = cfg;
+          // ctx takes ownership of mr_cfg.mr_low_res_mode_info if and only if
+          // this call succeeds. The first ctx entry in the array is
+          // responsible for freeing the memory.
           res = ctx->iface->init(ctx, &mr_cfg);
         }
 

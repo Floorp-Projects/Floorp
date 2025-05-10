@@ -732,7 +732,17 @@ static vpx_codec_err_t vp8e_init(vpx_codec_ctx_t *ctx,
 
       set_vp8e_config(&priv->oxcf, priv->cfg, priv->vp8_cfg, mr_cfg);
       priv->cpi = vp8_create_compressor(&priv->oxcf);
-      if (!priv->cpi) res = VPX_CODEC_MEM_ERROR;
+      if (!priv->cpi) {
+#if CONFIG_MULTI_RES_ENCODING
+        // Release ownership of mr_cfg->mr_low_res_mode_info on failure. This
+        // prevents ownership confusion with the caller and avoids a double
+        // free when vpx_codec_destroy() is called on this instance.
+        priv->oxcf.mr_total_resolutions = 0;
+        priv->oxcf.mr_encoder_id = 0;
+        priv->oxcf.mr_low_res_mode_info = NULL;
+#endif
+        res = VPX_CODEC_MEM_ERROR;
+      }
     }
   }
 
