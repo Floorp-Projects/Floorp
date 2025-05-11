@@ -38,7 +38,7 @@
   max-width: var(--panel-sidebar-width);
   min-width: var(--panel-sidebar-width);
   color: var(--toolbar-color);
-  background-color: var(--toolbar-bgcolor);
+  background-color: var(--panel-sidebar-background-color);
   background-image: var(--lwt-additional-images);
   background-repeat: no-repeat;
   background-position: center;
@@ -49,12 +49,15 @@
 }
 
 #panel-sidebar-select-box:-moz-lwtheme {
-  background-color: var(--lwt-accent-color-inactive, var(--toolbar-bgcolor));
+  background-color: var(
+    --lwt-accent-color-inactive,
+    var(--panel-sidebar-background-color)
+  );
 }
 
 /* Panel Sidebar Box */
 #panel-sidebar-box {
-  background: var(--toolbar-bgcolor);
+  background: var(--panel-sidebar-background-color);
   min-width: 225px;
 }
 
@@ -147,7 +150,7 @@
 /* Header */
 #panel-sidebar-header {
   height: var(--panel-sidebar-header-height);
-  background-color: var(--toolbar-bgcolor);
+  background-color: var(--panel-sidebar-background-color);
   background-image: var(--lwt-additional-images);
   background-repeat: no-repeat;
   background-position: center;
@@ -167,7 +170,10 @@
   .panel-sidebar-panel:hover,
   .panel-sidebar-actions:hover {
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-    background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+    background-color: var(
+      --tab-selected-bgcolor,
+      var(--panel-sidebar-background-color)
+    );
   }
 
   .panel-sidebar-panel[data-checked="true"],

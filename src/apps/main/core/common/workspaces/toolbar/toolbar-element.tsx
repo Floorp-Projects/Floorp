@@ -46,7 +46,7 @@ export class WorkspacesToolbarButton {
       },
       CustomizableUI.AREA_TABSTRIP,
       this.StyleElement() as JSX.Element,
-      -1,
+      0,
     );
 
     const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);

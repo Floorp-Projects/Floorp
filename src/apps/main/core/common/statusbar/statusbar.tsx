@@ -15,7 +15,7 @@ export function StatusBarElem() {
         customizable="true"
         class={`border-t border-[var(--chrome-content-separator-color)] ${
           manager.showStatusBar() ? "flex items-center" : "hidden"
-        } browser-toolbar w-full`}
+        } browser-toolbar w-full !bg-[var(--panel-sidebar-background-color)]`}
         mode="icons"
         context="toolbar-context-menu"
         accesskey="A"

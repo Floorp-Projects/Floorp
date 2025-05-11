@@ -10,9 +10,9 @@ import { SidebarSelectbox } from "./sidebar-selectbox";
 import { SidebarSplitter } from "./sidebar-splitter";
 import { createEffect, Show } from "solid-js";
 import {
-  selectedPanelId,
   isFloating,
   isPanelSidebarEnabled,
+  selectedPanelId,
 } from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
@@ -51,6 +51,19 @@ export class PanelSidebarElem {
         );
       }
     });
+
+    this.setVerticalTabBgColor();
+    Services.prefs.addObserver("sidebar.verticalTabs", () => {
+      this.setVerticalTabBgColor();
+    });
+  }
+
+  private setVerticalTabBgColor() {
+    const newValue = Services.prefs.getBoolPref("sidebar.verticalTabs");
+    this.documentElement?.style.setProperty(
+      "--panel-sidebar-background-color",
+      newValue ? "var(--toolbox-bgcolor)" : "var(--toolbar-bgcolor)",
+    );
   }
 
   private style() {
