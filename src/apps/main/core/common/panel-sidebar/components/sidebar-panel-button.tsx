@@ -25,7 +25,7 @@ export function PanelSidebarButton(props: {
   const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
 
   const handleDragStart = (e: DragEvent) => {
-    e.dataTransfer?.setData("text/plain", props.panel.id);
+    e.dataTransfer?.setData("text/floorp-panel-id", props.panel.id);
     (e.target as HTMLElement).classList.add("dragging");
   };
 
@@ -50,7 +50,7 @@ export function PanelSidebarButton(props: {
     e.stopPropagation();
     (e.target as HTMLElement).classList.remove("drag-over");
 
-    const sourceId = e.dataTransfer?.getData("text/plain");
+    const sourceId = e.dataTransfer?.getData("text/floorp-panel-id");
     const targetId = props.panel.id;
 
     if (sourceId === targetId) return;
