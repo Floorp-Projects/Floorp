@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-08_00-52-22_UTC
-// COMMIT: 0c4a8de420882c00af48602dd104adcb4150bbca
+// VERSION: 2025-05-12_07-25-20_UTC
+// COMMIT: 823beb1425def931c8b0b170a6bc33b424c3f9b0
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -11996,11 +11996,6 @@ analytics-gateway.us-east-1.amazonaws.com
 analytics-gateway.us-east-2.amazonaws.com
 analytics-gateway.us-west-2.amazonaws.com
 
-// Appwrite : https://appwrite.io
-// Submitted by Steven Nguyen <security@appwrite.io>
-appwrite.global
-*.appwrite.run
-
 // AWS Amplify
 // Submitted by AWS Security <psl-maintainers@amazon.com>
 // Reference: c35bed18-6f4f-424f-9298-5756f2f7d72b
@@ -12174,6 +12169,11 @@ appspaceusercontent.com
 // Appudo UG (haftungsbeschränkt) : https://www.appudo.com
 // Submitted by Alexander Hochbaum <admin@appudo.com>
 appudo.net
+
+// Appwrite : https://appwrite.io
+// Submitted by Steven Nguyen <security@appwrite.io>
+appwrite.global
+*.appwrite.run
 
 // Aptible : https://www.aptible.com/
 // Submitted by Thomas Orozco <thomas@aptible.com>
@@ -12683,7 +12683,9 @@ ondigitalocean.app
 
 // DigitalPlat : https://www.digitalplat.org/
 // Submitted by Edward Hsing <contact@digitalplat.org>
+qzz.io
 us.kg
+xx.kg
 dpdns.org
 
 // Discord Inc : https://discord.com

@@ -3,6 +3,37 @@
     {
       "stash": {
         "blocked": [
+          "{178b7d08-856c-4d24-9aa2-5c656d5b7406}:6.6.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1746794167841,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1746815706308,
+      "id": "e0acee9e-5f92-4567-8ebc-8b8aeb35fbf5",
+      "last_modified": 1746815782081
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{3023a854-75d2-4f14-9cfc-8ae0847e5204}:2.4.2",
+          "{3023a854-75d2-4f14-9cfc-8ae0847e5204}:3.5.2",
+          "{166252d6-b859-4b63-b85f-54c9cb476186}:2.4.2",
+          "{166252d6-b859-4b63-b85f-54c9cb476186}:2.5.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1746556589631,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1746794105194,
+      "id": "631b576c-7ad2-449a-ab5a-83eb103919ac",
+      "last_modified": 1746794167684
+    },
+    {
+      "stash": {
+        "blocked": [
           "coral@testnet:2025.1",
           "whopple@pro:1.0.0",
           "whopple@pro:1.0.1",
@@ -307,5 +338,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1746556589509
+  "timestamp": 1746815782081
 }

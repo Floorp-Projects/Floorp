@@ -1,6 +1,123 @@
 {
   "data": [
     {
+      "schema": 1746885468781,
+      "derHash": "aDekmLtp3sdJ//T9H1/9xWZafBoyb8bXoFeGa6AKr9I=",
+      "attachment": {
+        "hash": "f33592d4ebc84003c3d3443ca77b5c12b64b972495471d12e950c31ffb399d90",
+        "size": 2166,
+        "filename": "0PheQZyWwOVIG2AaIz2n8nb8C7PPxMg8UUDUV_onhb8=.pem",
+        "location": "security-state-staging/intermediates/86b32f79-1b07-4e5c-abf1-9859c27797d6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "c1d3350f-ac06-47e1-ab14-2251b618ae74",
+      "last_modified": 1746889022900
+    },
+    {
+      "schema": 1746885471004,
+      "derHash": "AIeP1HRZxK23WvU/ssJZKXdrM0aeLsln31AMuHliS6g=",
+      "attachment": {
+        "hash": "bb3647a627bf0e2d7d524b6e2bce1f21dcd9579ac674bafd983d53eae2469597",
+        "size": 2105,
+        "filename": "ZGJqloXMjH3_tG33fU5v_65SGnqevOdJcbqtGXaxhWw=.pem",
+        "location": "security-state-staging/intermediates/912f1f2f-2f6d-4538-9307-5a09d7ecf4cf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "d9681fb2-a0e8-46f0-998b-c1b533c6af82",
+      "last_modified": 1746889022897
+    },
+    {
+      "schema": 1746885470296,
+      "derHash": "WVxoQD4cPtdCE7GtLrIW48HNLkWKmGN4UDDQJ1Usn5M=",
+      "attachment": {
+        "hash": "f58bb0e299b01588f897d65f13f4a693e15c015afdb0613cc69266b180641e23",
+        "size": 2194,
+        "filename": "DUckGhzjIeeKrOBmdhhJG-osPJw8IBb2ZDIM4k1fxCU=.pem",
+        "location": "security-state-staging/intermediates/134106e3-b330-4625-a02c-7629837a7141.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "2f5fd161-b385-4e94-a995-7eeaf5f840f6",
+      "last_modified": 1746889022894
+    },
+    {
+      "schema": 1746885467335,
+      "derHash": "btN6bNrt/2e1IkwnoSD+y/uY2gD7lVFUkanKGWLGUcA=",
+      "attachment": {
+        "hash": "39d85bb3e70c1cba638c68f824f7974ecf7e50bc4abb5c7e6514dc4c20506bd3",
+        "size": 1191,
+        "filename": "zKEXr1wYR8o0yeBbLnMzSpOdWYe2BJ8xV_87loGxlxA=.pem",
+        "location": "security-state-staging/intermediates/a15eeb98-5ad8-4dc5-ae8e-00af95415b07.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "b203cd58-fd84-45b8-9922-0ca43c013462",
+      "last_modified": 1746889022891
+    },
+    {
+      "schema": 1746885466555,
+      "derHash": "JBHm1nP7t9KWZV/ZfvwtVLxfIreB9zojOLRKYqFI5kI=",
+      "attachment": {
+        "hash": "3aa48dc0b215c90bbdb72219842d1e94cefd8fd52241ca6c9660438d0d402942",
+        "size": 2133,
+        "filename": "IIDg-QlxY6Pf-D47ZmK2WfRyoNwjNBEnxcLj5KoRdwM=.pem",
+        "location": "security-state-staging/intermediates/58eab13d-3d5e-4911-aed8-2f60e47c00f4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "0e1e8e75-8069-4721-930d-6fb0c319e9d4",
+      "last_modified": 1746889022888
+    },
+    {
+      "schema": 1746885464632,
+      "derHash": "/5PBDUa2MkI5S4iRw5ihVtILgfC5GO5S659TkSbIDZc=",
+      "attachment": {
+        "hash": "f5bf3e22c2710a788c647f9176d3713e86fd65a8a0cdef9a46bc2b116db638be",
+        "size": 1102,
+        "filename": "P6DMBu56CTPEdJB2UiGK3PQq2bMc8xQLOXSg77WHO4g=.pem",
+        "location": "security-state-staging/intermediates/4c40ea2b-4df3-4df3-bb43-de336b445ffa.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "fb3960b0-6290-4a6f-9899-cee0d02e3dc8",
+      "last_modified": 1746889022885
+    },
+    {
+      "schema": 1746885468075,
+      "derHash": "GxjCZB+rv4evaxre7QHV8jT7EDKnCr98Nv6uegbBDzw=",
+      "attachment": {
+        "hash": "d391fcfe227bb7f228776503928e368ab767a5245fd118aa29cebcd66a02e9f9",
+        "size": 1158,
+        "filename": "9M3ekA7LdRary7W7SCc7M8dXc1awLKPHmBNS0gAU1mw=.pem",
+        "location": "security-state-staging/intermediates/998f24f1-bcdf-4d6f-a6a6-b3825106abcf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "4a9d8fdb-55f8-44ee-bd2e-36582a248c2b",
+      "last_modified": 1746889022881
+    },
+    {
+      "schema": 1746885469556,
+      "derHash": "X46w+KZmlToRrAtTfnDHvfIOxzn806vEkFG4JaH9FnM=",
+      "attachment": {
+        "hash": "4cc06606ba1e5e56cb9d693d8e5a4c991908be180cc8ca9f96146343fe2c4ff1",
+        "size": 1134,
+        "filename": "XaLrQ90IPcwDoGzVxITboNCytxaVaQ1jdUIq8533qSQ=.pem",
+        "location": "security-state-staging/intermediates/2156a973-fe5b-4f07-9b4f-888207a3285e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "f2fbca63-05d7-424f-988f-3f4214230af2",
+      "last_modified": 1746889022877
+    },
+    {
+      "schema": 1746885465635,
+      "derHash": "aJFkornwPA5eTWFssfRTvdX8Gj0cbtk1aMg6OBKn/CA=",
+      "attachment": {
+        "hash": "b78da514e83afb5ca04e45cabfae5d4417a6e94094156935da19b88850181d8d",
+        "size": 1146,
+        "filename": "QtKJPwiNJP9xZk__Xl3Yv3jKBK48lFSJ6XC6foyont0=.pem",
+        "location": "security-state-staging/intermediates/aac1d6a6-a428-4ce3-bbcf-3ed6f3b9317d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "486e626b-8d03-4336-91d9-1ac02ce7572e",
+      "last_modified": 1746889022874
+    },
+    {
       "schema": 1746237472458,
       "derHash": "8HfhrxHP4eihKHH5CAtp77i0HotKS5WrUTzfZQx2ssI=",
       "attachment": {
@@ -11343,24 +11460,6 @@
       "crlite_enrolled": false,
       "id": "ee7fb2cb-357d-4c77-afde-598161638058",
       "last_modified": 1666727875132
-    },
-    {
-      "schema": 1666727443308,
-      "derHash": "vzLalUVxZZqvcVwT7nA+NkPfy67uLYIRDKaOtXy2fOA=",
-      "subject": "CN=TUBITAK Kamu SM SSL Sertifika Hizmet Saglayicisi - Surum 1,OU=Kamu Sertifikasyon Merkezi - Kamu SM,O=Turkiye Bilimsel ve Teknolojik Arastirma Kurumu - TUBITAK,L=Gebze - Kocaeli,C=TR",
-      "subjectDN": "MIHfMQswCQYDVQQGEwJUUjEYMBYGA1UEBwwPR2ViemUgLSBLb2NhZWxpMUIwQAYDVQQKDDlUdXJraXllIEJpbGltc2VsIHZlIFRla25vbG9qaWsgQXJhc3Rpcm1hIEt1cnVtdSAtIFRVQklUQUsxLTArBgNVBAsMJEthbXUgU2VydGlmaWthc3lvbiBNZXJrZXppIC0gS2FtdSBTTTFDMEEGA1UEAww6VFVCSVRBSyBLYW11IFNNIFNTTCBTZXJ0aWZpa2EgSGl6bWV0IFNhZ2xheWljaXNpIC0gU3VydW0gMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ab10fd30609bc30f75d3ede708f810cf2fdb009802424fd6ed3e4c6bf308db7c",
-        "size": 2296,
-        "filename": "FUrqo5K2woGDo0xUxDmAoLHpCJRt3-d67a7xGdVm1s8=.pem",
-        "location": "security-state-staging/intermediates/56f71156-d839-4560-9fe4-299ea364f331.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "FUrqo5K2woGDo0xUxDmAoLHpCJRt3+d67a7xGdVm1s8=",
-      "crlite_enrolled": false,
-      "id": "461c30ef-db33-4e0c-bcf1-c4fb264c2a61",
-      "last_modified": 1666727875111
     },
     {
       "schema": 1666727339898,
@@ -29093,5 +29192,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1746500222556
+  "timestamp": 1746975423008
 }
