@@ -37,9 +37,9 @@
     ・
     <a href="#-download---install">Download</a>
     ・
-    <a href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">Blog & Release Notes</a>
+    <a href="https://blog.floorp.app">Blog & Release Notes</a>
     ・
-    <a href="https://support.ablaze.one">Official Support Site & Send feedback</a>
+    <a href="https://floorp.app/discord">Official Discord</a>
     ・
     <a href="https://docs.floorp.app">Documentation</a>
   </p>
@@ -49,7 +49,7 @@
 
 Floorp Browser is a free and open-source project. If you like Floorp Browser, please consider sponsoring us. Your sponsorship will help us to continue development and pay for the server costs. You may advertise if you continuously sponsor a minimum of $100 per month.
 
-- [GitHub Sponsors](https://github.com/sponsors/Ablaze-MIRAI)
+- [GitHub Sponsors](https://github.com/sponsors/surapunoyousei)
 
 <h2> 💕 Special Sponsors </h2>
 <div align="left" style="display: flex; flex-wrap: wrap;">
@@ -71,7 +71,7 @@ Floorp Browser is available for Windows, macOS, and Linux. You can install it by
 
 - x86_64 CPU architecture. AArch64 is not supported.
 
-- Floorp provides "exe" installer & "Winget" install.
+- Floorp provides "exe" installer, "Winget" and "Scoop" install.
 
 Winget install command:
 
@@ -80,6 +80,15 @@ winget install Ablaze.Floorp
 ```
 
 Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
+
+Scoop install command:
+
+```
+scoop bucket add extras
+scoop install extras/floorp
+```
+
+Scoop repository provided by [@SegoCode](https://github.com/SegoCode)
 
 **Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". However, the installer for the Daylight build is not signed.**
 
@@ -103,7 +112,7 @@ brew install --cask floorp
 
 - x86_64 & AArch64 CPU architecture.
 
-- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/128.0esr/system-requirements/#gnulinux)
+- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/firefox/138.0.1/system-requirements/#gnulinux)
 
 - List of supported package managers:
 
@@ -117,6 +126,8 @@ brew install --cask floorp
 4. AUR bin (Arch-based Distributions) "https://aur.archlinux.org/packages/floorp-bin/" **Unofficial**
 
 5. AUR (Arch-based Distributions) "https://aur.archlinux.org/packages/floorp/" **Unofficial**
+
+6. SBo bin (Slackware-based Distributions)  "https://slackbuilds.org/repository/15.0/network/floorp-bin/" **Unofficial**
 ```
 
 ### 📥 Download & 📦 Install
@@ -137,13 +148,13 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code and other open-source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
+- Floorp uses Mozilla Firefox's source code and other open-source projects. See [Floorp License Notices](#-Floorp-License-Notices-)
 
 ### 📧 Contact
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser)
 
-- [Official Floorp Projects Discord](https://discord.floorp.app)
+- [Official Floorp Projects Discord](https://floorp.app/discord)
 
 ### 📜 Privacy Policy
 
