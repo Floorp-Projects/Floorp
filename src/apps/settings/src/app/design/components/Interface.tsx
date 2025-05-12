@@ -8,7 +8,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
-import { ExternalLink, Palette } from "lucide-react";
+import { Palette } from "lucide-react";
 
 export function Interface() {
   const { t } = useTranslation();
@@ -33,10 +33,17 @@ export function Interface() {
               {interfaceOptions.map((option) => (
                 <label
                   key={option.value}
-                  className={`flex flex-col items-center rounded p-2 cursor-pointer relative hover:bg-base-200 ${getValues("design") === option.value
-                    ? "bg-primary/10 text-base-content dark:bg-primary/15 dark:text-base-content border-1 border-primary/30"
-                    : "border-1 border-secondary/10"
+                  tabIndex={0}
+                  className={`flex flex-col items-center rounded p-2 cursor-pointer relative border-1 transition-colors ${getValues("design") === option.value
+                    ? "bg-primary/10 text-base-content dark:bg-primary/15 border-primary/30 ring-1 ring-primary/20"
+                    : "border-secondary/10 hover:bg-base-200 focus-within:bg-base-200 focus-within:border-primary/20 focus:bg-base-200 focus:border-primary/20"
                     }`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setValue("design", option.value);
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   <img
                     src={option.image}
@@ -50,7 +57,7 @@ export function Interface() {
                     value={option.value}
                     checked={getValues("design") === option.value}
                     onChange={() => setValue("design", option.value)}
-                    className="hidden top-2 right-2"
+                    className="opacity-0 absolute top-2 right-2 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </label>
               ))}
