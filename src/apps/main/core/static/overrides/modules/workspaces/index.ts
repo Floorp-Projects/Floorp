@@ -61,7 +61,9 @@ export const overrides = [
       // Note 2: This is also used to notify a user that an extension has changed
       //         the New Tab page.
 
-      const gWorkspacesServices = Workspaces?.ctx!;
+      const gWorkspacesServices = Workspaces.getCtx();
+
+      console.log("gWorkspacesServices", gWorkspacesServices);
 
       Services.obs.notifyObservers(
         {
