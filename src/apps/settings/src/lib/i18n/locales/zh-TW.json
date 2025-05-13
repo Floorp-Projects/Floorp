@@ -26,13 +26,13 @@
         "tabAndAppearance": "分頁與外觀",
         "browserSidebar": "面板側邊欄",
         "workspaces": "工作空間",
-        "keyboardShortcuts": "鍵盤快速鍵",
+        "keyboardShortcuts": "鍵盤快捷鍵",
         "webApps": "PWA 應用程式",
         "profileAndAccount": "設定檔和帳戶",
         "aboutBrowser": "關於 {{productName}}",
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
-        "keyboardShortcut": "鍵盤快速鍵"
+        "keyboardShortcut": "鍵盤快捷鍵"
     },
     "home": {
         "welcome": "歡迎您， {{name}}👋",
@@ -191,7 +191,7 @@
         "releaseNotes": "發佈說明與更多資訊",
         "browserVersion": "{{productName}} 版本： {{browserVersion}} | Firefox 版本： {{firefoxVersion}}",
         "isOfficialBuild": "(公式版本)",
-        "browserDescription": "{{productName}} 是一款於日本誕生的瀏覽器。由 Ablaze 社群基於 Firefox 開發，旨在促進網路良好發展。",
+        "browserDescription": "{{productName}} 是一款於日本誕生的瀏覽器。以 Firefox 為基礎，由 Ablaze 社開發，旨在促進網路發展。",
         "browser": "{{productName}}",
         "copyright": "© 2024 {{productName}} Project。保留所有權利。",
         "openSourceLicense": "{{productName}} 是可在 Mozilla Public License 2.0 下使用的開放原始碼軟體，由 Firefox 開放原始碼專案和其他開放原始碼軟體促成。",

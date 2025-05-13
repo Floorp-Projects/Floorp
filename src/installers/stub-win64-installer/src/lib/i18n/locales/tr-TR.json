@@ -1,46 +1,46 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Arka planda yükleniyor...",
+            "installComplete": "Yükleme tamamlandı"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "title": "Floorp Yükleyicisi",
+            "description": "Floorp tarayıcısını yükleyin ve gizlilik odaklı, hızlı ve Kişiselleştirilebilir bir tarama deneyimine başlayın.",
+            "adminRights": "Yönetici izni ile yükle",
+            "adminRightsEnabled": "Yönetici iznine sahip tüm kullanıcılar için yükleyin.",
+            "adminRightsDisabled": "Yalnızca mevcut kullanıcı için yükleyin.",
+            "customPathRequired": "Özel kurulum yolu Yönetici izni gerektirir.",
+            "installLocation": "Yükleme konumu",
+            "change": "Değiştir",
+            "installButton": "Yüklemeyi başlat",
+            "retryButton": "Tekrar deneyin"
         },
         "progress": {
-            "installing": "Installing...",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "installing": "Yükleniyor...",
+            "slideCounter": "Sunum {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "selectLocation": "Yükleme Konumunu Seçin",
+            "installPath": "Yükleme yolu",
+            "browse": "Göz at",
+            "resetDefault": "Varsayılana Sıfırla",
+            "cancel": "İptal Et",
+            "save": "Ayarları Kaydet",
+            "close": "Kapat"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "Yükleme iptal edilsin mi?",
+            "message": "Yükleme işleminin iptal edilmesi Floorp'un yüklenmesini engelleyecektir.",
+            "cancelButton": "Vazgeç",
+            "confirmButton": "Yüklemeyi iptal et"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds"
+            "success": "Yükleme Başarılı",
+            "error": "Yükleme Başarısız oldu",
+            "launchCheckbox": "Yükleme bitince Floorp tarayıcısını başlatın",
+            "closeButton": "Yükleyiciyi Kapat",
+            "countdownMessage": "Yükleyici {{count}} saniye içinde kapanacaktır"
         }
     },
     "slides": {
@@ -67,27 +67,27 @@
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "Floorp yükleyici indirildi (geliştirme modu)",
+            "installation_complete": "Floorp başarılı bir şekilde yüklendi."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "installer_not_found": "Floorp yükleyicisi alınamadı.",
+            "download_failed": "İndirme sırasında bir hata oluştu: {{0}}",
+            "signature_verification_failed": "Yükleyici imza doğrulaması başarısız oldu. Yürütme güvenlik nedeniyle iptal edildi.",
+            "signature_verification_error": "İmza doğrulama sırasında bir hata oluştu: {{0}}",
+            "installer_exit_code": "Yükleyici {{0}}kodu ile çıktı.",
+            "installer_execution": "Yükleyici çalıştırılırken bir hata oluştu: {{0}}",
+            "browser_not_found": "Floorp tarayıcı bulunamadı. Yükleme başarılı oldu, ancak tarayıcı yürütülebilir dosyası bulunamadı.",
+            "browser_launch_failed": "Tarayıcı başlatılamadı: {{0}}",
+            "file_not_found": "Dosya bulunamadı: {{0}}",
+            "not_a_file": "Yol bir dosya değil: {{0}}",
+            "admin_rights_denied": "Yönetici izni reddedildi. Yönetici izni modunu seçtiniz, ancak izin reddedildi.",
+            "exit_code_not_found": "Yükleyicinin çıkış kodu alınamadı. Yönetici izni reddedilmiş olabilir.",
+            "powershell_script_creation": "PowerShell betiği oluşturulamadı: {{0}}",
+            "powershell_process": "PowerShell işlemi başlatılamadı: {{0}}",
+            "admin_install_failed": "Yönetici izni ile kurulum başarısız oldu. Çıkış kodu: {{0}}",
+            "user_installer_launch": "Kullanıcı izni ile yükleyici işlemi başlatılamadı: {{0}}",
+            "user_installer_execution": "Yükleyiciyi kullanıcı izni ile çalıştırırken bir sorun oluştu: {{0}}"
         }
     }
 }

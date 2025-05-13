@@ -1,6 +1,6 @@
 {
     "navigation": {
-        "welcome": "Hoş geldiniz",
+        "welcome": "Hoş Geldiniz",
         "language": "Dil",
         "languageSupport": "Dil Desteği",
         "features": "Özellikler",
@@ -49,7 +49,7 @@
     "welcomePage": {
         "welcome": "Floorp'a hoş geldiniz!",
         "description": "Floorp, gizlilik ve güvenliği vurgulayan hızlı ve kullanıcı dostu bir web tarayıcısıdır. Bu kılavuz size Floorp'un ana özelliklerini ve ayarlarını tanıtacaktır.",
-        "readyToStart": "Hazır olduğunuzda, devam etmek için aşağıdaki düğmeyi tıklayın.",
+        "readyToStart": "Hazır olduğunuzda, devam etmek için aşağıdaki düğmeye tıklayın.",
         "features": "Floorp Özellikleri",
         "privacy": "Gizlilik",
         "privacyDesc": "Verilerinizi korur",
@@ -68,63 +68,63 @@
         "systemLanguage": "Sistem Dili",
         "floorpLanguage": "Floorp Dili",
         "selectLanguage": "Dil Seçiniz",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "useSystemLanguage": "Sistem Dilini Kullanın",
+        "multilingual": "Çoklu dil desteği",
+        "chooseLanguage": "Çok çeşitli diller arasından seçim yapın",
+        "languageChangeNotice": "Dili değiştirmek, Floorp'u yeniden başlatmaya gerek duymadan seçilen dili uygulayacaktır. Bazı eklentiler dil değişikliklerini desteklemeyebilir."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Floorp'un Ana Özellikleri",
+        "subtitle": "Floorp birçok kullanışlı özellikle birlikte gelir. Onlara bir göz atın!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "Panel Kenar Çubuğu",
+            "description": "Gezinirken sağ taraftaki kenar çubuğundan kullanışlı özelliklere erişin. Kenar çubuğuna web panelleri, not alma işlevleri, eklentiler, yer imleri vb. yerleştirebilirsiniz.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "Web sitelerini kenar çubuğuna sabitleyin",
+                "Arama yaparken Floorp Notlar ile hızlıca not alın",
+                "Kapsayıcıları destekler"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "Çalışma Alanları",
+            "description": "Çalışmanızı kolaylaştırmak için birden fazla sekme kümesi düzenleyin. Ayırt edici simgeler ve adlarla çalışma alanları arasında hızla geçiş yapın. Sol üstteki çalışma alanı düğmesiyle erişin.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Amaca göre sınıflandırın: iş, kişisel, vb.",
+                "Özel simgelerle görsel olarak tanımlayın",
+                "Sekmeleri kolayca yönetin"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "Progressive Web Uygulamaları (PWA) Desteği",
+            "description": "Windows'ta, PWA uyumlu siteleri ziyaret ettiğinizde masaüstü uygulamaları olarak ekleyebilirsiniz. Normal web siteleri de yüklenebilir.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "Masaüstü uygulamaları olarak bağımsız çalışma",
+                "Görev çubuğuna sabitlenebilir",
+                "Firefox eklentileri de çalışır"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "Fare Hareketleri",
+            "description": "Yerel olarak uygulanan Fare Hareketi işlevselliği ile tarayıcınızı daha sezgisel bir şekilde kontrol edin. Sağ tıklama düğmesini basılı tutarak ve farenizi hareket ettirerek Hareketleri yürütün.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "Klavye kısayolları olmadan çalıştırın",
+                "Tamamen özelleştirilebilir Hareketler",
+                "Sayfalarda ve geçmişte hızlıca gezinme"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "Not Defteri",
+        "nextTab": "Sonraki Sekmeye Git"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "title": "Kurulum Tamamlandı!",
+        "subtitle": "Tebrikler! Floorp kurulumunu tamamladınız. Rahat ve güvenli bir internet tarama deneyiminin keyfini çıkarın.",
+        "nextSteps": "Sonraki Adımlar (İsteğe Bağlı)",
+        "defaultBrowser": "Varsayılan Tarayıcı Olarak Ayarla",
+        "support": "Destek",
+        "documentation": "Dokümantasyon",
+        "getStarted": "Floorp ile Başlayın",
+        "hint": "Daha detaylı ayarlar için, sağ üstteki menü düğmesindeki Ayarlar kısmını kullanabilirsiniz.",
+        "resourcesLabel": "Kaynaklar",
+        "defaultBrowserSuccess": "Floorp varsayılan tarayıcınız olarak ayarlandı!"
     }
 }

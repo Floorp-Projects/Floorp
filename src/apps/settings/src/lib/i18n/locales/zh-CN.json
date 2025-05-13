@@ -113,7 +113,7 @@
             "doubleClickToClose": "双击关闭标签页",
             "minWidth": "最小标签宽度",
             "minWidthError": "Tab width must be between {{min}} and {{max}} pixels.",
-            "minHeight": "最小标签高度",
+            "minHeight": "最小标签宽度",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "uiCustomization": {

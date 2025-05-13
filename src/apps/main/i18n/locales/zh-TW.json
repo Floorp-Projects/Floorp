@@ -1,16 +1,16 @@
 {
     "undo-closed-tab": {
         "label": "復原已關閉分頁",
-        "tooltiptext": "重新開啟上次關閉的分頁 {{shortcut}}"
+        "tooltiptext": "重新開啟上次關閉的索引標籤 {{shortcut}}"
     },
     "workspaces": {
         "modal": {
             "name": "名稱",
-            "name-placeholder": "為此工作空間命名",
+            "name-placeholder": "為此工作區命名",
             "container": "容器",
             "no-container": "無容器",
             "icon": "圖示",
-            "edit-title": "編輯工作空間",
+            "edit-title": "編輯工作區",
             "save": "儲存變更",
             "cancel": "取消"
         },
@@ -51,17 +51,17 @@
             "user": "用户"
         },
         "service": {
-            "new-workspace": "新工作空間 ({{count}})"
+            "new-workspace": "新工作區 ({{count}})"
         },
         "context-menu": {
-            "move-up": "向上移動此工作空間",
-            "move-down": "向下移動此工作空間",
-            "delete": "刪除工作空間",
-            "manage": "管理工作空間"
+            "move-up": "向上移動此工作區",
+            "move-down": "向下移動此工作區",
+            "delete": "刪除工作區",
+            "manage": "管理工作區"
         },
         "popup": {
-            "create-new": "建立新工作空間...",
-            "manage": "管理工作空間"
+            "create-new": "建立新工作區...",
+            "manage": "管理工作區"
         },
         "menu": {
             "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間"
@@ -144,13 +144,13 @@
             "gecko-search-the-web": "在網路上搜尋",
             "gecko-open-migration-wizard": "開啟遷移導引",
             "gecko-quit-from-application": "結束應用程式",
-            "gecko-enter-into-customize-mode": "進入自訂模式",
+            "gecko-enter-into-customize-mode": "進入客製化模式",
             "gecko-enter-into-offline-mode": "進入離線模式",
             "gecko-open-screen-capture": "開啟螢幕擷圖工具",
             "floorp-show-pip": "顯示子母畫面",
             "gecko-open-bookmark-add-tool": "開啟新增書籤工具",
             "gecko-open-bookmarks-manager": "開啟書籤管理員",
-            "gecko-toggle-bookmark-toolbar": "切換顯示書籤列",
+            "gecko-toggle-bookmark-toolbar": "切換書籤工具列",
             "gecko-open-general-preferences": "開啟一般設定",
             "gecko-open-privacy-preferences": "開啟隱私安全設定",
             "gecko-open-workspaces-preferences": "開啟工作空間設定",

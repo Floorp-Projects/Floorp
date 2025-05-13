@@ -123,7 +123,7 @@
         "support": "Support",
         "documentation": "Dokumentation",
         "getStarted": "Kom i gang med Floorp",
-        "hint": "Du kan tilpasse mere detaljerede indstillinger via Indstillinger i menuknappen øverst til højre.",
+        "hint": "Du kan tilpasse mere detaljerede indstillinger via \"Indstillinger\" i menuknappen øverst til højre.",
         "resourcesLabel": "Ressourcer",
         "defaultBrowserSuccess": "Floorp er blevet indstillet som din standardbrowser!"
     }
