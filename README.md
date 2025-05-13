@@ -39,7 +39,7 @@
     ・
     <a href="https://blog.floorp.app">Blog & Release Notes</a>
     ・
-    <a href="https://floorp.app/discord">Official Discord</a>
+    <a href="https://discord.floorp.app">Official Discord</a>
     ・
     <a href="https://docs.floorp.app">Documentation</a>
   </p>
@@ -154,7 +154,7 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser)
 
-- [Official Floorp Projects Discord](https://floorp.app/discord)
+- [Official Floorp Projects Discord](https://discord.floorp.app)
 
 ### 📜 Privacy Policy
 
