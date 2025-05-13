@@ -303,6 +303,13 @@ function testEscapeStringPosix() {
     "$'query=evil\\n\\ncmd ^& calc.exe\\n\\n'",
     "The evil command is escaped properly"
   );
+
+  const str = "EvilHeader: &calc.exe&";
+  is(
+    CurlUtils.escapeStringPosix(str),
+    "'EvilHeader: ^&calc.exe^&'",
+    "The evil command is escaped properly"
+  );
 }
 
 function testEscapeStringWin() {
