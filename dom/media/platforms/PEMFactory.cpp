@@ -116,10 +116,10 @@ PEMFactory::CheckAndMaybeCreateEncoder(const EncoderConfig& aConfig,
               return PlatformEncoderModule::CreateEncoderPromise::
                   CreateAndResolve(std::move(aEncoder), __func__);
             },
-            [self = RefPtr{this}, i, config = aConfig, aTaskQueue,
-             &aConfig](const MediaResult& aError) mutable {
+            [self = RefPtr{this}, i, config = aConfig,
+             aTaskQueue](const MediaResult& aError) mutable {
               // Try the next PEM.
-              return self->CheckAndMaybeCreateEncoder(aConfig, i + 1,
+              return self->CheckAndMaybeCreateEncoder(config, i + 1,
                                                       aTaskQueue);
             });
   }
