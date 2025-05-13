@@ -150,7 +150,10 @@ async function checkNewtabUserPreference(): Promise<boolean> {
     return false;
   }
 
-  const result = Services.prefs.getStringPref("floorp.design.configs");
+  const result = Services.prefs.getStringPref(
+    "floorp.design.configs",
+    undefined,
+  );
 
   if (!result) {
     return true;
@@ -243,11 +246,11 @@ async function registerCustomAboutPages(): Promise<void> {
   }
 }
 
-initializeVersionInfo();
 (async () => {
+  await registerCustomAboutPages();
+  initializeVersionInfo();
   await setupNoranekoNewTab();
 })().catch(console.error);
-registerCustomAboutPages();
 
 if (isMainBrowser) {
   Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
