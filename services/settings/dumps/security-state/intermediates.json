@@ -1,6 +1,19 @@
 {
   "data": [
     {
+      "schema": 1747274261060,
+      "derHash": "Sn8QTwV9UvGrkS1BwSAHRAGeDjilb/J/T6ettOmjq5w=",
+      "attachment": {
+        "hash": "09486a4dc7a76a50df8734c024908603884945ffd8526f37453750d3fd3803de",
+        "size": 1821,
+        "filename": "yP4Wl1DsS7rJOKFrlSzDRH1_eNx0U3XU2TjrxnmmNbs=.pem",
+        "location": "security-state-staging/intermediates/9ae3b70c-7c4c-49dd-a9f6-cc712303e4f9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "d4454036-3d05-4125-8165-85ec3dc0c4a5",
+      "last_modified": 1747277822302
+    },
+    {
       "schema": 1746885468781,
       "derHash": "aDekmLtp3sdJ//T9H1/9xWZafBoyb8bXoFeGa6AKr9I=",
       "attachment": {
@@ -17222,24 +17235,6 @@
       "last_modified": 1666727868179
     },
     {
-      "schema": 1666727413203,
-      "derHash": "RZCrAULHhnEfVuh9+B6/mJGngEPNaNBwKUM/NRjsdss=",
-      "subject": "CN=WebSpace-Forum Essential CA II,O=WebSpace-Forum e.K.,L=Berlin,ST=Berlin,C=DE",
-      "subjectDN": "MHYxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIEwZCZXJsaW4xDzANBgNVBAcTBkJlcmxpbjEcMBoGA1UEChMTV2ViU3BhY2UtRm9ydW0gZS5LLjEnMCUGA1UEAxMeV2ViU3BhY2UtRm9ydW0gRXNzZW50aWFsIENBIElJ",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dcfbd2676910e5589b335c5be968b4cb3dcb3d6c8f52742c1882baa24ad9642f",
-        "size": 2138,
-        "filename": "JLiByOVnWd2f8bAC0L_puQNtFwBfGt4XaQ6BRcqgrQ4=.pem",
-        "location": "security-state-staging/intermediates/04ef33c1-c720-4d0f-877c-45a3b0231711.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "JLiByOVnWd2f8bAC0L/puQNtFwBfGt4XaQ6BRcqgrQ4=",
-      "crlite_enrolled": false,
-      "id": "a4afd380-aadd-42d1-bc83-e5e3fdf9f9ab",
-      "last_modified": 1666727868165
-    },
-    {
       "schema": 1666727397297,
       "derHash": "Fk4Ac6dSAKWBaZG9wXxSbrohJx9xNXRGmE7SyApZ/Vo=",
       "subject": "CN=AlpiroSSL RSA OV CA,O=Alpiro s.r.o.,C=CZ",
@@ -17994,24 +17989,6 @@
       "crlite_enrolled": false,
       "id": "6c442ac4-66c1-432d-bf78-80ce046badd7",
       "last_modified": 1666727867316
-    },
-    {
-      "schema": 1666727403214,
-      "derHash": "C9FHkYe6Aeo+k4p1DHveO28oXcEOu5lTA/ZmAbpbLSA=",
-      "subject": "CN=WebSpace-Forum Server CA II,O=WebSpace-Forum e.K.,L=Berlin,ST=Berlin,C=DE",
-      "subjectDN": "MHMxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIEwZCZXJsaW4xDzANBgNVBAcTBkJlcmxpbjEcMBoGA1UEChMTV2ViU3BhY2UtRm9ydW0gZS5LLjEkMCIGA1UEAxMbV2ViU3BhY2UtRm9ydW0gU2VydmVyIENBIElJ",
-      "whitelist": false,
-      "attachment": {
-        "hash": "65b7676339537a03054bbad626b8cb8d54125b5819f31bbe0f37a375bca49efb",
-        "size": 2133,
-        "filename": "5RYmGs6llHArO1X6YMpESuHfz0WJ0hjDErS2_5y9hWo=.pem",
-        "location": "security-state-staging/intermediates/c118334a-9f3b-48bb-b538-707da8727964.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5RYmGs6llHArO1X6YMpESuHfz0WJ0hjDErS2/5y9hWo=",
-      "crlite_enrolled": false,
-      "id": "15268d2e-197a-4e65-942b-23efa82b8c59",
-      "last_modified": 1666727867290
     },
     {
       "schema": 1666727348871,
@@ -29192,5 +29169,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1746975423008
+  "timestamp": 1747277822302
 }

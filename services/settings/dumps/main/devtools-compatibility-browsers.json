@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Node.js",
+      "schema": 1747181110151,
+      "status": "current",
+      "version": "24.0.0",
+      "browserid": "nodejs",
+      "id": "9e4eb0f8-808c-4ae9-b137-bf0172b24166",
+      "last_modified": 1747199364436
+    },
+    {
       "name": "Edge",
       "schema": 1746230703388,
       "status": "current",
@@ -325,15 +334,6 @@
       "last_modified": 1732521556529
     },
     {
-      "name": "Node.js",
-      "schema": 1731110704254,
-      "status": "current",
-      "version": "23.0.0",
-      "browserid": "nodejs",
-      "id": "78b5378c-c23a-4deb-b026-b305f4d17d23",
-      "last_modified": 1731397547435
-    },
-    {
       "name": "Firefox for Android",
       "schema": 1723593904156,
       "status": "esr",
@@ -361,5 +361,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1747035932495
+  "timestamp": 1747199364436
 }

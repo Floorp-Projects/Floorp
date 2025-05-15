@@ -452,9 +452,9 @@
       },
       "id": "05645095-d26e-4f20-9137-f24a14a23f28",
       "identifier": "bing",
-      "last_modified": 1742996759040,
+      "last_modified": 1747257920659,
       "recordType": "engine",
-      "schema": 1742810344329,
+      "schema": 1747180809142,
       "variants": [
         {
           "environment": {
@@ -571,6 +571,27 @@
                     {
                       "name": "form",
                       "value": "MZVIVO"
+                    }
+                  ],
+                  "searchTermParamName": "q"
+                }
+              }
+            },
+            {
+              "environment": {
+                "experiment": "adblockers"
+              },
+              "partnerCode": "MZABT",
+              "urls": {
+                "search": {
+                  "params": [
+                    {
+                      "name": "pc",
+                      "value": "{partnerCode}"
+                    },
+                    {
+                      "name": "form",
+                      "value": "ABT"
                     }
                   ],
                   "searchTermParamName": "q"
@@ -8199,5 +8220,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1745933974542
+  "timestamp": 1747257920659
 }
