@@ -48,16 +48,16 @@ export function SidebarHeader(props: { ctx: CPanelSidebar }) {
         />
       </Show>
       <xul:spacer flex="1" />
+      <xul:toolbarbutton
+        id="panel-sidebar-float"
+        onCommand={() => setIsFloating(!isFloating())}
+        class="panel-sidebar-actions"
+        data-l10n-id="sidebar-float-button"
+      />
       <Show
         when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===
           "web"}
       >
-        <xul:toolbarbutton
-          id="panel-sidebar-float"
-          onCommand={() => setIsFloating(!isFloating())}
-          class="panel-sidebar-actions"
-          data-l10n-id="sidebar-float-button"
-        />
         <xul:toolbarbutton
           id="panel-sidebar-open-in-main-window"
           onCommand={() =>
