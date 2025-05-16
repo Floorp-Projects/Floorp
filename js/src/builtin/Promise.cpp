@@ -100,7 +100,7 @@ enum RejectFunctionSlots {
 
 enum PromiseCombinatorElementFunctionSlots {
   PromiseCombinatorElementFunctionSlot_Data = 0,
-  PromiseCombinatorElementFunctionSlot_ElementIndex,
+  PromiseCombinatorElementFunctionSlot_ElementIndexOrResolveFunc,
 };
 
 enum ReactionJobSlots {
@@ -3137,7 +3137,8 @@ static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
 
 static JSFunction* NewPromiseCombinatorElementFunction(
     JSContext* cx, Native native,
-    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index);
+    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index,
+    Handle<Value> maybeResolveFunc);
 
 static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp);
@@ -3239,7 +3240,8 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
 
       // Steps 4.j-q.
       JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-          cx, PromiseAllResolveElementFunction, dataHolder, index);
+          cx, PromiseAllResolveElementFunction, dataHolder, index,
+          UndefinedHandleValue);
       if (!resolveFunc) {
         return nullptr;
       }
@@ -3885,7 +3887,8 @@ template <typename T>
 
 static JSFunction* NewPromiseCombinatorElementFunction(
     JSContext* cx, Native native,
-    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index) {
+    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index,
+    Handle<Value> maybeResolveFunc) {
   JSFunction* fn = NewNativeFunction(
       cx, native, 1, nullptr, gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
   if (!fn) {
@@ -3894,8 +3897,15 @@ static JSFunction* NewPromiseCombinatorElementFunction(
 
   fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_Data,
                       ObjectValue(*dataHolder));
-  fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex,
-                      Int32Value(index));
+  if (maybeResolveFunc.isObject()) {
+    fn->setExtendedSlot(
+        PromiseCombinatorElementFunctionSlot_ElementIndexOrResolveFunc,
+        maybeResolveFunc);
+  } else {
+    fn->setExtendedSlot(
+        PromiseCombinatorElementFunctionSlot_ElementIndexOrResolveFunc,
+        Int32Value(index));
+  }
   return fn;
 }
 
@@ -3928,6 +3938,14 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
   // Step 1. Let F be the active function object.
   JSFunction* fn = &args.callee().as<JSFunction>();
 
+  constexpr size_t indexOrResolveFuncSlot =
+      PromiseCombinatorElementFunctionSlot_ElementIndexOrResolveFunc;
+  if (fn->getExtendedSlot(indexOrResolveFuncSlot).isObject()) {
+    Value slotVal = fn->getExtendedSlot(indexOrResolveFuncSlot);
+    fn = &slotVal.toObject().as<JSFunction>();
+  }
+  MOZ_RELEASE_ASSERT(fn->getExtendedSlot(indexOrResolveFuncSlot).isInt32());
+
   // Promise.all functions
   // Step 2. If F.[[AlreadyCalled]] is true, return undefined.
   // Promise.allSettled functions
@@ -3956,9 +3974,7 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
   // Step 4. Let index be F.[[Index]].
   // Promise.allSettled functions
   // Step 5. Let index be F.[[Index]].
-  int32_t idx =
-      fn->getExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex)
-          .toInt32();
+  int32_t idx = fn->getExtendedSlot(indexOrResolveFuncSlot).toInt32();
   MOZ_ASSERT(idx >= 0);
   *index = uint32_t(idx);
 
@@ -4012,7 +4028,8 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
 
     // Steps 4.j-q.
     JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllResolveElementFunction, dataHolder, index);
+        cx, PromiseAllResolveElementFunction, dataHolder, index,
+        UndefinedHandleValue);
     if (!resolveFunc) {
       return false;
     }
@@ -4236,7 +4253,8 @@ static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
 
     // Steps 4.j-r.
     JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllSettledResolveElementFunction, dataHolder, index);
+        cx, PromiseAllSettledResolveElementFunction, dataHolder, index,
+        UndefinedHandleValue);
     if (!resolveFunc) {
       return false;
     }
@@ -4244,7 +4262,8 @@ static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
 
     // Steps 4.s-z.
     JSFunction* rejectFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllSettledRejectElementFunction, dataHolder, index);
+        cx, PromiseAllSettledRejectElementFunction, dataHolder, index,
+        resolveFunVal);
     if (!rejectFunc) {
       return false;
     }
@@ -4473,7 +4492,8 @@ static void ThrowAggregateError(JSContext* cx,
 
     // Steps 4.j-q.
     JSFunction* rejectFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAnyRejectElementFunction, dataHolder, index);
+        cx, PromiseAnyRejectElementFunction, dataHolder, index,
+        UndefinedHandleValue);
     if (!rejectFunc) {
       return false;
     }
