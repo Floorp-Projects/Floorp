@@ -17,7 +17,7 @@ self.onmessage = async (e) => {
 const rootDir = await rootDirPromise;
 const projectDir = resolve(
   rootDir,
-  "src/apps/main/core/utils/modal-child",
+  "src/apps/modal-child",
 );
 console.info("[worker:modal-child] Setting working directory to:", projectDir);
 

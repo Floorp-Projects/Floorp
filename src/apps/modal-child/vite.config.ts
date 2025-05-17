@@ -1,9 +1,10 @@
-import { defineConfig, PluginOption } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
-import { generateJarManifest } from "../../../../common/scripts/gen_jarmanifest.ts";
-import { fileURLToPath, URL as NodeURL } from "node:url";
+import { generateJarManifest } from "../common/scripts/gen_jarmanifest.ts";
+import { join } from "node:path";
+import { dirname } from "node:path";
 
 export default defineConfig({
   server: {
@@ -18,7 +19,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": fileURLToPath(new NodeURL("./src", import.meta.url)),
+      "@/": join(dirname(import.meta.url), "src"),
     },
   },
   plugins: [
