@@ -10,7 +10,6 @@ import { noraComponent, NoraComponentBase } from "@core/utils/base";
 @noraComponent(import.meta.hot)
 export default class Designs extends NoraComponentBase {
   init(): void {
-    //render(BrowserStyle, document.head);
     render(() => {
       return BrowserDesignElement();
     }, document?.head);

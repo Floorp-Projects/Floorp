@@ -38,7 +38,6 @@ export function BrowserDesignElement() {
       const iconsDirPath = rawPath.startsWith("/@fs/")
         ? `file://${rawPath.slice(4)}`
         : `/src/${rawPath}`;
-      console.log(iconsDirPath);
       for (const link of styles) {
         arr.push(
           (await import(/* @vite-ignore */ `${link}?raw`)).default.replaceAll(

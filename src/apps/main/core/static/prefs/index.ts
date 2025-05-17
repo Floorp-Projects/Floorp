@@ -19,6 +19,8 @@ export function initBeforeSessionStoreInit() {
     ),
   );
   prefs.setBoolPref("browser.preferences.moreFromMozilla", false);
+  prefs.setBoolPref("svg.context-properties.content.enabled", true);
+  prefs.lockPref("svg.context-properties.content.enabled");
 }
 
 export function init() {
