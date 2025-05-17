@@ -66,8 +66,6 @@ const update = {
           _attributes: {
             type: "complete",
             URL: getMarUrl(platform),
-            hashFunctions: "sha512",
-            hashValue: meta.mar_shasum,
             size: meta.mar_size,
           },
         },
