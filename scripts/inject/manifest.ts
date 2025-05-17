@@ -101,7 +101,7 @@ content     noraneko-notes          notes/        contentaccessible=yes
       option,
     );
     await symlink(
-      r("../../src/apps/main/core/utils/modal-child/_dist"),
+      r("../../src/apps/modal-child/_dist"),
       `${binPath}/${dirName}/modal-child`,
       option,
     );
