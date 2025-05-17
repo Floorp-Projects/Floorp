@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal, onCleanup } from "solid-js";
-import type { } from "solid-styled-jsx";
+import type {} from "solid-styled-jsx";
 
 export class StatusBarManager {
   _showStatusBar = createSignal(
@@ -19,7 +19,6 @@ export class StatusBarManager {
       this.observerStatusbarPref,
     );
     createEffect(() => {
-      console.log("solid to pref");
       Services.prefs.setBoolPref(
         "noraneko.statusbar.enable",
         this.showStatusBar(),
@@ -52,7 +51,6 @@ export class StatusBarManager {
     window.CustomizableUI.registerToolbarNode(
       document.getElementById("nora-statusbar"),
     );
-    window.CustomizableUI.addWidgetToArea("zoom-controls", "nora-statusbar", 1);
 
     //move elem to bottom of window
     document
@@ -82,7 +80,6 @@ export class StatusBarManager {
 
   //if we use just method, `this` will be broken
   private observerStatusbarPref = () => {
-    console.log("pref to solid");
     this.setShowStatusBar((_prev) => {
       return Services.prefs.getBoolPref("noraneko.statusbar.enable");
     });
