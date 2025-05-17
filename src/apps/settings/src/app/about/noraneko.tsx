@@ -58,7 +58,10 @@ export default function Page() {
                 })}
               </p>
             </div>
-            <p>Noraneko is a browser as testhead of Floorp 12.</p>
+            <p>
+              Noraneko is a browser as testhead of Floorp 12. Floorp is based on
+              Firefox & Noraneko.
+            </p>
             <p>Made by Noraneko Community with ❤</p>
           </CardContent>
           <CardFooter>
@@ -103,13 +106,13 @@ export default function Page() {
             </Button>
             <Button asChild className="w-full">
               <a
-                href="https://github.com/nyanrus/noraneko"
+                href="https://github.com/Floorp-Projects/Floorp"
                 target="_blank"
                 className="flex items-center gap-2"
                 rel="noreferrer"
               >
                 <SiGithub className="size-4" />
-                GitHub Repository: nyanrus/noraneko
+                GitHub Repository: Floorp-Projects/Floorp
                 <ExternalLink className="size-4" />
               </a>
             </Button>
