@@ -220,7 +220,7 @@
         }
     },
     "chrome_css": {
-        "menu": "User Style Sheets",
+        "menu": "Style",
         "rebuild": "Rebuild Style Sheets",
         "create": "Create New Style Sheet",
         "open_folder": "Open Style Sheets Folder",

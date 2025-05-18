@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { createRoot, createSignal, onCleanup, onMount } from "solid-js";
 import { render } from "@nora/solid-xul";
 import { CSSEntry } from "./cssEntry.ts";
 import i18next from "i18next";
@@ -16,9 +16,8 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-/**
- * Chrome CSS Management Service
- */
+let instance: ChromeCSSService | null = null;
+
 export class ChromeCSSService {
   readonly AGENT_SHEET = Ci.nsIStyleSheetService.AGENT_SHEET;
   readonly USER_SHEET = Ci.nsIStyleSheetService.USER_SHEET;
@@ -26,39 +25,132 @@ export class ChromeCSSService {
 
   readCSS: Record<string, CSSEntry> = {};
   initialized = false;
-  menuContainer: HTMLElement | null = null;
-  keysetContainer: HTMLElement | null = null;
 
-  constructor() {}
+  private cssFilesSignal = createSignal<
+    Array<{ name: string; entry: CSSEntry }>
+  >([], { equals: false });
+
+  private dispose: (() => void) | null = null;
+  private isCreating = false;
+
+  static getInstance(): ChromeCSSService {
+    if (!instance) {
+      instance = new ChromeCSSService();
+    }
+    return instance;
+  }
+
+  private constructor() {
+  }
+
+  getCssFiles() {
+    return this.cssFilesSignal[0]();
+  }
+
+  private setCssFiles(files: Array<{ name: string; entry: CSSEntry }>) {
+    this.cssFilesSignal[1](files);
+  }
 
   private get document(): Document {
     return document!;
   }
 
-  private getElement(id: string): HTMLElement | null {
-    return this.document.getElementById(id) as HTMLElement | null;
-  }
-
-  private createElement(tagName: string): HTMLElement {
-    return this.document.createElement(tagName);
+  private getElement(id: string): XULElement | null {
+    return this.document.getElementById(id) as XULElement | null;
   }
 
   init(): void {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
 
-    this.renderMenu();
+    // Create a target in the DOM for our menu to be rendered
+    this.setupMenuTarget();
+
+    // Initial loading of CSS files
     this.rebuild();
+
+    // Mark as initialized
     this.initialized = true;
 
-    // Handle window unload
+    // Set up window unload handler
     const handleUnload = () => this.uninit();
     window.addEventListener("unload", handleUnload);
-    onCleanup(() => {
-      window.removeEventListener("unload", handleUnload);
+  }
+
+  private setupMenuTarget(): void {
+    // Remove any existing Chrome CSS menu elements
+    this.cleanupExistingElements();
+
+    // Find the main menubar
+    const mainMenubar = this.getElement("main-menubar");
+    if (!mainMenubar) {
+      console.error("Main menubar not found, cannot setup Chrome CSS menu");
+      return;
+    }
+
+    // Create a container for the menu
+    const menuContainer = this.document.createXULElement(
+      "menuitem",
+    ) as XULElement;
+    menuContainer.id = "usercssloader-placeholder";
+    menuContainer.hidden = true;
+    mainMenubar.appendChild(menuContainer);
+
+    // Find the main keyset
+    const mainKeyset = this.getElement("mainKeyset");
+    let keysetContainer = null;
+
+    if (mainKeyset) {
+      keysetContainer = this.document.createXULElement("keyset") as XULElement;
+      keysetContainer.id = "usercssloader-keyset-placeholder";
+      mainKeyset.appendChild(keysetContainer);
+    }
+
+    // Create a single reactive root for our application
+    createRoot((dispose) => {
+      this.dispose = dispose;
+
+      // Render the main Chrome CSS menu
+      render(() => <ChromeCSSMenuWrapper service={this} />, mainMenubar);
+
+      // Render the keyset if available
+      if (keysetContainer && mainKeyset) {
+        render(
+          () => <CSSKeyset onRebuild={() => this.rebuild()} />,
+          keysetContainer,
+        );
+      }
     });
   }
 
+  private cleanupExistingElements(): void {
+    // Remove any existing Chrome CSS menu elements to prevent duplication
+    const existingMenu = this.document.getElementById("usercssloader-menu");
+    if (existingMenu && existingMenu.parentNode) {
+      existingMenu.parentNode.removeChild(existingMenu);
+    }
+
+    const existingPlaceholder = this.document.getElementById(
+      "usercssloader-placeholder",
+    );
+    if (existingPlaceholder && existingPlaceholder.parentNode) {
+      existingPlaceholder.parentNode.removeChild(existingPlaceholder);
+    }
+
+    const existingKeyset = this.document.getElementById(
+      "usercssloader-keyset-placeholder",
+    );
+    if (existingKeyset && existingKeyset.parentNode) {
+      existingKeyset.parentNode.removeChild(existingKeyset);
+    }
+  }
+
   uninit(): void {
+    if (!this.initialized) {
+      return;
+    }
+
     // Save list of disabled CSS entries
     const disabledList = Object.keys(this.readCSS)
       .filter((key) => !this.readCSS[key].enabled)
@@ -68,21 +160,20 @@ export class ChromeCSSService {
       "UserCSSLoader.disabled_list",
       encodeURIComponent(disabledList),
     );
-  }
 
-  renderMenu(): void {
-    const mainMenubar = this.getElement("main-menubar");
-    if (!mainMenubar) return;
-
-    render(() => <CSSMenu service={this} />, mainMenubar);
-
-    // Render keyset
-    if (this.keysetContainer) {
-      render(
-        () => <CSSKeyset onRebuild={() => this.rebuild()} />,
-        this.keysetContainer,
-      );
+    // Dispose of reactive root
+    if (this.dispose) {
+      this.dispose();
+      this.dispose = null;
     }
+
+    // Clean up DOM elements
+    this.cleanupExistingElements();
+
+    // Clear CSS files
+    this.setCssFiles([]);
+
+    this.initialized = false;
   }
 
   getCSSFolder(): string {
@@ -104,40 +195,46 @@ export class ChromeCSSService {
     const cssFolder = this.getCSSFolder();
 
     try {
-      // Create folder if it doesn't exist
       if (!(await IOUtils.exists(cssFolder))) {
         await IOUtils.makeDirectory(cssFolder);
       }
 
-      // Get list of files in folder
       const fileList = await IOUtils.getChildren(cssFolder);
 
-      // Process each file
+      // Reset all flags
+      for (const key of Object.keys(this.readCSS)) {
+        this.readCSS[key].flag = false;
+      }
+
       for (const filePath of fileList) {
         const fileName = filePath.replace(cssFolder, "").replace(/^[/\\]/, "");
         if (!cssExtension.test(fileName) || excludeUcCss.test(fileName)) {
           continue;
         }
 
-        // Load CSS file
         const cssFile = this.loadCSS(fileName, cssFolder);
         cssFile.flag = true;
       }
 
-      // Handle deleted files
+      // Process deleted files
+      const filesToRemove = [];
       for (const leafName of Object.keys(this.readCSS)) {
         const cssFile = this.readCSS[leafName];
         if (!cssFile.flag) {
           cssFile.enabled = false;
-          delete this.readCSS[leafName];
+          filesToRemove.push(leafName);
         }
         delete cssFile.flag;
       }
 
-      // Redraw menu
-      this.renderCSSItems();
+      // Remove deleted files from the collection
+      for (const leafName of filesToRemove) {
+        delete this.readCSS[leafName];
+      }
 
-      // Show rebuild complete message in status bar
+      // Update the CSS files signal to trigger UI refresh
+      this.updateCssFilesList();
+
       if (this.initialized) {
         try {
           const rebuildCompleteMsg = i18next.t("chrome_css.rebuild_complete") ??
@@ -160,61 +257,27 @@ export class ChromeCSSService {
     let cssFile = this.readCSS[fileName];
 
     if (!cssFile) {
-      // Create new CSS entry
       cssFile = this.readCSS[fileName] = new CSSEntry(fileName, folder);
 
-      // Get state from disabled list
       const disabledList = decodeURIComponent(
         Services.prefs.getStringPref("UserCSSLoader.disabled_list", ""),
       );
       cssFile.enabled = !disabledList.includes(fileName);
     } else if (cssFile.enabled) {
-      // Enable existing entry
       cssFile.enabled = true;
     }
 
     return cssFile;
   }
 
-  renderCSSItems(): void {
-    const menupopup = this.getElement("usercssloader-menupopup");
-    if (!menupopup) return;
-
-    // Clear existing CSS menu items
-    const existingItems = menupopup.querySelectorAll(".usercssloader-css-item");
-    existingItems.forEach((item: Element) => item.remove());
-
-    // Recreate CSS menu items
-    const cssItems = this.createElement("div");
-    cssItems.id = "usercssloader-css-items";
-    menupopup.appendChild(cssItems);
-
-    // Prepare CSS file list
+  // Update the list of CSS files (will trigger UI refresh due to reactivity)
+  updateCssFilesList(): void {
     const cssFiles = Object.keys(this.readCSS).map((name) => ({
       name,
       entry: this.readCSS[name],
     }));
 
-    // Render CSS items using SolidJS
-    try {
-      render(() => (
-        <>
-          {cssFiles.map(({ name, entry }) => (
-            <CSSItem
-              fileName={name}
-              enabled={entry.enabled}
-              sheetType={this.getSheetClassName(entry)}
-              onToggle={() => this.toggle(name)}
-              onEdit={() =>
-                this.edit(PathUtils.join(this.getCSSFolder(), name))}
-              service={this}
-            />
-          ))}
-        </>
-      ), cssItems);
-    } catch (error) {
-      console.error("Error rendering CSS items:", error);
-    }
+    this.setCssFiles(cssFiles);
   }
 
   getSheetClassName(cssFile: CSSEntry): string {
@@ -232,9 +295,8 @@ export class ChromeCSSService {
 
     try {
       cssFile.enabled = !cssFile.enabled;
-      setTimeout(() => {
-        this.renderCSSItems();
-      }, 0);
+      // Update UI through reactive state
+      this.updateCssFilesList();
     } catch (error) {
       console.error("Error toggling CSS:", error);
     }
@@ -294,7 +356,6 @@ export class ChromeCSSService {
       }
     }
 
-    // Open file in editor
     this.openFileInEditor(filePath, editorPath);
   }
 
@@ -322,12 +383,10 @@ export class ChromeCSSService {
 
   openFileInEditor(filePath: string, editorPath: string): void {
     try {
-      // Handle path encoding (platform dependent)
       const path = AppConstants.platform === "win"
         ? this.convertUTF8ToShiftJIS(filePath)
         : filePath;
 
-      // Launch editor process
       const app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       app.initWithPath(editorPath);
 
@@ -341,7 +400,6 @@ export class ChromeCSSService {
     }
   }
 
-  // Character encoding utility (for Windows)
   convertUTF8ToShiftJIS(utf8String: string): string {
     try {
       const decoder = new TextDecoder("utf-8");
@@ -355,48 +413,64 @@ export class ChromeCSSService {
   }
 
   async create(fileName?: string): Promise<void> {
-    if (!fileName) {
-      // Prompt for filename
-      const promptMsg = i18next.t("chrome_css.please_enter_filename") ??
-        "Please enter a filename";
-      const userInput = prompt(
-        promptMsg,
-        new Date().getTime().toString(),
-      );
-
-      if (userInput === null) return;
-      fileName = userInput;
+    if (this.isCreating) {
+      return;
     }
 
-    // Normalize filename (handle spaces and special characters)
-    fileName = fileName
-      .replace(/\s+/g, " ")
-      .replace(/[\\/:*?"<>|]/g, "");
-
-    if (!fileName || !/\S/.test(fileName)) return;
-
-    // Add .css extension
-    if (!fileName.endsWith(".css")) {
-      fileName += ".css";
-    }
-
-    // Use PathUtils.join for OS-independent path construction
-    const filePath = PathUtils.join(this.getCSSFolder(), fileName);
+    this.isCreating = true;
 
     try {
-      // Create empty CSS file
+      if (!fileName) {
+        const promptMsg = i18next.t("chrome_css.please_enter_filename") ??
+          "Please enter a filename";
+        const userInput = prompt(
+          promptMsg,
+          new Date().getTime().toString(),
+        );
+
+        if (userInput === null) {
+          this.isCreating = false;
+          return;
+        }
+        fileName = userInput;
+      }
+
+      fileName = fileName
+        .replace(/\s+/g, " ")
+        .replace(/[\\/:*?"<>|]/g, "");
+
+      if (!fileName || !/\S/.test(fileName)) {
+        this.isCreating = false;
+        return;
+      }
+
+      if (!fileName.endsWith(".css")) {
+        fileName += ".css";
+      }
+
+      const filePath = PathUtils.join(this.getCSSFolder(), fileName);
+
       await IOUtils.writeUTF8(filePath, "");
-
-      // Open file in editor
-      this.edit(filePath);
-
-      // Update menu
       await this.rebuild();
+      this.edit(filePath);
     } catch (error) {
       console.error("Error creating CSS file:", error);
+    } finally {
+      this.isCreating = false;
     }
   }
 }
+
+/**
+ * Wrapper component for Chrome CSS Menu
+ */
+const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
+  return (
+    <xul:menu id="usercssloader-menu" label={i18next.t("chrome_css.menu")}>
+      <CSSMenu service={props.service} />
+    </xul:menu>
+  );
+};
 
 /**
  * CSS Menu Component
@@ -404,7 +478,6 @@ export class ChromeCSSService {
 const CSSMenu = (props: { service: ChromeCSSService }) => {
   const { service } = props;
 
-  // Translation data for localization
   const [translations, setTranslations] = createSignal({
     menu: i18next.t("chrome_css.menu"),
     rebuild: i18next.t("chrome_css.rebuild"),
@@ -414,7 +487,6 @@ const CSSMenu = (props: { service: ChromeCSSService }) => {
     editUserContent: i18next.t("chrome_css.edit_user_content"),
   });
 
-  // Update translations when language changes
   addI18nObserver(() => {
     setTranslations({
       menu: i18next.t("chrome_css.menu"),
@@ -426,60 +498,73 @@ const CSSMenu = (props: { service: ChromeCSSService }) => {
     });
   });
 
-  // Safe event handler function
   const safeHandler = (callback: () => void) => (event: Event) => {
     event.preventDefault();
     event.stopPropagation();
-    // Delay execution to avoid blocking UI thread
-    setTimeout(() => {
-      try {
-        callback();
-      } catch (error) {
-        console.error("Error in menu handler:", error);
-      }
-    }, 0);
+    try {
+      callback();
+    } catch (error) {
+      console.error("Error in menu handler:", error);
+    }
   };
 
   return (
-    <xul:menu label={translations().menu} id="usercssloader-menu">
-      <xul:menupopup id="usercssloader-menupopup">
-        <xul:menu label={translations().menu}>
-          <xul:menupopup id="usercssloader-submenupopup">
-            <xul:menuitem
-              label={translations().rebuild}
-              id="usercssloader-rebuild"
-              onClick={safeHandler(() => service.rebuild())}
-            />
-            <xul:menuseparator />
-            <xul:menuitem
-              label={translations().create}
-              id="usercssloader-create"
-              onClick={safeHandler(() => service.create())}
-            />
-            <xul:menuitem
-              label={translations().openFolder}
-              id="usercssloader-open-folder"
-              onClick={safeHandler(() => service.openFolder())}
-            />
-            <xul:menuitem
-              label={translations().editUserChrome}
-              id="usercssloader-edit-chrome"
-              onClick={safeHandler(() => service.editUserCSS("userChrome.css"))}
-            />
-            <xul:menuitem
-              label={translations().editUserContent}
-              id="usercssloader-edit-content"
-              onClick={safeHandler(() =>
-                service.editUserCSS("userContent.css")
-              )}
-            />
-          </xul:menupopup>
-        </xul:menu>
-        <div id="usercssloader-css-items">
-          {/* CSS items will be rendered here */}
-        </div>
-      </xul:menupopup>
-    </xul:menu>
+    <xul:menupopup id="usercssloader-menupopup">
+      <xul:menu label={translations().menu}>
+        <xul:menupopup id="usercssloader-submenupopup">
+          <xul:menuitem
+            label={translations().rebuild}
+            id="usercssloader-rebuild"
+            onClick={safeHandler(() => service.rebuild())}
+          />
+          <xul:menuseparator />
+          <xul:menuitem
+            label={translations().create}
+            id="usercssloader-create"
+            onClick={safeHandler(() => service.create())}
+          />
+          <xul:menuitem
+            label={translations().openFolder}
+            id="usercssloader-open-folder"
+            onClick={safeHandler(() => service.openFolder())}
+          />
+          <xul:menuitem
+            label={translations().editUserChrome}
+            id="usercssloader-edit-chrome"
+            onClick={safeHandler(() => service.editUserCSS("userChrome.css"))}
+          />
+          <xul:menuitem
+            label={translations().editUserContent}
+            id="usercssloader-edit-content"
+            onClick={safeHandler(() => service.editUserCSS("userContent.css"))}
+          />
+        </xul:menupopup>
+      </xul:menu>
+      <CSSItems service={service} />
+    </xul:menupopup>
+  );
+};
+
+/**
+ * CSS Items Component
+ */
+const CSSItems = (props: { service: ChromeCSSService }) => {
+  const { service } = props;
+
+  return (
+    <xul:vbox id="usercssloader-css-items">
+      {service.getCssFiles().map(({ name, entry }) => (
+        <CSSItem
+          fileName={name}
+          enabled={entry.enabled}
+          sheetType={service.getSheetClassName(entry)}
+          onToggle={() => service.toggle(name)}
+          onEdit={() =>
+            service.edit(PathUtils.join(service.getCSSFolder(), name))}
+          service={service}
+        />
+      ))}
+    </xul:vbox>
   );
 };
 
@@ -496,20 +581,16 @@ const CSSItem = (props: {
 }) => {
   const { fileName, enabled, sheetType, onToggle, service } = props;
 
-  // Safe menu operation handling
   const safeToggle = (event?: Event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-    // Delay execution to avoid blocking UI thread
-    setTimeout(() => {
-      try {
-        onToggle();
-      } catch (error) {
-        console.error("Error in toggle handler:", error);
-      }
-    }, 0);
+    try {
+      onToggle();
+    } catch (error) {
+      console.error("Error in toggle handler:", error);
+    }
   };
 
   const handleClick = (event: MouseEvent) => {
@@ -519,24 +600,18 @@ const CSSItem = (props: {
     event.stopPropagation();
 
     if (event.button === 1) {
-      // Middle click: toggle enabled/disabled
       safeToggle();
     } else if (event.button === 2) {
-      // Right click: open in editor
       if (event.target instanceof Element) {
         if (typeof window.closeMenus === "function") {
           window.closeMenus(event.target);
         }
       }
-      // Delay execution to avoid blocking UI thread
-      setTimeout(() => {
-        try {
-          // Use PathUtils.join for OS-independent path construction
-          service.edit(PathUtils.join(service.getCSSFolder(), fileName));
-        } catch (error) {
-          console.error("Error opening editor:", error);
-        }
-      }, 0);
+      try {
+        service.edit(PathUtils.join(service.getCSSFolder(), fileName));
+      } catch (error) {
+        console.error("Error opening editor:", error);
+      }
     }
   };
 
@@ -559,7 +634,6 @@ const CSSItem = (props: {
 const CSSKeyset = (props: { onRebuild: () => void }) => {
   const { onRebuild } = props;
 
-  // Register event listeners
   onMount(() => {
     const handleRebuild = () => onRebuild();
     document!.addEventListener("css-rebuild", handleRebuild);
