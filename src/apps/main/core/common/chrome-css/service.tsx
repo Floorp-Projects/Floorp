@@ -295,8 +295,9 @@ export class ChromeCSSService {
 
     try {
       cssFile.enabled = !cssFile.enabled;
-      // Update UI through reactive state
-      this.updateCssFilesList();
+      setTimeout(() => {
+        this.updateCssFilesList();
+      }, 50);
     } catch (error) {
       console.error("Error toggling CSS:", error);
     }
@@ -501,11 +502,14 @@ const CSSMenu = (props: { service: ChromeCSSService }) => {
   const safeHandler = (callback: () => void) => (event: Event) => {
     event.preventDefault();
     event.stopPropagation();
-    try {
-      callback();
-    } catch (error) {
-      console.error("Error in menu handler:", error);
-    }
+
+    setTimeout(() => {
+      try {
+        callback();
+      } catch (error) {
+        console.error("Error in menu handler:", error);
+      }
+    }, 0);
   };
 
   return (
@@ -586,11 +590,14 @@ const CSSItem = (props: {
       event.preventDefault();
       event.stopPropagation();
     }
-    try {
-      onToggle();
-    } catch (error) {
-      console.error("Error in toggle handler:", error);
-    }
+
+    setTimeout(() => {
+      try {
+        onToggle();
+      } catch (error) {
+        console.error("Error in toggle handler:", error);
+      }
+    }, 0);
   };
 
   const handleClick = (event: MouseEvent) => {
@@ -607,11 +614,14 @@ const CSSItem = (props: {
           window.closeMenus(event.target);
         }
       }
-      try {
-        service.edit(PathUtils.join(service.getCSSFolder(), fileName));
-      } catch (error) {
-        console.error("Error opening editor:", error);
-      }
+
+      setTimeout(() => {
+        try {
+          service.edit(PathUtils.join(service.getCSSFolder(), fileName));
+        } catch (error) {
+          console.error("Error opening editor:", error);
+        }
+      }, 0);
     }
   };
 
