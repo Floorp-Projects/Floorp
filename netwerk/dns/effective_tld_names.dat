@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-12_07-25-20_UTC
-// COMMIT: 823beb1425def931c8b0b170a6bc33b424c3f9b0
+// VERSION: 2025-05-17_19-44-00_UTC
+// COMMIT: d4f072b4db3db5c0bd6b144b54eba1802b763c96
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -6750,7 +6750,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-04-30T15:19:32Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2025-05-17T15:16:58Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -9611,10 +9611,6 @@ politie
 // porn : ICM Registry PN LLC
 // https://www.iana.org/domains/root/db/porn.html
 porn
-
-// pramerica : Prudential Financial, Inc.
-// https://www.iana.org/domains/root/db/pramerica.html
-pramerica
 
 // praxi : Praxi S.p.A.
 // https://www.iana.org/domains/root/db/praxi.html
