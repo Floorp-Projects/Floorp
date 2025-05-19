@@ -67,7 +67,11 @@ export class SsbRunnerUtils {
   }
 }
 
-async function startSSBFromCmdLine(id: string) {
+async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
+  if (initialLaunch) {
+    return;
+  }
+
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
@@ -85,7 +89,7 @@ async function startSSBFromCmdLine(id: string) {
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         const ssb = value as Manifest;
-        const win = SsbRunnerUtils.openSsbWindow(ssb, true);
+        const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
         await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
         break;
       }
@@ -100,10 +104,13 @@ export class SSBCommandLineHandler {
     "nsICommandLineHandler",
   ]) as TQueryInterface;
 
+  private isInitialized = false;
+
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
-      startSSBFromCmdLine(id);
+      startSSBFromCmdLine(id, !this.isInitialized);
+      this.isInitialized = true;
       cmdLine.preventDefault = true;
     }
   }
