@@ -104,6 +104,8 @@ const FILTER_IMAGES_EXTENSIONS = [
   "raw",
   "webp",
   "heic",
+  "avif",
+  "jxl",
 ];
 
 const FILTER_XML_EXTENSIONS = ["xml"];

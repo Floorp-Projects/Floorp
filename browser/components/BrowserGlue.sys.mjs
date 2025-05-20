@@ -7,6 +7,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+try {
+  ChromeUtils.importESModule("resource://floorp/FloorpStartup.sys.mjs");
+} catch (e) {
+  console.error(e);
+}
+
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   AWToolbarButton: "resource:///modules/aboutwelcome/AWToolbarUtils.sys.mjs",

@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(U) 🧰 Pull upstream"
+
+on: workflow_dispatch
+
+jobs:
+  pull-upstream:
+    permissions: write-all
+    name: Pull upstream
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup 🪛
+      run: |
+        export DATE_STR=`date +"%Y%m%d%I%M%S"`
+        echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
+
+    - name: Setup git 🪛
+      run: |
+        git config --global user.name github-actions
+        git config --global user.email github-actions@github.com
+
+    - name: Clone Mozilla Firefox 🧬
+      run: |
+        git clone https://github.com/mozilla-firefox/firefox.git
+        cd firefox
+        git checkout -b upstream-esr128-${DATE_STR} origin/esr128
+
+    - name: Fetch Floorp 📥
+      run: |
+        cd mozilla-unified
+        git remote add floorp https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git
+        git fetch floorp
+
+    - name: Push 🎁
+      run: |
+        cd mozilla-unified
+        git push floorp upstream-esr128-${DATE_STR}
+
+    - name: Create Pull Request
+      run: |
+        cd mozilla-unified
+        gh pr create --repo ${{ github.repository }} --base ESR128 --head upstream-esr128-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
+      env:
+        GH_TOKEN: ${{ github.token }}

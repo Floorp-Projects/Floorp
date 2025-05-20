@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-{
+ {
   // start private scope for gBrowser
   /**
    * A set of known icons to use for internal pages. These are hardcoded so we can
@@ -3235,6 +3235,32 @@
         let tab;
         let tabWasReused = false;
 
+
+        // Floorp Injections
+        if (tabData.floorpDisableHistory) {
+          continue;
+        }
+
+        let floorpWorkspaceId,
+          floorpLastShowWorkspaceId,
+          floorpWorkspace,
+          floorpSSB;
+
+
+        floorpWorkspaceId = tabData.floorpWorkspaceId;
+        floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
+        floorpWorkspace = tabData.floorpWorkspace
+          ? tabData.floorpWorkspace
+          : Services.prefs
+              .getStringPref("floorp.browser.workspace.all")
+              .split(",")[0];
+        floorpSSB = tabData.floorpSSB;
+
+        if (floorpSSB) {
+          window.close();
+        }
+        // End Floorp Injections
+
         // Re-use existing selected tab if possible to avoid the overhead of
         // selecting a new tab.
         if (
@@ -3244,6 +3270,32 @@
         ) {
           tabWasReused = true;
           tab = this.selectedTab;
+
+          // Floorp Injections
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
+          let { WorkspacesService } = ChromeUtils.importESModule(
+            "resource://floorp/WorkspacesService.mjs"
+          );
+
+          if (floorpWorkspaceId) {
+            tab.setAttribute(
+              WorkspacesService.workspacesTabAttributionId,
+              floorpWorkspaceId
+            );
+          }
+
+          if (floorpLastShowWorkspaceId) {
+            tab.setAttribute(
+              WorkspacesService.workspaceLastShowId,
+              floorpLastShowWorkspaceId
+            );
+          }
+
+          if (floorpSSB) {
+            tab.setAttribute("floorpSSB", floorpSSB);
+          }
+          // End Floorp Injections
+
           if (!tabData.pinned) {
             this.unpinTab(tab);
           } else {
@@ -3292,6 +3344,29 @@
             skipLoad: true,
             preferredRemoteType,
           });
+
+
+          // Floorp Injections
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
+
+          let { WorkspacesService } = ChromeUtils.importESModule(
+            "resource://floorp/WorkspacesService.mjs"
+          );
+
+          if (floorpWorkspaceId) {
+            tab.setAttribute(
+              WorkspacesService.workspacesTabAttributionId,
+              floorpWorkspaceId
+            );
+          }
+
+          if (floorpLastShowWorkspaceId) {
+            tab.setAttribute(
+              WorkspacesService.workspaceLastShowId,
+              floorpLastShowWorkspaceId
+            );
+          }
+          // End Floorp Injections
 
           if (select) {
             tabToSelect = tab;
@@ -4194,6 +4269,15 @@
         aTab,
         this
       );
+
+      // Floorp Injections
+      // Force to close & Make do not save history of the tab.
+      try {
+        this._endRemoveTab(aTab);
+      } catch (e) {
+        console.warn(e);
+      }
+      // End of Floorp Injections
     },
 
     _hasBeforeUnload(aTab) {
