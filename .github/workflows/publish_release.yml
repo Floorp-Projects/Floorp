@@ -151,8 +151,8 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
           tag_name: "v${{ env.VERSION }}"
-          name: "Floorp 12 ${env.VERSION}"
+          name: "Floorp 12 RC ${env.VERSION}"
           body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.VERSION }}"
           draft: false
-          make_latest: true
+          prerelease: true
           token: ${{ github.token }}
