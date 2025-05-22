@@ -6,38 +6,40 @@ on:
   workflow_dispatch:
 
 jobs:
-    update-lepton:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v4
+  update-lepton:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
 
-        - name: Update Lepton Photon
-          run: |
-            curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Photon-Style.zip -L -o Lepton-Photon-Style.zip
-            mkdir ~/Lepton-Photon-Style
-            unzip -o Lepton-Photon-Style.zip -d ~/Lepton-Photon-Style
-            cp -r ~/Lepton-Photon-Style/user.js ./src/packages/skin/lepton/userjs/photon.js
+      - name: Update Lepton Photon
+        run: |
+          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Photon-Style.zip -L -o Lepton-Photon-Style.zip
+          mkdir ~/Lepton-Photon-Style
+          unzip -o Lepton-Photon-Style.zip -d ~/Lepton-Photon-Style
+          cp -r ~/Lepton-Photon-Style/user.js ./src/packages/skin/lepton/userjs/photon.js
 
-        - name: Update Lepton Proton
-          run: |
-            curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Proton-Style.zip  -L -o Lepton-Proton-Style.zip
-            mkdir ~/Lepton-Proton-Style
-            unzip -o Lepton-Proton-Style.zip -d ~/Lepton-Proton-Style
-            cp -r ~/Lepton-Proton-Style/user.js ./src/packages/skin/lepton/userjs/protonfix.js
+      - name: Update Lepton Proton
+        run: |
+          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Proton-Style.zip  -L -o Lepton-Proton-Style.zip
+          mkdir ~/Lepton-Proton-Style
+          unzip -o Lepton-Proton-Style.zip -d ~/Lepton-Proton-Style
+          cp -r ~/Lepton-Proton-Style/user.js ./src/packages/skin/lepton/userjs/protonfix.js
 
-        - name: Update Lepton Original
-          run: |
-            curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton.zip -L -o Lepton.zip
-            mkdir ~/Lepton
-            unzip -o Lepton.zip -d ~/Lepton
-            cp -r ~/Lepton/chrome/css/* ./src/packages/skin/lepton/css/
-            cp -r ~/Lepton/chrome/icons/* ./src/packages/skin/lepton/icons/
-            cp -r ~/Lepton/user.js ./src/packages/skin/lepton/userjs/lepton.js
+      - name: Update Lepton Original
+        run: |
+          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton.zip -L -o Lepton.zip
+          mkdir ~/Lepton
+          unzip -o Lepton.zip -d ~/Lepton
+          cp -r ~/Lepton/chrome/css/* ./src/packages/skin/lepton/css/
+          cp -r ~/Lepton/chrome/icons/* ./src/packages/skin/lepton/icons/
+          cp -r ~/Lepton/user.js ./src/packages/skin/lepton/userjs/lepton.js
 
-        - name: commit changes
-          run: |
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git config --global user.name "github-actions[bot]"
-            git add .
-            git commit -m "🧰 (u) Update Lepton Themes" || echo "no change to commit"
-            git push
+      - name: commit changes
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "🧰 (u) Update Lepton Themes" || echo "no change to commit"
+          git push

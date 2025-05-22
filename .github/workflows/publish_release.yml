@@ -41,6 +41,9 @@ jobs:
           deno install -g -A npm:zx
 
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
 
       - name: Retrieve run IDs
         run: |
