@@ -48,7 +48,7 @@ jobs:
             WINDOWS_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("Windows-x64"))][0].id')
             echo "WINDOWS_RUN_ID=$WINDOWS_ID" >> $GITHUB_ENV
           else
@@ -59,7 +59,7 @@ jobs:
             LINUX_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-x64"))][0].id')
             echo "LINUX_RUN_ID=$LINUX_ID" >> $GITHUB_ENV
           else
@@ -70,7 +70,7 @@ jobs:
             MAC_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp-12/actions/workflows/package.yml/runs?branch=main&status=success" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
             | jq -r '[.workflow_runs[] | select(.display_title | endswith("macOS-x64"))][0].id')
             echo "MAC_RUN_ID=$MAC_ID" >> $GITHUB_ENV
           else

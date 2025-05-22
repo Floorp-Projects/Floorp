@@ -26,7 +26,7 @@ function getPlatformFromPath(xmlPath: string): string {
 
 function getMarUrl(platform: string): string {
   const base =
-    "http://github.com/Floorp-Projects/Floorp-12/releases/download/beta/floorp-";
+    "http://github.com/Floorp-Projects/Floorp/releases/download/beta/floorp-";
   switch (platform) {
     case "win":
       return `${base}win-amd64-full.mar`;

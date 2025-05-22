@@ -170,7 +170,7 @@ jobs:
             await addMozConfig('--with-branding=browser/branding/floorp-daylight');
 
             // Set update URL based on platform
-            const baseUrl = 'github.com/Floorp-Projects/Floorp-12/releases/download/beta/';
+            const baseUrl = 'github.com/Floorp-Projects/Floorp/releases/download/beta/';
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT_x86_64-msvc-x64.`,
               'Linux-x64': `${baseUrl}Linux_x86_64.`,
