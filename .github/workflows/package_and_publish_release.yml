@@ -1,4 +1,4 @@
-name: "(R) |α| Package and Publish Release"
+name: "(R) ⚠️ Package and Publish Release"
 
 on:
   workflow_dispatch:

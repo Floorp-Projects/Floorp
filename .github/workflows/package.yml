@@ -48,7 +48,7 @@ jobs:
       - name: Checkout ${{ github.repository }}-runtime
         uses: actions/checkout@v4
         with:
-          repository: Floorp-Projects/Floorp-12-runtime
+          repository: Floorp-Projects/Floorp-runtime
           submodules: "recursive"
 
       - name: Checkout Floorp
@@ -297,14 +297,14 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
-          repository: Floorp-Projects/Floorp-12-runtime
+          repository: Floorp-Projects/Floorp-runtime
           path: ~/downloads
 
       - name: Download Mozilla Artifact from GitHub Releases
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           mkdir -p ~/downloads
-          curl -L https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${{ env.ARTIFACT_FROM_RELEASE_NAME }} -o ~/downloads/${{ env.ARTIFACT_FROM_RELEASE_NAME }}
+          curl -L https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/${{ env.ARTIFACT_FROM_RELEASE_NAME }} -o ~/downloads/${{ env.ARTIFACT_FROM_RELEASE_NAME }}
 
       - name: Make Downloaded Artifact to Mozilla Artifact (Actions)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -449,14 +449,14 @@ jobs:
           pattern: "*dist-host"
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
-          repository: Floorp-Projects/Floorp-12-runtime
+          repository: Floorp-Projects/Floorp-runtime
           path: obj-artifact-build-output/dist/host
           merge-multiple: true
 
       - name: Download artifact of MAR tools (GitHub Releases)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
-          curl -L https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${{ inputs.platform }}-dist-host.zip -o ~/downloads/${{ inputs.platform }}-dist-host.zip
+          curl -L https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/${{ inputs.platform }}-dist-host.zip -o ~/downloads/${{ inputs.platform }}-dist-host.zip
           unzip ~/downloads/${{ inputs.platform }}-dist-host.zip -d ./obj-artifact-build-output/dist/host
 
       - name: Download artifact of binary for getting build information (Actions)
@@ -466,14 +466,14 @@ jobs:
           pattern: "*application-ini"
           run-id: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID }}
           github-token: ${{github.token}}
-          repository: Floorp-Projects/Floorp-12-runtime
+          repository: Floorp-Projects/Floorp-runtime
           path: ~/noraneko-dev
           merge-multiple: true
 
       - name: Download artifact of binary for getting build information (GiHub Releases)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
-          curl -L https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${{ inputs.platform }}-application-ini.zip -o ~/downloads/${{ inputs.platform }}-application-ini.zip
+          curl -L https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/${{ inputs.platform }}-application-ini.zip -o ~/downloads/${{ inputs.platform }}-application-ini.zip
           unzip ~/downloads/${{ inputs.platform }}-application-ini.zip -d ~/noraneko-dev
 
       - name: Create MAR package

@@ -178,7 +178,7 @@ async function downloadBinArchive() {
       (error as { stderr: string }).stderr,
     );
     const upstreamUrl =
-      `https://github.com/Floorp-Projects/Floorp-12-runtime/releases/latest/download/${fileName}`;
+      `https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/${fileName}`;
     console.log(`Downloading from upstream: ${upstreamUrl}`);
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;

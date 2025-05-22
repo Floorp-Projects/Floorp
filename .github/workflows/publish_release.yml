@@ -5,7 +5,6 @@
 name: "(R) |α| Publish Release"
 
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       win_runtime_artifact_workflow_call:
