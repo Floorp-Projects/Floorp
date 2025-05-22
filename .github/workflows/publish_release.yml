@@ -137,6 +137,21 @@ jobs:
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
+      - name: Check Files
+        run: |
+          echo "Windows Files:"
+          ls -la ~/noraneko-publish/win
+          echo "Linux Files:"
+          ls -la ~/noraneko-publish/linux
+          echo "macOS Files:"
+          ls -la ~/noraneko-publish/mac
+          echo "Windows Installer Files:"
+          ls -la ~/noraneko-publish/win-dist
+          echo "Linux Installer Files:"
+          ls -la ~/noraneko-publish/linux-dist
+          echo "macOS Installer Files:"
+          ls -la ~/noraneko-publish/mac-dist
+
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
         with:
@@ -150,9 +165,9 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
-          tag_name: "v${{ env.VERSION }}"
-          name: "Floorp 12 RC ${env.VERSION}"
-          body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.VERSION }}"
+          tag_name: "v${{ env.NR_VERSION }}"
+          name: "Floorp 12 RC ${{ env.NR_VERSION }}"
+          body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
           draft: false
           prerelease: true
           token: ${{ github.token }}
