@@ -28,6 +28,15 @@
   background-color: var(--toolbar-bgcolor) !important;
 }
 
+#panel-sidebar-box,
+#panel-sidebar-splitter,
+#panel-sidebar-splitter-box {
+  :root[inFullscreen]:not([macOSNativeFullscreen])
+    &:not([fullscreentoolbar="true"]) {
+    visibility: collapse !important;
+  }
+}
+
 #tabbrowser-tabbox[flex],
 #tabbrowser-tabpanels,
 browser[type="content-primary"],
