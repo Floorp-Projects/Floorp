@@ -168,3 +168,18 @@ jobs:
           draft: false
           prerelease: true
           token: ${{ github.token }}
+
+      - name: Deploy to Floorp Update Server 🚀
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-rc-updatexml-files.yml/dispatches" \
+            -d '{
+              "ref": "main",
+              "inputs": {
+                "win-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/win-x86_64-update.xml",
+                "linux-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/linux-x86_64-update.xml",
+                "macOS-Universal-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/macOS-Universal-update.xml"
+              }
+            }'
