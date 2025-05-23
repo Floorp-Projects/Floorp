@@ -47,3 +47,4 @@ jobs:
       win_runtime_artifact_workflow_call: ${{ github.run_id }}
       linux_runtime_artifact_workflow_call: ${{ github.run_id }}
       mac_runtime_artifact_workflow_call: ${{ github.run_id }}
+    secrets: inherit

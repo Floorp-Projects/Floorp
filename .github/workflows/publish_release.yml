@@ -171,15 +171,27 @@ jobs:
 
       - name: Deploy to Floorp Update Server 🚀
         run: |
+          # このコードには大きな誤りはありませんが、いくつか注意点があります。
+
+          # 1. `${{ secrets.PAT }}` がこのワークフローで利用可能であることを確認してください。
+          #    利用できない場合、認証エラーになります。
+
+          # 2. `-d` オプションで渡しているJSON内の変数展開（${{ github.repository }}や${{ env.NR_VERSION }}）は
+          #    シェルのシングルクォート内では展開されません。
+          #    そのため、正しく展開されているか確認が必要です。
+          #    通常、シェル変数やGitHub Actionsの変数を展開したい場合はダブルクォートを使う必要があります。
+
+          # 3. もしJSONの中で変数展開を行いたい場合、以下のようにダブルクォートを使うか、heredocを使うと良いです。
+
           curl -X POST \
             -H "Authorization: token ${{ secrets.PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-rc-updatexml-files.yml/dispatches" \
-            -d '{
-              "ref": "main",
-              "inputs": {
-                "win-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/win-x86_64-update.xml",
-                "linux-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/linux-x86_64-update.xml",
-                "macOS-Universal-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/macOS-Universal-update.xml"
+            -d "{
+              \"ref\": \"main\",
+              \"inputs\": {
+                \"win-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/win-x86_64-update.xml\",
+                \"linux-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/linux-x86_64-update.xml\",
+                \"macOS-Universal-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/macOS-Universal-update.xml\"
               }
-            }'
+            }"
