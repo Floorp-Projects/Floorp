@@ -151,6 +151,9 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
+            ${{ env.ROOT_DIR }}/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux/Linux_x86_64.update.xml
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac/Darwin_Universal.update.xml
           tag_name: "v12.0.0-rc"
           name: "Floorp 12 RC ${{ env.NR_VERSION }}"
           body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
