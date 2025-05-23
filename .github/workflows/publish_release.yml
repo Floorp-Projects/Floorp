@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           ref: main
 
       - name: Retrieve run IDs
