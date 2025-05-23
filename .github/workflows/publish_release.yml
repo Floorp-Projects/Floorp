@@ -133,24 +133,13 @@ jobs:
           deno install --allow-scripts
           sudo apt install jq
 
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/win-x86_64-update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux/linux-x86_64-update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac/macOS-Universal-update.xml
+
           echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
-
-      - name: Check Files
-        run: |
-          echo "Windows Files:"
-          ls -la ~/noraneko-publish/win
-          echo "Linux Files:"
-          ls -la ~/noraneko-publish/linux
-          echo "macOS Files:"
-          ls -la ~/noraneko-publish/mac
-          echo "Windows Installer Files:"
-          ls -la ~/noraneko-publish/win-dist
-          echo "Linux Installer Files:"
-          ls -la ~/noraneko-publish/linux-dist
-          echo "macOS Installer Files:"
-          ls -la ~/noraneko-publish/mac-dist
 
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
@@ -171,18 +160,6 @@ jobs:
 
       - name: Deploy to Floorp Update Server 🚀
         run: |
-          # このコードには大きな誤りはありませんが、いくつか注意点があります。
-
-          # 1. `${{ secrets.PAT }}` がこのワークフローで利用可能であることを確認してください。
-          #    利用できない場合、認証エラーになります。
-
-          # 2. `-d` オプションで渡しているJSON内の変数展開（${{ github.repository }}や${{ env.NR_VERSION }}）は
-          #    シェルのシングルクォート内では展開されません。
-          #    そのため、正しく展開されているか確認が必要です。
-          #    通常、シェル変数やGitHub Actionsの変数を展開したい場合はダブルクォートを使う必要があります。
-
-          # 3. もしJSONの中で変数展開を行いたい場合、以下のようにダブルクォートを使うか、heredocを使うと良いです。
-
           curl -X POST \
             -H "Authorization: token ${{ secrets.PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
