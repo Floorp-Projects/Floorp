@@ -9,7 +9,6 @@ import style from "./style.css?inline";
 import { render } from "@nora/solid-xul";
 
 export class TabSizeSpecification {
-
   private StyleElement() {
     return <style>{style}</style>;
   }
@@ -24,14 +23,24 @@ export class TabSizeSpecification {
       return;
     }
 
-    const documentElem = document?.documentElement as XULElement;
-    documentElem.style.setProperty("--floorp-tab-min-height", `${minH}px`);
-    documentElem.style.setProperty("--floorp-tab-min-width", `${minW}px`);
+    console.log("fewqweffewfew", document?.head);
+
+    const styleElement = (
+      <style id="floorp-tab-size-specification">
+        {`:root {
+          --floorp-tab-min-height: ${minH}px;
+          --floorp-tab-min-width: ${minW}px;
+        }`}
+      </style>
+    );
+    render(() => styleElement, document?.head);
   }
 
   constructor() {
     render(() => this.StyleElement(), document?.head);
     createEffect(() => {
+      console.log("config().tab.tabMinHeight", config().tab.tabMinHeight);
+
       const minH = config().tab.tabMinHeight;
       const minW = config().tab.tabMinWidth;
       this.setTabSizeSpecification(minH, minW);
