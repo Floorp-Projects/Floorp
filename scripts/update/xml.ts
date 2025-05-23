@@ -26,7 +26,7 @@ function getPlatformFromPath(xmlPath: string): string {
 
 function getMarUrl(platform: string): string {
   const base =
-    "http://github.com/Floorp-Projects/Floorp/releases/download/beta/floorp-";
+    "https://github.com/Floorp-Projects/Floorp/releases/download/v12.0.0-rc/floorp-";
   switch (platform) {
     case "win":
       return `${base}win-amd64-full.mar`;
@@ -58,8 +58,7 @@ const update = {
         buildID: meta.buildid,
         appVersion2: meta.noraneko_version,
         buildID2: meta.noraneko_buildid,
-        detailsURL:
-          "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/",
+        detailsURL: "https://blog.floorp.app/",
       },
       patch: [
         {
