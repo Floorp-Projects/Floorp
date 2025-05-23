@@ -167,8 +167,8 @@ jobs:
             -d "{
               \"ref\": \"main\",
               \"inputs\": {
-                \"win-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/WINNT_x86_64-msvc-x64.update.xml\",
-                \"linux-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/Linux_x86_64.update.xml\",
-                \"macOS-Universal-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/Darwin_Universal.update.xml\"
+                \"win-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/WINNT_x86_64-msvc-x64.update.xml\",
+                \"linux-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/Linux_x86_64.update.xml\",
+                \"macOS-Universal-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/Darwin_Universal.update.xml\"
               }
             }"
