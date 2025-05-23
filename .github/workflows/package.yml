@@ -203,7 +203,7 @@ jobs:
             console.log(`Using version from file: ${versionFromFile}`);
 
             // Set update URL based on platform
-            const baseUrl = `floorp-update.ablaze.one/browser/${versionFromFile}/`;
+            const baseUrl = `updates.floorp.app/browser/rc/`;
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT/x86_64/`,
               'Linux-x64': `${baseUrl}Linux/x86_64/`,
