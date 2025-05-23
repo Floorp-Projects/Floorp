@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-name: "(A) 📦️ Package"
+name: "12 (A) 📦️ Package"
 on:
   workflow_dispatch:
     inputs:
@@ -55,6 +55,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: "floorp"
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
