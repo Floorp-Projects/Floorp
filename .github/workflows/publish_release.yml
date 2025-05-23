@@ -162,7 +162,7 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
-          tag_name: "v${{ env.NR_VERSION }}"
+          tag_name: "v12.0.0-rc"
           name: "Floorp 12 RC ${{ env.NR_VERSION }}"
           body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
           draft: false
