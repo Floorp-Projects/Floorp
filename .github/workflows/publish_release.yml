@@ -157,13 +157,10 @@ jobs:
         with:
           files: |
             ${{ env.ROOT_DIR }}/noraneko-publish/win/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*.exe
             ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp 12 RC ${{ env.NR_VERSION }}"
