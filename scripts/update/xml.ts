@@ -15,7 +15,6 @@ const meta = JSON.parse(
   noraneko_buildid: string;
 };
 
-// Determine platform from output XML filename
 function getPlatformFromPath(xmlPath: string): string {
   const filename = path.basename(xmlPath);
   if (filename.includes("WINNT")) return "win";
@@ -24,9 +23,24 @@ function getPlatformFromPath(xmlPath: string): string {
   throw new Error(`Unknown platform in filename: ${filename}`);
 }
 
-function getMarUrl(platform: string): string {
-  const base =
-    "https://github.com/Floorp-Projects/Floorp/releases/download/v12.0.0-rc/floorp-";
+function getMarUrl(platform: string, baseType: string): string {
+  let base: string;
+  switch (baseType) {
+    case "release":
+      base =
+        `https://github.com/Floorp-Projects/Floorp/releases/download/v${meta.noraneko_version}/floorp-`;
+      break;
+    case "rc":
+      base =
+        "https://github.com/Floorp-Projects/Floorp/releases/download/v12.0.0-rc/floorp-";
+      break;
+    case "beta":
+      base =
+        "https://github.com/Floorp-Projects/Floorp/releases/download/beta/floorp-";
+      break;
+    default:
+      throw new Error(`Unknown baseType: ${baseType}`);
+  }
   switch (platform) {
     case "win":
       return `${base}win-amd64-full.mar`;
@@ -39,6 +53,7 @@ function getMarUrl(platform: string): string {
   }
 }
 
+const baseType = process.argv[4] || "release";
 const platform = getPlatformFromPath(process.argv[3]);
 
 const update = {
@@ -58,13 +73,15 @@ const update = {
         buildID: meta.buildid,
         appVersion2: meta.noraneko_version,
         buildID2: meta.noraneko_buildid,
-        detailsURL: "https://blog.floorp.app/",
+        detailsURL: process.argv[4] === "rc"
+          ? "https://blog.floorp.app/ja/release/12.0.0-RC1.html"
+          : `https://blog.floorp.app/release/${meta.noraneko_version}/`,
       },
       patch: [
         {
           _attributes: {
             type: "complete",
-            URL: getMarUrl(platform),
+            URL: getMarUrl(platform, baseType),
             size: meta.mar_size,
           },
         },
