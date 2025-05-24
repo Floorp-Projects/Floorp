@@ -171,7 +171,6 @@ export class WorkspacesTabManager {
    */
   getWorkspaceIdFromAttribute(tab: XULElement): TWorkspaceID | null {
     const raw = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-    console.debug("WorkspacesTabManager: raw workspace attribute:", raw);
     if (!raw) {
       console.debug(
         "WorkspacesTabManager: no workspace attribute on tab, returning null",
@@ -179,7 +178,6 @@ export class WorkspacesTabManager {
       return null;
     }
     const clean = raw.replace(/[{}]/g, "");
-    console.debug("WorkspacesTabManager: cleaned workspace id:", clean);
     const parseResult = zWorkspaceID.safeParse(clean);
     if (!parseResult.success) {
       console.warn(
