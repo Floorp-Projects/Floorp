@@ -14,6 +14,7 @@ export default class ChromeCSS extends NoraComponentBase {
   static ctx: ChromeCSSService | null = null;
 
   init(): void {
+    return;
     const cssService = ChromeCSSService.getInstance();
     cssService.init();
     ChromeCSS.ctx = cssService;
