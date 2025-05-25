@@ -5,7 +5,7 @@
 
 import type { DataManager } from "./dataStore.ts";
 import type { Manifest } from "./type.ts";
-import { SiteSpecificBrowserManager } from "./ssbManager.ts";
+import type { SiteSpecificBrowserManager } from "./ssbManager.ts";
 
 const { SsbRunnerUtils } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
@@ -28,6 +28,7 @@ export class SsbRunner {
   }
 
   public async openSsbWindow(ssb: Manifest) {
+    console.log("openSsbWindow", ssb);
     const win = SsbRunnerUtils.openSsbWindow(ssb);
     await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
     return win;
