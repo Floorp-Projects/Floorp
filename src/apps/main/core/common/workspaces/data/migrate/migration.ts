@@ -66,6 +66,34 @@ export function migrateWorkspacesData(): Promise<void> {
                 return;
               }
 
+              const usedWorkspaceIDs = new Set<TWorkspaceID>();
+              for (
+                const win of Services.wm.getEnumerator(
+                  "navigator:browser",
+                ) as any
+              ) {
+                try {
+                  const tabs = (win as any).gBrowser.tabs as any[];
+                  for (const tab of tabs) {
+                    const tabEl = tab as {
+                      getAttribute(name: string): string | null;
+                    };
+                    const wsId: string =
+                      tabEl.getAttribute("floorpWorkspaceId") ?? "";
+                    const rawWsId = wsId.replace(/[{}]/g, "");
+                    const wsParse = zWorkspaceID.safeParse(rawWsId);
+                    if (wsParse.success) {
+                      usedWorkspaceIDs.add(wsParse.data);
+                    }
+                  }
+                } catch (e: unknown) {
+                  console.error(
+                    "Workspaces migration: error iterating windows",
+                    e,
+                  );
+                }
+              }
+
               const dataMap = new Map<TWorkspaceID, TWorkspace>();
               const orderList: TWorkspaceID[] = [];
               let defaultID: TWorkspaceID | null = null;
@@ -92,6 +120,7 @@ export function migrateWorkspacesData(): Promise<void> {
                     continue;
                   }
                   const idParsed = idParse.data;
+                  if (!usedWorkspaceIDs.has(idParsed)) continue;
                   if (!dataMap.has(idParsed)) {
                     dataMap.set(idParsed, {
                       name: detail.name,
@@ -100,47 +129,10 @@ export function migrateWorkspacesData(): Promise<void> {
                       isDefault: detail.defaultWorkspace,
                     });
                     orderList.push(idParsed);
-                    if (detail.defaultWorkspace) {
+                    if (detail.defaultWorkspace && !defaultID) {
                       defaultID = idParsed;
                     }
                   }
-                }
-              }
-
-              for (
-                const win of Services.wm.getEnumerator(
-                  "navigator:browser",
-                ) as any
-              ) {
-                try {
-                  const tabs = (win as any).gBrowser.tabs as any[];
-                  for (const tab of tabs) {
-                    const tabEl = tab as {
-                      getAttribute(name: string): string | null;
-                    };
-                    const wsId: string =
-                      tabEl.getAttribute("floorpWorkspaceId") ??
-                        "";
-                    const rawWsId = wsId.replace(/[{}]/g, "");
-                    const wsParse = zWorkspaceID.safeParse(rawWsId);
-                    if (!wsParse.success) {
-                      console.warn(
-                        "Workspaces migration: invalid selected workspace id",
-                        wsId,
-                      );
-                      continue;
-                    }
-                    const wsParsed = wsParse.data;
-                    if (dataMap.has(wsParsed)) {
-                      setSelectedWorkspaceID(wsParsed);
-                      break;
-                    }
-                  }
-                } catch (e: unknown) {
-                  console.error(
-                    "Workspaces migration: error iterating windows",
-                    e,
-                  );
                 }
               }
 
