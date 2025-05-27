@@ -6,13 +6,11 @@
 import { config } from "../../designs/configs.ts";
 import { createEffect } from "solid-js";
 
-// ドラッグデータ用の型定義
 interface DragData {
   animDropIndex: number;
   movingTabs?: XULElement[];
 }
 
-// タブ要素の型定義
 interface TabBrowserTab {
   _dragData: DragData;
 }
@@ -80,12 +78,12 @@ export class MultirowTabbarClass {
 
     const elementConstructor = win.customElements.get("tabbrowser-tabs");
     if (!elementConstructor?.prototype) {
-      console.warn("Paxmod: tab box not found in this win");
+      console.warn("tab box not found in this win");
       return;
     }
     const tabsProto = elementConstructor.prototype as any;
     if (tabsProto._positionPinnedTabs_orig) {
-      console.warn("Paxmod: tab box already injectioned in this win");
+      console.warn("tab box already injectioned in this win");
       return;
     }
 
@@ -190,14 +188,16 @@ export class MultirowTabbarClass {
 
     const elementConstructor = win.customElements.get("tabbrowser-tabs");
     if (!elementConstructor?.prototype) {
-      console.warn("Paxmod: tab box not injectioned");
+      console.warn("tab box not injectioned");
       return;
     }
     const tabsProto = elementConstructor.prototype as any;
 
     function uninjectionMethod(name: string): void {
-      tabsProto[name] = tabsProto[name + "_orig"];
-      delete tabsProto[name + "_orig"];
+      if (tabsProto[name + "_orig"]) {
+        tabsProto[name] = tabsProto[name + "_orig"];
+        delete tabsProto[name + "_orig"];
+      }
     }
 
     uninjectionMethod("_positionPinnedTabs");
