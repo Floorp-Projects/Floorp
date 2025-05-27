@@ -10,7 +10,8 @@
     "@std/encoding": "jsr:@std/encoding@^1.0.7",
     "@std/fs": "jsr:@std/fs@^1.0.11",
     "zod": "npm:zod",
-    "solid-styled-jsx": "npm:solid-styled-jsx"
+    "solid-styled-jsx": "npm:solid-styled-jsx",
+    "@swc/core": "npm:@swc/core@1.11.29"
   },
   "compilerOptions": {
     "lib": [
