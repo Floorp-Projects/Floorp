@@ -18,7 +18,12 @@
     "daisyui": "^5.0.0",
     "postcss": "^8.5.1",
     "react": "^19.0.0",
-    "vite": "^6.0.11"
+    "vite": "^6.0.11",
+    "@lexical/selection": "npm:@lexical/selection@0.30.0",
+    "@lexical/react": "npm:@lexical/react@0.30.0",
+    "@lexical/rich-text": "npm:@lexical/rich-text@0.30.0",
+    "@lexical/list": "npm:@lexical/list@0.30.0",
+    "lexical": "npm:lexical@0.30.0"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
