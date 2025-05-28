@@ -478,6 +478,7 @@ async function main(args) {
     "network.stricttransportsecurity.preloadlist",
     false
   );
+  Services.prefs.setBoolPref("network.http.http3.enable", false);
   // download and parse the raw json file from the Chromium source
   let rawdata = download();
   // get just the hosts with mode: "force-https"

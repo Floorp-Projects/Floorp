@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-17_19-44-00_UTC
-// COMMIT: d4f072b4db3db5c0bd6b144b54eba1802b763c96
+// VERSION: 2025-05-28_07-01-50_UTC
+// COMMIT: faa2e8d226ac537daab3f45b43bed152ee21a2c4
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -976,20 +976,59 @@ soc.dz
 tm.dz
 
 // ec : https://www.nic.ec/
-// Submitted by registry <vabboud@nic.ec>
+// Submitted by registry <infraestructura@nic.ec>
 ec
+abg.ec
+adm.ec
+agron.ec
+arqt.ec
+art.ec
+bar.ec
+chef.ec
 com.ec
+cont.ec
+cpa.ec
+cue.ec
+dent.ec
+dgn.ec
+disco.ec
+doc.ec
 edu.ec
+eng.ec
+esm.ec
 fin.ec
+fot.ec
+gal.ec
 gob.ec
 gov.ec
+gye.ec
+ibr.ec
 info.ec
 k12.ec
+lat.ec
+loj.ec
 med.ec
 mil.ec
+mktg.ec
+mon.ec
 net.ec
+ntr.ec
+odont.ec
 org.ec
 pro.ec
+prof.ec
+psic.ec
+psiq.ec
+pub.ec
+rio.ec
+rrpp.ec
+sal.ec
+tech.ec
+tul.ec
+tur.ec
+uio.ec
+vet.ec
+xxx.ec
 
 // edu : https://www.iana.org/domains/root/db/edu.html
 edu
@@ -1137,10 +1176,12 @@ org.gg
 // Although domains directly at second level are not possible at the moment,
 // they have been possible for some time and may come back.
 gh
+biz.gh
 com.gh
 edu.gh
 gov.gh
 mil.gh
+net.gh
 org.gh
 
 // gi : http://www.nic.gi/rules.html
@@ -1344,6 +1385,7 @@ biz.id
 co.id
 desa.id
 go.id
+kop.id
 mil.id
 my.id
 net.id
@@ -12347,9 +12389,9 @@ cafjs.com
 // Canva Pty Ltd : https://canva.com/
 // Submitted by Joel Aquilina <publicsuffixlist@canva.com>
 canva-apps.cn
-*.my.canvasite.cn
+my.canvasite.cn
 canva-apps.com
-*.my.canva.site
+my.canva.site
 
 // Carrd : https://carrd.co
 // Submitted by AJ <aj@carrd.co>
@@ -12456,7 +12498,6 @@ cloudns.us
 // Submitted by Khash Sajadi <khash@cloud66.com>
 c66.me
 cloud66.ws
-cloud66.zone
 
 // CloudAccess.net : https://www.cloudaccess.net/
 // Submitted by Pawel Panek <noc@cloudaccess.net>
@@ -12662,6 +12703,17 @@ dedyn.io
 // Submitted by Aavash Shrestha <aavash@deta.sh>
 deta.app
 deta.dev
+
+// Dfinity Foundation: https://dfinity.org/
+// Submitted by Dfinity Team <domains@dfinity.org>
+caffeine.ai
+id.ai
+icp-api.io
+icp0.io
+*.raw.icp0.io
+icp1.io
+*.raw.icp1.io
+caffeine.site
 
 // dhosting.pl Sp. z o.o. : https://dhosting.pl/
 // Submitted by Michal Kokoszkiewicz <bok@dhosting.pl>
@@ -13081,8 +13133,11 @@ tuleap-partners.com
 // Encoretivity AB : https://encore.cloud
 // Submitted by André Eriksson <security@encore.cloud>
 encr.app
+frontend.encr.app
 encoreapi.com
 lp.dev
+api.lp.dev
+objects.lp.dev
 
 // encoway GmbH : https://www.encoway.de
 // Submitted by Marcel Daus <cloudops@encoway.de>
@@ -13444,6 +13499,7 @@ gsj.bz
 
 // GitHub, Inc.
 // Submitted by Patrick Toomey <security@github.com>
+github.app
 githubusercontent.com
 githubpreview.dev
 github.io
@@ -13879,13 +13935,15 @@ is-a-good.dev
 is-a.dev
 
 // IServ GmbH : https://iserv.de
-// Submitted by Mario Hoberg <info@iserv.de>
+// Submitted by Kim Brodowski <info@iserv.de>
 iservschule.de
 mein-iserv.de
+schuldock.de
 schulplattform.de
 schulserver.de
 test-iserv.de
 iserv.dev
+iserv.host
 
 // Jelastic, Inc. : https://jelastic.com/
 // Submitted by Ihor Kolodyuk <ik@jelastic.com>
@@ -14760,6 +14818,7 @@ priv.at
 // PROJECT ELIV : https://eliv.kr/
 // Submitted by PROJECT ELIV Domain Team <team@eliv.kr>
 c01.kr
+eliv-cdn.kr
 eliv-dns.kr
 mmv.kr
 vki.kr
