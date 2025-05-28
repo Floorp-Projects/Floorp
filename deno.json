@@ -12,8 +12,7 @@
     "@std/streams": "jsr:@std/streams@^1.0.9"
   },
   "compilerOptions": {
-    "lib": ["deno.ns", "ESNext", "dom"],
-    "allowJs": true,
+    "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],
     "checkJs": true
   },
   "tasks": {

@@ -10,7 +10,7 @@
   "keywords": [],
   "license": "MPL-2.0",
   "devDependencies": {
-    "@bytecodealliance/componentize-js": "^0.16.0",
+    "@bytecodealliance/componentize-js": "^0.18.2",
     "@bytecodealliance/jco": "^1.10.2"
   }
 }

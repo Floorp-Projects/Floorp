@@ -6,7 +6,7 @@ export const brandingName = "Noraneko";
 
 //? when the linux binary has published, I'll sync linux bin version
 export const VERSION = Deno.build.os === "windows" ? "001" : "000";
-export const binExtractDir = "_dist/bin";
+export const binRootDir = "_dist/bin";
 export const binDir = Deno.build.os !== "darwin"
   ? `_dist/bin/${brandingBaseName}`
   : `_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/Resources`;
@@ -17,6 +17,19 @@ export const binPathExe = Deno.build.os !== "darwin"
   : `./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName}`;
 
 export const binVersion = pathe.join(binDir, "nora.version.txt");
+
+//? Build-related paths
+export const buildid2Path = "_dist/buildid2";
+export const profileTestPath = "./_dist/profile/test";
+export const loaderFeaturesPath = "apps/system/loader-features";
+export const featuresChromePath = "apps/features-chrome";
+export const i18nFeaturesChromePath = "i18n/features-chrome";
+export const loaderModulesPath = "apps/system/loader-modules"; // Added this line
+export const modulesPath = "apps/modules";
+export const devServerReadyString =
+  "nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-dev";
+export const devBrandingSuffix = "noraneko-dev";
+export const mozbuildOutputDir = "../obj-artifact-build-output/dist";
 
 export function getBinArchive() {
   switch (Deno.build.os) {

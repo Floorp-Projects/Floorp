@@ -8,37 +8,25 @@
   "author": "",
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "2.0.0-beta.2",
+    "@biomejs/biome": "2.0.0-beta.5",
     "@bytecodealliance/preview2-shim": "^0.17.2",
-    "@swc-node/register": "^1.10.10",
-    "@swc/core": "^1.11.24",
-    "@types/adm-zip": "^0.5.7",
-    "@types/node": "^22.15.3",
-    "@types/postcss-sorting": "^8.0.2",
+    "@types/node": "^22.15.21",
     "chalk": "^5.4.1",
     "chokidar": "^4.0.3",
     "fast-glob": "^3.3.3",
-    "lightningcss": "^1.29.3",
+    "lightningcss": "^1.30.1",
     "linkedom": "0.18.10",
-    "oxlint": "^0.16.9",
+    "oxlint": "^0.16.12",
     "pathe": "^2.0.3",
-    "puppeteer-core": "^24.8.0",
+    "puppeteer-core": "^24.9.0",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",
-    "vite": "6.3.4",
-    "vite-plugin-solid": "^2.11.6",
-    "vite-tsconfig-paths": "^5.1.4",
-    "xml-js": "^1.6.11"
+    "vite": "6.3.5"
   },
   "dependencies": {
-    "@svgr/core": "^8.1.0",
-    "@svgr/plugin-jsx": "^8.1.0",
-    "adm-zip": "^0.5.16",
-    "hereby": "^1.10.0",
-    "solid-element": "^1.9.1",
-    "solid-styled-jsx": "^0.27.1",
-    "sortablejs": "^1.15.6",
-    "zod": "^3.24.3",
-    "zx": "^8.5.3"
+    "@swc/core": "^1.11.29",
+    "hereby": "^1.11.0",
+    "zod": "^3.25.28",
+    "zx": "^8.5.4"
   }
 }
