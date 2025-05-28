@@ -95,39 +95,28 @@ export function PanelSidebarButton(props: {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onContextMenu={handleContextMenu}
+      class="relative"
     >
       <div
         id={props.panel.id}
-        class={`${props.panel.type} panel-sidebar-panel`}
+        class={`${props.panel.type} panel-sidebar-panel flex items-center justify-center`}
         data-checked={selectedPanelId() === props.panel.id}
         data-panel-id={props.panel.id}
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
         }}
         style={{
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
+          "border-right": props.panel.userContextId !== 0 &&
+              props.panel.userContextId !== null &&
+              props.panel.type === "web"
+            ? `2px solid ${getUserContextColor(props.panel.userContextId ?? 0)}`
+            : "none",
         }}
       >
         <Suspense>
           <img src={faviconURL()} width="16" height="16" />
         </Suspense>
       </div>
-      <Show
-        when={props.panel.userContextId !== 0 &&
-          props.panel.userContextId !== null &&
-          props.panel.type === "web"}
-      >
-        <xul:box
-          class="panel-sidebar-user-context-border"
-          style={{
-            "background-color": getUserContextColor(
-              props.panel.userContextId ?? 0,
-            ),
-          }}
-        />
-      </Show>
     </div>
   );
 }
