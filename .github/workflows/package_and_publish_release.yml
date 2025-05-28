@@ -1,0 +1,50 @@
+name: "12 (R) ⚠️ Package and Publish Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_windows_artifact_workflow_run_id:
+        description: "The workflow run ID for the Windows runtime artifact"
+        required: false
+        type: string
+      runtime_linux_artifact_workflow_run_id:
+        description: "The workflow run ID for the Linux runtime artifact"
+        required: false
+        type: string
+      runtime_mac_artifact_workflow_run_id:
+        description: "The workflow run ID for the macOS runtime artifact"
+        required: false
+        type: string
+permissions:
+  contents: write
+
+jobs:
+  package-windows:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: Windows-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
+    secrets: inherit
+
+  package-linux:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: Linux-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
+    secrets: inherit
+
+  package-macos:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: macOS-x64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
+    secrets: inherit
+
+  publishs:
+    needs: [package-windows, package-linux, package-macos]
+    uses: ./.github/workflows/publish_release.yml
+    with:
+      win_runtime_artifact_workflow_call: ${{ github.run_id }}
+      linux_runtime_artifact_workflow_call: ${{ github.run_id }}
+      mac_runtime_artifact_workflow_call: ${{ github.run_id }}
+    secrets: inherit

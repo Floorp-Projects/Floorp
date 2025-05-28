@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
+ import {
   actionCreators as ac,
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.mjs";
 import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 // We use importESModule here instead of static import so that
 // the Karma test environment won't choke on this module. This
@@ -29,6 +31,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 export class PrefsFeed {
   constructor(prefMap) {
+    this.imagesDataPath = {urls:[]};
+    this.oneImageData = {url:"",data:"",extension:"",notExist:false};
+    this.fetchedImages = {};
     this._prefMap = prefMap;
     this._prefs = new Prefs();
     this.onExperimentUpdated = this.onExperimentUpdated.bind(this);
@@ -52,6 +57,9 @@ export class PrefsFeed {
           data: { name, value },
         })
       );
+      if (name === "floorp.background.type" && value === 3){
+        this.getImage()
+      }
     }
   }
 
@@ -191,6 +199,10 @@ export class PrefsFeed {
       "discoverystream.sponsored-collections.enabled",
       false
     );
+    this._setIntPref(values, "floorp.background.type", 0);
+    this._setBoolPref(values, "floorp.newtab.backdrop.blur.disable", false);
+    this._setBoolPref(values, "floorp.newtab.releasenote.hide", false);
+    this._setBoolPref(values, "floorp.newtab.imagecredit.hide", false);
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
@@ -214,8 +226,80 @@ export class PrefsFeed {
         },
       })
     );
+
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder", this.getImage.bind(this))
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions", this.getImage.bind(this))
+    Services.obs.addObserver(this.getImage.bind(this), "floorp-newtab-background-update");
+    this.getImage()
   }
 
+  async getImage() {
+    if (Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") === 3) {
+      const tPath = PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"), "a").slice(0, -1)
+      const folderExists = await IOUtils.exists(tPath)
+      if (folderExists) {
+        const imagesPath = await IOUtils.getChildren(tPath)
+        const str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "").split(",").join("|").toLowerCase()})+$`)
+        this.imagesDataPath = {urls:[]}
+
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.PREF_CHANGED,
+            data: { name: "backgroundPaths", value: {data:{},urls:[]} },
+          })
+        );
+        this.fetchedImages = {}
+        if (imagesPath !== 0) {
+          for (const elem of imagesPath) {
+            if (elem.toLowerCase().match(str)) {
+              const filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
+              this.imagesDataPath.urls.push(filePath)
+            }
+          }
+        }
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.PREF_CHANGED,
+            data: { name: "backgroundPaths", value: this.imagesDataPath },
+          })
+        );
+
+      }
+    } else if (Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") === 4){
+      const tmpPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages","wallpaper.png")
+      const fetchPath = Services.io.newFileURI(FileUtils.File(tmpPath)).asciiSpec
+      if (tmpPath !== this.oneImageData.url){
+        this.oneImageData = {"url":tmpPath,data:"","extension":"",notExist:false}
+      }
+      this.store.dispatch(
+        ac.BroadcastToContent({
+          type: at.PREF_CHANGED,
+          data: { name: "oneImageData", value: this.oneImageData},
+        })
+      );
+      if (!this.oneImageData.data && !this.oneImageData.notExist)
+      {
+        if (await IOUtils.exists(tmpPath)){
+          const blobData = await (await fetch(fetchPath)).blob()
+          this.oneImageData.extension = blobData.type
+          const promise = new Promise(resolve => {
+            const fr = new FileReader()
+            fr.onload = e => resolve(e.target.result)
+            fr.readAsArrayBuffer(blobData)
+          })
+          this.oneImageData.data  = await promise.catch(() => null)
+          this.store.dispatch(
+            ac.BroadcastToContent({
+              type: at.PREF_CHANGED,
+              data: { name: "oneImageData", value: this.oneImageData },
+            })
+          );
+        } else {
+          this.oneImageData.notExist = true
+        }
+      }
+    }
+  }
   uninit() {
     this.removeListeners();
   }
@@ -268,6 +352,29 @@ export class PrefsFeed {
       case at.UPDATE_SECTION_PREFS:
         this._setIndexedDBPref(action.data.id, action.data.value);
         break;
+      case at.GET_IMAGE:
+        this.sendImgReply(action.data.path)
     }
+  }
+
+  async sendImgReply(path){
+    if(!(path in this.fetchedImages)){
+      const blobData = await (await fetch(path)).blob()
+      this.fetchedImages[path] = {}
+      this.fetchedImages[path].type = blobData.type
+      const promise = new Promise(resolve => {
+        const fr = new FileReader()
+        fr.onload = e => resolve(e.target.result)
+        fr.readAsArrayBuffer(blobData)
+      })
+      this.fetchedImages[path].data = await promise.catch(() => null)
+    }
+    const returnValue = this.fetchedImages[path]
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: { name: `floorpBackgroundPathsVal_${path}`, value: returnValue },
+      })
+    );
   }
 }

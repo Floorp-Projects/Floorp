@@ -543,11 +543,13 @@
     }
 
     set docShellIsActive(val) {
-      this.browsingContext.isActive = val;
+      // Floorp Injections
+      this.browsingContext.isActive = val || this.spliting;
       if (this.isRemoteBrowser) {
         let remoteTab = this.frameLoader?.remoteTab;
         if (remoteTab) {
-          remoteTab.renderLayers = val;
+          // Floorp Injections
+          remoteTab.renderLayers = val || this.spliting;
         }
       }
     }
