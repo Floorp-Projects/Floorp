@@ -2646,9 +2646,9 @@ def wasm_sandboxing_libraries():
     )
 
 
-@depends(dependable(wasm_sandboxing_libraries), build_project)
-def default_wasm_sandboxing_libraries(libraries, build_project):
-    if build_project != "tools/rusttests":
+@depends(dependable(wasm_sandboxing_libraries), build_project, target)
+def default_wasm_sandboxing_libraries(libraries, build_project, target):
+    if build_project != "tools/rusttests" and target.endianness == "little":
         non_default_libs = {}
 
         return tuple(l for l in libraries if l not in non_default_libs)
