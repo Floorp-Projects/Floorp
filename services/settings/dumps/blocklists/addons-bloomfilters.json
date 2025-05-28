@@ -3,6 +3,116 @@
     {
       "stash": {
         "blocked": [
+          "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.5",
+          "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.7",
+          "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.9",
+          "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.11",
+          "footokx-scores@opensourcefora.site:1.5",
+          "footokx-scores@opensourcefora.site:13.5",
+          "footokx-scores@opensourcefora.site:13.7",
+          "footokx-scores@opensourcefora.site:13.8",
+          "footokx-scores@opensourcefora.site:13.11"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748284571776,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748370907296,
+      "id": "d3bcc414-367d-46c9-9210-395d57e22155",
+      "last_modified": 1748370984313
+    },
+    {
+      "stash": {
+        "blocked": [
+          "suiwallet@example.com:1.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748268762319,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748284505318,
+      "id": "078ad199-6e80-42aa-a2b8-961d06d420b2",
+      "last_modified": 1748284571653
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{4966a25b-b88d-408e-a71c-96b5bff561f6}:1.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748003780355,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748262906516,
+      "id": "bc93c8eb-c162-4859-9b72-c427574c6b8b",
+      "last_modified": 1748262979293
+    },
+    {
+      "stash": {
+        "blocked": [
+          "glu@prod:2025.5"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1747982182039,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748003705959,
+      "id": "6f0ad1a7-7294-4319-a130-a1c3610a5d3a",
+      "last_modified": 1748003780182
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [
+          "{2e3be1f1-fb5c-40fb-b578-d2c9184ce470}:2.4.1.14038",
+          "{2e3be1f1-fb5c-40fb-b578-d2c9184ce470}:2.4.1.14043",
+          "{51536072-b64d-4a34-bee0-49b8e8175bc1}:2.4.1.14038",
+          "{666ff753-69f8-49da-8adf-8aa770d3e383}:2.4.1.14041",
+          "{666ff753-69f8-49da-8adf-8aa770d3e383}:2.4.1.14044",
+          "{5f398d3f-25db-47f5-b422-aa2364ff6c0b}:2.3.8",
+          "ihmgiclibbndffejedjimfjmfoabpcke@chromeStoreFoxified-231839395:2.9.51",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified--1790109361:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-1235661559:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-1391172115:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-1689651976:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-1899575932:2.0.6",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-274820859:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-2765042028:2.0.6",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-2961456433:2.0.6",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-526754774:2.0.6",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chrome-store-foxified-839608472:2.0.7",
+          "aapbdbdomjkkjkaonfhkkikfgjllcleb@chromeStoreFoxified-231839395:2.0.6"
+        ],
+        "softblocked": []
+      },
+      "schema": 1747847624608,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1747982106373,
+      "id": "aad2bcb7-b91a-402b-85df-f18476603268",
+      "last_modified": 1747982181879
+    },
+    {
+      "stash": {
+        "blocked": [
+          "sui-dev@example.com:1.2",
+          "sui-dev@example.com:1.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1747672081769,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1747744507071,
+      "id": "7159edd0-a80f-49c1-b056-aa9065f484ce",
+      "last_modified": 1747744582051
+    },
+    {
+      "stash": {
+        "blocked": [
           "scorebase@opensourcehigher.site:13.3",
           "scorebase@opensourcehigher.site:13.4",
           "scorebase@opensourcehigher.site:13.5",
@@ -378,5 +488,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1747398972252
+  "timestamp": 1748370984313
 }

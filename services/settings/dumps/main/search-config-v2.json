@@ -3261,14 +3261,17 @@
           "suggestions": {
             "base": "https://suggest.perplexity.ai/suggest",
             "searchTermParamName": "q"
+          },
+          "trending": {
+            "base": "https://www.perplexity.ai/rest/autosuggest/list-trending-suggest"
           }
         }
       },
       "id": "bb836721-7be9-4de6-ac18-520189a69076",
       "identifier": "perplexity",
-      "last_modified": 1745933974539,
+      "last_modified": 1748291339929,
       "recordType": "engine",
-      "schema": 1745887296200,
+      "schema": 1747872009382,
       "variants": [
         {
           "environment": {
@@ -8220,5 +8223,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1747257920659
+  "timestamp": 1748291339929
 }
