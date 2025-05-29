@@ -420,7 +420,7 @@ jobs:
           github-artifact-id: '${{ steps.publish-unsigned-binary.outputs.artifact-id }}'
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
-          output-artifact-directory: ~/noraneko-unsigned-installer/signed_binary
+          output-artifact-directory: ${{ env.HOME }}/noraneko-unsigned-installer/signed_binary
 
       - name: Prepare installer with codesigning and re-packaging (installer)
         run: |
@@ -451,7 +451,7 @@ jobs:
           github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
-          output-artifact-directory: ~/noraneko-installer
+          output-artifact-directory: ${{ env.HOME }}/noraneko-installer
 
       - name: Prepare installer with codesigning and re-packaging (without windows)
         run: |
