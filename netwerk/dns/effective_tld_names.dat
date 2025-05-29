@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-28_07-01-50_UTC
-// COMMIT: faa2e8d226ac537daab3f45b43bed152ee21a2c4
+// VERSION: 2025-05-28_19-51-51_UTC
+// COMMIT: 9228b7033159f1490bbc9fe45159a5aeb8da62ad
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -15287,10 +15287,6 @@ srht.site
 // Submitted by Antonis Kalipetis <akalipetis@sourcelair.com>
 apps.lair.io
 *.stolos.io
-
-// SparrowHost : https://sparrowhost.in/
-// Submitted by Anant Pandey <info@sparrowhost.in>
-ind.mom
 
 // SpeedPartner GmbH : https://www.speedpartner.de/
 // Submitted by Stefan Neufeind <info@speedpartner.de>

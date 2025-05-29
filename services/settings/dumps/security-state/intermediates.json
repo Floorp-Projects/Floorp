@@ -1,6 +1,32 @@
 {
   "data": [
     {
+      "schema": 1748440663301,
+      "derHash": "pvnJZ+uKqSg6HKZJuHt2RyDp9cOvqBwVBnb0yjbpjPY=",
+      "attachment": {
+        "hash": "9b41b88f8fee2ce4f639b931746c791cd080b4aa700bdbacd2d6fd1ab2ac4fb8",
+        "size": 1987,
+        "filename": "PEdy1ISwUVLDpnikUbhK1EtItNX5aDwLEkamk5GZosU=.pem",
+        "location": "security-state-staging/intermediates/96d74948-8351-4159-87af-0ace41ef4dcc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "66349e16-b1c6-460e-beb4-16ce116b7860",
+      "last_modified": 1748444222326
+    },
+    {
+      "schema": 1748440662520,
+      "derHash": "pfQe341uBF/z/u1nZlDOCDddOp7yEMFpXEeqnf8R1cU=",
+      "attachment": {
+        "hash": "222e9d49f569e0fe9c88705c7ddc63854cf1d82a4205cec8b22579ee2ee38850",
+        "size": 1366,
+        "filename": "qqgQ1iitO8P7qmUpjGzqlXoRXwuoMdE49aK6o3eCfjM=.pem",
+        "location": "security-state-staging/intermediates/a05f9fd6-3c39-4e85-999f-21a91fab4c70.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "93934e36-b53b-4915-a09a-8f853d5be4ee",
+      "last_modified": 1748444222323
+    },
+    {
       "schema": 1748397462573,
       "derHash": "Hm6++AZ2/SDSWXwfRaXhmN1MTL8zKOUig3GWYAwxkUE=",
       "attachment": {
@@ -16422,24 +16448,6 @@
       "last_modified": 1666727869652
     },
     {
-      "schema": 1666727430858,
-      "derHash": "OH1Ja5IgLUxEPNlP9C2hffLx5o4kTC+7p+KU290RNXs=",
-      "subject": "CN=WISeKey CertifyID Advanced GC CA 1,O=WISeKey,C=CH",
-      "subjectDN": "MEwxCzAJBgNVBAYTAkNIMRAwDgYDVQQKEwdXSVNlS2V5MSswKQYDVQQDEyJXSVNlS2V5IENlcnRpZnlJRCBBZHZhbmNlZCBHQyBDQSAx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3847cc74ceb46d2e07d37b69b668ff50587428a43ef992473d4a3e433bcb1972",
-        "size": 1293,
-        "filename": "Y3IJxxxojxFKeXVhVUyyPE4P-7QrAbKt0viCWXpb1G8=.pem",
-        "location": "security-state-staging/intermediates/233bd648-66bc-440b-8b31-293196be1b49.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Y3IJxxxojxFKeXVhVUyyPE4P+7QrAbKt0viCWXpb1G8=",
-      "crlite_enrolled": false,
-      "id": "5905f153-1bda-44df-8205-013b8756834a",
-      "last_modified": 1666727869638
-    },
-    {
       "schema": 1666727396472,
       "derHash": "ubZIktCtRxksE/FdrM9bogQbs58wQagPqq1vxsUqilA=",
       "subject": "CN=ZwTrus EV SSL CA,O=北京中万网络科技有限责任公司,C=CN",
@@ -29652,5 +29660,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1748401022526
+  "timestamp": 1748444222326
 }
