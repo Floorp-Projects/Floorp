@@ -396,7 +396,7 @@ jobs:
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
             mkdir -p ~/noraneko-unsigned-installer/binary ~/noraneko-unsigned-installer/installer
             cp ./floorp/.github/workflows/assets/windows/* ~/noraneko-unsigned-installer/
-            7z x obj-*/dist/$INSTALLER_PATH -o~/noraneko-unsigned-installer/binary
+            7z x obj-*/dist/$INSTALLER_PATH -o$HOME/noraneko-unsigned-installer/binary
           fi
 
       - name: Publish Unsigned Binary 🎁
