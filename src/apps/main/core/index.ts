@@ -110,23 +110,31 @@ async function initializeModules(
       );
     }
   }
-  // @ts-expect-error SessionStore type not defined
-  await SessionStore.promiseInitialized;
 
-  for (const module of modules) {
-    try {
-      if (module?.init) {
-        await module.init();
+  async function initializeModulesAfterLoad() {
+    for (const module of modules) {
+      try {
+        if (module?.init) {
+          await module.init();
+        }
+        if (module?.default) {
+          new module.default();
+        }
+        _registerModuleLoadState(module.name, true);
+      } catch (e) {
+        console.error(`[noraneko] Failed to init module ${module.name}:`, e);
+        _registerModuleLoadState(module.name, false);
       }
-      if (module?.default) {
-        new module.default();
-      }
-      _registerModuleLoadState(module.name, true);
-    } catch (e) {
-      console.error(`[noraneko] Failed to init module ${module.name}:`, e);
-      _registerModuleLoadState(module.name, false);
     }
+    _registerModuleLoadState("__init_all__", true);
+    await _rejectOtherLoadStates();
   }
-  _registerModuleLoadState("__init_all__", true);
-  await _rejectOtherLoadStates();
+
+  if (document?.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", async () => {
+      await initializeModulesAfterLoad();
+    });
+  } else {
+    await initializeModulesAfterLoad();
+  }
 }

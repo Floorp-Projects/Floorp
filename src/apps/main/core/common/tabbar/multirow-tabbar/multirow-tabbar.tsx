@@ -6,6 +6,15 @@
 import { config } from "../../designs/configs.ts";
 import { createEffect } from "solid-js";
 
+interface DragData {
+  animDropIndex: number;
+  movingTabs?: XULElement[];
+}
+
+interface TabBrowserTab {
+  _dragData: DragData;
+}
+
 export class MultirowTabbarClass {
   private get arrowScrollbox(): XULElement | null {
     return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
@@ -37,8 +46,6 @@ export class MultirowTabbarClass {
     return config().tabbar.multiRowTabBar.maxRow * this.aTabHeight;
   }
 
-  private draggedTabElement: Element | null = null; // Track the dragged tab
-
   private setMultirowTabMaxHeight() {
     if (!this.isMaxRowEnabled) {
       return;
@@ -58,183 +65,166 @@ export class MultirowTabbarClass {
     this.arrowScrollbox?.style.removeProperty("max-height");
   }
 
-  private preventDrag(event: DragEvent) {
-    event.preventDefault();
-  }
-
-  /*
-  private disableDrag() {
-    this.arrowScrollbox?.addEventListener("dragstart", this.preventDrag, true);
-    this.arrowScrollbox?.addEventListener("drop", this.preventDrag, true);
-  }
-
-  private enableDrag() {
-    this.arrowScrollbox?.removeEventListener(
-      "dragstart",
-      this.preventDrag,
-      true,
-    );
-    this.arrowScrollbox?.removeEventListener("drop", this.preventDrag, true);
-  }
-  */
-
-  // --- Custom Drag Handlers ---
-  private handleDragStart(event: DragEvent) {
-    const target = event.target as Element;
-    const tab = target.closest(".tabbrowser-tab");
-    if (!tab || !(event.dataTransfer)) {
-      return;
-    }
-    event.stopPropagation(); // Prevent event from bubbling further or reaching default handlers (Capture Phase)
-    this.draggedTabElement = tab;
-    // Use a minimal data transfer, can be enhanced later
-    try { // Added try-catch as stopPropagation might interfere in some edge cases
-      event.dataTransfer.setData("text/plain", tab.id || "dragging-tab");
-      event.dataTransfer.effectAllowed = "move";
-    } catch (e) {
-      console.error("Error setting drag data in handleDragStart:", e);
-      return; // Stop if data transfer fails
-    }
-    tab.classList.add("floorp-tab-dragging"); // Add class for visual feedback
-    console.log("Custom Drag Start (Capture):", tab);
-  }
-
-  private handleDragOver(event: DragEvent) {
-    console.log("Custom Drag Over:", event.target);
-    if (!this.draggedTabElement) {
-      console.log("Drag Over: No dragged element, returning.");
-      return; // Only react if a custom drag is in progress
-    }
-    event.preventDefault(); // Necessary to allow dropping
-    event.stopPropagation(); // Prevent Firefox default handling
-    event.dataTransfer!.dropEffect = "move";
-
-    // Optional: Add visual feedback to the potential drop target
-    const target = event.target as Element;
-    const potentialTargetTab = target.closest(".tabbrowser-tab");
-    // Remove indicator from previous potential targets
-    this.arrowScrollbox?.querySelectorAll(".floorp-tab-dragover").forEach((
-      el: Element,
-    ) => el.classList.remove("floorp-tab-dragover"));
-    if (potentialTargetTab && potentialTargetTab !== this.draggedTabElement) {
-      potentialTargetTab.classList.add("floorp-tab-dragover");
-    }
-  }
-
-  private handleDrop(event: DragEvent) {
-    console.log("Custom Drop Attempt:", event.target);
-    if (!this.draggedTabElement) {
-      console.log("Drop: No dragged element, returning.");
-      return; // Only react if a custom drag is in progress
-    }
-    event.preventDefault(); // Prevent default browser drop action
-    event.stopPropagation(); // Prevent Firefox default handling
-    const target = event.target as Element;
-    const targetTab = target.closest(".tabbrowser-tab");
-
-    // Clean up visual feedback regardless of drop target validity
-    this.draggedTabElement.classList.remove("floorp-tab-dragging");
-    this.arrowScrollbox?.querySelectorAll(".floorp-tab-dragover").forEach((
-      el: Element,
-    ) => el.classList.remove("floorp-tab-dragover"));
-
-    if (targetTab && targetTab !== this.draggedTabElement) {
-      console.log("Custom Drop:", this.draggedTabElement, "onto", targetTab);
-      this.onCustomDrop(targetTab); // Call the placeholder
-    } else {
-      console.log("Custom Drop: Invalid target or dropped on self");
-    }
-
-    this.draggedTabElement = null; // Reset dragged element
-  }
-
-  private handleDragEnd(event: DragEvent) {
-    // Clean up visual feedback if drag ends unexpectedly (e.g., Escape key)
-    if (this.draggedTabElement) {
-      this.draggedTabElement.classList.remove("floorp-tab-dragging");
-      this.draggedTabElement = null;
-    }
-    this.arrowScrollbox?.querySelectorAll(".floorp-tab-dragover").forEach((
-      el: Element,
-    ) => el.classList.remove("floorp-tab-dragover"));
-    console.log("Custom Drag End");
-  }
-
-  // Placeholder for user's drop logic
-  private onCustomDrop(targetTabElement: Element) {
-    // User will implement the actual reordering logic here
-    console.log("onCustomDrop called with target:", targetTabElement);
-  }
-  // --- End Custom Drag Handlers ---
-
   private enableMultirowTabbar() {
     this.scrollboxPart?.setAttribute("style", "flex-wrap: wrap;");
-    // REMOVED: this.disableDrag();
-
-    // Add custom drag listeners using CAPTURE phase on the arrowScrollbox
-    this.arrowScrollbox?.addEventListener(
-      "dragstart",
-      this.handleDragStart.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.addEventListener(
-      "dragover",
-      this.handleDragOver.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.addEventListener(
-      "drop",
-      this.handleDrop.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.addEventListener(
-      "dragend",
-      this.handleDragEnd.bind(this),
-      true,
-    ); // Use capture
-    console.log(
-      "Multirow enabled, custom drag listeners added (capture phase).",
-    );
   }
 
   private disableMultirowTabbar() {
     this.scrollboxPart?.removeAttribute("style");
-    // REMOVED: this.enableDrag();
+  }
 
-    // Remove custom drag listeners (must match capture phase)
-    this.arrowScrollbox?.removeEventListener(
-      "dragstart",
-      this.handleDragStart.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.removeEventListener(
-      "dragover",
-      this.handleDragOver.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.removeEventListener(
-      "drop",
-      this.handleDrop.bind(this),
-      true,
-    ); // Use capture
-    this.arrowScrollbox?.removeEventListener(
-      "dragend",
-      this.handleDragEnd.bind(this),
-      true,
-    ); // Use capture
-    console.log(
-      "Multirow disabled, custom drag listeners removed (capture phase).",
+  private applyInjection(): void {
+    const win = window;
+
+    const elementConstructor = win.customElements.get("tabbrowser-tabs");
+    if (!elementConstructor?.prototype) {
+      console.warn("tab box not found in this win");
+      return;
+    }
+    const tabsProto = elementConstructor.prototype as any;
+    if (tabsProto._positionPinnedTabs_orig) {
+      console.warn("tab box already injectioned in this win");
+      return;
+    }
+
+    const dropIndex = (tabs: XULElement[], event: DragEvent): number => {
+      for (const tab of tabs) {
+        const rect = tab.getBoundingClientRect();
+        if (
+          event.screenY >= tab.screenY &&
+          event.screenY < tab.screenY + rect.height &&
+          event.screenX < tab.screenX + rect.width / 2
+        ) {
+          // First tab right of the cursor, and in the cursor's row
+          return tabs.indexOf(tab);
+        }
+        if (event.screenY <= tab.screenY) {
+          // Entered a new tab row
+          return tabs.indexOf(tab);
+        }
+      }
+      return -1;
+    };
+
+    function injectionMethod(
+      name: string,
+      f: (this: any, ...args: any[]) => any,
+    ): void {
+      tabsProto[name + "_orig"] = tabsProto[name];
+      tabsProto[name] = f;
+    }
+
+    injectionMethod("_positionPinnedTabs", function (this: any): void {
+      // Remove visual offset of pinned tabs
+      this._positionPinnedTabs_orig();
+      this.style.paddingInlineStart = "";
+      for (const tab of this.allTabs) {
+        tab.style.marginInlineStart = "";
+      }
+    });
+
+    injectionMethod("on_drop", function (this: any, event: DragEvent): any {
+      const dt = event.dataTransfer!;
+      if (dt.dropEffect !== "move") {
+        return this.on_drop_orig(event);
+      }
+      const draggedTab = dt.mozGetDataAt(
+        "application/x-moz-tabbrowser-tab",
+        0,
+      ) as TabBrowserTab;
+      draggedTab._dragData.animDropIndex = dropIndex(
+        this.allTabs as XULElement[],
+        event,
+      );
+      return this.on_drop_orig(event);
+    });
+
+    injectionMethod(
+      "on_dragover",
+      function (this: any, event: DragEvent): void {
+        const dt = event.dataTransfer!;
+        if (dt.dropEffect !== "move") {
+          return this.on_dragover_orig(event);
+        }
+        const draggedTab = dt.mozGetDataAt(
+          "application/x-moz-tabbrowser-tab",
+          0,
+        ) as TabBrowserTab;
+        draggedTab._dragData.animDropIndex = dropIndex(
+          this.allTabs as XULElement[],
+          event,
+        );
+        this.on_dragover_orig(event);
+        // Reset rules that visualize dragging because they don't work in multi-row
+        for (const tab of this.allTabs) {
+          tab.style.transform = "";
+        }
+      },
     );
+
+    injectionMethod(
+      "_handleTabSelect",
+      function (this: any, aInstant: boolean): void {
+        // Only when "overflow" attribute is set, the selected tab will get
+        // automatically scrolled into view
+        this.setAttribute("overflow", "true");
+        this._handleTabSelect_orig(aInstant);
+      },
+    );
+
+    const tabsElement = win.document!.querySelector("#tabbrowser-tabs") as any;
+    tabsElement._positionPinnedTabs?.();
+
+    const arrowscrollbox = win.document!.querySelector(
+      "#tabbrowser-arrowscrollbox",
+    ) as any;
+    if (arrowscrollbox && arrowscrollbox.on_wheel) {
+      arrowscrollbox.removeEventListener("wheel", arrowscrollbox.on_wheel);
+    }
+  }
+
+  private removeInjection(): void {
+    const win = window;
+
+    const elementConstructor = win.customElements.get("tabbrowser-tabs");
+    if (!elementConstructor?.prototype) {
+      console.warn("tab box not injectioned");
+      return;
+    }
+    const tabsProto = elementConstructor.prototype as any;
+
+    function uninjectionMethod(name: string): void {
+      if (tabsProto[name + "_orig"]) {
+        tabsProto[name] = tabsProto[name + "_orig"];
+        delete tabsProto[name + "_orig"];
+      }
+    }
+
+    uninjectionMethod("_positionPinnedTabs");
+    uninjectionMethod("on_drop");
+    uninjectionMethod("on_dragover");
+    uninjectionMethod("_handleTabSelect");
+
+    const arrowscrollbox = win.document!.querySelector(
+      "#tabbrowser-arrowscrollbox",
+    ) as any;
+    if (arrowscrollbox && arrowscrollbox.on_wheel) {
+      arrowscrollbox.addEventListener("wheel", arrowscrollbox.on_wheel);
+    }
   }
 
   constructor() {
+    this.tabsToolbar?.setAttribute("multibar", "true");
+
     createEffect(() => {
       if (config().tabbar.tabbarStyle === "multirow") {
         this.enableMultirowTabbar();
         this.setMultirowTabMaxHeight();
+        this.applyInjection();
       } else {
         this.disableMultirowTabbar();
         this.removeMultirowTabMaxHeight();
+        this.removeInjection();
       }
     });
   }

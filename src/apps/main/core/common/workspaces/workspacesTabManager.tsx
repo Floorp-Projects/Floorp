@@ -4,6 +4,7 @@ import type {
   PanelMultiViewParentElement,
   TWorkspaceID,
 } from "./utils/type.ts";
+import { zWorkspaceID } from "./utils/type.ts";
 import {
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
@@ -26,7 +27,7 @@ export class WorkspacesTabManager {
     this.boundHandleTabClose = this.handleTabClose.bind(this);
 
     const initWorkspace = () => {
-      globalThis.SessionStore.promiseAllWindowsRestored.then(() => {
+      (globalThis as any).SessionStore.promiseAllWindowsRestored.then(() => {
         this.initializeWorkspace();
         globalThis.addEventListener("TabClose", this.boundHandleTabClose);
       }).catch((error: Error) => {
@@ -169,13 +170,32 @@ export class WorkspacesTabManager {
    * @returns The workspace id.
    */
   getWorkspaceIdFromAttribute(tab: XULElement): TWorkspaceID | null {
-    const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-
-    if (workspaceId && this.dataManagerCtx.isWorkspaceID(workspaceId)) {
-      return workspaceId;
-    } else {
+    const raw = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+    if (!raw) {
+      console.debug(
+        "WorkspacesTabManager: no workspace attribute on tab, returning null",
+      );
       return null;
     }
+    const clean = raw.replace(/[{}]/g, "");
+    const parseResult = zWorkspaceID.safeParse(clean);
+    if (!parseResult.success) {
+      console.warn(
+        "WorkspacesTabManager: invalid workspace id format:",
+        raw,
+        parseResult.error,
+      );
+      return null;
+    }
+    const wsId = parseResult.data;
+    if (!this.dataManagerCtx.isWorkspaceID(wsId)) {
+      console.warn(
+        "WorkspacesTabManager: workspace id not found in store:",
+        wsId,
+      );
+      return null;
+    }
+    return wsId;
   }
 
   /**

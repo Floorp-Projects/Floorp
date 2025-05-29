@@ -65,7 +65,18 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
   }
 
   public isWorkspaceID(id: string): id is TWorkspaceID {
-    return workspacesDataStore.data.has(zWorkspaceID.parse(id));
+    // WorkspaceID の形式を検証
+    const parseResult = zWorkspaceID.safeParse(id);
+    if (!parseResult.success) {
+      console.warn("WorkspacesDataManager: invalid WorkspaceID format:", id);
+      return false;
+    }
+    const parsedId = parseResult.data;
+    const exists = workspacesDataStore.data.has(parsedId);
+    if (!exists) {
+      console.warn("WorkspacesDataManager: WorkspaceID not found:", parsedId);
+    }
+    return exists;
   }
 
   public getRawWorkspace(id: TWorkspaceID): TWorkspace {

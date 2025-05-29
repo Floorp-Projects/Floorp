@@ -8,6 +8,7 @@ import { WorkspacesPopupContxtMenu } from "./contextMenu/popupSet.tsx";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
 import { enabled } from "@core/common/workspaces/data/config.ts";
 import { WorkspacesTabContextMenu } from "./tabContextMenu.tsx";
+import { migrateWorkspacesData } from "./data/migrate/migration.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -26,14 +27,16 @@ export default class Workspaces extends NoraComponentBase {
       return;
     }
 
-    const iconCtx = new WorkspaceIcons();
-    const dataManagerCtx = new WorkspacesDataManager();
-    const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
-    const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
-    Workspaces.windowWorkspacesMap.set(window, ctx);
-    new WorkspaceManageModal(ctx, iconCtx);
-    new WorkspacesToolbarButton(ctx);
-    new WorkspacesPopupContxtMenu(ctx);
-    new WorkspacesTabContextMenu(ctx);
+    migrateWorkspacesData().then(() => {
+      const iconCtx = new WorkspaceIcons();
+      const dataManagerCtx = new WorkspacesDataManager();
+      const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
+      const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
+      Workspaces.windowWorkspacesMap.set(window, ctx);
+      new WorkspaceManageModal(ctx, iconCtx);
+      new WorkspacesToolbarButton(ctx);
+      new WorkspacesPopupContxtMenu(ctx);
+      new WorkspacesTabContextMenu(ctx);
+    });
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "noraneko-bin",
-  "version": "12.0.0-rc-1.1",
+  "version": "12.0.3",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -26,6 +26,7 @@
     "oxlint": "^0.15.9",
     "pathe": "^2.0.2",
     "puppeteer-core": "^24.1.1",
+    "rolldown": "^1.0.0-beta.9",
     "typescript": "^5.7.3",
     "uuid": "^11.0.5",
     "vite": "6.0.11",

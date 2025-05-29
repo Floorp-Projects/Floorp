@@ -3,16 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Panel } from "./type";
-import { STATIC_PANEL_DATA } from "../data/static-panels";
-import { getSidebarIconFromSidebarController } from "../extension-panels";
+import type { Panel } from "./type.ts";
+import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
+import { getSidebarIconFromSidebarController } from "../extension-panels.ts";
 
 const { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs",
 );
 
-const gFavicons = PlacesUtils.favicons as nsIFaviconService;
 const DEFAULT_FAVICON = "chrome://devtools/skin/images/globe.svg";
+
+const gFavicons = PlacesUtils.favicons as {
+  getFaviconForPage: (
+    uri: nsIURI,
+  ) => Promise<{ uri: nsIURI }>;
+};
 
 export async function getFaviconURLForPanel(panel: Panel): Promise<string> {
   try {
@@ -24,11 +29,10 @@ export async function getFaviconURLForPanel(panel: Panel): Promise<string> {
 }
 
 async function getFaviconFromPlaces(url: string): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    gFavicons.getFaviconURLForPage(Services.io.newURI(url), (uri: nsIURI) =>
-      resolve(uri?.spec),
-    );
-  });
+  const result = await gFavicons.getFaviconForPage(
+    Services.io.newURI(url),
+  );
+  return result.uri.spec ?? undefined;
 }
 
 function getFaviconFromExtension(extensionId: string): string {
@@ -40,7 +44,7 @@ function getFallbackFavicon(panel: Panel): string {
     case "static":
       return (
         STATIC_PANEL_DATA[panel.url as keyof typeof STATIC_PANEL_DATA].icon ??
-        DEFAULT_FAVICON
+          DEFAULT_FAVICON
       );
     case "extension":
       return getFaviconFromExtension(panel.extensionId ?? "");
