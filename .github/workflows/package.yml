@@ -78,7 +78,7 @@ jobs:
 
       - name: Setup 🪛
         run: |
-          sudo apt install msitools -y
+          sudo apt install msitools p7zip-full -y
 
           ./mach --no-interactive bootstrap --application-choice browser_artifact_mode
 
@@ -389,12 +389,72 @@ jobs:
         run: |
           ./mach package
 
-      - name: Prepare installer with codesigning and re-packaging
+      - name: Prepare un-packaging installer files for windows-codesigning (binary)
         run: |
           mkdir -p ~/noraneko-installer
 
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            mkdir ~/noraneko-unsigned-installer/binary ~/noraneko-unsigned-installer/installer
+            cp ./floorp/.github/workflows/assets/packaging/win/* ~/noraneko-unsigned-installer/
+            7z x obj-*/dist/$INSTALLER_PATH -o~/noraneko-unsigned-installer/binary
+
+      - name: Publish Unsigned Binary 🎁
+        id: publish-unsigned-binary
+        if: inputs.platform == "Windows-x64"
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-binary
+          path: ~/noraneko-unsigned-installer/binary
+
+      - name: Sign Binary 🖊️
+        id: Sign
+        if: inputs.platform == "Windows-x64"
+        uses: signpath/github-action-submit-signing-request@v1.1
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+          project-slug: 'Floorp'
+          signing-policy-slug: 'release-signing'
+          artifact-configuration-slug: 'core-signing'
+          github-artifact-id: '${{ steps.publish-unsigned-binary.outputs.artifact-id }}'
+          wait-for-completion-timeout-in-seconds: 7200
+          wait-for-completion: true
+          output-artifact-directory: ~/noraneko-unsigned-installer/signed_binary
+
+      - name: Prepare installer with codesigning and re-packaging (installer)
+        run: |
+          if [ "${{inputs.platform}}" == "Windows-x64" ]; then
+            cd ~/noraneko-unsigned-installer/signed_binary
+            7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+            cat ../7zSD.sfx ../app.tag app.7z > ~/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
+
+      - name: Publish Unsigned Installer 🎁
+        id: publish-unsigned-installer
+        if: inputs.platform == "Windows-x64"
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-installer
+          path: ~/noraneko-unsigned-installer/installer
+
+      - name: Sign Installer 🖊️
+        id: Sign
+        if: inputs.platform == "Windows-x64"
+        uses: signpath/github-action-submit-signing-request@v1.1
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
+          project-slug: 'Floorp'
+          signing-policy-slug: 'release-signing'
+          artifact-configuration-slug: 'stub-signing'
+          github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
+          wait-for-completion-timeout-in-seconds: 7200
+          wait-for-completion: true
+          output-artifact-directory: ~/noraneko-installer
+
+      - name: Prepare installer with codesigning and re-packaging (without windows)
+        run: |
+          mkdir -p ~/noraneko-installer
+
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
