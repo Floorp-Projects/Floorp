@@ -395,9 +395,9 @@ jobs:
           mkdir -p ~/noraneko-installer
 
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mkdir -p ~/noraneko-unsigned-installer/binary ~/noraneko-unsigned-installer/installer
-            cp ./floorp/.github/workflows/assets/windows/* ~/noraneko-unsigned-installer/
-            7z x obj-*/dist/$INSTALLER_PATH -o$HOME/noraneko-unsigned-installer/binary
+            mkdir -p $GITHUB_WORKSPACE/noraneko-unsigned-installer/binary $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer
+            cp ./floorp/.github/workflows/assets/windows/* $GITHUB_WORKSPACE/noraneko-unsigned-installer/
+            7z x obj-*/dist/$INSTALLER_PATH -o$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary
           fi
 
       - name: Publish Unsigned Binary 🎁
@@ -406,7 +406,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-binary
-          path: ~/noraneko-unsigned-installer/binary
+          path: ${{ env.GITHUB_WORKSPACE }}/noraneko-unsigned-installer/binary
 
       - name: Sign Binary 🖊️
         id: Sign-binary
@@ -421,14 +421,14 @@ jobs:
           github-artifact-id: '${{ steps.publish-unsigned-binary.outputs.artifact-id }}'
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
-          output-artifact-directory: ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/signed_binary
+          output-artifact-directory: noraneko-unsigned-installer/signed_binary
 
       - name: Prepare installer with codesigning and re-packaging (installer)
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            cd ~/noraneko-unsigned-installer/signed_binary
+            cd $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary
             7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-            cat ../7zSD.sfx ../app.tag app.7z > ~/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
+            cat ../7zSD.sfx ../app.tag app.7z > $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
           fi
 
       - name: Publish Unsigned Installer 🎁
@@ -437,7 +437,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-installer
-          path: ~/noraneko-unsigned-installer/installer
+          path: ${{ env.GITHUB_WORKSPACE }}/noraneko-unsigned-installer/installer
 
       - name: Sign Installer 🖊️
         id: Sign-installer
@@ -452,13 +452,13 @@ jobs:
           github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
-          output-artifact-directory: ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/signed_installer
+          output-artifact-directory: noraneko-unsigned-installer/signed_installer
 
       - name: Prepare installer with codesigning and re-packaging (without windows)
         run: |
           mkdir -p ~/noraneko-installer
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mv ~/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
