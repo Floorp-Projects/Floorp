@@ -406,7 +406,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-binary
-          path: ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/binary
+          path: ~/noraneko-unsigned-installer/binary
 
       - name: Sign Binary 🖊️
         id: Sign-binary
@@ -437,7 +437,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-${{ env.OUTPUT_NAME }}-unsigned-installer
-          path: ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/installer
+          path: ~/noraneko-unsigned-installer/installer
 
       - name: Sign Installer 🖊️
         id: Sign-installer
