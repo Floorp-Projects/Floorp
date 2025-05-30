@@ -395,9 +395,9 @@ jobs:
           mkdir -p ~/noraneko-installer
 
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mkdir -p ${{ env.HOME }}/noraneko-unsigned-installer/binary ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/installer
-            cp ./floorp/.github/workflows/assets/windows/* ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/
-            7z x obj-*/dist/$INSTALLER_PATH -o${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/binary
+            mkdir -p $RUNNER_HOME/noraneko-unsigned-installer/binary $RUNNER_HOME/noraneko-unsigned-installer/installer
+            cp ./floorp/.github/workflows/assets/windows/* $RUNNER_HOME/noraneko-unsigned-installer/
+            7z x obj-*/dist/$INSTALLER_PATH -o$$RUNNER_HOME/noraneko-unsigned-installer/binary
           fi
 
       - name: Publish Unsigned Binary 🎁
@@ -426,9 +426,9 @@ jobs:
       - name: Prepare installer with codesigning and re-packaging (installer)
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            cd ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/signed_binary
+            cd $RUNNER_HOME/noraneko-unsigned-installer/signed_binary
             7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-            cat ../7zSD.sfx ../app.tag app.7z > ${{ env.RUNNER_HOME }}/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
+            cat ../7zSD.sfx ../app.tag app.7z > $RUNNER_HOME/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
           fi
 
       - name: Publish Unsigned Installer 🎁
@@ -458,7 +458,7 @@ jobs:
         run: |
           mkdir -p ~/noraneko-installer
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mv ${{ env.HOME }}/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            mv $RUNNER_HOME/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           if [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
