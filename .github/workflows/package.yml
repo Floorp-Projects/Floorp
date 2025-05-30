@@ -459,7 +459,7 @@ jobs:
           mkdir -p ~/noraneko-installer
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
             mv $RUNNER_HOME/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-          if [ "${{inputs.platform}}" == "Linux-x64" ]; then
+          elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
             # Unpack DMG
