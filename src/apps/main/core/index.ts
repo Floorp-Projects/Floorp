@@ -111,28 +111,38 @@ async function initializeModules(
     }
   }
 
-  async function initializeModulesAfterLoad() {
-    for (const module of modules) {
-      try {
-        if (module?.init) {
-          await module.init();
-        }
-        if (module?.default) {
-          new module.default();
-        }
-        _registerModuleLoadState(module.name, true);
-      } catch (e) {
-        console.error(`[noraneko] Failed to init module ${module.name}:`, e);
-        _registerModuleLoadState(module.name, false);
-      }
+  let initializationPromise: Promise<void> | null = null;
+
+  function initializeModulesAfterLoad() {
+    if (initializationPromise) {
+      return initializationPromise;
     }
-    _registerModuleLoadState("__init_all__", true);
-    await _rejectOtherLoadStates();
+
+    initializationPromise = (async () => {
+      for (const module of modules) {
+        try {
+          if (module?.init) {
+            await module.init();
+          }
+          if (module?.default) {
+            new module.default();
+          }
+          _registerModuleLoadState(module.name, true);
+        } catch (e) {
+          console.error(`[noraneko] Failed to init module ${module.name}:`, e);
+          _registerModuleLoadState(module.name, false);
+        }
+      }
+      _registerModuleLoadState("__init_all__", true);
+      await _rejectOtherLoadStates();
+    })();
+
+    return initializationPromise;
   }
 
   if (document?.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", async () => {
-      await initializeModulesAfterLoad();
+    document.addEventListener("DOMContentLoaded", () => {
+      initializeModulesAfterLoad();
     });
   } else {
     await initializeModulesAfterLoad();
