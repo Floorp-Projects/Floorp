@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "model.enhu.intgemm.alphas.bin",
+      "schema": 1748268761157,
+      "toLang": "hu",
+      "version": "2.0a1",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "ec0c210d09cd5d8a5edf7a50462db0a8fb5dd78d03bbc6d4d72d91074f0490e4",
+        "size": 31561787,
+        "filename": "model.enhu.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/58648c7c-9baa-4541-abbd-03054f4d37e5.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "302c4d50-f27a-40ad-b703-344a9419eea9",
+      "last_modified": 1748624505420
+    },
+    {
+      "name": "lex.50.50.enhu.s2t.bin",
+      "schema": 1748446888250,
+      "toLang": "hu",
+      "version": "2.0a1",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "f3d1e61003597d1cc9d87e05d2b398a7ae2b3941e3f96947764aac239df1a808",
+        "size": 3490288,
+        "filename": "lex.50.50.enhu.s2t.bin",
+        "location": "main-workspace/translations-models/23ad75a1-98c3-4ca0-86c2-912249247a19.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "9f43eb72-59b6-40c5-8375-38eb424f84d6",
+      "last_modified": 1748624505416
+    },
+    {
+      "name": "vocab.enhu.spm",
+      "schema": 1748446880437,
+      "toLang": "hu",
+      "version": "2.0a1",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "2eee837cfdcc45c091d025f585d3fcdb293db7794e316b38a0aeff8c47a659e0",
+        "size": 806121,
+        "filename": "vocab.enhu.spm",
+        "location": "main-workspace/translations-models/38e4e2f1-d9ca-4107-8573-8a4daeee3747.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "08b307e1-23c5-4981-95ea-85e39ae1c6cb",
+      "last_modified": 1748624505412
+    },
+    {
       "name": "srcvocab.enja.spm",
       "schema": 1745957382410,
       "toLang": "ja",
@@ -6421,5 +6475,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1745959174037
+  "timestamp": 1748624505420
 }

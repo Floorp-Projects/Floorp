@@ -3,6 +3,25 @@
     {
       "stash": {
         "blocked": [
+          "support@exodus.com:1.2.0",
+          "support@exodus.com:1.2.3",
+          "support@exodus.com:1.2.5",
+          "support@exodus.com:1.2.7",
+          "support@exodus.com:1.2.8",
+          "support@exodus.com:1.2.9"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748370984454,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748630105058,
+      "id": "6c6e5aa0-9159-437d-b62b-f7544061f46e",
+      "last_modified": 1748630172541
+    },
+    {
+      "stash": {
+        "blocked": [
           "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.5",
           "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.7",
           "{f09ff4ee-5216-4c51-b3bf-31e1f4bf5b5c}:1.0.9",
@@ -488,5 +507,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1748370984313
+  "timestamp": 1748630172541
 }

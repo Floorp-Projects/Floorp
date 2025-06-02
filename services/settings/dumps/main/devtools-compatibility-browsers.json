@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Deno",
+      "schema": 1748649903302,
+      "status": "current",
+      "version": "2.3.2",
+      "browserid": "deno",
+      "id": "1f2765cf-a177-4249-b5f9-fdf271727bb7",
+      "last_modified": 1748854785996
+    },
+    {
+      "name": "Edge",
+      "schema": 1748649903447,
+      "status": "current",
+      "version": "137",
+      "browserid": "edge",
+      "id": "fd0c0e43-c139-4526-8f78-16d479f71267",
+      "last_modified": 1748854785992
+    },
+    {
       "name": "Firefox for Android",
       "schema": 1748390704665,
       "status": "planned",
@@ -199,15 +217,6 @@
       "last_modified": 1747642859911
     },
     {
-      "name": "Edge",
-      "schema": 1747199364491,
-      "status": "beta",
-      "version": "137",
-      "browserid": "edge",
-      "id": "fd0c0e43-c139-4526-8f78-16d479f71267",
-      "last_modified": 1747642859907
-    },
-    {
       "name": "Opera",
       "schema": 1747440304433,
       "status": "beta",
@@ -242,15 +251,6 @@
       "browserid": "nodejs",
       "id": "9e4eb0f8-808c-4ae9-b137-bf0172b24166",
       "last_modified": 1747199364436
-    },
-    {
-      "name": "Edge",
-      "schema": 1746230703388,
-      "status": "current",
-      "version": "136",
-      "browserid": "edge",
-      "id": "debb081e-a0a2-45ed-9431-605493ad9400",
-      "last_modified": 1747035932495
     },
     {
       "name": "Opera Android",
@@ -316,15 +316,6 @@
       "last_modified": 1743663287829
     },
     {
-      "name": "Deno",
-      "schema": 1740182702831,
-      "status": "current",
-      "version": "2.2",
-      "browserid": "deno",
-      "id": "9e4229e7-0c63-4134-8dc1-fb52bbb3cf80",
-      "last_modified": 1740474638731
-    },
-    {
       "name": "Node.js",
       "schema": 1734480302872,
       "status": "esr",
@@ -370,5 +361,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1748418497438
+  "timestamp": 1748854785996
 }
