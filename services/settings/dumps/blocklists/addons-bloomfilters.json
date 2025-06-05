@@ -2,6 +2,88 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": [
+          "omkoccdnelofncmfglaojiamckipjblb@chrome-store-foxified-228715104:7.3.3"
+        ],
+        "softblocked": []
+      },
+      "schema": 1749062171726,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1749105305619,
+      "id": "c30efa2e-bce1-47d0-9535-5bd0062e1a6b",
+      "last_modified": 1749105373811
+    },
+    {
+      "stash": {
+        "blocked": [
+          "bitget-firefox@bitget.com:2.16.7",
+          "bitget-firefox@example.com:2.16.6"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748966470063,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1749062105190,
+      "id": "a68e2eb8-dfd1-4a15-996a-78944d79a2eb",
+      "last_modified": 1749062171583
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{51d9e8b4-96d7-4299-948a-0b28a54ffaf9}:6.6.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748889373075,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748954106587,
+      "id": "9eece217-fe28-4757-bb53-6d88ae1ef5b9",
+      "last_modified": 1748954181841
+    },
+    {
+      "stash": {
+        "blocked": [
+          "filfox-de2@example.com:1.0",
+          "filfox-de2@example.com:1.0.1",
+          "filfox-de1@example.com:1.0",
+          "ton-dev1@example.com:1.8",
+          "ton-dev1@example.com:1.9",
+          "ton-dev1@example.com:1.9.1",
+          "filfox-dev@example.com:1.0",
+          "filfox-dev@example.com:1.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748867771824,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748889305261,
+      "id": "38cea384-18c2-4a3b-a1af-31657255b416",
+      "last_modified": 1748889372914
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{ae4cb7b8-d776-4e49-b803-2f6b961c33f9}:24.12.99.32",
+          "{ae4cb7b8-d776-4e49-b803-2f6b961c33f9}:24.12.99.34",
+          "{ae4cb7b8-d776-4e49-b803-2f6b961c33f9}:25.1.0.1",
+          "wallet@mystenlabs.com:24.12.99.32",
+          "wallet@mystenlabs.com:24.12.99.33"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1748856098784,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1748867705665,
+      "id": "035b5770-ed17-4e01-9946-b1cf5a5bc309",
+      "last_modified": 1748867771623
+    },
+    {
+      "stash": {
         "blocked": [
           "support@exodus.com:1.2.0",
           "support@exodus.com:1.2.3",
@@ -507,5 +589,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1748630172541
+  "timestamp": 1749105373811
 }

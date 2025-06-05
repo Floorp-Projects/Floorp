@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "WebView on iOS",
+      "schema": 1748995503594,
+      "status": "current",
+      "version": "18.5",
+      "browserid": "webview_ios",
+      "id": "6825f615-9f79-4745-a3be-b104b9248e42",
+      "last_modified": 1749017535209
+    },
+    {
+      "name": "Safari",
+      "schema": 1748995503304,
+      "status": "current",
+      "version": "18.5",
+      "browserid": "safari",
+      "id": "eecb087c-5690-4874-a579-6ec0e2a0284d",
+      "last_modified": 1749017535205
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1748995503452,
+      "status": "current",
+      "version": "18.5",
+      "browserid": "safari_ios",
+      "id": "a9289b33-c6cc-4993-aa89-ce04acaef875",
+      "last_modified": 1749017535201
+    },
+    {
       "name": "Deno",
       "schema": 1748649903302,
       "status": "current",
@@ -262,60 +289,6 @@
       "last_modified": 1745991620101
     },
     {
-      "name": "WebView on iOS",
-      "schema": 1743811504360,
-      "status": "beta",
-      "version": "18.5",
-      "browserid": "webview_ios",
-      "id": "6825f615-9f79-4745-a3be-b104b9248e42",
-      "last_modified": 1744003666413
-    },
-    {
-      "name": "Safari",
-      "schema": 1743811504249,
-      "status": "beta",
-      "version": "18.5",
-      "browserid": "safari",
-      "id": "eecb087c-5690-4874-a579-6ec0e2a0284d",
-      "last_modified": 1744003666410
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1743811504305,
-      "status": "beta",
-      "version": "18.5",
-      "browserid": "safari_ios",
-      "id": "a9289b33-c6cc-4993-aa89-ce04acaef875",
-      "last_modified": 1744003666405
-    },
-    {
-      "name": "Safari",
-      "schema": 1743638704212,
-      "status": "current",
-      "version": "18.4",
-      "browserid": "safari",
-      "id": "cf1cd501-f4d5-4d50-8b15-69f542242897",
-      "last_modified": 1743663287834
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1743638704325,
-      "status": "current",
-      "version": "18.4",
-      "browserid": "safari_ios",
-      "id": "5f48eafa-ae46-47e0-b877-2dc787043df2",
-      "last_modified": 1743663287831
-    },
-    {
-      "name": "WebView on iOS",
-      "schema": 1743638704717,
-      "status": "current",
-      "version": "18.4",
-      "browserid": "webview_ios",
-      "id": "da68f85c-70d1-44fb-803f-f69288964055",
-      "last_modified": 1743663287829
-    },
-    {
       "name": "Node.js",
       "schema": 1734480302872,
       "status": "esr",
@@ -361,5 +334,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1748854785996
+  "timestamp": 1749017535220
 }

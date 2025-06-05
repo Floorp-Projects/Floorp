@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-05-28_19-51-51_UTC
-// COMMIT: 9228b7033159f1490bbc9fe45159a5aeb8da62ad
+// VERSION: 2025-06-04_06-21-53_UTC
+// COMMIT: f50ae882e118b57cb241fd377cff99bfc04f31fa
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -14235,6 +14235,10 @@ barsy.uk
 barsy.co.uk
 barsyonline.co.uk
 
+// Lutra : https://lutra.ai
+// Submitted by Joshua Newman <public-suffix-list@lutra.ai>
+*.lutrausercontent.com
+
 // Luyani Inc. : https://luyani.com/
 // Submitted by Umut Gumeli <public-suffix-list@luyani.com>
 luyani.app
@@ -15463,6 +15467,10 @@ taveusercontent.com
 p.tawk.email
 p.tawkto.email
 
+// Tche.br : https://tche.br
+// Submitted by Bruno Lorensi <suporte@tche.br>
+tche.br
+
 // team.blue : https://team.blue
 // Submitted by Cedric Dubois <cedric.dubois@team.blue>
 site.tb-hosting.com
@@ -15634,11 +15642,12 @@ val.run
 web.val.run
 
 // Vercel, Inc : https://vercel.com/
-// Submitted by Max Leiter <security@vercel.com>
+// Submitted by Laurens Duijvesteijn <security@vercel.com>
 vercel.app
 v0.build
 vercel.dev
 vusercontent.net
+vercel.run
 now.sh
 
 // VeryPositive SIA : http://very.lv
