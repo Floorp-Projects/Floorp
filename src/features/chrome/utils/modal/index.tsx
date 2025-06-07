@@ -10,12 +10,12 @@ import { createRootHMR, render } from "@nora/solid-xul";
 
 const targetParent = document?.getElementById("appcontent") as HTMLElement;
 
-createRootHMR(()=>{
+createRootHMR(() => {
   render(() => <style>{modalStyle}</style>, document?.head, {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     marker: document?.head?.lastChild as Element,
   });
-},import.meta.hot)
+}, import.meta.hot);
 
 export function ShareModal(props: {
   onClose: () => void;

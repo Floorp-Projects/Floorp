@@ -3,24 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+  "resource://gre/modules/AppConstants.sys.mjs",
 );
 
 const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
+  "resource://gre/modules/FileUtils.sys.mjs",
 );
 
 const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
+  "resource://gre/modules/NetUtil.sys.mjs",
 );
 
 const ImgTools = Cc["@mozilla.org/image/tools;1"].getService(
-  Ci.imgITools
+  Ci.imgITools,
 ) as imgITools;
 
 export const ImageTools = {
   loadImage(
-    dataURI: nsIURI
+    dataURI: nsIURI,
   ): Promise<{ type: string; container: imgIContainer }> {
     return new Promise((resolve, reject) => {
       if (!dataURI.schemeIs("data")) {
@@ -46,7 +46,7 @@ export const ImageTools = {
             reject(Components.Exception("Failed to load image.", aStatus));
           }
         },
-        null as unknown as imgINotificationObserver
+        null as unknown as imgINotificationObserver,
       );
     });
   },
@@ -58,7 +58,7 @@ export const ImageTools = {
         "image/png",
         width,
         height,
-        ""
+        "",
       );
 
       try {
@@ -68,8 +68,8 @@ export const ImageTools = {
         reject(
           Components.Exception(
             "imgIEncoder must implement nsIAsyncInputStream",
-            e
-          )
+            e,
+          ),
         );
       }
 
@@ -92,7 +92,7 @@ export const ImageTools = {
               callback,
               0,
               0,
-              Services.tm.mainThread
+              Services.tm.mainThread,
             );
             return;
           }
@@ -109,7 +109,7 @@ export const ImageTools = {
           callback,
           0,
           0,
-          Services.tm.mainThread
+          Services.tm.mainThread,
         );
       } catch (e) {
         reject(e);
@@ -121,7 +121,7 @@ export const ImageTools = {
     container: imgIContainer,
     width: number,
     height: number,
-    target: nsIFile
+    target: nsIFile,
   ) {
     let format: string;
     if (AppConstants.platform === "win") {
@@ -137,7 +137,7 @@ export const ImageTools = {
         format,
         width,
         height,
-        ""
+        "",
       );
       NetUtil.asyncCopy(stream, output, (aStatus: number) => {
         if (Components.isSuccessCode(aStatus)) {

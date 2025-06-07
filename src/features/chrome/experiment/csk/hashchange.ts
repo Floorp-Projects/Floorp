@@ -14,7 +14,7 @@ export function initHashChange() {
 }
 
 export function changeCSK() {
-  if(hash() === "#csk") {
+  if (hash() === "#csk") {
     document.getElementById("cskCategory").hidden = false;
   } else {
     document.getElementById("cskCategory").hidden = true;

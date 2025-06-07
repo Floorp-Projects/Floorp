@@ -2,10 +2,12 @@
 import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
 
 function localPathToResourceURI(path: string) {
-  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/)
-  const result = re.exec(path)
+  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/);
+  const result = re.exec(path);
   if (!result || result.length != 2) {
-    throw Error(`[nora-browserGlue] localPathToResource URI match failed : ${path}`);
+    throw Error(
+      `[nora-browserGlue] localPathToResource URI match failed : ${path}`,
+    );
   }
   const resourceURI = `resource://noraneko/${result[1]}.sys.mjs`;
   return resourceURI;
@@ -130,12 +132,12 @@ const JS_WINDOW_ACTORS: {
   NRProgressiveWebApp: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "../actors/NRProgressiveWebAppParent.sys.mts"
+        "../actors/NRProgressiveWebAppParent.sys.mts",
       ),
     },
     child: {
       esModuleURI: localPathToResourceURI(
-        "../actors/NRProgressiveWebAppChild.sys.mts"
+        "../actors/NRProgressiveWebAppChild.sys.mts",
       ),
       events: {
         pageshow: {},

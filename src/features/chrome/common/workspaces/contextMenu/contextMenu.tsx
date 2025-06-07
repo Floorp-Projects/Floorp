@@ -10,7 +10,7 @@ export function ContextMenu(props: {
   disableBefore: boolean;
   disableAfter: boolean;
   contextWorkspaceId: TWorkspaceID;
-  ctx: WorkspacesService
+  ctx: WorkspacesService;
 }) {
   return (
     <>
@@ -20,8 +20,7 @@ export function ContextMenu(props: {
         disabled={props.disableBefore}
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)
-        }
+          props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)}
       />
       <xul:menuitem
         data-l10n-id="reorder-this-workspace-to-down"
@@ -29,8 +28,7 @@ export function ContextMenu(props: {
         disabled={props.disableAfter}
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)
-        }
+          props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)}
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
@@ -38,16 +36,14 @@ export function ContextMenu(props: {
         label="Delete Workspace"
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.deleteWorkspace(props.contextWorkspaceId)
-        }
+          props.ctx.deleteWorkspace(props.contextWorkspaceId)}
       />
       <xul:menuitem
         data-l10n-id="manage-this-workspaces"
         label="Manage Workspace"
         onCommand={() =>
           //TODO: validate ID
-          props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)
-        }
+          props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
       />
     </>
   );

@@ -81,7 +81,7 @@ export namespace ContextMenuUtils {
     (async () => {
       for (const contextMenuSeparator of contextMenuSeparators()) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
-        
+
         if (
           nextSibling?.hidden &&
           contextMenuSeparator.id !== "context-sep-navigation" &&

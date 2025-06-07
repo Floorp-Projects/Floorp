@@ -5,23 +5,22 @@
 
 import { Show } from "solid-js";
 import {
-  selectedPanelId,
-  setSelectedPanelId,
-  setIsFloating,
   isFloating,
+  selectedPanelId,
+  setIsFloating,
+  setSelectedPanelId,
 } from "../data/data";
 import { PanelNavigator } from "../panel-navigator";
 import { CPanelSidebar } from "./panel-sidebar";
 
-export function SidebarHeader(props:{ctx:CPanelSidebar}) {
+export function SidebarHeader(props: { ctx: CPanelSidebar }) {
   const gPanelSidebar = props.ctx;
   PanelNavigator.gPanelSidebar = gPanelSidebar;
   return (
     <xul:box id="panel-sidebar-header" align="center">
       <Show
-        when={
-          gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type === "web"
-        }
+        when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===
+          "web"}
       >
         <xul:toolbarbutton
           id="panel-sidebar-back"
@@ -49,9 +48,8 @@ export function SidebarHeader(props:{ctx:CPanelSidebar}) {
       </Show>
       <xul:spacer flex="1" />
       <Show
-        when={
-          gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type === "web"
-        }
+        when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===
+          "web"}
       >
         <xul:toolbarbutton
           id="panel-sidebar-float"
@@ -62,8 +60,7 @@ export function SidebarHeader(props:{ctx:CPanelSidebar}) {
         <xul:toolbarbutton
           id="panel-sidebar-open-in-main-window"
           onCommand={() =>
-            gPanelSidebar.openInMainWindow(selectedPanelId() ?? "")
-          }
+            gPanelSidebar.openInMainWindow(selectedPanelId() ?? "")}
           class="panel-sidebar-actions"
         />
       </Show>

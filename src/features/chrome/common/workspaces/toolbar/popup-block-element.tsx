@@ -11,9 +11,11 @@ export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
   isSelected: boolean;
   bmsMode: boolean;
-  ctx:WorkspacesService,
+  ctx: WorkspacesService;
 }) {
-  const workspace = createMemo(()=>props.ctx.getRawWorkspace(props.workspaceId))
+  const workspace = createMemo(() =>
+    props.ctx.getRawWorkspace(props.workspaceId)
+  );
   const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
   return (
     <xul:toolbarbutton

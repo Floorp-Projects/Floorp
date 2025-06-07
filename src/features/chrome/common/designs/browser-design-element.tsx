@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, createSignal, For, Match, Switch } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  Switch,
+} from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs";
@@ -17,7 +24,7 @@ export function BrowserDesignElement() {
   });
 
   const getCSS = createMemo(() => {
-    return getCSSFromConfig(config())
+    return getCSSFromConfig(config());
   });
 
   createEffect(() => {
@@ -25,16 +32,16 @@ export function BrowserDesignElement() {
     if (userjs) applyUserJS(userjs);
   });
 
-  const [devStyle,setDevStyle] = createSignal([] as string[]);
+  const [devStyle, setDevStyle] = createSignal([] as string[]);
 
   if (import.meta.env.DEV) {
-    createEffect(async ()=>{
+    createEffect(async () => {
       let arr = [];
       for (const link of getCSS().styles) {
-        arr.push((await import(/* @vite-ignore */`${link}?raw`)).default)
+        arr.push((await import(/* @vite-ignore */ `${link}?raw`)).default);
       }
-      setDevStyle(arr)
-    })
+      setDevStyle(arr);
+    });
   }
 
   return (
@@ -44,16 +51,16 @@ export function BrowserDesignElement() {
           <For each={getCSS().styles}>
             {(style) => (
               <link
-              class="nora-designs"
-              rel="stylesheet"
-              href={ `${style}`}
-            />
+                class="nora-designs"
+                rel="stylesheet"
+                href={`${style}`}
+              />
             )}
           </For>
         </Match>
         <Match when={import.meta.env.DEV}>
           <For each={devStyle()}>
-            {(style)=>(
+            {(style) => (
               <style>
                 {style}
               </style>

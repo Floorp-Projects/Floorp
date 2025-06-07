@@ -6,16 +6,16 @@
 /**
  * the name of the preference that stores the workspaces data.
  */
-export const WORKSPACE_DATA_PREF_NAME = "floorp.workspaces.v4.store"
+export const WORKSPACE_DATA_PREF_NAME = "floorp.workspaces.v4.store";
 /**
  * the attribute name of tabs that stores the workspace id.
  */
-export const WORKSPACE_TAB_ATTRIBUTION_ID = "floorpWorkspaceID"
+export const WORKSPACE_TAB_ATTRIBUTION_ID = "floorpWorkspaceID";
 /**
  * the attribute name of the workspace that stores the last shown workspace id.
  */
-export const WORKSPACE_LAST_SHOW_ID = "floorpWorkspaceLastShowID"
+export const WORKSPACE_LAST_SHOW_ID = "floorpWorkspaceLastShowID";
 
-export const WORKSPACE_ENABLED_PREF_NAME = "floorp.workspaces.enabled"
+export const WORKSPACE_ENABLED_PREF_NAME = "floorp.workspaces.enabled";
 
-export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config"
+export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";

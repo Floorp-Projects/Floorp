@@ -14,7 +14,6 @@ export default function initScripts() {
     });
 
     initHashChange();
-
   };
 
   init();

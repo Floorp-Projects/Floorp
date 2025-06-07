@@ -11,9 +11,8 @@ import type { Panel } from "../utils/type";
 export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
 
 export class SidebarContextMenuElem {
-
-  ctx: CPanelSidebar
-  constructor(ctx:CPanelSidebar) {
+  ctx: CPanelSidebar;
+  constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
     const parentElem = document?.body;
     const beforeElem = document?.getElementById("window-modal-dialog");

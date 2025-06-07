@@ -8,7 +8,6 @@ type ModuleStrings = {
 };
 
 export class WorkspaceIcons {
-
   private moduleStrings: ModuleStrings;
   private resolvedIcons: { [key: string]: string } = {};
   public workspaceIcons = new Set([
@@ -56,7 +55,7 @@ export class WorkspaceIcons {
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
       query: "?url",
       import: "default",
-      eager:true
+      eager: true,
     }) as ModuleStrings;
     for (const path in this.moduleStrings) {
       const iconUrl = this.moduleStrings[path];

@@ -1,9 +1,9 @@
-import { Settings } from 'lucide-react';
+import { Settings } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar.tsx"
+} from "@/components/ui/sidebar.tsx";
 
 export function NavHeader() {
   return (
@@ -21,5 +21,5 @@ export function NavHeader() {
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

@@ -16,7 +16,7 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 export class SsbRunner {
   constructor(
     private dataManager: DataManager,
-    private ssbManager: SiteSpecificBrowserManager
+    private ssbManager: SiteSpecificBrowserManager,
   ) {}
 
   public async runSsbById(id: string) {
@@ -51,7 +51,10 @@ export class SsbRunner {
   }
 }
 
-async function startSSBFromCmdLine(id: string, ssbManager: SiteSpecificBrowserManager) {
+async function startSSBFromCmdLine(
+  id: string,
+  ssbManager: SiteSpecificBrowserManager,
+) {
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.

@@ -3,19 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Show, createResource, Suspense } from "solid-js";
+import { createResource, Show, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import { CPanelSidebar } from "./panel-sidebar";
-import { selectedPanelId, panelSidebarData, setPanelSidebarData } from "../data/data";
+import {
+  panelSidebarData,
+  selectedPanelId,
+  setPanelSidebarData,
+} from "../data/data";
 import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
 
-
-export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
+export function PanelSidebarButton(
+  props: { panel: Panel; ctx: CPanelSidebar },
+) {
   const gPanelSidebar = props.ctx;
 
-  const [faviconURL] = createResource(()=>props.panel,getFaviconURLForPanel);
+  const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/plain", props.panel.id);
@@ -78,23 +83,27 @@ export function PanelSidebarButton(props: { panel: Panel, ctx:CPanelSidebar}) {
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
         }}
-        style={{display:"flex","align-items":"center","justify-content":"center"}}
+        style={{
+          display: "flex",
+          "align-items": "center",
+          "justify-content": "center",
+        }}
       >
-      <Suspense>
-        <img src={faviconURL()} width="16" height="16" />
+        <Suspense>
+          <img src={faviconURL()} width="16" height="16" />
         </Suspense>
       </div>
       <Show
-        when={
-          props.panel.userContextId !== 0 &&
+        when={props.panel.userContextId !== 0 &&
           props.panel.userContextId !== null &&
-          props.panel.type === "web"
-        }
+          props.panel.type === "web"}
       >
         <xul:box
           class="panel-sidebar-user-context-border"
           style={{
-            "background-color": getUserContextColor(props.panel.userContextId ?? 0),
+            "background-color": getUserContextColor(
+              props.panel.userContextId ?? 0,
+            ),
           }}
         />
       </Show>

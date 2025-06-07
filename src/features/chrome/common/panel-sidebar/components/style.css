@@ -185,11 +185,11 @@
 
 /* Hidden States */
 :is(
-    :root[inDOMFullscreen],
-    :root[inFullscreen]:not([macOSNativeFullscreen]),
-    *|*:root[chromehidden~="toolbar"],
-    :root[invisibleBMS]
-  )
+  :root[inDOMFullscreen],
+  :root[inFullscreen]:not([macOSNativeFullscreen]),
+  *|*:root[chromehidden~="toolbar"],
+  :root[invisibleBMS]
+)
   #sidebar-select-box {
   display: none;
 }

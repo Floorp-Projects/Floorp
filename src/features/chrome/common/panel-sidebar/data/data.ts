@@ -3,7 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Accessor, createEffect, createSignal, onCleanup, Setter } from "solid-js";
+import {
+  Accessor,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Setter,
+} from "solid-js";
 import {
   defaultEnabled,
   strDefaultConfig,
@@ -18,7 +24,7 @@ import {
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 
-function createPanelSidebarData(): [Accessor<Panels>,Setter<Panels>] {
+function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   function getPanelSidebarData(stringData: string) {
     return JSON.parse(stringData).data || {};
   }
@@ -45,11 +51,14 @@ function createPanelSidebarData(): [Accessor<Panels>,Setter<Panels>] {
     );
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
-    observer
+    observer,
   );
-  onCleanup(()=>{
-    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarDataPrefName,observer)
-  })
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      PanelSidebarStaticNames.panelSidebarDataPrefName,
+      observer,
+    );
+  });
 
   createEffect(() => {
     Services.prefs.setStringPref(
@@ -57,28 +66,41 @@ function createPanelSidebarData(): [Accessor<Panels>,Setter<Panels>] {
       JSON.stringify({ data: panelSidebarData() }),
     );
   });
-  return [panelSidebarData,setPanelSidebarData]
+  return [panelSidebarData, setPanelSidebarData];
 }
 
 /** PanelSidebar data */
-export const [panelSidebarData, setPanelSidebarData] = createRootHMR(createPanelSidebarData,import.meta.hot)
+export const [panelSidebarData, setPanelSidebarData] = createRootHMR(
+  createPanelSidebarData,
+  import.meta.hot,
+);
 
-function createSelectedPanelId(): [Accessor<string|null>,Setter<string|null>] {
+function createSelectedPanelId(): [
+  Accessor<string | null>,
+  Setter<string | null>,
+] {
   const [selectedPanelId, setSelectedPanelId] = createSignal<
     string | null
   >(null);
   createEffect(() => {
     window.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
   });
-  return [selectedPanelId, setSelectedPanelId]
+  return [selectedPanelId, setSelectedPanelId];
 }
 
 /** Selected Panel */
-export const [selectedPanelId, setSelectedPanelId] = createRootHMR(createSelectedPanelId,import.meta.hot);
+export const [selectedPanelId, setSelectedPanelId] = createRootHMR(
+  createSelectedPanelId,
+  import.meta.hot,
+);
 
-function createPanelSidebarConfig(): [Accessor<PanelSidebarConfig>,Setter<PanelSidebarConfig>] {
-  const [panelSidebarConfig, setPanelSidebarConfig] =
-  createSignal<PanelSidebarConfig>(
+function createPanelSidebarConfig(): [
+  Accessor<PanelSidebarConfig>,
+  Setter<PanelSidebarConfig>,
+] {
+  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
+    PanelSidebarConfig
+  >(
     zPanelSidebarConfig.parse(
       getPanelSidebarConfig(
         Services.prefs.getStringPref(
@@ -111,27 +133,39 @@ function createPanelSidebarConfig(): [Accessor<PanelSidebarConfig>,Setter<PanelS
 
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarConfigPrefName,
-    observer
+    observer,
   );
   onCleanup(() => {
-    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarConfigPrefName,observer);
-  })
-  return [panelSidebarConfig, setPanelSidebarConfig]
+    Services.prefs.removeObserver(
+      PanelSidebarStaticNames.panelSidebarConfigPrefName,
+      observer,
+    );
+  });
+  return [panelSidebarConfig, setPanelSidebarConfig];
 }
 
 /** Get PanelSidebar Config data */
-export const [panelSidebarConfig, setPanelSidebarConfig] = createRootHMR(createPanelSidebarConfig,import.meta.hot)
+export const [panelSidebarConfig, setPanelSidebarConfig] = createRootHMR(
+  createPanelSidebarConfig,
+  import.meta.hot,
+);
 
 /** Floating state */
-export const [isFloating, setIsFloating] = createRootHMR(()=>createSignal(false),import.meta.hot);
+export const [isFloating, setIsFloating] = createRootHMR(
+  () => createSignal(false),
+  import.meta.hot,
+);
 
 /** Floating DraggingState */
-export const [isFloatingDragging, setIsFloatingDragging] =
-createRootHMR(()=>createSignal<boolean>(false),import.meta.hot);
+export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
+  () => createSignal<boolean>(false),
+  import.meta.hot,
+);
 
-function createIsPanelSidebarEnabled(): [Accessor<boolean>,Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
-  createSignal<boolean>(defaultEnabled);
+function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
+    boolean
+  >(defaultEnabled);
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
@@ -147,15 +181,20 @@ function createIsPanelSidebarEnabled(): [Accessor<boolean>,Setter<boolean>] {
     );
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-    observer
+    observer,
   );
-  onCleanup(()=>{
-    Services.prefs.removeObserver(PanelSidebarStaticNames.panelSidebarEnabledPrefName,observer)
-  }) 
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      observer,
+    );
+  });
 
-  return [isPanelSidebarEnabled, setIsPanelSidebarEnabled]
+  return [isPanelSidebarEnabled, setIsPanelSidebarEnabled];
 }
 
 /** Panel Sidebar Enabled */
-export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createRootHMR(createIsPanelSidebarEnabled,import.meta.hot)
-
+export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createRootHMR(
+  createIsPanelSidebarEnabled,
+  import.meta.hot,
+);

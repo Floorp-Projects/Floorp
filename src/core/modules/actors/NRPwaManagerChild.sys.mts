@@ -22,7 +22,9 @@ export class NRPwaManagerChild extends JSWindowActorChild {
       });
     }
   }
-  NRGetInstalledApps(callback: (installedApps: Record<string, any>) => void = () => {}) {
+  NRGetInstalledApps(
+    callback: (installedApps: Record<string, any>) => void = () => {},
+  ) {
     const promise = new Promise<Record<string, any>>((resolve, _reject) => {
       this.resolveGetInstalledApps = resolve;
     });
@@ -38,7 +40,9 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     this.sendAsyncMessage("PwaManager:UninstallSsb", { id });
   }
 
-  resolveGetInstalledApps: ((installedApps: Record<string, any>) => void) | null = null;
+  resolveGetInstalledApps:
+    | ((installedApps: Record<string, any>) => void)
+    | null = null;
   resolveRenameSsb: ((id: string, newName: string) => void) | null = null;
   resolveUninstallSsb: ((id: string) => void) | null = null;
   async receiveMessage(message: ReceiveMessageArgument) {

@@ -14,13 +14,13 @@ export const zWorkspace = z.object({
   isDefault: z.boolean().nullish(),
 });
 
-export const zWorkspaceID = z.string().uuid().brand<"WorkspaceID">()
+export const zWorkspaceID = z.string().uuid().brand<"WorkspaceID">();
 
 export const zWorkspacesServicesStoreData = z.object({
   defaultID: zWorkspaceID,
   selectedID: zWorkspaceID,
-  data: z.map(zWorkspaceID,zWorkspace),
-  order: z.array(zWorkspaceID)
+  data: z.map(zWorkspaceID, zWorkspace),
+  order: z.array(zWorkspaceID),
 });
 
 export const zWorkspaceBackupTab = z.object({

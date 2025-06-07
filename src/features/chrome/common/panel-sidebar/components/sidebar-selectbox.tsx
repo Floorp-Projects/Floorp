@@ -3,26 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { For, } from "solid-js";
+import { For } from "solid-js";
 import { panelSidebarData } from "../data/data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { setPanelSidebarAddModalState } from "./panel-sidebar-modal";
 import { CPanelSidebar } from "./panel-sidebar";
 
-
-
-export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
+export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
   return (
     <xul:vbox
       id="panel-sidebar-select-box"
       class="webpanel-box chromeclass-extrachrome"
     >
       <For each={panelSidebarData()}>
-        {(panel) =>
-
-          <PanelSidebarButton panel={panel} ctx={props.ctx} />
-          }
-
+        {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
       </For>
       <xul:toolbarbutton
         id="panel-sidebar-add"
@@ -37,16 +31,14 @@ export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
           class="panel-sidebar-panel"
           data-l10n-id="sidebar2-hide-sidebar"
           onCommand={() =>
-            Services.prefs.setBoolPref("floorp.browser.sidebar.enable", false)
-          }
+            Services.prefs.setBoolPref("floorp.browser.sidebar.enable", false)}
           id="panel-sidebar-hide-icon"
         />
         <xul:toolbarbutton
           class="panel-sidebar-panel"
           data-l10n-id="sidebar-addons-button"
           onCommand={() =>
-            window.BrowserAddonUI.openAddonsMgr("addons://list/extension")
-          }
+            window.BrowserAddonUI.openAddonsMgr("addons://list/extension")}
           id="panel-sidebar-addons-icon"
         />
         <xul:toolbarbutton
@@ -55,8 +47,7 @@ export function SidebarSelectbox(props: {ctx:CPanelSidebar}) {
           onCommand={() =>
             window.LoginHelper.openPasswordManager(window, {
               entryPoint: "mainmenu",
-            })
-          }
+            })}
           id="panel-sidebar-passwords-icon"
         />
         <xul:toolbarbutton

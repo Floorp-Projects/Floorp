@@ -27,7 +27,6 @@
   background-color: var(--toolbarbutton-hover-background);
 }
 
-
 #emptyDownloads {
   display: none !important;
 }
@@ -51,7 +50,7 @@
   flex-flow: row nowrap;
   align-items: center;
   justify-content: flex-end !important;
-  background-color: rgba(var(--toolbar-bgcolor),70%) !important;
+  background-color: rgba(var(--toolbar-bgcolor), 70%) !important;
   flex-grow: 0;
 }
 
@@ -61,7 +60,7 @@
   align-items: center;
   justify-content: center;
   margin: 1px 5px 1px !important;
-  background-color: rgba(var(--toolbar-bgcolor),70%) !important;
+  background-color: rgba(var(--toolbar-bgcolor), 70%) !important;
   fill: var(--toolbarbutton-icon-fill);
   background-size: 25px;
   flex-direction: row-reverse;
@@ -72,12 +71,11 @@
 }
 
 #downloadIcon {
-  list-style-image: url('chrome://browser/skin/downloads/downloads.svg');
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
 #closeIcon {
-  list-style-image: url('chrome://global/skin/icons/close.svg');
-
+  list-style-image: url("chrome://global/skin/icons/close.svg");
 }
 
 .downloadProgress {

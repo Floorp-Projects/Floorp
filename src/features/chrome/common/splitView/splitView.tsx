@@ -5,19 +5,18 @@
 
 import { SplitViewStaticNames } from "./utils/static-names";
 import { render } from "@nora/solid-xul";
-import type { TSplitViewDatum, Tab, TabEvent } from "./utils/type";
+import type { Tab, TabEvent, TSplitViewDatum } from "./utils/type";
 import splitViewStyles from "./style.css?inline";
 import {
   currentSplitView,
+  fixedSplitViewData,
   setCurrentSplitView,
+  setFixedSplitViewData,
   setSplitViewData,
   splitViewData,
-  setFixedSplitViewData,
-  fixedSplitViewData,
 } from "./utils/data";
 
 export class CSplitView {
-
   constructor() {
     this.initializeStyles();
     this.initializePreferences();
@@ -57,7 +56,7 @@ export class CSplitView {
   }
 
   private StyleElement(): Element {
-    return (<style>{splitViewStyles}</style>) as Element;
+    return <style>{splitViewStyles}</style> as Element;
   }
 
   get tabBrowserPanel(): XULElement {
@@ -74,7 +73,7 @@ export class CSplitView {
     }
     return (
       tab.getAttribute(SplitViewStaticNames.TabAttributionId) ??
-      this.setTabId(tab, this.getGeneratedUuid)
+        this.setTabId(tab, this.getGeneratedUuid)
     );
   }
 
@@ -115,7 +114,7 @@ export class CSplitView {
 
   private findGroupIndexForTab(tab: Tab): number {
     return splitViewData().findIndex((group) =>
-      group.tabIds.includes(this.getTabId(tab)),
+      group.tabIds.includes(this.getTabId(tab))
     );
   }
 
@@ -384,7 +383,7 @@ export class CSplitView {
 
   private findSplitDataForTab(tab: Tab): TSplitViewDatum | undefined {
     return splitViewData().find((group) =>
-      group.tabIds.includes(this.getTabId(tab)),
+      group.tabIds.includes(this.getTabId(tab))
     );
   }
 
@@ -437,7 +436,7 @@ export class CSplitView {
     Services.prefs.setBoolPref("floorp.browser.splitView.working", false);
     this.setTabsDocShellState(
       splitViewData()[currentSplitView()].tabIds.map((id) =>
-        this.getTabById(id),
+        this.getTabById(id)
       ),
       false,
     );
@@ -484,12 +483,10 @@ export class CSplitView {
 
   private getFlexDirection(reverse: boolean, method: "row" | "column"): string {
     return method === "column"
-      ? reverse
-        ? "column-reverse"
-        : "column"
+      ? reverse ? "column-reverse" : "column"
       : reverse
-        ? "row-reverse"
-        : "row";
+      ? "row-reverse"
+      : "row";
   }
 
   private styleContainer(
@@ -559,7 +556,7 @@ export class CSplitView {
   public unsplitCurrentView() {
     const currentTab = window.gBrowser.selectedTab;
     let tabs = splitViewData()[currentSplitView()].tabIds.map((id) =>
-      this.getTabById(id),
+      this.getTabById(id)
     );
 
     if (splitViewData()[currentSplitView()].fixedMode) {

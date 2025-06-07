@@ -7,7 +7,6 @@ import { render } from "@nora/solid-xul";
 import { CSplitView } from "./splitView";
 
 export class SplitViewContextMenu {
-
   private contextMenu() {
     const gSplitView = this.ctx;
     return (
@@ -30,9 +29,9 @@ export class SplitViewContextMenu {
     );
   }
 
-  ctx:CSplitView;
-  constructor(ctx:CSplitView) {
-    this.ctx=ctx;
+  ctx: CSplitView;
+  constructor(ctx: CSplitView) {
+    this.ctx = ctx;
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
       marker: document?.getElementById(

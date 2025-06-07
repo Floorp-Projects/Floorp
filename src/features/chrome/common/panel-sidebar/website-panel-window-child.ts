@@ -70,7 +70,7 @@ export class WebsitePanelWindowChild {
 
     window.floorpWebPanelWindow = true;
     window.SessionStore.promiseInitialized.then(() =>
-      this.createWebpanelWindow(),
+      this.createWebpanelWindow()
     );
   }
 
@@ -137,7 +137,10 @@ export class WebsitePanelWindowChild {
     mainWindow.setAttribute("BMS-usercontextid", userContextId.toString());
     mainWindow.setAttribute("BMS-useragent", userAgent.toString());
     mainWindow.setAttribute("BMS-webpanelid", this.webpanelId ?? "");
-    document?.getElementById("navigator-toolbox")?.setAttribute("hidden", "true");
+    document?.getElementById("navigator-toolbox")?.setAttribute(
+      "hidden",
+      "true",
+    );
     document?.getElementById("browser")?.setAttribute("data-is-child", "true");
     window.bmsLoadedURI = loadURL;
 
@@ -172,6 +175,7 @@ export class WebsitePanelWindowChild {
       this.setZoomLevel();
     });
 
-    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")?.remove();
+    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")
+      ?.remove();
   }
 }

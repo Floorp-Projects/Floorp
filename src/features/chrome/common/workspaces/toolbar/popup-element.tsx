@@ -9,7 +9,7 @@ import { PopupToolbarElement } from "./popup-block-element";
 import { configStore } from "../data/config";
 import { workspacesDataStore } from "../data/data.js";
 
-export function PopupElement(props:{ctx:WorkspacesService}) {
+export function PopupElement(props: { ctx: WorkspacesService }) {
   return (
     <xul:panelview
       id="workspacesToolbarButtonPanel"
@@ -28,12 +28,14 @@ export function PopupElement(props:{ctx:WorkspacesService}) {
           >
             <For each={workspacesDataStore.order}>
               {(id) => {
-                return <PopupToolbarElement
-                  workspaceId={id}
-                  isSelected={id === workspacesDataStore.selectedID}
-                  bmsMode={configStore.manageOnBms}
-                  ctx={props.ctx}
-                />
+                return (
+                  <PopupToolbarElement
+                    workspaceId={id}
+                    isSelected={id === workspacesDataStore.selectedID}
+                    bmsMode={configStore.manageOnBms}
+                    ctx={props.ctx}
+                  />
+                );
               }}
             </For>
           </xul:vbox>

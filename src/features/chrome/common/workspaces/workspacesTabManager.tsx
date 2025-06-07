@@ -1,22 +1,25 @@
 import { createEffect, createResource } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import { PanelMultiViewParentElement, TWorkspaceID } from "./utils/type";
-import { WORKSPACE_LAST_SHOW_ID, WORKSPACE_TAB_ATTRIBUTION_ID } from "./utils/workspaces-static-names";
+import {
+  WORKSPACE_LAST_SHOW_ID,
+  WORKSPACE_TAB_ATTRIBUTION_ID,
+} from "./utils/workspaces-static-names";
 import { configStore } from "./data/config";
 import { WorkspaceIcons } from "./utils/workspace-icons";
 import { WorkspacesDataManager } from "./workspacesDataManagerBase";
 
 export class WorkspacesTabManager {
   dataManagerCtx: WorkspacesDataManager;
-  iconCtx: WorkspaceIcons
-  constructor(iconCtx:WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
+  iconCtx: WorkspaceIcons;
+  constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
     createEffect(() => {
       if (workspacesDataStore.selectedID) {
-        this.updateTabsVisibility()
+        this.updateTabsVisibility();
       }
-    })
+    });
   }
   /**
    * Check Tabs visibility.
@@ -33,8 +36,8 @@ export class WorkspacesTabManager {
         WORKSPACE_LAST_SHOW_ID,
       ) &&
       selectedTab.getAttribute(
-        WORKSPACE_TAB_ATTRIBUTION_ID
-      ) === currentWorkspaceId
+          WORKSPACE_TAB_ATTRIBUTION_ID,
+        ) === currentWorkspaceId
     ) {
       const lastShowWorkspaceTabs = document?.querySelectorAll(
         `[${WORKSPACE_LAST_SHOW_ID}="${currentWorkspaceId}"]`,
@@ -121,9 +124,13 @@ export class WorkspacesTabManager {
    * @param select will select tab if true.
    * @returns The created tab.
    */
-  createTabForWorkspace(workspaceId: TWorkspaceID, select = false, url?: string) {
-    const targetURL =
-      url ?? Services.prefs.getStringPref("browser.startup.homepage");
+  createTabForWorkspace(
+    workspaceId: TWorkspaceID,
+    select = false,
+    url?: string,
+  ) {
+    const targetURL = url ??
+      Services.prefs.getStringPref("browser.startup.homepage");
     const tab = window.gBrowser.addTab(targetURL, {
       skipAnimation: true,
       inBackground: false,
@@ -163,9 +170,8 @@ export class WorkspacesTabManager {
       this.createTabForWorkspace(workspaceId, true);
     }
 
-    setWorkspacesDataStore("selectedID",workspaceId)
+    setWorkspacesDataStore("selectedID", workspaceId);
   }
-
 
   /**
    * Switch to another workspace tab.

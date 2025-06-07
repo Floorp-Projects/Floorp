@@ -5,7 +5,7 @@
 
 import { CSplitView } from "./splitView";
 
-export function Popup(props:{ctx:CSplitView}) {
+export function Popup(props: { ctx: CSplitView }) {
   const gSplitView = props.ctx;
 
   return (
@@ -33,8 +33,7 @@ export function Popup(props:{ctx:CSplitView}) {
               id="splitView-position-selector-left"
               class="splitView-select-box"
               onClick={() =>
-                gSplitView.handleSplitViewPanelRevseOptionClick(false)
-              }
+                gSplitView.handleSplitViewPanelRevseOptionClick(false)}
             >
               <label
                 data-l10n-id="split-view-position-left"
@@ -55,8 +54,7 @@ export function Popup(props:{ctx:CSplitView}) {
               id="splitView-position-selector-right"
               class="splitView-select-box"
               onClick={() =>
-                gSplitView.handleSplitViewPanelRevseOptionClick(true)
-              }
+                gSplitView.handleSplitViewPanelRevseOptionClick(true)}
             >
               <label
                 data-l10n-id="split-view-position-right"
@@ -81,8 +79,7 @@ export function Popup(props:{ctx:CSplitView}) {
               id="splitView-flex-selector-row"
               class="splitView-select-box"
               onClick={() =>
-                gSplitView.handleSplitViewPanelTypeOptionClick("row")
-              }
+                gSplitView.handleSplitViewPanelTypeOptionClick("row")}
             >
               <label
                 data-l10n-id="split-view-flex-row"
@@ -103,8 +100,7 @@ export function Popup(props:{ctx:CSplitView}) {
               id="splitView-flex-selector-column"
               class="splitView-select-box"
               onClick={() =>
-                gSplitView.handleSplitViewPanelTypeOptionClick("column")
-              }
+                gSplitView.handleSplitViewPanelTypeOptionClick("column")}
             >
               <label
                 data-l10n-id="split-view-flex-column"

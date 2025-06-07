@@ -14,7 +14,12 @@ export class NRPwaManagerParent extends JSWindowActorParent {
       }
       case "PwaManager:RenameSsb": {
         Services.obs.notifyObservers(
-          { wrappedJSObject: { id: message.data.id, newName: message.data.newName } },
+          {
+            wrappedJSObject: {
+              id: message.data.id,
+              newName: message.data.newName,
+            },
+          },
           "nora-ssb-rename",
         );
       }

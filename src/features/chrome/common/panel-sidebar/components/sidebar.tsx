@@ -10,23 +10,22 @@ import { SidebarSelectbox } from "./sidebar-selectbox";
 import { SidebarSplitter } from "./sidebar-splitter";
 import { createEffect, Show } from "solid-js";
 import {
-  selectedPanelId,
   isFloating,
   isPanelSidebarEnabled,
+  selectedPanelId,
 } from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
 import { CPanelSidebar } from "./panel-sidebar";
 
 export class PanelSidebarElem {
-
-  ctx: CPanelSidebar
+  ctx: CPanelSidebar;
 
   private get documentElement() {
     return document?.documentElement as XULElement;
   }
 
-  constructor(ctx:CPanelSidebar) {
+  constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
     if (!isPanelSidebarEnabled()) {
       return;

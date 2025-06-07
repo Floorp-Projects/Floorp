@@ -34,4 +34,3 @@ export class NRAppConstantsChild extends JSWindowActorChild {
     }
   }
 }
-

@@ -7,7 +7,7 @@ import type { Browser, Icon, IconData } from "./type.js";
 import { ImageTools } from "./imageTools";
 
 const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+  "resource://gre/modules/PlacesUtils.sys.mjs",
 );
 
 export class IconProcesser {
@@ -24,10 +24,9 @@ export class IconProcesser {
 
     for (const icon of icons) {
       for (const sizeSpec of icon.sizes) {
-        const size =
-          sizeSpec === "any"
-            ? Number.MAX_SAFE_INTEGER
-            : Number.parseInt(sizeSpec);
+        const size = sizeSpec === "any"
+          ? Number.MAX_SAFE_INTEGER
+          : Number.parseInt(sizeSpec);
 
         iconList.push({
           icon,
@@ -62,7 +61,7 @@ export class IconProcesser {
   async getIconResource(iconData: IconData): Promise<Icon> {
     // This should be a data url so no network traffic.
     const imageData = await ImageTools.loadImage(
-      Services.io.newURI(iconData.iconURL)
+      Services.io.newURI(iconData.iconURL),
     );
     if (imageData.container.type === Ci.imgIContainer.TYPE_VECTOR) {
       return {
@@ -86,7 +85,7 @@ export class IconProcesser {
     const iconUrl = await new Promise<string>((resolve) => {
       gFavicons.getFaviconURLForPage(
         Services.io.newURI(browser.currentURI.spec),
-        (uri: nsIURI) => resolve(uri?.spec || "")
+        (uri: nsIURI) => resolve(uri?.spec || ""),
       );
     });
 
@@ -103,7 +102,7 @@ export class IconProcesser {
         reader.readAsDataURL(blob);
       });
       const { container } = await ImageTools.loadImage(
-        Services.io.newURI(old_base64)
+        Services.io.newURI(old_base64),
       );
 
       const blobPng = (await ImageTools.scaleImage(container, 64, 64)) as Blob;

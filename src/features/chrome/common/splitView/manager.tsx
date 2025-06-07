@@ -10,9 +10,8 @@ import { render } from "@nora/solid-xul";
 import { CSplitView } from "./splitView";
 
 export class SplitViewManager {
-
-  constructor(ctx:CSplitView) {
-    render(() => this.ToolbarElement({ctx}), this.targetParent, {
+  constructor(ctx: CSplitView) {
+    render(() => this.ToolbarElement({ ctx }), this.targetParent, {
       marker: this.markerElement,
     });
   }
@@ -29,7 +28,7 @@ export class SplitViewManager {
     ) as XULElement;
   }
 
-  private ToolbarElement(props:{ctx:CSplitView}) {
+  private ToolbarElement(props: { ctx: CSplitView }) {
     return (
       <Show when={currentSplitView() !== -1}>
         <xul:hbox
@@ -41,7 +40,7 @@ export class SplitViewManager {
           hidden={false}
         >
           <xul:image id="splitView-image" class="urlbar-icon" />
-          <Popup ctx={props.ctx}/>
+          <Popup ctx={props.ctx} />
         </xul:hbox>
       </Show>
     );

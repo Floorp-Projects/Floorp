@@ -11,13 +11,13 @@ import { createSignal, Show } from "solid-js";
 import { TWorkspaceID } from "../utils/type.js";
 
 export class WorkspacesPopupContxtMenu {
-  ctx:WorkspacesService
-  constructor(ctx:WorkspacesService) {
-    this.ctx=ctx;
+  ctx: WorkspacesService;
+  constructor(ctx: WorkspacesService) {
+    this.ctx = ctx;
     ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet());
   }
-  contextWorkspaceID : TWorkspaceID | null = null;
-  needDisableBefore = false
+  contextWorkspaceID: TWorkspaceID | null = null;
+  needDisableBefore = false;
   needDisableAfter = false;
   /**
    * Create context menu items for workspaces.
@@ -39,8 +39,8 @@ export class WorkspacesPopupContxtMenu {
     if (this.ctx.isWorkspaceID(contextWorkspaceId)) {
       this.contextWorkspaceID = contextWorkspaceId;
     }
-    
-    const defaultWorkspaceId = workspacesDataStore.defaultID
+
+    const defaultWorkspaceId = workspacesDataStore.defaultID;
 
     const beforeSiblingElem =
       eventTargetElement.previousElementSibling?.getAttribute(
@@ -54,24 +54,22 @@ export class WorkspacesPopupContxtMenu {
     const isBeforeSiblingDefaultWorkspace =
       beforeSiblingElem === defaultWorkspaceId;
     const isAfterSiblingExist = afterSiblingElem != null;
-    this.needDisableBefore =
-      isDefaultWorkspace || isBeforeSiblingDefaultWorkspace;
+    this.needDisableBefore = isDefaultWorkspace ||
+      isBeforeSiblingDefaultWorkspace;
     this.needDisableAfter = isDefaultWorkspace || !isAfterSiblingExist;
   }
 
   private PopupSet() {
-    const [show,setShow] = createSignal(false)
+    const [show, setShow] = createSignal(false);
     return (
       <xul:popupset>
         <xul:menupopup
           id="workspaces-toolbar-item-context-menu"
-          onPopupShowing={(event) =>
-          {
+          onPopupShowing={(event) => {
             this.createWorkspacesContextMenuItems(event);
             setShow(true);
-          }
-          }
-          onPopupHiding={()=>{
+          }}
+          onPopupHiding={() => {
             setShow(false);
           }}
         >
@@ -87,6 +85,4 @@ export class WorkspacesPopupContxtMenu {
       </xul:popupset>
     );
   }
-
-  
 }

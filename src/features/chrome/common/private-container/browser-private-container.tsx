@@ -8,7 +8,6 @@ import { PrivateContainer } from "./PrivateContainer";
 import { createRootHMR } from "@nora/solid-xul";
 
 export class FloorpPrivateContainer {
-
   private get privateContainerMenuItem() {
     return document.querySelector("#open_in_private_container") as XULElement;
   }
@@ -32,7 +31,7 @@ export class FloorpPrivateContainer {
         FloorpPrivateContainer.handleTabModifications,
       );
 
-      createRootHMR(()=>{
+      createRootHMR(() => {
         // add URL link a context menu to open in private container.
         ContextMenuUtils.addContextBox(
           "open_in_private_container",
@@ -47,7 +46,7 @@ export class FloorpPrivateContainer {
             this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
           },
         );
-      },import.meta.hot)
+      }, import.meta.hot);
     });
   }
 
@@ -63,8 +62,8 @@ export class FloorpPrivateContainer {
   }
 
   private static removeDataIfPrivateContainerTabNotExist() {
-    const privateContainerUserContextID =
-      PrivateContainer.getPrivateContainerUserContextId();
+    const privateContainerUserContextID = PrivateContainer
+      .getPrivateContainerUserContextId();
     setTimeout(() => {
       if (!FloorpPrivateContainer.checkPrivateContainerTabExist()) {
         PrivateContainer.removePrivateContainerData();
@@ -93,8 +92,8 @@ export class FloorpPrivateContainer {
   }
 
   private static checkTabIsPrivateContainer(tab: { userContextId: number }) {
-    const privateContainerUserContextID =
-      PrivateContainer.getPrivateContainerUserContextId();
+    const privateContainerUserContextID = PrivateContainer
+      .getPrivateContainerUserContextId();
     return tab.userContextId === privateContainerUserContextID;
   }
 
@@ -126,8 +125,8 @@ export class FloorpPrivateContainer {
         relatedToCurrent = true;
         break;
     }
-    const privateContainerUserContextID =
-      PrivateContainer.getPrivateContainerUserContextId();
+    const privateContainerUserContextID = PrivateContainer
+      .getPrivateContainerUserContextId();
     Services.obs.notifyObservers(
       {
         wrappedJSObject: new Promise((resolve) => {
@@ -174,8 +173,8 @@ export class FloorpPrivateContainer {
         // Ensure that we have a null principal if we couldn't
         // deserialize it (for lazy tab browsers) ...
         // This won't always work however is safe to use.
-        triggeringPrincipal =
-          Services.scriptSecurityManager.createNullPrincipal({
+        triggeringPrincipal = Services.scriptSecurityManager
+          .createNullPrincipal({
             userContextId,
           });
       } else if (triggeringPrincipal.isContentPrincipal) {

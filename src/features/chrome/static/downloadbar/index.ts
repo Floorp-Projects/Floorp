@@ -14,7 +14,7 @@ export let manager: DownloadBarManager;
 // TODO: REMOVE ALL CREATE_ROOT_HMR
 
 export function init() {
-  createRoot(()=>{
+  createRoot(() => {
     manager = new DownloadBarManager();
 
     manager.init();
@@ -32,8 +32,9 @@ export function init() {
     delete window.DownloadsPanel.panel;
     delete window.DownloadsPanel.richListBox;
     window.DownloadsPanel.panel = document.getElementById("downloadsPanel");
-    window.DownloadsPanel.richListBox =
-      document.getElementById("downloadsListBox");
+    window.DownloadsPanel.richListBox = document.getElementById(
+      "downloadsListBox",
+    );
     window.DownloadsView.contextMenu = document.getElementById(
       "downloadsContextMenu",
     );
@@ -51,5 +52,5 @@ export function init() {
       e.preventDefault();
       scrollElem.scrollLeft += e.deltaY * 10;
     });
-  })
+  });
 }

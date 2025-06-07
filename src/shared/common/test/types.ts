@@ -1,7 +1,6 @@
 export interface ServerFunctions {
   hi(name: string): string;
   /**
-   *
    * @param name image name to save
    * @param image base64-encoded png data
    */

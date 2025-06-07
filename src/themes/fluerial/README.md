@@ -2,11 +2,9 @@
 
 ## Used Files
 
-css/fluerial.css (test_legacy.css)
-icons/menu.svg (menu.svg)
-icons/newtab.svg (newtab.svg)
-icons/material.svg (material.svg)
-icons/bookmark.svg (../fluentUI/bookmark.svg)
+css/fluerial.css (test_legacy.css) icons/menu.svg (menu.svg) icons/newtab.svg
+(newtab.svg) icons/material.svg (material.svg) icons/bookmark.svg
+(../fluentUI/bookmark.svg)
 
 ## License
 

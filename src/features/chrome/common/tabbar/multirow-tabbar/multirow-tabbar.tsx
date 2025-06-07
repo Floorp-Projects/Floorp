@@ -7,7 +7,6 @@ import { config } from "../../designs/configs";
 import { createEffect } from "solid-js";
 
 export class MultirowTabbarClass {
-
   private get arrowScrollbox(): XULElement | null {
     return document.querySelector("#tabbrowser-arrowscrollbox");
   }
@@ -42,7 +41,7 @@ export class MultirowTabbarClass {
     );
     this.arrowScrollbox?.style.setProperty(
       "max-height",
-      `${this.getMultirowTabMaxHeight}px`
+      `${this.getMultirowTabMaxHeight}px`,
     );
   }
 

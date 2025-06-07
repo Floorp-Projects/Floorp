@@ -16,12 +16,11 @@ const { CustomizableUI } = ChromeUtils.importESModule(
 );
 
 export class WorkspacesToolbarButton {
-
   private StyleElement = () => {
     return <style>{workspacesStyles}</style>;
   };
 
-  constructor(ctx:WorkspacesService) {
+  constructor(ctx: WorkspacesService) {
     const gWorkspacesServices = ctx;
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
@@ -32,10 +31,16 @@ export class WorkspacesToolbarButton {
       (aNode) => {
         // On Startup, the workspace is not yet loaded, so we need to set the label after the workspace is loaded.
         // We cannot get Element from WorkspacesServices, so we need to get it from CustomizableUI directly.
-        const workspace = () => ctx.getRawWorkspace(ctx.getSelectedWorkspaceID());
-        const icon = ()=>ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
-        createEffect(()=>{
-          aNode?.style.setProperty("list-style-image",icon() ? `url(${icon()})` : `url("chrome://branding/content/icon32.png")`);
+        const workspace = () =>
+          ctx.getRawWorkspace(ctx.getSelectedWorkspaceID());
+        const icon = () => ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
+        createEffect(() => {
+          aNode?.style.setProperty(
+            "list-style-image",
+            icon()
+              ? `url(${icon()})`
+              : `url("chrome://branding/content/icon32.png")`,
+          );
           if (configStore.showWorkspaceNameOnToolbar) {
             aNode?.setAttribute("label", workspace().name);
           } else {

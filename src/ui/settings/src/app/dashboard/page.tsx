@@ -1,4 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -46,7 +50,8 @@ export default function Page() {
               {t("home.setup.setupProgressTitle")}: 50%
             </p>
             <div className="w-full h-1 bg-blue-200 rounded">
-              <div className="bg-blue-500 h-1 rounded" style={{ width: "25%" }}></div>
+              <div className="bg-blue-500 h-1 rounded" style={{ width: "25%" }}>
+              </div>
             </div>
             <p className="text-xs mt-1">
               {t("home.setup.step", { step: 2, total: 4 })}

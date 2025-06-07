@@ -202,7 +202,11 @@ export default defineConfig({
     ],
     preserveSymlinks: true,
     alias: [
-      { find: "@nora/skin", replacement: r("../../../../libs/skin") },
+      { find: "@nora/skin", replacement: r("../../../../src/themes") },
+      {
+        find: "../../../../../shared",
+        replacement: r("../../../../src/shared"),
+      },
       { "find": "#apps", "replacement": r("../../../../apps") },
       {
         "find": "#i18n-features-chrome",

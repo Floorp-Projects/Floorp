@@ -1,6 +1,6 @@
 import { ViteHotContext } from "vite/types/hot";
-import { kebabCase } from 'es-toolkit/string';
-import { } from "consola/browser";
+import { kebabCase } from "es-toolkit/string";
+import {} from "consola/browser";
 import type { ClassDecorator } from "./decorator";
 import { createRootHMR } from "@nora/solid-xul";
 import { onCleanup } from "solid-js";
@@ -14,24 +14,28 @@ import { onCleanup } from "solid-js";
  * class FooBar extends NoraComponentBase {}
  * ```
  * @see {@link file://./../../vite.config.ts vite.config.ts} noraneko_component_hmr_support
- *
  */
-export function noraComponent(aViteHotContext : ViteHotContext | undefined): ClassDecorator<NoraComponentBase> {
-  return (clazz,ctx) => {
+export function noraComponent(
+  aViteHotContext: ViteHotContext | undefined,
+): ClassDecorator<NoraComponentBase> {
+  return (clazz, ctx) => {
     if (_NoraComponentBase_viteHotContext.has(ctx.name!)) {
       throw new Error(`Duplicate NoraComponent Name: ${ctx.name}`);
     }
 
-    _NoraComponentBase_viteHotContext.set(ctx.name!,aViteHotContext);
-    console.debug("[nora@base] noraComponent "+ctx.name);
-  }
+    _NoraComponentBase_viteHotContext.set(ctx.name!, aViteHotContext);
+    console.debug("[nora@base] noraComponent " + ctx.name);
+  };
 }
 
 const nora_component_base_console = console.createInstance({
-  prefix:`nora@nora-component-base`,
+  prefix: `nora@nora-component-base`,
 });
 
-let _NoraComponentBase_viteHotContext = new Map<string,ViteHotContext | undefined>()
+let _NoraComponentBase_viteHotContext = new Map<
+  string,
+  ViteHotContext | undefined
+>();
 export abstract class NoraComponentBase {
   logger: ConsoleInstance;
   constructor() {
@@ -39,18 +43,18 @@ export abstract class NoraComponentBase {
     const hot = _NoraComponentBase_viteHotContext.get(this.constructor.name);
     // Initialize logger
     const _console = console.createInstance({
-      prefix:`nora@${kebabCase(this.constructor.name)}`,
+      prefix: `nora@${kebabCase(this.constructor.name)}`,
     });
     this.logger = _console;
 
     // Run init with solid-js HMR support
-    createRootHMR(()=>{
+    createRootHMR(() => {
       this.init();
-      onCleanup(()=>{
-        nora_component_base_console.debug(`onCleanup ${this.constructor.name}`)
+      onCleanup(() => {
+        nora_component_base_console.debug(`onCleanup ${this.constructor.name}`);
         _NoraComponentBase_viteHotContext.delete(this.constructor.name);
       });
-    },hot);
+    }, hot);
   }
   abstract init(): void;
 }

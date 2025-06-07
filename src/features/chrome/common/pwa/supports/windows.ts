@@ -8,22 +8,23 @@ import { ImageTools } from "../imageTools";
 import type { Manifest } from "../type";
 
 export class WindowsSupport {
-  private static shellService = Cc["@mozilla.org/browser/shell-service;1"].getService(
-    Ci.nsIWindowsShellService
-  );
+  private static shellService = Cc["@mozilla.org/browser/shell-service;1"]
+    .getService(
+      Ci.nsIWindowsShellService,
+    );
 
   private static uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
-    Ci.nsIWindowsUIUtils
+    Ci.nsIWindowsUIUtils,
   );
 
   private static taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
-    Ci.nsIWinTaskbar
+    Ci.nsIWinTaskbar,
   );
 
   private static nsIFile = Components.Constructor(
     "@mozilla.org/file/local;1",
     Ci.nsIFile,
-    "initWithPath"
+    "initWithPath",
   );
 
   constructor(private ssbManager: SiteSpecificBrowserManager) {}
@@ -49,7 +50,7 @@ export class WindowsSupport {
     const icon = ssb.icon;
     if (icon) {
       const { container } = await ImageTools.loadImage(
-        Services.io.newURI(icon)
+        Services.io.newURI(icon),
       );
       ImageTools.saveIcon(container, 128, 128, iconFile);
     } else {
@@ -64,7 +65,7 @@ export class WindowsSupport {
       0,
       this.buildGroupId(ssb.id),
       "Programs",
-      `${ssb.name}.lnk`
+      `${ssb.name}.lnk`,
     );
   }
 
@@ -104,7 +105,7 @@ export class WindowsSupport {
   async applyOSIntegration(ssb: Manifest, aWindow: Window) {
     WindowsSupport.taskbar.setGroupIdForWindow(
       aWindow,
-      this.buildGroupId(ssb.id)
+      this.buildGroupId(ssb.id),
     );
     const getIcon = async (size: number) => {
       const icon = ssb.icon;

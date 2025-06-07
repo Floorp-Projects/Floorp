@@ -4,7 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect } from "solid-js";
-import { isFloating, panelSidebarConfig, setSelectedPanelId } from "../data/data";
+import {
+  isFloating,
+  panelSidebarConfig,
+  setSelectedPanelId,
+} from "../data/data";
 import { STATIC_PANEL_DATA } from "../data/static-panels";
 
 const { AppConstants } = ChromeUtils.importESModule(
@@ -109,8 +113,7 @@ export class PanelSidebarFloating {
     const clickedElementIsWebTypeBrowser = clickedBrowser?.baseURI?.startsWith(
       `${AppConstants.BROWSER_CHROME_URL}?floorpWebPanelId`,
     );
-    const insideSidebar =
-      sidebarBox?.contains(event.target as Node) ||
+    const insideSidebar = sidebarBox?.contains(event.target as Node) ||
       clickedBrowserIsSidebarBrowser;
     const insideSelectBox = selectBox?.contains(event.target as Node);
     const insideSplitter = splitter?.contains(event.target as Node);

@@ -30,13 +30,15 @@ export type ClassSetterDecorator = (value: Function, context: {
 export type ClassFieldDecorator = (value: undefined, context: {
   kind: "field";
   name: string | symbol;
-  access: { get(): unknown, set(value: unknown): void };
+  access: { get(): unknown; set(value: unknown): void };
   static: boolean;
   private: boolean;
   addInitializer(initializer: () => void): void;
 }) => (initialValue: unknown) => unknown | void;
 
-export type ClassDecorator<T = any> = <Class extends new (...args: any) => T = new (...args:any)=>T>(value: Class, context: ClassDecoratorContext<Class>) => Class | void;
+export type ClassDecorator<T = any> = <
+  Class extends new (...args: any) => T = new (...args: any) => T,
+>(value: Class, context: ClassDecoratorContext<Class>) => Class | void;
 
 export type ClassAutoAccessorDecorator = (
   value: {
@@ -46,11 +48,11 @@ export type ClassAutoAccessorDecorator = (
   context: {
     kind: "accessor";
     name: string | symbol;
-    access: { get(): unknown, set(value: unknown): void };
+    access: { get(): unknown; set(value: unknown): void };
     static: boolean;
     private: boolean;
     addInitializer(initializer: () => void): void;
-  }
+  },
 ) => {
   get?: () => unknown;
   set?: (value: unknown) => void;

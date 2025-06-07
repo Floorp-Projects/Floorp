@@ -1,5 +1,4 @@
 export function init() {
-  
   // if (
   //   Services.prefs.getStringPref("noraneko.version2", "") !==
   //   NoranekoConstants.version2

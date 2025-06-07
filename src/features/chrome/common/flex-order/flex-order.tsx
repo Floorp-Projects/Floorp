@@ -8,13 +8,13 @@ import { createSignal, onCleanup } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data.ts";
 
 type Orders = {
-  fxSidebar: number,
-  fxSidebarSplitter: number,
-  browserBox: number,
-  floorpSidebarSplitter: number,
-  floorpSidebar: number,
-  floorpSidebarSelectBox: number,
-}
+  fxSidebar: number;
+  fxSidebarSplitter: number;
+  browserBox: number;
+  floorpSidebarSplitter: number;
+  floorpSidebar: number;
+  floorpSidebarSelectBox: number;
+};
 
 export namespace gFlexOrder {
   const fxSidebarPosition = "sidebar.position_start";
@@ -26,14 +26,25 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   const browserBoxId = "tabbrowser-tabbox";
 
-  const [orders,setOrders] = createRootHMR(()=>createSignal<Orders>({fxSidebar:-1,fxSidebarSplitter:-1,browserBox:-1,floorpSidebarSplitter:-1,floorpSidebar:-1,floorpSidebarSelectBox:-1}),import.meta.hot)
+  const [orders, setOrders] = createRootHMR(
+    () =>
+      createSignal<Orders>({
+        fxSidebar: -1,
+        fxSidebarSplitter: -1,
+        browserBox: -1,
+        floorpSidebarSplitter: -1,
+        floorpSidebar: -1,
+        floorpSidebarSelectBox: -1,
+      }),
+    import.meta.hot,
+  );
 
   export function init() {
     applyFlexOrder();
-    renderOrderStyle()
+    renderOrderStyle();
     Services.prefs.addObserver(fxSidebarPosition, applyFlexOrder);
 
-    onCleanup(()=>{
+    onCleanup(() => {
       Services.prefs.removeObserver(fxSidebarPosition, applyFlexOrder);
     });
   }
@@ -90,7 +101,9 @@ export namespace gFlexOrder {
   }
 
   function renderOrderStyle() {
-    render(() => <style jsx>{`
+    render(() => (
+      <style jsx>
+        {`
       #${fxSidebarId} {
         order: ${orders().fxSidebar} !important;
       }
@@ -109,6 +122,8 @@ export namespace gFlexOrder {
       #${browserBoxId} {
         order: ${orders().browserBox} !important;
       }
-    `}</style>, document?.head);
+    `}
+      </style>
+    ), document?.head);
   }
 }

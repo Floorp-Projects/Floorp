@@ -5,7 +5,7 @@
 
 import { createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
-import { render, createRootHMR } from "@nora/solid-xul";
+import { createRootHMR, render } from "@nora/solid-xul";
 import type { Manifest } from "./type";
 import type { PwaService } from "./pwaService";
 
@@ -27,7 +27,8 @@ export class SsbPanelView {
             mutation.type === "attributes" &&
             mutation.attributeName === "open"
           ) {
-            const isOpened = this.panelUIButton?.getAttribute("open") === "true";
+            const isOpened =
+              this.panelUIButton?.getAttribute("open") === "true";
             setIsOpen(isOpened);
 
             if (isOpened && !this.isRendered) {
@@ -47,19 +48,19 @@ export class SsbPanelView {
 
   private get parentElement(): HTMLElement | null {
     return document?.querySelector(
-      "#appMenu-mainView > .panel-subview-body"
+      "#appMenu-mainView > .panel-subview-body",
     ) as HTMLElement | null;
   }
 
   private get beforeElement(): HTMLElement | null {
     return document?.getElementById(
-      "appMenu-bookmarks-button"
+      "appMenu-bookmarks-button",
     ) as HTMLElement | null;
   }
 
   private get panelUIButton(): HTMLElement | null {
     return document?.getElementById(
-      "PanelUI-menu-button"
+      "PanelUI-menu-button",
     ) as HTMLElement | null;
   }
 
@@ -75,7 +76,7 @@ export class SsbPanelView {
   private static async showSsbPanelSubView() {
     await window.PanelUI.showSubView(
       "PanelUI-ssb",
-      document?.getElementById("appMenu-ssb-button")
+      document?.getElementById("appMenu-ssb-button"),
     );
 
     SsbPanelView.updateInstalledApps();
@@ -85,14 +86,14 @@ export class SsbPanelView {
     const [, setInstalledApps] = SsbPanelView.installedApps;
     const apps = await SsbPanelView.pwaService.getInstalledApps();
     setInstalledApps(
-      Object.values(apps).map((value) => ({ ...(value as Manifest) }))
+      Object.values(apps).map((value) => ({ ...(value as Manifest) })),
     );
   }
 
   private static handleInstallOrRunCurrentPageAsSsb() {
     SsbPanelView.pwaService.installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
-      false
+      false,
     );
   }
 
@@ -134,7 +135,8 @@ export class SsbPanelView {
               class="subviewbutton"
               data-l10n-id="appmenuitem-install-current-page"
               label="Install Current Page as Progressive Web App"
-              onCommand={() => SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
+              onCommand={() =>
+                SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
             />
             <xul:toolbarseparator />
             <h2

@@ -17,7 +17,9 @@
     --avatar-image-url: url("chrome://noraneko/skin/floorp-fluerial/icons/account_circle_FILL0_wght700_GRAD200_opsz48.svg");
   }
 
-  &:not([privatebrowsingmode], [firefoxviewhidden]) :is(toolbarbutton, toolbarpaletteitem) + #tabbrowser-tabs {
+  &:not([privatebrowsingmode], [firefoxviewhidden])
+    :is(toolbarbutton, toolbarpaletteitem)
+    + #tabbrowser-tabs {
     border-inline-start: none;
   }
 }
@@ -138,7 +140,10 @@
     border-radius: 8px 8px 0 0 !important;
     position: relative !important;
     border: 0 !important;
-    transition: opacity var(--tab-transition-duration) var(--ease-basic), background-color 0s var(--tab-transition-duration) var(--ease-basic) !important;
+    transition:
+      opacity var(--tab-transition-duration) var(--ease-basic),
+      background-color 0s var(--tab-transition-duration) var(--ease-basic)
+      !important;
     opacity: var(--tab-opacity) !important;
     visibility: visible !important;
     box-shadow: none !important;
@@ -153,7 +158,8 @@
       height: 8px !important;
       bottom: 0 !important;
       pointer-events: none !important;
-      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic) !important;
+      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic)
+        !important;
       clip-path: inset(0) !important;
     }
 
@@ -170,7 +176,8 @@
     }
   }
 
-  &:not([visuallyselected], [multiselected], :hover, :first-of-type) > .tab-stack {
+  &:not([visuallyselected], [multiselected], :hover, :first-of-type)
+    > .tab-stack {
     display: relative;
     /*? separator */
     &::before {
@@ -183,10 +190,13 @@
       opacity: var(--tab-separator-opacity);
       background-color: var(--toolbarseparator-color);
 
-      transform: translateX(var(--tab-separator-position-x)) translateY(var(--tab-separator-position-y)) !important;
+      transform: translateX(var(--tab-separator-position-x))
+        translateY(var(--tab-separator-position-y)) !important;
     }
   }
-  &:is([visuallyselected], [multiselected], :hover) + &:not([visuallyselected]) .tab-stack::before {
+  &:is([visuallyselected], [multiselected], :hover)
+    + &:not([visuallyselected])
+    .tab-stack::before {
     opacity: 0 !important;
   }
   /* ? not selected, hover */

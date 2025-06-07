@@ -138,8 +138,9 @@
   --chakra-borders-8px: 8px solid;
   --chakra-fonts-heading: Inter, sans-serif;
   --chakra-fonts-body: Inter, sans-serif;
-  --chakra-fonts-mono: SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  --chakra-fonts-mono:
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
   --chakra-fontSizes-3xs: 0.45rem;
   --chakra-fontSizes-2xs: 0.625rem;
   --chakra-fontSizes-xs: 0.75rem;
@@ -229,20 +230,25 @@
   --chakra-space-3-5: 0.875rem;
   --chakra-shadows-xs: 0 0 0 1px rgba(0, 0, 0, 0.05);
   --chakra-shadows-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --chakra-shadows-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
-    0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --chakra-shadows-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --chakra-shadows-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --chakra-shadows-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --chakra-shadows-base:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --chakra-shadows-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --chakra-shadows-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --chakra-shadows-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --chakra-shadows-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --chakra-shadows-outline: 0 0 0 3px rgba(66, 153, 225, 0.6);
   --chakra-shadows-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   --chakra-shadows-none: none;
-  --chakra-shadows-dark-lg: rgba(0, 0, 0, 0.1) 0px 0px 0px 1px,
-    rgba(0, 0, 0, 0.2) 0px 5px 10px, rgba(0, 0, 0, 0.4) 0px 15px 40px;
+  --chakra-shadows-dark-lg:
+    rgba(0, 0, 0, 0.1) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 5px 10px, rgba(
+    0,
+    0,
+    0,
+    0.4
+  ) 0px 15px 40px;
   --chakra-sizes-1: 0.25rem;
   --chakra-sizes-2: 0.5rem;
   --chakra-sizes-3: 0.75rem;
@@ -311,14 +317,15 @@
   --chakra-zIndices-skipLink: 1600;
   --chakra-zIndices-toast: 1700;
   --chakra-zIndices-tooltip: 1800;
-  --chakra-transition-property-common: background-color, border-color, color,
-    fill, stroke, opacity, box-shadow, transform;
-  --chakra-transition-property-colors: background-color, border-color, color,
-    fill, stroke;
+  --chakra-transition-property-common:
+    background-color, border-color, color, fill, stroke, opacity, box-shadow,
+    transform;
+  --chakra-transition-property-colors:
+    background-color, border-color, color, fill, stroke;
   --chakra-transition-property-dimensions: width, height;
   --chakra-transition-property-position: left, right, top, bottom;
-  --chakra-transition-property-background: background-color, background-image,
-    background-position;
+  --chakra-transition-property-background:
+    background-color, background-image, background-position;
   --chakra-transition-easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
   --chakra-transition-easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
   --chakra-transition-easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);

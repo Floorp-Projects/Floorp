@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Manifest, Browser, Icon } from "./type.js";
+import type { Browser, Icon, Manifest } from "./type.js";
 import { IconProcesser } from "./iconProcesser";
 
 const { ManifestObtainer } = ChromeUtils.importESModule(
-  "resource://gre/modules/ManifestObtainer.sys.mjs"
+  "resource://gre/modules/ManifestObtainer.sys.mjs",
 );
 
 const { ManifestProcessor } = ChromeUtils.importESModule(
-  "resource://gre/modules/ManifestProcessor.sys.mjs"
+  "resource://gre/modules/ManifestProcessor.sys.mjs",
 );
 
 export class ManifestProcesser {
@@ -34,7 +34,7 @@ export class ManifestProcesser {
    */
   public async getManifestFromBrowser(
     browser: Browser,
-    useWebManifest: boolean
+    useWebManifest: boolean,
   ): Promise<Manifest> {
     let manifest = null;
     try {
@@ -61,7 +61,7 @@ export class ManifestProcesser {
       !manifest ||
       !this.scopeIncludes(
         Services.io.newURI(manifest.scope),
-        browser.currentURI
+        browser.currentURI,
       )
     ) {
       manifest = this.generateManifestForURI(browser.currentURI);
@@ -77,7 +77,7 @@ export class ManifestProcesser {
           }
 
           const actor = browser.browsingContext.currentWindowGlobal.getActor(
-            "NRProgressiveWebApp"
+            "NRProgressiveWebApp",
           );
           try {
             icon.src = await actor.sendQuery("LoadIcon", icon.src);
@@ -87,7 +87,7 @@ export class ManifestProcesser {
           }
 
           return icon;
-        })
+        }),
       )
     ).filter((icon) => icon);
 
@@ -142,7 +142,7 @@ export class ManifestProcesser {
     } catch (e) {
       console.error(
         `Failed to generate a SSB (PWA) manifest for ${uri.spec}.`,
-        e
+        e,
       );
       throw e;
     }

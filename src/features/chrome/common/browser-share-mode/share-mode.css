@@ -55,6 +55,7 @@
 }
 
 #fxa-avatar-image {
-  list-style-image: url("chrome://branding/content/about-logo-private.png") !important;
+  list-style-image: url("chrome://branding/content/about-logo-private.png")
+    !important;
   scale: 1.2;
 }

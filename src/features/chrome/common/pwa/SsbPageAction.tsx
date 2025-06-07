@@ -29,11 +29,11 @@ export class SsbPageAction {
 
     Services.obs.addObserver(
       () => this.onCheckPageHasManifest(),
-      "nora-pwa-check-page-has-manifest"
+      "nora-pwa-check-page-has-manifest",
     );
     window.gBrowser.tabContainer.addEventListener(
       "TabSelect",
-      () => this.onCheckPageHasManifest()
+      () => this.onCheckPageHasManifest(),
     );
 
     this.onCheckPageHasManifest();
@@ -42,10 +42,13 @@ export class SsbPageAction {
   private async onCheckPageHasManifest() {
     const browser = window.gBrowser.selectedBrowser;
 
-    const canBeInstallAsPwa = await this.pwaService.checkBrowserCanBeInstallAsPwa(browser);
+    const canBeInstallAsPwa = await this.pwaService
+      .checkBrowserCanBeInstallAsPwa(browser);
     this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
-    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(browser);
+    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
+      browser,
+    );
     this.isInstalled[1](isInstalled);
     this.pwaService.updateUIElements(isInstalled);
   }
@@ -53,7 +56,7 @@ export class SsbPageAction {
   private onCommand = () => {
     this.pwaService.installOrRunCurrentPageAsSsb(
       window.gBrowser.selectedBrowser,
-      true
+      true,
     );
     this.isInstalling[1](true);
   };
@@ -63,9 +66,11 @@ export class SsbPageAction {
     this.icon[1](icon);
 
     const manifest = await this.pwaService.getManifest(
-      window.gBrowser.selectedBrowser
+      window.gBrowser.selectedBrowser,
     );
-    this.title[1](manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec);
+    this.title[1](
+      manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec,
+    );
     this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
   };
 
@@ -159,9 +164,9 @@ export class SsbPageAction {
                   class="panel-button ssb-install-buttons footer-button primary"
                   hidden={isInstalling()}
                   onClick={this.onCommand}
-                  label={
-                    isInstalled() ? "アプリケーションを開く" : "インストール"
-                  }
+                  label={isInstalled()
+                    ? "アプリケーションを開く"
+                    : "インストール"}
                 />
                 <xul:button
                   id="ssb-app-cancel-button"

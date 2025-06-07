@@ -10,9 +10,9 @@ import { workspacesDataStore } from "./data/data.js";
 import { TWorkspaceID } from "./utils/type.js";
 
 export class WorkspacesTabContextMenu {
-  ctx:WorkspacesService;
-  constructor(ctx:WorkspacesService) {
-    this.ctx=ctx;
+  ctx: WorkspacesService;
+  constructor(ctx: WorkspacesService) {
+    this.ctx = ctx;
     const parentElem = document?.getElementById("tabContextMenu");
     render(() => this.contextMenu(), parentElem, {
       marker: document?.getElementById("context_moveTabOptions") as XULElement,
@@ -26,18 +26,25 @@ export class WorkspacesTabContextMenu {
         {(id) => {
           if (this.ctx.isWorkspaceID(id)) {
             const workspace = () => this.ctx.getRawWorkspace(id);
-            const icon = () => this.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
-            return <xul:menuitem
-              id="context_MoveTabToOtherWorkspace"
-              label={workspace().name}
-              class="menuitem-iconic"
-              style={`list-style-image: url(${icon()})`}
-              onCommand={() =>
-                this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(id)
-              }
-            />
+            const icon = () =>
+              this.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
+            return (
+              <xul:menuitem
+                id="context_MoveTabToOtherWorkspace"
+                label={workspace().name}
+                class="menuitem-iconic"
+                style={`list-style-image: url(${icon()})`}
+                onCommand={() =>
+                  this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
+                    id,
+                  )}
+              />
+            );
           } else {
-            console.error("Not valid ID for Workspaces (maybe order is not updated) : "+id);
+            console.error(
+              "Not valid ID for Workspaces (maybe order is not updated) : " +
+                id,
+            );
           }
         }}
       </For>
@@ -71,12 +78,13 @@ export class WorkspacesTabContextMenu {
       window.TabContextMenu.contextTab,
     );
 
-    const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter((w)=>w !== tabWorkspaceId)
+    const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter(
+      (w) => w !== tabWorkspaceId,
+    );
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
     render(
-      () =>
-        this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+      () => this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
       parentElem,
     );
   }
