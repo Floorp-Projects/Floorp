@@ -14,16 +14,18 @@ export interface DevServerOptions {
 /**
  * Start development server
  */
-export async function startDevServer(options: DevServerOptions = {}): Promise<void> {
+export async function startDevServer(
+  options: DevServerOptions = {},
+): Promise<void> {
   const { port = 8080, watch = true, profile = "test" } = options;
-  
+
   log.info(`🚀 Starting development server on port ${port}`);
   log.info(`📁 Using profile: ${profile}`);
-  
+
   if (watch) {
     log.info("👀 File watching enabled");
   }
-  
+
   // Implementation would go here
   // This is a placeholder for the actual dev server logic
 }
@@ -33,14 +35,16 @@ export async function startDevServer(options: DevServerOptions = {}): Promise<vo
  */
 export async function cleanDev(): Promise<void> {
   log.info("🧹 Cleaning development artifacts...");
-  
+
   try {
     // Clean temporary files
     await Deno.remove("../../_dist/temp", { recursive: true }).catch(() => {});
-    
+
     // Clean profile test data
-    await Deno.remove("../../_dist/profile/test", { recursive: true }).catch(() => {});
-    
+    await Deno.remove("../../_dist/profile/test", { recursive: true }).catch(
+      () => {},
+    );
+
     log.info("✅ Development artifacts cleaned");
   } catch (error) {
     log.error(`❌ Failed to clean development artifacts: ${error}`);
@@ -53,18 +57,18 @@ export async function cleanDev(): Promise<void> {
  */
 export async function resetDev(): Promise<void> {
   log.info("🔄 Resetting development environment...");
-  
+
   await cleanDev();
-  
+
   // Additional reset logic would go here
-  
+
   log.info("✅ Development environment reset");
 }
 
 // CLI interface
 if (import.meta.main) {
   const command = Deno.args[0];
-  
+
   switch (command) {
     case "start":
       await startDevServer();

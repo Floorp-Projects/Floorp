@@ -1,14 +1,21 @@
 {
   "patch": ["libs/@types/gecko"],
   "unstable": ["npm-patch"],
-  "workspace": ["./libs/*", "./apps/*", "./apps/system/*"],
+  "workspace": ["./libs/*", "./chrome/*", "./modules/*", "./src/core/glue/*"],
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
-    "@std/fs": "jsr:@std/fs@^1.0.17",
+    "@std/fs": "jsr:@std/fs@^1.0.18",
     "#i18n/": "./i18n/",
-    "#apps/": "./apps/",
+    "#chrome/": "./chrome/",
     "#libs/": "./libs/",
-    "#features-chrome/": "./apps/features-chrome/",
+    "#chrome/browser/": "./chrome/browser/",
+    "#features-chrome/": "./chrome/browser/",
+    "#i18n-features-chrome/": "./i18n/features-chrome/",
+    "#modules/": "./modules/",
+    "#shared/": "./src/shared/",
+    "#features/": "./src/features/",
+    "#ui/": "./src/ui/",
+    "#themes/": "./src/themes/",
     "@std/streams": "jsr:@std/streams@^1.0.9"
   },
   "compilerOptions": {

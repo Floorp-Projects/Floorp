@@ -20,13 +20,13 @@ interface BuildOptions {
  */
 export async function build(options: BuildOptions): Promise<void> {
   const { mode, skipMozbuild = false, _clean = false } = options;
-  
+
   log.info(`🏗️  Starting Noraneko build (${mode} mode)`);
-  
+
   try {
     // Pre-build phase
     await runPreBuildPhase();
-    
+
     // Mozilla build phase
     if (!skipMozbuild) {
       log.info("🦊 Running Mozilla build...");
@@ -35,12 +35,11 @@ export async function build(options: BuildOptions): Promise<void> {
     } else {
       log.info("⏭️  Skipping Mozilla build");
     }
-    
+
     // Post-build phase
     await runPostBuildPhase(mode === "dev");
-    
+
     log.info("🎉 Build completed successfully!");
-    
   } catch (error) {
     log.error(`💥 Build failed: ${error}`);
     Deno.exit(1);
@@ -53,6 +52,6 @@ if (import.meta.main) {
   const mode: BuildMode = args.includes("--dev") ? "dev" : "production";
   const skipMozbuild = args.includes("--skip-mozbuild");
   const _clean = args.includes("--clean");
-  
+
   await build({ mode, skipMozbuild, _clean });
 }

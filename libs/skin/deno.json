@@ -1,6 +1,0 @@
-{
-  "name": "@nora/skin",
-  "exports": {
-    ".": "./*"
-  }
-}
