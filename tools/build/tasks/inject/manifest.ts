@@ -4,7 +4,7 @@ import { relative, resolve } from "npm:pathe@^2.0.2";
 import { SymlinkOptions } from "@std/fs/unstable-types";
 import { ensureDir } from "@std/fs/ensure-dir";
 import { symlinkDirectory } from "./symlink-directory.ts";
-import { isExists } from "../utils.ts";
+import { isExists } from "../../utils.ts";
 
 export async function injectManifest(
   binPath: string,
@@ -26,13 +26,10 @@ export async function injectManifest(
     }
   }
 
-  console.log("aa11");
   if (await isExists(`${binPath}/${dirName}`)) {
     await Deno.remove(`${binPath}/${dirName}`, { recursive: true });
   }
-  console.log("aa2");
   await ensureDir(`${binPath}/${dirName}`);
-  console.log("aa2");
   await Deno.writeTextFile(
     `${binPath}/${dirName}/noraneko.manifest`,
     `content noraneko content/ contentaccessible=yes
@@ -45,32 +42,31 @@ ${
         : ""
     }`,
   );
-  console.log("aa");
-  await symlinkDirectory(
-    `${binPath}/${dirName}`,
-    "apps/system/loader-features/_dist",
-    "content",
-  );
+  {
+    await symlinkDirectory(
+      `${binPath}/${dirName}`,
+      "src/core/glue/loader-features/_dist",
+      "content",
+    );
 
-  await symlinkDirectory(
-    `${binPath}/${dirName}`,
-    "apps/system/startup/_dist",
-    "startup",
-  );
-  await symlinkDirectory(
-    `${binPath}/${dirName}`,
-    "apps/designs/_dist",
-    "skin",
-  );
-  await symlinkDirectory(
-    `${binPath}/${dirName}`,
-    "apps/loader-modules/_dist",
-    "resource",
-  );
-  console.log("aa1");
-  // if (mode !== "dev") {
-  //   await symlink(
-  //     r("../../src/apps/settings/_dist"),
+    await symlinkDirectory(
+      `${binPath}/${dirName}`,
+      "src/core/glue/startup/_dist",
+      "startup",
+    );
+    await symlinkDirectory(
+      `${binPath}/${dirName}`,
+      "src/themes/_dist",
+      "skin",
+    );
+    await symlinkDirectory(
+      `${binPath}/${dirName}`,
+      "src/core/glue/loader-modules/_dist",
+      "resource",
+    );
+  }
+  // if (mode !== "dev") {  //   await symlink(
+  //     r("../../src/ui/settings/_dist"),
   //     `${binPath}/${dirName}/settings`,
   //     option,
   //   );

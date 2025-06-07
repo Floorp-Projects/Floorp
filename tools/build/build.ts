@@ -1,37 +1,54 @@
 import {
   applyPatches,
   initializeBinGit,
-} from "./git-patches/git-patches-manager.ts";
-import { applyMixin } from "./inject/mixin-loader.ts";
-import { injectManifest } from "./inject/manifest.ts";
-import { injectXHTML, injectXHTMLDev } from "./inject/xhtml.ts";
-import { savePrefsForProfile } from "./launchDev/savePrefs.ts";
-import { genVersion } from "./launchDev/writeVersion.ts";
-import { writeBuildid2 } from "./update/buildid2.ts";
+} from "./tasks/git-patches/git-patches-manager.ts";
+import { applyMixin } from "./tasks/inject/mixin-loader.ts";
+import { injectManifest } from "./tasks/inject/manifest.ts";
+import { injectXHTML, injectXHTMLDev } from "./tasks/inject/xhtml.ts";
+import { savePrefsForProfile } from "../dev/launchDev/savePrefs.ts";
+import { genVersion } from "../dev/launchDev/writeVersion.ts";
+import { writeBuildid2 } from "./tasks/update/buildid2.ts";
 import {
+  actualModulesPath,
   binDir,
-  brandingBaseName,
   buildid2Path,
   devBrandingSuffix,
-  devServerReadyString,
-  featuresChromePath,
-  getBinArchive,
-  i18nFeaturesChromePath,
   loaderFeaturesPath,
   loaderModulesPath,
-  modulesPath,
   mozbuildOutputDir,
   profileTestPath,
 } from "./defines.ts";
-import { symlinkDirectory } from "./inject/symlink-directory.ts";
-import { decompressBin } from "./prepareDev/decompressBin.ts";
-import { Readable } from "node:stream";
-import { initBin } from "./prepareDev/initBin.ts";
+import { symlinkDirectory } from "./tasks/inject/symlink-directory.ts";
+import { initBin } from "../dev/prepareDev/initBin.ts";
 import { isExists } from "./utils.ts";
 import { log } from "./logger.ts";
 
-const decoder = new TextDecoder();
 const encoder = new TextEncoder();
+
+/**
+ * Wait for a port to be available by attempting to connect to it
+ * @param port Port number to check
+ * @param timeout Maximum time to wait in milliseconds
+ */
+async function waitForPort(
+  port: number,
+  timeout: number = 30000,
+): Promise<void> {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    try {
+      const conn = await Deno.connect({ hostname: "127.0.0.1", port });
+      conn.close();
+      return; // Port is available
+    } catch {
+      // Port is not ready yet, wait a bit
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  throw new Error(`Port ${port} did not become available within ${timeout}ms`);
+}
 
 /**
  * Initializes the binary and git repositories, then runs the application.
@@ -52,7 +69,6 @@ export async function runWithInitBinGit() {
 
 let devViteProcess: Deno.ChildProcess | null = null;
 let browserProcess: Deno.ChildProcess | null = null;
-let devInit = false;
 
 /**
  * Initializes the core application environment. This includes:
@@ -103,6 +119,25 @@ async function initializeApplicationEnvironment(): Promise<string | null> {
   await Deno.mkdir(profileTestPath, { recursive: true });
   await savePrefsForProfile(profileTestPath);
 
+  // Create symlinks inside loader-features to point to chrome content
+  await symlinkDirectory(
+    loaderFeaturesPath, // Parent dir: src/core/glue/loader-features
+    "src/features/chrome",
+    "link-features-chrome",
+  );
+  // Create symlinks inside loader-features to point to i18n content
+  await symlinkDirectory(
+    loaderFeaturesPath, // Parent dir: src/core/glue/loader-features
+    "i18n/features-chrome", // Target: i18n/features-chrome
+    "link-i18n-features-chrome",
+  );
+  // Create symlinks: modules -> src/core/modules (actual module files)
+  await symlinkDirectory(
+    loaderModulesPath, // Parent dir: src/core/glue/loader-modules
+    actualModulesPath, // Target: src/core/modules
+    "link-modules",
+  );
+
   return buildid2;
 }
 
@@ -122,19 +157,21 @@ export async function run(mode: "dev" | "test" | "release" = "dev") {
   const command = new Deno.Command(Deno.execPath(), {
     args: ["-A", "./scripts/launchDev/child-browser.ts"],
     stdin: "piped",
-    stdout: "piped",
+    stdout: "inherit",
+    stderr: "inherit",
   });
 
-  const stream = new TextDecoderStream();
+  browserProcess = command.spawn();
 
+  // Monitor the browser process and exit when it completes
   (async () => {
-    for await (const chunk of stream.readable) {
-      log.info(chunk);
+    try {
+      await browserProcess.status;
+    } catch (error) {
+      log.error("Browser process error:", error);
     }
     exit();
   })();
-  browserProcess = command.spawn();
-  browserProcess.stdout.pipeTo(stream.writable);
 }
 
 /**
@@ -145,73 +182,45 @@ export async function run(mode: "dev" | "test" | "release" = "dev") {
  * @param buildid2 The build ID string.
  */
 export async function runDevMode(mode: string, buildid2: string | null) {
-  // Ensure development environment initialization happens only once.
-  if (!devInit) {
-    // Create symbolic links for various application components to enable development features.
-    // These links point to shared loader directories within 'apps/system'.
-    await symlinkDirectory(
-      loaderFeaturesPath, // Source: apps/system/loader-features
-      featuresChromePath, // Destination: apps/features-chrome
-      "link-features-chrome",
-    );
-    await symlinkDirectory(
-      loaderFeaturesPath, // Source: apps/system/loader-features
-      i18nFeaturesChromePath, // Destination: i18n/features-chrome
-      "link-i18n-features-chrome",
-    );
-    await symlinkDirectory(
-      loaderModulesPath, // Source: apps/system/loader-modules
-      modulesPath, // Destination: apps/modules
-      "link-modules",
-    );
+  // Create symbolic links for various application components to enable development features.
+  // These links point to shared loader directories within 'src/core/glue'.
 
-    // Run a child build process for development, which might compile or prepare assets.
-    const childBuildCommand = new Deno.Command(Deno.execPath(), {
-      args: [
-        "run",
-        "-A",
-        "./scripts/launchDev/child-build.ts",
-        mode,
-        buildid2 ?? "",
-      ],
-    });
-    // Wait for the child build process to complete.
-    await childBuildCommand.output();
-    log.info("run dev servers");
+  // Run a child build process for development, which might compile or prepare assets.
+  const childBuildCommand = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      "-A",
+      "./scripts/launchDev/child-build.ts",
+      mode,
+      buildid2 ?? "",
+    ],
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  // Wait for the child build process to complete.
+  await childBuildCommand.output();
+  log.info("run dev servers");
 
-    // Start the development server (e.g., Vite) in a child process.
-    // This server provides Hot Module Replacement (HMR) for rapid development.
-    const command = new Deno.Command(Deno.execPath(), {
-      args: ["-A", "./scripts/launchDev/child-dev.ts", mode, buildid2 ?? ""],
-      stdin: "piped",
-      stdout: "piped",
-    });
+  // Start the development server (e.g., Vite) in a child process.
+  // This server provides Hot Module Replacement (HMR) for rapid development.
+  const command = new Deno.Command(Deno.execPath(), {
+    args: ["-A", "./scripts/launchDev/child-dev.ts", mode, buildid2 ?? ""],
+    stdin: "piped",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
 
-    // Use Promise.withResolvers to wait for a specific log message from the dev server,
-    // indicating that it's ready to accept connections.
-    // Reference: https://github.com/denoland/std/issues/3757
-    const p = Promise.withResolvers();
-    const stream = new TextDecoderStream();
+  devViteProcess = command.spawn();
 
-    (async () => {
-      for await (const chunk of stream.readable) {
-        // Resolve the promise once the specific "ready" string is found in the output.
-        if (chunk.includes(devServerReadyString)) {
-          p.resolve(void 0);
-        }
-        log.info(chunk); // Log all output from the dev server.
-      }
-      exit(); // Exit the main process if the dev server process terminates.
-    })();
-    devViteProcess = command.spawn(); // Spawn the dev server process.
-    devViteProcess.stdout.pipeTo(stream.writable); // Pipe its stdout to our stream.
-    await p.promise; // Wait for the dev server to signal readiness.
+  // Wait for the dev server to be ready by checking if the port is listening
+  log.info("Starting development server...");
+  await waitForPort(5181, 30000); // Wait up to 30 seconds for port 5181
+  log.info("Development server is ready!");
 
-    devInit = true; // Mark development environment as initialized.
-  }
   // Inject manifest and XHTML content specific to the development build into the binary directory.
   await injectManifest(binDir, "dev", devBrandingSuffix);
   await injectXHTMLDev(binDir);
+  await injectXHTML(binDir);
 }
 
 /**
@@ -345,6 +354,8 @@ export async function buildForProduction(
         "production",
         buildid2 ?? "",
       ],
+      stdout: "inherit",
+      stderr: "inherit",
     });
     await childBuildCommand.output(); // Wait for the production child build to complete.
     await injectManifest("./_dist", "prod"); // Inject the production manifest into the _dist directory.
@@ -358,7 +369,7 @@ export async function buildForProduction(
       binPath = `${mozbuildOutputDir}/bin`;
       log.info(`Using bin directory: ${mozbuildOutputDir}/bin`);
     }
-    injectXHTML(binPath); // Inject final XHTML content into the located binary path.
+    await injectXHTML(binPath); // Inject final XHTML content into the located binary path.
 
     // Write buildid2 into the browser directory within the final binary.
     // This is typically for debugging or version tracking within the browser itself,

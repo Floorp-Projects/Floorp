@@ -2,11 +2,11 @@ import { symlink } from "@std/fs/unstable-symlink";
 import { resolve } from "npm:pathe@^2.0.2";
 
 export async function symlinkDirectory(
-  targetDirpath: string,
-  srcDirpath: string,
-  symlinkName: string,
+  linkParentDir: string, // Directory where the symlink will be created; e.g. loader path
+  linkTarget: string, // Directory that the symlink points to
+  linkName: string, // Name of the symlink
 ) {
-  const symlinkPath = resolve(targetDirpath, symlinkName);
+  const symlinkPath = resolve(linkParentDir, linkName);
   try {
     await Deno.lstat(symlinkPath);
     await Deno.remove(symlinkPath, { recursive: true });
@@ -16,9 +16,9 @@ export async function symlinkDirectory(
 
   await symlink(
     Deno.build.os === "windows"
-      ? resolve(import.meta.dirname, "../..", srcDirpath)
-      : srcDirpath,
-    resolve(targetDirpath, symlinkName),
+      ? resolve(import.meta.dirname, "../..", linkTarget)
+      : linkTarget,
+    resolve(linkParentDir, linkName),
     { "type": "dir" },
   );
 }

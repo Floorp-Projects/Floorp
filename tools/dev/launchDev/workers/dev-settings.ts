@@ -1,6 +1,6 @@
 import { createServer } from "npm:vite@6.3.3";
 
-Deno.chdir("./src/apps/settings");
+Deno.chdir("./src/ui/settings");
 
 const server = await createServer({
   configFile: "./vite.config.ts",

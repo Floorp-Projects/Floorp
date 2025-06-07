@@ -9,8 +9,8 @@ import {
   brandingName,
   getBinArchive,
   VERSION,
-} from "../defines.ts";
-import { isExists } from "../utils.ts";
+} from "../../build/defines.ts";
+import { isExists } from "../../build/utils.ts";
 import { downloadBinArchive } from "./downloadBin.ts";
 import pathe from "pathe";
 

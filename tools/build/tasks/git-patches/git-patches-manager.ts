@@ -1,5 +1,5 @@
 /// <reference lib="deno.ns" />
-import { brandingBaseName, brandingName } from "../defines.ts";
+import { brandingBaseName, brandingName } from "../../defines.ts";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { $ } from "zx";

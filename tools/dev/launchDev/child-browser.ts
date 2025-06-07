@@ -67,7 +67,7 @@ function printFirefoxLog(lines: string[]) {
 }
 
 import { log, type LogEntry } from "zx/core";
-import { brandingBaseName, brandingName } from "../defines.ts";
+import { brandingBaseName, brandingName } from "../../build/defines.ts";
 
 $.log = (entry: LogEntry) => {
   // if the buffer is null, the process is on exit.

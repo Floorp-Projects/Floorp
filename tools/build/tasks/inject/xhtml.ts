@@ -18,7 +18,7 @@ export async function injectXHTML(binPath: string) {
     script.setAttribute("type", "module");
     script.setAttribute(
       "src",
-      "chrome://noraneko-startup/content/chrome_root.mjs",
+      "chrome://noraneko-startup/content/chrome_root.js",
     );
     script.setAttribute("async", "async");
     script.dataset.geckomixin = "";

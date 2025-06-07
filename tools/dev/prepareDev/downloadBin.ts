@@ -1,5 +1,5 @@
 import { $ } from "npm:zx@^8.5.3/core";
-import { getBinArchive } from "../defines.ts";
+import { getBinArchive } from "../../build/defines.ts";
 
 // Binary archive filename
 const binArchive = getBinArchive();

@@ -1,6 +1,6 @@
 import { v7 as uuidv7 } from "uuid";
-import { writeVersion } from "../update/version.ts";
-import { writeBuildid2 } from "../update/buildid2.ts";
+import { writeVersion } from "../../build/tasks/update/version.ts";
+import { writeBuildid2 } from "../../build/tasks/update/buildid2.ts";
 import { resolve } from "pathe";
 import fs from "node:fs/promises";
 

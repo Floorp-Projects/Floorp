@@ -1,6 +1,6 @@
 import { createServer, type ViteDevServer } from "vite";
 import { resolve } from "pathe";
-import packageJson from "../../package.json" with { type: "json" };
+import packageJson from "../../../package.json" with { type: "json" };
 import { $, type Options, type ProcessPromise, usePwsh } from "zx";
 
 if (Deno.build.os === "windows") {
@@ -20,8 +20,8 @@ async function launchDev(mode: string, buildid2: string) {
   pDevVite = [
     await createServer({
       mode,
-      configFile: r("./apps/system/loader-features/vite.config.ts"),
-      root: r("./apps/system/loader-features"),
+      configFile: r("./src/core/glue/loader-features/vite.config.ts"),
+      root: r("./src/core/glue/loader-features"),
       define: {
         "import.meta.env.__BUILDID2__": `"${buildid2 ?? ""}"`,
         "import.meta.env.__VERSION2__": `"${packageJson.version}"`,

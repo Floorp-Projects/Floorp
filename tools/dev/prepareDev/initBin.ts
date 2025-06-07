@@ -4,8 +4,8 @@ import {
   binRootDir,
   binVersion,
   VERSION,
-} from "../defines.ts";
-import { isExists } from "../utils.ts";
+} from "../../build/defines.ts";
+import { isExists } from "../../build/utils.ts";
 import { decompressBin } from "./decompressBin.ts";
 
 /**
