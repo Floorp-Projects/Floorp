@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "rolldown-vite";
 import path from "node:path";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";

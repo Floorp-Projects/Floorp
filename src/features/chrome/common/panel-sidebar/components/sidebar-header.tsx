@@ -15,7 +15,7 @@ import { CPanelSidebar } from "./panel-sidebar";
 
 export function SidebarHeader(props: { ctx: CPanelSidebar }) {
   const gPanelSidebar = props.ctx;
-  PanelNavigator.gPanelSidebar = gPanelSidebar;
+  PanelNavigator.setGPanelSidebar(gPanelSidebar);
   return (
     <xul:box id="panel-sidebar-header" align="center">
       <Show

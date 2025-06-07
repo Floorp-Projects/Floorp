@@ -1,5 +1,8 @@
 {
   "name": "@nora/solid-xul",
+  "imports": {
+    "vite": "npm:rolldown-vite@latest"
+  },
   "exports": {
     ".": "./index.ts",
     "./jsx-runtime": "./jsx-runtime.d.ts"

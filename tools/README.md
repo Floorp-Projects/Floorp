@@ -1,97 +1,89 @@
 # Noraneko Build Tools
 
-この `tools/`
-ディレクトリには、Noranekoプロジェクトのビルドと開発に関するすべてのツールが含まれています。
+This `tools/` directory contains all the tools for building and developing the Noraneko project.
 
-## 📜 履歴
+## 📁 Directory Structure
 
-> **移行について**: このディレクトリは以前の `scripts/`
-> ディレクトリから移行されました。プロジェクトの成長に伴い、より良い組織化と拡張性のために
-> `scripts/` から `tools/`
-> へとリネームされ、構造が改善されました。すべての機能は保持され、新しいモジュラーアーキテクチャで強化されています。
-
-## 📁 ディレクトリ構造
-
-```
+```text
 tools/
-├── build/                      # ビルドシステム
-│   ├── phases/                 # ビルドフェーズ
-│   │   ├── pre-build.ts        # Mozilla ビルド前の処理
-│   │   └── post-build.ts       # Mozilla ビルド後の処理
-│   ├── tasks/                  # 個別のビルドタスク
-│   │   ├── inject/             # コード注入タスク
-│   │   ├── git-patches/        # Git パッチ適用
-│   │   └── update/             # アップデート関連
-│   ├── index.ts                # メインビルドオーケストレーター
-│   ├── defines.ts              # パスと定数の定義
-│   ├── logger.ts               # ロギングユーティリティ
-│   └── utils.ts                # 共通ユーティリティ
+├── build/                      # Build System
+│   ├── phases/                 # Build phases
+│   │   ├── pre-build.ts        # Pre-Mozilla build processing
+│   │   └── post-build.ts       # Post-Mozilla build processing
+│   ├── tasks/                  # Individual build tasks
+│   │   ├── inject/             # Code injection tasks
+│   │   ├── git-patches/        # Git patch application
+│   │   └── update/             # Update-related tasks
+│   ├── index.ts                # Main build orchestrator
+│   ├── defines.ts              # Path and constant definitions
+│   ├── logger.ts               # Logging utilities
+│   └── utils.ts                # Common utilities
 │
-└── dev/                        # 開発ツール
-    ├── launchDev/              # 開発環境起動
-    ├── prepareDev/             # 開発環境準備
-    ├── cssUpdate/              # CSS更新ツール
-    └── index.ts                # 開発ツールエントリーポイント
+└── dev/                        # Development Tools
+    ├── launchDev/              # Development environment launch
+    ├── prepareDev/             # Development preparation
+    ├── cssUpdate/              # CSS update utilities
+    └── index.ts                # Development tools entry point
 ```
 
-## 🚀 使用方法
+## 🚀 Usage
 
-### ビルドシステム
+### Build System
 
 ```bash
-# 開発ビルド
+# Development build
 deno run -A build.ts --dev
 
-# プロダクションビルド
+# Production build
 deno run -A build.ts --production
 
-# Mozilla ビルドをスキップして開発ビルド
+# Development build (skip Mozilla build)
 deno run -A build.ts --dev-skip-mozbuild
 ```
 
-### 開発ツール
+### Development Tools
 
 ```bash
-# 開発サーバー開始
+# Start development server
 deno run -A tools/dev/index.ts start
 
-# 開発環境クリーンアップ
+# Clean development environment
 deno run -A tools/dev/index.ts clean
 
-# 開発環境リセット
+# Reset development environment
 deno run -A tools/dev/index.ts reset
 ```
 
-## 🔧 主な改善点
+## 🔧 Key Improvements
 
-### 1. **明確な関心の分離**
+### 1. **Clear Separation of Concerns**
 
-- `build/` : ビルド関連の全ての機能
-- `dev/` : 開発関連のツールとユーティリティ
+- `build/`: All build-related functionality
+- `dev/`: Development tools and utilities
 
-### 2. **モジュラー設計**
+### 2. **Modular Design**
 
-- フェーズベースのビルドシステム
-- 再利用可能なタスク
-- 独立したユーティリティ
+- Phase-based build system
+- Reusable tasks
+- Independent utilities
 
-### 3. **保守性の向上**
+### 3. **Enhanced Maintainability**
 
-- 明確なインポートパス
-- 一貫したエラーハンドリング
-- 包括的なロギング
+- Clear import paths
+- Consistent error handling
+- Comprehensive logging
 
-### 4. **開発者体験の向上**
+### 4. **Improved Developer Experience**
 
-- 直感的なCLIインターフェース
-- ヘルプメッセージ
-- エラーメッセージの改善
+- Intuitive CLI interface
+- Help messages
+- Better error reporting
 
-## 🔄 移行ガイド
+## 🔄 Migration Guide
 
-### 旧 `scripts/` からの変更点
+### Changes from Old `scripts/`
 
-| 旧パス                | 新パス                      |
+| Old Path              | New Path                    |
 | --------------------- | --------------------------- |
 | `scripts/build.ts`    | `tools/build/build.ts`      |
 | `scripts/defines.ts`  | `tools/build/defines.ts`    |
@@ -99,20 +91,26 @@ deno run -A tools/dev/index.ts reset
 | `scripts/launchDev/`  | `tools/dev/launchDev/`      |
 | `scripts/prepareDev/` | `tools/dev/prepareDev/`     |
 
-### インポートパスの更新
+### Import Path Updates
 
 ```typescript
-// 旧
+// Old
 import { log } from "./scripts/logger.ts";
 
-// 新
+// New
 import { log } from "./tools/build/logger.ts";
 ```
 
-## 📝 今後の改善予定
+## 📚 Related Documentation
 
-1. **TypeScript設定の統一**
-2. **テストの追加**
-3. **CI/CD統合の改善**
-4. **ドキュメントの拡充**
-5. **パフォーマンス最適化**
+- [Build System Documentation](../docs/BUILD_SYSTEM_IMPROVEMENTS.md)
+- [Development Guide](../docs/DEVELOPMENT_GUIDE.md)
+- [Project Structure](../docs/PROJECT_STRUCTURE.md)
+
+## 📝 Future Improvements
+
+1. **Unified TypeScript Configuration**
+2. **Test Coverage Addition**
+3. **Enhanced CI/CD Integration**
+4. **Documentation Expansion**
+5. **Performance Optimization**

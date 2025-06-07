@@ -9,7 +9,7 @@
     "solid-js": "npm:solid-js@^1.9.5",
     "unplugin-swc": "npm:unplugin-swc@^1.5.2",
     "uuid": "npm:uuid@^11.1.0",
-    "vite": "npm:vite@^6.3.3",
+    "vite": "npm:rolldown-vite@latest",
     "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.0.0",
     "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.6",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",

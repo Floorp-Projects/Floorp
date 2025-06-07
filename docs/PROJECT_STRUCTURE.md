@@ -1,261 +1,191 @@
 # Noraneko Project Structure Guide
 
-## 🎯 Proposed Developer-Friendly Structure
+## 🎯 Current Project Structure
 
-```
+```text
 noraneko/
 ├── docs/                           # 📚 Documentation
 │   ├── PROJECT_STRUCTURE.md        # This file
 │   ├── DEVELOPMENT_GUIDE.md        # Step-by-step development guide
-│   ├── API_REFERENCE.md            # API documentation
-│   └── TROUBLESHOOTING.md          # Common issues and solutions
+│   ├── BUILD_SYSTEM_IMPROVEMENTS.md # Build system documentation
+│   └── README.md                   # Documentation index
 │
 ├── src/                            # 🛠️ Source Code
 │   ├── core/                       # Core browser functionality
 │   │   ├── glue/                   # 🔗 Browser integration glue code (STABLE)
-│   │   │   ├── loader-features/    # Feature loading system
-│   │   │   ├── loader-modules/     # Module loading system  
-│   │   │   └── startup/            # Browser startup integration
-│   │   ├── modules/                # System modules (.sys.mts files)
-│   │   └── actors/                 # Browser actors
+│   │   └── modules/                # System modules (.sys.mts files)
 │   │
 │   ├── features/                   # 🚀 Browser features (ACTIVE DEVELOPMENT)
-│   │   ├── workspaces/             # Workspace functionality
-│   │   ├── split-view/             # Split view feature
-│   │   └── pwa-manager/            # Progressive Web App management
+│   │   └── chrome/                 # Chrome-level browser features
 │   │
 │   ├── ui/                         # User Interface
-│   │   ├── chrome/                 # Browser chrome (toolbars, menus)
-│   │   ├── content/                # Content area components
-│   │   ├── settings/               # Settings pages
-│   │   └── about-pages/            # about:* pages
+│   │   ├── about-pages/            # about:* pages
+│   │   └── settings/               # Settings pages
 │   │
 │   ├── themes/                     # Visual themes
-│   │   ├── default/                # Default Noraneko theme
+│   │   ├── fluerial/               # Fluerial theme
 │   │   ├── lepton/                 # Lepton theme integration
-│   │   └── fluerial/               # Fluerial theme
+│   │   └── noraneko/               # Default Noraneko theme
 │   │
 │   └── shared/                     # Shared utilities and libraries
-│       ├── utils/                  # Common utilities
+│       ├── common/                 # Common utilities
+│       ├── constants/              # Application constants
 │       ├── types/                  # TypeScript type definitions
-│       └── constants/              # Application constants
+│       └── utils/                  # Utility functions
 │
 ├── tools/                          # 🔧 Development Tools
 │   ├── build/                      # Build orchestration
 │   │   ├── phases/                 # Build phases (before/after mozbuild)
-│   │   └── tasks/                  # Individual build tasks
+│   │   ├── tasks/                  # Individual build tasks
+│   │   └── index.ts                # Main build entry point
 │   └── dev/                        # Development utilities
+│       ├── launchDev/              # Development launch scripts
+│       ├── prepareDev/             # Development preparation
+│       └── cssUpdate/              # CSS update tools
+│
+├── libs/                           # 📚 Libraries and dependencies
+│   ├── @types/                     # Type definitions
+│   ├── crates/                     # Rust crates
+│   ├── shared/                     # Shared libraries
+│   ├── skin/                       # UI skin libraries
+│   ├── solid-xul/                  # Solid.js XUL integration
+│   ├── user-js-runner/             # User script runner
+│   └── vitest-noraneko/            # Testing framework
 │
 ├── config/                         # ⚙️ Configuration
-│   ├── vite/                       # Vite configurations
-│   ├── deno/                       # Deno configurations
-│   └── build/                      # Build configurations
-│
-├── dist/                           # 📦 Build Output
-│   ├── bin/                        # Binary files
-│   ├── profile/                    # Profile data
-│   └── temp/                       # Temporary files
-│
-├── tests/                          # 🧪 Tests
-│   ├── unit/                       # Unit tests
-│   ├── integration/                # Integration tests
-│   └── e2e/                        # End-to-end tests
-│
-└── assets/                         # 📎 Static Assets
-    ├── icons/                      # Application icons
-    ├── images/                     # Images and graphics
-    └── locales/                    # Internationalization files
+├── i18n/                           # 🌐 Internationalization
+├── static/                         # 📦 Static assets
+├── tests/                          # 🧪 Test files
+├── assets/                         # 📎 Application assets
+├── build/                          # 🏗️ Build configurations
+└── _dist/                          # 📦 Build output (generated)
+    ├── bin/                        # Binary files
+    ├── profile/                    # Profile data
+    └── temp/                       # Temporary files
 ```
 
-## 🚀 Benefits of This Structure
+## 🚀 Key Architecture Principles
 
 ### 1. **Clear Separation of Concerns**
 
-- `src/` contains all source code
-- `tools/` contains development utilities
-- `config/` contains all configuration files
-- `docs/` contains comprehensive documentation
+- **`src/core/`**: Stable browser integration code
+- **`src/features/`**: Active feature development
+- **`src/ui/`**: User interface components
+- **`src/themes/`**: Visual theming
+- **`tools/`**: Development and build tools
 
-### 2. **Intuitive Navigation**
+### 2. **Modular Build System**
 
-- Features are grouped logically under `src/features/`
-- UI components are organized under `src/ui/`
-- Themes are centralized under `src/themes/`
+- **Phase-based builds**: Pre and post Mozilla build phases
+- **Task-oriented**: Individual build tasks for specific operations
+- **Tool separation**: Build tools separate from development tools
 
-### 3. **Development Efficiency**
+### 3. **Feature-Driven Development**
 
-- Related files are co-located
-- Clear naming conventions
-- Reduced cognitive load for new developers
+- Features are self-contained in `src/features/`
+- Clear boundaries between core and features
+- Easy to add, remove, or modify features
 
-### 4. **Scalability**
+## 📋 Directory Responsibilities
 
-- Easy to add new features
-- Modular structure supports plugin architecture
-- Clear boundaries between components
+### Source Code (`src/`)
 
-## 📋 Migration Strategy
+| Directory | Purpose | Stability | Examples |
+|-----------|---------|-----------|----------|
+| `core/glue/` | Browser integration | 🟢 Stable | Loader systems, startup |
+| `core/modules/` | System modules | 🟢 Stable | .sys.mts files |
+| `features/chrome/` | Browser features | 🟡 Active | Custom features |
+| `ui/` | User interfaces | 🟡 Active | Settings, about pages |
+| `themes/` | Visual themes | 🟡 Active | Fluerial, Lepton |
+| `shared/` | Common utilities | 🟢 Stable | Types, constants |
 
-### Phase 1: Documentation and Planning
+### Tools (`tools/`)
 
-1. Create comprehensive documentation
-2. Set up development guides
-3. Establish coding standards
+| Directory | Purpose | Usage |
+|-----------|---------|-------|
+| `build/` | Build orchestration | Production builds |
+| `dev/` | Development utilities | Development workflow |
 
-### Phase 2: Gradual Restructuring
+### Libraries (`libs/`)
 
-1. Move and consolidate related files
-2. Update import paths
-3. Update build configurations
+| Directory | Purpose | Technology |
+|-----------|---------|------------|
+| `@types/` | Type definitions | TypeScript |
+| `crates/` | Rust libraries | Rust |
+| `shared/` | Shared libraries | TypeScript |
+| `solid-xul/` | UI framework | Solid.js |
 
-### Phase 3: Tooling Updates
+## 🎯 Development Workflow
 
-1. Update build scripts
-2. Update development workflows
-3. Update CI/CD pipelines
-
-## 🎯 Immediate Actions
-
-### 1. Separate Build System from Application Code
-
-**Current Problem**: `apps/system/` mixes build scripts with browser glue code,
-causing confusion for feature developers.
-
-**Proposed Structure**:
-
-```
-├── src/                            # 🛠️ Source Code
-│   ├── core/                       # Core browser functionality  
-│   │   ├── glue/                   # 🔗 Browser integration glue code (STABLE)
-│   │   │   ├── loader-features/    # Feature loading system
-│   │   │   ├── loader-modules/     # Module loading system  
-│   │   │   └── startup/            # Browser startup integration
-│   │   ├── modules/                # System modules (.sys.mts files)
-│   │   └── actors/                 # Browser actors
-│   │
-│   ├── features/                   # 🚀 Browser features (ACTIVE DEVELOPMENT)
-│   │   ├── workspaces/             # Workspace functionality
-│   │   ├── split-view/             # Split view feature
-│   │   └── pwa-manager/            # Progressive Web App management
-│   │
-├── tools/                          # 🔧 Development Tools
-│   ├── build/                      # Build orchestration
-│   │   ├── phases/                 # Build phases (before/after mozbuild)
-│   │   └── tasks/                  # Individual build tasks
-│   └── dev/                        # Development utilities
-```
-
-**Benefits**:
-
-- **Clear Separation**: Glue code in `src/core/glue/` (stable, rarely changed)
-- **Feature Focus**: Developers work in `src/features/` without distraction
-- **Build Configs Colocated**: Build scripts stay with their respective glue
-  code
-- **Reduced Complexity**: Clear boundaries between stable glue and active
-  development
-
-### 2. Migration Steps
-
-1. **Phase 1**: Move glue code
-   ```bash
-   # Move browser integration code to core
-   mv apps/system/loader-features src/core/glue/
-   mv apps/system/loader-modules src/core/glue/
-   mv apps/system/startup src/core/glue/
-   ```
-
-2. **Phase 2**: Keep build configurations colocated
-   ```bash
-   # Build configurations remain with their respective glue code
-   # This keeps related functionality together and simplifies maintenance
-   # Example structure:
-   # src/core/glue/loader-features/vite.config.ts
-   # src/core/glue/loader-modules/tsdown.config.ts
-   # src/core/glue/startup/tsdown.config.ts
-   ```
-
-3. **Phase 3**: Update import paths and build scripts
-   - Update `scripts/build.ts` to reference new paths
-   - Update symlink creation in build system
-   - Update vite configurations to work with colocated build configs
-
-**Implementation Priority**:
-
-1. ✅ **Create Developer Onboarding Guide**
-2. 🔄 **Separate Glue Code from Build Scripts** (This proposal)
-3. **Standardize Configuration Files**
-4. **Improve Build Script Organization**
-5. **Add Component Documentation**
-6. **Set Up Development Templates**
-
-## ✅ Migration Progress
-
-### ✅ **Phase 1 Completed: Tools Directory Restructuring**
-
-**Status**: **COMPLETED** ✅
-
-The `scripts/` directory has been successfully migrated to the new `tools/`
-structure:
-
-```
-tools/                          # 🔧 Development Tools
-├── build/                      # Build orchestration
-│   ├── phases/                 # Build phases (before/after mozbuild)
-│   │   ├── pre-build.ts        # Pre-Mozilla build tasks
-│   │   └── post-build.ts       # Post-Mozilla build tasks
-│   ├── tasks/                  # Individual build tasks
-│   │   ├── inject/             # Code injection tasks
-│   │   ├── git-patches/        # Git patch management
-│   │   └── update/             # Update-related tasks
-│   ├── index.ts                # Main build orchestrator
-│   ├── defines.ts              # Path and constant definitions
-│   ├── logger.ts               # Logging utilities
-│   └── utils.ts                # Common utilities
-│
-└── dev/                        # Development utilities
-    ├── launchDev/              # Development launch tools
-    ├── prepareDev/             # Development preparation
-    ├── cssUpdate/              # CSS update tools
-    └── index.ts                # Development tools entry point
-```
-
-**Benefits Achieved**:
-
-- ✅ **Clear Separation**: Build tools vs development tools
-- ✅ **Modular Design**: Phase-based build system with reusable tasks
-- ✅ **Improved CLI**: Intuitive command-line interface with help messages
-- ✅ **Better Error Handling**: Consistent error reporting and logging
-- ✅ **Path Normalization**: All paths relative to project root from tools
-  directory
-
-**New Usage**:
+### 1. **Feature Development**
 
 ```bash
-# Development build
-deno run -A build.ts --dev
+# Work in features directory
+cd src/features/chrome/
 
-# Production build  
-deno run -A build.ts --production
-
-# Development tools
-deno run -A tools/dev/index.ts start
-deno run -A tools/dev/index.ts clean
+# Add new feature
+mkdir my-new-feature
+cd my-new-feature
 ```
 
-### 🔄 **Next Phase: Source Code Restructuring**
+### 2. **UI Development**
 
-**Target**: Move application source code to the proposed `src/` structure:
+```bash
+# Work in UI directory
+cd src/ui/
 
-- `apps/system/` → `src/core/glue/`
-- Feature code → `src/features/`
-- UI components → `src/ui/`
-- Themes → `src/themes/`
+# Add new UI component
+mkdir my-component
+cd my-component
+```
 
-**Benefits Expected**:
+### 3. **Theme Development**
 
-- **Enhanced Clarity**: Distinct folders for glue code, features, UI, and themes
-- **Improved Collaboration**: Frontend and backend developers can work
-  independently
-- **Easier Navigation**: Logical grouping of related files
-- **Streamlined Development**: Focused areas for feature development and bug
-  fixing
+```bash
+# Work in themes directory
+cd src/themes/
+
+# Modify existing theme or create new one
+cd noraneko/  # or fluerial/, lepton/
+```
+
+## 🔧 Build System Integration
+
+### Current Structure Benefits
+
+1. **Modular Build Process**: Each phase has specific responsibilities
+2. **Clear Dependencies**: Build order is well-defined
+3. **Development Tools**: Separate from production build
+4. **Maintainable**: Easy to understand and modify
+
+### Build Phases
+
+1. **Pre-Mozilla Build**: Preparation and setup
+2. **Mozilla Build**: Core Firefox build
+3. **Post-Mozilla Build**: Noraneko integration
+
+## 📚 Related Documentation
+
+- [Development Guide](DEVELOPMENT_GUIDE.md) - Step-by-step development instructions
+- [Build System Documentation](BUILD_SYSTEM_IMPROVEMENTS.md) - Build system details
+- [Documentation Index](README.md) - All documentation links
+
+## 🎯 Migration Status
+
+### ✅ Completed
+
+- Tools directory restructuring
+- Build system modularization
+- Documentation organization
+
+### 🔄 In Progress
+
+- Source code organization refinement
+- Feature development guidelines
+- Testing framework integration
+
+### 📋 Future Plans
+
+- Component documentation
+- Development templates
+- CI/CD pipeline improvements

@@ -1,249 +1,316 @@
 # Noraneko Development Guide
 
-## 🎯 Getting Started
+Welcome to the Noraneko development guide! This document provides step-by-step instructions for setting up, building, and developing the Noraneko browser.
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Deno runtime
-- GitHub CLI (`gh`)
-- Git
+- **Deno**: Version 1.40+ ([Install Deno](https://deno.land/manual/getting_started/installation))
+- **Node.js**: Version 18+ (for some development tools)
+- **Git**: For version control
+- **Visual Studio Build Tools** (Windows) or **Xcode** (macOS) or **GCC** (Linux)
 
-### Quick Setup
+### 1. Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-repo/noraneko.git
+git clone https://github.com/nyanrus/noraneko.git
 cd noraneko
-
-# Install dependencies
-deno install --allow-scripts
-
-# Download runtime binaries (Windows)
-gh run download -R nyanrus/noraneko-runtime -n noraneko-win-amd64-dev [run_id]
-
-# Start development
-deno task dev
 ```
 
-## 🏗️ Architecture Overview
+### 2. Initial Setup
 
-### Core Components
+```bash
+# Download Mozilla source and prepare development environment
+deno run -A tools/dev/index.ts prepare
+```
 
-#### 1. **Build System** (`scripts/build.ts`)
+### 3. Development Build
 
-The heart of the development workflow:
+```bash
+# Build for development (includes HMR and source maps)
+deno run -A build.ts --dev
+```
 
-- **Development Mode**: Hot Module Replacement (HMR) for rapid iteration
-- **Production Mode**: Optimized builds for release
-- **Mozbuild Integration**: Works with Firefox's build system
+### 4. Launch Development Browser
 
-#### 2. **Feature Modules** (`src/apps/main/core/`)
+```bash
+# Launch the development browser
+deno run -A tools/dev/index.ts start
+```
 
-- **Workspaces**: Tab organization and management
-- **Split View**: Side-by-side browsing
-- **Panel Sidebar**: Customizable sidebar panels
+## 🛠️ Development Workflow
 
-#### 3. **UI Components** (`src/apps/`)
+### Project Structure Overview
 
-- **Settings**: Browser configuration interface
-- **About Pages**: Custom browser pages
-- **Themes**: Visual customization system
+```text
+noraneko/
+├── src/                    # 🛠️ Source Code
+│   ├── core/              # Core browser functionality
+│   ├── features/          # Browser features
+│   ├── ui/                # User interface components
+│   ├── themes/            # Visual themes
+│   └── shared/            # Shared utilities
+├── tools/                 # 🔧 Development Tools
+│   ├── build/             # Build system
+│   └── dev/               # Development utilities
+├── docs/                  # 📚 Documentation
+└── _dist/                 # 📦 Build output
+```
 
-## 🔧 Development Workflows
+### Development Modes
+
+#### 1. **Full Development Build**
+
+```bash
+# Complete build including Mozilla Firefox base
+deno run -A build.ts --dev
+```
+
+This mode:
+
+- Downloads and builds Mozilla Firefox
+- Applies Noraneko patches and features
+- Enables hot module reloading (HMR)
+- Includes source maps for debugging
+
+#### 2. **Quick Development Build**
+
+```bash
+# Skip Mozilla build (faster iteration)
+deno run -A build.ts --dev-skip-mozbuild
+```
+
+This mode:
+
+- Skips Mozilla build (requires previous full build)
+- Only rebuilds Noraneko-specific code
+- Much faster for feature development
+
+#### 3. **Production Build**
+
+```bash
+# Production build with optimizations
+deno run -A build.ts --production
+```
+
+This mode:
+
+- Optimized and minified builds
+- No source maps
+- Production-ready output
+
+## 🎯 Feature Development
 
 ### Adding a New Feature
 
 1. **Create Feature Directory**
-   ```
-   src/apps/main/core/common/your-feature/
-   ├── index.ts              # Main entry point
-   ├── manager.tsx           # Feature manager
-   ├── data/                 # Data management
-   └── utils/                # Utilities
+
+   ```bash
+   mkdir src/features/chrome/my-new-feature
+   cd src/features/chrome/my-new-feature
    ```
 
-2. **Implement Feature Interface**
+2. **Create Feature Files**
+
    ```typescript
-   import { noraComponent, NoraComponentBase } from "@core/utils/base";
-
-   @noraComponent(import.meta.hot)
-   export default class YourFeature extends NoraComponentBase {
-     init() {
-       // Initialize your feature
+   // src/features/chrome/my-new-feature/index.ts
+   export class MyNewFeature {
+     static initialize() {
+       console.log("My new feature initialized!");
      }
    }
    ```
 
-3. **Register Feature** Add to the appropriate module loader
+3. **Register Feature**
 
-### Development Server Ports
+   Add your feature to the appropriate loader in `src/core/glue/`.
 
-| Application | Port | Purpose               |
-| ----------- | ---- | --------------------- |
-| Main App    | 5181 | Core browser features |
-| Designs     | 5182 | Theme development     |
-| Settings    | 5183 | Settings interface    |
-| Tests       | 5191 | Test environment      |
+4. **Test Your Feature**
 
-### Hot Module Replacement (HMR)
+   ```bash
+   # Rebuild and test
+   deno run -A build.ts --dev-skip-mozbuild
+   deno run -A tools/dev/index.ts start
+   ```
 
-HMR is supported for:
+### Feature Development Guidelines
 
-- ✅ TypeScript/JavaScript files
-- ✅ CSS/SCSS files
-- ✅ React/Solid components
-- ❌ System modules (require restart)
+- **Self-contained**: Keep features in their own directories
+- **Clear naming**: Use descriptive names for files and classes
+- **Documentation**: Add comments and documentation
+- **Testing**: Include tests when applicable
 
 ## 🎨 UI Development
 
-### Creating Components
+### Working with Themes
 
-1. **Solid.js Components** (for browser UI)
-   ```typescript
-   import { createSignal } from "solid-js";
+```bash
+# Navigate to themes directory
+cd src/themes/
 
-   export function MyComponent() {
-     const [count, setCount] = createSignal(0);
+# Available themes:
+# - noraneko/    (Default theme)
+# - fluerial/    (Fluerial theme)
+# - lepton/      (Lepton theme integration)
+```
 
-     return (
-       <div onClick={() => setCount((c) => c + 1)}>
-         Count: {count()}
-       </div>
-     );
-   }
-   ```
+### Creating Custom UI
 
-2. **React Components** (for settings pages)
-   ```typescript
-   import { useState } from "react";
+```bash
+# Navigate to UI directory
+cd src/ui/
 
-   export function MySettingsComponent() {
-     const [value, setValue] = useState("");
+# Add new UI components:
+# - about-pages/  (about:* pages)
+# - settings/     (Settings pages)
+```
 
-     return (
-       <input
-         value={value}
-         onChange={(e) => setValue(e.target.value)}
-       />
-     );
-   }
-   ```
+## 🔧 Build System
 
-### Styling Guidelines
+### Build Architecture
 
-- Use CSS custom properties for themes
-- Follow BEM naming convention
-- Leverage Tailwind CSS for settings pages
+The build system is organized into phases:
+
+1. **Pre-Build Phase**: Preparation and setup
+2. **Mozilla Build Phase**: Core Firefox build
+3. **Post-Build Phase**: Noraneko integration
+
+### Build Commands
+
+```bash
+# View all build options
+deno run -A build.ts --help
+
+# Clean build output
+deno run -A tools/dev/index.ts clean
+
+# Reset development environment
+deno run -A tools/dev/index.ts reset
+```
+
+### Build Configuration
+
+Build settings are centralized in `tools/build/defines.ts`:
+
+- Platform-specific paths
+- Development vs production settings
+- Port configurations
+- Feature flags
 
 ## 🧪 Testing
 
 ### Running Tests
 
 ```bash
-# Unit tests
-deno task test
+# Run all tests
+deno run -A tools/dev/index.ts test
 
-# Integration tests
-deno task test:integration
-
-# E2E tests
-deno task test:e2e
+# Run specific test suite
+deno run -A tests/unit/my-feature.test.ts
 ```
 
 ### Writing Tests
 
-```typescript
-import { describe, expect, it } from "vitest";
+Create test files in the `tests/` directory:
 
-describe("MyFeature", () => {
-  it("should work correctly", () => {
-    expect(true).toBe(true);
-  });
+```typescript
+// tests/unit/my-feature.test.ts
+import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
+import { MyNewFeature } from "../../src/features/chrome/my-new-feature/index.ts";
+
+Deno.test("MyNewFeature initializes correctly", () => {
+  // Test implementation
+  assertEquals(typeof MyNewFeature.initialize, "function");
 });
 ```
 
-## 🔨 Build System
+## 🔍 Debugging
 
-### Build Modes
+### Development Tools
 
-1. **Development** (`deno task dev`)
-   - Fast rebuilds
-   - HMR enabled
-   - Source maps
-   - Debug symbols
-
-2. **Production** (`deno task build`)
-   - Optimized output
-   - Minification
-   - Tree shaking
-   - Asset optimization
-
-### Build Phases
-
-1. **Before Mozbuild**: Prepare assets for Firefox build system
-2. **After Mozbuild**: Final injection and packaging
-
-## 📦 Package Management
-
-### Adding Dependencies
-
-For Deno projects:
-
-```bash
-# Add to deno.json
-{
-  "imports": {
-    "my-library": "npm:my-library@^1.0.0"
-  }
-}
-```
-
-For Node.js projects:
-
-```bash
-npm install my-package
-```
-
-## 🐛 Debugging
-
-### Browser Debugging
-
-1. Enable Developer Tools in browser
-2. Use `console.log()` for quick debugging
-3. Use browser debugger for breakpoints
-
-### Build Debugging
-
-1. Check build logs in terminal
-2. Verify file paths and imports
-3. Use `--verbose` flag for detailed output
+- **Browser DevTools**: Standard web debugging tools
+- **Source Maps**: Available in development builds
+- **Logging**: Built-in logging system in `tools/build/logger.ts`
 
 ### Common Issues
 
-| Issue               | Solution                            |
-| ------------------- | ----------------------------------- |
-| Build fails         | Check import paths and dependencies |
-| HMR not working     | Restart dev server                  |
-| Browser won't start | Check binary download               |
+#### Build Failures
 
-## 📚 Resources
+```bash
+# Clean and rebuild
+deno run -A tools/dev/index.ts clean
+deno run -A build.ts --dev
+```
 
-- [Mozilla Firefox Developer Documentation](https://firefox-source-docs.mozilla.org/)
-- [Deno Documentation](https://deno.land/manual)
-- [Vite Documentation](https://vitejs.dev/)
-- [Solid.js Documentation](https://docs.solidjs.com/)
+#### Module Loading Issues
 
-## 🤝 Contributing
+- Check import paths in your features
+- Verify feature registration in loaders
+- Check browser console for errors
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+#### Performance Issues
 
-### Code Style
+- Use `--dev-skip-mozbuild` for faster iterations
+- Profile with browser DevTools
+- Check build logs for optimization hints
 
-- Use TypeScript for all new code
-- Follow ESLint configuration
-- Add JSDoc comments for public APIs
-- Use conventional commit messages
+## 📚 Advanced Topics
+
+### Custom Build Tasks
+
+Create custom build tasks in `tools/build/tasks/`:
+
+```typescript
+// tools/build/tasks/my-custom-task.ts
+export async function myCustomTask() {
+  console.log("Running my custom task...");
+  // Task implementation
+}
+```
+
+### Integration with External Tools
+
+- **TypeScript**: Configured via `tsconfig.json`
+- **ESLint**: Code linting and formatting
+- **Vite**: For UI development and HMR
+
+### Contributing Guidelines
+
+1. **Fork the Repository**
+2. **Create Feature Branch**: `git checkout -b feature/my-feature`
+3. **Follow Coding Standards**: Use TypeScript, proper naming
+4. **Add Tests**: Include tests for new features
+5. **Update Documentation**: Update relevant docs
+6. **Submit Pull Request**: Include clear description
+
+## 🆘 Getting Help
+
+### Resources
+
+- **Documentation**: See `docs/` directory
+- **Issues**: [GitHub Issues](https://github.com/nyanrus/noraneko/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/nyanrus/noraneko/discussions)
+
+### Common Commands Reference
+
+```bash
+# Setup and build
+deno run -A tools/dev/index.ts prepare
+deno run -A build.ts --dev
+
+# Development workflow
+deno run -A build.ts --dev-skip-mozbuild
+deno run -A tools/dev/index.ts start
+
+# Maintenance
+deno run -A tools/dev/index.ts clean
+deno run -A tools/dev/index.ts reset
+
+# Testing
+deno run -A tools/dev/index.ts test
+```
+
+---
+
+Happy coding! 🦊✨

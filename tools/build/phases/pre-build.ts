@@ -13,6 +13,12 @@ import { readBuildid2 } from "../tasks/update/buildid2.ts";
 import { setupBuildSymlinks } from "../tasks/setup/symlinks.ts";
 import { resolve } from "pathe";
 
+// Global type definitions for process monitoring
+declare global {
+  var noranekoDevProcess: Deno.ChildProcess | undefined;
+  var noranekoBuildProcess: Deno.ChildProcess | undefined;
+}
+
 export async function runPreBuildPhase(
   options?: { initGitForPatch?: boolean; isDev?: boolean },
 ): Promise<void> {
@@ -116,34 +122,73 @@ async function runChildDev(): Promise<void> {
     const command = new Deno.Command(Deno.execPath(), {
       args: ["run", "-A", childDevPath, mode, buildid2],
       cwd: projectRoot,
+      stdin: "piped", // Add stdin for shutdown communication
       stdout: "piped",
       stderr: "piped",
     });
 
     const process = command.spawn();
+    
+    // Store the process reference for monitoring from browser
+    // We'll use a global storage mechanism since we can't import from build.ts here
+    // due to circular dependency. Instead, we'll store it in a way that the main
+    // build process can access it.
+    globalThis.noranekoDevProcess = process;
 
-    // Start the dev server in the background
     log.info("Development server started in background");
 
-    // Don't wait for the process to complete as it's a dev server that runs continuously
-    // Just check if it started successfully by waiting a short time
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Dev server start timeout")), 5000);
-    });
-
-    const startPromise = (async () => {
-      // Wait a bit to see if there are immediate errors
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return true;
+    // Monitor the dev server output in background
+    (async () => {
+      try {
+        const decoder = new TextDecoder();
+        if (process.stdout) {
+          const reader = process.stdout.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const output = decoder.decode(value);
+              if (output.trim()) {
+                log.info(`[Dev Server]: ${output.trim()}`);
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        }
+      } catch (error) {
+        log.warn(`Dev server output monitoring error: ${error}`);
+      }
     })();
 
-    try {
-      await Promise.race([startPromise, timeoutPromise]);
-      log.info("Development server appears to have started successfully");
-    } catch (error) {
-      log.warn(`Development server start check failed: ${error}`);
-      // Don't throw here as the dev server might still be starting
-    }
+    // Monitor stderr separately
+    (async () => {
+      try {
+        const decoder = new TextDecoder();
+        if (process.stderr) {
+          const reader = process.stderr.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const output = decoder.decode(value);
+              if (output.trim()) {
+                log.warn(`[Dev Server Error]: ${output.trim()}`);
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        }
+      } catch (error) {
+        log.warn(`Dev server error monitoring error: ${error}`);
+      }
+    })();
+
+    // Wait a bit to see if there are immediate errors
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    log.info("Development server appears to have started successfully");
+
   } catch (error) {
     log.error(`Failed to run child-dev: ${error}`);
     throw error;

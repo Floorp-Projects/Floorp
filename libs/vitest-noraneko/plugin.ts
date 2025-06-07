@@ -1,4 +1,4 @@
-import type { Plugin, ViteDevServer } from "vite";
+import type { Plugin, ViteDevServer } from "rolldown-vite";
 import { type BirpcReturn, createBirpc } from "birpc";
 import type {
   ClientFunctions,

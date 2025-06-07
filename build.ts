@@ -1,8 +1,10 @@
 /**
- * Minimal build.ts - Entry point for Noraneko build system
+ * Noraneko Build System - Root Entry Point
  *
- * This file serves as a simple entry point that delegates to the actual
- * build system in tools/build.ts while maintaining backward compatibility.
+ * This file provides backward compatibility and a simple entry point
+ * that delegates to the actual build system in tools/build.ts.
+ *
+ * For detailed build system documentation, see docs/BUILD_SYSTEM_IMPROVEMENTS.md
  */
 
 import { buildAndLaunch } from "./tools/build.ts";
@@ -65,8 +67,8 @@ Development (recommended):
   (no args)                   Same as --dev
 
 Production CI/CD Phases:
-  --production-before         Production build - before phase (noranekoスクリプト実行)
-  --production-after          Production build - after phase (Inject処理)
+  --production-before         Production build - before phase
+  --production-after          Production build - after phase  
   --release-build-before      CI/CD production build - before phase
   --release-build-after       CI/CD production build - after phase
 
@@ -83,14 +85,16 @@ Development:
   deno task dev               # Full build + launch browser
 
 Production (CI/CD):
-  1. deno task prod-before    # Run noraneko scripts  
+  1. deno task prod-before    # Prepare Noraneko scripts  
   2. ./mach build             # External Mozilla build
-  3. deno task prod-after     # Run inject processes
+  3. deno task prod-after     # Apply injections
 
 Examples:
   deno run -A build.ts
   deno run -A build.ts --dev
   deno task dev
+
+For detailed documentation, see docs/BUILD_SYSTEM_IMPROVEMENTS.md
       `);
       break;
     }

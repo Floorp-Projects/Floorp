@@ -17,7 +17,8 @@
     "#features/": "./src/features/",
     "#ui/": "./src/ui/",
     "#themes/": "./src/themes/",
-    "@std/streams": "jsr:@std/streams@^1.0.9"
+    "@std/streams": "jsr:@std/streams@^1.0.9",
+    "vite": "npm:rolldown-vite@latest"
   },
   "compilerOptions": {
     "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],

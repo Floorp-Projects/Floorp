@@ -21,6 +21,15 @@ Please check [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
 
+## 📚 Documentation
+
+For comprehensive development documentation, see:
+
+- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Step-by-step setup and development instructions
+- **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Understanding the codebase organization
+- **[Build System](docs/BUILD_SYSTEM_IMPROVEMENTS.md)** - Build system architecture and usage
+- **[Documentation Index](docs/README.md)** - Complete documentation overview
+
 ## How to Start Development
 
 1. Run `deno install --allow-scripts`

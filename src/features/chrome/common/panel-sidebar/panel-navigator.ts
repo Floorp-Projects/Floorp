@@ -8,37 +8,46 @@ import { CPanelSidebar } from "./components/panel-sidebar";
 import { WebsitePanel } from "./website-panel-window-parent";
 
 export namespace PanelNavigator {
-  export let gPanelSidebar: CPanelSidebar | null = null;
+  let _gPanelSidebar: CPanelSidebar | null = null;
+  
+  export function setGPanelSidebar(sidebar: CPanelSidebar | null) {
+    _gPanelSidebar = sidebar;
+  }
+  
+  export function getGPanelSidebar(): CPanelSidebar | null {
+    return _gPanelSidebar;
+  }
+  
   const gWebsitePanel = WebsitePanel.getInstance();
   const addonEnabled = panelSidebarConfig().webExtensionRunningEnabled;
 
   function goHome(browser: XULElement, sideBarId: string) {
     browser.src = "";
-    browser.src = gPanelSidebar!.getPanelData(sideBarId)?.url ?? "";
+    browser.src = getGPanelSidebar()!.getPanelData(sideBarId)?.url ?? "";
   }
 
   /* Navigation */
   export function back(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.goBackPanel(sideBarId)
-      : gPanelSidebar!.getBrowserElement(sideBarId)?.goBack();
+      : getGPanelSidebar()!.getBrowserElement(sideBarId)?.goBack();
   }
 
   export function forward(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.goForwardPanel(sideBarId)
-      : gPanelSidebar!.getBrowserElement(sideBarId)?.goForward();
+      : getGPanelSidebar()!.getBrowserElement(sideBarId)?.goForward();
   }
 
   export function reload(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.reloadPanel(sideBarId)
-      : gPanelSidebar!.getBrowserElement(sideBarId)?.reload();
+      : getGPanelSidebar()!.getBrowserElement(sideBarId)?.reload();
   }
 
   export function goIndexPage(sideBarId: string) {
     addonEnabled ? gWebsitePanel.goIndexPagePanel(sideBarId) : goHome(
-      gPanelSidebar!.getBrowserElement(sideBarId) as XULElement,
+      getGPanelSidebar()!.getBrowserElement(sideBarId) as XULElement,
       sideBarId,
     );
   }
@@ -47,7 +56,7 @@ export namespace PanelNavigator {
   export function toggleMute(sideBarId: string) {
     addonEnabled
       ? gWebsitePanel.toggleMutePanel(sideBarId)
-      : gPanelSidebar!.getBrowserElement(sideBarId)?.toggleMute();
+      : getGPanelSidebar()!.getBrowserElement(sideBarId)?.toggleMute();
   }
 
   /* Zoom */

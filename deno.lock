@@ -15,11 +15,10 @@
     "npm:@bytecodealliance/componentize-js@~0.18.2": "0.18.2",
     "npm:@bytecodealliance/jco@^1.10.2": "1.11.2",
     "npm:@bytecodealliance/preview2-shim@~0.17.2": "0.17.2",
-    "npm:@deno/vite-plugin@^1.0.4": "1.0.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
+    "npm:@deno/vite-plugin@^1.0.4": "1.0.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
     "npm:@jsr/std__fs@^1.0.17": "1.0.18",
     "npm:@swc/core@^1.11.31": "1.11.31",
     "npm:@types/chroma-js@^3.1.1": "3.1.1",
-    "npm:@types/node@*": "22.15.15",
     "npm:@types/node@^22.15.30": "22.15.30",
     "npm:@types/uuid@10": "10.0.0",
     "npm:@types/ws@^8.18.1": "8.18.1",
@@ -28,7 +27,7 @@
     "npm:chalk@^5.4.1": "5.4.1",
     "npm:chokidar@^4.0.3": "4.0.3",
     "npm:chroma-js@^3.1.1": "3.1.2",
-    "npm:es-toolkit@^1.37.1": "1.39.1",
+    "npm:es-toolkit@^1.37.1": "1.39.3",
     "npm:fast-glob@^3.3.3": "3.3.3",
     "npm:hereby@^1.11.0": "1.11.0",
     "npm:i18next@^25.0.2": "25.2.1_typescript@5.8.3",
@@ -39,6 +38,7 @@
     "npm:pathe@^2.0.2": "2.0.3",
     "npm:pathe@^2.0.3": "2.0.3",
     "npm:puppeteer-core@^24.10.0": "24.10.0_devtools-protocol@0.0.1452169",
+    "npm:rolldown-vite@latest": "6.3.18_@types+node@22.15.30_picomatch@4.0.2",
     "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5": "1.0.0-beta.9-commit.d91dfb5",
     "npm:solid-js@^1.9.5": "1.9.7_seroval@1.3.2",
     "npm:solid-js@^1.9.6": "1.9.7_seroval@1.3.2",
@@ -47,20 +47,16 @@
     "npm:typescript@^5.8.3": "5.8.3",
     "npm:unplugin-swc@^1.5.2": "1.5.4_@swc+core@1.11.31",
     "npm:uuid@^11.1.0": "11.1.0",
-    "npm:vite-plugin-istanbul@7": "7.0.0_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
-    "npm:vite-plugin-solid@^2.11.6": "2.11.6_solid-js@1.9.7__seroval@1.3.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@babel+core@7.27.4_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
-    "npm:vite-tsconfig-paths@^5.1.4": "5.1.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_typescript@5.8.3_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
-    "npm:vite@*": "6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-    "npm:vite@6.3.5": "6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-    "npm:vite@^6.3.3": "6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-    "npm:vite@^6.3.4": "6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-    "npm:vitest@^3.1.2": "3.2.2_@types+node@22.15.30_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_lightningcss@1.30.1_@types+node@22.15.15",
+    "npm:vite-plugin-istanbul@7": "7.0.0_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
+    "npm:vite-plugin-solid@^2.11.6": "2.11.6_solid-js@1.9.7__seroval@1.3.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@babel+core@7.27.4_@types+node@22.15.30_lightningcss@1.30.1",
+    "npm:vite-tsconfig-paths@^5.1.4": "5.1.4_typescript@5.8.3_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
+    "npm:vite@*": "6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2",
+    "npm:vitest@^3.1.2": "3.2.2_@types+node@22.15.30_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_lightningcss@1.30.1",
     "npm:ws@*": "8.18.2",
     "npm:ws@^8.18.1": "8.18.2",
-    "npm:zod@^3.24.3": "3.25.55",
-    "npm:zod@^3.25.55": "3.25.55",
+    "npm:zod@^3.24.3": "3.25.56",
+    "npm:zod@^3.25.55": "3.25.56",
     "npm:zx@^8.5.3": "8.5.5",
-    "npm:zx@^8.5.4": "8.5.5",
     "npm:zx@^8.5.5": "8.5.5"
   },
   "jsr": {
@@ -389,13 +385,7 @@
     "@deno/vite-plugin@1.0.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1": {
       "integrity": "sha512-xg8YT8Wn2sGXSnJgiGTpBGX1Dov0c6fd1rAp8VsfrCUtyBRRWzwVMAnd3fQ4yq8h7LSVvJUxEFN4U421k/DQLA==",
       "dependencies": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ]
-    },
-    "@deno/vite-plugin@1.0.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-xg8YT8Wn2sGXSnJgiGTpBGX1Dov0c6fd1rAp8VsfrCUtyBRRWzwVMAnd3fQ4yq8h7LSVvJUxEFN4U421k/DQLA==",
-      "dependencies": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ]
     },
     "@emnapi/core@1.4.3": {
@@ -754,38 +744,18 @@
     "@oxc-project/types@0.72.2": {
       "integrity": "sha512-il5RF8AP85XC0CMjHF4cnVT9nT/v/ocm6qlZQpSiAR9qBbQMGkFKloBZwm7PcnOdiUX97yHgsKM7uDCCWCu3tg=="
     },
-    "@oxlint/darwin-arm64@0.16.12": {
-      "integrity": "sha512-G7phYhlIA4ke2nW7tHLl+E5+rvdzgGA6830D+e+y1RGllT0w2ONGdKcVTj+2pXGCw6yPmCC5fDsDEn2+RPTfxg==",
-      "os": ["darwin"],
-      "cpu": ["arm64"]
-    },
     "@oxlint/darwin-arm64@0.17.0": {
       "integrity": "sha512-py/N0yTMbdy5Kd1RFMMgFqzO5Qwc5MbHSCA0BvSx/GnC3n7yPstcEFSSdZzb+HaANI00xn4dwjYo6HVEFHhuWA==",
       "os": ["darwin"],
       "cpu": ["arm64"]
-    },
-    "@oxlint/darwin-x64@0.16.12": {
-      "integrity": "sha512-P/LSOgJ6SzQ3OKEIf3HsebgokZiZ5nDuTgIL4LpNCHlkOLDu/fT8XL9pSkR5y+60v0SOxUF/+aN0Q8EmxblrCw==",
-      "os": ["darwin"],
-      "cpu": ["x64"]
     },
     "@oxlint/darwin-x64@0.17.0": {
       "integrity": "sha512-rQUFu6Ci8gmBHTgb2EMKYNZWCmBB8sSW7SAxBes9k0esonKsioDNjT51CsfKZhXyaMtaM70hiVhSCBc0NqUEJg==",
       "os": ["darwin"],
       "cpu": ["x64"]
     },
-    "@oxlint/linux-arm64-gnu@0.16.12": {
-      "integrity": "sha512-0N/ZsW+cL7ZAUvOHbzMp3iApt5b/Q81q2e9RgEzkI6gUDCJK8/blWg0se/i6y9e24WH0ZC4bcxY1+Qz4ZQ+mFw==",
-      "os": ["linux"],
-      "cpu": ["arm64"]
-    },
     "@oxlint/linux-arm64-gnu@0.17.0": {
       "integrity": "sha512-NoAWscdfVj6Sci3NdbHHc1OivSSKpwtkLff5SoAM8XgJ9t7flf+zW7XOy3OeSgZAxNbcF4QGruv+XcBLR7tWMA==",
-      "os": ["linux"],
-      "cpu": ["arm64"]
-    },
-    "@oxlint/linux-arm64-musl@0.16.12": {
-      "integrity": "sha512-MoG1SIw4RGowsOsPjm5HjRWymisRZWBea7ewMoXA5xIVQ3eqECifG0KJW0OZp96Ad8DFBEavdlNuImB2uXsMwg==",
       "os": ["linux"],
       "cpu": ["arm64"]
     },
@@ -794,18 +764,8 @@
       "os": ["linux"],
       "cpu": ["arm64"]
     },
-    "@oxlint/linux-x64-gnu@0.16.12": {
-      "integrity": "sha512-STho8QdMLfn/0lqRU94tGPaYX8lGJccPbqeUcEr3eK5gZ5ZBdXmiHlvkcngXFEXksYC8/5VoJN7Vf3HsmkEskw==",
-      "os": ["linux"],
-      "cpu": ["x64"]
-    },
     "@oxlint/linux-x64-gnu@0.17.0": {
       "integrity": "sha512-KcaXWkBfqt7weerU1EXJysEupEHB8AtJytufBOQMuLE5vx2OoAbjAk0vt2V14W8Lss9Sz+ET7nXo6ZAEku4vCA==",
-      "os": ["linux"],
-      "cpu": ["x64"]
-    },
-    "@oxlint/linux-x64-musl@0.16.12": {
-      "integrity": "sha512-i7pzSoj9nCg/ZzOe8dCZeFWyRRWDylR9tIX04xRTq3G6PBLm6i9VrOdEkxbgM9+pCkRzUc0a9D7rbtCF34TQUA==",
       "os": ["linux"],
       "cpu": ["x64"]
     },
@@ -814,20 +774,10 @@
       "os": ["linux"],
       "cpu": ["x64"]
     },
-    "@oxlint/win32-arm64@0.16.12": {
-      "integrity": "sha512-wcxq3IBJ7ZlONlXJxQM+7EMx+LX1nkz3ZS3R0EtDM76EOZaqe8BMkW5cXVhF8jarZTZC18oKAckW4Ng9d8adBg==",
-      "os": ["win32"],
-      "cpu": ["arm64"]
-    },
     "@oxlint/win32-arm64@0.17.0": {
       "integrity": "sha512-zdoB3mbvcx3eGOh6ElPJ01S2MOzyZo/gijeHw7yb2PXcRis+3clVje6kpnG7/TN69zoHv7WwDX6poJu8FURTqg==",
       "os": ["win32"],
       "cpu": ["arm64"]
-    },
-    "@oxlint/win32-x64@0.16.12": {
-      "integrity": "sha512-Ae1fx7wmAcMVqzS8rLINaFRpAdh29QzHh133bEYMHzfWBYyK/hLu9g4GLwC/lEIVQu9884b8qutGfdOk6Qia3w==",
-      "os": ["win32"],
-      "cpu": ["x64"]
     },
     "@oxlint/win32-x64@0.17.0": {
       "integrity": "sha512-gxVYAOy/8IAWgmsaXDxRJvOr7l61DUDj6s7tXImzXqBAH/An6yJZGr1tR+5BsACVw/3hcCPOUbotXGS4+vZNZQ==",
@@ -856,6 +806,11 @@
         "quansync"
       ]
     },
+    "@rolldown/binding-darwin-arm64@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-wyBH60GIWFp+JPExag933Mroi4TH/kRjL5D1NWBVGX8BkCA5f8KYzBHl2je++4hEEiZaPhqt9LzGnuoDsGVT4w==",
+      "os": ["darwin"],
+      "cpu": ["arm64"]
+    },
     "@rolldown/binding-darwin-arm64@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-Hlt/h+lOJ+ksC2wED2M9Hku/9CA2Hr17ENK82gNMmi3OqwcZLdZFqJDpASTli65wIOeT4p9rIUMdkfshCoJpYA==",
       "os": ["darwin"],
@@ -866,6 +821,11 @@
       "os": ["darwin"],
       "cpu": ["arm64"]
     },
+    "@rolldown/binding-darwin-x64@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-JOgRGe4NWzzPM9uwGuXvEqjNzf3Cg3rBi1K88lq6l6cW5BbnUUaXAuQ3gSqXVIODtJ18m5VvlOnb+d4fRPiVbg==",
+      "os": ["darwin"],
+      "cpu": ["x64"]
+    },
     "@rolldown/binding-darwin-x64@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-Bnst+HBwhW2YrNybEiNf9TJkI1myDgXmiPBVIOS0apzrLCmByzei6PilTClOpTpNFYB+UviL3Ox2gKUmcgUjGw==",
       "os": ["darwin"],
@@ -874,6 +834,11 @@
     "@rolldown/binding-darwin-x64@1.0.0-beta.9-commit.d91dfb5": {
       "integrity": "sha512-40re4rMNrsi57oavRzIOpRGmg3QRlW6Ea8Q3znaqgOuJuKVrrm2bIQInTfkZJG7a4/5YMX7T951d0+toGLTdCA==",
       "os": ["darwin"],
+      "cpu": ["x64"]
+    },
+    "@rolldown/binding-freebsd-x64@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-n8jKI6paSi1sbChM7O5rWiOL0sJU4u112GnfX2Rs5Vgf27HgBeuX6hV9W3mismknDaHtZCjvQt0po7gwBLqbvg==",
+      "os": ["freebsd"],
       "cpu": ["x64"]
     },
     "@rolldown/binding-freebsd-x64@1.0.0-beta.11-commit.f051675": {
@@ -886,6 +851,11 @@
       "os": ["freebsd"],
       "cpu": ["x64"]
     },
+    "@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-t+DOeCjZf56kmjOLJJbmGalG7rHzolyblK188OEpylpf1smISOQbLjYMSikyMaBA6M/WGl5rOlA1hQd3JeieFw==",
+      "os": ["linux"],
+      "cpu": ["arm"]
+    },
     "@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-TpUltUdvcsAf2WvXXD8AVc3BozvhgazJ2gJLXp4DVV2V82m26QelI373Bzx8d/4hB167EEIg4wWW/7GXB/ltoQ==",
       "os": ["linux"],
@@ -896,6 +866,11 @@
       "os": ["linux"],
       "cpu": ["arm"]
     },
+    "@rolldown/binding-linux-arm64-gnu@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-3SJOJ0ddxlUaBKz2LhwX/g4lfJyNYqtNI8Vxr6vnMJ8QRdo5TKr+/FrhIJxrl5Rceyh45l+plv6AsZMihQcPmA==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
     "@rolldown/binding-linux-arm64-gnu@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-eGvHnYQSdbdhsTdjdp/+83LrN81/7X9HD6y3jg7mEmdsicxEMEIt6CsP7tvYS/jn4489jgO/6mLxW/7Vg+B8pw==",
       "os": ["linux"],
@@ -903,6 +878,11 @@
     },
     "@rolldown/binding-linux-arm64-gnu@1.0.0-beta.9-commit.d91dfb5": {
       "integrity": "sha512-5clBW/I+er9F2uM1OFjJFWX86y7Lcy0M+NqsN4s3o07W+8467Zk8oQa4B45vdaXoNUF/yqIAgKkA/OEdQDxZqA==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@rolldown/binding-linux-arm64-musl@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-XR/SWdDHhQBmrpSUDTT6gqKzTv6q1NfjreOqYJmWho79kO/ohVGbT+I5oM+eE9XhUI0rSif/pF6vVWsyHLXEqw==",
       "os": ["linux"],
       "cpu": ["arm64"]
     },
@@ -916,6 +896,11 @@
       "os": ["linux"],
       "cpu": ["arm64"]
     },
+    "@rolldown/binding-linux-x64-gnu@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-OXBTtIhT++3cCpc4pCtOcfPo4p9fOmlJLNOtxP+8USSVKy4n6snBfg2jdOyu6o/H6VeqoggHuLivtBXW5tFbPQ==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
     "@rolldown/binding-linux-x64-gnu@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-9vXnu27r4zgS/BHP6RCLBOrJoV2xxtLYHT68IVpSOdCkBHGpf1oOJt6blv1y5NRRJBEfAFCvj5NmwSMhETF96w==",
       "os": ["linux"],
@@ -923,6 +908,11 @@
     },
     "@rolldown/binding-linux-x64-gnu@1.0.0-beta.9-commit.d91dfb5": {
       "integrity": "sha512-gxD0/xhU4Py47IH3bKZbWtvB99tMkUPGPJFRfSc5UB9Osoje0l0j1PPbxpUtXIELurYCqwLBKXIMTQGifox1BQ==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@rolldown/binding-linux-x64-musl@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-DUchRVMBPCOrg+UMFNW0MieM8YEn8sLV7s77zOz7cLQI7OgD3x7JfiRxlpazAtCOnJCuuHpnONLDrli+c8rluA==",
       "os": ["linux"],
       "cpu": ["x64"]
     },
@@ -935,6 +925,13 @@
       "integrity": "sha512-HotuVe3XUjDwqqEMbm3o3IRkP9gdm8raY/btd/6KE3JGLF/cv4+3ff1l6nOhAZI8wulWDPEXPtE7v+HQEaTXnA==",
       "os": ["linux"],
       "cpu": ["x64"]
+    },
+    "@rolldown/binding-wasm32-wasi@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-gT++TSMmZM4nW6b/rM0r/qJ+7NSXONP8E/ok/j2CW/cR9f8wyU4tNzVmbZwVJf3kVUzKezYBO9JNdSq7IkF2Bw==",
+      "dependencies": [
+        "@napi-rs/wasm-runtime"
+      ],
+      "cpu": ["wasm32"]
     },
     "@rolldown/binding-wasm32-wasi@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-nBQVizPoUQiViANhWrOyihXNf2booP2iq3S396bI1tmHftdgUXWKa6yAoleJBgP0oF0idXpTPU82ciaROUcjpg==",
@@ -950,6 +947,11 @@
       ],
       "cpu": ["wasm32"]
     },
+    "@rolldown/binding-win32-arm64-msvc@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-TvDW2TXF3b+eLqX8PqRKEIu7xaUwb//HmkzgbuDaGZbbUR4ewNOrue4xpUxJiRhRHqqfZBPpmp6ukyuUxsNaow==",
+      "os": ["win32"],
+      "cpu": ["arm64"]
+    },
     "@rolldown/binding-win32-arm64-msvc@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-Rey/ECXKI/UEykrKfJX3oVAPXDH2k1p2BKzYGza0z3S2X5I3sTDOeBn2I0IQgyyf7U3+DCBhYjkDFnmSePrU/A==",
       "os": ["win32"],
@@ -959,6 +961,11 @@
       "integrity": "sha512-Vhq5vikrVDxAa75fxsyqj0c0Y/uti/TwshXI71Xb8IeUQJOBnmLUsn5dgYf5ljpYYkNa0z9BPAvUDIDMmyDi+w==",
       "os": ["win32"],
       "cpu": ["arm64"]
+    },
+    "@rolldown/binding-win32-ia32-msvc@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-cAoyh54I5wKQOvXQJz2bJfqsRP0AQv2aCWx2fwCP2ick142tKufFiKfYa5A7nsDHSjQiGA8sXxi6SLho65Wgog==",
+      "os": ["win32"],
+      "cpu": ["ia32"]
     },
     "@rolldown/binding-win32-ia32-msvc@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-LtuMKJe6iFH4iV55dy+gDwZ9v23Tfxx5cd7ZAxvhYFGoVNSvarxAgl844BvFGReERCnLTGRvo85FUR6fDHQX+A==",
@@ -970,6 +977,11 @@
       "os": ["win32"],
       "cpu": ["ia32"]
     },
+    "@rolldown/binding-win32-x64-msvc@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-qsDfpbZb4sUbF4+n1th+JuwOlV17jRZoVwvdfZcyexXHXIzmYzoTpHPL86V0eTdbEK206vx/2NoFjK871CR4cg==",
+      "os": ["win32"],
+      "cpu": ["x64"]
+    },
     "@rolldown/binding-win32-x64-msvc@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-YY8UYfBm4dbWa4psgEPPD9T9X0nAvlYu0BOsQC5vDfCwzzU7IHT4jAfetvlQq+4+M6qWHSTr6v+/WX5EmlM1WA==",
       "os": ["win32"],
@@ -980,6 +992,9 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
+    "@rolldown/pluginutils@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-BzOULtKKG5aXllquK5TQKwonut+cN7KtWSt9UUAwlipWyNPKViJs+vFVTBwdvgSsHrWefNVjHkC9rO1eeYKkDA=="
+    },
     "@rolldown/pluginutils@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-TAqMYehvpauLKz7v4TZOTUQNjxa5bUQWw2+51/+Zk3ItclBxgoSWhnZ31sXjdoX6le6OXdK2vZfV3KoyW/O/GA=="
     },
@@ -989,7 +1004,7 @@
     "@rollup/pluginutils@5.1.4": {
       "integrity": "sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==",
       "dependencies": [
-        "@types/estree",
+        "@types/estree@1.0.8",
         "estree-walker@2.0.2",
         "picomatch@4.0.2"
       ]
@@ -1226,6 +1241,9 @@
     "@types/estree@1.0.7": {
       "integrity": "sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ=="
     },
+    "@types/estree@1.0.8": {
+      "integrity": "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="
+    },
     "@types/node@22.15.15": {
       "integrity": "sha512-R5muMcZob3/Jjchn5LcO8jdKwSCbzqmPB6ruBxMcf9kbxtniZHP327s6C37iOfuw8mbKK3cAQa7sEl7afLrQ8A==",
       "dependencies": [
@@ -1269,22 +1287,10 @@
         "@vitest/spy",
         "estree-walker@3.0.3",
         "magic-string",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
+        "vite"
       ],
       "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ]
-    },
-    "@vitest/mocker@3.2.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-jKojcaRyIYpDEf+s7/dD3LJt53c0dPfp5zCPXz9H/kcGrSlovU/t1yEaNzM9oFME3dcd4ULwRI/x0Po1Zf+LTw==",
-      "dependencies": [
-        "@vitest/spy",
-        "estree-walker@3.0.3",
-        "magic-string",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
-      ],
-      "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ]
     },
     "@vitest/pretty-format@3.2.2": {
@@ -1793,8 +1799,8 @@
     "es-module-lexer@1.7.0": {
       "integrity": "sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA=="
     },
-    "es-toolkit@1.39.1": {
-      "integrity": "sha512-cJNIXXx861Brn2GaXourDn5h3WRjYVc5hHKBLve8r0vP9TFeyPCiNgJFLn30HiJyCK4lUyjDhBELBwZG1tgZ0A=="
+    "es-toolkit@1.39.3": {
+      "integrity": "sha512-Qb/TCFCldgOy8lZ5uC7nLGdqJwSabkQiYQShmw4jyiPk1pZzaYWTwaYKYP7EgLccWYgZocMrtItrwh683voaww=="
     },
     "esbuild@0.25.5": {
       "integrity": "sha512-P8OtKZRv/5J5hhz0cUAdu/cLuPIKXpQl1R9pZtvmHWQvrAUVd0UNIPT4IB4W3rNOqVO0rlqHmCIbSwxh/c9yUQ==",
@@ -1870,7 +1876,7 @@
     "estree-walker@3.0.3": {
       "integrity": "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==",
       "dependencies": [
-        "@types/estree"
+        "@types/estree@1.0.8"
       ]
     },
     "esutils@2.0.3": {
@@ -2403,14 +2409,14 @@
     "oxlint@0.17.0": {
       "integrity": "sha512-LCXomDhPGbDUZ/T+ScFA0tjh7A5QgYwPRCw7XFlJxRD2URBV8wj2lLvepbQ9yS/Q6SGhVfHQMpziQytajl8NcQ==",
       "optionalDependencies": [
-        "@oxlint/darwin-arm64@0.17.0",
-        "@oxlint/darwin-x64@0.17.0",
-        "@oxlint/linux-arm64-gnu@0.17.0",
-        "@oxlint/linux-arm64-musl@0.17.0",
-        "@oxlint/linux-x64-gnu@0.17.0",
-        "@oxlint/linux-x64-musl@0.17.0",
-        "@oxlint/win32-arm64@0.17.0",
-        "@oxlint/win32-x64@0.17.0"
+        "@oxlint/darwin-arm64",
+        "@oxlint/darwin-x64",
+        "@oxlint/linux-arm64-gnu",
+        "@oxlint/linux-arm64-musl",
+        "@oxlint/linux-x64-gnu",
+        "@oxlint/linux-x64-musl",
+        "@oxlint/win32-arm64",
+        "@oxlint/win32-x64"
       ],
       "bin": true
     },
@@ -2622,6 +2628,50 @@
         "typescript"
       ]
     },
+    "rolldown-vite@6.3.18_@types+node@22.15.30_picomatch@4.0.2": {
+      "integrity": "sha512-c1D5JZa82T5HDWTz11ZBm86hvOBejSP1Y9SSzol7HyNQ+rDx88MPbVlbI1gGJaYYLr3rxaJIfNJnSEQBcZXSbA==",
+      "dependencies": [
+        "@oxc-project/runtime@0.72.2",
+        "@types/node@22.15.30",
+        "fdir",
+        "lightningcss",
+        "picomatch@4.0.2",
+        "postcss",
+        "rolldown@1.0.0-beta.11-commit.0a985f3",
+        "tinyglobby"
+      ],
+      "optionalDependencies": [
+        "fsevents"
+      ],
+      "optionalPeers": [
+        "@types/node@22.15.30"
+      ],
+      "bin": true
+    },
+    "rolldown@1.0.0-beta.11-commit.0a985f3": {
+      "integrity": "sha512-rfwPHnevUxuFPjpltnvjj7hrVcT9Y+GuegBtbKxfaitE2rkoo6HrnzOaIWgAMTOi2y57K9x5177weP/4YR96Xg==",
+      "dependencies": [
+        "@oxc-project/runtime@0.72.2",
+        "@oxc-project/types@0.72.2",
+        "@rolldown/pluginutils@1.0.0-beta.11-commit.0a985f3",
+        "ansis"
+      ],
+      "optionalDependencies": [
+        "@rolldown/binding-darwin-arm64@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-darwin-x64@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-freebsd-x64@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-linux-arm64-gnu@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-linux-arm64-musl@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-linux-x64-gnu@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-linux-x64-musl@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-wasm32-wasi@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-win32-arm64-msvc@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-win32-ia32-msvc@1.0.0-beta.11-commit.0a985f3",
+        "@rolldown/binding-win32-x64-msvc@1.0.0-beta.11-commit.0a985f3"
+      ],
+      "bin": true
+    },
     "rolldown@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-g8MCVkvg2GnrrG+j+WplOTx1nAmjSwYOMSOQI0qfxf8D4NmYZqJuG3f85yWK64XXQv6pKcXZsfMkOPs9B6B52A==",
       "dependencies": [
@@ -2673,7 +2723,7 @@
     "rollup@4.41.2": {
       "integrity": "sha512-6VwIRjxJPRGfwtHnBWrApOrFposYNARbBUnBzWSBYutdukosTadkxSB1prmEd95jhiJ1uWtZOD3sDx7qfVwu4A==",
       "dependencies": [
-        "@types/estree"
+        "@types/estree@1.0.7"
       ],
       "optionalDependencies": [
         "@rollup/rollup-android-arm-eabi",
@@ -3093,18 +3143,7 @@
         "debug",
         "es-module-lexer",
         "pathe",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ],
-      "bin": true
-    },
-    "vite-node@3.2.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-Xj/jovjZvDXOq2FgLXu8NsY4uHUMWtzVmMC2LkCu9HWdr9Qu1Is5sanX3Z4jOFKdohfaWDnEJWp9pRP0vVpAcA==",
-      "dependencies": [
-        "cac",
-        "debug",
-        "es-module-lexer",
-        "pathe",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ],
       "bin": true
     },
@@ -3117,19 +3156,7 @@
         "picocolors",
         "source-map@0.7.4",
         "test-exclude",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ]
-    },
-    "vite-plugin-istanbul@7.0.0_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-UAXSyS0zslaSP1yCdO54YwrTkoY3VxCBH8y8MAy3I+E6uqT07LEsVOFEHueeDJ+vyyeaA9Rkqz/j6LACJTzTKw==",
-      "dependencies": [
-        "@istanbuljs/load-nyc-config",
-        "espree",
-        "istanbul-lib-instrument",
-        "picocolors",
-        "source-map@0.7.4",
-        "test-exclude",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ]
     },
     "vite-plugin-solid@2.11.6_solid-js@1.9.7__seroval@1.3.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@babel+core@7.27.4_@types+node@22.15.30_lightningcss@1.30.1": {
@@ -3141,45 +3168,28 @@
         "merge-anything",
         "solid-js",
         "solid-refresh",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2",
-        "vitefu@1.0.6_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1"
+        "vite",
+        "vitefu"
       ]
     },
-    "vite-plugin-solid@2.11.6_solid-js@1.9.7__seroval@1.3.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@babel+core@7.27.4_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-Sl5CTqJTGyEeOsmdH6BOgalIZlwH3t4/y0RQuFLMGnvWMBvxb4+lq7x3BSiAw6etf0QexfNJW7HSOO/Qf7pigg==",
+    "vite-tsconfig-paths@5.1.4_typescript@5.8.3": {
+      "integrity": "sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==",
       "dependencies": [
-        "@babel/core",
-        "@types/babel__core",
-        "babel-preset-solid",
-        "merge-anything",
-        "solid-js",
-        "solid-refresh",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-        "vitefu@1.0.6_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15"
+        "debug",
+        "globrex",
+        "tsconfck"
       ]
     },
-    "vite-tsconfig-paths@5.1.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_typescript@5.8.3_@types+node@22.15.30_lightningcss@1.30.1": {
+    "vite-tsconfig-paths@5.1.4_typescript@5.8.3_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1": {
       "integrity": "sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==",
       "dependencies": [
         "debug",
         "globrex",
         "tsconfck",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
+        "vite"
       ],
       "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ]
-    },
-    "vite-tsconfig-paths@5.1.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_typescript@5.8.3_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==",
-      "dependencies": [
-        "debug",
-        "globrex",
-        "tsconfck",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
-      ],
-      "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ]
     },
     "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2": {
@@ -3203,43 +3213,13 @@
       ],
       "bin": true
     },
-    "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15": {
-      "integrity": "sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==",
-      "dependencies": [
-        "@types/node@22.15.15",
-        "esbuild",
-        "fdir",
-        "lightningcss",
-        "picomatch@4.0.2",
-        "postcss",
-        "rollup",
-        "tinyglobby"
-      ],
-      "optionalDependencies": [
-        "fsevents"
-      ],
-      "optionalPeers": [
-        "@types/node@22.15.15",
-        "lightningcss"
-      ],
-      "bin": true
-    },
     "vitefu@1.0.6_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1": {
       "integrity": "sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==",
       "dependencies": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
+        "vite"
       ],
       "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2"
-      ]
-    },
-    "vitefu@1.0.6_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==",
-      "dependencies": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
-      ],
-      "optionalPeers": [
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15"
+        "vite"
       ]
     },
     "vitest@3.2.2_@types+node@22.15.30_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_lightningcss@1.30.1": {
@@ -3248,7 +3228,7 @@
         "@types/chai",
         "@types/node@22.15.30",
         "@vitest/expect",
-        "@vitest/mocker@3.2.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
+        "@vitest/mocker",
         "@vitest/pretty-format",
         "@vitest/runner",
         "@vitest/snapshot",
@@ -3266,45 +3246,12 @@
         "tinyglobby",
         "tinypool",
         "tinyrainbow",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2",
-        "vite-node@3.2.2_@types+node@22.15.30_lightningcss@1.30.1",
+        "vite",
+        "vite-node",
         "why-is-node-running"
       ],
       "optionalPeers": [
         "@types/node@22.15.30"
-      ],
-      "bin": true
-    },
-    "vitest@3.2.2_@types+node@22.15.30_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_lightningcss@1.30.1_@types+node@22.15.15": {
-      "integrity": "sha512-fyNn/Rp016Bt5qvY0OQvIUCwW2vnaEBLxP42PmKbNIoasSYjML+8xyeADOPvBe+Xfl/ubIw4og7Lt9jflRsCNw==",
-      "dependencies": [
-        "@types/chai",
-        "@types/node@22.15.15",
-        "@vitest/expect",
-        "@vitest/mocker@3.2.2_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
-        "@vitest/pretty-format",
-        "@vitest/runner",
-        "@vitest/snapshot",
-        "@vitest/spy",
-        "@vitest/utils",
-        "chai",
-        "debug",
-        "expect-type",
-        "magic-string",
-        "pathe",
-        "picomatch@4.0.2",
-        "std-env",
-        "tinybench",
-        "tinyexec@0.3.2",
-        "tinyglobby",
-        "tinypool",
-        "tinyrainbow",
-        "vite@6.3.5_@types+node@22.15.30_lightningcss@1.30.1_picomatch@4.0.2_@types+node@22.15.15",
-        "vite-node@3.2.2_@types+node@22.15.30_lightningcss@1.30.1_@types+node@22.15.15",
-        "why-is-node-running"
-      ],
-      "optionalPeers": [
-        "@types/node@22.15.15"
       ],
       "bin": true
     },
@@ -3386,8 +3333,8 @@
         "fd-slicer"
       ]
     },
-    "zod@3.25.55": {
-      "integrity": "sha512-219huNnkSLQnLsQ3uaRjXsxMrVm5C9W3OOpEVt2k5tvMKuA8nBSu38e0B//a+he9Iq2dvmk2VyYVlHqiHa4YBA=="
+    "zod@3.25.56": {
+      "integrity": "sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ=="
     },
     "zx@8.5.5": {
       "integrity": "sha512-kzkjV3uqyEthw1IBDbA7Co2djji77vCP1DRvt58aYSMwiX4nyvAkFE8OBSEsOUbDJAst0Yo4asNvMTGG5HGPXA==",
@@ -3399,7 +3346,8 @@
       "jsr:@std/encoding@^1.0.10",
       "jsr:@std/fs@^1.0.18",
       "jsr:@std/path@^1.0.7",
-      "jsr:@std/streams@^1.0.9"
+      "jsr:@std/streams@^1.0.9",
+      "npm:rolldown-vite@latest"
     ],
     "packageJson": {
       "dependencies": [
@@ -3416,9 +3364,9 @@
         "npm:oxlint@0.17",
         "npm:pathe@^2.0.3",
         "npm:puppeteer-core@^24.10.0",
+        "npm:rolldown-vite@latest",
         "npm:typescript@^5.8.3",
         "npm:uuid@^11.1.0",
-        "npm:vite@6.3.5",
         "npm:zod@^3.25.55",
         "npm:zx@^8.5.5"
       ]
@@ -3432,10 +3380,13 @@
         }
       },
       "libs/solid-xul": {
+        "dependencies": [
+          "npm:rolldown-vite@latest"
+        ],
         "packageJson": {
           "dependencies": [
-            "npm:solid-js@^1.9.5",
-            "npm:vite@6.3.5"
+            "npm:rolldown-vite@latest",
+            "npm:solid-js@^1.9.5"
           ]
         }
       },
@@ -3448,6 +3399,9 @@
         }
       },
       "libs/vitest-noraneko": {
+        "dependencies": [
+          "npm:rolldown-vite@latest"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@types/ws@^8.18.1",
@@ -3455,7 +3409,7 @@
             "npm:birpc@^2.3.0",
             "npm:isomorphic-ws@5",
             "npm:pathe@^2.0.3",
-            "npm:vite@^6.3.3",
+            "npm:rolldown-vite@latest",
             "npm:vitest@^3.1.2",
             "npm:ws@^8.18.1",
             "npm:zx@^8.5.3"
@@ -3472,6 +3426,7 @@
           "npm:es-toolkit@^1.37.1",
           "npm:i18next@^25.0.2",
           "npm:pathe@^2.0.3",
+          "npm:rolldown-vite@latest",
           "npm:solid-js@^1.9.6",
           "npm:unplugin-swc@^1.5.2",
           "npm:uuid@^11.1.0",
@@ -3479,7 +3434,6 @@
           "npm:vite-plugin-solid@^2.11.6",
           "npm:vite-tsconfig-paths@^5.1.4",
           "npm:vite@*",
-          "npm:vite@^6.3.4",
           "npm:vitest@^3.1.2"
         ]
       },
