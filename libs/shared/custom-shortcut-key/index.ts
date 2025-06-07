@@ -1,5 +1,5 @@
 import { commands } from "./commands";
-import { zCSKCommands, zCSKData, type CSKData } from "./defines";
+import { type CSKData, zCSKCommands, zCSKData } from "./defines";
 import { checkIsSystemShortcut } from "./utils";
 import { z } from "zod";
 

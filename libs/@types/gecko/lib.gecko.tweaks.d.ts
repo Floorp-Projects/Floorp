@@ -21,14 +21,12 @@ interface Document {
 }
 
 type nsIGleanPingNoReason = {
-  [K in keyof nsIGleanPing]: K extends "submit"
-    ? (_?: never) => void
+  [K in keyof nsIGleanPing]: K extends "submit" ? (_?: never) => void
     : nsIGleanPing[K];
 };
 
 type nsIGleanPingWithReason<T> = {
-  [K in keyof nsIGleanPing]: K extends "submit"
-    ? (reason: T) => void
+  [K in keyof nsIGleanPing]: K extends "submit" ? (reason: T) => void
     : nsIGleanPing[K];
 };
 
@@ -36,11 +34,11 @@ interface MessageListenerManagerMixin {
   // Overloads that define `data` arg as required, since it's ~always expected.
   addMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
   );
   removeMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
   );
 }
 
@@ -65,7 +63,7 @@ interface nsIXPCComponents_Constructor {
   <const T, IIDs = nsIXPCComponents_Interfaces>(
     cid,
     id: T,
-    init?
+    init?,
   ): {
     new (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
     (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
@@ -85,7 +83,7 @@ interface nsIXPCComponents_Exception {
     message?: string,
     resultOrOptions?: number | ComponentsExceptionOptions,
     stack?: nsIStackFrame,
-    data?: object
+    data?: object,
   ): nsIException;
 }
 

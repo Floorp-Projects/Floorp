@@ -1,4 +1,4 @@
-import { createRoot, onCleanup, type JSX } from "solid-js";
+import { createRoot, type JSX, onCleanup } from "solid-js";
 import { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";
 import type { ViteHotContext } from "vite/types/hot.js";
@@ -118,19 +118,23 @@ const {
 
 /**
  * @description This render must be called inside of NoraComponentBase or createRootHMR
- * @param code 
- * @param node 
- * @param options 
- * @returns 
+ * @param code
+ * @param node
+ * @param options
+ * @returns
  */
 const _render = (
   code: () => JSX.Element,
   node: JSX.Element,
   options?: { marker?: Element },
 ) => {
-  let elem : unknown = insert(node, code(), options ? options.marker : undefined);
-  const disposer = onCleanup(()=>{
-    console.log("[nora@solid-xul] cleanup")
+  let elem: unknown = insert(
+    node,
+    code(),
+    options ? options.marker : undefined,
+  );
+  const disposer = onCleanup(() => {
+    console.log("[nora@solid-xul] cleanup");
     if (typeof elem === "function") {
       elem = elem();
     }
@@ -142,7 +146,7 @@ const _render = (
     ) {
       elem.forEach((e) => e.remove());
     }
-  })
+  });
   return disposer;
 };
 
@@ -166,20 +170,20 @@ export function createRootHMR<T>(
 
 export {
   _render as render,
-  effect,
-  memo,
   createComponent,
   createElement,
   createTextNode,
-  insertNode,
+  effect,
   /**
    * insertBefore
    * @deprecated please use render with marker
    */
   insert,
-  spread,
-  setProp,
+  insertNode,
+  memo,
   mergeProps,
+  setProp,
+  spread,
 };
 
-export {onCleanup} from "solid-js"
+export { onCleanup } from "solid-js";

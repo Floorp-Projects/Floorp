@@ -1,7 +1,7 @@
 import {
   setBoolPref,
-  setStringPref,
   setIntPref,
+  setStringPref,
 } from "local:component/noraneko";
 function user_pref(prefName, prefValue) {
   if (prefValue === true || prefValue === false) {

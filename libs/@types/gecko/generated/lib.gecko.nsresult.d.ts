@@ -5,7 +5,6 @@
  */
 
 interface nsIXPCComponents_Results {
-
   // Error Message definitions.
 
   // xpconnect specific codes (from nsIXPConnect.h)
@@ -675,4 +674,5 @@ interface nsIXPCComponents_Results {
   NS_ERROR_WDBA_BUILD: 0x80720004;
 }
 
-type nsIXPCComponents_Values = nsIXPCComponents_Results[keyof nsIXPCComponents_Results];
+type nsIXPCComponents_Values =
+  nsIXPCComponents_Results[keyof nsIXPCComponents_Results];
