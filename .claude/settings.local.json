@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:searchfox.org)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": []
+  }
+}
