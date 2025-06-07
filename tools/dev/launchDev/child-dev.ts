@@ -1,19 +1,11 @@
 import { createServer, type ViteDevServer } from "vite";
 import { resolve } from "pathe";
 import packageJson from "../../../package.json" with { type: "json" };
-import { $, type Options, type ProcessPromise, usePwsh } from "zx";
-
-if (Deno.build.os === "windows") {
-  usePwsh();
-}
 
 let pDevVite: ViteDevServer[] = [];
-let pSettings: ProcessPromise | null = null;
-
-let worker: Worker | null = null;
 
 const r = (value: string): string => {
-  return resolve(import.meta.dirname, "../..", value);
+  return resolve(import.meta.dirname!, "../../..", value);
 };
 
 async function launchDev(mode: string, buildid2: string) {
@@ -40,10 +32,6 @@ async function shutdownDev() {
   for (const i of pDevVite) {
     await i.close();
   }
-  if (worker) {
-    worker.postMessage("");
-  }
-  // await pSettings!.kill("SIGABRT")
   console.log("[child-dev] Completed Shutdown ViteDevServer✅");
 }
 
@@ -59,5 +47,5 @@ async function shutdownDev() {
       }
     }
   })();
-  await launchDev(Deno.args[0], Deno.args[1]);
+  await launchDev(Deno.args[0] || "dev", Deno.args[1] || "default-build-id");
 }

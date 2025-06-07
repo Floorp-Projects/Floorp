@@ -6,18 +6,18 @@ export interface Type<T> extends Function {
 
 type MixinArgument =
   | {
-      path: string;
-      type: "class";
-      export: boolean;
-      extends: string;
-      className: string;
-    }
+    path: string;
+    type: "class";
+    export: boolean;
+    extends: string;
+    className: string;
+  }
   | {
-      path: string;
-      type: "function";
-      export: boolean;
-      funcName: string;
-    };
+    path: string;
+    type: "function";
+    export: boolean;
+    funcName: string;
+  };
 
 const map: Map<MixinArgument, Array<object>> = new Map();
 

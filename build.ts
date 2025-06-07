@@ -1,65 +1,101 @@
-import { usePwsh } from "npm:zx@^8.5.4/core";
-import { build } from "./tools/build/index.ts";
-import { genVersion } from "./tools/dev/launchDev/writeVersion.ts";
+/**
+ * Minimal build.ts - Entry point for Noraneko build system
+ *
+ * This file serves as a simple entry point that delegates to the actual
+ * build system in tools/build.ts while maintaining backward compatibility.
+ */
 
-// Platform specific configurations
-switch (Deno.build.os) {
-  case "windows":
-    usePwsh();
-    break;
-}
-
-// Helper function to check if a file or directory exists
-const isExists = async (path: string): Promise<boolean> => {
-  try {
-    await Deno.stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-// Main build entry point for Noraneko
-// This script provides a simplified interface to the new modular build system
+import { buildAndLaunch } from "./tools/build.ts";
 
 if (Deno.args[0]) {
   switch (Deno.args[0]) {
-    case "--dev":
-      await build({ mode: "dev" });
+    case "--dev": {
+      await buildAndLaunch({ mode: "dev", launchBrowser: true });
       break;
-    case "--production":
-      await build({ mode: "production" });
+    }
+    case "--production": {
+      await buildAndLaunch({ mode: "production" });
       break;
-    case "--dev-skip-mozbuild":
-      await build({ mode: "dev", skipMozbuild: true });
+    }
+    case "--dev-before": {
+      await buildAndLaunch({ mode: "dev", phase: "before" });
       break;
-    case "--production-skip-mozbuild":
-      await build({ mode: "production", skipMozbuild: true });
+    }
+    case "--dev-after": {
+      await buildAndLaunch({
+        mode: "dev",
+        phase: "after",
+        launchBrowser: true,
+      });
       break;
-    case "--write-version":
+    }
+    case "--production-before": {
+      await buildAndLaunch({ mode: "production", phase: "before" });
+      break;
+    }
+    case "--production-after": {
+      await buildAndLaunch({ mode: "production", phase: "after" });
+      break;
+    }
+    case "--release-build-before": {
+      await buildAndLaunch({ mode: "production", phase: "before" });
+      break;
+    }
+    case "--release-build-after": {
+      await buildAndLaunch({ mode: "production", phase: "after" });
+      break;
+    }
+    case "--write-version": {
+      // Import genVersion only when needed
+      const { genVersion } = await import(
+        "./tools/dev/launchDev/writeVersion.ts"
+      );
       await genVersion();
       break;
-    default:
+    }
+    default: {
       console.log(`
 🏗️  Noraneko Build System
 
 Usage:
   deno run -A build.ts [option]
 
-Options:
-  --dev                        Development build
-  --production                 Production build
-  --dev-skip-mozbuild         Development build (skip Mozilla build)
-  --production-skip-mozbuild  Production build (skip Mozilla build)
+Development (recommended):
+  --dev                       Full development build with browser launch
+  (no args)                   Same as --dev
+
+Production CI/CD Phases:
+  --production-before         Production build - before phase (noranekoスクリプト実行)
+  --production-after          Production build - after phase (Inject処理)
+  --release-build-before      CI/CD production build - before phase
+  --release-build-after       CI/CD production build - after phase
+
+Development Split Phases (if needed):
+  --dev-before                Development build - before phase
+  --dev-after                 Development build - after phase with browser launch
+
+Utilities:
   --write-version             Write version info only
 
+Typical Workflows:
+
+Development:
+  deno task dev               # Full build + launch browser
+
+Production (CI/CD):
+  1. deno task prod-before    # Run noraneko scripts  
+  2. ./mach build             # External Mozilla build
+  3. deno task prod-after     # Run inject processes
+
 Examples:
+  deno run -A build.ts
   deno run -A build.ts --dev
-  deno run -A build.ts --production
+  deno task dev
       `);
       break;
+    }
   }
 } else {
-  // Default to development build
-  await build({ mode: "dev" });
+  // Default to development build with browser launch
+  await buildAndLaunch({ mode: "dev", launchBrowser: true });
 }

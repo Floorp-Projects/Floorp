@@ -1,7 +1,5 @@
-import { $ } from "npm:zx@^8.5.3/core";
 import {
   binDir,
-  binPath,
   binPathExe,
   binRootDir,
   binVersion,
@@ -16,6 +14,44 @@ import pathe from "pathe";
 
 // Binary archive filename
 const binArchive = getBinArchive();
+
+/**
+ * Executes a shell command using Deno's subprocess API
+ */
+async function runCommand(command: string, args: string[]): Promise<void> {
+  const cmd = new Deno.Command(command, {
+    args,
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const { code, stderr } = await cmd.output();
+
+  if (code !== 0) {
+    const errorText = new TextDecoder().decode(stderr);
+    throw new Error(
+      `Command failed: ${command} ${args.join(" ")}\n${errorText}`,
+    );
+  }
+}
+
+/**
+ * Executes a PowerShell command on Windows
+ */
+async function runPowerShellCommand(script: string): Promise<void> {
+  const cmd = new Deno.Command("pwsh", {
+    args: ["-Command", script],
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const { code, stderr } = await cmd.output();
+
+  if (code !== 0) {
+    const errorText = new TextDecoder().decode(stderr);
+    throw new Error(`PowerShell command failed: ${script}\n${errorText}`);
+  }
+}
 
 /**
  * Decompresses the binary archive based on the platform.
@@ -33,8 +69,10 @@ export async function decompressBin() {
 
     switch (Deno.build.os) {
       case "windows":
-        // Windows
-        await $`Expand-Archive -LiteralPath ${binArchive} -DestinationPath ${binRootDir}`;
+        // Windows - Use PowerShell's Expand-Archive with explicit module import
+        await runPowerShellCommand(
+          `Expand-Archive -LiteralPath "${binArchive}" -DestinationPath "${binRootDir}"`,
+        );
         break;
 
       case "darwin":
@@ -44,16 +82,16 @@ export async function decompressBin() {
 
       case "linux":
         // Linux
-        await $`tar -xf ${binArchive} -C ${binRootDir}`;
-        await $`chmod ${["-R", "755", `./${binDir}`]}`;
-        await $`chmod ${["755", binPathExe]}`;
+        await runCommand("tar", ["-xf", binArchive, "-C", binRootDir]);
+        await runCommand("chmod", ["-R", "755", `./${binDir}`]);
+        await runCommand("chmod", ["755", binPathExe]);
         break;
     }
 
     await Deno.writeTextFile(binVersion, VERSION);
 
     console.log("[dev] decompress complete!");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[dev] Error during decompression:", error);
     Deno.exit(1);
   }
@@ -72,7 +110,12 @@ async function decompressBinMacOS() {
 
   try {
     await Deno.mkdir(mountDir, { recursive: true });
-    await $`hdiutil ${["attach", "-mountpoint", mountDir, binArchive]}`;
+    await runCommand("hdiutil", [
+      "attach",
+      "-mountpoint",
+      mountDir,
+      binArchive,
+    ]);
 
     try {
       const appDestBase = pathe.join(
@@ -114,15 +157,25 @@ async function decompressBinMacOS() {
       }
 
       await Promise.all([
-        $`chmod ${["-R", "777", appDestBase]}`,
-        $`xattr ${["-rc", appDestBase]}`,
+        runCommand("chmod", ["-R", "777", appDestBase]),
+        runCommand("xattr", ["-rc", appDestBase]),
       ]);
     } finally {
-      await $`hdiutil ${["detach", mountDir]}`;
+      await runCommand("hdiutil", ["detach", mountDir]);
       await Deno.remove(mountDir, { recursive: true });
     }
   } catch (error) {
     console.error("[dev] Error during macOS decompression:", error);
+    Deno.exit(1);
+  }
+}
+
+// Direct execution support
+if (import.meta.main) {
+  try {
+    await decompressBin();
+  } catch (error) {
+    console.error("[dev] Failed to decompress binary:", error);
     Deno.exit(1);
   }
 }

@@ -11,7 +11,7 @@ const fileList = await fg("*", {
 
 const tempDistDir = join(
   import.meta.dirname!,
-  "../../_dist/temp",
+  "../../../../_dist/temp",
 );
 const tempMixinsDir = join(tempDistDir, "mixins");
 const tempSharedDir = join(tempDistDir, "shared");
@@ -59,7 +59,7 @@ export async function applyMixin(binPath: string) {
       // Dynamically import and apply mixin after transformation.
       // This is necessary to execute the transformed code.
       const module = await import(
-        `../../_dist/temp/mixins/${file}`
+        `../../../../_dist/temp/mixins/${file}`
       );
       for (const i in module) {
         try {

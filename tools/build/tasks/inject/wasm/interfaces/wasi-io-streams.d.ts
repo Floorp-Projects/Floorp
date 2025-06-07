@@ -2,15 +2,15 @@ export namespace WasiIoStreams {
   export { OutputStream };
   export { InputStream };
 }
-import type { Error } from './wasi-io-error.js';
+import type { Error } from "./wasi-io-error.js";
 export { Error };
 export type StreamError = StreamErrorLastOperationFailed | StreamErrorClosed;
 export interface StreamErrorLastOperationFailed {
-  tag: 'last-operation-failed',
-  val: Error,
+  tag: "last-operation-failed";
+  val: Error;
 }
 export interface StreamErrorClosed {
-  tag: 'closed',
+  tag: "closed";
 }
 
 export class InputStream {

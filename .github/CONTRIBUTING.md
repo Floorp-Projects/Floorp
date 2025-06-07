@@ -2,10 +2,12 @@
 
 Thank you for interest!
 
-First, please ask "how to contribute" in GitHub Issues or [Ablaze Community Discord](https://aka.ablaze.one/discord) \
+First, please ask "how to contribute" in GitHub Issues or
+[Ablaze Community Discord](https://aka.ablaze.one/discord)\
 It can be help if you stuck, or for communication to start contribution.
 
-When you ask, make an issue and make pull request, please use 5W1H as a reference for description.
+When you ask, make an issue and make pull request, please use 5W1H as a
+reference for description.
 
 1. Who
 2. When
@@ -15,6 +17,7 @@ When you ask, make an issue and make pull request, please use 5W1H as a referenc
 6. Why
 
 e.g.
+
 1. NyanRus
 2. Two weeks ago
 3. src/apps/experiment/csk

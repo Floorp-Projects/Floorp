@@ -3,7 +3,7 @@ import { build } from "vite";
 import packageJson from "../../../package.json" with { type: "json" };
 
 const r = (value: string): string => {
-  return resolve(import.meta.dirname, "../..", value);
+  return resolve(import.meta.dirname!, "../../..", value);
 };
 
 async function launchBuild(mode: string, buildid2: string) {

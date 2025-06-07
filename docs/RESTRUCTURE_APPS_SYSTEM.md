@@ -2,14 +2,18 @@
 
 ## 🎯 Problem Solved
 
-The previous `apps/system/` directory mixed two distinct concerns, which has now been successfully reorganized:
+The previous `apps/system/` directory mixed two distinct concerns, which has now
+been successfully reorganized:
 
-1. **Build Scripts & Configuration** - Development tooling (now in `tools/glue-build/`)
-2. **Browser Glue Code** - Stable browser integration code (now in `src/core/glue/`)
+1. **Build Scripts & Configuration** - Development tooling (now in
+   `tools/glue-build/`)
+2. **Browser Glue Code** - Stable browser integration code (now in
+   `src/core/glue/`)
 
 ## ✅ Completed Restructuring
 
 ### Phase 1: Core Glue Code Migration ✅
+
 Successfully moved stable browser integration code to a dedicated location:
 
 ```
@@ -20,6 +24,7 @@ src/core/glue/                # 🔗 Stable browser integration (rarely changed)
 ```
 
 ### Phase 2: Build Configuration Organization ✅
+
 Build configurations organized in dedicated tools directory:
 
 ```
@@ -49,10 +54,11 @@ tools/
 ├── build/                    # 🔧 Build orchestration
 └── glue-build/              # 🔗 Glue code build configurations
 ```
+
     ├── loader-modules.tsdown.config.ts
     └── startup.tsdown.config.ts
-```
 
+````
 ## 🚀 Benefits
 
 ### For Feature Developers
@@ -77,9 +83,10 @@ mkdir -p tools/glue-build
 mv apps/system/loader-features src/core/glue/
 mv apps/system/loader-modules src/core/glue/  
 mv apps/system/startup src/core/glue/
-```
+````
 
 ### Phase 2: Extract Build Configurations
+
 ```bash
 # Move build configurations to tools
 mv src/core/glue/loader-features/vite.config.ts tools/glue-build/loader-features.vite.config.ts
@@ -88,13 +95,14 @@ mv src/core/glue/startup/tsdown.config.ts tools/glue-build/startup.tsdown.config
 ```
 
 ### Phase 3: Update Build System
+
 1. Update `scripts/build.ts` path references:
    ```typescript
    // Old paths
    const loaderFeaturesPath = "apps/system/loader-features";
    const loaderModulesPath = "apps/system/loader-modules";
-   
-   // New paths  
+
+   // New paths
    const loaderFeaturesPath = "src/core/glue/loader-features";
    const loaderModulesPath = "src/core/glue/loader-modules";
    ```
@@ -106,12 +114,14 @@ mv src/core/glue/startup/tsdown.config.ts tools/glue-build/startup.tsdown.config
 ## 🔧 Implementation Steps
 
 ### Step 1: Create Directory Structure
+
 ```bash
 mkdir -p src/core/glue
 mkdir -p tools/glue-build
 ```
 
 ### Step 2: Move Files
+
 ```bash
 # Move the actual glue code
 mv apps/system/loader-features src/core/glue/
@@ -123,23 +133,27 @@ rmdir apps/system
 ```
 
 ### Step 3: Update Build References
+
 - Update `scripts/defines.ts`
-- Update `scripts/build.ts` 
+- Update `scripts/build.ts`
 - Update `scripts/launchDev/child-build.ts`
 
 ### Step 4: Test & Validate
+
 - Ensure development build works
-- Ensure production build works  
+- Ensure production build works
 - Verify symlinks are created correctly
 
 ## ⚠️ Considerations
 
 ### Backward Compatibility
+
 - Update all import paths in one commit
 - Update documentation references
 - Consider temporary symlinks during transition
 
 ### Testing Strategy
+
 - Test development workflow
 - Test production build
 - Verify hot module replacement still works
@@ -152,4 +166,5 @@ rmdir apps/system
 3. **Create developer guidelines for when to modify glue code**
 4. **Add clear separation documentation**
 
-This restructuring will make the codebase much more approachable for new developers while protecting the stable browser integration code.
+This restructuring will make the codebase much more approachable for new
+developers while protecting the stable browser integration code.

@@ -234,10 +234,8 @@ jobs:
           # https://www.spinics.net/lists/git/msg391750.html
           rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
           rm -rf ../obj-artifact-build-output/dist/bin
-          mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
-
-          if [ "${{inputs.platform}}" == "macOS-x64" ]; then
-            for patch_file in ./scripts/git-patches/patches/*.patch; do
+          mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin          if [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            for patch_file in ./tools/build/tasks/git-patches/patches/*.patch; do
               for resource_dir in ../obj-artifact-build-output/dist/*.app/Contents/Resources; do
                 if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
                   patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
@@ -248,7 +246,7 @@ jobs:
               done
             done
           else
-            git apply --reject ./scripts/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
+            git apply --reject ./tools/build/tasks/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
           fi
 
           cd ..

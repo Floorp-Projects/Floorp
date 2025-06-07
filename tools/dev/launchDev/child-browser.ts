@@ -1,11 +1,5 @@
-import { $, ProcessPromise } from "zx";
 import chalk from "chalk";
-import { usePwsh } from "zx";
-
-switch (process.platform) {
-  case "win32":
-    usePwsh();
-}
+import { brandingBaseName, brandingName } from "../../build/defines.ts";
 
 chalk.level = 3;
 
@@ -66,98 +60,129 @@ function printFirefoxLog(lines: string[]) {
   }
 }
 
-import { log, type LogEntry } from "zx/core";
-import { brandingBaseName, brandingName } from "../../build/defines.ts";
-
-$.log = (entry: LogEntry) => {
-  // if the buffer is null, the process is on exit.
-  switch (entry.kind) {
-    case "stdout": {
-      /**
-       * In sub-thread, Firefox seems to use stdout
-       */
-      const str = entry.data.toString();
-      printFirefoxLog(str.split("\n"));
-      break;
-    }
-    case "stderr": {
-      /**
-       * Firefox's log seems to be outputted in stderr mainly.
-       */
-      const str = entry.data.toString();
-      const WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX =
-        /^WebDriver BiDi listening on (ws:\/\/.*)/;
-      if (WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX.test(str.replace("\n", ""))) {
-        console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver");
-      }
-
-      printFirefoxLog(str.split("\n"));
-      break;
-    }
-    default:
-      log(entry);
-  }
-};
-
-let processBrowser: ProcessPromise | null = null;
+let processBrowser: Deno.ChildProcess | null = null;
 let intendedShutdown = false;
 
 export async function runBrowser(port = 5180) {
   // https://wiki.mozilla.org/Firefox/CommandLineOptions
+  let command: Deno.Command;
+
   switch (Deno.build.os) {
     case "windows":
-      processBrowser =
-        $`./_dist/bin/${brandingBaseName}/${brandingBaseName}.exe --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
-          .stdio("pipe");
+      command = new Deno.Command(
+        `./_dist/bin/${brandingBaseName}/${brandingBaseName}.exe`,
+        {
+          args: [
+            "--profile",
+            "./_dist/profile/test",
+            "--remote-debugging-port",
+            port.toString(),
+            "--wait-for-browser",
+            "--jsdebugger",
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        },
+      );
       break;
 
     case "linux":
-      processBrowser =
-        $`./_dist/bin/${brandingBaseName}/${brandingBaseName} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
-          .stdio("pipe");
+      command = new Deno.Command(
+        `./_dist/bin/${brandingBaseName}/${brandingBaseName}`,
+        {
+          args: [
+            "--profile",
+            "./_dist/profile/test",
+            "--remote-debugging-port",
+            port.toString(),
+            "--wait-for-browser",
+            "--jsdebugger",
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        },
+      );
       break;
 
     case "darwin":
-      processBrowser =
-        $`./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`
-          .stdio("pipe");
+      command = new Deno.Command(
+        `./_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/MacOS/${brandingBaseName}`,
+        {
+          args: [
+            "--profile",
+            "./_dist/profile/test",
+            "--remote-debugging-port",
+            port.toString(),
+            "--wait-for-browser",
+            "--jsdebugger",
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        },
+      );
       break;
+    default:
+      throw new Error(`Unsupported platform: ${Deno.build.os}`);
   }
 
-  //processBrowser = $`${binPath()} --profile ./_dist/profile/test --remote-debugging-port ${port} --wait-for-browser --jsdebugger`;
+  processBrowser = command.spawn();
 
-  // processBrowser!.stdout.on("readable",()=>{
-  //   const temp = processBrowser?.stdout.read()
-  //   // if the buffer is null, the process is on exit.
-  //   if (!temp) {
-  //     return;
-  //   }
-  //   /**
-  //      * In sub-thread, Firefox seems to use stdout
-  //      */
-  //   const str = temp.toString();
-  //   printFirefoxLog(str.split("\n"));
-  // });
-  // processBrowser!.stderr.on("readable",()=>{
-  //   const temp = processBrowser?.stderr.read()
-  //   // if the buffer is null, the process is on exit.
-  //   if (!temp) {
-  //     return;
-  //   }
-  //   /**
-  //    * Firefox's log seems to be outputted in stderr mainly.
-  //    */
-  //   const str = temp.toString();
-  //   const WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX =
-  //   /^WebDriver BiDi listening on (ws:\/\/.*)/;
-  //   if (WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX.test(str.replace("\n", ""))) {
-  //     console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver")
-  //   }
+  // Process stdout
+  (async () => {
+    if (processBrowser?.stdout) {
+      const reader = processBrowser.stdout.getReader();
+      const decoder = new TextDecoder();
 
-  //   printFirefoxLog(str.split("\n"));
-  // });
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-  await processBrowser;
+          const str = decoder.decode(value);
+          printFirefoxLog(str.split("\n"));
+        }
+      } catch (error) {
+        console.error("Error reading stdout:", error);
+      } finally {
+        reader.releaseLock();
+      }
+    }
+  })();
+
+  // Process stderr
+  (async () => {
+    if (processBrowser?.stderr) {
+      const reader = processBrowser.stderr.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const str = decoder.decode(value);
+          const WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX =
+            /^WebDriver BiDi listening on (ws:\/\/.*)/;
+          if (
+            WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX.test(str.replace("\n", ""))
+          ) {
+            console.log(
+              "nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver",
+            );
+          }
+
+          printFirefoxLog(str.split("\n"));
+        }
+      } catch (error) {
+        console.error("Error reading stderr:", error);
+      } finally {
+        reader.releaseLock();
+      }
+    }
+  })();
+
+  await processBrowser.status;
+
   /**
    * Kill nodejs process gratefully
    */
@@ -176,7 +201,11 @@ export async function runBrowser(port = 5180) {
         console.log("[child-browser] Shutdown Browser");
         intendedShutdown = true;
         if (processBrowser != null) {
-          await processBrowser.kill();
+          try {
+            processBrowser.kill("SIGTERM");
+          } catch (error) {
+            console.error("Error killing browser process:", error);
+          }
         }
         Deno.exit(0);
       }

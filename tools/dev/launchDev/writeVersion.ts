@@ -2,18 +2,14 @@ import { v7 as uuidv7 } from "uuid";
 import { writeVersion } from "../../build/tasks/update/version.ts";
 import { writeBuildid2 } from "../../build/tasks/update/buildid2.ts";
 import { resolve } from "pathe";
-import fs from "node:fs/promises";
-
-const r = (value: string): string => {
-  return resolve(import.meta.dirname, "../..", value);
-};
 
 export async function genVersion() {
-  await writeVersion(r("./static/gecko"));
+  const projectRoot = resolve(import.meta.dirname!, "../../../");
+  await writeVersion(resolve(projectRoot, "static/gecko"));
   try {
-    await fs.access("_dist");
+    await Deno.stat("_dist");
   } catch {
-    await fs.mkdir("_dist");
+    await Deno.mkdir("_dist", { recursive: true });
   }
-  await writeBuildid2(r("./_dist"), uuidv7());
+  await writeBuildid2(resolve(projectRoot, "_dist"), uuidv7());
 }

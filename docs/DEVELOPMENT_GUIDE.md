@@ -3,11 +3,13 @@
 ## 🎯 Getting Started
 
 ### Prerequisites
+
 - Deno runtime
 - GitHub CLI (`gh`)
 - Git
 
 ### Quick Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/your-repo/noraneko.git
@@ -28,17 +30,21 @@ deno task dev
 ### Core Components
 
 #### 1. **Build System** (`scripts/build.ts`)
+
 The heart of the development workflow:
+
 - **Development Mode**: Hot Module Replacement (HMR) for rapid iteration
 - **Production Mode**: Optimized builds for release
 - **Mozbuild Integration**: Works with Firefox's build system
 
 #### 2. **Feature Modules** (`src/apps/main/core/`)
+
 - **Workspaces**: Tab organization and management
 - **Split View**: Side-by-side browsing
 - **Panel Sidebar**: Customizable sidebar panels
 
 #### 3. **UI Components** (`src/apps/`)
+
 - **Settings**: Browser configuration interface
 - **About Pages**: Custom browser pages
 - **Themes**: Visual customization system
@@ -68,21 +74,21 @@ The heart of the development workflow:
    }
    ```
 
-3. **Register Feature**
-   Add to the appropriate module loader
+3. **Register Feature** Add to the appropriate module loader
 
 ### Development Server Ports
 
-| Application | Port | Purpose |
-|-------------|------|---------|
+| Application | Port | Purpose               |
+| ----------- | ---- | --------------------- |
 | Main App    | 5181 | Core browser features |
-| Designs     | 5182 | Theme development |
-| Settings    | 5183 | Settings interface |
-| Tests       | 5191 | Test environment |
+| Designs     | 5182 | Theme development     |
+| Settings    | 5183 | Settings interface    |
+| Tests       | 5191 | Test environment      |
 
 ### Hot Module Replacement (HMR)
 
 HMR is supported for:
+
 - ✅ TypeScript/JavaScript files
 - ✅ CSS/SCSS files
 - ✅ React/Solid components
@@ -95,12 +101,12 @@ HMR is supported for:
 1. **Solid.js Components** (for browser UI)
    ```typescript
    import { createSignal } from "solid-js";
-   
+
    export function MyComponent() {
      const [count, setCount] = createSignal(0);
-     
+
      return (
-       <div onClick={() => setCount(c => c + 1)}>
+       <div onClick={() => setCount((c) => c + 1)}>
          Count: {count()}
        </div>
      );
@@ -110,14 +116,14 @@ HMR is supported for:
 2. **React Components** (for settings pages)
    ```typescript
    import { useState } from "react";
-   
+
    export function MySettingsComponent() {
      const [value, setValue] = useState("");
-     
+
      return (
-       <input 
-         value={value} 
-         onChange={e => setValue(e.target.value)} 
+       <input
+         value={value}
+         onChange={(e) => setValue(e.target.value)}
        />
      );
    }
@@ -132,6 +138,7 @@ HMR is supported for:
 ## 🧪 Testing
 
 ### Running Tests
+
 ```bash
 # Unit tests
 deno task test
@@ -144,8 +151,9 @@ deno task test:e2e
 ```
 
 ### Writing Tests
+
 ```typescript
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("MyFeature", () => {
   it("should work correctly", () => {
@@ -180,6 +188,7 @@ describe("MyFeature", () => {
 ### Adding Dependencies
 
 For Deno projects:
+
 ```bash
 # Add to deno.json
 {
@@ -190,6 +199,7 @@ For Deno projects:
 ```
 
 For Node.js projects:
+
 ```bash
 npm install my-package
 ```
@@ -197,22 +207,24 @@ npm install my-package
 ## 🐛 Debugging
 
 ### Browser Debugging
+
 1. Enable Developer Tools in browser
 2. Use `console.log()` for quick debugging
 3. Use browser debugger for breakpoints
 
 ### Build Debugging
+
 1. Check build logs in terminal
 2. Verify file paths and imports
 3. Use `--verbose` flag for detailed output
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Build fails | Check import paths and dependencies |
-| HMR not working | Restart dev server |
-| Browser won't start | Check binary download |
+| Issue               | Solution                            |
+| ------------------- | ----------------------------------- |
+| Build fails         | Check import paths and dependencies |
+| HMR not working     | Restart dev server                  |
+| Browser won't start | Check binary download               |
 
 ## 📚 Resources
 
@@ -230,6 +242,7 @@ npm install my-package
 5. Submit a pull request
 
 ### Code Style
+
 - Use TypeScript for all new code
 - Follow ESLint configuration
 - Add JSDoc comments for public APIs

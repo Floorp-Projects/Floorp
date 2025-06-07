@@ -60,3 +60,13 @@ export async function initBin() {
     console.log("[dev] Initialization complete.");
   }
 }
+
+// Direct execution support
+if (import.meta.main) {
+  try {
+    await initBin();
+  } catch (error) {
+    console.error("[dev] Failed to initialize binary:", error);
+    Deno.exit(1);
+  }
+}

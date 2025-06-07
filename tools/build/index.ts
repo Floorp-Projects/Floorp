@@ -8,36 +8,51 @@ import { runPostBuildPhase } from "./phases/post-build.ts";
 import { log } from "./logger.ts";
 
 type BuildMode = "dev" | "production";
+type BuildPhase = "full" | "before" | "after";
 
 interface BuildOptions {
   mode: BuildMode;
-  skipMozbuild?: boolean;
+  phase?: BuildPhase;
   _clean?: boolean;
+  initGitForPatch?: boolean; // パッチ作成用のGit初期化フラグ
 }
 
 /**
  * Main build function
  */
 export async function build(options: BuildOptions): Promise<void> {
-  const { mode, skipMozbuild = false, _clean = false } = options;
+  const { mode, phase = "full", _clean = false, initGitForPatch = false } =
+    options;
 
-  log.info(`🏗️  Starting Noraneko build (${mode} mode)`);
+  log.info(`🏗️  Starting Noraneko build (${mode} mode, ${phase} phase)`);
 
   try {
-    // Pre-build phase
-    await runPreBuildPhase();
+    // Before phase: noranekoスクリプト実行
+    if (phase === "before" || phase === "full") {
+      await runPreBuildPhase({ initGitForPatch, isDev: mode === "dev" });
+      log.info("✅ Before phase completed (noranekoスクリプト実行)");
 
-    // Mozilla build phase
-    if (!skipMozbuild) {
-      log.info("🦊 Running Mozilla build...");
-      // This would call the actual Mozilla build system
-      // Implementation depends on the specific build requirements
-    } else {
-      log.info("⏭️  Skipping Mozilla build");
+      if (phase === "before") {
+        log.info(
+          "🔄 Ready for Mozilla build. Run 'deno run -A tools/build.ts --after' after mozbuild",
+        );
+        return;
+      }
     }
 
-    // Post-build phase
-    await runPostBuildPhase(mode === "dev");
+    // Mozilla build phase (external)
+    if (phase === "full") {
+      log.info("🦊 Mozilla build should be executed externally");
+      log.info(
+        "💡 Use --before and --after options to split the build process",
+      );
+    }
+
+    // After phase: Inject処理
+    if (phase === "after" || phase === "full") {
+      await runPostBuildPhase(mode === "dev");
+      log.info("✅ After phase completed (Inject処理)");
+    }
 
     log.info("🎉 Build completed successfully!");
   } catch (error) {
@@ -50,8 +65,14 @@ export async function build(options: BuildOptions): Promise<void> {
 if (import.meta.main) {
   const args = Deno.args;
   const mode: BuildMode = args.includes("--dev") ? "dev" : "production";
-  const skipMozbuild = args.includes("--skip-mozbuild");
   const _clean = args.includes("--clean");
 
-  await build({ mode, skipMozbuild, _clean });
+  let phase: BuildPhase = "full";
+  if (args.includes("--before")) {
+    phase = "before";
+  } else if (args.includes("--after")) {
+    phase = "after";
+  }
+
+  await build({ mode, phase, _clean });
 }

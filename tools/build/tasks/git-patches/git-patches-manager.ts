@@ -1,25 +1,47 @@
 /// <reference lib="deno.ns" />
 import { brandingBaseName, brandingName } from "../../defines.ts";
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import { $ } from "zx";
-import process from "node:process";
-import { resolve } from "pathe";
 import { existsSync } from "@std/fs";
+import { join, relative, resolve } from "@std/path";
+
+// Helper function to run git commands
+async function runGitCommand(
+  args: string[],
+  options: { cwd?: string } = {},
+): Promise<{ stdout: string; stderr: string }> {
+  const command = new Deno.Command("git", {
+    args,
+    cwd: options.cwd,
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const { code, stdout, stderr } = await command.output();
+
+  if (code !== 0) {
+    const errorMessage = new TextDecoder().decode(stderr);
+    throw new Error(`Git command failed: ${errorMessage}`);
+  }
+
+  return {
+    stdout: new TextDecoder().decode(stdout),
+    stderr: new TextDecoder().decode(stderr),
+  };
+}
 
 function getBinDir() {
-  return process.platform !== "darwin"
+  return Deno.build.os !== "darwin"
     ? `_dist/bin/${brandingBaseName}`
     : `_dist/bin/${brandingBaseName}/${brandingName}.app/Contents/Resources`;
 }
 
-const PATCHES_DIR = "scripts/git-patches/patches";
+const PATCHES_DIR = "tools/build/tasks/git-patches/patches";
 const PATCHES_TMP = "_dist/bin/applied_patches";
 
 async function isGitInitialized(dir: string): Promise<boolean> {
   try {
-    await fs.access(path.join(dir, ".git"));
-    return true;
+    const gitDir = join(dir, ".git");
+    const stat = await Deno.stat(gitDir);
+    return stat.isDirectory;
   } catch {
     return false;
   }
@@ -38,7 +60,7 @@ export async function initializeBinGit() {
 
   // create .gitignore
   await Deno.writeTextFile(
-    path.join(BIN_DIR, ".gitignore"),
+    join(BIN_DIR, ".gitignore"),
     [
       `./noraneko-dev/*`,
       `./browser/chrome/browser/res/activity-stream/data/content/abouthomecache/*`,
@@ -46,17 +68,23 @@ export async function initializeBinGit() {
   );
 
   // Initialize git repository
-  await $({ cwd: BIN_DIR })`git init`;
-  await $({ cwd: BIN_DIR })`git add .`;
-  await $({ cwd: BIN_DIR })`git commit -m initialize`;
+  await runGitCommand(["init"], { cwd: BIN_DIR });
+  await runGitCommand(["add", "."], { cwd: BIN_DIR });
+  await runGitCommand(["commit", "-m", "initialize"], { cwd: BIN_DIR });
 
   console.log("[git-patches] Git repository initialized in _dist/bin");
 }
 
 export function checkPatchIsNeeded() {
+  // Check if patches directory exists
+  if (!existsSync(PATCHES_DIR, { "isDirectory": true })) {
+    return false;
+  }
+
   if (!existsSync(PATCHES_TMP, { "isDirectory": true })) {
     return true;
   }
+
   const patches_tmp = Deno.readDirSync(PATCHES_TMP);
   const patches_dir = Deno.readDirSync(PATCHES_DIR);
 
@@ -74,10 +102,10 @@ export function checkPatchIsNeeded() {
 
   const files_eq = patches_dir.every((patch) => {
     const patch_in_dir = Deno.readTextFileSync(
-      resolve(PATCHES_DIR, patch.name),
+      join(PATCHES_DIR, patch.name),
     );
     const patch_in_tmp = Deno.readTextFileSync(
-      resolve(PATCHES_TMP, patch.name),
+      join(PATCHES_TMP, patch.name),
     );
     return patch_in_dir === patch_in_tmp;
   });
@@ -99,40 +127,75 @@ export async function applyPatches(binDir = getBinDir()) {
   }
   let reverse_is_aborted = false;
   try {
-    await fs.access(PATCHES_TMP);
+    await Deno.stat(PATCHES_TMP);
     // Already the bin is patched
     // Need reverse patch
-    const reverse_patches = await fs.readdir(PATCHES_TMP);
-    for (const patch of reverse_patches) {
-      const patchPath = path.join(PATCHES_TMP, patch);
+    const patches_tmp_entries = [];
+    for await (const entry of Deno.readDir(PATCHES_TMP)) {
+      patches_tmp_entries.push(entry.name);
+    }
+
+    for (const patch of patches_tmp_entries) {
       try {
-        await $`git apply -R --reject --whitespace=fix --unsafe-paths --directory ${binDir} ./${patchPath}`;
+        // Use absolute paths to avoid path resolution issues on Windows
+        const patchPath = resolve(PATCHES_TMP, patch);
+        const relativeBinDir = relative(Deno.cwd(), binDir);
+
+        await runGitCommand([
+          "apply",
+          "-R",
+          "--reject",
+          "--whitespace=fix",
+          "--unsafe-paths",
+          `--directory=${relativeBinDir}`,
+          patchPath,
+        ], { cwd: Deno.cwd() });
       } catch (e) {
-        console.warn(`[git-patches] Failed to reverse patch: ${patchPath}`);
+        console.warn(`[git-patches] Failed to reverse patch: ${patch}`);
         console.warn(e);
         reverse_is_aborted = true;
       }
     }
     if (!reverse_is_aborted) {
-      await fs.rm(PATCHES_TMP, { "recursive": true });
+      await Deno.remove(PATCHES_TMP, { recursive: true });
     }
-  } catch {}
+  } catch {
+    // Ignore if PATCHES_TMP doesn't exist - means no patches were applied before
+    console.log("[git-patches] No previous patches to reverse");
+  }
   if (reverse_is_aborted) {
     throw new Error("[git-patches] Reverse Patch Failed: aborted");
   }
-  const patches = await fs.readdir(PATCHES_DIR);
-  await fs.mkdir(PATCHES_TMP, { "recursive": true });
+
+  const patches_entries = [];
+  for await (const entry of Deno.readDir(PATCHES_DIR)) {
+    patches_entries.push(entry.name);
+  }
+
+  await Deno.mkdir(PATCHES_TMP, { recursive: true });
   let aborted = false;
-  for (const patch of patches) {
+
+  for (const patch of patches_entries) {
     if (!patch.endsWith(".patch")) continue;
 
-    const patchPath = path.join(PATCHES_DIR, patch);
-    console.log(`Applying patch: ${patchPath}`);
+    console.log(`Applying patch: ${patch}`);
     try {
-      await $`git apply --reject --whitespace=fix --unsafe-paths --directory ${binDir} ./${patchPath}`;
-      await fs.cp(patchPath, PATCHES_TMP + "/" + patch);
+      // Use absolute paths to avoid path resolution issues on Windows
+      const patchPath = resolve(PATCHES_DIR, patch);
+      const relativeBinDir = relative(Deno.cwd(), binDir);
+
+      await runGitCommand([
+        "apply",
+        "--reject",
+        "--whitespace=fix",
+        "--unsafe-paths",
+        `--directory=${relativeBinDir}`,
+        patchPath,
+      ], { cwd: Deno.cwd() });
+
+      await Deno.copyFile(join(PATCHES_DIR, patch), join(PATCHES_TMP, patch));
     } catch (e) {
-      console.warn(`[git-patches] Failed to apply patch: ${patchPath}`);
+      console.warn(`[git-patches] Failed to apply patch: ${patch}`);
       console.warn(e);
       aborted = true;
     }
@@ -151,9 +214,10 @@ export async function createPatches() {
   }
 
   // Get list of changed files
-  const { stdout: diffNameOnly } = await $({
-    cwd: BIN_DIR,
-  })`git diff --name-only`;
+  const { stdout: diffNameOnly } = await runGitCommand(
+    ["diff", "--name-only"],
+    { cwd: BIN_DIR },
+  );
   const changedFiles = diffNameOnly.split("\n").filter(Boolean);
 
   if (changedFiles.length === 0) {
@@ -162,12 +226,14 @@ export async function createPatches() {
   }
 
   // Create patches directory if it doesn't exist
-  await fs.mkdir(PATCHES_DIR, { recursive: true });
+  await Deno.mkdir(PATCHES_DIR, { recursive: true });
 
   // Create patch for each changed file
   for (const file of changedFiles) {
     try {
-      const { stdout: diff } = await $({ cwd: BIN_DIR })`git diff ${file}`;
+      const { stdout: diff } = await runGitCommand(["diff", file], {
+        cwd: BIN_DIR,
+      });
 
       const modifiedDiff = `${
         `${diff}`
@@ -182,7 +248,7 @@ export async function createPatches() {
           .replace(/\.[^/.]+$/, "")
       }.patch`;
 
-      const patchPath = path.join(PATCHES_DIR, patchName);
+      const patchPath = join(PATCHES_DIR, patchName);
 
       await Deno.writeTextFile(patchPath, modifiedDiff);
       console.log(`[git-patches] Created/Updated patch: ${patchPath}`);
@@ -193,8 +259,8 @@ export async function createPatches() {
   }
 }
 
-if (process.argv[2]) {
-  switch (process.argv[2]) {
+if (Deno.args[0]) {
+  switch (Deno.args[0]) {
     case "--apply":
       applyPatches();
       break;

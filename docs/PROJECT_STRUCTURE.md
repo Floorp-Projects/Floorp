@@ -70,22 +70,26 @@ noraneko/
 ## 🚀 Benefits of This Structure
 
 ### 1. **Clear Separation of Concerns**
+
 - `src/` contains all source code
 - `tools/` contains development utilities
 - `config/` contains all configuration files
 - `docs/` contains comprehensive documentation
 
 ### 2. **Intuitive Navigation**
+
 - Features are grouped logically under `src/features/`
 - UI components are organized under `src/ui/`
 - Themes are centralized under `src/themes/`
 
 ### 3. **Development Efficiency**
+
 - Related files are co-located
 - Clear naming conventions
 - Reduced cognitive load for new developers
 
 ### 4. **Scalability**
+
 - Easy to add new features
 - Modular structure supports plugin architecture
 - Clear boundaries between components
@@ -93,16 +97,19 @@ noraneko/
 ## 📋 Migration Strategy
 
 ### Phase 1: Documentation and Planning
+
 1. Create comprehensive documentation
 2. Set up development guides
 3. Establish coding standards
 
 ### Phase 2: Gradual Restructuring
+
 1. Move and consolidate related files
 2. Update import paths
 3. Update build configurations
 
 ### Phase 3: Tooling Updates
+
 1. Update build scripts
 2. Update development workflows
 3. Update CI/CD pipelines
@@ -111,9 +118,11 @@ noraneko/
 
 ### 1. Separate Build System from Application Code
 
-**Current Problem**: `apps/system/` mixes build scripts with browser glue code, causing confusion for feature developers.
+**Current Problem**: `apps/system/` mixes build scripts with browser glue code,
+causing confusion for feature developers.
 
 **Proposed Structure**:
+
 ```
 ├── src/                            # 🛠️ Source Code
 │   ├── core/                       # Core browser functionality  
@@ -137,10 +146,13 @@ noraneko/
 ```
 
 **Benefits**:
+
 - **Clear Separation**: Glue code in `src/core/glue/` (stable, rarely changed)
 - **Feature Focus**: Developers work in `src/features/` without distraction
-- **Build Configs Colocated**: Build scripts stay with their respective glue code
-- **Reduced Complexity**: Clear boundaries between stable glue and active development
+- **Build Configs Colocated**: Build scripts stay with their respective glue
+  code
+- **Reduced Complexity**: Clear boundaries between stable glue and active
+  development
 
 ### 2. Migration Steps
 
@@ -168,20 +180,22 @@ noraneko/
    - Update vite configurations to work with colocated build configs
 
 **Implementation Priority**:
-1. ✅ **Create Developer Onboarding Guide** 
+
+1. ✅ **Create Developer Onboarding Guide**
 2. 🔄 **Separate Glue Code from Build Scripts** (This proposal)
 3. **Standardize Configuration Files**
-4. **Improve Build Script Organization** 
+4. **Improve Build Script Organization**
 5. **Add Component Documentation**
 6. **Set Up Development Templates**
 
 ## ✅ Migration Progress
 
-### ✅ **Phase 1 Completed: Tools Directory Restructuring** 
+### ✅ **Phase 1 Completed: Tools Directory Restructuring**
 
 **Status**: **COMPLETED** ✅
 
-The `scripts/` directory has been successfully migrated to the new `tools/` structure:
+The `scripts/` directory has been successfully migrated to the new `tools/`
+structure:
 
 ```
 tools/                          # 🔧 Development Tools
@@ -206,13 +220,16 @@ tools/                          # 🔧 Development Tools
 ```
 
 **Benefits Achieved**:
+
 - ✅ **Clear Separation**: Build tools vs development tools
 - ✅ **Modular Design**: Phase-based build system with reusable tasks
 - ✅ **Improved CLI**: Intuitive command-line interface with help messages
 - ✅ **Better Error Handling**: Consistent error reporting and logging
-- ✅ **Path Normalization**: All paths relative to project root from tools directory
+- ✅ **Path Normalization**: All paths relative to project root from tools
+  directory
 
 **New Usage**:
+
 ```bash
 # Development build
 deno run -A build.ts --dev
@@ -228,13 +245,17 @@ deno run -A tools/dev/index.ts clean
 ### 🔄 **Next Phase: Source Code Restructuring**
 
 **Target**: Move application source code to the proposed `src/` structure:
+
 - `apps/system/` → `src/core/glue/`
 - Feature code → `src/features/`
 - UI components → `src/ui/`
 - Themes → `src/themes/`
 
 **Benefits Expected**:
+
 - **Enhanced Clarity**: Distinct folders for glue code, features, UI, and themes
-- **Improved Collaboration**: Frontend and backend developers can work independently
+- **Improved Collaboration**: Frontend and backend developers can work
+  independently
 - **Easier Navigation**: Logical grouping of related files
-- **Streamlined Development**: Focused areas for feature development and bug fixing
+- **Streamlined Development**: Focused areas for feature development and bug
+  fixing
