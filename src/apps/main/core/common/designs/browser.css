@@ -157,15 +157,6 @@ browser[type="content"] > html {
   display: none;
 }
 
-#qrcode-img-vbox > * {
-  border-radius: 10px;
-  margin: 10px;
-}
-
-#QRCodeGeneratePageAction-image {
-  list-style-image: url("chrome://floorp/skin/icons/floorp-share.svg");
-}
-
 #identity-icon-label[value="Firefox"] {
   display: none !important;
 }

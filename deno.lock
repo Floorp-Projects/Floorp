@@ -84,6 +84,7 @@
     "npm:postcss@^8.5.1": "8.5.3",
     "npm:postcss@^8.5.3": "8.5.3",
     "npm:puppeteer-core@^24.1.1": "24.9.0_devtools-protocol@0.0.1439962",
+    "npm:qr-code-styling@^1.9.2": "1.9.2",
     "npm:react-dom@19": "19.1.0_react@19.1.0",
     "npm:react-hook-form@^7.54.2": "7.56.4_react@19.1.0",
     "npm:react-i18next@^15.4.1": "15.5.2_i18next@24.2.3__typescript@5.8.3_react@19.1.0_typescript@5.8.3",
@@ -5709,6 +5710,15 @@
     "qjobs@1.2.0": {
       "integrity": "sha512-8YOJEHtxpySA3fFDyCRxA+UUV+fA+rTWnuWvylOK/NCjhY+b4ocCtmu8TtsWb+mYeU+GCHf/S66KZF/AsteKHg=="
     },
+    "qr-code-styling@1.9.2": {
+      "integrity": "sha512-RgJaZJ1/RrXJ6N0j7a+pdw3zMBmzZU4VN2dtAZf8ZggCfRB5stEQ3IoDNGaNhYY3nnZKYlYSLl5YkfWN5dPutg==",
+      "dependencies": [
+        "qrcode-generator"
+      ]
+    },
+    "qrcode-generator@1.4.4": {
+      "integrity": "sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw=="
+    },
     "qs@6.13.0": {
       "integrity": "sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==",
       "dependencies": [
@@ -7550,6 +7560,7 @@
         "npm:oxlint@~0.15.9",
         "npm:pathe@^2.0.2",
         "npm:puppeteer-core@^24.1.1",
+        "npm:qr-code-styling@^1.9.2",
         "npm:rolldown@^1.0.0-beta.9",
         "npm:solid-element@^1.9.1",
         "npm:solid-styled-jsx@~0.27.1",

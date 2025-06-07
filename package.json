@@ -38,6 +38,7 @@
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "adm-zip": "^0.5.16",
+    "qr-code-styling": "^1.9.2",
     "solid-element": "^1.9.1",
     "solid-styled-jsx": "^0.27.1",
     "sortablejs": "^1.15.6",
