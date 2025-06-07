@@ -2,6 +2,7 @@ import { v7 as uuidv7 } from "uuid";
 import { writeVersion } from "../../build/tasks/update/version.ts";
 import { writeBuildid2 } from "../../build/tasks/update/buildid2.ts";
 import { resolve } from "pathe";
+import { ensureDir } from "../../build/utils.ts";
 
 export async function genVersion() {
   const projectRoot = resolve(import.meta.dirname!, "../../../");
@@ -9,7 +10,7 @@ export async function genVersion() {
   try {
     await Deno.stat("_dist");
   } catch {
-    await Deno.mkdir("_dist", { recursive: true });
+    await ensureDir("_dist");
   }
   await writeBuildid2(resolve(projectRoot, "_dist"), uuidv7());
 }

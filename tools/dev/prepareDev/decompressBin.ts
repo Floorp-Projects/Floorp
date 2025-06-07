@@ -8,32 +8,17 @@ import {
   getBinArchive,
   VERSION,
 } from "../../build/defines.ts";
-import { isExists } from "../../build/utils.ts";
+import {
+  ensureDir,
+  isExists,
+  runCommand,
+  safeRemove,
+} from "../../build/utils.ts";
 import { downloadBinArchive } from "./downloadBin.ts";
 import pathe from "pathe";
 
 // Binary archive filename
-const binArchive = getBinArchive();
-
-/**
- * Executes a shell command using Deno's subprocess API
- */
-async function runCommand(command: string, args: string[]): Promise<void> {
-  const cmd = new Deno.Command(command, {
-    args,
-    stdout: "piped",
-    stderr: "piped",
-  });
-
-  const { code, stderr } = await cmd.output();
-
-  if (code !== 0) {
-    const errorText = new TextDecoder().decode(stderr);
-    throw new Error(
-      `Command failed: ${command} ${args.join(" ")}\n${errorText}`,
-    );
-  }
-}
+const binArchive = getBinArchive().filename;
 
 /**
  * Executes a PowerShell command on Windows
@@ -109,7 +94,7 @@ async function decompressBinMacOS() {
   const mountDir = macConfig.mountDir;
 
   try {
-    await Deno.mkdir(mountDir, { recursive: true });
+    await ensureDir(mountDir);
     await runCommand("hdiutil", [
       "attach",
       "-mountpoint",
@@ -124,8 +109,8 @@ async function decompressBinMacOS() {
         `${brandingName}.app`,
       );
       const destContents = pathe.join(appDestBase, macConfig.appDirName);
-      await Deno.mkdir(destContents, { recursive: true });
-      await Deno.mkdir(binDir, { recursive: true });
+      await ensureDir(destContents);
+      await ensureDir(binDir);
 
       const srcContents = pathe.join(
         mountDir,
@@ -162,7 +147,7 @@ async function decompressBinMacOS() {
       ]);
     } finally {
       await runCommand("hdiutil", ["detach", mountDir]);
-      await Deno.remove(mountDir, { recursive: true });
+      await safeRemove(mountDir);
     }
   } catch (error) {
     console.error("[dev] Error during macOS decompression:", error);

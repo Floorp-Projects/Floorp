@@ -202,7 +202,7 @@ export async function runBrowser(port = 5180) {
         intendedShutdown = true;
         if (processBrowser != null) {
           try {
-            processBrowser.kill("SIGTERM");
+            (processBrowser as Deno.ChildProcess).kill("SIGTERM");
           } catch (error) {
             console.error("Error killing browser process:", error);
           }

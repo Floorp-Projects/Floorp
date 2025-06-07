@@ -9,15 +9,15 @@ import { WebsitePanel } from "./website-panel-window-parent";
 
 export namespace PanelNavigator {
   let _gPanelSidebar: CPanelSidebar | null = null;
-  
+
   export function setGPanelSidebar(sidebar: CPanelSidebar | null) {
     _gPanelSidebar = sidebar;
   }
-  
+
   export function getGPanelSidebar(): CPanelSidebar | null {
     return _gPanelSidebar;
   }
-  
+
   const gWebsitePanel = WebsitePanel.getInstance();
   const addonEnabled = panelSidebarConfig().webExtensionRunningEnabled;
 

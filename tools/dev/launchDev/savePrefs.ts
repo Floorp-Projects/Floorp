@@ -23,10 +23,12 @@ user_pref("remote.active-protocols", 1);
 user_pref("browser.newtabpage.enabled", true);
 `;
 
+import { ensureDir } from "../../build/utils.ts";
+
 export async function savePrefsForProfile(profile_dir: string) {
   try {
     // Ensure the profile directory exists
-    await Deno.mkdir(profile_dir, { recursive: true });
+    await ensureDir(profile_dir);
 
     // Write the user.js file using Deno API
     await Deno.writeTextFile(`${profile_dir}/user.js`, USER_JS);

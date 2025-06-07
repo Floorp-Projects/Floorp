@@ -53,7 +53,7 @@ type InjectMetadata = {
 export function Inject(value: InjectMetadata) {
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   return (target: any, context: ClassMethodDecoratorContext) => {
-    return function (this, ...args) {
+    return function (this: any, ..._args: unknown[]) {
       this[`__meta_${context.name.toString()}__`] = {
         meta: value,
         func: target.toString(),

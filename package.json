@@ -11,6 +11,7 @@
     "@biomejs/biome": "2.0.0-beta.6",
     "@bytecodealliance/preview2-shim": "^0.17.2",
     "@types/node": "^22.15.30",
+    "@vitejs/plugin-react-swc": "^3.7.2",
     "chalk": "^5.4.1",
     "chokidar": "^4.0.3",
     "fast-glob": "^3.3.3",
@@ -21,11 +22,17 @@
     "puppeteer-core": "^24.10.0",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",
-    "vite": "npm:rolldown-vite@latest"
+    "vite": "npm:rolldown-vite@latest",
+    "vite-plugin-solid": "^2.10.2"
   },
   "dependencies": {
+    "@deno/vite-plugin": "^1.0.4",
     "@swc/core": "^1.11.31",
+    "@tailwindcss/vite": "^4.1.8",
     "hereby": "^1.11.0",
+    "unplugin-swc": "^1.5.4",
+    "vite-plugin-istanbul": "^7.0.0",
+    "vite-tsconfig-paths": "^5.1.4",
     "zod": "^3.25.55",
     "zx": "^8.5.5"
   }

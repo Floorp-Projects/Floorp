@@ -5,7 +5,7 @@ import {
   binVersion,
   VERSION,
 } from "../../build/defines.ts";
-import { isExists } from "../../build/utils.ts";
+import { ensureDir, isExists, safeRemove } from "../../build/utils.ts";
 import { decompressBin } from "./decompressBin.ts";
 
 /**
@@ -27,7 +27,7 @@ export async function initBin() {
         console.log(
           "[dev] Removing existing binary directory and decompressing new binary.",
         );
-        await Deno.remove(binRootDir, { recursive: true });
+        await safeRemove(binRootDir);
         isBinInitNeeded = true;
       } else {
         // if (!mismatch)
@@ -38,7 +38,7 @@ export async function initBin() {
       console.log(
         `[dev] Binary exists, but version file not found. Writing ${VERSION} to version file.`,
       );
-      await Deno.mkdir(binDir, { recursive: true });
+      await ensureDir(binDir);
       await Deno.writeTextFile(binVersion, VERSION);
       console.log("[dev] Initialization complete.");
     }
@@ -55,7 +55,7 @@ export async function initBin() {
   }
 
   if (isBinInitNeeded) {
-    await Deno.mkdir(binDir, { recursive: true });
+    await ensureDir(binDir);
     await decompressBin();
     console.log("[dev] Initialization complete.");
   }

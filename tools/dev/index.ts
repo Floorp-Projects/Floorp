@@ -4,6 +4,7 @@
  */
 
 import { log } from "../build/logger.ts";
+import { safeRemove } from "../build/utils.ts";
 
 export interface DevServerOptions {
   port?: number;
@@ -38,12 +39,10 @@ export async function cleanDev(): Promise<void> {
 
   try {
     // Clean temporary files
-    await Deno.remove("../../_dist/temp", { recursive: true }).catch(() => {});
+    await safeRemove("../../_dist/temp");
 
     // Clean profile test data
-    await Deno.remove("../../_dist/profile/test", { recursive: true }).catch(
-      () => {},
-    );
+    await safeRemove("../../_dist/profile/test");
 
     log.info("✅ Development artifacts cleaned");
   } catch (error) {

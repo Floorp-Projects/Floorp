@@ -24,6 +24,7 @@
     "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],
     "checkJs": true
   },
+  "exclude": ["tools/build/tasks/inject/wasm/nora-inject.js", "_dist/**/*", "libs/@types/gecko/**/*", "libs/user-js-runner/**/*", "tools/build/tasks/inject/mixins/**/*", "chrome/**/*", "modules/**/*", "src/**/*", "node_modules/**/*"],
   "tasks": {
     "dev": "deno run -A build.ts --dev",
     "prod-before": "deno run -A build.ts --production-before",

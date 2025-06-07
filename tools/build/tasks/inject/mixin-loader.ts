@@ -2,6 +2,7 @@ import fg from "fast-glob";
 import { join, resolve } from "pathe";
 import { transform } from "./wasm/nora-inject.js";
 import { transformFileSync } from "@swc/core";
+import { ensureDir } from "../../utils.ts";
 
 const mixinsDir = join(import.meta.dirname!, "mixins");
 const fileList = await fg("*", {
@@ -19,8 +20,8 @@ const tempSharedDir = join(tempDistDir, "shared");
 export async function applyMixin(binPath: string) {
   try {
     // Ensure temporary directories exist
-    await Deno.mkdir(tempMixinsDir, { recursive: true });
-    await Deno.mkdir(tempSharedDir, { recursive: true });
+    await ensureDir(tempMixinsDir);
+    await ensureDir(tempSharedDir);
 
     // Transform and write shared define file
     const defineFilePath = resolve(

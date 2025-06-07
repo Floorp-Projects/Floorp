@@ -1,7 +1,7 @@
 import { getBinArchive } from "../../build/defines.ts";
 
 // Binary archive filename
-const binArchive = getBinArchive();
+const binArchive = getBinArchive().filename;
 
 /**
  * Gets the git remote origin URL using Deno's subprocess API

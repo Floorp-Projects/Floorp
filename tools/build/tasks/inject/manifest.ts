@@ -1,10 +1,5 @@
-import { symlink } from "@std/fs/unstable-symlink";
-import { emptyDir } from "@std/fs/empty-dir";
-import { relative, resolve } from "npm:pathe@^2.0.2";
-import { SymlinkOptions } from "@std/fs/unstable-types";
-import { ensureDir } from "@std/fs/ensure-dir";
 import { symlinkDirectory } from "./symlink-directory.ts";
-import { isExists } from "../../utils.ts";
+import { ensureDir, isExists, safeRemove } from "../../utils.ts";
 
 export async function injectManifest(
   binPath: string,
@@ -27,7 +22,7 @@ export async function injectManifest(
   }
 
   if (await isExists(`${binPath}/${dirName}`)) {
-    await Deno.remove(`${binPath}/${dirName}`, { recursive: true });
+    await safeRemove(`${binPath}/${dirName}`);
   }
   await ensureDir(`${binPath}/${dirName}`);
   await Deno.writeTextFile(

@@ -3,9 +3,9 @@
 //? While some error occurs in vscode, it runs well.
 //? So I turned this file to JS and `checkJS` to false.
 
-import { Mixin, Inject } from "../shared/define.js";
+import { Mixin, Inject } from "../shared/define.ts";
 
-@Mixin({
+export @Mixin({
   //? https://searchfox.org/mozilla-central/rev/dd421ae14997e3bebb9c08634633a4a3e3edeffc/remote/webdriver-bidi/WebDriverBiDiConnection.sys.mjs#217
   path: "chrome/remote/content/webdriver-bidi/WebDriverBiDiConnection.sys.mjs",
   type: "class",
@@ -13,7 +13,7 @@ import { Mixin, Inject } from "../shared/define.js";
   className: "WebDriverBiDiConnection",
   extends: "WebSocketConnection",
 })
-export class MixinWebDriverBiDiConnection {
+class MixinWebDriverBiDiConnection {
   @Inject({
     method: "onPacket",
     at: { value: "INVOKE", target: "sendResult" },

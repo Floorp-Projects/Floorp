@@ -1,31 +1,20 @@
 /// <reference lib="deno.ns" />
 import { brandingBaseName, brandingName } from "../../defines.ts";
-import { existsSync } from "@std/fs";
 import { join, relative, resolve } from "@std/path";
+import {
+  ensureDir,
+  isExistsSync,
+  isGitInitialized,
+  runCommandChecked,
+  safeRemove,
+} from "../../utils.ts";
 
 // Helper function to run git commands
 async function runGitCommand(
   args: string[],
   options: { cwd?: string } = {},
 ): Promise<{ stdout: string; stderr: string }> {
-  const command = new Deno.Command("git", {
-    args,
-    cwd: options.cwd,
-    stdout: "piped",
-    stderr: "piped",
-  });
-
-  const { code, stdout, stderr } = await command.output();
-
-  if (code !== 0) {
-    const errorMessage = new TextDecoder().decode(stderr);
-    throw new Error(`Git command failed: ${errorMessage}`);
-  }
-
-  return {
-    stdout: new TextDecoder().decode(stdout),
-    stderr: new TextDecoder().decode(stderr),
-  };
+  return await runCommandChecked("git", args, options);
 }
 
 function getBinDir() {
@@ -36,16 +25,6 @@ function getBinDir() {
 
 const PATCHES_DIR = "tools/build/tasks/git-patches/patches";
 const PATCHES_TMP = "_dist/bin/applied_patches";
-
-async function isGitInitialized(dir: string): Promise<boolean> {
-  try {
-    const gitDir = join(dir, ".git");
-    const stat = await Deno.stat(gitDir);
-    return stat.isDirectory;
-  } catch {
-    return false;
-  }
-}
 
 export async function initializeBinGit() {
   const BIN_DIR = getBinDir();
@@ -77,11 +56,11 @@ export async function initializeBinGit() {
 
 export function checkPatchIsNeeded() {
   // Check if patches directory exists
-  if (!existsSync(PATCHES_DIR, { "isDirectory": true })) {
+  if (!isExistsSync(PATCHES_DIR, { "isDirectory": true })) {
     return false;
   }
 
-  if (!existsSync(PATCHES_TMP, { "isDirectory": true })) {
+  if (!isExistsSync(PATCHES_TMP, { "isDirectory": true })) {
     return true;
   }
 
@@ -157,7 +136,7 @@ export async function applyPatches(binDir = getBinDir()) {
       }
     }
     if (!reverse_is_aborted) {
-      await Deno.remove(PATCHES_TMP, { recursive: true });
+      await safeRemove(PATCHES_TMP);
     }
   } catch {
     // Ignore if PATCHES_TMP doesn't exist - means no patches were applied before
@@ -172,7 +151,7 @@ export async function applyPatches(binDir = getBinDir()) {
     patches_entries.push(entry.name);
   }
 
-  await Deno.mkdir(PATCHES_TMP, { recursive: true });
+  await ensureDir(PATCHES_TMP);
   let aborted = false;
 
   for (const patch of patches_entries) {
@@ -226,7 +205,7 @@ export async function createPatches() {
   }
 
   // Create patches directory if it doesn't exist
-  await Deno.mkdir(PATCHES_DIR, { recursive: true });
+  await ensureDir(PATCHES_DIR);
 
   // Create patch for each changed file
   for (const file of changedFiles) {
