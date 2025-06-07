@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
+  <path fill="context-stroke" d="m0 0 10 10L20 0Z"/>
+  <path fill="context-fill" d="m1 0 9 9 9-9z"/>
+</svg>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<linearGradient gradientTransform="matrix(1 0 0 1 0 0)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="501.156" x2="498.161" y1="69.4587" y2="957.974">
+<stop offset="0" stop-color="#ff9f01"/>
+<stop offset="1" stop-color="#ed1304"/>
+</linearGradient>
+</defs>
+<g id="レイヤー-1">
+<path d="M330.889 68.0128L693.109 68.0128C734.656 68.0128 785.175 97.1802 805.948 133.16L987.058 446.852C1007.83 482.832 1007.83 541.168 987.058 577.147L805.948 890.84C785.175 926.819 734.656 955.987 693.109 955.987L330.889 955.987C289.342 955.987 238.823 926.819 218.05 890.84L36.9397 577.147C16.1668 541.168 16.1668 482.832 36.9397 446.852L218.05 133.16C238.823 97.1801 289.342 68.0128 330.889 68.0128Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M275.188 233.125C255.858 233.125 240.187 248.795 240.188 268.125C240.188 269.688 240.187 466.562 240.188 468.125C240.188 487.455 255.858 503.125 275.188 503.125L475.188 503.125C494.517 503.125 510.188 487.455 510.188 468.125L510.188 268.125C510.188 248.795 494.517 233.125 475.188 233.125L275.188 233.125ZM275.188 580.719C255.858 580.719 240.187 596.389 240.188 615.719C240.188 635.049 255.858 650.719 275.188 650.719L794.156 650.719C813.486 650.719 829.156 635.049 829.156 615.719C829.156 596.389 813.486 580.719 794.156 580.719L275.188 580.719ZM275.188 720.875C255.858 720.875 240.187 736.545 240.188 755.875C240.188 775.205 255.858 790.875 275.188 790.875L590.75 790.875C610.08 790.875 625.75 775.205 625.75 755.875C625.75 736.545 610.08 720.875 590.75 720.875L275.188 720.875Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+</svg>

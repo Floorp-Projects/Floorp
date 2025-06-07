@@ -1,0 +1,80 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/** Navigation bar **/
+#fxa-toolbar-menu-button,
+#PanelUI-menu-button {
+  display: none !important;
+}
+
+#stop-reload-button,
+#back-button {
+  display: inherit !important;
+}
+
+/** Search bar & URL bar **/
+
+/* break min-height: var(--urlbar-container-height); */
+#urlbar-container[breakout] {
+  min-height: unset !important;
+}
+
+#urlbar[breakout] {
+  top: unset !important;
+}
+
+#star-button-box,
+#ssbPageAction {
+  display: none;
+}
+
+#urlbar-background,
+#searchbar {
+  background-color: unset !important;
+  background-clip: unset !important;
+  border-radius: unset !important;
+  border: none !important;
+}
+
+#urlbar-container {
+  margin-right: auto;
+  border-right: 0.1px solid var(--toolbarbutton-border-color) !important;
+  padding-right: 5px;
+}
+
+.unified-extensions-item,
+#downloads-button,
+#unified-extensions-button {
+  display: inherit !important;
+}
+
+#page-action-buttons {
+  border-right: 1px solid gray;
+  padding: 5px;
+  margin-right: 10px;
+  border-left: solid 0.1px gray;
+}
+
+/* title bar ******/
+
+#titlebar {
+  appearance: unset !important;
+  appearance: none !important;
+  padding-top: 0px !important;
+}
+
+/* Panel Sidebar */
+#panel-sidebar-box {
+  display: none !important;
+}
+
+#panel-sidebar-select-box {
+  display: none !important;
+}
+
+#panel-sidebar-splitter {
+  display: none !important;
+}
