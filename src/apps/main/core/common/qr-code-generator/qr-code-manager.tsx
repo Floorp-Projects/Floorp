@@ -28,7 +28,6 @@ export class QRCodeManager {
       generateForUrl: (url: string) => this.generateQRCode(url),
     };
 
-    // gFloorpPageAction互換性
     if (!window.gFloorpPageAction) {
       window.gFloorpPageAction = {};
     }

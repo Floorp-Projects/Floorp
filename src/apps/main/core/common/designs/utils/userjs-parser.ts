@@ -39,6 +39,14 @@ export async function resetPreferencesWithUserJsContents(path: string) {
       const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
       let [prefName] = tmp.split(",");
       prefName = prefName.trim().replaceAll('"', "");
+      if (
+        // Due to unload userChrome.css, we need to skip this pref
+        prefName.startsWith(
+          "toolkit.legacyUserProfileCustomizations.stylesheets",
+        )
+      ) {
+        continue;
+      }
       Services.prefs.clearUserPref(prefName);
     }
   }
