@@ -21,7 +21,7 @@ export class TabScroll {
       if (event.deltaY > 0 !== config().tab.tabScroll.reverse) {
         tabBrowserTabs?.advanceSelectedTab(
           1,
-          config().tab.tabScroll.reverse,
+          config().tab.tabScroll.wrap,
         );
       } else {
         tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabScroll.wrap);
