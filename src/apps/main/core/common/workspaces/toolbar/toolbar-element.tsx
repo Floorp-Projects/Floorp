@@ -10,7 +10,7 @@ import { createEffect, type JSX, onCleanup } from "solid-js";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
-import { selectedWorkspaceID } from "../data/data.ts";
+import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -42,6 +42,13 @@ export class WorkspacesToolbarButton {
         createEffect(() => {
           const _ = selectedWorkspaceID();
           this.updateButtonIfNeeded();
+        });
+
+        // Watch for workspace data changes to update button when name changes
+        createEffect(() => {
+          const _ = workspacesDataStore.data;
+          // Force update when workspace data changes
+          this.updateButtonIfNeeded(true);
         });
       },
       CustomizableUI.AREA_TABSTRIP,
