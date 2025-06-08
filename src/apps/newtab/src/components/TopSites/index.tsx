@@ -200,7 +200,7 @@ export function TopSites() {
             className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-gray-700/50"
           >
             <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-600 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-              <span className="text-lg font-semibold text-gray-300">
+              <span className="text-lg font-semibold text-gray-300 flex items-center justify-center">
                 +
               </span>
             </div>
