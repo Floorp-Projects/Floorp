@@ -67,8 +67,20 @@ export class CSplitView {
       tab.linkedBrowser.renderLayers = true;
 
       const panel = document?.getElementById(tab.linkedPanel);
-      if (panel && !panel.classList.contains("deck-selected")) {
-        panel.classList.add("deck-selected");
+      if (panel && currentSplitView() >= 0) {
+        // Only manage deck-selected class when in split view mode
+        const allPanels = document?.querySelectorAll(
+          "#tabbrowser-tabpanels > *",
+        );
+        allPanels?.forEach((p: Element) => {
+          if (p !== panel) {
+            p.classList.remove("deck-selected");
+          }
+        });
+
+        if (!panel.classList.contains("deck-selected")) {
+          panel.classList.add("deck-selected");
+        }
       }
     });
   }
@@ -219,6 +231,7 @@ export class CSplitView {
 
   private resetTabBrowserPanel() {
     this.tabBrowserPanel.removeAttribute("split-view");
+    document?.body?.removeAttribute("split-view-active");
     this.tabBrowserPanel.style.display = "";
     this.tabBrowserPanel.style.flexDirection = "";
   }
@@ -498,6 +511,7 @@ export class CSplitView {
 
   private activateSplitView(splitData: TSplitViewDatum, activeTab: Tab) {
     this.tabBrowserPanel.setAttribute("split-view", "true");
+    document?.body?.setAttribute("split-view-active", "true");
     Services.prefs.setBoolPref("floorp.browser.splitView.working", true);
 
     setCurrentSplitView(splitViewData().indexOf(splitData));
@@ -578,7 +592,14 @@ export class CSplitView {
       }
 
       tab.linkedBrowser.spliting = active;
-      tab.linkedBrowser.docShellIsActive = active;
+
+      // Only set docShellIsActive to false when deactivating, preserve it for activation
+      if (!active) {
+        tab.linkedBrowser.docShellIsActive = false;
+      } else {
+        // For activation, ensure renderLayers is true but preserve docShell state
+        tab.linkedBrowser.renderLayers = true;
+      }
 
       const browser = tab.linkedBrowser.closest(
         ".browserSidebarContainer",
@@ -616,9 +637,10 @@ export class CSplitView {
 
   private resetContainerStyle(container: XULElement) {
     container.removeAttribute("split-active");
-    container.classList.remove("deck-selected");
+    container.removeAttribute("split-anim");
     container.style.flex = "";
     container.style.order = "";
+    container.style.display = "";
   }
 
   public unsplitCurrentView() {

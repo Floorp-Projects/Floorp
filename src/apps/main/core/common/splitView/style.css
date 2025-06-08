@@ -19,9 +19,17 @@
   flex-direction: row;
 }
 
-#tabbrowser-tabpanels[split-view="true"] > *:not([split="true"]) {
+#tabbrowser-tabpanels[split-view="true"]
+  > *:not([split="true"]):not(.deck-selected) {
   flex: 0;
   margin: 0 !important;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+body[split-view-active="true"] .tab-preview-thumbnail-container {
+  display: none;
 }
 
 #tabbrowser-tabpanels[split-view="true"] > [split="true"] {
