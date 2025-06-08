@@ -152,6 +152,19 @@ export class CSplitView {
 
   private handleTabClose = (event: TabEvent) => {
     const tab = event.target;
+    const tabId = this.getTabId(tab);
+
+    // Check if this tab is the fixed tab
+    if (fixedSplitViewData().fixedTabId === tabId) {
+      setFixedSplitViewData({
+        fixedTabId: null,
+        options: {
+          reverse: false,
+          method: "row",
+        },
+      });
+    }
+
     const groupIndex = this.findGroupIndexForTab(tab);
 
     if (groupIndex < 0) {
