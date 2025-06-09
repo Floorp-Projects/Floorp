@@ -2,6 +2,38 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "simple-tab-groups@drive6ik:5.5"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1749126973379,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1749213305492,
+      "id": "c4819838-fc5c-4613-b188-b13e7bf315c3",
+      "last_modified": 1749213372557
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{44fdb5d3-05bf-40b1-8656-c5b0e37985b3}:1.0.0",
+          "{44fdb5d3-05bf-40b1-8656-c5b0e37985b3}:1.0.1",
+          "{44fdb5d3-05bf-40b1-8656-c5b0e37985b3}:1.0.2",
+          "{44fdb5d3-05bf-40b1-8656-c5b0e37985b3}:1.0.7",
+          "{44fdb5d3-05bf-40b1-8656-c5b0e37985b3}:1.0.9"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1749105373963,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1749126905129,
+      "id": "d4cb3612-df6e-4f8e-8930-2b2b11ea7c21",
+      "last_modified": 1749126973311
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": [
           "omkoccdnelofncmfglaojiamckipjblb@chrome-store-foxified-228715104:7.3.3"
@@ -589,5 +621,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1749105373811
+  "timestamp": 1749213372557
 }
