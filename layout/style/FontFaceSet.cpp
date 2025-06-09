@@ -142,10 +142,17 @@ already_AddRefed<Promise> FontFaceSet::Load(JSContext* aCx,
 
   nsTArray<RefPtr<Promise>> promises;
 
-  nsTArray<FontFace*> faces;
-  mImpl->FindMatchingFontFaces(aFont, aText, faces, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  nsTArray<RefPtr<FontFace>> faces;
+  {
+    nsTArray<FontFace*> weakFaces;
+    mImpl->FindMatchingFontFaces(aFont, aText, weakFaces, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    if (!faces.AppendElements(weakFaces, fallible)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
   }
 
   for (FontFace* f : faces) {
