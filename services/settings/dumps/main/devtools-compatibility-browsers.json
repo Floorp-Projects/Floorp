@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1749550693771,
+      "status": "beta",
+      "version": "26",
+      "browserid": "safari",
+      "id": "a2267a3f-85fb-4cae-ae62-114bac84b6e2",
+      "last_modified": 1749710045183
+    },
+    {
+      "name": "WebView on iOS",
+      "schema": 1749600305332,
+      "status": "beta",
+      "version": "26",
+      "browserid": "webview_ios",
+      "id": "4bffa3ba-dc73-452c-8ad8-0a5c0a678a5b",
+      "last_modified": 1749710045179
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1749600305266,
+      "status": "beta",
+      "version": "26",
+      "browserid": "safari_ios",
+      "id": "35e8bf06-f297-404f-b4d3-186f3fd5dbae",
+      "last_modified": 1749710045175
+    },
+    {
+      "name": "Samsung Internet",
+      "schema": 1749254703179,
+      "status": "current",
+      "version": "28.0",
+      "browserid": "samsunginternet_android",
+      "id": "d85a7f04-256c-4b3c-a633-29d0b2a19f18",
+      "last_modified": 1749550693720
+    },
+    {
       "name": "WebView on iOS",
       "schema": 1748995503594,
       "status": "current",
@@ -298,15 +334,6 @@
       "last_modified": 1735832995466
     },
     {
-      "name": "Samsung Internet",
-      "schema": 1731974720014,
-      "status": "current",
-      "version": "27.0",
-      "browserid": "samsunginternet_android",
-      "id": "e05f8a82-8aa6-4621-b1ef-3195828ccdc0",
-      "last_modified": 1732521556529
-    },
-    {
       "name": "Firefox for Android",
       "schema": 1723593904156,
       "status": "esr",
@@ -334,5 +361,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1749017535220
+  "timestamp": 1749710045183
 }

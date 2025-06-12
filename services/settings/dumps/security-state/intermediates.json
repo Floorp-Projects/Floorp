@@ -14191,24 +14191,6 @@
       "last_modified": 1666727873196
     },
     {
-      "schema": 1666727452137,
-      "derHash": "NcC4pXfRHJS6Zl4kLeRdZodSKlMeORu02ZXSYfOCmrc=",
-      "subject": "CN=certSIGN CA Class 2 G2,OU=certSIGN CA Class 2 G2,O=certSIGN,C=RO",
-      "subjectDN": "MGIxCzAJBgNVBAYTAlJPMREwDwYDVQQKEwhjZXJ0U0lHTjEfMB0GA1UECxMWY2VydFNJR04gQ0EgQ2xhc3MgMiBHMjEfMB0GA1UEAxMWY2VydFNJR04gQ0EgQ2xhc3MgMiBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "df0ec1a6797109126df83a75e016edf4ec5eae8f6a58946debcf2ddee8cf2524",
-        "size": 1609,
-        "filename": "noYGcVGJvDlxvfPLFE31WgvXSwkoZGrfCEpsm_L3qt4=.pem",
-        "location": "security-state-staging/intermediates/e03925b7-c8a0-4286-aa06-57ae5c110937.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "noYGcVGJvDlxvfPLFE31WgvXSwkoZGrfCEpsm/L3qt4=",
-      "crlite_enrolled": false,
-      "id": "a0571407-53b3-407c-bbd4-0be77d0d2d3e",
-      "last_modified": 1666727873182
-    },
-    {
       "schema": 1666727331515,
       "derHash": "I5/6htcQM7olWRR4IFfYfoQhrt1ZELeGkotqEkjD40E=",
       "subject": "CN=CA Disig R2I3 Certification Service,O=Disig a.s.,L=Bratislava,C=SK",
@@ -14225,42 +14207,6 @@
       "crlite_enrolled": false,
       "id": "85d742bd-cad8-4921-b914-8cb3b1931d2c",
       "last_modified": 1666727873154
-    },
-    {
-      "schema": 1666727440932,
-      "derHash": "MAO/iFNCfHuRAj91OYU9mHxY3E4Ru+BH0qkwXAGmFSw=",
-      "subject": "CN=certSIGN Non-Repudiation CA Class 4 G2,OU=certSIGN Non-Repudiation CA Class 4 G2,O=certSIGN,C=RO",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJSTzERMA8GA1UEChMIY2VydFNJR04xLzAtBgNVBAsTJmNlcnRTSUdOIE5vbi1SZXB1ZGlhdGlvbiBDQSBDbGFzcyA0IEcyMS8wLQYDVQQDEyZjZXJ0U0lHTiBOb24tUmVwdWRpYXRpb24gQ0EgQ2xhc3MgNCBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bb516b77cbf95fd334340bb2777b602490882a3aa757c5d82da5214f34585cda",
-        "size": 1654,
-        "filename": "5z5YTIwg2yLkx8NYmJAGw7XsuJfhisYA72CTV71K7Tc=.pem",
-        "location": "security-state-staging/intermediates/052ceaa4-fdf0-40d7-8242-4aa8fcb41d3e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5z5YTIwg2yLkx8NYmJAGw7XsuJfhisYA72CTV71K7Tc=",
-      "crlite_enrolled": false,
-      "id": "0d31579b-64f1-4e30-bf5f-c484b7588ede",
-      "last_modified": 1666727873140
-    },
-    {
-      "schema": 1666727396796,
-      "derHash": "yJwktBWnLJQJZn6I+15ukqONVgnDyZ5V2ZtLHUWJkPk=",
-      "subject": "CN=certSIGN Qualified CA Class 3 G2,OU=certSIGN Qualified CA Class 3 G2,O=certSIGN,C=RO",
-      "subjectDN": "MHYxCzAJBgNVBAYTAlJPMREwDwYDVQQKEwhjZXJ0U0lHTjEpMCcGA1UECxMgY2VydFNJR04gUXVhbGlmaWVkIENBIENsYXNzIDMgRzIxKTAnBgNVBAMTIGNlcnRTSUdOIFF1YWxpZmllZCBDQSBDbGFzcyAzIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8790a1c05eb34050a0518d6b450074d0a070eab4fdfc196e7812a7cc01b12fc8",
-        "size": 1634,
-        "filename": "UPMbIpu91S39VXXONt79PssKsPf6YLoNySvPP-qGdwY=.pem",
-        "location": "security-state-staging/intermediates/dcc54254-18e6-46af-8584-ac6c726a3de5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "UPMbIpu91S39VXXONt79PssKsPf6YLoNySvPP+qGdwY=",
-      "crlite_enrolled": false,
-      "id": "17f3db66-1a26-4fc2-b72b-4734ccc0cd35",
-      "last_modified": 1666727873126
     },
     {
       "schema": 1666727446208,
@@ -30031,5 +29977,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1749221822598
+  "timestamp": 1749567422319
 }

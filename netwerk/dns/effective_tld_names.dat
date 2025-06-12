@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-06-07_22-01-00_UTC
-// COMMIT: 8d4a151ff8b0a401fb03d2fcec16c834cd454523
+// VERSION: 2025-06-10_05-43-04_UTC
+// COMMIT: 9f9c1865c17a23edce0491aa6e697cc987fcdafa
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -15297,6 +15297,14 @@ srht.site
 // Submitted by Antonis Kalipetis <akalipetis@sourcelair.com>
 apps.lair.io
 *.stolos.io
+
+// sourceWAY GmbH : https://sourceway.de
+// Submitted by Richard Reiber <mail@sourceway.de>
+4.at
+my.at
+my.de
+*.nxa.eu
+nx.gw
 
 // SpeedPartner GmbH : https://www.speedpartner.de/
 // Submitted by Stefan Neufeind <info@speedpartner.de>
