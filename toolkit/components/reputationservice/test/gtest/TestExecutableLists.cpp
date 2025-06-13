@@ -241,6 +241,7 @@ static const char* const kTestFileExtensions[] = {
     ".tbz",       // Linux archive (bzip2)
     ".tbz2",      // Linux archive (bzip2)
     ".tcsh",      // Linux shell
+    ".terminal",  // Apple Terminal configuration files
     ".tgz",       // Linux archive (gzip)
     ".torrent",   // Bittorrent
     ".tpz",       // Linux archive (gzip)
