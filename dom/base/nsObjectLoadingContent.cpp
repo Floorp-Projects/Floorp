@@ -540,8 +540,8 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   }
 
   // See if requester is planning on using the JS API.
-  nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
+  nsAutoCString prePath;
+  nsresult rv = aURI->GetPrePath(prePath);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -552,10 +552,10 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   // URLs, convert the parameters to query in order to make the video load
   // correctly as an iframe. In either case, warn about it in the
   // developer console.
-  int32_t ampIndex = uri.FindChar('&', 0);
+  int32_t ampIndex = path.FindChar('&', 0);
   bool replaceQuery = false;
   if (ampIndex != -1) {
-    int32_t qmIndex = uri.FindChar('?', 0);
+    int32_t qmIndex = path.FindChar('?', 0);
     if (qmIndex == -1 || qmIndex > ampIndex) {
       replaceQuery = true;
     }
@@ -571,19 +571,21 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
     return;
   }
 
-  nsAutoString utf16OldURI = NS_ConvertUTF8toUTF16(uri);
+  NS_ConvertUTF8toUTF16 utf16OldURI(prePath);
+  AppendUTF8toUTF16(path, utf16OldURI);
   // If we need to convert the URL, it means an ampersand comes first.
   // Use the index we found earlier.
   if (replaceQuery) {
     // Replace question marks with ampersands.
-    uri.ReplaceChar('?', '&');
+    path.ReplaceChar('?', '&');
     // Replace the first ampersand with a question mark.
-    uri.SetCharAt('?', ampIndex);
+    path.SetCharAt('?', ampIndex);
   }
   // Switch out video access url formats, which should possibly allow HTML5
   // video loading.
-  uri.ReplaceSubstring("/v/"_ns, "/embed/"_ns);
-  nsAutoString utf16URI = NS_ConvertUTF8toUTF16(uri);
+  path.ReplaceSubstring("/v/"_ns, "/embed/"_ns);
+  NS_ConvertUTF8toUTF16 utf16URI(prePath);
+  AppendUTF8toUTF16(path, utf16URI);
   rv = nsContentUtils::NewURIWithDocumentCharset(aRewrittenURI, utf16URI, doc,
                                                  aBaseURI);
   if (NS_FAILED(rv)) {
