@@ -202,7 +202,10 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.toml",
+    "tests/browser/browser_uuid_migration.toml",
+]
 
 with Files("**"):
     BUG_COMPONENT = ("Web Compatibility", "Tooling & Investigations")

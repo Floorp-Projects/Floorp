@@ -380,6 +380,8 @@ const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
+const WEBCOMPAT_ADDON_ID = "webcompat@mozilla.org";
+const WEBCOMPAT_UUID = "9a310967-e580-48bf-b3e8-4eafebbc122d";
 
 const COMMENT_REGEXP = new RegExp(
   String.raw`
@@ -419,6 +421,23 @@ var UUIDMap = {
 
   get(id, create = true) {
     let map = this._read();
+
+    // In general, the UUID should not change once assigned because it may be
+    // stored elsewhere within the profile directory, when the extension URL is
+    // exposed (e.g. history, bookmarks, site permissions, web or extension
+    // APIs that associate data with the extension principal or origin).
+    // The webcompat add-on does not rely on the persisted uuid, so we can
+    // simply migrate the uuid below, see bug 1717672.
+    if (id === WEBCOMPAT_ADDON_ID) {
+      if (!create && !(id in map)) {
+        return null;
+      }
+      if (map[id] !== WEBCOMPAT_UUID) {
+        map[id] = WEBCOMPAT_UUID;
+        this._write(map);
+      }
+      return WEBCOMPAT_UUID;
+    }
 
     if (id in map) {
       return map[id];
