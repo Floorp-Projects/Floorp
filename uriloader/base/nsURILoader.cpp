@@ -47,6 +47,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "nsContentUtils.h"
+#include "imgLoader.h"
 
 mozilla::LazyLogModule nsURILoader::mLog("URILoader");
 
@@ -240,6 +241,28 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
   return NS_OK;
 }
 
+static bool IsContentPDF(nsIChannel* aChannel, const nsACString& aContentType) {
+  bool isPDF = aContentType.LowerCaseEqualsASCII(APPLICATION_PDF);
+  if (!isPDF && (aContentType.LowerCaseEqualsASCII(APPLICATION_OCTET_STREAM) ||
+                 aContentType.IsEmpty())) {
+    nsAutoString flname;
+    aChannel->GetContentDispositionFilename(flname);
+    isPDF = StringEndsWith(flname, u".pdf"_ns);
+    if (!isPDF) {
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetURI(getter_AddRefs(uri));
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+      if (url) {
+        nsAutoCString ext;
+        url->GetFileExtension(ext);
+        isPDF = ext.EqualsLiteral("pdf");
+      }
+    }
+  }
+
+  return isPDF;
+}
+
 nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   LOG(("[0x%p] nsDocumentOpenInfo::DispatchContent for type '%s'", this,
        mContentType.get()));
@@ -274,72 +297,51 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   // could happen because the Content-Disposition header is set so, or, in the
   // future, because the user has specified external handling for the MIME
   // type.
-  //
-  // If we're not going to be able to retarget to an external handler, ignore
-  // content-disposition, and unconditionally try to display the content.
-  // This is used for object/embed tags, which expect to display subresources
-  // marked with an attachment disposition.
-  bool forceExternalHandling = false;
-  if (!(mFlags & nsIURILoader::DONT_RETARGET)) {
-    uint32_t disposition;
-    rv = aChannel->GetContentDisposition(&disposition);
+  uint32_t disposition;
+  rv = aChannel->GetContentDisposition(&disposition);
 
-    if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT) {
-      forceExternalHandling = true;
-    }
-  }
+  bool forceExternalHandling =
+      NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT;
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
 
-  if (forceExternalHandling &&
-      mozilla::StaticPrefs::browser_download_open_pdf_attachments_inline()) {
-    // Check if this is a PDF which should be opened internally. We also handle
-    // octet-streams that look like they might be PDFs based on their extension.
-    bool isPDF = mContentType.LowerCaseEqualsASCII(APPLICATION_PDF);
-    if (!isPDF &&
-        (mContentType.LowerCaseEqualsASCII(APPLICATION_OCTET_STREAM) ||
-         mContentType.IsEmpty())) {
-      nsAutoString flname;
-      aChannel->GetContentDispositionFilename(flname);
-      isPDF = StringEndsWith(flname, u".pdf"_ns);
-      if (!isPDF) {
-        nsCOMPtr<nsIURI> uri;
-        aChannel->GetURI(getter_AddRefs(uri));
-        nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-        if (url) {
-          nsAutoCString ext;
-          url->GetFileExtension(ext);
-          isPDF = ext.EqualsLiteral("pdf");
-        }
-      }
-    }
+  // Ignore the Content-Disposition header if we're loading a PDF or Image
+  // subresource within an object/embed element.
+  if (forceExternalHandling && (mFlags & nsIURILoader::IS_OBJECT_EMBED) &&
+      (imgLoader::SupportImageWithMimeType(mContentType) ||
+       IsContentPDF(aChannel, mContentType))) {
+    LOG(("Handling pdf/image MIME internally for object/embed element"));
+    forceExternalHandling = false;
+  }
 
+  // Check if this is a PDF which should be opened internally. We also handle
+  // octet-streams that look like they might be PDFs based on their extension.
+  if (forceExternalHandling &&
+      mozilla::StaticPrefs::browser_download_open_pdf_attachments_inline() &&
+      IsContentPDF(aChannel, mContentType)) {
     // For a PDF, check if the preference is set that forces attachments to be
     // opened inline. If so, treat it as a non-attachment by clearing
     // 'forceExternalHandling' again. This allows it open a PDF directly
     // instead of downloading it first. It may still end up being handled by
     // a helper app depending anyway on the later checks.
-    if (isPDF) {
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
 
-      nsCOMPtr<nsIMIMEInfo> mimeInfo;
+    nsCOMPtr<nsIMIMEInfo> mimeInfo;
 
-      nsCOMPtr<nsIMIMEService> mimeSvc(
-          do_GetService(NS_MIMESERVICE_CONTRACTID));
-      NS_ENSURE_TRUE(mimeSvc, NS_ERROR_FAILURE);
-      mimeSvc->GetFromTypeAndExtension(nsLiteralCString(APPLICATION_PDF), ""_ns,
-                                       getter_AddRefs(mimeInfo));
+    nsCOMPtr<nsIMIMEService> mimeSvc(do_GetService(NS_MIMESERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(mimeSvc, NS_ERROR_FAILURE);
+    mimeSvc->GetFromTypeAndExtension(nsLiteralCString(APPLICATION_PDF), ""_ns,
+                                     getter_AddRefs(mimeInfo));
 
-      if (mimeInfo) {
-        int32_t action = nsIMIMEInfo::saveToDisk;
-        mimeInfo->GetPreferredAction(&action);
+    if (mimeInfo) {
+      int32_t action = nsIMIMEInfo::saveToDisk;
+      mimeInfo->GetPreferredAction(&action);
 
-        bool alwaysAsk = true;
-        mimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-        forceExternalHandling =
-            alwaysAsk || action != nsIMIMEInfo::handleInternally;
-      }
+      bool alwaysAsk = true;
+      mimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+      forceExternalHandling =
+          alwaysAsk || action != nsIMIMEInfo::handleInternally;
     }
   }
 
