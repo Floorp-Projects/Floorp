@@ -78,6 +78,7 @@ export function EnterprisePoliciesManager() {
   Services.obs.addObserver(this, "final-ui-startup", true);
   Services.obs.addObserver(this, "sessionstore-windows-restored", true);
   Services.obs.addObserver(this, "EnterprisePolicies:Restart", true);
+  Services.obs.addObserver(this, "distribution-customization-complete", true);
 }
 
 EnterprisePoliciesManager.prototype = {
@@ -112,20 +113,17 @@ EnterprisePoliciesManager.prototype = {
 
     if (provider.failed) {
       this.status = Ci.nsIEnterprisePolicies.FAILED;
-      this._reportEnterpriseTelemetry();
       return;
     }
 
     if (!provider.hasPolicies) {
       this.status = Ci.nsIEnterprisePolicies.INACTIVE;
-      this._reportEnterpriseTelemetry();
       return;
     }
 
     this.status = Ci.nsIEnterprisePolicies.ACTIVE;
     this._parsedPolicies = {};
     this._activatePolicies(provider.policies);
-    this._reportEnterpriseTelemetry();
 
     Services.prefs.setBoolPref(PREF_POLICIES_APPLIED, true);
   },
@@ -276,6 +274,7 @@ EnterprisePoliciesManager.prototype = {
     await notifyTopicOnIdle("profile-after-change");
     await notifyTopicOnIdle("final-ui-startup");
     await notifyTopicOnIdle("sessionstore-windows-restored");
+    await notifyTopicOnIdle("distribution-customization-complete");
   },
 
   // nsIObserver implementation
@@ -299,16 +298,22 @@ EnterprisePoliciesManager.prototype = {
 
       case "sessionstore-windows-restored":
         this._runPoliciesCallbacks("onAllWindowsRestored");
-
-        // After the last set of policy callbacks ran, notify the test observer.
-        Services.obs.notifyObservers(
-          null,
-          "EnterprisePolicies:AllPoliciesApplied"
-        );
         break;
 
       case "EnterprisePolicies:Restart":
         this._restart().then(null, console.error);
+        break;
+
+      case "distribution-customization-complete":
+        this._reportEnterpriseTelemetry();
+
+        // Notify the test observer when the last message
+        // is received.
+        Services.obs.notifyObservers(
+          null,
+          "EnterprisePolicies:AllPoliciesApplied"
+        );
+
         break;
     }
   },
