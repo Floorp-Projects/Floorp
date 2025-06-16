@@ -3,6 +3,32 @@
     {
       "stash": {
         "blocked": [
+          "support@guarda.com:1.3.1",
+          "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:1.0.0",
+          "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:1.0.1",
+          "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:13.18.9",
+          "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:91.5.0.3",
+          "{efbc2fa2-d6a3-4a90-9e14-705e7c12a057}:1.0.0",
+          "{efbc2fa2-d6a3-4a90-9e14-705e7c12a057}:4.0.2",
+          "metameta2o@example.com:1.0",
+          "metameta2o@example.com:13.18.8",
+          "metameta2o@example.com:13.18.9",
+          "metameta1o@example.com:1.0",
+          "metameta1o@example.com:13.18.1",
+          "admin@exodus.com:1.3.1"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1749743666427,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1749818104880,
+      "id": "da7b9eee-3961-4b6c-9b2e-73642835897d",
+      "last_modified": 1749818177432
+    },
+    {
+      "stash": {
+        "blocked": [
           "meta-dev1@example.com:1.0",
           "meta-dev1@example.com:1.0.1",
           "meta-dev@example.com:1.2",
@@ -661,5 +687,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1749645388171
+  "timestamp": 1749818177432
 }

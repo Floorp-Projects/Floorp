@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-06-10_05-43-04_UTC
-// COMMIT: 9f9c1865c17a23edce0491aa6e697cc987fcdafa
+// VERSION: 2025-06-12_21-09-57_UTC
+// COMMIT: a01fe523d7359fc523d8b164bcb16834a4f2d8ba
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -11306,9 +11306,10 @@ adobeaemcloud.com
 aem.live
 hlx.live
 adobeaemcloud.net
+aem.network
 aem.page
 hlx.page
-hlx3.page
+aem.reviews
 
 // Adobe Developer Platform : https://developer.adobe.com
 // Submitted by Jesse MacFadyen<jessem@adobe.com>
