@@ -46,7 +46,9 @@ async function loadAndCheck(file, displayInline, downloadFile = null) {
             displayInline
               ? Ci.nsIObjectLoadingContent.TYPE_DOCUMENT
               : Ci.nsIObjectLoadingContent.TYPE_FALLBACK,
-            `should be displaying TYPE_${displayInline ? "DOCUMENT" : "FALLBACK"}`
+            `should be displaying TYPE_${
+              displayInline ? "DOCUMENT" : "FALLBACK"
+            }`
           );
         }
       );
