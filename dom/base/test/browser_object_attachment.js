@@ -30,10 +30,12 @@ async function loadAndCheck(file, displayInline, downloadFile = null) {
   await BrowserTestUtils.withNewTab(
     `${httpsTestRoot}/${file}`,
     async browser => {
-      is(
-        browser.browsingContext.children.length,
-        displayInline ? 1 : 0,
-        `Should ${displayInline ? "not " : ""}have a child frame`
+      // Do this check using waitForCondition, as on ESR, we temporarily create
+      // an extra subdocument which should be quickly removed.
+      await TestUtils.waitForCondition(
+        () =>
+          browser.browsingContext.children.length == (displayInline ? 1 : 0),
+        `Should ${displayInline ? "" : "not "}have a child frame`
       );
 
       await SpecialPowers.spawn(
