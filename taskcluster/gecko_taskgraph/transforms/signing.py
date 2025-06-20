@@ -208,6 +208,7 @@ def make_task_description(config, jobs):
                 build_platform,
                 attributes.get("build_type"),
             )
+            task["retries"] = 0
         elif "macosx" in build_platform:
             # iscript overrides
             task["worker"]["mac-behavior"] = "mac_sign_and_pkg"

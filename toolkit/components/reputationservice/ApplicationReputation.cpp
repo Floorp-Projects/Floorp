@@ -152,6 +152,7 @@ const char* const ApplicationReputationService::kNonBinaryExecutables[] = {
     ".air",
     ".atloc",
     ".ftploc",
+    ".terminal",
     // clang-format on
 };
 

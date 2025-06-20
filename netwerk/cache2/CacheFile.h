@@ -30,12 +30,12 @@ namespace CacheFileUtils {
 class CacheFileLock;
 };
 
-#define CACHEFILELISTENER_IID                        \
-  { /* 95e7f284-84ba-48f9-b1fc-3a7336b4c33c */       \
-    0x95e7f284, 0x84ba, 0x48f9, {                    \
-      0xb1, 0xfc, 0x3a, 0x73, 0x36, 0xb4, 0xc3, 0x3c \
-    }                                                \
-  }
+#define CACHEFILELISTENER_IID                 \
+  {/* 95e7f284-84ba-48f9-b1fc-3a7336b4c33c */ \
+   0x95e7f284,                                \
+   0x84ba,                                    \
+   0x48f9,                                    \
+   {0xb1, 0xfc, 0x3a, 0x73, 0x36, 0xb4, 0xc3, 0x3c}}
 
 class CacheFileListener : public nsISupports {
  public:

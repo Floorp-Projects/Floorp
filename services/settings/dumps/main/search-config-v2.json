@@ -3269,14 +3269,33 @@
       },
       "id": "bb836721-7be9-4de6-ac18-520189a69076",
       "identifier": "perplexity",
-      "last_modified": 1748291339929,
+      "last_modified": 1749848937099,
       "recordType": "engine",
-      "schema": 1747872009382,
+      "schema": 1749743664865,
       "variants": [
         {
           "environment": {
             "experiment": "perplexity"
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "locales": [
+                  "de"
+                ],
+                "regions": [
+                  "de",
+                  "us",
+                  "gb"
+                ]
+              },
+              "urls": {
+                "trending": {
+                  "base": "https://www.perplexity.ai/rest/autosuggest/list-trending-suggest?lang=de-DE"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -8223,5 +8242,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1748291339929
+  "timestamp": 1749848937099
 }

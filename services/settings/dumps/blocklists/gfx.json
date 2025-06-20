@@ -1,6 +1,32 @@
 {
   "data": [
     {
+      "os": "WINNT 10.0",
+      "schema": 1748268762353,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1968876",
+        "name": "NVIDIA mixed refresh rate + dcomp + Windows 10 bugs"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "WEBRENDER_COMPOSITOR",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "139.0",
+        "minVersion": "139.0"
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "f5947ade-470c-4f40-9c6a-3af14cd91cca",
+      "last_modified": 1748485472559
+    },
+    {
       "os": "Linux",
       "schema": 1731431264604,
       "vendor": "0x10de",
@@ -1557,5 +1583,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1731615130278
+  "timestamp": 1748485472559
 }

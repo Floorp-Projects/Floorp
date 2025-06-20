@@ -198,6 +198,8 @@ task_description_schema = Schema(
         },
         # Override the default priority for the project
         Optional("priority"): str,
+        # Override the default 5 retries
+        Optional("retries"): int,
     }
 )
 
@@ -2243,6 +2245,8 @@ def build_task(config, tasks):
 
         if task.get("requires", None):
             task_def["requires"] = task["requires"]
+        if task.get("retries") is not None:
+            task_def["retries"] = task["retries"]
 
         if task_th:
             # link back to treeherder in description

@@ -53,6 +53,12 @@ interface nsIURILoader : nsISupports
    * be indicated.
    */
   const unsigned long DONT_RETARGET        = 1 << 1;
+  /**
+   * If this flag is set, the navigation is for an object or embed element,
+   * which may handle some content types internally, even if an attachment
+   * content disposition is specified.
+   */
+  const unsigned long IS_OBJECT_EMBED      = 1 << 2;
   /* @} */
 
   /**

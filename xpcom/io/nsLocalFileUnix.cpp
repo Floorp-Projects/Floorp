@@ -1811,6 +1811,7 @@ nsLocalFile::IsExecutable(bool* aResult) {
         "ftploc",   // Can point to other files.
         "inetloc",  // Shouldn't be able to do the same, but can, due to
                     // macOS vulnerabilities.
+        "terminal", // macOS Terminal app configuration files
 #endif
         "jar"  // java application bundle
     };

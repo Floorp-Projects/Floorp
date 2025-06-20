@@ -1,0 +1,7 @@
+[DEFAULT]
+tags = "webextensions"
+# Must be set in [DEFAULT] to ensure that the pref is set before the browser starts.
+# We choose two built-in extensions here: webcompat and another built-in extension.
+prefs = ['extensions.webextensions.uuids={"webcompat@mozilla.org":"f00df00d-1111-f00d-8888-012345678900","pictureinpicture@mozilla.org":"f00df00d-2222-f00d-8888-012345678900"}']
+
+["browser_uuid_migration.js"]
