@@ -135,6 +135,7 @@ jobs:
 
           echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
+          echo "BUILDID_MAC=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
       - name: Check Files
@@ -172,14 +173,18 @@ jobs:
       - name: Deploy to Floorp Update Server 🚀
         run: |
           curl -X POST \
-            -H "Authorization: token ${{ secrets.PAT }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-rc-updatexml-files.yml/dispatches" \
-            -d '{
-              "ref": "main",
-              "inputs": {
-                "win-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/win-x86_64-update.xml",
-                "linux-x86_64-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/linux-x86_64-update.xml",
-                "macOS-Universal-update-xml": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/macOS-Universal-update.xml"
-              }
-            }'
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-rc-updatexml-files.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "win-mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/win-x86_64-complete.mar",
+              "linux-mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/linux-x86_64-complete.mar",
+              "mac-mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ env.NR_VERSION }}/macOS-Universal-complete.mar",
+              "mac-buildid": "${{ env.BUILDID_MAC }}",
+              "mac-firefox-version": "${{ env.VERSION }}",
+              "display-version": "${{ env.NR_VERSION }}",
+              "release-note-url": "https://blog.floorp.app/release/${{ env.NR_VERSION }}"
+            }
+          }'
