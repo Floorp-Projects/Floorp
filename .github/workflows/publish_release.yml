@@ -135,7 +135,7 @@ jobs:
 
           echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "BUILDID_MAC=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/\"//g')" >> "$GITHUB_ENV"
+          echo "BUILDID=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
       - name: Check Files
@@ -182,8 +182,8 @@ jobs:
               "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-win-amd64-full.mar",
               "linux-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-amd64-full.mar",
               "mac-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-mac-universal-full.mar",
-              "mac-buildid": "${{ env.BUILDID_MAC }}",
-              "mac-firefox-version": "${{ env.VERSION }}",
+              "buildid": "${{ env.BUILDID }}",
+              "firefox-version": "${{ env.VERSION }}",
               "display-version": "${{ env.NR_VERSION }}",
               "release-note-url": "https://blog.floorp.app/release/${{ env.NR_VERSION }}"
             }
