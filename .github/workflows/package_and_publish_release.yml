@@ -43,6 +43,7 @@ jobs:
   publishs:
     needs: [package-windows, package-linux, package-macos]
     uses: ./.github/workflows/publish_release.yml
+    secrets: inherit
     with:
       win_runtime_artifact_workflow_call: ${{ github.run_id }}
       linux_runtime_artifact_workflow_call: ${{ github.run_id }}
