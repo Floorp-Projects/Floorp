@@ -56,6 +56,7 @@ jobs:
         with:
           path: "floorp"
           ref: main
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
@@ -78,8 +79,7 @@ jobs:
 
       - name: Setup 🪛
         run: |
-          sudo apt install msitools p7zip-full -y
-
+          sudo apt install msitools -y
           ./mach --no-interactive bootstrap --application-choice browser_artifact_mode
 
       - name: Write Versions
@@ -202,7 +202,7 @@ jobs:
             console.log(`Using version from file: ${versionFromFile}`);
 
             // Set update URL based on platform
-            const baseUrl = `floorp-update.ablaze.one/browser/${versionFromFile}/`;
+            const baseUrl = `updates.floorp.app/browser/rc/`;
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT/x86_64/`,
               'Linux-x64': `${baseUrl}Linux/x86_64/`,
@@ -413,12 +413,12 @@ jobs:
         if: inputs.platform == 'Windows-x64'
         uses: signpath/github-action-submit-signing-request@v1.1
         with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
-          project-slug: 'Floorp'
-          signing-policy-slug: 'release-signing'
-          artifact-configuration-slug: 'core-signing'
-          github-artifact-id: '${{ steps.publish-unsigned-binary.outputs.artifact-id }}'
+          api-token: "${{ secrets.SIGNPATH_API_TOKEN }}"
+          organization-id: "3b13ba3b-8062-4df7-a4a6-217a5ec352c4"
+          project-slug: "Floorp"
+          signing-policy-slug: "release-signing"
+          artifact-configuration-slug: "core-signing"
+          github-artifact-id: "${{ steps.publish-unsigned-binary.outputs.artifact-id }}"
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
           output-artifact-directory: noraneko-unsigned-installer/signed_binary
@@ -444,12 +444,12 @@ jobs:
         if: inputs.platform == 'Windows-x64'
         uses: signpath/github-action-submit-signing-request@v1.1
         with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '3b13ba3b-8062-4df7-a4a6-217a5ec352c4'
-          project-slug: 'Floorp'
-          signing-policy-slug: 'release-signing'
-          artifact-configuration-slug: 'stub-signing'
-          github-artifact-id: '${{ steps.publish-unsigned-installer.outputs.artifact-id }}'
+          api-token: "${{ secrets.SIGNPATH_API_TOKEN }}"
+          organization-id: "3b13ba3b-8062-4df7-a4a6-217a5ec352c4"
+          project-slug: "Floorp"
+          signing-policy-slug: "release-signing"
+          artifact-configuration-slug: "stub-signing"
+          github-artifact-id: "${{ steps.publish-unsigned-installer.outputs.artifact-id }}"
           wait-for-completion-timeout-in-seconds: 7200
           wait-for-completion: true
           output-artifact-directory: noraneko-unsigned-installer/signed_installer
