@@ -350,6 +350,12 @@ jobs:
             MOZ_ARTIFACT_FILE="$(echo ~/artifacts/floorp-macOS-universal-moz-artifact.dmg):$(echo ~/artifacts/floorp-macOS.update_framework_artifacts.zip)" ./mach build
           fi
 
+      - name: Upload Floorp Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-${{ inputs.platform }}-artifact-test-build-output
+          path: ./obj-artifact-build-output/dist/bin
+
       - name: Inject Floorp
         run: |
           cd ./floorp
