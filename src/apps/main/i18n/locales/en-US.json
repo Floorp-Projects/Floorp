@@ -243,5 +243,14 @@
         "editor_path_not_found": "Editor Path Not Found",
         "set_pref_description": "Please set the editor path",
         "please_enter_filename": "Please enter a filename"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Restart",
+            "normal-restart": "Restart",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
     }
 }
