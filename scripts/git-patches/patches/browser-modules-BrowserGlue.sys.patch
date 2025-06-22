@@ -1,7 +1,7 @@
-diff --git a/browser/components/BrowserGlue.sys.mjs b/browser/components/BrowserGlue.sys.mjs
+diff --git a/browser/modules/BrowserGlue.sys.mjs b/browser/modules/BrowserGlue.sys.mjs
 index bde641f7112ad..cfa5d771e6cb2 100644
---- a/browser/components/BrowserGlue.sys.mjs
-+++ b/browser/components/BrowserGlue.sys.mjs
+--- ./browser/modules/BrowserGlue.sys.mjs
++++ ./browser/modules/BrowserGlue.sys.mjs
 @@ -5,6 +5,14 @@
  import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
  import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -15,5 +15,5 @@ index bde641f7112ad..cfa5d771e6cb2 100644
 +/*@ NORA INJECT END @*/
 +
  const lazy = {};
- 
+
  ChromeUtils.defineESModuleGetters(lazy, {
