@@ -22,6 +22,11 @@ on:
         type: string
         default: ""
         required: false
+      skip_signing:
+        type: boolean
+        required: false
+        default: false
+        description: "Skip code signing process"
 
   workflow_call:
     inputs:
@@ -37,8 +42,13 @@ on:
         type: string
         default: ""
         required: false
+      skip_signing:
+        type: boolean
+        required: false
+        default: false
+        description: "Skip code signing process"
 
-run-name: 📦️ Package ${{ inputs.platform }}
+run-name: 📦️ Package ${{ inputs.platform }}${{ inputs.skip_signing && ' (Unsigned)' || '' }}
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -420,7 +430,7 @@ jobs:
 
       - name: Sign Binary 🖊️
         id: Sign-binary
-        if: inputs.platform == 'Windows-x64'
+        if: inputs.platform == 'Windows-x64' && !inputs.skip_signing
         uses: signpath/github-action-submit-signing-request@v1.1
         with:
           api-token: "${{ secrets.SIGNPATH_API_TOKEN }}"
@@ -436,7 +446,11 @@ jobs:
       - name: Prepare installer with codesigning and re-packaging (installer)
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            cd $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary
+            if [ "${{inputs.skip_signing}}" == "true" ]; then
+              cd $GITHUB_WORKSPACE/noraneko-unsigned-installer/binary
+            else
+              cd $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary
+            fi
             7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
             cat ../7zSD.sfx ../app.tag app.7z > $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME
           fi
@@ -451,7 +465,7 @@ jobs:
 
       - name: Sign Installer 🖊️
         id: Sign-installer
-        if: inputs.platform == 'Windows-x64'
+        if: inputs.platform == 'Windows-x64' && !inputs.skip_signing
         uses: signpath/github-action-submit-signing-request@v1.1
         with:
           api-token: "${{ secrets.SIGNPATH_API_TOKEN }}"
@@ -468,53 +482,62 @@ jobs:
         run: |
           mkdir -p ~/noraneko-installer
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
-            mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            if [ "${{inputs.skip_signing}}" == "true" ]; then
+              mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            else
+              mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            fi
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
-            # Unpack DMG
-            mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-            ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
-
-            # Codesign
-            # Install apple-codesign
-            cargo install apple-codesign --locked
-
-            echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
-            base64 --decode floorp-cert.txt > floorpCert.p12
-            echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
-            APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
-            echo "Found app file: $APP_FILE"
-
-            ./mach macos-sign -v -r -c "release" \
-              -a "$APP_FILE" \
-              --rcodesign-p12-file floorpCert.p12 \
-              --rcodesign-p12-password-file floorpCertPassword.passwd
-
-            # Re-package DMG
-            if [ "${{inputs.beta}}" == "true" ]; then
-              DS_STORE_PATH="./floorp/.github/workflows/assets/mac/daylight/DS_Store"
-              BACKGROUND_PATH="./floorp/.github/workflows/assets/mac/daylight/background.tiff"
-              VOLUME_NAME="Floorp Daylight Installer"
+            if [ "${{inputs.skip_signing}}" == "true" ]; then
+              # Skip signing, just move the DMG
+              mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             else
-              DS_STORE_PATH="./floorp/.github/workflows/assets/mac/official/DS_Store"
-              BACKGROUND_PATH="./floorp/.github/workflows/assets/mac/official/background.tiff"
-              VOLUME_NAME="Floorp Installer"
+              # Unpack DMG
+              mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
+              mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
+
+              # Codesign
+              # Install apple-codesign
+              cargo install apple-codesign --locked
+
+              echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
+              base64 --decode floorp-cert.txt > floorpCert.p12
+              echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
+              APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
+              echo "Found app file: $APP_FILE"
+
+              ./mach macos-sign -v -r -c "release" \
+                -a "$APP_FILE" \
+                --rcodesign-p12-file floorpCert.p12 \
+                --rcodesign-p12-password-file floorpCertPassword.passwd
+
+              # Re-package DMG
+              if [ "${{inputs.beta}}" == "true" ]; then
+                DS_STORE_PATH="./floorp/.github/workflows/assets/mac/daylight/DS_Store"
+                BACKGROUND_PATH="./floorp/.github/workflows/assets/mac/daylight/background.tiff"
+                VOLUME_NAME="Floorp Daylight Installer"
+              else
+                DS_STORE_PATH="./floorp/.github/workflows/assets/mac/official/DS_Store"
+                BACKGROUND_PATH="./floorp/.github/workflows/assets/mac/official/background.tiff"
+                VOLUME_NAME="Floorp Installer"
+              fi
+
+              ./mach python -m mozbuild.action.make_dmg --dsstore $DS_STORE_PATH --background $BACKGROUND_PATH --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+              echo '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' | jq '.' > ~/mac-code-signing/key.json
+              rcodesign notary-submit \
+                --api-key-file ~/mac-code-signing/key.json \
+                --wait \
+                ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+
+              # remove old .app
+              rm -rf obj-*/dist/floorp/*.app
+              cp -r ~/mac-code-signing/old/*.app obj-*/dist/floorp
+
+              mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             fi
-
-            ./mach python -m mozbuild.action.make_dmg --dsstore $DS_STORE_PATH --background $BACKGROUND_PATH --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
-            echo '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' | jq '.' > ~/mac-code-signing/key.json
-            rcodesign notary-submit \
-              --api-key-file ~/mac-code-signing/key.json \
-              --wait \
-              ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
-
-            # remove old .app
-            rm -rf obj-*/dist/floorp/*.app
-            cp -r ~/mac-code-signing/old/*.app obj-*/dist/floorp
-
-            mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           fi
 
       - name: Download artifact of MAR tools (Actions)
@@ -623,12 +646,12 @@ jobs:
       - name: Publish dist 🎁
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-${{ env.OUTPUT_NAME }}-installer
+          name: noraneko-${{ env.OUTPUT_NAME }}-installer${{ inputs.skip_signing && '-unsigned' || '' }}
           path: ~/noraneko-installer/*
           compression-level: 9
 
       - name: Publish MAR 🎁
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-${{ env.OUTPUT_NAME }}-mar-full
+          name: noraneko-${{ env.OUTPUT_NAME }}-mar-full${{ inputs.skip_signing && '-unsigned' || '' }}
           path: ~/noraneko-publish/*
