@@ -62,6 +62,9 @@ export const zFloorpDesignConfigs = z.object({
     multirowTab: z.object({
       newtabInsideEnabled: z.boolean().default(false),
     }).passthrough(),
+    bookmarkBar: z.object({
+      focusExpand: z.boolean().default(false),
+    }).passthrough(),
   }).passthrough(),
 }).passthrough();
 

@@ -57,6 +57,7 @@ export const zDesignFormData = z.object({
   stgLikeWorkspaces: z.boolean(),
   multirowTabNewtabInside: z.boolean(),
   disableFloorpStart: z.boolean(),
+  bookmarkBarFocusExpand: z.boolean(),
 });
 
 export type DesignFormData = z.infer<typeof zDesignFormData>;

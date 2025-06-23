@@ -15,6 +15,7 @@ import deleteBorderCSS from "./css/options/delete-border.css?inline";
 import stgLikeFloorpWorkspacesCSS from "./css/options/STG-like-floorp-workspaces.css?inline";
 import multirowTabShowNewtabInTabbarCSS from "./css/options/multirowtab-show-newtab-button-in-tabbar.css?inline";
 import multirowTabShowNewtabAtEndCSS from "./css/options/multirowtab-show-newtab-button-at-end.css?inline";
+import bookmarkbarFocusExpandCSS from "./css/options/bookmarkbar_focus_expand.css?inline";
 
 export class StyleManager {
   private styleElements: Map<string, HTMLStyleElement> = new Map();
@@ -24,6 +25,7 @@ export class StyleManager {
     this.setupDisplayEffects();
     this.setupSpecialEffects();
     this.setupMultirowTabEffects();
+    this.setupBookmarkBarEffects();
   }
 
   private setupNavbarEffects() {
@@ -105,6 +107,16 @@ export class StyleManager {
         "floorp-newtabbuttonatendofmultirowtabbar",
         multirowTabShowNewtabAtEndCSS,
         !newtabInsideEnabled && isMultirowStyle,
+      );
+    });
+  }
+
+  private setupBookmarkBarEffects() {
+    createEffect(() => {
+      this.applyStyle(
+        "floorp-bookmarkbar-focus-expand",
+        bookmarkbarFocusExpandCSS,
+        config().uiCustomization.bookmarkBar?.focusExpand ?? false,
       );
     });
   }

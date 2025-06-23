@@ -59,6 +59,9 @@ export async function saveDesignSettings(
       multirowTab: {
         newtabInsideEnabled: settings.multirowTabNewtabInside,
       },
+      bookmarkBar: {
+        focusExpand: settings.bookmarkBarFocusExpand,
+      },
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
@@ -99,6 +102,8 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,
+    bookmarkBarFocusExpand: data.uiCustomization.bookmarkBar?.focusExpand ??
+      false,
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
   };
   return formData;

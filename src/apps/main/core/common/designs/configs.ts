@@ -72,6 +72,12 @@ function getOldUICustomizationConfig() {
           false,
         ),
       },
+      bookmarkBar: {
+        focusExpand: Services.prefs.getBoolPref(
+          "floorp.bookmarks.bar.focus.mode",
+          false,
+        ),
+      },
     };
   } catch (e) {
     console.error("Failed to get UI customization config:", e);
@@ -92,6 +98,9 @@ function getOldUICustomizationConfig() {
       },
       multirowTab: {
         newtabInsideEnabled: false,
+      },
+      bookmarkBar: {
+        focusExpand: false,
       },
     };
   }
@@ -196,6 +205,9 @@ function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         },
         multirowTab: {
           newtabInsideEnabled: false,
+        },
+        bookmarkBar: {
+          focusExpand: false,
         },
       },
     };

@@ -204,6 +204,26 @@ export function UICustomization() {
             </div>
           </div>
 
+          {/* ブックマークバー */}
+          <div>
+            <h3 className="text-base font-medium mb-2">
+              {t("design.uiCustomization.bookmarkBar.title")}
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="bookmark-bar-focus-expand">
+                  {t("design.uiCustomization.bookmarkBar.focusExpand")}
+                </label>
+                <Switch
+                  id="bookmark-bar-focus-expand"
+                  checked={!!getValues("bookmarkBarFocusExpand")}
+                  onChange={(e) =>
+                    setValue("bookmarkBarFocusExpand", e.target.checked)}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* マルチロータブ関連 */}
           {currentTabbarStyle === "multirow" && (
             <div>
