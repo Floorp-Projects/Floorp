@@ -274,7 +274,7 @@ jobs:
               await addToENV("ARTIFACT_FROM_RELEASE_NAME","floorp-win-amd64-moz-artifact.zip");
               await addToENV("OUTPUT_NAME","win-amd64");
               await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`;
-              await addToENV("OUTPUT_INSTALLER_NAME","floorp-win64-installer.exe");
+              await addToENV("OUTPUT_INSTALLER_NAME","floorp-win64.installer.exe");
               await $`echo "WORKSPACE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV`;
               break;
             case "Linux-x64":
@@ -350,11 +350,15 @@ jobs:
             MOZ_ARTIFACT_FILE="$(echo ~/artifacts/floorp-macOS-universal-moz-artifact.dmg):$(echo ~/artifacts/floorp-macOS.update_framework_artifacts.zip)" ./mach build
           fi
 
+      - name: test package
+        run: |
+          ./mach package
+
       - name: Upload Floorp Artifact
         uses: actions/upload-artifact@v4
         with:
           name: floorp-${{ inputs.platform }}-artifact-test-build-output
-          path: ./obj-artifact-build-output/dist/bin
+          path: ./obj-artifact-build-output/dist
 
       - name: Inject Floorp
         run: |
