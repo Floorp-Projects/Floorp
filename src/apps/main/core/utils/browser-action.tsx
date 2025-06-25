@@ -118,7 +118,7 @@ export namespace BrowserActionUtils {
   export function createToolbarClickActionButton(
     widgetId: string,
     l10nId: string | null,
-    onCommandFunc: () => void,
+    onCommandFunc: (event: XULCommandEvent) => void,
     styleElement: JSXElement | null = null,
     area: string = CustomizableUI.AREA_NAVBAR,
     position: number | null = 0,
@@ -143,8 +143,8 @@ export namespace BrowserActionUtils {
         tooltiptext,
         label,
         removable: true,
-        onCommand: () => {
-          onCommandFunc?.();
+        onCommand: (event: XULCommandEvent) => {
+          onCommandFunc?.(event);
         },
         onCreated: (aNode: XULElement) => {
           onCreatedFunc?.(aNode);
