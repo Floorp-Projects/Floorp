@@ -198,7 +198,7 @@
     *|*:root[chromehidden~="toolbar"],
     :root[invisibleBMS]
   )
-  #sidebar-select-box {
+  #panel-sidebar-select-box {
   display: none;
 }
 
