@@ -3,6 +3,168 @@
     {
       "stash": {
         "blocked": [
+          "{862894ac-d730-4d10-8ef0-8f786a76c5b7}:3.1.3",
+          "{862894ac-d730-4d10-8ef0-8f786a76c5b7}:132.18.9",
+          "{1d25ffe2-f3f2-4ceb-8d5d-61b7843ae8ce}:3.49.0",
+          "{1d25ffe2-f3f2-4ceb-8d5d-61b7843ae8ce}:11.1",
+          "{5dd53289-faed-44a6-9b9c-59943a11b176}:0.6.5.1",
+          "{5dd53289-faed-44a6-9b9c-59943a11b176}:101.7",
+          "{5dd53289-faed-44a6-9b9c-59943a11b176}:205.45.0",
+          "supportfirefox1@exodus.com:1.1.3",
+          "supportfirefox1@exodus.com:1.1.4",
+          "bitget-extension@web3.bitget.com:2.16.23",
+          "{0f459ea1-c1d3-4718-93aa-3110e139eddd}:1.0",
+          "labuburbt@outlook.com:1.0",
+          "labuburbt@outlook.com:1.0.1"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750904128016,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750962905565,
+      "id": "f6e7dac9-751b-457d-a27a-475fb239ea71",
+      "last_modified": 1750962978029
+    },
+    {
+      "stash": {
+        "blocked": [
+          "firefox-extension-single-file@egrajeda.com:1.22.81",
+          "firefox-extension-single-file@egrajeda.com:1.22.82"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750817734161,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750854905447,
+      "id": "9e9d51c8-f63a-44cd-ac65-792864fdbcea",
+      "last_modified": 1750854976158
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{91a36cb9-b25f-481a-92ab-d7f95b0b4488}:2.6",
+          "{91a36cb9-b25f-481a-92ab-d7f95b0b4488}:132.18.9",
+          "{74daf2f5-6377-4135-95cd-59e96fb05aa8}:1.1.2",
+          "{74daf2f5-6377-4135-95cd-59e96fb05aa8}:3.120.0",
+          "phantomrbt@outlook.com:1.0.0",
+          "phantomrbt@outlook.com:1.1.0",
+          "Phantomdappt@outlook.com:1.0",
+          "Phantomdappt@outlook.com:1.1.0",
+          "okx-wallet-porta2l@huntersoutce.site:15.20",
+          "okx-wallet-porta2l@huntersoutce.site:15.20.2",
+          "phantomrbt2@outlook.com:1.1.0",
+          "phantomrbt2@outlook.com:1.2.0",
+          "{19e8bf5a-7b82-42c9-8b94-0b8f9870a034}:9.6.18.0",
+          "{19e8bf5a-7b82-42c9-8b94-0b8f9870a034}:10.1",
+          "etexctgvuygjhgukjhkjmbb@gmail.com:1.0",
+          "etexctgvuygjhgukjhkjmbb@gmail.com:101.3",
+          "etexctgvuygjhgukjhkjmbb@gmail.com:101.3.1",
+          "{3363ec66-1bd7-46ee-8b8e-70f61c0d6977}:5.3.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750779054751,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750790105843,
+      "id": "3bb59b3d-e0aa-46fe-931c-f744ac21b2e3",
+      "last_modified": 1750790183628
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{c53c03b7-7d8b-4bc2-8a0f-619e435ec982}:4.1280",
+          "{c53c03b7-7d8b-4bc2-8a0f-619e435ec982}:10.1",
+          "{c53c03b7-7d8b-4bc2-8a0f-619e435ec982}:11.0",
+          "{9eef92f7-82c3-41da-81e2-c6711b8fff99}:13.18.9"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750358175634,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750682106103,
+      "id": "8889a530-f77a-4ecf-9fdf-531ad0f0094a",
+      "last_modified": 1750682176263
+    },
+    {
+      "stash": {
+        "blocked": [
+          "okx-wallet-portal@gitsources.site:13.54.2",
+          "okx-wallet-portal@gitsources.site:13.54.3"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750336584732,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750358105279,
+      "id": "1c9dff77-22d2-404c-b37e-b40988ae42eb",
+      "last_modified": 1750358175311
+    },
+    {
+      "stash": {
+        "blocked": [
+          "support@TronLink.org:1.0.0",
+          "support@TronLink.org:1.1.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750324786841,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750336505891,
+      "id": "c9e2fdca-ebe4-4772-aae2-edaf5cadf650",
+      "last_modified": 1750336584527
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:1.0.5",
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:1.0.6",
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:1.1.2",
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:9.5.0.3",
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:10.3",
+          "{6883dad1-208a-4bd3-a516-f83df7dee19e}:132.18.9"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750175584534,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750271705747,
+      "id": "9a7899d6-7a8b-4c74-9d11-3333e4450e8e",
+      "last_modified": 1750271777017
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{c305c1d4-5df0-4f7a-85f5-6889b277395e}:1.0.0",
+          "{c305c1d4-5df0-4f7a-85f5-6889b277395e}:1.1.2",
+          "{c305c1d4-5df0-4f7a-85f5-6889b277395e}:1.3",
+          "{c305c1d4-5df0-4f7a-85f5-6889b277395e}:9.5.0.3",
+          "{2c16127a-6a5b-47ba-ae84-a0e23022aada}:1.0.0",
+          "{2c16127a-6a5b-47ba-ae84-a0e23022aada}:1.1.2",
+          "{2c16127a-6a5b-47ba-ae84-a0e23022aada}:13.18.9",
+          "{00fa666e-603e-441a-beb5-6bb10be1ce5b}:1.0.0",
+          "{00fa666e-603e-441a-beb5-6bb10be1ce5b}:1.1.2",
+          "{00fa666e-603e-441a-beb5-6bb10be1ce5b}:1.1.21",
+          "{00fa666e-603e-441a-beb5-6bb10be1ce5b}:1.1.22"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1750062174757,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1750098905463,
+      "id": "026f67bd-4485-449e-b8ce-4006b24df7ac",
+      "last_modified": 1750098971877
+    },
+    {
+      "stash": {
+        "blocked": [
           "support@guarda.com:1.3.1",
           "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:1.0.0",
           "{9eef92f7-82c3-41da-81e2-c6711b8fff77}:1.0.1",
@@ -687,5 +849,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1749818177432
+  "timestamp": 1750962978029
 }

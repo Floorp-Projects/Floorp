@@ -1,6 +1,32 @@
 {
   "data": [
     {
+      "schema": 1750730263299,
+      "derHash": "LguEGJ/5dAwUDMfr3aBRosI58d7rEvxMVtvVAPlTmNg=",
+      "attachment": {
+        "hash": "c4d199ed4f7b32cdadcf429f7b1d962e6a3c034fe3b704492b0ac16fcd1b00b2",
+        "size": 1853,
+        "filename": "joN6IPaPB9ALd3OzEFQHSQcSICs0_U_MmT4qcKgSXrc=.pem",
+        "location": "security-state-staging/intermediates/f96f2779-246d-471e-b62b-242743e655e3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "d58e8eea-15e8-46e4-a20b-aad35a61dfdd",
+      "last_modified": 1750733822397
+    },
+    {
+      "schema": 1750255062558,
+      "derHash": "sOcUWki5+uSkmQcf6cT6WQMt9y51lVsrPvt5WZ5KU+A=",
+      "attachment": {
+        "hash": "f1f67fdd9b44a170657f5ecb602b7115773ba1a9ee24505ac5d702c7bc16a3bb",
+        "size": 2369,
+        "filename": "Vo0kHXgA-__lFjaxinaazmjp6Snzw2dANQzv6YTU5n0=.pem",
+        "location": "security-state-staging/intermediates/1cd9e0f2-1935-4231-ae43-19ac3d9aef8c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "id": "7422ccce-eccc-4a7f-a6b7-f9481a9c169b",
+      "last_modified": 1750258622612
+    },
+    {
       "schema": 1749218267234,
       "derHash": "M7W3wh5mUE/T7mWw/g0SwxdboqYWRBtxM9s8Eja1Xfc=",
       "attachment": {
@@ -7297,42 +7323,6 @@
       "last_modified": 1704470223072
     },
     {
-      "schema": 1703537607315,
-      "derHash": "ctcW97tr0QVwT0K5UkkjUQ3LhbLYcMDpraWuuclpBRo=",
-      "subject": "CN=ePKI Root Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MGMxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEvMC0GA1UEAwwmZVBLSSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "aff986340dcc592a5eacd96a6044c07f55438a9b0214921ea5306a0ea997fed9",
-        "size": 2804,
-        "filename": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=.pem",
-        "location": "security-state-staging/intermediates/1cd7753f-d18c-4864-8129-0ea1a5092f75.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=",
-      "crlite_enrolled": false,
-      "id": "4e467304-4cae-4b24-8542-fa721e586cfb",
-      "last_modified": 1703537823229
-    },
-    {
-      "schema": 1703537607030,
-      "derHash": "aAfJcjXF7GCQJppLX+36tGmG5C9NZ9Lt3c9uRc8N+oA=",
-      "subject": "CN=HiPKI Root CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "ME8xCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEbMBkGA1UEAwwSSGlQS0kgUm9vdCBDQSAtIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c94a4c47c3048f75024cf6c844a614b253f7ee3823a41c0e39e567effea001fc",
-        "size": 2328,
-        "filename": "ecqvU0fm5KlMjniphJb8dAIPgJ7eE_Ig-rYQTI3tMp8=.pem",
-        "location": "security-state-staging/intermediates/24d59f73-321d-498a-8fa9-3f4111529687.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ecqvU0fm5KlMjniphJb8dAIPgJ7eE/Ig+rYQTI3tMp8=",
-      "crlite_enrolled": false,
-      "id": "64de4f00-ad9d-48db-9d46-2c27c55f4337",
-      "last_modified": 1703537823226
-    },
-    {
       "schema": 1702979286308,
       "derHash": "hHQJ5jUm8WJ1OsSfdSGO+q+n1clK3pCVznLn9rbjrJk=",
       "subject": "CN=WE5,O=Google Trust Services,C=US",
@@ -12427,24 +12417,6 @@
       "last_modified": 1666727875348
     },
     {
-      "schema": 1666727336675,
-      "derHash": "2uNDT2lvyfD2UuGypvabXpJz0J9DvTvdRxfWFB+M0sI=",
-      "subject": "OU=Public Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MGAxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEsMCoGA1UECwwjUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d35775690c65ebee8113249b23f19a293655d0ed08e999f64243089ed009db1b",
-        "size": 2129,
-        "filename": "tnFqrstaexEa6Zz-CVGGozhI8IF1FafM6uzX3zzHrUI=.pem",
-        "location": "security-state-staging/intermediates/07e9d719-440e-4db5-9e24-7f15cd5cee54.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tnFqrstaexEa6Zz+CVGGozhI8IF1FafM6uzX3zzHrUI=",
-      "crlite_enrolled": false,
-      "id": "9bae286e-930a-4285-8a27-54c6509f3077",
-      "last_modified": 1666727875331
-    },
-    {
       "schema": 1666727377394,
       "derHash": "GDWw5ILqZVNvwBDkvBPAYPZWaBZfupfi9ULOlspt/vw=",
       "subject": "CN=Entrust Certification Authority - L1F,OU=See www.entrust.net/legal-terms+OU=(c) 2016 Entrust\\, Inc. - for authorized use only,O=Entrust\\, Inc.,C=US",
@@ -13091,24 +13063,6 @@
       "crlite_enrolled": false,
       "id": "9dfe1a67-5cce-4d31-a077-99d8791d279d",
       "last_modified": 1666727874573
-    },
-    {
-      "schema": 1666727376029,
-      "derHash": "YJkw64B61CCv2iqKphtnSDA5FozXZuCZQqSL/n873BA=",
-      "subject": "OU=Public Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MGAxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEsMCoGA1UECwwjUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b2b74d8c5d2ce4f283391974773f823f1441c476105a4e78f1b99db3e02f9528",
-        "size": 2117,
-        "filename": "tnFqrstaexEa6Zz-CVGGozhI8IF1FafM6uzX3zzHrUI=.pem",
-        "location": "security-state-staging/intermediates/b062306c-bad7-433f-bcc1-81512b1194eb.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tnFqrstaexEa6Zz+CVGGozhI8IF1FafM6uzX3zzHrUI=",
-      "crlite_enrolled": false,
-      "id": "4835ad01-5f2c-4639-abc1-05d2b5279fb5",
-      "last_modified": 1666727874544
     },
     {
       "schema": 1666727343840,
@@ -27241,42 +27195,6 @@
       "last_modified": 1645578266173
     },
     {
-      "schema": 1643316508186,
-      "derHash": "S9FvSVXz88nI6kjvmZUyTaUSFyT4mRXV8skesLrvIzc=",
-      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "689c7ab13bb497838c62b566e5da7f914f4cf9354f08643500263bcfb46a32a3",
-        "size": 2105,
-        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
-        "location": "security-state-staging/intermediates/c2017a82-2237-4c28-8656-5764f263e185.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
-      "crlite_enrolled": false,
-      "id": "a869aa70-b82b-40fc-b8b7-123af99bb58e",
-      "last_modified": 1643317054972
-    },
-    {
-      "schema": 1643295453377,
-      "derHash": "RksOwKYC8Bk9tfM5EYhaOmGSGtFtJmTiW++rEM+m7SU=",
-      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "49845caec147a9f80e7f49b5e4b2b8629653bccf72d7aa8dfa0b7029f5d75514",
-        "size": 1934,
-        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
-        "location": "security-state-staging/intermediates/cabaf189-98ae-41ee-8da3-966fb99dbea2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
-      "crlite_enrolled": false,
-      "id": "201bbcbe-98a9-4e1d-9ba8-1d91ccaef4d5",
-      "last_modified": 1643317054962
-    },
-    {
       "schema": 1642150113750,
       "derHash": "fPY09fr+ndzIizbWsefr+3B4A01kQZ58Z4M15W2CNCE=",
       "subject": "CN=ZoTrus ECC DV SSL CA,O=ZoTrus Technology Limited,C=CN",
@@ -27817,24 +27735,6 @@
       "last_modified": 1601517444423
     },
     {
-      "schema": 1601376733088,
-      "derHash": "ZHFyUK+LAo3Y5cC65MkULIsQNTJhK8SHCF/Twxn5wGc=",
-      "subject": "CN=ePKI Root Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MGMxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEvMC0GA1UEAwwmZVBLSSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "73789188b1ff6dcd70442594b8ff119cb7b30d858c0e7f072cf8a014cd8f296a",
-        "size": 2649,
-        "filename": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=.pem",
-        "location": "security-state-staging/intermediates/3785b85c-da3b-4b7b-bd12-2796cce60c04.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=",
-      "crlite_enrolled": false,
-      "id": "ee033ab1-7bfc-4f08-b26a-b3b2bce86767",
-      "last_modified": 1601517444135
-    },
-    {
       "schema": 1601376755836,
       "derHash": "joxuv3fcc9s+OOk/SAPmK2tZM761HuQVL2jXqhRCazE=",
       "subject": "CN=Microsec e-Szigno Root CA 2009,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -27869,42 +27769,6 @@
       "crlite_enrolled": false,
       "id": "ff319db3-4ac0-4406-9c29-03f632e42c98",
       "last_modified": 1601517443342
-    },
-    {
-      "schema": 1601376763286,
-      "derHash": "0QjDSljA5KYWRJ+MSDGAI6IpyGzT3dXV/mBBpAHBahQ=",
-      "subject": "OU=ePKI Root Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MF4xCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEqMCgGA1UECwwhZVBLSSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "15e5931fc9e514bb8bf23b5f5c3c40bb3131ccf6ed8b0857416342b002b8db15",
-        "size": 2645,
-        "filename": "YlVMFwBVQ7I3IV8EJo3NL9HEcCQK08hmDiWuLFljD1U=.pem",
-        "location": "security-state-staging/intermediates/a894f5a2-8e74-4828-97c6-41052369ca59.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "YlVMFwBVQ7I3IV8EJo3NL9HEcCQK08hmDiWuLFljD1U=",
-      "crlite_enrolled": false,
-      "id": "056b1bcf-53e9-405c-96eb-eea77dcff395",
-      "last_modified": 1601517442680
-    },
-    {
-      "schema": 1601376780263,
-      "derHash": "GEZ8TmTVhshEpERm3lunptWWnHqShZpRHF/a11sDzc4=",
-      "subject": "CN=ePKI Root Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MGMxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEvMC0GA1UEAwwmZVBLSSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6bf1025a0f2a333a3a9f9cf1fa26d326f099cad7c0d6658f30ea16733092bd7a",
-        "size": 2621,
-        "filename": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=.pem",
-        "location": "security-state-staging/intermediates/c7b2feb5-da29-4802-ba1d-e34f9184099c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=",
-      "crlite_enrolled": false,
-      "id": "ca26521c-22ff-48b3-bd4d-3c06d4ffa75a",
-      "last_modified": 1601517442632
     },
     {
       "schema": 1601376748460,
@@ -29977,5 +29841,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1749567422319
+  "timestamp": 1750733822397
 }

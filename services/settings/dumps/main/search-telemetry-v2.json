@@ -1,6 +1,99 @@
 {
   "data": [
     {
+      "schema": 1750817732643,
+      "subframes": [
+        {
+          "regexp": "^https://syndicatedsearch\\.goog/afs/ads",
+          "inspectRegexpInSERP": true,
+          "inspectRegexpInParent": true
+        }
+      ],
+      "components": [
+        {
+          "type": "ad_carousel",
+          "included": {
+            "parent": {
+              "selector": ".product-ads-carousel"
+            },
+            "related": {
+              "selector": ".snippet__control"
+            },
+            "children": [
+              {
+                "selector": ".product-ads-carousel__item",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "included": {
+            "parent": {
+              "selector": ".ad-result"
+            },
+            "children": [
+              {
+                "type": "ad_sitelink",
+                "selector": ".result__extra-content .deep-links--descriptions"
+              }
+            ]
+          }
+        },
+        {
+          "type": "incontent_searchbox",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "form.search-form"
+            },
+            "related": {
+              "selector": ".search-form__suggestions"
+            },
+            "children": [
+              {
+                "selector": ".search-form__input, .search-form__submit"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "default": true
+        }
+      ],
+      "shoppingTab": {
+        "regexp": "/shopping?",
+        "selector": "nav li[data-test-id='search-navigation-item-shopping'] a"
+      },
+      "taggedCodes": [
+        "mzl",
+        "813cf1dd",
+        "16eeffc4"
+      ],
+      "telemetryId": "ecosia",
+      "organicCodes": [],
+      "codeParamName": "tt",
+      "queryParamName": "q",
+      "queryParamNames": [
+        "q"
+      ],
+      "searchPageRegexp": "^https://www\\.ecosia\\.org/",
+      "filter_expression": "env.version|versionCompare(\"110.0a1\")>=0",
+      "searchPageMatches": [
+        "https://www.ecosia.org/*"
+      ],
+      "expectedOrganicCodes": [],
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k",
+        "^https://syndicatedsearch\\.goog/aclk\\?",
+        "^https://www\\.googleadservices\\.com/pagead/aclk\\?"
+      ],
+      "id": "9a487171-3a06-4647-8866-36250ec84f3a",
+      "last_modified": 1750880107190
+    },
+    {
       "schema": 1748966468517,
       "subframes": [],
       "components": [
@@ -757,99 +850,7 @@
       ],
       "id": "19c434a3-d173-4871-9743-290ac92a3f6a",
       "last_modified": 1741781945955
-    },
-    {
-      "schema": 1741189700650,
-      "subframes": [
-        {
-          "regexp": "^https://syndicatedsearch\\.goog/afs/ads",
-          "inspectRegexpInSERP": true,
-          "inspectRegexpInParent": true
-        }
-      ],
-      "components": [
-        {
-          "type": "ad_carousel",
-          "included": {
-            "parent": {
-              "selector": ".product-ads-carousel"
-            },
-            "related": {
-              "selector": ".snippet__control"
-            },
-            "children": [
-              {
-                "selector": ".product-ads-carousel__item",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "included": {
-            "parent": {
-              "selector": ".ad-result"
-            },
-            "children": [
-              {
-                "type": "ad_sitelink",
-                "selector": ".result__extra-content .deep-links--descriptions"
-              }
-            ]
-          }
-        },
-        {
-          "type": "incontent_searchbox",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "form.search-form"
-            },
-            "related": {
-              "selector": ".search-form__suggestions"
-            },
-            "children": [
-              {
-                "selector": ".search-form__input, .search-form__submit"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "default": true
-        }
-      ],
-      "shoppingTab": {
-        "regexp": "/shopping?",
-        "selector": "nav li[data-test-id='search-navigation-item-shopping'] a"
-      },
-      "taggedCodes": [
-        "mzl",
-        "813cf1dd",
-        "16eeffc4"
-      ],
-      "telemetryId": "ecosia",
-      "organicCodes": [],
-      "codeParamName": "tt",
-      "queryParamName": "q",
-      "queryParamNames": [
-        "q"
-      ],
-      "searchPageRegexp": "^https://www\\.ecosia\\.org/",
-      "filter_expression": "env.version|versionCompare(\"110.0a1\")>=0",
-      "searchPageMatches": [
-        "https://www.ecosia.org/*"
-      ],
-      "expectedOrganicCodes": [],
-      "extraAdServersRegexps": [
-        "^https://www\\.bing\\.com/acli?c?k",
-        "^https://syndicatedsearch\\.goog/aclk\\?"
-      ],
-      "id": "9a487171-3a06-4647-8866-36250ec84f3a",
-      "last_modified": 1741781945953
     }
   ],
-  "timestamp": 1749153997368
+  "timestamp": 1750880107190
 }
