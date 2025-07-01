@@ -484,7 +484,7 @@ const CurlUtils = {
         // Lastly we replace new lines with ^ and TWO new lines because the first
         // new line is there to enact the escape command the second is the character
         // to escape (in this case new line).
-        .replace(/\r?\n/g, "^\n\n") +
+        .replace(/\r?\n|\r/g, "^\n\n") +
       encapsChars
     );
   },
