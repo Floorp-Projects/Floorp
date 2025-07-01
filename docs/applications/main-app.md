@@ -1,720 +1,863 @@
-# メインアプリケーション - 詳細解説
+# Main Application - Detailed Analysis
 
-## 概要
+## Overview
 
-メインアプリケーション (`src/apps/main/`) は Floorp ブラウザのコア機能を担当する最も重要なコンポーネントです。SolidJS と TypeScript で構築され、Firefox の XUL システムと統合してブラウザの主要な UI とロジックを提供します。
+The main application is the core of Floorp browser, providing the primary browser functionality and user interface. It integrates SolidJS with Firefox's XUL system to create a modern, reactive browser experience while maintaining compatibility with Firefox's ecosystem.
 
-## アーキテクチャ
+## Architecture and Technology Stack
 
-### 全体構造
+### Core Technologies
+- **SolidJS**: Reactive UI framework for efficient DOM updates
+- **TypeScript**: Type-safe JavaScript development
+- **Tailwind CSS**: Utility-first CSS framework
+- **Vite**: Fast build tool and development server
+- **XUL**: Mozilla's XML-based user interface language
 
+### Directory Structure
 ```
 src/apps/main/
-├── core/                   # コア機能とロジック
-│   ├── index.ts           # アプリケーションエントリーポイント
-│   ├── modules.ts         # モジュール管理システム
-│   ├── modules-hooks.ts   # モジュールライフサイクルフック
-│   ├── common/            # 共通ユーティリティ
-│   ├── static/            # 静的アセット
-│   ├── test/              # テストファイル
-│   └── utils/             # ユーティリティ関数
-├── i18n/                  # 国際化ファイル
-├── docs/                  # ドキュメント
-├── about/                 # About ページ
-├── @types/                # 型定義
-├── package.json           # 依存関係
-├── vite.config.ts         # Vite ビルド設定
-├── tsconfig.json          # TypeScript 設定
-├── tailwind.config.js     # Tailwind CSS 設定
-├── postcss.config.js      # PostCSS 設定
-├── deno.json              # Deno 設定
-└── indexx.html            # HTML テンプレート
+├── core/                   # Core application logic
+│   ├── index.ts           # Main entry point
+│   ├── modules.ts         # Module management system
+│   ├── modules-hooks.ts   # Module lifecycle hooks
+│   ├── common/            # Common utilities and types
+│   ├── static/            # Static assets
+│   ├── test/              # Test files
+│   └── utils/             # Utility functions
+├── i18n/                  # Internationalization files
+├── docs/                  # Documentation
+├── about/                 # About page components
+├── @types/                # TypeScript type definitions
+├── package.json           # Dependencies and scripts
+├── vite.config.ts         # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+├── tailwind.config.js     # Tailwind CSS configuration
+└── deno.json              # Deno configuration
 ```
 
-### 技術スタック
+## Core Systems
 
-- **SolidJS**: リアクティブ UI フレームワーク
-- **TypeScript**: 型安全な JavaScript
-- **Tailwind CSS**: ユーティリティファーストCSS
-- **Vite**: 高速ビルドツール
-- **@nora/solid-xul**: XUL 統合ライブラリ
-- **@nora/skin**: テーマシステム
+### 1. Entry Point (index.ts)
 
-## コアシステム
-
-### 1. アプリケーションエントリーポイント (core/index.ts)
+The main entry point initializes the application and sets up the integration with Firefox's XUL system.
 
 ```typescript
-// メインアプリケーションの初期化
+// Main application initialization
 import { render } from "solid-js/web";
-import { createSignal, onMount } from "solid-js";
 import { ModuleManager } from "./modules";
-import { setupModuleHooks } from "./modules-hooks";
+import { setupXULIntegration } from "@floorp/solid-xul";
 
-// アプリケーション状態
-const [appState, setAppState] = createSignal({
-  initialized: false,
-  modules: new Map(),
-  theme: "default"
-});
+// Initialize XUL integration
+setupXULIntegration();
 
-// メインアプリケーションコンポーネント
-function MainApp() {
-  onMount(async () => {
-    // モジュールシステムの初期化
-    await ModuleManager.initialize();
+// Initialize module system
+const moduleManager = new ModuleManager();
+
+// Start application
+async function initApp() {
+  try {
+    // Load core modules
+    await moduleManager.loadCoreModules();
     
-    // フックの設定
-    setupModuleHooks();
-    
-    // UI の初期化
+    // Initialize UI components
     await initializeUI();
     
-    setAppState(prev => ({ ...prev, initialized: true }));
-  });
-
-  return (
-    <div class="floorp-main-app">
-      {appState().initialized ? (
-        <ModuleContainer />
-      ) : (
-        <LoadingScreen />
-      )}
-    </div>
-  );
+    // Setup event listeners
+    setupEventListeners();
+    
+    console.log("Floorp main application initialized");
+  } catch (error) {
+    console.error("Failed to initialize application:", error);
+  }
 }
 
-// DOM への描画
-render(() => <MainApp />, document.getElementById("app")!);
+// Initialize UI components
+async function initializeUI() {
+  // Find XUL elements to enhance
+  const browserToolbox = document.getElementById("navigator-toolbox");
+  const tabsToolbar = document.getElementById("TabsToolbar");
+  
+  if (browserToolbox && tabsToolbar) {
+    // Render SolidJS components into XUL
+    render(() => <BrowserEnhancements />, browserToolbox);
+    render(() => <TabBarEnhancements />, tabsToolbar);
+  }
+}
+
+// Setup global event listeners
+function setupEventListeners() {
+  // Browser window events
+  window.addEventListener("load", handleWindowLoad);
+  window.addEventListener("unload", handleWindowUnload);
+  
+  // Tab events
+  gBrowser.tabContainer.addEventListener("TabOpen", handleTabOpen);
+  gBrowser.tabContainer.addEventListener("TabClose", handleTabClose);
+}
+
+// Initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 ```
 
-### 2. モジュール管理システム (core/modules.ts)
+### 2. Module Management System (modules.ts)
+
+The module system provides a way to organize and manage different features of the browser.
 
 ```typescript
-// モジュール管理の中核システム
+// Module interface definition
 export interface Module {
   id: string;
   name: string;
   version: string;
-  dependencies: string[];
-  initialize: () => Promise<void>;
-  cleanup: () => Promise<void>;
-  exports: Record<string, any>;
+  dependencies?: string[];
+  initialize(): Promise<void>;
+  destroy(): Promise<void>;
 }
 
+// Module manager class
 export class ModuleManager {
-  private static modules = new Map<string, Module>();
-  private static loadOrder: string[] = [];
+  private modules = new Map<string, Module>();
+  private loadedModules = new Set<string>();
   
-  // モジュールの登録
-  static register(module: Module): void {
-    if (this.modules.has(module.id)) {
-      throw new Error(`Module ${module.id} is already registered`);
-    }
-    
+  // Register a module
+  registerModule(module: Module): void {
     this.modules.set(module.id, module);
-    this.calculateLoadOrder();
   }
   
-  // 依存関係を考慮した読み込み順序の計算
-  private static calculateLoadOrder(): void {
-    const visited = new Set<string>();
-    const visiting = new Set<string>();
-    const order: string[] = [];
+  // Load core modules
+  async loadCoreModules(): Promise<void> {
+    const coreModules = [
+      "ui-enhancements",
+      "tab-management",
+      "sidebar-manager",
+      "user-scripts",
+      "theme-manager"
+    ];
     
-    const visit = (moduleId: string) => {
-      if (visiting.has(moduleId)) {
-        throw new Error(`Circular dependency detected: ${moduleId}`);
+    for (const moduleId of coreModules) {
+      await this.loadModule(moduleId);
+    }
+  }
+  
+  // Load a specific module
+  async loadModule(moduleId: string): Promise<void> {
+    if (this.loadedModules.has(moduleId)) {
+      return; // Already loaded
+    }
+    
+    const module = this.modules.get(moduleId);
+    if (!module) {
+      throw new Error(`Module not found: ${moduleId}`);
+    }
+    
+    // Load dependencies first
+    if (module.dependencies) {
+      for (const depId of module.dependencies) {
+        await this.loadModule(depId);
       }
-      
-      if (!visited.has(moduleId)) {
-        visiting.add(moduleId);
-        
-        const module = this.modules.get(moduleId);
-        if (module) {
-          for (const dep of module.dependencies) {
-            visit(dep);
+    }
+    
+    // Initialize module
+    try {
+      await module.initialize();
+      this.loadedModules.add(moduleId);
+      console.log(`Module loaded: ${moduleId}`);
+    } catch (error) {
+      console.error(`Failed to load module ${moduleId}:`, error);
+      throw error;
+    }
+  }
+  
+  // Unload a module
+  async unloadModule(moduleId: string): Promise<void> {
+    const module = this.modules.get(moduleId);
+    if (module && this.loadedModules.has(moduleId)) {
+      await module.destroy();
+      this.loadedModules.delete(moduleId);
+      console.log(`Module unloaded: ${moduleId}`);
+    }
+  }
+  
+  // Get loaded modules
+  getLoadedModules(): string[] {
+    return Array.from(this.loadedModules);
+  }
+}
+```
+
+### 3. Module Hooks System (modules-hooks.ts)
+
+The hooks system provides lifecycle management and event handling for modules.
+
+```typescript
+import { createSignal, createEffect, onCleanup } from "solid-js";
+
+// Hook for browser state
+export function useBrowserState() {
+  const [currentTab, setCurrentTab] = createSignal(gBrowser.selectedTab);
+  const [tabCount, setTabCount] = createSignal(gBrowser.tabs.length);
+  
+  // Update current tab when selection changes
+  const handleTabSelect = () => {
+    setCurrentTab(gBrowser.selectedTab);
+  };
+  
+  // Update tab count when tabs are added/removed
+  const handleTabCountChange = () => {
+    setTabCount(gBrowser.tabs.length);
+  };
+  
+  // Setup event listeners
+  gBrowser.tabContainer.addEventListener("TabSelect", handleTabSelect);
+  gBrowser.tabContainer.addEventListener("TabOpen", handleTabCountChange);
+  gBrowser.tabContainer.addEventListener("TabClose", handleTabCountChange);
+  
+  // Cleanup on component unmount
+  onCleanup(() => {
+    gBrowser.tabContainer.removeEventListener("TabSelect", handleTabSelect);
+    gBrowser.tabContainer.removeEventListener("TabOpen", handleTabCountChange);
+    gBrowser.tabContainer.removeEventListener("TabClose", handleTabCountChange);
+  });
+  
+  return {
+    currentTab,
+    tabCount,
+    switchToTab: (tab: XULElement) => gBrowser.selectedTab = tab,
+    closeTab: (tab: XULElement) => gBrowser.removeTab(tab)
+  };
+}
+
+// Hook for preferences
+export function usePreferences() {
+  const [prefs, setPrefs] = createSignal(new Map());
+  
+  // Load preferences
+  const loadPreferences = () => {
+    const prefService = Services.prefs;
+    const prefMap = new Map();
+    
+    // Load Floorp-specific preferences
+    const floorpPrefs = prefService.getChildList("floorp.");
+    for (const prefName of floorpPrefs) {
+      try {
+        const value = prefService.getStringPref(prefName);
+        prefMap.set(prefName, value);
+      } catch (e) {
+        // Handle different pref types
+        try {
+          const value = prefService.getBoolPref(prefName);
+          prefMap.set(prefName, value);
+        } catch (e) {
+          try {
+            const value = prefService.getIntPref(prefName);
+            prefMap.set(prefName, value);
+          } catch (e) {
+            console.warn(`Could not load preference: ${prefName}`);
           }
         }
+      }
+    }
+    
+    setPrefs(prefMap);
+  };
+  
+  // Save preference
+  const setPref = (name: string, value: any) => {
+    const prefService = Services.prefs;
+    
+    try {
+      if (typeof value === "string") {
+        prefService.setStringPref(name, value);
+      } else if (typeof value === "boolean") {
+        prefService.setBoolPref(name, value);
+      } else if (typeof value === "number") {
+        prefService.setIntPref(name, value);
+      }
+      
+      // Update local state
+      setPrefs(prev => new Map(prev.set(name, value)));
+    } catch (error) {
+      console.error(`Failed to set preference ${name}:`, error);
+    }
+  };
+  
+  // Load preferences on initialization
+  loadPreferences();
+  
+  return {
+    prefs,
+    setPref,
+    getPref: (name: string) => prefs().get(name),
+    reloadPrefs: loadPreferences
+  };
+}
+
+// Hook for window management
+export function useWindowManager() {
+  const [windows, setWindows] = createSignal([]);
+  
+  // Get all browser windows
+  const getAllWindows = () => {
+    const windowList = [];
+    const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
+    
+    while (windowEnumerator.hasMoreElements()) {
+      const win = windowEnumerator.getNext();
+      windowList.push(win);
+    }
+    
+    return windowList;
+  };
+  
+  // Update window list
+  const updateWindows = () => {
+    setWindows(getAllWindows());
+  };
+  
+  // Listen for window events
+  const windowWatcher = {
+    observe: (subject: any, topic: string) => {
+      if (topic === "domwindowopened" || topic === "domwindowclosed") {
+        updateWindows();
+      }
+    }
+  };
+  
+  Services.ww.registerNotification(windowWatcher);
+  
+  // Initial load
+  updateWindows();
+  
+  // Cleanup
+  onCleanup(() => {
+    Services.ww.unregisterNotification(windowWatcher);
+  });
+  
+  return {
+    windows,
+    currentWindow: window,
+    openNewWindow: () => window.openDialog("chrome://browser/content/browser.xhtml"),
+    closeWindow: (win: Window) => win.close()
+  };
+}
+```
+
+## UI Component System
+
+### 1. Browser Enhancements Component
+
+```typescript
+import { Component, createSignal, For } from "solid-js";
+import { useBrowserState, usePreferences } from "../core/modules-hooks";
+
+const BrowserEnhancements: Component = () => {
+  const { currentTab, tabCount } = useBrowserState();
+  const { prefs, setPref } = usePreferences();
+  const [showSidebar, setShowSidebar] = createSignal(false);
+  
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    const newState = !showSidebar();
+    setShowSidebar(newState);
+    setPref("floorp.sidebar.enabled", newState);
+  };
+  
+  return (
+    <div class="floorp-browser-enhancements">
+      {/* Sidebar toggle button */}
+      <button 
+        class="sidebar-toggle-btn"
+        onClick={toggleSidebar}
+        title="Toggle Sidebar"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M2 2h12v12H2V2zm1 1v10h3V3H3zm4 0v10h7V3H7z"/>
+        </svg>
+      </button>
+      
+      {/* Tab counter */}
+      <div class="tab-counter">
+        <span class="tab-count">{tabCount()}</span>
+        <span class="tab-label">tabs</span>
+      </div>
+      
+      {/* Quick actions */}
+      <div class="quick-actions">
+        <button 
+          class="quick-action-btn"
+          onClick={() => BrowserTestUtils.addTab(gBrowser, "about:newtab")}
+          title="New Tab"
+        >
+          +
+        </button>
+        <button 
+          class="quick-action-btn"
+          onClick={() => gBrowser.selectedTab && gBrowser.removeTab(gBrowser.selectedTab)}
+          title="Close Tab"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default BrowserEnhancements;
+```
+
+### 2. Tab Bar Enhancements Component
+
+```typescript
+import { Component, createSignal, createEffect } from "solid-js";
+import { useBrowserState } from "../core/modules-hooks";
+
+const TabBarEnhancements: Component = () => {
+  const { currentTab, tabCount } = useBrowserState();
+  const [tabGroups, setTabGroups] = createSignal([]);
+  
+  // Group tabs by domain
+  createEffect(() => {
+    const tabs = Array.from(gBrowser.tabs);
+    const groups = new Map();
+    
+    tabs.forEach(tab => {
+      try {
+        const uri = tab.linkedBrowser.currentURI;
+        const domain = uri.host || "local";
         
-        visiting.delete(moduleId);
-        visited.add(moduleId);
-        order.push(moduleId);
+        if (!groups.has(domain)) {
+          groups.set(domain, []);
+        }
+        groups.get(domain).push(tab);
+      } catch (e) {
+        // Handle tabs without valid URIs
+        if (!groups.has("other")) {
+          groups.set("other", []);
+        }
+        groups.get("other").push(tab);
+      }
+    });
+    
+    setTabGroups(Array.from(groups.entries()));
+  });
+  
+  return (
+    <div class="floorp-tab-enhancements">
+      {/* Tab groups indicator */}
+      <div class="tab-groups-indicator">
+        <span class="groups-count">{tabGroups().length}</span>
+        <span class="groups-label">groups</span>
+      </div>
+      
+      {/* Vertical tabs toggle */}
+      <button 
+        class="vertical-tabs-toggle"
+        onClick={() => toggleVerticalTabs()}
+        title="Toggle Vertical Tabs"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M3 2h10v2H3V2zm0 4h10v2H3V6zm0 4h10v2H3v-2z"/>
+        </svg>
+      </button>
+    </div>
+  );
+};
+
+// Toggle vertical tabs layout
+function toggleVerticalTabs() {
+  const tabsToolbar = document.getElementById("TabsToolbar");
+  const isVertical = tabsToolbar?.getAttribute("orient") === "vertical";
+  
+  if (tabsToolbar) {
+    tabsToolbar.setAttribute("orient", isVertical ? "horizontal" : "vertical");
+    Services.prefs.setBoolPref("floorp.tabs.vertical", !isVertical);
+  }
+}
+
+export default TabBarEnhancements;
+```
+
+## XUL Integration
+
+### 1. XUL Element Enhancement
+
+```typescript
+// Enhance existing XUL elements with SolidJS reactivity
+export function enhanceXULElement(element: XULElement, component: Component) {
+  const container = document.createElement("div");
+  container.className = "solid-xul-container";
+  
+  // Insert container before the XUL element
+  element.parentNode?.insertBefore(container, element);
+  
+  // Render SolidJS component
+  render(() => component, container);
+  
+  return container;
+}
+
+// Create custom XUL elements
+export function createCustomXULElement(tagName: string, component: Component) {
+  class CustomXULElement extends XULElement {
+    connectedCallback() {
+      super.connectedCallback();
+      
+      // Render SolidJS component inside XUL element
+      render(() => component, this);
+    }
+    
+    disconnectedCallback() {
+      super.disconnectedCallback();
+      // Cleanup handled by SolidJS
+    }
+  }
+  
+  customElements.define(tagName, CustomXULElement);
+}
+```
+
+### 2. Firefox API Integration
+
+```typescript
+// Wrapper for Firefox APIs with SolidJS reactivity
+export class FirefoxAPIWrapper {
+  // Bookmarks API
+  static createBookmarksSignal() {
+    const [bookmarks, setBookmarks] = createSignal([]);
+    
+    const loadBookmarks = async () => {
+      try {
+        const bookmarkTree = await PlacesUtils.promiseBookmarksTree();
+        setBookmarks(bookmarkTree.children || []);
+      } catch (error) {
+        console.error("Failed to load bookmarks:", error);
       }
     };
     
-    for (const moduleId of this.modules.keys()) {
-      visit(moduleId);
-    }
+    // Listen for bookmark changes
+    const bookmarkObserver = {
+      onItemAdded: loadBookmarks,
+      onItemRemoved: loadBookmarks,
+      onItemChanged: loadBookmarks
+    };
     
-    this.loadOrder = order;
-  }
-  
-  // 全モジュールの初期化
-  static async initialize(): Promise<void> {
-    for (const moduleId of this.loadOrder) {
-      const module = this.modules.get(moduleId);
-      if (module) {
-        try {
-          await module.initialize();
-          console.log(`Module ${moduleId} initialized successfully`);
-        } catch (error) {
-          console.error(`Failed to initialize module ${moduleId}:`, error);
-          throw error;
-        }
-      }
-    }
-  }
-  
-  // モジュールの取得
-  static getModule(id: string): Module | undefined {
-    return this.modules.get(id);
-  }
-  
-  // 全モジュールのクリーンアップ
-  static async cleanup(): Promise<void> {
-    // 逆順でクリーンアップ
-    for (const moduleId of this.loadOrder.reverse()) {
-      const module = this.modules.get(moduleId);
-      if (module) {
-        try {
-          await module.cleanup();
-        } catch (error) {
-          console.error(`Failed to cleanup module ${moduleId}:`, error);
-        }
-      }
-    }
-  }
-}
-```
-
-### 3. モジュールフックシステム (core/modules-hooks.ts)
-
-```typescript
-// モジュールのライフサイクルフック
-import { createSignal, createEffect } from "solid-js";
-
-export interface ModuleHooks {
-  onBeforeInit?: () => Promise<void>;
-  onAfterInit?: () => Promise<void>;
-  onBeforeCleanup?: () => Promise<void>;
-  onAfterCleanup?: () => Promise<void>;
-  onStateChange?: (newState: any, oldState: any) => void;
-}
-
-class HookManager {
-  private hooks = new Map<string, ModuleHooks>();
-  
-  // フックの登録
-  registerHooks(moduleId: string, hooks: ModuleHooks): void {
-    this.hooks.set(moduleId, hooks);
-  }
-  
-  // フックの実行
-  async executeHook(
-    hookName: keyof ModuleHooks, 
-    moduleId?: string,
-    ...args: any[]
-  ): Promise<void> {
-    const targets = moduleId 
-      ? [this.hooks.get(moduleId)].filter(Boolean)
-      : Array.from(this.hooks.values());
+    PlacesUtils.bookmarks.addObserver(bookmarkObserver);
     
-    for (const hooks of targets) {
-      const hook = hooks[hookName];
-      if (typeof hook === 'function') {
-        try {
-          await hook(...args);
-        } catch (error) {
-          console.error(`Hook ${hookName} failed for module ${moduleId}:`, error);
-        }
-      }
-    }
-  }
-}
-
-export const hookManager = new HookManager();
-
-// グローバルフックの設定
-export function setupModuleHooks(): void {
-  // ウィンドウクローズ時のクリーンアップ
-  window.addEventListener('beforeunload', async () => {
-    await hookManager.executeHook('onBeforeCleanup');
-    await ModuleManager.cleanup();
-    await hookManager.executeHook('onAfterCleanup');
-  });
-  
-  // テーマ変更の監視
-  createEffect(() => {
-    const theme = getCurrentTheme();
-    hookManager.executeHook('onStateChange', undefined, { theme }, { theme: getPreviousTheme() });
-  });
-}
-```
-
-## UI コンポーネントシステム
-
-### 1. ベースコンポーネント
-
-```typescript
-// 基本的な UI コンポーネント
-import { Component, JSX, children } from "solid-js";
-import { Dynamic } from "solid-js/web";
-
-// Button コンポーネント
-export const Button: Component<{
-  variant?: "primary" | "secondary" | "danger";
-  size?: "sm" | "md" | "lg";
-  disabled?: boolean;
-  onClick?: () => void;
-  children: JSX.Element;
-}> = (props) => {
-  const c = children(() => props.children);
-  
-  const baseClasses = "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2";
-  const variantClasses = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
-  };
-  const sizeClasses = {
-    sm: "px-2 py-1 text-sm",
-    md: "px-4 py-2",
-    lg: "px-6 py-3 text-lg"
-  };
-  
-  return (
-    <button
-      class={`${baseClasses} ${variantClasses[props.variant || "primary"]} ${sizeClasses[props.size || "md"]}`}
-      disabled={props.disabled}
-      onClick={props.onClick}
-    >
-      {c()}
-    </button>
-  );
-};
-
-// Modal コンポーネント
-export const Modal: Component<{
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: JSX.Element;
-}> = (props) => {
-  const c = children(() => props.children);
-  
-  return (
-    <div 
-      class={`fixed inset-0 z-50 ${props.isOpen ? 'block' : 'hidden'}`}
-      onClick={props.onClose}
-    >
-      <div class="fixed inset-0 bg-black bg-opacity-50" />
-      <div class="flex items-center justify-center min-h-screen px-4">
-        <div 
-          class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {props.title && (
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">{props.title}</h3>
-              <button 
-                onClick={props.onClose}
-                class="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          <div>{c()}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
-```
-
-### 2. レイアウトシステム
-
-```typescript
-// レイアウトコンポーネント
-export const Layout: Component<{
-  sidebar?: JSX.Element;
-  header?: JSX.Element;
-  footer?: JSX.Element;
-  children: JSX.Element;
-}> = (props) => {
-  return (
-    <div class="flex h-screen bg-gray-100">
-      {props.sidebar && (
-        <aside class="w-64 bg-white shadow-md">
-          {props.sidebar}
-        </aside>
-      )}
-      
-      <div class="flex-1 flex flex-col overflow-hidden">
-        {props.header && (
-          <header class="bg-white shadow-sm border-b">
-            {props.header}
-          </header>
-        )}
-        
-        <main class="flex-1 overflow-auto p-6">
-          {props.children}
-        </main>
-        
-        {props.footer && (
-          <footer class="bg-white border-t p-4">
-            {props.footer}
-          </footer>
-        )}
-      </div>
-    </div>
-  );
-};
-```
-
-## XUL 統合
-
-### 1. XUL ブリッジ
-
-```typescript
-// XUL システムとの統合
-import { createSignal, onMount, onCleanup } from "solid-js";
-
-// XUL 要素の監視
-export function useXULElement(elementId: string) {
-  const [element, setElement] = createSignal<XULElement | null>(null);
-  
-  onMount(() => {
-    const xulElement = document.getElementById(elementId) as XULElement;
-    if (xulElement) {
-      setElement(xulElement);
-      
-      // XUL イベントリスナーの設定
-      const handleXULEvent = (event: Event) => {
-        // SolidJS の状態更新
-        console.log('XUL event:', event);
-      };
-      
-      xulElement.addEventListener('command', handleXULEvent);
-      
-      onCleanup(() => {
-        xulElement.removeEventListener('command', handleXULEvent);
-      });
-    }
-  });
-  
-  return element;
-}
-
-// XUL メニューの動的生成
-export function createXULMenu(items: MenuItemConfig[]): void {
-  const menubar = document.getElementById('main-menubar');
-  if (!menubar) return;
-  
-  const menu = document.createXULElement('menu');
-  menu.setAttribute('label', 'Floorp');
-  
-  const menupopup = document.createXULElement('menupopup');
-  
-  items.forEach(item => {
-    const menuitem = document.createXULElement('menuitem');
-    menuitem.setAttribute('label', item.label);
-    menuitem.setAttribute('oncommand', item.command);
-    menupopup.appendChild(menuitem);
-  });
-  
-  menu.appendChild(menupopup);
-  menubar.appendChild(menu);
-}
-```
-
-### 2. Firefox API 統合
-
-```typescript
-// Firefox の内部 API との統合
-declare global {
-  interface Window {
-    gBrowser: any;
-    BrowserApp: any;
-    Services: any;
-  }
-}
-
-// タブ管理
-export class TabManager {
-  static getCurrentTab() {
-    return window.gBrowser?.selectedTab;
-  }
-  
-  static async openTab(url: string, options: { background?: boolean } = {}) {
-    const tab = window.gBrowser?.addTab(url, {
-      inBackground: options.background
-    });
+    // Initial load
+    loadBookmarks();
     
-    if (!options.background) {
-      window.gBrowser?.selectedTab = tab;
-    }
-    
-    return tab;
-  }
-  
-  static closeTab(tab: any) {
-    window.gBrowser?.removeTab(tab);
-  }
-  
-  static async getAllTabs() {
-    return Array.from(window.gBrowser?.tabs || []);
-  }
-}
-
-// ブックマーク管理
-export class BookmarkManager {
-  static async addBookmark(url: string, title: string, folder?: string) {
-    const { PlacesUtils } = window.Services;
-    
-    return await PlacesUtils.bookmarks.insert({
-      parentGuid: folder || PlacesUtils.bookmarks.unfiledGuid,
-      url,
-      title
-    });
-  }
-  
-  static async getBookmarks(folderId?: string) {
-    const { PlacesUtils } = window.Services;
-    
-    const bookmarks = await PlacesUtils.bookmarks.fetch({
-      parentGuid: folderId || PlacesUtils.bookmarks.unfiledGuid
+    // Cleanup
+    onCleanup(() => {
+      PlacesUtils.bookmarks.removeObserver(bookmarkObserver);
     });
     
     return bookmarks;
   }
+  
+  // History API
+  static createHistorySignal(limit: number = 50) {
+    const [history, setHistory] = createSignal([]);
+    
+    const loadHistory = async () => {
+      try {
+        const db = await PlacesUtils.promiseDBConnection();
+        const rows = await db.executeCached(`
+          SELECT url, title, visit_date
+          FROM moz_places p
+          JOIN moz_historyvisits h ON p.id = h.place_id
+          ORDER BY visit_date DESC
+          LIMIT :limit
+        `, { limit });
+        
+        const historyItems = rows.map(row => ({
+          url: row.getResultByName("url"),
+          title: row.getResultByName("title"),
+          visitDate: new Date(row.getResultByName("visit_date") / 1000)
+        }));
+        
+        setHistory(historyItems);
+      } catch (error) {
+        console.error("Failed to load history:", error);
+      }
+    };
+    
+    loadHistory();
+    
+    return history;
+  }
+  
+  // Downloads API
+  static createDownloadsSignal() {
+    const [downloads, setDownloads] = createSignal([]);
+    
+    const loadDownloads = async () => {
+      try {
+        const downloadList = await Downloads.getList(Downloads.ALL);
+        const allDownloads = await downloadList.getAll();
+        setDownloads(allDownloads);
+      } catch (error) {
+        console.error("Failed to load downloads:", error);
+      }
+    };
+    
+    loadDownloads();
+    
+    return downloads;
+  }
 }
 ```
 
-## 状態管理
+## State Management
 
-### 1. グローバル状態
+### 1. Global State Store
 
 ```typescript
-// アプリケーション全体の状態管理
-import { createSignal, createContext, useContext } from "solid-js";
+import { createStore } from "solid-js/store";
 
-// アプリケーション状態の型定義
-interface AppState {
-  user: {
-    preferences: UserPreferences;
-    session: SessionData;
-  };
+// Global application state
+export interface AppState {
   ui: {
+    sidebarOpen: boolean;
+    verticalTabs: boolean;
     theme: string;
-    language: string;
-    layout: LayoutConfig;
+    compactMode: boolean;
   };
   browser: {
-    tabs: TabData[];
-    bookmarks: BookmarkData[];
-    history: HistoryEntry[];
+    currentUrl: string;
+    tabCount: number;
+    isLoading: boolean;
+  };
+  user: {
+    preferences: Map<string, any>;
+    customizations: any[];
   };
 }
 
-// 状態管理コンテキスト
-const AppStateContext = createContext<{
-  state: () => AppState;
-  setState: (updater: Partial<AppState> | ((prev: AppState) => AppState)) => void;
-}>();
-
-// 状態プロバイダー
-export function AppStateProvider(props: { children: any }) {
-  const [state, setState] = createSignal<AppState>(getInitialState());
-  
-  const contextValue = {
-    state,
-    setState: (updater: any) => {
-      if (typeof updater === 'function') {
-        setState(updater);
-      } else {
-        setState(prev => ({ ...prev, ...updater }));
-      }
-    }
-  };
-  
-  return (
-    <AppStateContext.Provider value={contextValue}>
-      {props.children}
-    </AppStateContext.Provider>
-  );
-}
-
-// 状態フック
-export function useAppState() {
-  const context = useContext(AppStateContext);
-  if (!context) {
-    throw new Error('useAppState must be used within AppStateProvider');
+// Initial state
+const initialState: AppState = {
+  ui: {
+    sidebarOpen: false,
+    verticalTabs: false,
+    theme: "system",
+    compactMode: false
+  },
+  browser: {
+    currentUrl: "",
+    tabCount: 0,
+    isLoading: false
+  },
+  user: {
+    preferences: new Map(),
+    customizations: []
   }
-  return context;
-}
+};
+
+// Create global store
+export const [appState, setAppState] = createStore(initialState);
+
+// State actions
+export const appActions = {
+  // UI actions
+  toggleSidebar: () => setAppState("ui", "sidebarOpen", !appState.ui.sidebarOpen),
+  toggleVerticalTabs: () => setAppState("ui", "verticalTabs", !appState.ui.verticalTabs),
+  setTheme: (theme: string) => setAppState("ui", "theme", theme),
+  
+  // Browser actions
+  setCurrentUrl: (url: string) => setAppState("browser", "currentUrl", url),
+  setTabCount: (count: number) => setAppState("browser", "tabCount", count),
+  setLoading: (loading: boolean) => setAppState("browser", "isLoading", loading),
+  
+  // User actions
+  setPreference: (key: string, value: any) => {
+    setAppState("user", "preferences", prev => new Map(prev.set(key, value)));
+  },
+  addCustomization: (customization: any) => {
+    setAppState("user", "customizations", prev => [...prev, customization]);
+  }
+};
 ```
 
-### 2. 永続化
+## Performance Optimizations
+
+### 1. Lazy Loading
 
 ```typescript
-// 状態の永続化
-export class StateManager {
-  private static readonly STORAGE_KEY = 'floorp-app-state';
-  
-  // 状態の保存
-  static async saveState(state: AppState): Promise<void> {
-    try {
-      const serialized = JSON.stringify(state);
-      await window.Services.prefs.setStringPref(this.STORAGE_KEY, serialized);
-    } catch (error) {
-      console.error('Failed to save state:', error);
-    }
-  }
-  
-  // 状態の読み込み
-  static async loadState(): Promise<AppState | null> {
-    try {
-      const serialized = window.Services.prefs.getStringPref(this.STORAGE_KEY, '');
-      if (serialized) {
-        return JSON.parse(serialized);
-      }
-    } catch (error) {
-      console.error('Failed to load state:', error);
-    }
-    return null;
-  }
-  
-  // 状態のリセット
-  static async resetState(): Promise<void> {
-    try {
-      window.Services.prefs.clearUserPref(this.STORAGE_KEY);
-    } catch (error) {
-      console.error('Failed to reset state:', error);
-    }
-  }
-}
+// Lazy load components
+const LazySettingsPanel = lazy(() => import("./SettingsPanel"));
+const LazyBookmarksManager = lazy(() => import("./BookmarksManager"));
+
+// Lazy load modules
+const loadModuleAsync = async (moduleId: string) => {
+  const module = await import(`./modules/${moduleId}`);
+  return module.default;
+};
 ```
 
-## パフォーマンス最適化
-
-### 1. 遅延読み込み
+### 2. Virtual Scrolling for Large Lists
 
 ```typescript
-// コンポーネントの遅延読み込み
-import { lazy, Suspense } from "solid-js";
+import { createVirtualizer } from "@tanstack/solid-virtual";
 
-// 遅延読み込みコンポーネント
-const LazySettingsPanel = lazy(() => import("./components/SettingsPanel"));
-const LazyBookmarkManager = lazy(() => import("./components/BookmarkManager"));
-
-// 使用例
-function App() {
-  return (
-    <div>
-      <Suspense fallback={<div>Loading settings...</div>}>
-        <LazySettingsPanel />
-      </Suspense>
-      
-      <Suspense fallback={<div>Loading bookmarks...</div>}>
-        <LazyBookmarkManager />
-      </Suspense>
-    </div>
-  );
-}
-```
-
-### 2. メモ化
-
-```typescript
-// 計算結果のメモ化
-import { createMemo, createSignal } from "solid-js";
-
-function ExpensiveComponent() {
-  const [data, setData] = createSignal([]);
+const VirtualTabList: Component<{ tabs: Tab[] }> = (props) => {
+  let containerRef: HTMLDivElement;
   
-  // 重い計算のメモ化
-  const processedData = createMemo(() => {
-    return data().map(item => {
-      // 重い処理
-      return processItem(item);
-    });
+  const virtualizer = createVirtualizer({
+    get count() { return props.tabs.length; },
+    getScrollElement: () => containerRef,
+    estimateSize: () => 32, // Height of each tab item
+    overscan: 5
   });
   
   return (
-    <div>
-      {processedData().map(item => (
-        <div key={item.id}>{item.name}</div>
-      ))}
+    <div ref={containerRef!} class="virtual-tab-list">
+      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}>
+        <For each={virtualizer.getVirtualItems()}>
+          {(item) => (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: `${item.size}px`,
+                transform: `translateY(${item.start}px)`
+              }}
+            >
+              <TabItem tab={props.tabs[item.index]} />
+            </div>
+          )}
+        </For>
+      </div>
     </div>
   );
-}
+};
 ```
 
-## テスト戦略
+## Testing Strategies
 
-### 1. ユニットテスト
+### 1. Unit Tests
 
 ```typescript
-// Vitest を使用したテスト
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Button } from "../components/Button";
-
-describe("Button Component", () => {
-  it("renders correctly", () => {
-    const { getByText } = render(() => <Button>Click me</Button>);
-    expect(getByText("Click me")).toBeInTheDocument();
-  });
-  
-  it("handles click events", () => {
-    let clicked = false;
-    const { getByText } = render(() => 
-      <Button onClick={() => clicked = true}>Click me</Button>
-    );
-    
-    getByText("Click me").click();
-    expect(clicked).toBe(true);
-  });
-});
-```
-
-### 2. 統合テスト
-
-```typescript
-// モジュール統合テスト
-import { describe, it, expect, beforeEach } from "vitest";
 import { ModuleManager } from "../core/modules";
 
-describe("Module System", () => {
-  beforeEach(() => {
-    ModuleManager.reset();
-  });
-  
-  it("loads modules in correct order", async () => {
-    const loadOrder: string[] = [];
+describe("ModuleManager", () => {
+  it("should register and load modules", async () => {
+    const manager = new ModuleManager();
     
-    const moduleA = {
-      id: "a",
-      dependencies: ["b"],
-      initialize: async () => loadOrder.push("a")
+    const testModule = {
+      id: "test-module",
+      name: "Test Module",
+      version: "1.0.0",
+      initialize: vi.fn().mockResolvedValue(undefined),
+      destroy: vi.fn().mockResolvedValue(undefined)
     };
     
-    const moduleB = {
-      id: "b", 
-      dependencies: [],
-      initialize: async () => loadOrder.push("b")
-    };
+    manager.registerModule(testModule);
+    await manager.loadModule("test-module");
     
-    ModuleManager.register(moduleA);
-    ModuleManager.register(moduleB);
-    
-    await ModuleManager.initialize();
-    
-    expect(loadOrder).toEqual(["b", "a"]);
+    expect(testModule.initialize).toHaveBeenCalled();
+    expect(manager.getLoadedModules()).toContain("test-module");
   });
 });
 ```
 
-このメインアプリケーションは Floorp ブラウザの中核として、モジュラーで拡張可能な設計により、複雑なブラウザ機能を効率的に管理しています。
+### 2. Integration Tests
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { setupTestEnvironment } from "../test/setup";
+
+describe("Browser Integration", () => {
+  beforeEach(async () => {
+    await setupTestEnvironment();
+  });
+  
+  it("should enhance XUL elements with SolidJS components", async () => {
+    const toolbox = document.getElementById("navigator-toolbox");
+    expect(toolbox).toBeTruthy();
+    
+    // Simulate component rendering
+    const container = document.createElement("div");
+    container.className = "solid-xul-container";
+    toolbox?.appendChild(container);
+    
+    expect(toolbox?.querySelector(".solid-xul-container")).toBeTruthy();
+  });
+});
+```
+
+## Code Examples
+
+### 1. Creating a Custom Browser Feature
+
+```typescript
+// Custom feature: Tab Groups
+export class TabGroupsFeature implements Module {
+  id = "tab-groups";
+  name = "Tab Groups";
+  version = "1.0.0";
+  
+  private groups = new Map<string, Tab[]>();
+  
+  async initialize() {
+    // Add UI elements
+    this.addTabGroupsUI();
+    
+    // Setup event listeners
+    this.setupEventListeners();
+    
+    console.log("Tab Groups feature initialized");
+  }
+  
+  async destroy() {
+    // Cleanup
+    this.removeTabGroupsUI();
+    this.removeEventListeners();
+  }
+  
+  private addTabGroupsUI() {
+    const tabsToolbar = document.getElementById("TabsToolbar");
+    if (tabsToolbar) {
+      const container = document.createElement("div");
+      container.id = "tab-groups-container";
+      
+      render(() => <TabGroupsComponent groups={this.groups} />, container);
+      tabsToolbar.appendChild(container);
+    }
+  }
+  
+  private setupEventListeners() {
+    gBrowser.tabContainer.addEventListener("TabOpen", this.handleTabOpen.bind(this));
+    gBrowser.tabContainer.addEventListener("TabClose", this.handleTabClose.bind(this));
+  }
+  
+  private handleTabOpen(event: Event) {
+    const tab = event.target as Tab;
+    // Auto-group tabs by domain
+    this.autoGroupTab(tab);
+  }
+  
+  private autoGroupTab(tab: Tab) {
+    try {
+      const uri = tab.linkedBrowser.currentURI;
+      const domain = uri.host || "ungrouped";
+      
+      if (!this.groups.has(domain)) {
+        this.groups.set(domain, []);
+      }
+      
+      this.groups.get(domain)?.push(tab);
+    } catch (e) {
+      console.error("Failed to group tab:", e);
+    }
+  }
+}
+```
+
+This main application architecture provides a solid foundation for building modern browser features while maintaining compatibility with Firefox's existing systems. The modular design allows for easy extension and customization, while the SolidJS integration provides efficient reactivity and modern development patterns.

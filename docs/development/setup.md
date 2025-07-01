@@ -1,170 +1,220 @@
-# 開発環境セットアップ
+# Development Environment Setup
 
-## 必要な環境
+## System Requirements
 
-### システム要件
+### Minimum System Requirements
 
 #### Windows
-- **OS**: Windows 10 以降 (Windows 7/8 はサポート外)
-- **アーキテクチャ**: x86_64 (AArch64 はサポート外)
-- **PowerShell**: PowerShell 7 推奨
-- **メモリ**: 8GB 以上推奨
-- **ストレージ**: 10GB 以上の空き容量
+- **OS**: Windows 10 (1903) or later, Windows 11
+- **Architecture**: x64, ARM64
+- **Memory**: 8GB RAM (16GB recommended)
+- **Storage**: 10GB free space
+- **Network**: Stable internet connection for downloading Firefox binaries
 
 #### macOS
-- **OS**: macOS 10.15 以降
-- **アーキテクチャ**: x86_64 & ARM64 (Universal Binary)
-- **Xcode**: 最新版推奨
-- **メモリ**: 8GB 以上推奨
-- **ストレージ**: 10GB 以上の空き容量
+- **OS**: macOS 10.15 (Catalina) or later
+- **Architecture**: Intel x64, Apple Silicon (M1/M2)
+- **Memory**: 8GB RAM (16GB recommended)
+- **Storage**: 10GB free space
+- **Network**: Stable internet connection for downloading Firefox binaries
 
 #### Linux
-- **ディストリビューション**: Ubuntu 20.04+, Debian 11+, Arch Linux
-- **アーキテクチャ**: x86_64 & AArch64
-- **必要パッケージ**: build-essential, curl, git
-- **メモリ**: 8GB 以上推奨
-- **ストレージ**: 10GB 以上の空き容量
+- **Distribution**: Ubuntu 20.04+, Debian 11+, Fedora 35+, or equivalent
+- **Architecture**: x64, ARM64
+- **Memory**: 8GB RAM (16GB recommended)
+- **Storage**: 10GB free space
+- **Network**: Stable internet connection for downloading Firefox binaries
 
-### 必要なツール
+## Required Tools
 
-#### 1. Deno (必須)
+### 1. Deno (Required)
+Deno is the primary runtime for Floorp's build system.
+
+#### Installation
 ```bash
-# Linux/macOS
+# Using install script (Windows/macOS/Linux)
 curl -fsSL https://deno.land/install.sh | sh
 
-# Windows (PowerShell)
+# Windows (using PowerShell)
 irm https://deno.land/install.ps1 | iex
 
-# Homebrew (macOS)
+# macOS (using Homebrew)
 brew install deno
 
-# Chocolatey (Windows)
-choco install deno
+# Linux (using Snap)
+sudo snap install deno
 
-# Scoop (Windows)
-scoop install deno
+# Verify installation
+deno --version
 ```
 
-#### 2. Node.js (推奨)
-```bash
-# Node.js 18+ 推奨
-# nvm を使用した場合
-nvm install 18
-nvm use 18
+#### Required Version
+- **Minimum**: Deno 1.40.0 or later
+- **Recommended**: Latest stable version
 
-# 直接インストール
-# https://nodejs.org/ からダウンロード
+### 2. Node.js (Required)
+Used for frontend development tools and package management.
+
+#### Installation
+```bash
+# Download from official website
+# https://nodejs.org/
+
+# Using Node Version Manager (recommended)
+# Install nvm first
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install and use Node.js
+nvm install 20
+nvm use 20
+
+# Verify installation
+node --version
+npm --version
 ```
 
-#### 3. Rust (Rust コンポーネント開発時)
+#### Required Version
+- **Node.js**: 18.0.0 or later (20.x recommended)
+- **npm**: 9.0.0 or later
+
+### 3. Rust (Required for Rust components)
+Used for building WebAssembly components and native modules.
+
+#### Installation
 ```bash
-# Rustup を使用
+# Install Rust using rustup
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# WebAssembly ターゲットを追加
+# Add to PATH (restart terminal or run)
+source ~/.cargo/env
+
+# Add WebAssembly target
 rustup target add wasm32-wasi
+
+# Verify installation
+rustc --version
+cargo --version
 ```
 
-#### 4. Python (一部スクリプト用)
+#### Required Version
+- **Rust**: 1.70.0 or later
+- **Cargo**: Included with Rust
+
+### 4. Python (Required for build scripts)
+Used by some build scripts and Mozilla's build system.
+
+#### Installation
 ```bash
-# Python 3.8+ 推奨
-# システムのパッケージマネージャーまたは公式サイトからインストール
+# Windows
+# Download from https://python.org/
+
+# macOS
+brew install python3
+
+# Linux (Ubuntu/Debian)
+sudo apt update
+sudo apt install python3 python3-pip
+
+# Verify installation
+python3 --version
+pip3 --version
 ```
 
-## セットアップ手順
+#### Required Version
+- **Python**: 3.8.0 or later
 
-### 1. リポジトリのクローン
+### 5. Git (Required)
+For version control and patch management.
 
+#### Installation
 ```bash
-# HTTPS
+# Windows
+# Download from https://git-scm.com/
+
+# macOS
+brew install git
+
+# Linux (Ubuntu/Debian)
+sudo apt install git
+
+# Verify installation
+git --version
+```
+
+## Step-by-step Setup
+
+### 1. Clone Repository
+```bash
+# Clone the repository
 git clone https://github.com/Floorp-Projects/Floorp.git
 cd Floorp
 
-# SSH (推奨)
+# Or if you have SSH access
 git clone git@github.com:Floorp-Projects/Floorp.git
 cd Floorp
 ```
 
-### 2. 依存関係のインストール
-
+### 2. Install Dependencies
 ```bash
-# Deno 依存関係のインストール
-deno install
-
-# Node.js 依存関係のインストール (オプション)
+# Install Node.js dependencies
 npm install
 
-# または pnpm を使用
-pnpm install
+# Install Deno dependencies (if needed)
+deno cache build.ts
+
+# Verify setup
+deno task --help
 ```
 
-### 3. 初回ビルド
-
+### 3. Initial Build
 ```bash
-# 開発用ビルドの実行
-deno task dev
+# First build (downloads Firefox binaries)
+deno task build
+
+# This process may take 10-30 minutes depending on network speed
+# Firefox binaries (~200-500MB) will be downloaded and extracted
 ```
 
-初回実行時は以下の処理が自動的に行われます：
+### 4. Start Development Server
+```bash
+# Start in development mode
+deno task dev
 
-1. **Firefox バイナリのダウンロード**
-   - GitHub Releases から最新のビルド済みバイナリを取得
-   - プラットフォーム別のアーカイブを自動選択
+# The browser will launch automatically
+# Hot reload is enabled for code changes
+```
 
-2. **バイナリの展開**
-   - ダウンロードしたアーカイブを `_dist/bin/` に展開
-   - プラットフォーム固有の処理を実行
-
-3. **パッチの適用**
-   - Firefox に必要なカスタマイズパッチを適用
-   - Git パッチシステムを使用
-
-4. **アプリケーションのビルド**
-   - TypeScript/SolidJS アプリケーションをコンパイル
-   - Rust コンポーネントをビルド (必要に応じて)
-
-5. **開発サーバーの起動**
-   - 各アプリケーションの開発サーバーを起動
-   - ホットリロード機能を有効化
-
-### 4. 開発環境の確認
-
-ビルドが成功すると、カスタマイズされた Firefox ブラウザが起動します。以下を確認してください：
-
-- ブラウザが正常に起動する
-- 開発者ツールが利用可能
-- ホットリロードが機能する
-- カスタム UI が表示される
-
-## 開発ツールの設定
+## Development Tools Configuration
 
 ### Visual Studio Code
 
-推奨される拡張機能：
-
+#### Recommended Extensions
 ```json
 {
   "recommendations": [
     "denoland.vscode-deno",
     "rust-lang.rust-analyzer",
     "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
     "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next"
+    "dbaeumer.vscode-eslint"
   ]
 }
 ```
 
-VS Code 設定 (`.vscode/settings.json`):
-
+#### Settings Configuration
+Create `.vscode/settings.json`:
 ```json
 {
   "deno.enable": true,
   "deno.lint": true,
   "deno.unstable": true,
   "typescript.preferences.importModuleSpecifier": "relative",
-  "editor.formatOnSave": true,
   "editor.defaultFormatter": "denoland.vscode-deno",
   "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
   "[rust]": {
@@ -173,190 +223,285 @@ VS Code 設定 (`.vscode/settings.json`):
 }
 ```
 
-### その他のエディタ
+#### Tasks Configuration
+Create `.vscode/tasks.json`:
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Floorp: Dev",
+      "type": "shell",
+      "command": "deno",
+      "args": ["task", "dev"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Floorp: Build",
+      "type": "shell",
+      "command": "deno",
+      "args": ["task", "build"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
+```
 
-#### Neovim
+### Neovim Configuration
+
+#### Using lazy.nvim
 ```lua
--- Deno LSP 設定
-require('lspconfig').denols.setup{
-  root_dir = require('lspconfig').util.root_pattern("deno.json", "deno.jsonc"),
-  init_options = {
-    lint = true,
-    unstable = true,
+return {
+  -- Deno support
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        denols = {
+          root_dir = require("lspconfig.util").root_pattern("deno.json", "deno.jsonc"),
+          settings = {
+            deno = {
+              enable = true,
+              lint = true,
+              unstable = true,
+            },
+          },
+        },
+      },
+    },
+  },
+  
+  -- Rust support
+  {
+    "simrat39/rust-tools.nvim",
+    dependencies = "neovim/nvim-lspconfig",
+    opts = {},
+  },
+  
+  -- TypeScript support
+  {
+    "jose-elias-alvarez/typescript.nvim",
+    dependencies = "neovim/nvim-lspconfig",
+    opts = {},
   },
 }
 ```
 
-#### Vim
+### Vim Configuration
+
+#### Basic Configuration
 ```vim
-" Deno プラグイン
-Plug 'vim-denops/denops.vim'
-Plug 'lambdalisue/deno.vim'
+" Deno support
+let g:deno_enable = v:true
+let g:deno_lint = v:true
+let g:deno_unstable = v:true
+
+" TypeScript/JavaScript settings
+autocmd FileType typescript,javascript setlocal expandtab shiftwidth=2 tabstop=2
+autocmd FileType rust setlocal expandtab shiftwidth=4 tabstop=4
+
+" Auto format on save
+autocmd BufWritePre *.ts,*.js,*.tsx,*.jsx :!deno fmt %
+autocmd BufWritePre *.rs :!rustfmt %
 ```
 
-## 環境変数の設定
+## Environment Variables
 
-開発に必要な環境変数：
-
+### Required Environment Variables
 ```bash
-# .env ファイル (ルートディレクトリに作成)
-# Firefox バイナリのカスタムパス (オプション)
-FIREFOX_BINARY_PATH=/path/to/custom/firefox
+# Optional: Custom Firefox binary path
+export FIREFOX_PATH="/path/to/custom/firefox"
 
-# 開発モードの設定
-NODE_ENV=development
-DENO_ENV=development
+# Optional: Custom profile directory
+export FIREFOX_PROFILE_DIR="/path/to/profile"
 
-# ログレベル
-LOG_LEVEL=debug
+# Optional: Development server port
+export DEV_SERVER_PORT=3000
 
-# プロキシ設定 (必要に応じて)
-HTTP_PROXY=http://proxy.example.com:8080
-HTTPS_PROXY=http://proxy.example.com:8080
+# Optional: Enable debug mode
+export DEBUG=1
 ```
 
-## プラットフォーム固有の設定
+### Setting Environment Variables
 
-### Windows
-
-#### PowerShell の設定
+#### Windows (PowerShell)
 ```powershell
-# 実行ポリシーの設定
+# Temporary (current session only)
+$env:DEBUG = "1"
+
+# Permanent (user-level)
+[Environment]::SetEnvironmentVariable("DEBUG", "1", "User")
+```
+
+#### macOS/Linux (Bash/Zsh)
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export DEBUG=1
+export DEV_SERVER_PORT=3000
+
+# Reload configuration
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+## Platform-specific Configuration
+
+### Windows Configuration
+
+#### PowerShell Execution Policy
+```powershell
+# Allow script execution (run as Administrator)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# 開発者モードの有効化 (Windows 10/11)
-# 設定 > 更新とセキュリティ > 開発者向け > 開発者モード
 ```
 
-#### Windows Defender の除外設定
-```powershell
-# プロジェクトディレクトリを除外
-Add-MpPreference -ExclusionPath "C:\path\to\Floorp"
-```
+#### Windows Defender Exclusions
+Add the following directories to Windows Defender exclusions for better performance:
+- Project root directory
+- `_dist/` directory
+- Node.js installation directory
+- Deno installation directory
 
-### macOS
+### macOS Configuration
 
 #### Xcode Command Line Tools
 ```bash
+# Install Xcode Command Line Tools
 xcode-select --install
 ```
 
-#### Homebrew の設定
+#### Gatekeeper Configuration
 ```bash
-# Homebrew がインストールされていない場合
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# 必要なパッケージのインストール
-brew install git curl
+# Allow Floorp to run (if needed)
+sudo spctl --master-disable
+# Re-enable after development
+sudo spctl --master-enable
 ```
 
-### Linux
+### Linux Configuration
 
-#### Ubuntu/Debian
+#### Required System Packages
 ```bash
-# 必要なパッケージのインストール
+# Ubuntu/Debian
 sudo apt update
-sudo apt install -y build-essential curl git pkg-config libssl-dev
+sudo apt install build-essential curl wget git python3 python3-pip
 
-# Firefox の依存関係
-sudo apt install -y libgtk-3-dev libdbus-glib-1-dev libxt6
+# Fedora
+sudo dnf install gcc gcc-c++ make curl wget git python3 python3-pip
+
+# Arch Linux
+sudo pacman -S base-devel curl wget git python python-pip
 ```
 
-#### Arch Linux
+#### Firefox Dependencies
 ```bash
-# 必要なパッケージのインストール
-sudo pacman -S base-devel curl git
+# Ubuntu/Debian
+sudo apt install libgtk-3-0 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libasound2 libpangocairo-1.0-0 libatk1.0-0 libcairo-gobject2 libgtk-3-0 libgdk-pixbuf2.0-0
 
-# Firefox の依存関係
-sudo pacman -S gtk3 dbus-glib libxt
+# Fedora
+sudo dnf install gtk3 libX11-xcb libXcomposite libXcursor libXdamage libXi libXtst nss cups-libs libXScrnSaver libXrandr alsa-lib pango atk cairo-gobject gdk-pixbuf2
 ```
 
-#### CentOS/RHEL/Fedora
-```bash
-# 必要なパッケージのインストール
-sudo dnf install -y gcc gcc-c++ make curl git openssl-devel
+## Troubleshooting Common Issues
 
-# Firefox の依存関係
-sudo dnf install -y gtk3-devel dbus-glib-devel libXt-devel
+### Issue: Deno not found
+```bash
+# Solution: Add Deno to PATH
+echo 'export PATH="$HOME/.deno/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-## トラブルシューティング
-
-### よくある問題と解決方法
-
-#### 1. Deno のパーミッションエラー
+### Issue: Permission denied when running scripts
 ```bash
-# 問題: Deno がファイルアクセスを拒否される
-# 解決: --allow-all フラグを使用
-deno run --allow-all build.ts
+# Solution: Make scripts executable
+chmod +x build.ts
+# Or run with explicit permissions
+deno run -A build.ts
 ```
 
-#### 2. Firefox バイナリのダウンロード失敗
+### Issue: Firefox binary download fails
 ```bash
-# 問題: ネットワークエラーでバイナリがダウンロードできない
-# 解決: 手動でダウンロードして配置
-curl -L -o floorp-linux-amd64-moz-artifact.tar.xz \
-  https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/floorp-linux-amd64-moz-artifact.tar.xz
+# Solution: Manual download and extraction
+# 1. Check available binaries at: https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/
+# 2. Download appropriate binary for your platform
+# 3. Extract to _dist/bin/ directory
 ```
 
-#### 3. ポート競合エラー
+### Issue: Build fails with memory error
 ```bash
-# 問題: 開発サーバーのポートが使用中
-# 解決: 使用中のプロセスを終了
-lsof -ti:3000 | xargs kill -9
-
-# または別のポートを使用
-export VITE_PORT=3001
+# Solution: Increase Node.js memory limit
+export NODE_OPTIONS="--max-old-space-size=8192"
+deno task build
 ```
 
-#### 4. メモリ不足エラー
+### Issue: Hot reload not working
 ```bash
-# 問題: ビルド中にメモリ不足
-# 解決: Node.js のメモリ制限を増加
-export NODE_OPTIONS="--max-old-space-size=4096"
+# Solution: Check if ports are available
+netstat -an | grep :3000
+# Kill processes using the port if needed
+# Restart development server
+deno task dev
 ```
 
-#### 5. Rust コンパイルエラー
+### Issue: Rust compilation fails
 ```bash
-# 問題: Rust コンポーネントのビルド失敗
-# 解決: Rust ツールチェーンの更新
-rustup update
+# Solution: Update Rust toolchain
+rustup update stable
 rustup target add wasm32-wasi
+
+# Clear Rust cache
+cargo clean
+deno task build
 ```
 
-### デバッグ情報の収集
+## Performance Optimization
 
-問題が発生した場合、以下の情報を収集してください：
-
+### Build Performance
 ```bash
-# システム情報
-deno --version
-node --version
-rustc --version
+# Use multiple CPU cores for compilation
+export MAKEFLAGS="-j$(nproc)"  # Linux
+export MAKEFLAGS="-j$(sysctl -n hw.ncpu)"  # macOS
 
-# 環境情報
-echo $PATH
-echo $DENO_DIR
-echo $NODE_ENV
-
-# ログの確認
-deno task dev --verbose
+# Enable Rust incremental compilation
+export CARGO_INCREMENTAL=1
 ```
 
-## 次のステップ
+### Development Server Performance
+```bash
+# Increase file watcher limits (Linux)
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
 
-セットアップが完了したら、以下のドキュメントを参照してください：
+## Next Steps
 
-- [開発ワークフロー](./workflow.md) - 日常的な開発作業の流れ
-- [デバッグ・テスト](./debugging-testing.md) - デバッグとテストの方法
-- [コーディング規約](./coding-standards.md) - コードスタイルと規約
+After completing the setup:
 
-## サポート
+1. **Read the Architecture Documentation**: Understand how Floorp is structured
+2. **Explore the Codebase**: Start with `src/apps/main/` for the main application
+3. **Make Your First Change**: Try modifying a UI component and see hot reload in action
+4. **Run Tests**: Execute `deno task test` to run the test suite
+5. **Join the Community**: Connect with other developers on Discord or GitHub Discussions
 
-セットアップで問題が発生した場合：
+## Getting Help
 
-1. **GitHub Issues**: バグ報告と質問
-2. **Discord**: [公式 Discord サーバー](https://discord.floorp.app)
-3. **ドキュメント**: [公式ドキュメント](https://docs.floorp.app)
+If you encounter issues during setup:
 
-開発環境が正常に動作することを確認してから、実際の開発作業を開始してください。
+1. **Check the logs**: Build and development server logs often contain helpful error messages
+2. **Search existing issues**: Check GitHub Issues for similar problems
+3. **Ask for help**: Post in GitHub Discussions or Discord
+4. **Update tools**: Ensure you're using the latest versions of all required tools
+
+The development environment setup is complete once you can successfully run `deno task dev` and see the Floorp browser launch with hot reload functionality.

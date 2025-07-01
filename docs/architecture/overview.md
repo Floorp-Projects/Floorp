@@ -1,31 +1,31 @@
-# Floorp Browser - アーキテクチャ概要
+# Floorp Browser - Architecture Overview
 
-## プロジェクト概要
+## Project Overview
 
-Floorp は Mozilla Firefox をベースとした独立したブラウザで、オープン、プライベート、持続可能なウェブを維持することを目的としています。Firefox の安定性とセキュリティを保ちながら、独自の機能と改良されたユーザーエクスペリエンスを提供します。
+Floorp is an independent browser based on Mozilla Firefox, designed to maintain an open, private, and sustainable web. It provides unique features and improved user experience while maintaining Firefox's stability and security.
 
-## 設計哲学
+## Design Philosophy
 
-### 1. Firefox 互換性の維持
-- Firefox のコアエンジン（Gecko）をそのまま使用
-- Firefox の更新に追従できるアーキテクチャ
-- 既存の Firefox 拡張機能との互換性
+### 1. Maintaining Firefox Compatibility
+- Uses Firefox's core engine (Gecko) as-is
+- Architecture that can follow Firefox updates
+- Compatibility with existing Firefox extensions
 
-### 2. モジュラー設計
-- 機能ごとに独立したアプリケーション
-- 再利用可能なパッケージシステム
-- プラグイン可能なテーマシステム
+### 2. Modular Design
+- Independent applications for each feature
+- Reusable package system
+- Pluggable theme system
 
-### 3. 現代的な開発体験
-- TypeScript による型安全性
-- SolidJS による高性能な UI
-- ホットリロード対応の開発環境
+### 3. Modern Development Experience
+- Type safety through TypeScript
+- High-performance UI with SolidJS
+- Development environment with hot reload support
 
-### 4. マルチプラットフォーム対応
-- Windows、macOS、Linux での統一体験
-- プラットフォーム固有の最適化
+### 4. Multi-platform Support
+- Unified experience across Windows, macOS, and Linux
+- Platform-specific optimizations
 
-## 全体アーキテクチャ
+## Overall Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -54,153 +54,153 @@ Floorp は Mozilla Firefox をベースとした独立したブラウザで、�
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 主要コンポーネント
+## Major Components
 
-### 1. UI アプリケーション層
-**技術**: SolidJS + TypeScript + Tailwind CSS
+### 1. UI Application Layer
+**Technology**: SolidJS + TypeScript + Tailwind CSS
 
-- **メインアプリケーション**: ブラウザの主要機能とUI
-- **設定アプリケーション**: ユーザー設定とカスタマイゼーション
-- **新しいタブ**: カスタマイズ可能なスタートページ
-- **その他**: ノート、ウェルカム画面、モーダルダイアログ
+- **Main Application**: Primary browser functionality and UI
+- **Settings Application**: User settings and customization
+- **New Tab**: Customizable start page
+- **Others**: Notes, welcome screen, modal dialogs
 
-### 2. 共有パッケージ層
-**技術**: TypeScript + モジュラー設計
+### 2. Shared Package Layer
+**Technology**: TypeScript + Modular Design
 
-- **Solid-XUL**: SolidJS と Firefox XUL の統合
-- **スキンシステム**: テーマとスタイリングの管理
-- **ユーザースクリプトランナー**: カスタムスクリプトの実行
-- **テストユーティリティ**: テスト支援ツール
+- **Solid-XUL**: Integration between SolidJS and Firefox XUL
+- **Skin System**: Theme and styling management
+- **User Script Runner**: Custom script execution
+- **Test Utilities**: Testing support tools
 
-### 3. Rust コンポーネント層
-**技術**: Rust + WebAssembly
+### 3. Rust Component Layer
+**Technology**: Rust + WebAssembly
 
-- **Nora-Inject**: 高性能なコード注入システム
-- **パフォーマンス最適化**: 重要な処理の高速化
-- **セキュリティ**: 安全なコード実行環境
+- **Nora-Inject**: High-performance code injection system
+- **Performance Optimization**: Acceleration of critical processes
+- **Security**: Safe code execution environment
 
-### 4. Firefox/Gecko 統合層
-**技術**: C++ + JavaScript + XUL
+### 4. Firefox/Gecko Integration Layer
+**Technology**: C++ + JavaScript + XUL
 
-- **Gecko エンジン**: Firefox のブラウザエンジン
-- **XUL/XPCOM**: Firefox の UI フレームワーク
-- **WebExtensions**: ブラウザ拡張 API
+- **Gecko Engine**: Firefox's browser engine
+- **XUL/XPCOM**: Firefox's UI framework
+- **WebExtensions**: Browser extension APIs
 
-## データフロー
+## Data Flow
 
-### 1. 開発時のデータフロー
+### 1. Development Data Flow
 ```
-開発者のコード変更
+Developer Code Changes
     ↓
-Deno ビルドシステム
+Deno Build System
     ↓
-TypeScript コンパイル + SolidJS 変換
+TypeScript Compilation + SolidJS Transformation
     ↓
-Rust コンポーネントのビルド (WebAssembly)
+Rust Component Build (WebAssembly)
     ↓
-Firefox バイナリへのコード注入
+Code Injection into Firefox Binary
     ↓
-カスタマイズされた Firefox の起動
-```
-
-### 2. ランタイムでのデータフロー
-```
-ユーザーの操作
-    ↓
-SolidJS アプリケーション
-    ↓
-Solid-XUL ブリッジ
-    ↓
-Firefox XUL システム
-    ↓
-Gecko エンジン
-    ↓
-ウェブページの表示・操作
+Launch Customized Firefox
 ```
 
-## 技術選択の理由
+### 2. Runtime Data Flow
+```
+User Operations
+    ↓
+SolidJS Application
+    ↓
+Solid-XUL Bridge
+    ↓
+Firefox XUL System
+    ↓
+Gecko Engine
+    ↓
+Web Page Display & Interaction
+```
 
-### SolidJS の採用
-- **高性能**: 仮想 DOM を使わない効率的な更新
-- **小さなバンドルサイズ**: ブラウザに組み込む際の軽量性
-- **React ライクな API**: 開発者にとって親しみやすい
+## Technology Choice Rationale
 
-### Rust + WebAssembly の採用
-- **パフォーマンス**: ネイティブレベルの実行速度
-- **安全性**: メモリ安全性とスレッド安全性
-- **サンドボックス**: WebAssembly による隔離実行
+### SolidJS Adoption
+- **High Performance**: Efficient updates without virtual DOM
+- **Small Bundle Size**: Lightweight for browser embedding
+- **React-like API**: Familiar to developers
 
-### Deno の採用
-- **モダンなランタイム**: ES モジュールとTypeScript ネイティブサポート
-- **セキュリティ**: デフォルトでセキュアな実行環境
-- **ツールチェーン統合**: フォーマッター、リンター、テストランナーの統合
+### Rust + WebAssembly Adoption
+- **Performance**: Native-level execution speed
+- **Safety**: Memory safety and thread safety
+- **Sandbox**: Isolated execution through WebAssembly
 
-## セキュリティアーキテクチャ
+### Deno Adoption
+- **Modern Runtime**: Native ES modules and TypeScript support
+- **Security**: Secure execution environment by default
+- **Toolchain Integration**: Integrated formatter, linter, and test runner
 
-### 1. コード注入の安全性
-- 注入されるコードの検証とサニタイゼーション
-- WebAssembly サンドボックスによる隔離
-- 権限の最小化原則
+## Security Architecture
 
-### 2. 更新メカニズム
-- デジタル署名による更新の検証
-- 段階的ロールアウト
-- ロールバック機能
+### 1. Code Injection Safety
+- Validation and sanitization of injected code
+- Isolation through WebAssembly sandbox
+- Principle of least privilege
 
-### 3. ユーザーデータの保護
-- Firefox の既存のセキュリティ機能を継承
-- 追加のプライバシー保護機能
-- データの暗号化とセキュアストレージ
+### 2. Update Mechanism
+- Digital signature verification of updates
+- Staged rollout
+- Rollback functionality
 
-## パフォーマンス最適化
+### 3. User Data Protection
+- Inherits Firefox's existing security features
+- Additional privacy protection features
+- Data encryption and secure storage
 
-### 1. ビルド時最適化
-- Tree shaking による不要コードの除去
-- Code splitting による効率的な読み込み
-- 静的アセットの最適化
+## Performance Optimization
 
-### 2. ランタイム最適化
-- SolidJS の効率的な DOM 更新
-- WebAssembly による高速処理
-- 遅延読み込みとキャッシュ戦略
+### 1. Build-time Optimization
+- Tree shaking to remove unnecessary code
+- Code splitting for efficient loading
+- Static asset optimization
 
-### 3. メモリ管理
-- Rust の所有権システムによるメモリ安全性
-- ガベージコレクションの最適化
-- リソースの適切な解放
+### 2. Runtime Optimization
+- Efficient DOM updates with SolidJS
+- High-speed processing with WebAssembly
+- Lazy loading and caching strategies
 
-## 拡張性とメンテナンス性
+### 3. Memory Management
+- Memory safety through Rust's ownership system
+- Garbage collection optimization
+- Proper resource cleanup
 
-### 1. モジュラー設計
-- 機能ごとの独立したパッケージ
-- 明確な依存関係の管理
-- インターフェースベースの設計
+## Extensibility and Maintainability
 
-### 2. テスト戦略
-- ユニットテスト: 各コンポーネントの単体テスト
-- 統合テスト: コンポーネント間の連携テスト
-- E2E テスト: ユーザーシナリオのテスト
+### 1. Modular Design
+- Independent packages for each feature
+- Clear dependency management
+- Interface-based design
 
-### 3. ドキュメンテーション
-- コード内ドキュメント
-- API リファレンス
-- アーキテクチャドキュメント
+### 2. Testing Strategy
+- Unit tests: Individual component testing
+- Integration tests: Inter-component interaction testing
+- E2E tests: User scenario testing
 
-## 将来の拡張計画
+### 3. Documentation
+- In-code documentation
+- API reference
+- Architecture documentation
 
-### 1. 新機能の追加
-- プラグインシステムの拡張
-- AI 機能の統合
-- クロスデバイス同期
+## Future Expansion Plans
 
-### 2. パフォーマンス向上
-- より多くの処理を Rust/WebAssembly に移行
-- GPU アクセラレーションの活用
-- ネットワーク最適化
+### 1. New Feature Addition
+- Plugin system expansion
+- AI feature integration
+- Cross-device synchronization
 
-### 3. プラットフォーム対応
-- モバイル版の検討
-- 組み込みシステム対応
-- クラウド統合機能
+### 2. Performance Improvements
+- Migration of more processing to Rust/WebAssembly
+- GPU acceleration utilization
+- Network optimization
 
-このアーキテクチャにより、Floorp は Firefox の安定性とセキュリティを保ちながら、現代的で拡張可能なブラウザ体験を提供しています。
+### 3. Platform Support
+- Mobile version consideration
+- Embedded system support
+- Cloud integration features
+
+This architecture enables Floorp to provide a modern and extensible browser experience while maintaining Firefox's stability and security.
