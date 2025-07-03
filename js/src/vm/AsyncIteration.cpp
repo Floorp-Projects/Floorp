@@ -312,15 +312,15 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 // Stesp 10-13.
 [[nodiscard]] static bool AsyncGeneratorYield(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
-  // Step 13.a.
-  generator->setSuspendedYield();
-
   // Step 10. Perform
   //          ! AsyncGeneratorCompleteStep(generator, completion, false,
   //                                       previousRealm).
   if (!AsyncGeneratorCompleteStepNormal(cx, generator, value, false)) {
     return false;
   }
+
+  // Step 13.a.
+  generator->setSuspendedYield();
 
   // Steps 11-13.
   return AsyncGeneratorDrainQueue(cx, generator);
