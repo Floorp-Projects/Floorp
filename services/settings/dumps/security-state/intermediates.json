@@ -24351,24 +24351,6 @@
       "last_modified": 1663293423105
     },
     {
-      "schema": 1663225023673,
-      "derHash": "q97sUxSQmPigsH79lys0Wom+3o7eaXXmG+le4Cbafvo=",
-      "subject": "CN=Actalis Client Authentication CA G1,O=Actalis S.p.A./03358520967,L=Milano,ST=Milano,C=IT",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJJVDEPMA0GA1UECAwGTWlsYW5vMQ8wDQYDVQQHDAZNaWxhbm8xIzAhBgNVBAoMGkFjdGFsaXMgUy5wLkEuLzAzMzU4NTIwOTY3MSwwKgYDVQQDDCNBY3RhbGlzIENsaWVudCBBdXRoZW50aWNhdGlvbiBDQSBHMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "737f0f0ce1590b65bb7efa52f0521e84ec1ac16313c8b4c6cd288064af2d127d",
-        "size": 2235,
-        "filename": "YsqG87ugr7iITRNFFaHeNX5oMmY80JlEVuqBCxAhZAM=.pem",
-        "location": "security-state-staging/intermediates/5df58a07-e383-4a1a-8af4-9471aa61c013.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "YsqG87ugr7iITRNFFaHeNX5oMmY80JlEVuqBCxAhZAM=",
-      "crlite_enrolled": false,
-      "id": "621a2382-280e-48de-b859-5293ba5379b7",
-      "last_modified": 1663246623215
-    },
-    {
       "schema": 1662515823574,
       "derHash": "Yjq+xvhacCisoQ9b3F2BtWtjFN8odD/8yE7KMvNa6EY=",
       "subject": "CN=MuaSSL.com TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
@@ -29841,5 +29823,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1750733822397
+  "timestamp": 1751425022691
 }

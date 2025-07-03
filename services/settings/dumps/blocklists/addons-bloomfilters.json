@@ -3,6 +3,84 @@
     {
       "stash": {
         "blocked": [
+          "{b678f48e-7c96-0da4-2a0e-d7f81c6a8549}:132.18.9",
+          "{79784b54-31ad-4b53-bba7-07f29b413ab2}:0.9.3",
+          "{79784b54-31ad-4b53-bba7-07f29b413ab2}:132.18.9",
+          "{1cd46909-0c5d-4678-9f34-ae3e5c72d9aa}:0.3.2",
+          "{1cd46909-0c5d-4678-9f34-ae3e5c72d9aa}:11.1",
+          "{b14176c3-4b40-45ac-866f-6eb763a32b0b}:1.0",
+          "{b14176c3-4b40-45ac-866f-6eb763a32b0b}:132.18.9",
+          "{c20d1a36-66ab-4510-a07b-12a29d17780a}:1.2",
+          "{c20d1a36-66ab-4510-a07b-12a29d17780a}:205.45.0",
+          "mozilla@tronlink.org:1.0.0",
+          "mozilla@tronlink.org:1.1.8",
+          "{0e1b0b39-347a-45eb-a26f-e7df69075bab}:8.2.3",
+          "{0e1b0b39-347a-45eb-a26f-e7df69075bab}:10.1"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1751422538436,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1751481305495,
+      "id": "a1e2e961-4bc8-41c5-979d-56d3d1cc8e4b",
+      "last_modified": 1751481375139
+    },
+    {
+      "stash": {
+        "blocked": [
+          "Slush-Sui@outlook.com:1.2.0",
+          "{46a086dd-c7fb-42b4-95ed-34c97b9f6afe}:101.1.292",
+          "{816bc7c9-717f-4f2c-8dbc-d3fe61579430}:1.1.2",
+          "videoresumer111@jetpack:1.2.4resigned1",
+          "videoresumer111@jetpack:13.18.9",
+          "videoresumer111@jetpack:15.5.0.3",
+          "videoresumer111@jetpack:15.5.0.4",
+          "videoresumer11@jetpack:1.2.4resigned1",
+          "videoresumer11@jetpack:101.1.291",
+          "videoresumer11@jetpack:101.1.292",
+          "videoresumer1@jetpack:1.2.4resigned1",
+          "videoresumer1@jetpack:101.1.291",
+          "videoresumer1@jetpack:131.18.9",
+          "{b9db16a4-6edc-47ec-21f4-b86333e2333d}:9.5.0.2",
+          "{b9db16a4-6edc-47ec-21f4-b86333e2222d}:9.5.0.2",
+          "cwallet-nhl-scores@cwalliet.site:1.0.0",
+          "trust-secure-nhl@trustdask.site:1.0",
+          "trust-secure-nhl@trustdask.site:2.1",
+          "Scores-nfl-metamask@a-walliet.site:1.1",
+          "Scores-nfl-Exodus@citrixereceiver.com:1.1",
+          "Scores-nfl-Exodus@citrixereceiver.com:1.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1751373387952,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1751394906589,
+      "id": "c32a06fa-398d-433a-8b85-3fc739efa835",
+      "last_modified": 1751394987070
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{d4ea69a3-46ee-4976-99a2-7d3cb7fe7fa2}:1.0.3",
+          "{d4ea69a3-46ee-4976-99a2-7d3cb7fe7fa2}:3.120.0",
+          "{d4ea69a3-46ee-4976-99a2-7d3cb7fe7fa2}:3.120.1",
+          "{672dda93-c486-47bd-b1f6-bffdf95bd0c6}:1.1.2",
+          "{672dda93-c486-47bd-b1f6-bffdf95bd0c6}:101.1.292"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1751336137922,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1751373306835,
+      "id": "e8a3c2d9-0d7b-412e-816e-47abc0d132c3",
+      "last_modified": 1751373387871
+    },
+    {
+      "stash": {
+        "blocked": [
           "{862894ac-d730-4d10-8ef0-8f786a76c5b7}:3.1.3",
           "{862894ac-d730-4d10-8ef0-8f786a76c5b7}:132.18.9",
           "{1d25ffe2-f3f2-4ceb-8d5d-61b7843ae8ce}:3.49.0",
@@ -849,5 +927,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1750962978029
+  "timestamp": 1751481375139
 }
