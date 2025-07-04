@@ -125,7 +125,7 @@ void gfxGDIFont::Initialize() {
 
   LOGFONTW logFont;
 
-  if (mAdjustedSize == 0.0) {
+  if (mAdjustedSize <= 0.0) {
     mAdjustedSize = GetAdjustedSize();
     if (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) !=
         FontSizeAdjust::Tag::None) {
