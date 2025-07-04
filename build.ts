@@ -76,10 +76,12 @@ const binVersion = pathe.join(binDir, "nora.version.txt");
 
 async function decompressBin() {
   try {
-    console.log(`decompressing ${binArchive}`);
+    console.log(chalk.cyan(`📦 Decompressing ${binArchive}...`));
     if (!(await isExists(binArchive))) {
       console.log(
-        `${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`,
+        chalk.yellow(
+          `⚠️  ${binArchive} not found. We will download ${await getBinArchive()} from GitHub latest release.`,
+        ),
       );
       await downloadBinArchive();
       return;
@@ -153,7 +155,7 @@ async function decompressBin() {
       await $`chmod ${["755", binPathExe]}`;
     }
 
-    console.log("decompress complete!");
+    console.log(chalk.green("✅ Decompress complete!"));
   } catch (e) {
     console.error(e);
     process.exit(1);
@@ -168,24 +170,24 @@ async function downloadBinArchive() {
   }
   const originDownloadUrl =
     `${originUrl}-runtime/releases/latest/download/${fileName}`;
-  console.log(`Downloading from origin: ${originDownloadUrl}`);
+  console.log(chalk.blue(`⬇️  Downloading from origin: ${originDownloadUrl}`));
   try {
     await $`curl -L --fail --progress-bar -o ${binArchive} ${originDownloadUrl}`;
-    console.log("Download complete from origin!");
+    console.log(chalk.green("✅ Download complete from origin!"));
   } catch (error: unknown) {
     console.error(
-      "Origin download failed, falling back to upstream:",
+      chalk.red("❌ Origin download failed, falling back to upstream:"),
       (error as { stderr: string }).stderr,
     );
     const upstreamUrl =
       `https://github.com/Floorp-Projects/Floorp-runtime/releases/latest/download/${fileName}`;
-    console.log(`Downloading from upstream: ${upstreamUrl}`);
+    console.log(chalk.blue(`⬇️  Downloading from upstream: ${upstreamUrl}`));
     try {
       await $`curl -L --fail --progress-bar -o ${binArchive} ${upstreamUrl}`;
-      console.log("Download complete from upstream!");
+      console.log(chalk.green("✅ Download complete from upstream!"));
     } catch (error2: unknown) {
       console.error(
-        "Upstream download failed:",
+        chalk.red("❌ Upstream download failed:"),
         (error2 as { stderr: string }).stderr,
       );
       throw (error2 as { stderr: string }).stderr;
@@ -202,7 +204,9 @@ async function initBin() {
     const version = (await fs.readFile(binVersion)).toString();
     const mismatch = VERSION !== version;
     if (mismatch) {
-      console.log(`version mismatch ${version} !== ${VERSION}`);
+      console.log(
+        chalk.yellow(`⚠️  Version mismatch ${version} !== ${VERSION}`),
+      );
       await fs.rm(binDir, { recursive: true });
       await fs.mkdir(binDir, { recursive: true });
       await decompressBin();
@@ -210,17 +214,96 @@ async function initBin() {
     }
   } else {
     if (hasBin) {
-      console.log(`bin exists, but version file not found, writing ${VERSION}`);
+      console.log(
+        chalk.cyan(
+          `📝 Bin exists, but version file not found, writing ${VERSION}`,
+        ),
+      );
       await fs.mkdir(binDir, { recursive: true });
       await fs.writeFile(binVersion, VERSION);
     }
   }
-  console.log("initBin");
+  console.log(chalk.magenta("🔧 Initializing binary..."));
   if (!hasBin) {
-    console.log("There seems no bin. decompressing.");
+    console.log(chalk.yellow("⚠️  There seems no bin. decompressing."));
     await fs.mkdir(binDir, { recursive: true });
     await decompressBin();
   }
+}
+
+async function applyPrefs(targetBinDir?: string) {
+  console.log(chalk.blue("⚙️  Applying Firefox preferences overrides..."));
+
+  const actualBinDir = targetBinDir || binDir;
+  const firefoxJsPath = pathe.join(
+    actualBinDir,
+    "browser",
+    "defaults",
+    "preferences",
+    "firefox.js",
+  );
+
+  // Check if firefox.js exists
+  if (!(await isExists(firefoxJsPath))) {
+    console.warn(
+      chalk.yellow(
+        `⚠️  firefox.js not found at ${firefoxJsPath}, skipping preferences override`,
+      ),
+    );
+    return;
+  }
+
+  // Check if override.sh exists
+  const overrideScriptPath = pathe.join(
+    import.meta.dirname as string,
+    "gecko",
+    "pref",
+    "override.sh",
+  );
+  if (!(await isExists(overrideScriptPath))) {
+    console.warn(
+      chalk.yellow("⚠️  override.sh not found, skipping preferences override"),
+    );
+    return;
+  }
+
+  try {
+    // Make sure the script is executable
+    await $`chmod +x ${overrideScriptPath}`;
+
+    // Run the override script and capture output
+    console.log(chalk.cyan(`🔧 Running override script on ${firefoxJsPath}`));
+    const result = await $`${overrideScriptPath} ${firefoxJsPath}`;
+
+    // Display script output
+    if (result.stdout) {
+      console.log(chalk.gray("📄 Script output:"), result.stdout);
+    }
+    if (result.stderr) {
+      console.log(chalk.gray("📄 Script stderr:"), result.stderr);
+    }
+
+    console.log(
+      chalk.green("✅ Firefox preferences override completed successfully"),
+    );
+  } catch (error) {
+    console.error(chalk.red("❌ Failed to apply preferences override:"), error);
+    // Show the stderr output if available
+    if (error && typeof error === "object") {
+      if ("stdout" in error && error.stdout) {
+        console.error(chalk.gray("📄 Script stdout:"), error.stdout);
+      }
+      if ("stderr" in error && error.stderr) {
+        console.error(chalk.gray("📄 Script stderr:"), error.stderr);
+      }
+    }
+    throw error;
+  }
+}
+
+// Alias function for release mode
+async function applyPrefsForPath(binPath: string) {
+  await applyPrefs(binPath);
 }
 
 async function runWithInitBinGit() {
@@ -237,7 +320,7 @@ async function clobber() {
   try {
     await fs.rm("_dist", { recursive: true });
   } catch {
-    console.error("Failed to remove _dist directory");
+    console.error(chalk.red("❌ Failed to remove _dist directory"));
   }
 }
 
@@ -248,6 +331,7 @@ let devInit = false;
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
   await applyPatches();
+  await applyPrefs();
 
   //create version for dev
   await genVersion();
@@ -256,9 +340,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     await fs.access("_dist/buildid2");
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
   } catch {
-    console.warn("buildid2 not found");
+    console.warn(chalk.yellow("⚠️  buildid2 not found"));
   }
-  console.log(`[dev] buildid2: ${buildid2}`);
+  console.log(chalk.gray(`🔢 Build ID: ${buildid2}`));
 
   // env
   if (process.platform === "darwin") {
@@ -270,7 +354,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       await $`deno run -A ./scripts/launchDev/child-build.ts ${mode} ${
         buildid2 ?? ""
       }`;
-      console.log("run dev servers");
+      console.log(chalk.green("🚀 Starting dev servers..."));
       devViteProcess = $`deno run -A ./scripts/launchDev/child-dev.ts ${mode} ${
         buildid2 ?? ""
       }`.stdio("pipe").nothrow();
@@ -348,7 +432,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
     try {
       await browserProcess;
     } catch {
-      console.error("browserProcess error");
+      console.error(chalk.red("❌ browserProcess error"));
     }
     exit();
   })();
@@ -359,24 +443,24 @@ async function exit() {
   if (runningExit) return;
   runningExit = true;
   if (browserProcess) {
-    console.log("[build] Start Shutdown browserProcess");
+    console.log(chalk.blue("🛑 Start Shutdown browserProcess"));
     browserProcess.stdin.write("q");
     try {
       await browserProcess;
     } catch (e) {
       console.error(e);
     }
-    console.log("[build] End Shutdown browserProcess");
+    console.log(chalk.blue("✅ End Shutdown browserProcess"));
   }
   if (devViteProcess) {
-    console.log("[build] Start Shutdown devViteProcess");
+    console.log(chalk.blue("🛑 Start Shutdown devViteProcess"));
     devViteProcess.stdin.write("q");
     try {
       await devViteProcess;
     } catch (e) {
       console.error(e);
     }
-    console.log("[build] End Shutdown devViteProcess");
+    console.log(chalk.blue("✅ End Shutdown devViteProcess"));
   }
   console.log(chalk.green("[build] Cleanup Complete!"));
   process.exit(0);
@@ -396,14 +480,16 @@ async function release(mode: "before" | "after") {
     await fs.access("_dist/buildid2");
     buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
   } catch {
-    console.warn("buildid2 not found");
+    console.warn(chalk.yellow("⚠️  buildid2 not found"));
   }
-  console.log(`[build] buildid2: ${buildid2}`);
+  console.log(chalk.gray(`🔢 Build ID: ${buildid2}`));
   if (mode === "before") {
     console.log(
-      `deno run -A ./scripts/launchDev/child-build.ts production ${
-        buildid2 ?? ""
-      }`,
+      chalk.cyan(
+        `🔧 Running: deno run -A ./scripts/launchDev/child-build.ts production ${
+          buildid2 ?? ""
+        }`,
+      ),
     );
     await $`deno run -A ./scripts/launchDev/child-build.ts production ${
       buildid2 ?? ""
@@ -420,23 +506,41 @@ async function release(mode: "before" | "after") {
         const appPath = `${baseDir}/${appFile}`;
         binPath = `${appPath}/Contents/Resources`;
         console.log(
-          `Using app bundle directory: ${appPath}/Contents/Resources`,
+          chalk.cyan(
+            `📁 Using app bundle directory: ${appPath}/Contents/Resources`,
+          ),
         );
       } else {
         binPath = `${baseDir}/bin`;
-        console.log(`Using bin directory: ${baseDir}/bin`);
+        console.log(chalk.cyan(`📁 Using bin directory: ${baseDir}/bin`));
       }
     } catch (error) {
-      console.warn("Error reading output directory:", error);
+      console.warn(chalk.yellow("⚠️  Error reading output directory:"), error);
       binPath = `${baseDir}/bin`;
     }
+
+    // Apply Firefox preferences override
+    const tempBinDir = binDir;
+    try {
+      // Temporarily update binDir for applyPrefs to work with the correct path
+      (globalThis as any).tempBinDir = binPath;
+      await applyPrefsForPath(binPath);
+    } catch (error) {
+      console.warn(
+        chalk.yellow(
+          "⚠️  Failed to apply preferences override in release mode:",
+        ),
+        error,
+      );
+    }
+
     injectXHTML(binPath);
     let buildid2: string | null = null;
     try {
       await fs.access("_dist/buildid2");
       buildid2 = await fs.readFile("_dist/buildid2", { encoding: "utf-8" });
     } catch {
-      console.warn("buildid2 not found");
+      console.warn(chalk.yellow("⚠️  buildid2 not found"));
     }
     await writeBuildid2(`${binPath}/browser`, buildid2 ?? "");
   }

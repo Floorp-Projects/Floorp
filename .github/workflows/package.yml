@@ -399,6 +399,37 @@ jobs:
 
           cd ..
 
+      - name: Apply Firefox Preferences Override
+        run: |
+          cd ./floorp
+
+          # Determine the correct Firefox.js path based on platform
+          if [ "${{inputs.platform}}" == "macOS-x64" ]; then
+            # Find .app bundle and apply to all of them
+            for app_bundle in ../obj-artifact-build-output/dist/*.app; do
+              if [ -d "$app_bundle" ]; then
+                FIREFOX_JS_PATH="$app_bundle/Contents/Resources/browser/defaults/preferences/firefox.js"
+                if [ -f "$FIREFOX_JS_PATH" ]; then
+                  echo "Applying preferences override to: $FIREFOX_JS_PATH"
+                  ./gecko/pref/override.sh "$FIREFOX_JS_PATH"
+                else
+                  echo "Warning: firefox.js not found at $FIREFOX_JS_PATH"
+                fi
+              fi
+            done
+          else
+            # For Windows and Linux
+            FIREFOX_JS_PATH="../obj-artifact-build-output/dist/bin/browser/defaults/preferences/firefox.js"
+            if [ -f "$FIREFOX_JS_PATH" ]; then
+              echo "Applying preferences override to: $FIREFOX_JS_PATH"
+              ./gecko/pref/override.sh "$FIREFOX_JS_PATH"
+            else
+              echo "Warning: firefox.js not found at $FIREFOX_JS_PATH"
+            fi
+          fi
+
+          cd ..
+
       - name: Replace RC Icon
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ] && [ "${{inputs.beta}}" == "true" ]; then

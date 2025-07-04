@@ -48,15 +48,15 @@ while IFS= read -r line; do
     if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
         continue
     fi
-    
+
     # Parse preference line (pref_name = value)
     if [[ "$line" =~ ^[[:space:]]*([^=]+)[[:space:]]*=[[:space:]]*(.+)$ ]]; then
         pref_name="${BASH_REMATCH[1]// /}"  # Remove leading/trailing spaces
         pref_value="${BASH_REMATCH[2]}"
-        
+
         # Remove leading/trailing spaces and handle quotes properly
         pref_value=$(echo "$pref_value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        
+
         # Handle values that are not quoted
         if [[ "$pref_value" =~ ^\".*\"$ ]]; then
             # Already quoted
