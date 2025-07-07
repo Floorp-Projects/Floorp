@@ -154,17 +154,25 @@ jobs:
           echo "macOS Installer Files:"
           ls -la ~/noraneko-publish/mac-dist
 
+      - name: Prepare meta.json files with platform-specific names
+        run: |
+          cp ~/noraneko-publish/win/meta.json ~/noraneko-publish/win-meta.json
+          cp ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux-meta.json
+          cp ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac-meta.json
+
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ env.ROOT_DIR }}/noraneko-publish/win/*
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux/*
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac/*
-
-            ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/*
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*
+            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*.exe
+            ${{ env.ROOT_DIR }}/noraneko-publish/win-meta.json
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-meta.json
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
 
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp 12 RC ${{ env.NR_VERSION }}"
