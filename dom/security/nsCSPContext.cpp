@@ -921,7 +921,7 @@ void nsCSPContext::logToConsole(const char* aName,
 
 /**
  * Strip URI for reporting according to:
- * https://w3c.github.io/webappsec-csp/#security-violation-reports
+ * https://w3c.github.io/webappsec-csp/#strip-url-for-use-in-reports
  *
  * @param aSelfURI
  *        The URI of the CSP policy. Used for cross-origin checks.
@@ -936,34 +936,41 @@ void nsCSPContext::logToConsole(const char* aName,
 void StripURIForReporting(nsIURI* aSelfURI, nsIURI* aURI,
                           const nsAString& aEffectiveDirective,
                           nsACString& outStrippedURI) {
-  // If the origin of aURI is a globally unique identifier (for example,
-  // aURI has a scheme of data, blob, or filesystem), then
-  // return the ASCII serialization of uri’s scheme.
   bool isHttpOrWs = (aURI->SchemeIs("http") || aURI->SchemeIs("https") ||
                      aURI->SchemeIs("ws") || aURI->SchemeIs("wss"));
 
+  // Step 1. If url’s scheme is not an HTTP(S) scheme, then return url’s scheme.
+  // https://github.com/w3c/webappsec-csp/issues/735: We also allow WS(S) schemes.
   if (!isHttpOrWs) {
-    // not strictly spec compliant, but what we really care about is
-    // http/https. If it's not http/https, then treat aURI
-    // as if it's a globally unique identifier and just return the scheme.
     aURI->GetScheme(outStrippedURI);
     return;
   }
 
+  // Step 2. Set url’s fragment to the empty string.
+  // Step 3. Set url’s username to the empty string.
+  // Step 3. Set url’s password to the empty string.
+  nsCOMPtr<nsIURI> stripped;
+  if (NS_FAILED(NS_MutateURI(aURI).SetRef(""_ns).SetUserPass(""_ns).Finalize(stripped))) {
+    // Mutating the URI failed for some reason, just return the scheme.
+    aURI->GetScheme(outStrippedURI);
+    return;
+  }
+
+  // Non-standard: https://github.com/w3c/webappsec-csp/issues/735
   // For cross-origin URIs in frame-src also strip the path.
   // This prevents detailed tracking of pages loaded into an iframe
   // by the embedding page using a report-only policy.
   if (aEffectiveDirective.EqualsLiteral("frame-src") ||
       aEffectiveDirective.EqualsLiteral("object-src")) {
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    if (NS_FAILED(ssm->CheckSameOriginURI(aSelfURI, aURI, false, false))) {
-      aURI->GetPrePath(outStrippedURI);
+    if (NS_FAILED(ssm->CheckSameOriginURI(aSelfURI, stripped, false, false))) {
+      stripped->GetPrePath(outStrippedURI);
       return;
     }
   }
 
-  // Return aURI, with any fragment component removed.
-  aURI->GetSpecIgnoringRef(outStrippedURI);
+  // Step 4. Return the result of executing the URL serializer on url.
+  stripped->GetSpec(outStrippedURI);
 }
 
 nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
