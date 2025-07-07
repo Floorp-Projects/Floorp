@@ -3,6 +3,39 @@
     {
       "stash": {
         "blocked": [
+          "{5ed4ceb7-6581-4704-94b4-98ba611587fb}:1.5resigned1",
+          "{5ed4ceb7-6581-4704-94b4-98ba611587fb}:10.1",
+          "{f2eb727d-6cde-4ff9-a842-6f4b8b3170a8}:2.1.0",
+          "{f2eb727d-6cde-4ff9-a842-6f4b8b3170a8}:3.1",
+          "{323dc2fb-2420-4838-830d-d2c2e535775a}:3.1.1.0",
+          "{323dc2fb-2420-4838-830d-d2c2e535775a}:101.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1751595336540,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1751632505416,
+      "id": "80b1fa37-b664-4b4a-87c1-40dbe6d0a816",
+      "last_modified": 1751632572296
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{e41b457f-73bf-419b-824d-6a19b9634f21}:1.0.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1751508935811,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1751567706009,
+      "id": "73a5916e-3aa4-4dc1-80ec-141a4311c01b",
+      "last_modified": 1751567783237
+    },
+    {
+      "stash": {
+        "blocked": [
           "{b678f48e-7c96-0da4-2a0e-d7f81c6a8549}:132.18.9",
           "{79784b54-31ad-4b53-bba7-07f29b413ab2}:0.9.3",
           "{79784b54-31ad-4b53-bba7-07f29b413ab2}:132.18.9",
@@ -927,5 +960,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1751481375139
+  "timestamp": 1751632572296
 }

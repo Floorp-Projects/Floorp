@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-06-26_12-43-24_UTC
-// COMMIT: 9ae55199aa39694b19b7791d2e7b0b7592b3bdd7
+// VERSION: 2025-07-05_07-07-06_UTC
+// COMMIT: 968c2cce548037261cd6b9c41bffc90138ed7e6f
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -15668,8 +15668,8 @@ dnsupdate.info
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
 us.org
 
-// V.UA Domain Administrator : https://domain.v.ua/
-// Submitted by Serhii Rostilo <sergey@rostilo.kiev.ua>
+// V.UA Domain Registry: https://www.v.ua/
+// Submitted by Serhii Rostilo <admin@v.ua>
 v.ua
 
 // Val Town, Inc : https://val.town/
