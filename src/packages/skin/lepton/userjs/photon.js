@@ -1,4 +1,4 @@
-// v8.7.1 Lepton-Photon-Style
+// v8.7.2 Lepton-Photon-Style
 // ** Theme Default Options ****************************************************
 // userchrome.css usercontent.css activate
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
@@ -58,7 +58,6 @@ user_pref("userChrome.rounding.square_tab",            true);
 // user_pref("userChrome.compatibility.navbar_top_border",    true);
 // user_pref("userChrome.compatibility.dynamic_separator",    true); // Need dynamic_separator
 
-// user_pref("userChrome.compatibility.os.linux_non_native_titlebar_button", true);
 // user_pref("userChrome.compatibility.os.windows_maximized", true);
 // user_pref("userChrome.compatibility.os.win11",             true);
 
