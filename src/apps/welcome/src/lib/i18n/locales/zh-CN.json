@@ -4,15 +4,15 @@
         "language": "语言",
         "languageSupport": "Language Support",
         "features": "技术特性",
-        "featureIntroduction": "Feature Introduction",
-        "customize": "Customize",
+        "featureIntroduction": "功能介绍",
+        "customize": "自定义",
         "initialSettings": "初始设置",
         "complete": "完成",
         "previous": "上一页",
-        "next": "Next"
+        "next": "下一步"
     },
     "customize": {
-        "title": "Customize Floorp",
+        "title": "自定义 Floorp",
         "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
         "appearance": {
             "title": "外观设置",
@@ -26,7 +26,7 @@
         "themeInfo": {
             "light": "浅色主题",
             "dark": "深色主题",
-            "system": "System preference"
+            "system": "系统首选项"
         },
         "searchEngine": {
             "title": "默认搜索引擎",
@@ -52,10 +52,10 @@
         "readyToStart": "When you're ready, click the below button to proceed.",
         "features": "Floorp 特性",
         "privacy": "隐私政策",
-        "privacyDesc": "Protects your data",
+        "privacyDesc": "保护您的数据",
         "speed": "速度",
         "speedDesc": "性能优化",
-        "customization": "Customization",
+        "customization": "自定义界面",
         "customizationDesc": "Arrange to your preference",
         "start": "开始使用"
     },
@@ -74,15 +74,15 @@
         "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
+        "title": "Floorp 主要特性",
         "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
+            "title": "面板侧边栏",
             "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
             "features": [
                 "Pin websites to the sidebar",
                 "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "支持容器功能"
             ]
         },
         "workspaces": {
@@ -91,16 +91,16 @@
             "features": [
                 "Categorize by purpose: work, personal, etc.",
                 "Visually identify with custom icons",
-                "Easily manage tabs"
+                "轻松管理标签页"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
+            "title": "PWA 支持",
             "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
             "features": [
                 "Run independently as desktop apps",
                 "可以固定到任务栏",
-                "Firefox add-ons work too"
+                "Firefox 附加组件也能正常工作"
             ]
         },
         "mouseGesture": {
@@ -108,7 +108,7 @@
             "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
             "features": [
                 "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
+                "完全自定义鼠标手势",
                 "快速浏览页面和历史记录"
             ]
         },

@@ -1,16 +1,16 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "在后台安装……",
+            "installComplete": "安装完成"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
+            "title": "Floorp 安装程序",
+            "description": "安装 Floorp 浏览器，开启注重隐私、快速且可定制化的浏览体验。",
+            "adminRights": "使用管理员权限安装",
+            "adminRightsEnabled": "以管理员权限为所有用户安装。",
             "adminRightsDisabled": "仅为当前用户安装。",
-            "customPathRequired": "Custom installation path requires admin rights.",
+            "customPathRequired": "自定义安装路径需要管理员权限。",
             "installLocation": "安装位置",
             "change": "更改",
             "installButton": "开始安装",
@@ -18,26 +18,26 @@
         },
         "progress": {
             "installing": "正在安装……",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "slideCounter": "幻灯片 {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
+            "selectLocation": "选择安装路径",
+            "installPath": "安装路径",
             "browse": "浏览",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
+            "resetDefault": "重置为默认值",
+            "cancel": "取消",
+            "save": "保存设置",
             "close": "关闭"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
+            "title": "取消安装？",
             "message": "Canceling the installation process will prevent Floorp from being installed.",
             "cancelButton": "取消",
-            "confirmButton": "Cancel Installation"
+            "confirmButton": "取消安装"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
+            "success": "安装成功",
+            "error": "安装失败",
             "launchCheckbox": "安装后启动 Floorp 浏览器",
             "closeButton": "关闭安装程序",
             "countdownMessage": "Installer will close in {{count}} seconds"
@@ -45,7 +45,7 @@
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
+            "title": "欢迎使用 Floorp",
             "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
         "slide2": {
@@ -53,7 +53,7 @@
             "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
         },
         "slide3": {
-            "title": "Latest Features",
+            "title": "最新功能",
             "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
         },
         "slide4": {
@@ -71,19 +71,19 @@
             "installation_complete": "Floorp installation completed successfully."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
+            "installer_not_found": "无法获取 Floorp 安装包。",
+            "download_failed": "下载过程中出现错误： {{0}}",
+            "signature_verification_failed": "安装程序签名验证失败。由于安全原因中止执行。",
             "signature_verification_error": "An error occurred during signature verification: {{0}}",
             "installer_exit_code": "安装程序退出，代码为 {{0}}。",
             "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
+            "browser_not_found": "未找到 Floorp 浏览器。安装成功，但找不到浏览器可执行文件。",
+            "browser_launch_failed": "启动浏览器失败: {{0}}",
             "file_not_found": "找不到文件：{{0}}",
             "not_a_file": "路径不是文件: {{0}}",
             "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
             "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
+            "powershell_script_creation": "创建 PowerShell 脚本失败： {{0}}",
             "powershell_process": "启动 PowerShell 进程失败： {{0}}",
             "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
             "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",

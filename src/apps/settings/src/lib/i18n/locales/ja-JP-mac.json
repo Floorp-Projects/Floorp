@@ -129,7 +129,7 @@
             "display": {
                 "title": "表示",
                 "disableFullscreenNotification": "フルスクリーン通知を無効にする",
-                "deleteBrowserBorder": "ブラウザーの境界線を削除",
+                "deleteBrowserBorder": "ページの角を丸める",
                 "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す"
             },
             "special": {

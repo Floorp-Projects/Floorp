@@ -218,5 +218,17 @@
             "changeUA": "在该网络面板上将用户代理切换为移动/桌面版本",
             "delete": "删除此面板"
         }
+    },
+    "chrome_css": {
+        "menu": "样式",
+        "rebuild": "重载样式",
+        "create": "创建样式",
+        "open_folder": "打开样式文件夹",
+        "edit_user_chrome": "编辑 userChrome.css",
+        "edit_user_content": "编辑 userChrome.css",
+        "rebuild_complete": "样式已重重载",
+        "editor_path_not_found": "未找到编辑器路径",
+        "set_pref_description": "请设置编辑器路径",
+        "please_enter_filename": "请输入文件名称"
     }
 }

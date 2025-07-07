@@ -64,7 +64,7 @@
             "manage": "Administrer arbejdsområder"
         },
         "menu": {
-            "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+            "moveTabToAnotherWorkspace": "Flyt fane til andet arbejdsområde"
         },
         "error": {
             "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
@@ -194,7 +194,7 @@
             "type": "Paneltype",
             "typeOptions": {
                 "web": "Webside",
-                "sidebar-tool": "Tool Sidebar",
+                "sidebar-tool": "Værktøjssidepanel",
                 "extension": "Udvidelsessidepanel"
             },
             "width": "Panelbredde",
@@ -218,5 +218,17 @@
             "changeUA": "Skift brugeragent til mobil-/computerversion på dette webpanel",
             "delete": "Slet dette panel"
         }
+    },
+    "chrome_css": {
+        "menu": "Stil",
+        "rebuild": "Gendan stylesheets",
+        "create": "Opret ny stylesheet",
+        "open_folder": "Åbn stylesheets-mappen",
+        "edit_user_chrome": "Rediger userChrome.css",
+        "edit_user_content": "Rediger userContent.css",
+        "rebuild_complete": "Stylesheets gendannet",
+        "editor_path_not_found": "Editorsti ikke fundet",
+        "set_pref_description": "Angiv venligst stien til editoren",
+        "please_enter_filename": "Indtast venligst et filnavn"
     }
 }

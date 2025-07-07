@@ -129,7 +129,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Remove browser border",
+                "deleteBrowserBorder": "Round the corners of pages",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button"
             },
             "special": {

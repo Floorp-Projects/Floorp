@@ -218,5 +218,17 @@
             "changeUA": "이 엡 패널에서 사용자 에이전트를 모바일/데스크톱 버전으로 전환",
             "delete": "이 패널 삭제"
         }
+    },
+    "chrome_css": {
+        "menu": "Style",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Edit userChrome.css",
+        "edit_user_content": "Edit userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor Path Not Found",
+        "set_pref_description": "Please set the editor path",
+        "please_enter_filename": "Please enter a filename"
     }
 }

@@ -218,5 +218,17 @@
             "changeUA": "Mudar o agente do utilizador para a versão móvel/desktop neste Webpanel",
             "delete": "Eliminar este painel"
         }
+    },
+    "chrome_css": {
+        "menu": "Estilo",
+        "rebuild": "Reconstruir folhas de estilo",
+        "create": "Criar nova folha de estilo",
+        "open_folder": "Abrir a pasta de folhas de estilo",
+        "edit_user_chrome": "Editar userChrome.css",
+        "edit_user_content": "Editar userContent.css",
+        "rebuild_complete": "Folhas de estilo reconstruídas",
+        "editor_path_not_found": "Caminho do editor não encontrado",
+        "set_pref_description": "Defina o caminho do editor",
+        "please_enter_filename": "Introduza um nome de ficheiro"
     }
 }

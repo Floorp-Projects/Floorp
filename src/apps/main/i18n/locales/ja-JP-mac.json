@@ -218,5 +218,17 @@
             "changeUA": "このウェブパネルのユーザーエージェントをモバイル/デスクトップに切り替える",
             "delete": "このパネルを削除"
         }
+    },
+    "chrome_css": {
+        "menu": "スタイル",
+        "rebuild": "スタイルシートを再構築",
+        "create": "新規スタイルシートを作成",
+        "open_folder": "スタイルシートのフォルダーを開く",
+        "edit_user_chrome": "userChrome.css を編集",
+        "edit_user_content": "userContent.css を編集",
+        "rebuild_complete": "スタイルシートを再構築しました",
+        "editor_path_not_found": "エディターのパスが見つかりません",
+        "set_pref_description": "エディターのパスを指定してください",
+        "please_enter_filename": "ファイル名を入力してください"
     }
 }

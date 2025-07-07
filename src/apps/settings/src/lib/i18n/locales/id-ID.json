@@ -129,7 +129,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Nonaktifkan notifikasi layar penuh",
-                "deleteBrowserBorder": "Hapus batas peramban",
+                "deleteBrowserBorder": "Bulatkan sudut halaman",
                 "hideUnifiedExtensionsButton": "Sembunyikan tombol pengaya terpadu"
             },
             "special": {

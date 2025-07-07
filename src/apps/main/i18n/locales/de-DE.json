@@ -1,6 +1,6 @@
 {
     "undo-closed-tab": {
-        "label": "Undo Closed Tab",
+        "label": "Tab wiederherstellen",
         "tooltiptext": "Reopen the last closed tab {{shortcut}}"
     },
     "workspaces": {
@@ -20,7 +20,7 @@
             "briefcase": "Briefcase",
             "cart": "Shopping Cart",
             "chat": "Chat",
-            "chill": "Chill",
+            "chill": "",
             "circle": "Circle",
             "compass": "Compass",
             "code": "Code",
@@ -61,7 +61,7 @@
         },
         "popup": {
             "create-new": "Create New Workspace...",
-            "manage": "Manage Workspaces"
+            "manage": "Arbeitsbereiche verwalten"
         },
         "menu": {
             "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
@@ -218,5 +218,17 @@
             "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
             "delete": "Delete this panel"
         }
+    },
+    "chrome_css": {
+        "menu": "Style",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Edit userChrome.css",
+        "edit_user_content": "Edit userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor Path Not Found",
+        "set_pref_description": "Please set the editor path",
+        "please_enter_filename": "Please enter a filename"
     }
 }

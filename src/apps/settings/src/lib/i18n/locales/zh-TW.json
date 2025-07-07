@@ -129,7 +129,7 @@
             "display": {
                 "title": "顯示",
                 "disableFullscreenNotification": "停用全螢幕通知",
-                "deleteBrowserBorder": "移除瀏覽器邊框",
+                "deleteBrowserBorder": "圓化頁面邊緣",
                 "hideUnifiedExtensionsButton": "隱藏統合擴充套件按鈕"
             },
             "special": {

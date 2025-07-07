@@ -1,42 +1,42 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
+        "addSite": "Lägg till webbplats",
+        "addNewSite": "Lägg till ny webbplats",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name"
+        "label": "Etikett",
+        "cancel": "Avbryt",
+        "add": "Lägg till",
+        "close": "Stäng",
+        "labelPlaceholder": "Webbplatsnamn"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "close": "Close"
+        "newTabSettings": "Ny flikinställningar",
+        "displayComponents": "Visnings komponenter",
+        "topSites": "Toppsajter",
+        "clock": "Klocka",
+        "searchBar": "Sökfält",
+        "backgroundSettings": "Bakgrundsinställningar",
+        "noBackground": "Ingen bakgrund",
+        "randomImage": "Slumpmässig bild",
+        "customImage": "Anpassad bild",
+        "folderImages": "Bilder från mapp",
+        "floorpImages": "Floorp bilder",
+        "currentImage": "Nuvarande bild:",
+        "currentFolder": "Nuvarande mapp:",
+        "selectFolder": "Välj mapp",
+        "selected": "Vald",
+        "imageRecommendation": "Rekommenderas: 1920x1080 eller högre",
+        "close": "Stäng"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Sök eller ange URL",
+        "loadingSearchEngines": "Laddar sökmotorer..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Inställningar"
     },
     "modal": {
-        "close": "Close"
+        "close": "Stäng"
     }
 }

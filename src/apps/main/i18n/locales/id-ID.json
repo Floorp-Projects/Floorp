@@ -218,5 +218,17 @@
             "changeUA": "Ganti agen Pengguna ke versi Seluler/Desktop pada panel ini",
             "delete": "Hapus panel ini"
         }
+    },
+    "chrome_css": {
+        "menu": "Gaya",
+        "rebuild": "Buat Ulang Lembar Gaya",
+        "create": "Buat Lembar Gaya Baru",
+        "open_folder": "Buka Folder Lembar Gaya",
+        "edit_user_chrome": "Sunting userChrome.css",
+        "edit_user_content": "Sunting userContent.css",
+        "rebuild_complete": "Lembar gaya dibangun kembali",
+        "editor_path_not_found": "Jalur Penyunting Tidak Ditemukan",
+        "set_pref_description": "Silakan atur jalur penyunting",
+        "please_enter_filename": "Silakan masukkan nama berkas"
     }
 }

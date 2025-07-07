@@ -5,7 +5,7 @@
             "installComplete": "Installation abgeschlossen"
         },
         "installer": {
-            "title": "",
+            "title": "Floorp Installer",
             "description": "Installiere den Floorp Browser und starte ein Sicherheitsfokussiertes, schnelles und anpassbares Browser Erlebnis.",
             "adminRights": "Mit Admin-Rechten installieren",
             "adminRightsEnabled": "Installieren für alle Benutzer mit Administratorrechten.",
@@ -45,24 +45,24 @@
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "title": "Willkommen bei Floorp",
+            "description": "Willkommen zur neuesten Version von Floorp, einem Web-Browser, der mit Schwerpunkt auf Entwicklung und Forschung in Japan entwickelt wurde. Der nachfolgende Inhalt ist nur ein Teil des Projekts."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "Regelmäßige Updates",
+            "description": "Floorp wird auch als Community-basiertes Projekt laufend gepflegt und aktualisiert. Wir liefern sicheres Surfen abgestimmt auf das Prinzip, dass das Web frei für jeden zugänglich sein sollte."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "Neueste Features",
+            "description": "Die neueste Version von Floorp nutzt modernste Webfunktionen, die von Mozillas Firefox entwickelt wurden. Sie wurde außerdem neu gestaltet, um Tools, die jeder wünscht, leicht zugänglich zu machen."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "Erweiterte Anpassungen",
+            "description": "Ausgestattet mit zahlreichen Anpassungsoptionen, um die Privatsphäre besser zu schützen als Ihr Standardbrowser. Floorp ermöglicht es Ihnen, Ihre bevorzugte Konfiguration zu realisieren."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "Kämpfen für dich",
+            "description": "Floorp blockiert schädliche Tracking. Wir balancieren den Betrieb und die Benutzerrechte. Wir arbeiten daran, das Web sowohl in der Funktionalität als auch in der Privatsphäre zu verbessern."
         }
     },
     "rust": {
