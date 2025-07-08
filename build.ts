@@ -253,27 +253,44 @@ async function applyPrefs(targetBinDir?: string) {
     return;
   }
 
-  // Check if override.sh exists
+  // Determine which script to use based on platform
+  const isWindows = process.platform === "win32";
+  const scriptName = isWindows ? "override.ps1" : "override.sh";
   const overrideScriptPath = pathe.join(
     import.meta.dirname as string,
     "gecko",
     "pref",
-    "override.sh",
+    scriptName,
   );
+
+  // Check if override script exists
   if (!(await isExists(overrideScriptPath))) {
     console.warn(
-      chalk.yellow("⚠️  override.sh not found, skipping preferences override"),
+      chalk.yellow(
+        `⚠️  ${scriptName} not found, skipping preferences override`,
+      ),
     );
     return;
   }
 
   try {
-    // Make sure the script is executable
-    await $`chmod +x ${overrideScriptPath}`;
+    let result;
 
-    // Run the override script and capture output
-    console.log(chalk.cyan(`🔧 Running override script on ${firefoxJsPath}`));
-    const result = await $`${overrideScriptPath} ${firefoxJsPath}`;
+    if (isWindows) {
+      // Run PowerShell script on Windows
+      console.log(
+        chalk.cyan(`🔧 Running PowerShell override script on ${firefoxJsPath}`),
+      );
+      result =
+        await $`powershell.exe -ExecutionPolicy Bypass -File ${overrideScriptPath} ${firefoxJsPath}`;
+    } else {
+      // Run bash script on Unix-like systems
+      await $`chmod +x ${overrideScriptPath}`;
+      console.log(
+        chalk.cyan(`🔧 Running bash override script on ${firefoxJsPath}`),
+      );
+      result = await $`${overrideScriptPath} ${firefoxJsPath}`;
+    }
 
     // Display script output
     if (result.stdout) {
