@@ -10,5 +10,5 @@ XPCOM_MANIFESTS += [
 ]
 
 DIRS += [
-    "webpanel-ua",
+    "webextensions",
 ]
