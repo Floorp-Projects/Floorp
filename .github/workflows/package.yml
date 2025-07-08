@@ -214,7 +214,7 @@ jobs:
             console.log(`Using version from file: ${versionFromFile}`);
 
             // Set update URL based on platform
-            const baseUrl = `updates.floorp.app/browser/rc/`;
+            const baseUrl = `updates.floorp.app/browser/stable/`;
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT/x86_64/`,
               'Linux-x64': `${baseUrl}Linux/x86_64/`,
@@ -430,7 +430,7 @@ jobs:
 
           cd ..
 
-      - name: Replace RC Icon
+      - name: Replace Icon (Beta)
         run: |
           if [ "${{inputs.platform}}" == "Windows-x64" ] && [ "${{inputs.beta}}" == "true" ]; then
             sudo apt update
