@@ -1,3 +1,5 @@
+/// <reference path="../../../../@types/gecko/dom/index.d.ts" />
+
 declare global {
   var gFloorp: {
     tabColor?: {
