@@ -1774,7 +1774,7 @@ inline auto MaybeFind(C& container, const K& key)
 
 std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
     const ColorLutKey& request) const {
-  if (const auto found = MaybeFind(mColorLutTexMap, request)) {
+  if (const auto found = gl::MaybeFind(mColorLutTexMap, request)) {
     return *found;  // Might be *Some(nullptr) -> nullptr!
   }
 
