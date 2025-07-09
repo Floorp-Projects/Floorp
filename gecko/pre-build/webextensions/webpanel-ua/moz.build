@@ -4,13 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET_FILES.features["webpanel-ua@floorp.ablaze.one"] += [
+FINAL_TARGET_FILES["webpanel-ua"] += [
     "background.js",
     "link-48.png",
     "manifest.json",
 ]
 
-FINAL_TARGET_FILES.features["webpanel-ua@floorp.ablaze.one"]["APIs"] += [
+FINAL_TARGET_FILES["webpanel-ua"] += [
     "APIs/webRequestExt.js",
     "APIs/webRequestExt.json",
 ]
