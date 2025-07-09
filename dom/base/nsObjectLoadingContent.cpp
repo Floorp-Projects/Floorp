@@ -1162,27 +1162,28 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     }
   }
 
-  // Don't allow view-source scheme.
-  // view-source is the only scheme to which this applies at the moment due to
-  // potential timing attacks to read data from cross-origin documents. If this
-  // widens we should add a protocol flag for whether the scheme is only allowed
-  // in top and use something like nsNetUtil::NS_URIChainHasFlags.
-  if (mType != ObjectType::Fallback) {
-    nsCOMPtr<nsIURI> tempURI = mURI;
-    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(tempURI);
-    while (nestedURI) {
-      // view-source should always be an nsINestedURI, loop and check the
-      // scheme on this and all inner URIs that are also nested URIs.
-      if (tempURI->SchemeIs("view-source")) {
-        LOG(("OBJLC [%p]: Blocking as effective URI has view-source scheme",
-             this));
-        mType = ObjectType::Fallback;
+  // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+  // requires that `embed` and `object` go through `Fetch` with mode=navigate,
+  // see 1.3.5. This will in https://fetch.spec.whatwg.org/#fetching plumb us
+  // through to https://fetch.spec.whatwg.org/#concept-main-fetch where in step
+  // 12 a switch is performed. Since `object` and `embed` have mode=navigate the
+  // result of https://fetch.spec.whatwg.org/#concept-scheme-fetch will decide
+  // if main fetch proceeds. We short-circuit that scheme-fetch here, inspecting
+  // if the scheme of `mURI` is one that would return a network error. The
+  // following schemes are allowed through in scheme fetch:
+  // "about", "blob", "data", "file", "http", "https".
+  //
+  // Some accessibility tests use our internal "chrome" scheme.
+  if (mType != ObjectType::Fallback && mURI) {
+    ObjectType type = ObjectType::Fallback;
+    for (const auto& candidate :
+         {"about", "blob", "chrome", "data", "file", "http", "https"}) {
+      if (mURI->SchemeIs(candidate)) {
+        type = mType;
         break;
       }
-
-      nestedURI->GetInnerURI(getter_AddRefs(tempURI));
-      nestedURI = do_QueryInterface(tempURI);
     }
+    mType = type;
   }
 
   // Items resolved as Image/Document are not candidates for content blocking,
