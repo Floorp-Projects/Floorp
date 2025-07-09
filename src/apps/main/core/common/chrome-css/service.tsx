@@ -40,8 +40,7 @@ export class ChromeCSSService {
     return instance;
   }
 
-  private constructor() {
-  }
+  private constructor() { }
 
   getCssFiles() {
     return this.cssFilesSignal[0]();
@@ -237,8 +236,8 @@ export class ChromeCSSService {
 
       if (this.initialized) {
         try {
-          const rebuildCompleteMsg = i18next.t("chrome_css.rebuild_complete") ??
-            "CSS files rebuilt";
+          const rebuildCompleteMsg =
+            i18next.t("chrome_css.rebuild_complete") ?? "CSS files rebuilt";
           if (typeof window.StatusPanel !== "undefined") {
             window.StatusPanel._label = rebuildCompleteMsg;
           } else if (typeof window.XULBrowserWindow !== "undefined") {
@@ -305,10 +304,32 @@ export class ChromeCSSService {
 
   openFolder(): void {
     try {
-      const file = FileUtils.File(this.getCSSFolder());
-      file.launch();
+      const cssFolder = this.getCSSFolder();
+
+      if (AppConstants.platform === "macosx") {
+        // macOS: Use 'open' command to open folder in Finder
+        const app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        app.initWithPath("/usr/bin/open");
+
+        const process = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess,
+        );
+        process.init(app);
+        process.run(false, [cssFolder], 1);
+      } else {
+        // Windows and Linux: Use traditional file.launch()
+        const file = FileUtils.File(cssFolder);
+        file.launch();
+      }
     } catch (error) {
       console.error("Error opening CSS folder:", error);
+      // Fallback: Try to use file.launch() regardless of platform
+      try {
+        const file = FileUtils.File(this.getCSSFolder());
+        file.launch();
+      } catch (fallbackError) {
+        console.error("Fallback folder open also failed:", fallbackError);
+      }
     }
   }
 
@@ -334,10 +355,19 @@ export class ChromeCSSService {
     if (!editorPath) {
       editorPath = await this.getDefaultEditorPath();
 
+      // If we found a valid default editor, use it without prompting
+      if (editorPath && (await IOUtils.exists(editorPath))) {
+        this.openFileInEditor(filePath, editorPath);
+        return;
+      }
+
+      // Only prompt if no valid editor was found
       const textEditorPath = { value: editorPath };
-      const titleMsg = i18next.t("chrome_css.editor_path_not_found") ??
+      const titleMsg =
+        i18next.t("chrome_css.editor_path_not_found") ??
         "Editor Path Not Found";
-      const descMsg = i18next.t("chrome_css.set_pref_description") ??
+      const descMsg =
+        i18next.t("chrome_css.set_pref_description") ??
         "Please set the editor path";
       const confirmed = Services.prompt.prompt(
         window as mozIDOMWindow,
@@ -348,12 +378,15 @@ export class ChromeCSSService {
         { value: false },
       );
 
-      if (confirmed) {
+      if (confirmed && textEditorPath.value) {
         Services.prefs.setStringPref(
           "view_source.editor.path",
           textEditorPath.value,
         );
         editorPath = textEditorPath.value;
+      } else {
+        // User cancelled or provided empty path
+        return;
       }
     }
 
@@ -361,32 +394,100 @@ export class ChromeCSSService {
   }
 
   async getDefaultEditorPath(): Promise<string> {
-    let editorPath = "";
+    const editorPath = "";
 
     if (AppConstants.platform === "win") {
-      editorPath = "C:\\windows\\system32\\notepad.exe";
-
-      const vscodePath = `${
-        Services.dirsvc.get("Home", Ci.nsIFile).path
-      }\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe`;
+      // Check VS Code first on Windows
+      const vscodePath = `${Services.dirsvc.get("Home", Ci.nsIFile).path
+        }\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe`;
       if (await IOUtils.exists(vscodePath)) {
-        editorPath = vscodePath;
+        return vscodePath;
+      }
+
+      // Fallback to Notepad (should always exist)
+      const notepadPath = "C:\\windows\\system32\\notepad.exe";
+      if (await IOUtils.exists(notepadPath)) {
+        return notepadPath;
+      }
+    } else if (AppConstants.platform === "macosx") {
+      // macOS: Check for common editors in priority order
+      const editors = [
+        "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
+        "/usr/local/bin/code",
+        "/opt/homebrew/bin/code",
+        "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
+        "/usr/local/bin/subl",
+        "/Applications/Atom.app/Contents/Resources/app/atom.sh",
+        "/usr/local/bin/atom",
+        "/System/Applications/TextEdit.app/Contents/MacOS/TextEdit",
+      ];
+
+      for (const editor of editors) {
+        if (await IOUtils.exists(editor)) {
+          return editor;
+        }
       }
     } else {
-      const geditPath = "/usr/bin/gedit";
-      if (await IOUtils.exists(geditPath)) {
-        editorPath = geditPath;
+      // Linux and other Unix-like systems
+      const editors = [
+        "/usr/bin/code",
+        "/usr/local/bin/code",
+        "/snap/bin/code",
+        "/usr/bin/gedit",
+        "/usr/bin/nano",
+        "/usr/bin/vim",
+      ];
+
+      for (const editor of editors) {
+        if (await IOUtils.exists(editor)) {
+          return editor;
+        }
       }
     }
 
-    return editorPath;
+    // Return empty string if no editor found
+    return "";
   }
 
   openFileInEditor(filePath: string, editorPath: string): void {
     try {
-      const path = AppConstants.platform === "win"
-        ? this.convertUTF8ToShiftJIS(filePath)
-        : filePath;
+      let path = filePath;
+      let args = [path];
+
+      if (AppConstants.platform === "win") {
+        path = this.convertUTF8ToShiftJIS(filePath);
+        args = [path];
+      } else if (AppConstants.platform === "macosx") {
+        // macOS: Handle special cases for different editors
+        if (editorPath.includes("TextEdit")) {
+          // TextEdit requires special handling
+          args = [filePath];
+        } else if (editorPath.includes("code") || editorPath.includes("Code")) {
+          // VS Code
+          args = [filePath];
+        } else if (editorPath.includes("subl")) {
+          // Sublime Text
+          args = [filePath];
+        } else if (editorPath.includes("atom")) {
+          // Atom
+          args = [filePath];
+        } else {
+          // Default: use open command for .app bundles
+          if (editorPath.endsWith(".app") || editorPath.includes(".app/")) {
+            const openApp = Cc["@mozilla.org/file/local;1"].createInstance(
+              Ci.nsIFile,
+            );
+            openApp.initWithPath("/usr/bin/open");
+
+            const openProcess = Cc[
+              "@mozilla.org/process/util;1"
+            ].createInstance(Ci.nsIProcess);
+            openProcess.init(openApp);
+            openProcess.run(false, ["-a", editorPath, filePath], 3);
+            return;
+          }
+        }
+      }
 
       const app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       app.initWithPath(editorPath);
@@ -395,9 +496,30 @@ export class ChromeCSSService {
         Ci.nsIProcess,
       );
       process.init(app);
-      process.run(false, [path], 1);
+      process.run(false, args, args.length);
     } catch (error) {
       console.error("Error opening editor:", error);
+
+      // macOS fallback: try using 'open' command
+      if (AppConstants.platform === "macosx") {
+        try {
+          const openApp = Cc["@mozilla.org/file/local;1"].createInstance(
+            Ci.nsIFile,
+          );
+          openApp.initWithPath("/usr/bin/open");
+
+          const openProcess = Cc["@mozilla.org/process/util;1"].createInstance(
+            Ci.nsIProcess,
+          );
+          openProcess.init(openApp);
+          openProcess.run(false, ["-e", filePath], 2);
+        } catch (fallbackError) {
+          console.error(
+            "macOS fallback editor open also failed:",
+            fallbackError,
+          );
+        }
+      }
     }
   }
 
@@ -453,7 +575,34 @@ export class ChromeCSSService {
 
       await IOUtils.writeUTF8(filePath, "");
       await this.rebuild();
-      this.edit(filePath);
+
+      // Check if we can open editor automatically
+      const editorPath = Services.prefs.getStringPref("view_source.editor.path", "") ||
+        await this.getDefaultEditorPath();
+
+      if (editorPath && await IOUtils.exists(editorPath)) {
+        // Ask user if they want to open the file for editing
+        const openMsg = i18next.t("chrome_css.open_file_in_editor") ??
+          `Open ${fileName} in editor?`;
+        const shouldOpen = Services.prompt.confirm(
+          window as mozIDOMWindow,
+          i18next.t("chrome_css.file_created") ?? "File Created",
+          openMsg
+        );
+
+        if (shouldOpen) {
+          this.edit(filePath);
+        }
+      } else {
+        // If no editor is available, just notify that the file was created
+        const createdMsg = i18next.t("chrome_css.file_created_successfully") ??
+          `File ${fileName} created successfully`;
+        Services.prompt.alert(
+          window as mozIDOMWindow,
+          i18next.t("chrome_css.file_created") ?? "File Created",
+          createdMsg
+        );
+      }
     } catch (error) {
       console.error("Error creating CSS file:", error);
     } finally {
@@ -564,7 +713,8 @@ const CSSItems = (props: { service: ChromeCSSService }) => {
           sheetType={service.getSheetClassName(entry)}
           onToggle={() => service.toggle(name)}
           onEdit={() =>
-            service.edit(PathUtils.join(service.getCSSFolder(), name))}
+            service.edit(PathUtils.join(service.getCSSFolder(), name))
+          }
           service={service}
         />
       ))}
