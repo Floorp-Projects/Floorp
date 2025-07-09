@@ -40,7 +40,7 @@ export class ChromeCSSService {
     return instance;
   }
 
-  private constructor() { }
+  private constructor() {}
 
   getCssFiles() {
     return this.cssFilesSignal[0]();
@@ -188,6 +188,8 @@ export class ChromeCSSService {
   }
 
   async rebuild(): Promise<void> {
+    console.log("rebuild");
+
     const cssExtension = /\.css$/i;
     const excludeUcCss = /\.uc\.css/i;
 
@@ -236,8 +238,8 @@ export class ChromeCSSService {
 
       if (this.initialized) {
         try {
-          const rebuildCompleteMsg =
-            i18next.t("chrome_css.rebuild_complete") ?? "CSS files rebuilt";
+          const rebuildCompleteMsg = i18next.t("chrome_css.rebuild_complete") ??
+            "CSS files rebuilt";
           if (typeof window.StatusPanel !== "undefined") {
             window.StatusPanel._label = rebuildCompleteMsg;
           } else if (typeof window.XULBrowserWindow !== "undefined") {
@@ -302,9 +304,14 @@ export class ChromeCSSService {
     }
   }
 
-  openFolder(): void {
+  async openFolder(): Promise<void> {
     try {
       const cssFolder = this.getCSSFolder();
+
+      // Ensure the folder exists before trying to open it
+      if (!(await IOUtils.exists(cssFolder))) {
+        await IOUtils.makeDirectory(cssFolder);
+      }
 
       if (AppConstants.platform === "macosx") {
         // macOS: Use 'open' command to open folder in Finder
@@ -329,17 +336,20 @@ export class ChromeCSSService {
         file.launch();
       } catch (fallbackError) {
         console.error("Fallback folder open also failed:", fallbackError);
+        // Show error to user if both methods fail
+        Services.prompt.alert(
+          window as mozIDOMWindow,
+          i18next.t("chrome_css.error_title") ?? "Error",
+          i18next.t("chrome_css.folder_open_failed") ??
+            `Failed to open CSS folder: ${this.getCSSFolder()}`,
+        );
       }
     }
   }
 
   editUserCSS(fileName: string): void {
     try {
-      const path = PathUtils.join(
-        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
-        "chrome",
-        fileName,
-      );
+      const path = PathUtils.join(this.getCSSFolder(), fileName);
       this.edit(path);
     } catch (error) {
       console.error("Error editing user CSS:", error);
@@ -347,50 +357,63 @@ export class ChromeCSSService {
   }
 
   async edit(filePath: string): Promise<void> {
-    let editorPath = Services.prefs.getStringPref(
-      "view_source.editor.path",
-      "",
-    );
-
-    if (!editorPath) {
-      editorPath = await this.getDefaultEditorPath();
-
-      // If we found a valid default editor, use it without prompting
-      if (editorPath && (await IOUtils.exists(editorPath))) {
-        this.openFileInEditor(filePath, editorPath);
-        return;
+    try {
+      // Check if file exists, if not create it
+      if (!(await IOUtils.exists(filePath))) {
+        await IOUtils.writeUTF8(filePath, "");
       }
 
-      // Only prompt if no valid editor was found
-      const textEditorPath = { value: editorPath };
-      const titleMsg =
-        i18next.t("chrome_css.editor_path_not_found") ??
-        "Editor Path Not Found";
-      const descMsg =
-        i18next.t("chrome_css.set_pref_description") ??
-        "Please set the editor path";
-      const confirmed = Services.prompt.prompt(
-        window as mozIDOMWindow,
-        titleMsg,
-        descMsg,
-        textEditorPath,
+      let editorPath = Services.prefs.getStringPref(
+        "view_source.editor.path",
         "",
-        { value: false },
       );
 
-      if (confirmed && textEditorPath.value) {
-        Services.prefs.setStringPref(
-          "view_source.editor.path",
-          textEditorPath.value,
-        );
-        editorPath = textEditorPath.value;
-      } else {
-        // User cancelled or provided empty path
-        return;
-      }
-    }
+      if (!editorPath) {
+        editorPath = await this.getDefaultEditorPath();
 
-    this.openFileInEditor(filePath, editorPath);
+        // If we found a valid default editor, use it without prompting
+        if (editorPath && (await IOUtils.exists(editorPath))) {
+          this.openFileInEditor(filePath, editorPath);
+          return;
+        }
+
+        // Only prompt if no valid editor was found
+        const textEditorPath = { value: editorPath };
+        const titleMsg = i18next.t("chrome_css.editor_path_not_found") ??
+          "Editor Path Not Found";
+        const descMsg = i18next.t("chrome_css.set_pref_description") ??
+          "Please set the editor path";
+        const confirmed = Services.prompt.prompt(
+          window as mozIDOMWindow,
+          titleMsg,
+          descMsg,
+          textEditorPath,
+          "",
+          { value: false },
+        );
+
+        if (confirmed && textEditorPath.value) {
+          Services.prefs.setStringPref(
+            "view_source.editor.path",
+            textEditorPath.value,
+          );
+          editorPath = textEditorPath.value;
+        } else {
+          // User cancelled or provided empty path
+          return;
+        }
+      }
+
+      this.openFileInEditor(filePath, editorPath);
+    } catch (error) {
+      console.error("Error in edit method:", error);
+      Services.prompt.alert(
+        window as mozIDOMWindow,
+        i18next.t("chrome_css.error_title") ?? "Error",
+        i18next.t("chrome_css.edit_failed") ??
+          `Failed to edit file: ${filePath}`,
+      );
+    }
   }
 
   async getDefaultEditorPath(): Promise<string> {
@@ -398,8 +421,9 @@ export class ChromeCSSService {
 
     if (AppConstants.platform === "win") {
       // Check VS Code first on Windows
-      const vscodePath = `${Services.dirsvc.get("Home", Ci.nsIFile).path
-        }\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe`;
+      const vscodePath = `${
+        Services.dirsvc.get("Home", Ci.nsIFile).path
+      }\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe`;
       if (await IOUtils.exists(vscodePath)) {
         return vscodePath;
       }
@@ -420,12 +444,34 @@ export class ChromeCSSService {
         "/Applications/Atom.app/Contents/Resources/app/atom.sh",
         "/usr/local/bin/atom",
         "/System/Applications/TextEdit.app/Contents/MacOS/TextEdit",
+        "/Applications/TextEdit.app/Contents/MacOS/TextEdit",
       ];
 
       for (const editor of editors) {
         if (await IOUtils.exists(editor)) {
           return editor;
         }
+      }
+
+      // Try to find VS Code using which command
+      try {
+        const whichApp = Cc["@mozilla.org/file/local;1"].createInstance(
+          Ci.nsIFile,
+        );
+        whichApp.initWithPath("/usr/bin/which");
+
+        const whichProcess = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess,
+        );
+        whichProcess.init(whichApp);
+
+        // Check if 'code' is in PATH
+        const result = whichProcess.run(true, ["code"], 1);
+        if (result === 0) {
+          return "code";
+        }
+      } catch (error) {
+        console.debug("Could not find editor using which command:", error);
       }
     } else {
       // Linux and other Unix-like systems
@@ -577,7 +623,8 @@ export class ChromeCSSService {
       await this.rebuild();
 
       // Check if we can open editor automatically
-      const editorPath = Services.prefs.getStringPref("view_source.editor.path", "") ||
+      const editorPath =
+        Services.prefs.getStringPref("view_source.editor.path", "") ||
         await this.getDefaultEditorPath();
 
       if (editorPath && await IOUtils.exists(editorPath)) {
@@ -587,7 +634,7 @@ export class ChromeCSSService {
         const shouldOpen = Services.prompt.confirm(
           window as mozIDOMWindow,
           i18next.t("chrome_css.file_created") ?? "File Created",
-          openMsg
+          openMsg,
         );
 
         if (shouldOpen) {
@@ -600,7 +647,7 @@ export class ChromeCSSService {
         Services.prompt.alert(
           window as mozIDOMWindow,
           i18next.t("chrome_css.file_created") ?? "File Created",
-          createdMsg
+          createdMsg,
         );
       }
     } catch (error) {
@@ -648,10 +695,7 @@ const CSSMenu = (props: { service: ChromeCSSService }) => {
     });
   });
 
-  const safeHandler = (callback: () => void) => (event: Event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
+  const safeHandler = (callback: () => void) => () => {
     setTimeout(() => {
       try {
         callback();
@@ -668,28 +712,34 @@ const CSSMenu = (props: { service: ChromeCSSService }) => {
           <xul:menuitem
             label={translations().rebuild}
             id="usercssloader-rebuild"
-            onClick={safeHandler(() => service.rebuild())}
+            onCommand={safeHandler(() => service.rebuild())}
           />
           <xul:menuseparator />
           <xul:menuitem
             label={translations().create}
             id="usercssloader-create"
-            onClick={safeHandler(() => service.create())}
+            onCommand={safeHandler(() => service.create())}
           />
           <xul:menuitem
             label={translations().openFolder}
             id="usercssloader-open-folder"
-            onClick={safeHandler(() => service.openFolder())}
+            onCommand={safeHandler(() => {
+              service.openFolder().catch((error) => {
+                console.error("Error opening folder:", error);
+              });
+            })}
           />
           <xul:menuitem
             label={translations().editUserChrome}
             id="usercssloader-edit-chrome"
-            onClick={safeHandler(() => service.editUserCSS("userChrome.css"))}
+            onCommand={safeHandler(() => service.editUserCSS("userChrome.css"))}
           />
           <xul:menuitem
             label={translations().editUserContent}
             id="usercssloader-edit-content"
-            onClick={safeHandler(() => service.editUserCSS("userContent.css"))}
+            onCommand={safeHandler(() =>
+              service.editUserCSS("userContent.css")
+            )}
           />
         </xul:menupopup>
       </xul:menu>
@@ -713,8 +763,7 @@ const CSSItems = (props: { service: ChromeCSSService }) => {
           sheetType={service.getSheetClassName(entry)}
           onToggle={() => service.toggle(name)}
           onEdit={() =>
-            service.edit(PathUtils.join(service.getCSSFolder(), name))
-          }
+            service.edit(PathUtils.join(service.getCSSFolder(), name))}
           service={service}
         />
       ))}
@@ -782,8 +831,8 @@ const CSSItem = (props: {
       type="checkbox"
       checked={enabled}
       class={`usercssloader-item usercssloader-css-item ${sheetType}`}
-      onClick={(e) => handleClick(e)}
       onCommand={safeToggle}
+      onMouseDown={(e) => handleClick(e)}
     />
   );
 };

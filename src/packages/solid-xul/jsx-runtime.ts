@@ -2,11 +2,14 @@ import type { JSX as SolidJSX } from "solid-js";
 
 declare module "solid-js" {
   namespace JSX {
-    type XULElementBase = SolidJSX.HTMLAttributes<HTMLElement> & {
-      flex?: `${number}`;
-      "data-l10n-id"?: string;
-      align?: "center";
-    };
+    type XULElementBase =
+      & Omit<SolidJSX.HTMLAttributes<HTMLElement>, "oncommand">
+      & {
+        flex?: `${number}`;
+        "data-l10n-id"?: string;
+        align?: "center";
+        oncommand?: string | (() => void);
+      };
     interface XULBrowserElement extends XULElementBase {
       contextmenu?: string;
       message?: string;
@@ -34,7 +37,7 @@ declare module "solid-js" {
     interface XULMenuListElement extends XULElementBase {
       label?: string;
       accesskey?: string;
-      oncommand?: string;
+      oncommand?: string | (() => void);
       onCommand?: () => void;
       value?: string;
     }
@@ -45,8 +48,9 @@ declare module "solid-js" {
       type?: "checkbox";
       checked?: boolean;
       disabled?: boolean;
-      oncommand?: string;
+      oncommand?: string | (() => void);
       onCommand?: () => void;
+      onMouseDown?: (event: MouseEvent) => void;
       value?: string;
     }
 
@@ -101,7 +105,7 @@ declare module "solid-js" {
     interface XULToolbarButtonElement extends XULElementBase {
       label?: string;
       accesskey?: string;
-      oncommand?: string;
+      oncommand?: string | (() => void);
       onCommand?: () => void;
       context?: string;
       image?: string;
@@ -112,7 +116,7 @@ declare module "solid-js" {
     interface XULButtonElement extends XULElementBase {
       label?: string;
       accesskey?: string;
-      oncommand?: string;
+      oncommand?: string | (() => void);
       onCommand?: () => void;
       context?: string;
       image?: string;
@@ -124,9 +128,8 @@ declare module "solid-js" {
       height?: string;
     }
 
-    interface XULTabElement
-      extends XULElementBase, HTMLAttributes<HTMLElement> {
-      onwheel?: EventHandlerUnion<HTMLElement, WheelEvent>;
+    interface XULTabElement extends XULElementBase {
+      onwheel?: (event: WheelEvent) => void;
     }
 
     interface IntrinsicElements {

@@ -242,7 +242,13 @@
         "rebuild_complete": "Style sheets rebuilt",
         "editor_path_not_found": "Editor Path Not Found",
         "set_pref_description": "Please set the editor path",
-        "please_enter_filename": "Please enter a filename"
+        "please_enter_filename": "Please enter a filename",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Error",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
     },
     "reboot": {
         "menu": {

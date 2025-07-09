@@ -229,6 +229,12 @@
         "rebuild_complete": "スタイルシートを再構築しました",
         "editor_path_not_found": "エディターのパスが見つかりません",
         "set_pref_description": "エディターのパスを指定してください",
-        "please_enter_filename": "ファイル名を入力してください"
+        "please_enter_filename": "ファイル名を入力してください",
+        "file_created": "ファイルが作成されました",
+        "file_created_successfully": "ファイルが正常に作成されました",
+        "open_file_in_editor": "エディタでファイルを開きますか？",
+        "error_title": "エラー",
+        "folder_open_failed": "CSSフォルダを開くのに失敗しました",
+        "edit_failed": "ファイルの編集に失敗しました"
     }
 }
