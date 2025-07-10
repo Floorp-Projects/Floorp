@@ -10108,6 +10108,37 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
   emitWasmValueStore(ins, type, narrowingOp, src, addr);
 }
 
+void CodeGenerator::visitWasmStoreStackResult(LWasmStoreStackResult* ins) {
+  const LAllocation* value = ins->value();
+  Address addr(ToRegister(ins->stackResultsArea()), ins->offset());
+
+  switch (ins->type()) {
+    case MIRType::Int32:
+      masm.storePtr(ToRegister(value), addr);
+      break;
+    case MIRType::Float32:
+      masm.storeFloat32(ToFloatRegister(value), addr);
+      break;
+    case MIRType::Double:
+      masm.storeDouble(ToFloatRegister(value), addr);
+      break;
+#ifdef ENABLE_WASM_SIMD
+    case MIRType::Simd128:
+      masm.storeUnalignedSimd128(ToFloatRegister(value), addr);
+      break;
+#endif
+    case MIRType::WasmAnyRef:
+      masm.storePtr(ToRegister(value), addr);
+      break;
+    default:
+      MOZ_CRASH("unexpected type in ::visitWasmStoreStackResult");
+  }
+}
+
+void CodeGenerator::visitWasmStoreStackResultI64(LWasmStoreStackResultI64* ins) {
+  masm.store64(ToRegister64(ins->value()), Address(ToRegister(ins->stackResultsArea()), ins->offset()));
+}
+
 void CodeGenerator::visitWasmStoreElement(LWasmStoreElement* ins) {
   MIRType type = ins->type();
   MNarrowingOp narrowingOp = ins->narrowingOp();
