@@ -5432,6 +5432,10 @@ Maybe<layers::SurfaceDescriptor> ValidSurfaceDescriptorForRemoteCanvas2d(
 #ifdef XP_MACOSX
     case layers::RemoteDecoderVideoSubDescriptor::
         TSurfaceDescriptorMacIOSurface: {
+      const auto& ssd = subdesc.get_SurfaceDescriptorMacIOSurface();
+      if (ssd.gpuFence()) {
+        return Nothing();
+      }
       break;
     }
 #endif
