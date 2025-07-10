@@ -18,9 +18,9 @@ import type { Panel } from "../utils/type";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels";
 import { WebsitePanel } from "../website-panel-window-parent";
+import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
-
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as
       | XULElement
@@ -184,8 +184,8 @@ export class CPanelSidebar {
         prev.map((panel) =>
           panel.id === selectedPanelId()
             ? { ...panel, width: Number(currentWidth) }
-            : panel,
-        ),
+            : panel
+        )
       );
     }
   }
