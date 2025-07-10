@@ -793,15 +793,15 @@ workers:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
             os: macosx
-            worker-type: depsigning-mac-v1
+            worker-type: dep-gecko-signing-mac14m2
         mac-signing:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
             os: macosx
             worker-type:
                 by-release-level:
-                    production: signing-mac-v1
-                    staging: depsigning-mac-v1
+                    production: gecko-signing-mac14m2
+                    staging: dep-gecko-signing-mac14m2
         push-apk:
             provisioner: scriptworker-k8s
             implementation: scriptworker-pushapk
