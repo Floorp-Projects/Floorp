@@ -2557,24 +2557,9 @@
         ],
         "classification": "general",
         "name": "Google",
-        "partnerCode": "firefox-b-d",
         "urls": {
           "search": {
             "base": "https://www.google.com/search",
-            "params": [
-              {
-                "name": "client",
-                "value": "{partnerCode}"
-              },
-              {
-                "experimentConfig": "google_channel_row",
-                "name": "channel"
-              },
-              {
-                "enterpriseValue": "entpr",
-                "name": "channel"
-              }
-            ],
             "searchTermParamName": "q"
           },
           "suggestions": {
@@ -2610,14 +2595,15 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1742996759044,
+      "last_modified": 1751892680463,
       "recordType": "engine",
-      "schema": 1742915469472,
+      "schema": 1751854531869,
       "variants": [
         {
           "environment": {
             "allRegionsAndLocales": true
           },
+          "partnerCode": "firefox-b-d",
           "subVariants": [
             {
               "environment": {
@@ -2641,7 +2627,25 @@
               "telemetrySuffix": "b-m"
             }
           ],
-          "telemetrySuffix": "b-d"
+          "telemetrySuffix": "b-d",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
@@ -2652,12 +2656,7 @@
               "kz"
             ]
           },
-          "telemetrySuffix": "com-nocodes",
-          "urls": {
-            "search": {
-              "params": []
-            }
-          }
+          "telemetrySuffix": "com-nocodes"
         },
         {
           "environment": {
@@ -2763,10 +2762,34 @@
           "environment": {
             "distributions": [
               "mint-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-lm",
-          "telemetrySuffix": "b-lm"
+          "telemetrySuffix": "b-lm",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
@@ -2778,7 +2801,25 @@
             ]
           },
           "partnerCode": "firefox-b-1-lm",
-          "telemetrySuffix": "b-1-lm"
+          "telemetrySuffix": "b-1-lm",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
@@ -2788,10 +2829,30 @@
             ],
             "distributions": [
               "vivo-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-vv",
-          "telemetrySuffix": "b-vv"
+          "telemetrySuffix": "b-vv",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
@@ -2801,10 +2862,30 @@
             ],
             "distributions": [
               "dt-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
             ]
           },
           "partnerCode": "firefox-b-tf",
-          "telemetrySuffix": "b-tf"
+          "telemetrySuffix": "b-tf",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -8242,5 +8323,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1749848937099
+  "timestamp": 1751892680463
 }
