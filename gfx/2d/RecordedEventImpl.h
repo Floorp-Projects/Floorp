@@ -17,9 +17,6 @@
 #include "ScaledFontBase.h"
 #include "SFNTData.h"
 
-#include "mozilla/dom/CanvasRenderingContextHelper.h"
-#include "mozilla/IntegerRange.h"
-#include "mozilla/layers/BuildConstants.h"
 #include "mozilla/layers/LayersSurfaces.h"
 
 namespace mozilla {
@@ -3206,35 +3203,6 @@ inline bool RecordedDrawSurfaceDescriptor::PlayEvent(
   dt->DrawSurface(surface, mDest, mSource, mDSOptions, mOptions);
   return true;
 }
-
-template <class S>
-struct ElementStreamFormat<S, layers::SurfaceDescriptor> {
-  using T = layers::SurfaceDescriptor;
-
-  static void Write(S& s, const T& t) {
-    // More rigorous version is coming soon! -Kelsey
-    const auto valid = dom::ValidSurfaceDescriptorForRemoteCanvas2d(t);
-    MOZ_RELEASE_ASSERT(valid && *valid == t);
-    if (kIsDebug) {
-      // We better be able to memcpy and destroy this if we're going to send it
-      // over IPC!
-      constexpr int A_COUPLE_TIMES = 3;
-      for (const auto i : IntegerRange(A_COUPLE_TIMES)) {
-        (void)i;
-        auto copy = T{};
-        memcpy(&copy, &t, sizeof(T));
-      }
-    }
-    const auto& tValid = *valid;
-    s.write(reinterpret_cast<const char*>(&tValid), sizeof(T));
-  }
-  static void Read(S& s, T& t) {
-    s.read(reinterpret_cast<char*>(&t), sizeof(T));
-    const auto valid = dom::ValidSurfaceDescriptorForRemoteCanvas2d(t);
-    MOZ_RELEASE_ASSERT(valid && *valid == t);
-    t = *valid;
-  }
-};
 
 template <class S>
 void RecordedDrawSurfaceDescriptor::Record(S& aStream) const {
