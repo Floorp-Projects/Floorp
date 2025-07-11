@@ -232,6 +232,15 @@ tests.push({
     hasTelemetryId(engines, "Google", "google-b-lm"),
 });
 
+tests.push({
+  region: "ru",
+  distribution: "mint-001",
+  test: engines =>
+    hasDefault(engines, "Google") &&
+    hasEnginesFirst(engines, ["Google"]) &&
+    hasTelemetryId(engines, "Google", "google-com-nocodes"),
+});
+
 function hasURLs(engines, engineName, url, suggestURL) {
   let engine = engines.find(e => e.name === engineName);
   Assert.ok(engine, `Should be able to find ${engineName}`);

@@ -12,7 +12,7 @@ const test = new SearchConfigTest({
   aliases: ["@google"],
   default: {
     // Included everywhere apart from the exclusions below. These are basically
-    // just excluding what Yandex and Baidu include.
+    // just excluding what Baidu includes.
     excluded: [
       {
         regions: ["cn"],
