@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { CPanelSidebar } from "./panel-sidebar.tsx";
+import type { CPanelSidebar } from "./panel-sidebar.tsx";
 import { createSignal, Show } from "solid-js";
 import type { Panel } from "../utils/type.ts";
 import { ContextMenuUtils } from "@core/utils/context-menu.tsx";
@@ -18,7 +18,7 @@ const translationKeys = {
   zoomOut: "panelSidebar.contextMenu.zoomOut",
   resetZoom: "panelSidebar.contextMenu.resetZoom",
   changeUA: "panelSidebar.contextMenu.changeUA",
-  delete: "panelSidebar.contextMenu.delete"
+  delete: "panelSidebar.contextMenu.delete",
 };
 
 const getTranslations = () => ({
@@ -29,17 +29,18 @@ const getTranslations = () => ({
   zoomOut: i18next.t(translationKeys.zoomOut),
   resetZoom: i18next.t(translationKeys.resetZoom),
   changeUA: i18next.t(translationKeys.changeUA),
-  delete: i18next.t(translationKeys.delete)
+  delete: i18next.t(translationKeys.delete),
 });
 
 export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
 
 export class SidebarContextMenuElem {
-
-  ctx: CPanelSidebar
+  ctx: CPanelSidebar;
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.sidebarContextMenu());
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
+      this.sidebarContextMenu()
+    );
   }
 
   public contextPanelId: string | null = null;
@@ -53,7 +54,7 @@ export class SidebarContextMenuElem {
     let panelId: string | undefined;
 
     for (let i = 0; i < 10 && currentElement && !panelId; i++) {
-      panelId = currentElement.getAttribute('data-panel-id') || undefined;
+      panelId = currentElement.getAttribute("data-panel-id") || undefined;
 
       if (!panelId && currentElement.parentElement) {
         currentElement = currentElement.parentElement;
@@ -94,12 +95,12 @@ export class SidebarContextMenuElem {
     try {
       callback();
     } catch (error) {
-      console.error("コマンド実行エラー:", error);
+      console.error("Command execution error:", error);
     } finally {
-      if (typeof document !== 'undefined' && document) {
+      if (typeof document !== "undefined" && document) {
         const contextMenu = document.getElementById("webpanel-context");
         if (contextMenu) {
-          // @ts-ignore - Firefox特有のXUL APIなのでTypeScriptの型定義にない
+          // @ts-ignore - Fix type error
           contextMenu.hidePopup();
         }
       }
@@ -147,11 +148,11 @@ export class SidebarContextMenuElem {
   }
 
   private handleChangeUserAgentCommand() {
+    const gPanelSidebar = this.ctx;
     const panelId = contextPanel()?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
-        // UAの変更処理を実装する必要がある
-        // gPanelSidebar.changeUserAgent(panelId);
+        gPanelSidebar.changeUserAgent(panelId);
       });
     }
   }

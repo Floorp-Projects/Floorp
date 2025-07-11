@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Panel } from "../utils/type";
+import type { Panel } from "../utils/type.ts";
 
 export function WebSiteBrowser({ id, type, url, userContextId }: Panel) {
   return (

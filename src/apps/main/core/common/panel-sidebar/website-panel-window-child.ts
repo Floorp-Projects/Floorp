@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Panels } from "./utils/type";
+import type { Panels } from "./utils/type.ts";
 
 const PANEL_SIDEBAR_DATA_PREF_NAME = "floorp.panelSidebar.data";
 
@@ -16,7 +16,7 @@ export class WebsitePanelWindowChild {
     return WebsitePanelWindowChild.instance;
   }
 
-  currentURL = new URL(window.location.href);
+  currentURL = new URL(globalThis.location.href);
 
   get panelSidebarData() {
     return JSON.parse(
@@ -46,17 +46,16 @@ export class WebsitePanelWindowChild {
   }
 
   get userAgent() {
-    return this.webpanelData?.userAgent ? this.webpanelData.userAgent : false;
+    return this.webpanelData.userAgent;
   }
 
   get webpanelData() {
     const id = this.webpanelId;
-    for (const panel of this.panelSidebarData) {
-      if (panel.id === id) {
-        return panel;
-      }
+    const panel = this.panelSidebarData.find((panel) => panel.id === id);
+    if (!panel) {
+      throw new Error(`Panel not found: ${id}`);
     }
-    return null;
+    return panel;
   }
 
   get isBmsWindow() {
@@ -68,23 +67,23 @@ export class WebsitePanelWindowChild {
       return;
     }
 
-    window.floorpWebPanelWindow = true;
-    window.SessionStore.promiseInitialized.then(() =>
-      this.createWebpanelWindow(),
+    globalThis.floorpWebPanelWindow = true;
+    globalThis.SessionStore.promiseInitialized.then(() =>
+      this.createWebpanelWindow()
     );
   }
 
   setZoomLevel() {
     const zoomLevel = this.webpanelData?.zoomLevel;
     if (zoomLevel) {
-      window.ZoomManager.zoom = zoomLevel;
+      globalThis.ZoomManager.zoom = zoomLevel;
     }
   }
 
   handleUserContext() {
     let triggeringPrincipal: Principal | null = null;
 
-    const tab = window.gBrowser.selectedTab;
+    const tab = globalThis.gBrowser.selectedTab;
     if (tab.getAttribute("usercontextid") === this.userContextId) {
       return;
     }
@@ -92,9 +91,9 @@ export class WebsitePanelWindowChild {
     if (tab.linkedPanel) {
       triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
     } else {
-      const tabState = JSON.parse(window.SessionStore.getTabState(tab));
+      const tabState = JSON.parse(globalThis.SessionStore.getTabState(tab));
       try {
-        triggeringPrincipal = window.E10SUtils.deserializePrincipal(
+        triggeringPrincipal = globalThis.E10SUtils.deserializePrincipal(
           tabState.triggeringPrincipal_base64,
         );
       } catch (ex) {
@@ -118,44 +117,46 @@ export class WebsitePanelWindowChild {
       );
     }
 
-    const newTab = window.gBrowser.addTab(window.bmsLoadedURI, {
+    const newTab = globalThis.gBrowser.addTab(globalThis.bmsLoadedURI, {
       userContextId: this.userContextId,
       triggeringPrincipal,
     });
 
-    if (window.gBrowser.selectedTab === tab) {
-      window.gBrowser.selectedTab = newTab;
+    if (globalThis.gBrowser.selectedTab === tab) {
+      globalThis.gBrowser.selectedTab = newTab;
     }
 
-    window.gBrowser.removeTab(tab);
+    globalThis.gBrowser.removeTab(tab);
   }
 
   createWebpanelWindow() {
-    const { userContextId, userAgent, loadURL, mainWindow } = this;
+    const { loadURL, mainWindow, userAgent } = this;
 
-    mainWindow.setAttribute("BSM-window", "true");
-    mainWindow.setAttribute("BMS-usercontextid", userContextId.toString());
-    mainWindow.setAttribute("BMS-useragent", userAgent.toString());
-    mainWindow.setAttribute("BMS-webpanelid", this.webpanelId ?? "");
-    document?.getElementById("navigator-toolbox")?.setAttribute("hidden", "true");
+    // flag for userAgent
+    globalThis.floorpBmsUserAgent = userAgent;
+
+    document?.getElementById("navigator-toolbox")?.setAttribute(
+      "hidden",
+      "true",
+    );
     document?.getElementById("browser")?.setAttribute("data-is-child", "true");
-    window.bmsLoadedURI = loadURL;
+    globalThis.bmsLoadedURI = loadURL;
 
     // Remove "navigator:browser" from window-main attribute
     mainWindow.setAttribute("windowtype", "navigator:webpanel");
 
     // Tab modifications
-    window.gBrowser.loadURI(Services.io.newURI(loadURL as string), {
+    globalThis.gBrowser.loadURI(Services.io.newURI(loadURL as string), {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 
     // Attribute modifications
-    window.gBrowser.selectedTab.setAttribute("BMS-webpanel-tab", "true");
+    globalThis.gBrowser.selectedTab.setAttribute("BMS-webpanel-tab", "true");
 
     // Handle issue of opening URL by another application and not loading on the main window
-    window.setTimeout(() => {
-      const tab = window.gBrowser.addTrustedTab("about:blank");
-      window.gBrowser.removeTab(tab);
+    globalThis.setTimeout(() => {
+      const tab = globalThis.gBrowser.addTrustedTab("about:blank");
+      globalThis.gBrowser.removeTab(tab);
     }, 0);
 
     // User context handling
@@ -172,6 +173,7 @@ export class WebsitePanelWindowChild {
       this.setZoomLevel();
     });
 
-    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")?.remove();
+    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")
+      ?.remove();
   }
 }
