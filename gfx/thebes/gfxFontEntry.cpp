@@ -420,7 +420,7 @@ class gfxFontEntry::FontTableBlobData {
     MOZ_COUNT_DTOR(FontTableBlobData);
     if (mFontEntry && mHashKey) {
       AutoWriteLock lock(mFontEntry->mLock);
-      mFontEntry->mFontTableCache->RemoveEntry(mHashKey);
+      mFontEntry->GetFontTableCache()->RemoveEntry(mHashKey);
     }
   }
 
