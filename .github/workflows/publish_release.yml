@@ -186,6 +186,45 @@ jobs:
           cp ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux-meta.json
           cp ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac-meta.json
 
+      - name: Generate hashes.txt
+        run: |
+          cd ~/noraneko-publish
+          echo "# Floorp ${{ env.NR_VERSION }} - File Hashes" > hashes.txt
+          echo "Generated on: $(date -u)" >> hashes.txt
+          echo "" >> hashes.txt
+
+          echo "## Windows Files" >> hashes.txt
+          find win -name "*.mar" -o -name "*.exe" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          find win-dist -name "*.exe" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          echo "" >> hashes.txt
+
+          echo "## Linux Files" >> hashes.txt
+          find linux -name "*.mar" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          find linux-dist -type f | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          echo "" >> hashes.txt
+
+          echo "## macOS Files" >> hashes.txt
+          find mac -name "*.mar" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          find mac-dist -name "*.dmg" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          echo "" >> hashes.txt
+
+          echo "## Stub Installers" >> hashes.txt
+          find stub-installers -name "*.exe" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
         with:
@@ -200,6 +239,7 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
             ${{ env.ROOT_DIR }}/noraneko-publish/stub-installers/*.exe
+            ${{ env.ROOT_DIR }}/noraneko-publish/hashes.txt
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp ${{ env.NR_VERSION }}"
           body: |
