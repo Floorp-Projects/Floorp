@@ -202,9 +202,15 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/stub-installers/*.exe
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp ${{ env.NR_VERSION }}"
-          body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
+          body: |
+            Release Note: https://blog.floorp.app/release/${{ env.NR_VERSION }}
+
+            ## What's Changed
+
+            ${{ steps.release_notes.outputs.body }}
+          generate_release_notes: true
           draft: false
-          prerelease: true
+          make_latest: true
           token: ${{ github.token }}
 
       - name: Deploy to Floorp Update Server 🚀
