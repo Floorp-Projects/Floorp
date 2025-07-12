@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Öppna den senaste stängda fliken"
         }
     },
+    "qrCode": {
+        "pageAction": "Generera QR-kod",
+        "modalTitle": "QR-kodgenerator",
+        "loading": "Genererar QR-kod...",
+        "copyButton": "Kopiera bild",
+        "downloadButton": "Ladda ner",
+        "closeButton": "Stäng",
+        "copySuccess": "QR-kod har kopierats till urklipp!",
+        "copyError": "Misslyckades med att kopiera QR-kod",
+        "generateError": "Misslyckades med att generera QR-kod"
+    },
+    "qrcode-generate-page-action": "Generera QR-kod för den här sidan",
+    "qrcode-generate-page-action-title": "QR-kodgenerator",
     "panelSidebar": {
         "modal": {
             "type": "Paneltyp",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Stilmallar ombyggda",
         "editor_path_not_found": "Sökväg för redigerare hittades inte",
         "set_pref_description": "Vänligen ange sökvägen för redigeraren",
-        "please_enter_filename": "Vänligen ange ett filnamn"
+        "please_enter_filename": "Vänligen ange ett filnamn",
+        "file_created": "Fil skapad",
+        "file_created_successfully": "Filen skapades framgångsrikt",
+        "open_file_in_editor": "Öppna fil i redigerare?",
+        "error_title": "Fel",
+        "folder_open_failed": "Misslyckades med att öppna CSS-mapp",
+        "edit_failed": "Misslyckades med att redigera fil"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Starta om",
+            "normal-restart": "Starta om",
+            "restart-cache-clear": "Starta om med cache rensning",
+            "restart-safe-mode": "Starta om i felsäkert läge",
+            "restart-profile-manager": "Starta om med profilhanterare"
+        }
     }
 }

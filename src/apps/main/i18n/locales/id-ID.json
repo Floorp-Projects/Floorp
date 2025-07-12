@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Reopen the last closed tab"
         }
     },
+    "qrCode": {
+        "pageAction": "Buat Kode QR",
+        "modalTitle": "Pembuat Kode QR",
+        "loading": "Membuat kode QR …",
+        "copyButton": "Salin Gambar",
+        "downloadButton": "Unduh",
+        "closeButton": "Tutup",
+        "copySuccess": "Kode QR disaln ke papan kerani!",
+        "copyError": "Gagal menyalin kode QR",
+        "generateError": "Gagal membuat kode QR"
+    },
+    "qrcode-generate-page-action": "Buat kode QR untuk halaman ini",
+    "qrcode-generate-page-action-title": "Pembuat Kode QR",
     "panelSidebar": {
         "modal": {
             "type": "Jenis Panel",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Lembar gaya dibangun kembali",
         "editor_path_not_found": "Jalur Penyunting Tidak Ditemukan",
         "set_pref_description": "Silakan atur jalur penyunting",
-        "please_enter_filename": "Silakan masukkan nama berkas"
+        "please_enter_filename": "Silakan masukkan nama berkas",
+        "file_created": "Berkas Dibuat",
+        "file_created_successfully": "Berkas berhasil dibuat",
+        "open_file_in_editor": "Buka berkas di editor?",
+        "error_title": "Galat",
+        "folder_open_failed": "Gagal membuka folder CSS",
+        "edit_failed": "Gagal menyunting berkas"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Mulai Ulang",
+            "normal-restart": "Mulai Ulang",
+            "restart-cache-clear": "Mulai Ulang dengan Pembersihan Cache",
+            "restart-safe-mode": "Mulai Ulang dalam Mode Aman",
+            "restart-profile-manager": "Mulai Ulang dengan Manajer Profil"
+        }
     }
 }

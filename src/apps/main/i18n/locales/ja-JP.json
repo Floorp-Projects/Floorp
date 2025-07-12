@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "最後に閉じたタブを開きなおす"
         }
     },
+    "qrCode": {
+        "pageAction": "QR コードを生成",
+        "modalTitle": "QR コードジェネレーター",
+        "loading": "QR コードを生成中...",
+        "copyButton": "画像をコピー",
+        "downloadButton": "ダウンロード",
+        "closeButton": "閉じる",
+        "copySuccess": "QR コードをクリップボードにコピーしました！",
+        "copyError": "QR コードのコピーに失敗しました",
+        "generateError": "QR コードの生成に失敗しました"
+    },
+    "qrcode-generate-page-action": "このページの QR コードを生成",
+    "qrcode-generate-page-action-title": "QR コードジェネレーター",
     "panelSidebar": {
         "modal": {
             "type": "パネルの種類",
@@ -229,6 +242,21 @@
         "rebuild_complete": "スタイルシートを再構築しました",
         "editor_path_not_found": "エディターのパスが見つかりません",
         "set_pref_description": "エディターのパスを指定してください",
-        "please_enter_filename": "ファイル名を入力してください"
+        "please_enter_filename": "ファイル名を入力してください",
+        "file_created": "ファイルを作成しました",
+        "file_created_successfully": "ファイルは正常に作成されました",
+        "open_file_in_editor": "エディターでファイルを開きますか？",
+        "error_title": "エラー",
+        "folder_open_failed": "CSS フォルダーを開けませんでした",
+        "edit_failed": "ファイルを編集できませんでした"
+    },
+    "reboot": {
+        "menu": {
+            "title": "再起動",
+            "normal-restart": "再起動",
+            "restart-cache-clear": "キャッシュを消去して再起動",
+            "restart-safe-mode": "セーフモードで再起動",
+            "restart-profile-manager": "再起動してプロファイルマネージャーを表示"
+        }
     }
 }

@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "Flik med flera rader",
                 "newtabInsideEnabled": "Visa knappen för ny flik inuti flikfältet"
+            },
+            "bookmarkBar": {
+                "title": "Bokmärkesfält",
+                "focusExpand": "Expandera bokmärkesfältet vid fokus"
             }
         }
     },

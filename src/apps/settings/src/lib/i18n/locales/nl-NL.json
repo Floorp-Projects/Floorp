@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "Multirow Tab",
                 "newtabInsideEnabled": "Show new tab button inside tab bar"
+            },
+            "bookmarkBar": {
+                "title": "Bookmark Bar",
+                "focusExpand": "Expand bookmark bar on focus"
             }
         }
     },

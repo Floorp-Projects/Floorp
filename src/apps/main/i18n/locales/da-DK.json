@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Genåbn den sidst lukkede fane"
         }
     },
+    "qrCode": {
+        "pageAction": "Generate QR Code",
+        "modalTitle": "QR Code Generator",
+        "loading": "Generating QR Code...",
+        "copyButton": "Copy Image",
+        "downloadButton": "Download",
+        "closeButton": "Close",
+        "copySuccess": "QR code copied to clipboard!",
+        "copyError": "Failed to copy QR code",
+        "generateError": "Failed to generate QR code"
+    },
+    "qrcode-generate-page-action": "Generate QR Code for this page",
+    "qrcode-generate-page-action-title": "QR Code Generator",
     "panelSidebar": {
         "modal": {
             "type": "Paneltype",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Stylesheets gendannet",
         "editor_path_not_found": "Editorsti ikke fundet",
         "set_pref_description": "Angiv venligst stien til editoren",
-        "please_enter_filename": "Indtast venligst et filnavn"
+        "please_enter_filename": "Indtast venligst et filnavn",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Error",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Restart",
+            "normal-restart": "Restart",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
     }
 }

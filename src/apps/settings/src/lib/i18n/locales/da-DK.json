@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "Multirow Tab",
                 "newtabInsideEnabled": "Vis Ny Fane-knap i fanelinjen"
+            },
+            "bookmarkBar": {
+                "title": "Bookmark Bar",
+                "focusExpand": "Expand bookmark bar on focus"
             }
         }
     },

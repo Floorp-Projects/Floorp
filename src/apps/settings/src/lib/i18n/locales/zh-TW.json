@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "多層分頁列",
                 "newtabInsideEnabled": "在分頁列內顯示新分頁按鈕"
+            },
+            "bookmarkBar": {
+                "title": "書籤列",
+                "focusExpand": "對焦時展開書籤列"
             }
         }
     },

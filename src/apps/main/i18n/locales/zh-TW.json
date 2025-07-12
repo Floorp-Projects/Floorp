@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "重新開啟上次關閉的分頁"
         }
     },
+    "qrCode": {
+        "pageAction": "產生 QR 碼",
+        "modalTitle": "QR 碼產生器",
+        "loading": "正在產生 QR 碼……",
+        "copyButton": "複製圖片",
+        "downloadButton": "下載",
+        "closeButton": "關閉",
+        "copySuccess": "QR 碼已複製到剪貼簿！",
+        "copyError": "複製 QR 碼失敗",
+        "generateError": "產生 QR 碼失敗"
+    },
+    "qrcode-generate-page-action": "為此頁生成 QR 碼",
+    "qrcode-generate-page-action-title": "QR 碼產生器",
     "panelSidebar": {
         "modal": {
             "type": "面板類型",
@@ -229,6 +242,21 @@
         "rebuild_complete": "樣式檔重建完成",
         "editor_path_not_found": "未找到編輯器路徑",
         "set_pref_description": "請設定編輯器路徑",
-        "please_enter_filename": "請鍵入檔案名"
+        "please_enter_filename": "請鍵入檔案名",
+        "file_created": "已新增檔案",
+        "file_created_successfully": "已成功新增檔案",
+        "open_file_in_editor": "在編輯器中開啟檔案？",
+        "error_title": "錯誤",
+        "folder_open_failed": "開啟 CSS 資料夾失敗",
+        "edit_failed": "編輯檔案失敗"
+    },
+    "reboot": {
+        "menu": {
+            "title": "重新啟動",
+            "normal-restart": "重新啟動",
+            "restart-cache-clear": "清除快取並重新啟動",
+            "restart-safe-mode": "在安全模式下重新啟動",
+            "restart-profile-manager": "重新啟動並開啟設定檔管理員"
+        }
     }
 }

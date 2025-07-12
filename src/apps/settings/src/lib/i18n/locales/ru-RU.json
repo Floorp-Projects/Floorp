@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "Multirow Tab",
                 "newtabInsideEnabled": "Show new tab button inside tab bar"
+            },
+            "bookmarkBar": {
+                "title": "Bookmark Bar",
+                "focusExpand": "Expand bookmark bar on focus"
             }
         }
     },
@@ -350,7 +354,7 @@
             "gecko-enter-into-customize-mode": "Enter Customize Mode",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
+            "floorp-show-pip": "Показать в режиме картинки в картинке",
             "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",

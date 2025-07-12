@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "Çok Satırlı Sekme",
                 "newtabInsideEnabled": "Yeni sekme düğmesini sekme çubuğunun içinde göster"
+            },
+            "bookmarkBar": {
+                "title": "Bookmark Bar",
+                "focusExpand": "Expand bookmark bar on focus"
             }
         }
     },

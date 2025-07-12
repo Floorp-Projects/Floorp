@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Reopen the last closed tab"
         }
     },
+    "qrCode": {
+        "pageAction": "Generate QR Code",
+        "modalTitle": "QR Code Generator",
+        "loading": "Generating QR Code...",
+        "copyButton": "Copy Image",
+        "downloadButton": "Download",
+        "closeButton": "Close",
+        "copySuccess": "QR code copied to clipboard!",
+        "copyError": "Failed to copy QR code",
+        "generateError": "Failed to generate QR code"
+    },
+    "qrcode-generate-page-action": "Generate QR Code for this page",
+    "qrcode-generate-page-action-title": "QR Code Generator",
     "panelSidebar": {
         "modal": {
             "type": "패널 유형",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Style sheets rebuilt",
         "editor_path_not_found": "Editor Path Not Found",
         "set_pref_description": "Please set the editor path",
-        "please_enter_filename": "Please enter a filename"
+        "please_enter_filename": "Please enter a filename",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Error",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Restart",
+            "normal-restart": "Restart",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
     }
 }

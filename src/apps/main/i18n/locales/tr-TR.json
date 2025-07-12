@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Son Kapatılan Sekmeyi Yeniden Aç"
         }
     },
+    "qrCode": {
+        "pageAction": "Generate QR Code",
+        "modalTitle": "QR Code Generator",
+        "loading": "Generating QR Code...",
+        "copyButton": "Copy Image",
+        "downloadButton": "Download",
+        "closeButton": "Close",
+        "copySuccess": "QR code copied to clipboard!",
+        "copyError": "Failed to copy QR code",
+        "generateError": "Failed to generate QR code"
+    },
+    "qrcode-generate-page-action": "Generate QR Code for this page",
+    "qrcode-generate-page-action-title": "QR Code Generator",
     "panelSidebar": {
         "modal": {
             "type": "Panel Türü",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Stil sayfaları yeniden oluşturuldu",
         "editor_path_not_found": "Editör Yolu Bulunamadı",
         "set_pref_description": "Lütfen editör yolunu ayarlayın",
-        "please_enter_filename": "Lütfen bir dosya adı girin"
+        "please_enter_filename": "Lütfen bir dosya adı girin",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Error",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Restart",
+            "normal-restart": "Restart",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
     }
 }

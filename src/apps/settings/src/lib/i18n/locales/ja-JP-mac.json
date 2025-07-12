@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "多段タブ",
                 "newtabInsideEnabled": "タブバーの中に \"新規タブ\" ボタンを表示"
+            },
+            "bookmarkBar": {
+                "title": "ブックマークバー",
+                "focusExpand": "カーソルを合わせたときにブックマークバーを広げる"
             }
         }
     },

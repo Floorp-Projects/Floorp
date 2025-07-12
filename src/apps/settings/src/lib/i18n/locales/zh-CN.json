@@ -145,6 +145,10 @@
             "multirowTab": {
                 "title": "多行标签页",
                 "newtabInsideEnabled": "在标签栏内显示新标签按钮"
+            },
+            "bookmarkBar": {
+                "title": "Bookmark Bar",
+                "focusExpand": "Expand bookmark bar on focus"
             }
         }
     },

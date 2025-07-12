@@ -189,6 +189,19 @@
             "gecko-restore-last-tab": "Reabrir o último separador fechado"
         }
     },
+    "qrCode": {
+        "pageAction": "Gerar código QR",
+        "modalTitle": "",
+        "loading": "Geração de código QR...",
+        "copyButton": "Copiar imagem",
+        "downloadButton": "Descarregar",
+        "closeButton": "Fechar",
+        "copySuccess": "Código QR copiado para a área de transferência!",
+        "copyError": "Falha ao copiar o código QR",
+        "generateError": "Falha ao gerar o código QR"
+    },
+    "qrcode-generate-page-action": "Gerar código QR para esta página",
+    "qrcode-generate-page-action-title": "Gerador de código QR",
     "panelSidebar": {
         "modal": {
             "type": "Panel Type",
@@ -229,6 +242,21 @@
         "rebuild_complete": "Folhas de estilo reconstruídas",
         "editor_path_not_found": "Caminho do editor não encontrado",
         "set_pref_description": "Defina o caminho do editor",
-        "please_enter_filename": "Introduza um nome de ficheiro"
+        "please_enter_filename": "Introduza um nome de ficheiro",
+        "file_created": "Ficheiro criado",
+        "file_created_successfully": "Ficheiro criado com sucesso",
+        "open_file_in_editor": "Abrir o ficheiro no editor?",
+        "error_title": "Erro",
+        "folder_open_failed": "Falha ao abrir a pasta CSS",
+        "edit_failed": "Falha ao editar o ficheiro"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Reiniciar",
+            "normal-restart": "Reiniciar",
+            "restart-cache-clear": "Reiniciar com limpeza de cache",
+            "restart-safe-mode": "Reiniciar no modo de segurança",
+            "restart-profile-manager": "Reiniciar com o Profile Manager"
+        }
     }
 }
