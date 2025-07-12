@@ -2,6 +2,7 @@ name: "12 (A) 📦️ Build Installers"
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-installer:

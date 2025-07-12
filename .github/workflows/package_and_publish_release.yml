@@ -40,8 +40,12 @@ jobs:
       runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
     secrets: inherit
 
+  build-installer:
+    uses: ./.github/workflows/build_installers.yml
+    secrets: inherit
+
   publishs:
-    needs: [package-windows, package-linux, package-macos]
+    needs: [package-windows, package-linux, package-macos, build-installer]
     uses: ./.github/workflows/publish_release.yml
     secrets: inherit
     with:

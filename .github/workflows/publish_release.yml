@@ -19,6 +19,10 @@ on:
         type: string
         required: false
         default: ""
+      stub_installer_workflow_call:
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -80,6 +84,17 @@ jobs:
             echo "MAC_RUN_ID=${{ inputs.mac_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
           fi
 
+          if [ -z "${{ inputs.stub_installer_workflow_call }}" ]; then
+            STUB_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/build_installers.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Build Installers"))][0].id')
+            echo "STUB_RUN_ID=$STUB_ID" >> $GITHUB_ENV
+          else
+            echo "STUB_RUN_ID=${{ inputs.stub_installer_workflow_call }}" >> $GITHUB_ENV
+          fi
+
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
@@ -128,6 +143,15 @@ jobs:
           path: ~/noraneko-publish/mac-dist
           github-token: ${{ github.token }}
 
+      - name: Download Stub Installer
+
+        uses: actions/download-artifact@v4
+        with:
+          name: floorp-stub-installer
+          run-id: ${{ env.STUB_RUN_ID }}
+          path: ~/noraneko-publish/stub-installers
+          github-token: ${{ github.token }}
+
       - name: Setup
         run: |
           deno install --allow-scripts
@@ -153,6 +177,8 @@ jobs:
           ls -la ~/noraneko-publish/linux-dist
           echo "macOS Installer Files:"
           ls -la ~/noraneko-publish/mac-dist
+          echo "Stub Installer Files:"
+          ls -la ~/noraneko-publish/stub-installers
 
       - name: Prepare meta.json files with platform-specific names
         run: |
@@ -173,7 +199,7 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
-
+            ${{ env.ROOT_DIR }}/noraneko-publish/stub-installers/*.exe
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp ${{ env.NR_VERSION }}"
           body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
