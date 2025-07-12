@@ -45,7 +45,6 @@ function getBrowserById(browserId: string): Window | null {
         if (tab.linkedBrowser && tab.linkedBrowser.browserId === browserId) {
           return tab.linkedBrowser.ownerGlobal;
         }
-        return null;
       }
     }
   }

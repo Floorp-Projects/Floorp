@@ -46,14 +46,14 @@ export class WebsitePanelWindowChild {
   }
 
   get userAgent() {
-    return this.webpanelData.userAgent;
+    return this.webpanelData?.userAgent;
   }
 
   get webpanelData() {
     const id = this.webpanelId;
     const panel = this.panelSidebarData.find((panel) => panel.id === id);
     if (!panel) {
-      throw new Error(`Panel not found: ${id}`);
+      return null;
     }
     return panel;
   }
