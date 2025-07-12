@@ -153,12 +153,22 @@ browser[type="content"] > html {
   border: none !important;
 }
 
+/* Floorp View Tab */
 .tabbrowser-tab[label="Floorp View"] {
   display: none;
 }
 
+/* Hide Firefox Icon for against localization override */
 #identity-icon-label[value="Firefox"] {
   display: none !important;
+}
+
+/* Tailwind CSS Overrides */
+@layer base {
+  dialog,
+  #fullscreen-warning {
+    margin: auto !important;
+  }
 }
 
 #tabbrowser-tabbox {
