@@ -40,6 +40,73 @@ const EXPECTED_SIGNERS: [&str; 2] = [
     "Open Source Developer, Ryosuke Asano",
 ];
 
+/// Check if the CPU supports SSE4.1 instructions
+fn check_sse4_1_support() -> bool {
+    #[cfg(target_arch = "x86_64")]
+    {
+        // Use is_x86_feature_detected! macro which is safer and handles LLVM constraints
+        let sse4_1_supported = is_x86_feature_detected!("sse4.1");
+
+        println!("[INFO] CPUID check - SSE4.1 support: {}", sse4_1_supported);
+
+        sse4_1_supported
+    }
+
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        // For non-x86_64 architectures, assume support
+        println!("[INFO] Non-x86_64 architecture detected, assuming SSE4.1 support");
+        true
+    }
+}
+
+/// Check CPU requirements and exit if not met
+fn check_cpu_requirements() {
+    println!("[INFO] Checking CPU requirements...");
+
+    if !check_sse4_1_support() {
+        println!("[ERROR] CPU does not support SSE4.1 instructions");
+        println!("[ERROR] Floorp requires a processor with SSE4.1 support");
+        println!("[ERROR] This device is not supported");
+
+        // Show error dialog and exit
+        let error_message = "Floorp requires a processor with SSE4.1 support.\n\nThis device is not supported.\n\nPlease use a device with a compatible processor.";
+
+        // Try to show a Windows message box
+        unsafe {
+            use windows::Win32::UI::WindowsAndMessaging::{
+                MessageBoxW, MB_OK, MB_ICONERROR
+            };
+
+            let wide_message: Vec<u16> = OsStr::new(error_message)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+
+            let wide_title: Vec<u16> = OsStr::new("Floorp Installer - Unsupported Device")
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+
+            let _ = MessageBoxW(
+                HWND::default(),
+                PCWSTR(wide_message.as_ptr()),
+                PCWSTR(wide_title.as_ptr()),
+                MB_OK | MB_ICONERROR,
+            );
+        }
+
+        std::process::exit(1);
+    }
+
+    println!("[INFO] CPU requirements met");
+}
+
+#[tauri::command]
+async fn check_cpu_support() -> Result<bool, String> {
+    Ok(check_sse4_1_support())
+}
+
 #[tauri::command]
 async fn download_and_run_installer(
     use_admin: bool,
@@ -886,6 +953,8 @@ async fn check_and_install_webview2_runtime() -> Result<String, String> {
 }
 
 fn main() {
+    check_cpu_requirements(); // Call the new CPU check function
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
@@ -893,12 +962,28 @@ fn main() {
             download_and_run_installer,
             launch_floorp_browser,
             exit_application,
-            check_and_install_webview2_runtime
+            check_and_install_webview2_runtime,
+            check_cpu_support
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
 
             tauri::async_runtime::spawn(async move {
+                // Check CPU support first
+                if !check_sse4_1_support() {
+                    println!("[ERROR] CPU does not support SSE4.1 instructions");
+                    println!("[ERROR] Floorp requires a processor with SSE4.1 support");
+                    println!("[ERROR] This device is not supported");
+                    
+                    // Close all windows and exit
+                    for (_, window) in app_handle.webview_windows() {
+                        let _ = window.close();
+                    }
+                    
+                    std::process::exit(1);
+                }
+                
+                // Continue with WebView2 Runtime check
                 match check_webview2_runtime().await {
                     Ok(true) => {
                         println!("[INFO] WebView2 Runtime is already installed");

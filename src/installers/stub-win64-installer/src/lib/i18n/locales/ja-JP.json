@@ -87,7 +87,9 @@
             "powershell_process": "PowerShell プロセスの開始に失敗しました: {{0}}",
             "admin_install_failed": "管理者権限でのインストールに失敗しました。終了コード: {{0}}",
             "user_installer_launch": "ユーザー権限でインストーラープロセスを起動できませんでした: {{0}}",
-            "user_installer_execution": "ユーザー権限でインストーラーを実行中に問題が発生しました: {{0}}"
+            "user_installer_execution": "ユーザー権限でインストーラーを実行中に問題が発生しました: {{0}}",
+            "cpu_not_supported": "このデバイスのCPUは SSE4.1 をサポートしていません。Floorp は SSE4.1 をサポートするプロセッサーが必要です。",
+            "cpu_check_failed": "CPU要件の確認に失敗しました。システム要件を確認してください。"
         }
     }
 }

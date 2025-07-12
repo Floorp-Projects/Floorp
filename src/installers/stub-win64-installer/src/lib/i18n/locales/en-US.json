@@ -87,7 +87,9 @@
             "powershell_process": "Failed to start PowerShell process: {{0}}",
             "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
             "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
         }
     }
 }
