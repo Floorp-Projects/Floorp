@@ -188,8 +188,6 @@ export class ChromeCSSService {
   }
 
   async rebuild(): Promise<void> {
-    console.log("rebuild");
-
     const cssExtension = /\.css$/i;
     const excludeUcCss = /\.uc\.css/i;
 

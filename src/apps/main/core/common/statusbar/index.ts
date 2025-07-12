@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { ContextMenu } from "./context-menu";
-import { StatusBarElem } from "./statusbar";
-import { StatusBarManager } from "./statusbar-manager";
-import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { ContextMenu } from "./context-menu.tsx";
+import { StatusBarElem } from "./statusbar.tsx";
+import { StatusBarManager } from "./statusbar-manager.tsx";
+import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
 
 export let manager: StatusBarManager;
 
@@ -15,32 +15,46 @@ export let manager: StatusBarManager;
 export default class StatusBar extends NoraComponentBase {
   init() {
     manager = new StatusBarManager();
-    render(StatusBarElem, document.body, {
-      marker: document?.getElementById("customization-container"),
-    });
-    //https://searchfox.org/mozilla-central/rev/4d851945737082fcfb12e9e7b08156f09237aa70/browser/base/content/main-popupset.js#321
-    const mainPopupSet = document.getElementById("mainPopupSet");
-    mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
-  
+    if (typeof document !== "undefined" && document?.body) {
+      render(StatusBarElem, document?.body, {
+        marker: document?.getElementById("customization-container") ??
+          undefined,
+      });
+      const mainPopupSet = document?.getElementById("mainPopupSet");
+      mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
+    }
     manager.init();
   }
 }
 
 function onPopupShowing(event: Event) {
-  if (document.getElementById("toggle_statusBar")) {
-    console.log(document.getElementById("toggle_statusBar"))
+  if (
+    typeof document !== "undefined" &&
+    document?.getElementById("toggle_statusBar")
+  ) {
     return;
   }
 
-  switch (event.target.id) {
+  const target = event.target as HTMLElement | null;
+  if (!target || !target.id) {
+    return;
+  }
+
+  switch (target.id) {
     case "toolbar-context-menu":
-      render(
-        ContextMenu,
-        document.getElementById("viewToolbarsMenuSeparator")!.parentElement,
-        {
-          marker: document.getElementById("viewToolbarsMenuSeparator")!,
-          hotCtx: import.meta.hot,
-        },
-      );
+      if (typeof document !== "undefined") {
+        const separator = document?.getElementById("viewToolbarsMenuSeparator");
+        if (separator && separator.parentElement) {
+          render(
+            ContextMenu,
+            separator.parentElement,
+            {
+              marker: separator,
+              hotCtx: import.meta.hot,
+            },
+          );
+        }
+      }
+      break;
   }
 }

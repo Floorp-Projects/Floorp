@@ -60,7 +60,6 @@ export class WebsitePanel {
   public goForwardPanel(webpanelId: string) {
     try {
       const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      console.log("targetPanelWindow", targetPanelWindow);
       targetPanelWindow.gBrowser.selectedTab.linkedBrowser.goForward();
     } catch (e) {
       console.error("Failed to go forward in webpanel", e);
@@ -70,7 +69,6 @@ export class WebsitePanel {
   public goBackPanel(webpanelId: string) {
     try {
       const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      console.log("targetPanelWindow", targetPanelWindow);
       targetPanelWindow.gBrowser.selectedTab.linkedBrowser.goBack();
     } catch (e) {
       console.error("Failed to go back in webpanel", e);

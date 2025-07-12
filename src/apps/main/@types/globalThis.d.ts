@@ -9,6 +9,11 @@ declare global {
   var gBrowser: any;
   var TabContextMenu: any;
   var SessionStore: any;
+  var E10SUtils: any;
+  var bmsLoadedURI: string;
+  var floorpWebPanelWindow: boolean;
+  var ZoomManager: any;
+  var floorpBmsUserAgent: boolean | undefined | null;
 }
 
 export {};

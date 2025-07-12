@@ -24,7 +24,6 @@ export class TabColorManager {
   init() {
     createEffect(() => {
       const currentConfig = config();
-      console.log(currentConfig);
       if (currentConfig.globalConfigs.faviconColor !== this.enableTabColor()) {
         this.setEnableTabColor(currentConfig.globalConfigs.faviconColor);
       }

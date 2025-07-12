@@ -72,7 +72,6 @@ export namespace ContextMenuUtils {
   }
 
   export function onPopupShowing() {
-    console.log("onpopupshowing");
     if (!screenShotContextMenuItems()?.hidden) {
       const sep = pdfjsContextMenuSeparator();
       if (sep) sep.hidden = false;
@@ -102,18 +101,22 @@ type ContextMenuText = {
   label: string;
 };
 
-export function ContextMenu(id: string, translationKey: string, runFunction: () => void) {
+export function ContextMenu(
+  id: string,
+  translationKey: string,
+  runFunction: () => void,
+) {
   return createRootHMR(
     () => {
       const defaultText: ContextMenuText = {
-        label: translationKey
+        label: translationKey,
       };
 
       const [text, setText] = createSignal<ContextMenuText>(defaultText);
 
       addI18nObserver(() => {
         setText({
-          label: i18next.t(translationKey)
+          label: i18next.t(translationKey),
         });
       });
 

@@ -4,23 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
-import { ChromeSiteBrowser } from "../browsers/chrome-site-browser";
-import { ExtensionSiteBrowser } from "../browsers/extension-site-browser";
-import { WebSiteBrowser } from "../browsers/web-site-browser";
+import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
+import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
+import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
   setSelectedPanelId,
-} from "../data/data";
-import type { Panel } from "../utils/type";
+} from "../data/data.ts";
+import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
-import { getExtensionSidebarAction } from "../extension-panels";
-import { WebsitePanel } from "../website-panel-window-parent";
+import { getExtensionSidebarAction } from "../extension-panels.ts";
+import { WebsitePanel } from "../website-panel-window-parent.ts";
+import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
-
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as
       | XULElement
@@ -44,7 +44,8 @@ export class CPanelSidebar {
       const currentCheckedPanels = Array.from(
         document?.querySelectorAll(".panel-sidebar-panel[data-checked]") ?? [],
       );
-      currentCheckedPanels.map((panel) => {
+      // Use forEach instead of map to avoid type error
+      (currentCheckedPanels as XULElement[]).forEach((panel) => {
         panel.removeAttribute("data-checked");
       });
 
@@ -90,9 +91,11 @@ export class CPanelSidebar {
   }
 
   private resetBrowsersFlex(): void {
-    Array.from(this.browsers ?? []).forEach((browser) => {
-      browser.removeAttribute("flex");
-    });
+    if (this.browsers) {
+      for (const browser of this.browsers as Iterable<XULElement>) {
+        (browser as XULElement).removeAttribute("flex");
+      }
+    }
   }
 
   private renderBrowserComponent(panel: Panel): void {
@@ -102,8 +105,7 @@ export class CPanelSidebar {
 
     const browserComponent = this.createBrowserComponent(panel);
     render(() => browserComponent, this.parentElement, {
-      // biome-ignore lint/suspicious/noExplicitAny: Required for hot module replacement
-      hotCtx: (import.meta as any).hot,
+      hotCtx: import.meta.hot,
     });
 
     this.initBrowser(panel);
@@ -126,14 +128,14 @@ export class CPanelSidebar {
       const sidebarAction = getExtensionSidebarAction(panel.extensionId);
 
       browser.addEventListener("DOMContentLoaded", () => {
-        const oa = window.E10SUtils.predictOriginAttributes({ browser });
+        const oa = globalThis.E10SUtils.predictOriginAttributes({ browser });
         browser.setAttribute(
           "remoteType",
-          window.E10SUtils.getRemoteTypeForURI(
+          globalThis.E10SUtils.getRemoteTypeForURI(
             panel.url ?? "",
             true,
             false,
-            window.E10SUtils.EXTENSION_REMOTE_TYPE,
+            globalThis.E10SUtils.EXTENSION_REMOTE_TYPE,
             null,
             oa,
           ),
@@ -184,8 +186,8 @@ export class CPanelSidebar {
         prev.map((panel) =>
           panel.id === selectedPanelId()
             ? { ...panel, width: Number(currentWidth) }
-            : panel,
-        ),
+            : panel
+        )
       );
     }
   }
@@ -199,7 +201,7 @@ export class CPanelSidebar {
 
   public openInMainWindow(panelId: string) {
     const url = this.getPanelData(panelId)?.url;
-    window.gBrowser.addTab(url, {
+    globalThis.gBrowser.addTab(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       inBackground: false,
     });
@@ -238,5 +240,21 @@ export class CPanelSidebar {
         gWebsitePanel.resetZoomLevelPanel(panelId);
         break;
     }
+  }
+
+  public changeUserAgent(panelId: string) {
+    const panel = this.getPanelData(panelId);
+    if (!panel) {
+      throw new Error(`Panel not found: ${panelId}`);
+    }
+
+    // Toggle the userAgent property for the specified panel
+    setPanelSidebarData((prev) =>
+      prev.map((p) => p.id === panelId ? { ...p, userAgent: !p.userAgent } : p)
+    );
+
+    // Unload and reload the panel to apply the new user agent
+    this.unloadPanel(panelId);
+    this.changePanel(panelId);
   }
 }

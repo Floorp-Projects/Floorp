@@ -10,13 +10,13 @@ import { panelSidebarConfig } from "../panel-sidebar/data/data";
 import { createEffect } from "solid-js";
 
 type Orders = {
-  fxSidebar: number,
-  fxSidebarSplitter: number,
-  browserBox: number,
-  floorpSidebarSplitter: number,
-  floorpSidebar: number,
-  floorpSidebarSelectBox: number,
-}
+  fxSidebar: number;
+  fxSidebarSplitter: number;
+  browserBox: number;
+  floorpSidebarSplitter: number;
+  floorpSidebar: number;
+  floorpSidebarSelectBox: number;
+};
 
 export namespace gFlexOrder {
   const fxSidebarPosition = "sidebar.position_start";
@@ -28,16 +28,29 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   const browserBoxId = "tabbrowser-tabbox";
 
-  const [orders, setOrders] = createRootHMR(() => createSignal<Orders>({ fxSidebar: -1, fxSidebarSplitter: -1, browserBox: -1, floorpSidebarSplitter: -1, floorpSidebar: -1, floorpSidebarSelectBox: -1 }), import.meta.hot)
+  const [orders, setOrders] = createRootHMR(
+    () =>
+      createSignal<Orders>({
+        fxSidebar: -1,
+        fxSidebarSplitter: -1,
+        browserBox: -1,
+        floorpSidebarSplitter: -1,
+        floorpSidebar: -1,
+        floorpSidebarSelectBox: -1,
+      }),
+    import.meta.hot,
+  );
 
   export function init() {
     const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
     const floorpSidebarPositionPref = panelSidebarConfig().position_start;
 
     applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
-    renderOrderStyle()
+    renderOrderStyle();
     Services.prefs.addObserver(fxSidebarPosition, () => {
-      const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const fxSidebarPositionPref = Services.prefs.getBoolPref(
+        fxSidebarPosition,
+      );
       const floorpSidebarPositionPref = panelSidebarConfig().position_start;
 
       applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
@@ -46,7 +59,9 @@ export namespace gFlexOrder {
 
     onCleanup(() => {
       Services.prefs.removeObserver(fxSidebarPosition, () => {
-        const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+        const fxSidebarPositionPref = Services.prefs.getBoolPref(
+          fxSidebarPosition,
+        );
         const floorpSidebarPositionPref = panelSidebarConfig().position_start;
         applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
         renderOrderStyle();
@@ -54,7 +69,9 @@ export namespace gFlexOrder {
     });
 
     createEffect(() => {
-      const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const fxSidebarPositionPref = Services.prefs.getBoolPref(
+        fxSidebarPosition,
+      );
       const floorpSidebarPositionPref = panelSidebarConfig().position_start;
 
       applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
@@ -62,9 +79,10 @@ export namespace gFlexOrder {
     });
   }
 
-  export function applyFlexOrder(fxSidebarPositionPref: boolean, floorpSidebarPositionPref: boolean) {
-    console.log(fxSidebarPositionPref, floorpSidebarPositionPref);
-
+  export function applyFlexOrder(
+    fxSidebarPositionPref: boolean,
+    floorpSidebarPositionPref: boolean,
+  ) {
     if (fxSidebarPositionPref && floorpSidebarPositionPref) {
       // Fx's sidebar -> browser -> Floorp's sidebar
       setOrders({
@@ -113,7 +131,9 @@ export namespace gFlexOrder {
   }
 
   function renderOrderStyle() {
-    render(() => <style jsx>{`
+    render(() => (
+      <style jsx>
+        {`
       #${fxSidebarId} {
         order: ${orders().fxSidebar} !important;
       }
@@ -132,6 +152,8 @@ export namespace gFlexOrder {
       #${browserBoxId} {
         order: ${orders().browserBox} !important;
       }
-    `}</style>, document?.head);
+    `}
+      </style>
+    ), document?.head);
   }
 }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Panel } from "../utils/type";
+import type { Panel } from "../utils/type.ts";
 
 export function ExtensionSiteBrowser({ id, type, url }: Panel) {
   return (
@@ -18,14 +18,3 @@ export function ExtensionSiteBrowser({ id, type, url }: Panel) {
     />
   );
 }
-
-// {
-//   browser.setAttribute("type", "content");
-//   browser.setAttribute("flex", "1");
-//   browser.setAttribute("disableglobalhistory", "true");
-//   browser.setAttribute("messagemanagergroup", "webext-browsers");
-//   browser.setAttribute("webextension-view-type", panel.viewType);
-//   browser.setAttribute("context", "contentAreaContextMenu");
-//   browser.setAttribute("tooltip", "aHTMLTooltip");
-//   browser.setAttribute("autocompletepopup", "PopupAutoComplete");
-// }

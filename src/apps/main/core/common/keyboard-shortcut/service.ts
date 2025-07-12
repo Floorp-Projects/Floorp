@@ -7,7 +7,7 @@ import { _setConfig, getConfig, isEnabled, setEnabled } from "./config.ts";
 import { KeyboardShortcutController } from "./controller.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
-import { type KeyboardShortcutConfig } from "./type.ts";
+import type { KeyboardShortcutConfig } from "./type.ts";
 
 let globalController: KeyboardShortcutController | null = null;
 
@@ -28,7 +28,6 @@ export class KeyboardShortcutService {
       const configString = JSON.stringify(config);
 
       if (this.lastConfigString && this.lastConfigString !== configString) {
-        console.log("Keyboard shortcut config changed, recreating controller");
         this.destroyController();
         if (isEnabled()) {
           this.createController();
