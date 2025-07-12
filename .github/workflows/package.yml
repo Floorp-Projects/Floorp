@@ -521,6 +521,8 @@ jobs:
               mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             fi
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            sudo apt install patchelf
+            patchelf --add-rpath '$ORIGIN' "$PWD"/obj-artifact-build-output/dist/floorp/updater
             mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
             if [ "${{inputs.skip_signing}}" == "true" ]; then
