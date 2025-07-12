@@ -12,6 +12,7 @@ export default function LocalizationPage() {
     const [selectedLocale, setSelectedLocale] = useState<string>("");
     const [installingLanguage, setInstallingLanguage] = useState(false);
     const [nativeLanguageNames, setNativeLanguageNames] = useState<Record<string, string>>({});
+    const [dropdownDirection, setDropdownDirection] = useState<'dropdown-bottom' | 'dropdown-top'>('dropdown-bottom');
 
     useEffect(() => {
         fetchLocaleInfo();
@@ -22,6 +23,31 @@ export default function LocalizationPage() {
             fetchNativeNames(localeData.availableLocales);
         }
     }, [localeData]);
+
+    useEffect(() => {
+        const checkDropdownDirection = () => {
+            const dropdownElement = document.querySelector('.language-dropdown');
+            if (dropdownElement) {
+                const rect = dropdownElement.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                const dropdownHeight = 240; // Estimated dropdown height
+
+                if (rect.bottom + dropdownHeight > windowHeight) {
+                    setDropdownDirection('dropdown-top');
+                } else {
+                    setDropdownDirection('dropdown-bottom');
+                }
+            }
+        };
+
+        // Check on mount and window resize
+        checkDropdownDirection();
+        window.addEventListener('resize', checkDropdownDirection);
+
+        return () => {
+            window.removeEventListener('resize', checkDropdownDirection);
+        };
+    }, []);
 
     const fetchNativeNames = async (availableLocales: LangPack[]) => {
         try {
@@ -122,8 +148,8 @@ export default function LocalizationPage() {
                             {t('localizationPage.languageSettings')}
                         </h2>
 
-                        <div className="flex flex-row gap-4 mt-2">
-                            <div className="flex justify-center items-center w-2/5">
+                        <div className="flex flex-col lg:flex-row gap-4 mt-2">
+                            <div className="flex justify-center items-center lg:w-2/5">
                                 <div className="text-center">
                                     <Languages size={160} className="text-primary mx-auto mb-4" />
                                     <div className="font-semibold text-lg">{t('localizationPage.multilingual')}</div>
@@ -131,7 +157,7 @@ export default function LocalizationPage() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-4 w-3/4">
+                            <div className="flex flex-col gap-4 lg:w-3/4">
                                 <div className="bg-base-300 p-3 rounded-lg">
                                     <h3 className="font-bold mb-2">{t('localizationPage.currentLanguageInfo')}</h3>
                                     <div className="flex flex-col gap-2">
@@ -161,14 +187,14 @@ export default function LocalizationPage() {
                                         </button>
                                     </div>
 
-                                    <div className="dropdown dropdown-bottom w-full">
+                                    <div className={`dropdown ${dropdownDirection} w-full language-dropdown`}>
                                         <label tabIndex={0} className="btn btn-sm btn-outline w-full flex justify-between items-center">
                                             <span className="flex items-center">
                                                 <span className="truncate">{getLanguageName(selectedLocale)}</span>
                                             </span>
                                             <ChevronDown size={16} />
                                         </label>
-                                        <div tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box max-h-70 w-full overflow-y-auto flex flex-col flex-nowrap">
+                                        <div tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full overflow-y-auto flex flex-col flex-nowrap" style={{ maxHeight: '12rem' }}>
                                             {getSortedLanguages().map((langPack) => {
                                                 const locale = getLocaleFromLangPack(langPack);
                                                 if (locale === selectedLocale) {
