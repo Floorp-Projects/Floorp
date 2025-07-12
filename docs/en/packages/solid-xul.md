@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Solid-XUL package (`src/packages/solid-xul/`) is a crucial bridge that enables SolidJS reactive components to work seamlessly with Firefox's XUL (XML User Interface Language) system. This integration allows Floorp to provide modern, reactive UI experiences while maintaining full compatibility with Firefox's existing interface framework.
+The Solid-XUL package (`src/packages/solid-xul/`) is a crucial bridge that seamlessly connects SolidJS reactive components with Firefox's XUL (XML User Interface Language) system. This integration allows Floorp to maintain complete compatibility with Firefox's existing interface framework while providing a modern, reactive UI experience.
 
 ## Architecture
 
@@ -15,24 +15,24 @@ SolidJS-XUL integration works by creating a bidirectional bridge between two dif
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  Solid-XUL Architecture                     │
+│                  Solid-XUL Architecture                      │
 ├─────────────────────────────────────────────────────────────┤
-│  SolidJS Components (TypeScript/JSX)                       │
+│  SolidJS Components (TypeScript/JSX)                        │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
-│  │   Reactive  │ │   Custom    │ │   Event Handling    │   │
-│  │ Components  │ │   Hooks     │ │   & State Mgmt      │   │
+│  │ Reactive    │ │ Custom      │ │ Event Handling      │   │
+│  │ Components  │ │ Hooks       │ │ & State Management  │   │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘   │
 ├─────────────────────────────────────────────────────────────┤
-│  Bridge Layer (solid-xul package)                          │
+│  Bridge Layer (solid-xul package)                           │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
-│  │   JSX       │ │   XUL       │ │   Event Bridge      │   │
-│  │  Runtime    │ │ Elements    │ │   & API Wrapper     │   │
+│  │ JSX         │ │ XUL         │ │ Event Bridge        │   │
+│  │ Runtime     │ │ Elements    │ │ & API Wrappers      │   │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘   │
 ├─────────────────────────────────────────────────────────────┤
-│  XUL System (Firefox Native)                               │
+│  XUL System (Firefox Native)                                │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
-│  │   XUL       │ │   XPCOM     │ │   Firefox APIs      │   │
-│  │ Elements    │ │  Services   │ │   & Components      │   │
+│  │ XUL         │ │ XPCOM       │ │ Firefox APIs        │   │
+│  │ Elements    │ │ Services    │ │ & Components        │   │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -48,12 +48,12 @@ src/packages/solid-xul/
 │   ├── toolbar.ts         # Toolbar elements
 │   ├── menu.ts            # Menu and popup elements
 │   └── common.ts          # Common XUL elements
-├── hooks/                 # SolidJS hooks for XUL/Firefox
+├── hooks/                 # XUL/Firefox SolidJS hooks
 │   ├── use-xul-element.ts # XUL element management
 │   ├── use-firefox-api.ts # Firefox API integration
 │   └── use-preferences.ts # Preferences management
 ├── utils/                 # Utility functions
-│   ├── xul-helpers.ts     # XUL manipulation helpers
+│   ├── xul-helpers.ts     # XUL operation helpers
 │   ├── event-bridge.ts    # Event system bridge
 │   └── type-guards.ts     # Type checking utilities
 ├── types/                 # TypeScript type definitions
@@ -64,63 +64,63 @@ src/packages/solid-xul/
 └── tsconfig.json          # TypeScript configuration
 ```
 
-## Main API Files
+## Main API File
 
 ### 1. index.ts - Main API
 
 The main entry point exports all public APIs and utilities.
 
 ```typescript
-// Main exports for Solid-XUL integration
-export * from './jsx-runtime';
-export * from './elements';
-export * from './hooks';
-export * from './utils';
+// Solid-XUL integration main exports
+export * from "./jsx-runtime";
+export * from "./elements";
+export * from "./hooks";
+export * from "./utils";
 
 // Core integration functions
-export { setupSolidXULIntegration } from './core/setup';
-export { createXULComponent } from './core/component-factory';
-export { XULProvider } from './core/provider';
+export { setupSolidXULIntegration } from "./core/setup";
+export { createXULComponent } from "./core/component-factory";
+export { XULProvider } from "./core/provider";
 
 // Type exports
 export type {
   XULElement,
   XULElementProps,
   SolidXULComponent,
-  XULEventHandler
-} from './types';
+  XULEventHandler,
+} from "./types";
 
 // Version information
-export const VERSION = '1.0.0';
+export const VERSION = "1.0.0";
 
-// Initialize the integration
+// Integration initialization
 export async function initializeSolidXUL(): Promise<void> {
-  // Setup JSX runtime for XUL
+  // Setup XUL JSX runtime
   await setupJSXRuntime();
-  
+
   // Register custom elements
   await registerXULElements();
-  
+
   // Setup event bridge
   await setupEventBridge();
-  
-  console.log('Solid-XUL integration initialized');
+
+  console.log("Solid-XUL integration initialized");
 }
 
-// Setup JSX runtime
+// JSX runtime setup
 async function setupJSXRuntime(): Promise<void> {
   // Configure SolidJS to work with XUL elements
-  const { configureJSXRuntime } = await import('./jsx-runtime');
+  const { configureJSXRuntime } = await import("./jsx-runtime");
   configureJSXRuntime();
 }
 
 // Register XUL element wrappers
 async function registerXULElements(): Promise<void> {
-  const elements = await import('./elements');
-  
+  const elements = await import("./elements");
+
   // Register all XUL element components
   Object.entries(elements).forEach(([name, component]) => {
-    if (typeof component === 'function') {
+    if (typeof component === "function") {
       // Register as custom element if needed
       const tagName = `solid-${name.toLowerCase()}`;
       if (!customElements.get(tagName)) {
@@ -132,7 +132,7 @@ async function registerXULElements(): Promise<void> {
 
 // Setup event bridge between SolidJS and XUL
 async function setupEventBridge(): Promise<void> {
-  const { initializeEventBridge } = await import('./utils/event-bridge');
+  const { initializeEventBridge } = await import("./utils/event-bridge");
   initializeEventBridge();
 }
 ```
@@ -142,21 +142,21 @@ async function setupEventBridge(): Promise<void> {
 Custom JSX runtime that handles XUL elements alongside regular DOM elements.
 
 ```typescript
-import { template, createComponent, mergeProps } from 'solid-js/web';
-import { isXULElement, createXULElement } from './utils/xul-helpers';
+import { template, createComponent, mergeProps } from "solid-js/web";
+import { isXULElement, createXULElement } from "./utils/xul-helpers";
 
 // Custom JSX factory for XUL elements
 export function jsx(type: any, props: any, key?: string) {
   // Check if this is a XUL element
-  if (typeof type === 'string' && isXULElement(type)) {
+  if (typeof type === "string" && isXULElement(type)) {
     return createXULComponent(type, props, key);
   }
-  
+
   // Handle regular SolidJS components
-  if (typeof type === 'function') {
+  if (typeof type === "function") {
     return createComponent(type, props);
   }
-  
+
   // Handle regular DOM elements
   return template(`<${type}></${type}>`, 1, false)(props, key);
 }
@@ -171,15 +171,15 @@ function createXULComponent(tagName: string, props: any, key?: string) {
   return () => {
     // Create XUL element
     const element = createXULElement(tagName);
-    
+
     // Apply props to XUL element
     applyXULProps(element, props);
-    
+
     // Handle children
     if (props.children) {
       handleXULChildren(element, props.children);
     }
-    
+
     return element;
   };
 }
@@ -187,22 +187,22 @@ function createXULComponent(tagName: string, props: any, key?: string) {
 // Apply props to XUL element
 function applyXULProps(element: XULElement, props: any): void {
   Object.entries(props).forEach(([key, value]) => {
-    if (key === 'children') return;
-    
-    if (key.startsWith('on') && typeof value === 'function') {
+    if (key === "children") return;
+
+    if (key.startsWith("on") && typeof value === "function") {
       // Handle event listeners
       const eventName = key.slice(2).toLowerCase();
       element.addEventListener(eventName, value);
-    } else if (key === 'ref') {
+    } else if (key === "ref") {
       // Handle refs
-      if (typeof value === 'function') {
+      if (typeof value === "function") {
         value(element);
       } else if (value) {
         value.current = element;
       }
     } else {
       // Handle attributes
-      if (typeof value === 'boolean') {
+      if (typeof value === "boolean") {
         if (value) {
           element.setAttribute(key, key);
         }
@@ -216,7 +216,7 @@ function applyXULProps(element: XULElement, props: any): void {
 // Handle XUL children
 function handleXULChildren(element: XULElement, children: any): void {
   if (Array.isArray(children)) {
-    children.forEach(child => appendXULChild(element, child));
+    children.forEach((child) => appendXULChild(element, child));
   } else {
     appendXULChild(element, children);
   }
@@ -224,14 +224,14 @@ function handleXULChildren(element: XULElement, children: any): void {
 
 // Append child to XUL element
 function appendXULChild(parent: XULElement, child: any): void {
-  if (typeof child === 'string' || typeof child === 'number') {
+  if (typeof child === "string" || typeof child === "number") {
     const textNode = document.createTextNode(String(child));
     parent.appendChild(textNode);
-  } else if (child && typeof child === 'object') {
+  } else if (child && typeof child === "object") {
     if (child.nodeType) {
       // DOM node
       parent.appendChild(child);
-    } else if (typeof child === 'function') {
+    } else if (typeof child === "function") {
       // SolidJS component
       const result = child();
       if (result) {
@@ -244,13 +244,13 @@ function appendXULChild(parent: XULElement, child: any): void {
 // Configure JSX runtime for XUL
 export function configureJSXRuntime(): void {
   // Override default JSX runtime settings for XUL compatibility
-  if (typeof window !== 'undefined' && window.document) {
+  if (typeof window !== "undefined" && window.document) {
     // Ensure XUL namespace is available
-    if (!document.documentElement.lookupNamespaceURI('xul')) {
+    if (!document.documentElement.lookupNamespaceURI("xul")) {
       document.documentElement.setAttributeNS(
-        'http://www.w3.org/2000/xmlns/',
-        'xmlns:xul',
-        'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'
+        "http://www.w3.org/2000/xmlns/",
+        "xmlns:xul",
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       );
     }
   }
@@ -262,8 +262,8 @@ export function configureJSXRuntime(): void {
 ### 1. Browser Elements (elements/browser.ts)
 
 ```typescript
-import { Component, JSX, splitProps } from 'solid-js';
-import { XULElementProps } from '../types';
+import { Component, JSX, splitProps } from "solid-js";
+import { XULElementProps } from "../types";
 
 // Browser element wrapper
 export interface BrowserProps extends XULElementProps {
@@ -280,10 +280,14 @@ export interface BrowserProps extends XULElementProps {
 
 export const Browser: Component<BrowserProps> = (props) => {
   const [xulProps, otherProps] = splitProps(props, [
-    'src', 'type', 'remote', 'disablehistory', 
-    'disableglobalhistory', 'messagemanagergroup'
+    "src",
+    "type",
+    "remote",
+    "disablehistory",
+    "disableglobalhistory",
+    "messagemanagergroup",
   ]);
-  
+
   return (
     <browser {...xulProps} {...otherProps}>
       {props.children}
@@ -347,13 +351,13 @@ export const Tab: Component<TabProps> = (props) => {
 ### 2. Toolbar Elements (elements/toolbar.ts)
 
 ```typescript
-import { Component, JSX } from 'solid-js';
-import { XULElementProps } from '../types';
+import { Component, JSX } from "solid-js";
+import { XULElementProps } from "../types";
 
 // Toolbar wrapper
 export interface ToolbarProps extends XULElementProps {
-  mode?: 'icons' | 'text' | 'full';
-  iconsize?: 'small' | 'large';
+  mode?: "icons" | "text" | "full";
+  iconsize?: "small" | "large";
   defaultset?: string;
   currentset?: string;
   customizable?: boolean;
@@ -379,7 +383,7 @@ export interface ToolbarButtonProps extends XULElementProps {
   label?: string;
   image?: string;
   command?: string;
-  type?: 'button' | 'menu' | 'menu-button';
+  type?: "button" | "menu" | "menu-button";
   disabled?: boolean;
   checked?: boolean;
   onCommand?: (event: Event) => void;
@@ -404,17 +408,13 @@ export const ToolbarButton: Component<ToolbarButtonProps> = (props) => {
 
 // Toolbox wrapper
 export interface ToolboxProps extends XULElementProps {
-  mode?: 'icons' | 'text' | 'full';
-  iconsize?: 'small' | 'large';
+  mode?: "icons" | "text" | "full";
+  iconsize?: "small" | "large";
 }
 
 export const Toolbox: Component<ToolboxProps> = (props) => {
   return (
-    <toolbox
-      mode={props.mode}
-      iconsize={props.iconsize}
-      {...props}
-    >
+    <toolbox mode={props.mode} iconsize={props.iconsize} {...props}>
       {props.children}
     </toolbox>
   );
@@ -433,8 +433,8 @@ export const Spacer: Component<SpacerProps> = (props) => {
 ### 3. Menu Elements (elements/menu.ts)
 
 ```typescript
-import { Component } from 'solid-js';
-import { XULElementProps } from '../types';
+import { Component } from "solid-js";
+import { XULElementProps } from "../types";
 
 // Menubar wrapper
 export interface MenubarProps extends XULElementProps {
@@ -497,7 +497,7 @@ export interface MenuitemProps extends XULElementProps {
   accesskey?: string;
   key?: string;
   command?: string;
-  type?: 'checkbox' | 'radio';
+  type?: "checkbox" | "radio";
   checked?: boolean;
   disabled?: boolean;
   onCommand?: (event: Event) => void;
@@ -530,25 +530,25 @@ export const Menuseparator: Component<XULElementProps> = (props) => {
 ### 1. XUL Element Hook (hooks/use-xul-element.ts)
 
 ```typescript
-import { createSignal, onMount, onCleanup, Accessor } from 'solid-js';
+import { createSignal, onMount, onCleanup, Accessor } from "solid-js";
 
 // Hook for managing XUL elements
 export function useXULElement<T extends XULElement>(
   selector: string
 ): [Accessor<T | null>, (element: T) => void] {
   const [element, setElement] = createSignal<T | null>(null);
-  
+
   onMount(() => {
     // Find existing XUL element
     const xulElement = document.querySelector(selector) as T;
     if (xulElement) {
       setElement(xulElement);
     }
-    
+
     // Setup mutation observer to watch for element changes
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
+        if (mutation.type === "childList") {
           const newElement = document.querySelector(selector) as T;
           if (newElement !== element()) {
             setElement(newElement);
@@ -556,17 +556,17 @@ export function useXULElement<T extends XULElement>(
         }
       });
     });
-    
+
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
-    
+
     onCleanup(() => {
       observer.disconnect();
     });
   });
-  
+
   return [element, setElement];
 }
 
@@ -576,7 +576,7 @@ export function useXULAttribute(
   attributeName: string
 ): [Accessor<string | null>, (value: string | null) => void] {
   const [value, setValue] = createSignal<string | null>(null);
-  
+
   // Update value when element changes
   createEffect(() => {
     const el = element();
@@ -585,7 +585,7 @@ export function useXULAttribute(
       setValue(attrValue);
     }
   });
-  
+
   // Function to set attribute value
   const setAttributeValue = (newValue: string | null) => {
     const el = element();
@@ -598,7 +598,7 @@ export function useXULAttribute(
       setValue(newValue);
     }
   };
-  
+
   return [value, setAttributeValue];
 }
 
@@ -607,27 +607,27 @@ export function useXULVisibility(
   element: Accessor<XULElement | null>
 ): [Accessor<boolean>, (visible: boolean) => void] {
   const [isVisible, setIsVisible] = createSignal(true);
-  
+
   createEffect(() => {
     const el = element();
     if (el) {
-      const hidden = el.getAttribute('hidden') === 'true';
+      const hidden = el.getAttribute("hidden") === "true";
       setIsVisible(!hidden);
     }
   });
-  
+
   const setVisible = (visible: boolean) => {
     const el = element();
     if (el) {
       if (visible) {
-        el.removeAttribute('hidden');
+        el.removeAttribute("hidden");
       } else {
-        el.setAttribute('hidden', 'true');
+        el.setAttribute("hidden", "true");
       }
       setIsVisible(visible);
     }
   };
-  
+
   return [isVisible, setVisible];
 }
 ```
@@ -635,13 +635,13 @@ export function useXULVisibility(
 ### 2. Firefox API Hook (hooks/use-firefox-api.ts)
 
 ```typescript
-import { createSignal, createEffect, onCleanup } from 'solid-js';
+import { createSignal, createEffect, onCleanup } from "solid-js";
 
 // Hook for browser tabs
 export function useBrowserTabs() {
   const [tabs, setTabs] = createSignal([]);
   const [selectedTab, setSelectedTab] = createSignal(null);
-  
+
   const updateTabs = () => {
     if (window.gBrowser) {
       const allTabs = Array.from(window.gBrowser.tabs);
@@ -649,60 +649,60 @@ export function useBrowserTabs() {
       setSelectedTab(window.gBrowser.selectedTab);
     }
   };
-  
+
   onMount(() => {
     updateTabs();
-    
+
     // Listen for tab events
     const tabContainer = window.gBrowser?.tabContainer;
     if (tabContainer) {
-      const events = ['TabOpen', 'TabClose', 'TabSelect', 'TabMove'];
-      
-      events.forEach(eventName => {
+      const events = ["TabOpen", "TabClose", "TabSelect", "TabMove"];
+
+      events.forEach((eventName) => {
         tabContainer.addEventListener(eventName, updateTabs);
       });
-      
+
       onCleanup(() => {
-        events.forEach(eventName => {
+        events.forEach((eventName) => {
           tabContainer.removeEventListener(eventName, updateTabs);
         });
       });
     }
   });
-  
+
   const openTab = (url: string, options: { background?: boolean } = {}) => {
     if (window.gBrowser) {
       const tab = window.gBrowser.addTab(url, {
-        inBackground: options.background
+        inBackground: options.background,
       });
-      
+
       if (!options.background) {
         window.gBrowser.selectedTab = tab;
       }
-      
+
       return tab;
     }
   };
-  
+
   const closeTab = (tab: any) => {
     if (window.gBrowser && tab) {
       window.gBrowser.removeTab(tab);
     }
   };
-  
+
   return {
     tabs,
     selectedTab,
     openTab,
     closeTab,
-    refresh: updateTabs
+    refresh: updateTabs,
   };
 }
 
 // Hook for bookmarks
 export function useBookmarks() {
   const [bookmarks, setBookmarks] = createSignal([]);
-  
+
   const loadBookmarks = async () => {
     try {
       if (window.PlacesUtils) {
@@ -710,74 +710,76 @@ export function useBookmarks() {
         setBookmarks(bookmarkTree.children || []);
       }
     } catch (error) {
-      console.error('Failed to load bookmarks:', error);
+      console.error("Failed to load bookmarks:", error);
     }
   };
-  
+
   onMount(() => {
     loadBookmarks();
-    
+
     // Listen for bookmark changes
     if (window.PlacesUtils?.bookmarks) {
       const observer = {
         onItemAdded: loadBookmarks,
         onItemRemoved: loadBookmarks,
-        onItemChanged: loadBookmarks
+        onItemChanged: loadBookmarks,
       };
-      
+
       window.PlacesUtils.bookmarks.addObserver(observer);
-      
+
       onCleanup(() => {
         window.PlacesUtils.bookmarks.removeObserver(observer);
       });
     }
   });
-  
+
   const addBookmark = async (url: string, title: string, folder?: string) => {
     try {
       if (window.PlacesUtils?.bookmarks) {
         await window.PlacesUtils.bookmarks.insert({
           parentGuid: folder || window.PlacesUtils.bookmarks.unfiledGuid,
           url,
-          title
+          title,
         });
         await loadBookmarks();
       }
     } catch (error) {
-      console.error('Failed to add bookmark:', error);
+      console.error("Failed to add bookmark:", error);
     }
   };
-  
+
   return {
     bookmarks,
     addBookmark,
-    refresh: loadBookmarks
+    refresh: loadBookmarks,
   };
 }
 
 // Hook for downloads
 export function useDownloads() {
   const [downloads, setDownloads] = createSignal([]);
-  
+
   const loadDownloads = async () => {
     try {
       if (window.Downloads) {
-        const downloadList = await window.Downloads.getList(window.Downloads.ALL);
+        const downloadList = await window.Downloads.getList(
+          window.Downloads.ALL
+        );
         const allDownloads = await downloadList.getAll();
         setDownloads(allDownloads);
       }
     } catch (error) {
-      console.error('Failed to load downloads:', error);
+      console.error("Failed to load downloads:", error);
     }
   };
-  
+
   onMount(() => {
     loadDownloads();
   });
-  
+
   return {
     downloads,
-    refresh: loadDownloads
+    refresh: loadDownloads,
   };
 }
 ```
@@ -791,16 +793,49 @@ export function useDownloads() {
 
 // List of XUL element tag names
 const XUL_ELEMENTS = new Set([
-  'browser', 'tabbrowser', 'tab', 'tabs',
-  'toolbar', 'toolbarbutton', 'toolbox', 'spacer',
-  'menubar', 'menu', 'menupopup', 'menuitem', 'menuseparator',
-  'box', 'hbox', 'vbox', 'deck', 'stack',
-  'splitter', 'grippy', 'statusbar', 'statusbarpanel',
-  'textbox', 'checkbox', 'radio', 'button',
-  'listbox', 'listitem', 'tree', 'treecol', 'treechildren',
-  'richlistbox', 'richlistitem', 'description', 'label',
-  'progressmeter', 'scale', 'colorpicker', 'datepicker',
-  'wizard', 'wizardpage', 'prefwindow', 'prefpane'
+  "browser",
+  "tabbrowser",
+  "tab",
+  "tabs",
+  "toolbar",
+  "toolbarbutton",
+  "toolbox",
+  "spacer",
+  "menubar",
+  "menu",
+  "menupopup",
+  "menuitem",
+  "menuseparator",
+  "box",
+  "hbox",
+  "vbox",
+  "deck",
+  "stack",
+  "splitter",
+  "grippy",
+  "statusbar",
+  "statusbarpanel",
+  "textbox",
+  "checkbox",
+  "radio",
+  "button",
+  "listbox",
+  "listitem",
+  "tree",
+  "treecol",
+  "treechildren",
+  "richlistbox",
+  "richlistitem",
+  "description",
+  "label",
+  "progressmeter",
+  "scale",
+  "colorpicker",
+  "datepicker",
+  "wizard",
+  "wizardpage",
+  "prefwindow",
+  "prefpane",
 ]);
 
 // Check if a tag name is a XUL element
@@ -810,7 +845,8 @@ export function isXULElement(tagName: string): boolean {
 
 // Create XUL element with proper namespace
 export function createXULElement(tagName: string): XULElement {
-  const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+  const XUL_NS =
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   return document.createElementNS(XUL_NS, tagName) as XULElement;
 }
 
@@ -825,8 +861,12 @@ export function findXULElements(selector: string): XULElement[] {
 }
 
 // Set XUL attribute safely
-export function setXULAttribute(element: XULElement, name: string, value: string | boolean | number): void {
-  if (typeof value === 'boolean') {
+export function setXULAttribute(
+  element: XULElement,
+  name: string,
+  value: string | boolean | number
+): void {
+  if (typeof value === "boolean") {
     if (value) {
       element.setAttribute(name, name);
     } else {
@@ -838,20 +878,36 @@ export function setXULAttribute(element: XULElement, name: string, value: string
 }
 
 // Get XUL attribute with type conversion
-export function getXULAttribute(element: XULElement, name: string, type: 'string'): string | null;
-export function getXULAttribute(element: XULElement, name: string, type: 'boolean'): boolean;
-export function getXULAttribute(element: XULElement, name: string, type: 'number'): number | null;
-export function getXULAttribute(element: XULElement, name: string, type: 'string' | 'boolean' | 'number'): any {
+export function getXULAttribute(
+  element: XULElement,
+  name: string,
+  type: "string"
+): string | null;
+export function getXULAttribute(
+  element: XULElement,
+  name: string,
+  type: "boolean"
+): boolean;
+export function getXULAttribute(
+  element: XULElement,
+  name: string,
+  type: "number"
+): number | null;
+export function getXULAttribute(
+  element: XULElement,
+  name: string,
+  type: "string" | "boolean" | "number"
+): any {
   const value = element.getAttribute(name);
-  
+
   if (value === null) {
-    return type === 'boolean' ? false : null;
+    return type === "boolean" ? false : null;
   }
-  
+
   switch (type) {
-    case 'boolean':
-      return value === 'true' || value === name;
-    case 'number':
+    case "boolean":
+      return value === "true" || value === name;
+    case "number":
       const num = parseFloat(value);
       return isNaN(num) ? null : num;
     default:
@@ -863,31 +919,31 @@ export function getXULAttribute(element: XULElement, name: string, type: 'string
 export function insertSolidComponent(
   xulElement: XULElement,
   component: () => JSX.Element,
-  position: 'before' | 'after' | 'prepend' | 'append' = 'append'
+  position: "before" | "after" | "prepend" | "append" = "append"
 ): HTMLElement {
-  const container = document.createElement('div');
-  container.className = 'solid-xul-container';
-  
+  const container = document.createElement("div");
+  container.className = "solid-xul-container";
+
   // Position the container
   switch (position) {
-    case 'before':
+    case "before":
       xulElement.parentNode?.insertBefore(container, xulElement);
       break;
-    case 'after':
+    case "after":
       xulElement.parentNode?.insertBefore(container, xulElement.nextSibling);
       break;
-    case 'prepend':
+    case "prepend":
       xulElement.insertBefore(container, xulElement.firstChild);
       break;
-    case 'append':
+    case "append":
     default:
       xulElement.appendChild(container);
       break;
   }
-  
+
   // Render SolidJS component
   render(component, container);
-  
+
   return container;
 }
 ```
@@ -899,30 +955,30 @@ export function insertSolidComponent(
 
 // Event mapping between XUL and standard events
 const XUL_EVENT_MAP = new Map([
-  ['command', 'click'],
-  ['select', 'change'],
-  ['input', 'input'],
-  ['focus', 'focus'],
-  ['blur', 'blur']
+  ["command", "click"],
+  ["select", "change"],
+  ["input", "input"],
+  ["focus", "focus"],
+  ["blur", "blur"],
 ]);
 
 // Initialize event bridge
 export function initializeEventBridge(): void {
   // Setup global event delegation for XUL events
-  document.addEventListener('command', handleXULCommand, true);
-  document.addEventListener('select', handleXULSelect, true);
-  
-  console.log('Event bridge initialized');
+  document.addEventListener("command", handleXULCommand, true);
+  document.addEventListener("select", handleXULSelect, true);
+
+  console.log("Event bridge initialized");
 }
 
 // Handle XUL command events
 function handleXULCommand(event: Event): void {
   const target = event.target as XULElement;
-  
+
   // Check if target has SolidJS event handlers
   if (target && target._solidEventHandlers) {
     const handler = target._solidEventHandlers.onCommand;
-    if (typeof handler === 'function') {
+    if (typeof handler === "function") {
       handler(event);
     }
   }
@@ -931,10 +987,10 @@ function handleXULCommand(event: Event): void {
 // Handle XUL select events
 function handleXULSelect(event: Event): void {
   const target = event.target as XULElement;
-  
+
   if (target && target._solidEventHandlers) {
     const handler = target._solidEventHandlers.onSelect;
-    if (typeof handler === 'function') {
+    if (typeof handler === "function") {
       handler(event);
     }
   }
@@ -951,10 +1007,10 @@ export function attachXULEventHandler(
     element._solidEventHandlers = {};
   }
   element._solidEventHandlers[eventName] = handler;
-  
+
   // Map XUL event to standard event if needed
   const mappedEvent = XUL_EVENT_MAP.get(eventName.toLowerCase()) || eventName;
-  
+
   // Add native event listener
   element.addEventListener(mappedEvent, handler);
 }
@@ -967,7 +1023,8 @@ export function removeXULEventHandler(
   if (element._solidEventHandlers) {
     const handler = element._solidEventHandlers[eventName];
     if (handler) {
-      const mappedEvent = XUL_EVENT_MAP.get(eventName.toLowerCase()) || eventName;
+      const mappedEvent =
+        XUL_EVENT_MAP.get(eventName.toLowerCase()) || eventName;
       element.removeEventListener(mappedEvent, handler);
       delete element._solidEventHandlers[eventName];
     }
@@ -984,7 +1041,7 @@ export function createXULEvent(
   return new CustomEvent(type, {
     detail,
     bubbles,
-    cancelable
+    cancelable,
   });
 }
 
@@ -994,30 +1051,30 @@ export function dispatchXULEvent(
   event: Event | string,
   detail?: any
 ): boolean {
-  if (typeof event === 'string') {
+  if (typeof event === "string") {
     event = createXULEvent(event, detail);
   }
-  
+
   return element.dispatchEvent(event);
 }
 ```
 
 ## Usage Examples
 
-### 1. Creating a Custom Toolbar
+### 1. Creating Custom Toolbar
 
 ```typescript
-import { Component, createSignal } from 'solid-js';
-import { Toolbar, ToolbarButton, Spacer } from '@floorp/solid-xul';
+import { Component, createSignal } from "solid-js";
+import { Toolbar, ToolbarButton, Spacer } from "@floorp/solid-xul";
 
 const CustomToolbar: Component = () => {
   const [buttonCount, setButtonCount] = createSignal(0);
-  
+
   const handleButtonClick = () => {
-    setButtonCount(prev => prev + 1);
+    setButtonCount((prev) => prev + 1);
     console.log(`Button clicked ${buttonCount()} times`);
   };
-  
+
   return (
     <Toolbar id="custom-toolbar" mode="icons">
       <ToolbarButton
@@ -1025,13 +1082,10 @@ const CustomToolbar: Component = () => {
         image="chrome://floorp/skin/icons/custom.png"
         onCommand={handleButtonClick}
       />
-      
+
       <Spacer flex={1} />
-      
-      <ToolbarButton
-        label={`Clicks: ${buttonCount()}`}
-        disabled={true}
-      />
+
+      <ToolbarButton label={`Clicks: ${buttonCount()}`} disabled={true} />
     </Toolbar>
   );
 };
@@ -1040,31 +1094,29 @@ const CustomToolbar: Component = () => {
 ### 2. Tab Management Component
 
 ```typescript
-import { Component, For } from 'solid-js';
-import { useBrowserTabs } from '@floorp/solid-xul';
+import { Component, For } from "solid-js";
+import { useBrowserTabs } from "@floorp/solid-xul";
 
 const TabManager: Component = () => {
   const { tabs, selectedTab, openTab, closeTab } = useBrowserTabs();
-  
+
   return (
     <div class="tab-manager">
       <h3>Open Tabs ({tabs().length})</h3>
-      
+
       <For each={tabs()}>
         {(tab) => (
-          <div class={`tab-item ${tab === selectedTab() ? 'selected' : ''}`}>
+          <div class={`tab-item ${tab === selectedTab() ? "selected" : ""}`}>
             <span class="tab-title">{tab.label}</span>
             <button onClick={() => closeTab(tab)}>×</button>
           </div>
         )}
       </For>
-      
-      <button onClick={() => openTab('about:newtab')}>
-        New Tab
-      </button>
+
+      <button onClick={() => openTab("about:newtab")}>New Tab</button>
     </div>
   );
 };
 ```
 
-The Solid-XUL integration package provides a powerful bridge between modern reactive UI development and Firefox's native XUL system, enabling Floorp to deliver advanced browser features while maintaining full compatibility with the Firefox ecosystem.
+The Solid-XUL integration package provides a powerful bridge between modern reactive UI development and Firefox's native XUL system, enabling Floorp to deliver advanced browser features while maintaining complete compatibility with the Firefox ecosystem.

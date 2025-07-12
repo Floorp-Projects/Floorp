@@ -6,18 +6,16 @@
 floorp/
 ├── .git/                    # Git repository metadata
 ├── .github/                 # GitHub Actions workflows and templates
-├── .vscode/                 # VSCode workspace configuration
-├── .claude/                 # Claude AI assistant configuration
+├── .vscode/                 # VSCode workspace settings
+├── .claude/                 # Claude AI assistant settings
 ├── @types/                  # TypeScript type definitions
 ├── src/                     # Main source code directory
 ├── scripts/                 # Build and automation scripts
-├── crates/                  # Rust crates and components
 ├── gecko/                   # Firefox/Gecko integration files
 ├── _dist/                   # Build output directory (generated)
 ├── build.ts                 # Main build script
 ├── deno.json               # Deno configuration and tasks
 ├── package.json            # Node.js dependencies
-├── Cargo.toml              # Rust workspace configuration
 ├── tsconfig.json           # TypeScript configuration
 ├── moz.build               # Mozilla build system integration
 ├── biome.json              # Biome configuration (formatter/linter)
@@ -29,12 +27,12 @@ floorp/
 ## src/ Directory - Main Source Code
 
 ### Overall Structure
+
 ```
 src/
 ├── apps/                   # UI applications
 ├── packages/               # Reusable packages
 ├── installers/             # Installers
-├── lib.rs                  # Rust library entry point
 └── .oxlintrc.json         # Oxlint configuration
 ```
 
@@ -83,7 +81,7 @@ src/apps/
 │
 ├── notes/                 # Notes functionality
 ├── welcome/               # Welcome screen
-├── startup/               # Startup processing
+├── startup/               # Startup process
 ├── modal-child/           # Modal dialogs
 ├── os/                    # OS-specific functionality
 ├── i18n-supports/         # Internationalization support
@@ -151,7 +149,7 @@ scripts/
 │   ├── child-dev.ts      # Development server
 │   ├── child-browser.ts  # Browser launch
 │   ├── savePrefs.ts      # Settings save
-│   └── writeVersion.ts   # Version writing
+│   └── writeVersion.ts   # Version write
 │
 ├── update/               # Update related
 │   ├── buildid2.ts       # Build ID management
@@ -174,23 +172,6 @@ scripts/
 │   └── validators/       # Translation validation
 │
 └── .oxlintrc.json       # Oxlint configuration
-```
-
-## crates/ - Rust Components
-
-```
-crates/
-└── nora-inject/          # Code injection system
-    ├── src/              # Rust source code
-    │   ├── lib.rs        # Library entry point
-    │   ├── inject.rs     # Injection logic
-    │   ├── parser.rs     # Code parser
-    │   └── utils.rs      # Utilities
-    ├── wit/              # WebAssembly Interface Types
-    │   └── world.wit     # Interface definition
-    ├── Cargo.toml        # Rust package configuration
-    ├── package.json      # npm package configuration
-    └── *.wasm            # Compiled WebAssembly
 ```
 
 ## gecko/ - Firefox/Gecko Integration
@@ -228,7 +209,7 @@ gecko/
         └── webext.d.ts   # WebExtensions type definitions
 ```
 
-## _dist/ - Build Output (Generated)
+## \_dist/ - Build Output (Generated)
 
 ```
 _dist/
@@ -251,6 +232,7 @@ _dist/
 ## Configuration File Details
 
 ### deno.json - Deno Configuration
+
 ```json
 {
   "workspace": ["./src/packages/*", "./src/apps/*"],
@@ -266,17 +248,13 @@ _dist/
 ```
 
 ### package.json - Node.js Dependencies
+
 - Frontend development tools
 - Build tools
 - UI libraries
 
-### Cargo.toml - Rust Workspace
-```toml
-[workspace]
-members = ["crates/nora-inject", "src/installers/stub-win64-installer"]
-```
-
 ### moz.build - Mozilla Build System Integration
+
 ```python
 DIRS += [
     "_dist/noraneko/content",
@@ -288,37 +266,38 @@ DIRS += [
 ## File Naming Conventions
 
 ### TypeScript/JavaScript
+
 - **Components**: PascalCase (`MainComponent.tsx`)
 - **Utilities**: camelCase (`utilityFunction.ts`)
 - **Configuration**: kebab-case (`vite.config.ts`)
 
-### Rust
-- **Files**: snake_case (`code_inject.rs`)
-- **Crates**: kebab-case (`nora-inject`)
-
 ### CSS/SCSS
+
 - **Files**: kebab-case (`main-styles.css`)
 - **Classes**: BEM notation or Tailwind
 
 ### Assets
+
 - **Images**: kebab-case (`app-icon.png`)
 - **Fonts**: kebab-case (`custom-font.woff2`)
 
 ## Directory Roles and Responsibilities
 
 ### Development Related
+
 - `src/apps/`: UI application implementation
 - `src/packages/`: Reusable libraries
 - `scripts/`: Build and development support tools
 
 ### Build Related
+
 - `_dist/`: Build artifacts (temporary)
 - `build.ts`: Build orchestration
 - Each app's `vite.config.ts`: Individual build configuration
 
 ### Integration Related
+
 - `gecko/`: Firefox integration configuration
-- `crates/`: Rust components
 - `@types/`: Type safety assurance
 
-This structure enables Floorp to manage complex browser applications in an organized manner, providing an environment where developers can work efficiently.
+This structure allows Floorp to manage complex browser applications in an organized manner, providing developers with an efficient working environment.

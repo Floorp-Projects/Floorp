@@ -1,101 +1,103 @@
-# Main Application - Detailed Analysis
+# メインアプリケーション - 詳細分析
 
-## Overview
+## 概要
 
-The main application is the core of Floorp browser, providing the primary browser functionality and user interface. It integrates SolidJS with Firefox's XUL system to create a modern, reactive browser experience while maintaining compatibility with Firefox's ecosystem.
+メインアプリケーションは Floorp ブラウザのコアであり、Chrome ツールバー上で動作するスクリプトが存在します。主要なブラウザ機能とユーザーインターフェースを提供します。SolidJS と Firefox の XUL システムを統合して、Firefox のエコシステムとの互換性を維持しながら、モダンでリアクティブなブラウザ体験を作り出します。
 
-## Architecture and Technology Stack
+## アーキテクチャと技術スタック
 
-### Core Technologies
-- **SolidJS**: Reactive UI framework for efficient DOM updates
-- **TypeScript**: Type-safe JavaScript development
-- **Tailwind CSS**: Utility-first CSS framework
-- **Vite**: Fast build tool and development server
-- **XUL**: Mozilla's XML-based user interface language
+### コア技術
 
-### Directory Structure
+- **SolidJS**: 効率的な DOM 更新のためのリアクティブ UI フレームワーク
+- **TypeScript**: 型安全な JavaScript 開発
+- **Tailwind CSS**: ユーティリティファーストの CSS フレームワーク
+- **Vite**: 高速なビルドツールと開発サーバー
+- **XUL**: Mozilla の XML ベースのユーザーインターフェース言語
+
+### ディレクトリ構造
+
 ```
 src/apps/main/
-├── core/                   # Core application logic
-│   ├── index.ts           # Main entry point
-│   ├── modules.ts         # Module management system
-│   ├── modules-hooks.ts   # Module lifecycle hooks
-│   ├── common/            # Common utilities and types
-│   ├── static/            # Static assets
-│   ├── test/              # Test files
-│   └── utils/             # Utility functions
-├── i18n/                  # Internationalization files
-├── docs/                  # Documentation
-├── about/                 # About page components
-├── @types/                # TypeScript type definitions
-├── package.json           # Dependencies and scripts
-├── vite.config.ts         # Vite configuration
-├── tsconfig.json          # TypeScript configuration
-├── tailwind.config.js     # Tailwind CSS configuration
-└── deno.json              # Deno configuration
+├── core/                   # コアアプリケーションロジック
+│   ├── index.ts           # メインエントリーポイント
+│   ├── modules.ts         # モジュール管理システム
+│   ├── modules-hooks.ts   # モジュールライフサイクルフック
+│   ├── common/            # 共通ユーティリティとタイプ
+│   ├── static/            # 静的アセット
+│   ├── test/              # テストファイル
+│   └── utils/             # ユーティリティ関数
+├── i18n/                  # 国際化ファイル
+├── docs/                  # ドキュメント
+├── about/                 # Aboutページコンポーネント
+├── @types/                # TypeScript型定義
+├── package.json           # 依存関係とスクリプト
+├── vite.config.ts         # Vite設定
+├── tsconfig.json          # TypeScript設定
+├── tailwind.config.js     # Tailwind CSS設定
+└── deno.json              # Deno設定
 ```
 
-## Core Systems
+## コアシステム
 
-### 1. Entry Point (index.ts)
+### 1. エントリーポイント (index.ts)
 
-The main entry point initializes the application and sets up the integration with Firefox's XUL system.
+メインエントリーポイントはアプリケーションを初期化し、Firefox の XUL システムとの統合を設定します。
 
 ```typescript
-// Main application initialization
+// メインアプリケーション初期化
 import { render } from "solid-js/web";
 import { ModuleManager } from "./modules";
 import { setupXULIntegration } from "@floorp/solid-xul";
 
-// Initialize XUL integration
+// XUL統合を初期化
 setupXULIntegration();
 
-// Initialize module system
+// モジュールシステムを初期化
 const moduleManager = new ModuleManager();
 
-// Start application
+// アプリケーションを開始
 async function initApp() {
   try {
-    // Load core modules
+    // コアモジュールを読み込み
     await moduleManager.loadCoreModules();
-    
-    // Initialize UI components
+
+    // UIコンポーネントを初期化
     await initializeUI();
-    
-    // Setup event listeners
+
+    // イベントリスナーを設定
     setupEventListeners();
-    
-    console.log("Floorp main application initialized");
+
+    console.log("Floorpメインアプリケーションが初期化されました");
   } catch (error) {
-    console.error("Failed to initialize application:", error);
+    console.error("アプリケーションの初期化に失敗しました:", error);
   }
 }
 
-// Initialize UI components
+// UIコンポーネントを初期化
 async function initializeUI() {
-  // Find XUL elements to enhance
+  // 強化するXUL要素を見つける
   const browserToolbox = document.getElementById("navigator-toolbox");
   const tabsToolbar = document.getElementById("TabsToolbar");
-  
+
   if (browserToolbox && tabsToolbar) {
-    // Render SolidJS components into XUL
+    // SolidJSコンポーネントをXULにレンダリング
     render(() => <BrowserEnhancements />, browserToolbox);
     render(() => <TabBarEnhancements />, tabsToolbar);
   }
 }
 
-// Setup global event listeners
+// グローバルイベントリスナーを設定
 function setupEventListeners() {
-  // Browser window events
+  // ブラウザウィンドウイベント
   window.addEventListener("load", handleWindowLoad);
   window.addEventListener("unload", handleWindowUnload);
-  
-  // Tab events
+
+  // タブイベント
   gBrowser.tabContainer.addEventListener("TabOpen", handleTabOpen);
   gBrowser.tabContainer.addEventListener("TabClose", handleTabClose);
 }
 
-// Initialize when DOM is ready
+// DOMが準備できたときに初期化
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
@@ -103,12 +105,12 @@ if (document.readyState === "loading") {
 }
 ```
 
-### 2. Module Management System (modules.ts)
+### 2. モジュール管理システム (modules.ts)
 
-The module system provides a way to organize and manage different features of the browser.
+モジュールシステムは、ブラウザの異なる機能を整理・管理する方法を提供します。
 
 ```typescript
-// Module interface definition
+// モジュールインターフェース定義
 export interface Module {
   id: string;
   name: string;
@@ -118,136 +120,136 @@ export interface Module {
   destroy(): Promise<void>;
 }
 
-// Module manager class
+// モジュールマネージャークラス
 export class ModuleManager {
   private modules = new Map<string, Module>();
   private loadedModules = new Set<string>();
-  
-  // Register a module
+
+  // モジュールを登録
   registerModule(module: Module): void {
     this.modules.set(module.id, module);
   }
-  
-  // Load core modules
+
+  // コアモジュールを読み込み
   async loadCoreModules(): Promise<void> {
     const coreModules = [
       "ui-enhancements",
       "tab-management",
       "sidebar-manager",
       "user-scripts",
-      "theme-manager"
+      "theme-manager",
     ];
-    
+
     for (const moduleId of coreModules) {
       await this.loadModule(moduleId);
     }
   }
-  
-  // Load a specific module
+
+  // 特定のモジュールを読み込み
   async loadModule(moduleId: string): Promise<void> {
     if (this.loadedModules.has(moduleId)) {
-      return; // Already loaded
+      return; // 既に読み込み済み
     }
-    
+
     const module = this.modules.get(moduleId);
     if (!module) {
-      throw new Error(`Module not found: ${moduleId}`);
+      throw new Error(`モジュールが見つかりません: ${moduleId}`);
     }
-    
-    // Load dependencies first
+
+    // 依存関係を最初に読み込み
     if (module.dependencies) {
       for (const depId of module.dependencies) {
         await this.loadModule(depId);
       }
     }
-    
-    // Initialize module
+
+    // モジュールを初期化
     try {
       await module.initialize();
       this.loadedModules.add(moduleId);
-      console.log(`Module loaded: ${moduleId}`);
+      console.log(`モジュールが読み込まれました: ${moduleId}`);
     } catch (error) {
-      console.error(`Failed to load module ${moduleId}:`, error);
+      console.error(`モジュール ${moduleId} の読み込みに失敗しました:`, error);
       throw error;
     }
   }
-  
-  // Unload a module
+
+  // モジュールをアンロード
   async unloadModule(moduleId: string): Promise<void> {
     const module = this.modules.get(moduleId);
     if (module && this.loadedModules.has(moduleId)) {
       await module.destroy();
       this.loadedModules.delete(moduleId);
-      console.log(`Module unloaded: ${moduleId}`);
+      console.log(`モジュールがアンロードされました: ${moduleId}`);
     }
   }
-  
-  // Get loaded modules
+
+  // 読み込まれたモジュールを取得
   getLoadedModules(): string[] {
     return Array.from(this.loadedModules);
   }
 }
 ```
 
-### 3. Module Hooks System (modules-hooks.ts)
+### 3. モジュールフックシステム (modules-hooks.ts)
 
-The hooks system provides lifecycle management and event handling for modules.
+フックシステムは、モジュールのライフサイクル管理とイベント処理を提供します。
 
 ```typescript
 import { createSignal, createEffect, onCleanup } from "solid-js";
 
-// Hook for browser state
+// ブラウザ状態のフック
 export function useBrowserState() {
   const [currentTab, setCurrentTab] = createSignal(gBrowser.selectedTab);
   const [tabCount, setTabCount] = createSignal(gBrowser.tabs.length);
-  
-  // Update current tab when selection changes
+
+  // 選択が変更されたときに現在のタブを更新
   const handleTabSelect = () => {
     setCurrentTab(gBrowser.selectedTab);
   };
-  
-  // Update tab count when tabs are added/removed
+
+  // タブが追加/削除されたときにタブ数を更新
   const handleTabCountChange = () => {
     setTabCount(gBrowser.tabs.length);
   };
-  
-  // Setup event listeners
+
+  // イベントリスナーを設定
   gBrowser.tabContainer.addEventListener("TabSelect", handleTabSelect);
   gBrowser.tabContainer.addEventListener("TabOpen", handleTabCountChange);
   gBrowser.tabContainer.addEventListener("TabClose", handleTabCountChange);
-  
-  // Cleanup on component unmount
+
+  // コンポーネントのアンマウント時にクリーンアップ
   onCleanup(() => {
     gBrowser.tabContainer.removeEventListener("TabSelect", handleTabSelect);
     gBrowser.tabContainer.removeEventListener("TabOpen", handleTabCountChange);
     gBrowser.tabContainer.removeEventListener("TabClose", handleTabCountChange);
   });
-  
+
   return {
     currentTab,
     tabCount,
-    switchToTab: (tab: XULElement) => gBrowser.selectedTab = tab,
-    closeTab: (tab: XULElement) => gBrowser.removeTab(tab)
+    switchToTab: (tab: XULElement) => (gBrowser.selectedTab = tab),
+    closeTab: (tab: XULElement) => gBrowser.removeTab(tab),
   };
 }
 
-// Hook for preferences
+// 設定のフック
 export function usePreferences() {
   const [prefs, setPrefs] = createSignal(new Map());
-  
-  // Load preferences
+
+  // 設定を読み込み
   const loadPreferences = () => {
     const prefService = Services.prefs;
     const prefMap = new Map();
-    
-    // Load Floorp-specific preferences
+
+    // Floorp固有の設定を読み込み
     const floorpPrefs = prefService.getChildList("floorp.");
     for (const prefName of floorpPrefs) {
       try {
         const value = prefService.getStringPref(prefName);
         prefMap.set(prefName, value);
       } catch (e) {
-        // Handle different pref types
+        // 異なる設定タイプを処理
         try {
           const value = prefService.getBoolPref(prefName);
           prefMap.set(prefName, value);
@@ -256,19 +258,19 @@ export function usePreferences() {
             const value = prefService.getIntPref(prefName);
             prefMap.set(prefName, value);
           } catch (e) {
-            console.warn(`Could not load preference: ${prefName}`);
+            console.warn(`設定を読み込めませんでした: ${prefName}`);
           }
         }
       }
     }
-    
+
     setPrefs(prefMap);
   };
-  
-  // Save preference
+
+  // 設定を保存
   const setPref = (name: string, value: any) => {
     const prefService = Services.prefs;
-    
+
     try {
       if (typeof value === "string") {
         prefService.setStringPref(name, value);
@@ -277,78 +279,79 @@ export function usePreferences() {
       } else if (typeof value === "number") {
         prefService.setIntPref(name, value);
       }
-      
-      // Update local state
-      setPrefs(prev => new Map(prev.set(name, value)));
+
+      // ローカル状態を更新
+      setPrefs((prev) => new Map(prev.set(name, value)));
     } catch (error) {
-      console.error(`Failed to set preference ${name}:`, error);
+      console.error(`設定 ${name} の保存に失敗しました:`, error);
     }
   };
-  
-  // Load preferences on initialization
+
+  // 初期化時に設定を読み込み
   loadPreferences();
-  
+
   return {
     prefs,
     setPref,
     getPref: (name: string) => prefs().get(name),
-    reloadPrefs: loadPreferences
+    reloadPrefs: loadPreferences,
   };
 }
 
-// Hook for window management
+// ウィンドウ管理のフック
 export function useWindowManager() {
   const [windows, setWindows] = createSignal([]);
-  
-  // Get all browser windows
+
+  // すべてのブラウザウィンドウを取得
   const getAllWindows = () => {
     const windowList = [];
     const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
-    
+
     while (windowEnumerator.hasMoreElements()) {
       const win = windowEnumerator.getNext();
       windowList.push(win);
     }
-    
+
     return windowList;
   };
-  
-  // Update window list
+
+  // ウィンドウリストを更新
   const updateWindows = () => {
     setWindows(getAllWindows());
   };
-  
-  // Listen for window events
+
+  // ウィンドウイベントを監視
   const windowWatcher = {
     observe: (subject: any, topic: string) => {
       if (topic === "domwindowopened" || topic === "domwindowclosed") {
         updateWindows();
       }
-    }
+    },
   };
-  
+
   Services.ww.registerNotification(windowWatcher);
-  
-  // Initial load
+
+  // 初期読み込み
   updateWindows();
-  
-  // Cleanup
+
+  // クリーンアップ
   onCleanup(() => {
     Services.ww.unregisterNotification(windowWatcher);
   });
-  
+
   return {
     windows,
     currentWindow: window,
-    openNewWindow: () => window.openDialog("chrome://browser/content/browser.xhtml"),
-    closeWindow: (win: Window) => win.close()
+    openNewWindow: () =>
+      window.openDialog("chrome://browser/content/browser.xhtml"),
+    closeWindow: (win: Window) => win.close(),
   };
 }
 ```
 
-## UI Component System
+## UI コンポーネントシステム
 
-### 1. Browser Enhancements Component
+### 1. ブラウザ拡張コンポーネント
 
 ```typescript
 import { Component, createSignal, For } from "solid-js";
@@ -358,46 +361,48 @@ const BrowserEnhancements: Component = () => {
   const { currentTab, tabCount } = useBrowserState();
   const { prefs, setPref } = usePreferences();
   const [showSidebar, setShowSidebar] = createSignal(false);
-  
-  // Toggle sidebar
+
+  // サイドバーを切り替え
   const toggleSidebar = () => {
     const newState = !showSidebar();
     setShowSidebar(newState);
     setPref("floorp.sidebar.enabled", newState);
   };
-  
+
   return (
     <div class="floorp-browser-enhancements">
-      {/* Sidebar toggle button */}
-      <button 
+      {/* サイドバー切り替えボタン */}
+      <button
         class="sidebar-toggle-btn"
         onClick={toggleSidebar}
-        title="Toggle Sidebar"
+        title="サイドバーを切り替え"
       >
         <svg width="16" height="16" viewBox="0 0 16 16">
-          <path d="M2 2h12v12H2V2zm1 1v10h3V3H3zm4 0v10h7V3H7z"/>
+          <path d="M2 2h12v12H2V2zm1 1v10h3V3H3zm4 0v10h7V3H7z" />
         </svg>
       </button>
-      
-      {/* Tab counter */}
+
+      {/* タブカウンター */}
       <div class="tab-counter">
         <span class="tab-count">{tabCount()}</span>
-        <span class="tab-label">tabs</span>
+        <span class="tab-label">タブ</span>
       </div>
-      
-      {/* Quick actions */}
+
+      {/* クイックアクション */}
       <div class="quick-actions">
-        <button 
+        <button
           class="quick-action-btn"
           onClick={() => BrowserTestUtils.addTab(gBrowser, "about:newtab")}
-          title="New Tab"
+          title="新しいタブ"
         >
           +
         </button>
-        <button 
+        <button
           class="quick-action-btn"
-          onClick={() => gBrowser.selectedTab && gBrowser.removeTab(gBrowser.selectedTab)}
-          title="Close Tab"
+          onClick={() =>
+            gBrowser.selectedTab && gBrowser.removeTab(gBrowser.selectedTab)
+          }
+          title="タブを閉じる"
         >
           ×
         </button>
@@ -409,7 +414,7 @@ const BrowserEnhancements: Component = () => {
 export default BrowserEnhancements;
 ```
 
-### 2. Tab Bar Enhancements Component
+### 2. タブバー拡張コンポーネント
 
 ```typescript
 import { Component, createSignal, createEffect } from "solid-js";
@@ -418,60 +423,60 @@ import { useBrowserState } from "../core/modules-hooks";
 const TabBarEnhancements: Component = () => {
   const { currentTab, tabCount } = useBrowserState();
   const [tabGroups, setTabGroups] = createSignal([]);
-  
-  // Group tabs by domain
+
+  // ドメイン別にタブをグループ化
   createEffect(() => {
     const tabs = Array.from(gBrowser.tabs);
     const groups = new Map();
-    
-    tabs.forEach(tab => {
+
+    tabs.forEach((tab) => {
       try {
         const uri = tab.linkedBrowser.currentURI;
         const domain = uri.host || "local";
-        
+
         if (!groups.has(domain)) {
           groups.set(domain, []);
         }
         groups.get(domain).push(tab);
       } catch (e) {
-        // Handle tabs without valid URIs
+        // 有効なURIがないタブを処理
         if (!groups.has("other")) {
           groups.set("other", []);
         }
         groups.get("other").push(tab);
       }
     });
-    
+
     setTabGroups(Array.from(groups.entries()));
   });
-  
+
   return (
     <div class="floorp-tab-enhancements">
-      {/* Tab groups indicator */}
+      {/* タブグループインジケーター */}
       <div class="tab-groups-indicator">
         <span class="groups-count">{tabGroups().length}</span>
-        <span class="groups-label">groups</span>
+        <span class="groups-label">グループ</span>
       </div>
-      
-      {/* Vertical tabs toggle */}
-      <button 
+
+      {/* 垂直タブ切り替え */}
+      <button
         class="vertical-tabs-toggle"
         onClick={() => toggleVerticalTabs()}
-        title="Toggle Vertical Tabs"
+        title="垂直タブを切り替え"
       >
         <svg width="16" height="16" viewBox="0 0 16 16">
-          <path d="M3 2h10v2H3V2zm0 4h10v2H3V6zm0 4h10v2H3v-2z"/>
+          <path d="M3 2h10v2H3V2zm0 4h10v2H3V6zm0 4h10v2H3v-2z" />
         </svg>
       </button>
     </div>
   );
 };
 
-// Toggle vertical tabs layout
+// 垂直タブレイアウトを切り替え
 function toggleVerticalTabs() {
   const tabsToolbar = document.getElementById("TabsToolbar");
   const isVertical = tabsToolbar?.getAttribute("orient") === "vertical";
-  
+
   if (tabsToolbar) {
     tabsToolbar.setAttribute("orient", isVertical ? "horizontal" : "vertical");
     Services.prefs.setBoolPref("floorp.tabs.vertical", !isVertical);
@@ -481,144 +486,128 @@ function toggleVerticalTabs() {
 export default TabBarEnhancements;
 ```
 
-## XUL Integration
+## XUL 統合
 
-### 1. XUL Element Enhancement
+### 1. XUL 要素拡張
 
 ```typescript
-// Enhance existing XUL elements with SolidJS reactivity
+// 既存のXUL要素をSolidJSリアクティビティで拡張
 export function enhanceXULElement(element: XULElement, component: Component) {
   const container = document.createElement("div");
   container.className = "solid-xul-container";
-  
-  // Insert container before the XUL element
+
+  // コンテナをXUL要素の前に挿入
   element.parentNode?.insertBefore(container, element);
-  
-  // Render SolidJS component
+
+  // SolidJSコンポーネントをレンダリング
   render(() => component, container);
-  
+
   return container;
 }
 
-// Create custom XUL elements
+// カスタムXUL要素を作成
 export function createCustomXULElement(tagName: string, component: Component) {
   class CustomXULElement extends XULElement {
     connectedCallback() {
       super.connectedCallback();
-      
-      // Render SolidJS component inside XUL element
+
+      // XUL要素内にSolidJSコンポーネントをレンダリング
       render(() => component, this);
     }
-    
+
     disconnectedCallback() {
       super.disconnectedCallback();
-      // Cleanup handled by SolidJS
+      // クリーンアップはSolidJSが処理
     }
   }
-  
+
   customElements.define(tagName, CustomXULElement);
 }
 ```
 
-### 2. Firefox API Integration
+### 2. Firefox API 統合
 
 ```typescript
-// Wrapper for Firefox APIs with SolidJS reactivity
+// SolidJSリアクティビティを持つFirefox APIのラッパー
 export class FirefoxAPIWrapper {
-  // Bookmarks API
+  // ブックマークAPI
   static createBookmarksSignal() {
     const [bookmarks, setBookmarks] = createSignal([]);
-    
+
     const loadBookmarks = async () => {
       try {
         const bookmarkTree = await PlacesUtils.promiseBookmarksTree();
         setBookmarks(bookmarkTree.children || []);
       } catch (error) {
-        console.error("Failed to load bookmarks:", error);
+        console.error("ブックマークの読み込みに失敗しました:", error);
       }
     };
-    
-    // Listen for bookmark changes
+
+    // ブックマーク変更を監視
     const bookmarkObserver = {
       onItemAdded: loadBookmarks,
       onItemRemoved: loadBookmarks,
-      onItemChanged: loadBookmarks
+      onItemChanged: loadBookmarks,
     };
-    
+
     PlacesUtils.bookmarks.addObserver(bookmarkObserver);
-    
-    // Initial load
+
+    // 初期読み込み
     loadBookmarks();
-    
-    // Cleanup
+
+    // クリーンアップ
     onCleanup(() => {
       PlacesUtils.bookmarks.removeObserver(bookmarkObserver);
     });
-    
+
     return bookmarks;
   }
-  
-  // History API
+
+  // 履歴API
   static createHistorySignal(limit: number = 50) {
     const [history, setHistory] = createSignal([]);
-    
+
     const loadHistory = async () => {
       try {
         const db = await PlacesUtils.promiseDBConnection();
-        const rows = await db.executeCached(`
+        const rows = await db.executeCached(
+          `
           SELECT url, title, visit_date
           FROM moz_places p
           JOIN moz_historyvisits h ON p.id = h.place_id
           ORDER BY visit_date DESC
           LIMIT :limit
-        `, { limit });
-        
-        const historyItems = rows.map(row => ({
+        `,
+          { limit }
+        );
+
+        const historyItems = rows.map((row) => ({
           url: row.getResultByName("url"),
           title: row.getResultByName("title"),
-          visitDate: new Date(row.getResultByName("visit_date") / 1000)
+          visitDate: new Date(row.getResultByName("visit_date") / 1000),
         }));
-        
+
         setHistory(historyItems);
       } catch (error) {
-        console.error("Failed to load history:", error);
+        console.error("履歴の読み込みに失敗しました:", error);
       }
     };
-    
+
     loadHistory();
-    
+
     return history;
-  }
-  
-  // Downloads API
-  static createDownloadsSignal() {
-    const [downloads, setDownloads] = createSignal([]);
-    
-    const loadDownloads = async () => {
-      try {
-        const downloadList = await Downloads.getList(Downloads.ALL);
-        const allDownloads = await downloadList.getAll();
-        setDownloads(allDownloads);
-      } catch (error) {
-        console.error("Failed to load downloads:", error);
-      }
-    };
-    
-    loadDownloads();
-    
-    return downloads;
   }
 }
 ```
 
-## State Management
+## 状態管理
 
-### 1. Global State Store
+### 1. グローバル状態ストア
 
 ```typescript
 import { createStore } from "solid-js/store";
 
-// Global application state
+// グローバルアプリケーション状態
 export interface AppState {
   ui: {
     sidebarOpen: boolean;
@@ -637,84 +626,94 @@ export interface AppState {
   };
 }
 
-// Initial state
+// 初期状態
 const initialState: AppState = {
   ui: {
     sidebarOpen: false,
     verticalTabs: false,
     theme: "system",
-    compactMode: false
+    compactMode: false,
   },
   browser: {
     currentUrl: "",
     tabCount: 0,
-    isLoading: false
+    isLoading: false,
   },
   user: {
     preferences: new Map(),
-    customizations: []
-  }
+    customizations: [],
+  },
 };
 
-// Create global store
+// グローバルストアを作成
 export const [appState, setAppState] = createStore(initialState);
 
-// State actions
+// 状態アクション
 export const appActions = {
-  // UI actions
-  toggleSidebar: () => setAppState("ui", "sidebarOpen", !appState.ui.sidebarOpen),
-  toggleVerticalTabs: () => setAppState("ui", "verticalTabs", !appState.ui.verticalTabs),
+  // UIアクション
+  toggleSidebar: () =>
+    setAppState("ui", "sidebarOpen", !appState.ui.sidebarOpen),
+  toggleVerticalTabs: () =>
+    setAppState("ui", "verticalTabs", !appState.ui.verticalTabs),
   setTheme: (theme: string) => setAppState("ui", "theme", theme),
-  
-  // Browser actions
+
+  // ブラウザアクション
   setCurrentUrl: (url: string) => setAppState("browser", "currentUrl", url),
   setTabCount: (count: number) => setAppState("browser", "tabCount", count),
-  setLoading: (loading: boolean) => setAppState("browser", "isLoading", loading),
-  
-  // User actions
+  setLoading: (loading: boolean) =>
+    setAppState("browser", "isLoading", loading),
+
+  // ユーザーアクション
   setPreference: (key: string, value: any) => {
-    setAppState("user", "preferences", prev => new Map(prev.set(key, value)));
+    setAppState("user", "preferences", (prev) => new Map(prev.set(key, value)));
   },
   addCustomization: (customization: any) => {
-    setAppState("user", "customizations", prev => [...prev, customization]);
-  }
+    setAppState("user", "customizations", (prev) => [...prev, customization]);
+  },
 };
 ```
 
-## Performance Optimizations
+## パフォーマンス最適化
 
-### 1. Lazy Loading
+### 1. 遅延読み込み
 
 ```typescript
-// Lazy load components
+// コンポーネントの遅延読み込み
 const LazySettingsPanel = lazy(() => import("./SettingsPanel"));
 const LazyBookmarksManager = lazy(() => import("./BookmarksManager"));
 
-// Lazy load modules
+// モジュールの遅延読み込み
 const loadModuleAsync = async (moduleId: string) => {
   const module = await import(`./modules/${moduleId}`);
   return module.default;
 };
 ```
 
-### 2. Virtual Scrolling for Large Lists
+### 2. 大きなリストの仮想スクロール
 
 ```typescript
 import { createVirtualizer } from "@tanstack/solid-virtual";
 
 const VirtualTabList: Component<{ tabs: Tab[] }> = (props) => {
   let containerRef: HTMLDivElement;
-  
+
   const virtualizer = createVirtualizer({
-    get count() { return props.tabs.length; },
+    get count() {
+      return props.tabs.length;
+    },
     getScrollElement: () => containerRef,
-    estimateSize: () => 32, // Height of each tab item
-    overscan: 5
+    estimateSize: () => 32, // 各タブアイテムの高さ
+    overscan: 5,
   });
-  
+
   return (
     <div ref={containerRef!} class="virtual-tab-list">
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          position: "relative",
+        }}
+      >
         <For each={virtualizer.getVirtualItems()}>
           {(item) => (
             <div
@@ -724,7 +723,7 @@ const VirtualTabList: Component<{ tabs: Tab[] }> = (props) => {
                 left: 0,
                 width: "100%",
                 height: `${item.size}px`,
-                transform: `translateY(${item.start}px)`
+                transform: `translateY(${item.start}px)`,
               }}
             >
               <TabItem tab={props.tabs[item.index]} />
@@ -737,9 +736,9 @@ const VirtualTabList: Component<{ tabs: Tab[] }> = (props) => {
 };
 ```
 
-## Testing Strategies
+## テスト戦略
 
-### 1. Unit Tests
+### 1. ユニットテスト
 
 ```typescript
 import { describe, it, expect } from "vitest";
@@ -747,117 +746,121 @@ import { render } from "@solidjs/testing-library";
 import { ModuleManager } from "../core/modules";
 
 describe("ModuleManager", () => {
-  it("should register and load modules", async () => {
+  it("モジュールを登録して読み込むべき", async () => {
     const manager = new ModuleManager();
-    
+
     const testModule = {
       id: "test-module",
-      name: "Test Module",
+      name: "テストモジュール",
       version: "1.0.0",
       initialize: vi.fn().mockResolvedValue(undefined),
-      destroy: vi.fn().mockResolvedValue(undefined)
+      destroy: vi.fn().mockResolvedValue(undefined),
     };
-    
+
     manager.registerModule(testModule);
     await manager.loadModule("test-module");
-    
+
     expect(testModule.initialize).toHaveBeenCalled();
     expect(manager.getLoadedModules()).toContain("test-module");
   });
 });
 ```
 
-### 2. Integration Tests
+### 2. 統合テスト
 
 ```typescript
 import { describe, it, expect } from "vitest";
 import { setupTestEnvironment } from "../test/setup";
 
-describe("Browser Integration", () => {
+describe("ブラウザ統合", () => {
   beforeEach(async () => {
     await setupTestEnvironment();
   });
-  
-  it("should enhance XUL elements with SolidJS components", async () => {
+
+  it("XUL要素をSolidJSコンポーネントで拡張すべき", async () => {
     const toolbox = document.getElementById("navigator-toolbox");
     expect(toolbox).toBeTruthy();
-    
-    // Simulate component rendering
+
+    // コンポーネントレンダリングをシミュレート
     const container = document.createElement("div");
     container.className = "solid-xul-container";
     toolbox?.appendChild(container);
-    
+
     expect(toolbox?.querySelector(".solid-xul-container")).toBeTruthy();
   });
 });
 ```
 
-## Code Examples
+## コード例
 
-### 1. Creating a Custom Browser Feature
+### 1. カスタムブラウザ機能の作成
 
 ```typescript
-// Custom feature: Tab Groups
+// カスタム機能: タブグループ
 export class TabGroupsFeature implements Module {
   id = "tab-groups";
-  name = "Tab Groups";
+  name = "タブグループ";
   version = "1.0.0";
-  
+
   private groups = new Map<string, Tab[]>();
-  
+
   async initialize() {
-    // Add UI elements
+    // UI要素を追加
     this.addTabGroupsUI();
-    
-    // Setup event listeners
+
+    // イベントリスナーを設定
     this.setupEventListeners();
-    
-    console.log("Tab Groups feature initialized");
+
+    console.log("タブグループ機能が初期化されました");
   }
-  
+
   async destroy() {
-    // Cleanup
+    // クリーンアップ
     this.removeTabGroupsUI();
     this.removeEventListeners();
   }
-  
+
   private addTabGroupsUI() {
     const tabsToolbar = document.getElementById("TabsToolbar");
     if (tabsToolbar) {
       const container = document.createElement("div");
       container.id = "tab-groups-container";
-      
+
       render(() => <TabGroupsComponent groups={this.groups} />, container);
       tabsToolbar.appendChild(container);
     }
   }
-  
+
   private setupEventListeners() {
-    gBrowser.tabContainer.addEventListener("TabOpen", this.handleTabOpen.bind(this));
-    gBrowser.tabContainer.addEventListener("TabClose", this.handleTabClose.bind(this));
+    gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      this.handleTabOpen.bind(this)
+    );
+    gBrowser.tabContainer.addEventListener(
+      "TabClose",
+      this.handleTabClose.bind(this)
+    );
   }
-  
+
   private handleTabOpen(event: Event) {
     const tab = event.target as Tab;
-    // Auto-group tabs by domain
+    // ドメイン別にタブを自動グループ化
     this.autoGroupTab(tab);
   }
-  
+
   private autoGroupTab(tab: Tab) {
     try {
       const uri = tab.linkedBrowser.currentURI;
       const domain = uri.host || "ungrouped";
-      
+
       if (!this.groups.has(domain)) {
         this.groups.set(domain, []);
       }
-      
+
       this.groups.get(domain)?.push(tab);
     } catch (e) {
-      console.error("Failed to group tab:", e);
+      console.error("タブのグループ化に失敗しました:", e);
     }
   }
 }
 ```
-
-This main application architecture provides a solid foundation for building modern browser features while maintaining compatibility with Firefox's existing systems. The modular design allows for easy extension and customization, while the SolidJS integration provides efficient reactivity and modern development patterns.
