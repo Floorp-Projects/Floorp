@@ -123,7 +123,6 @@ export class StyleManager {
 
   applyStyle(id: string, cssContent: string, condition: boolean) {
     if (condition) {
-      console.log("applyStyle", id);
       this.createStyle(id, cssContent);
     } else {
       this.removeStyle(id);

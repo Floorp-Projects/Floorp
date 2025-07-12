@@ -20,7 +20,6 @@ const httpRequestObserver = {
 
   observe: (channel: any, topic: string) => {
     const topLevelWindow = getBrowserById(channel.browserId);
-    console.log("topLevelWindow", topLevelWindow?.floorpBmsUserAgent);
 
     if (
       topic !== "http-on-modify-request" ||

@@ -28,7 +28,6 @@ export class SsbRunner {
   }
 
   public async openSsbWindow(ssb: Manifest) {
-    console.log("openSsbWindow", ssb);
     const win = SsbRunnerUtils.openSsbWindow(ssb);
     await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
     return win;

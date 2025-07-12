@@ -63,8 +63,6 @@ export const overrides = [
 
       const gWorkspacesServices = Workspaces.getCtx();
 
-      console.log("gWorkspacesServices", gWorkspacesServices);
-
       Services.obs.notifyObservers(
         {
           wrappedJSObject: new Promise((resolve) => {

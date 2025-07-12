@@ -23,8 +23,6 @@ export class TabSizeSpecification {
       return;
     }
 
-    console.log("fewqweffewfew", document?.head);
-
     const styleElement = (
       <style id="floorp-tab-size-specification">
         {`:root {
@@ -39,8 +37,6 @@ export class TabSizeSpecification {
   constructor() {
     render(() => this.StyleElement(), document?.head);
     createEffect(() => {
-      console.log("config().tab.tabMinHeight", config().tab.tabMinHeight);
-
       const minH = config().tab.tabMinHeight;
       const minW = config().tab.tabMinWidth;
       this.setTabSizeSpecification(minH, minW);
