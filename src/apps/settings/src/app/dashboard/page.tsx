@@ -60,7 +60,8 @@ export default function Page() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 pl-6">
-        <Card className="z-1">
+        {
+          /* <Card className="z-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Rocket className="size-5 text-blue-500" />
@@ -93,7 +94,8 @@ export default function Page() {
               </Button>
             </a>
           </CardFooter>
-        </Card>
+        </Card> */
+        }
 
         <Card className="z-1">
           <CardHeader>

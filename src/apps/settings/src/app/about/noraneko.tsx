@@ -50,11 +50,9 @@ export default function Page() {
               <p className="text-xl">
                 {t("about.browserVersion", {
                   browserVersion:
-                    constantsData?.MOZ_APP_VERSION.split("@")[1] ??
-                      "unknown",
+                    constantsData?.MOZ_APP_VERSION.split("@")[1] ?? "unknown",
                   firefoxVersion:
-                    constantsData?.MOZ_APP_VERSION.split("@")[0] ??
-                      "unknown",
+                    constantsData?.MOZ_APP_VERSION.split("@")[0] ?? "unknown",
                 })}
               </p>
             </div>
@@ -67,7 +65,7 @@ export default function Page() {
           <CardFooter>
             <Button asChild>
               <a
-                href="https://noraneko.example.com/about"
+                href="https://floorp.app"
                 className="flex items-center gap-2"
               >
                 {t("about.releaseNotes")}
@@ -95,9 +93,7 @@ export default function Page() {
             <Button asChild className="w-full">
               <a
                 href="about:license"
-                target="_blank"
                 className="flex items-center gap-2"
-                rel="noreferrer"
               >
                 <Scale className="size-4" />
                 {t("about.openSourceLicenseNotice")}
@@ -107,9 +103,7 @@ export default function Page() {
             <Button asChild className="w-full">
               <a
                 href="https://github.com/Floorp-Projects/Floorp"
-                target="_blank"
                 className="flex items-center gap-2"
-                rel="noreferrer"
               >
                 <SiGithub className="size-4" />
                 GitHub Repository: Floorp-Projects/Floorp
