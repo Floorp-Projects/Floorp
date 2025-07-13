@@ -2,29 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* reverse the urlbar and menubar */
-#urlbar-container {
-  transform: scale(-1, -1) !important;
-}
-
-#urlbar {
-  transform: scaleX(-1) !important;
-}
-
-#urlbar > * {
-  transform: scaleY(-1);
-}
-
-/* This is a workaround for the fact that the urlbar and menubar are not
-   flipped when the browser is flipped. */
-#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
-#TabsToolbar > .titlebar-buttonbox-container {
-  top: auto !important;
-  right: auto !important;
-  height: auto !important;
-  position: unset !important;
-}
-
 #nav-bar {
   border-inline: 0 !important;
   border-inline-style: none !important;
@@ -32,23 +9,19 @@
 }
 
 #urlbar {
-  top: 0 !important;
+  transform: scale(1, -1) !important;
+  top: 0px !important;
+}
+
+#urlbar-container {
+  transform: scale(1, -1) !important;
   z-index: 1000 !important;
+  --urlbar-container-height: unset !important;
 }
 
-#browser {
-  z-index: 0 !important;
-}
-
-.tabbrowser-tab {
-  z-index: 0 !important;
-}
-
-:root[inFullscreen]:not([macOSNativeFullscreen]) :is(#nav-bar) {
-  display: none !important;
-}
-
-/** Fix for https://github.com/Floorp-Projects/Floorp/issues/889 **/
-#TabsToolbar {
-  z-index: 0 !important;
+#urlbar-searchmode-switcher {
+  #urlbar:not([unifiedsearchbutton-available]) > .urlbar-input-container > & {
+    position: unset !important;
+    top: 0 !important;
+  }
 }
