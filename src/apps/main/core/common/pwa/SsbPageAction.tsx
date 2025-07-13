@@ -13,6 +13,7 @@ import { iconUrlParser } from "@core/utils/iconUrlParser.ts";
 import style from "./style.css?inline";
 import PWAINSTALL_SVG from "./icons/pwa-install.svg";
 import PWALAUNCH_SVG from "./icons/pwa-launch.svg";
+import INSTALLING_GIF from "./icons/installing.gif";
 
 export class SsbPageAction {
   private isInstalling = createSignal(false);
@@ -180,7 +181,7 @@ export class SsbPageAction {
                     <xul:vbox id="ssb-installing-vbox">
                       <img
                         id="ssb-installing-icon"
-                        src="chrome://floorp/skin/icons/installing.gif"
+                        src={iconUrlParser(INSTALLING_GIF)}
                         width="48"
                         height="48"
                       />
