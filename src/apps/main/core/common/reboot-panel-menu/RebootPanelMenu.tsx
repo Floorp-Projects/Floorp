@@ -73,7 +73,7 @@ export class RebootPanelMenu {
   private static async showRebootPanelSubView() {
     await window.PanelUI.showSubView(
       "PanelUI-reboot",
-      document?.getElementById("appMenu-reboot-button"),
+      document?.getElementById("appMenu-restart-button"),
     );
   }
 
@@ -130,12 +130,8 @@ export class RebootPanelMenu {
     return (
       <>
         <xul:toolbarbutton
-          id="appMenu-reboot-button"
+          id="appMenu-restart-button"
           class="subviewbutton subviewbutton-nav"
-          style={{
-            "list-style-image":
-              "url('chrome://noraneko/content/assets/svg/refresh-cw.svg')",
-          }}
           label={translations().reboot}
           closemenu="none"
           onCommand={() => RebootPanelMenu.showRebootPanelSubView()}
@@ -145,10 +141,6 @@ export class RebootPanelMenu {
             <xul:toolbarbutton
               id="appMenu-restart-normal-button"
               class="subviewbutton"
-              style={{
-                "list-style-image":
-                  "url('chrome://noraneko/content/assets/svg/refresh-cw.svg')",
-              }}
               label={translations().normalRestart}
               onCommand={() => RebootPanelMenu.handleRestart()}
             />
@@ -156,34 +148,24 @@ export class RebootPanelMenu {
             <xul:toolbarbutton
               id="appMenu-restart-cache-clear-button"
               class="subviewbutton"
-              style={{
-                "list-style-image":
-                  "url('chrome://noraneko/content/assets/svg/forget.svg')",
-              }}
               label={translations().restartWithCacheClear}
               onCommand={() => RebootPanelMenu.handleRestartWithCacheClear()}
             />
             <xul:toolbarbutton
               id="appMenu-restart-safe-mode-button"
               class="subviewbutton"
-              style={{
-                "list-style-image":
-                  "url('chrome://noraneko/content/assets/svg/plug-disconnected.svg')",
-              }}
               label={translations().restartInSafeMode}
               onCommand={() => RebootPanelMenu.handleRestartInSafeMode()}
             />
-            <xul:toolbarbutton
+            {
+              /* <xul:toolbarbutton
               id="appMenu-restart-profile-manager-button"
               class="subviewbutton"
-              style={{
-                "list-style-image":
-                  "url('chrome://browser/skin/fxa/avatar-empty.svg')",
-              }}
               label={translations().restartWithProfileManager}
               onCommand={() =>
                 RebootPanelMenu.handleRestartWithProfileManager()}
-            />
+            /> */
+            }
           </xul:vbox>
         </xul:panelview>
       </>
