@@ -17,14 +17,14 @@ export class SsbRunner {
     private ssbManager: SiteSpecificBrowserManager,
   ) {}
 
-  public async runSsbById(id: string) {
-    const ssbData = await this.dataManager.getCurrentSsbData();
-    this.openSsbWindow(ssbData[id]);
-  }
-
   public async runSsbByUrl(url: string) {
     const ssbData = await this.dataManager.getCurrentSsbData();
-    this.openSsbWindow(ssbData[url]);
+    const ssbToRun = Object.values(ssbData).find((ssb) =>
+      url.startsWith(ssb.start_url)
+    );
+    if (ssbToRun) {
+      this.openSsbWindow(ssbToRun);
+    }
   }
 
   public async openSsbWindow(ssb: Manifest) {
