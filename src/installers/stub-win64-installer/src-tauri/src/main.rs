@@ -290,10 +290,14 @@ async fn get_latest_installer_url() -> Option<String> {
 
     for asset in json["assets"].as_array()? {
         let name = asset["name"].as_str()?;
-        if name.ends_with(".exe") {
+        // Skip stub installers and only get full Windows installers
+        if name.ends_with(".exe") && !name.contains("stub") {
+            println!("[INFO] Found full installer: {}", name);
             return asset["browser_download_url"]
                 .as_str()
                 .map(|s| s.to_string());
+        } else if name.ends_with(".exe") && name.contains("stub") {
+            println!("[INFO] Skipping stub installer: {}", name);
         }
     }
     None
