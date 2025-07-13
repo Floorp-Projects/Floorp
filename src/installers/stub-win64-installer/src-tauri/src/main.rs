@@ -290,16 +290,16 @@ async fn get_latest_installer_url() -> Option<String> {
 
     for asset in json["assets"].as_array()? {
         let name = asset["name"].as_str()?;
-        // Skip stub installers and only get full Windows installers
-        if name.ends_with(".exe") && !name.contains("stub") {
-            println!("[INFO] Found full installer: {}", name);
+        // Look specifically for floorp-win64.installer.exe
+        if name == "floorp-win64.installer.exe" {
+            println!("[INFO] Found target installer: {}", name);
             return asset["browser_download_url"]
                 .as_str()
                 .map(|s| s.to_string());
-        } else if name.ends_with(".exe") && name.contains("stub") {
-            println!("[INFO] Skipping stub installer: {}", name);
         }
     }
+
+    println!("[WARN] floorp-win64.installer.exe not found in release assets");
     None
 }
 
