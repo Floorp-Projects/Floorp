@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from "react";
 import ProgressBar from "./components/ProgressBar.tsx";
 import { getLocaleData } from "./app/localization/dataManager.ts";
 import { useTranslation } from "react-i18next";
+import { rpc } from "./lib/rpc/rpc.ts";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
 const LocalizationPage = lazy(() => import("./app/localization/page.tsx"));
@@ -26,6 +27,9 @@ function App() {
 
     initializeLanguage();
   }, [i18n]);
+
+  //* Set welcome page shown to true
+  rpc.setBoolPref("floorp.browser.welcome.page.shown", true);
 
   return (
     <MemoryRouter>

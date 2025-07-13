@@ -26,10 +26,6 @@ export function migrateWorkspacesData(): Promise<void> {
           return;
         }
 
-        gBrowser.addTrustedTab("about:welcome", {
-          inBackground: false,
-        });
-
         const fileURI = Services.io.newFileURI(profDir);
 
         NetUtil.asyncFetch(

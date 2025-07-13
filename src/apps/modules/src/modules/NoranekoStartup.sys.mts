@@ -46,12 +46,40 @@ function initializeVersionInfo(): void {
   Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
 }
 
+function checkAndShowWelcomePage(): void {
+  try {
+    // Check if welcome page has been shown before
+    const welcomeShown = Services.prefs.getBoolPref(
+      "floorp.browser.welcome.page.shown",
+      false,
+    );
+
+    if (!welcomeShown) {
+      // Open welcome page in a new tab
+      const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+      if (gBrowser) {
+        gBrowser.addTab("about:welcome");
+
+        // Mark welcome page as shown
+        Services.prefs.setBoolPref("floorp.browser.welcome.page.shown", true);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to show welcome page:", error);
+  }
+}
+
 export function onFinalUIStartup(): void {
   Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
 
   createDefaultUserChromeFiles().catch((error) => {
     console.error("Failed to create default userChrome files:", error);
   });
+
+  // Show welcome page on update if not shown before
+  if (isUpdated) {
+    checkAndShowWelcomePage();
+  }
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
