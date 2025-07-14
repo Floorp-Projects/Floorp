@@ -1,6 +1,138 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
 import type { DesignFormData } from "@/types/pref.ts";
 
+// Lepton Settings Interface
+export interface LeptonFormData {
+  // Auto-hide settings
+  autohideTab: boolean;
+  autohideNavbar: boolean;
+  autohideSidebar: boolean;
+  autohideBackButton: boolean;
+  autohideForwardButton: boolean;
+  autohidePageAction: boolean;
+
+  // Hide settings
+  hiddenTabIcon: boolean;
+  hiddenTabbar: boolean;
+  hiddenNavbar: boolean;
+  hiddenSidebarHeader: boolean;
+  hiddenUrlbarIconbox: boolean;
+  hiddenBookmarkbarIcon: boolean;
+  hiddenBookmarkbarLabel: boolean;
+  hiddenDisabledMenu: boolean;
+
+  // Icon settings
+  iconDisabled: boolean;
+  iconMenu: boolean;
+
+  // Centered settings
+  centeredTab: boolean;
+  centeredUrlbar: boolean;
+  centeredBookmarkbar: boolean;
+
+  // URL View settings
+  urlViewMoveIconToLeft: boolean;
+  urlViewGoButtonWhenTyping: boolean;
+  urlViewAlwaysShowPageActions: boolean;
+
+  // Tab Bar settings
+  tabbarAsTitlebar: boolean;
+  tabbarOneLiner: boolean;
+
+  // Sidebar settings
+  sidebarOverlap: boolean;
+}
+
+// Lepton preference keys mapping
+const LEPTON_PREFS = {
+  autohideTab: "userChrome.autohide.tab",
+  autohideNavbar: "userChrome.autohide.navbar",
+  autohideSidebar: "userChrome.autohide.sidebar",
+  autohideBackButton: "userChrome.autohide.back_button",
+  autohideForwardButton: "userChrome.autohide.forward_button",
+  autohidePageAction: "userChrome.autohide.page_action",
+  hiddenTabIcon: "userChrome.hidden.tab_icon",
+  hiddenTabbar: "userChrome.hidden.tabbar",
+  hiddenNavbar: "userChrome.hidden.navbar",
+  hiddenSidebarHeader: "userChrome.hidden.sidebar_header",
+  hiddenUrlbarIconbox: "userChrome.hidden.urlbar_iconbox",
+  hiddenBookmarkbarIcon: "userChrome.hidden.bookmarkbar_icon",
+  hiddenBookmarkbarLabel: "userChrome.hidden.bookmarkbar_label",
+  hiddenDisabledMenu: "userChrome.hidden.disabled_menu",
+  iconDisabled: "userChrome.icon.disabled",
+  iconMenu: "userChrome.icon.menu",
+  centeredTab: "userChrome.centered.tab",
+  centeredUrlbar: "userChrome.centered.urlbar",
+  centeredBookmarkbar: "userChrome.centered.bookmarkbar",
+  urlViewMoveIconToLeft: "userChrome.urlView.move_icon_to_left",
+  urlViewGoButtonWhenTyping: "userChrome.urlView.go_button_when_typing",
+  urlViewAlwaysShowPageActions: "userChrome.urlView.always_show_page_actions",
+  tabbarAsTitlebar: "userChrome.tabbar.as_titlebar",
+  tabbarOneLiner: "userChrome.tabbar.one_liner",
+  sidebarOverlap: "userChrome.sidebar.overlap",
+} as const;
+
+export async function saveLeptonSettings(
+  settings: LeptonFormData,
+): Promise<void> {
+  const promises = Object.entries(settings).map(([key, value]) => {
+    const prefKey = LEPTON_PREFS[key as keyof LeptonFormData];
+    if (prefKey) {
+      return rpc.setBoolPref(prefKey, value);
+    }
+    return Promise.resolve();
+  });
+
+  await Promise.all(promises);
+}
+
+export async function getLeptonSettings(): Promise<LeptonFormData> {
+  const defaultSettings: LeptonFormData = {
+    autohideTab: false,
+    autohideNavbar: false,
+    autohideSidebar: false,
+    autohideBackButton: false,
+    autohideForwardButton: false,
+    autohidePageAction: false,
+    hiddenTabIcon: false,
+    hiddenTabbar: false,
+    hiddenNavbar: false,
+    hiddenSidebarHeader: false,
+    hiddenUrlbarIconbox: false,
+    hiddenBookmarkbarIcon: false,
+    hiddenBookmarkbarLabel: false,
+    hiddenDisabledMenu: false,
+    iconDisabled: false,
+    iconMenu: false,
+    centeredTab: false,
+    centeredUrlbar: false,
+    centeredBookmarkbar: false,
+    urlViewMoveIconToLeft: false,
+    urlViewGoButtonWhenTyping: false,
+    urlViewAlwaysShowPageActions: false,
+    tabbarAsTitlebar: false,
+    tabbarOneLiner: false,
+    sidebarOverlap: false,
+  };
+
+  const results = await Promise.all(
+    Object.entries(LEPTON_PREFS).map(async ([key, prefKey]) => {
+      const value = await rpc.getBoolPref(prefKey);
+      return [key, value ?? defaultSettings[key as keyof LeptonFormData]] as [
+        string,
+        boolean,
+      ];
+    }),
+  );
+
+  const settings: LeptonFormData = { ...defaultSettings };
+  results.forEach(([key, value]) => {
+    settings[key as keyof LeptonFormData] = value;
+  });
+
+  return settings;
+}
+
 export async function saveDesignSettings(
   settings: DesignFormData,
 ): Promise<null | void> {

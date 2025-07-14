@@ -1,6 +1,7 @@
 import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   getDesignSettings,
   saveDesignSettings,
@@ -13,15 +14,20 @@ import type { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
   const { t } = useTranslation();
-  const methods = useForm({ defaultValues: {} });
+  const navigate = useNavigate();
+  const methods = useForm<DesignFormData>({
+    defaultValues: {} as DesignFormData,
+  });
   const { control, setValue } = methods;
   const watchAll = useWatch({ control });
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
       const values = await getDesignSettings();
-      for (const key in values) {
-        setValue(key as keyof DesignFormData, values[key]);
+      if (values) {
+        Object.entries(values).forEach(([key, value]) => {
+          setValue(key as keyof DesignFormData, value);
+        });
       }
     };
     fetchDefaultValues();
@@ -35,8 +41,39 @@ export default function Page() {
   }, [setValue]);
 
   React.useEffect(() => {
-    saveDesignSettings(watchAll);
+    if (watchAll && Object.keys(watchAll).length > 0) {
+      saveDesignSettings(watchAll as DesignFormData);
+    }
   }, [watchAll]);
+
+  const LeptonSettingsButton = () => {
+    return (
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium mb-1">
+              {t("design.lepton-preferences.title")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t("design.lepton-preferences.description")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/features/design/lepton")}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/80"
+          >
+            {t("design.lepton-preferences.configureLepton")}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Check if current design supports Lepton settings
+  const isLeptonCompatible = watchAll &&
+    watchAll.design &&
+    ["protonfix", "photon", "lepton"].includes(watchAll.design);
 
   return (
     <div className="p-6 space-y-3">
@@ -52,6 +89,7 @@ export default function Page() {
       <FormProvider {...methods}>
         <form className="space-y-3 pl-6">
           <Interface />
+          {isLeptonCompatible && <LeptonSettingsButton />}
           <Tabbar />
           <Tab />
           <UICustomization />
