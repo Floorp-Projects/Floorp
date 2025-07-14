@@ -20,3 +20,12 @@
   margin: 0px !important;
   margin-inline-start: 7px !important;
 }
+
+.titlebar-buttonbox-container {
+  display: none !important;
+}
+
+#floorp-tabbar-window-manage-container {
+  display: flex !important;
+  visibility: visible !important;
+}

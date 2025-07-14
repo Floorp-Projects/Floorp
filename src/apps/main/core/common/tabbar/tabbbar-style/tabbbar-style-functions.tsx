@@ -82,11 +82,12 @@ export namespace gTabbarStyleFunctions {
   export function optimiseToVerticalTabbar() {
     const tabbarElement = getTabbarElement();
     const navbarElement = getNavbarElement();
+    const windowManageContainer = document?.querySelector(
+      "#floorp-tabbar-window-manage-container",
+    ) as XULElement;
 
     tabbarElement?.setAttribute("hidden", "true");
-    navbarElement?.appendChild(
-      document?.querySelector("#floorp-tabbar-window-manage-container") as Node,
-    );
+    navbarElement?.appendChild(windowManageContainer);
     checkPaddingEnabled();
   }
 
