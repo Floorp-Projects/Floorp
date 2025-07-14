@@ -13,9 +13,11 @@ export default class UICustomization extends NoraComponentBase {
   private domManager: DOMLayoutManager | null = null;
 
   init() {
-    this.styleManager = new StyleManager();
-    this.domManager = new DOMLayoutManager();
-    this.styleManager?.setupStyleEffects();
-    this.domManager?.setupDOMEffects();
+    globalThis.SessionStore.promiseInitialized.then(() => {
+      this.styleManager = new StyleManager();
+      this.domManager = new DOMLayoutManager();
+      this.styleManager?.setupStyleEffects();
+      this.domManager?.setupDOMEffects();
+    });
   }
 }

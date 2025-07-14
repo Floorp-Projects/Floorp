@@ -22,6 +22,7 @@ export class StyleManager {
 
   setupStyleEffects() {
     this.setupNavbarEffects();
+    this.setupSearchbarEffects();
     this.setupDisplayEffects();
     this.setupSpecialEffects();
     this.setupMultirowTabEffects();
@@ -35,7 +36,11 @@ export class StyleManager {
         navbarBottomCSS,
         config().uiCustomization.navbar.position === "bottom",
       );
+    });
+  }
 
+  private setupSearchbarEffects() {
+    createEffect(() => {
       this.applyStyle(
         "floorp-searchbartop",
         movePageInsideSearchbarCSS,
@@ -130,30 +135,47 @@ export class StyleManager {
   }
 
   private createStyle(id: string, cssContent: string) {
+    // Remove existing style before creating new one
     this.removeStyle(id);
-    if (!document || !document.head) return;
 
-    const styleTag = document.createElement("style");
-    styleTag.setAttribute("id", id);
-    styleTag.textContent = cssContent;
-    document.head.appendChild(styleTag);
-    this.styleElements.set(id, styleTag);
+    if (!document || !document.head) {
+      console.warn("Document or document.head not available");
+      return;
+    }
+
+    try {
+      const styleTag = document.createElement("style");
+      styleTag.setAttribute("id", id);
+      styleTag.textContent = cssContent;
+      document.head.appendChild(styleTag);
+      this.styleElements.set(id, styleTag);
+    } catch (error) {
+      console.error(`Failed to create style with id: ${id}`, error);
+    }
   }
 
   private createInlineStyle(id: string, cssContent: string) {
-    this.removeStyle(id);
-    if (!document || !document.head) return;
-
-    const styleTag = document.createElement("style");
-    styleTag.setAttribute("id", id);
-    styleTag.textContent = cssContent;
-    document.head.appendChild(styleTag);
-    this.styleElements.set(id, styleTag);
+    // Use the same createStyle method since they do the same thing
+    this.createStyle(id, cssContent);
   }
 
   private removeStyle(id: string) {
-    if (!document) return;
-    document.getElementById(id)?.remove();
-    this.styleElements.delete(id);
+    if (!document) {
+      console.warn("Document not available");
+      return;
+    }
+
+    try {
+      // Remove from DOM
+      const existingElement = document.getElementById(id);
+      if (existingElement) {
+        existingElement.remove();
+      }
+
+      // Remove from internal map
+      this.styleElements.delete(id);
+    } catch (error) {
+      console.error(`Failed to remove style with id: ${id}`, error);
+    }
   }
 }
