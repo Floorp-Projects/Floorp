@@ -9,6 +9,11 @@ import { config } from "@core/common/designs/configs.ts";
 export class DOMLayoutManager {
   private static readonly DEBUG_PREFIX = "[DOMLayoutManager]";
 
+  // Store original navbar position for proper restoration
+  private originalNavbarParent: Element | null = null;
+  private originalNavbarNextSibling: Element | null = null;
+  private isNavbarAtBottom = false;
+
   private get navBar(): XULElement {
     const element = document?.getElementById("nav-bar") as XULElement;
     return element;
@@ -33,6 +38,16 @@ export class DOMLayoutManager {
 
   setupDOMEffects() {
     this.setupNavbarPosition();
+  }
+
+  /**
+   * Reset the saved navbar position state
+   * Useful when the DOM structure changes or for cleanup
+   */
+  private resetNavbarPositionState() {
+    this.originalNavbarParent = null;
+    this.originalNavbarNextSibling = null;
+    this.isNavbarAtBottom = false;
   }
 
   private setupNavbarPosition() {
@@ -69,11 +84,17 @@ export class DOMLayoutManager {
       return;
     }
 
-    try {
-      // Move navbar to bottom position
-      fullscreenWrapper.after(navbar);
+    if (this.isNavbarAtBottom) {
+      return;
+    }
 
-      // Fix urlbar input container position
+    try {
+      this.originalNavbarParent = navbar.parentElement;
+      this.originalNavbarNextSibling = navbar.nextElementSibling;
+
+      fullscreenWrapper.after(navbar);
+      this.isNavbarAtBottom = true;
+
       this.fixUrlbarInputContainer();
     } catch (error: unknown) {
       console.error(
@@ -84,51 +105,20 @@ export class DOMLayoutManager {
   }
 
   private moveNavbarToTop() {
-    const navbar = this.navBar;
-    const navigatorToolbox = this.navigatorToolbox;
-    const personalToolbar = this.personalToolbar;
+    // When changing from bottom to top position, a restart is required
+    // to properly restore the original DOM structure
+    if (this.isNavbarAtBottom) {
+      console.info(
+        `${DOMLayoutManager.DEBUG_PREFIX} Navbar position change requires restart to take effect`,
+      );
 
-    if (!navbar) {
-      console.warn(`${DOMLayoutManager.DEBUG_PREFIX} navbar element not found`);
+      // Optionally show a notification to the user about restart requirement
+      // This could be implemented with a toast notification or similar UI element
+
       return;
     }
 
-    if (!navigatorToolbox) {
-      console.warn(
-        `${DOMLayoutManager.DEBUG_PREFIX} navigatorToolbox element not found`,
-      );
-      return;
-    }
-
-    try {
-      // Move navbar back to navigator toolbox
-      navigatorToolbox.appendChild(navbar);
-
-      // Fix urlbar input container position
-      this.restoreUrlbarInputContainer();
-
-      // Handle personal toolbar positioning
-      if (personalToolbar && navigatorToolbox) {
-        const bookmarksFakeStatusMode = globalThis.Services?.prefs
-          ?.getBoolPref?.(
-            "floorp.bookmarks.fakestatus.mode",
-            false,
-          );
-
-        if (!bookmarksFakeStatusMode) {
-          navigatorToolbox.appendChild(personalToolbar);
-        }
-      } else {
-        console.warn(
-          `${DOMLayoutManager.DEBUG_PREFIX} personalToolbar or navigatorToolbox not available for personal toolbar positioning`,
-        );
-      }
-    } catch (error: unknown) {
-      console.error(
-        `${DOMLayoutManager.DEBUG_PREFIX} Error in moveNavbarToTop:`,
-        error,
-      );
-    }
+    // If navbar is already at top, no action needed
   }
 
   private fixUrlbarInputContainer() {
