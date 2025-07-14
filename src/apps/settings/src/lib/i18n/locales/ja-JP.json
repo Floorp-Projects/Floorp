@@ -116,64 +116,6 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
-        "lepton-preferences": {
-            "title": "Lepton 設定",
-            "description": "Lepton テーマの詳細設定を構成します",
-            "configureLepton": "Lepton を設定",
-            "back": "戻る",
-            "experimentalWarning": {
-                "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なものであり、公式にはサポートされていません。 問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox の CSS テーマです。",
-                "visitRepository": "リポジトリページを開く"
-            },
-            "autohide": {
-                "title": "自動非表示設定",
-                "tab": "タブを自動的に隠す",
-                "navbar": "ツールバーを自動的に隠す",
-                "sidebar": "サイドバーを自動的に隠す",
-                "backButton": "戻るボタンを自動的に隠す",
-                "forwardButton": "進むボタンを自動的に隠す",
-                "pageAction": "アドレスバーのボタンを自動的に隠す"
-            },
-            "hidden": {
-                "title": "非表示設定",
-                "tabIcon": "タブアイコンを隠す",
-                "tabbar": "タブバーを隠す",
-                "navbar": "ツールバーを隠す",
-                "sidebarHeader": "サイドバーヘッダーを隠す",
-                "urlbarIconbox": "アドレスバーアイコンを隠す",
-                "bookmarkbarIcon": "ブックマークバーアイコンを隠す",
-                "bookmarkbarLabel": "ブックマークバーラベルを隠す",
-                "disabledMenu": "無効化されたコンテキストメニュー項目を隠す"
-            },
-            "icon": {
-                "title": "アイコン設定",
-                "disabled": "Leptonのコンテキストメニューとパネルメニューアイコンを無効化",
-                "menu": "Leptonのコンテキストメニューアイコンを有効化"
-            },
-            "centered": {
-                "title": "センタリング設定",
-                "tab": "タブのラベルを中央に配置",
-                "urlbar": "アドレスバーのテキストを中央に配置",
-                "bookmarkbar": "ブックマークバーアイテムを中央に配置"
-            },
-            "urlView": {
-                "title": "URL表示設定",
-                "moveIconToLeft": "アドレスバーアイコンを左側に移動",
-                "goButtonWhenTyping": "入力時に「Go」ボタンを表示",
-                "alwaysShowPageActions": "アドレスバーでページアクションを常に表示"
-            },
-            "tabbar": {
-                "title": "タブバー設定",
-                "asTitlebar": "タイトルバーにタブバーを表示",
-                "oneLiner": "タブバーとツールバーを結合"
-            },
-            "sidebar": {
-                "title": "サイドバー設定",
-                "overlap": "ウェブサイトコンテンツの上にサイドバーを表示"
-            }
-        },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
             "needRestartDescriptionForEnableAndDisable": "この UI カスタマイズ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
