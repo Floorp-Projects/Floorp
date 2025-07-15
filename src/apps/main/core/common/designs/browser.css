@@ -180,6 +180,8 @@ browser[type="content"] > html {
 }
 
 /* hidden="false" の場合は非表示にしない */
-[hidden]:where(:not([hidden="until-found"]))[hidden="false"] {
-  display: flex !important;
+@layer base {
+  :root [hidden][hidden="false"]:not([hidden="until-found"]) {
+    display: flex !important;
+  }
 }
