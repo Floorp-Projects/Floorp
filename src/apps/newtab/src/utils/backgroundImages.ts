@@ -15,6 +15,10 @@ export function getRandomBackgroundImage(): string {
   return imageUrls[randomIndex];
 }
 
+export function getAllBackgroundImages(): string[] {
+  return imageUrls;
+}
+
 export function getFloorpImages(): { name: string; url: string }[] {
   return Object.entries(floorpImages).map(([path, url]) => {
     const fileName = path.split("/").pop() || "";

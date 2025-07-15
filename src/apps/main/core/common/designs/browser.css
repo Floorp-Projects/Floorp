@@ -178,3 +178,8 @@ browser[type="content"] > html {
     outline: none !important;
   }
 }
+
+/* hidden="false" の場合は非表示にしない */
+[hidden]:where(:not([hidden="until-found"]))[hidden="false"] {
+  display: flex !important;
+}

@@ -7,7 +7,12 @@ import {
 } from "react";
 import { getNewTabSettings, saveNewTabSettings } from "../utils/dataManager.ts";
 
-export type BackgroundType = "none" | "random" | "custom" | "folderPath" | "floorp";
+export type BackgroundType =
+  | "none"
+  | "random"
+  | "custom"
+  | "folderPath"
+  | "floorp";
 
 interface BackgroundContextType {
   type: BackgroundType;
@@ -15,6 +20,10 @@ interface BackgroundContextType {
   fileName: string | null;
   folderPath: string | null;
   selectedFloorp: string | null;
+  slideshow: {
+    enabled: boolean;
+    interval: number;
+  };
   setType: (type: BackgroundType) => Promise<void>;
   setCustomImage: (
     image: string | null,
@@ -22,6 +31,7 @@ interface BackgroundContextType {
   ) => Promise<void>;
   setFolderPath: (path: string | null) => Promise<void>;
   setSelectedFloorp: (imageName: string | null) => Promise<void>;
+  setSlideshow: (enabled: boolean, interval?: number) => Promise<void>;
 }
 
 const BackgroundContext = createContext<BackgroundContextType | null>(null);
@@ -34,6 +44,12 @@ export function BackgroundProvider(
   const [fileName, setFileName] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [selectedFloorp, setSelectedFloorp] = useState<string | null>(null);
+  const [slideshow, setSlideshowState] = useState<
+    { enabled: boolean; interval: number }
+  >({
+    enabled: false,
+    interval: 30,
+  });
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -45,6 +61,7 @@ export function BackgroundProvider(
         setFileName(settings.background.fileName);
         setFolderPath(settings.background.folderPath || null);
         setSelectedFloorp(settings.background.selectedFloorp || null);
+        setSlideshowState(settings.background.slideshow);
       } catch (e) {
         console.error("Failed to load background settings:", e);
       } finally {
@@ -114,24 +131,53 @@ export function BackgroundProvider(
     }
   }, []);
 
-  const handleSetSelectedFloorp = useCallback(async (imageName: string | null) => {
-    try {
-      const settings = await getNewTabSettings();
-      await saveNewTabSettings({
-        ...settings,
-        background: {
-          ...settings.background,
-          type: "floorp",
-          selectedFloorp: imageName,
-        },
-      });
-      setType("floorp");
-      setSelectedFloorp(imageName);
-    } catch (e) {
-      console.error("Failed to save selected Floorp image:", e);
-      throw e;
-    }
-  }, []);
+  const handleSetSelectedFloorp = useCallback(
+    async (imageName: string | null) => {
+      try {
+        const settings = await getNewTabSettings();
+        await saveNewTabSettings({
+          ...settings,
+          background: {
+            ...settings.background,
+            type: "floorp",
+            selectedFloorp: imageName,
+          },
+        });
+        setType("floorp");
+        setSelectedFloorp(imageName);
+      } catch (e) {
+        console.error("Failed to save selected Floorp image:", e);
+        throw e;
+      }
+    },
+    [],
+  );
+
+  const handleSetSlideshow = useCallback(
+    async (enabled: boolean, interval?: number) => {
+      try {
+        const settings = await getNewTabSettings();
+        const newSlideshow = {
+          ...settings.background.slideshow,
+          enabled,
+          ...(interval !== undefined && { interval }),
+        };
+
+        await saveNewTabSettings({
+          ...settings,
+          background: {
+            ...settings.background,
+            slideshow: newSlideshow,
+          },
+        });
+        setSlideshowState(newSlideshow);
+      } catch (e) {
+        console.error("Failed to save slideshow settings:", e);
+        throw e;
+      }
+    },
+    [],
+  );
 
   if (!isInitialized) {
     return null;
@@ -145,10 +191,12 @@ export function BackgroundProvider(
         fileName,
         folderPath,
         selectedFloorp,
+        slideshow,
         setType: handleSetType,
         setCustomImage: handleSetCustomImage,
         setFolderPath: handleSetFolderPath,
         setSelectedFloorp: handleSetSelectedFloorp,
+        setSlideshow: handleSetSlideshow,
       }}
     >
       {children}
