@@ -285,7 +285,7 @@ jobs:
               await addToENV("ARTIFACT_NAME","floorp-win-amd64-moz-artifact");
               await addToENV("ARTIFACT_FROM_RELEASE_NAME","floorp-win-amd64-moz-artifact.zip");
               await addToENV("OUTPUT_NAME","win-amd64");
-              await $`echo "INSTALLER_PATH=install/sea/*installer.exe" >> $GITHUB_ENV`;
+              await $`echo "INSTALLER_PATH=*installer.exe" >> $GITHUB_ENV`;
               await addToENV("OUTPUT_INSTALLER_NAME","floorp-win64.installer.exe");
               await $`echo "WORKSPACE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV`;
               break;
