@@ -450,6 +450,9 @@ jobs:
           if [ "${{inputs.platform}}" == "Windows-x64" ]; then
             mkdir -p $GITHUB_WORKSPACE/noraneko-unsigned-installer/binary $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer
             cp ./floorp/.github/workflows/assets/windows/* $GITHUB_WORKSPACE/noraneko-unsigned-installer/
+
+            ls -la obj-*/dist/install/sea/
+
             7z x obj-*/dist/$INSTALLER_PATH -o$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary
           fi
 
