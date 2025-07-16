@@ -27,9 +27,7 @@
         "selectFolder": "フォルダーを選択",
         "selected": "選択中",
         "imageRecommendation": "推奨: 1920x1080 以上",
-        "close": "閉じる",
-        "enableSlideshow": "スライドショーを有効にする",
-        "slideshowInterval": "切り替え間隔 (秒)"
+        "close": "閉じる"
     },
     "searchBar": {
         "searchOrEnterUrl": "検索または URL を入力",
