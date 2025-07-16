@@ -27,11 +27,6 @@
         "selectFolder": "Select Folder",
         "selected": "Selected",
         "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "enableSlideshow": "Enable Slideshow",
-        "slideshowInterval": "Slideshow Interval",
-        "seconds": "seconds",
-        "minute": "minute",
-        "minutes": "minutes",
         "close": "Close"
     },
     "searchBar": {

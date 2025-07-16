@@ -7,10 +7,6 @@ declare global {
       folderPath: string,
       callback: (data: string) => void,
     ) => void;
-    NRGetAllImagesFromFolder: (
-      folderPath: string,
-      callback: (data: string) => void,
-    ) => void;
   }
 }
 
@@ -26,10 +22,6 @@ export interface NewTabSettings {
     fileName: string | null;
     folderPath?: string | null;
     selectedFloorp?: string | null;
-    slideshow: {
-      enabled: boolean;
-      interval: number; // seconds
-    };
   };
   searchBar: {
     searchEngine: string;
@@ -47,11 +39,6 @@ export interface RandomImageResult {
   success: boolean;
 }
 
-export interface AllImagesResult {
-  images: string[];
-  success: boolean;
-}
-
 const DEFAULT_SETTINGS: NewTabSettings = {
   components: {
     topSites: true,
@@ -64,10 +51,6 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     fileName: null,
     folderPath: null,
     selectedFloorp: null,
-    slideshow: {
-      enabled: false,
-      interval: 30, // 30 seconds default
-    },
   },
   searchBar: {
     searchEngine: "default",
@@ -139,17 +122,6 @@ export async function getRandomImageFromFolder(
 ): Promise<RandomImageResult> {
   return await new Promise((resolve) => {
     window.NRGetRandomImageFromFolder(folderPath, (data: string) => {
-      const result = JSON.parse(data);
-      resolve(result);
-    });
-  });
-}
-
-export async function getAllImagesFromFolder(
-  folderPath: string,
-): Promise<AllImagesResult> {
-  return await new Promise((resolve) => {
-    window.NRGetAllImagesFromFolder(folderPath, (data: string) => {
       const result = JSON.parse(data);
       resolve(result);
     });
