@@ -15,6 +15,57 @@ interface TabBrowserTab {
   _dragData: DragData;
 }
 
+// Define interfaces for the tab browser elements
+interface TabBrowserTabsElement extends XULElement {
+  allTabs: XULElement[];
+  _positionPinnedTabs(): void;
+  _positionPinnedTabs_orig?: () => void;
+  on_drop(event: DragEvent): unknown;
+  on_drop_orig?: (event: DragEvent) => unknown;
+  on_dragover(event: DragEvent): void;
+  on_dragover_orig?: (event: DragEvent) => void;
+  _handleTabSelect(aInstant: boolean): void;
+  _handleTabSelect_orig?: (aInstant: boolean) => void;
+  setAttribute(name: string, value: string): void;
+  style: CSSStyleDeclaration & {
+    paddingInlineStart: string;
+    transform: string;
+  };
+}
+
+interface ArrowScrollboxElement extends XULElement {
+  on_wheel?: (event: Event) => void;
+  removeEventListener(type: string, listener: EventListener): void;
+  addEventListener(type: string, listener: EventListener): void;
+}
+
+interface TabBrowserTabsPrototype {
+  _positionPinnedTabs(): void;
+  _positionPinnedTabs_orig?: () => void;
+  on_drop(event: DragEvent): unknown;
+  on_drop_orig?: (event: DragEvent) => unknown;
+  on_dragover(event: DragEvent): void;
+  on_dragover_orig?: (event: DragEvent) => void;
+  _handleTabSelect(aInstant: boolean): void;
+  _handleTabSelect_orig?: (aInstant: boolean) => void;
+  [key: string]: unknown;
+}
+
+// Define specific function types for each injection method
+type PositionPinnedTabsFunction = (this: TabBrowserTabsElement) => void;
+type OnDropFunction = (
+  this: TabBrowserTabsElement,
+  event: DragEvent,
+) => unknown;
+type OnDragOverFunction = (
+  this: TabBrowserTabsElement,
+  event: DragEvent,
+) => void;
+type HandleTabSelectFunction = (
+  this: TabBrowserTabsElement,
+  aInstant: boolean,
+) => void;
+
 export class MultirowTabbarClass {
   private get arrowScrollbox(): XULElement | null {
     return document?.querySelector("#tabbrowser-arrowscrollbox") || null;
@@ -81,7 +132,7 @@ export class MultirowTabbarClass {
       console.warn("tab box not found in this win");
       return;
     }
-    const tabsProto = elementConstructor.prototype as any;
+    const tabsProto = elementConstructor.prototype as TabBrowserTabsPrototype;
     if (tabsProto._positionPinnedTabs_orig) {
       console.warn("tab box already injectioned in this win");
       return;
@@ -106,45 +157,33 @@ export class MultirowTabbarClass {
       return -1;
     };
 
-    function injectionMethod(
-      name: string,
-      f: (this: any, ...args: any[]) => any,
+    function injectionMethod<T extends keyof TabBrowserTabsPrototype>(
+      name: T,
+      f: TabBrowserTabsPrototype[T],
     ): void {
-      tabsProto[name + "_orig"] = tabsProto[name];
+      tabsProto[name + "_orig" as string] = tabsProto[name];
       tabsProto[name] = f;
     }
 
-    injectionMethod("_positionPinnedTabs", function (this: any): void {
-      // Remove visual offset of pinned tabs
-      this._positionPinnedTabs_orig();
-      this.style.paddingInlineStart = "";
-      for (const tab of this.allTabs) {
-        tab.style.marginInlineStart = "";
-      }
-    });
-
-    injectionMethod("on_drop", function (this: any, event: DragEvent): any {
-      const dt = event.dataTransfer!;
-      if (dt.dropEffect !== "move") {
-        return this.on_drop_orig(event);
-      }
-      const draggedTab = dt.mozGetDataAt(
-        "application/x-moz-tabbrowser-tab",
-        0,
-      ) as TabBrowserTab;
-      draggedTab._dragData.animDropIndex = dropIndex(
-        this.allTabs as XULElement[],
-        event,
-      );
-      return this.on_drop_orig(event);
-    });
+    injectionMethod(
+      "_positionPinnedTabs",
+      function (this: TabBrowserTabsElement): void {
+        // Remove visual offset of pinned tabs
+        this._positionPinnedTabs_orig?.();
+        this.style.paddingInlineStart = "";
+        for (const tab of this.allTabs) {
+          (tab.style as CSSStyleDeclaration & { marginInlineStart: string })
+            .marginInlineStart = "";
+        }
+      } as PositionPinnedTabsFunction,
+    );
 
     injectionMethod(
-      "on_dragover",
-      function (this: any, event: DragEvent): void {
+      "on_drop",
+      function (this: TabBrowserTabsElement, event: DragEvent): unknown {
         const dt = event.dataTransfer!;
         if (dt.dropEffect !== "move") {
-          return this.on_dragover_orig(event);
+          return this.on_drop_orig?.(event);
         }
         const draggedTab = dt.mozGetDataAt(
           "application/x-moz-tabbrowser-tab",
@@ -154,30 +193,52 @@ export class MultirowTabbarClass {
           this.allTabs as XULElement[],
           event,
         );
-        this.on_dragover_orig(event);
+        return this.on_drop_orig?.(event);
+      } as OnDropFunction,
+    );
+
+    injectionMethod(
+      "on_dragover",
+      function (this: TabBrowserTabsElement, event: DragEvent): void {
+        const dt = event.dataTransfer!;
+        if (dt.dropEffect !== "move") {
+          return this.on_dragover_orig?.(event);
+        }
+        const draggedTab = dt.mozGetDataAt(
+          "application/x-moz-tabbrowser-tab",
+          0,
+        ) as TabBrowserTab;
+        draggedTab._dragData.animDropIndex = dropIndex(
+          this.allTabs as XULElement[],
+          event,
+        );
+        this.on_dragover_orig?.(event);
         // Reset rules that visualize dragging because they don't work in multi-row
         for (const tab of this.allTabs) {
-          tab.style.transform = "";
+          (tab.style as CSSStyleDeclaration & { transform: string }).transform =
+            "";
         }
-      },
+      } as OnDragOverFunction,
     );
 
     injectionMethod(
       "_handleTabSelect",
-      function (this: any, aInstant: boolean): void {
+      function (this: TabBrowserTabsElement, aInstant: boolean): void {
         // Only when "overflow" attribute is set, the selected tab will get
         // automatically scrolled into view
         this.setAttribute("overflow", "true");
-        this._handleTabSelect_orig(aInstant);
-      },
+        this._handleTabSelect_orig?.(aInstant);
+      } as HandleTabSelectFunction,
     );
 
-    const tabsElement = win.document!.querySelector("#tabbrowser-tabs") as any;
+    const tabsElement = win.document!.querySelector(
+      "#tabbrowser-tabs",
+    ) as TabBrowserTabsElement;
     tabsElement._positionPinnedTabs?.();
 
     const arrowscrollbox = win.document!.querySelector(
       "#tabbrowser-arrowscrollbox",
-    ) as any;
+    ) as ArrowScrollboxElement;
     if (arrowscrollbox && arrowscrollbox.on_wheel) {
       arrowscrollbox.removeEventListener("wheel", arrowscrollbox.on_wheel);
     }
@@ -191,7 +252,7 @@ export class MultirowTabbarClass {
       console.warn("tab box not injectioned");
       return;
     }
-    const tabsProto = elementConstructor.prototype as any;
+    const tabsProto = elementConstructor.prototype as TabBrowserTabsPrototype;
 
     function uninjectionMethod(name: string): void {
       if (tabsProto[name + "_orig"]) {
@@ -207,7 +268,7 @@ export class MultirowTabbarClass {
 
     const arrowscrollbox = win.document!.querySelector(
       "#tabbrowser-arrowscrollbox",
-    ) as any;
+    ) as ArrowScrollboxElement;
     if (arrowscrollbox && arrowscrollbox.on_wheel) {
       arrowscrollbox.addEventListener("wheel", arrowscrollbox.on_wheel);
     }

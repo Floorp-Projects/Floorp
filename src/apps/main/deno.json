@@ -6,7 +6,9 @@
     ],
     "types": [
       "npm:vite/client",
-      "jsr:@nora/lib-dom-gecko"
+      "jsr:@nora/lib-dom-gecko",
+      "../../../@types/gecko/dom/index.d.ts",
+      "../../../@types/gecko/CustomizableUI.d.ts"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "solid-js"
@@ -20,6 +22,7 @@
   },
   "imports": {
     "@typescript/lib-dom": "jsr:@nora/lib-dom-gecko",
+    "@types/gecko/": "../../../@types/gecko/",
     "@nora/skin/": "../../packages/skin/",
     "@nora/solid-xul": "../../packages/solid-xul/index.ts",
     "@core/": "./core/",
