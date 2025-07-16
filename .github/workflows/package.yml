@@ -362,16 +362,6 @@ jobs:
             MOZ_ARTIFACT_FILE="$(echo ~/artifacts/floorp-macOS-universal-moz-artifact.dmg):$(echo ~/artifacts/floorp-macOS.update_framework_artifacts.zip)" ./mach build
           fi
 
-      # - name: test package
-      #   run: |
-      #     ./mach package
-
-      # - name: Upload Floorp Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: floorp-${{ inputs.platform }}-artifact-test-build-output
-      #     path: ./obj-artifact-build-output/dist
-
       - name: Inject Floorp
         run: |
           cd ./floorp
@@ -442,6 +432,12 @@ jobs:
       - name: Package noraneko
         run: |
           ./mach package
+
+      - name: Upload Floorp Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-${{ inputs.platform }}-artifact-test-build-output
+          path: ./obj-artifact-build-output/dist
 
       - name: Prepare un-packaging installer files for windows-codesigning (binary)
         run: |
