@@ -19,12 +19,18 @@ export function Settings(
     setCustomImage,
     setFolderPath,
     setSelectedFloorp,
+    slideshowEnabled,
+    slideshowInterval,
+    setSlideshowEnabled,
+    setSlideshowInterval,
   } = useBackground();
   const { components, toggleComponent } = useComponents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentFileName, setCurrentFileName] = useState<string>("");
   const [currentFolderPath, setCurrentFolderPath] = useState<string>("");
-  const [floorpImages, setFloorpImages] = useState<{ name: string; url: string }[]>([]);
+  const [floorpImages, setFloorpImages] = useState<
+    { name: string; url: string }[]
+  >([]);
 
   useEffect(() => {
     if (backgroundType === "custom" && fileName) {
@@ -103,7 +109,11 @@ export function Settings(
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t("settings.newTabSettings")}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("settings.newTabSettings")}
+    >
       <div className="space-y-6">
         <section>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
@@ -130,7 +140,9 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">{t("settings.clock")}</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.clock")}
+              </span>
             </label>
             <label className="flex items-center space-x-3">
               <input
@@ -162,7 +174,9 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">{t("settings.noBackground")}</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.noBackground")}
+              </span>
             </label>
             <label className="flex items-center space-x-3">
               <input
@@ -188,7 +202,9 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">{t("settings.customImage")}</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.customImage")}
+              </span>
             </label>
 
             <label className="flex items-center space-x-3">
@@ -201,7 +217,9 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">{t("settings.folderImages")}</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.folderImages")}
+              </span>
             </label>
 
             <label className="flex items-center space-x-3">
@@ -214,7 +232,9 @@ export function Settings(
                 disabled={isSubmitting}
                 className="form-radio h-5 w-5 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary"
               />
-              <span className="text-gray-700 dark:text-gray-200">{t("settings.floorpImages")}</span>
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.floorpImages")}
+              </span>
             </label>
 
             {backgroundType === "custom" && (
@@ -260,6 +280,40 @@ export function Settings(
               </div>
             )}
 
+            {(backgroundType === "random" || backgroundType === "folderPath") &&
+              (
+                <div className="mt-4 pl-8 space-y-4">
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={slideshowEnabled}
+                      onChange={(e) => setSlideshowEnabled(e.target.checked)}
+                      disabled={isSubmitting}
+                      className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
+                    />
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {t("settings.enableSlideshow")}
+                    </span>
+                  </label>
+                  {slideshowEnabled && (
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="number"
+                        value={slideshowInterval}
+                        onChange={(e) =>
+                          setSlideshowInterval(Number(e.target.value))}
+                        disabled={isSubmitting}
+                        className="form-input w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        min="1"
+                      />
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {t("settings.slideshowInterval")}
+                      </span>
+                    </label>
+                  )}
+                </div>
+              )}
+
             {backgroundType === "floorp" && (
               <div className="mt-4 pl-8">
                 <div className="grid grid-cols-3 gap-4">
@@ -268,7 +322,11 @@ export function Settings(
                       key={image.name}
                       className={`
                         relative cursor-pointer rounded-lg overflow-hidden border-2
-                        ${selectedFloorp === image.name ? 'border-primary' : 'border-transparent'}
+                        ${
+                        selectedFloorp === image.name
+                          ? "border-primary"
+                          : "border-transparent"
+                      }
                       `}
                       onClick={() => handleFloorpImageSelect(image.name)}
                     >

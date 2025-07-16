@@ -7,7 +7,12 @@ import {
 } from "react";
 import { getNewTabSettings, saveNewTabSettings } from "../utils/dataManager.ts";
 
-export type BackgroundType = "none" | "random" | "custom" | "folderPath" | "floorp";
+export type BackgroundType =
+  | "none"
+  | "random"
+  | "custom"
+  | "folderPath"
+  | "floorp";
 
 interface BackgroundContextType {
   type: BackgroundType;
@@ -15,6 +20,8 @@ interface BackgroundContextType {
   fileName: string | null;
   folderPath: string | null;
   selectedFloorp: string | null;
+  slideshowEnabled: boolean;
+  slideshowInterval: number;
   setType: (type: BackgroundType) => Promise<void>;
   setCustomImage: (
     image: string | null,
@@ -22,6 +29,8 @@ interface BackgroundContextType {
   ) => Promise<void>;
   setFolderPath: (path: string | null) => Promise<void>;
   setSelectedFloorp: (imageName: string | null) => Promise<void>;
+  setSlideshowEnabled: (enabled: boolean) => Promise<void>;
+  setSlideshowInterval: (interval: number) => Promise<void>;
 }
 
 const BackgroundContext = createContext<BackgroundContextType | null>(null);
@@ -34,6 +43,8 @@ export function BackgroundProvider(
   const [fileName, setFileName] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [selectedFloorp, setSelectedFloorp] = useState<string | null>(null);
+  const [slideshowEnabled, setSlideshowEnabled] = useState(false);
+  const [slideshowInterval, setSlideshowInterval] = useState(30);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -45,6 +56,8 @@ export function BackgroundProvider(
         setFileName(settings.background.fileName);
         setFolderPath(settings.background.folderPath || null);
         setSelectedFloorp(settings.background.selectedFloorp || null);
+        setSlideshowEnabled(settings.background.slideshowEnabled ?? false);
+        setSlideshowInterval(settings.background.slideshowInterval ?? 30);
       } catch (e) {
         console.error("Failed to load background settings:", e);
       } finally {
@@ -114,21 +127,58 @@ export function BackgroundProvider(
     }
   }, []);
 
-  const handleSetSelectedFloorp = useCallback(async (imageName: string | null) => {
+  const handleSetSelectedFloorp = useCallback(
+    async (imageName: string | null) => {
+      try {
+        const settings = await getNewTabSettings();
+        await saveNewTabSettings({
+          ...settings,
+          background: {
+            ...settings.background,
+            type: "floorp",
+            selectedFloorp: imageName,
+          },
+        });
+        setType("floorp");
+        setSelectedFloorp(imageName);
+      } catch (e) {
+        console.error("Failed to save selected Floorp image:", e);
+        throw e;
+      }
+    },
+    [],
+  );
+
+  const handleSetSlideshowEnabled = useCallback(async (enabled: boolean) => {
     try {
       const settings = await getNewTabSettings();
       await saveNewTabSettings({
         ...settings,
         background: {
           ...settings.background,
-          type: "floorp",
-          selectedFloorp: imageName,
+          slideshowEnabled: enabled,
         },
       });
-      setType("floorp");
-      setSelectedFloorp(imageName);
+      setSlideshowEnabled(enabled);
     } catch (e) {
-      console.error("Failed to save selected Floorp image:", e);
+      console.error("Failed to save slideshow enabled status:", e);
+      throw e;
+    }
+  }, []);
+
+  const handleSetSlideshowInterval = useCallback(async (interval: number) => {
+    try {
+      const settings = await getNewTabSettings();
+      await saveNewTabSettings({
+        ...settings,
+        background: {
+          ...settings.background,
+          slideshowInterval: interval,
+        },
+      });
+      setSlideshowInterval(interval);
+    } catch (e) {
+      console.error("Failed to save slideshow interval:", e);
       throw e;
     }
   }, []);
@@ -145,10 +195,14 @@ export function BackgroundProvider(
         fileName,
         folderPath,
         selectedFloorp,
+        slideshowEnabled,
+        slideshowInterval,
         setType: handleSetType,
         setCustomImage: handleSetCustomImage,
         setFolderPath: handleSetFolderPath,
         setSelectedFloorp: handleSetSelectedFloorp,
+        setSlideshowEnabled: handleSetSlideshowEnabled,
+        setSlideshowInterval: handleSetSlideshowInterval,
       }}
     >
       {children}

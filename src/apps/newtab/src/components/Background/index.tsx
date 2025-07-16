@@ -1,59 +1,128 @@
 import { useBackground } from "@/contexts/BackgroundContext.tsx";
-import { useEffect, useState } from "react";
-import { getRandomBackgroundImage, getSelectedFloorpImage } from "../../utils/backgroundImages.ts";
+import { useEffect, useRef, useState } from "react";
+import {
+  getRandomBackgroundImage,
+  getSelectedFloorpImage,
+} from "../../utils/backgroundImages.ts";
 import { getRandomImageFromFolder } from "../../utils/dataManager.ts";
 
 export function Background() {
-  const { type, customImage, folderPath, selectedFloorp } = useBackground();
-  const [folderImage, setFolderImage] = useState<string | null>(null);
+  const {
+    type,
+    customImage,
+    folderPath,
+    selectedFloorp,
+    slideshowEnabled,
+    slideshowInterval,
+  } = useBackground();
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [nextImage, setNextImage] = useState<string | null>(null);
+  const [isFading, setIsFading] = useState(false);
+  const isTransitioningRef = useRef(false);
 
-  useEffect(() => {
-    if (type === "folderPath" && folderPath) {
-      getRandomImageFromFolder(folderPath)
-        .then(result => {
-          if (result.success && result.image) {
-            setFolderImage(result.image);
-          } else {
-            console.error("Failed to load random image from folder or no images found");
-            setFolderImage(null);
-          }
-        })
-        .catch(error => {
-          console.error("Failed to load random image from folder:", error);
-          setFolderImage(null);
-        });
-    }
-  }, [type, folderPath]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    root.style.removeProperty("background-image");
-    root.style.removeProperty("background-size");
-    root.style.removeProperty("background-position");
-
+  const getNextImage = async (): Promise<string | null> => {
     if (type === "random") {
-      const randomImage = getRandomBackgroundImage();
-      root.style.backgroundImage = `url(${randomImage})`;
-      root.style.backgroundSize = "cover";
-      root.style.backgroundPosition = "center";
-    } else if (type === "custom" && customImage) {
-      root.style.backgroundImage = `url(${customImage})`;
-      root.style.backgroundSize = "cover";
-      root.style.backgroundPosition = "center";
-    } else if (type === "folderPath" && folderImage) {
-      root.style.backgroundImage = `url(${folderImage})`;
-      root.style.backgroundSize = "cover";
-      root.style.backgroundPosition = "center";
-    } else if (type === "floorp" && selectedFloorp) {
-      const floorpImage = getSelectedFloorpImage(selectedFloorp);
-      if (floorpImage) {
-        root.style.backgroundImage = `url(${floorpImage})`;
-        root.style.backgroundSize = "cover";
-        root.style.backgroundPosition = "center";
-      }
+      return getRandomBackgroundImage();
     }
-  }, [type, customImage, folderImage, selectedFloorp]);
+    if (type === "folderPath" && folderPath) {
+      const result = await getRandomImageFromFolder(folderPath);
+      return result.success ? result.image : null;
+    }
+    return null;
+  };
 
-  return null;
+  useEffect(() => {
+    const initialize = async () => {
+      //
+      if (slideshowEnabled && (type === "random" || type === "folderPath")) {
+        // In slideshow mode, let the slideshow effect handle the first image.
+        if (!currentImage) {
+          const newImage = await getNextImage();
+          setCurrentImage(newImage);
+        }
+        return;
+      }
+
+      if (type === "random") {
+        setCurrentImage(getRandomBackgroundImage());
+      } else if (type === "folderPath" && folderPath) {
+        const result = await getRandomImageFromFolder(folderPath);
+        if (result.success && result.image) {
+          setCurrentImage(result.image);
+        } else {
+          console.error(
+            "Failed to load initial image from folder or no images found",
+          );
+          setCurrentImage(null);
+        }
+      } else if (type === "custom" && customImage) {
+        setCurrentImage(customImage);
+      } else if (type === "floorp" && selectedFloorp) {
+        setCurrentImage(getSelectedFloorpImage(selectedFloorp));
+      } else {
+        setCurrentImage(null);
+      }
+    };
+    initialize();
+  }, [type, folderPath, customImage, selectedFloorp, slideshowEnabled]);
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+
+    if (
+      slideshowEnabled &&
+      (type === "random" || type === "folderPath") &&
+      slideshowInterval > 0
+    ) {
+      const intervalId = setInterval(async () => {
+        if (isTransitioningRef.current) {
+          return;
+        }
+        isTransitioningRef.current = true;
+
+        const newImage = await getNextImage();
+        if (newImage && newImage !== currentImage) {
+          setIsFading(true);
+          setNextImage(newImage);
+
+          timeoutId = setTimeout(() => {
+            setIsFading(false);
+            setCurrentImage(newImage);
+            setNextImage(null);
+            isTransitioningRef.current = false;
+          }, 1000); // Must match transition duration
+        } else {
+          isTransitioningRef.current = false;
+        }
+      }, slideshowInterval * 1000);
+
+      return () => {
+        clearInterval(intervalId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+    }
+  }, [slideshowEnabled, type, slideshowInterval, folderPath, currentImage]);
+
+  const transitionClass = isFading ? "transition-opacity duration-1000" : "";
+
+  return (
+    <>
+      <div
+        className={`fixed inset-0 bg-cover bg-center ${transitionClass}`}
+        style={{
+          backgroundImage: currentImage ? `url(${currentImage})` : "none",
+          opacity: nextImage ? 0 : 1,
+        }}
+      />
+      <div
+        className={`fixed inset-0 bg-cover bg-center ${transitionClass}`}
+        style={{
+          backgroundImage: nextImage ? `url(${nextImage})` : "none",
+          opacity: nextImage ? 1 : 0,
+        }}
+      />
+    </>
+  );
 }

@@ -22,6 +22,8 @@ export interface NewTabSettings {
     fileName: string | null;
     folderPath?: string | null;
     selectedFloorp?: string | null;
+    slideshowEnabled?: boolean;
+    slideshowInterval?: number;
   };
   searchBar: {
     searchEngine: string;
@@ -51,6 +53,8 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     fileName: null,
     folderPath: null,
     selectedFloorp: null,
+    slideshowEnabled: false,
+    slideshowInterval: 30,
   },
   searchBar: {
     searchEngine: "default",
