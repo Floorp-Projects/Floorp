@@ -451,9 +451,9 @@ jobs:
             mkdir -p $GITHUB_WORKSPACE/noraneko-unsigned-installer/binary $GITHUB_WORKSPACE/noraneko-unsigned-installer/installer
             cp ./floorp/.github/workflows/assets/windows/* $GITHUB_WORKSPACE/noraneko-unsigned-installer/
 
-            ls -la obj-*/dist/install/sea/
+            ls -la obj-artifact-build-output/dist/install/sea/
 
-            7z x obj-*/dist/$INSTALLER_PATH -o$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary
+            7z x obj-artifact-build-output/dist/$INSTALLER_PATH -o$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary
           fi
 
       - name: Publish Unsigned Binary 🎁
@@ -526,15 +526,15 @@ jobs:
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             sudo apt install patchelf
             patchelf --add-rpath '$ORIGIN' "$PWD"/obj-artifact-build-output/dist/floorp/updater
-            mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+            mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
             if [ "${{inputs.skip_signing}}" == "true" ]; then
               # Skip signing, just move the DMG
-              mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             else
               # Unpack DMG
               mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-              mv obj-*/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
 
               # Codesign
@@ -571,8 +571,8 @@ jobs:
                 ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
 
               # remove old .app
-              rm -rf obj-*/dist/floorp/*.app
-              cp -r ~/mac-code-signing/old/*.app obj-*/dist/floorp
+              rm -rf obj-artifact-build-output/dist/floorp/*.app
+              cp -r ~/mac-code-signing/old/*.app obj-artifact-build-output/dist/floorp
 
               mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             fi
@@ -617,7 +617,7 @@ jobs:
         env:
           FORCE_COLOR: 3
         run: |
-          const path_obj = await $`echo ./obj-*`;
+          const path_obj = await $`echo ./obj-artifact-build-output`;
           await $`chmod +x ${path_obj}/dist/host/bin/mar`
           await $`mkdir ~/noraneko-mar`
 
