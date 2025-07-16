@@ -102,10 +102,12 @@ export async function getNewTabSettings(): Promise<NewTabSettings> {
     }
 
     const settings = JSON.parse(result);
-    return {
+    const mergedSettings = {
       ...DEFAULT_SETTINGS,
       ...settings,
     };
+
+    return mergedSettings;
   } catch (e) {
     console.error("Failed to load newtab settings:", e);
     return DEFAULT_SETTINGS;

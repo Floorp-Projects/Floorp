@@ -6,9 +6,10 @@ import { useComponents } from "@/contexts/ComponentsContext.tsx";
 import { getFloorpImages } from "@/utils/backgroundImages.ts";
 import { getFolderPathFromDialog } from "@/utils/dataManager.ts";
 
-export function Settings(
-  { isOpen, onClose }: { isOpen: boolean; onClose: () => void },
-) {
+export function Settings({
+  isOpen,
+  onClose,
+}: { isOpen: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   const {
     type: backgroundType,
@@ -48,6 +49,46 @@ export function Settings(
     setFloorpImages(getFloorpImages());
   }, [backgroundType, fileName, folderPath]);
 
+  const compressImage = (
+    dataUrl: string,
+    maxWidth = 1920,
+    maxHeight = 1080,
+    quality = 0.8,
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas context not available"));
+          return;
+        }
+
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  };
+
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -62,7 +103,19 @@ export function Settings(
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      await setCustomImage(imageData, file.name);
+
+      // Compress image if it's too large
+      let finalImageData = imageData;
+      if (imageData.length > 500000) {
+        finalImageData = await compressImage(imageData, 1920, 1080, 0.8);
+      }
+
+      // Final size check
+      if (finalImageData.length > 1000000) {
+        return;
+      }
+
+      await setCustomImage(finalImageData, file.name);
       setCurrentFileName(file.name);
     } catch (error) {
       console.error("Failed to load image:", error);
@@ -100,6 +153,8 @@ export function Settings(
       if (type === "none") {
         await setCustomImage(null, null);
       }
+      // Don't clear custom image data when switching to custom type
+      // Only change the type, preserve existing image data
       await setBackgroundType(type);
     } catch (error) {
       console.error("Failed to change background type:", error);
@@ -280,39 +335,39 @@ export function Settings(
               </div>
             )}
 
-            {(backgroundType === "random" || backgroundType === "folderPath") &&
-              (
-                <div className="mt-4 pl-8 space-y-4">
+            {(backgroundType === "random" ||
+              backgroundType === "folderPath") && (
+              <div className="mt-4 pl-8 space-y-4">
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={slideshowEnabled}
+                    onChange={(e) => setSlideshowEnabled(e.target.checked)}
+                    disabled={isSubmitting}
+                    className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
+                  />
+                  <span className="text-gray-700 dark:text-gray-200">
+                    {t("settings.enableSlideshow")}
+                  </span>
+                </label>
+                {slideshowEnabled && (
                   <label className="flex items-center space-x-3">
                     <input
-                      type="checkbox"
-                      checked={slideshowEnabled}
-                      onChange={(e) => setSlideshowEnabled(e.target.checked)}
+                      type="number"
+                      value={slideshowInterval}
+                      onChange={(e) =>
+                        setSlideshowInterval(Number(e.target.value))}
                       disabled={isSubmitting}
-                      className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
+                      className="form-input w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      min="1"
                     />
                     <span className="text-gray-700 dark:text-gray-200">
-                      {t("settings.enableSlideshow")}
+                      {t("settings.slideshowInterval")}
                     </span>
                   </label>
-                  {slideshowEnabled && (
-                    <label className="flex items-center space-x-3">
-                      <input
-                        type="number"
-                        value={slideshowInterval}
-                        onChange={(e) =>
-                          setSlideshowInterval(Number(e.target.value))}
-                        disabled={isSubmitting}
-                        className="form-input w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        min="1"
-                      />
-                      <span className="text-gray-700 dark:text-gray-200">
-                        {t("settings.slideshowInterval")}
-                      </span>
-                    </label>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
             {backgroundType === "floorp" && (
               <div className="mt-4 pl-8">
