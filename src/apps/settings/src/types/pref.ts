@@ -36,6 +36,9 @@ export const zDesignFormData = z.object({
   // Tab Bar
   style: tabbar.tabbarStyle,
   position: tabbar.tabbarPosition,
+  maxRow: tabbar.multiRowTabBar.shape.maxRow,
+  maxRowEnabled: tabbar.multiRowTabBar.shape.maxRowEnabled,
+
   // Tab
   tabOpenPosition: tab.tabOpenPosition,
   tabMinHeight: tab.tabMinHeight,

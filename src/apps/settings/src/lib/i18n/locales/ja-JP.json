@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "タブバーとタイトルバーを隠す",
         "showTabBarOnBottomOfNavigationBar": "ナビゲーションバーの下にタブバーを表示",
         "showTabBarOnBottomOfWindow": "ウィンドウの下部にタブバーを表示",
+        "maxRowEnabled": "タブバーの最大行数を有効にする",
+        "maxRow": "タブバーの最大行数",
         "tab": {
             "title": "タブ",
             "footerLinkText": "タブ設定について",

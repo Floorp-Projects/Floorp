@@ -7,8 +7,7 @@
     "types": [
       "npm:vite/client",
       "jsr:@nora/lib-dom-gecko",
-      "../../../@types/gecko/dom/index.d.ts",
-      "../../../@types/gecko/CustomizableUI.d.ts"
+      "./@types/globalThis.d.ts"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "solid-js"

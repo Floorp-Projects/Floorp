@@ -10,7 +10,9 @@ import { TabbarStyleClass } from "./tabbbar-style/tabbar-style";
 @noraComponent(import.meta.hot)
 export default class TabBar extends NoraComponentBase {
   init() {
-    new TabbarStyleClass();
-    new MultirowTabbarClass();
+    globalThis.SessionStore.promiseInitialized.then(() => {
+      new TabbarStyleClass();
+      new MultirowTabbarClass();
+    });
   }
 }

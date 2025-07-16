@@ -75,7 +75,14 @@ export class MultirowTabbarClass {
     return document?.getElementById("TabsToolbar") as XULElement | null;
   }
 
-  private get scrollboxPart(): XULElement | null {
+  private get scrollbox(): XULElement | null {
+    return this.arrowScrollbox
+      ? this.arrowScrollbox.shadowRoot?.querySelector("[part='scrollbox']") ||
+        null
+      : null;
+  }
+
+  private get itemsWrapper(): XULElement | null {
     return this.arrowScrollbox
       ? this.arrowScrollbox.shadowRoot?.querySelector(
         "[part='items-wrapper']",
@@ -98,30 +105,30 @@ export class MultirowTabbarClass {
   }
 
   private setMultirowTabMaxHeight() {
-    if (!this.isMaxRowEnabled) {
-      return;
+    this.removeMultirowTabMaxHeight();
+    if (this.isMaxRowEnabled) {
+      this.scrollbox?.style.setProperty(
+        "max-height",
+        `${this.getMultirowTabMaxHeight}px`,
+        "important",
+      );
+      this.arrowScrollbox?.style.removeProperty("max-height");
     }
-    this.scrollboxPart?.setAttribute(
-      "style",
-      `max-height: ${this.getMultirowTabMaxHeight}px !important;`,
-    );
-    this.arrowScrollbox?.style.setProperty(
-      "max-height",
-      `${this.getMultirowTabMaxHeight}px`,
-    );
   }
 
   private removeMultirowTabMaxHeight() {
-    this.scrollboxPart?.removeAttribute("style");
+    this.scrollbox?.style.removeProperty("max-height");
     this.arrowScrollbox?.style.removeProperty("max-height");
   }
 
   private enableMultirowTabbar() {
-    this.scrollboxPart?.setAttribute("style", "flex-wrap: wrap;");
+    this.itemsWrapper?.style.setProperty("flex-wrap", "wrap");
+    this.itemsWrapper?.style.setProperty("overflow", "scroll");
   }
 
   private disableMultirowTabbar() {
-    this.scrollboxPart?.removeAttribute("style");
+    this.itemsWrapper?.style.removeProperty("flex-wrap");
+    this.itemsWrapper?.style.removeProperty("overflow");
   }
 
   private applyInjection(): void {

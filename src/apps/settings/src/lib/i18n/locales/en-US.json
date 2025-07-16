@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Hide Tab Bar & Title Bar",
         "showTabBarOnBottomOfNavigationBar": "Show Tab Bar at Bottom of Navigation Bar",
         "showTabBarOnBottomOfWindow": "Show Tab Bar at Bottom of Window",
+        "maxRowEnabled": "Enable Maximum Row of Tabbar",
+        "maxRow": "Maximum Row of Tabbar",
         "tab": {
             "title": "Tabs",
             "footerLinkText": "About Tab Settings",

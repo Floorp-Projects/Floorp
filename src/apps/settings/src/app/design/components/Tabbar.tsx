@@ -50,6 +50,55 @@ export function Tabbar() {
               <span>{t("design.multirow")}</span>
             </label>
           </div>
+          {getValues("style") === "multirow" && (
+            <div className="flex flex-col gap-y-2 mt-6">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="maxRowEnabled"
+                  checked={getValues("maxRowEnabled")}
+                  onChange={(e) => setValue("maxRowEnabled", e.target.checked)}
+                  className="accent-primary rounded border border-primary focus:ring-2 focus:ring-primary"
+                  style={{ width: 18, height: 18 }}
+                />
+                <span className="text-sm">{t("design.maxRowEnabled")}</span>
+              </label>
+              <div className="flex flex-col">
+                <label className="block mb-1">
+                  {t("design.maxRow")}
+                  <span className="float-right text-xs text-muted-foreground">
+                    1 ~ 10
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  name="maxRow"
+                  value={getValues("maxRow")}
+                  onChange={(e) =>
+                    setValue("maxRow", Number.parseInt(e.target.value))}
+                  className="bg-background border border-input rounded px-3 py-2 w-full text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                  min={1}
+                  max={10}
+                  disabled={!getValues("maxRowEnabled")}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="alert alert-warning alert-soft">
+          <span className="text-sm">
+            {t("design.verticalTabIsRemovedFromBrowser")}{" "}
+            <a
+              href="https://docs.floorp.app/docs/features/about-vertical-tab-bar"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+            >
+              {t("design.learnMore")}
+              <ExternalLink className="size-4" />
+            </a>
+          </span>
         </div>
 
         <div className="mt-4">
@@ -90,23 +139,6 @@ export function Tabbar() {
             ))}
           </div>
         </div>
-
-        {getValues("position") === "hide-horizontal-tabbar" && (
-          <div className="p-3 bg-base-200 rounded-lg">
-            <p className="text-sm">
-              {t("design.verticalTabsDescription")}{" "}
-              <a
-                href="https://docs.floorp.app/docs/features/vertical-tabs"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
-              >
-                {t("design.learnMore")}
-                <ExternalLink className="size-4" />
-              </a>
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

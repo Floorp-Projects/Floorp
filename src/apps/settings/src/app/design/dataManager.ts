@@ -157,6 +157,11 @@ export async function saveDesignSettings(
       ...oldData.tabbar,
       tabbarPosition: settings.position,
       tabbarStyle: settings.style,
+      multiRowTabBar: {
+        ...oldData.tabbar.multiRowTabBar,
+        maxRowEnabled: settings.maxRowEnabled,
+        maxRow: settings.maxRow,
+      },
     },
     tab: {
       ...oldData.tab,
@@ -219,7 +224,8 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     tabDubleClickToClose: data.tab.tabDubleClickToClose,
     tabScroll: data.tab.tabScroll.enabled,
     faviconColor: data.globalConfigs.faviconColor,
-
+    maxRowEnabled: data.tabbar.multiRowTabBar.maxRowEnabled,
+    maxRow: data.tabbar.multiRowTabBar.maxRow,
     navbarPosition: data.uiCustomization.navbar.position,
     searchBarTop: data.uiCustomization.navbar.searchBarTop,
     disableFullscreenNotification:
