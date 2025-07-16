@@ -11,8 +11,10 @@ import { TabbarStyleClass } from "./tabbbar-style/tabbar-style";
 export default class TabBar extends NoraComponentBase {
   init() {
     globalThis.SessionStore.promiseInitialized.then(() => {
-      new TabbarStyleClass();
-      new MultirowTabbarClass();
+      globalThis.setTimeout(() => {
+        new TabbarStyleClass();
+        new MultirowTabbarClass();
+      }, 1000);
     });
   }
 }
