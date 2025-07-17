@@ -4,5 +4,3 @@
 
 MOZ_APP_DISPLAYNAME="Floorp"
 MOZ_APP_NAME="floorp"
-MOZ_APP_VENDOR="Ablaze"
-MOZ_APP_REMOTINGNAME="floorp-default"
