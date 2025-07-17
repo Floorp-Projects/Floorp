@@ -418,7 +418,8 @@ nsresult nsAppShell::Init() {
     gchar* name = gdk_pixbuf_format_get_name(format);
     if (strcmp(name, "jpeg") && strcmp(name, "png") && strcmp(name, "gif") &&
         strcmp(name, "bmp") && strcmp(name, "ico") && strcmp(name, "xpm") &&
-        strcmp(name, "svg") && strcmp(name, "webp") && strcmp(name, "avif")) {
+        strcmp(name, "svg") && strcmp(name, "webp") && strcmp(name, "avif") &&
+        strcmp(name, "jxl")) {
       gdk_pixbuf_format_set_disabled(format, TRUE);
     }
     g_free(name);

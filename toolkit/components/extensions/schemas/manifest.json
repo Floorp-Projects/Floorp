@@ -14,58 +14,49 @@
             "maximum": 3,
             "postprocess": "manifestVersionCheck"
           },
-
           "applications": {
             "$ref": "DeprecatedApplications",
             "description": "The applications property is deprecated, please use 'browser_specific_settings'",
             "optional": true,
             "max_manifest_version": 2
           },
-
           "browser_specific_settings": {
             "$ref": "BrowserSpecificSettings",
             "optional": true
           },
-
           "name": {
             "type": "string",
             "description": "Name must be at least 2, at should be at most 75 characters",
             "optional": false,
             "preprocess": "localize"
           },
-
           "short_name": {
             "type": "string",
             "optional": true,
             "preprocess": "localize"
           },
-
           "description": {
             "type": "string",
             "optional": true,
             "preprocess": "localize"
           },
-
           "author": {
             "type": "string",
             "optional": true,
             "preprocess": "localize",
             "onError": "warn"
           },
-
           "version": {
             "type": "string",
             "optional": false,
             "format": "versionString"
           },
-
           "homepage_url": {
             "type": "string",
             "format": "url",
             "optional": true,
             "preprocess": "localize"
           },
-
           "install_origins": {
             "type": "array",
             "optional": true,
@@ -74,7 +65,6 @@
               "format": "origin"
             }
           },
-
           "developer": {
             "type": "object",
             "optional": true,
@@ -99,42 +89,45 @@
         "id": "WebExtensionManifest",
         "type": "object",
         "description": "Represents a WebExtension manifest.json file",
-
         "$import": "ManifestBase",
         "properties": {
           "minimum_chrome_version": {
             "type": "string",
             "optional": true
           },
-
           "minimum_opera_version": {
             "type": "string",
             "optional": true
           },
-
           "icons": {
             "type": "object",
             "optional": true,
             "patternProperties": {
-              "^[1-9]\\d*$": { "$ref": "ExtensionFileUrl" }
+              "^[1-9]\\d*$": {
+                "$ref": "ExtensionFileUrl"
+              }
             }
           },
-
           "incognito": {
             "type": "string",
             "description": "The 'split' value is not supported.",
-            "enum": ["not_allowed", "spanning", "split"],
+            "enum": [
+              "not_allowed",
+              "spanning",
+              "split"
+            ],
             "postprocess": "incognitoSplitUnsupportedAndFallback",
             "default": "spanning",
             "optional": true
           },
-
           "background": {
             "choices": [
               {
                 "type": "object",
                 "properties": {
-                  "page": { "$ref": "ExtensionURL" },
+                  "page": {
+                    "$ref": "ExtensionURL"
+                  },
                   "persistent": {
                     "optional": true,
                     "type": "boolean",
@@ -142,19 +135,26 @@
                     "default": true
                   }
                 },
-                "additionalProperties": { "$ref": "UnrecognizedProperty" }
+                "additionalProperties": {
+                  "$ref": "UnrecognizedProperty"
+                }
               },
               {
                 "type": "object",
                 "properties": {
                   "scripts": {
                     "type": "array",
-                    "items": { "$ref": "ExtensionURL" }
+                    "items": {
+                      "$ref": "ExtensionURL"
+                    }
                   },
                   "type": {
                     "optional": true,
                     "type": "string",
-                    "enum": ["module", "classic"]
+                    "enum": [
+                      "module",
+                      "classic"
+                    ]
                   },
                   "persistent": {
                     "optional": true,
@@ -163,30 +163,34 @@
                     "default": true
                   }
                 },
-                "additionalProperties": { "$ref": "UnrecognizedProperty" }
+                "additionalProperties": {
+                  "$ref": "UnrecognizedProperty"
+                }
               },
               {
                 "type": "object",
                 "properties": {
-                  "service_worker": { "$ref": "ExtensionURL" }
+                  "service_worker": {
+                    "$ref": "ExtensionURL"
+                  }
                 },
                 "postprocess": "requireBackgroundServiceWorkerEnabled"
               }
             ],
             "optional": true
           },
-
           "options_page": {
             "$ref": "ExtensionURL",
             "optional": true,
             "description": "Alias property for options_ui.page, ignored when options_ui.page is set. When using this property the options page is always opened in a new tab."
           },
-
           "options_ui": {
             "type": "object",
             "optional": true,
             "properties": {
-              "page": { "$ref": "ExtensionURL" },
+              "page": {
+                "$ref": "ExtensionURL"
+              },
               "browser_style": {
                 "type": "boolean",
                 "optional": true,
@@ -203,15 +207,17 @@
                 "optional": true
               }
             },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "additionalProperties": {
+              "$ref": "UnrecognizedProperty"
+            }
           },
-
           "content_scripts": {
             "type": "array",
             "optional": true,
-            "items": { "$ref": "ContentScript" }
+            "items": {
+              "$ref": "ContentScript"
+            }
           },
-
           "content_security_policy": {
             "optional": true,
             "onError": "warn",
@@ -238,7 +244,6 @@
               }
             ]
           },
-
           "permissions": {
             "default": [],
             "optional": true,
@@ -261,13 +266,11 @@
               }
             ]
           },
-
           "granted_host_permissions": {
             "type": "boolean",
             "optional": true,
             "default": false
           },
-
           "host_permissions": {
             "min_manifest_version": 3,
             "type": "array",
@@ -278,7 +281,6 @@
             "optional": true,
             "default": []
           },
-
           "optional_host_permissions": {
             "min_manifest_version": 3,
             "type": "array",
@@ -289,7 +291,6 @@
             "optional": true,
             "default": []
           },
-
           "optional_permissions": {
             "type": "array",
             "items": {
@@ -299,14 +300,15 @@
             "optional": true,
             "default": []
           },
-
           "web_accessible_resources": {
             "optional": true,
             "choices": [
               {
                 "max_manifest_version": 2,
                 "type": "array",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string"
+                }
               },
               {
                 "min_manifest_version": 3,
@@ -317,51 +319,62 @@
                   "properties": {
                     "resources": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "matches": {
                       "optional": true,
                       "type": "array",
-                      "items": { "$ref": "MatchPattern" }
+                      "items": {
+                        "$ref": "MatchPattern"
+                      }
                     },
                     "extension_ids": {
                       "optional": true,
                       "type": "array",
                       "items": {
                         "choices": [
-                          { "$ref": "ExtensionID" },
-                          { "type": "string", "enum": ["*"] }
+                          {
+                            "$ref": "ExtensionID"
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "*"
+                            ]
+                          }
                         ]
                       }
                     }
                   },
-                  "additionalProperties": { "$ref": "UnrecognizedProperty" }
+                  "additionalProperties": {
+                    "$ref": "UnrecognizedProperty"
+                  }
                 }
               }
             ]
           },
-
           "hidden": {
             "type": "boolean",
             "optional": true,
             "default": false
           }
         },
-
-        "additionalProperties": { "$ref": "UnrecognizedProperty" }
+        "additionalProperties": {
+          "$ref": "UnrecognizedProperty"
+        }
       },
       {
         "id": "WebExtensionLangpackManifest",
         "type": "object",
         "description": "Represents a WebExtension language pack manifest.json file",
-
         "$import": "ManifestBase",
         "properties": {
           "langpack_id": {
             "type": "string",
             "pattern": "^[a-zA-Z][a-zA-Z-]+$"
           },
-
           "languages": {
             "type": "object",
             "patternProperties": {
@@ -423,7 +436,6 @@
         "id": "WebExtensionDictionaryManifest",
         "type": "object",
         "description": "Represents a WebExtension dictionary manifest.json file",
-
         "$import": "ManifestBase",
         "properties": {
           "dictionaries": {
@@ -442,7 +454,6 @@
         "id": "WebExtensionSitePermissionsManifest",
         "type": "object",
         "description": "Represents a WebExtension site permissions manifest.json file",
-
         "$import": "ManifestBase",
         "properties": {
           "site_permissions": {
@@ -480,21 +491,27 @@
             "description": "The size of the icons"
           }
         },
-        "additionalProperties": { "$ref": "UnrecognizedProperty" }
+        "additionalProperties": {
+          "$ref": "UnrecognizedProperty"
+        }
       },
       {
         "id": "OptionalPermissionNoPrompt",
         "choices": [
           {
             "type": "string",
-            "enum": ["idle"]
+            "enum": [
+              "idle"
+            ]
           }
         ]
       },
       {
         "id": "OptionalPermission",
         "choices": [
-          { "$ref": "OptionalPermissionNoPrompt" },
+          {
+            "$ref": "OptionalPermissionNoPrompt"
+          },
           {
             "type": "string",
             "enum": [
@@ -509,8 +526,12 @@
       {
         "id": "OptionalPermissionOrOrigin",
         "choices": [
-          { "$ref": "OptionalPermission" },
-          { "$ref": "MatchPattern" }
+          {
+            "$ref": "OptionalPermission"
+          },
+          {
+            "$ref": "MatchPattern"
+          }
         ]
       },
       {
@@ -518,38 +539,62 @@
         "choices": [
           {
             "type": "string",
-            "enum": ["mozillaAddons"]
+            "enum": [
+              "mozillaAddons"
+            ]
           }
         ]
       },
       {
         "id": "PermissionNoPrompt",
         "choices": [
-          { "$ref": "OptionalPermissionNoPrompt" },
-          { "$ref": "PermissionPrivileged" },
+          {
+            "$ref": "OptionalPermissionNoPrompt"
+          },
+          {
+            "$ref": "PermissionPrivileged"
+          },
           {
             "type": "string",
-            "enum": ["alarms", "storage", "unlimitedStorage"]
+            "enum": [
+              "alarms",
+              "storage",
+              "unlimitedStorage"
+            ]
           }
         ]
       },
       {
         "id": "Permission",
         "choices": [
-          { "$ref": "PermissionNoPrompt" },
-          { "$ref": "OptionalPermission" }
+          {
+            "$ref": "PermissionNoPrompt"
+          },
+          {
+            "$ref": "OptionalPermission"
+          }
         ]
       },
       {
         "id": "PermissionOrOrigin",
-        "choices": [{ "$ref": "Permission" }, { "$ref": "MatchPattern" }]
+        "choices": [
+          {
+            "$ref": "Permission"
+          },
+          {
+            "$ref": "MatchPattern"
+          }
+        ]
       },
       {
         "id": "SitePermission",
         "choices": [
           {
             "type": "string",
-            "enum": ["midi", "midi-sysex"]
+            "enum": [
+              "midi",
+              "midi-sysex"
+            ]
           }
         ]
       },
@@ -597,29 +642,27 @@
             "$ref": "ExtensionID",
             "optional": true
           },
-
           "update_url": {
             "type": "string",
             "format": "url",
             "optional": true
           },
-
           "strict_min_version": {
             "type": "string",
             "optional": true
           },
-
           "strict_max_version": {
             "type": "string",
             "optional": true
           },
-
           "admin_install_only": {
             "type": "boolean",
             "optional": true
           }
         },
-        "additionalProperties": { "$ref": "UnrecognizedProperty" }
+        "additionalProperties": {
+          "$ref": "UnrecognizedProperty"
+        }
       },
       {
         "id": "GeckoAndroidSpecificProperties",
@@ -634,7 +677,9 @@
             "optional": true
           }
         },
-        "additionalProperties": { "$ref": "UnrecognizedProperty" }
+        "additionalProperties": {
+          "$ref": "UnrecognizedProperty"
+        }
       },
       {
         "id": "DeprecatedApplications",
@@ -650,7 +695,9 @@
             "unsupported": true
           }
         },
-        "additionalProperties": { "type": "any" }
+        "additionalProperties": {
+          "type": "any"
+        }
       },
       {
         "id": "BrowserSpecificSettings",
@@ -665,14 +712,18 @@
             "optional": true
           }
         },
-        "additionalProperties": { "type": "any" }
+        "additionalProperties": {
+          "type": "any"
+        }
       },
       {
         "id": "MatchPattern",
         "choices": [
           {
             "type": "string",
-            "enum": ["<all_urls>"]
+            "enum": [
+              "<all_urls>"
+            ]
           },
           {
             "$ref": "MatchPatternRestricted"
@@ -702,7 +753,7 @@
         "choices": [
           {
             "type": "string",
-            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:"
+            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:|^moz-extension://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
           }
         ]
       },
@@ -710,41 +761,55 @@
         "id": "ContentScript",
         "type": "object",
         "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time. Based on InjectDetails, but using underscore rather than camel case naming conventions.",
-        "additionalProperties": { "$ref": "UnrecognizedProperty" },
+        "additionalProperties": {
+          "$ref": "UnrecognizedProperty"
+        },
         "properties": {
           "matches": {
             "type": "array",
             "optional": false,
             "minItems": 1,
-            "items": { "$ref": "MatchPattern" }
+            "items": {
+              "$ref": "MatchPattern"
+            }
           },
           "exclude_matches": {
             "type": "array",
             "optional": true,
             "minItems": 1,
-            "items": { "$ref": "MatchPattern" }
+            "items": {
+              "$ref": "MatchPattern"
+            }
           },
           "include_globs": {
             "type": "array",
             "optional": true,
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "exclude_globs": {
             "type": "array",
             "optional": true,
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "css": {
             "type": "array",
             "optional": true,
             "description": "The list of CSS files to inject",
-            "items": { "$ref": "ExtensionURL" }
+            "items": {
+              "$ref": "ExtensionURL"
+            }
           },
           "js": {
             "type": "array",
             "optional": true,
             "description": "The list of JS files to inject",
-            "items": { "$ref": "ExtensionURL" }
+            "items": {
+              "$ref": "ExtensionURL"
+            }
           },
           "all_frames": {
             "type": "boolean",
@@ -781,11 +846,15 @@
           {
             "type": "object",
             "patternProperties": {
-              "^[1-9]\\d*$": { "$ref": "ExtensionFileUrl" }
+              "^[1-9]\\d*$": {
+                "$ref": "ExtensionFileUrl"
+              }
             },
             "additionalProperties": false
           },
-          { "$ref": "ExtensionFileUrl" }
+          {
+            "$ref": "ExtensionFileUrl"
+          }
         ]
       },
       {
@@ -794,11 +863,15 @@
           {
             "type": "object",
             "patternProperties": {
-              "^[1-9]\\d*$": { "$ref": "ImageData" }
+              "^[1-9]\\d*$": {
+                "$ref": "ImageData"
+              }
             },
             "additionalProperties": false
           },
-          { "$ref": "ImageData" }
+          {
+            "$ref": "ImageData"
+          }
         ]
       },
       {

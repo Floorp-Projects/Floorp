@@ -1,0 +1,177 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+name: "12 (R) |α| Publish Release"
+
+on:
+  workflow_call:
+    inputs:
+      win_runtime_artifact_workflow_call:
+        type: string
+        required: false
+        default: ""
+      linux_runtime_artifact_workflow_call:
+        type: string
+        required: false
+        default: ""
+      mac_runtime_artifact_workflow_call:
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+run-name: "|α| Publish Release"
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: init zx
+        run: |
+          deno install -g -A npm:zx
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: main
+
+      - name: Retrieve run IDs
+        run: |
+          if [ -z "${{ inputs.win_runtime_artifact_workflow_call }}" ]; then
+            WINDOWS_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Windows-x64"))][0].id')
+            echo "WINDOWS_RUN_ID=$WINDOWS_ID" >> $GITHUB_ENV
+          else
+            echo "WINDOWS_RUN_ID=${{ inputs.win_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.linux_runtime_artifact_workflow_call }}" ]; then
+            LINUX_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-x64"))][0].id')
+            echo "LINUX_RUN_ID=$LINUX_ID" >> $GITHUB_ENV
+          else
+            echo "LINUX_RUN_ID=${{ inputs.linux_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.mac_runtime_artifact_workflow_call }}" ]; then
+            MAC_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("macOS-x64"))][0].id')
+            echo "MAC_RUN_ID=$MAC_ID" >> $GITHUB_ENV
+          else
+            echo "MAC_RUN_ID=${{ inputs.mac_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
+          fi
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-win-amd64-mar-full
+          run-id: ${{ env.WINDOWS_RUN_ID }}
+          path: ~/noraneko-publish/win
+          github-token: ${{ github.token }}
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-amd64-mar-full
+          run-id: ${{ env.LINUX_RUN_ID }}
+          path: ~/noraneko-publish/linux
+          github-token: ${{ github.token }}
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-mac-universal-mar-full
+          run-id: ${{ env.MAC_RUN_ID }}
+          path: ~/noraneko-publish/mac
+          github-token: ${{ github.token }}
+
+      - name: Download Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-win-amd64-installer
+          run-id: ${{ env.WINDOWS_RUN_ID }}
+          path: ~/noraneko-publish/win-dist
+          github-token: ${{ github.token }}
+
+      - name: Download Linux installer
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-amd64-installer
+          run-id: ${{ env.LINUX_RUN_ID }}
+          path: ~/noraneko-publish/linux-dist
+          github-token: ${{ github.token }}
+
+      - name: Download macOS installer
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-mac-universal-installer
+          run-id: ${{ env.MAC_RUN_ID }}
+          path: ~/noraneko-publish/mac-dist
+          github-token: ${{ github.token }}
+
+      - name: Setup
+        run: |
+          deno install --allow-scripts
+          sudo apt install jq
+
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml rc
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux/Linux_x86_64.update.xml rc
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac/Darwin_Universal.update.xml rc
+
+          echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
+          echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
+          echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
+
+      - name: Deploy to GitHub Releases 🚀
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*.exe
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
+            ${{ env.ROOT_DIR }}/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux/Linux_x86_64.update.xml
+            ${{ env.ROOT_DIR }}/noraneko-publish/mac/Darwin_Universal.update.xml
+          tag_name: "v12.0.0-rc"
+          name: "Floorp 12 RC ${{ env.NR_VERSION }}"
+          body: "Release Note: \n\n https://blog.floorp.app/release/${{ env.NR_VERSION }}"
+          draft: false
+          prerelease: true
+          token: ${{ github.token }}
+
+      - name: Deploy to Floorp Update Server 🚀
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-rc-updatexml-files.yml/dispatches" \
+            -d "{
+              \"ref\": \"main\",
+              \"inputs\": {
+                \"win-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/WINNT_x86_64-msvc-x64.update.xml\",
+                \"linux-x86_64-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/Linux_x86_64.update.xml\",
+                \"macOS-Universal-update-xml\": \"https://github.com/${{ github.repository }}/releases/download/v12.0.0-rc/Darwin_Universal.update.xml\"
+              }
+            }"
