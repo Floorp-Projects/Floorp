@@ -13964,6 +13964,14 @@
   value: false
   mirror: always
 
+# Whether we directly use the system print dialog to collect the user's print
+# settings rather than using the tab-modal print preview dialog.
+# Note: `print.always_print_silent` overrides this.
+- name: print.prefer_system_dialog
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether we attempt to generate links in Save As PDF output.
 - name: print.save_as_pdf.links.enabled
   type: RelaxedAtomicBool

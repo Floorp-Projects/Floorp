@@ -36,10 +36,9 @@ Result<txXPathNode, nsresult> txParseDocumentFromURI(const nsAString& aHref,
                            SyncOperationBehavior::eSuspendInput);
   rv = nsSyncLoadService::LoadDocument(
       documentURI, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC,
-      loaderDocument->NodePrincipal(),
-      nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT, loadGroup,
-      loaderDocument->CookieJarSettings(), true,
-      loaderDocument->GetReferrerPolicy(), getter_AddRefs(theDocument));
+      loaderDocument, nullptr,
+      nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT, loadGroup, nullptr,
+      true, loaderDocument->GetReferrerPolicy(), getter_AddRefs(theDocument));
 
   if (NS_FAILED(rv)) {
     aErrMsg.AppendLiteral("Document load of ");

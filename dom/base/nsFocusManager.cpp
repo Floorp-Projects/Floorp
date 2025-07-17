@@ -4345,16 +4345,17 @@ nsresult nsFocusManager::GetNextTabbableContent(
             rootElement = doc->GetRootElement();
           }
           if (aForward) {
-            nsIFrame* frame = invokerContent->GetPrimaryFrame();
-            int32_t tabIndex = frame->IsFocusable().mTabIndex;
-            if (tabIndex >= 0 &&
-                (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
-              nsresult rv = GetNextTabbableContent(
-                  aPresShell, rootElement, nullptr, invokerContent, true,
-                  tabIndex, false, false, aNavigateByKey, true,
-                  aReachedToEndForDocumentNavigation, aResultContent);
-              if (NS_SUCCEEDED(rv) && *aResultContent) {
-                return rv;
+            if (nsIFrame* frame = invokerContent->GetPrimaryFrame()) {
+              int32_t tabIndex = frame->IsFocusable().mTabIndex;
+              if (tabIndex >= 0 &&
+                  (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
+                nsresult rv = GetNextTabbableContent(
+                    aPresShell, rootElement, nullptr, invokerContent, true,
+                    tabIndex, false, false, aNavigateByKey, true,
+                    aReachedToEndForDocumentNavigation, aResultContent);
+                if (NS_SUCCEEDED(rv) && *aResultContent) {
+                  return rv;
+                }
               }
             }
           } else if (invokerContent) {

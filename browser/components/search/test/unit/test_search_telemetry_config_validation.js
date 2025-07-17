@@ -116,10 +116,9 @@ add_task(async function test_search_config_codes_in_search_telemetry() {
         `Should have the base partner code ${engine.base.partnerCode} listed in the search telemetry 'taggedCodes'`
       );
     } else {
-      Assert.equal(
-        telemetryEntry.telemetryId,
-        "baidu",
-        "Should only not have a base partner code for Baidu"
+      Assert.ok(
+        ["google", "baidu"].includes(telemetryEntry.telemetryId),
+        "Should only not have a base partner code for Google and Baidu"
       );
     }
 

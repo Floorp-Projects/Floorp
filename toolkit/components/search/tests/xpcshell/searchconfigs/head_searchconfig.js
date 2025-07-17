@@ -214,7 +214,7 @@ class SearchConfigTest {
   }
 
   /**
-   * @returns {Array} the list of locales for the tests to run with.
+   * @returns {Promise<string[]>} the list of locales for the tests to run with.
    */
   async getLocales() {
     if (TEST_DEBUG) {
@@ -429,26 +429,26 @@ class SearchConfigTest {
 
     for (const rule of details) {
       this._assertCorrectDomains(location, engine, rule);
-      if (rule.codes) {
+      if ("codes" in rule) {
         this._assertCorrectCodes(location, engine, rule);
       }
-      if (rule.searchUrlCode || rule.suggestUrlCode) {
+      if ("searchUrlCode" in rule || "suggestUrlCode" in rule) {
         this._assertCorrectUrlCode(location, engine, rule);
       }
-      if (rule.aliases) {
+      if ("aliases" in rule) {
         this.assertDeepEqual(
           engine.aliases,
           rule.aliases,
           "Should have the correct aliases for the engine"
         );
       }
-      if (rule.required_aliases) {
+      if ("required_aliases" in rule) {
         this.assertOk(
           rule.required_aliases.every(a => engine.aliases.includes(a)),
           "Should have the required aliases for the engine"
         );
       }
-      if (rule.telemetryId) {
+      if ("telemetryId" in rule) {
         this.assertEqual(
           engine.telemetryId,
           rule.telemetryId,

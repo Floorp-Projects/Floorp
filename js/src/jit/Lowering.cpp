@@ -6123,13 +6123,12 @@ void LIRGenerator::visitWasmStoreStackResult(MWasmStoreStackResult* ins) {
   LInstruction* lir;
   if (value->type() == MIRType::Int64) {
     lir = new (alloc())
-        LWasmStoreSlotI64(useInt64Register(value), useRegister(stackResultArea),
-                          offs, mozilla::Nothing());
+        LWasmStoreStackResultI64(useInt64Register(value), useRegister(stackResultArea),
+                          offs);
   } else {
-    MOZ_ASSERT(value->type() != MIRType::WasmAnyRef);
     lir = new (alloc())
-        LWasmStoreSlot(useRegister(value), useRegister(stackResultArea), offs,
-                       value->type(), MNarrowingOp::None, mozilla::Nothing());
+        LWasmStoreStackResult(useRegister(value), useRegister(stackResultArea), offs,
+                              value->type());
   }
   add(lir, ins);
 }

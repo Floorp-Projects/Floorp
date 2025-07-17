@@ -532,29 +532,24 @@ nsresult txSyncCompileObserver::loadURI(const nsAString& aUri,
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> referrerUri;
-  rv = NS_NewURI(getter_AddRefs(referrerUri), aReferrerUri);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrincipal> referrerPrincipal =
-      BasePrincipal::CreateContentPrincipal(referrerUri, OriginAttributes());
-  NS_ENSURE_TRUE(referrerPrincipal, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(mProcessor->GetParentObject());
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  nsCOMPtr<Document> loaderDoc = window->GetExtantDoc();
+  NS_ENSURE_TRUE(loaderDoc, NS_ERROR_FAILURE);
 
   // This is probably called by js, a loadGroup for the channel doesn't
   // make sense.
-  nsCOMPtr<nsINode> source;
-  if (mProcessor) {
-    source = mProcessor->GetSourceContentModel();
-  }
+  nsCOMPtr<nsINode> source = mProcessor->GetSourceContentModel();
   dom::nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr,
                                 dom::SyncOperationBehavior::eSuspendInput);
   nsCOMPtr<Document> document;
 
   rv = nsSyncLoadService::LoadDocument(
-      uri, nsIContentPolicy::TYPE_XSLT, referrerPrincipal,
-      nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT, nullptr,
-      source ? source->OwnerDoc()->CookieJarSettings() : nullptr, false,
-      aReferrerPolicy, getter_AddRefs(document));
+      uri, nsIContentPolicy::TYPE_XSLT, loaderDoc,
+      /* aLoaderPrincipal */ nullptr,
+      nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT, nullptr, nullptr,
+      false, aReferrerPolicy, getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = handleNode(document, aCompiler);

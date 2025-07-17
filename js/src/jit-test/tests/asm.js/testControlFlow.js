@@ -148,11 +148,11 @@ var exp = asmLink(asmCompile(USE_ASM + "var x=0; function a() { return x|0 } fun
 assertEq(exp.c(10), undefined);
 assertEq(exp.a(), 10);
 
-var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; switch(i|0) { case 1: i=-1; break; case 133742: i=2; break; default: i=42; break } return i|0 } return f"));
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; switch(i|0) { case 1: i=-1; break; case 65520: i=2; break; default: i=42; break } return i|0 } return f"));
 assertEq(f(1), -1);
 assertEq(f(2), 42);
-assertEq(f(133742), 2);
-assertEq(f(133743), 42);
+assertEq(f(65520), 2);
+assertEq(f(65521), 42);
 
 var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; switch(i|0) { case 1: i=42; break; default: i=13 } return i|0 } return f"));
 assertEq(f(-1), 13);

@@ -48,9 +48,10 @@ class nsSyncLoadService {
    */
   static nsresult LoadDocument(
       nsIURI* aURI, nsContentPolicyType aContentPolicyType,
-      nsIPrincipal* aLoaderPrincipal, nsSecurityFlags aSecurityFlags,
-      nsILoadGroup* aLoadGroup, nsICookieJarSettings* aCookieJarSettings,
-      bool aForceToXML, mozilla::dom::ReferrerPolicy aReferrerPolicy,
+      mozilla::dom::Document* aLoaderDoc, nsIPrincipal* aLoaderPrincipal,
+      nsSecurityFlags aSecurityFlags, nsILoadGroup* aLoadGroup,
+      nsICookieJarSettings* aCookieJarSettings, bool aForceToXML,
+      mozilla::dom::ReferrerPolicy aReferrerPolicy,
       mozilla::dom::Document** aResult);
 
   /**

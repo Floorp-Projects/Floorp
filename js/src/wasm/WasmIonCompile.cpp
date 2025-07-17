@@ -2554,17 +2554,9 @@ class FunctionCompiler {
         const ABIResult& result = iter.cur();
         if (result.onStack()) {
           MOZ_ASSERT(iter.remaining() > 1);
-          if (result.type().isRefRepr()) {
-            auto* store = MWasmStoreRef::New(
-                alloc(), instancePointer_, stackResultPointer_,
-                result.stackOffset(), values[i], AliasSet::WasmStackResult,
-                WasmPreBarrierKind::None);
-            curBlock_->add(store);
-          } else {
-            auto* store = MWasmStoreStackResult::New(
-                alloc(), stackResultPointer_, result.stackOffset(), values[i]);
-            curBlock_->add(store);
-          }
+          auto* store = MWasmStoreStackResult::New(
+              alloc(), stackResultPointer_, result.stackOffset(), values[i]);
+          curBlock_->add(store);
         } else {
           MOZ_ASSERT(iter.remaining() == 1);
           MOZ_ASSERT(i + 1 == values.length());
