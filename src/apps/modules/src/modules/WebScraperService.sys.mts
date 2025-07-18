@@ -174,7 +174,7 @@ class webScraper {
     });
   }
 
-  public getCurrentURI(instanceId: string): Promise<string | null> {
+  public getURI(instanceId: string): Promise<string | null> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
@@ -182,11 +182,40 @@ class webScraper {
 
     return new Promise((resolve) => {
       if (browser.browsingContext.currentURI.spec != "about:blank") {
-        console.log("currentURI", browser);
         resolve(browser.browsingContext.currentURI.spec);
       } else {
         resolve(null);
       }
+    });
+  }
+
+  public getHTML(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+    return new Promise((resolve) => {
+      try {
+        const actor = browser.browsingContext.currentWindowGlobal.getActor(
+          "NRWebScraper",
+        );
+        actor.sendQuery("WebScraper:GetHTML").then((result) => {
+          resolve(result);
+        });
+      } catch (e) {
+        console.error("Exception in getHTML:", e);
+        resolve(null);
+      }
+    });
+  }
+
+  public getScreenshot(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    return new Promise((_resolve) => {
     });
   }
 }
@@ -225,7 +254,7 @@ export async function testWebScraper() {
 
     // Test 3: Get current URI
     console.log("3. Getting current URI...");
-    const currentUri = await WebScraper.getCurrentURI(instanceId);
+    const currentUri = await WebScraper.getURI(instanceId);
     console.log("✅ Current URI:", currentUri);
 
     // Test 4: Navigate to another URL
@@ -236,11 +265,22 @@ export async function testWebScraper() {
 
     // Test 5: Get updated URI
     console.log("5. Getting updated URI...");
-    const updatedUri = await WebScraper.getCurrentURI(instanceId);
+    const updatedUri = await WebScraper.getURI(instanceId);
     console.log("✅ Updated URI:", updatedUri);
 
-    // Test 6: Destroy instance
-    console.log("6. Destroying instance...");
+    // Test 6: Get HTML content
+    console.log("6. Getting HTML content...");
+    const htmlContent = await WebScraper.getHTML(instanceId);
+    console.log(
+      "✅ HTML content length:",
+      htmlContent ? htmlContent.length : 0,
+    );
+    if (htmlContent) {
+      console.log("✅ HTML preview:", htmlContent.substring(0, 200) + "...");
+    }
+
+    // Test 7: Destroy instance
+    console.log("7. Destroying instance...");
     WebScraper.destroyInstance(instanceId);
     console.log("✅ Instance destroyed");
 
@@ -269,8 +309,11 @@ export async function quickTest() {
     await WebScraper.navigate(instanceId, "https://example.com");
     console.log("Navigation successful");
 
-    const uri = await WebScraper.getCurrentURI(instanceId);
+    const uri = await WebScraper.getURI(instanceId);
     console.log("Current URI:", uri);
+
+    const htmlContent = await WebScraper.getHTML(instanceId);
+    console.log("HTML content length:", htmlContent ? htmlContent.length : 0);
 
     WebScraper.destroyInstance(instanceId);
     console.log("Instance destroyed");
@@ -316,10 +359,16 @@ export async function stressTest(instanceCount = 3) {
       console.log(`Instance ${i + 1} navigated to:`, url);
     }
 
-    // Get URIs from all instances
+    // Get URIs and HTML content from all instances
     for (let i = 0; i < instances.length; i++) {
-      const uri = await WebScraper.getCurrentURI(instances[i]);
+      const uri = await WebScraper.getURI(instances[i]);
       console.log(`Instance ${i + 1} current URI:`, uri);
+
+      const htmlContent = await WebScraper.getHTML(instances[i]);
+      console.log(
+        `Instance ${i + 1} HTML content length:`,
+        htmlContent ? htmlContent.length : 0,
+      );
     }
 
     // Destroy all instances

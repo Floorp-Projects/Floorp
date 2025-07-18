@@ -17,9 +17,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
     return null;
   }
 
-  getHTML(): WindowProxy | null {
-    console.log("getHTML", this.contentWindow);
-    return this.contentWindow;
+  getHTML(): string | null {
+    try {
+      if (this.contentWindow) {
+        return this.contentWindow.document.documentElement.outerHTML;
+      }
+      return null;
+    } catch (e) {
+      console.error("Error getting HTML:", e);
+      return null;
+    }
   }
 
   inputElement(selector: string, value: string): void {
