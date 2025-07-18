@@ -32,6 +32,17 @@ declare module "solid-js" {
       usercontextid?: `${number}`;
       changeuseragent?: `${boolean}`;
       context?: string;
+      currentURI?: string;
+      docShellIsActive?: boolean;
+      isRemoteBrowser?: boolean;
+      remoteType?: string;
+      loadURI?: (url: string, options: {
+        loadType?: number;
+        referrerPolicy?: string;
+        triggeringPrincipal?: unknown;
+        triggeringRemoteAddress?: string;
+        allowThirdPartyFixup?: boolean;
+      }) => void;
     }
 
     interface XULMenuListElement extends XULElementBase {

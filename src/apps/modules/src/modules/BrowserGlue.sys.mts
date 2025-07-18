@@ -13,6 +13,11 @@ function localPathToResourceURI(path: string) {
   return resourceURI;
 }
 
+// init WebScraperService
+ChromeUtils.importESModule(
+  "resource://noraneko/modules/WebScraperService.sys.mjs",
+);
+
 const JS_WINDOW_ACTORS: {
   [k: string]: WindowActorOptions;
 } = {
@@ -185,23 +190,6 @@ const JS_WINDOW_ACTORS: {
       "about:*",
     ],
   },
-  // Floorp 13 test
-  // NRWebContentModifier: {
-  //   parent: {
-  //     esModuleURI: localPathToResourceURI(
-  //       "../actors/NRWebContentModifierParent.sys.mts",
-  //     ),
-  //   },
-  //   child: {
-  //     esModuleURI: localPathToResourceURI(
-  //       "../actors/NRWebContentModifierChild.sys.mts",
-  //     ),
-  //     events: {
-  //       DOMContentLoaded: {},
-  //     },
-  //   },
-  //   matches: ["https://*/*", "http://*/*"],
-  // },
   NRChromeModal: {
     child: {
       esModuleURI: localPathToResourceURI(
@@ -294,6 +282,21 @@ const JS_WINDOW_ACTORS: {
       "chrome://noraneko-newtab/*",
       "about:*",
     ],
+  },
+
+  NRWebScraper: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperChild.sys.mts",
+      ),
+    },
+    includeChrome: true,
+    allFrames: true,
   },
 };
 
