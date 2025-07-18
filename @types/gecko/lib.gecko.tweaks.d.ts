@@ -128,13 +128,8 @@ interface XULBrowserElement extends XULElement {
     triggeringRemoteAddress?: string;
     allowThirdPartyFixup?: boolean;
   }) => void;
-  browsingContext: {
-    currentWindowGlobal: {
-      getActor: (name: string) => {
-        sendQuery: (query: string) => string;
-      };
-    };
-  };
+  webProgress: any;
+  browsingContext: any;
 }
 
 // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1736
