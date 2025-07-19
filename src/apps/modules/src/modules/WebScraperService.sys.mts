@@ -18,6 +18,9 @@ const { E10SUtils } = ChromeUtils.importESModule(
 const { HiddenFrame } = ChromeUtils.importESModule(
   "resource://gre/modules/HiddenFrame.sys.mjs",
 );
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
 
 // Global sets to prevent garbage collection of active components
 const SCRAPER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
@@ -34,6 +37,15 @@ class webScraper {
   // Map to store browser instances with their unique IDs
   private _browserInstances: Map<string, XULBrowserElement> = new Map();
   private _instanceId: string;
+  private _windowlessBrowser: nsIWindowlessBrowser;
+
+  constructor() {
+    this._initializeWindowlessBrowser();
+  }
+
+  private async _initializeWindowlessBrowser(): Promise<void> {
+    this._windowlessBrowser = await FRAME.get();
+  }
 
   /**
    * Creates a new headless browser instance
@@ -47,13 +59,11 @@ class webScraper {
    * @returns Promise<string> - A unique identifier for the created browser instance
    */
   public async createInstance(): Promise<string> {
-    const windowlessBrowser = await FRAME.get();
-
-    const doc = windowlessBrowser.document;
+    const doc = this._windowlessBrowser.document;
     const browser = doc.createXULElement("browser");
     browser.setAttribute("remote", "true");
     browser.setAttribute("type", "content");
-    browser.setAttribute("maychangeremoteness", "true");
+    browser.setAttribute("disableglobalhistory", "true");
 
     // Set default size for browser element
     browser.style.width = "1366px";
@@ -63,8 +73,9 @@ class webScraper {
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement.appendChild(browser);
+    browser.browsingContext.allowJavascript = true;
 
-    this._instanceId = crypto.randomUUID();
+    this._instanceId = await crypto.randomUUID();
     this._browserInstances.set(this._instanceId, browser);
     SCRAPER_ACTOR_SETS.add(browser);
     return this._instanceId;
@@ -189,33 +200,353 @@ class webScraper {
     });
   }
 
-  public getHTML(instanceId: string): Promise<string | null> {
+  /**
+   * Retrieves the HTML content from a browser instance using the NRWebScraper actor
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to extract HTML content from the content process
+   * - Handles cases where the actor is not available or errors occur
+   *
+   * The actor communication allows safe access to content process DOM
+   * without violating cross-process security boundaries.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @returns Promise<string | null> - The HTML content as a string, or null if unavailable
+   * @throws Error - If the browser instance is not found
+   */
+  public async getHTML(instanceId: string): Promise<string | null> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
-    return new Promise((resolve) => {
-      try {
-        const actor = browser.browsingContext.currentWindowGlobal.getActor(
-          "NRWebScraper",
-        );
-        actor.sendQuery("WebScraper:GetHTML").then((result) => {
-          resolve(result);
-        });
-      } catch (e) {
-        console.error("Exception in getHTML:", e);
-        resolve(null);
+
+    try {
+      const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+        "NRWebScraper",
+      );
+
+      if (!actor) {
+        return null;
       }
+
+      return await actor.sendQuery("WebScraper:GetHTML");
+    } catch (e) {
+      console.error("Error getting HTML:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Retrieves a specific element from a browser instance using the NRWebScraper actor
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query with a CSS selector to find and return a specific element
+   * - Returns null if the actor is not available
+   *
+   * The actor communication enables safe DOM element access across
+   * process boundaries while maintaining security isolation.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<string | null> - The element's HTML content, or null if not found
+   * @throws Error - If the browser instance is not found
+   */
+  public async getElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:GetElement", { selector });
+  }
+
+  /**
+   * Retrieves the text content of an element from a browser instance
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to extract text content from a specific element
+   * - Returns null if the actor is not available or element not found
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<string | null> - The element's text content, or null if not found
+   * @throws Error - If the browser instance is not found
+   */
+  public async getElementText(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:GetElementText", { selector });
+  }
+
+  /**
+   * Clicks on an element in a browser instance
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to click on a specific element
+   * - Returns boolean indicating success or failure
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if click was successful, false otherwise
+   * @throws Error - If the browser instance is not found
+   */
+  public async clickElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return false;
+    }
+
+    return await actor.sendQuery("WebScraper:ClickElement", { selector });
+  }
+
+  /**
+   * Waits for an element to appear in a browser instance
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to wait for a specific element to appear
+   * - Returns boolean indicating if element was found within timeout
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @param timeout - Maximum time to wait in milliseconds (default: 5000)
+   * @returns Promise<boolean> - True if element was found, false if timeout reached
+   * @throws Error - If the browser instance is not found
+   */
+  public async waitForElement(
+    instanceId: string,
+    selector: string,
+    timeout = 5000,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return false;
+    }
+
+    return await actor.sendQuery("WebScraper:WaitForElement", {
+      selector,
+      timeout,
     });
   }
 
-  public getScreenshot(instanceId: string): Promise<string | null> {
+  /**
+   * Executes JavaScript code in a browser instance
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to execute JavaScript in the content context
+   * - Returns the result of the script execution
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param script - JavaScript code to execute
+   * @returns Promise<any> - The result of the script execution, or null if error
+   * @throws Error - If the browser instance is not found
+   */
+  public async executeScript(
+    instanceId: string,
+    script: string,
+  ): Promise<unknown> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    return new Promise((_resolve) => {
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:ExecuteScript", { script });
+  }
+
+  /**
+   * Takes a screenshot of the current viewport
+   *
+   * This method captures the visible area of the page and returns it
+   * as a base64 encoded PNG image. It includes error handling.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
+   * @throws Error - If the browser instance is not found
+   */
+  public async takeScreenshot(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:TakeScreenshot");
+  }
+
+  /**
+   * Takes a screenshot of a specific element
+   *
+   * This method captures a specific element on the page and returns it
+   * as a base64 encoded PNG image. It includes error handling.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
+   * @throws Error - If the browser instance is not found
+   */
+  public async takeElementScreenshot(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:TakeElementScreenshot", {
+      selector,
+    });
+  }
+
+  /**
+   * Takes a screenshot of the full page
+   *
+   * This method captures the entire scrollable area of the page and returns it
+   * as a base64 encoded PNG image. It includes error handling.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
+   * @throws Error - If the browser instance is not found
+   */
+  public async takeFullPageScreenshot(
+    instanceId: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:TakeFullPageScreenshot");
+  }
+
+  /**
+   * Takes a screenshot of a specific region of the page.
+   * If properties are omitted, they default to the maximum possible size.
+   *
+   * This method captures a specific area of the page defined by a rectangle.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param rect The rectangular area to capture { x, y, width, height }.
+   * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
+   * @throws Error - If the browser instance is not found
+   */
+  public async takeRegionScreenshot(
+    instanceId: string,
+    rect?: { x?: number; y?: number; width?: number; height?: number },
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return null;
+    }
+
+    return await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
+      rect,
+    });
+  }
+
+  /**
+   * Waits for the specified number of milliseconds.
+   *
+   * @param ms - The number of milliseconds to wait
+   * @returns Promise<void> - Resolves after the specified delay
+   */
+  public wait(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
     });
   }
 }
@@ -234,6 +565,9 @@ export const WebScraper = new webScraper();
  * - Create a browser instance
  * - Navigate to a test URL
  * - Get the current URI
+ * - Get HTML content
+ * - Navigate to another URL
+ * - Take viewport and full page screenshots
  * - Destroy the instance
  * - Log all results to console
  */
@@ -248,8 +582,9 @@ export async function testWebScraper() {
 
     // Test 2: Navigate to a test URL
     console.log("2. Navigating to test URL...");
-    const testUrl = "https://example.com";
+    const testUrl = "https://x.com/takesako";
     await WebScraper.navigate(instanceId, testUrl);
+    await WebScraper.wait(5000);
     console.log("✅ Navigation completed to:", testUrl);
 
     // Test 3: Get current URI
@@ -257,30 +592,131 @@ export async function testWebScraper() {
     const currentUri = await WebScraper.getURI(instanceId);
     console.log("✅ Current URI:", currentUri);
 
-    // Test 4: Navigate to another URL
-    console.log("4. Navigating to another URL...");
-    const secondUrl = "https://httpbin.org/get";
-    await WebScraper.navigate(instanceId, secondUrl);
-    console.log("✅ Navigation completed to:", secondUrl);
-
-    // Test 5: Get updated URI
-    console.log("5. Getting updated URI...");
-    const updatedUri = await WebScraper.getURI(instanceId);
-    console.log("✅ Updated URI:", updatedUri);
-
-    // Test 6: Get HTML content
-    console.log("6. Getting HTML content...");
+    // Test 4: Get HTML content
+    console.log("4. Getting HTML content...");
     const htmlContent = await WebScraper.getHTML(instanceId);
-    console.log(
-      "✅ HTML content length:",
-      htmlContent ? htmlContent.length : 0,
-    );
     if (htmlContent) {
       console.log("✅ HTML preview:", htmlContent.substring(0, 200) + "...");
     }
 
-    // Test 7: Destroy instance
-    console.log("7. Destroying instance...");
+    // Test 5: Get element text
+    console.log("5. Getting element text...");
+    const titleText = await WebScraper.getElementText(instanceId, "title");
+    console.log("✅ Title text:", titleText);
+
+    // Test 6: Get specific HTML element
+    console.log("6. Getting specific HTML element...");
+    const titleElement = await WebScraper.getElement(instanceId, "title");
+    console.log("✅ Title element HTML:", titleElement);
+
+    // Test 7: Get navigation element
+    console.log("7. Getting navigation element...");
+    const navElement = await WebScraper.getElement(instanceId, "nav");
+    if (navElement) {
+      console.log(
+        "✅ Navigation element preview:",
+        navElement.substring(0, 200) + "...",
+      );
+    } else {
+      console.log("✅ Navigation element: Not found");
+    }
+
+    // Test 8: Wait for element and click
+    console.log("8. Testing element interaction...");
+    const elementFound = await WebScraper.waitForElement(
+      instanceId,
+      "body",
+      3000,
+    );
+    console.log("✅ Element found:", elementFound);
+
+    // Test 9: Execute JavaScript
+    console.log("9. Executing JavaScript...");
+    const pageTitle = await WebScraper.executeScript(
+      instanceId,
+      "return document.title;",
+    );
+    console.log("✅ Page title via JavaScript:", pageTitle);
+
+    // Test 10: Take viewport screenshot
+    console.log("10. Taking viewport screenshot...");
+    const viewportScreenshot = await WebScraper.takeScreenshot(instanceId);
+    if (viewportScreenshot) {
+      console.log(
+        "✅ Viewport screenshot captured:",
+        viewportScreenshot,
+      );
+    } else {
+      console.log("❌ Viewport screenshot failed");
+    }
+
+    // Test 11: Take element screenshot
+    console.log("11. Taking element screenshot...");
+    const elementScreenshot = await WebScraper.takeElementScreenshot(
+      instanceId,
+      "nav",
+    );
+    if (elementScreenshot) {
+      console.log(
+        "✅ Element screenshot captured:",
+        elementScreenshot,
+      );
+    } else {
+      console.log("❌ Element screenshot failed");
+    }
+
+    // Test 12: Take full page screenshot
+    console.log("12. Taking full page screenshot...");
+    const fullPageScreenshot = await WebScraper.takeFullPageScreenshot(
+      instanceId,
+    );
+    if (fullPageScreenshot) {
+      console.log(
+        "✅ Full page screenshot captured:",
+        fullPageScreenshot,
+      );
+    } else {
+      console.log("❌ Full page screenshot failed");
+    }
+
+    // Test 13: Take region screenshot
+    console.log(
+      "13. Taking region screenshot (from 100,100 with size 300x200)...",
+    );
+    const regionScreenshot = await WebScraper.takeRegionScreenshot(instanceId, {
+      x: 100,
+      y: 100,
+      width: 300,
+      height: 200,
+    });
+    if (regionScreenshot) {
+      console.log(
+        "✅ Region screenshot captured:",
+        regionScreenshot,
+      );
+    } else {
+      console.log("❌ Region screenshot failed");
+    }
+
+    // Test 14: Take region screenshot with partial arguments (should be from top-left)
+    console.log(
+      "14. Taking region screenshot with partial arguments (height: 400px)...",
+    );
+    const partialRegionScreenshot = await WebScraper.takeRegionScreenshot(
+      instanceId,
+      { height: 2000 },
+    );
+    if (partialRegionScreenshot) {
+      console.log(
+        "✅ Partial region screenshot captured:",
+        partialRegionScreenshot,
+      );
+    } else {
+      console.log("❌ Partial region screenshot failed");
+    }
+
+    // Test 15: Destroy instance
+    console.log("15. Destroying instance...");
     WebScraper.destroyInstance(instanceId);
     console.log("✅ Instance destroyed");
 
@@ -289,110 +725,5 @@ export async function testWebScraper() {
     console.error("❌ WebScraper Test Failed:", error);
     console.error("Error details:", error.message);
     console.error("Stack trace:", error.stack);
-  }
-}
-
-/**
- * Quick test function for basic functionality
- *
- * Usage in Browser Console:
- * 1. Copy and paste this function
- * 2. Call: quickTest()
- */
-export async function quickTest() {
-  console.log("=== Quick WebScraper Test ===");
-
-  try {
-    const instanceId = await WebScraper.createInstance();
-    console.log("Instance created:", instanceId);
-
-    await WebScraper.navigate(instanceId, "https://example.com");
-    console.log("Navigation successful");
-
-    const uri = await WebScraper.getURI(instanceId);
-    console.log("Current URI:", uri);
-
-    const htmlContent = await WebScraper.getHTML(instanceId);
-    console.log("HTML content length:", htmlContent ? htmlContent.length : 0);
-
-    WebScraper.destroyInstance(instanceId);
-    console.log("Instance destroyed");
-
-    console.log("✅ Quick test passed!");
-  } catch (error) {
-    console.error("❌ Quick test failed:", error.message);
-  }
-}
-
-/**
- * Stress test function to test multiple instances
- *
- * Usage in Browser Console:
- * 1. Copy and paste this function
- * 2. Call: stressTest(5) // Creates 5 instances
- */
-export async function stressTest(instanceCount = 3) {
-  console.log(`=== WebScraper Stress Test (${instanceCount} instances) ===`);
-
-  const instances = [];
-
-  try {
-    // Create multiple instances
-    for (let i = 0; i < instanceCount; i++) {
-      const instanceId = await WebScraper.createInstance();
-      instances.push(instanceId);
-      console.log(`Instance ${i + 1} created:`, instanceId);
-    }
-
-    // Navigate all instances to different URLs
-    const testUrls = [
-      "https://example.com",
-      "https://httpbin.org/get",
-      "https://jsonplaceholder.typicode.com/posts/1",
-      "https://httpbin.org/headers",
-      "https://httpbin.org/ip",
-    ];
-
-    for (let i = 0; i < instances.length; i++) {
-      const url = testUrls[i % testUrls.length];
-      await WebScraper.navigate(instances[i], url);
-      console.log(`Instance ${i + 1} navigated to:`, url);
-    }
-
-    // Get URIs and HTML content from all instances
-    for (let i = 0; i < instances.length; i++) {
-      const uri = await WebScraper.getURI(instances[i]);
-      console.log(`Instance ${i + 1} current URI:`, uri);
-
-      const htmlContent = await WebScraper.getHTML(instances[i]);
-      console.log(
-        `Instance ${i + 1} HTML content length:`,
-        htmlContent ? htmlContent.length : 0,
-      );
-    }
-
-    // Destroy all instances
-    for (let i = 0; i < instances.length; i++) {
-      WebScraper.destroyInstance(instances[i]);
-      console.log(`Instance ${i + 1} destroyed`);
-    }
-
-    console.log("✅ Stress test completed successfully!");
-  } catch (error) {
-    console.error("❌ Stress test failed:", error.message);
-
-    // Clean up any remaining instances
-    for (const instanceId of instances) {
-      try {
-        WebScraper.destroyInstance(instanceId);
-      } catch (cleanupError) {
-        console.error(
-          "Cleanup error for instance",
-          instanceId,
-          ":",
-          cleanupError.message,
-        );
-      }
-    }
   }
 }

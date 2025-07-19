@@ -294,8 +294,14 @@ const JS_WINDOW_ACTORS: {
       esModuleURI: localPathToResourceURI(
         "../actors/NRWebScraperChild.sys.mts",
       ),
+      events: {
+        DOMContentLoaded: {},
+      },
     },
-    includeChrome: true,
+    matches: [
+      "http://*/*",
+      "https://*/*",
+    ],
     allFrames: true,
   },
 };

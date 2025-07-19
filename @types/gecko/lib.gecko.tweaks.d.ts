@@ -130,6 +130,7 @@ interface XULBrowserElement extends XULElement {
   }) => void;
   webProgress: any;
   browsingContext: any;
+  contentDocument: Document;
 }
 
 // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1736
