@@ -539,6 +539,37 @@ class webScraper {
   }
 
   /**
+   * Fills multiple form fields based on a selector-value map.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param formData A map where keys are CSS selectors for input fields
+   * and values are the corresponding values to set.
+   * @returns Promise<boolean> - True if all fields were filled successfully, false otherwise.
+   * @throws Error - If the browser instance is not found
+   */
+  public async fillForm(
+    instanceId: string,
+    formData: { [selector: string]: string },
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+
+    if (!actor) {
+      return false;
+    }
+
+    return await actor.sendQuery("WebScraper:FillForm", {
+      formData,
+    });
+  }
+
+  /**
    * Waits for the specified number of milliseconds.
    *
    * @param ms - The number of milliseconds to wait
@@ -553,177 +584,3 @@ class webScraper {
 
 // Export a singleton instance of the WebScraper service
 export const WebScraper = new webScraper();
-
-/**
- * Test function for WebScraperService that can be executed in Browser Console
- *
- * Usage in Browser Console:
- * 1. Copy and paste this entire function
- * 2. Call: testWebScraper()
- *
- * This test will:
- * - Create a browser instance
- * - Navigate to a test URL
- * - Get the current URI
- * - Get HTML content
- * - Navigate to another URL
- * - Take viewport and full page screenshots
- * - Destroy the instance
- * - Log all results to console
- */
-export async function testWebScraper() {
-  console.log("=== WebScraper Test Started ===");
-
-  try {
-    // Test 1: Create instance
-    console.log("1. Creating browser instance...");
-    const instanceId = await WebScraper.createInstance();
-    console.log("✅ Instance created with ID:", instanceId);
-
-    // Test 2: Navigate to a test URL
-    console.log("2. Navigating to test URL...");
-    const testUrl = "https://x.com/takesako";
-    await WebScraper.navigate(instanceId, testUrl);
-    await WebScraper.wait(5000);
-    console.log("✅ Navigation completed to:", testUrl);
-
-    // Test 3: Get current URI
-    console.log("3. Getting current URI...");
-    const currentUri = await WebScraper.getURI(instanceId);
-    console.log("✅ Current URI:", currentUri);
-
-    // Test 4: Get HTML content
-    console.log("4. Getting HTML content...");
-    const htmlContent = await WebScraper.getHTML(instanceId);
-    if (htmlContent) {
-      console.log("✅ HTML preview:", htmlContent.substring(0, 200) + "...");
-    }
-
-    // Test 5: Get element text
-    console.log("5. Getting element text...");
-    const titleText = await WebScraper.getElementText(instanceId, "title");
-    console.log("✅ Title text:", titleText);
-
-    // Test 6: Get specific HTML element
-    console.log("6. Getting specific HTML element...");
-    const titleElement = await WebScraper.getElement(instanceId, "title");
-    console.log("✅ Title element HTML:", titleElement);
-
-    // Test 7: Get navigation element
-    console.log("7. Getting navigation element...");
-    const navElement = await WebScraper.getElement(instanceId, "nav");
-    if (navElement) {
-      console.log(
-        "✅ Navigation element preview:",
-        navElement.substring(0, 200) + "...",
-      );
-    } else {
-      console.log("✅ Navigation element: Not found");
-    }
-
-    // Test 8: Wait for element and click
-    console.log("8. Testing element interaction...");
-    const elementFound = await WebScraper.waitForElement(
-      instanceId,
-      "body",
-      3000,
-    );
-    console.log("✅ Element found:", elementFound);
-
-    // Test 9: Execute JavaScript
-    console.log("9. Executing JavaScript...");
-    const pageTitle = await WebScraper.executeScript(
-      instanceId,
-      "return document.title;",
-    );
-    console.log("✅ Page title via JavaScript:", pageTitle);
-
-    // Test 10: Take viewport screenshot
-    console.log("10. Taking viewport screenshot...");
-    const viewportScreenshot = await WebScraper.takeScreenshot(instanceId);
-    if (viewportScreenshot) {
-      console.log(
-        "✅ Viewport screenshot captured:",
-        viewportScreenshot,
-      );
-    } else {
-      console.log("❌ Viewport screenshot failed");
-    }
-
-    // Test 11: Take element screenshot
-    console.log("11. Taking element screenshot...");
-    const elementScreenshot = await WebScraper.takeElementScreenshot(
-      instanceId,
-      "nav",
-    );
-    if (elementScreenshot) {
-      console.log(
-        "✅ Element screenshot captured:",
-        elementScreenshot,
-      );
-    } else {
-      console.log("❌ Element screenshot failed");
-    }
-
-    // Test 12: Take full page screenshot
-    console.log("12. Taking full page screenshot...");
-    const fullPageScreenshot = await WebScraper.takeFullPageScreenshot(
-      instanceId,
-    );
-    if (fullPageScreenshot) {
-      console.log(
-        "✅ Full page screenshot captured:",
-        fullPageScreenshot,
-      );
-    } else {
-      console.log("❌ Full page screenshot failed");
-    }
-
-    // Test 13: Take region screenshot
-    console.log(
-      "13. Taking region screenshot (from 100,100 with size 300x200)...",
-    );
-    const regionScreenshot = await WebScraper.takeRegionScreenshot(instanceId, {
-      x: 100,
-      y: 100,
-      width: 300,
-      height: 200,
-    });
-    if (regionScreenshot) {
-      console.log(
-        "✅ Region screenshot captured:",
-        regionScreenshot,
-      );
-    } else {
-      console.log("❌ Region screenshot failed");
-    }
-
-    // Test 14: Take region screenshot with partial arguments (should be from top-left)
-    console.log(
-      "14. Taking region screenshot with partial arguments (height: 400px)...",
-    );
-    const partialRegionScreenshot = await WebScraper.takeRegionScreenshot(
-      instanceId,
-      { height: 2000 },
-    );
-    if (partialRegionScreenshot) {
-      console.log(
-        "✅ Partial region screenshot captured:",
-        partialRegionScreenshot,
-      );
-    } else {
-      console.log("❌ Partial region screenshot failed");
-    }
-
-    // Test 15: Destroy instance
-    console.log("15. Destroying instance...");
-    WebScraper.destroyInstance(instanceId);
-    console.log("✅ Instance destroyed");
-
-    console.log("=== WebScraper Test Completed Successfully ===");
-  } catch (error) {
-    console.error("❌ WebScraper Test Failed:", error);
-    console.error("Error details:", error.message);
-    console.error("Stack trace:", error.stack);
-  }
-}

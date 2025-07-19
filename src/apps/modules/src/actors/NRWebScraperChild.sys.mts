@@ -44,6 +44,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * - "WebScraper:TakeElementScreenshot": Takes a screenshot of a specific element
    * - "WebScraper:TakeFullPageScreenshot": Takes a screenshot of the full page
    * - "WebScraper:TakeRegionScreenshot": Takes a screenshot of a specific region
+   * - "WebScraper:FillForm": Fills multiple form fields at once
    *
    * @param message - The message object containing the operation name and optional data
    * @returns string | null - Returns HTML content for GetHTML operations, null otherwise
@@ -56,6 +57,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       timeout?: number;
       script?: string;
       rect?: { x?: number; y?: number; width?: number; height?: number };
+      formData?: { [selector: string]: string };
     };
   }) {
     switch (message.name) {
@@ -106,6 +108,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
       case "WebScraper:TakeRegionScreenshot":
         if (message.data) {
           return this.takeRegionScreenshot(message.data.rect || {});
+        }
+        break;
+      case "WebScraper:FillForm":
+        if (message.data?.formData) {
+          return this.fillForm(message.data.formData);
         }
         break;
     }
@@ -462,6 +469,40 @@ export class NRWebScraperChild extends JSWindowActorChild {
     } catch (e) {
       console.error("NRWebScraperChild: Error taking region screenshot:", e);
       return null;
+    }
+  }
+
+  /**
+   * Fills multiple form fields based on a selector-value map.
+   *
+   * @param formData A map where keys are CSS selectors for input fields
+   * and values are the corresponding values to set.
+   * @returns boolean - True if all fields were filled successfully, false otherwise.
+   */
+  fillForm(formData: { [selector: string]: string }): boolean {
+    try {
+      let allFilled = true;
+      for (const selector in formData) {
+        if (Object.prototype.hasOwnProperty.call(formData, selector)) {
+          const value = formData[selector];
+          const element = this.document?.querySelector(selector) as
+            | HTMLInputElement
+            | HTMLTextAreaElement;
+          if (element) {
+            element.value = value;
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+          } else {
+            console.warn(
+              `NRWebScraperChild: Element not found for selector: ${selector}`,
+            );
+            allFilled = false;
+          }
+        }
+      }
+      return allFilled;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error filling form:", e);
+      return false;
     }
   }
 }
