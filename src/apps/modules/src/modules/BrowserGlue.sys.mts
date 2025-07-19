@@ -13,11 +13,6 @@ function localPathToResourceURI(path: string) {
   return resourceURI;
 }
 
-// init WebScraperService
-ChromeUtils.importESModule(
-  "resource://noraneko/modules/WebScraperService.sys.mjs",
-);
-
 const JS_WINDOW_ACTORS: {
   [k: string]: WindowActorOptions;
 } = {
