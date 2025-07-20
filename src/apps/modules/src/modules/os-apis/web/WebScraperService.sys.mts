@@ -95,10 +95,9 @@ class webScraper {
     const browser = this._browserInstances.get(instanceId);
     if (browser) {
       browser.remove();
+      this._browserInstances.delete(instanceId);
+      SCRAPER_ACTOR_SETS.delete(browser);
     }
-
-    this._browserInstances.delete(instanceId);
-    SCRAPER_ACTOR_SETS.delete(browser);
   }
 
   /**
