@@ -35,7 +35,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
     --verbose \
     buster \
     /srv/buster-amd64 \
-    http://deb.debian.org/debian || (echo "Debootstrap failed, outputting log:" && cat /srv/buster-amd64/debootstrap/debootstrap.log && exit 1) && \
+    http://archive.debian.org/debian || (echo "Debootstrap failed, outputting log:" && cat /srv/buster-amd64/debootstrap/debootstrap.log && exit 1) && \
     chroot /srv/buster-amd64 /bin/bash -c "\
         dpkg --add-architecture arm64 && \
         apt-get update && \
