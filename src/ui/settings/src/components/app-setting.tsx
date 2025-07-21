@@ -18,7 +18,11 @@ function Input(setting: TSetting) {
     case "select":
       return (
         <select defaultValue={setting.default as string}>
-          {setting.options!.map((o) => <option key={o} value={o}>{o}</option>)}
+          {setting.options!.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
         </select>
       );
     case "checkbox":
@@ -40,8 +44,7 @@ export function SettingsCard(props: TSettingsCard) {
         {Input(setting)}
         <p>{props.description}</p>
       </CardContent>
-      <CardFooter>
-      </CardFooter>
+      <CardFooter></CardFooter>
     </Card>
   ));
 }

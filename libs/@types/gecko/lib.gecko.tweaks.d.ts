@@ -36,11 +36,11 @@ interface MessageListenerManagerMixin {
   // Overloads that define `data` arg as required, since it's ~always expected.
   addMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
   );
   removeMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
   );
 }
 
@@ -65,7 +65,7 @@ interface nsIXPCComponents_Constructor {
   <const T, IIDs = nsIXPCComponents_Interfaces>(
     cid,
     id: T,
-    init?
+    init?,
   ): {
     new (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
     (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
@@ -85,7 +85,7 @@ interface nsIXPCComponents_Exception {
     message?: string,
     resultOrOptions?: number | ComponentsExceptionOptions,
     stack?: nsIStackFrame,
-    data?: object
+    data?: object,
   ): nsIException;
 }
 
@@ -149,7 +149,7 @@ interface DOMStringMap {
 interface Uint8Array<TArrayBuffer extends ArrayBufferLike> {
   setFromBase64(
     string: string,
-    options?: { alphabet?: string; lastChunkHandling: string }
+    options?: { alphabet?: string; lastChunkHandling: string },
   ): { read: number; written: number };
   setFromHex(string: string): { read: number; written: number };
   toBase64(options?: { alphabet?: string; omitPadding: boolean }): string;

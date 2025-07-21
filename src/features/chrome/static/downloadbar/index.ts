@@ -32,9 +32,8 @@ export function init() {
     delete window.DownloadsPanel.panel;
     delete window.DownloadsPanel.richListBox;
     window.DownloadsPanel.panel = document.getElementById("downloadsPanel");
-    window.DownloadsPanel.richListBox = document.getElementById(
-      "downloadsListBox",
-    );
+    window.DownloadsPanel.richListBox =
+      document.getElementById("downloadsListBox");
     window.DownloadsView.contextMenu = document.getElementById(
       "downloadsContextMenu",
     );

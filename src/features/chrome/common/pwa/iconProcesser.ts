@@ -24,9 +24,10 @@ export class IconProcesser {
 
     for (const icon of icons) {
       for (const sizeSpec of icon.sizes) {
-        const size = sizeSpec === "any"
-          ? Number.MAX_SAFE_INTEGER
-          : Number.parseInt(sizeSpec);
+        const size =
+          sizeSpec === "any"
+            ? Number.MAX_SAFE_INTEGER
+            : Number.parseInt(sizeSpec);
 
         iconList.push({
           icon,

@@ -95,14 +95,16 @@ export const zProgressiveWebAppFormData = z.object({
   showToolbar: z.boolean(),
 });
 
-export const zProgressiveWebAppObject = z.record(z.object({
-  id: z.string(),
-  name: z.string(),
-  short_name: z.string().optional(),
-  start_url: z.string(),
-  icon: z.string(),
-  scope: z.string().optional(),
-}));
+export const zProgressiveWebAppObject = z.record(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    short_name: z.string().optional(),
+    start_url: z.string(),
+    icon: z.string(),
+    scope: z.string().optional(),
+  }),
+);
 
 export type TProgressiveWebAppFormData = z.infer<
   typeof zProgressiveWebAppFormData

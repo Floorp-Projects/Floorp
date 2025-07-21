@@ -35,7 +35,7 @@ export function ThemeProvider({
 
     if (theme === "system") {
       const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
-          .matches
+        .matches
         ? "dark"
         : "light";
       root.classList.add(systemTheme);

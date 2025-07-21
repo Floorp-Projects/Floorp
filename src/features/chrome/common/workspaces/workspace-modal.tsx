@@ -73,8 +73,8 @@ export class WorkspaceManageModal {
   }
 
   private ContentElement(workspace: TWorkspace | null) {
-    const targetWorkspace = workspace ??
-      this.ctx.getRawWorkspace(this.ctx.getSelectedWorkspaceID());
+    const targetWorkspace =
+      workspace ?? this.ctx.getRawWorkspace(this.ctx.getSelectedWorkspaceID());
 
     return (
       <>
@@ -128,10 +128,11 @@ export class WorkspaceManageModal {
               {(container) => (
                 <option
                   value={container.userContextId}
-                  selected={targetWorkspace.userContextId ===
-                      container.userContextId
-                    ? true
-                    : undefined}
+                  selected={
+                    targetWorkspace.userContextId === container.userContextId
+                      ? true
+                      : undefined
+                  }
                 >
                   {this.getContainerName(container)}
                 </option>
@@ -150,13 +151,16 @@ export class WorkspaceManageModal {
         ContentElement={() =>
           this.ContentElement(
             this.ctx.getRawWorkspace(workspaceModalState().targetWorkspaceID!),
-          )}
+          )
+        }
         StyleElement={() => this.StyleElement}
         onClose={() =>
-          setWorkspaceModalState({ show: false, targetWorkspaceID: null })}
+          setWorkspaceModalState({ show: false, targetWorkspaceID: null })
+        }
         onSave={(formControls) => {
           console.log(formControls);
-          const targetWorkspace = workspaceModalState().targetWorkspaceID ??
+          const targetWorkspace =
+            workspaceModalState().targetWorkspaceID ??
             this.ctx.getSelectedWorkspaceID()!;
           const newData = {
             ...this.ctx.getRawWorkspace(targetWorkspace),

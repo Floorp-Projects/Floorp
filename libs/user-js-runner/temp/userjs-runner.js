@@ -45,7 +45,7 @@ export function instantiate(
       var bool1 = arg2;
       setBoolPref(
         result0,
-        bool1 == 0 ? false : (bool1 == 1 ? true : throwInvalidBool()),
+        bool1 == 0 ? false : bool1 == 1 ? true : throwInvalidBool(),
       );
     }
 
@@ -87,9 +87,9 @@ export function instantiate(
     ({ exports: exports2 } = yield instantiateCore(yield module2, {
       "": {
         $imports: exports0.$imports,
-        "0": trampoline0,
-        "1": trampoline1,
-        "2": trampoline2,
+        0: trampoline0,
+        1: trampoline1,
+        2: trampoline2,
       },
     }));
     realloc0 = exports1.cabi_realloc;
@@ -116,12 +116,11 @@ export function instantiate(
         else return value;
       }
       if (!promise) {
-        promise = new Promise((
-          _resolve,
-          _reject,
-        ) => (resolve = _resolve, reject = _reject));
+        promise = new Promise(
+          (_resolve, _reject) => ((resolve = _resolve), (reject = _reject)),
+        );
       }
-      value.then((nextVal) => done ? resolve() : runNext(nextVal), reject);
+      value.then((nextVal) => (done ? resolve() : runNext(nextVal)), reject);
     } catch (e) {
       if (reject) reject(e);
       else throw e;

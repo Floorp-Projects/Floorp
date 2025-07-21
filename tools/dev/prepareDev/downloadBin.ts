@@ -47,8 +47,7 @@ export async function downloadBinArchive() {
   if (originUrl.endsWith("/")) {
     originUrl = originUrl.slice(0, -1);
   }
-  const originDownloadUrl =
-    `${originUrl}-runtime/releases/latest/download/${fileName}`;
+  const originDownloadUrl = `${originUrl}-runtime/releases/latest/download/${fileName}`;
 
   console.log(`[dev] Downloading from origin: ${originDownloadUrl}`);
   try {
@@ -60,8 +59,7 @@ export async function downloadBinArchive() {
       error instanceof Error ? error.message : String(error),
     );
 
-    const upstreamUrl =
-      `https://github.com/nyanrus/noraneko-runtime/releases/latest/download/${fileName}`;
+    const upstreamUrl = `https://github.com/nyanrus/noraneko-runtime/releases/latest/download/${fileName}`;
     console.log(`[dev] Downloading from upstream: ${upstreamUrl}`);
 
     try {

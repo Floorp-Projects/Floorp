@@ -32,12 +32,9 @@ export class WorkspacesTabManager {
     const selectedTab = window.gBrowser.selectedTab;
     if (
       selectedTab &&
-      !selectedTab.hasAttribute(
-        WORKSPACE_LAST_SHOW_ID,
-      ) &&
-      selectedTab.getAttribute(
-          WORKSPACE_TAB_ATTRIBUTION_ID,
-        ) === currentWorkspaceId
+      !selectedTab.hasAttribute(WORKSPACE_LAST_SHOW_ID) &&
+      selectedTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
+        currentWorkspaceId
     ) {
       const lastShowWorkspaceTabs = document?.querySelectorAll(
         `[${WORKSPACE_LAST_SHOW_ID}="${currentWorkspaceId}"]`,
@@ -45,16 +42,11 @@ export class WorkspacesTabManager {
 
       if (lastShowWorkspaceTabs) {
         for (const lastShowWorkspaceTab of lastShowWorkspaceTabs) {
-          lastShowWorkspaceTab.removeAttribute(
-            WORKSPACE_LAST_SHOW_ID,
-          );
+          lastShowWorkspaceTab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
         }
       }
 
-      selectedTab.setAttribute(
-        WORKSPACE_LAST_SHOW_ID,
-        currentWorkspaceId,
-      );
+      selectedTab.setAttribute(WORKSPACE_LAST_SHOW_ID, currentWorkspaceId);
     }
 
     // Check Tabs visibility
@@ -81,9 +73,7 @@ export class WorkspacesTabManager {
    * @returns The workspace id.
    */
   getWorkspaceIdFromAttribute(tab: XULElement): TWorkspaceID | null {
-    const workspaceId = tab.getAttribute(
-      WORKSPACE_TAB_ATTRIBUTION_ID,
-    );
+    const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
 
     if (workspaceId && this.dataManagerCtx.isWorkspaceID(workspaceId)) {
       return workspaceId;
@@ -98,10 +88,7 @@ export class WorkspacesTabManager {
    * @param workspaceId The workspace id.
    */
   setWorkspaceIdToAttribute(tab: XULElement, workspaceId: TWorkspaceID) {
-    tab.setAttribute(
-      WORKSPACE_TAB_ATTRIBUTION_ID,
-      workspaceId,
-    );
+    tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, workspaceId);
   }
 
   /**
@@ -129,8 +116,8 @@ export class WorkspacesTabManager {
     select = false,
     url?: string,
   ) {
-    const targetURL = url ??
-      Services.prefs.getStringPref("browser.startup.homepage");
+    const targetURL =
+      url ?? Services.prefs.getStringPref("browser.startup.homepage");
     const tab = window.gBrowser.addTab(targetURL, {
       skipAnimation: true,
       inBackground: false,
@@ -210,11 +197,7 @@ export class WorkspacesTabManager {
    */
   public isThereNoWorkspaceTabs() {
     for (const tab of window.gBrowser.tabs as XULElement[]) {
-      if (
-        !tab.hasAttribute(
-          WORKSPACE_TAB_ATTRIBUTION_ID,
-        )
-      ) {
+      if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
       }
     }

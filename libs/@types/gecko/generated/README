@@ -2,7 +2,7 @@
 
 This directory contains generated TypeScript declarations for types and components
 exposed to js on the Gecko platform. The files are generated
-from various sources in the tree using tools/ts/build_*.js scripts.
+from various sources in the tree using tools/ts/build\_\*.js scripts.
 
 If you're modifying some of the interfaces or other source files, until we
 find the best way to integrate this process, updating the typelibs is optional.
@@ -15,7 +15,7 @@ them alongside your changes. Because this step is not automated, it's likely
 it will pick up previous updates unrelated to your patch, in which case it
 might be worth splitting out into a separate commit.
 
-There are also other ``mach ts`` commands for generating the files not updated
+There are also other `mach ts` commands for generating the files not updated
 with the command above.
 
 If there's an error with the process, updating the typelibs is not a blocker

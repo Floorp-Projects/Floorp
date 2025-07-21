@@ -64,6 +64,7 @@ async function launchBuild(mode: string, buildid2: string) {
   }
 }
 
-{ //* main
+{
+  //* main
   await launchBuild(Deno.args[0], Deno.args[1]);
 }

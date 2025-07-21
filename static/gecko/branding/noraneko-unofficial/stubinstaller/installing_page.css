@@ -45,7 +45,8 @@ body.high-contrast #progress_bar {
 }
 
 /* This layout doesn't want the header or content text. */
-#header, #content {
+#header,
+#content {
   display: none;
 }
 

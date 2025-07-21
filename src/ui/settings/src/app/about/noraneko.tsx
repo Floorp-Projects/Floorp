@@ -30,14 +30,16 @@ export default function Page() {
             <div className="pt-4">
               <Button asChild>
                 <a href="about:license">
-                  <Scale />License Notice: Know your rights
+                  <Scale />
+                  License Notice: Know your rights
                 </a>
               </Button>
             </div>
             <div className="pt-2">
               <Button asChild>
                 <a href="https://github.com/nyanrus/noraneko">
-                  <SiGithub />GitHub Repository: nyanrus/noraneko
+                  <SiGithub />
+                  GitHub Repository: nyanrus/noraneko
                 </a>
               </Button>
             </div>

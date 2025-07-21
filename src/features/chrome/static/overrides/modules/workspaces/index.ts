@@ -16,8 +16,8 @@ export const overrides = [
     } = {}) => {
       const werePassedURL = !!url;
       url ??= window.BROWSER_NEW_TAB_URL;
-      const searchClipboard = window.gMiddleClickNewTabUsesPasteboard &&
-        event?.button === 1;
+      const searchClipboard =
+        window.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
 
       let relatedToCurrent = false;
       let where = "tab";
@@ -75,9 +75,8 @@ export const overrides = [
             };
             if (!werePassedURL && searchClipboard) {
               let clipboard = window.readFromClipboard();
-              clipboard = window.UrlbarUtils.stripUnsafeProtocolOnPaste(
-                clipboard,
-              ).trim();
+              clipboard =
+                window.UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;

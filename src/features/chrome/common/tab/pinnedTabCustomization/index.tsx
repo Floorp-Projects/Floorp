@@ -17,10 +17,13 @@ export class TabPinnedTabCustomization {
 
   private toggleTitleVisibility(showTitleEnabled: boolean) {
     if (showTitleEnabled) {
-      createRootHMR((dispose) => {
-        render(() => this.StyleElement(), document?.head);
-        this.dispose = dispose;
-      }, import.meta.hot);
+      createRootHMR(
+        (dispose) => {
+          render(() => this.StyleElement(), document?.head);
+          this.dispose = dispose;
+        },
+        import.meta.hot,
+      );
     } else {
       this.dispose?.();
     }

@@ -17,11 +17,8 @@ import { trackStore } from "@solid-primitives/deep";
 function getDefaultStore() {
   const result = zWorkspacesServicesStoreData.safeParse(
     JSON.parse(
-      Services.prefs.getStringPref(
-        WORKSPACE_DATA_PREF_NAME,
-        "{}",
-      ),
-      (k, v) => k == "data" ? new Map(v) : v,
+      Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
+      (k, v) => (k == "data" ? new Map(v) : v),
     ),
   );
   if (result.success) {
@@ -41,33 +38,23 @@ function createWorkspacesData(): [
   Store<TWorkspacesStoreData>,
   SetStoreFunction<TWorkspacesStoreData>,
 ] {
-  const [workspacesDataStore, setWorkspacesDataStore] = createStore(
-    getDefaultStore(),
-  );
+  const [workspacesDataStore, setWorkspacesDataStore] =
+    createStore(getDefaultStore());
 
   createEffect(() => {
     trackStore(workspacesDataStore);
     Services.prefs.setStringPref(
       WORKSPACE_DATA_PREF_NAME,
-      JSON.stringify(
-        unwrap(workspacesDataStore),
-        (k, v) => k == "data" ? [...v] : v,
+      JSON.stringify(unwrap(workspacesDataStore), (k, v) =>
+        k == "data" ? [...v] : v,
       ),
     );
   });
 
   const observer = () => {
-    console.log(Services.prefs.getStringPref(
-      WORKSPACE_DATA_PREF_NAME,
-      "{}",
-    ));
+    console.log(Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"));
     const result = zWorkspacesServicesStoreData.safeParse(
-      JSON.parse(
-        Services.prefs.getStringPref(
-          WORKSPACE_DATA_PREF_NAME,
-          "{}",
-        ),
-      ),
+      JSON.parse(Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}")),
     );
     if (result.success) {
       console.log(result.data);

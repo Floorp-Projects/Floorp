@@ -20,9 +20,7 @@ export function BackupSettings() {
         </div>
 
         <div className="p-3 bg-muted rounded-lg">
-          <p className="text-sm">
-            {t("workspaces.backupComingSoon")}
-          </p>
+          <p className="text-sm">{t("workspaces.backupComingSoon")}</p>
         </div>
       </CardContent>
     </Card>

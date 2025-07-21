@@ -72,7 +72,8 @@ export function BasicSettings() {
                 id="close-popup"
                 checked={getValues("closePopupAfterClick")}
                 onChange={(e) =>
-                  setValue("closePopupAfterClick", e.target.checked)}
+                  setValue("closePopupAfterClick", e.target.checked)
+                }
                 className="h-4 w-4"
               />
             </div>
@@ -86,7 +87,8 @@ export function BasicSettings() {
                 id="show-name"
                 checked={getValues("showWorkspaceNameOnToolbar")}
                 onChange={(e) =>
-                  setValue("showWorkspaceNameOnToolbar", e.target.checked)}
+                  setValue("showWorkspaceNameOnToolbar", e.target.checked)
+                }
                 className="h-4 w-4"
               />
             </div>

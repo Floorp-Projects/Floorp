@@ -31,22 +31,26 @@ export class FloorpPrivateContainer {
         FloorpPrivateContainer.handleTabModifications,
       );
 
-      createRootHMR(() => {
-        // add URL link a context menu to open in private container.
-        ContextMenuUtils.addContextBox(
-          "open_in_private_container",
-          "open-in_private-container",
-          "context-openlink",
-          () =>
-            FloorpPrivateContainer.openWithPrivateContainer(
-              window.gContextMenu.linkURL,
-            ),
-          "context-openlink",
-          () => {
-            this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
-          },
-        );
-      }, import.meta.hot);
+      createRootHMR(
+        () => {
+          // add URL link a context menu to open in private container.
+          ContextMenuUtils.addContextBox(
+            "open_in_private_container",
+            "open-in_private-container",
+            "context-openlink",
+            () =>
+              FloorpPrivateContainer.openWithPrivateContainer(
+                window.gContextMenu.linkURL,
+              ),
+            "context-openlink",
+            () => {
+              this.privateContainerMenuItem.hidden =
+                this.openLinkMenuItem.hidden;
+            },
+          );
+        },
+        import.meta.hot,
+      );
     });
   }
 
@@ -62,8 +66,8 @@ export class FloorpPrivateContainer {
   }
 
   private static removeDataIfPrivateContainerTabNotExist() {
-    const privateContainerUserContextID = PrivateContainer
-      .getPrivateContainerUserContextId();
+    const privateContainerUserContextID =
+      PrivateContainer.getPrivateContainerUserContextId();
     setTimeout(() => {
       if (!FloorpPrivateContainer.checkPrivateContainerTabExist()) {
         PrivateContainer.removePrivateContainerData();
@@ -92,8 +96,8 @@ export class FloorpPrivateContainer {
   }
 
   private static checkTabIsPrivateContainer(tab: { userContextId: number }) {
-    const privateContainerUserContextID = PrivateContainer
-      .getPrivateContainerUserContextId();
+    const privateContainerUserContextID =
+      PrivateContainer.getPrivateContainerUserContextId();
     return tab.userContextId === privateContainerUserContextID;
   }
 
@@ -125,8 +129,8 @@ export class FloorpPrivateContainer {
         relatedToCurrent = true;
         break;
     }
-    const privateContainerUserContextID = PrivateContainer
-      .getPrivateContainerUserContextId();
+    const privateContainerUserContextID =
+      PrivateContainer.getPrivateContainerUserContextId();
     Services.obs.notifyObservers(
       {
         wrappedJSObject: new Promise((resolve) => {
@@ -173,8 +177,8 @@ export class FloorpPrivateContainer {
         // Ensure that we have a null principal if we couldn't
         // deserialize it (for lazy tab browsers) ...
         // This won't always work however is safe to use.
-        triggeringPrincipal = Services.scriptSecurityManager
-          .createNullPrincipal({
+        triggeringPrincipal =
+          Services.scriptSecurityManager.createNullPrincipal({
             userContextId,
           });
       } else if (triggeringPrincipal.isContentPrincipal) {

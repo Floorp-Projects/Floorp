@@ -50,8 +50,8 @@ document.querySelector("#category-nora-link").addEventListener("click", () => {
       "chrome://noraneko-settings/content/index.html",
       {
         relatedToCurrent: true,
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       },
     );
   }

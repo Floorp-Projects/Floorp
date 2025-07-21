@@ -113,7 +113,8 @@ export class PanelSidebarFloating {
     const clickedElementIsWebTypeBrowser = clickedBrowser?.baseURI?.startsWith(
       `${AppConstants.BROWSER_CHROME_URL}?floorpWebPanelId`,
     );
-    const insideSidebar = sidebarBox?.contains(event.target as Node) ||
+    const insideSidebar =
+      sidebarBox?.contains(event.target as Node) ||
       clickedBrowserIsSidebarBrowser;
     const insideSelectBox = selectBox?.contains(event.target as Node);
     const insideSplitter = splitter?.contains(event.target as Node);

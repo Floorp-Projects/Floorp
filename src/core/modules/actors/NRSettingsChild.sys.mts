@@ -46,30 +46,21 @@ export class NRSettingsChild extends JSWindowActorChild {
     this.rpc = createBirpc<{}, NRSettingsParentFunctions>(
       {
         getBoolPref: (prefName: string): Promise<boolean | null> => {
-          return this.NRSPrefGet({ prefName, "prefType": "boolean" });
+          return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },
         getIntPref: (prefName: string): Promise<number | null> => {
-          return this.NRSPrefGet({ prefName, "prefType": "number" });
+          return this.NRSPrefGet({ prefName, prefType: "number" });
         },
         getStringPref: (prefName: string): Promise<string | null> => {
-          return this.NRSPrefGet({ prefName, "prefType": "string" });
+          return this.NRSPrefGet({ prefName, prefType: "string" });
         },
-        setBoolPref: (
-          prefName: string,
-          prefValue: boolean,
-        ): Promise<void> => {
+        setBoolPref: (prefName: string, prefValue: boolean): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "boolean" });
         },
-        setIntPref: (
-          prefName: string,
-          prefValue: number,
-        ): Promise<void> => {
+        setIntPref: (prefName: string, prefValue: number): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "number" });
         },
-        setStringPref: (
-          prefName: string,
-          prefValue: string,
-        ): Promise<void> => {
+        setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
         },
       },

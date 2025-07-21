@@ -140,20 +140,14 @@ const _render = (
     }
     if (elem instanceof Element) {
       elem.remove();
-    } else if (
-      Array.isArray(elem) &&
-      elem.every((e) => e instanceof Element)
-    ) {
+    } else if (Array.isArray(elem) && elem.every((e) => e instanceof Element)) {
       elem.forEach((e) => e.remove());
     }
   });
   return disposer;
 };
 
-export function createRootHMR<T>(
-  fn: RootFunction<T>,
-  hotCtx?: ViteHotContext,
-) {
+export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
   return createRoot((disposer) => {
     const ret = fn(disposer);
     if (hotCtx) {

@@ -37,12 +37,10 @@ export default function App() {
                   element={<ProgressiveWebApp />}
                 />
                 <Route path="/about/browser" element={<About />} />
-                {
-                  /*
+                {/*
                   <Route path="/accounts" element={<ProfileAndAccount />} />
                   <Route path="/search" element={<SearchResults />} />
-                 */
-                }
+                 */}
               </Routes>
             </div>
           </div>

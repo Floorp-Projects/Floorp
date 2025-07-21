@@ -18,5 +18,4 @@ export function initBeforeSessionStoreInit() {
   prefs.setBoolPref("browser.preferences.moreFromMozilla", false);
 }
 
-export function init() {
-}
+export function init() {}

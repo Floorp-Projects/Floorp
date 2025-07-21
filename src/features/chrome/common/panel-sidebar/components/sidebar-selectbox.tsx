@@ -31,14 +31,16 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
           class="panel-sidebar-panel"
           data-l10n-id="sidebar2-hide-sidebar"
           onCommand={() =>
-            Services.prefs.setBoolPref("floorp.browser.sidebar.enable", false)}
+            Services.prefs.setBoolPref("floorp.browser.sidebar.enable", false)
+          }
           id="panel-sidebar-hide-icon"
         />
         <xul:toolbarbutton
           class="panel-sidebar-panel"
           data-l10n-id="sidebar-addons-button"
           onCommand={() =>
-            window.BrowserAddonUI.openAddonsMgr("addons://list/extension")}
+            window.BrowserAddonUI.openAddonsMgr("addons://list/extension")
+          }
           id="panel-sidebar-addons-icon"
         />
         <xul:toolbarbutton
@@ -47,7 +49,8 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
           onCommand={() =>
             window.LoginHelper.openPasswordManager(window, {
               entryPoint: "mainmenu",
-            })}
+            })
+          }
           id="panel-sidebar-passwords-icon"
         />
         <xul:toolbarbutton

@@ -37,7 +37,8 @@ export class WorkspacesTabContextMenu {
                 onCommand={() =>
                   this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
                     id,
-                  )}
+                  )
+                }
               />
             );
           } else {
@@ -83,9 +84,6 @@ export class WorkspacesTabContextMenu {
     );
 
     const parentElem = document?.getElementById("WorkspacesTabContextMenu");
-    render(
-      () => this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
-      parentElem,
-    );
+    render(() => this.menuItem(excludeHasTabWorkspaceIdWorkspaces), parentElem);
   }
 }

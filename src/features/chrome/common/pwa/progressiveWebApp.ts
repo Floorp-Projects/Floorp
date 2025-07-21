@@ -115,8 +115,8 @@ export class ProgressiveWebApp {
    */
   public async isPWARegistered(url: string): Promise<boolean> {
     const [currentPWAs] = this.currentPWAs;
-    return Object.values(currentPWAs()).some((manifest) =>
-      manifest.start_url === url
+    return Object.values(currentPWAs()).some(
+      (manifest) => manifest.start_url === url,
     );
   }
 
@@ -128,8 +128,8 @@ export class ProgressiveWebApp {
   public async getPWAByUrl(url: string): Promise<Manifest | null> {
     const [currentPWAs] = this.currentPWAs;
     return (
-      Object.values(currentPWAs()).find((manifest) =>
-        manifest.start_url === url
+      Object.values(currentPWAs()).find(
+        (manifest) => manifest.start_url === url,
       ) || null
     );
   }
@@ -141,8 +141,8 @@ export class ProgressiveWebApp {
    */
   public async getSsbById(id: string): Promise<Manifest | null> {
     const [currentPWAs] = this.currentPWAs;
-    const manifest = Object.values(currentPWAs()).find((m) =>
-      m.start_url === id
+    const manifest = Object.values(currentPWAs()).find(
+      (m) => m.start_url === id,
     );
 
     if (manifest) {

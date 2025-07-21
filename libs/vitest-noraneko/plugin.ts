@@ -17,7 +17,7 @@ export default function NoranekoTestPlugin() {
   let rpcPool: BirpcReturn<PoolFunctions, MiddlewareFunctions> | null = null;
   let viteDevServer: ViteDevServer | null = null;
 
-  const middleware = new class implements MiddlewareFunctions {
+  const middleware = new (class implements MiddlewareFunctions {
     async registerNoraRunner(): Promise<RunnerUID> {
       const uid = await rpc!.registerNoraRunner();
       viteDevServer!.ws.on(`vitest-noraneko:message:${uid}`, (data, client) => {
@@ -29,7 +29,7 @@ export default function NoranekoTestPlugin() {
     forwardToRunner(uid: RunnerUID, data: any): void {
       viteDevServer!.ws.send(`vitest-noraneko:message:${uid}`, data);
     }
-  }();
+  })();
 
   return {
     name: "vitest-noraneko",
@@ -48,13 +48,16 @@ export default function NoranekoTestPlugin() {
       });
       server.ws.on("vitest-noraneko:init", (data, client) => {
         console.log("init", data);
-        rpc = createBirpc<ClientFunctions, ServerFunctions>({}, {
-          post: (data) => client.send("vitest-noraneko:message", data),
-          on: (callback) => client.on("vitest-noraneko:message", callback),
-          // these are required when using WebSocket
-          serialize: (v) => JSON.stringify(v),
-          deserialize: (v) => JSON.parse(v),
-        });
+        rpc = createBirpc<ClientFunctions, ServerFunctions>(
+          {},
+          {
+            post: (data) => client.send("vitest-noraneko:message", data),
+            on: (callback) => client.on("vitest-noraneko:message", callback),
+            // these are required when using WebSocket
+            serialize: (v) => JSON.stringify(v),
+            deserialize: (v) => JSON.parse(v),
+          },
+        );
       });
     },
   } satisfies Plugin;

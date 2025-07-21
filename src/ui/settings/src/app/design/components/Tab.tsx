@@ -57,16 +57,16 @@ export function Tab() {
 
         {!getValues("tabScroll") &&
           (getValues("tabScrollReverse") || getValues("tabScrollWrap")) && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm">
-              {t("design.tab.scrollPrefInfo", {
-                reverseScrollPrefName: t("design.tab.reverseScroll"),
-                scrollWrapPrefName: t("design.tab.scrollWrap"),
-                scrollPrefName: t("design.tab.scrollTab"),
-              })}
-            </p>
-          </div>
-        )}
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm">
+                {t("design.tab.scrollPrefInfo", {
+                  reverseScrollPrefName: t("design.tab.reverseScroll"),
+                  scrollWrapPrefName: t("design.tab.scrollWrap"),
+                  scrollPrefName: t("design.tab.scrollTab"),
+                })}
+              </p>
+            </div>
+          )}
 
         <div>
           <h3 className="text-base font-medium mb-2">
@@ -88,7 +88,8 @@ export function Tab() {
                   value={value}
                   checked={getValues("tabOpenPosition") === value}
                   onChange={(e) =>
-                    setValue("tabOpenPosition", Number(e.target.value))}
+                    setValue("tabOpenPosition", Number(e.target.value))
+                  }
                 />
                 <span>{t(label)}</span>
               </label>
@@ -123,15 +124,16 @@ export function Tab() {
             type="number"
             value={getValues("tabMinWidth") || ""}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setValue("tabMinWidth", Number(e.target.value))}
+              setValue("tabMinWidth", Number(e.target.value))
+            }
             className="w-full"
           />
-          {(getValues("tabMinWidth") < 60 || getValues("tabMinWidth") > 300) &&
-            (
-              <p className="text-destructive text-sm mt-1">
-                {t("design.tab.minWidthError", { min: 60, max: 300 })}
-              </p>
-            )}
+          {(getValues("tabMinWidth") < 60 ||
+            getValues("tabMinWidth") > 300) && (
+            <p className="text-destructive text-sm mt-1">
+              {t("design.tab.minWidthError", { min: 60, max: 300 })}
+            </p>
+          )}
         </div>
 
         <div>
@@ -143,7 +145,8 @@ export function Tab() {
             type="number"
             value={getValues("tabMinHeight") || ""}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setValue("tabMinHeight", Number(e.target.value))}
+              setValue("tabMinHeight", Number(e.target.value))
+            }
             className="w-full"
           />
           {(getValues("tabMinHeight") < 20 ||

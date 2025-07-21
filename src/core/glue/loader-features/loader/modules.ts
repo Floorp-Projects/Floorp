@@ -10,10 +10,7 @@ export const MODULES = {
   const MODULES_COMMON = getFeaturesCommonEntries();
 
   Object.entries(MODULES_COMMON).map((v) => {
-    MODULES
-      .common[
-        v[0]
-      ] = v[1] as () => Promise<unknown>;
+    MODULES.common[v[0]] = v[1] as () => Promise<unknown>;
   });
 }
 

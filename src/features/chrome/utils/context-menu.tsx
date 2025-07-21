@@ -59,9 +59,7 @@ export namespace ContextMenuUtils {
     }
   }
 
-  export function addToolbarContentMenuPopupSet(
-    JSXElem: () => JSXElement,
-  ) {
+  export function addToolbarContentMenuPopupSet(JSXElem: () => JSXElement) {
     render(JSXElem, document?.body, {
       marker: windowModalDialogElem() ?? undefined,
     });

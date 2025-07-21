@@ -48,16 +48,16 @@ const directServicesFunctions: NRSettingsParentFunctions = {
 
 export const rpc = isLocalhost5183
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
-    {},
-    {
-      post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
-      on: (callback) => {
-        (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
-          callback,
-        );
+      {},
+      {
+        post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
+        on: (callback) => {
+          (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
+            callback,
+          );
+        },
+        serialize: (v) => JSON.stringify(v),
+        deserialize: (v) => JSON.parse(v),
       },
-      serialize: (v) => JSON.stringify(v),
-      deserialize: (v) => JSON.parse(v),
-    },
-  )
+    )
   : directServicesFunctions;

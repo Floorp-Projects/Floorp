@@ -43,41 +43,43 @@ export function CustomShortcutKeyPage() {
               </div>
               <For each={Object.entries(commands)}>
                 {([key, value]) =>
-                  value.type === category
-                    ? (
-                      <div style={{ "display": "flex", "padding-top": "5px" }}>
-                        <label
-                          style={{ "flex-grow": "1" }}
-                          data-l10n-id={"floorp-custom-actions-" +
-                            key.replace("floorp-", "").replace("gecko-", "")}
-                        >
-                          {key}
-                        </label>
-                        <input
-                          value={currentFocus() === key &&
-                              editingStatus() !== null
+                  value.type === category ? (
+                    <div style={{ display: "flex", "padding-top": "5px" }}>
+                      <label
+                        style={{ "flex-grow": "1" }}
+                        data-l10n-id={
+                          "floorp-custom-actions-" +
+                          key.replace("floorp-", "").replace("gecko-", "")
+                        }
+                      >
+                        {key}
+                      </label>
+                      <input
+                        value={
+                          currentFocus() === key && editingStatus() !== null
                             ? editingStatus()!
-                            : cskDatumToString(cskData(), key)}
-                          onFocus={(ev) => {
-                            setCurrentFocus(key);
-                          }}
-                          onBlur={(ev) => {
-                            setEditingStatus(null);
-                            if (currentFocus() === key) {
-                              setCurrentFocus(null);
-                            }
-                          }}
-                          readonly={true}
-                          placeholder="Type a shortcut"
-                          style={{
-                            "border-radius": "5px",
-                            border: "1px solid gray",
-                            padding: "6px 10px",
-                          }}
-                        />
-                      </div>
-                    )
-                    : undefined}
+                            : cskDatumToString(cskData(), key)
+                        }
+                        onFocus={(ev) => {
+                          setCurrentFocus(key);
+                        }}
+                        onBlur={(ev) => {
+                          setEditingStatus(null);
+                          if (currentFocus() === key) {
+                            setCurrentFocus(null);
+                          }
+                        }}
+                        readonly={true}
+                        placeholder="Type a shortcut"
+                        style={{
+                          "border-radius": "5px",
+                          border: "1px solid gray",
+                          padding: "6px 10px",
+                        }}
+                      />
+                    </div>
+                  ) : undefined
+                }
               </For>
             </>
           )}

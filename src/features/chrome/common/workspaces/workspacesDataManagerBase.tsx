@@ -43,9 +43,7 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(id: TWorkspaceID): void {
-    this.setCurrentWorkspaceID(
-      workspacesDataStore.defaultID as TWorkspaceID,
-    );
+    this.setCurrentWorkspaceID(workspacesDataStore.defaultID as TWorkspaceID);
 
     setWorkspacesDataStore("data", (prev) => {
       prev.delete(id);

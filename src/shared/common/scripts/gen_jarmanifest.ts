@@ -22,11 +22,9 @@ export async function generateJarManifest(
   }
   console.log("generate end jar.mn");
 
-  return `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes\n ${
-    Array.from(
-      new Set(arr),
-    )
-      .map((v) => `nora-${options.prefix}/${v} (${v})`)
-      .join("\n ")
-  }`;
+  return `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes\n ${Array.from(
+    new Set(arr),
+  )
+    .map((v) => `nora-${options.prefix}/${v} (${v})`)
+    .join("\n ")}`;
 }

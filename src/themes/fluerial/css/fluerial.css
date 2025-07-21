@@ -142,8 +142,7 @@
     border: 0 !important;
     transition:
       opacity var(--tab-transition-duration) var(--ease-basic),
-      background-color 0s var(--tab-transition-duration) var(--ease-basic)
-      !important;
+      background-color 0s var(--tab-transition-duration) var(--ease-basic) !important;
     opacity: var(--tab-opacity) !important;
     visibility: visible !important;
     box-shadow: none !important;
@@ -158,8 +157,7 @@
       height: 8px !important;
       bottom: 0 !important;
       pointer-events: none !important;
-      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic)
-        !important;
+      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic) !important;
       clip-path: inset(0) !important;
     }
 

@@ -62,8 +62,7 @@ browser[type="content"] > html {
 }
 
 :root[privatebrowsingmode] #fxa-avatar-image {
-  list-style-image: url("chrome://branding/content/about-logo-private.png")
-    !important;
+  list-style-image: url("chrome://branding/content/about-logo-private.png") !important;
   scale: 1.2;
 }
 
@@ -154,8 +153,10 @@ browser[type="content"] > html {
 
 @media (min-resolution: 1.1dppx) {
   toolbar[brighttext] .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x-light, inherit)
-      !important;
+    list-style-image: var(
+      --webextension-toolbar-image-2x-light,
+      inherit
+    ) !important;
   }
 }
 

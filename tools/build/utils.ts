@@ -157,8 +157,8 @@ export async function initializeDistDirectory(): Promise<void> {
  */
 export async function runChildBuild(isDev: boolean): Promise<void> {
   const { readBuildid2 } = await import("./tasks/update/buildid2.ts");
-  const buildid2 = await readBuildid2(resolveFromRoot("_dist")) ||
-    "default-build-id";
+  const buildid2 =
+    (await readBuildid2(resolveFromRoot("_dist"))) || "default-build-id";
   const mode = isDev ? "dev" : "prod";
   const childBuildPath = resolveFromRoot("tools/dev/launchDev/child-build.ts");
 
@@ -188,8 +188,8 @@ export async function runChildBuild(isDev: boolean): Promise<void> {
  */
 export async function runChildDev(): Promise<void> {
   const { readBuildid2 } = await import("./tasks/update/buildid2.ts");
-  const buildid2 = await readBuildid2(resolveFromRoot("_dist")) ||
-    "default-build-id";
+  const buildid2 =
+    (await readBuildid2(resolveFromRoot("_dist"))) || "default-build-id";
   const childDevPath = resolveFromRoot("tools/dev/launchDev/child-dev.ts");
 
   const command = new Deno.Command(Deno.execPath(), {

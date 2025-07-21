@@ -56,7 +56,7 @@ class ModuleLib implements TModuleLib {
   async _rejectOtherLoadStates() {
     for (const [_, pms] of _mapPromiseModuleState) {
       const t = {};
-      if (t === await Promise.race([pms[0], t])) {
+      if (t === (await Promise.race([pms[0], t]))) {
         pms[2](new Error("Module Not Found"));
       }
     }
@@ -65,16 +65,11 @@ class ModuleLib implements TModuleLib {
   private rejected = false;
 }
 
-export function onModuleLoaded(
-  module: string,
-): Promise<void> {
+export function onModuleLoaded(module: string): Promise<void> {
   return ModuleLib.getInstance().onModuleLoaded(module);
 }
 
-export function _registerModuleLoadState(
-  module: string,
-  isLoaded: boolean,
-) {
+export function _registerModuleLoadState(module: string, isLoaded: boolean) {
   return ModuleLib.getInstance()._registerModuleLoadState(module, isLoaded);
 }
 

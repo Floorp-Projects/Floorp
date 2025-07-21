@@ -13,8 +13,7 @@ export class DataManager {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
   }
 
-  constructor() {
-  }
+  constructor() {}
 
   public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
     const fileExists = await IOUtils.exists(this.ssbStoreFile);

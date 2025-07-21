@@ -31,9 +31,8 @@ export class SsbPageAction {
       () => this.onCheckPageHasManifest(),
       "nora-pwa-check-page-has-manifest",
     );
-    window.gBrowser.tabContainer.addEventListener(
-      "TabSelect",
-      () => this.onCheckPageHasManifest(),
+    window.gBrowser.tabContainer.addEventListener("TabSelect", () =>
+      this.onCheckPageHasManifest(),
     );
 
     this.onCheckPageHasManifest();
@@ -42,13 +41,12 @@ export class SsbPageAction {
   private async onCheckPageHasManifest() {
     const browser = window.gBrowser.selectedBrowser;
 
-    const canBeInstallAsPwa = await this.pwaService
-      .checkBrowserCanBeInstallAsPwa(browser);
+    const canBeInstallAsPwa =
+      await this.pwaService.checkBrowserCanBeInstallAsPwa(browser);
     this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
-    const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
-      browser,
-    );
+    const isInstalled =
+      await this.pwaService.checkCurrentPageIsInstalled(browser);
     this.isInstalled[1](isInstalled);
     this.pwaService.updateUIElements(isInstalled);
   }
@@ -164,9 +162,9 @@ export class SsbPageAction {
                   class="panel-button ssb-install-buttons footer-button primary"
                   hidden={isInstalling()}
                   onClick={this.onCommand}
-                  label={isInstalled()
-                    ? "アプリケーションを開く"
-                    : "インストール"}
+                  label={
+                    isInstalled() ? "アプリケーションを開く" : "インストール"
+                  }
                 />
                 <xul:button
                   id="ssb-app-cancel-button"

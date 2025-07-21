@@ -133,7 +133,7 @@ async function decompressBinMacOS() {
               Deno.copyFile(
                 pathe.join(srcItem, resItem.name),
                 pathe.join(binDir, resItem.name),
-              )
+              ),
             ),
           );
         } else {

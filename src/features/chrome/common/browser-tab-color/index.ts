@@ -32,15 +32,13 @@ export default class BrowserTabColor extends NoraComponentBase {
       "TabSelect",
       this.changeTabColor,
     );
-    onCleanup(
-      () => {
-        window.gBrowser.removeTabsProgressListener(listener);
-        window.gBrowser.tabContainer.removeEventListener(
-          "TabSelect",
-          this.changeTabColor,
-        );
-      },
-    );
+    onCleanup(() => {
+      window.gBrowser.removeTabsProgressListener(listener);
+      window.gBrowser.tabContainer.removeEventListener(
+        "TabSelect",
+        this.changeTabColor,
+      );
+    });
     manager.init();
   }
 

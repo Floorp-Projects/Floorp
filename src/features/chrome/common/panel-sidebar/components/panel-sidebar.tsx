@@ -59,13 +59,13 @@ export class CPanelSidebar {
   public getBrowserElement(id: string) {
     return document?.getElementById(`sidebar-panel-${id}`) as
       | (XULElement & {
-        contentWindow: Window;
-        goBack: () => void;
-        goForward: () => void;
-        goIndex: () => void;
-        reload: () => void;
-        toggleMute: () => void;
-      })
+          contentWindow: Window;
+          goBack: () => void;
+          goForward: () => void;
+          goIndex: () => void;
+          reload: () => void;
+          toggleMute: () => void;
+        })
       | undefined;
   }
 
@@ -183,8 +183,8 @@ export class CPanelSidebar {
         prev.map((panel) =>
           panel.id === selectedPanelId()
             ? { ...panel, width: Number(currentWidth) }
-            : panel
-        )
+            : panel,
+        ),
       );
     }
   }

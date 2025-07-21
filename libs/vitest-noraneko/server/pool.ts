@@ -110,11 +110,7 @@ class NoranekoTestPool implements ProcessPool, PoolFunctions {
         //   [],
         // );
         ctx.state.updateTasks(
-          getTasks(testFile).map((task) => [
-            task.id,
-            task.result,
-            task.meta,
-          ]),
+          getTasks(testFile).map((task) => [task.id, task.result, task.meta]),
         );
         console.log("end");
       }
@@ -125,8 +121,7 @@ class NoranekoTestPool implements ProcessPool, PoolFunctions {
       console.log(file.moduleId);
     }
   }
-  async close(): Promise<void> {
-  }
+  async close(): Promise<void> {}
 }
 
 export default () => new NoranekoTestPool();

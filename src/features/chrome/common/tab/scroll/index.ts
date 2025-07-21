@@ -19,10 +19,7 @@ export class TabScroll {
   ) => {
     if (Services.prefs.getBoolPref("toolkit.tabbox.switchByScrolling")) {
       if (event.deltaY > 0 !== config().tab.tabScroll.reverse) {
-        tabBrowserTabs?.advanceSelectedTab(
-          1,
-          config().tab.tabScroll.reverse,
-        );
+        tabBrowserTabs?.advanceSelectedTab(1, config().tab.tabScroll.reverse);
       } else {
         tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabScroll.wrap);
       }

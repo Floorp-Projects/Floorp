@@ -12,9 +12,7 @@
   },
   "js/ts.implicitProjectConfig.experimentalDecorators": true,
   "git.scanRepositories": ["./"],
-  "git.ignoredRepositories": [
-    "../_dist/*"
-  ],
+  "git.ignoredRepositories": ["../_dist/*"],
   "deno.enable": true,
   "deno.lint": true,
   "deno.unstable": ["sloppy-imports"],

@@ -54,7 +54,10 @@ export class PanelSidebarAddModal {
   private FormErrorText({
     targetId,
     text,
-  }: { targetId: string; text: string }) {
+  }: {
+    targetId: string;
+    text: string;
+  }) {
     return (
       <text class="modal-error" id={`${targetId}-error`} data-hidden>
         {text}
@@ -80,7 +83,8 @@ export class PanelSidebarAddModal {
             id="type"
             class="form-control"
             onChange={(e) =>
-              setType((e.target as HTMLSelectElement).value as Panel["type"])}
+              setType((e.target as HTMLSelectElement).value as Panel["type"])
+            }
           >
             <option value="web">ウェブページ</option>
             <option value="static">ツールサイドバー</option>

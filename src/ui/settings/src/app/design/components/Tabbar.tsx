@@ -78,8 +78,7 @@ export function Tabbar() {
                   name="position"
                   value={value}
                   checked={getValues("position") === value}
-                  onChange={(e) =>
-                    setValue("position", e.target.value)}
+                  onChange={(e) => setValue("position", e.target.value)}
                 />
                 <span>{t(label)}</span>
               </label>

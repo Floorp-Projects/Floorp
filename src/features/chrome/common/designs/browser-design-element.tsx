@@ -50,22 +50,12 @@ export function BrowserDesignElement() {
         <Match when={import.meta.env.PROD}>
           <For each={getCSS().styles}>
             {(style) => (
-              <link
-                class="nora-designs"
-                rel="stylesheet"
-                href={`${style}`}
-              />
+              <link class="nora-designs" rel="stylesheet" href={`${style}`} />
             )}
           </For>
         </Match>
         <Match when={import.meta.env.DEV}>
-          <For each={devStyle()}>
-            {(style) => (
-              <style>
-                {style}
-              </style>
-            )}
-          </For>
+          <For each={devStyle()}>{(style) => <style>{style}</style>}</For>
         </Match>
       </Switch>
       <style>{styleBrowser}</style>

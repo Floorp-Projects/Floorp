@@ -127,7 +127,7 @@ async function setupNoranekoNewTab(): Promise<void> {
     "resource:///modules/AboutNewTab.sys.mjs",
   );
 
-  if (await isNewTabFileAvailable() === false) {
+  if ((await isNewTabFileAvailable()) === false) {
     // Fallback for dev build about:newtab if file doesn't exist
     AboutNewTab.newTabURL = "http://localhost:5186/";
   }
@@ -144,7 +144,7 @@ async function isNewTabFileAvailable(): Promise<boolean> {
 }
 
 async function checkNewtabUserPreference(): Promise<boolean> {
-  if (await isNewTabFileAvailable() === false) {
+  if ((await isNewTabFileAvailable()) === false) {
     return false;
   }
 
@@ -169,8 +169,8 @@ async function checkNewtabUserPreference(): Promise<boolean> {
 
 const getCustomAboutPages = async (): Promise<Record<string, string>> => {
   const customAboutPages: Record<string, string> = {
-    "hub": "chrome://noraneko-settings/content/index.html",
-    "welcome": "chrome://noraneko-welcome/content/index.html",
+    hub: "chrome://noraneko-settings/content/index.html",
+    welcome: "chrome://noraneko-welcome/content/index.html",
   };
 
   if (await checkNewtabUserPreference()) {
@@ -202,8 +202,9 @@ class CustomAboutPage {
   }
 
   getURIFlags(_uri: nsIURI): number {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT! |
-      Ci.nsIAboutModule.IS_SECURE_CHROME_UI!;
+    return (
+      Ci.nsIAboutModule.ALLOW_SCRIPT! | Ci.nsIAboutModule.IS_SECURE_CHROME_UI!
+    );
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {

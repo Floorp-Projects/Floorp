@@ -10,9 +10,7 @@ const zMeta = z.object({
   noraneko_buildid: z.string(),
 });
 
-const meta = zMeta.parse(JSON.parse(
-  await Deno.readTextFile(Deno.args[0]),
-));
+const meta = zMeta.parse(JSON.parse(await Deno.readTextFile(Deno.args[0])));
 
 const patchUrl =
   "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-amd64-full.mar";

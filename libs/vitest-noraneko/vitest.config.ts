@@ -8,6 +8,6 @@ export default defineConfig({
     typecheck: {
       enabled: true,
     },
-    "teardownTimeout": undefined,
+    teardownTimeout: undefined,
   },
 });

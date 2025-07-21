@@ -11,12 +11,12 @@
     "jsr:@std/path@^1.0.8": "1.1.0",
     "jsr:@std/path@^1.1.0": "1.1.0",
     "jsr:@std/streams@^1.0.9": "1.0.9",
-    "npm:@biomejs/biome@2.0.0-beta.6": "2.0.0-beta.6",
     "npm:@bytecodealliance/componentize-js@~0.18.2": "0.18.2",
     "npm:@bytecodealliance/jco@^1.10.2": "1.11.2",
     "npm:@bytecodealliance/preview2-shim@~0.17.2": "0.17.2",
     "npm:@deno/vite-plugin@^1.0.4": "1.0.4_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
     "npm:@jsr/std__fs@^1.0.17": "1.0.18",
+    "npm:@prettier/plugin-oxc@^0.0.4": "0.0.4",
     "npm:@swc/core@^1.11.31": "1.11.31",
     "npm:@tailwindcss/vite@^4.1.8": "4.1.8_vite@6.3.5__@types+node@22.15.30__lightningcss@1.30.1__picomatch@4.0.2_@types+node@22.15.30_lightningcss@1.30.1",
     "npm:@types/chroma-js@^3.1.1": "3.1.1",
@@ -39,6 +39,8 @@
     "npm:oxlint@0.17": "0.17.0",
     "npm:pathe@^2.0.2": "2.0.3",
     "npm:pathe@^2.0.3": "2.0.3",
+    "npm:prettier@*": "3.6.2",
+    "npm:prettier@^3.6.2": "3.6.2",
     "npm:puppeteer-core@^24.10.0": "24.10.0_devtools-protocol@0.0.1452169",
     "npm:rolldown-vite@latest": "6.3.18_@types+node@22.15.30_picomatch@4.0.2",
     "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5": "1.0.0-beta.9-commit.d91dfb5",
@@ -238,20 +240,6 @@
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier"
       ]
-    },
-    "@biomejs/biome@2.0.0-beta.6": {
-      "integrity": "sha512-14vw9b5QJxrcP7WLkCeRiB/fft9wNZwx6yEiikBDxFbN7IAp39Xtvt/gJPq4ifhZ5IS25CnQEAkLLwfBIDMjsA==",
-      "optionalDependencies": [
-        "@biomejs/cli-darwin-arm64",
-        "@biomejs/cli-darwin-x64",
-        "@biomejs/cli-linux-arm64",
-        "@biomejs/cli-linux-arm64-musl",
-        "@biomejs/cli-linux-x64",
-        "@biomejs/cli-linux-x64-musl",
-        "@biomejs/cli-win32-arm64",
-        "@biomejs/cli-win32-x64"
-      ],
-      "bin": true
     },
     "@biomejs/cli-darwin-arm64@2.0.0-beta.6": {
       "integrity": "sha512-L7PBLJlGTz5anougOMJQvEbzgG9sT1wKIXvgjFhu0dIsDZ/px2caWFCnv7Q9L2K0+yF08EYRTTZVvoVO5D//sQ==",
@@ -676,7 +664,7 @@
     "@napi-rs/lzma-wasm32-wasi@1.4.3": {
       "integrity": "sha512-+rMamB0xaeDyVt4OP4cV888cnmso+m78iUebNhGcrL/WXIziwql50KQrmj7PBdBCza/W7XEcraZT8pO8gSDGcg==",
       "dependencies": [
-        "@napi-rs/wasm-runtime"
+        "@napi-rs/wasm-runtime@0.2.10"
       ],
       "cpu": ["wasm32"]
     },
@@ -722,7 +710,15 @@
       "dependencies": [
         "@emnapi/core",
         "@emnapi/runtime",
-        "@tybys/wasm-util"
+        "@tybys/wasm-util@0.9.0"
+      ]
+    },
+    "@napi-rs/wasm-runtime@0.2.12": {
+      "integrity": "sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==",
+      "dependencies": [
+        "@emnapi/core",
+        "@emnapi/runtime",
+        "@tybys/wasm-util@0.10.0"
       ]
     },
     "@nodelib/fs.scandir@2.1.5": {
@@ -742,6 +738,83 @@
         "fastq"
       ]
     },
+    "@oxc-parser/binding-android-arm64@0.74.0": {
+      "integrity": "sha512-lgq8TJq22eyfojfa2jBFy2m66ckAo7iNRYDdyn9reXYA3I6Wx7tgGWVx1JAp1lO+aUiqdqP/uPlDaETL9tqRcg==",
+      "os": ["android"],
+      "cpu": ["arm64"]
+    },
+    "@oxc-parser/binding-darwin-arm64@0.74.0": {
+      "integrity": "sha512-xbY/io/hkARggbpYEMFX6CwFzb7f4iS6WuBoBeZtdqRWfIEi7sm/uYWXfyVeB8uqOATvJ07WRFC2upI8PSI83g==",
+      "os": ["darwin"],
+      "cpu": ["arm64"]
+    },
+    "@oxc-parser/binding-darwin-x64@0.74.0": {
+      "integrity": "sha512-FIj2gAGtFaW0Zk+TnGyenMUoRu1ju+kJ/h71D77xc1owOItbFZFGa+4WSVck1H8rTtceeJlK+kux+vCjGFCl9Q==",
+      "os": ["darwin"],
+      "cpu": ["x64"]
+    },
+    "@oxc-parser/binding-freebsd-x64@0.74.0": {
+      "integrity": "sha512-W1I+g5TJg0TRRMHgEWNWsTIfe782V3QuaPgZxnfPNmDMywYdtlzllzclBgaDq6qzvZCCQc/UhvNb37KWTCTj8A==",
+      "os": ["freebsd"],
+      "cpu": ["x64"]
+    },
+    "@oxc-parser/binding-linux-arm-gnueabihf@0.74.0": {
+      "integrity": "sha512-gxqkyRGApeVI8dgvJ19SYe59XASW3uVxF1YUgkE7peW/XIg5QRAOVTFKyTjI9acYuK1MF6OJHqx30cmxmZLtiQ==",
+      "os": ["linux"],
+      "cpu": ["arm"]
+    },
+    "@oxc-parser/binding-linux-arm-musleabihf@0.74.0": {
+      "integrity": "sha512-jpnAUP4Fa93VdPPDzxxBguJmldj/Gpz7wTXKFzpAueqBMfZsy9KNC+0qT2uZ9HGUDMzNuKw0Se3bPCpL/gfD2Q==",
+      "os": ["linux"],
+      "cpu": ["arm"]
+    },
+    "@oxc-parser/binding-linux-arm64-gnu@0.74.0": {
+      "integrity": "sha512-fcWyM7BNfCkHqIf3kll8fJctbR/PseL4RnS2isD9Y3FFBhp4efGAzhDaxIUK5GK7kIcFh1P+puIRig8WJ6IMVQ==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@oxc-parser/binding-linux-arm64-musl@0.74.0": {
+      "integrity": "sha512-AMY30z/C77HgiRRJX7YtVUaelKq1ex0aaj28XoJu4SCezdS8i0IftUNTtGS1UzGjGZB8zQz5SFwVy4dRu4GLwg==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@oxc-parser/binding-linux-riscv64-gnu@0.74.0": {
+      "integrity": "sha512-/RZAP24TgZo4vV/01TBlzRqs0R7E6xvatww4LnmZEBBulQBU/SkypDywfriFqWuFoa61WFXPV7sLcTjJGjim/w==",
+      "os": ["linux"],
+      "cpu": ["riscv64"]
+    },
+    "@oxc-parser/binding-linux-s390x-gnu@0.74.0": {
+      "integrity": "sha512-620J1beNAlGSPBD+Msb3ptvrwxu04B8iULCH03zlf0JSLy/5sqlD6qBs0XUVkUJv1vbakUw1gfVnUQqv0UTuEg==",
+      "os": ["linux"],
+      "cpu": ["s390x"]
+    },
+    "@oxc-parser/binding-linux-x64-gnu@0.74.0": {
+      "integrity": "sha512-WBFgQmGtFnPNzHyLKbC1wkYGaRIBxXGofO0+hz1xrrkPgbxbJS1Ukva1EB8sPaVBBQ52Bdc2GjLSp721NWRvww==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@oxc-parser/binding-linux-x64-musl@0.74.0": {
+      "integrity": "sha512-y4mapxi0RGqlp3t6Sm+knJlAEqdKDYrEue2LlXOka/F2i4sRN0XhEMPiSOB3ppHmvK4I2zY2XBYTsX1Fel0fAg==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@oxc-parser/binding-wasm32-wasi@0.74.0": {
+      "integrity": "sha512-yDS9bRDh5ymobiS2xBmjlrGdUuU61IZoJBaJC5fELdYT5LJNBXlbr3Yc6m2PWfRJwkH6Aq5fRvxAZ4wCbkGa8w==",
+      "dependencies": [
+        "@napi-rs/wasm-runtime@0.2.12"
+      ],
+      "cpu": ["wasm32"]
+    },
+    "@oxc-parser/binding-win32-arm64-msvc@0.74.0": {
+      "integrity": "sha512-XFWY52Rfb4N5wEbMCTSBMxRkDLGbAI9CBSL24BIDywwDJMl31gHEVlmHdCDRoXAmanCI6gwbXYTrWe0HvXJ7Aw==",
+      "os": ["win32"],
+      "cpu": ["arm64"]
+    },
+    "@oxc-parser/binding-win32-x64-msvc@0.74.0": {
+      "integrity": "sha512-1D3x6iU2apLyfTQHygbdaNbX3nZaHu4yaXpD7ilYpoLo7f0MX0tUuoDrqJyJrVGqvyXgc0uz4yXz9tH9ZZhvvg==",
+      "os": ["win32"],
+      "cpu": ["x64"]
+    },
     "@oxc-project/runtime@0.71.0": {
       "integrity": "sha512-QwoF5WUXIGFQ+hSxWEib4U/aeLoiDN9JlP18MnBgx9LLPRDfn1iICtcow7Jgey6HLH4XFceWXQD5WBJ39dyJcw=="
     },
@@ -753,6 +826,9 @@
     },
     "@oxc-project/types@0.72.2": {
       "integrity": "sha512-il5RF8AP85XC0CMjHF4cnVT9nT/v/ocm6qlZQpSiAR9qBbQMGkFKloBZwm7PcnOdiUX97yHgsKM7uDCCWCu3tg=="
+    },
+    "@oxc-project/types@0.74.0": {
+      "integrity": "sha512-KOw/RZrVlHGhCXh1RufBFF7Nuo7HdY5w1lRJukM/igIl6x9qtz8QycDvZdzb4qnHO7znrPyo2sJrFJK2eKHgfQ=="
     },
     "@oxlint/darwin-arm64@0.17.0": {
       "integrity": "sha512-py/N0yTMbdy5Kd1RFMMgFqzO5Qwc5MbHSCA0BvSx/GnC3n7yPstcEFSSdZzb+HaANI00xn4dwjYo6HVEFHhuWA==",
@@ -796,6 +872,12 @@
     },
     "@pkgjs/parseargs@0.11.0": {
       "integrity": "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="
+    },
+    "@prettier/plugin-oxc@0.0.4": {
+      "integrity": "sha512-UGXe+g/rSRbglL0FOJiar+a+nUrst7KaFmsg05wYbKiInGWP6eAj/f8A2Uobgo5KxEtb2X10zeflNH6RK2xeIQ==",
+      "dependencies": [
+        "oxc-parser"
+      ]
     },
     "@puppeteer/browsers@2.10.5": {
       "integrity": "sha512-eifa0o+i8dERnngJwKrfp3dEq7ia5XFyoqB17S4gK8GhsQE4/P8nxOfQSE0zQHxzzLo/cmF+7+ywEQ7wK7Fb+w==",
@@ -939,21 +1021,21 @@
     "@rolldown/binding-wasm32-wasi@1.0.0-beta.11-commit.0a985f3": {
       "integrity": "sha512-gT++TSMmZM4nW6b/rM0r/qJ+7NSXONP8E/ok/j2CW/cR9f8wyU4tNzVmbZwVJf3kVUzKezYBO9JNdSq7IkF2Bw==",
       "dependencies": [
-        "@napi-rs/wasm-runtime"
+        "@napi-rs/wasm-runtime@0.2.10"
       ],
       "cpu": ["wasm32"]
     },
     "@rolldown/binding-wasm32-wasi@1.0.0-beta.11-commit.f051675": {
       "integrity": "sha512-nBQVizPoUQiViANhWrOyihXNf2booP2iq3S396bI1tmHftdgUXWKa6yAoleJBgP0oF0idXpTPU82ciaROUcjpg==",
       "dependencies": [
-        "@napi-rs/wasm-runtime"
+        "@napi-rs/wasm-runtime@0.2.10"
       ],
       "cpu": ["wasm32"]
     },
     "@rolldown/binding-wasm32-wasi@1.0.0-beta.9-commit.d91dfb5": {
       "integrity": "sha512-8Cx+ucbd8n2dIr21FqBh6rUvTVL0uTgEtKR7l+MUZ5BgY4dFh1e4mPVX8oqmoYwOxBiXrsD2JIOCz4AyKLKxWA==",
       "dependencies": [
-        "@napi-rs/wasm-runtime"
+        "@napi-rs/wasm-runtime@0.2.10"
       ],
       "cpu": ["wasm32"]
     },
@@ -1264,8 +1346,8 @@
         "@emnapi/core",
         "@emnapi/runtime",
         "@emnapi/wasi-threads",
-        "@napi-rs/wasm-runtime",
-        "@tybys/wasm-util",
+        "@napi-rs/wasm-runtime@0.2.10",
+        "@tybys/wasm-util@0.9.0",
         "tslib"
       ],
       "cpu": ["wasm32"]
@@ -1313,6 +1395,12 @@
     },
     "@tootallnate/quickjs-emscripten@0.23.0": {
       "integrity": "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="
+    },
+    "@tybys/wasm-util@0.10.0": {
+      "integrity": "sha512-VyyPYFlOMNylG45GoAe0xDoLwWuowvf92F9kySqzYh8vmYm7D2u4iUJKa1tOUpS70Ku13ASrOkS4ScXFsTaCNQ==",
+      "dependencies": [
+        "tslib"
+      ]
     },
     "@tybys/wasm-util@0.9.0": {
       "integrity": "sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==",
@@ -2553,6 +2641,29 @@
         "strip-ansi@7.1.0"
       ]
     },
+    "oxc-parser@0.74.0": {
+      "integrity": "sha512-2tDN/ttU8WE6oFh8EzKNam7KE7ZXSG5uXmvX85iNzxdJfMssDWcj3gpYzZi1E04XuE7m3v1dVWl/8BE886vPGw==",
+      "dependencies": [
+        "@oxc-project/types@0.74.0"
+      ],
+      "optionalDependencies": [
+        "@oxc-parser/binding-android-arm64",
+        "@oxc-parser/binding-darwin-arm64",
+        "@oxc-parser/binding-darwin-x64",
+        "@oxc-parser/binding-freebsd-x64",
+        "@oxc-parser/binding-linux-arm-gnueabihf",
+        "@oxc-parser/binding-linux-arm-musleabihf",
+        "@oxc-parser/binding-linux-arm64-gnu",
+        "@oxc-parser/binding-linux-arm64-musl",
+        "@oxc-parser/binding-linux-riscv64-gnu",
+        "@oxc-parser/binding-linux-s390x-gnu",
+        "@oxc-parser/binding-linux-x64-gnu",
+        "@oxc-parser/binding-linux-x64-musl",
+        "@oxc-parser/binding-wasm32-wasi",
+        "@oxc-parser/binding-win32-arm64-msvc",
+        "@oxc-parser/binding-win32-x64-msvc"
+      ]
+    },
     "oxlint@0.17.0": {
       "integrity": "sha512-LCXomDhPGbDUZ/T+ScFA0tjh7A5QgYwPRCw7XFlJxRD2URBV8wj2lLvepbQ9yS/Q6SGhVfHQMpziQytajl8NcQ==",
       "optionalDependencies": [
@@ -2667,6 +2778,10 @@
         "picocolors",
         "source-map-js"
       ]
+    },
+    "prettier@3.6.2": {
+      "integrity": "sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==",
+      "bin": true
     },
     "pretty-ms@8.0.0": {
       "integrity": "sha512-ASJqOugUF1bbzI35STMBUpZqdfYKlJugy6JBziGi2EE+AL5JPJGSzvpeVXojxrr0ViUYoToUjb5kjSEGf7Y83Q==",
@@ -3518,9 +3633,9 @@
     ],
     "packageJson": {
       "dependencies": [
-        "npm:@biomejs/biome@2.0.0-beta.6",
         "npm:@bytecodealliance/preview2-shim@~0.17.2",
         "npm:@deno/vite-plugin@^1.0.4",
+        "npm:@prettier/plugin-oxc@^0.0.4",
         "npm:@swc/core@^1.11.31",
         "npm:@tailwindcss/vite@^4.1.8",
         "npm:@types/node@^22.15.30",
@@ -3533,6 +3648,7 @@
         "npm:linkedom@0.18.11",
         "npm:oxlint@0.17",
         "npm:pathe@^2.0.3",
+        "npm:prettier@^3.6.2",
         "npm:puppeteer-core@^24.10.0",
         "npm:rolldown-vite@latest",
         "npm:typescript@^5.8.3",

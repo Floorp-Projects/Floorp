@@ -101,29 +101,32 @@ export namespace gFlexOrder {
   }
 
   function renderOrderStyle() {
-    render(() => (
-      <style jsx>
-        {`
-      #${fxSidebarId} {
-        order: ${orders().fxSidebar} !important;
-      }
-      #${floorpSidebarId} {
-        order: ${orders().floorpSidebar} !important;
-      }
-      #${floorpSidebarSelectBoxId} {
-        order: ${orders().floorpSidebarSelectBox} !important;
-      }
-      #${floorpSidebarSplitterId} {
-        order: ${orders().floorpSidebarSplitter} !important;
-      }
-      #${fxSidebarSplitterId} {
-        order: ${orders().fxSidebarSplitter} !important;
-      }
-      #${browserBoxId} {
-        order: ${orders().browserBox} !important;
-      }
-    `}
-      </style>
-    ), document?.head);
+    render(
+      () => (
+        <style jsx>
+          {`
+            #${fxSidebarId} {
+              order: ${orders().fxSidebar} !important;
+            }
+            #${floorpSidebarId} {
+              order: ${orders().floorpSidebar} !important;
+            }
+            #${floorpSidebarSelectBoxId} {
+              order: ${orders().floorpSidebarSelectBox} !important;
+            }
+            #${floorpSidebarSplitterId} {
+              order: ${orders().floorpSidebarSplitter} !important;
+            }
+            #${fxSidebarSplitterId} {
+              order: ${orders().fxSidebarSplitter} !important;
+            }
+            #${browserBoxId} {
+              order: ${orders().browserBox} !important;
+            }
+          `}
+        </style>
+      ),
+      document?.head,
+    );
   }
 }

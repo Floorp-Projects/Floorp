@@ -46,10 +46,12 @@ export namespace PanelNavigator {
   }
 
   export function goIndexPage(sideBarId: string) {
-    addonEnabled ? gWebsitePanel.goIndexPagePanel(sideBarId) : goHome(
-      getGPanelSidebar()!.getBrowserElement(sideBarId) as XULElement,
-      sideBarId,
-    );
+    addonEnabled
+      ? gWebsitePanel.goIndexPagePanel(sideBarId)
+      : goHome(
+          getGPanelSidebar()!.getBrowserElement(sideBarId) as XULElement,
+          sideBarId,
+        );
   }
 
   /* Mute/Unmute */

@@ -31,9 +31,7 @@ export async function savePanelSidebarSettings(
   ]);
 }
 
-export async function getPanelSidebarSettings(): Promise<
-  PanelSidebarFormData | null
-> {
+export async function getPanelSidebarSettings(): Promise<PanelSidebarFormData | null> {
   const [enabled, configResult] = await Promise.all([
     rpc.getBoolPref("floorp.panelSidebar.enabled"),
     rpc.getStringPref("floorp.panelSidebar.config"),

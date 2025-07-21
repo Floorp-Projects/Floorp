@@ -192,7 +192,8 @@ export async function runBrowser(port = 5180) {
   }
 }
 
-{ //* main
+{
+  //* main
   const decoder = new TextDecoder();
   (async () => {
     for await (const chunk of Deno.stdin.readable) {

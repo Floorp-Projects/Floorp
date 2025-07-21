@@ -19,31 +19,34 @@ export class SsbPanelView {
     SsbPanelView.pwaService = pwaService;
     if (!this.panelUIButton) return;
 
-    createRootHMR(() => {
-      const [, setIsOpen] = this.isOpen;
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (
-            mutation.type === "attributes" &&
-            mutation.attributeName === "open"
-          ) {
-            const isOpened =
-              this.panelUIButton?.getAttribute("open") === "true";
-            setIsOpen(isOpened);
+    createRootHMR(
+      () => {
+        const [, setIsOpen] = this.isOpen;
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (
+              mutation.type === "attributes" &&
+              mutation.attributeName === "open"
+            ) {
+              const isOpened =
+                this.panelUIButton?.getAttribute("open") === "true";
+              setIsOpen(isOpened);
 
-            if (isOpened && !this.isRendered) {
-              this.renderPanel();
+              if (isOpened && !this.isRendered) {
+                this.renderPanel();
+              }
             }
-          }
+          });
         });
-      });
 
-      observer.observe(this.panelUIButton!, {
-        attributes: true,
-      });
+        observer.observe(this.panelUIButton!, {
+          attributes: true,
+        });
 
-      onCleanup(() => observer.disconnect());
-    }, import.meta.hot);
+        onCleanup(() => observer.disconnect());
+      },
+      import.meta.hot,
+    );
   }
 
   private get parentElement(): HTMLElement | null {
@@ -136,7 +139,8 @@ export class SsbPanelView {
               data-l10n-id="appmenuitem-install-current-page"
               label="Install Current Page as Progressive Web App"
               onCommand={() =>
-                SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
+                SsbPanelView.handleInstallOrRunCurrentPageAsSsb()
+              }
             />
             <xul:toolbarseparator />
             <h2

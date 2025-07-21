@@ -32,9 +32,7 @@ export default function Page() {
         <h1 className="text-3xl font-bold">
           {t("home.welcome", { name: accountName })}
         </h1>
-        <p className="text-left text-sm mt-2">
-          {t("home.description")}
-        </p>
+        <p className="text-left text-sm mt-2">{t("home.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pl-6">
@@ -43,15 +41,15 @@ export default function Page() {
             <CardTitle>{t("home.setup.title")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm mb-2">
-              {t("home.setup.setupDescription")}
-            </p>
+            <p className="text-sm mb-2">{t("home.setup.setupDescription")}</p>
             <p className="font-bold text-sm mb-1">
               {t("home.setup.setupProgressTitle")}: 50%
             </p>
             <div className="w-full h-1 bg-blue-200 rounded">
-              <div className="bg-blue-500 h-1 rounded" style={{ width: "25%" }}>
-              </div>
+              <div
+                className="bg-blue-500 h-1 rounded"
+                style={{ width: "25%" }}
+              ></div>
             </div>
             <p className="text-xs mt-1">
               {t("home.setup.step", { step: 2, total: 4 })}
@@ -91,9 +89,7 @@ export default function Page() {
             <CardTitle>{t("home.ablazeAccount.title")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">
-              {t("home.ablazeAccount.description")}
-            </p>
+            <p className="text-sm">{t("home.ablazeAccount.description")}</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -109,9 +105,7 @@ export default function Page() {
             <CardTitle>{t("home.manageExtensions.title")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">
-              {t("home.manageExtensions.description")}
-            </p>
+            <p className="text-sm">{t("home.manageExtensions.description")}</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -127,9 +121,7 @@ export default function Page() {
             <CardTitle>{t("home.browserSupport.title")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">
-              {t("home.browserSupport.description")}
-            </p>
+            <p className="text-sm">{t("home.browserSupport.description")}</p>
           </CardContent>
           <CardFooter>
             <Button asChild>

@@ -37,29 +37,31 @@ export const paths: Paths = {
 /**
  * Platform-specific binary paths
  */
-export const binDir = platform !== "darwin"
-  ? join(paths.binRoot, branding.baseName)
-  : join(
-    paths.binRoot,
-    branding.baseName,
-    `${branding.displayName}.app`,
-    "Contents",
-    "Resources",
-  );
+export const binDir =
+  platform !== "darwin"
+    ? join(paths.binRoot, branding.baseName)
+    : join(
+        paths.binRoot,
+        branding.baseName,
+        `${branding.displayName}.app`,
+        "Contents",
+        "Resources",
+      );
 
 export const binRootDir = paths.binRoot;
 export const binPath = join(binDir, branding.baseName);
 
-export const binPathExe = platform !== "darwin"
-  ? binPath + (platform === "windows" ? ".exe" : "")
-  : join(
-    paths.binRoot,
-    branding.baseName,
-    `${branding.displayName}.app`,
-    "Contents",
-    "MacOS",
-    branding.baseName,
-  );
+export const binPathExe =
+  platform !== "darwin"
+    ? binPath + (platform === "windows" ? ".exe" : "")
+    : join(
+        paths.binRoot,
+        branding.baseName,
+        `${branding.displayName}.app`,
+        "Contents",
+        "MacOS",
+        branding.baseName,
+      );
 
 export const binVersion = join(binDir, "nora.version.txt");
 

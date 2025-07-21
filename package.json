@@ -8,8 +8,8 @@
   "author": "",
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "2.0.0-beta.6",
     "@bytecodealliance/preview2-shim": "^0.17.2",
+    "@prettier/plugin-oxc": "^0.0.4",
     "@types/node": "^22.15.30",
     "@vitejs/plugin-react-swc": "^3.7.2",
     "chalk": "^5.4.1",
@@ -19,6 +19,7 @@
     "linkedom": "0.18.11",
     "oxlint": "^0.17.0",
     "pathe": "^2.0.3",
+    "prettier": "^3.6.2",
     "puppeteer-core": "^24.10.0",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",

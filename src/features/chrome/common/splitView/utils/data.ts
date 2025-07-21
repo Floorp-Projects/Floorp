@@ -10,21 +10,17 @@ import { createRootHMR } from "@nora/solid-xul";
 /** SplitView data */
 export const [splitViewData, setSplitViewData] = createRootHMR<
   [Accessor<TSplitViewData>, Setter<TSplitViewData>]
->(() =>
-  createSignal<TSplitViewData>(
-    [],
-  ), import.meta.hot);
+>(() => createSignal<TSplitViewData>([]), import.meta.hot);
 
 /* Current split view */
 export const [currentSplitView, setCurrentSplitView] = createSignal<number>(-1);
 
 /* Sync data */
-export const [fixedSplitViewData, setFixedSplitViewData] = createSignal<
-  TFixedSplitViewDataGroup
->({
-  fixedTabId: null,
-  options: {
-    reverse: false,
-    method: "row",
-  },
-});
+export const [fixedSplitViewData, setFixedSplitViewData] =
+  createSignal<TFixedSplitViewDataGroup>({
+    fixedTabId: null,
+    options: {
+      reverse: false,
+      method: "row",
+    },
+  });

@@ -8,7 +8,7 @@
 2. extract binary
 
 3. symlink source files to build /modules and /chrome do not have build script
-   itself. /chrome/* should be symlinked to loader-features. /modules should be
+   itself. /chrome/\* should be symlinked to loader-features. /modules should be
    symlinked to loader-modules
 
 4. build the source do build with startup, loader-features, loader-modules
@@ -18,8 +18,8 @@
 5. create manifest the manifest is a file that makes Firefox to know there is
    source.
 
-6. symlink built files symlink _dist folders in startup, loader-features,
-   loader-modules to /_dist/noraneko symlink /_dist/noraneko to
-   /_dist/bin/noraneko/noraneko-dev
+6. symlink built files symlink \_dist folders in startup, loader-features,
+   loader-modules to /\_dist/noraneko symlink /\_dist/noraneko to
+   /\_dist/bin/noraneko/noraneko-dev
 
 7. run the browser if in development

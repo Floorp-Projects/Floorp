@@ -54,8 +54,8 @@ export class WorkspacesPopupContxtMenu {
     const isBeforeSiblingDefaultWorkspace =
       beforeSiblingElem === defaultWorkspaceId;
     const isAfterSiblingExist = afterSiblingElem != null;
-    this.needDisableBefore = isDefaultWorkspace ||
-      isBeforeSiblingDefaultWorkspace;
+    this.needDisableBefore =
+      isDefaultWorkspace || isBeforeSiblingDefaultWorkspace;
     this.needDisableAfter = isDefaultWorkspace || !isAfterSiblingExist;
   }
 

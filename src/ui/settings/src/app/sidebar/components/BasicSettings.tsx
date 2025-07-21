@@ -107,7 +107,8 @@ export function BasicSettings() {
                 type="number"
                 value={watchAll.globalWidth || ""}
                 onChange={(e) =>
-                  setValue("globalWidth", Number(e.target.value))}
+                  setValue("globalWidth", Number(e.target.value))
+                }
                 className="w-full"
               />
               <p className="text-sm text-muted-foreground">
@@ -116,9 +117,7 @@ export function BasicSettings() {
             </div>
 
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm">
-                {t("panelSidebar.iconProviderRemoved")}
-              </p>
+              <p className="text-sm">{t("panelSidebar.iconProviderRemoved")}</p>
             </div>
           </div>
         </div>

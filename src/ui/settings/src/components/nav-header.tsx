@@ -14,9 +14,7 @@ export function NavHeader() {
             <Settings className="size-4" />
           </div>
           <div className="text-sm">
-            <span className="truncate font-semibold">
-              Noraneko Settings
-            </span>
+            <span className="truncate font-semibold">Noraneko Settings</span>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>

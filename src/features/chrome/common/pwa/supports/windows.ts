@@ -8,10 +8,9 @@ import { ImageTools } from "../imageTools";
 import type { Manifest } from "../type";
 
 export class WindowsSupport {
-  private static shellService = Cc["@mozilla.org/browser/shell-service;1"]
-    .getService(
-      Ci.nsIWindowsShellService,
-    );
+  private static shellService = Cc[
+    "@mozilla.org/browser/shell-service;1"
+  ].getService(Ci.nsIWindowsShellService);
 
   private static uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
     Ci.nsIWindowsUIUtils,

@@ -13,7 +13,7 @@ i18n
   .init({
     fallbackLng: "en",
     debug: false,
-    "defaultNS": "translations",
+    defaultNS: "translations",
     detection: {
       order: ["navigator", "querystring", "cookie", "localStorage", "htmlTag"],
       caches: [],

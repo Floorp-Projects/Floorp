@@ -122,7 +122,13 @@ export const AppConstants: Readonly<{
   MOZ_BUILD_APP: "browser";
   MOZ_MACBUNDLE_ID: "org.mozilla.firefox";
   MOZ_MACBUNDLE_NAME: "Firefox.app";
-  MOZ_UPDATE_CHANNEL: "nightly" | "beta" | "release" | "esr" | "default" | "unofficial";
+  MOZ_UPDATE_CHANNEL:
+    | "nightly"
+    | "beta"
+    | "release"
+    | "esr"
+    | "default"
+    | "unofficial";
   MOZ_WIDGET_TOOLKIT: "android" | "cocoa" | "gtk" | "windows" | "uikit";
 
   DEBUG_JS_MODULES: string;

@@ -113,11 +113,11 @@ export default defineConfig({
     }),
     swc.vite({
       exclude: ["*solid-xul*", "*solid-js*"],
-      "jsc": {
+      jsc: {
         target: "esnext",
-        "parser": {
-          "syntax": "typescript",
-          "decorators": true,
+        parser: {
+          syntax: "typescript",
+          decorators: true,
         },
         transform: {
           decoratorMetadata: true,
@@ -151,7 +151,7 @@ export default defineConfig({
     {
       name: "noraneko_component_hmr_support",
       enforce: "pre",
-      "apply": "serve",
+      apply: "serve",
       transform(code, id, options) {
         if (
           code.includes("\n@noraComponent") &&
@@ -207,14 +207,14 @@ export default defineConfig({
         find: "../../../../../shared",
         replacement: r("../../../../src/shared"),
       },
-      { "find": "#apps", "replacement": r("../../../../apps") },
+      { find: "#apps", replacement: r("../../../../apps") },
       {
-        "find": "#i18n-features-chrome",
-        "replacement": r("./link-i18n-features-chrome"),
+        find: "#i18n-features-chrome",
+        replacement: r("./link-i18n-features-chrome"),
       },
       {
-        "find": "#features-chrome",
-        "replacement": r("./link-features-chrome"),
+        find: "#features-chrome",
+        replacement: r("./link-features-chrome"),
       },
     ],
   },

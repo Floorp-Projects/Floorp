@@ -15,14 +15,12 @@ export default async function initScripts() {
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   initI18N();
   console.debug(
-    `[noraneko-buildid2]\nuuid: ${import.meta.env.__BUILDID2__}\ndate: ${
-      new Date(
-        Number.parseInt(
-          import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""),
-          16,
-        ),
-      ).toISOString()
-    }`,
+    `[noraneko-buildid2]\nuuid: ${import.meta.env.__BUILDID2__}\ndate: ${new Date(
+      Number.parseInt(
+        import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""),
+        16,
+      ),
+    ).toISOString()}`,
   );
 
   setPrefFeatures(MODULES_KEYS);
@@ -89,14 +87,12 @@ async function loadEnabledModules(enabled_features: typeof MODULES_KEYS) {
 }
 
 async function initializeModules(
-  modules: Array<
-    {
-      init?: typeof Function;
-      initBeforeSessionStoreInit?: typeof Function;
-      name: string;
-      default?: typeof Function;
-    }
-  >,
+  modules: Array<{
+    init?: typeof Function;
+    initBeforeSessionStoreInit?: typeof Function;
+    name: string;
+    default?: typeof Function;
+  }>,
 ) {
   for (const module of modules) {
     try {

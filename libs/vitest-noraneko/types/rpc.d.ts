@@ -6,8 +6,7 @@ export interface ClientFunctions {
   registerNoraRunner(): RunnerUID;
 }
 
-export interface ServerFunctions {
-}
+export interface ServerFunctions {}
 
 export interface MiddlewareFunctions {
   registerNoraRunner(): Promise<RunnerUID>;

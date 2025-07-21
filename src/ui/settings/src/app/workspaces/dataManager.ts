@@ -22,16 +22,11 @@ export async function saveWorkspaceSettings(
       "floorp.workspaces.v4.config",
       JSON.stringify(newConfigs),
     ),
-    rpc.setBoolPref(
-      "floorp.workspaces.enabled",
-      Boolean(settings.enabled),
-    ),
+    rpc.setBoolPref("floorp.workspaces.enabled", Boolean(settings.enabled)),
   ]);
 }
 
-export async function getWorkspaceSettings(): Promise<
-  WorkspacesFormData | null
-> {
+export async function getWorkspaceSettings(): Promise<WorkspacesFormData | null> {
   const [enabled, configs] = await Promise.all([
     getWorkspacesEnabled(),
     getWorkspacesConfigsExcludeEnabled(),
@@ -51,9 +46,10 @@ async function getWorkspacesEnabled(): Promise<boolean | null> {
   return await rpc.getBoolPref("floorp.workspaces.enabled");
 }
 
-async function getWorkspacesConfigsExcludeEnabled(): Promise<
-  Omit<WorkspacesFormData, "enabled"> | null
-> {
+async function getWorkspacesConfigsExcludeEnabled(): Promise<Omit<
+  WorkspacesFormData,
+  "enabled"
+> | null> {
   const result = await rpc.getStringPref("floorp.workspaces.v4.config");
   if (!result) {
     return {

@@ -33,8 +33,8 @@ export class PwaWindowSupport {
   }
 
   private setupSignals(): void {
-    const ssbIdAttr = document?.documentElement?.getAttribute("FloorpSSBId") ??
-      null;
+    const ssbIdAttr =
+      document?.documentElement?.getAttribute("FloorpSSBId") ?? null;
     const [, setSsbId] = this.ssbId;
     setSsbId(ssbIdAttr);
   }
@@ -54,9 +54,12 @@ export class PwaWindowSupport {
   }
 
   private renderStyles(): void {
-    createRootHMR(() => {
-      render(() => this.createStyleElement(), document?.head);
-    }, import.meta.hot);
+    createRootHMR(
+      () => {
+        render(() => this.createStyleElement(), document?.head);
+      },
+      import.meta.hot,
+    );
   }
 
   private createStyleElement() {

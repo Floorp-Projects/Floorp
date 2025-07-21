@@ -869,9 +869,7 @@
       "resource:///modules/CustomizableWidgets.sys.mjs": [
         "browser/components/customizableui/CustomizableWidgets.sys.mjs"
       ],
-      "resource:///modules/Dedupe.sys.mjs": [
-        "browser/modules/Dedupe.sys.mjs"
-      ],
+      "resource:///modules/Dedupe.sys.mjs": ["browser/modules/Dedupe.sys.mjs"],
       "resource:///modules/DevToolsStartup.sys.mjs": [
         "devtools/startup/DevToolsStartup.sys.mjs"
       ],
@@ -1169,9 +1167,7 @@
       "resource:///modules/WindowsPreviewPerTab.sys.mjs": [
         "browser/modules/WindowsPreviewPerTab.sys.mjs"
       ],
-      "resource:///modules/ZoomUI.sys.mjs": [
-        "browser/modules/ZoomUI.sys.mjs"
-      ],
+      "resource:///modules/ZoomUI.sys.mjs": ["browser/modules/ZoomUI.sys.mjs"],
       "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs": [
         "browser/components/aboutwelcome/modules/AWScreenUtils.sys.mjs"
       ],
@@ -2924,9 +2920,7 @@
       "resource://devtools/client/memory/utils.js": [
         "devtools/client/memory/utils.js"
       ],
-      "resource://devtools/client/menus.js": [
-        "devtools/client/menus.js"
-      ],
+      "resource://devtools/client/menus.js": ["devtools/client/menus.js"],
       "resource://devtools/client/netmonitor/panel.js": [
         "devtools/client/netmonitor/panel.js"
       ],
@@ -4838,9 +4832,7 @@
       "resource://devtools/shared/css/parsing-utils.js": [
         "devtools/shared/css/parsing-utils.js"
       ],
-      "resource://devtools/shared/debounce.js": [
-        "devtools/shared/debounce.js"
-      ],
+      "resource://devtools/shared/debounce.js": ["devtools/shared/debounce.js"],
       "resource://devtools/shared/discovery/discovery.js": [
         "devtools/shared/discovery/discovery.js"
       ],
@@ -4856,12 +4848,8 @@
       "resource://devtools/shared/event-emitter.js": [
         "devtools/shared/event-emitter.js"
       ],
-      "resource://devtools/shared/extend.js": [
-        "devtools/shared/extend.js"
-      ],
-      "resource://devtools/shared/flags.js": [
-        "devtools/shared/flags.js"
-      ],
+      "resource://devtools/shared/extend.js": ["devtools/shared/extend.js"],
+      "resource://devtools/shared/flags.js": ["devtools/shared/flags.js"],
       "resource://devtools/shared/generate-uuid.js": [
         "devtools/shared/generate-uuid.js"
       ],
@@ -4904,9 +4892,7 @@
       "resource://devtools/shared/jsbeautify/src/beautify-js.js": [
         "devtools/shared/jsbeautify/src/beautify-js.js"
       ],
-      "resource://devtools/shared/l10n.js": [
-        "devtools/shared/l10n.js"
-      ],
+      "resource://devtools/shared/l10n.js": ["devtools/shared/l10n.js"],
       "resource://devtools/shared/layout/dom-matrix-2d.js": [
         "devtools/shared/layout/dom-matrix-2d.js"
       ],
@@ -4994,9 +4980,7 @@
       "resource://devtools/shared/plural-form.js": [
         "devtools/shared/plural-form.js"
       ],
-      "resource://devtools/shared/protocol.js": [
-        "devtools/shared/protocol.js"
-      ],
+      "resource://devtools/shared/protocol.js": ["devtools/shared/protocol.js"],
       "resource://devtools/shared/protocol/Actor.js": [
         "devtools/shared/protocol/Actor.js"
       ],
@@ -5243,12 +5227,8 @@
       "resource://devtools/shared/storage/vendor/stringvalidator/validator.js": [
         "devtools/shared/storage/vendor/stringvalidator/validator.js"
       ],
-      "resource://devtools/shared/string.js": [
-        "devtools/shared/string.js"
-      ],
-      "resource://devtools/shared/system.js": [
-        "devtools/shared/system.js"
-      ],
+      "resource://devtools/shared/string.js": ["devtools/shared/string.js"],
+      "resource://devtools/shared/system.js": ["devtools/shared/system.js"],
       "resource://devtools/shared/test-helpers/allocation-tracker.js": [
         "devtools/shared/test-helpers/allocation-tracker.js"
       ],
@@ -5264,9 +5244,7 @@
       "resource://devtools/shared/test-helpers/tracked-objects.sys.mjs": [
         "devtools/shared/test-helpers/tracked-objects.sys.mjs"
       ],
-      "resource://devtools/shared/throttle.js": [
-        "devtools/shared/throttle.js"
-      ],
+      "resource://devtools/shared/throttle.js": ["devtools/shared/throttle.js"],
       "resource://devtools/shared/transport/local-transport.js": [
         "devtools/shared/transport/local-transport.js"
       ],
@@ -5426,9 +5404,7 @@
       "resource://gre/modules/ClipboardContextMenu.sys.mjs": [
         "toolkit/modules/ClipboardContextMenu.sys.mjs"
       ],
-      "resource://gre/modules/Color.sys.mjs": [
-        "toolkit/modules/Color.sys.mjs"
-      ],
+      "resource://gre/modules/Color.sys.mjs": ["toolkit/modules/Color.sys.mjs"],
       "resource://gre/modules/ColorwayThemeMigration.sys.mjs": [
         "toolkit/mozapps/extensions/ColorwayThemeMigration.sys.mjs"
       ],
@@ -5879,9 +5855,7 @@
       "resource://gre/modules/LocationHelper.sys.mjs": [
         "dom/base/LocationHelper.sys.mjs"
       ],
-      "resource://gre/modules/Log.sys.mjs": [
-        "toolkit/modules/Log.sys.mjs"
-      ],
+      "resource://gre/modules/Log.sys.mjs": ["toolkit/modules/Log.sys.mjs"],
       "resource://gre/modules/LogManager.sys.mjs": [
         "toolkit/modules/LogManager.sys.mjs"
       ],
@@ -5954,9 +5928,7 @@
       "resource://gre/modules/Messaging.sys.mjs": [
         "mobile/shared/modules/geckoview/Messaging.sys.mjs"
       ],
-      "resource://gre/modules/NLP.sys.mjs": [
-        "toolkit/modules/NLP.sys.mjs"
-      ],
+      "resource://gre/modules/NLP.sys.mjs": ["toolkit/modules/NLP.sys.mjs"],
       "resource://gre/modules/NativeManifests.sys.mjs": [
         "toolkit/components/extensions/NativeManifests.sys.mjs"
       ],
@@ -6074,9 +6046,7 @@
       "resource://gre/modules/PushCrypto.sys.mjs": [
         "dom/push/PushCrypto.sys.mjs"
       ],
-      "resource://gre/modules/PushDB.sys.mjs": [
-        "dom/push/PushDB.sys.mjs"
-      ],
+      "resource://gre/modules/PushDB.sys.mjs": ["dom/push/PushDB.sys.mjs"],
       "resource://gre/modules/PushRecord.sys.mjs": [
         "dom/push/PushRecord.sys.mjs"
       ],
@@ -6203,9 +6173,7 @@
       "resource://gre/modules/TelemetryUtils.sys.mjs": [
         "toolkit/components/telemetry/app/TelemetryUtils.sys.mjs"
       ],
-      "resource://gre/modules/Timer.sys.mjs": [
-        "toolkit/modules/Timer.sys.mjs"
-      ],
+      "resource://gre/modules/Timer.sys.mjs": ["toolkit/modules/Timer.sys.mjs"],
       "resource://gre/modules/Troubleshoot.sys.mjs": [
         "toolkit/modules/Troubleshoot.sys.mjs"
       ],
@@ -6527,9 +6495,7 @@
       "resource://gre/modules/translations/LanguageDetector.sys.mjs": [
         "toolkit/components/translations/LanguageDetector.sys.mjs"
       ],
-      "resource://gre/modules/vtt.sys.mjs": [
-        "dom/media/webvtt/vtt.sys.mjs"
-      ],
+      "resource://gre/modules/vtt.sys.mjs": ["dom/media/webvtt/vtt.sys.mjs"],
       "resource://gre/modules/workers/PromiseWorker.js": [
         "tools/@types/subs/PromiseWorker.d.ts"
       ],
@@ -7529,9 +7495,7 @@
       "resource://services-sync/util.sys.mjs": [
         "services/sync/modules/util.sys.mjs"
       ],
-      "resource://test/es6module.js": [
-        "js/xpconnect/tests/unit/es6module.js"
-      ],
+      "resource://test/es6module.js": ["js/xpconnect/tests/unit/es6module.js"],
       "resource://testing-common/AppInfo.sys.mjs": [
         "testing/modules/AppInfo.sys.mjs"
       ],
@@ -7553,9 +7517,7 @@
       "resource://testing-common/services/sync/utils.sys.mjs": [
         "services/sync/modules-testing/utils.sys.mjs"
       ],
-      "moz-src:///*": [
-        "./*"
-      ]
+      "moz-src:///*": ["./*"]
     }
   }
 }

@@ -99,51 +99,49 @@ export function InstalledApps() {
         </CardHeader>
         <CardContent>
           {error && <p className="text-destructive mb-4">{error}</p>}
-          {Object.keys(installedApps).length === 0
-            ? (
-              <p className="text-muted-foreground">
-                {t("progressiveWebApp.noInstalledApps")}
-              </p>
-            )
-            : (
-              <div className="space-y-4">
-                {(Object.values(installedApps) as InstalledApp[]).map((app) => (
-                  <div
-                    key={app.id}
-                    className="flex items-center p-3 border rounded-lg"
-                  >
-                    <img
-                      src={app.icon}
-                      alt={app.name}
-                      className="w-8 h-8 rounded mr-3"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{app.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {app.start_url}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRename(app)}
-                      >
-                        {t("progressiveWebApp.renameApp")}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUninstall(app)}
-                        className="text-destructive"
-                      >
-                        {t("progressiveWebApp.uninstallApp")}
-                      </Button>
-                    </div>
+          {Object.keys(installedApps).length === 0 ? (
+            <p className="text-muted-foreground">
+              {t("progressiveWebApp.noInstalledApps")}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {(Object.values(installedApps) as InstalledApp[]).map((app) => (
+                <div
+                  key={app.id}
+                  className="flex items-center p-3 border rounded-lg"
+                >
+                  <img
+                    src={app.icon}
+                    alt={app.name}
+                    className="w-8 h-8 rounded mr-3"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{app.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {app.start_url}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRename(app)}
+                    >
+                      {t("progressiveWebApp.renameApp")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleUninstall(app)}
+                      className="text-destructive"
+                    >
+                      {t("progressiveWebApp.uninstallApp")}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -167,7 +165,8 @@ export function InstalledApps() {
           <Input
             value={newName}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setNewName(e.target.value)}
+              setNewName(e.target.value)
+            }
             className="mb-4"
           />
           <div className="flex justify-end gap-2">
@@ -213,10 +212,7 @@ export function InstalledApps() {
             >
               {t("progressiveWebApp.cancel")}
             </Button>
-            <Button
-              onClick={executeUninstall}
-              variant="destructive"
-            >
+            <Button onClick={executeUninstall} variant="destructive">
               {t("progressiveWebApp.uninstall")}
             </Button>
           </div>

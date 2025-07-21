@@ -15,9 +15,10 @@ import type { Panel } from "../utils/type";
 import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
 
-export function PanelSidebarButton(
-  props: { panel: Panel; ctx: CPanelSidebar },
-) {
+export function PanelSidebarButton(props: {
+  panel: Panel;
+  ctx: CPanelSidebar;
+}) {
   const gPanelSidebar = props.ctx;
 
   const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
@@ -94,9 +95,11 @@ export function PanelSidebarButton(
         </Suspense>
       </div>
       <Show
-        when={props.panel.userContextId !== 0 &&
+        when={
+          props.panel.userContextId !== 0 &&
           props.panel.userContextId !== null &&
-          props.panel.type === "web"}
+          props.panel.type === "web"
+        }
       >
         <xul:box
           class="panel-sidebar-user-context-border"

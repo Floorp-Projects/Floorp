@@ -11,8 +11,8 @@ export function Header() {
   const location = useLocation();
   const rawPath = location.pathname.replace(/^\//, "");
   const segments = rawPath ? rawPath.split("/") : [];
-  const capitalizedSegments = segments.map((seg) =>
-    seg.charAt(0).toUpperCase() + seg.slice(1)
+  const capitalizedSegments = segments.map(
+    (seg) => seg.charAt(0).toUpperCase() + seg.slice(1),
   );
 
   return (
@@ -21,23 +21,19 @@ export function Header() {
         <SidebarTrigger />
         <Breadcrumb>
           <BreadcrumbList>
-            {segments.length === 0
-              ? (
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              )
-              : null}
+            {segments.length === 0 ? (
+              <BreadcrumbItem>
+                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+              </BreadcrumbItem>
+            ) : null}
             {capitalizedSegments.map((name, index) => (
               <div key={index} className="flex items-center gap-1.5">
                 <BreadcrumbItem>
-                  {index === capitalizedSegments.length - 1
-                    ? <BreadcrumbPage>{name}</BreadcrumbPage>
-                    : (
-                      <BreadcrumbPage>
-                        {name}
-                      </BreadcrumbPage>
-                    )}
+                  {index === capitalizedSegments.length - 1 ? (
+                    <BreadcrumbPage>{name}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbPage>{name}</BreadcrumbPage>
+                  )}
                 </BreadcrumbItem>
                 {index < capitalizedSegments.length - 1 && (
                   <BreadcrumbSeparator />
@@ -50,7 +46,8 @@ export function Header() {
       <select
         value={i18n.language}
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-          i18n.changeLanguage(e.currentTarget.value)}
+          i18n.changeLanguage(e.currentTarget.value)
+        }
         className="p-2 ml-auto mr-4 rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-100"
       >
         <option value="en">English</option>

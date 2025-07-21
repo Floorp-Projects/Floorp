@@ -90,30 +90,30 @@ noraneko/
 
 ### Source Code (`src/`)
 
-| Directory | Purpose | Stability | Examples |
-|-----------|---------|-----------|----------|
-| `core/glue/` | Browser integration | 🟢 Stable | Loader systems, startup |
-| `core/modules/` | System modules | 🟢 Stable | .sys.mts files |
-| `features/chrome/` | Browser features | 🟡 Active | Custom features |
-| `ui/` | User interfaces | 🟡 Active | Settings, about pages |
-| `themes/` | Visual themes | 🟡 Active | Fluerial, Lepton |
-| `shared/` | Common utilities | 🟢 Stable | Types, constants |
+| Directory          | Purpose             | Stability | Examples                |
+| ------------------ | ------------------- | --------- | ----------------------- |
+| `core/glue/`       | Browser integration | 🟢 Stable | Loader systems, startup |
+| `core/modules/`    | System modules      | 🟢 Stable | .sys.mts files          |
+| `features/chrome/` | Browser features    | 🟡 Active | Custom features         |
+| `ui/`              | User interfaces     | 🟡 Active | Settings, about pages   |
+| `themes/`          | Visual themes       | 🟡 Active | Fluerial, Lepton        |
+| `shared/`          | Common utilities    | 🟢 Stable | Types, constants        |
 
 ### Tools (`tools/`)
 
-| Directory | Purpose | Usage |
-|-----------|---------|-------|
-| `build/` | Build orchestration | Production builds |
-| `dev/` | Development utilities | Development workflow |
+| Directory | Purpose               | Usage                |
+| --------- | --------------------- | -------------------- |
+| `build/`  | Build orchestration   | Production builds    |
+| `dev/`    | Development utilities | Development workflow |
 
 ### Libraries (`libs/`)
 
-| Directory | Purpose | Technology |
-|-----------|---------|------------|
-| `@types/` | Type definitions | TypeScript |
-| `crates/` | Rust libraries | Rust |
-| `shared/` | Shared libraries | TypeScript |
-| `solid-xul/` | UI framework | Solid.js |
+| Directory    | Purpose          | Technology |
+| ------------ | ---------------- | ---------- |
+| `@types/`    | Type definitions | TypeScript |
+| `crates/`    | Rust libraries   | Rust       |
+| `shared/`    | Shared libraries | TypeScript |
+| `solid-xul/` | UI framework     | Solid.js   |
 
 ## 🎯 Development Workflow
 

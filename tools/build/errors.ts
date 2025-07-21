@@ -179,13 +179,7 @@ export class PlatformError extends BuildError {
     code: string = "PLATFORM_ERROR",
     phase?: BuildPhase,
   ) {
-    super(
-      message,
-      code,
-      phase,
-      suggestion ? [suggestion] : [],
-      context,
-    );
+    super(message, code, phase, suggestion ? [suggestion] : [], context);
     this.platform = context.platform;
     this.architecture = context.architecture;
   }

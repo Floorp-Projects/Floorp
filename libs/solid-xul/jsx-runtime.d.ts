@@ -124,7 +124,8 @@ export namespace JSX {
   }
 
   interface XULTabElement
-    extends XULElementBase, SolidJSX.HTMLAttributes<HTMLElement> {
+    extends XULElementBase,
+      SolidJSX.HTMLAttributes<HTMLElement> {
     onwheel?: SolidJSX.EventHandlerUnion<HTMLElement, WheelEvent>;
   }
 

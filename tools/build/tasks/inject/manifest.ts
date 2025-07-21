@@ -32,10 +32,10 @@ content noraneko-startup startup/ contentaccessible=yes
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
 ${
-      mode !== "dev"
-        ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
-        : ""
-    }`,
+  mode !== "dev"
+    ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
+    : ""
+}`,
   );
   {
     await symlinkDirectory(
@@ -49,11 +49,7 @@ ${
       "src/core/glue/startup/_dist",
       "startup",
     );
-    await symlinkDirectory(
-      `${binPath}/${dirName}`,
-      "src/themes/_dist",
-      "skin",
-    );
+    await symlinkDirectory(`${binPath}/${dirName}`, "src/themes/_dist", "skin");
     await symlinkDirectory(
       `${binPath}/${dirName}`,
       "src/core/glue/loader-modules/_dist",

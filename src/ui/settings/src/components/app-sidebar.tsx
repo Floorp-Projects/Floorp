@@ -75,18 +75,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavFeatures
-          title={t("sidebar.overview")}
-          features={overview}
-        />
-        <NavFeatures
-          title={t("sidebar.features")}
-          features={features}
-        />
-        <NavFeatures
-          title={t("sidebar.about")}
-          features={about}
-        />
+        <NavFeatures title={t("sidebar.overview")} features={overview} />
+        <NavFeatures title={t("sidebar.features")} features={features} />
+        <NavFeatures title={t("sidebar.about")} features={about} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

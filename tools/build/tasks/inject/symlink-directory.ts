@@ -18,7 +18,7 @@ export async function symlinkDirectory(
   await symlink(
     Deno.build.os === "windows" ? resolve(projectRoot, linkTarget) : linkTarget,
     resolve(linkParentDir, linkName),
-    { "type": "dir" },
+    { type: "dir" },
   );
 }
 

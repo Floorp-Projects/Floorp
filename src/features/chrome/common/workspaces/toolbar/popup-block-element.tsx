@@ -14,7 +14,7 @@ export function PopupToolbarElement(props: {
   ctx: WorkspacesService;
 }) {
   const workspace = createMemo(() =>
-    props.ctx.getRawWorkspace(props.workspaceId)
+    props.ctx.getRawWorkspace(props.workspaceId),
   );
   const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
   return (

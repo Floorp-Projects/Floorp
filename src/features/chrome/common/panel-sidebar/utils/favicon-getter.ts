@@ -25,9 +25,8 @@ export async function getFaviconURLForPanel(panel: Panel): Promise<string> {
 
 async function getFaviconFromPlaces(url: string): Promise<string | undefined> {
   return new Promise((resolve) => {
-    gFavicons.getFaviconURLForPage(
-      Services.io.newURI(url),
-      (uri: nsIURI) => resolve(uri?.spec),
+    gFavicons.getFaviconURLForPage(Services.io.newURI(url), (uri: nsIURI) =>
+      resolve(uri?.spec),
     );
   });
 }
@@ -41,7 +40,7 @@ function getFallbackFavicon(panel: Panel): string {
     case "static":
       return (
         STATIC_PANEL_DATA[panel.url as keyof typeof STATIC_PANEL_DATA].icon ??
-          DEFAULT_FAVICON
+        DEFAULT_FAVICON
       );
     case "extension":
       return getFaviconFromExtension(panel.extensionId ?? "");

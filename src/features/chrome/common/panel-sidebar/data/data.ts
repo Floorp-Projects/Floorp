@@ -79,9 +79,9 @@ function createSelectedPanelId(): [
   Accessor<string | null>,
   Setter<string | null>,
 ] {
-  const [selectedPanelId, setSelectedPanelId] = createSignal<
-    string | null
-  >(null);
+  const [selectedPanelId, setSelectedPanelId] = createSignal<string | null>(
+    null,
+  );
   createEffect(() => {
     window.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
   });
@@ -98,18 +98,17 @@ function createPanelSidebarConfig(): [
   Accessor<PanelSidebarConfig>,
   Setter<PanelSidebarConfig>,
 ] {
-  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
-    PanelSidebarConfig
-  >(
-    zPanelSidebarConfig.parse(
-      getPanelSidebarConfig(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarConfigPrefName,
-          strDefaultConfig,
+  const [panelSidebarConfig, setPanelSidebarConfig] =
+    createSignal<PanelSidebarConfig>(
+      zPanelSidebarConfig.parse(
+        getPanelSidebarConfig(
+          Services.prefs.getStringPref(
+            PanelSidebarStaticNames.panelSidebarConfigPrefName,
+            strDefaultConfig,
+          ),
         ),
       ),
-    ),
-  );
+    );
   createEffect(() => {
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
@@ -163,9 +162,8 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
 );
 
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
-    boolean
-  >(defaultEnabled);
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
+    createSignal<boolean>(defaultEnabled);
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,

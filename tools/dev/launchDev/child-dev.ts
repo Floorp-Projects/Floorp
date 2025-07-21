@@ -35,7 +35,8 @@ async function shutdownDev() {
   console.log("[child-dev] Completed Shutdown ViteDevServer✅");
 }
 
-{ //* main
+{
+  //* main
   const decoder = new TextDecoder();
   (async () => {
     for await (const chunk of Deno.stdin.readable) {

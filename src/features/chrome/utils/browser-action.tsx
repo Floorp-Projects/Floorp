@@ -91,8 +91,8 @@ export namespace BrowserActionUtils {
       id: widgetId,
       type: "view",
       viewId: targetViewId,
-      tooltiptext: (document?.l10n?.formatValue(l10nId)) ?? "",
-      label: (document?.l10n?.formatValue(l10nId)) ?? "",
+      tooltiptext: document?.l10n?.formatValue(l10nId) ?? "",
+      label: document?.l10n?.formatValue(l10nId) ?? "",
       removable: true,
       onCreated: (aNode: XULElement) => {
         createRoot(() => onCreatedFunc?.(aNode), owner);

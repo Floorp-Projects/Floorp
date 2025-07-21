@@ -56,11 +56,11 @@ export async function initializeBinGit() {
 
 export function checkPatchIsNeeded() {
   // Check if patches directory exists
-  if (!isExistsSync(PATCHES_DIR, { "isDirectory": true })) {
+  if (!isExistsSync(PATCHES_DIR, { isDirectory: true })) {
     return false;
   }
 
-  if (!isExistsSync(PATCHES_TMP, { "isDirectory": true })) {
+  if (!isExistsSync(PATCHES_TMP, { isDirectory: true })) {
     return true;
   }
 
@@ -68,11 +68,12 @@ export function checkPatchIsNeeded() {
   const patches_dir = Deno.readDirSync(PATCHES_DIR);
 
   const patches_tmp_filenames = Array.from(patches_tmp.map((p) => p.name));
-  const filenames_eq = patches_dir.map((p) => p.name).filter((v) =>
-    v.endsWith(".patch")
-  ).every((p) => {
-    return patches_tmp_filenames.includes(p);
-  });
+  const filenames_eq = patches_dir
+    .map((p) => p.name)
+    .filter((v) => v.endsWith(".patch"))
+    .every((p) => {
+      return patches_tmp_filenames.includes(p);
+    });
 
   if (!filenames_eq) {
     // if filenames are not equal, need to apply patches
@@ -80,12 +81,8 @@ export function checkPatchIsNeeded() {
   }
 
   const files_eq = patches_dir.every((patch) => {
-    const patch_in_dir = Deno.readTextFileSync(
-      join(PATCHES_DIR, patch.name),
-    );
-    const patch_in_tmp = Deno.readTextFileSync(
-      join(PATCHES_TMP, patch.name),
-    );
+    const patch_in_dir = Deno.readTextFileSync(join(PATCHES_DIR, patch.name));
+    const patch_in_tmp = Deno.readTextFileSync(join(PATCHES_TMP, patch.name));
     return patch_in_dir === patch_in_tmp;
   });
   if (!files_eq) {
@@ -120,15 +117,18 @@ export async function applyPatches(binDir = getBinDir()) {
         const patchPath = resolve(PATCHES_TMP, patch);
         const relativeBinDir = relative(Deno.cwd(), binDir);
 
-        await runGitCommand([
-          "apply",
-          "-R",
-          "--reject",
-          "--whitespace=fix",
-          "--unsafe-paths",
-          `--directory=${relativeBinDir}`,
-          patchPath,
-        ], { cwd: Deno.cwd() });
+        await runGitCommand(
+          [
+            "apply",
+            "-R",
+            "--reject",
+            "--whitespace=fix",
+            "--unsafe-paths",
+            `--directory=${relativeBinDir}`,
+            patchPath,
+          ],
+          { cwd: Deno.cwd() },
+        );
       } catch (e) {
         console.warn(`[git-patches] Failed to reverse patch: ${patch}`);
         console.warn(e);
@@ -163,14 +163,17 @@ export async function applyPatches(binDir = getBinDir()) {
       const patchPath = resolve(PATCHES_DIR, patch);
       const relativeBinDir = relative(Deno.cwd(), binDir);
 
-      await runGitCommand([
-        "apply",
-        "--reject",
-        "--whitespace=fix",
-        "--unsafe-paths",
-        `--directory=${relativeBinDir}`,
-        patchPath,
-      ], { cwd: Deno.cwd() });
+      await runGitCommand(
+        [
+          "apply",
+          "--reject",
+          "--whitespace=fix",
+          "--unsafe-paths",
+          `--directory=${relativeBinDir}`,
+          patchPath,
+        ],
+        { cwd: Deno.cwd() },
+      );
 
       await Deno.copyFile(join(PATCHES_DIR, patch), join(PATCHES_TMP, patch));
     } catch (e) {
@@ -214,18 +217,14 @@ export async function createPatches() {
         cwd: BIN_DIR,
       });
 
-      const modifiedDiff = `${
-        `${diff}`
-          .replace(/^--- a\//gm, "--- ./")
-          .replace(/^\+\+\+ b\//gm, "+++ ./")
-          .trim()
-      }\n`;
+      const modifiedDiff = `${`${diff}`
+        .replace(/^--- a\//gm, "--- ./")
+        .replace(/^\+\+\+ b\//gm, "+++ ./")
+        .trim()}\n`;
 
-      const patchName = `${
-        file
-          .replace(/\//g, "-")
-          .replace(/\.[^/.]+$/, "")
-      }.patch`;
+      const patchName = `${file
+        .replace(/\//g, "-")
+        .replace(/\.[^/.]+$/, "")}.patch`;
 
       const patchPath = join(PATCHES_DIR, patchName);
 
