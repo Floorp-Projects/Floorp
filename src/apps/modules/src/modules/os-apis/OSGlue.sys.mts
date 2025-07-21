@@ -22,7 +22,7 @@ class OSGlue {
   }
 
   private readonly modules = [
-    this.localPathToResourceURI("./web/WebScraperService.sys.mts"),
+    this.localPathToResourceURI("./web/WebScraperServices.sys.mts"),
     this.localPathToResourceURI("./browser-info/BrowserInfo.sys.mts"),
   ];
 
