@@ -122,13 +122,7 @@ export const AppConstants: Readonly<{
   MOZ_BUILD_APP: "browser";
   MOZ_MACBUNDLE_ID: "org.mozilla.firefox";
   MOZ_MACBUNDLE_NAME: "Firefox.app";
-  MOZ_UPDATE_CHANNEL:
-    | "nightly"
-    | "beta"
-    | "release"
-    | "esr"
-    | "default"
-    | "unofficial";
+  MOZ_UPDATE_CHANNEL: "nightly" | "beta" | "release" | "esr" | "default" | "unofficial";
   MOZ_WIDGET_TOOLKIT: "android" | "cocoa" | "gtk" | "windows" | "uikit";
 
   DEBUG_JS_MODULES: string;
@@ -160,8 +154,7 @@ export const AppConstants: Readonly<{
   ENABLE_WEBDRIVER: boolean;
 
   // #ifdef !MOZ_THUNDERBIRD
-  REMOTE_SETTINGS_SERVER_URL:
-    "https://firefox.settings.services.mozilla.com/v1";
+  REMOTE_SETTINGS_SERVER_URL: "https://firefox.settings.services.mozilla.com/v1";
 
   // #ifdef !MOZ_THUNDERBIRD
   REMOTE_SETTINGS_VERIFY_SIGNATURE: boolean;
@@ -181,6 +174,9 @@ export const AppConstants: Readonly<{
 
   // #ifdef MOZ_GECKOVIEW
   MOZ_GECKOVIEW: boolean;
+
+  // #ifdef MOZ_WIDGET_ANDROID
+  MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS: boolean;
 
   // Returns true for CN region build when distibution id set as 'MozillaOnline'
   isChinaRepack(): boolean;

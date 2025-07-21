@@ -5,67 +5,60 @@
  */
 
 declare global {
-  // https://searchfox.org/mozilla-central/source/browser/components/shell/nsIGNOMEShellService.idl
 
-  interface nsIGNOMEShellService extends nsIShellService {
-    readonly canSetDesktopBackground: boolean;
-    isDefaultForScheme(aScheme: string): boolean;
-  }
+// https://searchfox.org/mozilla-central/source/browser/components/shell/nsIGNOMEShellService.idl
 
-  // https://searchfox.org/mozilla-central/source/browser/components/shell/nsIOpenTabsProvider.idl
+interface nsIGNOMEShellService extends nsIShellService {
+  readonly canSetDesktopBackground: boolean;
+  isDefaultForScheme(aScheme: string): boolean;
+}
 
-  interface nsIOpenTabsProvider extends nsISupports {
-    getOpenTabs(): string[];
-    switchToOpenTab(url: string): void;
-  }
+// https://searchfox.org/mozilla-central/source/browser/components/shell/nsIOpenTabsProvider.idl
 
-  // https://searchfox.org/mozilla-central/source/widget/nsIApplicationChooser.idl
+interface nsIOpenTabsProvider extends nsISupports {
+  getOpenTabs(): string[];
+  switchToOpenTab(url: string): void;
+}
 
-  type nsIApplicationChooserFinishedCallback = Callable<{
-    done(handlerApp: nsIHandlerApp): void;
-  }>;
+// https://searchfox.org/mozilla-central/source/widget/nsIApplicationChooser.idl
 
-  interface nsIApplicationChooser extends nsISupports {
-    init(parent: mozIDOMWindowProxy, title: string): void;
-    open(
-      contentType: string,
-      applicationChooserFinishedCallback: nsIApplicationChooserFinishedCallback,
-    ): void;
-  }
+type nsIApplicationChooserFinishedCallback = Callable<{
+  done(handlerApp: nsIHandlerApp): void;
+}>
 
-  // https://searchfox.org/mozilla-central/source/widget/nsIGtkTaskbarProgress.idl
+interface nsIApplicationChooser extends nsISupports {
+  init(parent: mozIDOMWindowProxy, title: string): void;
+  open(contentType: string, applicationChooserFinishedCallback: nsIApplicationChooserFinishedCallback): void;
+}
 
-  interface nsIGtkTaskbarProgress extends nsITaskbarProgress {
-    setPrimaryWindow(aWindow: mozIDOMWindowProxy): void;
-  }
+// https://searchfox.org/mozilla-central/source/widget/nsIGtkTaskbarProgress.idl
 
-  // https://searchfox.org/mozilla-central/source/widget/nsITaskbarProgress.idl
+interface nsIGtkTaskbarProgress extends nsITaskbarProgress {
+  setPrimaryWindow(aWindow: mozIDOMWindowProxy): void;
+}
 
-  interface nsITaskbarProgress extends nsISupports {
-    readonly STATE_NO_PROGRESS?: 0;
-    readonly STATE_INDETERMINATE?: 1;
-    readonly STATE_NORMAL?: 2;
-    readonly STATE_ERROR?: 3;
-    readonly STATE_PAUSED?: 4;
+// https://searchfox.org/mozilla-central/source/widget/nsITaskbarProgress.idl
 
-    setProgressState(
-      state: nsTaskbarProgressState,
-      currentValue?: u64,
-      maxValue?: u64,
-    ): void;
-  }
+interface nsITaskbarProgress extends nsISupports {
+  readonly STATE_NO_PROGRESS?: 0;
+  readonly STATE_INDETERMINATE?: 1;
+  readonly STATE_NORMAL?: 2;
+  readonly STATE_ERROR?: 3;
+  readonly STATE_PAUSED?: 4;
 
-  interface nsIXPCComponents_Interfaces {
-    nsIGNOMEShellService: nsJSIID<nsIGNOMEShellService>;
-    nsIOpenTabsProvider: nsJSIID<nsIOpenTabsProvider>;
-    nsIApplicationChooserFinishedCallback: nsJSIID<
-      nsIApplicationChooserFinishedCallback
-    >;
-    nsIApplicationChooser: nsJSIID<nsIApplicationChooser>;
-    nsIGtkTaskbarProgress: nsJSIID<nsIGtkTaskbarProgress>;
-    nsITaskbarProgress: nsJSIID<nsITaskbarProgress>;
-  }
-} // global
+  setProgressState(state: nsTaskbarProgressState, currentValue?: u64, maxValue?: u64): void;
+}
+
+interface nsIXPCComponents_Interfaces {
+  nsIGNOMEShellService: nsJSIID<nsIGNOMEShellService>;
+  nsIOpenTabsProvider: nsJSIID<nsIOpenTabsProvider>;
+  nsIApplicationChooserFinishedCallback: nsJSIID<nsIApplicationChooserFinishedCallback>;
+  nsIApplicationChooser: nsJSIID<nsIApplicationChooser>;
+  nsIGtkTaskbarProgress: nsJSIID<nsIGtkTaskbarProgress>;
+  nsITaskbarProgress: nsJSIID<nsITaskbarProgress>;
+}
+
+}  // global
 
 // Typedefs from xpidl.
 type PRTime = i64;
@@ -84,6 +77,6 @@ type OutParam<T> = { value?: T };
 type Enums<enums> = Partial<Pick<enums, keyof enums>>;
 
 /** Callable accepts either form of a [function] interface. */
-type Callable<iface> = iface | Extract<iface[keyof iface], Function>;
+type Callable<iface> = iface | Extract<iface[keyof iface], Function>
 
 export {};

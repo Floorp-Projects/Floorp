@@ -15,11 +15,9 @@ interface nsID<uuid = string> {
  * and expose constants defined on the class, including variants from enums.
  * https://searchfox.org/mozilla-central/source/js/xpconnect/src/XPCJSID.cpp#45
  */
-type nsJSIID<iface, enums = {}> =
-  & nsID
-  & Constants<iface>
-  & enums
-  & {
+type nsJSIID<iface, enums = {}> = nsID &
+  Constants<iface> &
+  enums & {
     new (_: never): void;
     prototype: iface;
   };

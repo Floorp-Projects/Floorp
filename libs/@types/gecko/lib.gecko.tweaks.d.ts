@@ -21,12 +21,14 @@ interface Document {
 }
 
 type nsIGleanPingNoReason = {
-  [K in keyof nsIGleanPing]: K extends "submit" ? (_?: never) => void
+  [K in keyof nsIGleanPing]: K extends "submit"
+    ? (_?: never) => void
     : nsIGleanPing[K];
 };
 
 type nsIGleanPingWithReason<T> = {
-  [K in keyof nsIGleanPing]: K extends "submit" ? (reason: T) => void
+  [K in keyof nsIGleanPing]: K extends "submit"
+    ? (reason: T) => void
     : nsIGleanPing[K];
 };
 
@@ -34,11 +36,11 @@ interface MessageListenerManagerMixin {
   // Overloads that define `data` arg as required, since it's ~always expected.
   addMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
   );
   removeMessageListener(
     msg: string,
-    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) },
+    listener: { receiveMessage(_: ReceiveMessageArgument & { data }) }
   );
 }
 
@@ -63,7 +65,7 @@ interface nsIXPCComponents_Constructor {
   <const T, IIDs = nsIXPCComponents_Interfaces>(
     cid,
     id: T,
-    init?,
+    init?
   ): {
     new (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
     (...any): nsQIResult<T extends keyof IIDs ? IIDs[T] : T>;
@@ -83,7 +85,7 @@ interface nsIXPCComponents_Exception {
     message?: string,
     resultOrOptions?: number | ComponentsExceptionOptions,
     stack?: nsIStackFrame,
-    data?: object,
+    data?: object
   ): nsIException;
 }
 
@@ -128,4 +130,28 @@ interface XULBrowserElement extends XULFrameElement, FrameLoader {
 // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1736
 interface Localization {
   formatValuesSync(aKeys: L10nKey[]): (string | null)[];
+}
+
+/**
+ * Redefine the DOMStringMap interface to match its implementation.
+ * xref Bug 1965336.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMStringMap)
+ */
+interface DOMStringMap {
+  [name: string]: string | undefined;
+}
+
+/**
+ * Define base64/hex methods for Uint8Array
+ * https://github.com/microsoft/TypeScript/issues/61695
+ */
+interface Uint8Array<TArrayBuffer extends ArrayBufferLike> {
+  setFromBase64(
+    string: string,
+    options?: { alphabet?: string; lastChunkHandling: string }
+  ): { read: number; written: number };
+  setFromHex(string: string): { read: number; written: number };
+  toBase64(options?: { alphabet?: string; omitPadding: boolean }): string;
+  toHex(): string;
 }

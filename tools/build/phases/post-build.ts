@@ -1,5 +1,4 @@
 import { log } from "../logger.ts";
-import { applyMixin } from "../tasks/inject/mixin-loader.ts";
 import { injectManifest } from "../tasks/inject/manifest.ts";
 import { injectXHTML, injectXHTMLDev } from "../tasks/inject/xhtml.ts";
 import { writeBuildid2 } from "../tasks/update/buildid2.ts";
@@ -12,9 +11,6 @@ export async function runPostBuildPhase(isDev = false): Promise<void> {
   log.info("🔨 Starting post-build phase...");
 
   const binPath = resolveFromRoot("_dist/bin/noraneko");
-
-  log.info("🧩 Applying mixins...");
-  await applyMixin(binPath);
 
   log.info("📋 Injecting manifest...");
   await injectManifest(binPath, isDev ? "dev" : "prod");
