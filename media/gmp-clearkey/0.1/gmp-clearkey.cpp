@@ -55,7 +55,7 @@ void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
                         GetCdmHostFunc get_cdm_host_func, void* user_data) {
   CK_LOGE("ClearKey CreateCDMInstance");
 
-  if (cdm_interface_version != cdm::ContentDecryptionModule_10::kVersion) {
+  if (cdm_interface_version != cdm::ContentDecryptionModule_11::kVersion) {
     CK_LOGE(
         "ClearKey CreateCDMInstance failed due to requesting unsupported "
         "version %d.",
@@ -81,7 +81,7 @@ void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
   }
 #endif
 
-  cdm::Host_10* host = static_cast<cdm::Host_10*>(
+  cdm::Host_11* host = static_cast<cdm::Host_11*>(
       get_cdm_host_func(cdm_interface_version, user_data));
   ClearKeyCDM* clearKey = new ClearKeyCDM(host);
 

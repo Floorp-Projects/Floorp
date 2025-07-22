@@ -15,7 +15,9 @@ namespace mozilla::gmp {
 
 class GMPContentChild;
 
-class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
+class ChromiumCDMChild final : public PChromiumCDMChild,
+                               public cdm::Host_10,
+                               public cdm::Host_11 {
  public:
   // Mark AddRef and Release as `final`, as they overload pure virtual
   // implementations in PChromiumCDMChild.
@@ -23,12 +25,12 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
-  void Init(cdm::ContentDecryptionModule_10* aCDM,
+  void Init(cdm::ContentDecryptionModule_11* aCDM,
             const nsACString& aStorageId);
 
   void TimerExpired(void* aContext);
 
-  // cdm::Host_10 implementation
+  // cdm::Host_10/cdm::Host_11 implementation
   cdm::Buffer* Allocate(uint32_t aCapacity) override;
   void SetTimer(int64_t aDelayMs, void* aContext) override;
   cdm::Time GetCurrentWallTime() override;
@@ -59,9 +61,10 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
   void OnDeferredInitializationDone(cdm::StreamType aStreamType,
                                     cdm::Status aDecoderStatus) override {}
   void RequestStorageId(uint32_t aVersion) override;
+  void ReportMetrics(cdm::MetricName aMetricName, uint64_t aValue) override;
   cdm::FileIO* CreateFileIO(cdm::FileIOClient* aClient) override;
   void OnInitialized(bool aSuccess) override;
-  // end cdm::Host_10 specific methods
+  // end cdm::Host_10/cdm::Host_11 specific methods
 
   void GiveBuffer(ipc::Shmem&& aBuffer);
 
@@ -123,7 +126,7 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
   void CallOnMessageLoopThread(const char* const, MethodType, ParamType&&...);
 
   GMPContentChild* mPlugin = nullptr;
-  cdm::ContentDecryptionModule_10* mCDM = nullptr;
+  cdm::ContentDecryptionModule_11* mCDM = nullptr;
 
   typedef SimpleMap<int64_t, uint64_t, ThreadSafePolicy> DurationMap;
   DurationMap mFrameDurations;

@@ -67,7 +67,7 @@ class TestManager {
   std::set<std::string> mTestIDs;
 };
 
-FakeDecryptor::FakeDecryptor(cdm::Host_10* aHost) : mHost(aHost) {
+FakeDecryptor::FakeDecryptor(cdm::Host_11* aHost) : mHost(aHost) {
   MOZ_ASSERT(!sInstance);
   sInstance = this;
 }

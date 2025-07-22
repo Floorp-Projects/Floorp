@@ -77,7 +77,7 @@ child:
 parent:
   async __delete__();
 
-  // cdm::Host_10
+  // cdm::Host_11
   async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
 
   async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);

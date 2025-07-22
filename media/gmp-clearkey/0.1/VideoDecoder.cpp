@@ -27,7 +27,7 @@
 
 using namespace wmf;
 
-VideoDecoder::VideoDecoder(cdm::Host_10* aHost)
+VideoDecoder::VideoDecoder(cdm::Host_11* aHost)
     : mHost(aHost), mHasShutdown(false) {
   CK_LOGD("VideoDecoder created");
 

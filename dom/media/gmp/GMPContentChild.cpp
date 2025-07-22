@@ -8,6 +8,7 @@
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
 #include "ChromiumCDMChild.h"
+#include "ChromiumCDMCompat.h"
 #include "base/task.h"
 #include "GMPUtils.h"
 
@@ -88,15 +89,23 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoEncoderConstructor(
 mozilla::ipc::IPCResult GMPContentChild::RecvPChromiumCDMConstructor(
     PChromiumCDMChild* aActor, const nsACString& aKeySystem) {
   ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
-  cdm::Host_10* host10 = child;
 
   void* cdm = nullptr;
-  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host10, &cdm, aKeySystem);
+  GMPErr err = mGMPChild->GetAPI(
+      CHROMIUM_CDM_API, static_cast<cdm::Host_11*>(child), &cdm, aKeySystem);
   if (err != GMPNoErr || !cdm) {
-    return IPC_FAIL(this, "GMPGetAPI call failed trying to get CDM.");
+    err =
+        mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT,
+                          static_cast<cdm::Host_10*>(child), &cdm, aKeySystem);
+    if (err != GMPNoErr || !cdm) {
+      return IPC_FAIL(this, "GMPGetAPI call failed trying to get CDM.");
+    }
+
+    cdm = new ChromiumCDMCompat(
+        static_cast<cdm::ContentDecryptionModule_10*>(cdm));
   }
 
-  child->Init(static_cast<cdm::ContentDecryptionModule_10*>(cdm),
+  child->Init(static_cast<cdm::ContentDecryptionModule_11*>(cdm),
               mGMPChild->mStorageId);
 
   return IPC_OK();

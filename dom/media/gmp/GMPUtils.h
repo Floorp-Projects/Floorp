@@ -16,8 +16,8 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-#define CHROMIUM_CDM_API_BACKWARD_COMPAT "chromium-cdm9-host4"
-#define CHROMIUM_CDM_API "chromium-cdm10-host4"
+#define CHROMIUM_CDM_API_BACKWARD_COMPAT "chromium-cdm10-host4"
+#define CHROMIUM_CDM_API "chromium-cdm11-host4"
 
 class GMPVideoEncodedFrame;
 class nsIFile;

@@ -28,7 +28,7 @@ ChromiumCDMChild::ChromiumCDMChild(GMPContentChild* aPlugin)
   GMP_LOG_DEBUG("ChromiumCDMChild:: ctor this=%p", this);
 }
 
-void ChromiumCDMChild::Init(cdm::ContentDecryptionModule_10* aCDM,
+void ChromiumCDMChild::Init(cdm::ContentDecryptionModule_11* aCDM,
                             const nsACString& aStorageId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   mCDM = aCDM;
@@ -365,6 +365,13 @@ void ChromiumCDMChild::RequestStorageId(uint32_t aVersion) {
                         ? reinterpret_cast<const uint8_t*>(mStorageId.get())
                         : nullptr,
                     mStorageId.Length());
+}
+
+void ChromiumCDMChild::ReportMetrics(cdm::MetricName aMetricName,
+                                     uint64_t aValue) {
+  GMP_LOG_DEBUG("ChromiumCDMChild::ReportMetrics() aMetricName=%" PRIu32
+                ", aValue=%" PRIu64,
+                aMetricName, aValue);
 }
 
 ChromiumCDMChild::~ChromiumCDMChild() {
