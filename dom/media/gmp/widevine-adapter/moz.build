@@ -10,7 +10,14 @@ SOURCES += [
     "WidevineVideoFrame.cpp",
 ]
 
-EXPORTS += ["WidevineFileIO.h", "WidevineUtils.h", "WidevineVideoFrame.h"]
+EXPORTS += [
+    "content_decryption_module.h",
+    "content_decryption_module_export.h",
+    "content_decryption_module_ext.h",
+    "WidevineFileIO.h",
+    "WidevineUtils.h",
+    "WidevineVideoFrame.h",
+]
 
 FINAL_LIBRARY = "xul"
 

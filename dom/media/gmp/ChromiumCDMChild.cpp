@@ -783,12 +783,12 @@ void ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame) {
   output.mFormat() = static_cast<cdm::VideoFormat>(aFrame.Format());
   output.mImageWidth() = aFrame.Size().width;
   output.mImageHeight() = aFrame.Size().height;
-  output.mYPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kYPlane),
-                      aFrame.Stride(cdm::VideoPlane::kYPlane)};
-  output.mUPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kUPlane),
-                      aFrame.Stride(cdm::VideoPlane::kUPlane)};
-  output.mVPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kVPlane),
-                      aFrame.Stride(cdm::VideoPlane::kVPlane)};
+  output.mYPlane() = {aFrame.PlaneOffset(cdm::kYPlane),
+                      aFrame.Stride(cdm::kYPlane)};
+  output.mUPlane() = {aFrame.PlaneOffset(cdm::kUPlane),
+                      aFrame.Stride(cdm::kUPlane)};
+  output.mVPlane() = {aFrame.PlaneOffset(cdm::kVPlane),
+                      aFrame.Stride(cdm::kVPlane)};
   output.mTimestamp() = aFrame.Timestamp();
 
   uint64_t duration = 0;
