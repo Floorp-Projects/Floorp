@@ -1,215 +1,283 @@
-import { useEffect, useRef, useState } from "react";
-import { TopSitesManager } from "./dataManager.ts";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  getNewTabSettings,
+  type NewTabSettings,
+  type PinnedSite,
+  saveNewTabSettings,
+} from "@/utils/dataManager";
 import { useTranslation } from "react-i18next";
+import { PinIcon } from "lucide-react";
 
-interface CustomTopSite {
+interface TopSite {
   url: string;
-  label: string;
-  title?: string;
+  title: string;
+  label?: string;
   favicon?: string;
-  tippyTopIcon?: string;
-  smallFavicon: string;
+  smallFavicon?: string | null;
+}
+
+declare global {
+  interface Window {
+    NRGetCurrentTopSites: (callback: (data: string) => void) => void;
+  }
+}
+
+async function getTopSites(): Promise<TopSite[]> {
+  return new Promise<TopSite[]>((resolve) => {
+    globalThis.NRGetCurrentTopSites((sites: string) => {
+      try {
+        const parsedSites = JSON.parse(sites).topsites || [];
+        resolve(
+          parsedSites.map((site: TopSite) => ({
+            ...site,
+            title: site.title || site.label || site.url,
+            smallFavicon: site.smallFavicon || "",
+          })),
+        );
+      } catch (e) {
+        console.error("Failed to parse top sites:", e);
+        resolve([]);
+      }
+    });
+  });
+}
+
+function BlockModal({
+  site,
+  onConfirm,
+  onCancel,
+}: {
+  site: TopSite | PinnedSite;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <dialog className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">
+          {t("topSites.blockTitle", {
+            defaultValue: `Block "${site.title}"?`,
+          })}
+        </h3>
+        <p className="py-4">
+          {t(
+            "topSites.blockConfirm",
+            "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+          )}
+        </p>
+        <div className="modal-action">
+          <button onClick={onConfirm} className="btn btn-primary">
+            {t("topSites.block")}
+          </button>
+          <button onClick={onCancel} className="btn">
+            {t("topSites.cancel")}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
 }
 
 export function TopSites() {
   const { t } = useTranslation();
-  const [sites, setSites] = useState<CustomTopSite[]>([]);
-  const [userAddedSites, setUserAddedSites] = useState<CustomTopSite[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSite, setNewSite] = useState({
-    url: "",
-    label: "",
-    smallFavicon: "",
-  });
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const [sites, setSites] = useState<TopSite[]>([]);
+  const [pinnedSites, setPinnedSites] = useState<PinnedSite[]>([]);
+  const [blockedSites, setBlockedSites] = useState<string[]>([]);
+  const [contextMenu, setContextMenu] = useState<
+    {
+      x: number;
+      y: number;
+      site: TopSite | PinnedSite;
+    } | null
+  >(null);
+  const [siteToBlock, setSiteToBlock] = useState<TopSite | PinnedSite | null>(
+    null,
+  );
+
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  const loadSettings = async () => {
+    const settings = await getNewTabSettings();
+    setPinnedSites(settings.topSites.pinned);
+    setBlockedSites(settings.topSites.blocked);
+
+    const topSites = await getTopSites();
+    const filteredSites = topSites.filter(
+      (site) =>
+        !settings.topSites.blocked.includes(site.url) &&
+        !settings.topSites.pinned.some((p) => p.url === site.url),
+    );
+    setSites(filteredSites);
+  };
 
   useEffect(() => {
-    const manager = TopSitesManager.getInstance();
-
-    const savedUserAddedSites = manager.getUserAddedSites().map((site) => ({
-      ...site,
-      label: site.label || "",
-      smallFavicon: site.smallFavicon || "",
-    }));
-    setUserAddedSites(savedUserAddedSites);
-
-    const loadTopSites = async () => {
-      const topSites = await manager.getTopSites();
-      const remainingSlots = 30 - savedUserAddedSites.length;
-      setSites(
-        topSites.slice(0, remainingSlots).map((site) => ({
-          ...site,
-          smallFavicon: site.smallFavicon || "",
-        })),
-      );
-    };
-
-    loadTopSites();
+    loadSettings();
   }, []);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isModalOpen) {
-        setIsModalOpen(false);
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
+        setContextMenu(null);
       }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [contextMenuRef]);
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isModalOpen]);
-
-  const handleAddSite = () => {
-    if (newSite.url && newSite.label) {
-      const updatedUserAddedSites = [{
-        ...newSite,
-        label: newSite.label || "",
-        smallFavicon: newSite.smallFavicon || "",
-      }, ...userAddedSites] as CustomTopSite[];
-      setUserAddedSites(updatedUserAddedSites);
-
-      const manager = TopSitesManager.getInstance();
-      manager.saveUserAddedSites(updatedUserAddedSites);
-
-      setNewSite({ url: "", label: "", smallFavicon: "" });
-      setIsModalOpen(false);
-    }
+  const handleContextMenu = (
+    e: MouseEvent<HTMLAnchorElement>,
+    site: TopSite | PinnedSite,
+  ) => {
+    e.preventDefault();
+    setContextMenu({ x: e.pageX, y: e.pageY, site });
   };
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) {
-      setIsModalOpen(false);
+  const handleSaveSettings = async (settings: Partial<NewTabSettings>) => {
+    await saveNewTabSettings(settings);
+    await loadSettings();
+    setContextMenu(null);
+  };
+
+  const pinSite = async (site: TopSite | PinnedSite) => {
+    const title = "title" in site && site.title ? site.title : site.url;
+    const newPinnedSites = [...pinnedSites, { url: site.url, title }];
+    await handleSaveSettings({
+      topSites: { pinned: newPinnedSites, blocked: blockedSites },
+    });
+  };
+
+  const unpinSite = async (site: PinnedSite) => {
+    const newPinnedSites = pinnedSites.filter((p) => p.url !== site.url);
+    await handleSaveSettings({
+      topSites: { pinned: newPinnedSites, blocked: blockedSites },
+    });
+  };
+
+  const handleBlockRequest = (site: TopSite | PinnedSite) => {
+    setSiteToBlock(site);
+    setContextMenu(null);
+  };
+
+  const confirmBlockSite = async () => {
+    if (!siteToBlock) return;
+    const newBlockedSites = [...blockedSites, siteToBlock.url];
+    let newPinnedSites = pinnedSites;
+    if (isPinned(siteToBlock)) {
+      newPinnedSites = pinnedSites.filter((p) => p.url !== siteToBlock.url);
     }
+    await handleSaveSettings({
+      topSites: { pinned: newPinnedSites, blocked: newBlockedSites },
+    });
+    setSiteToBlock(null);
+  };
+
+  const cancelBlockSite = () => {
+    setSiteToBlock(null);
+  };
+
+  const isPinned = (site: TopSite | PinnedSite) => {
+    return pinnedSites.some((p) => p.url === site.url);
   };
 
   return (
     <>
-      {isModalOpen && (
-        <div
-          className="modal modal-open"
-          ref={overlayRef}
-          onClick={handleOverlayClick}
-        >
-          <div className="modal-box">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-lg">{t("topSites.addNewSite")}</h3>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                <span className="sr-only">{t("topSites.close")}</span>
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="py-4">
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">{t("topSites.url")}</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://floorp.app"
-                  value={newSite.url}
-                  onChange={(e) =>
-                    setNewSite({ ...newSite, url: e.target.value })}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control w-full mt-2">
-                <label className="label">
-                  <span className="label-text">{t("topSites.label")}</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={t("topSites.labelPlaceholder")}
-                  value={newSite.label}
-                  onChange={(e) =>
-                    setNewSite({ ...newSite, label: e.target.value })}
-                  className="input input-bordered w-full"
-                />
-              </div>
-            </div>
-            <div className="modal-action">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="btn btn-ghost"
-              >
-                {t("topSites.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleAddSite}
-                className="btn btn-primary"
-              >
-                {t("topSites.add")}
-              </button>
-            </div>
-          </div>
-        </div>
+      {siteToBlock && (
+        <BlockModal
+          site={siteToBlock}
+          onConfirm={confirmBlockSite}
+          onCancel={cancelBlockSite}
+        />
       )}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm p-3 inline-block">
+      <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
         <div className="flex flex-wrap gap-x-0.5">
-          {[...userAddedSites, ...sites].map((site, index) => (
+          {pinnedSites.map((site) => (
             <a
-              key={index}
+              key={site.url}
               href={site.url}
               className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+              onContextMenu={(e) => handleContextMenu(e, site)}
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-                {site.favicon
-                  ? (
-                    <img
-                      src={site.favicon}
-                      alt={site.label}
-                      className="w-6 h-6 object-contain"
-                    />
-                  )
-                  : site.smallFavicon
-                    ? (
-                      <img
-                        src={site.smallFavicon}
-                        alt={site.label}
-                        className="w-6 h-6 object-contain"
-                      />
-                    )
-                    : (
-                      <span className="text-lg font-semibold text-gray-300">
-                        {(site.label || site.title || "?")[0]}
-                      </span>
-                    )}
+              <div className="relative w-8 h-8">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${
+                      new URL(site.url).hostname
+                    }&sz=32`}
+                    alt={site.title}
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+                <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">
+                  <PinIcon className="w-4 h-4 text-white" />
+                </div>
               </div>
               <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
-                {site.label || site.title}
+                {site.title}
               </span>
             </a>
           ))}
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-gray-700/50"
-          >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-600 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-              <span className="text-lg font-semibold text-gray-300 flex items-center justify-center">
-                +
+          {sites.map((site) => (
+            <a
+              key={site.url}
+              href={site.url}
+              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+              onContextMenu={(e) => handleContextMenu(e, site)}
+            >
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+                {site.favicon || site.smallFavicon
+                  ? (
+                    <img
+                      src={site.favicon || site.smallFavicon!}
+                      alt={site.title}
+                      className="w-6 h-6 object-contain"
+                    />
+                  )
+                  : (
+                    <span className="text-lg font-semibold text-gray-300">
+                      {(site.title || "?")[0]}
+                    </span>
+                  )}
+              </div>
+              <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
+                {site.title}
               </span>
-            </div>
-            <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
-              {t("topSites.addSite")}
-            </span>
-          </button>
+            </a>
+          ))}
         </div>
       </div>
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="absolute z-10 bg-base-200 rounded-md shadow-lg"
+          style={{
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+          }}
+        >
+          <ul className="menu p-2">
+            {isPinned(contextMenu.site)
+              ? (
+                <li onClick={() => unpinSite(contextMenu.site as PinnedSite)}>
+                  <a>{t("topSites.unpin")}</a>
+                </li>
+              )
+              : (
+                <li onClick={() => pinSite(contextMenu.site)}>
+                  <a>{t("topSites.pin")}</a>
+                </li>
+              )}
+            <li onClick={() => handleBlockRequest(contextMenu.site)}>
+              <a>{t("topSites.block")}</a>
+            </li>
+          </ul>
+        </div>
+      )}
     </>
   );
 }

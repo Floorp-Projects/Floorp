@@ -4,7 +4,11 @@ import { Modal } from "../Modal/index.tsx";
 import { useBackground } from "@/contexts/BackgroundContext.tsx";
 import { useComponents } from "@/contexts/ComponentsContext.tsx";
 import { getFloorpImages } from "@/utils/backgroundImages.ts";
-import { getFolderPathFromDialog } from "@/utils/dataManager.ts";
+import {
+  getFolderPathFromDialog,
+  getNewTabSettings,
+  saveNewTabSettings,
+} from "@/utils/dataManager.ts";
 
 export function Settings({
   isOpen,
@@ -32,6 +36,7 @@ export function Settings({
   const [floorpImages, setFloorpImages] = useState<
     { name: string; url: string }[]
   >([]);
+  const [blockedSites, setBlockedSites] = useState<string[]>([]);
 
   useEffect(() => {
     if (backgroundType === "custom" && fileName) {
@@ -48,6 +53,17 @@ export function Settings({
 
     setFloorpImages(getFloorpImages());
   }, [backgroundType, fileName, folderPath]);
+
+  useEffect(() => {
+    const loadBlockedSites = async () => {
+      const settings = await getNewTabSettings();
+      setBlockedSites(settings.topSites.blocked);
+    };
+
+    if (isOpen) {
+      loadBlockedSites();
+    }
+  }, [isOpen]);
 
   const compressImage = (
     dataUrl: string,
@@ -163,6 +179,27 @@ export function Settings({
     }
   };
 
+  const unblockSite = async (urlToUnblock: string) => {
+    setIsSubmitting(true);
+    try {
+      const settings = await getNewTabSettings();
+      const newBlockedSites = settings.topSites.blocked.filter(
+        (url) => url !== urlToUnblock,
+      );
+      await saveNewTabSettings({
+        topSites: {
+          ...settings.topSites,
+          blocked: newBlockedSites,
+        },
+      });
+      setBlockedSites(newBlockedSites);
+    } catch (error) {
+      console.error("Failed to unblock site:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -211,6 +248,43 @@ export function Settings({
                 {t("settings.searchBar")}
               </span>
             </label>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            {t("settings.blockedSites", "Blocked Sites")}
+          </h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+            {blockedSites.length > 0
+              ? (
+                blockedSites.map((url) => (
+                  <div
+                    key={url}
+                    className="flex items-center justify-between bg-gray-100 dark:bg-gray-700/50 p-2 rounded-md"
+                  >
+                    <p
+                      className="text-sm text-gray-700 dark:text-gray-200 truncate"
+                      title={url}
+                    >
+                      {url}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => unblockSite(url)}
+                      disabled={isSubmitting}
+                      className="btn btn-sm btn-ghost text-primary hover:bg-primary/10"
+                    >
+                      {t("settings.unblock", "Unblock")}
+                    </button>
+                  </div>
+                ))
+              )
+              : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("settings.noBlockedSites", "No sites are blocked.")}
+                </p>
+              )}
           </div>
         </section>
 
