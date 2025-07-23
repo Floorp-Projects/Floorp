@@ -10,6 +10,11 @@ declare global {
   }
 }
 
+export interface PinnedSite {
+  url: string;
+  title: string;
+}
+
 export interface NewTabSettings {
   components: {
     topSites: boolean;
@@ -27,6 +32,10 @@ export interface NewTabSettings {
   };
   searchBar: {
     searchEngine: string;
+  };
+  topSites: {
+    pinned: PinnedSite[];
+    blocked: string[];
   };
 }
 
@@ -59,12 +68,16 @@ const DEFAULT_SETTINGS: NewTabSettings = {
   searchBar: {
     searchEngine: "default",
   },
+  topSites: {
+    pinned: [],
+    blocked: [],
+  },
 };
 
 let savePromise: Promise<void> | null = null;
 
 export async function saveNewTabSettings(
-  settings: NewTabSettings,
+  settings: Partial<NewTabSettings>,
 ): Promise<void> {
   try {
     if (savePromise) {
@@ -77,6 +90,22 @@ export async function saveNewTabSettings(
       const newSettings = {
         ...current,
         ...settings,
+        components: {
+          ...current.components,
+          ...(settings.components ?? {}),
+        },
+        background: {
+          ...current.background,
+          ...(settings.background ?? {}),
+        },
+        searchBar: {
+          ...current.searchBar,
+          ...(settings.searchBar ?? {}),
+        },
+        topSites: {
+          ...current.topSites,
+          ...(settings.topSites ?? {}),
+        },
       };
 
       await rpc.setStringPref(
@@ -105,6 +134,22 @@ export async function getNewTabSettings(): Promise<NewTabSettings> {
     const mergedSettings = {
       ...DEFAULT_SETTINGS,
       ...settings,
+      components: {
+        ...DEFAULT_SETTINGS.components,
+        ...(settings.components || {}),
+      },
+      background: {
+        ...DEFAULT_SETTINGS.background,
+        ...(settings.background || {}),
+      },
+      searchBar: {
+        ...DEFAULT_SETTINGS.searchBar,
+        ...(settings.searchBar || {}),
+      },
+      topSites: {
+        ...DEFAULT_SETTINGS.topSites,
+        ...(settings.topSites || {}),
+      },
     };
 
     return mergedSettings;

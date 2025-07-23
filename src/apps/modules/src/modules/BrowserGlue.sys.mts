@@ -1,5 +1,10 @@
-//@ts-expect-error
-import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { ActorManagerParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ActorManagerParent.sys.mjs",
+);
 
 function localPathToResourceURI(path: string) {
   const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/);
@@ -185,23 +190,6 @@ const JS_WINDOW_ACTORS: {
       "about:*",
     ],
   },
-  // Floorp 13 test
-  // NRWebContentModifier: {
-  //   parent: {
-  //     esModuleURI: localPathToResourceURI(
-  //       "../actors/NRWebContentModifierParent.sys.mts",
-  //     ),
-  //   },
-  //   child: {
-  //     esModuleURI: localPathToResourceURI(
-  //       "../actors/NRWebContentModifierChild.sys.mts",
-  //     ),
-  //     events: {
-  //       DOMContentLoaded: {},
-  //     },
-  //   },
-  //   matches: ["https://*/*", "http://*/*"],
-  // },
   NRChromeModal: {
     child: {
       esModuleURI: localPathToResourceURI(
@@ -294,6 +282,27 @@ const JS_WINDOW_ACTORS: {
       "chrome://noraneko-newtab/*",
       "about:*",
     ],
+  },
+
+  NRWebScraper: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: [
+      "http://*/*",
+      "https://*/*",
+    ],
+    allFrames: true,
   },
 };
 

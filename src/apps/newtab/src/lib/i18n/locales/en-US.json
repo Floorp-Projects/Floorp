@@ -8,7 +8,10 @@
         "cancel": "Cancel",
         "add": "Add",
         "close": "Close",
-        "labelPlaceholder": "Website name"
+        "labelPlaceholder": "Website name",
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "block": "Block"
     },
     "settings": {
         "newTabSettings": "New Tab Settings",

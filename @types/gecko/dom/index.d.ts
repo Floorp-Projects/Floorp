@@ -35,6 +35,9 @@ interface CSSStyleDeclaration {
   flexTemplateAreas: string;
   height: string;
   animation: string;
+  width: string;
+  minWidth: string;
+  minHeight: string;
 }
 
 interface nsIXPCComponents extends nsISupports {

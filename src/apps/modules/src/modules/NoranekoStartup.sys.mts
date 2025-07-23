@@ -56,7 +56,10 @@ function checkAndShowWelcomePage(): void {
 
     if (!welcomeShown) {
       // Open welcome page in a new tab
-      const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+      const window = Services.wm.getMostRecentWindow(
+        "navigator:browser",
+      ) as Window;
+      const gBrowser = window.gBrowser;
       if (gBrowser) {
         gBrowser.addTab("about:welcome");
 
@@ -80,6 +83,11 @@ export function onFinalUIStartup(): void {
   if (isUpdated) {
     checkAndShowWelcomePage();
   }
+
+  // int OS Modules
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-apis/OSGlue.sys.mjs",
+  );
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
