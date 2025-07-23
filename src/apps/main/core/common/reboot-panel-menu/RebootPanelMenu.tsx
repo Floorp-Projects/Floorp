@@ -84,23 +84,16 @@ export class RebootPanelMenu {
   }
 
   private static handleRestartWithCacheClear() {
-    Services.env.set("MOZ_RESET_PROFILE_RESTART", "1");
+    Services.appinfo.invalidateCachesOnRestart();
     Services.startup.quit(
-      Services.startup.eForceQuit | Services.startup.eRestart,
+      Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit,
     );
   }
 
   private static handleRestartInSafeMode() {
-    Services.startup.restartInSafeMode(
-      Services.startup.eForceQuit | Services.startup.eRestart,
-    );
-  }
-
-  private static handleRestartWithProfileManager() {
-    Services.env.set("MOZ_RESET_PROFILE_RESTART", "1");
-    Services.env.set("MOZ_PROFILE_RESTART", "1");
-    Services.startup.quit(
-      Services.startup.eForceQuit | Services.startup.eRestart,
+    Services.obs.notifyObservers(
+      window as nsISupports,
+      "restart-in-safe-mode",
     );
   }
 
@@ -110,9 +103,6 @@ export class RebootPanelMenu {
       normalRestart: i18next.t("reboot.menu.normal-restart"),
       restartWithCacheClear: i18next.t("reboot.menu.restart-cache-clear"),
       restartInSafeMode: i18next.t("reboot.menu.restart-safe-mode"),
-      restartWithProfileManager: i18next.t(
-        "reboot.menu.restart-profile-manager",
-      ),
     });
 
     addI18nObserver(() => {
@@ -121,9 +111,6 @@ export class RebootPanelMenu {
         normalRestart: i18next.t("reboot.menu.normal-restart"),
         restartWithCacheClear: i18next.t("reboot.menu.restart-cache-clear"),
         restartInSafeMode: i18next.t("reboot.menu.restart-safe-mode"),
-        restartWithProfileManager: i18next.t(
-          "reboot.menu.restart-profile-manager",
-        ),
       });
     });
 
@@ -157,15 +144,6 @@ export class RebootPanelMenu {
               label={translations().restartInSafeMode}
               onCommand={() => RebootPanelMenu.handleRestartInSafeMode()}
             />
-            {
-              /* <xul:toolbarbutton
-              id="appMenu-restart-profile-manager-button"
-              class="subviewbutton"
-              label={translations().restartWithProfileManager}
-              onCommand={() =>
-                RebootPanelMenu.handleRestartWithProfileManager()}
-            /> */
-            }
           </xul:vbox>
         </xul:panelview>
       </>
