@@ -30,14 +30,6 @@ export async function injectXHTML(binPath: string) {
       document.querySelector("head").appendChild(script);
     }
 
-    const meta = document.querySelector(
-      "meta[http-equiv='Content-Security-Policy']",
-    ) as HTMLMetaElement;
-    meta?.setAttribute(
-      "content",
-      "script-src chrome: moz-src: resource: http://localhost:* 'report-sample'",
-    );
-
     await fs.writeFile(path_browserxhtml, document.toString());
   }
 }
