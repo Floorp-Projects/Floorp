@@ -1,6 +1,514 @@
 {
   "data": [
     {
+      "schema": 1753236937989,
+      "subframes": [],
+      "components": [
+        {
+          "type": "ad_carousel",
+          "included": {
+            "parent": {
+              "selector": ".module--carousel"
+            },
+            "related": {
+              "selector": ".module--carousel__left, .module--carousel__right"
+            },
+            "children": [
+              {
+                "selector": ".module--carousel__item",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "excluded": {
+            "parent": {
+              "selector": ".js-results-sidebar"
+            }
+          },
+          "included": {
+            "parent": {
+              "selector": "article[data-testid='ad']"
+            },
+            "children": [
+              {
+                "type": "ad_sitelink",
+                "selector": "ul"
+              }
+            ]
+          }
+        },
+        {
+          "type": "incontent_searchbox",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "form#search_form"
+            },
+            "related": {
+              "selector": "input#search_button, .search__autocomplete"
+            },
+            "children": [
+              {
+                "selector": " input#search_form_input"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_sidebar",
+          "included": {
+            "parent": {
+              "selector": ".js-results-sidebar"
+            },
+            "children": [
+              {
+                "selector": "article[data-testid='ad']",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "default": true
+        }
+      ],
+      "shoppingTab": {
+        "regexp": "&ia=shopping&iax=shopping|&iax=shopping&ia=shopping",
+        "selector": ".SnptgjT2zdOhGYfNng6g",
+        "inspectRegexpInSERP": true
+      },
+      "taggedCodes": [
+        "ffab",
+        "ffcm",
+        "ffhp",
+        "ffip",
+        "ffit",
+        "ffnt",
+        "ffocus",
+        "ffos",
+        "ffsb",
+        "fpas",
+        "fpsa",
+        "ftas",
+        "ftsa",
+        "lm",
+        "newext"
+      ],
+      "telemetryId": "duckduckgo",
+      "organicCodes": [],
+      "codeParamName": "t",
+      "pageTypeParam": {
+        "keys": [
+          "ia"
+        ],
+        "pageTypes": [
+          {
+            "name": "web",
+            "target": "default_tab",
+            "values": [
+              "web"
+            ],
+            "enabled": true,
+            "isDefault": true
+          },
+          {
+            "name": "images",
+            "values": [
+              "images"
+            ],
+            "enabled": false
+          },
+          {
+            "name": "shopping",
+            "target": "shopping_tab",
+            "values": [
+              "shopping"
+            ],
+            "enabled": true
+          },
+          {
+            "name": "videos",
+            "values": [
+              "videos"
+            ],
+            "enabled": false
+          },
+          {
+            "name": "news",
+            "values": [
+              "news"
+            ],
+            "enabled": false
+          }
+        ],
+        "enableSPAHandling": true
+      },
+      "queryParamName": "q",
+      "queryParamNames": [
+        "q"
+      ],
+      "domainExtraction": {
+        "ads": [
+          {
+            "method": "href",
+            "options": {
+              "queryParamKey": "ad_domain"
+            },
+            "selectors": ".products-carousel a.js-carousel-item-title, [data-testid='ad'] a[data-testid='result-title-a']"
+          }
+        ],
+        "nonAds": [
+          {
+            "method": "href",
+            "selectors": "[data-layout='organic'] a[data-testid='result-title-a']"
+          }
+        ]
+      },
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "searchPageMatches": [
+        "https://duckduckgo.com/*"
+      ],
+      "expectedOrganicCodes": [
+        "h_",
+        "ha",
+        "hb",
+        "hc",
+        "hd",
+        "he",
+        "hf",
+        "hg",
+        "hh",
+        "hi",
+        "hj",
+        "hk",
+        "hl",
+        "hm",
+        "hn",
+        "ho",
+        "hp",
+        "hq",
+        "hr",
+        "hs",
+        "ht",
+        "hu",
+        "hv",
+        "hw",
+        "hx",
+        "hy",
+        "hz"
+      ],
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)",
+        "^https://links\\.duckduckgo\\.com/m\\.js\\?dsl=1"
+      ],
+      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
+      "last_modified": 1753289524079
+    },
+    {
+      "schema": 1753150537617,
+      "subframes": [],
+      "components": [
+        {
+          "type": "ad_popover",
+          "included": {
+            "parent": {
+              "selector": "#plahover"
+            },
+            "children": [
+              {
+                "selector": ".pla-hovercard-container",
+                "skipCount": true,
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_carousel",
+          "included": {
+            "parent": {
+              "selector": ".pla-exp-container"
+            },
+            "related": {
+              "selector": "g-right-button, g-left-button, .exp-button"
+            },
+            "children": [
+              {
+                "selector": "[data-dtld]",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_carousel",
+          "included": {
+            "parent": {
+              "selector": ".sh-sr__shop-result-group"
+            },
+            "related": {
+              "selector": "g-right-button, g-left-button"
+            },
+            "children": [
+              {
+                "selector": ".sh-np__click-target",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "refined_search_buttons",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "#appbar g-scrolling-carousel"
+            },
+            "related": {
+              "selector": "g-right-button, g-left-button"
+            },
+            "children": [
+              {
+                "selector": "a"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "excluded": {
+            "parent": {
+              "selector": "#rhs"
+            }
+          },
+          "included": {
+            "parent": {
+              "selector": "[data-text-ad='1']"
+            },
+            "children": [
+              {
+                "type": "ad_sitelink",
+                "selector": "[role='list']"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_sidebar",
+          "included": {
+            "parent": {
+              "selector": "#rhs"
+            },
+            "children": [
+              {
+                "selector": ".pla-unit, .mnr-c",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "incontent_searchbox",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "form[role='search']"
+            },
+            "related": {
+              "selector": "div.logo + div + div"
+            },
+            "children": [
+              {
+                "selector": "input[type='text']"
+              },
+              {
+                "selector": "textarea[name='q']"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_image_row",
+          "excluded": {
+            "parent": {
+              "selector": ".pla-exp-container"
+            }
+          },
+          "included": {
+            "parent": {
+              "selector": ".top-pla-group-inner"
+            },
+            "children": [
+              {
+                "selector": "[data-dtld]",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "cookie_banner",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "div.spoKVd"
+            },
+            "children": [
+              {
+                "selector": "button#L2AGLb",
+                "eventListeners": [
+                  {
+                    "action": "clicked_accept",
+                    "eventType": "click"
+                  }
+                ]
+              },
+              {
+                "selector": "button#W0wltc",
+                "eventListeners": [
+                  {
+                    "action": "clicked_reject",
+                    "eventType": "click"
+                  }
+                ]
+              },
+              {
+                "selector": "button#VnjCcb",
+                "eventListeners": [
+                  {
+                    "action": "clicked_more_options",
+                    "eventType": "click"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "default": true
+        }
+      ],
+      "shoppingTab": {
+        "regexp": "&udm=28",
+        "selector": "div[role='navigation'] a",
+        "inspectRegexpInSERP": true
+      },
+      "taggedCodes": [
+        "firefox-a",
+        "firefox-b",
+        "firefox-b-ar",
+        "firefox-b-1",
+        "firefox-b-1-ar",
+        "firefox-b-ab",
+        "firefox-b-1-ab",
+        "firefox-b-d",
+        "firefox-b-dt",
+        "firefox-b-1-d",
+        "firefox-b-1-dt",
+        "firefox-b-e",
+        "firefox-b-1-e",
+        "firefox-b-m",
+        "firefox-b-1-m",
+        "firefox-b-o",
+        "firefox-b-1-o",
+        "firefox-b-lm",
+        "firefox-b-1-lm",
+        "firefox-b-lg",
+        "firefox-b-huawei-h1611",
+        "firefox-b-is-oem1",
+        "firefox-b-oem1",
+        "firefox-b-oem2",
+        "firefox-b-tinno",
+        "firefox-b-tf",
+        "firefox-b-pn-wt",
+        "firefox-b-pn-wt-us",
+        "firefox-b-vv",
+        "ubuntu",
+        "ubuntu-sn"
+      ],
+      "telemetryId": "google",
+      "organicCodes": [],
+      "codeParamName": "client",
+      "queryParamName": "q",
+      "queryParamNames": [
+        "q"
+      ],
+      "signedInCookies": [
+        {
+          "host": "accounts.google.com",
+          "name": "SID"
+        }
+      ],
+      "domainExtraction": {
+        "ads": [
+          {
+            "method": "textContent",
+            "selectors": ".sh-np__seller-container"
+          },
+          {
+            "method": "dataAttribute",
+            "options": {
+              "dataAttributeKey": "dtld"
+            },
+            "selectors": "[data-dtld]"
+          }
+        ],
+        "nonAds": [
+          {
+            "method": "href",
+            "options": {
+              "queryParamKey": "url",
+              "queryParamValueIsHref": true
+            },
+            "selectors": ".mnIHsc > a:first-child"
+          },
+          {
+            "method": "href",
+            "selectors": "a[jsname='UWckNb']"
+          },
+          {
+            "method": "dataAttribute",
+            "options": {
+              "dataAttributeKey": "lpage"
+            },
+            "selectors": "[data-id='mosaic'] [data-lpage]"
+          }
+        ]
+      },
+      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
+      "ignoreLinkRegexps": [
+        "^https?://consent\\.google\\.(?:.+)/d\\?continue\\="
+      ],
+      "nonAdsLinkRegexps": [
+        "^https?://www\\.google\\.(?:.+)/url?(?:.+)&url="
+      ],
+      "searchPageMatches": [
+        "https://{host}/search*"
+      ],
+      "adServerAttributes": [
+        "rw"
+      ],
+      "followOnParamNames": [
+        "oq",
+        "ved",
+        "ei"
+      ],
+      "extraAdServersRegexps": [
+        "^https?://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
+      ],
+      "nonAdsLinkQueryParamNames": [
+        "url"
+      ],
+      "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
+      "last_modified": 1753192248302
+    },
+    {
       "schema": 1751854531997,
       "subframes": [],
       "components": [
@@ -299,301 +807,6 @@
       "last_modified": 1750880107190
     },
     {
-      "schema": 1748966468517,
-      "subframes": [],
-      "components": [
-        {
-          "type": "ad_popover",
-          "included": {
-            "parent": {
-              "selector": "#plahover"
-            },
-            "children": [
-              {
-                "selector": ".pla-hovercard-container",
-                "skipCount": true,
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_carousel",
-          "included": {
-            "parent": {
-              "selector": ".pla-exp-container"
-            },
-            "related": {
-              "selector": "g-right-button, g-left-button, .exp-button"
-            },
-            "children": [
-              {
-                "selector": "[data-dtld]",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_carousel",
-          "included": {
-            "parent": {
-              "selector": ".sh-sr__shop-result-group"
-            },
-            "related": {
-              "selector": "g-right-button, g-left-button"
-            },
-            "children": [
-              {
-                "selector": ".sh-np__click-target",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "refined_search_buttons",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "#appbar g-scrolling-carousel"
-            },
-            "related": {
-              "selector": "g-right-button, g-left-button"
-            },
-            "children": [
-              {
-                "selector": "a"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "excluded": {
-            "parent": {
-              "selector": "#rhs"
-            }
-          },
-          "included": {
-            "parent": {
-              "selector": "[data-text-ad='1']"
-            },
-            "children": [
-              {
-                "type": "ad_sitelink",
-                "selector": "[role='list']"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_sidebar",
-          "included": {
-            "parent": {
-              "selector": "#rhs"
-            },
-            "children": [
-              {
-                "selector": ".pla-unit, .mnr-c",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "incontent_searchbox",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "form[role='search']"
-            },
-            "related": {
-              "selector": "div.logo + div + div"
-            },
-            "children": [
-              {
-                "selector": "input[type='text']"
-              },
-              {
-                "selector": "textarea[name='q']"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_image_row",
-          "excluded": {
-            "parent": {
-              "selector": ".pla-exp-container"
-            }
-          },
-          "included": {
-            "parent": {
-              "selector": ".top-pla-group-inner"
-            },
-            "children": [
-              {
-                "selector": "[data-dtld]",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "cookie_banner",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "div.spoKVd"
-            },
-            "children": [
-              {
-                "selector": "button#L2AGLb",
-                "eventListeners": [
-                  {
-                    "action": "clicked_accept",
-                    "eventType": "click"
-                  }
-                ]
-              },
-              {
-                "selector": "button#W0wltc",
-                "eventListeners": [
-                  {
-                    "action": "clicked_reject",
-                    "eventType": "click"
-                  }
-                ]
-              },
-              {
-                "selector": "button#VnjCcb",
-                "eventListeners": [
-                  {
-                    "action": "clicked_more_options",
-                    "eventType": "click"
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "default": true
-        }
-      ],
-      "shoppingTab": {
-        "regexp": "&udm=28",
-        "selector": "div[role='navigation'] a",
-        "inspectRegexpInSERP": true
-      },
-      "taggedCodes": [
-        "firefox-a",
-        "firefox-b",
-        "firefox-b-1",
-        "firefox-b-ab",
-        "firefox-b-1-ab",
-        "firefox-b-d",
-        "firefox-b-1-d",
-        "firefox-b-e",
-        "firefox-b-1-e",
-        "firefox-b-m",
-        "firefox-b-1-m",
-        "firefox-b-o",
-        "firefox-b-1-o",
-        "firefox-b-lm",
-        "firefox-b-1-lm",
-        "firefox-b-lg",
-        "firefox-b-huawei-h1611",
-        "firefox-b-is-oem1",
-        "firefox-b-oem1",
-        "firefox-b-oem2",
-        "firefox-b-tinno",
-        "firefox-b-tf",
-        "firefox-b-pn-wt",
-        "firefox-b-pn-wt-us",
-        "firefox-b-vv",
-        "ubuntu",
-        "ubuntu-sn"
-      ],
-      "telemetryId": "google",
-      "organicCodes": [],
-      "codeParamName": "client",
-      "queryParamName": "q",
-      "queryParamNames": [
-        "q"
-      ],
-      "signedInCookies": [
-        {
-          "host": "accounts.google.com",
-          "name": "SID"
-        }
-      ],
-      "domainExtraction": {
-        "ads": [
-          {
-            "method": "textContent",
-            "selectors": ".sh-np__seller-container"
-          },
-          {
-            "method": "dataAttribute",
-            "options": {
-              "dataAttributeKey": "dtld"
-            },
-            "selectors": "[data-dtld]"
-          }
-        ],
-        "nonAds": [
-          {
-            "method": "href",
-            "options": {
-              "queryParamKey": "url",
-              "queryParamValueIsHref": true
-            },
-            "selectors": ".mnIHsc > a:first-child"
-          },
-          {
-            "method": "href",
-            "selectors": "a[jsname='UWckNb']"
-          },
-          {
-            "method": "dataAttribute",
-            "options": {
-              "dataAttributeKey": "lpage"
-            },
-            "selectors": "[data-id='mosaic'] [data-lpage]"
-          }
-        ]
-      },
-      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
-      "ignoreLinkRegexps": [
-        "^https?://consent\\.google\\.(?:.+)/d\\?continue\\="
-      ],
-      "nonAdsLinkRegexps": [
-        "^https?://www\\.google\\.(?:.+)/url?(?:.+)&url="
-      ],
-      "searchPageMatches": [
-        "https://{host}/search*"
-      ],
-      "adServerAttributes": [
-        "rw"
-      ],
-      "followOnParamNames": [
-        "oq",
-        "ved",
-        "ei"
-      ],
-      "extraAdServersRegexps": [
-        "^https?://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
-      ],
-      "nonAdsLinkQueryParamNames": [
-        "url"
-      ],
-      "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
-      "last_modified": 1749153997368
-    },
-    {
       "isSPA": true,
       "schema": 1741189704472,
       "subframes": [],
@@ -672,167 +885,6 @@
       "last_modified": 1741781945960
     },
     {
-      "schema": 1741189703395,
-      "subframes": [],
-      "components": [
-        {
-          "type": "ad_carousel",
-          "included": {
-            "parent": {
-              "selector": ".module--carousel"
-            },
-            "related": {
-              "selector": ".module--carousel__left, .module--carousel__right"
-            },
-            "children": [
-              {
-                "selector": ".module--carousel__item",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "excluded": {
-            "parent": {
-              "selector": ".js-results-sidebar"
-            }
-          },
-          "included": {
-            "parent": {
-              "selector": "article[data-testid='ad']"
-            },
-            "children": [
-              {
-                "type": "ad_sitelink",
-                "selector": "ul"
-              }
-            ]
-          }
-        },
-        {
-          "type": "incontent_searchbox",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "form#search_form"
-            },
-            "related": {
-              "selector": "input#search_button, .search__autocomplete"
-            },
-            "children": [
-              {
-                "selector": " input#search_form_input"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_sidebar",
-          "included": {
-            "parent": {
-              "selector": ".js-results-sidebar"
-            },
-            "children": [
-              {
-                "selector": "article[data-testid='ad']",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "default": true
-        }
-      ],
-      "shoppingTab": {
-        "regexp": "&iax=shopping&ia=shopping",
-        "selector": "#duckbar a[data-zci-link='products']"
-      },
-      "taggedCodes": [
-        "ffab",
-        "ffcm",
-        "ffhp",
-        "ffip",
-        "ffit",
-        "ffnt",
-        "ffocus",
-        "ffos",
-        "ffsb",
-        "fpas",
-        "fpsa",
-        "ftas",
-        "ftsa",
-        "lm",
-        "newext"
-      ],
-      "telemetryId": "duckduckgo",
-      "organicCodes": [],
-      "codeParamName": "t",
-      "queryParamName": "q",
-      "queryParamNames": [
-        "q"
-      ],
-      "domainExtraction": {
-        "ads": [
-          {
-            "method": "href",
-            "options": {
-              "queryParamKey": "ad_domain"
-            },
-            "selectors": ".products-carousel a.js-carousel-item-title, [data-testid='ad'] a[data-testid='result-title-a']"
-          }
-        ],
-        "nonAds": [
-          {
-            "method": "href",
-            "selectors": "[data-layout='organic'] a[data-testid='result-title-a']"
-          }
-        ]
-      },
-      "searchPageRegexp": "^https://duckduckgo\\.com/",
-      "searchPageMatches": [
-        "https://duckduckgo.com/*"
-      ],
-      "expectedOrganicCodes": [
-        "h_",
-        "ha",
-        "hb",
-        "hc",
-        "hd",
-        "he",
-        "hf",
-        "hg",
-        "hh",
-        "hi",
-        "hj",
-        "hk",
-        "hl",
-        "hm",
-        "hn",
-        "ho",
-        "hp",
-        "hq",
-        "hr",
-        "hs",
-        "ht",
-        "hu",
-        "hv",
-        "hw",
-        "hx",
-        "hy",
-        "hz"
-      ],
-      "extraAdServersRegexps": [
-        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
-        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
-      ],
-      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1741781945958
-    },
-    {
       "schema": 1741189702306,
       "subframes": [],
       "taggedCodes": [
@@ -866,5 +918,5 @@
       "last_modified": 1741781945955
     }
   ],
-  "timestamp": 1751891587705
+  "timestamp": 1753289524079
 }

@@ -3,6 +3,133 @@
     {
       "stash": {
         "blocked": [
+          "{7b24d37b-e9b4-4e23-ac68-38921625d9a5}:1.0.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1753236939394,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1753295707122,
+      "id": "9b099472-afb4-4a96-947f-f23a8605e591",
+      "last_modified": 1753295782791
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{442f1347-e475-433a-baec-1071dd5f6c2a}:2.1",
+          "{42da09d5-c80c-43b4-a601-23f93ce1c7d5}:2.1",
+          "{bafb8edf-5759-4e99-8e2f-d52dbfd94e0f}:1.0",
+          "{36b73d3c-e3fd-41d6-b52a-20cf1d3023d4}:1.0",
+          "{36b73d3c-e3fd-41d6-b52a-20cf1d3023d4}:101.2",
+          "{36b73d3c-e3fd-41d6-b52a-20cf1d3023d4}:102.2",
+          "{36b73d3c-e3fd-41d6-b52a-20cf1d3023d4}:357.123.0",
+          "{36b73d3c-e3fd-41d6-b52a-20cf1d3023d4}:512.18.7",
+          "{39a5131f-ff8d-4e20-95ca-288a93b4126c}:1.0",
+          "{39a5131f-ff8d-4e20-95ca-288a93b4126c}:21.45.1",
+          "{89033fb2-f4a0-473c-9f39-81e525c09cb9}:1.0",
+          "{89033fb2-f4a0-473c-9f39-81e525c09cb9}:10.0",
+          "{89033fb2-f4a0-473c-9f39-81e525c09cb9}:12.18.109",
+          "{42cdd25c-0752-442f-a3d2-f571cc6be45b}:1.0",
+          "{42cdd25c-0752-442f-a3d2-f571cc6be45b}:357.123.0",
+          "{8e26af50-2c25-4769-8950-01708475308e}:15.1",
+          "{867df6e4-4c73-474c-997d-0ade170a36c5}:19.1",
+          "{a5bb3919-c577-422d-9962-5afa5f8995fc}:1.0",
+          "{814334d6-c8aa-4082-ad9e-118d8de81e73}:1.3",
+          "{814334d6-c8aa-4082-ad9e-118d8de81e73}:12.18.7",
+          "copy-pasta-logger@example.com:1.0",
+          "copy-pasta-logger@example.com:1.2.0",
+          "{b89278c6-1c0e-4c77-a472-dc1b5639ccf2}:1.0",
+          "{3dd5f7d3-bcc6-4d2f-b93f-cf91ddc6a949}:1.0",
+          "{3dd5f7d3-bcc6-4d2f-b93f-cf91ddc6a949}:2.6.0",
+          "{3799d5b2-8011-479c-a16c-f22aabc94009}:1.0",
+          "{3799d5b2-8011-479c-a16c-f22aabc94009}:1.1.3",
+          "{3799d5b2-8011-479c-a16c-f22aabc94009}:1.1.4",
+          "{3799d5b2-8011-479c-a16c-f22aabc94009}:2.5.1",
+          "{d39f00e1-09ba-4533-b8b5-1033d0883e9f}:1.0",
+          "{d39f00e1-09ba-4533-b8b5-1033d0883e9f}:2.2.1",
+          "{8331546c-79f4-461d-908f-a9e4bdb2cd53}:1.0",
+          "{8331546c-79f4-461d-908f-a9e4bdb2cd53}:2.2.7",
+          "{ec2eb1c8-050d-4e70-a752-3b853ef4ac07}:1.0",
+          "{ec2eb1c8-050d-4e70-a752-3b853ef4ac07}:12.8.1",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.1",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.11",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.13",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.15",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.16",
+          "{f71ca2f7-3fe5-41c8-bdad-993b536aa81f}:0.0.17",
+          "{c446a382-4044-42c2-8006-d9849dfa068d}:0.0.1",
+          "{c446a382-4044-42c2-8006-d9849dfa068d}:0.0.10",
+          "{c446a382-4044-42c2-8006-d9849dfa068d}:0.0.11",
+          "{c446a382-4044-42c2-8006-d9849dfa068d}:0.0.12",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.0.1",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.1.1",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.1.5",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.2.0",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.2.1",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.2.2",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.2.3",
+          "{de0439d1-4fd6-4eb3-a2ca-2e346304d59a}:0.2.4",
+          "infos@coinbase.com:1",
+          "info@coinbase.com:1",
+          "{78b59f7f-6179-45c6-b9c0-8e1a72ec89bb}:1.3",
+          "{78b59f7f-6179-45c6-b9c0-8e1a72ec89bb}:10.0",
+          "{26d839b6-2822-4cb9-9938-487daf2ba66c}:1.0",
+          "{26d839b6-2822-4cb9-9938-487daf2ba66c}:21.45.1"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1753187778077,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1753209305871,
+      "id": "930038aa-34e8-4bf3-858d-d0e7f6238490",
+      "last_modified": 1753209381369
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{a4f8822b-0775-45ca-8b29-aabfc18db5d1}:2.4.6",
+          "{a4f8822b-0775-45ca-8b29-aabfc18db5d1}:3.6.0",
+          "{a4f8822b-0775-45ca-8b29-aabfc18db5d1}:3.9.0",
+          "{397478c0-cdbd-400b-b18d-57e92c745def}:19.1",
+          "{bf5187c6-7f2c-42dd-9998-366b04653f8b}:19.1",
+          "{a8edaa88-167b-4b4f-b89d-2efc0a2f7141}:1.0",
+          "{a8edaa88-167b-4b4f-b89d-2efc0a2f7141}:6.1.2",
+          "{a8edaa88-167b-4b4f-b89d-2efc0a2f7141}:12.18.1",
+          "{a8edaa88-167b-4b4f-b89d-2efc0a2f7141}:12.18.7",
+          "{cc8ced72-6065-4bec-98ad-530c9d8c7550}:1.0",
+          "{cc8ced72-6065-4bec-98ad-530c9d8c7550}:12.18.7",
+          "{2105a1e3-9db9-46a2-a2e3-d0d7fa9c3fc1}:1.0",
+          "{2105a1e3-9db9-46a2-a2e3-d0d7fa9c3fc1}:2.0",
+          "{2105a1e3-9db9-46a2-a2e3-d0d7fa9c3fc1}:3.0.1"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1753150539683,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1753187705637,
+      "id": "ee48b0db-1d1a-4882-9339-39b582e39588",
+      "last_modified": 1753187777960
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{40c049c7-de7e-45ad-9cc8-d8345f5f8537}:2.0.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1753064138253,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1753122906149,
+      "id": "116c5f2c-59fe-4d15-a473-04da92cb6b46",
+      "last_modified": 1753122975242
+    },
+    {
+      "stash": {
+        "blocked": [
           "wallet@coinbase.com:1.0",
           "wallet@coinbase.com:2.0",
           "wallet@coinbase.com:4.0",
@@ -1937,5 +2064,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1752863772827
+  "timestamp": 1753295782791
 }

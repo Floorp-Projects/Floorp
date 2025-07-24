@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-07-18_13-36-23_UTC
-// COMMIT: 8aeb90f43d76aacad4688524004f1969793ce133
+// VERSION: 2025-07-22_16-41-10_UTC
+// COMMIT: 66d74ce941749134f5b0c9f0b9ab3393084b0c21
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -14255,6 +14255,8 @@ servers.run
 // Submitted by Fabian Hedin <security@lovable.dev>
 lovable.app
 lovableproject.com
+lovable.run
+lovable.sh
 
 // LubMAN UMCS Sp. z o.o : https://lubman.pl/
 // Submitted by Ireneusz Maliszewski <ireneusz.maliszewski@lubman.pl>
