@@ -4,3 +4,4 @@
 
 MOZ_APP_DISPLAYNAME="Floorp Daylight"
 MOZ_APP_NAME="floorp"
+MOZ_APP_VENDOR="Ablaze"
