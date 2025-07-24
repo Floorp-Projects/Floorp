@@ -31,6 +31,9 @@ run-name: "|α| Publish Release"
 jobs:
   main:
     runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.setup.outputs.VERSION }}
+      NR_VERSION: ${{ steps.setup.outputs.NR_VERSION }}
     steps:
       - uses: actions/setup-node@v4
         with:
@@ -153,14 +156,21 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Setup
+        id: setup
         run: |
           deno install --allow-scripts
           sudo apt install jq
 
-          echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "BUILDID=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "BUILDID2=$(cat ~/noraneko-publish/mac/meta.json | jq '.noraneko_buildid' | sed 's/\"//g')" >> "$GITHUB_ENV"
+          VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/"//g')
+          NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/"//g')
+
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "NR_VERSION=${NR_VERSION}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "NR_VERSION=${NR_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "BUILDID=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/"//g')" >> "$GITHUB_ENV"
+          echo "BUILDID2=$(cat ~/noraneko-publish/mac/meta.json | jq '.noraneko_buildid' | sed 's/"//g')" >> "$GITHUB_ENV"
           echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
 
       - name: Check Files
@@ -253,7 +263,16 @@ jobs:
           make_latest: true
           token: ${{ github.token }}
 
+  publish:
+    needs: [main]
+    runs-on: ubuntu-latest
+    environment:
+      name: Deploy-to-updater-release
+    steps:
       - name: Deploy to Floorp Update Server 🚀
+        env:
+          NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
+          VERSION: ${{ needs.main.outputs.VERSION }}
         run: |
           curl -X POST \
           -H "Authorization: token ${{ secrets.UPDATE_SERVER_TOKEN }}" \
