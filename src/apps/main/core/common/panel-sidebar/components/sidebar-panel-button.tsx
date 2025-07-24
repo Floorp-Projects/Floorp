@@ -21,8 +21,10 @@ export function PanelSidebarButton(props: {
   ctx: CPanelSidebar;
 }) {
   const gPanelSidebar = props.ctx;
-
-  const [faviconURL] = createResource(() => props.panel, getFaviconURLForPanel);
+  const [faviconURL] = createResource(
+    () => props.panel,
+    async () => await getFaviconURLForPanel(props.panel),
+  );
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/floorp-panel-id", props.panel.id);
@@ -113,7 +115,7 @@ export function PanelSidebarButton(props: {
             : "none",
         }}
       >
-        <Suspense>
+        <Suspense fallback={<div>I</div>}>
           <img src={faviconURL()} width="16" height="16" />
         </Suspense>
       </div>

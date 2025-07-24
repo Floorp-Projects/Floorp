@@ -21,14 +21,20 @@ const gFavicons = PlacesUtils.favicons as {
 
 export async function getFaviconURLForPanel(panel: Panel): Promise<string> {
   try {
+    await globalThis.SessionStore.promiseInitialized;
     const faviconURL = await getFaviconFromPlaces(panel.url ?? "");
     return faviconURL ?? getFallbackFavicon(panel);
-  } catch {
+  } catch (e) {
+    console.error(e);
     return getFallbackFavicon(panel);
   }
 }
 
 async function getFaviconFromPlaces(url: string): Promise<string | undefined> {
+  if (!url) {
+    return undefined;
+  }
+
   const result = await gFavicons.getFaviconForPage(
     Services.io.newURI(url),
   );

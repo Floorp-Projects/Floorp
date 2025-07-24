@@ -422,7 +422,7 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
 
   await Promise.all([
     (async () => {
-      await injectXHTML(binDir);
+      await injectXHTML(binDir, mode === "dev");
     })(),
     applyMixin(binDir),
   ]);
