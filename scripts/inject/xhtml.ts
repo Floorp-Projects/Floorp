@@ -1,7 +1,7 @@
 import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
 
-export async function injectXHTML(binPath: string) {
+export async function injectXHTML(binPath: string, isDev = false) {
   const path_browserxhtml =
     `${binPath}/browser/chrome/browser/content/browser/browser.xhtml`;
   {
@@ -30,13 +30,23 @@ export async function injectXHTML(binPath: string) {
       document.querySelector("head").appendChild(script);
     }
 
-    const meta = document.querySelector(
-      "meta[http-equiv='Content-Security-Policy']",
-    ) as HTMLMetaElement;
-    meta?.setAttribute(
-      "content",
-      "script-src chrome: moz-src: resource: http://localhost:* 'report-sample'",
-    );
+    if (isDev) {
+      const meta = document.querySelector(
+        "meta[http-equiv='Content-Security-Policy']",
+      ) as HTMLMetaElement;
+      meta?.setAttribute(
+        "content",
+        "script-src chrome: moz-src: resource: http://localhost:* 'report-sample'",
+      );
+    } else {
+      const meta = document.querySelector(
+        "meta[http-equiv='Content-Security-Policy']",
+      ) as HTMLMetaElement;
+      meta?.setAttribute(
+        "content",
+        "script-src chrome: moz-src: resource: 'report-sample'",
+      );
+    }
 
     await fs.writeFile(path_browserxhtml, document.toString());
   }
