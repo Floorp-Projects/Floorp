@@ -24021,24 +24021,6 @@
       "last_modified": 1663786624996
     },
     {
-      "schema": 1663786184777,
-      "derHash": "d1MwBWSsZl1W/vW9r9mciKcxwh6tjjmWyzc+ea39v9w=",
-      "subject": "CN=SignSec High-Assurance OV Authority,OU=SSL Department,O=FBS Inc,L=Irvine,ST=CA,C=US",
-      "subjectDN": "MIGEMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExDzANBgNVBAcTBklydmluZTEQMA4GA1UEChMHRkJTIEluYzEXMBUGA1UECxMOU1NMIERlcGFydG1lbnQxLDAqBgNVBAMTI1NpZ25TZWMgSGlnaC1Bc3N1cmFuY2UgT1YgQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b3f6b2b0fcf51e58b433e5f7227ed488ff7643994e55098dff3724b805ca9a1b",
-        "size": 2162,
-        "filename": "-NJzGF6Gew8FPxWa8xRHx0tz0t0bJjNH38uDaSIgIqI=.pem",
-        "location": "security-state-staging/intermediates/f538856a-1986-4ea8-9af5-e9a9636d887e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "+NJzGF6Gew8FPxWa8xRHx0tz0t0bJjNH38uDaSIgIqI=",
-      "crlite_enrolled": false,
-      "id": "30bd429d-11ce-4d9a-b5a8-5c55e73d232c",
-      "last_modified": 1663786624969
-    },
-    {
       "schema": 1663786182228,
       "derHash": "GY4zLxD6D1ivCDrpZLxkQfBs0PrTGbEjX+PtD3xur5M=",
       "subject": "CN=WebNIC RSA Extended Validation Secure Site CA,OU=Controlled by Sectigo exclusively for WebNIC,O=WebNIC (Web Commerce Communications (Singapore) Pte. Ltd.),L=Singapore,C=SG",
@@ -24145,24 +24127,6 @@
       "crlite_enrolled": false,
       "id": "a5d57b58-42af-4896-8d42-5978e9342d5b",
       "last_modified": 1663786624892
-    },
-    {
-      "schema": 1663786174523,
-      "derHash": "LHPumlL/rQcWa4co12gdjL79makGYzRbJarPmx7x8zM=",
-      "subject": "CN=SignSec Certification Authority,OU=SSL Department,O=FBS Inc,L=Irvine,ST=CA,C=US",
-      "subjectDN": "MIGAMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExDzANBgNVBAcTBklydmluZTEQMA4GA1UEChMHRkJTIEluYzEXMBUGA1UECxMOU1NMIERlcGFydG1lbnQxKDAmBgNVBAMTH1NpZ25TZWMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "330eca8b3c6c71906174a6f376dd96a4be63f53fd0d56981b4dfeae2d6a7401d",
-        "size": 2158,
-        "filename": "41fzHe29HqEJ0_pGALXNvRuPsmNV1cP7w8L-2fi7OPc=.pem",
-        "location": "security-state-staging/intermediates/c7c190cf-5113-4753-9b26-d5f26b89127f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "41fzHe29HqEJ0/pGALXNvRuPsmNV1cP7w8L+2fi7OPc=",
-      "crlite_enrolled": false,
-      "id": "2506e9cb-3ad3-4e08-a82b-9b825f074989",
-      "last_modified": 1663786624885
     },
     {
       "schema": 1663786173668,
@@ -29889,5 +29853,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1752937022631
+  "timestamp": 1753541822383
 }
