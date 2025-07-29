@@ -762,7 +762,8 @@ MFBT_API void MozStackWalk(MozWalkStackCallback aCallback,
 #    elif defined(ANDROID)
   pthread_attr_t sattr;
   pthread_attr_init(&sattr);
-  pthread_getattr_np(pthread_self(), &sattr);
+  int rc = pthread_getattr_np(pthread_self(), &sattr);
+  MOZ_RELEASE_ASSERT(rc == 0, "pthread_getattr_np failed");
   void* stackBase = stackEnd = nullptr;
   size_t stackSize = 0;
   if (gettid() != getpid()) {
