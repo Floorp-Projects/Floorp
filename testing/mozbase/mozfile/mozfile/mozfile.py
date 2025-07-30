@@ -486,11 +486,6 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None, extra_search_dirs=(
     if not exts:
         exts = oldexts.split(os.pathsep)
 
-    # This ensures that `cmd` without any extensions will be found.
-    # See: https://bugs.python.org/issue31405
-    if "." not in exts:
-        exts.append(".")
-
     os.environ["PATHEXT"] = os.pathsep.join(exts)
     try:
         path = shutil_which(cmd, mode=mode, path=path)
