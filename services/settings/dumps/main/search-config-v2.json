@@ -3682,7 +3682,6 @@
     },
     {
       "base": {
-        "charset": "EUC-JP",
         "classification": "unknown",
         "name": "楽天市場",
         "urls": {
@@ -3694,9 +3693,9 @@
       },
       "id": "ab6f7178-b0be-452a-82f2-f5df8df2d836",
       "identifier": "rakuten",
-      "last_modified": 1753280249778,
+      "last_modified": 1753710379308,
       "recordType": "engine",
-      "schema": 1753236937885,
+      "schema": 1753668939392,
       "variants": [
         {
           "environment": {
@@ -8401,5 +8400,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1753280249778
+  "timestamp": 1753710379308
 }
