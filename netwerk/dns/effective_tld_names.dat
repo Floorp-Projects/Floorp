@@ -5,8 +5,8 @@
 // Please pull this list from, and only from https://publicsuffix.org/list/public_suffix_list.dat,
 // rather than any other VCS sites. Pulling from any other URL is not guaranteed to be supported.
 
-// VERSION: 2025-07-22_16-41-10_UTC
-// COMMIT: 66d74ce941749134f5b0c9f0b9ab3393084b0c21
+// VERSION: 2025-08-01_18-47-38_UTC
+// COMMIT: 758d5d610dffb02f3b38e8ee6783cec7def1c150
 
 // Instructions on pulling and using this list can be found at https://publicsuffix.org/list/.
 
@@ -14152,6 +14152,11 @@ krellian.net
 // KUROKU LTD : https://kuroku.ltd/
 // Submitted by DisposaBoy <security@oya.to>
 oya.to
+
+// KV GmbH : https://www.nic.co.de
+// Submitted by KV GmbH <registry@kv-gmbh.de>
+// Abuse reports to <registry@kv-gmbh.de>
+co.de
 
 // Laravel Holdings, Inc. : https://laravel.com
 // Submitted by André Valentin <security@laravel.com>
