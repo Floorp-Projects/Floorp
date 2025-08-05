@@ -12,7 +12,7 @@ import type { PreBuildOptions } from "../types.ts";
 export async function runPreBuildPhase(
   options: PreBuildOptions = {},
 ): Promise<void> {
-  const { initGitForPatch = false, isDev = false } = options;
+  const { initGitForPatch = false, isDev = false, mode = "dev" } = options;
 
   log.info("🔧 Starting pre-build phase...");
 
@@ -36,7 +36,7 @@ export async function runPreBuildPhase(
 
   if (isDev) {
     log.info("🚀 Starting development server...");
-    await runChildDev();
+    await runChildDev(mode);
   }
 
   log.success("Pre-build phase completed");

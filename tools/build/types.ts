@@ -4,7 +4,7 @@
 
 export type Platform = "windows" | "linux" | "darwin";
 export type Architecture = "x86_64" | "aarch64";
-export type BuildMode = "dev" | "production";
+export type BuildMode = "dev" | "production" | "test";
 export type BuildPhase = "full" | "before" | "after";
 
 export interface Branding {
@@ -31,6 +31,7 @@ export interface BuildOptions {
 export interface PreBuildOptions {
   initGitForPatch?: boolean;
   isDev?: boolean;
+  mode?: BuildMode;
 }
 
 export interface Paths {

@@ -7,7 +7,7 @@ import { log } from "./build/logger.ts";
 import { ProcessManager } from "./build/process-manager.ts";
 import { CLI } from "./build/cli.ts";
 
-export type BuildMode = "dev" | "production";
+export type BuildMode = "dev" | "production" | "test";
 export type BuildPhase = "full" | "before" | "after";
 
 export interface BuildOptions {

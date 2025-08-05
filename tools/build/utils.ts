@@ -25,11 +25,11 @@ export const arch = Deno.build.arch;
  */
 export async function safeRemove(path: string): Promise<void> {
   try {
-    if (await exists(path)) {
-      await remove(path, { recursive: true });
-    }
+    await remove(path, { recursive: true });
   } catch (error) {
-    console.warn(`Failed to remove ${path}:`, error);
+    if (!(error instanceof Deno.errors.NotFound)) {
+      console.warn(`Failed to remove ${path}:`, error);
+    }
   }
 }
 
@@ -41,9 +41,7 @@ export async function createSymlink(
   target: string,
 ): Promise<void> {
   try {
-    if (await exists(link)) {
-      await safeRemove(link);
-    }
+    await safeRemove(link);
 
     if (platform === "windows") {
       // Windows: Use junction for directories, symlink for files
@@ -157,8 +155,8 @@ export async function initializeDistDirectory(): Promise<void> {
  */
 export async function runChildBuild(isDev: boolean): Promise<void> {
   const { readBuildid2 } = await import("./tasks/update/buildid2.ts");
-  const buildid2 =
-    (await readBuildid2(resolveFromRoot("_dist"))) || "default-build-id";
+  const buildid2 = (await readBuildid2(resolveFromRoot("_dist"))) ||
+    "default-build-id";
   const mode = isDev ? "dev" : "prod";
   const childBuildPath = resolveFromRoot("tools/dev/launchDev/child-build.ts");
 
@@ -186,14 +184,16 @@ export async function runChildBuild(isDev: boolean): Promise<void> {
 /**
  * Run child dev process
  */
-export async function runChildDev(): Promise<void> {
+export async function runChildDev(
+  mode: "dev" | "test" | "production",
+): Promise<void> {
   const { readBuildid2 } = await import("./tasks/update/buildid2.ts");
-  const buildid2 =
-    (await readBuildid2(resolveFromRoot("_dist"))) || "default-build-id";
+  const buildid2 = (await readBuildid2(resolveFromRoot("_dist"))) ||
+    "default-build-id";
   const childDevPath = resolveFromRoot("tools/dev/launchDev/child-dev.ts");
 
   const command = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", childDevPath, "dev", buildid2],
+    args: ["run", "-A", childDevPath, mode, buildid2],
     cwd: projectRoot,
     stdin: "piped",
     stdout: "piped",

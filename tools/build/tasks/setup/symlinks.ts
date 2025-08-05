@@ -22,6 +22,12 @@ export async function setupBuildSymlinks(): Promise<void> {
       ),
       target: resolveFromRoot("i18n/features-chrome"),
     },
+    {
+      link: resolveFromRoot(
+        "src/core/glue/loader-modules/link-modules",
+      ),
+      target: resolveFromRoot("src/core/modules"),
+    },
   ];
 
   // Create all symlinks

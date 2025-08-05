@@ -34,6 +34,7 @@
     "unplugin-swc": "^1.5.4",
     "vite-plugin-istanbul": "^7.0.0",
     "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "4.0.0-beta.6",
     "zod": "^3.25.55",
     "zx": "^8.5.5"
   }

@@ -23,12 +23,6 @@ async function launchBuild(mode: string, buildid2: string) {
         cwd: r("./src/core/glue/loader-modules"),
       }).output(),
     ]);
-
-    // await Promise.all([
-    //   // build({    //   //   configFile: r("./tools/dev/designs/vite.config.ts"),
-    //   //   root: r("./tools/dev/designs"),
-    //   // }),
-    // ]);  } else {
     await Promise.all([
       new Deno.Command(Deno.execPath(), {
         args: ["task", "build", `--env.MODE=${mode}`],
@@ -52,14 +46,6 @@ async function launchBuild(mode: string, buildid2: string) {
         ],
         cwd: r("./src/core/glue/loader-modules"),
       }).output(),
-      // build({      //   configFile: r("./tools/dev/designs/vite.config.ts"),
-      //   root: r("./tools/dev/designs"),
-      // }),
-      // build({
-      //   configFile: r("./src/ui/settings/vite.config.ts"),
-      //   root: r("./src/ui/settings"),
-      //   base: "chrome://noraneko-settings/content",
-      // }),
     ]);
   }
 }

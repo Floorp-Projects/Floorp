@@ -13,7 +13,11 @@ export async function build(options: BuildOptions): Promise<void> {
     await initializeDistDirectory();
 
     if (phase === "before" || phase === "full") {
-      await runPreBuildPhase({ initGitForPatch, isDev: mode === "dev" });
+      await runPreBuildPhase({
+        initGitForPatch,
+        isDev: (mode === "dev" || mode === "test"),
+        mode,
+      });
 
       if (phase === "before") {
         log.info(
@@ -28,7 +32,7 @@ export async function build(options: BuildOptions): Promise<void> {
     }
 
     if (phase === "after" || phase === "full") {
-      await runPostBuildPhase(mode === "dev");
+      await runPostBuildPhase(mode === "dev" || mode === "test");
     }
 
     log.success("🎉 Build completed successfully!");

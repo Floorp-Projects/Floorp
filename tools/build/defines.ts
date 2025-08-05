@@ -15,7 +15,9 @@ export const branding: Branding = {
 export const brandingBaseName = branding.baseName;
 export const brandingName = branding.displayName;
 
-export const VERSION = platform === "windows" ? "001" : "000";
+export const VERSION = (platform === "windows" || platform === "linux")
+  ? "001"
+  : "000";
 
 /**
  * Build paths
@@ -37,31 +39,29 @@ export const paths: Paths = {
 /**
  * Platform-specific binary paths
  */
-export const binDir =
-  platform !== "darwin"
-    ? join(paths.binRoot, branding.baseName)
-    : join(
-        paths.binRoot,
-        branding.baseName,
-        `${branding.displayName}.app`,
-        "Contents",
-        "Resources",
-      );
+export const binDir = platform !== "darwin"
+  ? join(paths.binRoot, branding.baseName)
+  : join(
+    paths.binRoot,
+    branding.baseName,
+    `${branding.displayName}.app`,
+    "Contents",
+    "Resources",
+  );
 
 export const binRootDir = paths.binRoot;
 export const binPath = join(binDir, branding.baseName);
 
-export const binPathExe =
-  platform !== "darwin"
-    ? binPath + (platform === "windows" ? ".exe" : "")
-    : join(
-        paths.binRoot,
-        branding.baseName,
-        `${branding.displayName}.app`,
-        "Contents",
-        "MacOS",
-        branding.baseName,
-      );
+export const binPathExe = platform !== "darwin"
+  ? binPath + (platform === "windows" ? ".exe" : "-bin")
+  : join(
+    paths.binRoot,
+    branding.baseName,
+    `${branding.displayName}.app`,
+    "Contents",
+    "MacOS",
+    branding.baseName,
+  );
 
 export const binVersion = join(binDir, "nora.version.txt");
 
@@ -90,7 +90,7 @@ export function getBinArchive(): BinaryArchive {
       };
 
     case "linux":
-      const linuxArch = arch === "x86_64" ? "amd64" : "arm64";
+      const linuxArch = arch === "x86_64" ? "x86_64" : "arm64";
       return {
         filename: `${branding.baseName}-linux-${linuxArch}-moz-artifact.tar.xz`,
         format: "tar.xz",

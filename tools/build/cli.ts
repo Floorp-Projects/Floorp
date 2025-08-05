@@ -50,6 +50,8 @@ Aliases:
       args.includes("--release-build-after")
     ) {
       mode = "production";
+    } else if (args.includes("--test")) {
+      mode = "test";
     }
 
     if (
@@ -64,7 +66,8 @@ Aliases:
       phase = "after";
     }
 
-    const launchBrowser = mode === "dev" && phase === "full";
+    const launchBrowser = (mode === "dev" || mode == "test") &&
+      phase === "full";
 
     return {
       mode,

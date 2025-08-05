@@ -1,5 +1,10 @@
-import { symlinkDirectory } from "./symlink-directory.ts";
-import { ensureDir, isExists, safeRemove } from "../../utils.ts";
+import {
+  createSymlink,
+  ensureDir,
+  isExists,
+  resolveFromRoot,
+  safeRemove,
+} from "../../utils.ts";
 
 export async function injectManifest(
   binPath: string,
@@ -32,29 +37,48 @@ content noraneko-startup startup/ contentaccessible=yes
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
 ${
-  mode !== "dev"
-    ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
-    : ""
-}`,
+      mode !== "dev"
+        ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
+        : ""
+    }`,
   );
   {
-    await symlinkDirectory(
-      `${binPath}/${dirName}`,
-      "src/core/glue/loader-features/_dist",
-      "content",
-    );
+    /**
+     * Setup all required symlinks for the build process
+     */
 
-    await symlinkDirectory(
-      `${binPath}/${dirName}`,
-      "src/core/glue/startup/_dist",
-      "startup",
-    );
-    await symlinkDirectory(`${binPath}/${dirName}`, "src/themes/_dist", "skin");
-    await symlinkDirectory(
-      `${binPath}/${dirName}`,
-      "src/core/glue/loader-modules/_dist",
-      "resource",
-    );
+    // Define symlinks to create
+    const symlinks = [
+      {
+        link: resolveFromRoot(
+          `${binPath}/${dirName}/content`,
+        ),
+        target: resolveFromRoot("src/core/glue/loader-features/_dist"),
+      },
+      {
+        link: resolveFromRoot(
+          `${binPath}/${dirName}/startup`,
+        ),
+        target: resolveFromRoot("src/core/glue/startup/_dist"),
+      },
+      {
+        link: resolveFromRoot(
+          `${binPath}/${dirName}/skin`,
+        ),
+        target: resolveFromRoot("src/themes/_dist"),
+      },
+      {
+        link: resolveFromRoot(
+          `${binPath}/${dirName}/resource`,
+        ),
+        target: resolveFromRoot("src/core/glue/loader-modules/_dist"),
+      },
+    ];
+
+    // Create all symlinks
+    for (const { link, target } of symlinks) {
+      await createSymlink(link, target);
+    }
   }
   // if (mode !== "dev") {  //   await symlink(
   //     r("../../src/ui/settings/_dist"),

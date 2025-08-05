@@ -88,7 +88,7 @@ export async function runBrowser(port = 5180) {
 
     case "linux":
       command = new Deno.Command(
-        `./_dist/bin/${brandingBaseName}/${brandingBaseName}`,
+        `./_dist/bin/${brandingBaseName}/${brandingBaseName}-bin`,
         {
           args: [
             "--profile",
