@@ -113,4 +113,17 @@ function addFloorpHubCategory(): void {
   });
 }
 
+function hideNewTabPage(): void {
+  const homeCategory = document.querySelector("#category-home");
+  const pref = Services.prefs.getStringPref("floorp.design.configs");
+  const config = JSON.parse(pref).uiCustomization.disableFloorpStart;
+
+  if (
+    homeCategory && !config
+  ) {
+    homeCategory.remove();
+  }
+}
+
 addFloorpHubCategory();
+hideNewTabPage();
