@@ -18,6 +18,8 @@ export function getFirefoxSidebarPanels(): Sidebar[] {
 }
 
 export function isExtensionExist(extensionId: string): boolean {
+  console.log(getFirefoxSidebarPanels());
+
   return getFirefoxSidebarPanels().some(
     (panel) => panel.extensionId === extensionId,
   );

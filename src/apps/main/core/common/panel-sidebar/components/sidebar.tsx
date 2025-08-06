@@ -32,8 +32,13 @@ export class PanelSidebarElem {
     }
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
-    render(() => this.sidebar(), parentElem, {
-      marker: beforeElem as XULElement,
+
+    // Wait for the sidebar controller to be initialized
+    // This is a workaround to avoid Extension Sidebar Panels not being loaded
+    globalThis.SidebarController.promiseInitialized.then(() => {
+      render(() => this.sidebar(), parentElem, {
+        marker: beforeElem as XULElement,
+      });
     });
 
     render(() => this.style(), document?.head);
