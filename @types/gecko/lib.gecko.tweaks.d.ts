@@ -116,10 +116,12 @@ interface XULBrowserElement extends XULElement {
   usercontextid?: `${number}`;
   changeuseragent?: `${boolean}`;
   context?: string;
-  currentURI?: string;
+  currentURI?: any;
   docShellIsActive?: boolean;
   isRemoteBrowser?: boolean;
   remoteType?: string;
+  browserId?: number;
+  contentTitle?: string;
   close?: () => void;
   loadURI?: (url: unknown, options: {
     loadType?: number;
