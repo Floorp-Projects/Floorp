@@ -33,21 +33,23 @@ export class QRCodeManager {
     }
 
     window.gFloorpPageAction.qrCode = {
-      onPopupShowing: () => {
-        this.updateCurrentTabUrl();
-        const url = this.currentUrl();
-        if (url) {
-          setTimeout(async () => {
-            const container = document?.getElementById(
-              "qrcode-img-vbox",
-            ) as HTMLElement;
-            if (container) {
-              await this.generateQRCode(url, container);
-            }
-          }, 100);
-        }
-      },
+      onPopupShowing: () => this.handlePopupShowing(),
     };
+  }
+
+  handlePopupShowing() {
+    this.updateCurrentTabUrl();
+    const url = this.currentUrl();
+    if (url) {
+      setTimeout(async () => {
+        const container = document?.getElementById(
+          "qrcode-img-vbox",
+        ) as HTMLElement;
+        if (container) {
+          await this.generateQRCode(url, container);
+        }
+      }, 100);
+    }
   }
 
   init() {
