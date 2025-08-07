@@ -1,4 +1,5 @@
 import { ensureDir, safeRemove } from "../../utils/utils.ts";
+import { v7 } from "npm:uuid@^9.0.0";
 
 export async function writeBuildid2(dir: string, buildid2: string) {
   const pathBuildid2 = `${dir}/buildid2`;
@@ -31,4 +32,12 @@ export async function readBuildid2(dir: string): Promise<string | null> {
     console.warn(`[buildid2] Read warning: ${pathBuildid2}: ${errorMessage}`);
     return null;
   }
+}
+
+/**
+ * CLI: Generate a UUIDv7 buildid2 using uuidjs/uuid v7
+ * Usage: deno run -A tools/misc/update/buildid2.ts --generate
+ */
+if (import.meta.main && Deno.args.includes("--generate")) {
+  console.log(v7());
 }
