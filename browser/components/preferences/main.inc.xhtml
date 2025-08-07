@@ -613,6 +613,47 @@
             preference="app.update.suppressPrompts"/>
 #endif
 #endif
+
+  <!-- Floorp 12 Upgrade -->
+  <vbox id="floorp12UpgradeContainer" style="margin: 24px 0; border-radius: 12px; background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('chrome://floorp/skin/floorp12/floorp12.png') center / cover no-repeat; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(0, 120, 212, 0.25);">
+    <hbox align="center" style="margin-bottom: 16px;">
+      <html:img src="chrome://floorp/skin/floorp12/logo.png" style="width: 64px; height: 64px; margin-inline-end: 20px;"/>
+      <vbox flex="1">
+        <label style="font-size: 24px; font-weight: 600; margin-bottom: 4px;" data-l10n-id="floorp-upgrade-to-12-ready"></label>
+        <description style="font-size: 16px; color: rgba(255, 255, 255, 0.9); line-height: 1.4;" data-l10n-id="floorp-upgrade-to-12-description"></description>
+      </vbox>
+    </hbox>
+    
+    <description style="color: rgba(255, 255, 255, 0.85); font-size: 14px; margin-bottom: 16px; font-weight: 500;" data-l10n-id="floorp-upgrade-to-12-features-header"></description>
+    <vbox style="margin-bottom: 20px;">
+      <description style="font-size: 14px; margin-bottom: 6px;" data-l10n-id="floorp-upgrade-to-12-feature-1"></description>
+      <description style="font-size: 14px; margin-bottom: 6px;" data-l10n-id="floorp-upgrade-to-12-feature-2"></description>
+      <description style="font-size: 14px; margin-bottom: 6px;" data-l10n-id="floorp-upgrade-to-12-feature-3"></description>
+      <description style="font-size: 14px;" data-l10n-id="floorp-upgrade-to-12-feature-4"></description>
+    </vbox>
+    
+    <hbox align="center" style="margin-bottom: 16px;">
+      <button id="floorp12LearnMore"
+              is="highlightable-button"
+              style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 500; margin-inline-end: 12px; min-width: 120px;"
+              data-l10n-id="floorp-upgrade-to-12-learn-more"/>
+      <spacer flex="1"/>
+    </hbox>
+    
+    <checkbox id="floorp12UpgradeEnabled"
+              style="font-size: 14px;"
+              data-l10n-id="floorp-upgrade-to-12-enable-checkbox"
+              preference="floorp.upgrade.to12.enabled"/>
+    
+    <hbox id="floorp12UpgradeInfo" align="center" style="margin-top: 12px; padding: 12px; background: rgba(255, 213, 79, 0.18); border-radius: 6px; border: 1.5px solid #ffd54f;">
+      <hbox class="warning-icon-container" style="margin-inline-end: 12px;">
+        <html:img src="chrome://global/skin/icons/warning.svg" style="width: 24px; height: 24px;"/>
+      </hbox>
+      <description style="font-size: 13px; flex: 1; color: #b28900; font-weight: 600;" data-l10n-id="floorp-upgrade-to-12-info">
+        <html:a data-l10n-name="upgrade-link" style="color: #b28900; text-decoration: underline;" href="https://blog.floorp.app/release/12.0.0.html" target="_blank"></html:a>
+      </description>
+    </hbox>
+  </vbox>
 </groupbox>
 
 <hbox id="performanceCategory"
