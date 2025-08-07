@@ -2,6 +2,7 @@
   "links": ["libs/@types/gecko"],
   "workspace": ["./libs/*", "./chrome/*", "./modules/*", "./src/core/glue/*"],
   "imports": {
+    "@std/cli": "jsr:@std/cli@^1.0.21",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
     "@std/fs": "jsr:@std/fs@^1.0.18",
     "@std/path": "jsr:@std/path@^1.0.7",
