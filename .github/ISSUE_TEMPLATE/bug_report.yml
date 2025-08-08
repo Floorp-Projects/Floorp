@@ -17,6 +17,7 @@ body:
 
         ## Disclaimer
         > [!NOTE]
+        > Floorp 12 is our current focus. Floorp 11 receives security fixes only. [Details](https://github.com/Floorp-Projects/Floorp/issues/1735)
         > Windows 7, 8, 8.1, and earlier versions are not supported due to maintenance costs.
         > DRM is not supported, esp. on Netflix.
         > In addition, kindly refer to the [Issue Tracker](https://docs.floorp.app/docs/issue-tracker/).
@@ -39,7 +40,7 @@ body:
         - label: I have checked with a new profile and the issue still occurs.
         - label: I have provided detailed step-by-step instructions on how to reproduce the issue.
         - label: I have included relevant screenshots or console outputs.
-        - label: I have checked that this problem is not occurring in the latest version of Firefox ESR.
+        - label: I have checked that this problem is not occurring in the latest version of Firefox.
         - label: This issue is specific to this browser and does not occur in other browsers.
 
   - type: textarea
