@@ -344,6 +344,7 @@ async function clobber() {
 let devViteProcess: ProcessPromise | null = null;
 let browserProcess: ProcessPromise | null = null;
 let devInit = false;
+let sapphillonProcess: ProcessPromise | null = null;
 
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
@@ -376,6 +377,12 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
         buildid2 ?? ""
       }`.stdio("pipe").nothrow();
 
+      // Start sapphillon-front dev server
+      console.log(chalk.green("🚀 Starting sapphillon-front dev server..."));
+      sapphillonProcess = $({ cwd: "src/sapphillon-front" })`deno task dev`
+        .stdio("pipe")
+        .nothrow();
+
       let resolve: ((value: void | PromiseLike<void>) => void) | undefined =
         undefined;
       const temp_prm = new Promise<void>((rs, _rj) => {
@@ -393,6 +400,18 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       })();
       (async () => {
         for await (const temp of devViteProcess.stderr) {
+          process.stdout.write(temp);
+        }
+      })();
+      (async () => {
+        if (!sapphillonProcess) return;
+        for await (const temp of sapphillonProcess.stdout) {
+          process.stdout.write(temp);
+        }
+      })();
+      (async () => {
+        if (!sapphillonProcess) return;
+        for await (const temp of sapphillonProcess.stderr) {
           process.stdout.write(temp);
         }
       })();
@@ -479,6 +498,16 @@ async function exit() {
     }
     console.log(chalk.blue("✅ End Shutdown devViteProcess"));
   }
+  if (sapphillonProcess) {
+    console.log(chalk.blue("🛑 Start Shutdown sapphillonProcess"));
+    try {
+      sapphillonProcess.kill();
+      await sapphillonProcess;
+    } catch (e) {
+      console.error(e);
+    }
+    console.log(chalk.blue("✅ End Shutdown sapphillonProcess"));
+  }
   console.log(chalk.green("[build] Cleanup Complete!"));
   process.exit(0);
 }
@@ -537,12 +566,9 @@ async function release(mode: "before" | "after") {
     }
 
     // Apply Firefox preferences override
-    const tempBinDir = binDir;
     try {
-      // Temporarily update binDir for applyPrefs to work with the correct path
-      (globalThis as any).tempBinDir = binPath;
       await applyPrefsForPath(binPath);
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn(
         chalk.yellow(
           "⚠️  Failed to apply preferences override in release mode:",

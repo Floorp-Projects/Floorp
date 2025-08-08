@@ -1,0 +1,3 @@
+[submodule "src/sapphillon-front"]
+	path = src/sapphillon-front
+	url = https://github.com/surapunoyousei/sapphillon-front
