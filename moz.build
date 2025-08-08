@@ -8,5 +8,4 @@ DIRS += [
     "_dist/noraneko/newtab",
     "_dist/noraneko/welcome",
     "_dist/noraneko/notes",
-    "_dist/noraneko/os",
 ]

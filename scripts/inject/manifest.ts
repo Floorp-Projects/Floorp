@@ -94,12 +94,6 @@ content     noraneko-os             os/           contentaccessible=yes
     `${binPath}/${dirName}/resource`,
     option,
   );
-  await symlink(
-    r("../../src/apps/os/_dist"),
-    `${binPath}/${dirName}/os`,
-    option,
-  );
-
   if (mode !== "dev") {
     await symlink(
       r("../../src/apps/settings/_dist"),

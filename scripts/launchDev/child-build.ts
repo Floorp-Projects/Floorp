@@ -72,11 +72,6 @@ async function launchBuild(mode: string, buildid2: string) {
         root: r("./src/apps/modal-child"),
         base: "chrome://noraneko-modal-child/content",
       }),
-      build({
-        configFile: r("./src/apps/os/vite.config.ts"),
-        root: r("./src/apps/os"),
-        base: "chrome://noraneko-os/content",
-      }),
     ]);
   }
 }
