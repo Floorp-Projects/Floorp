@@ -48,23 +48,23 @@ function initializeVersionInfo(): void {
 
 function checkAndShowWelcomePage(): void {
   try {
-    // Check if welcome page has been shown before
-    const welcomeShown = Services.prefs.getBoolPref(
-      "floorp.browser.welcome.page.shown",
+    // Show upgrade guide only for users who upgraded from Floorp 11
+    const isFromVersion11 = Services.prefs.getBoolPref(
+      "floorp.browser.isVersion11",
       false,
     );
 
-    if (!welcomeShown) {
-      // Open welcome page in a new tab
+    if (isFromVersion11) {
       const window = Services.wm.getMostRecentWindow(
         "navigator:browser",
       ) as Window;
       const gBrowser = window.gBrowser;
       if (gBrowser) {
-        gBrowser.addTab("about:welcome");
+        // Open welcome page with upgrade parameter
+        gBrowser.addTab("about:welcome?upgrade=12");
 
-        // Mark welcome page as shown
-        Services.prefs.setBoolPref("floorp.browser.welcome.page.shown", true);
+        // Reset the flag so it does not show again
+        Services.prefs.setBoolPref("floorp.browser.isVersion11", false);
       }
     }
   } catch (error) {
