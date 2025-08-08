@@ -126,8 +126,11 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
                                         const double& aSecondsSinceEpoch);
   ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId);
   ipc::IPCResult RecvOnQueryOutputProtectionStatus();
-  ipc::IPCResult RecvDecrypted(const uint32_t& aId, const uint32_t& aStatus,
-                               ipc::Shmem&& aData);
+  ipc::IPCResult RecvDecryptedShmem(const uint32_t& aId,
+                                    const uint32_t& aStatus,
+                                    ipc::Shmem&& aData);
+  ipc::IPCResult RecvDecryptedData(const uint32_t& aId, const uint32_t& aStatus,
+                                   nsTArray<uint8_t>&& aData);
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
                                    const uint32_t& aStatus);
   ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus);

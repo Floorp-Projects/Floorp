@@ -686,11 +686,11 @@ ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(const uint32_t& aId,
   return IPC_OK();
 }
 
-ipc::IPCResult ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
-                                                const uint32_t& aStatus,
-                                                ipc::Shmem&& aShmem) {
+ipc::IPCResult ChromiumCDMParent::RecvDecryptedShmem(const uint32_t& aId,
+                                                     const uint32_t& aStatus,
+                                                     ipc::Shmem&& aShmem) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
-  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecrypted(this=%p, id=%" PRIu32
+  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptedShmem(this=%p, id=%" PRIu32
                 ", status=%" PRIu32 ")",
                 this, aId, aStatus);
 
@@ -704,9 +704,33 @@ ipc::IPCResult ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
   }
   for (size_t i = 0; i < mDecrypts.Length(); i++) {
     if (mDecrypts[i]->mId == aId) {
-      mDecrypts[i]->PostResult(
-          ToDecryptStatus(aStatus),
-          Span<const uint8_t>(aShmem.get<uint8_t>(), aShmem.Size<uint8_t>()));
+      mDecrypts[i]->PostResult(ToDecryptStatus(aStatus),
+                               aShmem.IsReadable()
+                                   ? Span<const uint8_t>(aShmem.get<uint8_t>(),
+                                                         aShmem.Size<uint8_t>())
+                                   : Span<const uint8_t>());
+      mDecrypts.RemoveElementAt(i);
+      break;
+    }
+  }
+  return IPC_OK();
+}
+
+ipc::IPCResult ChromiumCDMParent::RecvDecryptedData(const uint32_t& aId,
+                                                    const uint32_t& aStatus,
+                                                    nsTArray<uint8_t>&& aData) {
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
+  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptedData(this=%p, id=%" PRIu32
+                ", status=%" PRIu32 ")",
+                this, aId, aStatus);
+
+  if (mIsShutdown) {
+    MOZ_ASSERT(mDecrypts.IsEmpty());
+    return IPC_OK();
+  }
+  for (size_t i = 0; i < mDecrypts.Length(); i++) {
+    if (mDecrypts[i]->mId == aId) {
+      mDecrypts[i]->PostResult(ToDecryptStatus(aStatus), aData);
       mDecrypts.RemoveElementAt(i);
       break;
     }
