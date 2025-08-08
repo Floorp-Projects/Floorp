@@ -29,7 +29,7 @@ export default defineConfig({
     {
       name: "gen_jarmn",
       enforce: "post",
-      async generateBundle(options, bundle, isWrite) {
+      async generateBundle(_options, bundle, _isWrite) {
         this.emitFile({
           type: "asset",
           fileName: "jar.mn",

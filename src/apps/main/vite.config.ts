@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import solidPlugin from "vite-plugin-solid";
@@ -9,17 +9,38 @@ import deno from "@deno/vite-plugin";
 import postcssPlugin from "npm:@tailwindcss/postcss";
 import autoprefixer from "npm:autoprefixer";
 
-import { generateJarManifest } from "../common/scripts/gen_jarmanifest";
+import { generateJarManifest } from "../common/scripts/gen_jarmanifest.ts";
+
+declare global {
+  interface ImportMeta {
+    dirname: string;
+  }
+}
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
+
+const appRoot = path.resolve(import.meta.dirname);
+const normalizePath = (p: string) => path.resolve(p);
+function isInside(dir: string, file: string) {
+  const d = normalizePath(dir);
+  const f = normalizePath(file);
+  return f === d || f.startsWith(d + path.sep);
+}
 
 export default defineConfig({
   publicDir: r("public"),
   server: {
     port: 5181,
     strictPort: true,
+    watch: {
+      ignored: (file) => !isInside(appRoot, path.resolve(file)),
+    },
+    fs: {
+      strict: true,
+      allow: [appRoot],
+    },
   },
   define: {
     "import.meta.env.__BUILDID2__": '"placeholder"',
@@ -54,7 +75,7 @@ export default defineConfig({
       output: {
         esModule: true,
         entryFileNames: "[name].js",
-        manualChunks(id, meta) {
+        manualChunks(id, _meta) {
           if (id.includes("node_modules")) {
             const arr_module_name = id
               .toString()
@@ -74,7 +95,9 @@ export default defineConfig({
             if (result?.at(1) != null) {
               return `modules/${result[1]}`;
             }
-          } catch {}
+          } catch {
+            /* noop */
+          }
         },
         assetFileNames(assetInfo) {
           if (assetInfo.originalFileNames.at(0)?.endsWith(".svg")) {
@@ -85,7 +108,7 @@ export default defineConfig({
           }
           return "assets/[name][extname]";
         },
-        chunkFileNames(chunkInfo) {
+        chunkFileNames(_chunkInfo) {
           return "assets/js/[name].js";
         },
       },
@@ -129,7 +152,7 @@ export default defineConfig({
     {
       name: "gen_jarmn",
       enforce: "post",
-      async generateBundle(options, bundle, isWrite) {
+      async generateBundle(_options, bundle, _isWrite) {
         this.emitFile({
           type: "asset",
           fileName: "jar.mn",
@@ -148,12 +171,12 @@ export default defineConfig({
         });
       },
     },
-    (istanbulPlugin as any)({}),
+    (istanbulPlugin as unknown as (options?: unknown) => PluginOption)({}),
     {
       name: "noraneko_component_hmr_support",
       enforce: "pre",
       "apply": "serve",
-      transform(code, id, options) {
+      transform(code, _id, _options) {
         if (
           code.includes("\n@noraComponent") &&
           !code.includes("//@nora-only-dispose")
@@ -181,7 +204,7 @@ export default defineConfig({
         }
       },
     },
-    NoranekoTestPlugin(),
+    NoranekoTestPlugin() as unknown as PluginOption,
     deno(),
   ],
   optimizeDeps: {

@@ -1,4 +1,4 @@
-import { defineConfig, PluginOption } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
@@ -29,7 +29,7 @@ export default defineConfig({
     {
       name: "gen_jarmn",
       enforce: "post",
-      async generateBundle(options, bundle, isWrite) {
+      async generateBundle(_options, bundle, _isWrite) {
         this.emitFile({
           type: "asset",
           fileName: "jar.mn",
