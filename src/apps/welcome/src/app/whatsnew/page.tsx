@@ -4,18 +4,18 @@ import workspacesSvg from "../features/assets/workspaces.svg";
 import pwaSvg from "../features/assets/pwa.svg";
 import mouseGestureSvg from "../features/assets/mousegesture.svg";
 import headerCover from "./header-cover.webp";
-import {
-  ArrowRight,
-  Github,
-  Globe,
-  HelpCircle,
-  MessageCircle,
-  Twitter,
-  Youtube,
-} from "lucide-react";
+import { ArrowRight, Github, MessageCircle, Twitter } from "lucide-react";
 
 export default function WhatsNewPage() {
   const { t } = useTranslation();
+  const version = (() => {
+    try {
+      const params = new URLSearchParams(globalThis.location.search);
+      return params.get("upgrade") ?? "12";
+    } catch {
+      return "12";
+    }
+  })();
 
   const closePage = () => {
     globalThis.open("about:newtab", "_blank");
@@ -36,8 +36,11 @@ export default function WhatsNewPage() {
           <div className="container mx-auto px-6 py-32 relative">
             <div className="text-center">
               <h1 className="text-5xl md:text-5xl font-bold text-gray-200 mb-8">
-                Floorp の新機能
+                {t("whatsNew.title", { version })}
               </h1>
+              <p className="text-lg md:text-xl text-gray-100/90">
+                {t("whatsNew.subtitle")}
+              </p>
             </div>
           </div>
         </div>
@@ -46,7 +49,7 @@ export default function WhatsNewPage() {
       <main className="bg-base-100 flex-1">
         <div className="container mx-auto max-w-6xl px-6">
           <FeatureSection
-            tag="生産性"
+            tag={t("whatsNew.tags.productivity")}
             title={t("featuresPage.panelSidebar.title")}
             description={t("featuresPage.panelSidebar.description")}
             image={panelSidebarSvg}
@@ -56,7 +59,7 @@ export default function WhatsNewPage() {
           />
 
           <FeatureSection
-            tag="ワークスペース"
+            tag={t("whatsNew.tags.workspaces")}
             title={t("featuresPage.workspaces.title")}
             description={t("featuresPage.workspaces.description")}
             image={workspacesSvg}
@@ -67,7 +70,7 @@ export default function WhatsNewPage() {
           />
 
           <FeatureSection
-            tag="PWA"
+            tag={t("whatsNew.tags.pwa")}
             title={t("featuresPage.pwa.title")}
             description={t("featuresPage.pwa.description")}
             image={pwaSvg}
@@ -77,7 +80,7 @@ export default function WhatsNewPage() {
           />
 
           <FeatureSection
-            tag="ジェスチャー"
+            tag={t("whatsNew.tags.gestures")}
             title={t("featuresPage.mouseGesture.title")}
             description={t("featuresPage.mouseGesture.description")}
             image={mouseGestureSvg}
@@ -106,7 +109,9 @@ export default function WhatsNewPage() {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
             {/* Social Media Links */}
             <div className="flex flex-col gap-4">
-              <h3 className="text-white font-medium">フォロー</h3>
+              <h3 className="text-white font-medium">
+                {t("whatsNew.footer.follow")}
+              </h3>
               <div className="flex gap-4">
                 <a
                   href="https://github.com/Floorp-Projects/Floorp"
@@ -156,7 +161,7 @@ export default function WhatsNewPage() {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  プライバシーと利用規約
+                  {t("whatsNew.footer.privacy")}
                 </a>
                 <a
                   href="https://docs.floorp.app"
@@ -164,7 +169,7 @@ export default function WhatsNewPage() {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Floorp について
+                  {t("whatsNew.footer.about")}
                 </a>
               </div>
             </div>
@@ -172,7 +177,9 @@ export default function WhatsNewPage() {
 
           <div className="mt-8 pt-8 border-t border-gray-700">
             <p className="text-center text-sm text-gray-400">
-              © 2025 Floorp Projects. All rights reserved.
+              {t("whatsNew.footer.copyright", {
+                year: new Date().getFullYear(),
+              })}
             </p>
           </div>
         </div>

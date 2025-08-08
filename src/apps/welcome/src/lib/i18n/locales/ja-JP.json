@@ -126,5 +126,21 @@
         "hint": "より詳細な設定は、右上のメニューボタンの中にある [設定] からいつでもアクセスできます。",
         "resourcesLabel": "リソース",
         "defaultBrowserSuccess": "Floorp が既定のブラウザーに設定されました！"
+    },
+    "whatsNew": {
+        "title": "ようこそ、Floorp {{version}} へ！",
+        "subtitle": "Floorp の最新の機能をご確認ください！",
+        "tags": {
+            "productivity": "生産性",
+            "workspaces": "ワークスペース",
+            "pwa": "PWA",
+            "gestures": "ジェスチャー"
+        },
+        "footer": {
+            "follow": "フォロー",
+            "privacy": "プライバシーと利用規約",
+            "about": "Floorp について",
+            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+        }
     }
 }
