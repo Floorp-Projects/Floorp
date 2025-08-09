@@ -1,0 +1,13 @@
+diff --git a/chrome/toolkit/content/extensions/schemas/manifest.json b/chrome/toolkit/content/extensions/schemas/manifest.json
+index c255cba..38a835d 100644
+--- ./chrome/toolkit/content/extensions/schemas/manifest.json
++++ ./chrome/toolkit/content/extensions/schemas/manifest.json
+@@ -667,7 +667,7 @@
+         "choices": [
+           {
+             "type": "string",
+-            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:"
++            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:|^moz-extension://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
+           }
+         ]
+       },
