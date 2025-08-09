@@ -1,4 +1,5 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
+import { callNRWithRetry } from "@/utils/nrRetry.ts";
 
 declare global {
   interface Window {
@@ -92,20 +93,14 @@ export async function saveNewTabSettings(
         ...settings,
         components: {
           ...current.components,
-          ...(settings.components ?? {}),
+          ...(settings.components as object),
         },
         background: {
           ...current.background,
-          ...(settings.background ?? {}),
+          ...(settings.background as object),
         },
-        searchBar: {
-          ...current.searchBar,
-          ...(settings.searchBar ?? {}),
-        },
-        topSites: {
-          ...current.topSites,
-          ...(settings.topSites ?? {}),
-        },
+        searchBar: { ...current.searchBar, ...(settings.searchBar as object) },
+        topSites: { ...current.topSites, ...(settings.topSites as object) },
       };
 
       await rpc.setStringPref(
@@ -136,19 +131,19 @@ export async function getNewTabSettings(): Promise<NewTabSettings> {
       ...settings,
       components: {
         ...DEFAULT_SETTINGS.components,
-        ...(settings.components || {}),
+        ...(settings.components as object),
       },
       background: {
         ...DEFAULT_SETTINGS.background,
-        ...(settings.background || {}),
+        ...(settings.background as object),
       },
       searchBar: {
         ...DEFAULT_SETTINGS.searchBar,
-        ...(settings.searchBar || {}),
+        ...(settings.searchBar as object),
       },
       topSites: {
         ...DEFAULT_SETTINGS.topSites,
-        ...(settings.topSites || {}),
+        ...(settings.topSites as object),
       },
     };
 
@@ -160,21 +155,43 @@ export async function getNewTabSettings(): Promise<NewTabSettings> {
 }
 
 export async function getFolderPathFromDialog(): Promise<FolderPathResult> {
-  return await new Promise((resolve) => {
-    window.NRGetFolderPathFromDialog((data: string) => {
-      const result = JSON.parse(data);
-      resolve(result);
-    });
-  });
+  try {
+    return await callNRWithRetry<FolderPathResult>(
+      (cb) => (globalThis as unknown as Window).NRGetFolderPathFromDialog(cb),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 5000,
+        delayMs: 400,
+        shouldRetry: (v) => !v || v.success === false,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get folder path from dialog:", e);
+    return { path: null, success: false };
+  }
 }
 
 export async function getRandomImageFromFolder(
   folderPath: string,
 ): Promise<RandomImageResult> {
-  return await new Promise((resolve) => {
-    window.NRGetRandomImageFromFolder(folderPath, (data: string) => {
-      const result = JSON.parse(data);
-      resolve(result);
-    });
-  });
+  try {
+    return await callNRWithRetry<RandomImageResult>(
+      (cb) =>
+        (globalThis as unknown as Window).NRGetRandomImageFromFolder(
+          folderPath,
+          cb,
+        ),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 5000,
+        delayMs: 400,
+        shouldRetry: (v) => !v || v.success === false,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get random image from folder:", e);
+    return { image: null, fileName: null, success: false };
+  }
 }

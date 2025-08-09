@@ -4,9 +4,10 @@ import {
   type NewTabSettings,
   type PinnedSite,
   saveNewTabSettings,
-} from "@/utils/dataManager";
+} from "@/utils/dataManager.ts";
 import { useTranslation } from "react-i18next";
 import { PinIcon } from "lucide-react";
+import { callNRWithRetry } from "@/utils/nrRetry.ts";
 
 interface TopSite {
   url: string;
@@ -23,23 +24,28 @@ declare global {
 }
 
 async function getTopSites(): Promise<TopSite[]> {
-  return new Promise<TopSite[]>((resolve) => {
-    globalThis.NRGetCurrentTopSites((sites: string) => {
-      try {
-        const parsedSites = JSON.parse(sites).topsites || [];
-        resolve(
-          parsedSites.map((site: TopSite) => ({
-            ...site,
-            title: site.title || site.label || site.url,
-            smallFavicon: site.smallFavicon || "",
-          })),
-        );
-      } catch (e) {
-        console.error("Failed to parse top sites:", e);
-        resolve([]);
-      }
-    });
-  });
+  try {
+    const parsed = await callNRWithRetry<{ topsites?: TopSite[] | undefined }>(
+      (cb) => (globalThis as unknown as Window).NRGetCurrentTopSites(cb),
+      (sites) => JSON.parse(sites),
+      {
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
+        shouldRetry: (res) => !res || !Array.isArray(res.topsites),
+      },
+    );
+
+    const list = (parsed.topsites ?? []).map((site: TopSite) => ({
+      ...site,
+      title: site.title || site.label || site.url,
+      smallFavicon: site.smallFavicon || "",
+    }));
+    return list;
+  } catch (e) {
+    console.error("Failed to get top sites after retries:", e);
+    return [];
+  }
 }
 
 function BlockModal({
@@ -67,10 +73,10 @@ function BlockModal({
           )}
         </p>
         <div className="modal-action">
-          <button onClick={onConfirm} className="btn btn-primary">
+          <button type="button" onClick={onConfirm} className="btn btn-primary">
             {t("topSites.block")}
           </button>
-          <button onClick={onCancel} className="btn">
+          <button type="button" onClick={onCancel} className="btn">
             {t("topSites.cancel")}
           </button>
         </div>

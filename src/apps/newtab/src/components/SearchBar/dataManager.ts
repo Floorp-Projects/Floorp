@@ -11,6 +11,8 @@ declare global {
   }
 }
 
+import { callNRWithRetry } from "@/utils/nrRetry.ts";
+
 export interface SearchEngine {
   identifier: string;
   name: string;
@@ -26,40 +28,93 @@ export interface SearchSuggestion {
 }
 
 export async function getSearchEngines(): Promise<SearchEngine[]> {
-  return await new Promise((resolve) => {
-    window.NRGetSearchEngines((data: string) => {
-      const engines = JSON.parse(data);
-      resolve(engines);
-    });
-  });
+  try {
+    return await callNRWithRetry<SearchEngine[]>(
+      (cb) => (globalThis as unknown as Window).NRGetSearchEngines(cb),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
+        shouldRetry: (v) => !Array.isArray(v),
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get search engines:", e);
+    return [];
+  }
 }
 
 export async function getDefaultEngine(): Promise<SearchEngine> {
-  return await new Promise((resolve) => {
-    window.NRGetDefaultEngine((data: string) => {
-      const engine = JSON.parse(data);
-      resolve(engine);
-    });
-  });
+  try {
+    return await callNRWithRetry<SearchEngine>(
+      (cb) => (globalThis as unknown as Window).NRGetDefaultEngine(cb),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
+        shouldRetry: (v) => !v || !v.identifier,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get default engine:", e);
+    return {
+      identifier: "",
+      name: "",
+      searchUrl: "",
+      description: "",
+      iconURL: "",
+    };
+  }
 }
 
 export async function getDefaultPrivateEngine(): Promise<SearchEngine> {
-  return await new Promise((resolve) => {
-    window.NRGetDefaultPrivateEngine((data: string) => {
-      const engine = JSON.parse(data);
-      resolve(engine);
-    });
-  });
+  try {
+    return await callNRWithRetry<SearchEngine>(
+      (cb) => (globalThis as unknown as Window).NRGetDefaultPrivateEngine(cb),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
+        shouldRetry: (v) => !v || !v.identifier,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get default private engine:", e);
+    return {
+      identifier: "",
+      name: "",
+      searchUrl: "",
+      description: "",
+      iconURL: "",
+    };
+  }
 }
 
 export async function getSuggestions(
   query: string,
   engine: SearchEngine,
 ): Promise<SearchSuggestion> {
-  return await new Promise((resolve) => {
-    window.NRGetSuggestions(query, engine.identifier, (data: string) => {
-      const suggestions = JSON.parse(data);
-      resolve(suggestions);
-    });
-  });
+  try {
+    return await callNRWithRetry<SearchSuggestion>(
+      (cb) =>
+        (globalThis as unknown as Window).NRGetSuggestions(
+          query,
+          engine.identifier,
+          cb,
+        ),
+      (data) => JSON.parse(data),
+      {
+        retries: 3,
+        timeoutMs: 1500,
+        delayMs: 300,
+        shouldRetry: (v) => !v || v.success === false,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to get suggestions:", e);
+    return { success: false, suggestions: [] };
+  }
 }
