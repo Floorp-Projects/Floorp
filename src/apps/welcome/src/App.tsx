@@ -8,6 +8,7 @@ import WhatsNewPage from "./app/whatsnew/page.tsx";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
 const LocalizationPage = lazy(() => import("./app/localization/page.tsx"));
+const HubIntroPage = lazy(() => import("./app/hub/page.tsx"));
 const FeaturesPage = lazy(() => import("./app/features/page.tsx"));
 const CustomizePage = lazy(() => import("./app/customize/page.tsx"));
 const FinishPage = lazy(() => import("./app/finish/page.tsx"));
@@ -178,6 +179,7 @@ function App() {
               <Route path="/" element={<WelcomePage />} />
               <Route path="/localization" element={<LocalizationPage />} />
               <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/hub" element={<HubIntroPage />} />
               <Route path="/customize" element={<CustomizePage />} />
               <Route path="/finish" element={<FinishPage />} />
             </Routes>

@@ -1,13 +1,30 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import panelSidebarSvg from "../features/assets/panelsidebar.svg";
 import workspacesSvg from "../features/assets/workspaces.svg";
 import pwaSvg from "../features/assets/pwa.svg";
 import mouseGestureSvg from "../features/assets/mousegesture.svg";
+import gearImage from "../hub/Floorp_Icon_Gear_Gradient.png";
 import headerCover from "./header-cover.webp";
-import { ArrowRight, Github, MessageCircle, Twitter } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Github,
+  Globe,
+  Languages,
+  MessageCircle,
+  Twitter,
+} from "lucide-react";
+import {
+  getLocaleData,
+  getNativeNames,
+  installLangPack,
+  setAppLocale,
+} from "../localization/dataManager.ts";
+import type { LangPack, LocaleData } from "../localization/type.ts";
 
 export default function WhatsNewPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const version = (() => {
     try {
       const params = new URLSearchParams(globalThis.location.search);
@@ -17,14 +34,194 @@ export default function WhatsNewPage() {
     }
   })();
 
+  // Localization state
+  const [localeData, setlocaleData] = useState<LocaleData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedLocale, setSelectedLocale] = useState<string>("");
+  const [installingLanguage, setInstallingLanguage] = useState(false);
+  const [nativeLanguageNames, setNativeLanguageNames] = useState<
+    Record<string, string>
+  >({});
+  const [dropdownDirection, setDropdownDirection] = useState<
+    "dropdown-bottom" | "dropdown-top"
+  >("dropdown-bottom");
+
   const closePage = () => {
     globalThis.open("about:newtab", "_blank");
     setTimeout(() => globalThis.close(), 50);
   };
 
+  // Localization functions
+  useEffect(() => {
+    // Add a small delay to prevent blocking the main page render
+    const timer = setTimeout(() => {
+      fetchLocaleInfo();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (localeData && localeData.availableLocales.length > 0) {
+      fetchNativeNames(localeData.availableLocales);
+    }
+  }, [localeData]);
+
+  // Auto-apply system language when locale data is loaded
+  useEffect(() => {
+    if (
+      localeData &&
+      localeData.localeInfo.systemLocale.language !==
+        localeData.localeInfo.appLocaleRaw &&
+      !installingLanguage
+    ) {
+      const applySystemLanguage = async () => {
+        try {
+          await handleLocaleChange(localeData.localeInfo.systemLocale.language);
+        } catch (error) {
+          console.error("Failed to auto-apply system language:", error);
+        }
+      };
+
+      // Add a small delay to ensure everything is initialized
+      const timer = setTimeout(applySystemLanguage, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [localeData, installingLanguage]);
+
+  useEffect(() => {
+    const checkDropdownDirection = () => {
+      const dropdownElement = document.querySelector(".language-dropdown");
+      if (dropdownElement) {
+        const rect = dropdownElement.getBoundingClientRect();
+        const windowHeight = globalThis.innerHeight;
+        const dropdownHeight = 240;
+
+        if (rect.bottom + dropdownHeight > windowHeight) {
+          setDropdownDirection("dropdown-top");
+        } else {
+          setDropdownDirection("dropdown-bottom");
+        }
+      }
+    };
+
+    checkDropdownDirection();
+    globalThis.addEventListener("resize", checkDropdownDirection);
+
+    return () => {
+      globalThis.removeEventListener("resize", checkDropdownDirection);
+    };
+  }, []);
+
+  const fetchNativeNames = async (availableLocales: LangPack[]) => {
+    try {
+      const locales = availableLocales.map((langPack) =>
+        getLocaleFromLangPack(langPack)
+      );
+
+      // Add timeout for native names
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 2000)
+      );
+
+      const nativeNames = await Promise.race([
+        getNativeNames(locales),
+        timeoutPromise,
+      ]) as string[];
+      const namesMap: Record<string, string> = {};
+      locales.forEach((locale, index) => {
+        namesMap[locale] = nativeNames[index] || locale;
+      });
+      setNativeLanguageNames(namesMap);
+    } catch (error) {
+      console.error("Failed to get native language name:", error);
+      // Fallback to using locale codes as names
+      const locales = availableLocales.map((langPack) =>
+        getLocaleFromLangPack(langPack)
+      );
+      const fallbackMap: Record<string, string> = {};
+      locales.forEach((locale) => {
+        fallbackMap[locale] = locale;
+      });
+      setNativeLanguageNames(fallbackMap);
+    }
+  };
+
+  const fetchLocaleInfo = async () => {
+    try {
+      setLoading(true);
+
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 3000)
+      );
+
+      const data = await Promise.race([
+        getLocaleData(),
+        timeoutPromise,
+      ]) as LocaleData;
+      setlocaleData(data);
+      setSelectedLocale(data.localeInfo.appLocaleRaw);
+    } catch (error) {
+      console.error("Failed to get language information:", error);
+      // Set loading to false and continue without language settings
+      setlocaleData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getLocaleFromLangPack = (langPack: LangPack): string => {
+    return langPack.target_locale;
+  };
+
+  const handleLocaleChange = async (locale: string) => {
+    if (installingLanguage || locale === selectedLocale) {
+      return;
+    }
+
+    try {
+      setInstallingLanguage(true);
+
+      if (!localeData?.installedLocales.includes(locale)) {
+        const targetLangPack = localeData?.availableLocales.find((langPack) =>
+          getLocaleFromLangPack(langPack) === locale
+        );
+        await installLangPack(targetLangPack!);
+      }
+
+      await setAppLocale(locale);
+      await i18n.changeLanguage(locale);
+
+      setInstallingLanguage(false);
+      setSelectedLocale(locale);
+    } catch (error) {
+      console.error("Failed to change locale:", error);
+      setInstallingLanguage(false);
+    }
+  };
+
+  const getLanguageName = (langCode: string) => {
+    if (nativeLanguageNames[langCode]) {
+      return nativeLanguageNames[langCode];
+    }
+    return langCode;
+  };
+
+  const getSortedLanguages = () => {
+    if (!localeData) return [];
+    return [...localeData.availableLocales].sort((a, b) => {
+      const localeA = getLocaleFromLangPack(a);
+      const localeB = getLocaleFromLangPack(b);
+      const nameA = getLanguageName(localeA);
+      const nameB = getLanguageName(localeB);
+      return nameA.localeCompare(nameB);
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="relative overflow-hidden">
+      <header className="relative overflow-hidden bg-base-100">
         <div
           className="relative m-5 rounded-2xl"
           style={{
@@ -46,8 +243,180 @@ export default function WhatsNewPage() {
         </div>
       </header>
 
+      {/* Language Selection Section */}
+      <section className="py-8">
+        <div className="container mx-auto max-w-6xl px-6">
+          {loading
+            ? (
+              <div className="flex justify-center">
+                <div className="loading loading-spinner loading-lg"></div>
+              </div>
+            )
+            : !localeData
+            ? (
+              <div className="card bg-base-100 shadow-2xl">
+                <div className="card-body p-8 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
+                    <Globe size={40} className="text-primary" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">
+                    {t("localizationPage.languageSettings")}
+                  </h2>
+                  <p className="text-base-content/70 mb-4">
+                    Language settings are temporarily unavailable. You can
+                    continue with the current language.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => fetchLocaleInfo()}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )
+            : (
+              <div className="card bg-base-100 shadow-xl">
+                <div className="card-body p-6">
+                  {/* Icon and Title */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
+                      <Globe size={24} className="text-primary" />
+                    </div>
+                    <h3 className="text-lg font-bold whitespace-nowrap">
+                      {t("localizationPage.languageSettings")}
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center">
+                    {/* Current Language Info */}
+                    <div className="bg-base-200 p-3 rounded-lg flex-grow min-w-0">
+                      <h4 className="font-semibold mb-2 text-xs">
+                        {t("localizationPage.currentLanguageInfo")}
+                      </h4>
+                      <div className="flex gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs opacity-70">
+                            {t("localizationPage.systemLanguage")}
+                          </div>
+                          <div className="font-medium text-sm truncate">
+                            {localeData.localeInfo.displayNames
+                              ?.systemLanguage ||
+                              localeData.localeInfo.systemLocaleRaw}
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs opacity-70">
+                            {t("localizationPage.floorpLanguage")}
+                          </div>
+                          <div className="font-medium text-sm truncate">
+                            {getLanguageName(selectedLocale)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* System Language Button */}
+                    <div className="flex-shrink-0">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm whitespace-nowrap"
+                        onClick={() =>
+                          handleLocaleChange(
+                            localeData.localeInfo.systemLocale.language,
+                          )}
+                        disabled={installingLanguage ||
+                          localeData.localeInfo.systemLocaleRaw ===
+                            selectedLocale}
+                      >
+                        <Globe size={14} className="mr-2" />
+                        {t("localizationPage.useSystemLanguage")}
+                      </button>
+                    </div>
+
+                    {/* Language Dropdown */}
+                    <div className="flex-shrink-0 min-w-48">
+                      <div
+                        className={`dropdown ${dropdownDirection} w-full language-dropdown`}
+                      >
+                        <label
+                          tabIndex={0}
+                          className="btn btn-outline btn-sm w-full flex justify-between items-center"
+                        >
+                          <span className="flex items-center">
+                            <Languages size={14} className="mr-2" />
+                            <span className="truncate">
+                              {getLanguageName(selectedLocale)}
+                            </span>
+                          </span>
+                          <ChevronDown size={14} />
+                        </label>
+                        <div
+                          tabIndex={0}
+                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full overflow-y-auto flex flex-col flex-nowrap max-h-60 z-50"
+                        >
+                          {getSortedLanguages().map((langPack) => {
+                            const locale = getLocaleFromLangPack(langPack);
+                            if (locale === selectedLocale) {
+                              return null;
+                            }
+                            return (
+                              <li
+                                key={locale}
+                                onClick={() => {
+                                  handleLocaleChange(locale);
+                                  document.activeElement instanceof
+                                      HTMLElement &&
+                                    document.activeElement.blur();
+                                }}
+                                className="w-full"
+                              >
+                                <a
+                                  className={selectedLocale === locale
+                                    ? "active"
+                                    : ""}
+                                >
+                                  <span className="truncate">
+                                    {getLanguageName(locale)}
+                                  </span>
+                                </a>
+                              </li>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {installingLanguage && (
+                        <div className="flex justify-center items-center mt-2">
+                          <div className="loading loading-spinner loading-xs mr-2">
+                          </div>
+                          <span className="text-xs">
+                            Changing language...
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+        </div>
+      </section>
+
       <main className="bg-base-100 flex-1">
         <div className="container mx-auto max-w-6xl px-6">
+          <FeatureSection
+            tag={t("whatsNew.tags.settings")}
+            title={t("hubPage.sectionTitle")}
+            description={t("hubPage.description")}
+            image={gearImage}
+            bullets={[
+              t("hubPage.features.dedicated"),
+              t("hubPage.features.accessible"),
+              t("hubPage.features.centralized"),
+            ]}
+          />
+
           <FeatureSection
             tag={t("whatsNew.tags.productivity")}
             title={t("featuresPage.panelSidebar.title")}
@@ -56,6 +425,7 @@ export default function WhatsNewPage() {
             bullets={(t("featuresPage.panelSidebar.features", {
               returnObjects: true,
             }) as string[]) || []}
+            reverse
           />
 
           <FeatureSection
@@ -66,7 +436,6 @@ export default function WhatsNewPage() {
             bullets={(t("featuresPage.workspaces.features", {
               returnObjects: true,
             }) as string[]) || []}
-            reverse
           />
 
           <FeatureSection
@@ -77,6 +446,7 @@ export default function WhatsNewPage() {
             bullets={(t("featuresPage.pwa.features", {
               returnObjects: true,
             }) as string[]) || []}
+            reverse
           />
 
           <FeatureSection
@@ -87,7 +457,6 @@ export default function WhatsNewPage() {
             bullets={(t("featuresPage.mouseGesture.features", {
               returnObjects: true,
             }) as string[]) || []}
-            reverse
           />
 
           <div className="py-16 text-center">
