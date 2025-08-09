@@ -22,10 +22,18 @@ const gFavicons = PlacesUtils.favicons as {
 export async function getFaviconURLForPanel(panel: Panel): Promise<string> {
   try {
     await globalThis.SessionStore.promiseInitialized;
-    const faviconURL = await getFaviconFromPlaces(panel.url ?? "");
+    const url = panel.url ?? "";
+    // Only attempt Places favicon lookup for regular web URLs
+    if (
+      panel.type !== "web" ||
+      !url.startsWith("http://") && !url.startsWith("https://")
+    ) {
+      return getFallbackFavicon(panel);
+    }
+    const faviconURL = await getFaviconFromPlaces(url);
     return faviconURL ?? getFallbackFavicon(panel);
-  } catch (e) {
-    console.error(e);
+  } catch {
+    // Swallow errors and fall back to default icon to avoid console noise
     return getFallbackFavicon(panel);
   }
 }
@@ -35,10 +43,13 @@ async function getFaviconFromPlaces(url: string): Promise<string | undefined> {
     return undefined;
   }
 
-  const result = await gFavicons.getFaviconForPage(
-    Services.io.newURI(url),
-  );
-  return result.uri.spec ?? undefined;
+  try {
+    const uri = Services.io.newURI(url);
+    const result = await gFavicons.getFaviconForPage(uri);
+    return result.uri?.spec ?? undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function getFaviconFromExtension(extensionId: string): string {

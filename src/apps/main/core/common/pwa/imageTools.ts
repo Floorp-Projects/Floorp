@@ -3,24 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+  "resource://gre/modules/AppConstants.sys.mjs",
 );
 
 const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
+  "resource://gre/modules/FileUtils.sys.mjs",
 );
 
 const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
+  "resource://gre/modules/NetUtil.sys.mjs",
 );
 
 const ImgTools = Cc["@mozilla.org/image/tools;1"].getService(
-  Ci.imgITools
+  Ci.imgITools,
 ) as imgITools;
 
 export const ImageTools = {
   loadImage(
-    dataURI: nsIURI
+    dataURI: nsIURI,
   ): Promise<{ type: string; container: imgIContainer }> {
     return new Promise((resolve, reject) => {
       if (!dataURI.schemeIs("data")) {
@@ -46,30 +46,45 @@ export const ImageTools = {
             reject(Components.Exception("Failed to load image.", aStatus));
           }
         },
-        null as unknown as imgINotificationObserver
+        null as unknown as imgINotificationObserver,
       );
     });
   },
 
   scaleImage(container: imgIContainer, width: number, height: number) {
     return new Promise((resolve, reject) => {
-      const stream = ImgTools.encodeScaledImage(
-        container,
-        "image/png",
-        width,
-        height,
-        ""
-      );
+      let stream: nsIInputStream;
+      try {
+        if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
+          stream = ImgTools.encodeImage(container, "image/png", "");
+        } else {
+          stream = ImgTools.encodeScaledImage(
+            container,
+            "image/png",
+            width,
+            height,
+            "",
+          );
+        }
+      } catch (_e) {
+        // スケール時に失敗した場合はフォールバック（サイズそのまま）
+        try {
+          stream = ImgTools.encodeImage(container, "image/png", "");
+        } catch (e2) {
+          reject(e2);
+          return;
+        }
+      }
 
       try {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        (stream as unknown as any).QueryInterface(Ci.nsIAsyncInputStream);
+        (stream as unknown as { QueryInterface: (iid: unknown) => unknown })
+          .QueryInterface(Ci.nsIAsyncInputStream);
       } catch (e) {
         reject(
           Components.Exception(
             "imgIEncoder must implement nsIAsyncInputStream",
-            e
-          )
+            e,
+          ),
         );
       }
 
@@ -92,7 +107,7 @@ export const ImageTools = {
               callback,
               0,
               0,
-              Services.tm.mainThread
+              Services.tm.mainThread,
             );
             return;
           }
@@ -109,10 +124,10 @@ export const ImageTools = {
           callback,
           0,
           0,
-          Services.tm.mainThread
+          Services.tm.mainThread,
         );
-      } catch (e) {
-        reject(e);
+      } catch (_e) {
+        reject(_e);
       }
     });
   },
@@ -121,7 +136,7 @@ export const ImageTools = {
     container: imgIContainer,
     width: number,
     height: number,
-    target: nsIFile
+    target: nsIFile,
   ) {
     let format: string;
     if (AppConstants.platform === "win") {
@@ -132,13 +147,27 @@ export const ImageTools = {
     }
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
-      const stream = ImgTools.encodeScaledImage(
-        container,
-        format,
-        width,
-        height,
-        ""
-      );
+      let stream: nsIInputStream;
+      try {
+        if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
+          stream = ImgTools.encodeImage(container, format, "");
+        } else {
+          stream = ImgTools.encodeScaledImage(
+            container,
+            format,
+            width,
+            height,
+            "",
+          );
+        }
+      } catch (_e) {
+        try {
+          stream = ImgTools.encodeImage(container, format, "");
+        } catch (e2) {
+          reject(e2);
+          return;
+        }
+      }
       NetUtil.asyncCopy(stream, output, (aStatus: number) => {
         if (Components.isSuccessCode(aStatus)) {
           resolve();

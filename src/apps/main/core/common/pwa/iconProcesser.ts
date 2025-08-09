@@ -104,17 +104,30 @@ export class IconProcesser {
         reader.onloadend = () => resolve(reader.result as string);
         reader.readAsDataURL(blob);
       });
+
       const { container } = await ImageTools.loadImage(
         Services.io.newURI(old_base64),
       );
 
-      const blobPng = (await ImageTools.scaleImage(container, 64, 64)) as Blob;
-      const pngBase64 = await new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blobPng);
-      });
+      if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
+        return old_base64;
+      }
 
-      return pngBase64;
+      try {
+        const blobPng =
+          (await ImageTools.scaleImage(container, 64, 64)) as Blob;
+        const pngBase64 = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blobPng);
+        });
+        return pngBase64;
+      } catch (scaleErr) {
+        console.warn(
+          "Icon scaling failed, falling back to original icon:",
+          scaleErr,
+        );
+        return old_base64;
+      }
     } catch (e) {
       console.error("Failed to fetch icon:", e);
       return "";
