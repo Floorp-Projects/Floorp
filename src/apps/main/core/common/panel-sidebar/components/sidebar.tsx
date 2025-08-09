@@ -8,7 +8,13 @@ import style from "./style.css?inline";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarSelectbox } from "./sidebar-selectbox";
 import { SidebarSplitter } from "./sidebar-splitter";
-import { createEffect, Show } from "solid-js";
+import {
+  createEffect,
+  createRoot,
+  getOwner,
+  runWithOwner,
+  Show,
+} from "solid-js";
 import {
   isFloating,
   isPanelSidebarEnabled,
@@ -35,27 +41,37 @@ export class PanelSidebarElem {
 
     // Wait for the sidebar controller to be initialized
     // This is a workaround to avoid Extension Sidebar Panels not being loaded
-    globalThis.SidebarController.promiseInitialized.then(() => {
-      render(() => this.sidebar(), parentElem, {
-        marker: beforeElem as XULElement,
-      });
+    const owner = getOwner();
+    const SidebarController = (globalThis as unknown as {
+      SidebarController: { promiseInitialized: Promise<void> };
+    }).SidebarController;
+    SidebarController.promiseInitialized.then(() => {
+      const exec = () =>
+        render(() => this.sidebar(), parentElem, {
+          marker: beforeElem as XULElement,
+        });
+      if (owner) runWithOwner(owner, exec);
+      else createRoot(exec);
     });
 
     render(() => this.style(), document?.head);
 
-    createEffect(() => {
-      if (selectedPanelId() === null) {
-        this.documentElement?.style.setProperty(
-          "--panel-sidebar-display",
-          "none",
-        );
-      } else {
-        this.documentElement?.style.setProperty(
-          "--panel-sidebar-display",
-          "flex",
-        );
-      }
-    });
+    const execEffect = () =>
+      createEffect(() => {
+        if (selectedPanelId() === null) {
+          this.documentElement?.style.setProperty(
+            "--panel-sidebar-display",
+            "none",
+          );
+        } else {
+          this.documentElement?.style.setProperty(
+            "--panel-sidebar-display",
+            "flex",
+          );
+        }
+      });
+    if (owner) runWithOwner(owner, execEffect);
+    else createRoot(execEffect);
 
     this.setVerticalTabBgColor();
     Services.prefs.addObserver("sidebar.verticalTabs", () => {

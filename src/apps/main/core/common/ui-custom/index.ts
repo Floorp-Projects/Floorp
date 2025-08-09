@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { createRoot, getOwner, runWithOwner } from "solid-js";
 import { StyleManager } from "./styles/style-manager.ts";
 import { DOMLayoutManager } from "./layout/dom-manipulator.ts";
 
@@ -13,11 +14,24 @@ export default class UICustomization extends NoraComponentBase {
   private domManager: DOMLayoutManager | null = null;
 
   init() {
+    const owner = getOwner();
     globalThis.SessionStore.promiseInitialized.then(() => {
-      this.styleManager = new StyleManager();
-      this.domManager = new DOMLayoutManager();
-      this.styleManager?.setupStyleEffects();
-      this.domManager?.setupDOMEffects();
+      if (owner) {
+        runWithOwner(owner, () => {
+          this.styleManager = new StyleManager();
+          this.domManager = new DOMLayoutManager();
+          this.styleManager?.setupStyleEffects();
+          this.domManager?.setupDOMEffects();
+        });
+      } else {
+        // Fallback: ensure a root context exists
+        createRoot(() => {
+          this.styleManager = new StyleManager();
+          this.domManager = new DOMLayoutManager();
+          this.styleManager?.setupStyleEffects();
+          this.domManager?.setupDOMEffects();
+        });
+      }
     });
   }
 }

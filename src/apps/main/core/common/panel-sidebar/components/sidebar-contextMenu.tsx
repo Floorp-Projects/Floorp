@@ -7,6 +7,7 @@ import type { CPanelSidebar } from "./panel-sidebar.tsx";
 import { createSignal, Show } from "solid-js";
 import type { Panel } from "../utils/type.ts";
 import { ContextMenuUtils } from "@core/utils/context-menu.tsx";
+import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
 import i18next from "i18next";
 import { addI18nObserver } from "../../../../i18n/config.ts";
 
@@ -38,9 +39,13 @@ export class SidebarContextMenuElem {
   ctx: CPanelSidebar;
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
-      this.sidebarContextMenu()
-    );
+    const owner: Owner | null = getOwner();
+    const exec = () =>
+      ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
+        this.sidebarContextMenu()
+      );
+    if (owner) runWithOwner(owner, exec);
+    else createRoot(exec);
   }
 
   public contextPanelId: string | null = null;

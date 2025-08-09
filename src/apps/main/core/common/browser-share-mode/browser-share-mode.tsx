@@ -5,9 +5,13 @@
 
 import { createSignal } from "solid-js";
 import { Show } from "solid-js";
+import { createRootHMR } from "@nora/solid-xul";
 import shareModeStyle from "./share-mode.css?inline";
 
-export const [shareModeEnabled, setShareModeEnabled] = createSignal(false);
+export const [shareModeEnabled, setShareModeEnabled] = createRootHMR(
+  () => createSignal(false),
+  import.meta.hot,
+);
 export function ShareModeElement() {
   return (
     <>

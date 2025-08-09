@@ -6,7 +6,14 @@
 import { BrowserActionUtils } from "@core/utils/browser-action.tsx";
 import { PopupElement } from "./popup-element.tsx";
 import workspacesStyles from "./styles.css?inline";
-import { createEffect, type JSX, onCleanup } from "solid-js";
+import {
+  createEffect,
+  createRoot,
+  getOwner,
+  type JSX,
+  onCleanup,
+  runWithOwner,
+} from "solid-js";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
@@ -24,6 +31,7 @@ export class WorkspacesToolbarButton {
   };
 
   constructor(ctx: WorkspacesService) {
+    const owner = getOwner();
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
       "workspaces-toolbar-button",
@@ -31,33 +39,41 @@ export class WorkspacesToolbarButton {
       <PopupElement ctx={ctx} />,
       null,
       () => {
-        setTimeout(() => this.updateButtonIfNeeded(true), 500);
+        const exec = () => {
+          setTimeout(() => this.updateButtonIfNeeded(true), 500);
 
-        createEffect(() => {
-          const _ = configStore.showWorkspaceNameOnToolbar;
-          const __ = enabled();
-          this.updateButtonIfNeeded();
-        });
+          createEffect(() => {
+            const _ = configStore.showWorkspaceNameOnToolbar;
+            const __ = enabled();
+            this.updateButtonIfNeeded();
+          });
 
-        createEffect(() => {
-          const _ = selectedWorkspaceID();
-          this.updateButtonIfNeeded();
-        });
+          createEffect(() => {
+            const _ = selectedWorkspaceID();
+            this.updateButtonIfNeeded();
+          });
 
-        // Watch for workspace data changes to update button when name changes
-        createEffect(() => {
-          const _ = workspacesDataStore.data;
-          // Force update when workspace data changes
-          this.updateButtonIfNeeded(true);
-        });
+          // Watch for workspace data changes to update button when name changes
+          createEffect(() => {
+            const _ = workspacesDataStore.data;
+            // Force update when workspace data changes
+            this.updateButtonIfNeeded(true);
+          });
+        };
+        if (owner) runWithOwner(owner, exec);
+        else createRoot(exec);
       },
       CustomizableUI.AREA_TABSTRIP,
       this.StyleElement() as JSX.Element,
       0,
     );
 
-    const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
-    onCleanup(() => clearInterval(intervalId));
+    const setupInterval = () => {
+      const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
+      onCleanup(() => clearInterval(intervalId));
+    };
+    if (owner) runWithOwner(owner, setupInterval);
+    else createRoot(setupInterval);
   }
 
   private getButtonNode(): Element | null {

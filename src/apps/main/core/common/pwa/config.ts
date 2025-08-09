@@ -18,12 +18,8 @@ if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.config")) {
 
 class PwaConfig {
   private static instance: PwaConfig;
-  public enabled: ReturnType<typeof createSignal<boolean>> = createSignal(
-    defaultEnabled,
-  );
-  public config: ReturnType<typeof createSignal<TPwaConfig>> = createSignal<
-    TPwaConfig
-  >({ showToolbar: false });
+  public enabled!: ReturnType<typeof createSignal<boolean>>;
+  public config!: ReturnType<typeof createSignal<TPwaConfig>>;
   private constructor() {
     createRoot(() => {
       this.enabled = createSignal(

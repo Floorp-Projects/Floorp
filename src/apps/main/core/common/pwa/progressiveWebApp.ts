@@ -7,14 +7,14 @@ import type { Browser, Icon, Manifest } from "./type";
 import { DataManager } from "./dataStore";
 import { IconProcesser } from "./iconProcesser";
 import { ManifestProcesser } from "./manifestProcesser";
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createRoot, createSignal } from "solid-js";
 
 export class ProgressiveWebApp {
   private static instance: ProgressiveWebApp;
   private dataManager: DataManager;
   private iconProcesser: IconProcesser;
   private manifestProcesser: ManifestProcesser;
-  private currentPWAs: ReturnType<
+  private currentPWAs!: ReturnType<
     typeof createSignal<Record<string, Manifest>>
   >;
 
@@ -22,9 +22,10 @@ export class ProgressiveWebApp {
     this.dataManager = new DataManager();
     this.iconProcesser = new IconProcesser();
     this.manifestProcesser = new ManifestProcesser();
-    this.currentPWAs = createSignal<Record<string, Manifest>>({});
-
-    this.initializeSignals();
+    createRoot(() => {
+      this.currentPWAs = createSignal<Record<string, Manifest>>({});
+      this.initializeSignals();
+    });
   }
 
   public static getInstance(): ProgressiveWebApp {
@@ -34,7 +35,7 @@ export class ProgressiveWebApp {
     return ProgressiveWebApp.instance;
   }
 
-  private async initializeSignals(): Promise<void> {
+  private initializeSignals(): void {
     const [, setCurrentPWAs] = this.currentPWAs;
     createEffect(async () => {
       const data = await this.dataManager.getCurrentSsbData();
@@ -59,7 +60,7 @@ export class ProgressiveWebApp {
    * Get all registered PWAs/SSBs
    * @returns Promise<Record<string, Manifest>>
    */
-  public async getAllPWAs(): Promise<Record<string, Manifest>> {
+  public getAllPWAs(): Record<string, Manifest> {
     const [currentPWAs] = this.currentPWAs;
     return currentPWAs();
   }
@@ -113,7 +114,7 @@ export class ProgressiveWebApp {
    * @param url The URL to check
    * @returns Promise<boolean>
    */
-  public async isPWARegistered(url: string): Promise<boolean> {
+  public isPWARegistered(url: string): boolean {
     const [currentPWAs] = this.currentPWAs;
     return Object.values(currentPWAs()).some((manifest) =>
       manifest.start_url === url
@@ -125,7 +126,7 @@ export class ProgressiveWebApp {
    * @param url The start URL of the PWA
    * @returns Promise<Manifest | null>
    */
-  public async getPWAByUrl(url: string): Promise<Manifest | null> {
+  public getPWAByUrl(url: string): Manifest | null {
     const [currentPWAs] = this.currentPWAs;
     return (
       Object.values(currentPWAs()).find((manifest) =>
@@ -139,7 +140,7 @@ export class ProgressiveWebApp {
    * @param id The ID (start_url) of the SSB to retrieve
    * @returns Promise<Manifest | null>
    */
-  public async getSsbById(id: string): Promise<Manifest | null> {
+  public getSsbById(id: string): Manifest | null {
     const [currentPWAs] = this.currentPWAs;
     const manifest = Object.values(currentPWAs()).find((m) =>
       m.start_url === id

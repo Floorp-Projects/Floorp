@@ -91,7 +91,7 @@ export const [workspacesDataStore, setWorkspacesDataStore] = createRootHMR(
  * Selected Workspace ID should not be stored in the store,
  * a Window should have only one selected workspace ID. Not need to track this value in Preferences.
  */
-function signalSelectedWorkspaceID(): [
+function createSelectedWorkspaceID(): [
   Accessor<TWorkspaceID | null>,
   Setter<TWorkspaceID | null>,
 ] {
@@ -102,5 +102,7 @@ function signalSelectedWorkspaceID(): [
 }
 
 /** Selected workspace ID */
-export const [selectedWorkspaceID, setSelectedWorkspaceID] =
-  signalSelectedWorkspaceID();
+export const [selectedWorkspaceID, setSelectedWorkspaceID] = createRootHMR(
+  createSelectedWorkspaceID,
+  import.meta.hot,
+);

@@ -4,22 +4,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
+import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
 import { ContextMenu } from "./context-menu.tsx";
 import { StatusBarElem } from "./statusbar.tsx";
 import { StatusBarManager } from "./statusbar-manager.tsx";
 import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
 
 export let manager: StatusBarManager;
+let statusbarOwner: Owner | null = null;
 
 @noraComponent(import.meta.hot)
 export default class StatusBar extends NoraComponentBase {
   init() {
+    statusbarOwner = getOwner();
     manager = new StatusBarManager();
     if (typeof document !== "undefined" && document?.body) {
-      render(StatusBarElem, document?.body, {
-        marker: document?.getElementById("customization-container") ??
-          undefined,
-      });
+      const exec = () =>
+        render(StatusBarElem, document?.body, {
+          marker: document?.getElementById("customization-container") ??
+            undefined,
+        });
+      if (statusbarOwner) runWithOwner(statusbarOwner, exec);
+      else createRoot(exec);
       const mainPopupSet = document?.getElementById("mainPopupSet");
       mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
     }
@@ -45,14 +51,17 @@ function onPopupShowing(event: Event) {
       if (typeof document !== "undefined") {
         const separator = document?.getElementById("viewToolbarsMenuSeparator");
         if (separator && separator.parentElement) {
-          render(
-            ContextMenu,
-            separator.parentElement,
-            {
-              marker: separator,
-              hotCtx: import.meta.hot,
-            },
-          );
+          const exec = () =>
+            render(
+              ContextMenu,
+              separator.parentElement,
+              {
+                marker: separator,
+                hotCtx: import.meta.hot,
+              },
+            );
+          if (statusbarOwner) runWithOwner(statusbarOwner, exec);
+          else createRoot(exec);
         }
       }
       break;

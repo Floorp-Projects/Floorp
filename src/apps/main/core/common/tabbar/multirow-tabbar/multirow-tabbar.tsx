@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "../../designs/configs.ts";
-import { createEffect } from "solid-js";
+import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
 
 interface DragData {
   animDropIndex: number;
@@ -284,16 +284,20 @@ export class MultirowTabbarClass {
   constructor() {
     this.tabsToolbar?.setAttribute("multibar", "true");
 
-    createEffect(() => {
-      if (config().tabbar.tabbarStyle === "multirow") {
-        this.enableMultirowTabbar();
-        this.setMultirowTabMaxHeight();
-        this.applyInjection();
-      } else {
-        this.disableMultirowTabbar();
-        this.removeMultirowTabMaxHeight();
-        this.removeInjection();
-      }
-    });
+    const owner = getOwner?.();
+    const exec = () =>
+      createEffect(() => {
+        if (config().tabbar.tabbarStyle === "multirow") {
+          this.enableMultirowTabbar();
+          this.setMultirowTabMaxHeight();
+          this.applyInjection();
+        } else {
+          this.disableMultirowTabbar();
+          this.removeMultirowTabMaxHeight();
+          this.removeInjection();
+        }
+      });
+    if (owner) runWithOwner(owner, exec);
+    else createRoot(exec);
   }
 }

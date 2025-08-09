@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/solid-xul";
+import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
 import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
@@ -21,6 +22,7 @@ import { WebsitePanel } from "../website-panel-window-parent.ts";
 import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
+  private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as
       | XULElement
@@ -40,23 +42,31 @@ export class CPanelSidebar {
   }
 
   constructor() {
-    createEffect(() => {
-      const currentCheckedPanels = Array.from(
-        document?.querySelectorAll(".panel-sidebar-panel[data-checked]") ?? [],
-      );
-      // Use forEach instead of map to avoid type error
-      (currentCheckedPanels as XULElement[]).forEach((panel) => {
-        panel.removeAttribute("data-checked");
-      });
+    this.owner = getOwner();
+    const exec = () => {
+      createEffect(() => {
+        const currentCheckedPanels = Array.from(
+          document?.querySelectorAll(".panel-sidebar-panel[data-checked]") ??
+            [],
+        );
+        // Use forEach instead of map to avoid type error
+        (currentCheckedPanels as XULElement[]).forEach((panel) => {
+          panel.removeAttribute("data-checked");
+        });
 
-      const currentPanel = this.getPanelData(selectedPanelId() ?? "");
-      if (currentPanel) {
-        document
-          ?.querySelector(`.panel-sidebar-panel[id="${currentPanel.id}"]`)
-          ?.setAttribute("data-checked", "true");
-      }
-    });
+        const currentPanel = this.getPanelData(selectedPanelId() ?? "");
+        if (currentPanel) {
+          document
+            ?.querySelector(`.panel-sidebar-panel[id="${currentPanel.id}"]`)
+            ?.setAttribute("data-checked", "true");
+        }
+      });
+    };
+    if (this.owner) runWithOwner(this.owner, exec);
+    else createRoot(exec);
   }
+
+  private owner: Owner | null = null;
 
   public getBrowserElement(id: string) {
     return document?.getElementById(`sidebar-panel-${id}`) as
@@ -103,10 +113,31 @@ export class CPanelSidebar {
       throw new Error("Parent element not found");
     }
 
-    const browserComponent = this.createBrowserComponent(panel);
-    render(() => browserComponent, this.parentElement, {
-      hotCtx: import.meta.hot,
-    });
+    // Dispose previous root for this panel if it exists (safety for re-renders)
+    const prevDispose = this.panelDisposers.get(panel.id);
+    if (prevDispose) {
+      try {
+        prevDispose();
+      } catch (e) {
+        console.warn("panel dispose failed", e);
+      }
+      this.panelDisposers.delete(panel.id);
+    }
+
+    const exec = () => {
+      const dispose = render(
+        () => this.createBrowserComponent(panel),
+        this.parentElement as XULElement,
+        {
+          hotCtx: import.meta.hot,
+        },
+      );
+      if (typeof dispose === "function") {
+        this.panelDisposers.set(panel.id, dispose);
+      }
+    };
+    if (this.owner) runWithOwner(this.owner, exec);
+    else createRoot(exec);
 
     this.initBrowser(panel);
   }
@@ -213,6 +244,17 @@ export class CPanelSidebar {
   }
 
   public unloadPanel(panelId: string) {
+    // Cleanup Solid root for this panel if present
+    const dispose = this.panelDisposers.get(panelId);
+    if (dispose) {
+      try {
+        dispose();
+      } catch (e) {
+        console.warn("panel dispose failed", e);
+      }
+      this.panelDisposers.delete(panelId);
+    }
+
     const browser = this.getBrowserElement(panelId);
     if (browser) {
       browser.remove();

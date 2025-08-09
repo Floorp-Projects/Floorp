@@ -3,6 +3,7 @@ import { QRCodePageActionButton } from "./qr-code-button";
 import { QRCodePanel } from "./qr-code-panel";
 import { QRCodeManager } from "./qr-code-manager";
 import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { createRoot, getOwner, runWithOwner } from "solid-js";
 
 export let manager: QRCodeManager;
 
@@ -17,14 +18,19 @@ export default class QRCodeGenerator extends NoraComponentBase {
       });
     }
 
-    window.SessionStore.promiseInitialized.then(() => {
-      const starButtonBox = document?.getElementById("star-button-box");
-      if (starButtonBox && starButtonBox.parentElement) {
-        render(QRCodePageActionButton, starButtonBox.parentElement, {
-          marker: starButtonBox,
-          hotCtx: import.meta.hot,
-        });
-      }
+    const owner = getOwner();
+    globalThis.SessionStore.promiseInitialized.then(() => {
+      const exec = () => {
+        const starButtonBox = document?.getElementById("star-button-box");
+        if (starButtonBox && starButtonBox.parentElement) {
+          render(QRCodePageActionButton, starButtonBox.parentElement, {
+            marker: starButtonBox,
+            hotCtx: import.meta.hot,
+          });
+        }
+      };
+      if (owner) runWithOwner(owner, exec);
+      else createRoot(exec);
     });
 
     manager.init();

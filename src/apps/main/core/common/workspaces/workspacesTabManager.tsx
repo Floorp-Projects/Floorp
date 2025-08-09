@@ -1,4 +1,10 @@
-import { createEffect, onCleanup } from "solid-js";
+import {
+  createEffect,
+  createRoot,
+  getOwner,
+  onCleanup,
+  runWithOwner,
+} from "solid-js";
 import { selectedWorkspaceID } from "./data/data.ts";
 import type {
   PanelMultiViewParentElement,
@@ -39,15 +45,19 @@ export class WorkspacesTabManager {
 
     initWorkspace();
 
-    createEffect(() => {
-      if (!enabled()) {
-        return;
-      }
+    const owner = getOwner?.();
+    const exec = () =>
+      createEffect(() => {
+        if (!enabled()) {
+          return;
+        }
 
-      if (selectedWorkspaceID()) {
-        this.updateTabsVisibility();
-      }
-    });
+        if (selectedWorkspaceID()) {
+          this.updateTabsVisibility();
+        }
+      });
+    if (owner) runWithOwner(owner, exec);
+    else createRoot(exec);
 
     onCleanup(() => {
       this.cleanup();
