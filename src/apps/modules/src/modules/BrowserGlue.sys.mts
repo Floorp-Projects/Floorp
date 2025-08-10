@@ -7,7 +7,7 @@ const { ActorManagerParent } = ChromeUtils.importESModule(
 );
 
 function localPathToResourceURI(path: string) {
-  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/);
+  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_/]+)\.sys\.mts/);
   const result = re.exec(path);
   if (!result || result.length != 2) {
     throw Error(
@@ -296,13 +296,35 @@ const JS_WINDOW_ACTORS: {
       ),
       events: {
         DOMContentLoaded: {},
+        DOMDocElementInserted: {},
       },
     },
     matches: [
       "http://*/*",
       "https://*/*",
+      "about:*",
     ],
     allFrames: true,
+  },
+  NRBrowserOS: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRBrowserOSParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRBrowserOSChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: [
+      "http://localhost/*",
+      "chrome://noraneko-settings/*",
+      "about:*",
+    ],
   },
 };
 

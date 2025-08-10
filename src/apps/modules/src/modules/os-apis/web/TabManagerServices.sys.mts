@@ -102,9 +102,20 @@ class TabManager {
   ): Promise<T | null> {
     try {
       const { browser } = this._getInstance(instanceId);
-      const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
         "NRWebScraper",
       );
+
+      // Retry a few times after navigation for actor readiness
+      if (!actor) {
+        for (let i = 0; i < 50; i++) {
+          await new Promise((r) => setTimeout(r, 100));
+          actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+            "NRWebScraper",
+          );
+          if (actor) break;
+        }
+      }
 
       if (!actor) {
         console.warn(`NRWebScraper actor not found for instance ${instanceId}`);
@@ -226,7 +237,13 @@ class TabManager {
       ),
     };
 
-    browser.loadURI(Services.io.newURI(url), loadURIOptions);
+    // Check if browser.loadURI is defined before calling it
+    if (typeof browser.loadURI === "function") {
+      browser.loadURI(Services.io.newURI(url), loadURIOptions);
+    } else {
+      // Throw an error if loadURI is not available
+      throw new Error("browser.loadURI is not defined");
+    }
     return this._waitForLoad(browser, url);
   }
 
@@ -280,8 +297,9 @@ class TabManager {
   public executeScript(
     instanceId: string,
     script: string,
-  ): Promise<unknown | null> {
-    return this._queryActor(instanceId, "WebScraper:ExecuteScript", { script });
+  ): Promise<void> {
+    return this._queryActor(instanceId, "WebScraper:ExecuteScript", { script })
+      .then(() => undefined);
   }
 
   public takeScreenshot(instanceId: string): Promise<string | null> {
@@ -323,6 +341,24 @@ class TabManager {
   ): Promise<boolean | null> {
     return this._queryActor<boolean>(instanceId, "WebScraper:FillForm", {
       formData,
+    });
+  }
+
+  public getValue(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    return this._queryActor<string>(instanceId, "WebScraper:GetValue", {
+      selector,
+    });
+  }
+
+  public submit(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    return this._queryActor<boolean>(instanceId, "WebScraper:Submit", {
+      selector,
     });
   }
 

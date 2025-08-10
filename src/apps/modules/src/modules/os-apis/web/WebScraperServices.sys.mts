@@ -36,8 +36,28 @@ const FRAME = new HiddenFrame();
 class webScraper {
   // Map to store browser instances with their unique IDs
   private _browserInstances: Map<string, XULBrowserElement> = new Map();
-  private _instanceId: string;
-  private _windowlessBrowser: nsIWindowlessBrowser;
+  private _instanceId!: string;
+  private _windowlessBrowser!: nsIWindowlessBrowser;
+
+  /**
+   * Try to get NRWebScraper actor with small retries to avoid race after navigation
+   */
+  private async _getActorForBrowser(
+    browser: XULBrowserElement,
+    tries = 20,
+    delayMs = 100,
+  ): Promise<any | null> {
+    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    );
+    for (let i = 0; !actor && i < tries; i++) {
+      await new Promise((r) => setTimeout(r, delayMs));
+      actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+        "NRWebScraper",
+      );
+    }
+    return actor ?? null;
+  }
 
   constructor() {
     this._initializeWindowlessBrowser();
@@ -72,7 +92,7 @@ class webScraper {
     browser.style.minHeight = "768px";
 
     // Add browser element to document to properly initialize webNavigation
-    doc.documentElement.appendChild(browser);
+    doc.documentElement?.appendChild(browser);
     browser.browsingContext.allowJavascript = true;
 
     this._instanceId = await crypto.randomUUID();
@@ -140,7 +160,11 @@ class webScraper {
 
       const uri = Services.io.newURI(url);
 
-      browser.loadURI(uri, loadURIOptions);
+      if (typeof browser.loadURI === "function") {
+        browser.loadURI(uri, loadURIOptions);
+      } else {
+        throw new Error("browser.loadURI is not defined");
+      }
       const { webProgress } = browser;
 
       /**
@@ -153,7 +177,12 @@ class webScraper {
        * - Cleans up listeners when navigation is complete
        */
       const progressListener = {
-        onLocationChange(progress, _request, location, flags) {
+        onLocationChange(
+          progress: nsIWebProgress,
+          _request: nsIRequest,
+          location: nsIURI,
+          flags: number,
+        ) {
           // Ignore inner-frame events
           if (!progress.isTopLevel) {
             return;
@@ -222,14 +251,8 @@ class webScraper {
     }
 
     try {
-      const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-        "NRWebScraper",
-      );
-
-      if (!actor) {
-        return null;
-      }
-
+      const actor = await this._getActorForBrowser(browser);
+      if (!actor) return null;
       return await actor.sendQuery("WebScraper:GetHTML");
     } catch (e) {
       console.error("Error getting HTML:", e);
@@ -263,14 +286,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:GetElement", { selector });
   }
 
@@ -297,14 +314,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:GetElementText", { selector });
   }
 
@@ -331,14 +342,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return false;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
     return await actor.sendQuery("WebScraper:ClickElement", { selector });
   }
 
@@ -367,14 +372,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return false;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
     return await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
       timeout,
@@ -398,21 +397,16 @@ class webScraper {
   public async executeScript(
     instanceId: string,
     script: string,
-  ): Promise<unknown> {
+  ): Promise<void> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
-    return await actor.sendQuery("WebScraper:ExecuteScript", { script });
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return;
+    await actor.sendQuery("WebScraper:ExecuteScript", { script });
+    return;
   }
 
   /**
@@ -431,14 +425,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:TakeScreenshot");
   }
 
@@ -462,14 +450,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:TakeElementScreenshot", {
       selector,
     });
@@ -493,14 +475,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:TakeFullPageScreenshot");
   }
 
@@ -524,14 +500,8 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return null;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
     return await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
       rect,
     });
@@ -555,17 +525,45 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
-
-    if (!actor) {
-      return false;
-    }
-
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
     return await actor.sendQuery("WebScraper:FillForm", {
       formData,
     });
+  }
+
+  /**
+   * Gets the value of an input/textarea element
+   */
+  public async getValue(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return await actor.sendQuery("WebScraper:GetValue", { selector });
+  }
+
+  /**
+   * Submits form associated with the selector element or the form itself
+   */
+  public async submit(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    return await actor.sendQuery("WebScraper:Submit", { selector });
   }
 
   /**

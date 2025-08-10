@@ -73,6 +73,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.getElementText(message.data.selector);
         }
         break;
+      case "WebScraper:GetValue":
+        if (message.data) {
+          return this.getValue(message.data.selector);
+        }
+        break;
       case "WebScraper:InputElement":
         if (message.data) {
           this.inputElement(message.data.selector, message.data.value);
@@ -93,7 +98,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:ExecuteScript":
         if (message.data) {
-          return this.executeScript(message.data.script);
+          return this.executeScript(message.data.script || "");
         }
         break;
       case "WebScraper:TakeScreenshot":
@@ -115,6 +120,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.fillForm(message.data.formData);
         }
         break;
+      case "WebScraper:Submit":
+        if (message.data) {
+          return this.submit(message.data.selector);
+        }
+        break;
     }
     return null;
   }
@@ -132,6 +142,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       if (this.contentWindow && this.contentWindow.document) {
         const html = this.contentWindow.document?.documentElement?.outerHTML;
+
+        console.log("NRWebScraperChild: getHTML", html);
+
         if (!html) {
           return null;
         }
@@ -208,6 +221,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
         element.value = value;
         // Trigger input event to ensure the change is detected
         element.dispatchEvent(new Event("input", { bubbles: true }));
+        // Some sites update bound state on change/blur
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+        element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
       }
     } catch (e) {
       console.error("NRWebScraperChild: Error setting input value:", e);
@@ -226,20 +242,54 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   clickElement(selector: string): boolean {
     try {
-      const element = this.document?.querySelector(selector) as HTMLElement;
-      if (element) {
-        // Check if element is visible and clickable
-        const style = window.getComputedStyle(element);
-        if (
-          style.display !== "none" &&
-          style.getPropertyValue("visibility") !== "hidden" &&
-          style.getPropertyValue("opacity") !== "0"
-        ) {
-          element.click();
-          return true;
-        }
+      const element = this.document?.querySelector(selector) as
+        | HTMLElement
+        | null;
+      if (!element) return false;
+
+      try {
+        element.scrollIntoView({ block: "center", inline: "center" });
+      } catch { /* ignore */ }
+
+      try {
+        (element as unknown as { focus?: () => void }).focus?.();
+      } catch { /* ignore */ }
+
+      const rects = element.getClientRects?.();
+      if (rects && rects.length === 0) {
+        return false;
       }
-      return false;
+
+      const style = globalThis.getComputedStyle(element);
+      if (
+        style?.display === "none" ||
+        style?.getPropertyValue("visibility") === "hidden"
+      ) {
+        return false;
+      }
+
+      const evInit: MouseEventInit = {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        view: this.contentWindow ?? undefined,
+      };
+      try {
+        element.dispatchEvent(new PointerEvent("pointerdown", evInit));
+      } catch (_e) { /* ignore */ }
+      try {
+        element.dispatchEvent(new MouseEvent("mousedown", evInit));
+      } catch (_e) { /* ignore */ }
+      try {
+        element.dispatchEvent(new MouseEvent("mouseup", evInit));
+      } catch (_e) { /* ignore */ }
+      try {
+        element.dispatchEvent(new MouseEvent("click", evInit));
+      } catch (_e) { /* ignore */ }
+      try {
+        element.click();
+      } catch (_e) { /* ignore */ }
+      return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
       return false;
@@ -286,18 +336,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param script - JavaScript code to execute
    * @returns any - The result of the script execution, or null if error
    */
-  executeScript(script: string): any {
+  executeScript(script: string): null {
     try {
       if (this.contentWindow) {
-        // Use Function constructor to create a safe execution context
         const func = new this.contentWindow.Function(script);
-        return func.call(this.contentWindow);
+        // execute side-effects only; ignore return value
+        func.call(this.contentWindow);
       }
-      return null;
-    } catch (e) {
-      console.error("NRWebScraperChild: Error executing script:", e);
-      return null;
+    } catch (_e) {
+      // swallow errors to keep API "no return" contract
     }
+    return null;
   }
 
   /**
@@ -313,7 +362,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (!this.contentWindow) {
         return null;
       }
-      const canvas = await this.contentWindow.document.createElement("canvas");
+      const canvas = (await this.contentWindow.document?.createElement(
+        "canvas",
+      )) as HTMLCanvasElement;
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
       const { innerWidth, innerHeight } = this.contentWindow;
 
@@ -356,7 +407,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return null;
       }
 
-      const canvas = await this.contentWindow.document.createElement("canvas");
+      const canvas = (await this.contentWindow.document?.createElement(
+        "canvas",
+      )) as HTMLCanvasElement;
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
       const rect = element.getBoundingClientRect();
 
@@ -393,11 +446,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return null;
       }
       const doc = this.contentWindow.document;
-      const canvas = await doc.createElement("canvas");
+      const canvas = (await doc?.createElement("canvas")) as HTMLCanvasElement;
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-      const width = doc.documentElement.scrollWidth;
-      const height = doc.documentElement.scrollHeight;
+      const width = doc?.documentElement?.scrollWidth ?? 0;
+      const height = doc?.documentElement?.scrollHeight ?? 0;
 
       canvas.width = width;
       canvas.height = height;
@@ -436,11 +489,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return null;
       }
       const doc = this.contentWindow.document;
-      const canvas = await doc.createElement("canvas");
+      const canvas = (await doc?.createElement("canvas")) as HTMLCanvasElement;
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-      const pageScrollWidth = doc.documentElement.scrollWidth;
-      const pageScrollHeight = doc.documentElement.scrollHeight;
+      const pageScrollWidth = doc?.documentElement?.scrollWidth ?? 0;
+      const pageScrollHeight = doc?.documentElement?.scrollHeight ?? 0;
 
       const x = rect.x ?? 0;
       const y = rect.y ?? 0;
@@ -491,6 +544,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
           if (element) {
             element.value = value;
             element.dispatchEvent(new Event("input", { bubbles: true }));
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+            element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
           } else {
             console.warn(
               `NRWebScraperChild: Element not found for selector: ${selector}`,
@@ -502,6 +557,55 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return allFilled;
     } catch (e) {
       console.error("NRWebScraperChild: Error filling form:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Gets the value of an input or textarea element by CSS selector
+   * @param selector - CSS selector to find the target element
+   * @returns string | null - The current value, or null if not found/unsupported
+   */
+  getValue(selector: string): string | null {
+    try {
+      const element = this.document?.querySelector(selector) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null;
+      if (element && typeof (element as HTMLInputElement).value === "string") {
+        return (element as HTMLInputElement).value;
+      }
+      return null;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting value:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Submits a form. If selector points to an element inside a form, submits its closest form.
+   * If selector is a form element, submits that form.
+   */
+  submit(selector: string): boolean {
+    try {
+      const root = this.document?.querySelector(selector) as Element | null;
+      const form = (root as HTMLFormElement | null)?.tagName === "FORM"
+        ? (root as HTMLFormElement)
+        : root?.closest?.("form") as HTMLFormElement | null;
+
+      if (!form) return false;
+
+      try {
+        // Prefer requestSubmit to trigger submitter/default handling
+        (form as any).requestSubmit
+          ? (form as any).requestSubmit()
+          : form.submit();
+      } catch {
+        form.submit();
+      }
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error submitting form:", e);
       return false;
     }
   }

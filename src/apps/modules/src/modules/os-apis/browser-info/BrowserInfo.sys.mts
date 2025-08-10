@@ -39,16 +39,23 @@ export class browserInfo {
         const result = PlacesUtils.history.executeQuery(query, options);
         const history: HistoryItem[] = [];
 
-        for (let i = 0; i < result.root.childCount; i++) {
-          const node = result.root.getChild(i);
-          if (node.uri) {
-            history.push({
-              url: node.uri,
-              title: node.title || node.uri,
-              lastVisitDate: node.lastModified,
-              visitCount: node.accessCount || 1,
-            });
+        // Open the container before accessing children, then ensure it is closed
+        const root = result.root;
+        try {
+          root.containerOpen = true;
+          for (let i = 0; i < root.childCount; i++) {
+            const node = root.getChild(i);
+            if (node.uri) {
+              history.push({
+                url: node.uri,
+                title: node.title || node.uri,
+                lastVisitDate: node.lastModified,
+                visitCount: node.accessCount || 1,
+              });
+            }
           }
+        } finally {
+          root.containerOpen = false;
         }
 
         resolve(history);
@@ -123,7 +130,12 @@ export class browserInfo {
 
             // Sort by start time (most recent first) and limit results
             const sortedItems = items
-              .sort((a, b) => (b.startTime || 0) - (a.startTime || 0))
+              .sort(
+                (
+                  a: { startTime?: number | null },
+                  b: { startTime?: number | null },
+                ) => (b.startTime || 0) - (a.startTime || 0),
+              )
               .slice(0, limit);
 
             for (const item of sortedItems) {
