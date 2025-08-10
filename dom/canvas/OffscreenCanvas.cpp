@@ -570,6 +570,10 @@ void OffscreenCanvas::SetWriteOnly(RefPtr<nsIPrincipal>&& aExpandedReader) {
                          mExpandedReader.forget());
   mExpandedReader = std::move(aExpandedReader);
   mIsWriteOnly = true;
+
+  if (mDisplay) {
+    mDisplay->SetWriteOnly(mExpandedReader);
+  }
 }
 
 bool OffscreenCanvas::CallerCanRead(nsIPrincipal& aPrincipal) const {

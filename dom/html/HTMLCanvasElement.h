@@ -372,13 +372,13 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
 
- public:
   // Record whether this canvas should be write-only or not.
   // We set this when script paints an image from a different origin.
   // We also transitively set it when script paints a canvas which
   // is itself write-only.
   bool mWriteOnly;
 
+ public:
   // When this canvas is (only) tainted by an image from an extension
   // content script, allow reads from the same extension afterwards.
   RefPtr<nsIPrincipal> mExpandedReader;

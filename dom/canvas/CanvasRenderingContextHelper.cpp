@@ -7,7 +7,6 @@
 #include "GLContext.h"
 #include "ImageBitmapRenderingContext.h"
 #include "ImageEncoder.h"
-#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/GfxMessageUtils.h"
@@ -25,55 +24,6 @@ namespace mozilla::dom {
 
 CanvasRenderingContextHelper::CanvasRenderingContextHelper()
     : mCurrentContextType(CanvasContextType::NoContext) {}
-
-void CanvasRenderingContextHelper::ToBlob(
-    JSContext* aCx, nsIGlobalObject* aGlobal, BlobCallback& aCallback,
-    const nsAString& aType, JS::Handle<JS::Value> aParams, bool aUsePlaceholder,
-    ErrorResult& aRv) {
-  // Encoder callback when encoding is complete.
-  class EncodeCallback : public EncodeCompleteCallback {
-   public:
-    EncodeCallback(nsIGlobalObject* aGlobal, BlobCallback* aCallback)
-        : mGlobal(aGlobal), mBlobCallback(aCallback) {}
-
-    // This is called on main thread.
-    MOZ_CAN_RUN_SCRIPT
-    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      RefPtr<BlobImpl> blobImpl = aBlobImpl;
-
-      RefPtr<Blob> blob;
-
-      if (blobImpl) {
-        blob = Blob::Create(mGlobal, blobImpl);
-      }
-
-      RefPtr<BlobCallback> callback(std::move(mBlobCallback));
-      ErrorResult rv;
-
-      callback->Call(blob, rv);
-
-      mGlobal = nullptr;
-      MOZ_ASSERT(!mBlobCallback);
-
-      return rv.StealNSResult();
-    }
-
-    bool CanBeDeletedOnAnyThread() override {
-      // EncodeCallback is used from the main thread only.
-      return false;
-    }
-
-    nsCOMPtr<nsIGlobalObject> mGlobal;
-    RefPtr<BlobCallback> mBlobCallback;
-  };
-
-  RefPtr<EncodeCompleteCallback> callback =
-      new EncodeCallback(aGlobal, &aCallback);
-
-  ToBlob(aCx, callback, aType, aParams, aUsePlaceholder, aRv);
-}
 
 void CanvasRenderingContextHelper::ToBlob(
     JSContext* aCx, EncodeCompleteCallback* aCallback, const nsAString& aType,
