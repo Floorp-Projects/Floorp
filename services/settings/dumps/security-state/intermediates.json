@@ -27892,24 +27892,6 @@
       "last_modified": 1601517441658
     },
     {
-      "schema": 1592519327482,
-      "derHash": "RbKwjhtYlIoCi+E6Z8DiDUskZq4rbsYlDrsQ/Wt/gjk=",
-      "subject": "CN=Trustwave Secure Global Extended Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
-      "subjectDN": "MIG4MQswCQYDVQQGEwJVUzERMA8GA1UECBMISWxsaW5vaXMxEDAOBgNVBAcTB0NoaWNhZ28xITAfBgNVBAoTGFRydXN0d2F2ZSBIb2xkaW5ncywgSW5jLjFAMD4GA1UEAxM3VHJ1c3R3YXZlIFNlY3VyZSBHbG9iYWwgRXh0ZW5kZWQgVmFsaWRhdGlvbiBDQSwgTGV2ZWwgMTEfMB0GCSqGSIb3DQEJARYQY2FAdHJ1c3R3YXZlLmNvbQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "296ea0b36874faa2487773b3da5792b5b41278241a226affe7e50a6ba22c0e72",
-        "size": 1784,
-        "filename": "jyPoX5LnCMukfvFxrxuJWUrZycp69MmdphXiTrhpMU4=.pem",
-        "location": "security-state-staging/intermediates/3c07694f-03e7-4fdb-b353-876f81151fda.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "jyPoX5LnCMukfvFxrxuJWUrZycp69MmdphXiTrhpMU4=",
-      "crlite_enrolled": false,
-      "id": "170a74a6-1485-4c35-aecb-8b37550de004",
-      "last_modified": 1600461980794
-    },
-    {
       "schema": 1591167038909,
       "derHash": "7tCpXn3jylPkpscqhrPxZMDCPjgPj2t5o0nvF4Q0LB8=",
       "subject": "CN=Sectigo SHA-256 DV Secure Server CA 2,O=Sectigo Limited,C=GB",
@@ -29944,5 +29926,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1754146622506
+  "timestamp": 1754751422477
 }

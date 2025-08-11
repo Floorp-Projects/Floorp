@@ -2,7 +2,7 @@
   "data": [
     {
       "isSPA": true,
-      "schema": 1754014537720,
+      "schema": 1754273750939,
       "subframes": [],
       "components": [
         {
@@ -51,7 +51,7 @@
       ],
       "shoppingTab": {
         "regexp": "t=shopping",
-        "selector": ".cW9uh",
+        "selector": "[data-testid='shoppingNavItem']",
         "inspectRegexpInSERP": true
       },
       "taggedCodes": [
@@ -127,7 +127,7 @@
         "^https://fdn\\.qwant\\.com/v3/r/"
       ],
       "id": "19c434a3-d173-4871-9743-290ac92a3f6b",
-      "last_modified": 1754069571469
+      "last_modified": 1754676198505
     },
     {
       "schema": 1753236937989,
@@ -969,5 +969,5 @@
       "last_modified": 1741781945955
     }
   ],
-  "timestamp": 1754069571469
+  "timestamp": 1754676198505
 }
