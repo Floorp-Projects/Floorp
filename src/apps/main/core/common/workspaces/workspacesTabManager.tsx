@@ -33,14 +33,16 @@ export class WorkspacesTabManager {
     this.boundHandleTabClose = this.handleTabClose.bind(this);
 
     const initWorkspace = () => {
-      (globalThis as any).SessionStore.promiseAllWindowsRestored.then(() => {
-        this.initializeWorkspace();
-        globalThis.addEventListener("TabClose", this.boundHandleTabClose);
-      }).catch((error: Error) => {
-        console.error("Error waiting for windows restore:", error);
-        this.initializeWorkspace();
-        globalThis.addEventListener("TabClose", this.boundHandleTabClose);
-      });
+      (globalThis as any).SessionStore.promiseAllWindowsRestored
+        .then(() => {
+          this.initializeWorkspace();
+          globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+        })
+        .catch((error: Error) => {
+          console.error("Error waiting for windows restore:", error);
+          this.initializeWorkspace();
+          globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+        });
     };
 
     initWorkspace();
@@ -170,6 +172,24 @@ export class WorkspacesTabManager {
         globalThis.gBrowser.showTab(tab);
       } else {
         globalThis.gBrowser.hideTab(tab);
+      }
+    }
+
+    const tabGroups = globalThis.gBrowser.tabGroups;
+    const visibleTabs = globalThis.gBrowser.visibleTabs;
+
+    for (const tg of tabGroups) {
+      let hasVisibleTab = false;
+      for (const tab of tg.tabs) {
+        if (visibleTabs.includes(tab)) {
+          hasVisibleTab = true;
+          break;
+        }
+      }
+      if (!hasVisibleTab) {
+        tg.hidden = true;
+      } else {
+        tg.hidden = false;
       }
     }
   }
