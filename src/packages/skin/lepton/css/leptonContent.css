@@ -3439,6 +3439,9 @@
         .menu-icon {
           display: unset !important;
         }
+        #main-menubar > menu > .menu-icon {
+          display: none !important;
+        }
         /* Contextmenu Checkbox Unset */
         menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[type="checkbox"] {
           margin-inline: 0 !important;
@@ -7292,6 +7295,9 @@
       }
       .menu-icon {
         display: unset !important;
+      }
+      #main-menubar > menu > .menu-icon {
+        display: none !important;
       }
       /* Contextmenu Checkbox Unset */
       menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[type="checkbox"] {

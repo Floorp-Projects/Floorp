@@ -1,4 +1,4 @@
-// v8.7.2 Lepton
+// v8.7.3 Lepton
 // ** Theme Default Options ****************************************************
 // userchrome.css usercontent.css activate
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
