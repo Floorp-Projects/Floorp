@@ -25,9 +25,21 @@ export function FloatingSplitter() {
 
     const startX = e.clientX;
     const startWidth = sidebarBox.getBoundingClientRect().width;
-    const startLeft =
-      Number.parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
-      sidebarBox.getBoundingClientRect().left;
+    // left を offsetParent 座標系で取得
+    const parentEl = (sidebarBox as unknown as HTMLElement).offsetParent as
+      | HTMLElement
+      | null;
+    const parentRect =
+      (parentEl ?? (document?.getElementById("browser") as HTMLElement))
+        .getBoundingClientRect();
+    const boxRect = sidebarBox.getBoundingClientRect();
+    const styleLeft = Number.parseInt(
+      sidebarBox.style.getPropertyValue("left") || "NaN",
+      10,
+    );
+    const startLeft = Number.isNaN(styleLeft)
+      ? boxRect.left - parentRect.left
+      : styleLeft;
     const isLeftSide = (e.target as HTMLElement).classList.contains(
       "floating-splitter-left",
     );
@@ -46,20 +58,22 @@ export function FloatingSplitter() {
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX;
+      const browserW =
+        (document?.getElementById("browser") as HTMLElement | null)
+          ?.clientWidth ?? window.innerWidth;
+      const minW = 225;
+      const maxW = browserW * 0.8;
       if (isLeftSide) {
-        pendingWidth = Math.max(
-          225,
-          Math.min(startWidth - deltaX, window.innerWidth * 0.8),
-        );
+        const rightEdge = startLeft + startWidth;
+        const desiredWidth = startWidth - deltaX;
+        pendingWidth = Math.max(minW, Math.min(desiredWidth, maxW));
         pendingLeft = Math.max(
           0,
-          Math.min(window.innerWidth - pendingWidth, startLeft + deltaX),
+          Math.min(browserW - pendingWidth, rightEdge - pendingWidth),
         );
       } else {
-        pendingWidth = Math.max(
-          225,
-          Math.min(startWidth + deltaX, window.innerWidth * 0.8),
-        );
+        const desiredWidth = startWidth + deltaX;
+        pendingWidth = Math.max(minW, Math.min(desiredWidth, maxW));
       }
       if (!frameRequested) {
         frameRequested = true;
@@ -103,9 +117,21 @@ export function FloatingSplitter() {
 
     const startY = e.clientY;
     const startHeight = sidebarBox.getBoundingClientRect().height;
-    const startTop =
-      Number.parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
-      sidebarBox.getBoundingClientRect().top;
+    // top を offsetParent 座標系で取得
+    const parentEl = (sidebarBox as unknown as HTMLElement).offsetParent as
+      | HTMLElement
+      | null;
+    const parentRect =
+      (parentEl ?? (document?.getElementById("browser") as HTMLElement))
+        .getBoundingClientRect();
+    const boxRect = sidebarBox.getBoundingClientRect();
+    const styleTop = Number.parseInt(
+      sidebarBox.style.getPropertyValue("top") || "NaN",
+      10,
+    );
+    const startTop = Number.isNaN(styleTop)
+      ? boxRect.top - parentRect.top
+      : styleTop;
     const isTopSide = (e.target as HTMLElement).classList.contains(
       "floating-splitter-top",
     );
@@ -124,20 +150,22 @@ export function FloatingSplitter() {
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaY = e.clientY - startY;
+      const browserH =
+        (document?.getElementById("browser") as HTMLElement | null)
+          ?.clientHeight ?? window.innerHeight;
+      const minH = 200;
+      const maxH = browserH * 0.9;
       if (isTopSide) {
-        pendingHeight = Math.max(
-          200,
-          Math.min(startHeight - deltaY, window.innerHeight * 0.9),
-        );
+        const bottomEdge = startTop + startHeight;
+        const desiredHeight = startHeight - deltaY;
+        pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
         pendingTop = Math.max(
           0,
-          Math.min(window.innerHeight - pendingHeight, startTop + deltaY),
+          Math.min(browserH - pendingHeight, bottomEdge - pendingHeight),
         );
       } else {
-        pendingHeight = Math.max(
-          200,
-          Math.min(startHeight + deltaY, window.innerHeight * 0.9),
-        );
+        const desiredHeight = startHeight + deltaY;
+        pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
       }
       if (!frameRequested) {
         frameRequested = true;
@@ -183,12 +211,28 @@ export function FloatingSplitter() {
     const startY = e.clientY;
     const startWidth = sidebarBox.getBoundingClientRect().width;
     const startHeight = sidebarBox.getBoundingClientRect().height;
-    const startLeft =
-      Number.parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
-      sidebarBox.getBoundingClientRect().left;
-    const startTop =
-      Number.parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
-      sidebarBox.getBoundingClientRect().top;
+    // 左上座標を offsetParent（= #browser）基準で算出
+    const parentEl = (sidebarBox as unknown as HTMLElement).offsetParent as
+      | HTMLElement
+      | null;
+    const parentRect =
+      (parentEl ?? (document?.getElementById("browser") as HTMLElement))
+        .getBoundingClientRect();
+    const boxRect = sidebarBox.getBoundingClientRect();
+    const styleLeft = Number.parseInt(
+      sidebarBox.style.getPropertyValue("left") || "NaN",
+      10,
+    );
+    const styleTop = Number.parseInt(
+      sidebarBox.style.getPropertyValue("top") || "NaN",
+      10,
+    );
+    const startLeft = Number.isNaN(styleLeft)
+      ? boxRect.left - parentRect.left
+      : styleLeft;
+    const startTop = Number.isNaN(styleTop)
+      ? boxRect.top - parentRect.top
+      : styleTop;
     const target = e.target as HTMLElement;
 
     const isTopLeft = target.classList.contains(
@@ -223,36 +267,41 @@ export function FloatingSplitter() {
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
+      const browserW =
+        (document?.getElementById("browser") as HTMLElement | null)
+          ?.clientWidth ?? window.innerWidth;
+      const browserH =
+        (document?.getElementById("browser") as HTMLElement | null)
+          ?.clientHeight ?? window.innerHeight;
+      const minW = 225;
+      const maxW = browserW * 0.8;
+      const minH = 200;
+      const maxH = browserH * 0.9;
+
       if (isTopLeft || isBottomLeft) {
-        pendingWidth = Math.max(
-          225,
-          Math.min(startWidth - deltaX, window.innerWidth * 0.8),
-        );
+        const rightEdge = startLeft + startWidth;
+        const desiredWidth = startWidth - deltaX;
+        pendingWidth = Math.max(minW, Math.min(desiredWidth, maxW));
         pendingLeft = Math.max(
           0,
-          Math.min(window.innerWidth - pendingWidth, startLeft + deltaX),
+          Math.min(browserW - pendingWidth, rightEdge - pendingWidth),
         );
       } else {
-        pendingWidth = Math.max(
-          225,
-          Math.min(startWidth + deltaX, window.innerWidth * 0.8),
-        );
+        const desiredWidth = startWidth + deltaX;
+        pendingWidth = Math.max(minW, Math.min(desiredWidth, maxW));
       }
 
       if (isTopLeft || isTopRight) {
-        pendingHeight = Math.max(
-          200,
-          Math.min(startHeight - deltaY, window.innerHeight * 0.9),
-        );
+        const bottomEdge = startTop + startHeight;
+        const desiredHeight = startHeight - deltaY;
+        pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
         pendingTop = Math.max(
           0,
-          Math.min(window.innerHeight - pendingHeight, startTop + deltaY),
+          Math.min(browserH - pendingHeight, bottomEdge - pendingHeight),
         );
       } else {
-        pendingHeight = Math.max(
-          200,
-          Math.min(startHeight + deltaY, window.innerHeight * 0.9),
-        );
+        const desiredHeight = startHeight + deltaY;
+        pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
       }
 
       if (!frameRequested) {
