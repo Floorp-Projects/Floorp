@@ -210,8 +210,12 @@
 
 /* Floating */
 
+#browser {
+  position: relative;
+}
+
 #panel-sidebar-box[data-floating="true"] {
-  position: fixed;
+  position: absolute;
   z-index: 999;
   box-shadow: var(--panel-sidebar-floating-shadow);
   border-radius: var(--panel-sidebar-floating-radius);
@@ -253,6 +257,7 @@
   position: absolute;
   inset: 0;
   z-index: 9999;
+  cursor: grabbing;
 }
 
 .floating-splitter-side {

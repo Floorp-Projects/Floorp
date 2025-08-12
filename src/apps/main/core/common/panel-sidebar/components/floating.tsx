@@ -14,7 +14,7 @@ import {
 } from "../data/data.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import { isResizeCooldown } from "./floating-splitter.tsx";
-import type { Panel } from "../utils/type";
+import type { Panel } from "../utils/type.ts";
 
 declare global {
   interface Window {
@@ -39,7 +39,7 @@ export class PanelSidebarFloating {
   }
 
   private resizeObserver: ResizeObserver | null = null;
-  private parentHeightTargetId = "tabbrowser-tabbox";
+  private parentHeightTargetId = "browser";
   private userResizedHeight = false;
   private isDraggingHeader = false;
 
@@ -54,11 +54,19 @@ export class PanelSidebarFloating {
           this.initResizeObserver();
           this.initDragHeader();
           this.applyStoredPositionToSidebarBox();
-          // document?.addEventListener("click", this.handleOutsideClick);
+          document?.addEventListener(
+            "mousedown",
+            this.handleOutsideClick,
+            true,
+          );
         } else {
           this.removeFloatingStyles();
           this.resizeObserver?.disconnect();
-          // document?.removeEventListener("click", this.handleOutsideClick);
+          document?.removeEventListener(
+            "mousedown",
+            this.handleOutsideClick,
+            true,
+          );
           this.userResizedHeight = false;
           this.restoreActivePanel();
         }
@@ -162,6 +170,8 @@ export class PanelSidebarFloating {
       e.preventDefault();
       this.isDraggingHeader = true;
       setIsFloatingDragging(true);
+      const docEl = document?.documentElement as XULElement | null;
+      docEl?.style.setProperty("user-select", "none");
 
       const startX = e.clientX;
       const startY = e.clientY;
@@ -173,31 +183,42 @@ export class PanelSidebarFloating {
         sidebarBox.getBoundingClientRect().top;
 
       sidebarBox.style.setProperty("margin", "0");
-      sidebarBox.style.setProperty("position", "fixed");
+      sidebarBox.style.setProperty("position", "absolute");
+      sidebarBox.style.setProperty("right", "auto");
       sidebarBox.style.setProperty("left", `${startLeft}px`);
       sidebarBox.style.setProperty("top", `${startTop}px`);
+
+      let frameRequested = false;
+      let pendingLeft = startLeft;
+      let pendingTop = startTop;
+
+      const applyFrame = () => {
+        frameRequested = false;
+        sidebarBox.style.setProperty("left", `${pendingLeft}px`);
+        sidebarBox.style.setProperty("top", `${pendingTop}px`);
+      };
 
       const onMouseMove = (e: MouseEvent) => {
         const deltaX = e.clientX - startX;
         const deltaY = e.clientY - startY;
 
-        const newLeft = Math.max(
+        const browserW = document?.getElementById("browser")?.clientWidth ??
+          window.innerWidth;
+        const browserH = document?.getElementById("browser")?.clientHeight ??
+          window.innerHeight;
+        pendingLeft = Math.max(
           0,
-          Math.min(
-            window.innerWidth - sidebarBox.clientWidth,
-            startLeft + deltaX,
-          ),
+          Math.min(browserW - sidebarBox.clientWidth, startLeft + deltaX),
         );
-        const newTop = Math.max(
+        pendingTop = Math.max(
           0,
-          Math.min(
-            window.innerHeight - sidebarBox.clientHeight,
-            startTop + deltaY,
-          ),
+          Math.min(browserH - sidebarBox.clientHeight, startTop + deltaY),
         );
 
-        sidebarBox.style.setProperty("left", `${newLeft}px`);
-        sidebarBox.style.setProperty("top", `${newTop}px`);
+        if (!frameRequested) {
+          frameRequested = true;
+          document?.defaultView?.requestAnimationFrame(applyFrame);
+        }
       };
 
       const onMouseUp = () => {
@@ -205,6 +226,8 @@ export class PanelSidebarFloating {
         setIsFloatingDragging(false);
         document?.removeEventListener("mousemove", onMouseMove);
         document?.removeEventListener("mouseup", onMouseUp);
+        const docEl = document?.documentElement as XULElement | null;
+        docEl?.style.removeProperty("user-select");
 
         this.savePosition();
       };
@@ -240,8 +263,12 @@ export class PanelSidebarFloating {
   }
 
   private applyHeightToSidebarBox() {
-    (document?.getElementById("panel-sidebar-box") as XULElement).style.height =
-      `${this.getBrowserHeight() - 20}px`;
+    const el = document?.getElementById("panel-sidebar-box") as
+      | XULElement
+      | null;
+    if (el) {
+      el.style.height = `${this.getBrowserHeight() - 20}px`;
+    }
   }
 
   private removeFloatingStyles() {
@@ -256,6 +283,7 @@ export class PanelSidebarFloating {
     sidebarBox.style.removeProperty("width");
     sidebarBox.style.removeProperty("position");
     sidebarBox.style.removeProperty("left");
+    sidebarBox.style.removeProperty("right");
     sidebarBox.style.removeProperty("top");
     sidebarBox.style.removeProperty("margin");
 
@@ -263,8 +291,12 @@ export class PanelSidebarFloating {
   }
 
   private removeHeightToSidebarBox() {
-    (document?.getElementById("panel-sidebar-box") as XULElement).style.height =
-      "";
+    const el = document?.getElementById("panel-sidebar-box") as
+      | XULElement
+      | null;
+    if (el) {
+      el.style.height = "";
+    }
   }
 
   private getBrowserHeight() {
@@ -306,28 +338,42 @@ export class PanelSidebarFloating {
       config.floatingPositionTop !== undefined
     ) {
       sidebarBox.style.setProperty("margin", "0");
-      sidebarBox.style.setProperty("position", "fixed");
+      sidebarBox.style.setProperty("position", "absolute");
+      sidebarBox.style.setProperty("right", "auto");
 
       const width = config.floatingWidth ||
         sidebarBox.getBoundingClientRect().width;
       const height = config.floatingHeight ||
         sidebarBox.getBoundingClientRect().height;
+      const browserW = document?.getElementById("browser")?.clientWidth ??
+        window.innerWidth;
+      const browserH = document?.getElementById("browser")?.clientHeight ??
+        window.innerHeight;
       const left = Math.max(
         0,
-        Math.min(window.innerWidth - width, config.floatingPositionLeft),
+        Math.min(browserW - width, config.floatingPositionLeft),
       );
       const top = Math.max(
         0,
-        Math.min(window.innerHeight - height, config.floatingPositionTop),
+        Math.min(browserH - height, config.floatingPositionTop),
       );
 
       sidebarBox.style.setProperty("left", `${left}px`);
       sidebarBox.style.setProperty("top", `${top}px`);
     } else {
-      const defaultLeft = 20;
+      // position_start に応じてデフォルトの左右を調整
+      const isStart = panelSidebarConfig().position_start;
+      const currentWidth = sidebarBox.getBoundingClientRect().width || 400;
+      const browserW = document?.getElementById("browser")?.clientWidth ??
+        window.innerWidth;
+      const margin = 20;
+      const defaultLeft = isStart
+        ? margin
+        : Math.max(margin, browserW - currentWidth - margin);
       const defaultTop = 100;
       sidebarBox.style.setProperty("margin", "0");
-      sidebarBox.style.setProperty("position", "fixed");
+      sidebarBox.style.setProperty("position", "absolute");
+      sidebarBox.style.setProperty("right", "auto");
       sidebarBox.style.setProperty("left", `${defaultLeft}px`);
       sidebarBox.style.setProperty("top", `${defaultTop}px`);
     }

@@ -17,6 +17,7 @@ export function FloatingSplitter() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
     ) as XULElement;
+    const docEl = document?.documentElement as XULElement | null;
 
     if (!sidebarBox) {
       return;
@@ -24,35 +25,53 @@ export function FloatingSplitter() {
 
     const startX = e.clientX;
     const startWidth = sidebarBox.getBoundingClientRect().width;
-    const startLeft = parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
+    const startLeft =
+      Number.parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
       sidebarBox.getBoundingClientRect().left;
-    const isLeftSide = (e.target as HTMLElement).classList.contains("floating-splitter-left");
+    const isLeftSide = (e.target as HTMLElement).classList.contains(
+      "floating-splitter-left",
+    );
+
+    let frameRequested = false;
+    let pendingWidth = startWidth;
+    let pendingLeft = startLeft;
+
+    const applyFrame = () => {
+      frameRequested = false;
+      sidebarBox.style.setProperty("width", `${pendingWidth}px`);
+      if (isLeftSide) {
+        sidebarBox.style.setProperty("left", `${pendingLeft}px`);
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX;
-      let newWidth: number;
-
       if (isLeftSide) {
-        newWidth = Math.max(
+        pendingWidth = Math.max(
           225,
           Math.min(startWidth - deltaX, window.innerWidth * 0.8),
         );
-        const newLeft = Math.max(0, Math.min(window.innerWidth - newWidth, startLeft + deltaX));
-        sidebarBox.style.setProperty("left", `${newLeft}px`);
+        pendingLeft = Math.max(
+          0,
+          Math.min(window.innerWidth - pendingWidth, startLeft + deltaX),
+        );
       } else {
-        newWidth = Math.max(
+        pendingWidth = Math.max(
           225,
           Math.min(startWidth + deltaX, window.innerWidth * 0.8),
         );
       }
-
-      sidebarBox.style.setProperty("width", `${newWidth}px`);
+      if (!frameRequested) {
+        frameRequested = true;
+        document?.defaultView?.requestAnimationFrame(applyFrame);
+      }
     };
 
     const onMouseUp = () => {
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
+      docEl?.style.removeProperty("user-select");
 
       setIsResizeCooldown(true);
 
@@ -66,6 +85,7 @@ export function FloatingSplitter() {
       }, 1000);
     };
 
+    docEl?.style.setProperty("user-select", "none");
     document?.addEventListener("mousemove", onMouseMove);
     document?.addEventListener("mouseup", onMouseUp);
   };
@@ -75,6 +95,7 @@ export function FloatingSplitter() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
     ) as XULElement;
+    const docEl = document?.documentElement as XULElement | null;
 
     if (!sidebarBox) {
       return;
@@ -82,35 +103,53 @@ export function FloatingSplitter() {
 
     const startY = e.clientY;
     const startHeight = sidebarBox.getBoundingClientRect().height;
-    const startTop = parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
+    const startTop =
+      Number.parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
       sidebarBox.getBoundingClientRect().top;
-    const isTopSide = (e.target as HTMLElement).classList.contains("floating-splitter-top");
+    const isTopSide = (e.target as HTMLElement).classList.contains(
+      "floating-splitter-top",
+    );
+
+    let frameRequested = false;
+    let pendingHeight = startHeight;
+    let pendingTop = startTop;
+
+    const applyFrame = () => {
+      frameRequested = false;
+      sidebarBox.style.setProperty("height", `${pendingHeight}px`);
+      if (isTopSide) {
+        sidebarBox.style.setProperty("top", `${pendingTop}px`);
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaY = e.clientY - startY;
-      let newHeight: number;
-
       if (isTopSide) {
-        newHeight = Math.max(
+        pendingHeight = Math.max(
           200,
           Math.min(startHeight - deltaY, window.innerHeight * 0.9),
         );
-        const newTop = Math.max(0, Math.min(window.innerHeight - newHeight, startTop + deltaY));
-        sidebarBox.style.setProperty("top", `${newTop}px`);
+        pendingTop = Math.max(
+          0,
+          Math.min(window.innerHeight - pendingHeight, startTop + deltaY),
+        );
       } else {
-        newHeight = Math.max(
+        pendingHeight = Math.max(
           200,
           Math.min(startHeight + deltaY, window.innerHeight * 0.9),
         );
       }
-
-      sidebarBox.style.setProperty("height", `${newHeight}px`);
+      if (!frameRequested) {
+        frameRequested = true;
+        document?.defaultView?.requestAnimationFrame(applyFrame);
+      }
     };
 
     const onMouseUp = () => {
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
+      docEl?.style.removeProperty("user-select");
 
       setIsResizeCooldown(true);
 
@@ -124,6 +163,7 @@ export function FloatingSplitter() {
       }, 1000);
     };
 
+    docEl?.style.setProperty("user-select", "none");
     document?.addEventListener("mousemove", onMouseMove);
     document?.addEventListener("mouseup", onMouseUp);
   };
@@ -133,6 +173,7 @@ export function FloatingSplitter() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
     ) as XULElement;
+    const docEl = document?.documentElement as XULElement | null;
 
     if (!sidebarBox) {
       return;
@@ -142,58 +183,89 @@ export function FloatingSplitter() {
     const startY = e.clientY;
     const startWidth = sidebarBox.getBoundingClientRect().width;
     const startHeight = sidebarBox.getBoundingClientRect().height;
-    const startLeft = parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
+    const startLeft =
+      Number.parseInt(sidebarBox.style.getPropertyValue("left") || "0", 10) ||
       sidebarBox.getBoundingClientRect().left;
-    const startTop = parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
+    const startTop =
+      Number.parseInt(sidebarBox.style.getPropertyValue("top") || "0", 10) ||
       sidebarBox.getBoundingClientRect().top;
     const target = e.target as HTMLElement;
 
-    const isTopLeft = target.classList.contains("floating-splitter-corner-topleft");
-    const isTopRight = target.classList.contains("floating-splitter-corner-topright");
-    const isBottomLeft = target.classList.contains("floating-splitter-corner-bottomleft");
+    const isTopLeft = target.classList.contains(
+      "floating-splitter-corner-topleft",
+    );
+    const isTopRight = target.classList.contains(
+      "floating-splitter-corner-topright",
+    );
+    const isBottomLeft = target.classList.contains(
+      "floating-splitter-corner-bottomleft",
+    );
+
+    let frameRequested = false;
+    let pendingWidth = startWidth;
+    let pendingHeight = startHeight;
+    let pendingLeft = startLeft;
+    let pendingTop = startTop;
+
+    const applyFrame = () => {
+      frameRequested = false;
+      sidebarBox.style.setProperty("width", `${pendingWidth}px`);
+      sidebarBox.style.setProperty("height", `${pendingHeight}px`);
+      if (isTopLeft || isBottomLeft) {
+        sidebarBox.style.setProperty("left", `${pendingLeft}px`);
+      }
+      if (isTopLeft || isTopRight) {
+        sidebarBox.style.setProperty("top", `${pendingTop}px`);
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
-      let newWidth: number;
       if (isTopLeft || isBottomLeft) {
-        newWidth = Math.max(
+        pendingWidth = Math.max(
           225,
           Math.min(startWidth - deltaX, window.innerWidth * 0.8),
         );
-        const newLeft = Math.max(0, Math.min(window.innerWidth - newWidth, startLeft + deltaX));
-        sidebarBox.style.setProperty("left", `${newLeft}px`);
+        pendingLeft = Math.max(
+          0,
+          Math.min(window.innerWidth - pendingWidth, startLeft + deltaX),
+        );
       } else {
-        newWidth = Math.max(
+        pendingWidth = Math.max(
           225,
           Math.min(startWidth + deltaX, window.innerWidth * 0.8),
         );
       }
 
-      let newHeight: number;
       if (isTopLeft || isTopRight) {
-        newHeight = Math.max(
+        pendingHeight = Math.max(
           200,
           Math.min(startHeight - deltaY, window.innerHeight * 0.9),
         );
-        const newTop = Math.max(0, Math.min(window.innerHeight - newHeight, startTop + deltaY));
-        sidebarBox.style.setProperty("top", `${newTop}px`);
+        pendingTop = Math.max(
+          0,
+          Math.min(window.innerHeight - pendingHeight, startTop + deltaY),
+        );
       } else {
-        newHeight = Math.max(
+        pendingHeight = Math.max(
           200,
           Math.min(startHeight + deltaY, window.innerHeight * 0.9),
         );
       }
 
-      sidebarBox.style.setProperty("width", `${newWidth}px`);
-      sidebarBox.style.setProperty("height", `${newHeight}px`);
+      if (!frameRequested) {
+        frameRequested = true;
+        document?.defaultView?.requestAnimationFrame(applyFrame);
+      }
     };
 
     const onMouseUp = () => {
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
+      docEl?.style.removeProperty("user-select");
 
       setIsResizeCooldown(true);
 
@@ -207,6 +279,7 @@ export function FloatingSplitter() {
       }, 1000);
     };
 
+    docEl?.style.setProperty("user-select", "none");
     document?.addEventListener("mousemove", onMouseMove);
     document?.addEventListener("mouseup", onMouseUp);
   };

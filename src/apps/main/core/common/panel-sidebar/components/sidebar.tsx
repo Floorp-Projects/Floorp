@@ -98,6 +98,7 @@ export class PanelSidebarElem {
           id="panel-sidebar-box"
           class="chromeclass-extrachrome chromeclass-directories instant customization-target"
           data-floating={isFloating().toString()}
+          popover="manual"
         >
           <SidebarHeader ctx={this.ctx} />
           <BrowserBox />

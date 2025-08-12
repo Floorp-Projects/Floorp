@@ -29,7 +29,7 @@ function isInside(dir: string, file: string) {
   return f === d || f.startsWith(d + path.sep);
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   publicDir: r("public"),
   server: {
     port: 5181,
@@ -205,7 +205,7 @@ export default defineConfig({
       },
     },
     NoranekoTestPlugin() as unknown as PluginOption,
-    deno(),
+    ...(command === "serve" ? [deno()] : []),
   ],
   optimizeDeps: {
     include: [
@@ -230,4 +230,4 @@ export default defineConfig({
       { find: "@nora/skin", replacement: r("../../packages/skin") },
     ],
   },
-});
+}));
