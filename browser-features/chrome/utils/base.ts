@@ -1,6 +1,5 @@
 import { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
-import {} from "consola/browser";
 import type { ClassDecorator } from "./decorator";
 import { createRootHMR } from "@nora/solid-xul";
 import { onCleanup } from "solid-js";

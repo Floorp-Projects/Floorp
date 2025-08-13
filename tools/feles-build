@@ -1,14 +1,15 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require_relative './lib/utils'            # ← 先に読み込む
 require_relative './lib/initializer'
 require_relative './lib/patcher'
 require_relative './lib/symlinker'
+require_relative './lib/update'
 require_relative './lib/builder'
 require_relative './lib/dev_server'
 require_relative './lib/injector'
 require_relative './lib/browser_launcher'
-require_relative './lib/utils'
 require_relative './lib/dev_env_manager'
 
 # Placeholder for modules that will be moved to tools/lib
@@ -69,7 +70,8 @@ class FelesBuildCLI
     FelesBuild::Initializer.run
     FelesBuild::Patcher.run
     FelesBuild::Symlinker.run
-    FelesBuild::Builder.run(mode: 'dev')
+
+    FelesBuild::Builder.run(mode: 'dev', buildid2: FelesBuild::Update.generate_uuid_v7())
     FelesBuild::Injector.run('dev')
     FelesBuild::Injector.inject_xhtml_from_ts(true)
     FelesBuild::DevEnvManager.setup

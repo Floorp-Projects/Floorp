@@ -35,6 +35,7 @@ module FelesBuild
         raise "Failed to generate UUIDv7: #{stderr}"
       end
 
+      puts stdout.strip
       stdout.strip
     end
 

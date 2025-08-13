@@ -1,9 +1,10 @@
 // vite.config.ts (修正版)
-import { defineConfig } from "rolldown-vite";
+import { defineConfig } from "vite";
 import path from "node:path";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import deno from "@deno/vite-plugin";
+import swc from "unplugin-swc";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -15,11 +16,11 @@ export default defineConfig({
     port: 5181,
     strictPort: true,
   },
-  
+
   define: {
     "import.meta.env.__BUILDID2__": '"placeholder"',
   },
-  
+
   // 既存のbuild設定...
   build: {
     sourcemap: true,
@@ -35,11 +36,10 @@ export default defineConfig({
       preserveEntrySignatures: "allow-extension",
       input: {
         core: r("loader/index.ts"),
-        "about-preferences": r(
-          "../../../../src/ui/about-pages/preferences/index.ts",
-        ),
-        "about-newtab": r("../../../../src/ui/about-pages/newtab/index.ts"),
-        //env: "./experiment/env.ts",
+        // "about-preferences": r(
+        //   "../../../../src/ui/about-pages/preferences/index.ts",
+        // ),
+        // "about-newtab": r("../../../../src/ui/about-pages/newtab/index.ts"),
       },
       output: {
         esModule: true,
@@ -86,8 +86,22 @@ export default defineConfig({
 
   plugins: [
     deno(),
-    
-    // 既存のプラグイン...
+
+    swc.vite({
+      exclude: ["*solid-xul*", "*solid-js*"],
+      jsc: {
+        target: "esnext",
+        parser: {
+          syntax: "typescript",
+          decorators: true,
+        },
+        transform: {
+          decoratorMetadata: true,
+          decoratorVersion: "2022-03",
+        },
+      },
+    }),
+
     solidPlugin({
       solid: {
         generate: "universal",
@@ -97,8 +111,7 @@ export default defineConfig({
       },
       hot: false,
     }),
-  
-    
+
     // HMR支援プラグイン
     {
       name: "noraneko_component_hmr_support",
@@ -123,10 +136,10 @@ export default defineConfig({
         }
       },
     },
-    
+
     istanbulPlugin({}),
   ],
-  
+
   // 既存の設定...
   optimizeDeps: {
     include: [
@@ -138,18 +151,18 @@ export default defineConfig({
       "solid-js/h",
     ],
   },
-  
+
   resolve: {
     dedupe: [
       "solid-js",
-      "solid-js/web", 
+      "solid-js/web",
       "solid-js/store",
       "solid-js/html",
       "solid-js/h",
     ],
     preserveSymlinks: true,
     alias: [
-      { find: "@nora/skin", replacement: r("../../../../src/themes") },
+      { find: "@nora/skin", replacement: r("../../browser-features/skin") },
       {
         find: "../../../../../shared",
         replacement: r("../../../../src/shared"),
@@ -165,4 +178,4 @@ export default defineConfig({
       },
     ],
   },
-})
+});

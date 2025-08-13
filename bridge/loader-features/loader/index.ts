@@ -13,11 +13,14 @@ console.log("[noraneko] Initializing scripts...");
 export default async function initScripts() {
   // Import required modules and initialize i18n
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
+  const { NoranekoConstants } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/NoranekoConstants.sys.mjs",
+  );
   initI18N();
   console.debug(
-    `[noraneko-buildid2]\nuuid: ${import.meta.env.__BUILDID2__}\ndate: ${new Date(
+    `[noraneko-buildid2]\nuuid: ${NoranekoConstants.buildID2}\ndate: ${new Date(
       Number.parseInt(
-        import.meta.env.__BUILDID2__.slice(0, 13).replace("-", ""),
+        NoranekoConstants.buildID2.slice(0, 13).replace("-", ""),
         16,
       ),
     ).toISOString()}`,

@@ -43,17 +43,16 @@ module FelesBuild
       version = package_version
 
       dev_commands = [
-        [['deno', 'task', 'build', mode], File.join(PROJECT_ROOT, 'bridge/startup')],
-        [['npx', 'vite', 'build'], File.join(PROJECT_ROOT, 'bridge/loader-modules')],
-        [['npx', 'vite', 'build'], File.join(PROJECT_ROOT, 'browser-features/skin')]
+        [['deno', 'task', 'build', "--env.MODE=#{mode}}"], File.join(PROJECT_ROOT, 'bridge/startup')],
+        [['deno', 'task', 'build',"--env.__BUILDID2__=#{buildid2}","--env.__VERSION2__=#{version}"], File.join(PROJECT_ROOT, 'bridge/loader-modules')],
+        [['deno', 'run', '-A', 'vite', 'build', '--base', 'chrome://noraneko/content'], File.join(PROJECT_ROOT, 'bridge/loader-features')],
       ]
 
       prod_commands = [
-        [['deno', 'task', 'build', mode], File.join(PROJECT_ROOT, 'bridge/startup')],
-        [['npx', 'vite', 'build', '--base', 'chrome://noraneko/content'], File.join(PROJECT_ROOT, 'bridge/loader-features')],
-        [['npx', 'vite', 'build', '--base', 'resource://noraneko'], File.join(PROJECT_ROOT, 'bridge/loader-modules')],
-        [['npx', 'vite', 'build'], File.join(PROJECT_ROOT, 'browser-features/skin')],
-        [['npx', 'vite', 'build', '--base', 'chrome://noraneko-settings/content'], File.join(PROJECT_ROOT, 'src/ui/settings')]
+        [['deno', 'task', 'build'], File.join(PROJECT_ROOT, 'bridge/startup')],
+        [['deno', 'run', '-A', 'vite', 'build', '--base', 'chrome://noraneko/content'], File.join(PROJECT_ROOT, 'bridge/loader-features')],
+        [['deno', 'run', '-A', 'vite', 'build', '--base', 'resource://noraneko'], File.join(PROJECT_ROOT, 'bridge/loader-modules')],
+        [['deno', 'run', '-A', 'vite', 'build', '--base', 'chrome://noraneko-settings/content'], File.join(PROJECT_ROOT, 'src/ui/settings')]
       ]
 
       if mode.start_with?('dev')

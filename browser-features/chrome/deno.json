@@ -13,10 +13,10 @@
     "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.0.0",
     "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.6",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",
-    "vitest": "npm:vitest@beta",
     "chroma-js": "npm:chroma-js@^3.1.1",
     "@types/chroma-js": "npm:@types/chroma-js@^3.1.1",
-    "@types/gecko": "jsr:@types/gecko"
+    "@types/gecko": "jsr:@types/gecko",
+    "#features-chrome/": "./"
   },
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],

@@ -17,9 +17,7 @@
   "deno.lint": true,
   "deno.unstable": ["sloppy-imports"],
   "editor.formatOnSave": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
-  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "yaml.schemas": {
     "https://www.artillery.io/schema.json": []
   }

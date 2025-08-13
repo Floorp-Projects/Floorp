@@ -23,19 +23,18 @@ module FelesBuild
 
     VERSION = %w[windows linux].include?(PLATFORM) ? '001' : '000'
 
-    PROJECT_ROOT = File.expand_path('../../..', __dir__)
+    PROJECT_ROOT = File.expand_path('../..', __dir__)
 
     PATHS = {
       root: PROJECT_ROOT,
       bin_root: File.join(PROJECT_ROOT, '_dist', 'bin'),
       buildid2: File.join(PROJECT_ROOT, '_dist', 'buildid2'),
       profile_test: File.join(PROJECT_ROOT, '_dist', 'profile', 'test'),
-      loader_features: File.join(PROJECT_ROOT, 'src/core/glue/loader-features'),
-      features_chrome: File.join(PROJECT_ROOT, 'chrome/browser'),
+      loader_features: File.join(PROJECT_ROOT, 'bridge/loader-features'),
+      features_chrome: File.join(PROJECT_ROOT, 'browser-features/chrome'),
       i18n_features_chrome: File.join(PROJECT_ROOT, 'i18n/features-chrome'),
-      loader_modules: File.join(PROJECT_ROOT, 'src/core/glue/loader-modules'),
-      modules: File.join(PROJECT_ROOT, 'modules'),
-      actual_modules: File.join(PROJECT_ROOT, 'src/core/modules'),
+      loader_modules: File.join(PROJECT_ROOT, 'bridge/loader-modules'),
+      modules: File.join(PROJECT_ROOT, 'browser-features/modules'),
       mozbuild_output: File.join(PROJECT_ROOT, 'obj-artifact-build-output/dist')
     }
 

@@ -1,0 +1,20 @@
+✘ [ERROR] Could not resolve "../common/scripts/gen_jarmanifest.ts"
+
+    vite.config.ts:5:36:
+      5 │ ... generateJarManifest } from "../common/scripts/gen_jarmanifest.ts";
+        ╵                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+failed to load config from /home/nyanrus/repos/noraneko/src/ui/settings/vite.config.ts
+error when starting dev server:
+Error: Build failed with 1 error:
+vite.config.ts:5:36: ERROR: Could not resolve "../common/scripts/gen_jarmanifest.ts"
+    at failureErrorWithLog (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:1467:15)
+    at /home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:926:25
+    at runOnEndCallbacks (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:1307:45)
+    at buildResponseToResult (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:924:7)
+    at /home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:951:16
+    at responseCallbacks.<computed> (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/home/nyanrus/repos/noraneko/node_modules/.deno/esbuild@0.25.9/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)

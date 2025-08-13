@@ -11,6 +11,8 @@ module FelesBuild
       has_bin = File.exist?(Defines::BIN_PATH_EXE)
       need_init = false
 
+      puts Defines::BIN_VERSION
+
       if has_bin && has_version
         version = File.read(Defines::BIN_VERSION).strip
         if Defines::VERSION != version

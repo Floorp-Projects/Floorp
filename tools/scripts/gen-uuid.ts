@@ -1,3 +1,3 @@
-import { v7 as uuidv7 } from "npm:uuid@^9.0.1";
+import { v7 as uuidv7 } from "uuid";
 
 console.log(uuidv7());

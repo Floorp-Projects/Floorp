@@ -1,4 +1,4 @@
-import { DOMParser } from "https://deno.land/x/linkedom/deno-dom-wasm.ts";
+import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
 
 async function injectXHTML(binPath: string) {
@@ -38,10 +38,10 @@ async function injectXHTMLDev(binPath: string) {
 
     const meta = document.querySelector("meta") as HTMLMetaElement;
     if (meta) {
-        meta.setAttribute(
+      meta.setAttribute(
         "content",
         `default-src chrome: http://localhost:* ws://localhost:*; img-src chrome: moz-icon: https: blob: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'`,
-        );
+      );
     }
 
     await fs.writeFile(path_preferencesxhtml, document.toString());
@@ -49,16 +49,16 @@ async function injectXHTMLDev(binPath: string) {
 }
 
 if (import.meta.main) {
-    const binPath = Deno.args[0];
-    const isDev = Deno.args.includes('--dev');
+  const binPath = Deno.args[0];
+  const isDev = Deno.args.includes("--dev");
 
-    if (!binPath) {
-        console.error("Error: binPath argument is required.");
-        Deno.exit(1);
-    }
+  if (!binPath) {
+    console.error("Error: binPath argument is required.");
+    Deno.exit(1);
+  }
 
-    await injectXHTML(binPath);
-    if (isDev) {
-        await injectXHTMLDev(binPath);
-    }
+  await injectXHTML(binPath);
+  if (isDev) {
+    await injectXHTMLDev(binPath);
+  }
 }

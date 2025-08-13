@@ -1,6 +1,5 @@
 import { defineConfig } from "tsdown/config";
-import { generateJarManifest } from "../../../shared/common/scripts/gen_jarmanifest.ts";
-import { resolve } from "pathe";
+import { generateJarManifest } from "../../src/shared/common/scripts/gen_jarmanifest.ts";
 import { Plugin } from "rolldown";
 
 const genJarmn = {

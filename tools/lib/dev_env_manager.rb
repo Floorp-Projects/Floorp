@@ -28,13 +28,13 @@ module FelesBuild
     end
 
     def self.write_dev_version_info
-      root = File.expand_path('../../../', __dir__)
+      root = File.expand_path('../../', __dir__)
       gecko = File.join(root, 'static/gecko')
       dist = File.join(root, '_dist')
       FileUtils.mkdir_p(dist)
 
       # From writeVersion.rb
-      File.write(File.join(gecko, 'version.txt'), "version: 1.0.0\n")
+      File.write(File.join(gecko, 'config/version.txt'), "version: 1.0.0\n")
       File.write(File.join(dist, 'buildid2.txt'), "buildid2: #{SecureRandom.uuid}\n")
       @logger.success "Wrote dev version info."
     end

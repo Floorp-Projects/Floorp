@@ -18,7 +18,7 @@ import {
 import {
   type TFloorpDesignConfigs,
   zFloorpDesignConfigs,
-} from "../../../../../shared/common/scripts/global-types/type.ts";
+} from "../../../../src/shared/common/scripts/global-types/type.ts";
 import {} from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 

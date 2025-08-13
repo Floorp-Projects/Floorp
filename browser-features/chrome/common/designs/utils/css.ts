@@ -1,4 +1,4 @@
-import { zFloorpDesignConfigs } from "../../../../../shared/common/scripts/global-types/type.ts";
+import { zFloorpDesignConfigs } from "../../../../../src/shared/common/scripts/global-types/type.ts";
 
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";

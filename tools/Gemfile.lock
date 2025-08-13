@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    childprocess (5.1.0)
+      logger (~> 1.5)
+    logger (1.7.0)
+
+PLATFORMS
+  ruby
+  x86_64-linux
+
+DEPENDENCIES
+  childprocess (~> 5.1)
+
+BUNDLED WITH
+   2.6.9

@@ -2,19 +2,16 @@ import { createRoot, type JSX, onCleanup } from "solid-js";
 import { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";
 import type { ViteHotContext } from "vite/types/hot.js";
-import { z } from "zod";
+import * as t from "io-ts";
 
-//TODO: test required
-const eventListener = z
-  .function()
-  .args(z.instanceof(Event))
-  .or(
-    z.object({
-      handleEvent: z.function().args(z.instanceof(Event)),
-    }),
+const isEventListener = (value: unknown) => {
+  return (
+    typeof value === "function" ||
+    (typeof value === "object" && Object.hasOwn(value!, "handleEvent"))
   );
+};
 
-const styleObject = z.record(z.string(), z.string());
+const CStyleObject = t.record(t.string, t.string);
 
 const hotCtxMap = new Map<ViteHotContext, Array<() => void>>();
 
@@ -56,16 +53,15 @@ const {
     prev?: T,
   ): void => {
     if (node instanceof Element) {
-      const resultEvListener = eventListener.safeParse(value);
-      const resultStyleObject = styleObject.safeParse(value);
-      if (resultEvListener.success) {
+      const resultStyleObject = CStyleObject.decode(value);
+      if (isEventListener(value)) {
         //? the eventListener name is on~~~
         //? so have to remove the `on`
         const evName = name.slice(2).toLowerCase();
-        node.addEventListener(evName, resultEvListener.data);
-      } else if (resultStyleObject.success) {
+        node.addEventListener(evName, value);
+      } else if (resultStyleObject._tag === "Right") {
         let tmp = "";
-        for (const [idx, v] of Object.entries(resultStyleObject.data)) {
+        for (const [idx, v] of Object.entries(resultStyleObject.right)) {
           tmp += `${idx}:${v};`;
         }
         node.setAttribute(name, tmp);

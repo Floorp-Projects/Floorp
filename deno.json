@@ -1,6 +1,6 @@
 {
   "links": ["libs/@types/gecko"],
-  "workspace": ["./libs/*", "./chrome/*", "./modules/*", "./src/core/glue/*"],
+  "workspace": ["./libs/*", "./browser-features/*", "./bridge/*"],
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.21",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
@@ -18,8 +18,8 @@
     "#ui/": "./src/ui/",
     "#themes/": "./src/themes/",
     "@std/streams": "jsr:@std/streams@^1.0.9",
-    "vite": "npm:rolldown-vite@latest",
-    "vitest": "npm:vitest@beta"
+    "vite": "npm:rolldown-vite@^7.1.2",
+    "vitest": "npm:vitest@^4.0.0-beta.8"
   },
   "compilerOptions": {
     "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],

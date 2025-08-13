@@ -41,11 +41,12 @@ module FelesBuild
       MANIFEST
 
       [
-        ['content', 'src/core/glue/loader-features/_dist'],
-        ['startup', 'src/core/glue/startup/_dist'],
-        ['skin', 'src/themes/_dist'],
-        ['resource', 'src/core/glue/loader-modules/_dist']
+        ['content', 'bridge/loader-features/_dist'],
+        ['startup', 'bridge/startup/_dist'],
+        ['skin', 'browser-features/skin'],
+        ['resource', 'bridge/loader-modules/_dist']
       ].each do |subdir, target|
+        FileUtils.remove_file(File.expand_path(File.join(dir_path, subdir), Dir.pwd)) if File.exist?(File.expand_path(File.join(dir_path, subdir), Dir.pwd))
         FileUtils.ln_sf(File.expand_path(target, Dir.pwd), File.expand_path(File.join(dir_path, subdir), Dir.pwd))
       end
       @logger.success "Manifest injected successfully."

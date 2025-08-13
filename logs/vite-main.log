@@ -1,0 +1,22 @@
+Failed to resolve dependency: ./node_modules/@nora, present in client 'optimizeDeps.include'
+
+  VITE v7.1.2  ready in 942 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+Error: ELOOP: too many symbolic links encountered, stat '/home/nyanrus/repos/noraneko/bridge/loader-features/link-i18n-features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome'
+Emitted 'error' event on FSWatcher instance at:
+    at FSWatcher._handleError (file:///home/nyanrus/repos/noraneko/node_modules/.deno/vite@7.1.2/node_modules/vite/dist/node/chunks/dep-CMEinpL-.js:17888:148)
+    at NodeFsHandler$1._addToNodeFs (file:///home/nyanrus/repos/noraneko/node_modules/.deno/vite@7.1.2/node_modules/vite/dist/node/chunks/dep-CMEinpL-.js:17085:18) {
+  errno: -40,
+  code: 'ELOOP',
+  syscall: 'stat',
+  path: '/home/nyanrus/repos/noraneko/bridge/loader-features/link-i18n-features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome/features-chrome'
+}
+
+Node.js v22.18.0

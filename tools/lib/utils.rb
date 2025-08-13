@@ -88,11 +88,11 @@ module FelesBuild
       end
 
       def warn(message, *args)
-        warn "#{COLORS[:warn]}#{format('WARN', message)}#{COLORS[:reset]}", *args
+        puts "#{COLORS[:warn]}#{format('WARN', message)}#{COLORS[:reset]}", *args
       end
 
       def error(message, *args)
-        warn "#{COLORS[:error]}#{format('ERROR', message)}#{COLORS[:reset]}", *args
+        puts "#{COLORS[:error]}#{format('ERROR', message)}#{COLORS[:reset]}", *args
       end
 
       def success(message, *args)

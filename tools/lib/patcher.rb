@@ -65,7 +65,6 @@ module FelesBuild
     end
 
     def self.apply_patches
-      initialize_bin_git
 
       unless patch_needed?
         @logger.info 'No patches needed to apply.'
@@ -139,7 +138,7 @@ module FelesBuild
           .gsub(/^\+\+\+ b\//, '+++ ./')
           .strip + "\n"
 
-        patch_name = "#{file.gsub('/', '-').gsub(/\.[^/.]+$/, '')}.patch"
+        patch_name = "#{file.gsub('/', '-').gsub(/\.[^\/.]+$/, '')}.patch"
         patch_path = File.join(PATCHES_DIR, patch_name)
         File.write(patch_path, modified_diff)
         @logger.info "Created/Updated patch: #{patch_path}"
