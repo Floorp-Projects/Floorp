@@ -1,6 +1,6 @@
 Failed to resolve dependency: ./node_modules/@nora, present in client 'optimizeDeps.include'
 
-  VITE v7.1.2  ready in 942 ms
+  VITE v7.1.2  ready in 440 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
