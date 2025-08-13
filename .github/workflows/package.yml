@@ -314,7 +314,7 @@ jobs:
           await $`cp noraneko/_dist/buildid2 ~/noraneko-mar/noraneko_buildid.txt`
 
           const noraneko_version_txt = await $`cat ~/noraneko-mar/noraneko_version.txt`
-          await $`echo "${version_txt}@${noraneko_version_txt}" > ~/noraneko-mar/version_display.txt`
+          await $`echo "${noraneko_version_txt}@${version_txt}" > ~/noraneko-mar/version_display.txt`
 
           await $`shasum --algorithm 512 ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar | cut -c 1-128 > ~/noraneko-mar/mar_shasum.txt`
           await $`stat --format "%s" ~/noraneko-mar/noraneko-${{ env.OUTPUT_NAME }}-full.mar > ~/noraneko-mar/mar_size.txt`
