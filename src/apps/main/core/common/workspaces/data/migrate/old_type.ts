@@ -5,17 +5,20 @@ import { z } from "zod";
  */
 export interface WorkspaceDetail {
   name: string;
-  tabs: undefined[];
+  tabs: unknown[];
   defaultWorkspace: boolean;
   id: string;
   icon: string | null;
+  userContextId?: number;
+  isPrivateContainerWorkspace?: boolean;
 }
 
 /**
  * 選択中ワークスペース情報
  */
 export interface WorkspacePreference {
-  selectedWorkspaceId: string;
+  selectedWorkspaceId?: string;
+  defaultWorkspace?: string;
 }
 
 /**
@@ -36,14 +39,17 @@ export interface Floorp11Workspaces {
 // Zod スキーマ定義
 export const zWorkspaceDetail = z.object({
   name: z.string(),
-  tabs: z.array(z.undefined()),
+  tabs: z.array(z.unknown()),
   defaultWorkspace: z.boolean(),
   id: z.string(),
   icon: z.string().nullable(),
+  userContextId: z.number().optional(),
+  isPrivateContainerWorkspace: z.boolean().optional(),
 });
 
 export const zWorkspacePreference = z.object({
-  selectedWorkspaceId: z.string(),
+  selectedWorkspaceId: z.string().optional(),
+  defaultWorkspace: z.string().optional(),
 });
 
 export const zWindowWorkspaces = z.record(

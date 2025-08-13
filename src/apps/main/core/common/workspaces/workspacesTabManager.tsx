@@ -33,7 +33,10 @@ export class WorkspacesTabManager {
     this.boundHandleTabClose = this.handleTabClose.bind(this);
 
     const initWorkspace = () => {
-      (globalThis as any).SessionStore.promiseAllWindowsRestored
+      (globalThis as unknown as {
+        SessionStore: { promiseAllWindowsRestored: Promise<void> };
+      }).SessionStore
+        .promiseAllWindowsRestored
         .then(() => {
           this.initializeWorkspace();
           globalThis.addEventListener("TabClose", this.boundHandleTabClose);
@@ -77,6 +80,17 @@ export class WorkspacesTabManager {
         this.changeWorkspace(defaultWorkspaceId);
       } catch (e) {
         console.error("Failed to change workspace:", e);
+        // Fallback: create default workspace when store is empty or invalid
+        try {
+          const createdId = this.dataManagerCtx.createWorkspace("Workspace");
+          this.dataManagerCtx.setDefaultWorkspace(createdId);
+          this.changeWorkspace(createdId);
+        } catch (createErr) {
+          console.error(
+            "Failed to create and switch to default workspace:",
+            createErr,
+          );
+        }
       }
     }
   }
@@ -159,8 +173,11 @@ export class WorkspacesTabManager {
     }
 
     // Check Tabs visibility
-    const tabs = globalThis.gBrowser.tabs;
+    const tabs = globalThis.gBrowser.tabs as Array<
+      XULElement | undefined | null
+    >;
     for (const tab of tabs) {
+      if (!tab) continue;
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
       if (!workspaceId) {
@@ -337,8 +354,11 @@ export class WorkspacesTabManager {
         } else {
           const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
           if (nonWorkspaceTab !== true) {
-            globalThis.gBrowser.selectedTab = nonWorkspaceTab;
-            this.setWorkspaceIdToAttribute(nonWorkspaceTab, workspaceId);
+            globalThis.gBrowser.selectedTab = nonWorkspaceTab as XULElement;
+            this.setWorkspaceIdToAttribute(
+              nonWorkspaceTab as XULElement,
+              workspaceId,
+            );
           } else {
             this.createTabForWorkspace(workspaceId, true);
           }
@@ -422,7 +442,12 @@ export class WorkspacesTabManager {
    * @returns true if there is no workspace tabs if false, return tab.
    */
   public isThereNoWorkspaceTabs() {
-    for (const tab of globalThis.gBrowser.tabs as XULElement[]) {
+    for (
+      const tab of globalThis.gBrowser.tabs as Array<
+        XULElement | undefined | null
+      >
+    ) {
+      if (!tab) continue;
       if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
       }
@@ -434,7 +459,7 @@ export class WorkspacesTabManager {
    * Move tabs to workspace.
    * @param workspaceId The workspace id.
    */
-  async moveTabToWorkspace(workspaceId: TWorkspaceID, tab: XULElement) {
+  moveTabToWorkspace(workspaceId: TWorkspaceID, tab: XULElement) {
     const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
     this.setWorkspaceIdToAttribute(tab, workspaceId);
 

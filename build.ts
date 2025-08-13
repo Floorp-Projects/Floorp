@@ -377,11 +377,18 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
         buildid2 ?? ""
       }`.stdio("pipe").nothrow();
 
-      // Start sapphillon-front dev server
-      console.log(chalk.green("🚀 Starting sapphillon-front dev server..."));
-      sapphillonProcess = $({ cwd: "src/sapphillon-front" })`deno task dev`
-        .stdio("pipe")
-        .nothrow();
+      // Start sapphillon-front dev server (only if exists)
+      const sapphillonDir = "src/sapphillon-front";
+      if (await isExists(sapphillonDir)) {
+        console.log(chalk.green("🚀 Starting sapphillon-front dev server..."));
+        sapphillonProcess = $({ cwd: sapphillonDir })`deno task dev`
+          .stdio("pipe")
+          .nothrow();
+      } else {
+        console.log(
+          chalk.yellow("⚠️  sapphillon-front not found. Skipping dev server."),
+        );
+      }
 
       let resolve: ((value: void | PromiseLike<void>) => void) | undefined =
         undefined;
