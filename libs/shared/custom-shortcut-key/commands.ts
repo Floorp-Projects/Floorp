@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as t from 'io-ts';
 
 export const csk_category = [
   "tab-action",
@@ -18,12 +18,23 @@ export const csk_category = [
   "split-view-action",
 ] as const;
 
-const zCommands = z.record(
-  z.union([z.string().startsWith("gecko-"), z.string().startsWith("floorp-")]),
-  z.object({ command: z.function(), type: z.enum(csk_category) }),
+
+const CskCategoryCodec = t.keyof(
+  csk_category.reduce((acc, k) => {
+    acc[k] = null;
+    return acc;
+  }, {} as Record<typeof csk_category[number], null>)
 );
 
-type Commands = z.infer<typeof zCommands>;
+const CommandsCodec = t.record(
+  t.refinement(t.string, (s) => s.startsWith('gecko-') || s.startsWith('floorp-')),
+  t.type({
+    command: t.refinement(t.unknown, (u): u is ((ev:Event) => void) => typeof u === 'function'),
+    type: CskCategoryCodec,
+  })
+);
+
+type Commands = t.TypeOf<typeof CommandsCodec>;
 
 export const commands: Commands = {
   "gecko-open-new-tab": {

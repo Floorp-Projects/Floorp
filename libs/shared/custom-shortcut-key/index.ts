@@ -1,7 +1,8 @@
-import { commands } from "./commands";
-import { type CSKData, zCSKCommands, zCSKData } from "./defines";
-import { checkIsSystemShortcut } from "./utils";
-import { z } from "zod";
+import { commands } from "./commands.ts";
+import { type CSKData, CSKCommandsCodec, CSKDataCodec } from "./defines.ts";
+import { checkIsSystemShortcut } from "./utils.ts";
+import { pipe } from 'fp-ts/function';
+import { fold, getOrElseW } from 'fp-ts/Either';
 
 export class CustomShortcutKey {
   private static instance: CustomShortcutKey;
@@ -19,27 +20,31 @@ export class CustomShortcutKey {
       CustomShortcutKey.windows.push(window);
       console.log("add window");
     }
-    //@ts-ignore
     Services.obs.addObserver(CustomShortcutKey.instance, "nora-csk");
     return CustomShortcutKey.instance;
   }
 
-  //@ts-ignore
-  observe(_subj, _topic, data: string) {
-    const d = zCSKCommands.safeParse(JSON.parse(data));
-    if (d.success) {
-      switch (d.data.type) {
-        case "disable-csk": {
-          this.disable_csk = d.data.data;
-          break;
+
+  observe(_subj:unknown, _topic:unknown, data: string) {
+    const decoded = CSKCommandsCodec.decode(JSON.parse(data));
+    
+    pipe(
+      decoded,
+      fold(
+        (errors) => console.error('Failed to decode CSK command:', errors),
+        (d) => {
+          switch (d.type) {
+            case 'disable-csk':
+              this.disable_csk = d.data;
+              break;
+            case 'update-pref':
+              this.initCSKData();
+              console.log(this.cskData);
+              break;
+          }
         }
-        case "update-pref": {
-          this.initCSKData();
-          console.log(this.cskData);
-          break;
-        }
-      }
-    }
+      )
+    );
   }
 
   cskData: CSKData = {};
@@ -50,23 +55,21 @@ export class CustomShortcutKey {
   }
 
   private initCSKData() {
-    // this.cskData = {
-    //   "gecko-open-new-window": {
-    //     modifiers: {
-    //       ctrl: true,
-    //       shift: true,
-    //       alt: false,
-    //       meta: false,
-    //     },
-    //     key: "V",
-    //   },
-    // };
-    //TODO: safely catch
-    this.cskData = zCSKData.parse(
-      JSON.parse(
+    try {
+      const prefData = JSON.parse(
         Services.prefs.getStringPref("floorp.browser.nora.csk.data", "{}"),
-      ),
-    );
+      );
+
+      this.cskData = pipe(
+        CSKDataCodec.decode(prefData),
+        getOrElseW(errors => {
+          throw new Error(`CSKData validation failed: ${JSON.stringify(errors)}`);
+        })
+      );
+    } catch (e) {
+      console.error("Could not initialize CSKData, falling back to empty config.", e);
+      this.cskData = {};
+    }
   }
   private startHandleShortcut(_window: Window) {
     _window.addEventListener("keydown", (ev: KeyboardEvent) => {

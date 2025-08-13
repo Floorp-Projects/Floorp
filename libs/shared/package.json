@@ -2,7 +2,8 @@
   "name": "@nora/shared",
   "private": true,
   "dependencies": {
-    "zod": "^3.24.3"
+    "fp-ts": "^2.16.10",
+    "io-ts": "^2.2.22"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "types": ["jsr:@types/gecko"]
+  },
+  "lint": {
+    "exclude": ["custom-shortcut-key/**/*"]
+  }
+}

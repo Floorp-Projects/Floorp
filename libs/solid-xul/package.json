@@ -6,8 +6,7 @@
     "fp-ts": "^2.16.10",
     "io-ts": "^2.2.22",
     "solid-js": "^1.9.5",
-    "vite": "npm:rolldown-vite@latest",
-    "zod": "^4.0.17"
+    "vite": "npm:rolldown-vite@latest"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

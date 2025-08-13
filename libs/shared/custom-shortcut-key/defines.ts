@@ -1,16 +1,10 @@
-import { z } from "zod";
-import { commands } from "./commands";
+import * as t from 'io-ts';
+import { commands } from './commands';
+import { getOrElseW } from 'fp-ts/Either';
+import { pipe } from 'fp-ts/function';
 
-//? https://github.com/colinhacks/zod/discussions/839#discussioncomment-6488540
-function zodEnumFromObjKeys<K extends string>(
-  obj: Record<K, unknown>,
-): z.ZodEnum<[K, ...K[]]> {
-  const [firstKey, ...otherKeys] = Object.keys(obj) as K[];
-  return z.enum([firstKey, ...otherKeys]);
-}
-
+// KeyCodes list
 export const keyCodesList = {
-  // F num keys
   F1: ["F1", "VK_F1"],
   F2: ["F2", "VK_F2"],
   F3: ["F3", "VK_F3"],
@@ -35,60 +29,69 @@ export const keyCodesList = {
   F22: ["F22", "VK_F22"],
   F23: ["F23", "VK_F23"],
   F24: ["F24", "VK_F24"],
-};
+} as const;
 
-const zFloorpCSKData = z.array(
-  z.object({
-    actionName: z.string(),
-    key: z.string(),
-    keyCode: z.string(),
-    modifiers: z.string(),
-  }),
+// FloorpCSKData codec
+export const FloorpCSKData = t.array(
+  t.type({
+    actionName: t.string,
+    key: t.string,
+    keyCode: t.string,
+    modifiers: t.string,
+  })
 );
+export type FloorpCSKData = t.TypeOf<typeof FloorpCSKData>;
 
-type FloorpCSKData = z.infer<typeof zFloorpCSKData>;
+// zCSKData equivalent in io-ts
+export const CSKDataCodec = t.record(
+  t.keyof(Object.keys(commands).reduce((acc, k) => {
+    acc[k] = null;
+    return acc;
+  }, {} as Record<string, null>)),
+  t.type({
+    modifiers: t.type({
+      alt: t.boolean,
+      ctrl: t.boolean,
+      meta: t.boolean,
+      shift: t.boolean,
+    }),
+    key: t.string,
+  })
+);
+export type CSKData = t.TypeOf<typeof CSKDataCodec>;
 
+// Function replacing zCSKData.parse
 export function floorpCSKToNora(data: FloorpCSKData): CSKData {
-  const arr = [];
+  const arr: Record<string, { key: string; modifiers: CSKData['any']['modifiers'] }> = {};
+  
   for (const datum of data) {
-    arr.push({
-      command: datum.actionName,
-      //? keyCode is VK_F1 ~ VK_F24 so should convert to F1 ~ F24
-      key: datum.keyCode ? datum.keyCode.replace("VK_", "") : datum.key,
+    arr[datum.actionName] = {
+      key: datum.keyCode ? datum.keyCode.replace('VK_', '') : datum.key,
       modifiers: {
-        alt: datum.modifiers.includes("alt"),
-        ctrl: datum.modifiers.includes("ctrl"),
+        alt: datum.modifiers.includes('alt'),
+        ctrl: datum.modifiers.includes('ctrl'),
         meta: false,
-        shift: datum.modifiers.includes("shift"),
+        shift: datum.modifiers.includes('shift'),
       },
-    });
+    };
   }
-  return zCSKData.parse(arr);
+
+  return pipe(
+    CSKDataCodec.decode(arr),
+    getOrElseW(errors => {
+      throw new Error(`Invalid CSKData: ${JSON.stringify(errors)}`);
+    })
+  );
 }
 
-export const zCSKData = z.record(
-  zodEnumFromObjKeys(commands),
-  z.object({
-    modifiers: z.object({
-      alt: z.boolean(),
-      ctrl: z.boolean(),
-      meta: z.boolean(),
-      shift: z.boolean(),
-    }),
-    key: z.string(),
+// zCSKCommands equivalent in io-ts
+export const CSKCommandsCodec = t.union([
+  t.type({
+    type: t.keyof({ 'disable-csk': null }),
+    data: t.boolean,
   }),
-);
-
-export type CSKData = z.infer<typeof zCSKData>;
-
-export const zCSKCommands = z.union([
-  z.object({
-    type: z.enum(["disable-csk"]),
-    data: z.boolean(),
-  }),
-  z.object({
-    type: z.enum(["update-pref"]),
+  t.type({
+    type: t.keyof({ 'update-pref': null }),
   }),
 ]);
-
-export type CSKCommands = z.infer<typeof zCSKCommands>;
+export type CSKCommands = t.TypeOf<typeof CSKCommandsCodec>;
