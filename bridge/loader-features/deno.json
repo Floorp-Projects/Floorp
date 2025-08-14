@@ -15,10 +15,9 @@
     "unplugin-swc": "npm:unplugin-swc@^1.5.5",
     "uuid": "npm:uuid@^11.1.0",
     "vite": "npm:rolldown-vite@latest",
-    "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.0.0",
+    "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.1.0",
     "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.6",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",
-    "vitest": "npm:vitest@4.0.0-beta.8",
     "chroma-js": "npm:chroma-js@^3.1.1",
     "@types/chroma-js": "npm:@types/chroma-js@^3.1.1"
   },

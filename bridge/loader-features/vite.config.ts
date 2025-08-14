@@ -137,7 +137,7 @@ export default defineConfig({
       },
     },
 
-    istanbulPlugin({}),
+    istanbulPlugin(),
   ],
 
   // 既存の設定...

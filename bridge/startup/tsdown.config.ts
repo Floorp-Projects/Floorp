@@ -1,26 +1,5 @@
 import { defineConfig } from "tsdown/config";
-import { generateJarManifest } from "../../src/shared/common/scripts/gen_jarmanifest.ts";
-import { Plugin } from "rolldown";
-
-const genJarmn = {
-  name: "gen_jarmn",
-  async generateBundle(options, bundle, isWrite) {
-    this.emitFile({
-      type: "asset",
-      fileName: "jar.mn",
-      source: await generateJarManifest(bundle, {
-        prefix: "startup",
-        namespace: "noraneko-startup",
-        register_type: "content",
-      }),
-    });
-    this.emitFile({
-      type: "asset",
-      fileName: "moz.build",
-      source: `JAR_MANIFESTS += ["jar.mn"]`,
-    });
-  },
-} satisfies Plugin;
+import {genJarmnPlugin} from "@nora/vite-plugin-gen-jarmn"
 
 export default [
   defineConfig({
@@ -32,7 +11,7 @@ export default [
     outDir: "_dist",
     platform: "browser",
     treeshake: false,
-    plugins: [genJarmn],
+    plugins: [genJarmnPlugin("startup","noraneko-startup","content")],
     external: /^resource:\/\/|^chrome:\/\//g,
   }),
 ];
