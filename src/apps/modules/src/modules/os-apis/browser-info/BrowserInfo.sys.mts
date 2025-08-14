@@ -86,7 +86,9 @@ export class browserInfo {
             const browser = tabbrowser.getBrowserForTab(tab);
 
             if (
-              browser.currentURI && browser.currentURI.spec !== "about:blank"
+              browser.currentURI &&
+              browser.currentURI.spec !== "about:blank" &&
+              tab.getAttribute("pending") !== "true"
             ) {
               tabs.push({
                 id: tab.linkedPanel ? Number.parseInt(tab.linkedPanel) : i,
