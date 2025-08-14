@@ -43,7 +43,7 @@ export const zWorkspaceDetail = z.object({
   defaultWorkspace: z.boolean(),
   id: z.string(),
   icon: z.string().nullable(),
-  userContextId: z.number().optional(),
+  userContextId: z.coerce.number().optional(),
   isPrivateContainerWorkspace: z.boolean().optional(),
 });
 
