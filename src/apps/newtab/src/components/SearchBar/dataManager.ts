@@ -33,13 +33,10 @@ export async function getSearchEngines(): Promise<SearchEngine[]> {
       (cb) => (globalThis as unknown as Window).NRGetSearchEngines(cb),
       (data) => JSON.parse(data),
       {
-        retries: 5,
-        timeoutMs: 1500,
-        delayMs: 200,
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
         shouldRetry: (v) => !Array.isArray(v),
-        functionName: "NRGetSearchEngines",
-        checkFunctionExists: true,
-        initializationDelayMs: 3000,
       },
     );
   } catch (e) {
@@ -54,13 +51,10 @@ export async function getDefaultEngine(): Promise<SearchEngine> {
       (cb) => (globalThis as unknown as Window).NRGetDefaultEngine(cb),
       (data) => JSON.parse(data),
       {
-        retries: 5,
-        timeoutMs: 1500,
-        delayMs: 200,
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
         shouldRetry: (v) => !v || !v.identifier,
-        functionName: "NRGetDefaultEngine",
-        checkFunctionExists: true,
-        initializationDelayMs: 3000,
       },
     );
   } catch (e) {
@@ -81,13 +75,10 @@ export async function getDefaultPrivateEngine(): Promise<SearchEngine> {
       (cb) => (globalThis as unknown as Window).NRGetDefaultPrivateEngine(cb),
       (data) => JSON.parse(data),
       {
-        retries: 5,
-        timeoutMs: 1500,
-        delayMs: 200,
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
         shouldRetry: (v) => !v || !v.identifier,
-        functionName: "NRGetDefaultPrivateEngine",
-        checkFunctionExists: true,
-        initializationDelayMs: 3000,
       },
     );
   } catch (e) {
@@ -117,12 +108,9 @@ export async function getSuggestions(
       (data) => JSON.parse(data),
       {
         retries: 3,
-        timeoutMs: 2000,
-        delayMs: 150,
+        timeoutMs: 1500,
+        delayMs: 300,
         shouldRetry: (v) => !v || v.success === false,
-        functionName: "NRGetSuggestions",
-        checkFunctionExists: true,
-        initializationDelayMs: 2000,
       },
     );
   } catch (e) {

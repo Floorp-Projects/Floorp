@@ -1,10 +1,4 @@
-import {
-  type MouseEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   getNewTabSettings,
   type NewTabSettings,
@@ -14,7 +8,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { PinIcon } from "lucide-react";
 import { callNRWithRetry } from "@/utils/nrRetry.ts";
-import { useNRStatus } from "@/hooks/useNRStatus.ts";
 
 interface TopSite {
   url: string;
@@ -32,61 +25,22 @@ declare global {
 
 async function getTopSites(): Promise<TopSite[]> {
   try {
-    const windowObj = globalThis as unknown as Window;
-    if (typeof windowObj.NRGetCurrentTopSites !== "function") {
-      console.warn("NRGetCurrentTopSites function is not available");
-      return [];
-    }
-
     const parsed = await callNRWithRetry<{ topsites?: TopSite[] | undefined }>(
-      (cb) => windowObj.NRGetCurrentTopSites(cb),
-      (sites) => {
-        if (!sites || sites.trim() === "") {
-          throw new Error("Empty response from NRGetCurrentTopSites");
-        }
-        try {
-          return JSON.parse(sites);
-        } catch (parseError) {
-          console.error(
-            "Failed to parse TopSites JSON:",
-            parseError,
-            "Raw data:",
-            sites,
-          );
-          throw new Error("Invalid JSON response from NRGetCurrentTopSites");
-        }
-      },
+      (cb) => (globalThis as unknown as Window).NRGetCurrentTopSites(cb),
+      (sites) => JSON.parse(sites),
       {
-        retries: 5,
-        timeoutMs: 2000,
-        delayMs: 200,
-        shouldRetry: (res) => {
-          if (!res || typeof res !== "object") return true;
-          if (!("topsites" in res)) return true;
-          if (!Array.isArray(res.topsites)) return true;
-          return false;
-        },
-        functionName: "NRGetCurrentTopSites",
-        checkFunctionExists: true,
-        initializationDelayMs: 3000,
+        retries: 3,
+        timeoutMs: 1200,
+        delayMs: 300,
+        shouldRetry: (res) => !res || !Array.isArray(res.topsites),
       },
     );
 
-    if (!parsed || !Array.isArray(parsed.topsites)) {
-      console.warn("Invalid topsites data structure:", parsed);
-      return [];
-    }
-
-    const list = parsed.topsites
-      .filter((site) => site && typeof site === "object" && site.url)
-      .map((site: TopSite) => ({
-        ...site,
-        title: site.title || site.label || site.url || "Unknown Site",
-        smallFavicon: site.smallFavicon || "",
-        favicon: site.favicon || "",
-        url: site.url,
-      }));
-
+    const list = (parsed.topsites ?? []).map((site: TopSite) => ({
+      ...site,
+      title: site.title || site.label || site.url,
+      smallFavicon: site.smallFavicon || "",
+    }));
     return list;
   } catch (e) {
     console.error("Failed to get top sites after retries:", e);
@@ -146,51 +100,26 @@ export function TopSites() {
   const [siteToBlock, setSiteToBlock] = useState<TopSite | PinnedSite | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const contextMenuRef = useRef<HTMLDivElement>(null);
-  const { isInitialized, availableFunctions, unavailableFunctions } =
-    useNRStatus();
 
-  const loadSettings = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loadSettings = async () => {
+    const settings = await getNewTabSettings();
+    setPinnedSites(settings.topSites.pinned);
+    setBlockedSites(settings.topSites.blocked);
 
-      if (!availableFunctions.includes("NRGetCurrentTopSites")) {
-        console.warn("NRGetCurrentTopSites is not available:", {
-          available: availableFunctions,
-          unavailable: unavailableFunctions,
-        });
-      }
-
-      const settings = await getNewTabSettings();
-      setPinnedSites(settings.topSites.pinned);
-      setBlockedSites(settings.topSites.blocked);
-
-      const topSites = await getTopSites();
-      const filteredSites = topSites.filter(
-        (site) =>
-          !settings.topSites.blocked.includes(site.url) &&
-          !settings.topSites.pinned.some((p) => p.url === site.url),
-      );
-      setSites(filteredSites);
-    } catch (err) {
-      console.error("Failed to load TopSites settings:", err);
-      setError(
-        err instanceof Error ? err.message : "設定の読み込みに失敗しました",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [availableFunctions, unavailableFunctions]);
+    const topSites = await getTopSites();
+    const filteredSites = topSites.filter(
+      (site) =>
+        !settings.topSites.blocked.includes(site.url) &&
+        !settings.topSites.pinned.some((p) => p.url === site.url),
+    );
+    setSites(filteredSites);
+  };
 
   useEffect(() => {
-    if (isInitialized) {
-      loadSettings();
-    }
-  }, [isInitialized, loadSettings]);
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: globalThis.MouseEvent) => {
@@ -216,14 +145,9 @@ export function TopSites() {
   };
 
   const handleSaveSettings = async (settings: Partial<NewTabSettings>) => {
-    try {
-      await saveNewTabSettings(settings);
-      await loadSettings();
-      setContextMenu(null);
-    } catch (err) {
-      console.error("Failed to save TopSites settings:", err);
-      setError(err instanceof Error ? err.message : "設定の保存に失敗しました");
-    }
+    await saveNewTabSettings(settings);
+    await loadSettings();
+    setContextMenu(null);
   };
 
   const pinSite = async (site: TopSite | PinnedSite) => {
@@ -267,40 +191,6 @@ export function TopSites() {
     return pinnedSites.some((p) => p.url === site.url);
   };
 
-  if (isLoading && !isInitialized) {
-    return (
-      <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
-        <div className="flex items-center justify-center h-16">
-          <div className="text-sm text-gray-400">
-            {t("topSites.loading", "トップサイトを読み込み中...")}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
-        <div className="flex flex-col items-center justify-center h-16 text-center">
-          <div className="text-sm text-red-400 mb-2">
-            {t("topSites.error", "エラーが発生しました")}
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              loadSettings();
-            }}
-            className="text-xs text-blue-400 hover:text-blue-300 underline"
-          >
-            {t("topSites.retry", "再試行")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {siteToBlock && (
@@ -311,15 +201,6 @@ export function TopSites() {
         />
       )}
       <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
-        {typeof Deno !== "undefined" &&
-          Deno.env.get("NODE_ENV") === "development" && !isInitialized && (
-          <div className="mb-2 text-xs text-yellow-400">
-            初期化中... ({availableFunctions
-              .length}/{availableFunctions.length + unavailableFunctions.length}
-            {" "}
-            functions ready)
-          </div>
-        )}
         <div className="flex flex-wrap gap-x-0.5">
           {pinnedSites.map((site) => (
             <a
