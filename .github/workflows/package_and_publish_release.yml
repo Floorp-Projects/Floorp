@@ -15,6 +15,10 @@ on:
         description: "The workflow run ID for the macOS runtime artifact"
         required: false
         type: string
+      runtime_linux_aarch64_artifact_workflow_run_id:
+        description: "The workflow run ID for the Linux aarch64 runtime artifact"
+        required: false
+        type: string
 permissions:
   contents: write
 
@@ -40,15 +44,30 @@ jobs:
       runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
     secrets: inherit
 
+  package-linux-aarch64:
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: Linux-aarch64
+      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_aarch64_artifact_workflow_run_id }}
+    secrets: inherit
+
   build-installer:
     uses: ./.github/workflows/build_installers.yml
     secrets: inherit
 
   publishs:
-    needs: [package-windows, package-linux, package-macos, build-installer]
+    needs:
+      [
+        package-windows,
+        package-linux,
+        package-macos,
+        package-linux-aarch64,
+        build-installer,
+      ]
     uses: ./.github/workflows/publish_release.yml
     secrets: inherit
     with:
       win_runtime_artifact_workflow_call: ${{ github.run_id }}
       linux_runtime_artifact_workflow_call: ${{ github.run_id }}
       mac_runtime_artifact_workflow_call: ${{ github.run_id }}
+      linux_aarch64_runtime_artifact_workflow_call: ${{ github.run_id }}

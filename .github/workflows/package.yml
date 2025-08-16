@@ -13,6 +13,7 @@ on:
         options:
           - Windows-x64
           - Linux-x64
+          - Linux-aarch64
           - macOS-x64
       beta:
         type: boolean
@@ -111,6 +112,7 @@ jobs:
           const mozconfigs = {
             'Windows-x64': './.github/workflows/mozconfigs/win64.mozconfig',
             'Linux-x64': './.github/workflows/mozconfigs/linux64.mozconfig',
+            'Linux-aarch64': './.github/workflows/mozconfigs/linux64-aarch64.mozconfig',
             'macOS-x64': './.github/workflows/mozconfigs/macosx64-x86_64.mozconfig'
           };
 
@@ -187,6 +189,7 @@ jobs:
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT_x86_64-msvc-x64.`,
               'Linux-x64': `${baseUrl}Linux_x86_64.`,
+              'Linux-aarch64': `${baseUrl}Linux_aarch64.`,
               'macOS-x64': `${baseUrl}Darwin_Universal.`
             };
 
@@ -218,6 +221,7 @@ jobs:
             const platformUrls = {
               'Windows-x64': `${baseUrl}WINNT/x86_64/`,
               'Linux-x64': `${baseUrl}Linux/x86_64/`,
+              'Linux-aarch64': `${baseUrl}Linux/aarch64/`,
               'macOS-x64': `${baseUrl}Darwin/x86_64/`
             };
 
@@ -295,6 +299,12 @@ jobs:
               await $`echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV`;
               await addToENV("OUTPUT_INSTALLER_NAME","floorp-linux-amd64.tar.xz");
               break;
+            case "Linux-aarch64":
+              await addToENV("ARTIFACT_FROM_RELEASE_NAME","floorp-linux-aarch64-moz-artifact.tar.xz");
+              await addToENV("OUTPUT_NAME","linux-aarch64");
+              await $`echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV`;
+              await addToENV("OUTPUT_INSTALLER_NAME","floorp-linux-aarch64.tar.xz");
+              break;
             case "macOS-x64":
               await addToENV("ARTIFACT_NAME","floorp-mac-universal-moz-artifact-release");
               await addToENV("ARTIFACT_FROM_RELEASE_NAME","floorp-mac-universal-moz-artifact-release.zip");
@@ -358,6 +368,8 @@ jobs:
             MOZ_ARTIFACT_FILE=$(echo ~/artifacts/floorp-win-amd64-moz-artifact.zip) ./mach build
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
             MOZ_ARTIFACT_FILE=$(echo ~/artifacts/floorp-linux-amd64-moz-artifact.tar.xz) ./mach build
+          elif [ "${{inputs.platform}}" == "Linux-aarch64" ]; then
+            MOZ_ARTIFACT_FILE=$(echo ~/artifacts/floorp-linux-aarch64-moz-artifact.tar.xz) ./mach build
           elif [ "${{inputs.platform}}" == "macOS-x64" ]; then
             MOZ_ARTIFACT_FILE="$(echo ~/artifacts/floorp-macOS-universal-moz-artifact.dmg):$(echo ~/artifacts/floorp-macOS.update_framework_artifacts.zip)" ./mach build
           fi
@@ -517,6 +529,10 @@ jobs:
               mv $GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             fi
           elif [ "${{inputs.platform}}" == "Linux-x64" ]; then
+            sudo apt install patchelf
+            patchelf --add-rpath '$ORIGIN' "$PWD"/obj-artifact-build-output/dist/floorp/updater
+            mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+          elif [ "${{inputs.platform}}" == "Linux-aarch64" ]; then
             sudo apt install patchelf
             patchelf --add-rpath '$ORIGIN' "$PWD"/obj-artifact-build-output/dist/floorp/updater
             mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME

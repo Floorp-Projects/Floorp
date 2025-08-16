@@ -19,6 +19,10 @@ on:
         type: string
         required: false
         default: ""
+      linux_aarch64_runtime_artifact_workflow_call:
+        type: string
+        required: false
+        default: ""
       stub_installer_workflow_call:
         type: string
         required: false
@@ -87,6 +91,17 @@ jobs:
             echo "MAC_RUN_ID=${{ inputs.mac_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
           fi
 
+          if [ -z "${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" ]; then
+            LINUX_AARCH64_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-aarch64"))][0].id')
+            echo "LINUX_AARCH64_RUN_ID=$LINUX_AARCH64_ID" >> $GITHUB_ENV
+          else
+            echo "LINUX_AARCH64_RUN_ID=${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
+          fi
+
           if [ -z "${{ inputs.stub_installer_workflow_call }}" ]; then
             STUB_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
@@ -146,8 +161,23 @@ jobs:
           path: ~/noraneko-publish/mac-dist
           github-token: ${{ github.token }}
 
-      - name: Download Stub Installer
+      - name: Download Linux aarch64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-aarch64-mar-full
+          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
+          path: ~/noraneko-publish/linux-aarch64
+          github-token: ${{ github.token }}
 
+      - name: Download Linux aarch64 installer
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-aarch64-installer
+          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
+          path: ~/noraneko-publish/linux-aarch64-dist
+          github-token: ${{ github.token }}
+
+      - name: Download Stub Installer
         uses: actions/download-artifact@v4
         with:
           name: floorp-stub-installer
@@ -179,12 +209,16 @@ jobs:
           ls -la ~/noraneko-publish/win
           echo "Linux Files:"
           ls -la ~/noraneko-publish/linux
+          echo "Linux aarch64 Files:"
+          ls -la ~/noraneko-publish/linux-aarch64
           echo "macOS Files:"
           ls -la ~/noraneko-publish/mac
           echo "Windows Installer Files:"
           ls -la ~/noraneko-publish/win-dist
           echo "Linux Installer Files:"
           ls -la ~/noraneko-publish/linux-dist
+          echo "Linux aarch64 Installer Files:"
+          ls -la ~/noraneko-publish/linux-aarch64-dist
           echo "macOS Installer Files:"
           ls -la ~/noraneko-publish/mac-dist
           echo "Stub Installer Files:"
@@ -194,6 +228,7 @@ jobs:
         run: |
           cp ~/noraneko-publish/win/meta.json ~/noraneko-publish/win-meta.json
           cp ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux-meta.json
+          cp ~/noraneko-publish/linux-aarch64/meta.json ~/noraneko-publish/linux-aarch64-meta.json
           cp ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac-meta.json
 
       - name: Generate hashes.txt
@@ -217,6 +252,15 @@ jobs:
             echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
           done
           find linux-dist -type f | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          echo "" >> hashes.txt
+
+          echo "## Linux aarch64 Files" >> hashes.txt
+          find linux-aarch64 -name "*.mar" | while read file; do
+            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
+          done
+          find linux-aarch64-dist -type f | while read file; do
             echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
           done
           echo "" >> hashes.txt
@@ -245,6 +289,9 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-meta.json
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-dist/**
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-meta.json
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
@@ -283,9 +330,11 @@ jobs:
             "inputs": {
               "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-win-amd64-full.mar",
               "linux-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-amd64-full.mar",
+              "linux-aarch64-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-aarch64-full.mar",
               "mac-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-mac-universal-full.mar",
               "win-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/win-meta.json",
               "linux-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/linux-meta.json",
+              "linux-aarch64-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/linux-aarch64-meta.json",
               "mac-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/mac-meta.json",
               "firefox-version": "${{ env.VERSION }}",
               "app-version2": "${{ env.NR_VERSION }}",

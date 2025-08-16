@@ -19,6 +19,10 @@ on:
         type: string
         required: false
         default: ""
+      linux_aarch64_runtime_artifact_workflow_call:
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -77,6 +81,17 @@ jobs:
             echo "MAC_RUN_ID=${{ inputs.mac_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
           fi
 
+          if [ -z "${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" ]; then
+            LINUX_AARCH64_ID=$(curl -s \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
+            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-aarch64"))][0].id')
+            echo "LINUX_AARCH64_RUN_ID=$LINUX_AARCH64_ID" >> $GITHUB_ENV
+          else
+            echo "LINUX_AARCH64_RUN_ID=${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
+          fi
+
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
@@ -125,6 +140,22 @@ jobs:
           path: ~/noraneko-publish/mac-dist
           github-token: ${{ github.token }}
 
+      - name: Download Linux aarch64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-aarch64-mar-full
+          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
+          path: ~/noraneko-publish/linux-aarch64
+          github-token: ${{ github.token }}
+
+      - name: Download Linux aarch64 installer
+        uses: actions/download-artifact@v4
+        with:
+          name: noraneko-linux-aarch64-installer
+          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
+          path: ~/noraneko-publish/linux-aarch64-dist
+          github-token: ${{ github.token }}
+
       - name: Setup
         run: |
           deno install --allow-scripts
@@ -132,6 +163,7 @@ jobs:
           deno run -A ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
           deno run -A ./scripts/update/xml.ts ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux/Linux_x86_64.update.xml
           deno run -A ./scripts/update/xml.ts ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac/Darwin_Universal.update.xml
+          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/linux-aarch64/meta.json ~/noraneko-publish/linux-aarch64/Linux_aarch64.update.xml
 
           echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
           echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
@@ -147,6 +179,9 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64/*.mar
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64/*.xml
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-dist/**
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.xml
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
