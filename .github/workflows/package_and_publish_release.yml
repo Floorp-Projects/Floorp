@@ -71,3 +71,4 @@ jobs:
       linux_runtime_artifact_workflow_call: ${{ github.run_id }}
       mac_runtime_artifact_workflow_call: ${{ github.run_id }}
       linux_aarch64_runtime_artifact_workflow_call: ${{ github.run_id }}
+      stub_installer_workflow_call: ${{ github.run_id }}

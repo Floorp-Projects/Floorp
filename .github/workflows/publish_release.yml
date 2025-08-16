@@ -103,12 +103,8 @@ jobs:
           fi
 
           if [ -z "${{ inputs.stub_installer_workflow_call }}" ]; then
-            STUB_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/build_installers.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Build Installers"))][0].id')
-            echo "STUB_RUN_ID=$STUB_ID" >> $GITHUB_ENV
+            # Use the current workflow run ID since build-installer is part of the same workflow
+            echo "STUB_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
           else
             echo "STUB_RUN_ID=${{ inputs.stub_installer_workflow_call }}" >> $GITHUB_ENV
           fi

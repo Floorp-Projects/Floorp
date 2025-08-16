@@ -33,6 +33,9 @@ use windows::{
     Win32::System::Registry::{
         RegOpenKeyExW, RegQueryValueExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ,
     },
+    Win32::Storage::FileSystem::{
+        GetDiskFreeSpaceExW,
+    },
 };
 
 const EXPECTED_SIGNERS: [&str; 2] = [
@@ -57,6 +60,95 @@ fn check_sse4_1_support() -> bool {
         // For non-x86_64 architectures, assume support
         println!("[INFO] Non-x86_64 architecture detected, assuming SSE4.1 support");
         true
+    }
+}
+
+/// Check available disk space (in MB) for the given path
+fn get_available_disk_space(path: &str) -> Result<u64, String> {
+    let path_wide: Vec<u16> = OsStr::new(path)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+
+    unsafe {
+        let mut free_bytes_available = 0u64;
+        let mut total_bytes = 0u64;
+        let mut total_free_bytes = 0u64;
+
+        let result = GetDiskFreeSpaceExW(
+            PCWSTR(path_wide.as_ptr()),
+            Some(&mut free_bytes_available),
+            Some(&mut total_bytes),
+            Some(&mut total_free_bytes),
+        );
+
+        if result.is_ok() {
+            // Convert bytes to MB
+            let free_mb = free_bytes_available / (1024 * 1024);
+            println!("[INFO] Available disk space: {} MB at path: {}", free_mb, path);
+            Ok(free_mb)
+        } else {
+            let error = GetLastError();
+            Err(format!("Failed to get disk space for {}: error code {}", path, error.0))
+        }
+    }
+}
+
+/// Check if there's enough disk space (minimum 300MB) for installation
+fn check_disk_space_requirements(install_path: Option<&str>) -> Result<bool, String> {
+    const MINIMUM_SPACE_MB: u64 = 300;
+    
+    println!("[INFO] Checking disk space requirements...");
+    
+    let check_path = if let Some(path) = install_path {
+        // Extract drive letter from custom path
+        if path.len() >= 3 && path.chars().nth(1) == Some(':') {
+            format!("{}\\", &path[..3])
+        } else {
+            "C:\\".to_string()
+        }
+    } else {
+        // Check both possible installation locations
+        let program_files_path = if let Ok(pf) = env::var("ProgramFiles") {
+            format!("{}\\", &pf[..3]) // Extract drive letter (usually C:\)
+        } else {
+            "C:\\".to_string()
+        };
+        
+        let local_appdata_path = if let Ok(la) = env::var("LOCALAPPDATA") {
+            format!("{}\\", &la[..3]) // Extract drive letter (usually C:\)
+        } else {
+            "C:\\".to_string()
+        };
+        
+        // Check both paths, use the one with more space
+        let pf_space = get_available_disk_space(&program_files_path).unwrap_or(0);
+        let la_space = get_available_disk_space(&local_appdata_path).unwrap_or(0);
+        
+        if pf_space >= la_space {
+            program_files_path
+        } else {
+            local_appdata_path
+        }
+    };
+
+    match get_available_disk_space(&check_path) {
+        Ok(available_mb) => {
+            if available_mb >= MINIMUM_SPACE_MB {
+                println!("[INFO] Disk space requirements met: {} MB available (minimum: {} MB)", 
+                         available_mb, MINIMUM_SPACE_MB);
+                Ok(true)
+            } else {
+                println!("[ERROR] Insufficient disk space: {} MB available, {} MB required", 
+                         available_mb, MINIMUM_SPACE_MB);
+                Ok(false)
+            }
+        }
+        Err(e) => {
+            println!("[WARN] Could not check disk space: {}", e);
+            // If we can't check disk space, assume it's available to avoid blocking installation
+            Ok(true)
+        }
     }
 }
 
@@ -108,10 +200,32 @@ async fn check_cpu_support() -> Result<bool, String> {
 }
 
 #[tauri::command]
+async fn check_disk_space(custom_install_path: Option<String>) -> Result<bool, String> {
+    match check_disk_space_requirements(custom_install_path.as_deref()) {
+        Ok(has_space) => Ok(has_space),
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
 async fn download_and_run_installer(
     use_admin: bool,
     custom_install_path: Option<String>,
 ) -> Result<String, String> {
+    // Check disk space requirements before proceeding
+    match check_disk_space_requirements(custom_install_path.as_deref()) {
+        Ok(true) => {
+            println!("[INFO] Disk space requirements satisfied");
+        }
+        Ok(false) => {
+            return Err("rust.errors.insufficient_disk_space".to_string());
+        }
+        Err(e) => {
+            println!("[WARN] Could not verify disk space: {}", e);
+            // Continue with installation despite check failure
+        }
+    }
+
     let url = match get_latest_installer_url().await {
         Some(url) => url,
         None => return Err("rust.errors.installer_not_found".to_string()),
@@ -967,7 +1081,8 @@ fn main() {
             launch_floorp_browser,
             exit_application,
             check_and_install_webview2_runtime,
-            check_cpu_support
+            check_cpu_support,
+            check_disk_space
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
