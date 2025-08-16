@@ -19,8 +19,12 @@ export function getAllGestureActions(): GestureActionRegistration[] {
 export function executeGestureAction(name: string): boolean {
   const action = gestureActions.getAction(name);
   if (action) {
-    action();
-    return true;
+    try {
+      action();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
   return false;
 }

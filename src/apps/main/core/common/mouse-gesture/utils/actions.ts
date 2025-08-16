@@ -192,14 +192,14 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-screen-capture",
-    fn: () => window.ScreenshotsUtils.notify(window, "shortcut"),
+    fn: () => window.ScreenshotsUtils.start(gBrowser.selectedBrowser),
   },
   {
     name: "floorp-show-pip",
     fn: () =>
-      window.gFloorpCSKActionFunctions.PictureInPicture.togglePictureInPicture(
-        null,
-      ),
+      (
+        document?.getElementById("picture-in-picture-button") as XULElement
+      ).click(),
   },
   {
     name: "gecko-open-bookmark-add-tool",
