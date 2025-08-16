@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+exec /opt/floorp/floorp "$@"
