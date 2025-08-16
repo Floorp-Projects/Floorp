@@ -160,10 +160,13 @@ export async function getFolderPathFromDialog(): Promise<FolderPathResult> {
       (cb) => (globalThis as unknown as Window).NRGetFolderPathFromDialog(cb),
       (data) => JSON.parse(data),
       {
-        retries: 3,
-        timeoutMs: 5000,
-        delayMs: 400,
+        retries: 4,
+        timeoutMs: 6000,
+        delayMs: 300,
         shouldRetry: (v) => !v || v.success === false,
+        functionName: "NRGetFolderPathFromDialog",
+        checkFunctionExists: true,
+        initializationDelayMs: 3000,
       },
     );
   } catch (e) {
@@ -184,10 +187,13 @@ export async function getRandomImageFromFolder(
         ),
       (data) => JSON.parse(data),
       {
-        retries: 3,
-        timeoutMs: 5000,
-        delayMs: 400,
+        retries: 4,
+        timeoutMs: 6000,
+        delayMs: 300,
         shouldRetry: (v) => !v || v.success === false,
+        functionName: "NRGetRandomImageFromFolder",
+        checkFunctionExists: true,
+        initializationDelayMs: 3000,
       },
     );
   } catch (e) {
