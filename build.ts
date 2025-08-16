@@ -50,7 +50,7 @@ const getBinArchive = () => {
     if (arch === "x64") {
       return `${brandingBaseName}-linux-amd64-moz-artifact.tar.xz`;
     } else if (arch === "arm64") {
-      return `${brandingBaseName}-linux-arm64-moz-artifact.tar.xz`;
+      return `${brandingBaseName}-linux-aarch64-moz-artifact.tar.xz`;
     }
   } else if (process.platform === "darwin") {
     return `${brandingBaseName}-macOS-universal-moz-artifact.dmg`;
