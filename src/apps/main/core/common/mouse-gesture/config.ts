@@ -44,7 +44,7 @@ export const zMouseGestureConfig = z.object({
 export type MouseGestureConfig = z.infer<typeof zMouseGestureConfig>;
 
 export const defaultConfig: MouseGestureConfig = {
-  enabled: true,
+  enabled: false,
   sensitivity: 40,
   showTrail: true,
   trailColor: "#37ff00",

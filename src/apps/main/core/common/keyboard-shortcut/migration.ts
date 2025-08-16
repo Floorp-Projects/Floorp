@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type KeyboardShortcutConfig } from "./type.ts";
+import type { KeyboardShortcutConfig, ShortcutConfig } from "./type.ts";
 
 const LEGACY_PREF = "floorp.browser.nora.csk.data";
 
@@ -31,7 +31,7 @@ export function migrateLegacyConfig(): KeyboardShortcutConfig | null {
       Services.prefs.getStringPref(LEGACY_PREF, "{}"),
     ) as LegacyConfig;
 
-    const shortcuts: Record<string, any> = {};
+    const shortcuts: Record<string, ShortcutConfig> = {};
     for (const [action, config] of Object.entries(legacyData)) {
       if (typeof config === "object" && config !== null) {
         shortcuts[action] = {

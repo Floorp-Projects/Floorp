@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { z } from "zod";
-import { type GestureActionRegistration } from "../mouse-gesture/utils/gestures.ts";
+import type { GestureActionRegistration } from "../mouse-gesture/utils/gestures.ts";
 
 export const zModifiers = z.object({
   alt: z.boolean().default(false),

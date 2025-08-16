@@ -25,7 +25,6 @@ export default class KeyboardShortcut extends NoraComponentBase {
   static ctx: typeof keyboardShortcutService | null = null;
   init(): void {
     const ctx = keyboardShortcutService;
-    ctx.setEnabled(true);
     KeyboardShortcut.ctx = ctx;
   }
 }
