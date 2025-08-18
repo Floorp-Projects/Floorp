@@ -21,17 +21,17 @@ class ReadContinuation {
                           uint32_t aDataSize) = 0;
 };
 
-void WriteRecord(cdm::Host_10* aHost, const std::string& aRecordName,
+void WriteRecord(cdm::Host_11* aHost, const std::string& aRecordName,
                  const std::string& aData, std::function<void()>&& aOnSuccess,
                  std::function<void()>&& aOnFailure);
 
-void WriteRecord(cdm::Host_10* aHost, const std::string& aRecordName,
+void WriteRecord(cdm::Host_11* aHost, const std::string& aRecordName,
                  const uint8_t* aData, uint32_t aNumBytes,
                  std::function<void()>&& aOnSuccess,
                  std::function<void()>&& aOnFailure);
 
 void ReadRecord(
-    cdm::Host_10* aHost, const std::string& aRecordName,
+    cdm::Host_11* aHost, const std::string& aRecordName,
     std::function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete);
 
 class OpenContinuation {
@@ -40,6 +40,6 @@ class OpenContinuation {
   virtual void operator()(bool aSuccess) = 0;
 };
 
-void OpenRecord(cdm::Host_10* aHost, const std::string& aRecordName,
+void OpenRecord(cdm::Host_11* aHost, const std::string& aRecordName,
                 std::function<void(bool)>&& aOpenComplete);
 #endif  // TEST_CDM_STORAGE_H__

@@ -44,8 +44,8 @@ class WidevineVideoFrame : public cdm::VideoFrame {
   cdm::VideoFormat mFormat;
   cdm::Size mSize;
   cdm::Buffer* mBuffer;
-  uint32_t mPlaneOffsets[cdm::VideoPlane::kMaxPlanes];
-  uint32_t mPlaneStrides[cdm::VideoPlane::kMaxPlanes];
+  uint32_t mPlaneOffsets[cdm::kMaxPlanes];
+  uint32_t mPlaneStrides[cdm::kMaxPlanes];
   int64_t mTimestamp;
 };
 

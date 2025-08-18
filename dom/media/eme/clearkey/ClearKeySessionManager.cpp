@@ -35,7 +35,7 @@ using std::function;
 using std::string;
 using std::vector;
 
-ClearKeySessionManager::ClearKeySessionManager(Host_10* aHost)
+ClearKeySessionManager::ClearKeySessionManager(Host_11* aHost)
     : mDecryptionManager(ClearKeyDecryptionManager::Get()) {
   CK_LOGD("ClearKeySessionManager ctor %p", this);
   AddRef();

@@ -16,22 +16,34 @@ namespace mozilla::dom {
 // https://streams.spec.whatwg.org/#transfer-array-buffer
 // As some parts of the specifcation want to use the abrupt completion value,
 // this function may leave a pending exception if it returns nullptr.
+//
+// This can be called with a CCW to an ArrayBuffer Object as we handle the
+// case explicitly.
 JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
-  MOZ_ASSERT(JS::IsArrayBufferObject(aObject));
-
-  // Step 1.
-  MOZ_ASSERT(!JS::IsDetachedArrayBufferObject(aObject));
-
-  // Step 3 (Reordered)
-  size_t bufferLength = JS::GetArrayBufferByteLength(aObject);
-
-  // Step 2 (Reordered)
-  UniquePtr<void, JS::FreePolicy> bufferData{
-      JS::StealArrayBufferContents(aCx, aObject)};
-
-  // Step 4.
-  if (!JS::DetachArrayBuffer(aCx, aObject)) {
+  JS::Rooted<JSObject*> unwrappedObj(aCx, JS::UnwrapArrayBuffer(aObject));
+  if (!unwrappedObj) {
+    js::ReportAccessDenied(aCx);
     return nullptr;
+  }
+
+  size_t bufferLength = 0;
+  UniquePtr<void, JS::FreePolicy> bufferData;
+  {
+    JSAutoRealm ar(aCx, unwrappedObj);
+
+    // Step 1.
+    MOZ_ASSERT(!JS::IsDetachedArrayBufferObject(unwrappedObj));
+
+    // Step 3 (Reordered)
+    bufferLength = JS::GetArrayBufferByteLength(unwrappedObj);
+
+    // Step 2 (Reordered)
+    bufferData.reset(JS::StealArrayBufferContents(aCx, unwrappedObj));
+
+    // Step 4.
+    if (!JS::DetachArrayBuffer(aCx, unwrappedObj)) {
+      return nullptr;
+    }
   }
 
   // Step 5.

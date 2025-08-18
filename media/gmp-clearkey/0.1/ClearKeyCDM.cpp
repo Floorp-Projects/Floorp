@@ -10,7 +10,7 @@
 
 using namespace cdm;
 
-ClearKeyCDM::ClearKeyCDM(Host_10* aHost) {
+ClearKeyCDM::ClearKeyCDM(Host_11* aHost) {
   mHost = aHost;
   mSessionManager = new ClearKeySessionManager(mHost);
 }

@@ -453,7 +453,7 @@ class gfxFontEntry::FontTableBlobData {
 
  private:
   // The font table data block
-  nsTArray<uint8_t> mTableData;
+  const nsTArray<uint8_t> mTableData;
 
   // The blob destroy function needs to know the owning font entry
   // so that it can take the font-entry's lock while modifying the
@@ -555,10 +555,16 @@ hb_blob_t* gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
   MOZ_POP_THREAD_SAFETY
 
   AutoWriteLock lock(mLock);
-  FontTableHashEntry* entry = cache->PutEntry(aTag);
-  if (MOZ_UNLIKELY(!entry)) {  // OOM
-    return nullptr;
+
+  FontTableHashEntry* entry;
+  if (MOZ_UNLIKELY(entry = cache->GetEntry(aTag))) {
+    // We must have been racing with another GetFontTable for the same table,
+    // and it won the race and filled in the entry before we took the lock.
+    // Ignore `aBuffer` and return a reference to the existing blob.
+    return entry->GetBlob();
   }
+
+  entry = cache->PutEntry(aTag);
 
   if (!aBuffer) {
     // ensure the entry is null

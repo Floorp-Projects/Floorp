@@ -20,7 +20,7 @@
 #  include "WMFUtils.h"
 #endif
 
-class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {
+class ClearKeyCDM final : public cdm::ContentDecryptionModule_11 {
  private:
   RefPtr<ClearKeySessionManager> mSessionManager;
 #ifdef ENABLE_WMF
@@ -29,10 +29,10 @@ class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {
   bool mIsProtectionQueryEnabled = false;
 
  protected:
-  cdm::Host_10* mHost;
+  cdm::Host_11* mHost;
 
  public:
-  explicit ClearKeyCDM(cdm::Host_10* aHost);
+  explicit ClearKeyCDM(cdm::Host_11* aHost);
 
   void Initialize(bool aAllowDistinctiveIdentifier, bool aAllowPersistentState,
                   bool aUseHardwareSecureCodecs) override;

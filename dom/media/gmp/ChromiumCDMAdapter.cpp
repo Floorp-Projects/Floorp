@@ -52,6 +52,15 @@ void ChromiumCDMAdapter::SetAdaptee(PRLibrary* aLib) { mLib = aLib; }
 void* ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData) {
   GMP_LOG_DEBUG("ChromiumCdmHostFunc(%d, %p)", aHostInterfaceVersion,
                 aUserData);
+  if (aHostInterfaceVersion != cdm::Host_11::kVersion) {
+    return nullptr;
+  }
+  return aUserData;
+}
+
+void* ChromiumCdmHostCompat(int aHostInterfaceVersion, void* aUserData) {
+  GMP_LOG_DEBUG("ChromiumCdmHostCompatFunc(%d, %p)", aHostInterfaceVersion,
+                aUserData);
   if (aHostInterfaceVersion != cdm::Host_10::kVersion) {
     return nullptr;
   }
@@ -116,16 +125,24 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
   GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %s) this=0x%p",
                 aAPIName, aHostAPI, aPluginAPI,
                 PromiseFlatCString(aKeySystem).get(), this);
-  bool isCdm10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
 
-  if (!isCdm10) {
-    MOZ_ASSERT_UNREACHABLE("We only support and expect cdm10!");
+  int version;
+  GetCdmHostFunc getCdmHostFunc;
+  if (!strcmp(aAPIName, CHROMIUM_CDM_API)) {
+    version = cdm::ContentDecryptionModule_11::kVersion;
+    getCdmHostFunc = &ChromiumCdmHost;
+  } else if (!strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT)) {
+    version = cdm::ContentDecryptionModule_10::kVersion;
+    getCdmHostFunc = &ChromiumCdmHostCompat;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("We only support and expect cdm10/11!");
     GMP_LOG_DEBUG(
         "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p got "
         "unsupported CDM version!",
         aAPIName, aHostAPI, aPluginAPI, this);
     return GMPGenericErr;
   }
+
   auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
   if (!create) {
@@ -136,9 +153,8 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
     return GMPGenericErr;
   }
 
-  const int version = cdm::ContentDecryptionModule_10::kVersion;
   void* cdm = create(version, aKeySystem.BeginReading(), aKeySystem.Length(),
-                     &ChromiumCdmHost, aHostAPI);
+                     getCdmHostFunc, aHostAPI);
   if (!cdm) {
     GMP_LOG_DEBUG(
         "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p "
@@ -169,8 +185,10 @@ bool ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
                                   int32_t aInterfaceVersion,
                                   int32_t aHostVersion) {
   return aModuleVersion == CDM_MODULE_VERSION &&
-         aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion &&
-         aHostVersion == cdm::Host_10::kVersion;
+         ((aInterfaceVersion == cdm::ContentDecryptionModule_11::kVersion &&
+           aHostVersion == cdm::Host_11::kVersion) ||
+          (aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion &&
+           aHostVersion == cdm::Host_10::kVersion));
 }
 
 #ifdef XP_WIN

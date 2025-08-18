@@ -70,10 +70,10 @@ class WMFClearKeyCDM final
 };
 
 // In order to reuse existing Gecko clearkey implementation, we need to
-// inherit the class `cdm::Host_10`.
+// inherit the class `cdm::Host_11`.
 // TODO : add a way to assert thread usage. It would be used on MF thread pool
 // and the media supervisor thread pool.
-class SessionManagerWrapper final : public RefCounted, private cdm::Host_10 {
+class SessionManagerWrapper final : public RefCounted, private cdm::Host_11 {
  public:
   explicit SessionManagerWrapper(WMFClearKeyCDM* aCDM);
 
@@ -94,7 +94,7 @@ class SessionManagerWrapper final : public RefCounted, private cdm::Host_10 {
 
  private:
   ~SessionManagerWrapper();
-  // cdm::Host_10
+  // cdm::Host_11
   void OnInitialized(bool aSuccess) override {}
   void OnResolveKeyStatusPromise(uint32_t aPromiseId,
                                  cdm::KeyStatus aKeyStatus) override {}
@@ -133,6 +133,7 @@ class SessionManagerWrapper final : public RefCounted, private cdm::Host_10 {
   void OnDeferredInitializationDone(cdm::StreamType aStreamType,
                                     cdm::Status aDecoderStatus) override {}
   void RequestStorageId(uint32_t aVersion) override {}
+  void ReportMetrics(cdm::MetricName aMetricName, uint64_t aValue) override {}
   cdm::Buffer* Allocate(uint32_t aCapacity) override;
   void SetTimer(int64_t aDelayMs, void* aContext) override {}
   cdm::Time GetCurrentWallTime() override { return 0.0; }
@@ -145,7 +146,7 @@ class SessionManagerWrapper final : public RefCounted, private cdm::Host_10 {
 
   // This is a RAII helper class to use ClearKeySessionManager::XXXSession
   // methods in a sync style, which is what MFCDM is required.
-  // ClearKeySessionManager uses cdm::Host_10's OnResolve/RejectXXX as callback
+  // ClearKeySessionManager uses cdm::Host_11's OnResolve/RejectXXX as callback
   // to report whether those function calls relatd with specific promise id
   // succeed or not. As we only do temporary session for ClearKey testing, we
   // don't need to wait to setup the storage so calling those XXXsession
@@ -155,7 +156,7 @@ class SessionManagerWrapper final : public RefCounted, private cdm::Host_10 {
   // [How to to use this class, not thread-safe]
   //   1. create it on the stack
   //   2. use GetPromiseId() to generate a fake promise id for tracking
-  //   3. in cdm::Host_10's callback function, check promise id to know what
+  //   3. in cdm::Host_11's callback function, check promise id to know what
   //      result needs to be set
   //   4. check result to see if the session method succeed or not
   class SyncResultChecker final {
