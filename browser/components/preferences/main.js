@@ -53,12 +53,6 @@ Preferences.addAll([
   { id: "browser.startup.page", type: "int" },
   { id: "browser.privatebrowsing.autostart", type: "bool" },
 
-  // Downloads
-  { id: "browser.download.useDownloadDir", type: "bool", inverted: true },
-  { id: "browser.download.always_ask_before_handling_new_types", type: "bool" },
-  { id: "browser.download.folderList", type: "int" },
-  { id: "browser.download.dir", type: "file" },
-
   /* Tab preferences
   Preferences:
 
@@ -145,9 +139,6 @@ Preferences.addAll([
   { id: "dom.ipc.processCount.web", type: "int" },
   { id: "layers.acceleration.disabled", type: "bool", inverted: true },
 
-  // Files and Applications
-  { id: "pref.downloads.disable_button.edit_actions", type: "bool" },
-
   // DRM content
   { id: "media.eme.enabled", type: "bool" },
 
@@ -194,6 +185,11 @@ if (AppConstants.MOZ_UPDATER) {
     Preferences.addAll([{ id: "app.update.suppressPrompts", type: "bool" }]);
   }
 }
+
+// Floorp 12 upgrade preferences
+Preferences.addAll([
+  { id: "floorp.upgrade.to12.enabled", type: "bool" },
+]);
 
 ChromeUtils.defineLazyGetter(this, "gIsPackagedApp", () => {
   return Services.sysinfo.getProperty("isPackagedApp");
@@ -353,7 +349,7 @@ var gMainPane = {
         let ver = parseFloat(Services.sysinfo.getProperty("version"));
         let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
         showTabsInTaskbar.hidden = ver < 6.1;
-      } catch (ex) {}
+      } catch (ex) { }
     }
 
     let thumbsCheckbox = document.getElementById("tabPreviewShowThumbnails");
@@ -495,7 +491,6 @@ var gMainPane = {
       gMainPane._rebuildFonts.bind(gMainPane)
     );
     setEventListener("advancedFonts", "command", gMainPane.configureFonts);
-    setEventListener("colors", "command", gMainPane.configureColors);
     Preferences.get("layers.acceleration.disabled").on(
       "change",
       gMainPane.updateHardwareAcceleration.bind(gMainPane)
@@ -519,6 +514,18 @@ var gMainPane = {
       "data-migration",
       "command",
       gMainPane.onMigrationButtonCommand
+    );
+
+    // Floorp 12 upgrade settings
+    setEventListener(
+      "floorp12LearnMore",
+      "command",
+      gMainPane.showFloorp12Details
+    );
+    setEventListener(
+      "floorp12UpgradeEnabled",
+      "command",
+      gMainPane.onFloorp12UpgradeChange
     );
 
     document
@@ -723,36 +730,8 @@ var gMainPane = {
     Services.obs.addObserver(this, AUTO_UPDATE_CHANGED_TOPIC);
     Services.obs.addObserver(this, BACKGROUND_UPDATE_CHANGED_TOPIC);
 
-    setEventListener("filter", "command", gMainPane.filter);
-    setEventListener("typeColumn", "click", gMainPane.sort);
-    setEventListener("actionColumn", "click", gMainPane.sort);
-    setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
-    Preferences.get("browser.download.folderList").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    Preferences.get("browser.download.dir").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    gMainPane.displayDownloadDirPref();
-
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this);
-
-    // Figure out how we should be sorting the list.  We persist sort settings
-    // across sessions, so we can't assume the default sort column/direction.
-    // XXX should we be using the XUL sort service instead?
-    if (document.getElementById("actionColumn").hasAttribute("sortDirection")) {
-      this._sortColumn = document.getElementById("actionColumn");
-      // The typeColumn element always has a sortDirection attribute,
-      // either because it was persisted or because the default value
-      // from the xul file was used.  If we are sorting on the other
-      // column, we should remove it.
-      document.getElementById("typeColumn").removeAttribute("sortDirection");
-    } else {
-      this._sortColumn = document.getElementById("typeColumn");
-    }
 
     appendSearchKeywords(
       "browserContainersSettings",
@@ -763,8 +742,6 @@ var gMainPane = {
         "user-context-shopping",
       ].map(ContextualIdentityService.formatContextLabel)
     );
-
-    AppearanceChooser.init();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "main-pane-loaded");
@@ -794,10 +771,6 @@ var gMainPane = {
       () => this.writeCheckSpelling()
     );
     Preferences.addSyncFromPrefListener(
-      document.getElementById("alwaysAsk"),
-      () => this.readUseDownloadDir()
-    );
-    Preferences.addSyncFromPrefListener(
       document.getElementById("linkTargeting"),
       () => this.readLinkTarget()
     );
@@ -810,10 +783,13 @@ var gMainPane = {
       () => this.readBrowserContainersCheckbox()
     );
 
+    // Initialize Floorp 12 upgrade UI
+    this.initFloorp12UpgradeUI();
+
     this.setInitialized();
   },
 
-  preInit() {
+  preInit() {/*
     promiseLoadHandlersList = new Promise((resolve, reject) => {
       // Load the data and build the list of handlers for applications pane.
       // By doing this after pageshow, we ensure it doesn't delay painting
@@ -836,6 +812,7 @@ var gMainPane = {
         { once: true }
       );
     });
+    */
   },
 
   handleSubcategory(subcategory) {
@@ -1849,7 +1826,7 @@ var gMainPane = {
     if (Services.prefs.getBoolPref("intl.multilingual.liveReload")) {
       if (
         Services.intl.getScriptDirection(newLocales[0]) !==
-          Services.intl.getScriptDirection(appLocalesAsBCP47[0]) &&
+        Services.intl.getScriptDirection(appLocalesAsBCP47[0]) &&
         !Services.prefs.getBoolPref("intl.multilingual.liveReloadBidirectional")
       ) {
         // Bug 1750852: The directionality of the text changed, which requires a restart
@@ -2595,6 +2572,49 @@ var gMainPane = {
    */
   showUpdates() {
     gSubDialog.open("chrome://mozapps/content/update/history.xhtml");
+  },
+
+  /**
+   * Shows Floorp 12 upgrade details and features
+   */
+  showFloorp12Details() {
+    // Open Floorp 12 information page in new tab
+    let url = "https://floorp.app/floorp12";
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win) {
+      win.openTrustedLinkIn(url, "tab");
+    } else {
+      window.open(url);
+    }
+  },
+
+  /**
+   * Handles changes to the Floorp 12 upgrade checkbox
+   */
+  onFloorp12UpgradeChange(event) {
+    let checkbox = event.target;
+    let isEnabled = checkbox.checked;
+    // Update pref
+    Services.prefs.setBoolPref("floorp.upgrade.to12.enabled", isEnabled);
+  },
+
+  /**
+   * Initialize Floorp 12 upgrade UI
+   */
+  initFloorp12UpgradeUI() {
+    let checkbox = document.getElementById("floorp12UpgradeEnabled");
+    let infoBox = document.getElementById("floorp12UpgradeInfo");
+    let upgradeLink = document.getElementById("floorp12UpgradeLink");
+
+    if (checkbox && infoBox) {
+      // Set initial state based on preference
+      let isEnabled = Services.prefs.getBoolPref("floorp.upgrade.to12.enabled", false);
+      checkbox.checked = isEnabled;
+
+      if (upgradeLink && isEnabled) {
+        upgradeLink.href = "https://floorp.app/upgrade";
+      }
+    }
   },
 
   destroy() {
@@ -3463,8 +3483,8 @@ var gMainPane = {
     document.getElementById("downloadFolder").disabled =
       document.getElementById("chooseFolder").disabled =
       document.getElementById("saveTo").disabled =
-        Preferences.get("browser.download.dir").locked ||
-        Preferences.get("browser.download.folderList").locked;
+      Preferences.get("browser.download.dir").locked ||
+      Preferences.get("browser.download.folderList").locked;
     // don't override the preference's value in UI
     return undefined;
   },
@@ -3725,14 +3745,14 @@ function getFileDisplayName(file) {
     if (file instanceof Ci.nsILocalFileWin) {
       try {
         return file.getVersionInfoField("FileDescription");
-      } catch (e) {}
+      } catch (e) { }
     }
   }
   if (AppConstants.platform == "macosx") {
     if (file instanceof Ci.nsILocalFileMac) {
       try {
         return file.bundleDisplayName;
-      } catch (e) {}
+      } catch (e) { }
     }
   }
   return file.leafName;
@@ -3983,7 +4003,7 @@ class HandlerInfoWrapper {
         if (url) {
           return url + "?size=16";
         }
-      } catch (ex) {}
+      } catch (ex) { }
     }
 
     // If this isn't a MIME type object on an OS that supports retrieving
@@ -4055,7 +4075,7 @@ class HandlerInfoWrapper {
     // and always return true in that case to override this invalid value.
     if (
       this.wrappedHandlerInfo.preferredAction ==
-        Ci.nsIHandlerInfo.useHelperApp &&
+      Ci.nsIHandlerInfo.useHelperApp &&
       !gMainPane.isValidHandlerApp(this.preferredApplicationHandler)
     ) {
       if (this.wrappedHandlerInfo.hasDefaultHandler) {
@@ -4101,7 +4121,7 @@ class HandlerInfoWrapper {
       ) {
         return this.wrappedHandlerInfo.primaryExtension;
       }
-    } catch (ex) {}
+    } catch (ex) { }
 
     return null;
   }

@@ -3545,6 +3545,16 @@ var XULBrowserWindow = {
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     var location = aLocationURI ? aLocationURI.spec : "";
 
+    // Floorp Injections
+    window.gFloorpOnLocationChange.onLocationChange(
+      aWebProgress,
+      aRequest,
+      aLocationURI,
+      aFlags,
+      aIsSimulated
+    );
+    // End Floorp Injections
+
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
     Services.obs.notifyObservers(
@@ -3682,6 +3692,8 @@ var XULBrowserWindow = {
 
     AboutReaderParent.updateReaderButton(gBrowser.selectedBrowser);
     TranslationsParent.onLocationChange(gBrowser.selectedBrowser);
+
+    gSplitView.onLocationChange(gBrowser.selectedBrowser);
 
     PictureInPicture.updateUrlbarToggle(gBrowser.selectedBrowser);
 

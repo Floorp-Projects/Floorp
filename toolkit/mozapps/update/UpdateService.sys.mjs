@@ -354,7 +354,7 @@ function transitionState(newState) {
   }
   LOG(
     `transitionState - "${lazy.AUS.getStateName(gUpdateState)}" -> ` +
-      `"${lazy.AUS.getStateName(newState)}".`
+    `"${lazy.AUS.getStateName(newState)}".`
   );
   gUpdateState = newState;
   // Assign the new Promise before we resolve the old one just to make sure that
@@ -482,7 +482,7 @@ function waitForOtherInstances() {
       } else if (iterations >= maxIterations) {
         LOG(
           "waitForOtherInstances - timeout expired while other instances " +
-            "are still running"
+          "are still running"
         );
         resolve(true);
         gOtherInstancePollPromise = undefined;
@@ -666,7 +666,7 @@ function getElevationRequired() {
     // be written to.
     LOG(
       "getElevationRequired - recursively testing write access on " +
-        getInstallDirRoot().path
+      getInstallDirRoot().path
     );
     if (
       !getInstallDirRoot().isWritable() ||
@@ -674,21 +674,21 @@ function getElevationRequired() {
     ) {
       LOG(
         "getElevationRequired - unable to write to application bundle, " +
-          "elevation required"
+        "elevation required"
       );
       return true;
     }
   } catch (ex) {
     LOG(
       "getElevationRequired - unable to write to application bundle, " +
-        "elevation required. Exception: " +
-        ex
+      "elevation required. Exception: " +
+      ex
     );
     return true;
   }
   LOG(
     "getElevationRequired - able to write to application bundle, elevation " +
-      "not required"
+    "not required"
   );
   return false;
 }
@@ -722,7 +722,7 @@ function isAppBaseDirWritable() {
   } catch (e) {
     LOG(
       "isAppBaseDirWritable - Base directory or test path could not be " +
-        `determined: ${e}`
+      `determined: ${e}`
     );
     return false;
   }
@@ -743,7 +743,7 @@ function isAppBaseDirWritable() {
   } catch (e) {
     LOG(
       `isAppBaseDirWritable - Path '${appDirTestFile.path}' ` +
-        `is not writable: ${e}`
+      `is not writable: ${e}`
     );
   }
   // No write access to the installation directory
@@ -770,8 +770,8 @@ function getCanApplyUpdates() {
   } catch (e) {
     LOG(
       "getCanApplyUpdates - unable to apply updates without write " +
-        "access to the update directory. Exception: " +
-        e
+      "access to the update directory. Exception: " +
+      e
     );
     return false;
   }
@@ -779,7 +779,7 @@ function getCanApplyUpdates() {
   if (AppConstants.platform == "macosx") {
     LOG(
       "getCanApplyUpdates - bypass the write since elevation can be used " +
-        "on Mac OS X"
+      "on Mac OS X"
     );
     return true;
   }
@@ -787,7 +787,7 @@ function getCanApplyUpdates() {
   if (shouldUseService()) {
     LOG(
       "getCanApplyUpdates - bypass the write checks because the Windows " +
-        "Maintenance Service can be used"
+      "Maintenance Service can be used"
     );
     return true;
   }
@@ -811,7 +811,7 @@ function getCanApplyUpdates() {
       if (!userCanElevate && !isAppBaseDirWritable) {
         LOG(
           "getCanApplyUpdates - unable to apply updates, because the base " +
-            "directory is not writable."
+          "directory is not writable."
         );
       }
     }
@@ -838,7 +838,7 @@ ChromeUtils.defineLazyGetter(
     if (getElevationRequired()) {
       LOG(
         "gCanStageUpdatesSession - unable to stage updates because elevation " +
-          "is required."
+        "is required."
       );
       return false;
     }
@@ -863,7 +863,7 @@ ChromeUtils.defineLazyGetter(
         updateTestFile.append(FILE_UPDATE_TEST);
         LOG(
           "gCanStageUpdatesSession - testing write access " +
-            updateTestFile.path
+          updateTestFile.path
         );
         updateTestFile.createUnique(
           Ci.nsIFile.DIRECTORY_TYPE,
@@ -894,7 +894,7 @@ function getCanStageUpdates(transient = true) {
   if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false)) {
     LOG(
       "getCanStageUpdates - staging updates is disabled by preference " +
-        PREF_APP_UPDATE_STAGING_ENABLED
+      PREF_APP_UPDATE_STAGING_ENABLED
     );
     return false;
   }
@@ -909,8 +909,8 @@ function getCanStageUpdates(transient = true) {
   if (transient && !hasUpdateMutex()) {
     LOG(
       "getCanStageUpdates - unable to apply updates because another " +
-        "instance of the application is already handling updates for this " +
-        "installation."
+      "instance of the application is already handling updates for this " +
+      "installation."
     );
     return false;
   }
@@ -955,7 +955,7 @@ function getCanUseBits(transient = true) {
   let defaultProxy = Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM;
   if (
     Services.prefs.getIntPref(PREF_NETWORK_PROXY_TYPE, defaultProxy) !=
-      defaultProxy &&
+    defaultProxy &&
     !Cu.isInAutomation
   ) {
     LOG("getCanUseBits - Not using BITS because of proxy usage");
@@ -1112,9 +1112,9 @@ function getStatusTextFromCode(code, defaultCode) {
     reason = lazy.gUpdateBundle.GetStringFromName("check_error-" + defaultCode);
     LOG(
       "getStatusTextFromCode - transfer error: " +
-        reason +
-        ", default code: " +
-        defaultCode
+      reason +
+      ", default code: " +
+      defaultCode
     );
   }
   return reason;
@@ -1170,9 +1170,9 @@ function readBinaryTransparencyResult(dir) {
   let result = readStringFromFile(binaryTransparencyResultFile);
   LOG(
     "readBinaryTransparencyResult - result: " +
-      result +
-      ", path: " +
-      binaryTransparencyResultFile.path
+    result +
+    ", path: " +
+    binaryTransparencyResultFile.path
   );
   // If result is non-null, the file exists. We should remove it to avoid
   // double-reporting this result.
@@ -1267,7 +1267,7 @@ function isServiceInstalled() {
     );
     installed = wrk.readIntValue("Installed");
     wrk.close();
-  } catch (e) {}
+  } catch (e) { }
   installed = installed == 1; // convert to bool
   LOG("isServiceInstalled - returning " + installed);
   return installed;
@@ -1303,8 +1303,8 @@ function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
   } catch (e) {
     LOG(
       "cleanUpReadyUpdateDir - unable to get the updates patch directory. " +
-        "Exception: " +
-        e
+      "Exception: " +
+      e
     );
     return;
   }
@@ -1326,7 +1326,7 @@ function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
         } catch (e) {
           LOG(
             `cleanUpReadyUpdateDir - failed to rename file '${log.path}' to ` +
-              `'${backupName}': ${e.result}`
+            `'${backupName}': ${e.result}`
           );
         }
       } else {
@@ -1340,7 +1340,7 @@ function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
           if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
             LOG(
               `cleanUpReadyUpdateDir - failed to remove file ` +
-                `'${backupLogFile.path}': ${e.result}`
+              `'${backupLogFile.path}': ${e.result}`
             );
           }
         }
@@ -1412,8 +1412,8 @@ function cleanUpDownloadingUpdateDir() {
   } catch (e) {
     LOG(
       "cleanUpDownloadUpdatesDir - unable to get the updates patch " +
-        "directory. Exception: " +
-        e
+      "directory. Exception: " +
+      e
     );
     return;
   }
@@ -1615,8 +1615,8 @@ function handleUpdateFailure(update) {
     let bestState = getBestPendingState();
     LOG(
       "handleUpdateFailure - witnessed SILENT_UPDATE_NEEDED_ELEVATION_ERROR, " +
-        "returning to " +
-        bestState
+      "returning to " +
+      bestState
     );
     writeStatusFile(getReadyUpdateDir(), (update.state = bestState));
 
@@ -1643,7 +1643,7 @@ function handleUpdateFailure(update) {
     if (elevationAttempts > maxAttempts) {
       LOG(
         "handleUpdateFailure - notifying observers of error. " +
-          "topic: update-error, status: elevation-attempts-exceeded"
+        "topic: update-error, status: elevation-attempts-exceeded"
       );
       Services.obs.notifyObservers(
         update,
@@ -1653,7 +1653,7 @@ function handleUpdateFailure(update) {
     } else {
       LOG(
         "handleUpdateFailure - notifying observers of error. " +
-          "topic: update-error, status: elevation-attempt-failed"
+        "topic: update-error, status: elevation-attempt-failed"
       );
       Services.obs.notifyObservers(
         update,
@@ -1687,14 +1687,14 @@ function handleUpdateFailure(update) {
       if (osxCancelations >= maxCancels) {
         LOG(
           "handleUpdateFailure - Too many OSX cancellations. Cleaning up " +
-            "ready update."
+          "ready update."
         );
         cleanupReadyUpdate();
         return false;
       }
       LOG(
         `handleUpdateFailure - OSX cancellation. Trying again by setting ` +
-          `status to "${STATE_PENDING_ELEVATE}".`
+        `status to "${STATE_PENDING_ELEVATE}".`
       );
       writeStatusFile(
         getReadyUpdateDir(),
@@ -1705,7 +1705,7 @@ function handleUpdateFailure(update) {
     } else {
       LOG(
         "handleUpdateFailure - Failure because elevation was cancelled. " +
-          "again by setting status to pending."
+        "again by setting status to pending."
       );
       writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     }
@@ -1744,7 +1744,7 @@ function handleUpdateFailure(update) {
 
     LOG(
       "handleUpdateFailure - Got a service error. Try to update without the " +
-        "service by setting the state to pending."
+      "service by setting the state to pending."
     );
     writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
@@ -1798,14 +1798,14 @@ async function handleFallbackToCompleteUpdate() {
   if (!update) {
     LOG(
       "handleFallbackToCompleteUpdate - Unable to find an update to fall " +
-        "back to."
+      "back to."
     );
     return;
   }
 
   LOG(
     "handleFallbackToCompleteUpdate - Cleaning up active updates in " +
-      "preparation of falling back to complete update."
+    "preparation of falling back to complete update."
   );
   await lazy.AUS.internal.stopDownload();
   cleanupActiveUpdates();
@@ -1826,26 +1826,26 @@ async function handleFallbackToCompleteUpdate() {
     // update in the background instead.
     LOG(
       "handleFallbackToCompleteUpdate - install of partial patch " +
-        "failed, downloading complete patch"
+      "failed, downloading complete patch"
     );
     var result = await lazy.AUS.internal.downloadUpdate(update);
     if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
       LOG(
         "handleFallbackToCompleteUpdate - Starting complete patch download " +
-          "failed. Cleaning up downloading patch."
+        "failed. Cleaning up downloading patch."
       );
       cleanupDownloadingUpdate();
     }
   } else {
     LOG(
       "handleFallbackToCompleteUpdate - install of complete or " +
-        "only one patch offered failed. Notifying observers. topic: " +
-        "update-error, status: unknown, " +
-        "update.patchCount: " +
-        update.patchCount +
-        ", " +
-        "oldType: " +
-        oldType
+      "only one patch offered failed. Notifying observers. topic: " +
+      "update-error, status: unknown, " +
+      "update.patchCount: " +
+      update.patchCount +
+      ", " +
+      "oldType: " +
+      oldType
     );
     transitionState(Ci.nsIApplicationUpdateService.STATE_IDLE);
     Services.obs.notifyObservers(update, "update-error", "unknown");
@@ -2188,9 +2188,9 @@ class UpdatePatch {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdatePatch) " +
-          "when calling method: [nsIWritablePropertyBag::setProperty]",
+        name +
+        "' (attribute exists on nsIUpdatePatch) " +
+        "when calling method: [nsIWritablePropertyBag::setProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2204,9 +2204,9 @@ class UpdatePatch {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdatePatch) " +
-          "when calling method: [nsIWritablePropertyBag::deleteProperty]",
+        name +
+        "' (attribute exists on nsIUpdatePatch) " +
+        "when calling method: [nsIWritablePropertyBag::deleteProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2257,9 +2257,9 @@ class UpdatePatch {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdatePatch) " +
-          "when calling method: [nsIWritablePropertyBag::getProperty]",
+        name +
+        "' (attribute exists on nsIUpdatePatch) " +
+        "when calling method: [nsIWritablePropertyBag::getProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2558,9 +2558,9 @@ class Update {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdate) " +
-          "when calling method: [nsIWritablePropertyBag::setProperty]",
+        name +
+        "' (attribute exists on nsIUpdate) " +
+        "when calling method: [nsIWritablePropertyBag::setProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2574,9 +2574,9 @@ class Update {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdate) " +
-          "when calling method: [nsIWritablePropertyBag::deleteProperty]",
+        name +
+        "' (attribute exists on nsIUpdate) " +
+        "when calling method: [nsIWritablePropertyBag::deleteProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2626,9 +2626,9 @@ class Update {
     if (this._attrNames.includes(name)) {
       throw Components.Exception(
         "Illegal value '" +
-          name +
-          "' (attribute exists on nsIUpdate) " +
-          "when calling method: [nsIWritablePropertyBag::getProperty]",
+        name +
+        "' (attribute exists on nsIUpdate) " +
+        "when calling method: [nsIWritablePropertyBag::getProperty]",
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -2803,7 +2803,7 @@ export class UpdateService {
     if (!this.canCheckForUpdates) {
       LOG(
         "UpdateService:_postUpdateProcessing - unable to check for " +
-          "updates... returning early"
+        "updates... returning early"
       );
       return;
     }
@@ -2814,7 +2814,7 @@ export class UpdateService {
     if (!this.canApplyUpdates) {
       LOG(
         "UpdateService:_postUpdateProcessing - unable to apply " +
-          "updates... returning early"
+        "updates... returning early"
       );
       if (hasUpdateMutex()) {
         // If the update is present in the update directory somehow,
@@ -2888,11 +2888,11 @@ export class UpdateService {
         : lazy.UM.internal.downloadingUpdate.channel;
       LOG(
         "UpdateService:_postUpdateProcessing - update channel is " +
-          "different than application's channel, removing update. update " +
-          "channel: " +
-          channel +
-          ", expected channel: " +
-          lazy.UpdateUtils.UpdateChannel
+        "different than application's channel, removing update. update " +
+        "channel: " +
+        channel +
+        ", expected channel: " +
+        lazy.UpdateUtils.UpdateChannel
       );
       // User switched channels, clear out the old active updates and remove
       // partial downloads
@@ -2941,17 +2941,17 @@ export class UpdateService {
       if (tooOldUpdate) {
         LOG(
           "UpdateService:_postUpdateProcessing - removing update for older " +
-            "application version or same application version with same build " +
-            "ID. update application version: " +
-            tooOldUpdate.appVersion +
-            ", " +
-            "application version: " +
-            Services.appinfo.version +
-            ", update " +
-            "build ID: " +
-            tooOldUpdate.buildID +
-            ", application build ID: " +
-            Services.appinfo.appBuildID
+          "application version or same application version with same build " +
+          "ID. update application version: " +
+          tooOldUpdate.appVersion +
+          ", " +
+          "application version: " +
+          Services.appinfo.version +
+          ", update " +
+          "build ID: " +
+          tooOldUpdate.buildID +
+          ", application build ID: " +
+          Services.appinfo.appBuildID
         );
         tooOldUpdate.state = STATE_FAILED;
         tooOldUpdate.statusText =
@@ -2985,8 +2985,8 @@ export class UpdateService {
         // when an update has already been downloaded.
         LOG(
           "UpdateService:_postUpdateProcessing - removing downloading patch " +
-            "because we installed a different patch before it finished" +
-            "downloading."
+          "because we installed a different patch before it finished" +
+          "downloading."
         );
         cleanupDownloadingUpdate();
       } else {
@@ -2994,7 +2994,7 @@ export class UpdateService {
         if (lazy.UM.internal.downloadingUpdate) {
           LOG(
             "UpdateService:_postUpdateProcessing - resuming patch found in " +
-              "downloading state"
+            "downloading state"
           );
           let result = await this.#downloadUpdate(
             lazy.UM.internal.downloadingUpdate
@@ -3002,20 +3002,20 @@ export class UpdateService {
           if (
             result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS &&
             result !=
-              Ci.nsIApplicationUpdateService
-                .DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND
+            Ci.nsIApplicationUpdateService
+              .DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND
           ) {
             LOG(
               "UpdateService:_postUpdateProcessing - Failed to resume patch. " +
-                "Cleaning up downloading update."
+              "Cleaning up downloading update."
             );
             cleanupDownloadingUpdate();
           }
         } else {
           LOG(
             "UpdateService:_postUpdateProcessing - Warning: found " +
-              "downloading state, but no downloading patch. Cleaning up " +
-              "active updates."
+            "downloading state, but no downloading patch. Cleaning up " +
+            "active updates."
           );
           // Put ourselves back in a good state.
           cleanupActiveUpdates();
@@ -3050,7 +3050,7 @@ export class UpdateService {
       ) {
         LOG(
           "UpdateService:_postUpdateProcessing - patch found in applying " +
-            "state for the first time"
+          "state for the first time"
         );
         update.state = STATE_APPLYING;
         lazy.UM.saveUpdates();
@@ -3060,7 +3060,7 @@ export class UpdateService {
         // We get here even if we don't have an update object
         LOG(
           "UpdateService:_postUpdateProcessing - patch found in applying " +
-            "state for the second time. Cleaning up ready update."
+          "state for the second time. Cleaning up ready update."
         );
         cleanupReadyUpdate();
       }
@@ -3071,14 +3071,14 @@ export class UpdateService {
       if (status != STATE_SUCCEEDED) {
         LOG(
           "UpdateService:_postUpdateProcessing - previous patch failed " +
-            "and no patch available. Cleaning up ready update."
+          "and no patch available. Cleaning up ready update."
         );
         cleanupReadyUpdate();
         return;
       }
       LOG(
         "UpdateService:_postUpdateProcessing - Update data missing. Creating " +
-          "an empty update object."
+        "an empty update object."
       );
       update = new Update(null);
     }
@@ -3087,13 +3087,13 @@ export class UpdateService {
     update.state = parts[0];
     LOG(
       `UpdateService:_postUpdateProcessing - Setting update's state from ` +
-        `the status file (="${update.state}")`
+      `the status file (="${update.state}")`
     );
     if (update.state == STATE_FAILED && parts[1]) {
       update.errorCode = parseInt(parts[1]);
       LOG(
         `UpdateService:_postUpdateProcessing - Setting update's errorCode ` +
-          `from the status file (="${update.errorCode}")`
+        `from the status file (="${update.errorCode}")`
       );
     }
 
@@ -3115,7 +3115,7 @@ export class UpdateService {
       if (!lazy.UM.internal.readyUpdate) {
         LOG(
           "UpdateService:_postUpdateProcessing - Assigning successful update " +
-            "readyUpdate before cleaning it up."
+          "readyUpdate before cleaning it up."
         );
         lazy.UM.internal.readyUpdate = update;
       }
@@ -3123,7 +3123,7 @@ export class UpdateService {
       // Done with this update. Clean it up.
       LOG(
         "UpdateService:_postUpdateProcessing - Cleaning up successful ready " +
-          "update."
+        "update."
       );
       cleanupReadyUpdate();
 
@@ -3133,7 +3133,7 @@ export class UpdateService {
       if (!update) {
         LOG(
           "UpdateService:_postUpdateProcessing - status is pending-elevate " +
-            "but there isn't a ready update, removing update"
+          "but there isn't a ready update, removing update"
         );
         cleanupReadyUpdate();
       } else {
@@ -3147,13 +3147,13 @@ export class UpdateService {
           // So this is defense in depth.
           LOG(
             "UpdateService:_postUpdateProcessing - status is " +
-              "pending-elevate, but this is a silent startup, so the " +
-              "elevation window has been suppressed."
+            "pending-elevate, but this is a silent startup, so the " +
+            "elevation window has been suppressed."
           );
         } else {
           LOG(
             "UpdateService:_postUpdateProcessing - status is " +
-              "pending-elevate. Showing Update elevation dialog."
+            "pending-elevate. Showing Update elevation dialog."
           );
           let uri = "chrome://mozapps/content/update/updateElevation.xhtml";
           let features =
@@ -3179,7 +3179,7 @@ export class UpdateService {
 
       LOG(
         "UpdateService:_postUpdateProcessing - Attempting to fall back to a " +
-          "complete update."
+        "complete update."
       );
       // Something went wrong with the patch application process.
       await handleFallbackToCompleteUpdate();
@@ -3200,7 +3200,7 @@ export class UpdateService {
 
     LOG(
       "UpdateService:_registerOnlineObserver - waiting for the network to " +
-        "be online, then forcing another check"
+      "be online, then forcing another check"
     );
 
     Services.obs.addObserver(this, "network:offline-status-changed");
@@ -3220,7 +3220,7 @@ export class UpdateService {
 
     LOG(
       "UpdateService:_offlineStatusChanged - network is online, forcing " +
-        "another background check"
+      "another background check"
     );
 
     // the background checker is contained in notify
@@ -3247,10 +3247,10 @@ export class UpdateService {
 
     LOG(
       "UpdateService:onCheckComplete - error during background update. error " +
-        "code: " +
-        update.errorCode +
-        ", status text: " +
-        update.statusText
+      "code: " +
+      update.errorCode +
+      ", status text: " +
+      update.statusText
     );
 
     if (update.errorCode == NETWORK_ERROR_OFFLINE) {
@@ -3277,7 +3277,7 @@ export class UpdateService {
     if (lazy.UM.internal.readyUpdate) {
       LOG(
         "UpdateService:onCheckComplete - Ignoring error because another " +
-          "update is ready."
+        "update is ready."
       );
       return;
     }
@@ -3293,7 +3293,7 @@ export class UpdateService {
     if (errCount >= maxErrors) {
       LOG(
         "UpdateService:onCheckComplete - notifying observers of error. " +
-          "topic: update-error, status: check-attempts-exceeded"
+        "topic: update-error, status: check-attempts-exceeded"
       );
       Services.obs.notifyObservers(
         update,
@@ -3304,7 +3304,7 @@ export class UpdateService {
     } else {
       LOG(
         "UpdateService:onCheckComplete - notifying observers of error. " +
-          "topic: update-error, status: check-attempt-failed"
+        "topic: update-error, status: check-attempt-failed"
       );
       Services.obs.notifyObservers(
         update,
@@ -3335,14 +3335,14 @@ export class UpdateService {
     ) {
       LOG(
         "UpdateService:_attemptResume - _patch.state: " +
-          this._downloader._patch.state
+        this._downloader._patch.state
       );
       let result = await this.#downloadUpdate(this._downloader._update);
       LOG("UpdateService:_attemptResume - downloadUpdate result: " + result);
       if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
         LOG(
           "UpdateService:_attemptResume - Resuming download failed. Cleaning " +
-            "up downloading update."
+          "up downloading update."
         );
         cleanupDownloadingUpdate();
       }
@@ -3629,8 +3629,8 @@ export class UpdateService {
       if (updateIsAtLeastAsOldAsCurrentVersion(update)) {
         LOG(
           "UpdateService:selectUpdate - skipping update because the " +
-            "update's application version is not greater than the current " +
-            "application version"
+          "update's application version is not greater than the current " +
+          "application version"
         );
         lastCheckCode = AUSTLMY.CHK_UPDATE_PREVIOUS_VERSION;
         continue;
@@ -3639,8 +3639,8 @@ export class UpdateService {
       if (updateIsAtLeastAsOldAsReadyUpdate(update)) {
         LOG(
           "UpdateService:selectUpdate - skipping update because the " +
-            "update's application version is not greater than that of the " +
-            "currently downloaded update"
+          "update's application version is not greater than that of the " +
+          "currently downloaded update"
         );
         lastCheckCode = AUSTLMY.CHK_UPDATE_PREVIOUS_VERSION;
         continue;
@@ -3649,7 +3649,7 @@ export class UpdateService {
       if (lazy.UM.internal.readyUpdate && !getPatchOfType(update, "partial")) {
         LOG(
           "UpdateService:selectUpdate - skipping update because no partial " +
-            "patch is available and an update has already been downloaded."
+          "patch is available and an update has already been downloaded."
         );
         lastCheckCode = AUSTLMY.CHK_NO_PARTIAL_PATCH;
         continue;
@@ -3677,7 +3677,7 @@ export class UpdateService {
         default:
           LOG(
             "UpdateService:selectUpdate - skipping unknown update type: " +
-              update.type
+            update.type
           );
           lastCheckCode = AUSTLMY.CHK_UPDATE_INVALID_TYPE;
           break;
@@ -3720,8 +3720,8 @@ export class UpdateService {
           if (numCancels >= maxCancels) {
             LOG(
               "UpdateService:selectUpdate - the user requires elevation to " +
-                "install this update, but the user has exceeded the max " +
-                "number of elevation attempts."
+              "install this update, but the user has exceeded the max " +
+              "number of elevation attempts."
             );
             update.elevationFailure = true;
             AUSTLMY.pingCheckCode(
@@ -3731,8 +3731,8 @@ export class UpdateService {
           } else if (vc.compare(rejectedVersion, update.appVersion) == 0) {
             LOG(
               "UpdateService:selectUpdate - the user requires elevation to " +
-                "install this update, but elevation is disabled for this " +
-                "version."
+              "install this update, but elevation is disabled for this " +
+              "version."
             );
             update.elevationFailure = true;
             AUSTLMY.pingCheckCode(
@@ -3742,7 +3742,7 @@ export class UpdateService {
           } else {
             LOG(
               "UpdateService:selectUpdate - the user requires elevation to " +
-                "install the update."
+              "install the update."
             );
           }
         }
@@ -3793,7 +3793,7 @@ export class UpdateService {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       LOG(
         "UpdateService:_selectAndInstallUpdate - not prompting because " +
-          "update is disabled"
+        "update is disabled"
       );
       return;
     }
@@ -3806,8 +3806,8 @@ export class UpdateService {
     if (update.unsupported) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - update not supported for " +
-          "this system. Notifying observers. topic: update-available, " +
-          "status: unsupported"
+        "this system. Notifying observers. topic: update-available, " +
+        "status: unsupported"
       );
       Services.obs.notifyObservers(update, "update-available", "unsupported");
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNSUPPORTED);
@@ -3817,8 +3817,8 @@ export class UpdateService {
     if (!getCanApplyUpdates()) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - the user is unable to " +
-          "apply updates... prompting. Notifying observers. " +
-          "topic: update-available, status: cant-apply"
+        "apply updates... prompting. Notifying observers. " +
+        "topic: update-available, status: cant-apply"
       );
       Services.obs.notifyObservers(null, "update-available", "cant-apply");
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNABLE_TO_APPLY);
@@ -3844,8 +3844,8 @@ export class UpdateService {
     if (!updateAuto) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - prompting because silent " +
-          "install is disabled. Notifying observers. topic: update-available, " +
-          "status: show-prompt"
+        "install is disabled. Notifying observers. topic: update-available, " +
+        "status: show-prompt"
       );
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_SHOWPROMPT_PREF);
       Services.obs.notifyObservers(update, "update-available", "show-prompt");
@@ -3860,7 +3860,7 @@ export class UpdateService {
     ) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - Failed to start downloading " +
-          "update. Cleaning up downloading update."
+        "update. Cleaning up downloading update."
       );
       cleanupDownloadingUpdate();
     }
@@ -3901,7 +3901,7 @@ export class UpdateService {
     if (this.disabled) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to automatically check " +
-          "for updates, the option has been disabled by the administrator."
+        "for updates, the option has been disabled by the administrator."
       );
       return false;
     }
@@ -3910,7 +3910,7 @@ export class UpdateService {
     if (!lazy.UpdateUtils.ABI) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
-          "unknown ABI"
+        "unknown ABI"
       );
       return false;
     }
@@ -3919,7 +3919,7 @@ export class UpdateService {
     if (!lazy.UpdateUtils.OSVersion) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
-          "unknown OS version"
+        "unknown OS version"
       );
       return false;
     }
@@ -3939,7 +3939,7 @@ export class UpdateService {
     if (!hasUpdateMutex()) {
       LOG(
         "UpdateService.canCheckForUpdates - unable to check for updates, " +
-          "unable to acquire update mutex"
+        "unable to acquire update mutex"
       );
       return false;
     }
@@ -3949,7 +3949,7 @@ export class UpdateService {
       // the other instance is gone or we time out waiting for it.
       LOG(
         "UpdateService.canCheckForUpdates - another instance is holding the " +
-          "lock, will need to wait for it prior to checking for updates"
+        "lock, will need to wait for it prior to checking for updates"
       );
     }
 
@@ -4036,7 +4036,7 @@ export class UpdateService {
     if (this._downloadListeners.size == oldSize) {
       LOG(
         "UpdateService:addDownloadListener - Warning: Didn't add duplicate " +
-          "listener"
+        "listener"
       );
       return;
     }
@@ -4055,7 +4055,7 @@ export class UpdateService {
     if (!elementRemoved) {
       LOG(
         "UpdateService:removeDownloadListener - Warning: Didn't remove " +
-          "non-existent listener"
+        "non-existent listener"
       );
       return;
     }
@@ -4104,37 +4104,37 @@ export class UpdateService {
     if (updateIsAtLeastAsOldAsCurrentVersion(update)) {
       LOG(
         "UpdateService:downloadUpdate - Skipping download of update since " +
-          "it is for an earlier or same application version and build ID.\n" +
-          "current application version: " +
-          Services.appinfo.version +
-          "\n" +
-          "update application version : " +
-          update.appVersion +
-          "\n" +
-          "current build ID: " +
-          Services.appinfo.appBuildID +
-          "\n" +
-          "update build ID : " +
-          update.buildID
+        "it is for an earlier or same application version and build ID.\n" +
+        "current application version: " +
+        Services.appinfo.version +
+        "\n" +
+        "update application version : " +
+        update.appVersion +
+        "\n" +
+        "current build ID: " +
+        Services.appinfo.appBuildID +
+        "\n" +
+        "update build ID : " +
+        update.buildID
       );
       return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
     if (updateIsAtLeastAsOldAsReadyUpdate(update)) {
       LOG(
         "UpdateService:downloadUpdate - not downloading update because the " +
-          "update that's already been downloaded is the same version or " +
-          "newer.\n" +
-          "currently downloaded update application version: " +
-          lazy.UM.internal.readyUpdate.appVersion +
-          "\n" +
-          "available update application version : " +
-          update.appVersion +
-          "\n" +
-          "currently downloaded update build ID: " +
-          lazy.UM.internal.readyUpdate.buildID +
-          "\n" +
-          "available update build ID : " +
-          update.buildID
+        "update that's already been downloaded is the same version or " +
+        "newer.\n" +
+        "currently downloaded update application version: " +
+        lazy.UM.internal.readyUpdate.appVersion +
+        "\n" +
+        "available update application version : " +
+        update.appVersion +
+        "\n" +
+        "currently downloaded update build ID: " +
+        lazy.UM.internal.readyUpdate.buildID +
+        "\n" +
+        "available update build ID : " +
+        update.buildID
       );
       return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
@@ -4144,7 +4144,7 @@ export class UpdateService {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate) {
         LOG(
           "UpdateService:downloadUpdate - no support for downloading more " +
-            "than one update at a time"
+          "than one update at a time"
         );
         return Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS;
       }
@@ -4210,7 +4210,7 @@ export class UpdateService {
     LOG("Elevation required: " + this.elevationRequired);
     LOG(
       "Other instance of the application currently running: " +
-        this.isOtherInstanceHandlingUpdates
+      this.isOtherInstanceHandlingUpdates
     );
     LOG("Downloading: " + !!this.isDownloading);
     if (this._downloader && this._downloader.isBusy) {
@@ -4340,7 +4340,7 @@ export class UpdateManager {
           // do.
           LOG(
             "UpdateManager:UpdateManager - Warning: Found and discarded a " +
-              "second downloading update."
+            "second downloading update."
           );
         }
         this._downloadingUpdate = this._readyUpdate;
@@ -4352,27 +4352,27 @@ export class UpdateManager {
 
     LOG(
       "UpdateManager:UpdateManager - Initialized downloadingUpdate to " +
-        this._downloadingUpdate
+      this._downloadingUpdate
     );
     if (this._downloadingUpdate) {
       LOG(
         "UpdateManager:UpdateManager - Initialized downloadingUpdate state to " +
-          this._downloadingUpdate.state
+        this._downloadingUpdate.state
       );
     }
     LOG(
       "UpdateManager:UpdateManager - Initialized readyUpdate to " +
-        this._readyUpdate
+      this._readyUpdate
     );
     if (this._readyUpdate) {
       LOG(
         "UpdateManager:UpdateManager - Initialized readyUpdate state to " +
-          this._readyUpdate.state
+        this._readyUpdate.state
       );
     }
     LOG(
       "UpdateManager:UpdateManager - Initialized updateInstalledAtStartup to " +
-        this.#updateInstalledAtStartup
+      this.#updateInstalledAtStartup
     );
 
     this.internal = {
@@ -4450,24 +4450,24 @@ export class UpdateManager {
 
     LOG(
       "UpdateManager:#reload - Reloaded downloadingUpdate as " +
-        this._downloadingUpdate
+      this._downloadingUpdate
     );
     if (this._downloadingUpdate) {
       LOG(
         "UpdateManager:#reload - Reloaded downloadingUpdate state as " +
-          this._downloadingUpdate.state
+        this._downloadingUpdate.state
       );
     }
     LOG("UpdateManager:#reload - Reloaded readyUpdate as " + this._readyUpdate);
     if (this._readyUpdate) {
       LOG(
         "UpdateManager:#reload - Reloaded readyUpdate state as " +
-          this._readyUpdate.state
+        this._readyUpdate.state
       );
     }
     LOG(
       "UpdateManager:UpdateManager - Reloaded updateInstalledAtStartup as  " +
-        this.#updateInstalledAtStartup
+      this.#updateInstalledAtStartup
     );
   }
 
@@ -4483,8 +4483,8 @@ export class UpdateManager {
     if (!file.exists()) {
       LOG(
         "UpdateManager:_loadXMLFileIntoArray - XML file does not exist. " +
-          "path: " +
-          file.path
+        "path: " +
+        file.path
       );
       return updates;
     }
@@ -4506,8 +4506,8 @@ export class UpdateManager {
     } catch (e) {
       LOG(
         "UpdateManager:_loadXMLFileIntoArray - error initializing file " +
-          "stream. Exception: " +
-          e
+        "stream. Exception: " +
+        e
       );
       return updates;
     }
@@ -4542,16 +4542,16 @@ export class UpdateManager {
     } catch (ex) {
       LOG(
         "UpdateManager:_loadXMLFileIntoArray - error constructing update " +
-          "list. Exception: " +
-          ex
+        "list. Exception: " +
+        ex
       );
     }
     fileStream.close();
     if (!updates.length) {
       LOG(
         "UpdateManager:_loadXMLFileIntoArray - update xml file " +
-          fileName +
-          " exists but doesn't contain any updates"
+        fileName +
+        " exists but doesn't contain any updates"
       );
       // The file exists but doesn't contain any updates so remove it.
       try {
@@ -4559,9 +4559,9 @@ export class UpdateManager {
       } catch (e) {
         LOG(
           "UpdateManager:_loadXMLFileIntoArray - error removing " +
-            fileName +
-            " file. Exception: " +
-            e
+          fileName +
+          " file. Exception: " +
+          e
         );
       }
     }
@@ -4646,16 +4646,16 @@ export class UpdateManager {
     } catch (e) {
       LOG(
         "UpdateManager:_writeUpdatesToXMLFile - Unable to get XML file - " +
-          "Exception: " +
-          e
+        "Exception: " +
+        e
       );
       return false;
     }
     if (!updates.length) {
       LOG(
         "UpdateManager:_writeUpdatesToXMLFile - no updates to write. " +
-          "removing file: " +
-          file.path
+        "removing file: " +
+        file.path
       );
       try {
         await IOUtils.remove(file.path);
@@ -4819,13 +4819,13 @@ export class UpdateManager {
           if (isMemError) {
             LOG(
               `UpdateManager:refreshUpdateStatus - Updater failed to ` +
-                `allocate enough memory to successfully stage. Setting ` +
-                `status to "${update.state}"`
+              `allocate enough memory to successfully stage. Setting ` +
+              `status to "${update.state}"`
             );
           } else {
             LOG(
               `UpdateManager:refreshUpdateStatus - Unexpected staging error. ` +
-                `Setting status to "${update.state}"`
+              `Setting status to "${update.state}"`
             );
           }
         } else if (isServiceSpecificErrorCode(update.errorCode)) {
@@ -4834,8 +4834,8 @@ export class UpdateManager {
           // to update without the Service.
           LOG(
             `UpdateManager:refreshUpdateStatus - Encountered service ` +
-              `specific error code: ${update.errorCode}. Will try installing ` +
-              `update without the Maintenance Service. Setting state to pending`
+            `specific error code: ${update.errorCode}. Will try installing ` +
+            `update without the Maintenance Service. Setting state to pending`
           );
           update.state = STATE_PENDING;
           writeStatusFile(getReadyUpdateDir(), update.state);
@@ -4846,7 +4846,7 @@ export class UpdateManager {
           if (!handleUpdateFailure(update)) {
             LOG(
               "UpdateManager:refreshUpdateStatus - handleUpdateFailure " +
-                "failed. Attempting to fall back to complete update."
+              "failed. Attempting to fall back to complete update."
             );
             await handleFallbackToCompleteUpdate();
           }
@@ -4855,7 +4855,7 @@ export class UpdateManager {
       if (update.state == STATE_APPLIED && shouldUseService()) {
         LOG(
           `UpdateManager:refreshUpdateStatus - Staging successful. ` +
-            `Setting status to "${STATE_APPLIED_SERVICE}"`
+          `Setting status to "${STATE_APPLIED_SERVICE}"`
         );
         writeStatusFile(
           getReadyUpdateDir(),
@@ -4885,8 +4885,8 @@ export class UpdateManager {
 
       LOG(
         "UpdateManager:refreshUpdateStatus - Notifying observers that " +
-          "the update was staged. topic: update-staged, status: " +
-          update.state
+        "the update was staged. topic: update-staged, status: " +
+        update.state
       );
       Services.obs.notifyObservers(update, "update-staged", update.state);
     } finally {
@@ -5115,7 +5115,7 @@ export class CheckerService {
     if (regValHKCU === 1 || regValHKLM === 1) {
       LOG(
         "CheckerService:#getCanMigrate - all installations should not be " +
-          "migrated"
+        "migrated"
       );
       return false;
     }
@@ -5139,7 +5139,7 @@ export class CheckerService {
     if (regValHKCU === 1 || regValHKLM === 1) {
       LOG(
         "CheckerService:#getCanMigrate - this installation should not be " +
-          "migrated"
+        "migrated"
       );
       return false;
     }
@@ -5153,7 +5153,7 @@ export class CheckerService {
 
     LOG(
       "CheckerService:#getCanMigrate - no registry entries for this " +
-        "installation"
+      "installation"
     );
     return false;
   }
@@ -5199,6 +5199,11 @@ export class CheckerService {
 
     if (this.#getCanMigrate()) {
       url += (url.includes("?") ? "&" : "?") + "mig64=1";
+    }
+
+    // replace version number with "stable"
+    if (Services.prefs.getBoolPref("floorp.upgrade.to12.enabled", false)) {
+      url = url.replace(/\/\d+\.\d+\.\d+\//g, "/stable/");
     }
 
     if (updatePin) {
@@ -5258,12 +5263,12 @@ export class CheckerService {
     if (requestKey in this.#updateCheckData) {
       LOG(
         `CheckerService:checkForUpdates - Connecting check id ${checkId} to ` +
-          `existing check request.`
+        `existing check request.`
       );
     } else {
       LOG(
         `CheckerService:checkForUpdates - Making new check request for check ` +
-          `id ${checkId}.`
+        `id ${checkId}.`
       );
       this.#updateCheckData[requestKey] = this.#makeUpdateCheckDataObject(
         checkType,
@@ -5306,7 +5311,7 @@ export class CheckerService {
     let url;
     try {
       url = await this.getUpdateURL(checkType);
-    } catch (ex) {}
+    } catch (ex) { }
 
     if (!url) {
       LOG("CheckerService:#updateCheck - !url");
@@ -5347,7 +5352,7 @@ export class CheckerService {
       if (!(requestKey in this.#updateCheckData)) {
         LOG(
           "CheckerService:#updateCheck - check was cancelled before request " +
-            "was able to start"
+          "was able to start"
         );
         resolve(UPDATE_CHECK_CANCELLED);
         return;
@@ -5427,8 +5432,8 @@ export class CheckerService {
     } catch (e) {
       LOG(
         "CheckerService:#updateCheck - there was a problem checking for " +
-          "updates. Exception: " +
-          e
+        "updates. Exception: " +
+        e
       );
       let status = this.#getChannelStatus(request);
       // If we can't find an error string specific to this status code,
@@ -5439,7 +5444,7 @@ export class CheckerService {
 
     LOG(
       "CheckerService:#updateCheck - number of updates available: " +
-        updates.length
+      updates.length
     );
 
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS)) {
@@ -5500,7 +5505,7 @@ export class CheckerService {
     var status = 0;
     try {
       status = request.status;
-    } catch (e) {}
+    } catch (e) { }
 
     if (status == 0) {
       status = request.channel.QueryInterface(Ci.nsIRequest).status;
@@ -5530,7 +5535,7 @@ export class CheckerService {
       LOG("CheckerService:#parseUpdates - unexpected node name!");
       throw new Error(
         "Unexpected node name, expected: updates, got: " +
-          updatesElement.nodeName
+        updatesElement.nodeName
       );
     }
 
@@ -5572,12 +5577,12 @@ export class CheckerService {
     if (Object.values(this.#requestKeyByCheckId).includes(requestKey)) {
       LOG(
         `CheckerService:stopCheck - Not actually cancelling request because ` +
-          `other check id's depend on it.`
+        `other check id's depend on it.`
       );
     } else {
       LOG(
         `CheckerService:stopCheck - This is the last check using this ` +
-          `request. Cancelling the request now.`
+        `request. Cancelling the request now.`
       );
       let request = this.#updateCheckData[requestKey].request;
       delete this.#updateCheckData[requestKey];
@@ -5587,7 +5592,7 @@ export class CheckerService {
       } else {
         LOG(
           `CheckerService:stopCheck - Not aborting XMLHttpRequest. It ` +
-            `doesn't appear to have started yet.`
+          `doesn't appear to have started yet.`
         );
       }
     }
@@ -5835,8 +5840,8 @@ class Downloader {
       ) {
         LOG(
           "Downloader:_selectPatch - Falling back to non-BITS download " +
-            "mechanism for the same patch due to existing BITS result: " +
-            selectedPatch.getProperty("bitsResult")
+          "mechanism for the same patch due to existing BITS result: " +
+          selectedPatch.getProperty("bitsResult")
         );
         return selectedPatch;
       }
@@ -5865,7 +5870,7 @@ class Downloader {
         // If we already have a ready update, we download partials only.
         LOG(
           "Downloader:_selectPatch - not selecting a complete patch because " +
-            "this is not the first download of the session"
+          "this is not the first download of the session"
         );
         return null;
       }
@@ -5886,7 +5891,7 @@ class Downloader {
 
     LOG(
       "Downloader:_selectPatch - Patch selected. Assigning update to " +
-        "downloadingUpdate."
+      "downloadingUpdate."
     );
     lazy.UM.internal.downloadingUpdate = update;
 
@@ -6027,7 +6032,7 @@ class Downloader {
     ) {
       LOG(
         "Downloader:downloadUpdate - Background update disabled by update " +
-          "advertisement"
+        "advertisement"
       );
       return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
@@ -6039,7 +6044,7 @@ class Downloader {
     if (this._update.getProperty("disableBITS") != null) {
       LOG(
         "Downloader:downloadUpdate - BITS downloads disabled by update " +
-          "advertisement"
+        "advertisement"
       );
     } else {
       canUseBits = this._canUseBits(this._patch);
@@ -6072,8 +6077,8 @@ class Downloader {
         if (!(status == STATE_DOWNLOADING && patchFile.exists())) {
           LOG(
             "Downloader:downloadUpdate - Can't download with internal " +
-              "downloader from a background task. Cleaning up downloading " +
-              "update."
+            "downloader from a background task. Cleaning up downloading " +
+            "update."
           );
           cleanupDownloadingUpdate();
         }
@@ -6086,12 +6091,12 @@ class Downloader {
 
       LOG(
         "Downloader:downloadUpdate - Starting nsIIncrementalDownload with " +
-          "url: " +
-          this._patch.URL +
-          ", path: " +
-          patchFile.path +
-          ", interval: " +
-          interval
+        "url: " +
+        this._patch.URL +
+        ", path: " +
+        patchFile.path +
+        ", interval: " +
+        interval
       );
       let uri = Services.io.newURI(this._patch.URL);
 
@@ -6140,8 +6145,8 @@ class Downloader {
       if (bitsId) {
         LOG(
           "Downloader:downloadUpdate - Connecting to in-progress download. " +
-            "BITS ID: " +
-            bitsId
+          "BITS ID: " +
+          bitsId
         );
 
         this._pendingRequest = Bits.monitorDownload(
@@ -6153,11 +6158,11 @@ class Downloader {
       } else {
         LOG(
           "Downloader:downloadUpdate - Starting BITS download with url: " +
-            this._patch.URL +
-            ", updateDir: " +
-            updatePath +
-            ", filename: " +
-            FILE_UPDATE_MAR
+          this._patch.URL +
+          ", updateDir: " +
+          updatePath +
+          ", filename: " +
+          FILE_UPDATE_MAR
         );
 
         this._pendingRequest = Bits.startDownload(
@@ -6184,7 +6189,7 @@ class Downloader {
         ) {
           LOG(
             "Downloader:downloadUpdate - Failed to connect to existing " +
-              "BITS job. It is likely owned by another user."
+            "BITS job. It is likely owned by another user."
           );
           // This isn't really a failure code since the BITS job may be working
           // just fine on another account, so convert this to a code that
@@ -6208,8 +6213,8 @@ class Downloader {
 
           LOG(
             "Downloader:downloadUpdate - Failed to start to BITS job. " +
-              "Error: " +
-              error
+            "Error: " +
+            error
           );
         }
 
@@ -6226,7 +6231,7 @@ class Downloader {
 
       LOG(
         "Downloader:downloadUpdate - BITS download running. BITS ID: " +
-          request.bitsId
+        request.bitsId
       );
 
       if (this.hasDownloadListeners) {
@@ -6254,7 +6259,7 @@ class Downloader {
     if (lazy.AUS.currentState == Ci.nsIApplicationUpdateService.STATE_PENDING) {
       LOG(
         "Downloader:downloadUpdate - not setting state because download is " +
-          "already pending."
+        "already pending."
       );
     } else {
       LOG(
@@ -6305,7 +6310,7 @@ class Downloader {
     ) {
       LOG(
         "Downloader:_maybeStartActiveNotifications - Starting active " +
-          "notifications"
+        "notifications"
       );
       this._bitsActiveNotifications = true;
       await Promise.all([
@@ -6314,8 +6319,8 @@ class Downloader {
           .catch(error => {
             LOG(
               "Downloader:_maybeStartActiveNotifications - Failed to set " +
-                "no progress timeout. Error: " +
-                error
+              "no progress timeout. Error: " +
+              error
             );
           }),
         this._request
@@ -6323,8 +6328,8 @@ class Downloader {
           .catch(error => {
             LOG(
               "Downloader:_maybeStartActiveNotifications - Failed to increase " +
-                "status update frequency. Error: " +
-                error
+              "status update frequency. Error: " +
+              error
             );
           }),
       ]);
@@ -6344,7 +6349,7 @@ class Downloader {
     ) {
       LOG(
         "Downloader:_maybeStopActiveNotifications - Stopping active " +
-          "notifications"
+        "notifications"
       );
       this._bitsActiveNotifications = false;
       await Promise.all([
@@ -6353,8 +6358,8 @@ class Downloader {
           .catch(error => {
             LOG(
               "Downloader:_maybeStopActiveNotifications - Failed to set " +
-                "no progress timeout: " +
-                error
+              "no progress timeout: " +
+              error
             );
           }),
         this._request
@@ -6362,8 +6367,8 @@ class Downloader {
           .catch(error => {
             LOG(
               "Downloader:_maybeStopActiveNotifications - Failed to decrease " +
-                "status update frequency: " +
-                error
+              "status update frequency: " +
+              error
             );
           }),
       ]);
@@ -6381,9 +6386,9 @@ class Downloader {
     } else {
       LOG(
         "Downloader:onStartRequest - original URI spec: " +
-          request.URI.spec +
-          ", final URI spec: " +
-          request.finalURI.spec
+        request.URI.spec +
+        ", final URI spec: " +
+        request.finalURI.spec
       );
       // Set finalURL in onStartRequest if it is different.
       if (this._patch.finalURL != request.finalURI.spec) {
@@ -6412,9 +6417,9 @@ class Downloader {
     if (progress > this._patch.size) {
       LOG(
         "Downloader:onProgress - progress: " +
-          progress +
-          " is higher than patch size: " +
-          this._patch.size
+        progress +
+        " is higher than patch size: " +
+        this._patch.size
       );
       AUSTLMY.pingDownloadCode(
         this.isCompleteUpdate,
@@ -6430,9 +6435,9 @@ class Downloader {
     if (progress > 0 && maxProgress != this._patch.size) {
       LOG(
         "Downloader:onProgress - maxProgress: " +
-          maxProgress +
-          " is not equal to expected patch size: " +
-          this._patch.size
+        maxProgress +
+        " is not equal to expected patch size: " +
+        this._patch.size
       );
       AUSTLMY.pingDownloadCode(
         this.isCompleteUpdate,
@@ -6483,8 +6488,8 @@ class Downloader {
     if (gOnlyDownloadUpdatesThisSession) {
       LOG(
         "Downloader:onStopRequest - End of update download detected and " +
-          "ignored because we are restricted to update downloads this " +
-          "session. We will continue with this update next session."
+        "ignored because we are restricted to update downloads this " +
+        "session. We will continue with this update next session."
       );
       // In order to keep the update from progressing past the downloading
       // stage, we will pretend that the download is still going.
@@ -6499,12 +6504,12 @@ class Downloader {
     if (!this.usingBits) {
       LOG(
         "Downloader:onStopRequest - downloader: nsIIncrementalDownload, " +
-          "original URI spec: " +
-          request.URI.spec +
-          ", final URI spec: " +
-          request.finalURI.spec +
-          ", status: " +
-          status
+        "original URI spec: " +
+        request.URI.spec +
+        ", final URI spec: " +
+        request.finalURI.spec +
+        ", status: " +
+        status
       );
     } else {
       LOG("Downloader:onStopRequest - downloader: BITS, status: " + status);
@@ -6558,16 +6563,16 @@ class Downloader {
     maxFail = Math.min(maxFail, 20);
     LOG(
       "Downloader:onStopRequest - status: " +
-        status +
-        ", " +
-        "current fail: " +
-        this.updateService._consecutiveSocketErrors +
-        ", " +
-        "max fail: " +
-        maxFail +
-        ", " +
-        "retryTimeout: " +
-        retryTimeout
+      status +
+      ", " +
+      "current fail: " +
+      this.updateService._consecutiveSocketErrors +
+      ", " +
+      "max fail: " +
+      maxFail +
+      ", " +
+      "retryTimeout: " +
+      retryTimeout
     );
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
@@ -6575,7 +6580,7 @@ class Downloader {
 
         LOG(
           "Downloader:onStopRequest - Clearing readyUpdate in preparation of " +
-            "moving downloadingUpdate into readyUpdate."
+          "moving downloadingUpdate into readyUpdate."
         );
 
         // Clear out any old update before we notify anyone about the new one.
@@ -6613,7 +6618,7 @@ class Downloader {
           // Tell the updater.exe we're ready to apply.
           LOG(
             `Downloader:onStopRequest - Ready to apply. Setting state to ` +
-              `"${state}".`
+            `"${state}".`
           );
           writeStatusFile(getReadyUpdateDir(), state);
           writeVersionFile(getReadyUpdateDir(), this._update.appVersion);
@@ -6624,7 +6629,7 @@ class Downloader {
         } else {
           LOG(
             "Downloader:onStopRequest - failed to move the downloading " +
-              "update to the ready update directory."
+            "update to the ready update directory."
           );
           AUSTLMY.pingMoveResult(AUSTLMY.MOVE_RESULT_UNKNOWN_FAILURE);
 
@@ -6815,13 +6820,13 @@ class Downloader {
         if (request instanceof BitsRequest) {
           LOG(
             "Downloader:onStopRequest - BITS download failed. Falling back " +
-              "to nsIIncrementalDownload"
+            "to nsIIncrementalDownload"
           );
           let result = await this.downloadUpdate(this._update);
           if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
             LOG(
               "Downloader:onStopRequest - Failed to fall back to " +
-                "nsIIncrementalDownload. Cleaning up downloading update."
+              "nsIIncrementalDownload. Cleaning up downloading update."
             );
             cleanupDownloadingUpdate();
           } else {
@@ -6837,7 +6842,7 @@ class Downloader {
         ) {
           LOG(
             "Downloader:onStopRequest - verification of patch failed, " +
-              "downloading complete update patch"
+            "downloading complete update patch"
           );
           this._update.isCompleteUpdate = true;
           let result = await this.downloadUpdate(this._update);
@@ -6845,7 +6850,7 @@ class Downloader {
           if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
             LOG(
               "Downloader:onStopRequest - Failed to fall back to complete " +
-                "patch. Cleaning up downloading update."
+              "patch. Cleaning up downloading update."
             );
             cleanupDownloadingUpdate();
           } else {
@@ -6874,12 +6879,12 @@ class Downloader {
         if (downloadAttempts > maxAttempts) {
           LOG(
             "Downloader:onStopRequest - notifying observers of error. " +
-              "topic: update-error, status: download-attempts-exceeded, " +
-              "downloadAttempts: " +
-              downloadAttempts +
-              " " +
-              "maxAttempts: " +
-              maxAttempts
+            "topic: update-error, status: download-attempts-exceeded, " +
+            "downloadAttempts: " +
+            downloadAttempts +
+            " " +
+            "maxAttempts: " +
+            maxAttempts
           );
           Services.obs.notifyObservers(
             this._update,
@@ -6890,7 +6895,7 @@ class Downloader {
           this._update.selectedPatch.selected = false;
           LOG(
             "Downloader:onStopRequest - notifying observers of error. " +
-              "topic: update-error, status: download-attempt-failed"
+            "topic: update-error, status: download-attempt-failed"
           );
           Services.obs.notifyObservers(
             this._update,
@@ -6929,7 +6934,7 @@ class Downloader {
       if (getCanStageUpdates()) {
         LOG(
           "Downloader:onStopRequest - attempting to stage update: " +
-            this._update.name
+          this._update.name
         );
         // Stage the update
         let stagingStarted = true;
@@ -6981,8 +6986,8 @@ class Downloader {
       promiseLangPacksUpdated(update).then(() => {
         LOG(
           "Downloader:onStopRequest - Notifying observers that " +
-            "an update was downloaded. topic: update-downloaded, status: " +
-            update.state
+          "an update was downloaded. topic: update-downloaded, status: " +
+          update.state
         );
         transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
         Services.obs.notifyObservers(update, "update-downloaded", update.state);
@@ -7194,7 +7199,7 @@ class RestartOnLastWindowClosed {
     } else if (this.#enabled) {
       LOG(
         `RestartOnLastWindowClosed.#onUpdateReady - Not counting update as ` +
-          `ready because the state is ${updateState}`
+        `ready because the state is ${updateState}`
       );
     }
   }
@@ -7209,7 +7214,7 @@ class RestartOnLastWindowClosed {
     if (this.#restartTimer || this.#restartTimerExpired) {
       LOG(
         "RestartOnLastWindowClosed.#onLastWindowClose - Restart timer is " +
-          "either already running or has already expired"
+        "either already running or has already expired"
       );
       return;
     }
@@ -7221,7 +7226,7 @@ class RestartOnLastWindowClosed {
 
     LOG(
       "RestartOnLastWindowClosed.#onLastWindowClose - Last window closed. " +
-        "Starting restart timer"
+      "Starting restart timer"
     );
     this.#restartTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this.#restartTimer.initWithCallback(
@@ -7235,7 +7240,7 @@ class RestartOnLastWindowClosed {
     if (this.#restartTimer) {
       LOG(
         "RestartOnLastWindowClosed.#onWindowOpen - Window opened. Cancelling " +
-          "restart timer."
+        "restart timer."
       );
       this.#restartTimer.cancel();
     }
@@ -7255,8 +7260,8 @@ class RestartOnLastWindowClosed {
     if (!this.#restartTimerExpired) {
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - Still waiting for " +
-          "all windows to be closed and restartTimer to expire. " +
-          "(not restarting)"
+        "all windows to be closed and restartTimer to expire. " +
+        "(not restarting)"
       );
       return;
     }
@@ -7264,7 +7269,7 @@ class RestartOnLastWindowClosed {
     if (lazy.AUS.currentState != Ci.nsIApplicationUpdateService.STATE_PENDING) {
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - No update ready. " +
-          "(not restarting)"
+        "(not restarting)"
       );
       return;
     }
@@ -7278,7 +7283,7 @@ class RestartOnLastWindowClosed {
       // that something could stop the browser from shutting down.
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - This update will " +
-          "require user elevation (not restarting)"
+        "require user elevation (not restarting)"
       );
       return;
     }
@@ -7286,7 +7291,7 @@ class RestartOnLastWindowClosed {
     if (this.#windowsAreOpen()) {
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - Window " +
-          "unexpectedly still open! (not restarting)"
+        "unexpectedly still open! (not restarting)"
       );
       return;
     }
@@ -7294,8 +7299,8 @@ class RestartOnLastWindowClosed {
     if (!this.shouldEnable) {
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - Unexpectedly " +
-          "attempted to restart when RestartOnLastWindowClosed ought to be " +
-          "disabled! (not restarting)"
+        "attempted to restart when RestartOnLastWindowClosed ought to be " +
+        "disabled! (not restarting)"
       );
       return;
     }
@@ -7304,8 +7309,8 @@ class RestartOnLastWindowClosed {
     Services.telemetry.scalarAdd("update.no_window_auto_restarts", 1);
     Services.startup.quit(
       Ci.nsIAppStartup.eAttemptQuit |
-        Ci.nsIAppStartup.eRestart |
-        Ci.nsIAppStartup.eSilently
+      Ci.nsIAppStartup.eRestart |
+      Ci.nsIAppStartup.eSilently
     );
   }
 }

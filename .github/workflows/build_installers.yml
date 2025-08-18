@@ -1,0 +1,13 @@
+name: "12 (A) 📦️ Build Installers"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+
+    steps:
+     - name: error
+       run: |
+         exit 1
