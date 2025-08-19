@@ -25,15 +25,52 @@ declare global {
 
 async function getTopSites(): Promise<TopSite[]> {
   try {
+    console.log("🔍 [TopSites Debug] Starting to get top sites...");
+    const nrFunction = (globalThis as unknown as Window).NRGetCurrentTopSites;
+    console.log(
+      "🔍 [TopSites Debug] NRGetCurrentTopSites function exists:",
+      !!nrFunction,
+    );
+    console.log(
+      "🔍 [TopSites Debug] NRGetCurrentTopSites type:",
+      typeof nrFunction,
+    );
+
     const parsed = await callNRWithRetry<{ topsites?: TopSite[] | undefined }>(
       (cb) => (globalThis as unknown as Window).NRGetCurrentTopSites(cb),
-      (sites) => JSON.parse(sites),
+      (sites) => {
+        console.log("🔍 [TopSites Debug] Raw sites data received:", sites);
+        try {
+          const parsed = JSON.parse(sites);
+          console.log("🔍 [TopSites Debug] Parsed sites data:", parsed);
+          return parsed;
+        } catch (e) {
+          console.error("🔍 [TopSites Debug] Failed to parse sites data:", e);
+          throw e;
+        }
+      },
       {
         retries: 3,
         timeoutMs: 1200,
         delayMs: 300,
-        shouldRetry: (res) => !res || !Array.isArray(res.topsites),
+        shouldRetry: (res) => {
+          const shouldRetry = !res || !Array.isArray(res.topsites);
+          console.log(
+            "🔍 [TopSites Debug] Should retry:",
+            shouldRetry,
+            "Response:",
+            res,
+          );
+          return shouldRetry;
+        },
       },
+    );
+
+    console.log("🔍 [TopSites Debug] Final parsed data:", parsed);
+    console.log("🔍 [TopSites Debug] Topsites array:", parsed.topsites);
+    console.log(
+      "🔍 [TopSites Debug] Topsites length:",
+      parsed.topsites?.length ?? 0,
     );
 
     const list = (parsed.topsites ?? []).map((site: TopSite) => ({
@@ -41,9 +78,16 @@ async function getTopSites(): Promise<TopSite[]> {
       title: site.title || site.label || site.url,
       smallFavicon: site.smallFavicon || "",
     }));
+
+    console.log("🔍 [TopSites Debug] Processed sites list:", list);
+    console.log("🔍 [TopSites Debug] Processed sites count:", list.length);
+
     return list;
   } catch (e) {
-    console.error("Failed to get top sites after retries:", e);
+    console.error(
+      "🔍 [TopSites Debug] Failed to get top sites after retries:",
+      e,
+    );
     return [];
   }
 }
@@ -101,24 +145,146 @@ export function TopSites() {
     null,
   );
 
+  // デバッグ用：状態の変化を監視
+  useEffect(() => {
+    console.log("🔍 [TopSites Debug] Sites state updated:", sites);
+    console.log("🔍 [TopSites Debug] Sites count:", sites.length);
+  }, [sites]);
+
+  useEffect(() => {
+    console.log("🔍 [TopSites Debug] Pinned sites state updated:", pinnedSites);
+    console.log("🔍 [TopSites Debug] Pinned sites count:", pinnedSites.length);
+  }, [pinnedSites]);
+
+  useEffect(() => {
+    console.log(
+      "🔍 [TopSites Debug] Blocked sites state updated:",
+      blockedSites,
+    );
+    console.log(
+      "🔍 [TopSites Debug] Blocked sites count:",
+      blockedSites.length,
+    );
+  }, [blockedSites]);
+
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const loadSettings = async () => {
+    console.log("🔍 [TopSites Debug] Loading settings...");
+
     const settings = await getNewTabSettings();
+    console.log("🔍 [TopSites Debug] Settings loaded:", settings);
+    console.log("🔍 [TopSites Debug] Pinned sites:", settings.topSites.pinned);
+    console.log(
+      "🔍 [TopSites Debug] Blocked sites:",
+      settings.topSites.blocked,
+    );
+
     setPinnedSites(settings.topSites.pinned);
     setBlockedSites(settings.topSites.blocked);
 
     const topSites = await getTopSites();
+    console.log("🔍 [TopSites Debug] Top sites before filtering:", topSites);
+
     const filteredSites = topSites.filter(
-      (site) =>
-        !settings.topSites.blocked.includes(site.url) &&
-        !settings.topSites.pinned.some((p) => p.url === site.url),
+      (site) => {
+        const isBlocked = settings.topSites.blocked.includes(site.url);
+        const isPinned = settings.topSites.pinned.some((p) =>
+          p.url === site.url
+        );
+        const shouldInclude = !isBlocked && !isPinned;
+
+        console.log(
+          `🔍 [TopSites Debug] Site "${site.title}" (${site.url}): blocked=${isBlocked}, pinned=${isPinned}, include=${shouldInclude}`,
+        );
+
+        return shouldInclude;
+      },
     );
+
+    console.log("🔍 [TopSites Debug] Filtered sites:", filteredSites);
+    console.log(
+      "🔍 [TopSites Debug] Final site count (regular):",
+      filteredSites.length,
+    );
+    console.log(
+      "🔍 [TopSites Debug] Final site count (pinned):",
+      settings.topSites.pinned.length,
+    );
+    console.log(
+      "🔍 [TopSites Debug] Total visible sites:",
+      filteredSites.length + settings.topSites.pinned.length,
+    );
+
     setSites(filteredSites);
   };
 
   useEffect(() => {
     loadSettings();
+
+    // デバッグツールをwindowオブジェクトに追加
+    interface DebugTools {
+      testNRFunction: () => void;
+      reloadSettings: () => void;
+      getCurrentState: () => void;
+      globalThis: typeof globalThis;
+      window: typeof window;
+    }
+
+    (window as typeof window & { debugTopSites: DebugTools }).debugTopSites = {
+      testNRFunction: () => {
+        console.log("🔍 [Debug Tool] Testing NRGetCurrentTopSites function...");
+        const nrFunction =
+          (globalThis as unknown as Window).NRGetCurrentTopSites;
+        console.log("🔍 [Debug Tool] Function exists:", !!nrFunction);
+        console.log("🔍 [Debug Tool] Function type:", typeof nrFunction);
+
+        if (nrFunction) {
+          try {
+            nrFunction((data) => {
+              console.log("🔍 [Debug Tool] Raw callback data:", data);
+              try {
+                const parsed = JSON.parse(data);
+                console.log("🔍 [Debug Tool] Parsed data:", parsed);
+              } catch (e) {
+                console.error("🔍 [Debug Tool] Parse error:", e);
+              }
+            });
+          } catch (e) {
+            console.error("🔍 [Debug Tool] Function call error:", e);
+          }
+        } else {
+          console.error(
+            "🔍 [Debug Tool] NRGetCurrentTopSites function not found!",
+          );
+        }
+      },
+      reloadSettings: () => {
+        console.log("🔍 [Debug Tool] Reloading settings...");
+        loadSettings();
+      },
+      getCurrentState: () => {
+        console.log("🔍 [Debug Tool] Current state:");
+        console.log("  - Sites:", sites);
+        console.log("  - Pinned Sites:", pinnedSites);
+        console.log("  - Blocked Sites:", blockedSites);
+      },
+      globalThis: globalThis,
+      window: window,
+    };
+
+    console.log(
+      "🔍 [Debug Tool] Debug tools available via window.debugTopSites",
+    );
+    console.log(
+      "🔍 [Debug Tool] Use: window.debugTopSites.testNRFunction() to test data retrieval",
+    );
+    console.log(
+      "🔍 [Debug Tool] Use: window.debugTopSites.reloadSettings() to reload settings",
+    );
+    console.log(
+      "🔍 [Debug Tool] Use: window.debugTopSites.getCurrentState() to view current state",
+    );
   }, []);
 
   useEffect(() => {
@@ -191,6 +357,19 @@ export function TopSites() {
     return pinnedSites.some((p) => p.url === site.url);
   };
 
+  // レンダリング前のデバッグ情報
+  console.log("🔍 [TopSites Debug] Rendering TopSites component");
+  console.log("🔍 [TopSites Debug] Render state - Sites:", sites.length, sites);
+  console.log(
+    "🔍 [TopSites Debug] Render state - Pinned sites:",
+    pinnedSites.length,
+    pinnedSites,
+  );
+  console.log(
+    "🔍 [TopSites Debug] Render state - Total sites to render:",
+    pinnedSites.length + sites.length,
+  );
+
   return (
     <>
       {siteToBlock && (
@@ -202,6 +381,14 @@ export function TopSites() {
       )}
       <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
         <div className="flex flex-wrap gap-x-0.5">
+          {/* Debug: Rendering pinned sites */}
+          {(() => {
+            console.log(
+              "🔍 [TopSites Debug] Rendering pinned sites:",
+              pinnedSites.length,
+            );
+            return null;
+          })()}
           {pinnedSites.map((site) => (
             <a
               key={site.url}
@@ -228,6 +415,14 @@ export function TopSites() {
               </span>
             </a>
           ))}
+          {/* Debug: Rendering regular sites */}
+          {(() => {
+            console.log(
+              "🔍 [TopSites Debug] Rendering regular sites:",
+              sites.length,
+            );
+            return null;
+          })()}
           {sites.map((site) => (
             <a
               key={site.url}

@@ -334,6 +334,5 @@ jobs:
               "mac-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/mac-meta.json",
               "firefox-version": "${{ env.VERSION }}",
               "app-version2": "${{ env.NR_VERSION }}",
-              "release-note-url": "https://blog.floorp.app/release/${{ env.NR_VERSION }}"
             }
           }'

@@ -14,13 +14,46 @@ function NewTabContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { components } = useComponents();
 
+  // コンポーネント設定のデバッグ
+  console.log("🔍 [App Debug] Components configuration:", components);
+  console.log("🔍 [App Debug] TopSites enabled:", components.topSites);
+  console.log("🔍 [App Debug] Clock enabled:", components.clock);
+  console.log("🔍 [App Debug] SearchBar enabled:", components.searchBar);
+
   return (
     <>
       <Background />
       <div className="relative w-full min-h-screen">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 w-full">
           <div className="lg:col-span-2 mb-10">
-            {components.topSites && <TopSites />}
+            {/* Debug: Checking TopSites render condition */}
+            {(() => {
+              console.log(
+                "🔍 [App Debug] Checking if TopSites should render:",
+                components.topSites,
+              );
+              return null;
+            })()}
+            {components.topSites
+              ? (
+                <>
+                  {(() => {
+                    console.log("🔍 [App Debug] Rendering TopSites component");
+                    return null;
+                  })()}
+                  <TopSites />
+                </>
+              )
+              : (
+                <>
+                  {(() => {
+                    console.log(
+                      "🔍 [App Debug] TopSites component is disabled",
+                    );
+                    return null;
+                  })()}
+                </>
+              )}
           </div>
 
           <div className="flex justify-center lg:justify-end h-fit">

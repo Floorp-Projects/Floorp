@@ -185,3 +185,7 @@ browser[type="content"] > html {
     display: flex !important;
   }
 }
+
+notification-message[message-bar-type="infobar"] {
+  --info-bar-text-color: var(--lwt-text-color, #222) !important;
+}
