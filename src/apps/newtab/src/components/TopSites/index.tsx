@@ -240,14 +240,60 @@ export function TopSites() {
         console.log("🔍 [Debug Tool] Function type:", typeof nrFunction);
 
         if (nrFunction) {
+          const startTime = Date.now();
           try {
             nrFunction((data) => {
-              console.log("🔍 [Debug Tool] Raw callback data:", data);
+              const endTime = Date.now();
+              const duration = endTime - startTime;
+
+              console.log("🔍 [Debug Tool] Response time:", duration + "ms");
+              console.log(
+                "🔍 [Debug Tool] Raw callback data type:",
+                typeof data,
+              );
+              console.log(
+                "🔍 [Debug Tool] Raw callback data length:",
+                data?.length || 0,
+              );
+              console.log(
+                "🔍 [Debug Tool] Raw callback data preview:",
+                data?.substring(0, 200) + "...",
+              );
+
               try {
                 const parsed = JSON.parse(data);
-                console.log("🔍 [Debug Tool] Parsed data:", parsed);
+                console.log(
+                  "🔍 [Debug Tool] Parsed data keys:",
+                  Object.keys(parsed),
+                );
+                console.log(
+                  "🔍 [Debug Tool] Has topsites:",
+                  "topsites" in parsed,
+                );
+                console.log(
+                  "🔍 [Debug Tool] Topsites is array:",
+                  Array.isArray(parsed.topsites),
+                );
+                console.log(
+                  "🔍 [Debug Tool] Topsites count:",
+                  parsed.topsites?.length || 0,
+                );
+
+                if (parsed.topsites && parsed.topsites.length > 0) {
+                  console.log(
+                    "🔍 [Debug Tool] Sample topsite:",
+                    parsed.topsites[0],
+                  );
+                  console.log("🔍 [Debug Tool] All topsites:", parsed.topsites);
+                }
+
+                console.log("🔍 [Debug Tool] Full parsed data:", parsed);
               } catch (e) {
                 console.error("🔍 [Debug Tool] Parse error:", e);
+                console.log(
+                  "🔍 [Debug Tool] Raw data causing parse error:",
+                  data,
+                );
               }
             });
           } catch (e) {
