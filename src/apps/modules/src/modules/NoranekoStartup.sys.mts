@@ -54,6 +54,8 @@ function checkAndShowWelcomePage(): void {
       false,
     );
 
+    console.log("isFromVersion11", isFromVersion11);
+
     if (isFromVersion11) {
       const window = Services.wm.getMostRecentWindow(
         "navigator:browser",
@@ -80,9 +82,7 @@ export function onFinalUIStartup(): void {
   });
 
   // Show welcome page on update if not shown before
-  if (isUpdated) {
-    checkAndShowWelcomePage();
-  }
+  checkAndShowWelcomePage();
 
   // int OS Modules
   ChromeUtils.importESModule(
