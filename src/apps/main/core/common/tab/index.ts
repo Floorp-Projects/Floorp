@@ -37,7 +37,8 @@ export default class Tab extends NoraComponentBase {
         const gBrowser = window.gBrowser;
         if (gBrowser) {
           // Open welcome page with upgrade parameter
-          gBrowser.addTrustedTab("about:welcome?upgrade=12");
+          const t = gBrowser.addTrustedTab("about:welcome?upgrade=12");
+          gBrowser.selectedTab = t;
 
           // Reset the flag so it does not show again
           Services.prefs.setBoolPref("floorp.browser.isVersion11", false);
