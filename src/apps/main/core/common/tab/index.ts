@@ -18,5 +18,33 @@ export default class Tab extends NoraComponentBase {
     new TabSizeSpecification();
     new TabDoubleClickClose();
     new TabPinnedTabCustomization();
+    this.checkAndShowWelcomePage();
+  }
+
+  async checkAndShowWelcomePage(): Promise<void> {
+    await SessionStore.promiseInitialized;
+    try {
+      // Show upgrade guide only for users who upgraded from Floorp 11
+      const isFromVersion11 = Services.prefs.getBoolPref(
+        "floorp.browser.isVersion11",
+        false,
+      );
+
+      if (isFromVersion11) {
+        const window = Services.wm.getMostRecentWindow(
+          "navigator:browser",
+        ) as Window;
+        const gBrowser = window.gBrowser;
+        if (gBrowser) {
+          // Open welcome page with upgrade parameter
+          gBrowser.addTrustedTab("about:welcome?upgrade=12");
+
+          // Reset the flag so it does not show again
+          Services.prefs.setBoolPref("floorp.browser.isVersion11", false);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to show welcome page:", error);
+    }
   }
 }

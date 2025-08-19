@@ -46,43 +46,12 @@ function initializeVersionInfo(): void {
   Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
 }
 
-function checkAndShowWelcomePage(): void {
-  try {
-    // Show upgrade guide only for users who upgraded from Floorp 11
-    const isFromVersion11 = Services.prefs.getBoolPref(
-      "floorp.browser.isVersion11",
-      false,
-    );
-
-    console.log("isFromVersion11", isFromVersion11);
-
-    if (isFromVersion11) {
-      const window = Services.wm.getMostRecentWindow(
-        "navigator:browser",
-      ) as Window;
-      const gBrowser = window.gBrowser;
-      if (gBrowser) {
-        // Open welcome page with upgrade parameter
-        gBrowser.addTab("about:welcome?upgrade=12");
-
-        // Reset the flag so it does not show again
-        Services.prefs.setBoolPref("floorp.browser.isVersion11", false);
-      }
-    }
-  } catch (error) {
-    console.error("Failed to show welcome page:", error);
-  }
-}
-
 export function onFinalUIStartup(): void {
   Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
 
   createDefaultUserChromeFiles().catch((error) => {
     console.error("Failed to create default userChrome files:", error);
   });
-
-  // Show welcome page on update if not shown before
-  checkAndShowWelcomePage();
 
   // int OS Modules
   ChromeUtils.importESModule(
