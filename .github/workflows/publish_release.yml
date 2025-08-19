@@ -333,6 +333,6 @@ jobs:
               "linux-aarch64-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/linux-aarch64-meta.json",
               "mac-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/mac-meta.json",
               "firefox-version": "${{ env.VERSION }}",
-              "app-version2": "${{ env.NR_VERSION }}",
+              "app-version2": "${{ env.NR_VERSION }}"
             }
           }'
