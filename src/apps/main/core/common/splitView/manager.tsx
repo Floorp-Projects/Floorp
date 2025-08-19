@@ -7,6 +7,7 @@ import { Show } from "solid-js/web";
 import { Popup } from "./popup";
 import { currentSplitView } from "./utils/data";
 import { render } from "@nora/solid-xul";
+import icon from "./assets/link.svg?raw";
 import type { CSplitView } from "./splitView";
 
 export class SplitViewManager {
@@ -38,7 +39,15 @@ export class SplitViewManager {
           popup="splitView-panel"
           id="splitView-action"
         >
-          <xul:image id="splitView-image" class="urlbar-icon" />
+          <xul:image
+            id="splitView-image"
+            class="urlbar-icon"
+            style={{
+              "list-style-image": `url("data:image/svg+xml,${
+                encodeURIComponent(icon)
+              }")`,
+            }}
+          />
           <Popup ctx={props.ctx} />
         </xul:hbox>
       </Show>
