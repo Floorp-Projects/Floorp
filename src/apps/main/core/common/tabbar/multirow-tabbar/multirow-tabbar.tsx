@@ -75,6 +75,10 @@ export class MultirowTabbarClass {
     return document?.getElementById("TabsToolbar") as XULElement | null;
   }
 
+  private get tabbrowserTabs(): XULElement | null {
+    return document?.getElementById("tabbrowser-tabs") as XULElement | null;
+  }
+
   private get scrollbox(): XULElement | null {
     return this.arrowScrollbox
       ? this.arrowScrollbox.shadowRoot?.querySelector("[part='scrollbox']") ||
@@ -114,11 +118,14 @@ export class MultirowTabbarClass {
       );
       this.arrowScrollbox?.style.removeProperty("max-height");
     }
+    // Set max-height to none with !important
+    this.tabbrowserTabs?.style.setProperty("max-height", "none", "important");
   }
 
   private removeMultirowTabMaxHeight() {
     this.scrollbox?.style.removeProperty("max-height");
     this.arrowScrollbox?.style.removeProperty("max-height");
+    this.tabbrowserTabs?.style.removeProperty("max-height");
   }
 
   private enableMultirowTabbar() {
