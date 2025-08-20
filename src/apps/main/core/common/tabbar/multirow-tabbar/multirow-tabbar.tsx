@@ -97,7 +97,7 @@ export class MultirowTabbarClass {
   private get aTabHeight(): number {
     return (
       document?.querySelector(".tabbrowser-tab:not([hidden='true'])")
-        ?.clientHeight || 30
+        ?.clientHeight ?? 30
     );
   }
 
