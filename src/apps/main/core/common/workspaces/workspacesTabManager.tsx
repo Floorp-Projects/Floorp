@@ -192,22 +192,17 @@ export class WorkspacesTabManager {
       }
     }
 
+    // Hide tab groups that have no visible tabs, show those that do
     const tabGroups = globalThis.gBrowser.tabGroups;
-    const visibleTabs = globalThis.gBrowser.visibleTabs;
+    const currentWorkspaceTabs = document?.querySelectorAll(
+      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${currentWorkspaceId}"]`,
+    ) as NodeListOf<XULElement>;
 
     for (const tg of tabGroups) {
-      let hasVisibleTab = false;
-      for (const tab of tg.tabs) {
-        if (visibleTabs.includes(tab)) {
-          hasVisibleTab = true;
-          break;
-        }
-      }
-      if (!hasVisibleTab) {
-        tg.hidden = true;
-      } else {
-        tg.hidden = false;
-      }
+      const hasVisibleTab = tg.tabs.some((tab: XULElement) => {
+        return Array.from(currentWorkspaceTabs).includes(tab);
+      });
+      tg.hidden = !hasVisibleTab;
     }
   }
 
