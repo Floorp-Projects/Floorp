@@ -73,7 +73,10 @@ export async function run(
   ];
 
   const prodCommands: CommandTuple[] = [
-    [["deno", "task", "build"], path.join(PROJECT_ROOT, "bridge/startup")],
+    [
+      ["deno", "task", "build", "--env.MODE=production"],
+      path.join(PROJECT_ROOT, "bridge/startup"),
+    ],
     [
       [
         "deno",
@@ -87,7 +90,13 @@ export async function run(
       path.join(PROJECT_ROOT, "bridge/loader-features"),
     ],
     [
-      ["deno", "run", "-A", "vite", "build", "--base", "resource://noraneko"],
+      [
+        "deno",
+        "task",
+        "build",
+        `--env.__BUILDID2__=${buildid2}`,
+        `--env.__VERSION2__=${version}`,
+      ],
       path.join(PROJECT_ROOT, "bridge/loader-modules"),
     ],
     // [

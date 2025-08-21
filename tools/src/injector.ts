@@ -24,7 +24,7 @@ export async function injectXhtmlFromTs(isDev = false): Promise<void> {
   logger.success("XHTML injection complete.");
 }
 
-export function run(mode: string, dirName = "noraneko"): void {
+export function run(mode: string, dirName = "noraneko-devdir"): void {
   const manifestPath = path.join(BIN_DIR, "chrome.manifest");
 
   if (mode !== "prod") {

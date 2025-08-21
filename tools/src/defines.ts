@@ -28,7 +28,7 @@ const detectPlatform = (): Platform => {
 
 export const PLATFORM: Platform = detectPlatform();
 
-export const VERSION = ["windows", "linux"].includes(PLATFORM) ? "001" : "000";
+export const VERSION = ["windows", "linux"].includes(PLATFORM) ? "002" : "000";
 
 export const PROJECT_ROOT = path.resolve(
   path.dirname(path.fromFileUrl(import.meta.url)),
