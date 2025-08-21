@@ -8,7 +8,7 @@
     "@solid-primitives/deep": "npm:@solid-primitives/deep@^0.3.3",
     "@types/uuid": "npm:@types/uuid@^10.0.0",
 
-    "es-toolkit": "npm:es-toolkit@^1.39.9",
+    "es-toolkit": "npm:es-toolkit@^1.39.10",
     "i18next": "npm:i18next@^25.0.2",
     "pathe": "npm:pathe@^2.0.3",
     "solid-js": "npm:solid-js@^1.9.6",

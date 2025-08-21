@@ -12,64 +12,9 @@ Noraneko Browser is currently testbed for Floorp 12.
 
 Have a nice day!
 
-## Contributing
-
-Thank you for investing your time.\
-Please check [CONTRIBUTING.md](.github/CONTRIBUTING.md)
-
 ## Noraneko Docs available
 
 Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
-
-## 📚 Documentation
-
-For comprehensive development documentation, see:
-
-- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Step-by-step setup and development instructions
-- **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Understanding the codebase organization
-- **[Build System](docs/BUILD_SYSTEM_IMPROVEMENTS.md)** - Build system architecture and usage
-- **[Documentation Index](docs/README.md)** - Complete documentation overview
-
-## How to Start Development
-
-1. Run `deno install --allow-scripts`
-
-You can run `deno task build` and `deno task dev`. `deno task build` outputs
-files, while `deno task dev` is used for debugging the code with file watch.
-Refer to "How to Debug" for instructions on using `deno task dev`.
-
-## How to debug
-
-### Windows
-
-1. Install `gh cli` from [https://cli.github.com/]
-2. Visit
-   [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_windows_build.yml).
-3. Go to latest successful build and check the id in url. It is run_id and is
-   number. the `Release` version is recommended.
-4. Run
-   `gh run download -R nyanrus/noraneko-runtime -n noraneko-win-amd64-dev [run_id]`
-5. Run `deno task dev`.
-6. The browser will launch, and if you change some files, you could rerun
-   `deno task dev`. If the source you changed supports HMR, it will reload the
-   browser so you'll not need to rerun.
-
-### GNU/Linux
-
-1. Install `gh cli` from [https://cli.github.com/] and `lbzip2` from your
-   package manager.
-2. Visit
-   [noraneko-runtime Action](https://github.com/nyanrus/noraneko-runtime/actions/workflows/wrapper_linux_build.yml).
-3. Go to latest successful build and check the id in url. It is run_id and is
-   number.
-4. Run
-   `gh run download -R nyanrus/noraneko-runtime -n noraneko-linux-amd64-dev [run_id]`
-5. Run `mkdir -p _dist/bin`
-6. Run `tar --strip-components=1 -xvf ./noraneko-*.tar.bz2 -C _dist/bin`
-7. Run `deno task dev`
-8. The browser will launch, and if you change some files, you could rerun
-   `deno task dev`. If the source you changed supports HMR, it will reload the
-   browser so you'll not need to rerun.
 
 ## Credits
 
@@ -103,7 +48,7 @@ Thank you!
 
 ## Useful Links
 
-[![Link to Noraneko Runtime Repository](.github/assets/readme/Link2RuntimeRepo.svg)](https://github.com/nyanrus/noraneko-runtime/)
+[![Link to Noraneko Runtime Repository](.github/assets/readme/Link2RuntimeRepo.svg)](https://github.com/f3liz-dev/noraneko-runtime/)
 
 ## LICENSE
 

@@ -34,7 +34,6 @@ export class TabColorManager {
 
   init() {
     createEffect(() => {
-      console.log("solid to pref");
       Services.prefs.setBoolPref(
         "noraneko.tabcolor.enable",
         this.enableTabColor(),
@@ -44,7 +43,6 @@ export class TabColorManager {
 
   //if we use just method, `this` will be broken
   private observerTabcolorPref = () => {
-    console.log("pref to solid");
     this.setEnableTabColor((_prev) => {
       return Services.prefs.getBoolPref("noraneko.tabcolor.enable");
     });

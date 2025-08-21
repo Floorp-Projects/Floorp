@@ -3,7 +3,7 @@ export class NRAboutNewTabChild extends JSWindowActorChild {
     if (event.type === "DOMContentLoaded") {
       //https://searchfox.org/mozilla-central/rev/3a34b4616994bd8d2b6ede2644afa62eaec817d1/browser/actors/AboutNewTabChild.sys.mjs#70
       Services.scriptloader.loadSubScript(
-        "chrome://noraneko-startup/content/about-newtab.mjs",
+        "chrome://noraneko-startup/content/about-newtab.js",
         this.contentWindow,
       );
     }

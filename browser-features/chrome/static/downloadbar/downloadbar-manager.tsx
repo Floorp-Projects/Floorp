@@ -28,7 +28,6 @@ export class DownloadBarManager {
 
   init() {
     createEffect(() => {
-      console.log("solid to pref");
       Services.prefs.setBoolPref(
         "noraneko.downloadbar.enable",
         this.showDownloadBar(),
@@ -42,7 +41,6 @@ export class DownloadBarManager {
 
   //if we use just method, `this` will be broken
   private observerDownloadbarPref = () => {
-    console.log("pref to solid");
     this.setShowDownloadBar((_prev) => {
       return Services.prefs.getBoolPref("noraneko.downloadbar.enable");
     });

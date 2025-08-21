@@ -15,7 +15,7 @@ export const [currentFocus, setCurrentFocus] = createSignal<
 >(null);
 
 createEffect(() => {
-  console.log(currentFocus() !== null);
+  // console.log(currentFocus() !== null);
   Services.obs.notifyObservers(
     {},
     "nora-csk",

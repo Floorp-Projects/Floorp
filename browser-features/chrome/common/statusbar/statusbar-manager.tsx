@@ -19,7 +19,6 @@ export class StatusBarManager {
       this.observerStatusbarPref,
     );
     createEffect(() => {
-      console.log("solid to pref");
       Services.prefs.setBoolPref(
         "noraneko.statusbar.enable",
         this.showStatusBar(),
@@ -82,7 +81,6 @@ export class StatusBarManager {
 
   //if we use just method, `this` will be broken
   private observerStatusbarPref = () => {
-    console.log("pref to solid");
     this.setShowStatusBar((_prev) => {
       return Services.prefs.getBoolPref("noraneko.statusbar.enable");
     });
