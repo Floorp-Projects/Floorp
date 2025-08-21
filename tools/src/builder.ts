@@ -1,0 +1,114 @@
+import * as path from "@std/path";
+import { PROJECT_ROOT, PATHS } from "./defines.ts";
+import { Logger, runCommandChecked } from "./utils.ts";
+
+const logger = new Logger("builder");
+
+export function packageVersion(): string {
+  const pkgPath = path.join(PROJECT_ROOT, "package.json");
+  const content = Deno.readTextFileSync(pkgPath);
+  return JSON.parse(content).version;
+}
+
+type CommandTuple = readonly [readonly string[], string];
+
+export async function runInParallel(commands: CommandTuple[]): Promise<void> {
+  const results = commands.map(([cmd, dir]) => {
+    logger.info(`Running \`${cmd.join(" ")}\` in \`${dir}\``);
+    // Use runCommandChecked (sync) to capture stdout/stderr concisely in Deno
+    const res = runCommandChecked(cmd[0], cmd.slice(1), dir);
+    return {
+      success: res.code === 0,
+      cmd,
+      dir,
+      out: res.stdout,
+      err: res.stderr,
+    };
+  });
+
+  for (const res of results) {
+    if (!res.success) {
+      throw new Error(
+        `Build command \`${res.cmd.join(" ")}\` in \`${res.dir}\` failed\nSTDOUT:\n${res.out}\nSTDERR:\n${res.err}`,
+      );
+    }
+  }
+}
+
+export async function run(
+  mode = "dev",
+  buildid2 = "default-build-id",
+): Promise<void> {
+  logger.info(`Building features with mode=${mode}`);
+
+  const version = packageVersion();
+
+  const devCommands: CommandTuple[] = [
+    [
+      ["deno", "task", "build", `--env.MODE=${mode}`],
+      path.join(PROJECT_ROOT, "bridge/startup"),
+    ],
+    [
+      [
+        "deno",
+        "task",
+        "build",
+        `--env.__BUILDID2__=${buildid2}`,
+        `--env.__VERSION2__=${version}`,
+      ],
+      path.join(PROJECT_ROOT, "bridge/loader-modules"),
+    ],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--base",
+        "chrome://noraneko/content",
+      ],
+      path.join(PROJECT_ROOT, "bridge/loader-features"),
+    ],
+  ];
+
+  const prodCommands: CommandTuple[] = [
+    [["deno", "task", "build"], path.join(PROJECT_ROOT, "bridge/startup")],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--base",
+        "chrome://noraneko/content",
+      ],
+      path.join(PROJECT_ROOT, "bridge/loader-features"),
+    ],
+    [
+      ["deno", "run", "-A", "vite", "build", "--base", "resource://noraneko"],
+      path.join(PROJECT_ROOT, "bridge/loader-modules"),
+    ],
+    // [
+    //   [
+    //     "deno",
+    //     "run",
+    //     "-A",
+    //     "vite",
+    //     "build",
+    //     "--base",
+    //     "chrome://noraneko-settings/content",
+    //   ],
+    //   path.join(PROJECT_ROOT, "src/ui/settings"),
+    // ],
+  ];
+
+  if (mode.startsWith("dev")) {
+    await runInParallel(devCommands);
+  } else {
+    await runInParallel(prodCommands);
+  }
+
+  logger.success("Build complete.");
+}
