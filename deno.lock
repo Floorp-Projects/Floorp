@@ -45,6 +45,7 @@
     "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5": "1.0.0-beta.9-commit.d91dfb5",
     "npm:solid-js@^1.9.5": "1.9.9_seroval@1.3.2",
     "npm:solid-js@^1.9.6": "1.9.9_seroval@1.3.2",
+    "npm:tsdown@*": "0.14.1_typescript@5.9.2_rolldown@1.0.0-beta.33",
     "npm:tsdown@~0.14.1": "0.14.1_typescript@5.9.2_rolldown@1.0.0-beta.33",
     "npm:typescript@^5.8.3": "5.9.2",
     "npm:unplugin-swc@^1.5.2": "1.5.6_@swc+core@1.13.4",
@@ -55,7 +56,8 @@
     "npm:vite-plugin-istanbul@^7.1.0": "7.1.0_vite@6.3.5__@types+node@24.3.0__lightningcss@1.30.1__picomatch@4.0.3_@types+node@24.3.0_lightningcss@1.30.1",
     "npm:vite-plugin-solid@^2.10.2": "2.11.8_solid-js@1.9.9__seroval@1.3.2_vite@6.3.5__@types+node@24.3.0__lightningcss@1.30.1__picomatch@4.0.3_@babel+core@7.28.3_@types+node@24.3.0_lightningcss@1.30.1",
     "npm:vite-plugin-solid@^2.11.6": "2.11.8_solid-js@1.9.9__seroval@1.3.2_vite@6.3.5__@types+node@24.3.0__lightningcss@1.30.1__picomatch@4.0.3_@babel+core@7.28.3_@types+node@24.3.0_lightningcss@1.30.1",
-    "npm:vite-tsconfig-paths@^5.1.4": "5.1.4_typescript@5.9.2"
+    "npm:vite-tsconfig-paths@^5.1.4": "5.1.4_typescript@5.9.2_vite@6.3.5__@types+node@24.3.0__lightningcss@1.30.1__picomatch@4.0.3_@types+node@24.3.0_lightningcss@1.30.1",
+    "npm:vite@*": "6.3.5_@types+node@24.3.0_lightningcss@1.30.1_picomatch@4.0.3"
   },
   "jsr": {
     "@std/bytes@1.0.6": {
@@ -2660,6 +2662,18 @@
         "debug",
         "globrex",
         "tsconfck"
+      ]
+    },
+    "vite-tsconfig-paths@5.1.4_typescript@5.9.2_vite@6.3.5__@types+node@24.3.0__lightningcss@1.30.1__picomatch@4.0.3_@types+node@24.3.0_lightningcss@1.30.1": {
+      "integrity": "sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==",
+      "dependencies": [
+        "debug",
+        "globrex",
+        "tsconfck",
+        "vite"
+      ],
+      "optionalPeers": [
+        "vite"
       ]
     },
     "vite@6.3.5_@types+node@24.3.0_lightningcss@1.30.1_picomatch@4.0.3": {

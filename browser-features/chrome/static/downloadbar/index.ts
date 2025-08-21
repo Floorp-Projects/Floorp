@@ -18,7 +18,7 @@ export function init() {
     manager = new DownloadBarManager();
 
     manager.init();
-    console.log(manager.showDownloadBar());
+    // console.log(manager.showDownloadBar());
     if (!manager.showDownloadBar()) {
       return;
     }
