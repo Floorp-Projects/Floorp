@@ -171,7 +171,7 @@ async function runPatch(action = "apply"): Promise<void> {
 }
 
 function printHelp(): void {
-  console.log("Usage: feles-build <command> [options]\n");
+  console.log("Usage: deno task feles-build <command> [options]\n");
   console.log("Commands:");
   console.log("  dev        Run the development workflow");
   console.log(
