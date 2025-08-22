@@ -54,8 +54,15 @@ export namespace gTabbarStyleFunctions {
       tabbarElement.appendChild(windowManageContainer);
     }
 
-    if (navigatorToolbox && tabbarElement) {
-      navigatorToolbox.prepend(tabbarElement);
+    if (tabbarElement && navigatorToolbox) {
+      const menubar = document?.getElementById("toolbar-menubar") as
+        | XULElement
+        | null;
+      if (menubar && menubar.parentNode === navigatorToolbox) {
+        menubar.after(tabbarElement);
+      } else {
+        navigatorToolbox.prepend(tabbarElement);
+      }
     }
 
     // Clean up
