@@ -14,15 +14,14 @@ export function writeVersion(geckoDir: string): void {
   console.log(`[update] Version files written to ${configDir}`);
 }
 
-export function writeBuildid2(dir: string, buildid2: string): void {
-  const pathBuildid2 = path.join(dir, "buildid2");
+export function writeBuildid2(pathBuildid2: string, buildid2: string): void {
+  const dir = path.dirname(pathBuildid2);
   Deno.mkdirSync(dir, { recursive: true });
   Deno.writeTextFileSync(pathBuildid2, buildid2);
   console.log(`[update] Build ID written to ${pathBuildid2}`);
 }
 
-export function readBuildid2(dir: string): string | null {
-  const pathBuildid2 = path.join(dir, "buildid2");
+export function readBuildid2(pathBuildid2: string): string | null {
   if (!exists(pathBuildid2)) return null;
   return Deno.readTextFileSync(pathBuildid2).trim();
 }

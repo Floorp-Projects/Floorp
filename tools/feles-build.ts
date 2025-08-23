@@ -156,7 +156,9 @@ async function runBuild(phase?: string): Promise<void> {
 
   if (optionsPhase === "before-mach") {
     Symlinker.run();
-    await Builder.run("production");
+    // Build production assets
+    const buildid2 = Update.generateUuidV7();
+    await Builder.run("production", buildid2);
   } else if (optionsPhase === "after-mach") {
     Injector.run("production");
     await Injector.injectXhtmlFromTs(false);

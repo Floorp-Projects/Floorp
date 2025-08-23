@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { manager } from ".";
+import { manager } from "./index.ts";
 import statusbarStyle from "./statusbar.css?inline";
 
 export function StatusBarElem() {

@@ -5,7 +5,7 @@
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
-import { addI18nObserver } from "#i18n-features-chrome/config.ts";
+import { addI18nObserver } from "#i18n-chrome/config.ts";
 import { StyleElement } from "./styleElem";
 import { BrowserActionUtils } from "#features-chrome/utils/browser-action";
 import i18next from "i18next";

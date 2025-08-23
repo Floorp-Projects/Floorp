@@ -6,15 +6,11 @@
 // NOTICE: Do not add toolbar buttons code here. Create new folder or file for new toolbar buttons.
 
 import { render } from "@nora/solid-xul";
-import type {
-  TCustomizableUI,
-  TCustomizableUIArea,
-} from "@types-gecko/CustomizableUI";
 import { createRoot, getOwner, type JSXElement } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
-) as { CustomizableUI: typeof TCustomizableUI };
+);
 
 export namespace BrowserActionUtils {
   export function createToolbarClickActionButton(
@@ -101,10 +97,6 @@ export namespace BrowserActionUtils {
         createRoot(() => onViewShowingFunc?.(event), owner);
       },
     });
-    CustomizableUI.addWidgetToArea(
-      widgetId,
-      area as TCustomizableUIArea,
-      position ?? 0,
-    );
+    CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
   }
 }

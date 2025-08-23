@@ -32,7 +32,7 @@ export function initializeBinGit(): void {
   Deno.writeTextFileSync(
     path.join(dir, ".gitignore"),
     [
-      "./noraneko-dev/*",
+      "./noraneko-devdir/*",
       "./browser/chrome/browser/res/activity-stream/data/content/abouthomecache/*",
     ].join("\n"),
   );

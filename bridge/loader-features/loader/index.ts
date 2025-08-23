@@ -4,7 +4,7 @@
 
 import "vite/modulepreload-polyfill";
 
-import { initI18N } from "#i18n-features-chrome/config.ts";
+import { initI18N } from "#i18n-chrome/config.ts";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
 import {

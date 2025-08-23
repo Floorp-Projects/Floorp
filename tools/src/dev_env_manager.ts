@@ -1,6 +1,7 @@
 import * as path from "@std/path";
 import { PROJECT_ROOT, PATHS } from "./defines.ts";
 import { Logger } from "./utils.ts";
+import { readBuildid2 } from "./update.ts";
 
 const logger = new Logger("dev-env");
 
@@ -41,9 +42,13 @@ export function writeDevVersionInfo(): void {
       path.join(gecko, "config", "version.txt"),
       "version: 1.0.0\n",
     );
+    const buildid2 = readBuildid2(PATHS.buildid2);
+    if (buildid2 === null) {
+      throw new Error(`buildid2 file not found at ${PATHS.buildid2}`);
+    }
     Deno.writeTextFileSync(
       path.join(dist, "buildid2.txt"),
-      `buildid2: ${crypto.randomUUID()}\n`,
+      `buildid2: ${buildid2}\n`,
     );
     logger.success("Wrote dev version info.");
   } catch (e: any) {

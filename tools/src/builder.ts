@@ -1,6 +1,7 @@
 import * as path from "@std/path";
 import { PROJECT_ROOT, PATHS } from "./defines.ts";
 import { Logger, runCommandChecked } from "./utils.ts";
+import { writeBuildid2 } from "./update.ts";
 
 const logger = new Logger("builder");
 
@@ -35,11 +36,15 @@ export async function runInParallel(commands: CommandTuple[]): Promise<void> {
   }
 }
 
-export async function run(
-  mode = "dev",
-  buildid2 = "default-build-id",
-): Promise<void> {
+export async function run(mode = "dev", buildid2: string): Promise<void> {
   logger.info(`Building features with mode=${mode}`);
+
+  // Ensure buildid2 is written to the expected path so other tools can read it.
+  try {
+    writeBuildid2(PATHS.buildid2, buildid2);
+  } catch (e: any) {
+    logger.error(`Failed to write buildid2: ${e?.message ?? e}`);
+  }
 
   const version = packageVersion();
 

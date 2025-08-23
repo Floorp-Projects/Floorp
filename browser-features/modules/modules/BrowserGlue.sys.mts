@@ -1,4 +1,4 @@
-//@ts-expect-error
+// @ts-ignore
 import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
 
 function localPathToResourceURI(path: string) {
