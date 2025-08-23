@@ -1,5 +1,14 @@
+import { parse } from "@std/toml";
 import { createRootHMR } from "@nora/solid-xul";
 import i18next from "i18next";
+
+import * as nsDefault from "./en-US/default.json" with { type: "json" };
+import * as nsBrowserChrome from "./en-US/browser-chrome.json" with { type: "json" };
+
+export const resources = {
+  default: nsDefault.default,
+  "browser-chrome": nsBrowserChrome.default,
+} as const;
 
 const _modules = import.meta.glob("./*/*.json", { eager: true });
 
@@ -12,19 +21,26 @@ for (const [idx, m] of Object.entries(_modules)) {
   modules[lng][ns] = (m as any).default as object;
 }
 
+const _meta = import.meta.glob("./*/_meta.toml", {
+  query: "?raw",
+});
+const fallbackLng: Record<string, string> = {};
+for (const path in _meta) {
+  fallbackLng[path.replaceAll("./", "").replaceAll("/_meta.toml", "")] = parse(
+    (await _meta[path]()).default,
+  )["fallback-language"] as string;
+}
+
 import { createEffect, createSignal } from "solid-js";
 
-export const defaultNS = "default";
-
-export const resources = modules;
-export function initI18N() {
+export function initI18N(namespace: string[], defaultNamespace: string) {
   i18next.init({
     lng: "en-US",
     debug: true,
-    resources,
-    defaultNS,
-    ns: ["undo"],
-    fallbackLng: ["en-US", "dev"],
+    resources: modules,
+    defaultNS: defaultNamespace,
+    ns: namespace,
+    fallbackLng,
   });
 }
 const [lang, setLang] = createRootHMR(
@@ -51,4 +67,8 @@ export function addI18nObserver(observer: (locale: string) => void) {
   createEffect(() => {
     observer(lang());
   });
+}
+
+export function setLanguage(lang: string) {
+  setLang(lang);
 }

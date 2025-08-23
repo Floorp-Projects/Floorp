@@ -43,7 +43,7 @@ export const PATHS = {
   profile_test: path.join(PROJECT_ROOT, "_dist", "profile", "test"),
   loader_features: path.join(PROJECT_ROOT, "bridge/loader-features"),
   features_chrome: path.join(PROJECT_ROOT, "browser-features/chrome"),
-  i18n_chrome: path.join(PROJECT_ROOT, "i18n/chrome"),
+  i18n: path.join(PROJECT_ROOT, "i18n"),
   loader_modules: path.join(PROJECT_ROOT, "bridge/loader-modules"),
   modules: path.join(PROJECT_ROOT, "browser-features/modules"),
   mozbuild_output: path.join(PROJECT_ROOT, "obj-artifact-build-output/dist"),

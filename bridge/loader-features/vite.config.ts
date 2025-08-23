@@ -172,8 +172,8 @@ export default defineConfig({
       },
       { find: "#apps", replacement: r("../../../../apps") },
       {
-        find: "#i18n-chrome",
-        replacement: r("./link-i18n-chrome"),
+        find: "#i18n",
+        replacement: r("./link-i18n"),
       },
       {
         find: "#features-chrome",
