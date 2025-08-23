@@ -1,5 +1,0 @@
-{
-  "name": "@nora/lib-dom-gecko",
-  "version": "1.0.0",
-  "exports": "./index.d.ts"
-}

@@ -1,30 +1,39 @@
 {
-  "patch": [
-    "@types/gecko/dom"
-  ],
-  "workspace": [
-    "./src/packages/*",
-    "./src/apps/*"
-  ],
+  "links": ["libs/@types/gecko"],
+  "workspace": ["./libs/*", "./browser-features/*", "./bridge/*"],
   "imports": {
-    "@std/encoding": "jsr:@std/encoding@^1.0.7",
-    "@std/fs": "jsr:@std/fs@^1.0.11"
+    "@std/cli": "jsr:@std/cli@^1.0.21",
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "@std/fs": "jsr:@std/fs@^1.0.18",
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "#i18n/": "./i18n/",
+    "#chrome/": "./chrome/",
+    "#libs/": "./libs/",
+    "#features-chrome/": "./browser-features/chrome/",
+    "#i18n-chrome/": "./i18n/chrome/",
+    "#modules/": "./browser-features/modules/",
+    "#ui/": "./src/ui/",
+    "#themes/": "./src/themes/",
+    "@std/streams": "jsr:@std/streams@^1.0.11",
+    "vite": "npm:rolldown-vite@^7.1.4"
   },
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.asynciterable",
-      "deno.ns",
-      "ESNext"
-    ]
+    "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],
+    "checkJs": true
   },
+  "exclude": [
+    "tools/build/tasks/inject/wasm/nora-inject.js",
+    "**/_dist/**/*",
+    "libs/@types/gecko/**/*",
+    "libs/user-js-runner/**/*",
+    "tools/build/tasks/inject/mixins/**/*",
+    "chrome/**/*",
+    "modules/**/*",
+    "src/**/*",
+    "node_modules/**/*"
+  ],
   "tasks": {
-    "build": "deno run -A build.ts",
-    "dev": "deno run -A build.ts --run",
-    "apply-patches": "deno run -A ./scripts/git-patches/git-patches-manager.ts --apply",
-    "dev-with-init-bin-git": "deno run -A ./build.ts --run-with-init-bin-git",
-    "init-bin-git": "deno run -A ./scripts/git-patches/git-patches-manager.ts --init",
-    "create-patches": "deno run -A ./scripts/git-patches/git-patches-manager.ts --create"
+    "feles-build": "deno run -A tools/feles-build.ts"
   },
   "nodeModulesDir": "auto"
 }

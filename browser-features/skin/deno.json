@@ -1,0 +1,6 @@
+{
+  "name": "@nora/skin",
+  "exports": {
+    ".": "./*"
+  }
+}

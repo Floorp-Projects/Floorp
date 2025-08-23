@@ -3,8 +3,9 @@
     "jacobcassidy.css-nesting-syntax-highlighting",
     "ms-vscode.vscode-typescript-next",
     "aaron-bond.better-comments",
-    "biomejs.biome",
     "usernamehw.errorlens",
-    "christian-kohler.path-intellisense"
+    "christian-kohler.path-intellisense",
+    "oxc.oxc-vscode",
+    "esbenp.prettier-vscode"
   ]
 }

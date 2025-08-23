@@ -1,0 +1,38 @@
+{
+  "name": "@nora/features-chrome",
+  "imports": {
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
+    "@jsr/std__assert": "npm:@jsr/std__assert@^1.0.14",
+    "@types/uuid": "npm:@types/uuid@^10.0.0",
+
+    "es-toolkit": "npm:es-toolkit@^1.36.0",
+    "i18next": "npm:i18next@^25.0.1",
+    "solid-js": "npm:solid-js@^1.9.5",
+    "solid-styled-jsx": "npm:solid-styled-jsx@^0.27.1",
+    "unplugin-swc": "npm:unplugin-swc@^1.5.2",
+    "uuid": "npm:uuid@^11.1.0",
+    "vite": "npm:rolldown-vite@latest",
+    "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.0.0",
+    "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.6",
+    "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",
+    "chroma-js": "npm:chroma-js@^3.1.1",
+    "@types/chroma-js": "npm:@types/chroma-js@^3.1.1",
+    "@types/gecko": "jsr:@types/gecko",
+    "#features-chrome/": "./"
+  },
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "types": ["npm:vite/client", "jsr:@types/gecko"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "jsr:@nora/solid-xul"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-sloppy-imports", "no-window"]
+    }
+  },
+  "exports": {
+    "./static/mod.ts": "./static/mod.ts",
+    "./common/mod.ts": "./common/mod.ts"
+  }
+}

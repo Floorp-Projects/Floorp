@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+imply_option("MOZ_APP_VENDOR", "Noraneko Community")
+imply_option("MOZ_APP_PROFILE", "Noraneko")
+imply_option("MOZ_APP_UA_NAME", "Firefox")
+
+imply_option("MOZ_REQUIRE_SIGNING", False, reason="Disable signing requirement for development builds")
+imply_option("MOZ_TELEMETRY_REPORTING", False, reason="Disable telemetry reporting")
+imply_option("MOZ_PACKAGE_JSSHELL", True, reason="Enable JS shell packaging")

@@ -11,3 +11,6 @@
 .idea/
 
 target/
+
+logs/
+.serena/

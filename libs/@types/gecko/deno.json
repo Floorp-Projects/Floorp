@@ -1,0 +1,8 @@
+{
+  "name": "@types/gecko",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./index.d.ts"
+  },
+  "lint": { "exclude": ["./generated/**/*"] }
+}
