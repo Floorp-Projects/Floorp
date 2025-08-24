@@ -50,6 +50,25 @@ export class WorkspacesTabManager {
 
     initWorkspace();
 
+    // Ensure the window does NOT close automatically when the (currently) last tab closes.
+    // Workspaces feature manages its own fallback tab logic; auto-closing breaks hidden-per-workspace model.
+    try {
+      const prefName = "browser.tabs.closeWindowWithLastTab";
+      if (Services.prefs.getBoolPref(prefName, true)) {
+        Services.prefs.setBoolPref(prefName, false);
+        console.debug(
+          "WorkspacesTabManager: disabled auto window close on last tab (set " +
+            prefName +
+            " to false)",
+        );
+      }
+    } catch (prefErr) {
+      console.warn(
+        "WorkspacesTabManager: failed to set closeWindowWithLastTab pref",
+        prefErr,
+      );
+    }
+
     const owner = getOwner?.();
     const exec = () =>
       createEffect(() => {
@@ -115,37 +134,89 @@ export class WorkspacesTabManager {
       ) as NodeListOf<XULElement>,
     ).filter((t) => t !== tab);
 
+    try {
+      const totalTabs = (globalThis.gBrowser.tabs as Array<XULElement>).length;
+      const visibleTabsCount =
+        (globalThis.gBrowser.visibleTabs as Array<XULElement>)
+          .length;
+      console.debug(
+        "WorkspacesTabManager: TabClose event",
+        {
+          closingWorkspace: workspaceId,
+          isCurrentWorkspace,
+          remainingTabsInWorkspace: workspaceTabs.length,
+          totalTabs,
+          visibleTabs: visibleTabsCount,
+        },
+      );
+    } catch {
+      // ignore logging failure
+    }
+
+    // --- Guard: ensure we never let the window reach 0 visible tabs while hidden tabs still exist ---
+    // If this was the last visible tab (for any reason) create a replacement immediately.
+    // NOTE: We do this BEFORE any async boundary (we removed setTimeout below) to avoid
+    // a race where Firefox decides to close the window when the last visible tab disappears.
+    let createdFallback = false;
+    try {
+      const remainingVisible = (globalThis.gBrowser.visibleTabs as XULElement[])
+        .filter((t: XULElement & { closing?: boolean }) =>
+          t !== tab && !t.closing
+        );
+      if (remainingVisible.length === 0) {
+        // Always create fallback inside the CURRENT workspace to remain there
+        const fallbackWorkspace = currentWorkspaceId || workspaceId;
+        const newVisible = this.createTabForWorkspace(fallbackWorkspace, true);
+        newVisible.setAttribute(WORKSPACE_LAST_SHOW_ID, fallbackWorkspace);
+        console.debug(
+          "WorkspacesTabManager: created fallback tab in current workspace",
+          { fallbackWorkspace },
+        );
+        createdFallback = true;
+      }
+    } catch (guardErr) {
+      console.error(
+        "WorkspacesTabManager: guard for last visible tab failed",
+        guardErr,
+      );
+    }
+
     if (workspaceTabs.length === 0 && isCurrentWorkspace) {
       try {
-        const defaultId = this.dataManagerCtx.getDefaultWorkspaceID();
-
-        if (defaultId !== workspaceId) {
-          const newTab = this.createTabForWorkspace(defaultId, false);
-
-          setTimeout(() => {
-            globalThis.gBrowser.selectedTab = newTab;
-            this.dataManagerCtx.setCurrentWorkspaceID(defaultId);
-            this.updateTabsVisibility();
-          }, 0);
+        if (!createdFallback) {
+          console.debug(
+            "WorkspacesTabManager: replacement tab created in same workspace (post-check)",
+            { workspaceId },
+          );
         } else {
-          setTimeout(() => {
-            this.createTabForWorkspace(defaultId, true);
-          }, 0);
+          console.debug(
+            "WorkspacesTabManager: fallback already existed; no extra tab",
+            { workspaceId },
+          );
         }
+        this.dataManagerCtx.setCurrentWorkspaceID(workspaceId);
+        this.updateTabsVisibility();
       } catch (e) {
-        console.error("Error handling last tab close in workspace:", e);
-        setTimeout(() => {
-          try {
-            const newTab = globalThis.gBrowser.addTab("about:newtab", {
-              skipAnimation: true,
-              triggeringPrincipal: Services.scriptSecurityManager
-                .getSystemPrincipal(),
-            });
-            globalThis.gBrowser.selectedTab = newTab;
-          } catch (innerError) {
-            console.error("Critical error handling tab close:", innerError);
-          }
-        }, 0);
+        console.error(
+          "Error handling last tab close in workspace (stay mode):",
+          e,
+        );
+        try {
+          const newTab = globalThis.gBrowser.addTab("about:newtab", {
+            skipAnimation: true,
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
+          });
+          globalThis.gBrowser.selectedTab = newTab;
+          console.debug(
+            "WorkspacesTabManager: created about:newtab fallback after error (stay mode)",
+          );
+        } catch (innerError) {
+          console.error(
+            "Critical error handling tab close (stay mode):",
+            innerError,
+          );
+        }
       }
     }
   };
