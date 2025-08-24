@@ -8,13 +8,7 @@
         "cancel": "キャンセル",
         "add": "追加",
         "close": "閉じる",
-        "labelPlaceholder": "ウェブサイト名",
-        "pin": "ピン留め",
-        "unpin": "ピン留め解除",
-        "block": "ブロック",
-        "invalidUrl": "URL が正しくありません",
-        "blockTitle": "\"{{title}}\" をブロックしますか?",
-        "blockConfirm": "このサイトはトップサイトから削除され、再度表示されません。設定から管理できます。"
+        "labelPlaceholder": "ウェブサイト名"
     },
     "settings": {
         "newTabSettings": "新しいタブの設定",
