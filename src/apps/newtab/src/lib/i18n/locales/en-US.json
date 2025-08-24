@@ -11,7 +11,10 @@
         "labelPlaceholder": "Website name",
         "pin": "Pin",
         "unpin": "Unpin",
-        "block": "Block"
+        "block": "Block",
+        "blockTitle": "Block \"{{title}}\"?",
+        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+        "invalidUrl": "Invalid URL"
     },
     "settings": {
         "newTabSettings": "New Tab Settings",

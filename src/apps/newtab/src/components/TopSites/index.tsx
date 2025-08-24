@@ -129,6 +129,99 @@ function BlockModal({
   );
 }
 
+function AddSiteModal({
+  onAdd,
+  onCancel,
+}: {
+  onAdd: (url: string, label: string) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [url, setUrl] = useState("");
+  const [label, setLabel] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const urlInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    urlInputRef.current?.focus();
+  }, []);
+
+  const normalizeUrl = (raw: string): string | null => {
+    let value = raw.trim();
+    if (!value) return null;
+    if (!/^https?:\/\//i.test(value)) {
+      value = `https://${value}`;
+    }
+    try {
+      const u = new URL(value);
+      // 不要な末尾スラッシュを除去（ルートのみ維持）
+      if (u.pathname !== "/") {
+        u.pathname = u.pathname.replace(/\/+$/, "");
+      }
+      return u.href;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const normalized = normalizeUrl(url);
+    if (!normalized) {
+      setError(t("topSites.invalidUrl", { defaultValue: "Invalid URL" }));
+      return;
+    }
+    onAdd(normalized, label.trim() || normalized);
+  };
+
+  return (
+    <dialog className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg mb-2">{t("topSites.addNewSite")}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">{t("topSites.url")}</span>
+            </label>
+            <input
+              ref={urlInputRef}
+              type="text"
+              className="input input-bordered w-full"
+              placeholder="https://example.com"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">{t("topSites.label")}</span>
+            </label>
+            <input
+              type="text"
+              className="input input-bordered w-full"
+              placeholder={t("topSites.labelPlaceholder", {
+                defaultValue: "Website name",
+              })}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-error text-sm">{error}</p>}
+          <div className="modal-action">
+            <button type="button" className="btn" onClick={onCancel}>
+              {t("topSites.cancel")}
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {t("topSites.add")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+  );
+}
+
 export function TopSites() {
   const { t } = useTranslation();
   const [sites, setSites] = useState<TopSite[]>([]);
@@ -144,6 +237,7 @@ export function TopSites() {
   const [siteToBlock, setSiteToBlock] = useState<TopSite | PinnedSite | null>(
     null,
   );
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // デバッグ用：状態の変化を監視
   useEffect(() => {
@@ -370,6 +464,24 @@ export function TopSites() {
     });
   };
 
+  const addCustomSite = async (url: string, title: string) => {
+    // 重複確認
+    if (
+      pinnedSites.some((p) => p.url === url) ||
+      sites.some((s) => s.url === url) ||
+      blockedSites.includes(url)
+    ) {
+      // 既に存在する場合はピン済み扱いとして閉じる
+      setShowAddModal(false);
+      return;
+    }
+    const newPinnedSites = [...pinnedSites, { url, title }];
+    await handleSaveSettings({
+      topSites: { pinned: newPinnedSites, blocked: blockedSites },
+    });
+    setShowAddModal(false);
+  };
+
   const unpinSite = async (site: PinnedSite) => {
     const newPinnedSites = pinnedSites.filter((p) => p.url !== site.url);
     await handleSaveSettings({
@@ -423,6 +535,12 @@ export function TopSites() {
           site={siteToBlock}
           onConfirm={confirmBlockSite}
           onCancel={cancelBlockSite}
+        />
+      )}
+      {showAddModal && (
+        <AddSiteModal
+          onAdd={addCustomSite}
+          onCancel={() => setShowAddModal(false)}
         />
       )}
       <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
@@ -496,6 +614,20 @@ export function TopSites() {
               </span>
             </a>
           ))}
+          {/* Add new site tile */}
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="group flex flex-col items-center w-16 p-2 rounded-lg border border-dashed border-gray-500/50 text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-gray-700/50 transition-colors"
+            title={t("topSites.addSite")}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-700/40 group-hover:scale-110 transform transition-transform mb-1">
+              <span className="text-2xl leading-none">＋</span>
+            </div>
+            <span className="text-[10px] text-center leading-tight line-clamp-2">
+              {t("topSites.addSite")}
+            </span>
+          </button>
         </div>
       </div>
       {contextMenu && (
