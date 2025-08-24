@@ -134,6 +134,18 @@ export function UICustomization() {
                     setValue("hideUnifiedExtensionsButton", e.target.checked)}
                 />
               </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="disable-qr-code-button">
+                  {t("design.uiCustomization.display.disableQRCodeButton")}
+                </label>
+                <Switch
+                  id="disable-qr-code-button"
+                  checked={!!getValues("disableQRCodeButton")}
+                  onChange={(e) =>
+                    setValue("disableQRCodeButton", e.target.checked)}
+                />
+              </div>
             </div>
           </div>
 

@@ -78,6 +78,9 @@ function getOldUICustomizationConfig() {
           false,
         ),
       },
+      qrCode: {
+        disableButton: false,
+      },
     };
   } catch (e) {
     console.error("Failed to get UI customization config:", e);
@@ -101,6 +104,9 @@ function getOldUICustomizationConfig() {
       },
       bookmarkBar: {
         focusExpand: false,
+      },
+      qrCode: {
+        disableButton: false,
       },
     };
   }
@@ -208,6 +214,9 @@ function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         },
         bookmarkBar: {
           focusExpand: false,
+        },
+        qrCode: {
+          disableButton: false,
         },
       },
     };

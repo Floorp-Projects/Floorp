@@ -61,6 +61,7 @@ export const zDesignFormData = z.object({
   multirowTabNewtabInside: z.boolean(),
   disableFloorpStart: z.boolean(),
   bookmarkBarFocusExpand: z.boolean(),
+  disableQRCodeButton: z.boolean(),
 });
 
 export type DesignFormData = z.infer<typeof zDesignFormData>;

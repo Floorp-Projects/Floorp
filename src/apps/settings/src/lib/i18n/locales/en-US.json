@@ -190,7 +190,8 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
                 "deleteBrowserBorder": "Round the corners of pages",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+                "hideUnifiedExtensionsButton": "Hide unified extensions button",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Special Features",

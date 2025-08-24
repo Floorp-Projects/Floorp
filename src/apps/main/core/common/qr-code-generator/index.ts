@@ -1,8 +1,8 @@
 import { render } from "@nora/solid-xul";
-import { QRCodePageActionButton } from "./qr-code-button";
-import { QRCodePanel } from "./qr-code-panel";
-import { QRCodeManager } from "./qr-code-manager";
-import { noraComponent, NoraComponentBase } from "@core/utils/base";
+import { QRCodePageActionButton } from "./qr-code-button.tsx";
+import { QRCodePanel } from "./qr-code-panel.tsx";
+import { QRCodeManager } from "./qr-code-manager.tsx";
+import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
 import { createRoot, getOwner, runWithOwner } from "solid-js";
 
 export let manager: QRCodeManager;

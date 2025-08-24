@@ -7,6 +7,8 @@ import qrCodeIcon from "./icons/send.svg?inline";
 import i18next from "i18next";
 import { createSignal } from "solid-js";
 import { addI18nObserver } from "../../../i18n/config.ts";
+import { config } from "../designs/configs.ts";
+import { Show } from "solid-js";
 
 export function QRCodePageActionButton() {
   const [tooltip, setTooltip] = createSignal(
@@ -18,18 +20,20 @@ export function QRCodePageActionButton() {
   });
 
   return (
-    <xul:hbox
-      id="QRCodeGeneratePageAction"
-      data-l10n-id="qrcode-generate-page-action"
-      class="urlbar-page-action rounded"
-      style={{
-        "list-style-image": `url("${qrCodeIcon}")`,
-      }}
-      title={tooltip()}
-      role="button"
-      popup="qrcode-panel"
-    >
-      <xul:image id="QRCodeGeneratePageAction-image" class="urlbar-icon" />
-    </xul:hbox>
+    <Show when={!config().uiCustomization.qrCode.disableButton}>
+      <xul:hbox
+        id="QRCodeGeneratePageAction"
+        data-l10n-id="qrcode-generate-page-action"
+        class="urlbar-page-action rounded"
+        style={{
+          "list-style-image": `url("${qrCodeIcon}")`,
+        }}
+        title={tooltip()}
+        role="button"
+        popup="qrcode-panel"
+      >
+        <xul:image id="QRCodeGeneratePageAction-image" class="urlbar-icon" />
+      </xul:hbox>
+    </Show>
   );
 }

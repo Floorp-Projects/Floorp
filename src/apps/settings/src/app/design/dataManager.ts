@@ -199,6 +199,9 @@ export async function saveDesignSettings(
       bookmarkBar: {
         focusExpand: settings.bookmarkBarFocusExpand,
       },
+      qrCode: {
+        disableButton: settings.disableQRCodeButton,
+      },
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
@@ -242,6 +245,7 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
       data.uiCustomization.multirowTab.newtabInsideEnabled,
     bookmarkBarFocusExpand: data.uiCustomization.bookmarkBar?.focusExpand ??
       false,
+    disableQRCodeButton: data.uiCustomization.qrCode?.disableButton ?? false,
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
   };
   return formData;

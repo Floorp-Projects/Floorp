@@ -130,7 +130,8 @@
                 "title": "表示",
                 "disableFullscreenNotification": "フルスクリーン通知を無効にする",
                 "deleteBrowserBorder": "ページの角を丸める",
-                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す"
+                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す",
+                "disableQRCodeButton": "QRコードボタンを無効にする"
             },
             "special": {
                 "title": "特別な機能",

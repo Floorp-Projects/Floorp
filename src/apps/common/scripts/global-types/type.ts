@@ -65,6 +65,9 @@ export const zFloorpDesignConfigs = z.object({
     bookmarkBar: z.object({
       focusExpand: z.boolean().default(false),
     }).passthrough(),
+    qrCode: z.object({
+      disableButton: z.boolean().default(false),
+    }).passthrough(),
   }).passthrough(),
 }).passthrough();
 
