@@ -5,10 +5,11 @@
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
-import { addI18nObserver } from "#i18n-chrome/config.ts";
+import { addI18nObserver, setLanguage } from "#i18n/config-browser-chrome.ts";
 import { StyleElement } from "./styleElem";
 import { BrowserActionUtils } from "#features-chrome/utils/browser-action";
 import i18next from "i18next";
+import "#features-chrome/@types/i18next.d.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs",
@@ -35,16 +36,16 @@ export default class UndoClosedTab extends NoraComponentBase {
 
         aNode.tooltip = "undo-closed-tab-tooltip";
 
+        window.setLanguage = setLanguage;
+
         createRootHMR(
           () => {
             addI18nObserver((locale) => {
               aNode.label = i18next.t("undo-closed-tab.label", {
                 lng: locale,
-                ns: "undo",
               });
               tooltip.label = i18next.t("undo-closed-tab.tooltiptext", {
                 lng: locale,
-                ns: "undo",
               });
             });
           },

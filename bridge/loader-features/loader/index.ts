@@ -4,7 +4,7 @@
 
 import "vite/modulepreload-polyfill";
 
-import { initI18N } from "#i18n-chrome/config.ts";
+import { initI18NForBrowserChrome } from "#i18n/config-browser-chrome.ts";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
 import {
@@ -20,7 +20,7 @@ export default async function initScripts() {
   const { NoranekoConstants } = ChromeUtils.importESModule(
     "resource://noraneko/modules/NoranekoConstants.sys.mjs",
   );
-  initI18N();
+  initI18NForBrowserChrome();
   console.debug(
     `[noraneko-buildid2]\nuuid: ${NoranekoConstants.buildID2}\ndate: ${new Date(
       Number.parseInt(
