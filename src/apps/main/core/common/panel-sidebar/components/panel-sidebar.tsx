@@ -232,9 +232,11 @@ export class CPanelSidebar {
 
   public openInMainWindow(panelId: string) {
     const url = this.getPanelData(panelId)?.url;
+    const userContextId = this.getPanelData(panelId)?.userContextId;
     globalThis.gBrowser.addTab(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       inBackground: false,
+      userContextId: userContextId
     });
   }
 
