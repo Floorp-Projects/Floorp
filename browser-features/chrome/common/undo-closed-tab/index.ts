@@ -41,7 +41,7 @@ export default class UndoClosedTab extends NoraComponentBase {
         createRootHMR(
           () => {
             addI18nObserver((locale) => {
-              aNode.label = i18next.t("undo-closed-tab.tooltiptext", {
+              aNode.label = i18next.t("undo-closed-tab.label", {
                 lng: locale,
               });
               tooltip.label = i18next.t("undo-closed-tab.tooltiptext", {
