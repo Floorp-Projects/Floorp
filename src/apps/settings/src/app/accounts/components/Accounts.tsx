@@ -54,7 +54,6 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
         <a
           href="https://accounts.firefox.com/signin"
           target="_blank"
-          rel="noreferrer"
           className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
         >
           {t("accounts.manageMozillaAccount")}

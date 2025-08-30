@@ -92,7 +92,6 @@ export function Tabbar() {
             <a
               href="https://docs.floorp.app/docs/features/about-vertical-tab-bar"
               target="_blank"
-              rel="noreferrer"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >
               {t("design.learnMore")}

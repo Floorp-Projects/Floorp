@@ -96,7 +96,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           </p>
         </div>
         <button
-          onClick={() => onClose ? onClose() : navigate("/features/design")}
+          onClick={() => (onClose ? onClose() : navigate("/features/design"))}
           type="button"
           className="btn btn-primary"
         >
@@ -117,12 +117,12 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
               {t(
                 "design.lepton-preferences.experimentalWarning.leptonRepository",
-              )}:
+              )}
+              :
             </span>
             <a
               href="https://github.com/black7375/Firefox-UI-Fix"
               target="_blank"
-              rel="noreferrer"
               className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
             >
               {t(
@@ -301,11 +301,10 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
               <Switch
                 id="hidden-bookmarkbar-label"
                 checked={settings.hiddenBookmarkbarLabel}
-                onChange={(e) =>
-                  handleSettingChange(
-                    "hiddenBookmarkbarLabel",
-                    e.target.checked,
-                  )}
+                onChange={(e) => handleSettingChange(
+                  "hiddenBookmarkbarLabel",
+                  e.target.checked,
+                )}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -431,11 +430,10 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
               <Switch
                 id="url-view-go-button-when-typing"
                 checked={settings.urlViewGoButtonWhenTyping}
-                onChange={(e) =>
-                  handleSettingChange(
-                    "urlViewGoButtonWhenTyping",
-                    e.target.checked,
-                  )}
+                onChange={(e) => handleSettingChange(
+                  "urlViewGoButtonWhenTyping",
+                  e.target.checked,
+                )}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -445,11 +443,10 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
               <Switch
                 id="url-view-always-show-page-actions"
                 checked={settings.urlViewAlwaysShowPageActions}
-                onChange={(e) =>
-                  handleSettingChange(
-                    "urlViewAlwaysShowPageActions",
-                    e.target.checked,
-                  )}
+                onChange={(e) => handleSettingChange(
+                  "urlViewAlwaysShowPageActions",
+                  e.target.checked,
+                )}
               />
             </div>
           </CardContent>

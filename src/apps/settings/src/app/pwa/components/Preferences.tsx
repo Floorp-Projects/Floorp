@@ -18,12 +18,16 @@ export function Preferences() {
 
   return (
     <>
-      {showRestartModal ? (
-        <RestartModal
-          onClose={() => setShowRestartModal(false)}
-          label={t("progressiveWebApp.needRestartDescriptionForEnableAndDisable")}
-        />
-      ) : null}
+      {showRestartModal
+        ? (
+          <RestartModal
+            onClose={() => setShowRestartModal(false)}
+            label={t(
+              "progressiveWebApp.needRestartDescriptionForEnableAndDisable",
+            )}
+          />
+        )
+        : null}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -81,7 +85,6 @@ export function Preferences() {
             <a
               href="https://docs.floorp.app/docs/features/how-to-use-pwa"
               target="_blank"
-              rel="noreferrer"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >
               {t("progressiveWebApp.learnMore")}
