@@ -159,11 +159,8 @@ export class WorkspacesTabManager {
     // a race where Firefox decides to close the window when the last visible tab disappears.
     let createdFallback = false;
     try {
-      const remainingVisible = (globalThis.gBrowser.visibleTabs as XULElement[])
-        .filter((t: XULElement & { closing?: boolean }) =>
-          t !== tab && !t.closing
-        );
-      if (remainingVisible.length === 0) {
+      const allTabs = globalThis.gBrowser.tabs as XULElement[];
+      if (allTabs.length === 1 && allTabs[0] === tab) {
         // Always create fallback inside the CURRENT workspace to remain there
         const fallbackWorkspace = currentWorkspaceId || workspaceId;
         const newVisible = this.createTabForWorkspace(fallbackWorkspace, true);
