@@ -290,6 +290,9 @@ export function Settings({
                 <span className="block text-sm text-gray-500 dark:text-gray-400">
                   {t("settings.disableFloorpStartDescription")}
                 </span>
+                <span className="block text-xs text-warning dark:text-yellow-400 mt-1">
+                  {t("settings.restartRequired")}
+                </span>
               </span>
             </label>
           </div>
