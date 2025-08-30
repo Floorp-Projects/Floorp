@@ -27,6 +27,9 @@
         "selectFolder": "フォルダーを選択",
         "selected": "選択中",
         "imageRecommendation": "推奨: 1920x1080 以上",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Floorp Start を無効化 (従来の about:newtab を使用)",
+        "disableFloorpStartDescription": "有効にすると、Floorp Start の代わりに従来の Firefox の新しいタブ/ホームページが表示されます。",
         "close": "閉じる"
     },
     "searchBar": {

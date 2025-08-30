@@ -34,7 +34,10 @@
         "selectFolder": "Select Folder",
         "selected": "Selected",
         "enableSlideshow": "Enable Slideshow",
-        "slideshowInterval": "Interval (seconds)"
+        "slideshowInterval": "Interval (seconds)",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page."
     },
     "searchBar": {
         "searchOrEnterUrl": "Search or enter URL",

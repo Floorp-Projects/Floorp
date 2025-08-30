@@ -9,6 +9,10 @@ import {
   getNewTabSettings,
   saveNewTabSettings,
 } from "@/utils/dataManager.ts";
+import {
+  getDisableFloorpStart,
+  setDisableFloorpStart,
+} from "@/utils/designPref.ts";
 
 export function Settings({
   isOpen,
@@ -37,6 +41,7 @@ export function Settings({
     { name: string; url: string }[]
   >([]);
   const [blockedSites, setBlockedSites] = useState<string[]>([]);
+  const [disableFloorpStart, setDisableFloorpStartState] = useState(false);
 
   useEffect(() => {
     if (backgroundType === "custom" && fileName) {
@@ -59,9 +64,14 @@ export function Settings({
       const settings = await getNewTabSettings();
       setBlockedSites(settings.topSites.blocked);
     };
+    const loadDisableFloorpStart = async () => {
+      const value = await getDisableFloorpStart();
+      setDisableFloorpStartState(value);
+    };
 
     if (isOpen) {
       loadBlockedSites();
+      loadDisableFloorpStart();
     }
   }, [isOpen]);
 
@@ -253,6 +263,40 @@ export function Settings({
 
         <section>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            {t("settings.floorpStart")}
+          </h3>
+          <div className="space-y-2">
+            <label className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                checked={disableFloorpStart}
+                onChange={async (e) => {
+                  const v = e.target.checked;
+                  setIsSubmitting(true);
+                  try {
+                    setDisableFloorpStartState(v);
+                    await setDisableFloorpStart(v);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                disabled={isSubmitting}
+                className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary mt-1"
+              />
+              <span className="text-gray-700 dark:text-gray-200">
+                <span className="block font-medium">
+                  {t("settings.disableFloorpStart")}
+                </span>
+                <span className="block text-sm text-gray-500 dark:text-gray-400">
+                  {t("settings.disableFloorpStartDescription")}
+                </span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
             {t("settings.blockedSites", "Blocked Sites")}
           </h3>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
@@ -400,6 +444,7 @@ export function Settings({
                   </div>
                 )}
                 <button
+                  type="button"
                   onClick={handleFolderSelect}
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold hover:bg-primary/20 transition-colors"

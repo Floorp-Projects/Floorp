@@ -98,8 +98,8 @@ export class DOMLayoutManager {
       fullscreenWrapper.after(navbar);
       this.isNavbarAtBottom = true;
 
-  // Delay urlbar fix to avoid early DOM mutation causing layout glitches (Issue #1936)
-  this.scheduleFixUrlbarInputContainer();
+      // Delay urlbar fix to avoid early DOM mutation causing layout glitches (Issue #1936)
+      this.scheduleFixUrlbarInputContainer();
     } catch (error: unknown) {
       console.error(
         `${DOMLayoutManager.DEBUG_PREFIX} Error in moveNavbarToBottom:`,
@@ -134,7 +134,9 @@ export class DOMLayoutManager {
     // Start after SessionStore initialization, then attempt several times with backoff.
     const sessionStore = globalThis.SessionStore;
     if (!sessionStore?.promiseInitialized) {
-      console.warn(`${DOMLayoutManager.DEBUG_PREFIX} SessionStore not ready for urlbar fix`);
+      console.warn(
+        `${DOMLayoutManager.DEBUG_PREFIX} SessionStore not ready for urlbar fix`,
+      );
       return;
     }
 
@@ -155,14 +157,18 @@ export class DOMLayoutManager {
   private retryFixUrlbarInputContainer(attempt = 0) {
     const MAX_ATTEMPTS = 10;
     const urlbarView = document?.querySelector(".urlbarView");
-    const urlbarInputContainer = document?.querySelector(".urlbar-input-container");
+    const urlbarInputContainer = document?.querySelector(
+      ".urlbar-input-container",
+    );
 
     if (urlbarView && urlbarInputContainer) {
       // Only move if not already placed
       if (urlbarView.nextElementSibling !== urlbarInputContainer) {
         try {
           urlbarView.after(urlbarInputContainer);
-          console.info(`${DOMLayoutManager.DEBUG_PREFIX} urlbar input container positioned (attempt ${attempt})`);
+          console.info(
+            `${DOMLayoutManager.DEBUG_PREFIX} urlbar input container positioned (attempt ${attempt})`,
+          );
         } catch (error: unknown) {
           console.error(
             `${DOMLayoutManager.DEBUG_PREFIX} Error moving urlbar input container:`,
@@ -178,10 +184,14 @@ export class DOMLayoutManager {
       setTimeout(() => this.retryFixUrlbarInputContainer(attempt + 1), delay);
     } else {
       if (!urlbarView) {
-        console.warn(`${DOMLayoutManager.DEBUG_PREFIX} urlbarView element not found after retries`);
+        console.warn(
+          `${DOMLayoutManager.DEBUG_PREFIX} urlbarView element not found after retries`,
+        );
       }
       if (!urlbarInputContainer) {
-        console.warn(`${DOMLayoutManager.DEBUG_PREFIX} urlbarInputContainer element not found after retries`);
+        console.warn(
+          `${DOMLayoutManager.DEBUG_PREFIX} urlbarInputContainer element not found after retries`,
+        );
       }
     }
   }
@@ -197,8 +207,8 @@ export class DOMLayoutManager {
     const MAX_DURATION_MS = 7000; // stop after 7s
     const REQUIRED_STABLE_TICKS = 5; // number of consecutive OK ticks before stopping
     const INTERVAL_MS = 300;
-  const perf = globalThis.performance;
-  const start = perf ? perf.now() : Date.now();
+    const perf = globalThis.performance;
+    const start = perf ? perf.now() : Date.now();
     this.urlbarStableCounter = 0;
 
     this.urlbarFixIntervalId = setInterval(() => {
@@ -209,12 +219,19 @@ export class DOMLayoutManager {
         this.urlbarStableCounter = 0; // reset stability window
       }
 
-  const elapsed = (perf ? perf.now() : Date.now()) - start;
-      if (this.urlbarStableCounter >= REQUIRED_STABLE_TICKS || elapsed > MAX_DURATION_MS) {
+      const elapsed = (perf ? perf.now() : Date.now()) - start;
+      if (
+        this.urlbarStableCounter >= REQUIRED_STABLE_TICKS ||
+        elapsed > MAX_DURATION_MS
+      ) {
         if (this.urlbarFixIntervalId) {
           clearInterval(this.urlbarFixIntervalId);
           this.urlbarFixIntervalId = null;
-          console.info(`${DOMLayoutManager.DEBUG_PREFIX} Stopped urlbar polling (stable=${this.urlbarStableCounter >= REQUIRED_STABLE_TICKS}, elapsed=${Math.round(elapsed)}ms)`);
+          console.info(
+            `${DOMLayoutManager.DEBUG_PREFIX} Stopped urlbar polling (stable=${
+              this.urlbarStableCounter >= REQUIRED_STABLE_TICKS
+            }, elapsed=${Math.round(elapsed)}ms)`,
+          );
         }
       }
     }, INTERVAL_MS) as unknown as number; // casting due to TS DOM lib / Gecko types mismatch
@@ -230,7 +247,7 @@ export class DOMLayoutManager {
 
     this.urlbarMutationObserver = new MutationObserver((mutations) => {
       // Debounced check: if any childList changes might affect order
-      const needsCheck = mutations.some(m => m.type === "childList");
+      const needsCheck = mutations.some((m) => m.type === "childList");
       if (needsCheck) {
         // microtask -> macrotask to let DOM settle
         setTimeout(() => this.ensureUrlbarOrder(), 0);
@@ -238,24 +255,37 @@ export class DOMLayoutManager {
     });
 
     try {
-      this.urlbarMutationObserver.observe(target, { childList: true, subtree: true });
+      this.urlbarMutationObserver.observe(target, {
+        childList: true,
+        subtree: true,
+      });
     } catch (e) {
-      console.warn(`${DOMLayoutManager.DEBUG_PREFIX} Failed to start MutationObserver`, e);
+      console.warn(
+        `${DOMLayoutManager.DEBUG_PREFIX} Failed to start MutationObserver`,
+        e,
+      );
     }
   }
 
   /** Ensure the urlbar input container is placed after .urlbarView. Returns true if layout is correct. */
   private ensureUrlbarOrder(): boolean {
     const urlbarView = document?.querySelector(".urlbarView");
-    const urlbarInputContainer = document?.querySelector(".urlbar-input-container");
+    const urlbarInputContainer = document?.querySelector(
+      ".urlbar-input-container",
+    );
     if (!urlbarView || !urlbarInputContainer) return false;
     if (urlbarView.nextElementSibling === urlbarInputContainer) return true;
     try {
       urlbarView.after(urlbarInputContainer);
-      console.info(`${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder: corrected ordering`);
+      console.info(
+        `${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder: corrected ordering`,
+      );
       return true;
     } catch (e) {
-      console.error(`${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder failed`, e);
+      console.error(
+        `${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder failed`,
+        e,
+      );
       return false;
     }
   }
