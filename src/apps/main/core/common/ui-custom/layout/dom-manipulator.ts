@@ -13,6 +13,9 @@ export class DOMLayoutManager {
   private originalNavbarParent: Element | null = null;
   private originalNavbarNextSibling: Element | null = null;
   private isNavbarAtBottom = false;
+  private urlbarFixIntervalId: number | null = null;
+  private urlbarMutationObserver: MutationObserver | null = null;
+  private urlbarStableCounter = 0;
 
   private get navBar(): XULElement {
     const element = document?.getElementById("nav-bar") as XULElement;
@@ -95,7 +98,8 @@ export class DOMLayoutManager {
       fullscreenWrapper.after(navbar);
       this.isNavbarAtBottom = true;
 
-      this.fixUrlbarInputContainer();
+  // Delay urlbar fix to avoid early DOM mutation causing layout glitches (Issue #1936)
+  this.scheduleFixUrlbarInputContainer();
     } catch (error: unknown) {
       console.error(
         `${DOMLayoutManager.DEBUG_PREFIX} Error in moveNavbarToBottom:`,
@@ -121,56 +125,138 @@ export class DOMLayoutManager {
     // If navbar is already at top, no action needed
   }
 
-  private fixUrlbarInputContainer() {
-    // Wait for SessionStore to be initialized
+  /**
+   * Schedule fix for urlbar input container with retries.
+   * Sometimes Firefox builds urlbar sub-DOM asynchronously; executing too early causes
+   * the address bar to render in the wrong place (Issue #1936).
+   */
+  private scheduleFixUrlbarInputContainer() {
+    // Start after SessionStore initialization, then attempt several times with backoff.
     const sessionStore = globalThis.SessionStore;
-
-    if (!sessionStore) {
-      console.warn(
-        `${DOMLayoutManager.DEBUG_PREFIX} SessionStore not available`,
-      );
+    if (!sessionStore?.promiseInitialized) {
+      console.warn(`${DOMLayoutManager.DEBUG_PREFIX} SessionStore not ready for urlbar fix`);
       return;
     }
 
-    if (sessionStore?.promiseInitialized) {
-      sessionStore.promiseInitialized.then(() => {
-        const urlbarView = document?.querySelector(".urlbarView");
-        const urlbarInputContainer = document?.querySelector(
-          ".urlbar-input-container",
+    sessionStore.promiseInitialized
+      .then(() => {
+        this.retryFixUrlbarInputContainer();
+        this.startUrlbarPositionPolling();
+        this.startUrlbarMutationObserver();
+      })
+      .catch((error: unknown) => {
+        console.error(
+          `${DOMLayoutManager.DEBUG_PREFIX} Error waiting for SessionStore initialization:`,
+          error,
         );
+      });
+  }
 
-        if (!urlbarView) {
-          console.warn(
-            `${DOMLayoutManager.DEBUG_PREFIX} urlbarView element not found`,
-          );
-          return;
-        }
+  private retryFixUrlbarInputContainer(attempt = 0) {
+    const MAX_ATTEMPTS = 10;
+    const urlbarView = document?.querySelector(".urlbarView");
+    const urlbarInputContainer = document?.querySelector(".urlbar-input-container");
 
-        if (!urlbarInputContainer) {
-          console.warn(
-            `${DOMLayoutManager.DEBUG_PREFIX} urlbarInputContainer element not found`,
-          );
-          return;
-        }
-
+    if (urlbarView && urlbarInputContainer) {
+      // Only move if not already placed
+      if (urlbarView.nextElementSibling !== urlbarInputContainer) {
         try {
           urlbarView.after(urlbarInputContainer);
+          console.info(`${DOMLayoutManager.DEBUG_PREFIX} urlbar input container positioned (attempt ${attempt})`);
         } catch (error: unknown) {
           console.error(
             `${DOMLayoutManager.DEBUG_PREFIX} Error moving urlbar input container:`,
             error,
           );
         }
-      }).catch((error: unknown) => {
-        console.error(
-          `${DOMLayoutManager.DEBUG_PREFIX} Error waiting for SessionStore initialization:`,
-          error,
-        );
-      });
+      }
+      return; // Success or already positioned
+    }
+
+    if (attempt < MAX_ATTEMPTS) {
+      const delay = 50 + attempt * 50; // incremental backoff
+      setTimeout(() => this.retryFixUrlbarInputContainer(attempt + 1), delay);
     } else {
-      console.warn(
-        `${DOMLayoutManager.DEBUG_PREFIX} SessionStore.promiseInitialized not available`,
-      );
+      if (!urlbarView) {
+        console.warn(`${DOMLayoutManager.DEBUG_PREFIX} urlbarView element not found after retries`);
+      }
+      if (!urlbarInputContainer) {
+        console.warn(`${DOMLayoutManager.DEBUG_PREFIX} urlbarInputContainer element not found after retries`);
+      }
+    }
+  }
+
+  /** Start lightweight polling for a short period to ensure late DOM tweaks don't revert layout. */
+  private startUrlbarPositionPolling() {
+    // Clear existing
+    if (this.urlbarFixIntervalId) {
+      clearInterval(this.urlbarFixIntervalId);
+      this.urlbarFixIntervalId = null;
+    }
+
+    const MAX_DURATION_MS = 7000; // stop after 7s
+    const REQUIRED_STABLE_TICKS = 5; // number of consecutive OK ticks before stopping
+    const INTERVAL_MS = 300;
+  const perf = globalThis.performance;
+  const start = perf ? perf.now() : Date.now();
+    this.urlbarStableCounter = 0;
+
+    this.urlbarFixIntervalId = setInterval(() => {
+      const ok = this.ensureUrlbarOrder();
+      if (ok) {
+        this.urlbarStableCounter++;
+      } else {
+        this.urlbarStableCounter = 0; // reset stability window
+      }
+
+  const elapsed = (perf ? perf.now() : Date.now()) - start;
+      if (this.urlbarStableCounter >= REQUIRED_STABLE_TICKS || elapsed > MAX_DURATION_MS) {
+        if (this.urlbarFixIntervalId) {
+          clearInterval(this.urlbarFixIntervalId);
+          this.urlbarFixIntervalId = null;
+          console.info(`${DOMLayoutManager.DEBUG_PREFIX} Stopped urlbar polling (stable=${this.urlbarStableCounter >= REQUIRED_STABLE_TICKS}, elapsed=${Math.round(elapsed)}ms)`);
+        }
+      }
+    }, INTERVAL_MS) as unknown as number; // casting due to TS DOM lib / Gecko types mismatch
+  }
+
+  /** Use MutationObserver for structural changes after initial stabilization (customization UI, extensions, etc.) */
+  private startUrlbarMutationObserver() {
+    // Disconnect existing observer
+    this.urlbarMutationObserver?.disconnect();
+
+    const target = document?.getElementById("nav-bar");
+    if (!target) return;
+
+    this.urlbarMutationObserver = new MutationObserver((mutations) => {
+      // Debounced check: if any childList changes might affect order
+      const needsCheck = mutations.some(m => m.type === "childList");
+      if (needsCheck) {
+        // microtask -> macrotask to let DOM settle
+        setTimeout(() => this.ensureUrlbarOrder(), 0);
+      }
+    });
+
+    try {
+      this.urlbarMutationObserver.observe(target, { childList: true, subtree: true });
+    } catch (e) {
+      console.warn(`${DOMLayoutManager.DEBUG_PREFIX} Failed to start MutationObserver`, e);
+    }
+  }
+
+  /** Ensure the urlbar input container is placed after .urlbarView. Returns true if layout is correct. */
+  private ensureUrlbarOrder(): boolean {
+    const urlbarView = document?.querySelector(".urlbarView");
+    const urlbarInputContainer = document?.querySelector(".urlbar-input-container");
+    if (!urlbarView || !urlbarInputContainer) return false;
+    if (urlbarView.nextElementSibling === urlbarInputContainer) return true;
+    try {
+      urlbarView.after(urlbarInputContainer);
+      console.info(`${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder: corrected ordering`);
+      return true;
+    } catch (e) {
+      console.error(`${DOMLayoutManager.DEBUG_PREFIX} ensureUrlbarOrder failed`, e);
+      return false;
     }
   }
 
