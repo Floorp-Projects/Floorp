@@ -114,16 +114,15 @@ function addFloorpHubCategory(): void {
 }
 
 function hideNewTabPage(): void {
-  const homeCategory = document.querySelector("#category-home");
   const pref = Services.prefs.getStringPref("floorp.design.configs");
   const config = JSON.parse(pref).uiCustomization.disableFloorpStart;
 
-  if (
-    homeCategory && !config
-  ) {
-    homeCategory.remove();
+  if (!config) {
+    document.querySelectorAll('#category-home, [data-category="paneHome"]').forEach((el) => {
+      el.remove();
+    });
   }
 }
 
 addFloorpHubCategory();
-hideNewTabPage();
+Services.obs.addObserver(hideNewTabPage, 'home-pane-loaded');
