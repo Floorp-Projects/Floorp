@@ -199,6 +199,7 @@ export class WorkspacesTabManager {
           e,
         );
         try {
+          console.debug("gBrowser.addTab called in handleTabClose");
           const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
             triggeringPrincipal: Services.scriptSecurityManager
@@ -376,8 +377,17 @@ export class WorkspacesTabManager {
     select = false,
     url?: string,
   ) {
-    const targetURL = url ??
-      Services.prefs.getStringPref("browser.startup.homepage");
+    console.debug("createTabForWorkspace called with:", {
+      workspaceId,
+      select,
+      url,
+    });
+    const targetURL =
+      url ?? Services.prefs.getStringPref("browser.startup.homepage");
+    console.debug(
+      "gBrowser.addTab called in createTabForWorkspace with url:",
+      targetURL,
+    );
     const tab = globalThis.gBrowser.addTab(targetURL, {
       skipAnimation: true,
       inBackground: false,
@@ -448,6 +458,7 @@ export class WorkspacesTabManager {
         console.error("Critical error handling workspace change:", innerError);
 
         try {
+          console.debug("gBrowser.addTab called in changeWorkspace");
           const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
             triggeringPrincipal: Services.scriptSecurityManager
