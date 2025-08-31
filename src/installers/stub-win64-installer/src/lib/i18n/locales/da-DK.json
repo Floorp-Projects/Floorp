@@ -40,7 +40,9 @@
             "error": "Installation mislykkedes",
             "launchCheckbox": "Start Floorp-browseren efter installation",
             "closeButton": "Luk installationsprogram",
-            "countdownMessage": "Installationsprogram lukker om {{count}} sekunder"
+            "countdownMessage": "Installationsprogram lukker om {{count}} sekunder",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "Kunne ikke starte PowerShell-process: {{0}}",
             "admin_install_failed": "Installation med administratorrettigheder mislykkedes. Exit-kode: {{0}}",
             "user_installer_launch": "Kunne ikke starte installationsprocessen med brugerrettigheder: {{0}}",
-            "user_installer_execution": "Der opstod et problem under kørsel af installationen med brugerrettigheder: {{0}}"
+            "user_installer_execution": "Der opstod et problem under kørsel af installationen med brugerrettigheder: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
         }
     }
 }

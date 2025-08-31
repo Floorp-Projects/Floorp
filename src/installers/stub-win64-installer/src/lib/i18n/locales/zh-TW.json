@@ -18,7 +18,7 @@
         },
         "progress": {
             "installing": "正在安裝中...",
-            "slideCounter": "滑動 {{current}}/{{total}}"
+            "slideCounter": "幻燈片 {{current}}/{{total}}"
         },
         "modal": {
             "selectLocation": "選擇安裝位置",
@@ -40,7 +40,9 @@
             "error": "安裝失敗",
             "launchCheckbox": "安裝後啟動 Floorp 瀏覽器",
             "closeButton": "關閉安裝程式",
-            "countdownMessage": "安裝程式會在 {{count}} 秒後關閉"
+            "countdownMessage": "安裝程式會在 {{count}} 秒後關閉",
+            "legacyDownloadMessage": "你也可以試試傳統的安裝程式。",
+            "legacyDownloadButton": "下載"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "啟動 PowerShell 程序失敗： {{0}}",
             "admin_install_failed": "使用管理員權限安裝失敗。退出代碼： {{0}}",
             "user_installer_launch": "以使用者權限啟動安裝程式程序失敗： {{0}}",
-            "user_installer_execution": "以使用者權限執行安裝程式時發生問題： {{0}}"
+            "user_installer_execution": "以使用者權限執行安裝程式時發生問題： {{0}}",
+            "cpu_not_supported": "此裝置的 CPU 不支援 SSE4.1。Floorp 需要支援 SSE4.1 的處理器。",
+            "cpu_check_failed": "驗證 CPU 要求失敗。請檢查系統要求。"
         }
     }
 }

@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "隱藏分頁列和標題列",
         "showTabBarOnBottomOfNavigationBar": "在瀏覽位址列底部顯示分頁列",
         "showTabBarOnBottomOfWindow": "在視窗底部顯示分頁列",
+        "maxRowEnabled": "限制分頁列的行數",
+        "maxRow": "分頁列的最大行數",
         "tab": {
             "title": "分頁列",
             "footerLinkText": "關於分頁設定",
@@ -116,6 +118,64 @@
             "minHeight": "最小分頁高度",
             "minHeightError": "分頁高度必須介於 {{min}} 和 {{max}} 像素之間。"
         },
+        "lepton-preferences": {
+            "title": "Lepton 設定",
+            "description": "Lepton 進階主題偏好設定",
+            "configureLepton": "設定 Lepton",
+            "back": "返回",
+            "experimentalWarning": {
+                "title": "⚠️ 測試功能",
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
+                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
+                "visitRepository": "訪問儲存庫頁面"
+            },
+            "autohide": {
+                "title": "自動隱藏設定",
+                "tab": "自動隱藏分頁列",
+                "navbar": "自動隱藏工具列",
+                "sidebar": "自動隱藏側邊欄",
+                "backButton": "自動隱藏\"返回\"鈕",
+                "forwardButton": "自動隱藏\"前進\"鈕",
+                "pageAction": "自動隱藏位址欄上的按鈕"
+            },
+            "hidden": {
+                "title": "隱藏設定",
+                "tabIcon": "隱藏分頁圖示",
+                "tabbar": "隱藏分頁列",
+                "navbar": "隱藏工具列",
+                "sidebarHeader": "隱藏側邊欄標題",
+                "urlbarIconbox": "隱藏位址欄圖示",
+                "bookmarkbarIcon": "隱藏書籤列圖示",
+                "bookmarkbarLabel": "隱藏書籤列文本",
+                "disabledMenu": "隱藏不可用的選單項目"
+            },
+            "icon": {
+                "title": "圖示設定",
+                "disabled": "停用 Lepton 的選單項目以及面板的圖示",
+                "menu": "啟用 Lepton 的選單項目圖示"
+            },
+            "centered": {
+                "title": "居中設定",
+                "tab": "居中顯示分頁標題",
+                "urlbar": "居中顯示位址欄文本",
+                "bookmarkbar": "居中顯示書籤列項目"
+            },
+            "urlView": {
+                "title": "URL 檢視設定",
+                "moveIconToLeft": "將位址欄圖示移至左邊",
+                "goButtonWhenTyping": "打字時顯示\"前往\"按鈕",
+                "alwaysShowPageActions": "始終在位址欄顯示頁面操作"
+            },
+            "tabbar": {
+                "title": "標籤列設定",
+                "asTitlebar": "在標題欄中顯示分頁列",
+                "oneLiner": "合併分頁列及工具列"
+            },
+            "sidebar": {
+                "title": "側邊欄設定",
+                "overlap": "在網站內容上顯示側邊欄"
+            }
+        },
         "uiCustomization": {
             "title": "介面客製化",
             "needRestartDescriptionForEnableAndDisable": "要完全啟用或停用此介面客製化功能，必須重新啟動 {{productName}}。",
@@ -130,7 +190,8 @@
                 "title": "顯示",
                 "disableFullscreenNotification": "停用全螢幕通知",
                 "deleteBrowserBorder": "圓化頁面邊緣",
-                "hideUnifiedExtensionsButton": "隱藏統合擴充套件按鈕"
+                "hideUnifiedExtensionsButton": "隱藏統合擴充套件按鈕",
+                "disableQRCodeButton": "停用 QR 碼按鈕"
             },
             "special": {
                 "title": "特色功能",

@@ -5,11 +5,27 @@
         "languageSupport": "Språkstöd",
         "features": "Funktioner",
         "featureIntroduction": "Funktion introduktion",
+        "hub": "Floorp Hub",
+        "hubIntro": "Om Floorp Hub",
         "customize": "Anpassa",
         "initialSettings": "Initiala inställningar",
         "complete": "Slutförd",
         "previous": "Föregående",
         "next": "Nästa"
+    },
+    "hubPage": {
+        "title": "Om Floorp Hub",
+        "subtitle": "En central plats för Floorp-specifika inställningar.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
+        "openHub": "Öppna about:hub",
+        "openPreferences": "Öppna inställningar (about:preferences)",
+        "tip": "Tips: du kan också komma åt Floorp Hub från sidofältet för inställningar i Firefox.",
+        "features": {
+            "dedicated": "Dedikerat Floorp-inställningscenter",
+            "accessible": "Tillgängligt från about:hub eller Firefox inställningar",
+            "centralized": "Alla Floorp-specifika alternativ på ett ställe"
+        }
     },
     "customize": {
         "title": "Anpassa Floorp",
@@ -33,6 +49,12 @@
             "default": "Standard",
             "search": "Sök",
             "noEnginesFound": "Inga sökmotorer hittades."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
+            "openHub": "Öppna about:hub",
+            "openPreferences": "Öppna inställningar (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "För mer detaljerade inställningar kan du anpassa via alternativet Inställningar i menyknappen längst upp till höger.",
         "resourcesLabel": "Resurser",
         "defaultBrowserSuccess": "Floorp har ställts in som din standardwebbläsare!"
+    },
+    "whatsNew": {
+        "title": "Välkommen till Floorp {{version}}!",
+        "subtitle": "Kolla in vad som är nytt i Floorp!",
+        "tags": {
+            "settings": "Inställningar",
+            "productivity": "Produktivitet",
+            "workspaces": "Arbetsytor",
+            "pwa": "PWA",
+            "gestures": "Gester"
+        },
+        "footer": {
+            "follow": "Följ",
+            "privacy": "Sekretess och villkor",
+            "about": "Om Floorp",
+            "copyright": "© {{year}} Projekt. Alla rättigheter reserverade."
+        }
     }
 }

@@ -15,40 +15,40 @@
             "cancel": "İptal Et"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Circle",
-            "compass": "Compass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
-            "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "article": "Bölüm",
+            "book": "Kitap",
+            "briefcase": "İş Çantası",
+            "cart": "Alışveriş Sepeti",
+            "chat": "Sohbet",
+            "chill": "Rahat",
+            "circle": "Daire",
+            "compass": "Pusula",
+            "code": "Kod",
+            "dollar": "Dolar",
+            "fence": "Çit",
+            "fingerprint": "Parmak İzi",
+            "food": "Yemek",
+            "fruit": "Meyve",
+            "game": "Oyun",
+            "gear": "Ayarlar",
+            "gift": "Hediye",
+            "key": "Anahtar",
+            "lightning": "Şimşek",
+            "network": "Ağ",
+            "notes": "Notlar",
+            "paint": "Resim",
+            "photo": "Fotoğraf",
+            "pin": "İğne",
+            "pet": "Evcil hayvan",
+            "question": "Soru",
+            "smartphone": "Akıllı Telefon",
+            "star": "Yıldız",
+            "tree": "Ağaç",
+            "vacation": "Tatil",
+            "love": "Aşk",
+            "moon": "Ay",
+            "music": "Müzik",
+            "user": "Kullanıcı"
         },
         "service": {
             "new-workspace": "Yeni Çalışma Alanı ({{count}})"
@@ -57,7 +57,7 @@
             "move-up": "Bu Çalışma Alanını Yukarı Taşı",
             "move-down": "Bu Çalışma Alanını Aşağı Taşı",
             "delete": "Çalışma Alanını Sil",
-            "manage": "Çalışma Alanlanını Yönet"
+            "manage": "Çalışma Alanını Yönet"
         },
         "popup": {
             "create-new": "Yeni Çalışma Alanı Oluştur...",
@@ -67,7 +67,7 @@
             "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı"
         },
         "error": {
-            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
+            "invalidWorkspaceID": "Geçersiz çalışma alanı ID'si (sıralama güncel olmayabilir)"
         }
     },
     "statusbar": {
@@ -190,18 +190,18 @@
         }
     },
     "qrCode": {
-        "pageAction": "Generate QR Code",
-        "modalTitle": "QR Code Generator",
-        "loading": "Generating QR Code...",
-        "copyButton": "Copy Image",
-        "downloadButton": "Download",
-        "closeButton": "Close",
-        "copySuccess": "QR code copied to clipboard!",
-        "copyError": "Failed to copy QR code",
-        "generateError": "Failed to generate QR code"
+        "pageAction": "QR kod oluştur",
+        "modalTitle": "QR Kod Oluşturucu",
+        "loading": "QR Kod Oluşturuluyor...",
+        "copyButton": "Resmi Kopyala",
+        "downloadButton": "İndir",
+        "closeButton": "Kapat",
+        "copySuccess": "QR kod panoya kopyalandı",
+        "copyError": "QR kod kopyalanamadı",
+        "generateError": "QR kod oluşturulamadı"
     },
-    "qrcode-generate-page-action": "Generate QR Code for this page",
-    "qrcode-generate-page-action-title": "QR Code Generator",
+    "qrcode-generate-page-action": "Bu sayfa için QR Kod oluşturun",
+    "qrcode-generate-page-action-title": "QR Kod Oluşturucu",
     "panelSidebar": {
         "modal": {
             "type": "Panel Türü",
@@ -243,20 +243,20 @@
         "editor_path_not_found": "Editör Yolu Bulunamadı",
         "set_pref_description": "Lütfen editör yolunu ayarlayın",
         "please_enter_filename": "Lütfen bir dosya adı girin",
-        "file_created": "File Created",
-        "file_created_successfully": "File created successfully",
-        "open_file_in_editor": "Open file in editor?",
-        "error_title": "Error",
-        "folder_open_failed": "Failed to open CSS folder",
-        "edit_failed": "Failed to edit file"
+        "file_created": "Dosya Oluşturuldu",
+        "file_created_successfully": "Dosya başarıyla oluşturuldu!",
+        "open_file_in_editor": "Dosya editörde açılsın mı?",
+        "error_title": "Hata",
+        "folder_open_failed": "CSS klasörü açılamadı",
+        "edit_failed": "Dosya düzenlenemedi"
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
-            "restart-cache-clear": "Restart with Cache Clear",
-            "restart-safe-mode": "Restart in Safe Mode",
-            "restart-profile-manager": "Restart with Profile Manager"
+            "title": "Yeniden Başlat",
+            "normal-restart": "Yeniden Başlat",
+            "restart-cache-clear": "Önbelleği Temizleme ve Yeniden Başlat",
+            "restart-safe-mode": "Güvenli Modda Yeniden Başlat",
+            "restart-profile-manager": "Profil Yöneticisi ile Yeniden Başlat"
         }
     }
 }

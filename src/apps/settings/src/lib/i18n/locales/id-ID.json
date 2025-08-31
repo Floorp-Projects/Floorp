@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Sembunyikan Bilah Tab dan Bilah Judul",
         "showTabBarOnBottomOfNavigationBar": "Tampilkan Bilah Tab di Bawah Bilah Navigasi",
         "showTabBarOnBottomOfWindow": "Tampilkan Bilah Tab di Bawah Jendela",
+        "maxRowEnabled": "Enable Maximum Row of Tabbar",
+        "maxRow": "Maximum Row of Tabbar",
         "tab": {
             "title": "Tab",
             "footerLinkText": "About Tab Settings",
@@ -116,6 +118,64 @@
             "minHeight": "Tinggi tab minimal",
             "minHeightError": "Tinggi tab harus di antara {{min}} dan {{max}} piksel."
         },
+        "lepton-preferences": {
+            "title": "Pengaturan Lepton",
+            "description": "Atur preferensi lanjutan tema Lepton",
+            "configureLepton": "Atur Lepton",
+            "back": "Kembali",
+            "experimentalWarning": {
+                "title": "⚠️ Fitur Eksperimental",
+                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi.",
+                "leptonRepository": "Lepton adalah tema CSS untuk Firefox.",
+                "visitRepository": "Kunjungi Halaman Repositori"
+            },
+            "autohide": {
+                "title": "Sembunyikan Pengaturan Otomatis",
+                "tab": "Sembunyikan tab secara otomatis",
+                "navbar": "Sembunyikan Bilah Alat secara otomatis",
+                "sidebar": "Sembunyikan Bilai Sisi secara otomatis",
+                "backButton": "Sembunyikan tombol kembali secara otomatis",
+                "forwardButton": "Sembunyikan tombol maju secara otomatis",
+                "pageAction": "Sembunyikan tombol di Baris Alamat secara otomatis"
+            },
+            "hidden": {
+                "title": "Sembunyikan Pengaturan",
+                "tabIcon": "Sembunyikan ikon tab",
+                "tabbar": "Sembunyikan Bilah Tab",
+                "navbar": "Sembunyikan Bilah Alat",
+                "sidebarHeader": "Sembunyikan Tajuk Bilah Sisi",
+                "urlbarIconbox": "Sembunyikan ikon Bilah Alamat",
+                "bookmarkbarIcon": "Sembunyikan ikon Bilah Markah",
+                "bookmarkbarLabel": "Sembunyikan label Bilah Markah",
+                "disabledMenu": "Sembunyikan item konteks menu nonaktif"
+            },
+            "icon": {
+                "title": "Pengaturan Ikon",
+                "disabled": "Nonaktifkan menu konteks dan ikon menu panel Lepton",
+                "menu": "Aktifkan ion menu konteks Lepton"
+            },
+            "centered": {
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
+            },
+            "urlView": {
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+            },
+            "tabbar": {
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
+            },
+            "sidebar": {
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            }
+        },
         "uiCustomization": {
             "title": "Kustomisasi UI",
             "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur kustomisasi antarmuka ini.",
@@ -130,7 +190,8 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Nonaktifkan notifikasi layar penuh",
                 "deleteBrowserBorder": "Bulatkan sudut halaman",
-                "hideUnifiedExtensionsButton": "Sembunyikan tombol pengaya terpadu"
+                "hideUnifiedExtensionsButton": "Sembunyikan tombol pengaya terpadu",
+                "disableQRCodeButton": "Nonaktifkan tombol kode QR"
             },
             "special": {
                 "title": "Fitur Istimewa",

@@ -64,10 +64,10 @@
             "manage": "워크스페이스 관리"
         },
         "menu": {
-            "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+            "moveTabToAnotherWorkspace": "탭을 다른 워크스페이스로 이동"
         },
         "error": {
-            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
+            "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
         }
     },
     "statusbar": {
@@ -142,7 +142,7 @@
             "gecko-show-next-search-result": "다음 검색 결과 표시",
             "gecko-show-previous-search-result": "이전 검색 결과 표시",
             "gecko-search-the-web": "탭 검색",
-            "gecko-open-migration-wizard": "Open Migration Wizard",
+            "gecko-open-migration-wizard": "이전 마법사 열기",
             "gecko-quit-from-application": "앱 종료",
             "gecko-enter-into-customize-mode": "맞춤 모드로 전환",
             "gecko-enter-into-offline-mode": "오프라인 모드로 전환",
@@ -152,56 +152,56 @@
             "gecko-open-bookmarks-manager": "북마크 관리자 열기",
             "gecko-toggle-bookmark-toolbar": "북마크 도구 모음 전환",
             "gecko-open-general-preferences": "일반 환경 설정 열기",
-            "gecko-open-privacy-preferences": "Open Privacy Preferences",
-            "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
-            "gecko-open-containers-preferences": "Open Containers Preferences",
-            "gecko-open-search-preferences": "Open Search Preferences",
-            "gecko-open-sync-preferences": "Open Sync Preferences",
-            "gecko-open-task-manager": "Open Task Manager",
-            "gecko-forget-history": "Forget History",
-            "gecko-quick-forget-history": "Quick Forget History",
-            "gecko-clear-recent-history": "Clear Recent History",
-            "gecko-restore-last-session": "Restore Last Session",
-            "gecko-search-history": "Search History",
-            "gecko-manage-history": "Manage History",
-            "gecko-open-downloads": "Open Downloads",
-            "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
-            "gecko-show-history-sidebar": "Show History Sidebar",
-            "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
-            "gecko-reverse-sidebar": "Reverse Sidebar Position",
-            "gecko-hide-sidebar": "Hide Sidebar",
-            "gecko-toggle-sidebar": "Toggle Sidebar",
-            "gecko-scroll-up": "Scroll Up",
-            "gecko-scroll-down": "Scroll Down",
-            "gecko-scroll-right": "Scroll Right",
-            "gecko-scroll-left": "Scroll Left",
-            "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
+            "gecko-open-privacy-preferences": "일반 설정 열기",
+            "gecko-open-workspaces-preferences": "워크스페이스 설정 열기",
+            "gecko-open-containers-preferences": "컨테이너 설정 열기",
+            "gecko-open-search-preferences": "검색 설정 열기",
+            "gecko-open-sync-preferences": "동기화 설정 열기",
+            "gecko-open-task-manager": "작업 관리자 열기",
+            "gecko-forget-history": "기록 삭제",
+            "gecko-quick-forget-history": "빠른 기록 삭제",
+            "gecko-clear-recent-history": "최근 기록 지우기",
+            "gecko-restore-last-session": "마지막 세션 복원",
+            "gecko-search-history": "검색 기록",
+            "gecko-manage-history": "기록 관리",
+            "gecko-open-downloads": "다운로드 열기",
+            "gecko-show-bookmark-sidebar": "북마크 사이드바 보기",
+            "gecko-show-history-sidebar": "기록 사이드바 열기",
+            "gecko-show-synced-tabs-sidebar": "동기화된 탭 사이드바 보기",
+            "gecko-reverse-sidebar": "사이드바 위치 반전",
+            "gecko-hide-sidebar": "사이드바 숨기기",
+            "gecko-toggle-sidebar": "사이드바 전환",
+            "gecko-scroll-up": "위로 스크롤",
+            "gecko-scroll-down": "아래로 스크롤",
+            "gecko-scroll-right": "오른쪽으로 스크롤",
+            "gecko-scroll-left": "왼쪽으로 스크롤",
+            "gecko-scroll-to-top": "맨 위로 스크롤",
+            "gecko-scroll-to-bottom": "맨 아래로 스크롤"
         },
         "descriptions": {
-            "gecko-back": "Navigate back to the previous page",
-            "gecko-forward": "Navigate forward to the next page",
-            "gecko-reload": "Reload the current page",
-            "gecko-close-tab": "Close the current tab",
-            "gecko-open-new-tab": "Open a new tab",
-            "gecko-duplicate-tab": "Duplicate the current tab",
-            "gecko-reload-all-tabs": "Reload all tabs",
-            "gecko-restore-last-tab": "Reopen the last closed tab"
+            "gecko-back": "이전 페이지로 돌아가기",
+            "gecko-forward": "다음 페이지로 이동",
+            "gecko-reload": "이 페이지 다시 불러오기",
+            "gecko-close-tab": "이 탭 닫기",
+            "gecko-open-new-tab": "새 탭 열기",
+            "gecko-duplicate-tab": "이 탭을 복제",
+            "gecko-reload-all-tabs": "모든 탭 다시 불러오기",
+            "gecko-restore-last-tab": "최근 닫은 탭 다시 열기"
         }
     },
     "qrCode": {
-        "pageAction": "Generate QR Code",
-        "modalTitle": "QR Code Generator",
-        "loading": "Generating QR Code...",
-        "copyButton": "Copy Image",
-        "downloadButton": "Download",
-        "closeButton": "Close",
-        "copySuccess": "QR code copied to clipboard!",
-        "copyError": "Failed to copy QR code",
-        "generateError": "Failed to generate QR code"
+        "pageAction": "QR 코드 생성",
+        "modalTitle": "QR 코드 생성기",
+        "loading": "QR 코드를 생성하는 중...",
+        "copyButton": "이미지 복사",
+        "downloadButton": "다운로드",
+        "closeButton": "닫기",
+        "copySuccess": "QR 코드가 클립보드에 복사되었습니다!",
+        "copyError": "QR 코드 복사에 실패했습니다",
+        "generateError": "QR 코드 생성에 실패했습니다"
     },
-    "qrcode-generate-page-action": "Generate QR Code for this page",
-    "qrcode-generate-page-action-title": "QR Code Generator",
+    "qrcode-generate-page-action": "이 페이지의 QR 코드 생성",
+    "qrcode-generate-page-action-title": "QR 코드 생성기",
     "panelSidebar": {
         "modal": {
             "type": "패널 유형",
@@ -233,30 +233,30 @@
         }
     },
     "chrome_css": {
-        "menu": "Style",
-        "rebuild": "Rebuild Style Sheets",
-        "create": "Create New Style Sheet",
-        "open_folder": "Open Style Sheets Folder",
-        "edit_user_chrome": "Edit userChrome.css",
-        "edit_user_content": "Edit userContent.css",
-        "rebuild_complete": "Style sheets rebuilt",
-        "editor_path_not_found": "Editor Path Not Found",
-        "set_pref_description": "Please set the editor path",
-        "please_enter_filename": "Please enter a filename",
-        "file_created": "File Created",
-        "file_created_successfully": "File created successfully",
-        "open_file_in_editor": "Open file in editor?",
-        "error_title": "Error",
-        "folder_open_failed": "Failed to open CSS folder",
-        "edit_failed": "Failed to edit file"
+        "menu": "스타일",
+        "rebuild": "스타일 시트 재작성",
+        "create": "새로운 스타일 시트 만들기",
+        "open_folder": "스타일 시트 폴더 열기",
+        "edit_user_chrome": "userChrome.css 편집",
+        "edit_user_content": "userContent.css 편집",
+        "rebuild_complete": "스타일 시트 재작성",
+        "editor_path_not_found": "편집기 경로를 찾을 수 없습니다",
+        "set_pref_description": "편집기 경로를 설정하세요",
+        "please_enter_filename": "파일 이름을 입력하세요",
+        "file_created": "파일이 생성되었습니다",
+        "file_created_successfully": "파일이 성공적으로 생성되었습니다",
+        "open_file_in_editor": "파일을 편집기로 열까요?",
+        "error_title": "오류",
+        "folder_open_failed": "CSS 폴더를 여는 데 실패했습니다",
+        "edit_failed": "파일 수정에 실패했습니다"
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
-            "restart-cache-clear": "Restart with Cache Clear",
-            "restart-safe-mode": "Restart in Safe Mode",
-            "restart-profile-manager": "Restart with Profile Manager"
+            "title": "다시 시작",
+            "normal-restart": "다시 시작",
+            "restart-cache-clear": "캐시 지우고 다시 시작",
+            "restart-safe-mode": "안전 모드로 다시 시작",
+            "restart-profile-manager": "프로필 관리자와 함께 다시 시작"
         }
     }
 }

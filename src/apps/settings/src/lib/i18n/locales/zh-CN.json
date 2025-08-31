@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "隐藏标签栏和标题栏",
         "showTabBarOnBottomOfNavigationBar": "在导航栏下方显示标签栏",
         "showTabBarOnBottomOfWindow": "在窗口底部显示标签栏",
+        "maxRowEnabled": "启用标签栏最大行数",
+        "maxRow": "标签栏最大行数",
         "tab": {
             "title": "标签页",
             "footerLinkText": "关于标签设置",
@@ -105,7 +107,7 @@
             "scrollPrefInfo": "\"{{reverseScrollPrefName}}\" 和 \"{{scrollWrapPrefName}}\" 只有在启用 \"{{scrollPrefName}}\" 时才会起作用。",
             "pinTitle": "显示固定标签页标题",
             "openPosition": "新标签页打开位置",
-            "openPositionDescription": "指定新标签页的打开位置。遵循Firefox的行为将根据您打开链接的方式改变位置。",
+            "openPositionDescription": "指定打开新标签页的位置。遵循 Firefox 的行为将根据您打开链接的方式改变位置。",
             "openDefault": "跟随 Firefox 默认行为",
             "openLast": "在标签栏末尾打开",
             "openNext": "在当前标签页旁打开",
@@ -115,6 +117,64 @@
             "minWidthError": "标签宽度必须在 {{min}} 和 {{max}} 像素之间。",
             "minHeight": "最小标签宽度",
             "minHeightError": "标签高度必须在 {{min}} 和 {{max}} 像素之间。"
+        },
+        "lepton-preferences": {
+            "title": "Lepton 设置",
+            "description": "配置 Lepton 主题高级首选项",
+            "configureLepton": "配置 Lepton",
+            "back": "后退",
+            "experimentalWarning": {
+                "title": "⚠️ 实验功能",
+                "description": "这些设置是实验性的，不受官方支持。问题可能会发生。",
+                "leptonRepository": "Lepton 是一款适用于 Firefox 的 css 主题。\n",
+                "visitRepository": "访问仓库页面"
+            },
+            "autohide": {
+                "title": "自动隐藏设置",
+                "tab": "自动隐藏标签栏",
+                "navbar": "自动隐藏工具栏",
+                "sidebar": "自动隐藏侧边栏",
+                "backButton": "自动隐藏 “后退” 按钮",
+                "forwardButton": "自动隐藏 “前进” 按钮",
+                "pageAction": "自动隐藏地址栏上的按钮"
+            },
+            "hidden": {
+                "title": "隐藏设置",
+                "tabIcon": "隐藏标签页图标",
+                "tabbar": "隐藏标签栏",
+                "navbar": "隐藏工具栏",
+                "sidebarHeader": "隐藏侧边栏标题",
+                "urlbarIconbox": "隐藏地址栏图标",
+                "bookmarkbarIcon": "隐藏书签栏图标",
+                "bookmarkbarLabel": "隐藏书签栏文本",
+                "disabledMenu": "隐藏禁用的上下文菜单项"
+            },
+            "icon": {
+                "title": "图标设置",
+                "disabled": "禁用 Lepton 的上下文菜单和面板菜单图标",
+                "menu": "启用 Lepton 的上下文菜单图标"
+            },
+            "centered": {
+                "title": "居中设置",
+                "tab": "标签页居中标签",
+                "urlbar": "地址栏居中文本",
+                "bookmarkbar": "居中书签栏项目"
+            },
+            "urlView": {
+                "title": "URL 视图设置",
+                "moveIconToLeft": "将地址栏图标移至左侧",
+                "goButtonWhenTyping": "键入时，显示 “转到” 按钮",
+                "alwaysShowPageActions": "始终在地址栏中显示页面操作"
+            },
+            "tabbar": {
+                "title": "标签栏设置",
+                "asTitlebar": "在标题栏中显示标签栏",
+                "oneLiner": "合并标签栏和工具栏"
+            },
+            "sidebar": {
+                "title": "侧边栏设置",
+                "overlap": "在网站内容上显示侧边栏"
+            }
         },
         "uiCustomization": {
             "title": "自定义界面",
@@ -130,7 +190,8 @@
                 "title": "显示",
                 "disableFullscreenNotification": "禁用全屏通知",
                 "deleteBrowserBorder": "网页区域圆角",
-                "hideUnifiedExtensionsButton": "隐藏扩展统一管理按钮"
+                "hideUnifiedExtensionsButton": "隐藏扩展统一管理按钮",
+                "disableQRCodeButton": "禁用 QR 码按钮"
             },
             "special": {
                 "title": "特色功能",
@@ -147,8 +208,8 @@
                 "newtabInsideEnabled": "在标签栏内显示新标签按钮"
             },
             "bookmarkBar": {
-                "title": "Bookmark Bar",
-                "focusExpand": "Expand bookmark bar on focus"
+                "title": "书签栏",
+                "focusExpand": "聚焦时展开书签栏"
             }
         }
     },
@@ -194,11 +255,11 @@
         "aboutBrowser": "关于 {{productName}}",
         "releaseNotes": "发布说明和更多信息",
         "browserVersion": "{{productName}} 版本： {{browserVersion}} | 火狐浏览器版本： {{firefoxVersion}}",
-        "isOfficialBuild": "(Official Build)",
+        "isOfficialBuild": "（官方构建）",
         "browserDescription": "{{productName}} 是日本开发的一款浏览器。是 Ablaze 旗下的，基于 Firefox 上开发的浏览器，旨在促进网络发展。",
         "browser": "{{productName}}",
-        "copyright": "© 2024 {{productName}} Project. All rights reserved.",
-        "openSourceLicense": "{{productName}} is open-source software available under the Mozilla Public License 2.0, made possible by the Firefox open-source project and other open-source software.",
+        "copyright": "© 2024 {{productName}} 项目。保留所有权利。",
+        "openSourceLicense": "{{productName}} 是根据 Mozilla Public License 2.0 提供的开源软件，由 Firefox 开源项目和其他开源软件实现。",
         "openSourceLicenseNotice": "开源许可",
         "versionInfo": "版本",
         "license": "许可协议"
@@ -254,7 +315,7 @@
             "notes": "便笺"
         },
         "url": "URL 地址",
-        "untitled": "Untitled",
+        "untitled": "未命名",
         "confirmDeleteTitle": "删除面板",
         "confirmDelete": "确定要删除此面板吗？",
         "delete": "删除",
@@ -266,7 +327,7 @@
             "invalidUrl": "请输入有效的 URL 地址",
             "extensionIdRequired": "扩展面板需要扩展 ID",
             "staticPanelRequired": "请选择边栏工具",
-            "invalidWidth": "Width must be at least 100 pixels"
+            "invalidWidth": "宽度必须至少为 100 像素"
         },
         "save": "保存",
         "cancel": "取消"
@@ -282,7 +343,7 @@
         "needRestartDescriptionForEnableAndDisable": "{{productName}} 需要重新启动才能完全启用或禁用渐进式应用（PWA）功能。",
         "otherSettings": "其它设置",
         "showToolbar": "显示工具栏",
-        "showToolbarDescription": "Display the toolbar in Progressive Web App windows",
+        "showToolbarDescription": "在 Progressive Web App 窗口中显示工具栏",
         "installedApps": "已安装的应用",
         "noInstalledApps": "未安装任何应用",
         "removeApp": "移除 Web 应用",
@@ -302,13 +363,13 @@
         "enabled": "启用鼠标手势",
         "showTrail": "显示手势轨迹",
         "sensitivity": "灵敏度",
-        "low": "Low",
-        "high": "High",
+        "low": "低",
+        "high": "高",
         "trailWidth": "轨迹宽度",
         "trailColor": "轨迹颜色",
         "actionsSettings": "手势操作",
         "actionsSettingsDescription": "配置鼠标手势操作",
-        "name": "Name",
+        "name": "名称",
         "pattern": "手势",
         "action": "动作",
         "actionDescription": "手势说明",
@@ -343,7 +404,7 @@
             "gecko-show-page-info": "显示页面信息",
             "floorp-rest-mode": "启用休息模式",
             "floorp-hide-user-interface": "隐藏界面",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+            "floorp-toggle-navigation-panel": "切换导航面板",
             "gecko-stop": "停止",
             "gecko-search-in-this-page": "页内搜索",
             "gecko-show-next-search-result": "查找下一个",
@@ -420,7 +481,7 @@
         "actions": "操作",
         "notSet": "未设置",
         "add": "添加",
-        "edit": "修改",
+        "edit": "编辑",
         "delete": "删除",
         "save": "保存",
         "cancel": "取消",
@@ -443,7 +504,7 @@
         "recording": "正在录制……",
         "key": "按键",
         "modal": {
-            "title": "修改快捷键",
+            "title": "编辑快捷键",
             "description": "输入您要使用的按键，然后选择修饰键来组合。",
             "currentShortcut": "当前快捷键",
             "newShortcut": "新建快捷键",

@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Dölj flikfält och titelfält",
         "showTabBarOnBottomOfNavigationBar": "Visa flikfält längst ner i navigeringsfältet",
         "showTabBarOnBottomOfWindow": "Visa flikfältet längst ner i fönstret",
+        "maxRowEnabled": "Aktivera maximal rad av flikfält",
+        "maxRow": "Maximal rad av flikfält",
         "tab": {
             "title": "Flikar",
             "footerLinkText": "Om flik inställningar",
@@ -116,6 +118,64 @@
             "minHeight": "Minsta flikhöjd",
             "minHeightError": "Flikens höjd måste vara mellan {{min}} och {{max}} pixlar."
         },
+        "lepton-preferences": {
+            "title": "Lepton inställningar",
+            "description": "Konfigurera avancerade Lepton temainställningar",
+            "configureLepton": "Konfigurera Lepton",
+            "back": "Tillbaka",
+            "experimentalWarning": {
+                "title": "⚠️ Experimentella funktioner",
+                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå.",
+                "leptonRepository": "Lepton är ett css-tema för Firefox.",
+                "visitRepository": "Besök förråd sidan"
+            },
+            "autohide": {
+                "title": "Dölj inställningar automatiskt",
+                "tab": "Dölj flikar automatiskt",
+                "navbar": "Dölj verktygsfältet automatiskt",
+                "sidebar": "Dölj automatiskt sidofältet",
+                "backButton": "Dölj automatiskt bakåtknappen",
+                "forwardButton": "Dölj automatiskt framåtknappen",
+                "pageAction": "Dölj automatiskt knappar på adressfältet"
+            },
+            "hidden": {
+                "title": "Dölj inställningar",
+                "tabIcon": "Dölj flikikoner",
+                "tabbar": "Dölj flikfält",
+                "navbar": "Dölj verktygsfält",
+                "sidebarHeader": "Dölj sidofältets rubriker",
+                "urlbarIconbox": "Dölj ikoner i adressfältet",
+                "bookmarkbarIcon": "Dölj ikoner i bokmärkesfältet",
+                "bookmarkbarLabel": "Dölj etiketter i bokmärkesfältet",
+                "disabledMenu": "Dölj inaktiverade kontextmenyobjekt"
+            },
+            "icon": {
+                "title": "Ikon inställningar",
+                "disabled": "Inaktivera Leptons sammanhangsmeny och panelmenyikoner",
+                "menu": "Aktivera Leptons sammanhangsberoende menyikoner"
+            },
+            "centered": {
+                "title": "Centrerade inställningar",
+                "tab": "Centrera etiketter i flikar",
+                "urlbar": "Centrera text i adressfältet",
+                "bookmarkbar": "Centrera bokmärkesfältet objekt"
+            },
+            "urlView": {
+                "title": "Inställningar för URL-visning",
+                "moveIconToLeft": "Flytta ikoner i adressfältet till vänster sida",
+                "goButtonWhenTyping": "När du skriver, visa en \"Gå\"-knapp",
+                "alwaysShowPageActions": "Visa alltid sidåtgärder i adressfältet"
+            },
+            "tabbar": {
+                "title": "Inställningar för flikfält",
+                "asTitlebar": "Flikfält i titelfält",
+                "oneLiner": "Kombinera flikfält och verktygsfält"
+            },
+            "sidebar": {
+                "title": "Sidofält inställningar",
+                "overlap": "Visa sidofält över webbplatsens innehåll"
+            }
+        },
         "uiCustomization": {
             "title": "Anpassning av användargränssnitt",
             "needRestartDescriptionForEnableAndDisable": "En omstart av {{productName}} krävs för att helt aktivera eller inaktivera denna funktion för anpassning av användargränssnittet.",
@@ -130,7 +190,8 @@
                 "title": "Visning",
                 "disableFullscreenNotification": "Inaktivera helskärmsavisering",
                 "deleteBrowserBorder": "Runda hörnen på sidorna",
-                "hideUnifiedExtensionsButton": "Dölj enhetliga tillägg knapp"
+                "hideUnifiedExtensionsButton": "Dölj enhetliga tillägg knapp",
+                "disableQRCodeButton": "Inaktivera QR-kodknapp"
             },
             "special": {
                 "title": "Specialfunktioner",

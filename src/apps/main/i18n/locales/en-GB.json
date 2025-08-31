@@ -10,8 +10,8 @@
             "container": "Container",
             "no-container": "No Container",
             "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
+            "edit-title": "Edit Workspace Title",
+            "save": "Save changes",
             "cancel": "Cancel"
         },
         "icons": {
@@ -60,7 +60,7 @@
             "manage": "Manage Workspace"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
+            "create-new": "Create new Workspace...",
             "manage": "Manage Workspaces"
         },
         "menu": {

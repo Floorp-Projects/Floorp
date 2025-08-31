@@ -5,11 +5,27 @@
         "languageSupport": "語言支援",
         "features": "功能",
         "featureIntroduction": "功能介紹",
+        "hub": "Floorp Hub",
+        "hubIntro": "關於 Floorp Hub",
         "customize": "客製化",
         "initialSettings": "初始設定",
         "complete": "完成",
         "previous": "前一頁",
         "next": "下一頁"
+    },
+    "hubPage": {
+        "title": "關於 Floorp Hub",
+        "subtitle": "集合 Floorp 專有設定的中心。",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub 是一個集合 Floorp 專有設定選項的設定中心。您可以通過在位址欄上鍵入 'about:hub' 開啟。您也可以從 Firefox 設定頁面 'about:preferences' 內左側點選進入。",
+        "openHub": "開啟 about:hub",
+        "openPreferences": "開啟設定 (about:preferences)",
+        "tip": "提示：你也可以從 Firefox 設定側邊欄存取 Floorp Hub。",
+        "features": {
+            "dedicated": "Floorp 專用設定中心",
+            "accessible": "可從 about:hub 或 Firefox 設定存取",
+            "centralized": "將所有 Floorp 專用設定集中於一處"
+        }
     },
     "customize": {
         "title": "客製化 Floorp",
@@ -33,6 +49,12 @@
             "default": "預設",
             "search": "搜尋",
             "noEnginesFound": "未找到搜尋引擎。"
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub 是一個集合 Floorp 專有設定選項的設定中心。您可以通過在位址欄上鍵入 'about:hub' 開啟。您也可以從 Firefox 設定頁面 'about:preferences' 內左側點選進入。",
+            "openHub": "開啟 about:hub",
+            "openPreferences": "開啟設定 (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "如需更詳細的設定，您可以透過右上方選單按鈕中的設定選項進行調整。",
         "resourcesLabel": "資源",
         "defaultBrowserSuccess": "Floorp 已設定為您的預設瀏覽器！"
+    },
+    "whatsNew": {
+        "title": "歡迎來到 Floorp {{version}}！",
+        "subtitle": "看看 Floorp 有什麼新東西！",
+        "tags": {
+            "settings": "設定",
+            "productivity": "生產力",
+            "workspaces": "工作空間",
+            "pwa": "PWA",
+            "gestures": "手勢"
+        },
+        "footer": {
+            "follow": "追蹤",
+            "privacy": "隱私聲明與條款",
+            "about": "關於 Floorp",
+            "copyright": "© {{year}} Floorp Projects。保留所有權利。"
+        }
     }
 }

@@ -5,11 +5,27 @@
         "languageSupport": "Dukungan Bahasa",
         "features": "Fitur",
         "featureIntroduction": "Pengenalan Fitur",
+        "hub": "Floorp Hub",
+        "hubIntro": "Tentang Floorp Hub",
         "customize": "Sesuaikan",
         "initialSettings": "Pengaturan Awal",
         "complete": "Selesai",
         "previous": "Sebelumnya",
         "next": "Selanjutnya"
+    },
+    "hubPage": {
+        "title": "Tentang Floorp Hub",
+        "subtitle": "Pusat pengaturan khusus Floorp.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub adalah pusat pengaturan khusus untuk opsi spesifik Floorp. Anda dapat membukanya dengan menavigasi ke 'about:hub'. Hub ini juga dapat diakses dari bilah sisi kiri di halaman pengaturan Firefox di 'about:preferences'.",
+        "openHub": "Buka about:hub",
+        "openPreferences": "Buka Pengaturan (about:preferences)",
+        "tip": "Tip: Anda juga dapat mengakses Floorp Hub dari bilah samping pengaturan Firefox.",
+        "features": {
+            "dedicated": "Pusat pengaturan Floorp khusus",
+            "accessible": "Dapat diakses dari about:hub atau pengaturan Firefox",
+            "centralized": "Semua setelan khusus Floorp di satu tempat"
+        }
     },
     "customize": {
         "title": "Sesuaikan Floorp",
@@ -33,6 +49,12 @@
             "default": "Bawaan",
             "search": "Cari",
             "noEnginesFound": "Tidak ada mesin pencari."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub adalah pusat pengaturan khusus untuk opsi spesifik Floorp. Anda dapat membukanya dengan menavigasi ke 'about:hub'. Hub ini juga dapat diakses dari bilah sisi kiri di halaman pengaturan Firefox di 'about:preferences'.",
+            "openHub": "Buka about:hub",
+            "openPreferences": "Buka Pengaturan (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "Untuk pengaturan yang lebih rinci, Anda dapat mengunjungi Pengaturan melalui tombol menu di kanan atas.",
         "resourcesLabel": "Sumber-Sumber",
         "defaultBrowserSuccess": "Floorp telah dijadikan peramban utama Anda!"
+    },
+    "whatsNew": {
+        "title": "Selamat datang di Floorp {{version}}!",
+        "subtitle": "Lihat apa yang baru di Floorp!",
+        "tags": {
+            "settings": "Pengaturan",
+            "productivity": "Produktivitas",
+            "workspaces": "Ruang Kerja",
+            "pwa": "PWA",
+            "gestures": "Gestur"
+        },
+        "footer": {
+            "follow": "Ikuti",
+            "privacy": "Privasi & Ketentuan",
+            "about": "Tentang Floorp",
+            "copyright": "© {{year}} Floorp Projects. Semua hak cipta dilindungi undang-undang."
+        }
     }
 }

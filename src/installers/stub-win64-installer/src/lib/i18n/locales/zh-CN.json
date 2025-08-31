@@ -31,7 +31,7 @@
         },
         "exitConfirmation": {
             "title": "取消安装？",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
+            "message": "取消安装过程将阻止安装 Floorp。",
             "cancelButton": "取消",
             "confirmButton": "取消安装"
         },
@@ -40,54 +40,58 @@
             "error": "安装失败",
             "launchCheckbox": "安装后启动 Floorp 浏览器",
             "closeButton": "关闭安装程序",
-            "countdownMessage": "Installer will close in {{count}} seconds"
+            "countdownMessage": "安装程序将在 {{count}} 秒后关闭",
+            "legacyDownloadMessage": "您也可尝试使用传统安装程序。",
+            "legacyDownloadButton": "下载"
         }
     },
     "slides": {
         "slide1": {
             "title": "欢迎使用 Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "description": "欢迎使用 Floorp 浏览器的最新版本，Floorp 是一款以日本开发和研究为重点的网络浏览器。接下来介绍的内容只是项目的一部分。"
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "定期更新",
+            "description": "Floorp 作为一个基于社区的项目，将不断得到维护和更新。我们秉承“人人都可自由访问网络”的原则，提供安全的浏览体验。"
         },
         "slide3": {
             "title": "最新功能",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "description": "最新版本的 Floorp 利用了 Mozilla Firefox 开发的尖端网络功能。它还经过了重新设计，使每个人都能方便地使用自己想要的工具。"
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "高级自定义",
+            "description": "配备大量自定义选项，比默认浏览器更能保护个人隐私。Floorp 允许你实现自己喜欢的配置。"
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "为你而战",
+            "description": "Floorp 阻止有害跟踪。我们在网站运营和用户权利之间取得平衡，努力改善网络的功能和隐私。"
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "已下载 Floorp 安装程序（开发模式）",
+            "installation_complete": "Floorp 安装成功。"
         },
         "errors": {
             "installer_not_found": "无法获取 Floorp 安装包。",
             "download_failed": "下载过程中出现错误： {{0}}",
             "signature_verification_failed": "安装程序签名验证失败。由于安全原因中止执行。",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
+            "signature_verification_error": "签名验证过程中发生错误：{{0}}",
             "installer_exit_code": "安装程序退出，代码为 {{0}}。",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
+            "installer_execution": "运行安装程序时发生错误：{{0}}",
             "browser_not_found": "未找到 Floorp 浏览器。安装成功，但找不到浏览器可执行文件。",
             "browser_launch_failed": "启动浏览器失败: {{0}}",
             "file_not_found": "找不到文件：{{0}}",
             "not_a_file": "路径不是文件: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
+            "admin_rights_denied": "管理员权限被拒绝。您选择了管理员权限模式，但权限被拒绝。",
+            "exit_code_not_found": "无法获取安装程序的退出代码。管理员权限可能已被拒绝。",
             "powershell_script_creation": "创建 PowerShell 脚本失败： {{0}}",
             "powershell_process": "启动 PowerShell 进程失败： {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}"
+            "admin_install_failed": "以管理员权限安装失败。退出代码：{{0}}",
+            "user_installer_launch": "以用户权限启动安装程序失败：{{0}}",
+            "user_installer_execution": "以用户权限运行安装程序时出现问题：{{0}}",
+            "cpu_not_supported": "该设备的 CPU 不支持 SSE4.1。Floorp 需要支持 SSE4.1 的处理器。",
+            "cpu_check_failed": "验证 CPU 要求失败。请检查系统要求。"
         }
     }
 }

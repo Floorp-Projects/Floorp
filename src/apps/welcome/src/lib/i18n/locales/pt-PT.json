@@ -5,11 +5,27 @@
         "languageSupport": "Apoio linguístico",
         "features": "Caraterísticas",
         "featureIntroduction": "Introdução à funcionalidade",
+        "hub": "Floorp Hub",
+        "hubIntro": "About Floorp Hub",
         "customize": "Personalizar",
         "initialSettings": "Definições iniciais",
         "complete": "Completo",
         "previous": "Anterior",
         "next": "Seguinte"
+    },
+    "hubPage": {
+        "title": "About Floorp Hub",
+        "subtitle": "A central place for Floorp-specific settings.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+        "openHub": "Open about:hub",
+        "openPreferences": "Open Settings (about:preferences)",
+        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "features": {
+            "dedicated": "Dedicated Floorp settings center",
+            "accessible": "Accessible from about:hub or Firefox settings",
+            "centralized": "All Floorp-specific options in one place"
+        }
     },
     "customize": {
         "title": "Personalizar Floorp",
@@ -33,6 +49,12 @@
             "default": "Predefinição",
             "search": "Pesquisar",
             "noEnginesFound": "Não foram encontrados motores de busca."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+            "openHub": "Open about:hub",
+            "openPreferences": "Open Settings (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "Para obter definições mais detalhadas, pode personalizar através da opção Definições no botão de menu no canto superior direito.",
         "resourcesLabel": "Recursos",
         "defaultBrowserSuccess": "O Floorp foi definido como o seu navegador predefinido!"
+    },
+    "whatsNew": {
+        "title": "Bem-vindo ao Floorp {{version}}!",
+        "subtitle": "Veja o que há de novo no Floorp!",
+        "tags": {
+            "settings": "Settings",
+            "productivity": "Produtividade",
+            "workspaces": "Espaços de trabalho",
+            "pwa": "PWA",
+            "gestures": "Gestos"
+        },
+        "footer": {
+            "follow": "Seguir",
+            "privacy": "Privacidade e Termos",
+            "about": "Sobre o Floorp",
+            "copyright": "© {{year}} Projectos Floorp. Todos os direitos reservados."
+        }
     }
 }

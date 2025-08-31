@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Skjul fanelinje og titellinje",
         "showTabBarOnBottomOfNavigationBar": "Vis fanelinje nederst på navigationslinjen",
         "showTabBarOnBottomOfWindow": "Vis fanelinje nederst på vinduet",
+        "maxRowEnabled": "Enable Maximum Row of Tabbar",
+        "maxRow": "Maximum Row of Tabbar",
         "tab": {
             "title": "Faner",
             "footerLinkText": "Om faneindstillinger",
@@ -116,6 +118,64 @@
             "minHeight": "Minimum fanehøjde",
             "minHeightError": "Fanehøjde skal være mellem {{min}} og {{max}} pixels."
         },
+        "lepton-preferences": {
+            "title": "Lepton Settings",
+            "description": "Configure advanced Lepton theme preferences",
+            "configureLepton": "Configure Lepton",
+            "back": "Back",
+            "experimentalWarning": {
+                "title": "⚠️ Experimental Features",
+                "description": "These settings are experimental and not officially supported. Issues may occur.",
+                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "visitRepository": "Visit Repository Page"
+            },
+            "autohide": {
+                "title": "Auto-hide Settings",
+                "tab": "Automatically hide tabs",
+                "navbar": "Automatically hide Toolbar",
+                "sidebar": "Automatically hide Sidebar",
+                "backButton": "Automatically hide back button",
+                "forwardButton": "Automatically hide forward button",
+                "pageAction": "Automatically hide buttons on the Address Bar"
+            },
+            "hidden": {
+                "title": "Hide Settings",
+                "tabIcon": "Hide tab icons",
+                "tabbar": "Hide Tab Bar",
+                "navbar": "Hide Toolbar",
+                "sidebarHeader": "Hide Sidebar Headers",
+                "urlbarIconbox": "Hide Address Bar icons",
+                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
+                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
+                "disabledMenu": "Hide disabled context menu items"
+            },
+            "icon": {
+                "title": "Icon Settings",
+                "disabled": "Disable Lepton's context menu and panel menu icons",
+                "menu": "Enable Lepton's context menu icons"
+            },
+            "centered": {
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
+            },
+            "urlView": {
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+            },
+            "tabbar": {
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
+            },
+            "sidebar": {
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            }
+        },
         "uiCustomization": {
             "title": "UI-tilpasning",
             "needRestartDescriptionForEnableAndDisable": "En genstart af {{productName}} er nødvendig for at aktivere eller deaktivere denne UI-tilpasningsfunktion helt.",
@@ -130,7 +190,8 @@
                 "title": "Visning",
                 "disableFullscreenNotification": "Deaktiver fuldskærmsmeddelelser",
                 "deleteBrowserBorder": "Afrund hjørnerne på sider",
-                "hideUnifiedExtensionsButton": "Skjul knappen for samlede udvidelser"
+                "hideUnifiedExtensionsButton": "Skjul knappen for samlede udvidelser",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Særlige funktioner",

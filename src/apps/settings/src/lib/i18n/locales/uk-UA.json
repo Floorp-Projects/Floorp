@@ -17,13 +17,13 @@
         "firefoxSettings": "Firefox Settings",
         "about": "About",
         "aboutNoraneko": "About Noraneko",
-        "debug": "Debug",
+        "debug": "Налагодження",
         "overview": "Overview",
         "features": "Features"
     },
     "pages": {
         "home": "Home",
-        "tabAndAppearance": "Tab & Appearance",
+        "tabAndAppearance": "Вкладки та зовнішній вигляд",
         "browserSidebar": "Panel Sidebar",
         "workspaces": "Workspaces",
         "keyboardShortcuts": "Keyboard Shortcuts",
@@ -67,33 +67,35 @@
         }
     },
     "design": {
-        "tabAndAppearance": "Tab & Appearance",
-        "customizePositionOfToolbars": "Customize toolbar positions, tab bar style, and {{productName}}'s appearance.",
-        "interface": "Interface",
-        "aboutInterfaceDesign": "About Interface Design",
+        "tabAndAppearance": "Вкладки та зовнішній вигляд",
+        "customizePositionOfToolbars": "Налаштуйте положення панелі інструментів, стиль панелі вкладок та зовнішній вигляд {{productName}}.",
+        "interface": "Інтерфейс",
+        "aboutInterfaceDesign": "Про дизайн інтерфейсу",
         "proton": "Proton",
         "lepton": "Lepton",
         "photon": "Photon",
         "protonfix": "Firefox UI Fix",
         "fluerial": "Fluerial",
-        "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
-        "otherInterfaceSettings": "Other Interface Settings",
-        "useFaviconColorToBackgroundOfNavigationBar": "Use Favicon Color for Navigation Bar Background",
-        "tabBar": "Tab Bar",
-        "styleDescription": "Select the tab bar style.",
-        "customizeTabBar": "Customize Tab Bar",
-        "style": "Style",
+        "interfaceDescription": "Оберіть зовнішній вигляд браузера. \"Lepton\" за замовчуванням.",
+        "otherInterfaceSettings": "Інші налаштування інтерфейсу",
+        "useFaviconColorToBackgroundOfNavigationBar": "Використовувати колір Favicon для фону панелі навігації",
+        "tabBar": "Панель вкладок",
+        "styleDescription": "Виберіть стиль панелі вкладок.",
+        "customizeTabBar": "Налаштування панелі вкладок",
+        "style": "Стиль",
         "horizontal": "Horizontal",
         "multirow": "Multi-row",
-        "verticalTabIsRemovedFromBrowser": "Vertical Tabs have been removed from {{productName}}. Please use Firefox's native Vertical Tab Bar instead.",
+        "verticalTabIsRemovedFromBrowser": "Вертикальні вкладки було вилучено з {{productName}}. Будь ласка, використовуйте замість них рідну панель вертикальних вкладок Firefox.",
         "learnMore": "Learn more",
-        "position": "Position",
-        "positionDescription": "Choose the tab bar position.",
-        "default": "Default",
-        "hideTabBar": "Hide Tab Bar",
-        "hideTabBarAndTitleBar": "Hide Tab Bar & Title Bar",
+        "position": "Розташування",
+        "positionDescription": "Виберіть розташування панелі вкладок.",
+        "default": "За замовчуванням",
+        "hideTabBar": "Приховати панель вкладок",
+        "hideTabBarAndTitleBar": "Сховати панель вкладок та заголовка",
         "showTabBarOnBottomOfNavigationBar": "Show Tab Bar at Bottom of Navigation Bar",
         "showTabBarOnBottomOfWindow": "Show Tab Bar at Bottom of Window",
+        "maxRowEnabled": "Enable Maximum Row of Tabbar",
+        "maxRow": "Maximum Row of Tabbar",
         "tab": {
             "title": "Tabs",
             "footerLinkText": "About Tab Settings",
@@ -116,6 +118,64 @@
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
+        "lepton-preferences": {
+            "title": "Lepton Settings",
+            "description": "Configure advanced Lepton theme preferences",
+            "configureLepton": "Configure Lepton",
+            "back": "Back",
+            "experimentalWarning": {
+                "title": "⚠️ Experimental Features",
+                "description": "These settings are experimental and not officially supported. Issues may occur.",
+                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "visitRepository": "Visit Repository Page"
+            },
+            "autohide": {
+                "title": "Auto-hide Settings",
+                "tab": "Automatically hide tabs",
+                "navbar": "Automatically hide Toolbar",
+                "sidebar": "Automatically hide Sidebar",
+                "backButton": "Automatically hide back button",
+                "forwardButton": "Automatically hide forward button",
+                "pageAction": "Automatically hide buttons on the Address Bar"
+            },
+            "hidden": {
+                "title": "Hide Settings",
+                "tabIcon": "Hide tab icons",
+                "tabbar": "Hide Tab Bar",
+                "navbar": "Hide Toolbar",
+                "sidebarHeader": "Hide Sidebar Headers",
+                "urlbarIconbox": "Hide Address Bar icons",
+                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
+                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
+                "disabledMenu": "Hide disabled context menu items"
+            },
+            "icon": {
+                "title": "Icon Settings",
+                "disabled": "Disable Lepton's context menu and panel menu icons",
+                "menu": "Enable Lepton's context menu icons"
+            },
+            "centered": {
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
+            },
+            "urlView": {
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+            },
+            "tabbar": {
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
+            },
+            "sidebar": {
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            }
+        },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
@@ -130,7 +190,8 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
                 "deleteBrowserBorder": "Round the corners of pages",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+                "hideUnifiedExtensionsButton": "Hide unified extensions button",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Special Features",
@@ -144,7 +205,7 @@
             },
             "multirowTab": {
                 "title": "Multirow Tab",
-                "newtabInsideEnabled": "Show new tab button inside tab bar"
+                "newtabInsideEnabled": "Показати кнопку нової вкладки на панелі вкладок"
             },
             "bookmarkBar": {
                 "title": "Bookmark Bar",
@@ -215,9 +276,9 @@
     "panelSidebar": {
         "title": "Panel Sidebar",
         "description": "Panel Sidebar is a feature that allows you to display various tools, websites, and extensions on the side of the window. Here, you can customize, add, delete, and manage panels.",
-        "basicSettings": "Basic Settings",
+        "basicSettings": "Базові налаштування",
         "howToUseAndCustomize": "How to use and customize Panel Sidebar",
-        "enableOrDisable": "Enable/Disable",
+        "enableOrDisable": "Увімкнути/Вимкнути",
         "enablePanelSidebar": "Enable Panel Sidebar",
         "enableDescription": "Panel Sidebar is different from Firefox's sidebar and won't interfere with it. Panel Sidebar can display web pages, unlike Firefox's sidebar. You can also manage workspaces in the sidebar.",
         "otherSettings": "Other Panel Sidebar Settings",
@@ -244,13 +305,13 @@
         "type": {
             "web": "Web",
             "static": "Sidebar Tool",
-            "extension": "Extension"
+            "extension": "Розширення"
         },
         "staticPanels": {
             "bmt": "Browser Manager Tool",
-            "bookmarks": "Bookmarks",
+            "bookmarks": "Закладки",
             "history": "History",
-            "downloads": "Downloads",
+            "downloads": "Завантаження",
             "notes": "Notes"
         },
         "url": "URL",
@@ -342,7 +403,7 @@
             "gecko-show-source-of-page": "Show Source Of Page",
             "gecko-show-page-info": "Show Page Info",
             "floorp-rest-mode": "Enable Rest Mode",
-            "floorp-hide-user-interface": "Hide Interface",
+            "floorp-hide-user-interface": "Приховати інтерфейс",
             "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
             "gecko-stop": "Stop",
             "gecko-search-in-this-page": "Search In This Page",
@@ -372,10 +433,10 @@
             "gecko-search-history": "Search History",
             "gecko-manage-history": "Manage History",
             "gecko-open-downloads": "Open Downloads",
-            "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
+            "gecko-show-bookmark-sidebar": "Показати бічну панель закладок",
             "gecko-show-history-sidebar": "Show History Sidebar",
-            "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
-            "gecko-reverse-sidebar": "Reverse Sidebar Position",
+            "gecko-show-synced-tabs-sidebar": "Показати бічну панель синхронізованих вкладок",
+            "gecko-reverse-sidebar": "Зворотне положення бічної панелі",
             "gecko-hide-sidebar": "Hide Sidebar",
             "gecko-toggle-sidebar": "Toggle Sidebar",
             "gecko-scroll-up": "Scroll Up",

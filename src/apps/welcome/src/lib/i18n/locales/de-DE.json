@@ -5,11 +5,27 @@
         "languageSupport": "Sprachunterstützung",
         "features": "Funktionen",
         "featureIntroduction": "Funktionseinführung",
+        "hub": "Floorp Hub",
+        "hubIntro": "About Floorp Hub",
         "customize": "Anpassen",
         "initialSettings": "Standardeinstellungen",
         "complete": "Abgeschlossen",
         "previous": "Zurück",
         "next": "Weiter"
+    },
+    "hubPage": {
+        "title": "About Floorp Hub",
+        "subtitle": "A central place for Floorp-specific settings.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+        "openHub": "Open about:hub",
+        "openPreferences": "Open Settings (about:preferences)",
+        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "features": {
+            "dedicated": "Dedicated Floorp settings center",
+            "accessible": "Accessible from about:hub or Firefox settings",
+            "centralized": "All Floorp-specific options in one place"
+        }
     },
     "customize": {
         "title": "Floorp anpassen",
@@ -33,6 +49,12 @@
             "default": "Standard",
             "search": "Suchen",
             "noEnginesFound": "Keine Suchmaschinen gefunden."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+            "openHub": "Open about:hub",
+            "openPreferences": "Open Settings (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "Für detailliertere Einstellungen können Sie über die Option Einstellungen in der Menü-Taste oben rechts anpassen.",
         "resourcesLabel": "Ressourcen",
         "defaultBrowserSuccess": "Floorp wurde als Ihr Standardbrowser festgelegt!"
+    },
+    "whatsNew": {
+        "title": "Welcome to Floorp {{version}}!",
+        "subtitle": "Check out what's new in Floorp!",
+        "tags": {
+            "settings": "Settings",
+            "productivity": "Productivity",
+            "workspaces": "Workspaces",
+            "pwa": "PWA",
+            "gestures": "Gestures"
+        },
+        "footer": {
+            "follow": "Follow",
+            "privacy": "Privacy & Terms",
+            "about": "About Floorp",
+            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+        }
     }
 }

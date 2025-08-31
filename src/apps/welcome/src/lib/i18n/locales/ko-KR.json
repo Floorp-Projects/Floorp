@@ -5,11 +5,27 @@
         "languageSupport": "언어 지원",
         "features": "기능",
         "featureIntroduction": "기능 소개",
+        "hub": "Floorp Hub",
+        "hubIntro": "About Floorp Hub",
         "customize": "맞춤 설정",
         "initialSettings": "초기 설정",
         "complete": "완료",
         "previous": "이전",
         "next": "다음"
+    },
+    "hubPage": {
+        "title": "About Floorp Hub",
+        "subtitle": "A central place for Floorp-specific settings.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+        "openHub": "Open about:hub",
+        "openPreferences": "Open Settings (about:preferences)",
+        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "features": {
+            "dedicated": "Dedicated Floorp settings center",
+            "accessible": "Accessible from about:hub or Firefox settings",
+            "centralized": "All Floorp-specific options in one place"
+        }
     },
     "customize": {
         "title": "Floorp 맞춤 설정",
@@ -33,6 +49,12 @@
             "default": "기본",
             "search": "검색",
             "noEnginesFound": "검색 엔진을 찾을 수 없습니다."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+            "openHub": "Open about:hub",
+            "openPreferences": "Open Settings (about:preferences)"
         }
     },
     "finish": {
@@ -57,20 +79,20 @@
         "speedDesc": "Optimized performance",
         "customization": "Customization",
         "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "start": "시작하기"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
+        "title": "Floorp는 당신의 언어를 말합니다",
+        "subtitle": "변경이 필요하다면 언어 설정을 확인하세요",
+        "languageSettings": "언어 설정",
+        "languageChanged": "언어 변경 완료!",
+        "currentLanguageInfo": "이 언어 정보",
         "systemLanguage": "시스템 언어",
         "floorpLanguage": "Floorp 언어",
         "selectLanguage": "언어 선택",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
+        "useSystemLanguage": "시스템 언어 사용",
+        "multilingual": "다국어 지원",
+        "chooseLanguage": "다양한 언어 중에서 선택하세요",
         "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
     },
     "featuresPage": {
@@ -113,18 +135,35 @@
             ]
         },
         "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "nextTab": "다음 탭으로"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
+        "title": "설정 완료!",
+        "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 이제 빠르고 안전한 인터넷 브라우징을 즐기세요.",
+        "nextSteps": "다음 단계 (선택적)",
+        "defaultBrowser": "기본 브라우저로 설정",
+        "support": "지원",
         "documentation": "Documentation",
         "getStarted": "Get Started with Floorp",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
         "resourcesLabel": "Resources",
         "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+    },
+    "whatsNew": {
+        "title": "Welcome to Floorp {{version}}!",
+        "subtitle": "Check out what's new in Floorp!",
+        "tags": {
+            "settings": "Settings",
+            "productivity": "Productivity",
+            "workspaces": "Workspaces",
+            "pwa": "PWA",
+            "gestures": "Gestures"
+        },
+        "footer": {
+            "follow": "Follow",
+            "privacy": "Privacy & Terms",
+            "about": "About Floorp",
+            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+        }
     }
 }

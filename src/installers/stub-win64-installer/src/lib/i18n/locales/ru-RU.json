@@ -40,29 +40,31 @@
             "error": "Установка не удалась",
             "launchCheckbox": "Запустить Floorp после установки",
             "closeButton": "Закрыть установщик",
-            "countdownMessage": "Установщик будет закрыт через {{count}} секунд"
+            "countdownMessage": "Установщик будет закрыт через {{count}} секунд",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "title": "Добро пожаловать в Floorp",
+            "description": "Добро пожаловать в последнюю версию Floorp, браузера, разработанного в Японии с упором на развитие и исследование. Представленное далее содержание - лишь часть проекта."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "Регулярные обновления",
+            "description": "Floorp постоянно поддерживается и обновляется, даже несмотря на то, что он разрабатывается сообществом. Мы обеспечиваем безопасный просмотр сайтов в соответствии с принципом, что Интернет должен быть свободным для всех."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "Новейшие функции",
+            "description": "Последняя версия Floorp использует передовые функции, разработанные в Mozilla Firefox. Кроме того, он был переработан таким образом, чтобы сделать все желаемые инструменты легко доступными каждому."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "Расширенная кастомизация",
+            "description": "Оснащенный многочисленными возможностями кастомизации для лучшего сохранения конфиденциальности, чем в браузере по умолчанию. Floorp позволяет вам реализовать любую желаемую конфигурацию."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "Боремся за вас",
+            "description": "Floorp блокирует вредоносное отслеживание. Мы балансируем между полноценной работой сайтов и правами пользователей, работая над улучшением как функциональности, так и конфиденциальности Интернета."
         }
     },
     "rust": {
@@ -87,7 +89,9 @@
             "powershell_process": "Не удалось запустить процесс PowerShell: {{0}}",
             "admin_install_failed": "Установка с правами администратора не удалась. Код выхода: {{0}}",
             "user_installer_launch": "Не удалось запустить процесс установки с правами пользователя: {{0}}",
-            "user_installer_execution": "Возникла ошибка при запуске программы установки с правами пользователя: {{0}}"
+            "user_installer_execution": "Возникла ошибка при запуске программы установки с правами пользователя: {{0}}",
+            "cpu_not_supported": "Процессор этого устройства не поддерживает SSE4.1. Для работы Floorp требуется процессор с поддержкой SSE4.1.",
+            "cpu_check_failed": "Не удалось подтвердить требования к процессору. Пожалуйста, проверьте системные требования."
         }
     }
 }

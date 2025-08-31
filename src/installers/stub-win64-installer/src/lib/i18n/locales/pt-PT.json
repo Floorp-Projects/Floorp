@@ -40,7 +40,9 @@
             "error": "Falha na instalação",
             "launchCheckbox": "Iniciar o navegador Floorp após a instalação",
             "closeButton": "Fechar o instalador",
-            "countdownMessage": "O instalador fechará em {{count}} segundos"
+            "countdownMessage": "O instalador fechará em {{count}} segundos",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "Falha ao iniciar o processo do PowerShell: {{0}}",
             "admin_install_failed": "A instalação com direitos de administrador falhou. Código de saída: {{0}}",
             "user_installer_launch": "Falha ao iniciar o processo de instalação com direitos de utilizador: {{0}}",
-            "user_installer_execution": "Ocorreu um problema ao executar o instalador com direitos de utilizador: {{0}}"
+            "user_installer_execution": "Ocorreu um problema ao executar o instalador com direitos de utilizador: {{0}}",
+            "cpu_not_supported": "O processador deste dispositivo não suporta SSE4.1. O Floorp requer um processador com suporte para SSE4.1.",
+            "cpu_check_failed": "Falha ao verificar os requisitos do processador. Verifique os requisitos do sistema."
         }
     }
 }

@@ -40,7 +40,9 @@
             "error": "Встановлення не вдалося",
             "launchCheckbox": "Запускати браузер Floorp після встановлення",
             "closeButton": "Закрити встановлювач",
-            "countdownMessage": "Встановлювач закриється через {{count}} секунд"
+            "countdownMessage": "Встановлювач закриється через {{count}} секунд",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "Не вдалося запустити процес PowerShell: {{0}}",
             "admin_install_failed": "Встановлення з правами адміністратора не вдалося. Код виходу: {{0}}",
             "user_installer_launch": "Не вдалося запустити процес інсталятора з правами користувача: {{0}}",
-            "user_installer_execution": "Виникла проблема під час запуску інсталятора з правами користувача: {{0}}"
+            "user_installer_execution": "Виникла проблема під час запуску інсталятора з правами користувача: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
         }
     }
 }

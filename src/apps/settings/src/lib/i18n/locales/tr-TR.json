@@ -85,7 +85,7 @@
         "style": "Stil",
         "horizontal": "Yatay",
         "multirow": "Çok-satırlı",
-        "verticalTabIsRemovedFromBrowser": "Dikey Sekmeler {{productName}}adresinden kaldırılmıştır. Lütfen bunun yerine Firefox'un yerel Dikey Sekme Çubuğunu kullanın.",
+        "verticalTabIsRemovedFromBrowser": "Dikey Sekmeler {{productName}}'tan kaldırılmıştır. Lütfen bunun yerine Firefox'un yerel Dikey Sekme Çubuğunu kullanın.",
         "learnMore": "Daha fazla bilgi",
         "position": "Konum",
         "positionDescription": "Sekme çubuğu konumunu seç.",
@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Sekme Çubuğunu ve Başlık Çubuğunu Gizle",
         "showTabBarOnBottomOfNavigationBar": "Gezinti Çubuğunun Altında Sekme Çubuğunu Göster",
         "showTabBarOnBottomOfWindow": "Sekme Çubuğunu Pencerenin Altında Göster",
+        "maxRowEnabled": "Maksimum Sekme Çubuğu Sırasını Etkinleştir",
+        "maxRow": "Maksimum Sekme Çubuğu Sırası",
         "tab": {
             "title": "Sekmeler",
             "footerLinkText": "Sekme Ayarları Hakkında",
@@ -116,6 +118,64 @@
             "minHeight": "Minimum sekme yüksekliği",
             "minHeightError": "Sekme yüksekliği {{min}} ile {{max}} piksel arasında olmalıdır."
         },
+        "lepton-preferences": {
+            "title": "Lepton Ayarları",
+            "description": "Gelişmiş Lepton tema tercihlerini yapılandırma",
+            "configureLepton": "Lepton'u Yapılandırma",
+            "back": "Geri",
+            "experimentalWarning": {
+                "title": "⚠️ Deneysel Özellikler",
+                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir.",
+                "leptonRepository": "Lepton, Firefox için bir css temasıdır.",
+                "visitRepository": "Depo Sayfasını Ziyaret Edin"
+            },
+            "autohide": {
+                "title": "Otomatik Gizleme Ayarları",
+                "tab": "Sekmeleri otomatik olarak gizle",
+                "navbar": "Araç Çubuğunu otomatik olarak gizle",
+                "sidebar": "Kenar Çubuğunu otomatik olarak gizle",
+                "backButton": "Geri düğmesini otomatik olarak gizle",
+                "forwardButton": "İleri düğmesini otomatik olarak gizle",
+                "pageAction": "Adres Çubuğundaki düğmeleri otomatik olarak gizle"
+            },
+            "hidden": {
+                "title": "Ayarları Gizle",
+                "tabIcon": "Sekme simgelerini gizle",
+                "tabbar": "Sekme Çubuğunu gizle",
+                "navbar": "Araç Çubuğunu gizle",
+                "sidebarHeader": "Kenar Çubuğu başlıklarını gizle",
+                "urlbarIconbox": "Adres Çubuğu simgelerini gizle",
+                "bookmarkbarIcon": "Yer İmleri Çubuğu simgelerini gizle",
+                "bookmarkbarLabel": "Yer İmleri Çubuğu etiketlerini gizle",
+                "disabledMenu": "Devre dışı bırakılmış içerik menüsü öğelerini gizle"
+            },
+            "icon": {
+                "title": "Simge Ayarları",
+                "disabled": "Lepton'un içerik menüsünü ve panel menü simgelerini devre dışı bırakın",
+                "menu": "Lepton'un içerik menüsü simgelerini etkinleştirin"
+            },
+            "centered": {
+                "title": "Ortaya Hizalama Ayarları",
+                "tab": "Sekme etiketlerini ortala",
+                "urlbar": "Adres Çubuğundaki metni ortala",
+                "bookmarkbar": "Yer İmleri çubuğu öğelerini ortala"
+            },
+            "urlView": {
+                "title": "URL Görünüm Ayarları",
+                "moveIconToLeft": "Adres Çubuğu simgelerini sol tarafa taşı",
+                "goButtonWhenTyping": "Yazarken \"Git\" düğmesini göster",
+                "alwaysShowPageActions": "Sayfa eylemlerini her zaman Adres Çubuğunda göster"
+            },
+            "tabbar": {
+                "title": "Sekme Çubuğu Ayarları",
+                "asTitlebar": "Başlık Çubuğunda Sekme Çubuğu",
+                "oneLiner": "Sekme Çubuğu ve Araç Çubuğunu Birleştir"
+            },
+            "sidebar": {
+                "title": "Kenar Çubuğu Ayarları",
+                "overlap": "Kenar Çubuğunu web sitesi içeriğinin üzerinde göster"
+            }
+        },
         "uiCustomization": {
             "title": "UI Kişiselleştirme",
             "needRestartDescriptionForEnableAndDisable": "Arayüz Özelleştirmesini tamamen etkinleştirmek veya devre dışı bırakmak için {{productName}}'un yeniden başlatılması gerekir.",
@@ -130,7 +190,8 @@
                 "title": "Görünüm",
                 "disableFullscreenNotification": "Tam ekran bildirimini devre dışı bırak",
                 "deleteBrowserBorder": "Remove browser border",
-                "hideUnifiedExtensionsButton": "Birleşik uzantılar düğmesini gizle"
+                "hideUnifiedExtensionsButton": "Birleşik uzantılar düğmesini gizle",
+                "disableQRCodeButton": "QR kodu düğmesini devre dışı bırak"
             },
             "special": {
                 "title": "Ayrıcalıklı Özellikler",
@@ -147,8 +208,8 @@
                 "newtabInsideEnabled": "Yeni sekme düğmesini sekme çubuğunun içinde göster"
             },
             "bookmarkBar": {
-                "title": "Bookmark Bar",
-                "focusExpand": "Expand bookmark bar on focus"
+                "title": "Yer imleri Çubuğu",
+                "focusExpand": "Odaklanıldığında yer imi çubuğunu genişlet"
             }
         }
     },
@@ -175,7 +236,7 @@
         "profileAndAccount": "Profil ve Hesap",
         "profileDescription": "Profiller geçmiş, yer imleri, ayarlar ve eklentiler gibi tarama ile ilgili bilgileri içerir. Floorp bu profili verileri kaydetmek için kullanır.",
         "profileManagement": "Profil Yönetimi",
-        "profileManagementDescription": "Profiller oluşturulabili ve birbirlerinden ayrılabilir. Verileri profil klasörlerinde saklanır.",
+        "profileManagementDescription": "Birden fazla profil oluşturulabilir ve birbirlerinden ayrılabilir. Verileri profil klasörlerinde saklanır.",
         "currentProfileName": "Mevcut Profil Adı: {{name}}",
         "profileSaveLocation": "Profil Kaydedileceği Konum: {{path}}",
         "openProfileManager": "Profil Yöneticisini Aç",

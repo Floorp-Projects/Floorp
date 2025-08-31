@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "タブバーとタイトルバーを隠す",
         "showTabBarOnBottomOfNavigationBar": "ナビゲーションバーの下にタブバーを表示",
         "showTabBarOnBottomOfWindow": "ウインドウの下部にタブバーを表示",
+        "maxRowEnabled": "タブバーの行数を制限",
+        "maxRow": "タブバーの最大行数",
         "tab": {
             "title": "タブ",
             "footerLinkText": "タブ設定について",
@@ -116,6 +118,64 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
+        "lepton-preferences": {
+            "title": "Lepton の設定",
+            "description": "Lepton テーマの高度な設定を変更します",
+            "configureLepton": "Lepton の設定",
+            "back": "戻る",
+            "experimentalWarning": {
+                "title": "⚠️ 実験的な機能",
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
+                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
+                "visitRepository": "リポジトリのページを開く"
+            },
+            "autohide": {
+                "title": "自動非表示の設定",
+                "tab": "タブを自動的に隠す",
+                "navbar": "ツールバーを自動的に隠す",
+                "sidebar": "サイドバーを自動的に隠す",
+                "backButton": "戻るボタンを自動的に隠す",
+                "forwardButton": "進むボタンを自動的に隠す",
+                "pageAction": "アドレスバー上のボタンを自動的に隠す"
+            },
+            "hidden": {
+                "title": "非表示の設定",
+                "tabIcon": "タブのアイコンを隠す",
+                "tabbar": "タブバーを隠す",
+                "navbar": "ツールバーを隠す",
+                "sidebarHeader": "サイドバーのヘッダーを隠す",
+                "urlbarIconbox": "アドレスバーのアイコンを隠す",
+                "bookmarkbarIcon": "ブックマークバーのアイコンを隠す",
+                "bookmarkbarLabel": "ブックマークバーのラベルを隠す",
+                "disabledMenu": "無効なコンテキストメニュー項目を隠す"
+            },
+            "icon": {
+                "title": "アイコンの設定",
+                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
+                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+            },
+            "centered": {
+                "title": "中央揃えの設定",
+                "tab": "タブ名を中央揃えにする",
+                "urlbar": "アドレスバーのテキストを中央揃えにする",
+                "bookmarkbar": "ブックマークバーの項目を中央揃えにする"
+            },
+            "urlView": {
+                "title": "URL 表示の設定",
+                "moveIconToLeft": "アドレスバーのアイコンを左側に移動",
+                "goButtonWhenTyping": "入力中に [移動] ボタンを表示",
+                "alwaysShowPageActions": "アドレスバーのページアクションボタンを常に表示"
+            },
+            "tabbar": {
+                "title": "タブバーの設定",
+                "asTitlebar": "タイトルバーにタブバーを表示",
+                "oneLiner": "タブバーとアドレスバーを統合"
+            },
+            "sidebar": {
+                "title": "サイドバーの設定",
+                "overlap": "サイドバーをウェブサイトに重ねて表示"
+            }
+        },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
             "needRestartDescriptionForEnableAndDisable": "この UI カスタマイズ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
@@ -130,7 +190,8 @@
                 "title": "表示",
                 "disableFullscreenNotification": "フルスクリーン通知を無効にする",
                 "deleteBrowserBorder": "ページの角を丸める",
-                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す"
+                "hideUnifiedExtensionsButton": "統合拡張機能ボタンを隠す",
+                "disableQRCodeButton": "QR コードボタンを無効にする"
             },
             "special": {
                 "title": "特別な機能",
@@ -221,7 +282,7 @@
         "enablePanelSidebar": "パネルサイドバーを有効にする",
         "enableDescription": "パネルサイドバーは Firefox のサイドバーとは別の機能です。 Firefox のサイドバーとは異なり、ウェブページを表示することができます。また、サイドバーでワークスペースを管理することもできます。",
         "otherSettings": "その他のパネルサイドバー設定",
-        "autoUnloadOnClose": "閉じる操作をしたパネルの読み込みを停止",
+        "autoUnloadOnClose": "閉じる操作をしたパネルを解放する",
         "position": "サイドバーの位置",
         "positionLeft": "左",
         "positionRight": "右",

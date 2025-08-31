@@ -40,7 +40,9 @@
             "error": "설치에 실패했습니다",
             "launchCheckbox": "설치 후 Floorp 브라우저 실행",
             "closeButton": "설치 관리자 닫기",
-            "countdownMessage": "{{count}}초 후 설치 프로그램이 닫힙니다"
+            "countdownMessage": "{{count}}초 후 설치 프로그램이 닫힙니다",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "PowerShell 프로세스를 시작하지 못했습니다: {{0}}",
             "admin_install_failed": "관리자 권한으로 설치하지 못했습니다. 종료 코드: {{0}}",
             "user_installer_launch": "사용자 권한으로 인해 설치 관리자 프로세스를 시작하지 못했습니다: {{0}}",
-            "user_installer_execution": "사용자 권한으로 설치 프로그램을 실행하는 동안 문제가 발생했습니다: {{0}}"
+            "user_installer_execution": "사용자 권한으로 설치 프로그램을 실행하는 동안 문제가 발생했습니다: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
         }
     }
 }

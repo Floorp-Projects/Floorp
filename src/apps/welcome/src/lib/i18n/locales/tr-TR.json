@@ -5,26 +5,42 @@
         "languageSupport": "Dil Desteği",
         "features": "Özellikler",
         "featureIntroduction": "Özellik Tanıtımı",
+        "hub": "Floorp Hub",
+        "hubIntro": "Floorp Hub Hakkında",
         "customize": "Kişiselleştir",
         "initialSettings": "İlk Ayarlar",
         "complete": "Tamamla",
         "previous": "Önceki",
         "next": "Sıradaki"
     },
+    "hubPage": {
+        "title": "Floorp Hub Hakkında",
+        "subtitle": "Floorp'a özgü ayarlar için merkezi bir yer.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub, Floorp’a özel ayarlar için tasarlanmış bir merkezdir. ‘about:hub’ adresini ziyaret ederek açabilirsiniz. Ayrıca Firefox’un ‘about:preferences’ adresindeki ayarlar sayfasının sol kenar çubuğundan da ulaşabilirsiniz.",
+        "openHub": "Aç about:hub",
+        "openPreferences": "Ayarlar'ı aç (about:preferences)",
+        "tip": "İpucu: Floorp Hub'a Firefox ayarları kenar çubuğundan da erişebilirsiniz.",
+        "features": {
+            "dedicated": "Özel Floorp ayar merkezi",
+            "accessible": "about:hub veya Firefox ayarlarından ulaşılabilir",
+            "centralized": "Floorp'a özgü tüm seçenekler tek bir yerde"
+        }
+    },
     "customize": {
         "title": "Floorp'u Kişiselleştirin",
         "description": "Tercih ettiğiniz ayarlara göre kişiselleştirin. Bunları daha sonra Floorp Hub veya ayarlar sayfasından her zaman değiştirebilirsiniz.",
         "appearance": {
             "title": "Görünüm Ayarları",
-            "description": "Floorp'un görünümünü tercihinize göre kişiselleştirebilirsiniz. Açık veya koyu bir tema seçin ya da sistem ayarlarınıza göre otomatik olarak geçiş yapmasını sağlayın."
+            "description": "Floorp'un görünümünü tercihlerinize göre kişiselleştirebilirsiniz. Açık veya koyu tema seçebilir ya da sistem ayarlarına göre otomatik geçiş yapabilirsiniz."
         },
         "themes": {
-            "light": "Aydınlık",
+            "light": "Açık",
             "dark": "Koyu",
             "system": "Sistem ayarlarını takip edin"
         },
         "themeInfo": {
-            "light": "Aydınlık tema",
+            "light": "Açık tema",
             "dark": "Koyu tema",
             "system": "Sistem tercihleri"
         },
@@ -33,11 +49,17 @@
             "default": "Varsayılan",
             "search": "Ara",
             "noEnginesFound": "Arama motoru bulunamadı."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub, Floorp’a özel ayarlar için tasarlanmış bir merkezdir. ‘about:hub’ adresini ziyaret ederek açabilirsiniz. Ayrıca Firefox’un ‘about:preferences’ adresindeki ayarlar sayfasının sol kenar çubuğundan da ulaşabilirsiniz.",
+            "openHub": "Aç about:hub",
+            "openPreferences": "Ayarlar'ı aç (about:preferences)"
         }
     },
     "finish": {
         "title": "Kurulum Tamamlandı!",
-        "subtitle": "Tebrikler! Floorp kurulumunu tamamladınız. Rahat ve güvenli bir internet tarama deneyiminin keyfini çıkarın.",
+        "subtitle": "Tebrikler! Floorp kurulumunu tamamladınız. İnternette rahat ve güvenli bir deneyimin tadını çıkarın.",
         "nextSteps": {
             "title": "Sonraki Adımlar (İsteğe Bağlı)",
             "setDefault": "Varsayılan Tarayıcı Olarak Ayarla",
@@ -126,5 +148,22 @@
         "hint": "Daha detaylı ayarlar için, sağ üstteki menü düğmesindeki Ayarlar kısmını kullanabilirsiniz.",
         "resourcesLabel": "Kaynaklar",
         "defaultBrowserSuccess": "Floorp varsayılan tarayıcınız olarak ayarlandı!"
+    },
+    "whatsNew": {
+        "title": "Floorp {{version}} sürümüne hoş geldiniz!",
+        "subtitle": "Floorp'taki yeniliklere göz atın!",
+        "tags": {
+            "settings": "Ayarlar",
+            "productivity": "Üretkenlik",
+            "workspaces": "Çalışma Alanları",
+            "pwa": "PWA",
+            "gestures": "Hareketler"
+        },
+        "footer": {
+            "follow": "Takip Et",
+            "privacy": "Gizlilik & Şartlar",
+            "about": "Floorp Hakkında",
+            "copyright": "© {{year}} Floorp Projesi. Tüm hakları saklıdır."
+        }
     }
 }

@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Ocultar a barra de separadores e a barra de título",
         "showTabBarOnBottomOfNavigationBar": "Mostrar barra de separadores na parte inferior da barra de navegação",
         "showTabBarOnBottomOfWindow": "Mostrar barra de separadores na parte inferior da janela",
+        "maxRowEnabled": "Ativar a fila máxima de Tabbar",
+        "maxRow": "Fila máxima de Tabbar",
         "tab": {
             "title": "Separadores",
             "footerLinkText": "Acerca das definições dos separadores",
@@ -116,6 +118,64 @@
             "minHeight": "Altura mínima do separador",
             "minHeightError": "A altura do separador deve situar-se entre {{min}} e {{max}} píxeis."
         },
+        "lepton-preferences": {
+            "title": "Definições de Lepton",
+            "description": "Configurar as preferências avançadas do tema Lepton",
+            "configureLepton": "Configurar o Lepton",
+            "back": "Voltar",
+            "experimentalWarning": {
+                "title": "⚠️ Funcionalidades Experimentais",
+                "description": "Estas definições são experimentais e não são suportadas oficialmente. Podem ocorrer problemas.",
+                "leptonRepository": "Lepton é um tema css para o Firefox.",
+                "visitRepository": "Visitar a página do repositório"
+            },
+            "autohide": {
+                "title": "Definições de ocultação automática",
+                "tab": "Ocultar separadores automaticamente",
+                "navbar": "Ocultar automaticamente a barra de ferramentas",
+                "sidebar": "Ocultar automaticamente a barra lateral",
+                "backButton": "Ocultar automaticamente o botão voltar",
+                "forwardButton": "Ocultar automaticamente o botão de avançar",
+                "pageAction": "Ocultar automaticamente botões na barra de endereços"
+            },
+            "hidden": {
+                "title": "Ocultar definições",
+                "tabIcon": "Ocultar ícones de separadores",
+                "tabbar": "Ocultar a barra de separadores",
+                "navbar": "Ocultar a barra de ferramentas",
+                "sidebarHeader": "Ocultar cabeçalhos da barra lateral",
+                "urlbarIconbox": "Ocultar ícones da barra de endereços",
+                "bookmarkbarIcon": "Ocultar os ícones da barra de favoritos",
+                "bookmarkbarLabel": "Ocultar etiquetas da barra de favoritos",
+                "disabledMenu": "Ocultar itens de menu de contexto desativados"
+            },
+            "icon": {
+                "title": "Definições de ícones",
+                "disabled": "Desativar o menu de contexto do Lepton e os ícones do menu do painel",
+                "menu": "Ativar os ícones do menu de contexto do Lepton"
+            },
+            "centered": {
+                "title": "Definições centradas",
+                "tab": "Centrar etiquetas nos separadores",
+                "urlbar": "Centrar o texto na barra de endereços",
+                "bookmarkbar": "Itens da barra de favoritos do centro"
+            },
+            "urlView": {
+                "title": "Definições da vista URL",
+                "moveIconToLeft": "Mover os ícones da barra de endereço para o lado esquerdo",
+                "goButtonWhenTyping": "Ao escrever, mostrar um botão \"Ir\"",
+                "alwaysShowPageActions": "Mostrar sempre as ações da página na barra de endereços"
+            },
+            "tabbar": {
+                "title": "Definições da barra de separadores",
+                "asTitlebar": "Barra de separadores na barra de título",
+                "oneLiner": "Combinar a barra de separadores e a barra de ferramentas"
+            },
+            "sidebar": {
+                "title": "Definições da barra lateral",
+                "overlap": "Mostrar barra lateral sobre o conteúdo do sítio Web"
+            }
+        },
         "uiCustomization": {
             "title": "Personalização da IU",
             "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o site {{productName}} para ativar ou desativar completamente esta funcionalidade de personalização da IU.",
@@ -130,7 +190,8 @@
                 "title": "Ecrã",
                 "disableFullscreenNotification": "Desativar a notificação em ecrã completo",
                 "deleteBrowserBorder": "Arredondar os cantos das páginas",
-                "hideUnifiedExtensionsButton": "Ocultar o botão de extensões unificadas"
+                "hideUnifiedExtensionsButton": "Ocultar o botão de extensões unificadas",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Caraterísticas especiais",

@@ -32,7 +32,7 @@
         "aboutBrowser": "О {{productName}}",
         "debug": "Отладка",
         "mouseGesture": "Жесты мышью",
-        "keyboardShortcut": "Keyboard Shortcuts"
+        "keyboardShortcut": "Сочетания клавиш"
     },
     "home": {
         "welcome": "Добро пожаловать, {{name}} 👋",
@@ -94,6 +94,8 @@
         "hideTabBarAndTitleBar": "Скрыть панель вкладок и заголовков",
         "showTabBarOnBottomOfNavigationBar": "Показывать панель вкладок в нижней части панели навигации",
         "showTabBarOnBottomOfWindow": "Показывать панель вкладок в нижней части окна",
+        "maxRowEnabled": "Enable Maximum Row of Tabbar",
+        "maxRow": "Maximum Row of Tabbar",
         "tab": {
             "title": "Вкладки",
             "footerLinkText": "О настройках вкладки",
@@ -116,9 +118,67 @@
             "minHeight": "Минимальная высота вкладки",
             "minHeightError": "Высота вкладки должна быть от {{min}} до {{max}} пикселей."
         },
+        "lepton-preferences": {
+            "title": "Lepton Settings",
+            "description": "Configure advanced Lepton theme preferences",
+            "configureLepton": "Configure Lepton",
+            "back": "Back",
+            "experimentalWarning": {
+                "title": "⚠️ Experimental Features",
+                "description": "These settings are experimental and not officially supported. Issues may occur.",
+                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "visitRepository": "Visit Repository Page"
+            },
+            "autohide": {
+                "title": "Auto-hide Settings",
+                "tab": "Automatically hide tabs",
+                "navbar": "Automatically hide Toolbar",
+                "sidebar": "Automatically hide Sidebar",
+                "backButton": "Automatically hide back button",
+                "forwardButton": "Automatically hide forward button",
+                "pageAction": "Automatically hide buttons on the Address Bar"
+            },
+            "hidden": {
+                "title": "Hide Settings",
+                "tabIcon": "Hide tab icons",
+                "tabbar": "Hide Tab Bar",
+                "navbar": "Hide Toolbar",
+                "sidebarHeader": "Hide Sidebar Headers",
+                "urlbarIconbox": "Hide Address Bar icons",
+                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
+                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
+                "disabledMenu": "Hide disabled context menu items"
+            },
+            "icon": {
+                "title": "Icon Settings",
+                "disabled": "Disable Lepton's context menu and panel menu icons",
+                "menu": "Enable Lepton's context menu icons"
+            },
+            "centered": {
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
+            },
+            "urlView": {
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+            },
+            "tabbar": {
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
+            },
+            "sidebar": {
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            }
+        },
         "uiCustomization": {
             "title": "UI Customization",
-            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
+            "needRestartDescriptionForEnableAndDisable": "Для полной активации или деактивации функции пользовательского интерфейса требуется перезапуск {{productName}}.",
             "navbar": {
                 "title": "Navigation Bar",
                 "positionWithExperiment": "Position (Experiment)",
@@ -130,7 +190,8 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
                 "deleteBrowserBorder": "Round the corners of pages",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+                "hideUnifiedExtensionsButton": "Hide unified extensions button",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Special Features",
@@ -279,7 +340,7 @@
         "enableDisable": "Включить/выключить",
         "enablePwa": "Включите прогрессивные веб-приложения",
         "enablePwaDescription": "Позволяет устанавливать веб-сайты в качестве декстопных приложений",
-        "needRestartDescriptionForEnableAndDisable": "{{productName}}'s restart is required to completely enable or disable the progressive web app feature.",
+        "needRestartDescriptionForEnableAndDisable": "Для полной активации или деактивации функции прогрессивного веб-приложения необходимо перезапустить {{productName}}.",
         "otherSettings": "Прочие настройки",
         "showToolbar": "Показать панель инструментов",
         "showToolbarDescription": "Отображение панели инструментов в окнах Прогрессивных Веб-приложений",
@@ -409,9 +470,9 @@
         "basicSettings": "Basic Settings",
         "basicSettingsDescription": "Configure basic keyboard shortcut settings",
         "enableOrDisable": "Enable/Disable",
-        "enable": "Enable custom keyboard shortcuts",
-        "enableDescription": "When enabled, you can customize keyboard shortcuts for various browser actions. When disabled, default Firefox shortcuts will be used.",
-        "needRestartDescription": "A restart of {{productName}} is required to completely enable or disable the custom keyboard shortcuts feature.",
+        "enable": "Включить пользовательские сочетания клавиш",
+        "enableDescription": "Если эта функция включена, вы можете настроить пользовательские сочетания клавиш для различных действий в браузере. Если эта функция отключена, будут использоваться сочетания клавиш Firefox по умолчанию.",
+        "needRestartDescription": "Для полной активации или деактивации функции пользовательских сочетаний клавиш требуется перезапуск {{productName}}.",
         "shortcuts": "Shortcuts",
         "shortcutsDescription": "Configure keyboard shortcuts for various browser actions",
         "shortcutsTip": "Some shortcuts may conflict with Firefox's default shortcuts.",

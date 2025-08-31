@@ -1,42 +1,53 @@
 {
-    "title": "Floorp Start",
+    "title": "Trang bắt đầu Floorp",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name"
+        "addSite": "Thêm trang",
+        "addNewSite": "Thêm trang mới",
+        "url": "Địa chỉ trang",
+        "label": "Tên",
+        "cancel": "Hủy",
+        "add": "Thêm",
+        "close": "Đóng",
+        "labelPlaceholder": "Tên trang",
+        "pin": "Ghim",
+        "unpin": "Bỏ ghim",
+        "block": "Chặn",
+        "blockTitle": "Block \"{{title}}\"?",
+        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+        "invalidUrl": "Invalid URL"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "close": "Close"
+        "newTabSettings": "Cài đặt thẻ mới",
+        "displayComponents": "Các thành phần hiển thị",
+        "topSites": "Những trang thường dùng",
+        "clock": "Đồng hồ",
+        "searchBar": "Thanh tìm kiếm",
+        "backgroundSettings": "Cài đặt nền",
+        "noBackground": "Không có nền",
+        "randomImage": "Ảnh ngẫu nhiên",
+        "customImage": "Ảnh tùy chọn",
+        "folderImages": "Ảnh từ thư mục",
+        "floorpImages": "Ảnh của Floorp",
+        "currentImage": "Ảnh hiện tại:",
+        "imageRecommendation": "Nên dùng ảnh với độ phân giải 1920x1080 hoặc cao hơn.",
+        "currentFolder": "Thư mục hiện tại",
+        "selectFolder": "Chọn thư mục",
+        "selected": "Đã chọn",
+        "enableSlideshow": "Bật trình chiếu",
+        "slideshowInterval": "Tốc độ (giây)",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+        "restartRequired": "Requires browser restart to take full effect."
     },
     "searchBar": {
         "searchOrEnterUrl": "Tìm kiếm hoặc nhập địa chỉ",
-        "loadingSearchEngines": "Loading search engines..."
+        "loadingSearchEngines": "Đang tải các công cụ tìm kiếm..."
     },
     "settingsButton": {
         "settings": "Cài đặt"
     },
     "modal": {
-        "close": "Close"
+        "close": "Đóng"
     }
 }

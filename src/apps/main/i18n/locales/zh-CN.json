@@ -38,7 +38,7 @@
             "notes": "便笺",
             "paint": "画图",
             "photo": "照片",
-            "pin": "大头针",
+            "pin": "固定",
             "pet": "宠物",
             "question": "疑问",
             "smartphone": "手机",
@@ -190,24 +190,24 @@
         }
     },
     "qrCode": {
-        "pageAction": "Generate QR Code",
-        "modalTitle": "QR Code Generator",
-        "loading": "Generating QR Code...",
-        "copyButton": "Copy Image",
-        "downloadButton": "Download",
-        "closeButton": "Close",
-        "copySuccess": "QR code copied to clipboard!",
-        "copyError": "Failed to copy QR code",
-        "generateError": "Failed to generate QR code"
+        "pageAction": "生成 QR 码",
+        "modalTitle": "QR 码生成器",
+        "loading": "正在生成 QR 码……",
+        "copyButton": "复制图像",
+        "downloadButton": "下载",
+        "closeButton": "关闭",
+        "copySuccess": "QR 码已复制到剪贴板！",
+        "copyError": "复制 QR 码失败",
+        "generateError": "生成 QR 码失败"
     },
-    "qrcode-generate-page-action": "Generate QR Code for this page",
-    "qrcode-generate-page-action-title": "QR Code Generator",
+    "qrcode-generate-page-action": "为此页面生成 QR 码",
+    "qrcode-generate-page-action-title": "QR 码生成器",
     "panelSidebar": {
         "modal": {
             "type": "面板类型",
             "typeOptions": {
                 "web": "网页",
-                "sidebar-tool": "Tool Sidebar",
+                "sidebar-tool": "工具侧边栏",
                 "extension": "扩展侧边栏"
             },
             "width": "面板宽度",
@@ -243,20 +243,20 @@
         "editor_path_not_found": "未找到编辑器路径",
         "set_pref_description": "请设置编辑器路径",
         "please_enter_filename": "请输入文件名称",
-        "file_created": "File Created",
-        "file_created_successfully": "File created successfully",
-        "open_file_in_editor": "Open file in editor?",
-        "error_title": "Error",
-        "folder_open_failed": "Failed to open CSS folder",
-        "edit_failed": "Failed to edit file"
+        "file_created": "文件已创建",
+        "file_created_successfully": "文件创建成功",
+        "open_file_in_editor": "在编辑器中打开文件？",
+        "error_title": "错误",
+        "folder_open_failed": "打开 CSS 文件夹失败",
+        "edit_failed": "编辑文件失败"
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
-            "restart-cache-clear": "Restart with Cache Clear",
-            "restart-safe-mode": "Restart in Safe Mode",
-            "restart-profile-manager": "Restart with Profile Manager"
+            "title": "重新启动",
+            "normal-restart": "重新启动",
+            "restart-cache-clear": "清空缓存后重新启动",
+            "restart-safe-mode": "以安全模式重新启动",
+            "restart-profile-manager": "使用配置文件管理器重新启动"
         }
     }
 }

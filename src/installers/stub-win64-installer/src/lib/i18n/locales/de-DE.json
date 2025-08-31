@@ -40,7 +40,9 @@
             "error": "Installation fehlgeschlagen",
             "launchCheckbox": "Floorp Browser nach der Installation starten",
             "closeButton": "Installationsprogramm schließen",
-            "countdownMessage": "Das Installationsprogramm wird in {{count}} Sekunden beendet"
+            "countdownMessage": "Das Installationsprogramm wird in {{count}} Sekunden beendet",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "Starten des PowerShell Prozesses fehlgeschlagen: {{0}}",
             "admin_install_failed": "Installation mit Administratorrechten fehlgeschlagen. Exit-Code: {{0}}",
             "user_installer_launch": "Der Installationsprozess konnte nicht mit Benutzerrechten gestartet werden: {{0}}",
-            "user_installer_execution": "Beim Ausführen des Installationsprogramms mit Benutzerrechten ist ein Problem aufgetreten: {{0}}"
+            "user_installer_execution": "Beim Ausführen des Installationsprogramms mit Benutzerrechten ist ein Problem aufgetreten: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
         }
     }
 }

@@ -40,7 +40,9 @@
             "error": "Yükleme Başarısız oldu",
             "launchCheckbox": "Yükleme bitince Floorp tarayıcısını başlatın",
             "closeButton": "Yükleyiciyi Kapat",
-            "countdownMessage": "Yükleyici {{count}} saniye içinde kapanacaktır"
+            "countdownMessage": "Yükleyici {{count}} saniye içinde kapanacaktır",
+            "legacyDownloadMessage": "Eski yükleyiciyi de deneyebilirsiniz.",
+            "legacyDownloadButton": "İndir"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "PowerShell işlemi başlatılamadı: {{0}}",
             "admin_install_failed": "Yönetici izni ile kurulum başarısız oldu. Çıkış kodu: {{0}}",
             "user_installer_launch": "Kullanıcı izni ile yükleyici işlemi başlatılamadı: {{0}}",
-            "user_installer_execution": "Yükleyiciyi kullanıcı izni ile çalıştırırken bir sorun oluştu: {{0}}"
+            "user_installer_execution": "Yükleyiciyi kullanıcı izni ile çalıştırırken bir sorun oluştu: {{0}}",
+            "cpu_not_supported": "Bu cihazın CPU'su SSE4.1'i desteklemiyor. Floorp, SSE4.1 desteği olan bir işlemci gerektirir.",
+            "cpu_check_failed": "CPU gereksinimleri doğrulanamadı. Lütfen sistem gereksinimlerini kontrol edin."
         }
     }
 }

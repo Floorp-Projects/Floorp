@@ -3,44 +3,44 @@
         "default": "{{productName}} Settings"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Cài đặt",
+        "searchPlaceholder": "Tìm kiếm cài đặt",
+        "darkMode": "Chế độ Tối"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
+        "title": "Khởi động lại là cần thiết",
         "description": "After restarting, the opened private windows and private tabs will be lost.",
-        "cancel": "Later",
+        "cancel": "Để sau",
         "restart": "Restart Now"
     },
     "sidebar": {
         "firefoxSettings": "Firefox Settings",
-        "about": "About",
-        "aboutNoraneko": "About Noraneko",
-        "debug": "Debug",
-        "overview": "Overview",
-        "features": "Features"
+        "about": "Về",
+        "aboutNoraneko": "Về Noraneko",
+        "debug": "Gỡ lỗi",
+        "overview": "Tổng quan",
+        "features": "Tính năng"
     },
     "pages": {
-        "home": "Home",
-        "tabAndAppearance": "Tab & Appearance",
-        "browserSidebar": "Panel Sidebar",
-        "workspaces": "Workspaces",
-        "keyboardShortcuts": "Keyboard Shortcuts",
-        "webApps": "Web Apps",
+        "home": "Nhà",
+        "tabAndAppearance": "Thẻ & Diện mạo",
+        "browserSidebar": "Thanh bên",
+        "workspaces": "Không gian làm việc",
+        "keyboardShortcuts": "Phím tắt ",
+        "webApps": "Ứng dụng Web",
         "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}",
-        "debug": "Debug",
-        "mouseGesture": "Mouse Gestures",
-        "keyboardShortcut": "Keyboard Shortcuts"
+        "aboutBrowser": "Về {{productName}}",
+        "debug": "Gỡ lỗi",
+        "mouseGesture": "Cử chỉ chuột",
+        "keyboardShortcut": "Phím tắt"
     },
     "home": {
-        "welcome": "Welcome, {{name}} 👋",
-        "defaultAccountName": "{{productName}} User",
-        "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
+        "welcome": "Xin chào, {{name}} 👋",
+        "defaultAccountName": "Người dùng {{productName}}",
+        "description": "Quản lí tài khoản, quyền riêng tư và bảo mật để nâng tầm trải nghiệm {{productName}} của bạn.",
         "setup": {
             "title": "Setup",
-            "footerLinkText": "Log in to Accounts",
+            "footerLinkText": "Đăng nhập vào tài khoản",
             "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
             "setupProgressTitle": "Setup Progress",
             "step": "Step {{step}} of {{total}}"
@@ -51,8 +51,8 @@
             "description": "{{productName}} protects your data and privacy by default, but you can also manage these settings manually."
         },
         "ablazeAccount": {
-            "title": "Ablaze Account (Coming Soon)",
-            "footerLinkText": "Ablaze Account",
+            "title": "Tài khoản Ablaze (sắp có)",
+            "footerLinkText": "Tài khoản Ablaze",
             "description": "Use a Mozilla Account to sync some data with other devices. Ablaze Account syncs data that can't be synced with a Mozilla Account."
         },
         "manageExtensions": {
@@ -74,33 +74,35 @@
         "proton": "Proton",
         "lepton": "Lepton",
         "photon": "Photon",
-        "protonfix": "Firefox UI Fix",
+        "protonfix": "Proton sửa đổi",
         "fluerial": "Fluerial",
         "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
-        "otherInterfaceSettings": "Other Interface Settings",
-        "useFaviconColorToBackgroundOfNavigationBar": "Use Favicon Color for Navigation Bar Background",
-        "tabBar": "Tab Bar",
-        "styleDescription": "Select the tab bar style.",
+        "otherInterfaceSettings": "Cài đặt giao diện khác",
+        "useFaviconColorToBackgroundOfNavigationBar": "Dùng màu của biểu tượng thẻ làm màu nền",
+        "tabBar": "Thẻ",
+        "styleDescription": "Chọn phong cách thẻ",
         "customizeTabBar": "Customize Tab Bar",
-        "style": "Style",
-        "horizontal": "Horizontal",
-        "multirow": "Multi-row",
-        "verticalTabIsRemovedFromBrowser": "Vertical Tabs have been removed from {{productName}}. Please use Firefox's native Vertical Tab Bar instead.",
-        "learnMore": "Learn more",
-        "position": "Position",
-        "positionDescription": "Choose the tab bar position.",
-        "default": "Default",
-        "hideTabBar": "Hide Tab Bar",
-        "hideTabBarAndTitleBar": "Hide Tab Bar & Title Bar",
-        "showTabBarOnBottomOfNavigationBar": "Show Tab Bar at Bottom of Navigation Bar",
-        "showTabBarOnBottomOfWindow": "Show Tab Bar at Bottom of Window",
+        "style": "Phong cách",
+        "horizontal": "Dọc",
+        "multirow": "Nhiều dòng",
+        "verticalTabIsRemovedFromBrowser": "Thẻ dọc đã bị loại bỏ khỏi {{productName}}. Hãy dùng thẻ dọc của Firefox.",
+        "learnMore": "Tìm hiểu thêm",
+        "position": "Vị trí",
+        "positionDescription": "Chọn vị trí của thẻ",
+        "default": "Đầu",
+        "hideTabBar": "Ẩn",
+        "hideTabBarAndTitleBar": "Ẩn cả thanh tiêu đề",
+        "showTabBarOnBottomOfNavigationBar": "Dưới thanh điều hướng",
+        "showTabBarOnBottomOfWindow": "Cuối",
+        "maxRowEnabled": "Bật giới hạn số dòng thẻ",
+        "maxRow": "Số dòng thẻ tối đa",
         "tab": {
-            "title": "Tabs",
+            "title": "Thẻ",
             "footerLinkText": "About Tab Settings",
-            "scroll": "Scroll",
-            "scrollDescription": "Choose whether to use scrolling for tab switching and select scrolling behavior.",
-            "scrollTab": "Switch tabs by scrolling",
-            "reverseScroll": "Reverse tab scroll",
+            "scroll": "Cuộn",
+            "scrollDescription": "Các cài đặt khi chuyển thẻ bằng cách cuộn.",
+            "scrollTab": "Chuyển thẻ bằng cách cuộn",
+            "reverseScroll": "Cuộn ngược",
             "scrollWrap": "Loop tab scroll",
             "scrollPrefInfo": "\"{{reverseScrollPrefName}}\" & \"{{scrollWrapPrefName}}\" will only work if \"{{scrollPrefName}}\" is enabled.",
             "pinTitle": "Show pinned tab titles",
@@ -116,6 +118,64 @@
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
+        "lepton-preferences": {
+            "title": "Lepton Settings",
+            "description": "Configure advanced Lepton theme preferences",
+            "configureLepton": "Configure Lepton",
+            "back": "Back",
+            "experimentalWarning": {
+                "title": "⚠️ Experimental Features",
+                "description": "These settings are experimental and not officially supported. Issues may occur.",
+                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "visitRepository": "Visit Repository Page"
+            },
+            "autohide": {
+                "title": "Auto-hide Settings",
+                "tab": "Automatically hide tabs",
+                "navbar": "Automatically hide Toolbar",
+                "sidebar": "Automatically hide Sidebar",
+                "backButton": "Automatically hide back button",
+                "forwardButton": "Automatically hide forward button",
+                "pageAction": "Automatically hide buttons on the Address Bar"
+            },
+            "hidden": {
+                "title": "Hide Settings",
+                "tabIcon": "Hide tab icons",
+                "tabbar": "Hide Tab Bar",
+                "navbar": "Hide Toolbar",
+                "sidebarHeader": "Hide Sidebar Headers",
+                "urlbarIconbox": "Hide Address Bar icons",
+                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
+                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
+                "disabledMenu": "Hide disabled context menu items"
+            },
+            "icon": {
+                "title": "Icon Settings",
+                "disabled": "Disable Lepton's context menu and panel menu icons",
+                "menu": "Enable Lepton's context menu icons"
+            },
+            "centered": {
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
+            },
+            "urlView": {
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+            },
+            "tabbar": {
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
+            },
+            "sidebar": {
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            }
+        },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
@@ -130,7 +190,8 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
                 "deleteBrowserBorder": "Round the corners of pages",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button"
+                "hideUnifiedExtensionsButton": "Hide unified extensions button",
+                "disableQRCodeButton": "Disable QR code button"
             },
             "special": {
                 "title": "Special Features",

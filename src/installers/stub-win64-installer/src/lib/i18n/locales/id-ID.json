@@ -40,7 +40,9 @@
             "error": "Pemasangan Gagal",
             "launchCheckbox": "Luncurkan peramban Floorp setelah pemasangan",
             "closeButton": "Tutup Penginstal",
-            "countdownMessage": "Penginstal akan menutup dalam {{count}} detik"
+            "countdownMessage": "Penginstal akan menutup dalam {{count}} detik",
+            "legacyDownloadMessage": "Anda juga dapat mencoba penginstal lama.",
+            "legacyDownloadButton": "Unduh"
         }
     },
     "slides": {
@@ -87,7 +89,9 @@
             "powershell_process": "Gagal menjalankan proses PowerShell: {{0}}",
             "admin_install_failed": "Pemasangan dengan hak administrator gagal. Kode keluar: {{0}}",
             "user_installer_launch": "Gagal meluncurkan proses penginstal dengan hak pengguna: {{0}}",
-            "user_installer_execution": "Terjadi masalah menjalankan penginstal dengan hak pengguna: {{0}}"
+            "user_installer_execution": "Terjadi masalah menjalankan penginstal dengan hak pengguna: {{0}}",
+            "cpu_not_supported": "CPU Perangkat ini tidak mendukung SSE4.1. Floorp memerlukan prosesor yang mendukung SSE4.1.",
+            "cpu_check_failed": "Gagal memastikan persyaratan CPU. Silakan periksa persyaratan sistem."
         }
     }
 }

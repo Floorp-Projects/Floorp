@@ -5,11 +5,27 @@
         "languageSupport": "Language Support",
         "features": "Features",
         "featureIntroduction": "Feature Introduction",
+        "hub": "Floorp Hub",
+        "hubIntro": "About Floorp Hub",
         "customize": "Customize",
         "initialSettings": "Initial Settings",
         "complete": "Complete",
         "previous": "Previous",
         "next": "Next"
+    },
+    "hubPage": {
+        "title": "About Floorp Hub",
+        "subtitle": "A central place for Floorp-specific settings.",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+        "openHub": "Open about:hub",
+        "openPreferences": "Open Settings (about:preferences)",
+        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "features": {
+            "dedicated": "Dedicated Floorp settings center",
+            "accessible": "Accessible from about:hub or Firefox settings",
+            "centralized": "All Floorp-specific options in one place"
+        }
     },
     "customize": {
         "title": "Customize Floorp",
@@ -33,6 +49,12 @@
             "default": "Default",
             "search": "Search",
             "noEnginesFound": "No search engines found."
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
+            "openHub": "Open about:hub",
+            "openPreferences": "Open Settings (about:preferences)"
         }
     },
     "finish": {
@@ -126,5 +148,22 @@
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
         "resourcesLabel": "Resources",
         "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+    },
+    "whatsNew": {
+        "title": "Welcome to Floorp {{version}}!",
+        "subtitle": "Check out what's new in Floorp!",
+        "tags": {
+            "settings": "Settings",
+            "productivity": "Productivity",
+            "workspaces": "Workspaces",
+            "pwa": "PWA",
+            "gestures": "Gestures"
+        },
+        "footer": {
+            "follow": "Follow",
+            "privacy": "Privacy & Terms",
+            "about": "About Floorp",
+            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+        }
     }
 }

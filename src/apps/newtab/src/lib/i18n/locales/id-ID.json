@@ -8,7 +8,13 @@
         "cancel": "Batal",
         "add": "Tambah",
         "close": "Tutup",
-        "labelPlaceholder": "Nama situs web"
+        "labelPlaceholder": "Nama situs web",
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "block": "Block",
+        "blockTitle": "Blokir \"{{title}}\"?",
+        "blockConfirm": "Situs ini akan dihapus dari Situs Teratas dan tidak akan disarankan lagi. Anda dapat mengelola situs yang diblokir di pengaturan.",
+        "invalidUrl": "URL tidak valid"
     },
     "settings": {
         "newTabSettings": "Pengaturan Tab Baru",
@@ -22,12 +28,17 @@
         "customImage": "Gambar Suaian",
         "folderImages": "Gambar dari Folder",
         "floorpImages": "Gambar Floorp",
-        "currentImage": "Gambar saat ini:",
-        "currentFolder": "Folder saat ini:",
+        "currentImage": "Gambar Saat Ini:",
+        "imageRecommendation": "Recommendation: Use images with a resolution of 1920x1080 or higher.",
+        "currentFolder": "Current Folder:",
         "selectFolder": "Pilih Folder",
         "selected": "Terpilih",
-        "imageRecommendation": "Saran: gambar berukuran 1920×1080 atau lebih",
-        "close": "Tutup"
+        "enableSlideshow": "Nyalakan Tayangan Salindia",
+        "slideshowInterval": "Interval (seconds)",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+        "restartRequired": "Requires browser restart to take full effect."
     },
     "searchBar": {
         "searchOrEnterUrl": "Cari atau masukkan URL",
