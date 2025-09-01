@@ -17,6 +17,15 @@ interface TopSite {
   smallFavicon?: string | null;
 }
 
+const TRUNCATE_TITLE_MAX = 18;
+function truncateTopSiteTitle(
+  title: string | undefined,
+  max: number = TRUNCATE_TITLE_MAX,
+): string {
+  if (!title) return "";
+  return title.length <= max ? title : title.slice(0, max - 1) + "…";
+}
+
 declare global {
   interface Window {
     NRGetCurrentTopSites: (callback: (data: string) => void) => void;
@@ -574,8 +583,11 @@ export function TopSites() {
                   <PinIcon className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
-                {site.title}
+              <span
+                className="text-xs text-center text-gray-300 leading-tight max-w-full inline-block overflow-hidden text-ellipsis"
+                title={site.title}
+              >
+                {truncateTopSiteTitle(site.title)}
               </span>
             </a>
           ))}
@@ -609,8 +621,11 @@ export function TopSites() {
                     </span>
                   )}
               </div>
-              <span className="text-xs text-center text-gray-300 line-clamp-2 leading-tight">
-                {site.title}
+              <span
+                className="text-xs text-center text-gray-300 leading-tight max-w-full inline-block overflow-hidden text-ellipsis"
+                title={site.title}
+              >
+                {truncateTopSiteTitle(site.title)}
               </span>
             </a>
           ))}

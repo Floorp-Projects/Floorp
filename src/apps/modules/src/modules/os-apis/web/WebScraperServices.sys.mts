@@ -565,18 +565,6 @@ class webScraper {
     if (!actor) return false;
     return await actor.sendQuery("WebScraper:Submit", { selector });
   }
-
-  /**
-   * Waits for the specified number of milliseconds.
-   *
-   * @param ms - The number of milliseconds to wait
-   * @returns Promise<void> - Resolves after the specified delay
-   */
-  public wait(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
 }
 
 // Export a singleton instance of the WebScraper service

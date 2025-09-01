@@ -361,10 +361,6 @@ class TabManager {
       selector,
     });
   }
-
-  public wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 }
 
 // Export a singleton instance of the TabManager service

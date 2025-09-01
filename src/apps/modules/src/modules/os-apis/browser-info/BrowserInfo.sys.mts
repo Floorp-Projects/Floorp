@@ -12,7 +12,7 @@ import type { Download, HistoryItem, Tab } from "../type.ts";
  * - Collect recent browser tabs
  * - Collect recent browser downloads
  */
-export class browserInfo {
+class browserInfo {
   /**
    * Gets recent browser history items
    *
@@ -91,7 +91,7 @@ export class browserInfo {
               tab.getAttribute("pending") !== "true"
             ) {
               tabs.push({
-                id: tab.linkedPanel ? Number.parseInt(tab.linkedPanel) : i,
+                id: tab.linkedPanel ? tab.linkedBrowser.browserId : i,
                 url: browser.currentURI.spec,
                 title: tab.label || browser.currentURI.spec,
                 isActive: tab === tabbrowser.selectedTab,

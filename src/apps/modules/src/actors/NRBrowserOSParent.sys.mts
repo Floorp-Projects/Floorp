@@ -17,19 +17,6 @@ export class NRBrowserOSParent extends JSWindowActorParent {
   receiveMessage(message: ReceiveMessageArgument) {
     try {
       const { name, data } = message;
-      const toStringValue = (val: unknown): string => {
-        try {
-          if (val === undefined || val === null) return "null";
-          if (typeof val === "string") return val;
-          return JSON.stringify(val);
-        } catch (_e) {
-          try {
-            return String(val);
-          } catch (_e2) {
-            return "null";
-          }
-        }
-      };
       switch (name) {
         // ---- Browser Info ----
         case "BrowserOS:GetAllContextData": {
@@ -85,8 +72,6 @@ export class NRBrowserOSParent extends JSWindowActorParent {
           return WebScraper.fillForm(data.instanceId, data.formData);
         case "BrowserOS:WSSubmit":
           return WebScraper.submit(data.instanceId, data.selector);
-        case "BrowserOS:WSWait":
-          return WebScraper.wait(data.ms);
 
         // ---- Tab Manager ----
         case "BrowserOS:TMCreateInstance":
@@ -153,10 +138,6 @@ export class NRBrowserOSParent extends JSWindowActorParent {
           return TabManagerServices.fillForm(data.instanceId, data.formData);
         case "BrowserOS:TMSubmit":
           return TabManagerServices.submit(data.instanceId, data.selector);
-        case "BrowserOS:TMWaIt":
-          // NOTE: the child uses TMWaIt (capital I) for differentiation; keep as-is
-          return TabManagerServices.wait(data.ms);
-
         default:
           console.warn("NRBrowserOSParent: unknown message", name, data);
           return null;

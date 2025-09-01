@@ -185,10 +185,6 @@ export class NRBrowserOSChild extends JSWindowActorChild {
           (instanceId: string, selector: string) =>
             this.sendQuery("BrowserOS:WSSubmit", { instanceId, selector }),
         );
-        exportAsync(
-          "wsWait",
-          (ms: number) => this.sendQuery("BrowserOS:WSWait", { ms }),
-        );
 
         // ---- Tab Manager (Visible tabs) ----
         exportAsync(
@@ -310,10 +306,6 @@ export class NRBrowserOSChild extends JSWindowActorChild {
           "tmSubmit",
           (instanceId: string, selector: string) =>
             this.sendQuery("BrowserOS:TMSubmit", { instanceId, selector }),
-        );
-        exportAsync(
-          "tmWait",
-          (ms: number) => this.sendQuery("BrowserOS:TMWaIt", { ms }),
         );
       }
     } catch (e) {
