@@ -22,6 +22,38 @@ import {
 import {} from "@core/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+function deepMerge<T extends Record<string, unknown>>(base: T, override: unknown): T {
+  // Start from a deep clone of base to avoid mutations
+  const result: T = isPlainObject(base)
+    ? (JSON.parse(JSON.stringify(base)) as T)
+    : base;
+
+  if (!isPlainObject(override)) {
+    return result;
+  }
+
+  const res = result as unknown as Record<string, unknown>;
+
+  for (const [key, overrideVal] of Object.entries(override)) {
+    const baseVal = res[key];
+    if (isPlainObject(baseVal) && isPlainObject(overrideVal)) {
+      res[key] = deepMerge(baseVal as Record<string, unknown>, overrideVal);
+    } else if (overrideVal !== undefined) {
+      res[key] = overrideVal as unknown;
+    }
+  }
+
+  return result;
+}
+
 function getOldUICustomizationConfig() {
   try {
     const navbarBottom = Services.prefs.getBoolPref(
@@ -240,7 +272,9 @@ function createConfig(): [
       getOldConfigs,
     );
     const parsedConfig = JSON.parse(configStr);
-    initialConfig = zFloorpDesignConfigs.parse(parsedConfig);
+    // Merge existing config with defaults to tolerate newly added fields
+    const merged = deepMerge(defaultConfig, parsedConfig);
+    initialConfig = zFloorpDesignConfigs.parse(merged);
   } catch (e) {
     console.error("Failed to parse initial design configs, using defaults:", e);
   }
@@ -254,7 +288,8 @@ function createConfig(): [
         getOldConfigs,
       );
       const parsedConfig = JSON.parse(configStr);
-      setConfig(zFloorpDesignConfigs.parse(parsedConfig));
+      const merged = deepMerge(defaultConfig, parsedConfig);
+      setConfig(zFloorpDesignConfigs.parse(merged));
     } catch (e) {
       console.error("Failed to parse design configs:", e);
     }

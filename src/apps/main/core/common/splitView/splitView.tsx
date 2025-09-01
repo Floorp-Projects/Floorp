@@ -400,6 +400,17 @@ export class CSplitView {
     reverse: boolean | null = null,
     method: "row" | "column" | null = null,
   ) {
+    // Persist user-selected position/layout in Fixed Tab mode
+    if (fixedSplitViewData().fixedTabId && (reverse !== null || method !== null)) {
+      setFixedSplitViewData((prev) => ({
+        fixedTabId: prev.fixedTabId,
+        options: {
+          reverse: reverse ?? prev.options.reverse,
+          method: method ?? prev.options.method,
+        },
+      }));
+    }
+
     this.tryToRemoveFixedView();
 
     const splitData = this.findSplitDataForTab(tab);
