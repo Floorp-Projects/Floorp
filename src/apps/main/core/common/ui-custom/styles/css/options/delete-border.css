@@ -70,7 +70,8 @@ browser[type="content-primary"],
 browser[type="content"] > html {
   background: var(--panel-sidebar-background-color) !important;
   background-color: var(--panel-sidebar-background-color) !important;
-  clip-path: inset(0px 0px 0px round 15px 0) !important;
+  border-radius: 15px !important;
+  overflow: clip;
 }
 
 #tabbrowser-tabbox {
