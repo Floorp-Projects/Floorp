@@ -6,6 +6,7 @@ import os
 import platform
 import re
 import shutil
+import ssl
 import stat
 import subprocess
 import sys
@@ -851,10 +852,9 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
         cinnabar_url = "https://github.com/glandium/git-cinnabar/"
         download_py = cinnabar_dir / "download.py"
         with open(download_py, "wb") as fh:
+            ssl_context = ssl.create_default_context(cafile=certifi.where())
             shutil.copyfileobj(
-                urlopen(
-                    f"{cinnabar_url}/raw/master/download.py", cafile=certifi.where()
-                ),
+                urlopen(f"{cinnabar_url}/raw/master/download.py", context=ssl_context),
                 fh,
             )
 
