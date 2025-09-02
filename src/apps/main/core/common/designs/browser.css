@@ -189,3 +189,7 @@ browser[type="content"] > html {
 notification-message[message-bar-type="infobar"] {
   --info-bar-text-color: var(--lwt-text-color, #222) !important;
 }
+
+:root[sizemode="fullscreen"]:not([inDOMFullscreen="true"]) #nav-bar {
+  display: none !important;
+}
