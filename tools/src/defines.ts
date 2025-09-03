@@ -93,7 +93,7 @@ export type BinArchive =
       filename: string;
       format: "tar.xz";
       platform: "linux";
-      architecture: "x86_64" | "arm64";
+      architecture: "x86_64" | "aarch64";
     }
   | {
       filename: string;
@@ -105,7 +105,7 @@ export type BinArchive =
 export function getBinArchive(): BinArchive {
   if (PLATFORM === "windows") {
     return {
-      filename: `${BRANDING.base_name}-win-amd64-moz-artifact.zip`,
+      filename: `${BRANDING.base_name}-windows-x86_64-moz-artifact.zip`,
       format: "zip",
       platform: "windows",
       architecture: "x86_64",
@@ -115,12 +115,11 @@ export function getBinArchive(): BinArchive {
   if (PLATFORM === "linux") {
     // Map Deno arch to expected strings
     const denoArch = Deno.build.arch;
-    const linuxArch = denoArch === "aarch64" ? "arm64" : "x86_64";
     return {
-      filename: `${BRANDING.base_name}-linux-${linuxArch}-moz-artifact.tar.xz`,
+      filename: `${BRANDING.base_name}-linux-${denoArch}-moz-artifact.tar.xz`,
       format: "tar.xz",
       platform: "linux",
-      architecture: linuxArch as "x86_64" | "arm64",
+      architecture: denoArch as "x86_64" | "aarch64",
     };
   }
 
