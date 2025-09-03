@@ -160,8 +160,8 @@ async function runBuild(phase?: string): Promise<void> {
     const buildid2 = Update.generateUuidV7();
     await Builder.run("production", buildid2);
   } else if (optionsPhase === "after-mach") {
-    Injector.run("production");
-    await Injector.injectXhtmlFromTs(false);
+    // Injector.run("production");
+    await Injector.injectXhtmlFromTs(false, true);
   } else {
     console.error(`Unknown phase: ${optionsPhase}`);
     process.exit(1);
@@ -231,6 +231,9 @@ async function main(): Promise<void> {
         const idx = argv.indexOf("--action");
         const action = idx >= 0 ? argv[idx + 1] : "apply";
         runPatch(action);
+      } else if (sub === "writeVersion") {
+        Update.writeVersion("static/gecko");
+        logger.success("Version written to static/gecko/config/");
       } else {
         logger.error(`Unknown misc command: ${sub}`);
         printHelp();

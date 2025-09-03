@@ -6,13 +6,16 @@ import {
   safeRemove,
   createSymlink,
 } from "./utils.ts";
-import { BIN_DIR, PROJECT_ROOT } from "./defines.ts";
+import { BIN_DIR, PROD_BIN_DIR, PROJECT_ROOT } from "./defines.ts";
 
 const logger = new Logger("injector");
 
-export async function injectXhtmlFromTs(isDev = false): Promise<void> {
+export async function injectXhtmlFromTs(
+  isDev = false,
+  isCI = false,
+): Promise<void> {
   const scriptPath = path.join(PROJECT_ROOT, "tools", "scripts", "xhtml.ts");
-  const binPath = BIN_DIR;
+  const binPath = !isCI ? BIN_DIR : PROD_BIN_DIR;
 
   const args = ["run", "--allow-read", "--allow-write", scriptPath, binPath];
   if (isDev) args.push("--dev");
@@ -27,7 +30,7 @@ export async function injectXhtmlFromTs(isDev = false): Promise<void> {
 export function run(mode: string, dirName = "noraneko-devdir"): void {
   const manifestPath = path.join(BIN_DIR, "chrome.manifest");
 
-  if (mode !== "prod") {
+  if (mode !== "production") {
     let manifest = "";
     if (exists(manifestPath)) {
       manifest = Deno.readTextFileSync(manifestPath);

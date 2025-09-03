@@ -8,6 +8,7 @@ import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import deno from "@deno/vite-plugin";
 import swc from "unplugin-swc";
+import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -141,6 +142,7 @@ export default defineConfig({
     },
 
     istanbulPlugin(),
+    genJarmnPlugin("content", "noraneko-content", "content"),
   ],
 
   // 既存の設定...
@@ -166,8 +168,11 @@ export default defineConfig({
     preserveSymlinks: true,
     alias: [
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
-      {find: "@nora/solid-xul",replacement: r("../../libs/solid-xul/index.ts")},
-      {find:"@std/toml",replacement:"@jsr/std__toml"},
+      {
+        find: "@nora/solid-xul",
+        replacement: r("../../libs/solid-xul/index.ts"),
+      },
+      { find: "@std/toml", replacement: "@jsr/std__toml" },
       {
         find: "../../../../../shared",
         replacement: r("../../../../src/shared"),
