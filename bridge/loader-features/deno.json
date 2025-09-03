@@ -4,23 +4,25 @@
     "types": ["npm:vite/client", "jsr:@types/gecko"]
   },
   "imports": {
-    "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
-    "@jsr/std__assert": "npm:@jsr/std__assert@^1.0.14",
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.5",
+    "@jsr/std__collections": "npm:@jsr/std__collections@^1.1.3",
+    "@std/assert": "npm:@jsr/std__assert@^1.0.14",
     "@solid-primitives/deep": "npm:@solid-primitives/deep@^0.3.3",
+    "@std/toml": "npm:@jsr/std__toml@^1.0.9",
     "@types/uuid": "npm:@types/uuid@^10.0.0",
 
     "es-toolkit": "npm:es-toolkit@^1.39.10",
-    "i18next": "npm:i18next@^25.0.2",
+    "i18next": "npm:i18next@^25.4.2",
     "pathe": "npm:pathe@^2.0.3",
-    "solid-js": "npm:solid-js@^1.9.6",
+    "solid-js": "npm:solid-js@^1.9.9",
     "solid-styled-jsx": "npm:solid-styled-jsx@^0.27.1",
-    "unplugin-swc": "npm:unplugin-swc@^1.5.5",
+    "unplugin-swc": "npm:unplugin-swc@^1.5.7",
     "uuid": "npm:uuid@^11.1.0",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "npm:vite@^7.1.3",
     "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.1.0",
-    "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.6",
+    "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.8",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^5.1.4",
-    "chroma-js": "npm:chroma-js@^3.1.1",
+    "chroma-js": "npm:chroma-js@^3.1.2",
     "@types/chroma-js": "npm:@types/chroma-js@^3.1.1"
   },
   "tasks": {

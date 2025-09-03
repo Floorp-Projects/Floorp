@@ -121,7 +121,7 @@ export async function decompressBin(): Promise<void> {
 }
 
 export async function downloadBin(filename: string): Promise<void> {
-  const url = `https://github.com/nyanrus/noraneko/releases/download/alpha/${filename}`;
+  const url = `https://github.com/f3liz-dev/noraneko-runtime/releases/latest/download/${filename}`;
   logger.info(`Downloading binary from ${url}`);
 
   const resp = await fetch(url);

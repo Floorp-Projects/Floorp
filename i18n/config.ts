@@ -1,14 +1,10 @@
 import { parse } from "@std/toml";
 import { createRootHMR } from "@nora/solid-xul";
 import i18next from "i18next";
+import { createEffect, createSignal } from "solid-js";
+import { Resources } from "./default.d.ts";
 
-import * as nsDefault from "./en-US/default.json" with { type: "json" };
-import * as nsBrowserChrome from "./en-US/browser-chrome.json" with { type: "json" };
-
-export const resources = {
-  default: nsDefault.default,
-  "browser-chrome": nsBrowserChrome.default,
-} as const;
+export let resources: Resources;
 
 const _modules = import.meta.glob("./*/*.json", { eager: true });
 
@@ -22,16 +18,16 @@ for (const [idx, m] of Object.entries(_modules)) {
 }
 
 const _meta = import.meta.glob("./*/_meta.toml", {
+  eager: true,
   query: "?raw",
 });
 const fallbackLng: Record<string, string> = {};
 for (const path in _meta) {
   fallbackLng[path.replaceAll("./", "").replaceAll("/_meta.toml", "")] = parse(
-    (await _meta[path]()).default,
+    _meta[path].default,
   )["fallback-language"] as string;
 }
 
-import { createEffect, createSignal } from "solid-js";
 
 export function initI18N(namespace: string[], defaultNamespace: string) {
   i18next.init({

@@ -88,7 +88,7 @@ export default defineConfig({
   },
 
   plugins: [
-    deno(),
+    // deno(),
 
     swc.vite({
       exclude: ["*solid-xul*", "*solid-js*"],
@@ -166,6 +166,8 @@ export default defineConfig({
     preserveSymlinks: true,
     alias: [
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
+      {find: "@nora/solid-xul",replacement: r("../../libs/solid-xul/index.ts")},
+      {find:"@std/toml",replacement:"@jsr/std__toml"},
       {
         find: "../../../../../shared",
         replacement: r("../../../../src/shared"),
