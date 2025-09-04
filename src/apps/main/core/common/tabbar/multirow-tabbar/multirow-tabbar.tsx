@@ -7,7 +7,7 @@ import { config } from "../../designs/configs.ts";
 import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
 
 interface DragData {
-  animDropIndex: number;
+  animDropIndex: number | undefined;
   movingTabs?: XULElement[];
 }
 
@@ -86,6 +86,14 @@ export class MultirowTabbarClass {
       : null;
   }
 
+  private get scrollboxClip(): XULElement | null {
+    return this.arrowScrollbox
+      ? this.arrowScrollbox.shadowRoot?.querySelector(
+        "[part='scrollbox-clip']",
+      ) || null
+      : null;
+  }
+
   private get itemsWrapper(): XULElement | null {
     return this.arrowScrollbox
       ? this.arrowScrollbox.shadowRoot?.querySelector(
@@ -129,13 +137,76 @@ export class MultirowTabbarClass {
   }
 
   private enableMultirowTabbar() {
+    // Match Paxmod's behavior: wrap tabs in the scrollbox and enable vertical scrolling
     this.itemsWrapper?.style.setProperty("flex-wrap", "wrap");
-    this.itemsWrapper?.style.setProperty("overflow", "scroll");
+
+    // Apply styles to parts in the arrowscrollbox shadow DOM
+    this.scrollbox?.setAttribute("style", (this.scrollbox?.getAttribute("style") || "") );
+    this.scrollbox?.style.setProperty("display", "flex", "important");
+    this.scrollbox?.style.setProperty("flex-wrap", "wrap", "important");
+    this.scrollbox?.style.setProperty("width", "100%", "important");
+    this.scrollbox?.style.setProperty("overflow-y", "auto", "important");
+    this.scrollbox?.style.setProperty("scroll-snap-type", "y mandatory", "important");
+    this.scrollbox?.style.setProperty("scroll-snap-stop", "always", "important");
+    this.scrollbox?.style.setProperty(
+      "scrollbar-width",
+      "thin",
+      "important",
+    );
+
+    // Ensure the clip element shows all rows and doesn't grow unexpectedly
+    this.scrollboxClip?.style.setProperty("display", "block", "important");
+    this.scrollboxClip?.style.setProperty("contain", "none", "important");
+
+    // Hide scroll buttons and overflow indicators which are not needed in multi-row
+    const shadow = (this.arrowScrollbox as any)?.shadowRoot as ShadowRoot | undefined;
+    const hideParts = [
+      "[part='scrollbutton-up']",
+      "[part='scrollbutton-down']",
+      "[part='overflow-start-indicator']",
+      "[part='overflow-end-indicator']",
+    ];
+    if (shadow) {
+      for (const sel of hideParts) {
+        const el = shadow.querySelector(sel) as HTMLElement | null;
+        el?.style.setProperty("display", "none", "important");
+      }
+    }
+
+    // Remove inline padding around the tabs container like Paxmod CSS
+    this.tabbrowserTabs?.style.setProperty("padding-inline", "0", "important");
   }
 
   private disableMultirowTabbar() {
     this.itemsWrapper?.style.removeProperty("flex-wrap");
-    this.itemsWrapper?.style.removeProperty("overflow");
+
+    // Revert styles applied to parts within the arrowscrollbox shadow DOM
+    this.scrollbox?.style.removeProperty("display");
+    this.scrollbox?.style.removeProperty("flex-wrap");
+    this.scrollbox?.style.removeProperty("width");
+    this.scrollbox?.style.removeProperty("overflow-y");
+    this.scrollbox?.style.removeProperty("scroll-snap-type");
+    this.scrollbox?.style.removeProperty("scroll-snap-stop");
+    this.scrollbox?.style.removeProperty("scrollbar-width");
+
+    this.scrollboxClip?.style.removeProperty("display");
+    this.scrollboxClip?.style.removeProperty("contain");
+
+    const shadow = (this.arrowScrollbox as any)?.shadowRoot as ShadowRoot | undefined;
+    const hideParts = [
+      "[part='scrollbutton-up']",
+      "[part='scrollbutton-down']",
+      "[part='overflow-start-indicator']",
+      "[part='overflow-end-indicator']",
+    ];
+    if (shadow) {
+      for (const sel of hideParts) {
+        const el = shadow.querySelector(sel) as HTMLElement | null;
+        el?.style.removeProperty("display");
+      }
+    }
+
+    this.tabbrowserTabs?.style.removeProperty("padding-inline");
   }
 
   private applyInjection(): void {
@@ -152,7 +223,7 @@ export class MultirowTabbarClass {
       return;
     }
 
-    const dropIndex = (tabs: XULElement[], event: DragEvent): number => {
+    const dropIndex = (tabs: XULElement[], event: DragEvent): number | undefined => {
       for (const tab of tabs) {
         const rect = tab.getBoundingClientRect();
         if (
@@ -168,7 +239,8 @@ export class MultirowTabbarClass {
           return tabs.indexOf(tab);
         }
       }
-      return -1;
+      // Match Paxmod behavior by returning undefined when not matched
+      return undefined;
     };
 
     function injectionMethod<T extends keyof TabBrowserTabsPrototype>(
