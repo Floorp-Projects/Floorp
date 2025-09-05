@@ -82,7 +82,7 @@ export function GestureDisplayUI(props: {
                         {getTrailElements()}
                     </div>
 
-                    <Show when={props.actionName}>
+                    <Show when={props.actionName && getConfig().showLabel}>
                         <div
                             style={{
                                 position: "fixed",

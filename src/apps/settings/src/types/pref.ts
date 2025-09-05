@@ -131,7 +131,16 @@ export type TProgressiveWebAppObject = z.infer<typeof zProgressiveWebAppObject>;
 export type InstalledApp = TProgressiveWebAppObject[string];
 
 /* Mouse Gesture */
-export const zGestureDirection = z.enum(["up", "down", "left", "right"]);
+export const zGestureDirection = z.enum([
+  "up",
+  "down",
+  "left",
+  "right",
+  "upRight",
+  "upLeft",
+  "downRight",
+  "downLeft",
+]);
 
 export const zGestureAction = z.object({
   pattern: z.array(zGestureDirection),
@@ -142,6 +151,7 @@ export const zMouseGestureConfig = z.object({
   enabled: z.boolean(),
   sensitivity: z.number(),
   showTrail: z.boolean(),
+  showLabel: z.boolean(),
   trailColor: z.string(),
   trailWidth: z.number(),
   actions: z.array(zGestureAction),

@@ -16,9 +16,7 @@ const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
 export const useMouseGestureConfig = () => {
-  const [config, setConfig] = useState<MouseGestureConfig>(
-    {} as MouseGestureConfig,
-  );
+  const [config, setConfig] = useState<MouseGestureConfig>({} as MouseGestureConfig);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +37,9 @@ export const useMouseGestureConfig = () => {
           const configStr = await rpc.getStringPref(MOUSE_GESTURE_CONFIG_PREF);
           if (configStr) {
             const parsedConfig = JSON.parse(configStr);
-            setConfig({ ...parsedConfig, enabled });
+            // Backward compatibility defaults
+            const showLabel = parsedConfig.showLabel ?? true;
+            setConfig({ ...parsedConfig, showLabel, enabled });
           } else {
             throw new Error("Configuration not found");
           }
@@ -117,6 +117,10 @@ export const patternToString = (pattern: GestureDirection[]) => {
     down: "↓",
     left: "←",
     right: "→",
+    upRight: "↗",
+    upLeft: "↖",
+    downRight: "↘",
+    downLeft: "↙",
   };
   return pattern.map((p) => directionMap[p]).join("");
 };
@@ -127,6 +131,10 @@ export const stringToPattern = (str: string): GestureDirection[] => {
     "↓": "down",
     "←": "left",
     "→": "right",
+    "↗": "upRight",
+    "↖": "upLeft",
+    "↘": "downRight",
+    "↙": "downLeft",
   } as const;
 
   return [...str].map((char) => {

@@ -17,11 +17,30 @@ import { getActionDisplayName } from "./utils/gestures";
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 export const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
-export type GestureDirection = "up" | "down" | "left" | "right";
+export type GestureDirection =
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "upRight"
+  | "upLeft"
+  | "downRight"
+  | "downLeft";
 export type GesturePattern = GestureDirection[];
 
 export const zGestureAction = z.object({
-  pattern: z.array(z.enum(["up", "down", "left", "right"])),
+  pattern: z.array(
+    z.enum([
+      "up",
+      "down",
+      "left",
+      "right",
+      "upRight",
+      "upLeft",
+      "downRight",
+      "downLeft",
+    ]),
+  ),
   action: z.string(),
 });
 export type GestureAction = z.infer<typeof zGestureAction>;
@@ -30,6 +49,7 @@ export const zMouseGestureConfig = z.object({
   enabled: z.boolean().default(false),
   sensitivity: z.number().min(1).max(100).default(40),
   showTrail: z.boolean().default(true),
+  showLabel: z.boolean().default(true),
   trailColor: z.string().default("#37ff00"),
   trailWidth: z.number().min(1).max(10).default(2),
   contextMenu: z.object({
@@ -47,6 +67,7 @@ export const defaultConfig: MouseGestureConfig = {
   enabled: false,
   sensitivity: 40,
   showTrail: true,
+  showLabel: true,
   trailColor: "#37ff00",
   trailWidth: 6,
   contextMenu: {

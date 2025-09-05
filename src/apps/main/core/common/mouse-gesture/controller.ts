@@ -113,14 +113,24 @@ export class MouseGestureController {
     const dx = coords.x - this.lastX;
     const dy = coords.y - this.lastY;
 
-    if (Math.abs(dx) > sensitivity || Math.abs(dy) > sensitivity) {
+    // Use vector magnitude to determine whether to register movement, so
+    // diagonal movements are recognized reliably as well.
+    if (Math.hypot(dx, dy) > sensitivity) {
       let direction: GestureDirection | null = null;
 
-      if (Math.abs(dx) > Math.abs(dy)) {
-        direction = dx > 0 ? "right" : "left";
-      } else {
-        direction = dy > 0 ? "down" : "up";
-      }
+      // Quantize to 8 directions (right, downRight, down, downLeft, left, upLeft, up, upRight)
+      const angle = Math.atan2(dy, dx); // dy>0 means moving down in screen coords
+      const deg = (angle * 180) / Math.PI;
+      const norm = (deg + 360) % 360; // 0..360
+
+      if (norm >= 337.5 || norm < 22.5) direction = "right";
+      else if (norm >= 22.5 && norm < 67.5) direction = "downRight";
+      else if (norm >= 67.5 && norm < 112.5) direction = "down";
+      else if (norm >= 112.5 && norm < 157.5) direction = "downLeft";
+      else if (norm >= 157.5 && norm < 202.5) direction = "left";
+      else if (norm >= 202.5 && norm < 247.5) direction = "upLeft";
+      else if (norm >= 247.5 && norm < 292.5) direction = "up";
+      else if (norm >= 292.5 && norm < 337.5) direction = "upRight";
 
       if (
         direction &&

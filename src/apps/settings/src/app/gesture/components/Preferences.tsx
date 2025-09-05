@@ -34,6 +34,11 @@ export function GeneralSettings({
         await updateConfig({ showTrail: !config.showTrail });
     };
 
+    const toggleShowLabel = async () => {
+        const current = config.showLabel ?? true;
+        await updateConfig({ showLabel: !current });
+    };
+
     const handleSensitivityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const target = e.target;
         const value = Number.parseInt(target.value);
@@ -79,6 +84,17 @@ export function GeneralSettings({
                         <Switch
                             checked={config.showTrail}
                             onChange={() => toggleShowTrail()}
+                            disabled={!config.enabled}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                        <span className="text-base-content/90">
+                            {t("mouseGesture.showLabel")}
+                        </span>
+                        <Switch
+                            checked={(config.showLabel ?? true)}
+                            onChange={() => toggleShowLabel()}
                             disabled={!config.enabled}
                         />
                     </div>

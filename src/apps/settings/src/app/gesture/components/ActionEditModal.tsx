@@ -157,42 +157,27 @@ export function ActionEditModal({
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-5 gap-2">
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm col-span-1"
-                                onClick={() => updatePattern("up")}
-                            >
-                                ↑
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm col-span-1"
-                                onClick={() => updatePattern("down")}
-                            >
-                                ↓
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm col-span-1"
-                                onClick={() => updatePattern("left")}
-                            >
-                                ←
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm col-span-1"
-                                onClick={() => updatePattern("right")}
-                            >
-                                →
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm col-span-1"
-                                onClick={resetPattern}
-                            >
-                                {t("mouseGesture.reset")}
-                            </button>
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-3 gap-2">
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("upLeft")}>↖</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("up")}>↑</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("upRight")}>↗</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("left")}>←</button>
+                                <div />
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("right")}>→</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("downLeft")}>↙</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("down")}>↓</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => updatePattern("downRight")}>↘</button>
+                            </div>
+                            <div>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline btn-sm"
+                                    onClick={resetPattern}
+                                >
+                                    {t("mouseGesture.reset")}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

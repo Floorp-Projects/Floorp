@@ -156,6 +156,10 @@ export class MouseGestureService {
       down: "↓",
       left: "←",
       right: "→",
+      upRight: "↗",
+      upLeft: "↖",
+      downRight: "↘",
+      downLeft: "↙",
     };
 
     return pattern.map((dir) => directionSymbols[dir] || dir).join(" ");
