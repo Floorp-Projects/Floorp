@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as t from 'io-ts';
 import { commands } from './commands';
 import { getOrElseW } from 'fp-ts/Either';

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 export const defaultNS = "browser-chrome";
 import { initI18N } from "./config.ts";
 export function initI18NForBrowserChrome() {

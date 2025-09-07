@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
 

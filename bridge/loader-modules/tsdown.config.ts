@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { defineConfig } from "tsdown";
 import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 

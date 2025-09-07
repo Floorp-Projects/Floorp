@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 type MozXULElement = {
   //https://searchfox.org/mozilla-central/rev/dbac9a2afcc5b1f112ed9b812d3daa7cbe71f951/toolkit/content/customElements.js#528
   /**

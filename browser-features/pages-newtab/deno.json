@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.13",
+    "tailwindcss": "npm:tailwindcss@^4.1.13",
+    "vite": "npm:vite@^7.1.4"
+  }
+}

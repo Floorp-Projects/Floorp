@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { BIN_PATH_EXE, PATHS } from "./defines.ts";
 import { ProcessUtils } from "./utils.ts";
 

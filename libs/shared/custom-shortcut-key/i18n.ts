@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { commands } from "./commands";
 import type { CSKData } from "./defines";
 

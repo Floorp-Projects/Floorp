@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 export function init() {
   // if (
   //   Services.prefs.getStringPref("noraneko.version2", "") !==

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 // @ts-ignore
 import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
 

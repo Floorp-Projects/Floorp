@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { JSX as SolidJSX } from "solid-js";
 
 export namespace JSX {

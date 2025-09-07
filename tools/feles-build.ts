@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as Initializer from "./src/initializer.ts";
 import * as Patcher from "./src/patcher.ts";
 import * as Symlinker from "./src/symlinker.ts";

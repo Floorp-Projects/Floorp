@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 const tests = import.meta.glob("./**/*.test.ts");
 
 (() => {

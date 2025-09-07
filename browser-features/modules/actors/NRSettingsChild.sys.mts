@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 import { createBirpc } from "birpc";
 import {
   NRSettingsParentFunctions,

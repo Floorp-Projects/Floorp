@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+-->
+
 # @nora/core
 
 When build, placed on noraneko/content
