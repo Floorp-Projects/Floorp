@@ -29,14 +29,10 @@
   "dependencies": {
     "@deno/vite-plugin": "^1.0.5",
     "@swc/core": "^1.13.5",
-<<<<<<< HEAD
     "@tailwindcss/vite": "^4.1.13",
-    "tailwindcss": "^4.1.13",
-=======
-    "@tailwindcss/vite": "^4.1.12",
     "i18next": "^25.5.2",
     "solid-js": "^1.9.9",
->>>>>>> 73c1d4d (add: panel-sidebar from floorp)
+    "tailwindcss": "^4.1.13",
     "unplugin-swc": "^1.5.7",
     "uuid": "^11.1.0",
     "vite-plugin-istanbul": "^7.1.0",
