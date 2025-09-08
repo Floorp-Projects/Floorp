@@ -189,6 +189,22 @@ index d3cbb41..b40299a 100644
 +            id: "you.com@search.mozilla.org",
 +          },
 +        },
++        {
++          aliases: ["Yahoo","yh"],
++          classification: "general",
++          name: "Yahoo! JAPAN",
++          urls: {
++            search: {
++              base: "https://search.yahoo.co.jp/",
++              searchTermParamName: "p",
++            },
++          },
++          identifier: "yahoo.co.jp",
++          webExtension: {
++            locale: "default",
++            id: "yahoo@search.mozilla.org",
++          },
++        },
 +      ],
 +      appDefaultEngineId: "google",
 +    };
