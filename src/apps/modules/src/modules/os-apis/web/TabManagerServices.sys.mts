@@ -60,6 +60,44 @@ class TabManager {
   private _waitForLoad(browser: XULBrowserElement, url: string): Promise<void> {
     return new Promise((resolve) => {
       const uri = Services.io.newURI(url);
+      let resolved = false;
+      const complete = async () => {
+        if (resolved) return;
+        resolved = true;
+        // After load, ensure content actor is ready and body exists
+        try {
+          let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+            "NRWebScraper",
+          );
+          if (!actor) {
+            for (let i = 0; i < 150; i++) {
+              await new Promise((r) => setTimeout(r, 100));
+              actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+                "NRWebScraper",
+              );
+              if (actor) break;
+            }
+          }
+          if (actor) {
+            // Prefer readiness wait; fallback to element waits for heavy SPAs (X.com等)
+            let ok = await actor
+              .sendQuery("WebScraper:WaitForReady", { timeout: 20000 })
+              .catch(() => false);
+            const tryWait = async (sel: string, to = 20000) =>
+              await actor!.sendQuery("WebScraper:WaitForElement", {
+                selector: sel,
+                timeout: to,
+              });
+            if (!ok) ok = await tryWait("body", 20000).catch(() => false);
+            if (!ok) ok = await tryWait("html", 8000).catch(() => false);
+            if (!ok) await tryWait("main", 8000).catch(() => false);
+          }
+        } catch (_) {
+          // ignore
+        }
+        resolve();
+      };
+
       const progressListener = {
         onLocationChange(
           progress: any,
@@ -77,7 +115,21 @@ class TabManager {
 
           PROGRESS_LISTENERS.delete(progressListener);
           browser.webProgress.removeProgressListener(progressListener);
-          resolve();
+          complete();
+        },
+        onStateChange(
+          progress: any,
+          _request: any,
+          flags: any,
+          _status: any,
+        ) {
+          if (!progress.isTopLevel) return;
+          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+          if (flags & STATE_STOP) {
+            PROGRESS_LISTENERS.delete(progressListener);
+            browser.webProgress.removeProgressListener(progressListener);
+            complete();
+          }
         },
         QueryInterface: ChromeUtils.generateQI([
           "nsIWebProgressListener",
@@ -87,7 +139,8 @@ class TabManager {
       PROGRESS_LISTENERS.add(progressListener);
       browser.webProgress.addProgressListener(
         progressListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION,
+        Ci.nsIWebProgress.NOTIFY_LOCATION |
+          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
       );
     });
   }
@@ -108,7 +161,7 @@ class TabManager {
 
       // Retry a few times after navigation for actor readiness
       if (!actor) {
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 150; i++) {
           await new Promise((r) => setTimeout(r, 100));
           actor = browser.browsingContext?.currentWindowGlobal?.getActor(
             "NRWebScraper",

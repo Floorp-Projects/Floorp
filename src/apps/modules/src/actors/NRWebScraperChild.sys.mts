@@ -61,6 +61,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
     };
   }) {
     switch (message.name) {
+      case "WebScraper:WaitForReady": {
+        const to = message.data?.timeout || 15000;
+        return this.waitForReady(to);
+      }
       case "WebScraper:GetHTML":
         return this.getHTML();
       case "WebScraper:GetElement":
@@ -324,6 +328,30 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
     }
 
+    return false;
+  }
+
+  /**
+   * Waits until the document is minimally ready for scraping.
+   * Conditions:
+   * - document and documentElement exist, and
+   * - body exists, or readyState is at least 'interactive',
+   * within the specified timeout.
+   */
+  async waitForReady(timeout = 15000): Promise<boolean> {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const win = this.contentWindow;
+        const doc = win?.document;
+        if (doc && doc.documentElement && (doc.body || doc.readyState === "interactive" || doc.readyState === "complete")) {
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 100));
+      } catch (_) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    }
     return false;
   }
 

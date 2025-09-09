@@ -44,7 +44,7 @@ class webScraper {
    */
   private async _getActorForBrowser(
     browser: XULBrowserElement,
-    tries = 20,
+    tries = 100,
     delayMs = 100,
   ): Promise<any | null> {
     let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
@@ -143,6 +143,32 @@ class webScraper {
 
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
     return new Promise((resolve) => {
+      const self = this;
+      let resolved = false;
+      const complete = async () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          const actor = await self._getActorForBrowser(browser, 150, 100); // up to ~15s
+          if (actor) {
+            // Prefer explicit readiness wait in the child actor
+            const ok = await actor
+              .sendQuery("WebScraper:WaitForReady", { timeout: 15000 })
+              .catch(() => false);
+            if (!ok) {
+              await actor
+                .sendQuery("WebScraper:WaitForElement", {
+                  selector: "body",
+                  timeout: 15000,
+                })
+                .catch(() => null);
+            }
+          }
+        } catch (_) {
+          // ignore
+        }
+        resolve();
+      };
       const oa = E10SUtils.predictOriginAttributes({
         browser,
       });
@@ -198,7 +224,21 @@ class webScraper {
 
           PROGRESS_LISTENERS.delete(progressListener);
           webProgress.removeProgressListener(progressListener);
-          resolve();
+          complete();
+        },
+        onStateChange(
+          progress: nsIWebProgress,
+          _request: nsIRequest,
+          flags: number,
+          _status: nsresult,
+        ) {
+          if (!progress.isTopLevel) return;
+          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+          if (flags & STATE_STOP) {
+            PROGRESS_LISTENERS.delete(progressListener);
+            webProgress.removeProgressListener(progressListener);
+            complete();
+          }
         },
         QueryInterface: ChromeUtils.generateQI([
           "nsIWebProgressListener",
@@ -208,7 +248,8 @@ class webScraper {
       PROGRESS_LISTENERS.add(progressListener);
       webProgress.addProgressListener(
         progressListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION,
+        Ci.nsIWebProgress.NOTIFY_LOCATION |
+          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
       );
     });
   }
