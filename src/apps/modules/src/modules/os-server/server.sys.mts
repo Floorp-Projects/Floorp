@@ -277,6 +277,8 @@ function statusText(code: number): string {
       return "Created";
     case 204:
       return "No Content";
+    case 408:
+      return "Request Timeout";
     case 400:
       return "Bad Request";
     case 401:
@@ -287,6 +289,8 @@ function statusText(code: number): string {
       return "Not Found";
     case 405:
       return "Method Not Allowed";
+    case 413:
+      return "Payload Too Large";
     case 500:
       return "Internal Server Error";
     default:
@@ -297,11 +301,17 @@ function statusText(code: number): string {
 function _badRequest(msg = "bad request") {
   return jsonResponse(400, { error: msg });
 }
+function requestTimeout(msg = "request timeout") {
+  return jsonResponse(408, { error: msg });
+}
 function unauthorized(msg = "unauthorized") {
   return jsonResponse(401, { error: msg });
 }
 function notFound() {
   return jsonResponse(404, { error: "not found" });
+}
+function payloadTooLarge(msg = "payload too large") {
+  return jsonResponse(413, { error: msg });
 }
 function serverError(msg = "internal error") {
   return jsonResponse(500, { error: msg });
@@ -370,6 +380,9 @@ class LocalHttpServer implements nsIServerSocketListener {
   private _server: nsIServerSocket | null = null;
   private _token = "";
   private _router: _Router | null = null;
+  private static readonly READ_HEAD_TIMEOUT_MS = 5000;
+  private static readonly READ_BODY_TIMEOUT_MS = 8000;
+  private static readonly MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
   QueryInterface = ChromeUtils.generateQI([
     "nsIServerSocketListener",
     "nsIObserver",
@@ -428,15 +441,22 @@ class LocalHttpServer implements nsIServerSocketListener {
         // Read until we hit CRLF CRLF for headers
         const chunks: string[] = [];
         let head = "";
-        for (let i = 0; i < 100; i++) {
+        const headDeadline = Date.now() + LocalHttpServer.READ_HEAD_TIMEOUT_MS;
+        while (true) {
           const avail = sis.available();
           if (avail > 0) {
             chunks.push(sis.read(avail));
             head = chunks.join("");
             if (head.includes("\r\n\r\n")) break;
           } else {
-            // yield once
-            await Promise.resolve();
+            if (Date.now() > headDeadline) {
+              const res = requestTimeout();
+              output.write(res, res.length);
+              output.close();
+              input.close();
+              return;
+            }
+            await new Promise((r) => setTimeout(r, 5));
           }
         }
         const split = head.indexOf("\r\n\r\n");
@@ -454,16 +474,38 @@ class LocalHttpServer implements nsIServerSocketListener {
         // Determine body length
         const contentLength =
           Number.parseInt(req.headers["content-length"] || "0", 10) || 0;
+        if (contentLength < 0) {
+          const res = _badRequest("invalid content-length");
+          output.write(res, res.length);
+          output.close();
+          input.close();
+          return;
+        }
+        if (contentLength > LocalHttpServer.MAX_BODY_BYTES) {
+          const res = payloadTooLarge();
+          output.write(res, res.length);
+          output.close();
+          input.close();
+          return;
+        }
         const enc = new TextEncoder();
         const leftover = split >= 0 ? head.slice(split + 4) : "";
         const bodyBytes: number[] = Array.from(enc.encode(leftover));
+        const bodyDeadline = Date.now() + LocalHttpServer.READ_BODY_TIMEOUT_MS;
         while (bodyBytes.length < contentLength) {
           const avail = sis.available();
           if (avail > 0) {
             const piece = sis.read(avail);
             bodyBytes.push(...enc.encode(piece));
           } else {
-            break;
+            if (Date.now() > bodyDeadline) {
+              const res = _badRequest("incomplete body");
+              output.write(res, res.length);
+              output.close();
+              input.close();
+              return;
+            }
+            await new Promise((r) => setTimeout(r, 5));
           }
         }
         req.body = new Uint8Array(bodyBytes.slice(0, contentLength));
@@ -545,6 +587,20 @@ class LocalHttpServer implements nsIServerSocketListener {
 
     // WebScraper
     api.namespace("/scraper", (s: NamespaceBuilder) => {
+      s.get("/instances/:id/exists", async (ctx: RouterContext) => {
+        const { WebScraper } = WebScraperModule();
+        try {
+          // Any call that touches the instance and throws when missing
+          await WebScraper.getURI(ctx.params.id);
+          return { status: 200, body: { exists: true } };
+        } catch (e) {
+          const msg = String(e ?? "");
+          if (/instance\s+not\s+found/i.test(msg)) {
+            return { status: 200, body: { exists: false } };
+          }
+          throw e;
+        }
+      });
       s.post("/instances", async () => {
         const { WebScraper } = WebScraperModule();
         const id = await WebScraper.createInstance();
@@ -665,6 +721,11 @@ class LocalHttpServer implements nsIServerSocketListener {
 
     // TabManager
     api.namespace("/tabs", (t: NamespaceBuilder) => {
+      t.get("/instances/:id/exists", async (ctx: RouterContext) => {
+        const { TabManagerServices } = TabManagerModule();
+        const info = await TabManagerServices.getInstanceInfo(ctx.params.id);
+        return { status: 200, body: { exists: info != null } };
+      });
       t.get("/list", async () => {
         const { TabManagerServices } = TabManagerModule();
         const tabs = await TabManagerServices.listTabs();
