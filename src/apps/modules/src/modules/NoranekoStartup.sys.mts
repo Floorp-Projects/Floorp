@@ -57,6 +57,10 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/os-apis/OSGlue.sys.mjs",
   );
+  // Localhost OS server (self-controlled by prefs)
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-server/server.sys.mjs",
+  );
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
@@ -226,16 +230,30 @@ async function registerCustomAboutPages(): Promise<void> {
 
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
-      createInstance(aIID: nsIID): any {
+      createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
         return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
-          aIID,
+          iid,
         );
       },
     };
 
-    const registrar = Components.manager.QueryInterface(
-      Ci.nsIComponentRegistrar,
-    );
+    let registrar: nsIComponentRegistrar | null = null;
+    const cm = Components.manager;
+    if (cm !== undefined && cm !== null) {
+      registrar = cm as unknown as nsIComponentRegistrar;
+      // Some environments require explicit QI; do it when available.
+      try {
+        const maybeQI =
+          (cm as unknown as { QueryInterface?: (iid: nsIID) => unknown })
+            .QueryInterface;
+        if (typeof maybeQI === "function") {
+          // @ts-ignore: Gecko Components.manager supports QueryInterface at runtime
+          registrar = cm.QueryInterface(Ci.nsIComponentRegistrar);
+        }
+      } catch (_) {
+        // ignore and keep casted registrar
+      }
+    }
     if (!registrar) {
       console.error("Failed to get nsIComponentRegistrar");
       continue;
