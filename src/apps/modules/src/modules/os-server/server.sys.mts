@@ -327,13 +327,13 @@ import {
   Router as _Router,
 } from "./router.sys.mts";
 import type {
-  Tab,
-  HistoryItem,
   Download,
-  HealthResponse,
-  OkResponse,
   ErrorResponse,
-} from "./api-types.sys.mts";
+  HealthResponse,
+  HistoryItem,
+  OkResponse,
+  Tab,
+} from "./api-types/index.sys.mts";
 
 function parseURL(path: string): {
   pathname: string;
@@ -610,7 +610,9 @@ class LocalHttpServer implements nsIServerSocketListener {
         return {
           status: 200,
           body: out,
-        } as RouterHttpResult<{ history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }>;
+        } as RouterHttpResult<
+          { history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }
+        >;
       });
     });
 
@@ -641,30 +643,35 @@ class LocalHttpServer implements nsIServerSocketListener {
         WebScraper.destroyInstance(id);
         return { status: 200, body: { ok: true } };
       });
-      s.post<{ url: string }, OkResponse | ErrorResponse>("/instances/:id/navigate", async (
-        ctx: RouterContext<{ url: string }>,
-      ) => {
-        const json = ctx.json();
-        if (!json?.url) return { status: 400, body: { error: "url required" } };
-        const { WebScraper } = WebScraperModule();
-        await WebScraper.navigate(ctx.params.id, json.url);
-        return { status: 200, body: { ok: true } };
-      });
+      s.post<{ url: string }, OkResponse | ErrorResponse>(
+        "/instances/:id/navigate",
+        async (
+          ctx: RouterContext<{ url: string }>,
+        ) => {
+          const json = ctx.json();
+          if (!json?.url) {
+            return { status: 400, body: { error: "url required" } };
+          }
+          const { WebScraper } = WebScraperModule();
+          await WebScraper.navigate(ctx.params.id, json.url);
+          return { status: 200, body: { ok: true } };
+        },
+      );
       s.get("/instances/:id/uri", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
         const uri = await WebScraper.getURI(ctx.params.id);
-        return { status: 200, body: { uri } };
+        return { status: 200, body: uri != null ? { uri } : {} };
       });
       s.get("/instances/:id/html", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
         const html = await WebScraper.getHTML(ctx.params.id);
-        return { status: 200, body: { html } };
+        return { status: 200, body: html != null ? { html } : {} };
       });
       s.get("/instances/:id/elementText", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
         const { WebScraper } = WebScraperModule();
         const text = await WebScraper.getElementText(ctx.params.id, sel);
-        return { status: 200, body: { text } };
+        return { status: 200, body: text != null ? { text } : {} };
       });
       s.post("/instances/:id/click", async (ctx: RouterContext) => {
         const json = ctx.json() as { selector?: string } | null;
@@ -699,7 +706,7 @@ class LocalHttpServer implements nsIServerSocketListener {
       s.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
         const image = await WebScraper.takeScreenshot(ctx.params.id);
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       s.get("/instances/:id/elementScreenshot", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
@@ -708,12 +715,12 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           sel,
         );
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       s.get("/instances/:id/fullPageScreenshot", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
         const image = await WebScraper.takeFullPageScreenshot(ctx.params.id);
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       s.post("/instances/:id/regionScreenshot", async (ctx: RouterContext) => {
         const json = ctx.json() as {
@@ -724,7 +731,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           json?.rect,
         );
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       // Forms
       s.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
@@ -774,7 +781,9 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx: RouterContext<{ url: string; inBackground?: boolean }>,
         ) => {
           const json = ctx.json();
-          if (!json?.url) return { status: 400, body: { error: "url required" } };
+          if (!json?.url) {
+            return { status: 400, body: { error: "url required" } };
+          }
           const { TabManagerServices } = TabManagerModule();
           const id = await TabManagerServices.createInstance(json.url, {
             inBackground: json.inBackground ?? true,
@@ -782,7 +791,10 @@ class LocalHttpServer implements nsIServerSocketListener {
           return { status: 200, body: { instanceId: id } };
         },
       );
-      t.post<{ browserId: string }, { instanceId: string | null } | ErrorResponse>(
+      t.post<
+        { browserId: string },
+        { instanceId: string | null } | ErrorResponse
+      >(
         "/attach",
         async (ctx: RouterContext<{ browserId: string }>) => {
           const json = ctx.json();
@@ -808,8 +820,9 @@ class LocalHttpServer implements nsIServerSocketListener {
         "/instances/:id/navigate",
         async (ctx: RouterContext<{ url: string }>) => {
           const json = ctx.json();
-          if (!json?.url)
+          if (!json?.url) {
             return { status: 400, body: { error: "url required" } };
+          }
           const { TabManagerServices } = TabManagerModule();
           await TabManagerServices.navigate(ctx.params.id, json.url);
           return { status: 200, body: { ok: true } };
@@ -823,7 +836,7 @@ class LocalHttpServer implements nsIServerSocketListener {
       t.get("/instances/:id/html", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const html = await TabManagerServices.getHTML(ctx.params.id);
-        return { status: 200, body: { html } };
+        return { status: 200, body: html != null ? { html } : {} };
       });
       t.get("/instances/:id/element", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
@@ -832,7 +845,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           sel,
         );
-        return { status: 200, body: { element } };
+        return { status: 200, body: element != null ? { element } : {} };
       });
       t.get("/instances/:id/elementText", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
@@ -841,7 +854,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           sel,
         );
-        return { status: 200, body: { text } };
+        return { status: 200, body: text != null ? { text } : {} };
       });
       t.post("/instances/:id/click", async (ctx: RouterContext) => {
         const json = ctx.json() as { selector?: string } | null;
@@ -882,7 +895,7 @@ class LocalHttpServer implements nsIServerSocketListener {
       t.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const image = await TabManagerServices.takeScreenshot(ctx.params.id);
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       t.get("/instances/:id/elementScreenshot", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
@@ -891,14 +904,14 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           sel,
         );
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       t.get("/instances/:id/fullPageScreenshot", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const image = await TabManagerServices.takeFullPageScreenshot(
           ctx.params.id,
         );
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       t.post("/instances/:id/regionScreenshot", async (ctx: RouterContext) => {
         const json = ctx.json() as {
@@ -909,7 +922,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           json?.rect,
         );
-        return { status: 200, body: { image } };
+        return { status: 200, body: image != null ? { image } : {} };
       });
       t.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
         const json = ctx.json() as
@@ -926,7 +939,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         const sel = ctx.searchParams.get("selector") ?? "";
         const { TabManagerServices } = TabManagerModule();
         const value = await TabManagerServices.getValue(ctx.params.id, sel);
-        return { status: 200, body: { value } };
+        return { status: 200, body: value != null ? { value } : {} };
       });
       t.post("/instances/:id/submit", async (ctx: RouterContext) => {
         const json = ctx.json() as { selector?: string } | null;
