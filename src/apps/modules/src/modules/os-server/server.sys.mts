@@ -335,6 +335,39 @@ import type {
   Tab,
 } from "./api-types/index.sys.mts";
 
+// Helper mappers to conform runtime data (numbers) to published API types (strings for some timestamps)
+function mapHistoryItems(
+  items: Array<
+    { url: string; title: string; lastVisitDate: number; visitCount: number }
+  >,
+): HistoryItem[] {
+  return items.map((h) => ({
+    url: h.url,
+    title: h.title,
+    lastVisitDate: String(h.lastVisitDate),
+    visitCount: h.visitCount,
+  })) as HistoryItem[];
+}
+function mapDownloads(
+  items: Array<
+    {
+      id: number;
+      url: string;
+      filename: string;
+      status: string;
+      startTime: number;
+    }
+  >,
+): Download[] {
+  return items.map((d) => ({
+    id: d.id,
+    url: d.url,
+    filename: d.filename,
+    status: d.status,
+    startTime: String(d.startTime),
+  })) as Download[];
+}
+
 function parseURL(path: string): {
   pathname: string;
   searchParams: URLSearchParams;
@@ -544,7 +577,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           const res = serverError(String(e));
           output.write(res, res.length);
           output.close();
-        } catch (_) {
+        } catch {
           // ignore
         }
         err("socket error: ", e);
@@ -580,11 +613,9 @@ class LocalHttpServer implements nsIServerSocketListener {
         async (ctx: RouterContext<undefined>) => {
           const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
           const { BrowserInfo } = BrowserInfoModule();
-          const history = await BrowserInfo.getRecentHistory(limit);
-          return {
-            status: 200,
-            body: history,
-          } as RouterHttpResult<HistoryItem[]>;
+          const historyRaw = await BrowserInfo.getRecentHistory(limit);
+          const history = mapHistoryItems(historyRaw);
+          return { status: 200, body: history };
         },
       );
       b.get<undefined, Download[]>(
@@ -592,11 +623,9 @@ class LocalHttpServer implements nsIServerSocketListener {
         async (ctx: RouterContext<undefined>) => {
           const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
           const { BrowserInfo } = BrowserInfoModule();
-          const downloads = await BrowserInfo.getRecentDownloads(limit);
-          return {
-            status: 200,
-            body: downloads,
-          } as RouterHttpResult<Download[]>;
+          const downloadsRaw = await BrowserInfo.getRecentDownloads(limit);
+          const downloads = mapDownloads(downloadsRaw);
+          return { status: 200, body: downloads };
         },
       );
       b.get<
@@ -607,12 +636,12 @@ class LocalHttpServer implements nsIServerSocketListener {
         const d = clampInt(ctx.searchParams.get("downloadLimit"), 10, 0, 1000);
         const { BrowserInfo } = BrowserInfoModule();
         const out = await BrowserInfo.getAllContextData(h, d);
-        return {
-          status: 200,
-          body: out,
-        } as RouterHttpResult<
-          { history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }
-        >;
+        const mapped = {
+          history: mapHistoryItems(out.history),
+          tabs: out.tabs,
+          downloads: mapDownloads(out.downloads),
+        };
+        return { status: 200, body: mapped };
       });
     });
 
