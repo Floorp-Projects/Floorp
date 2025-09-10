@@ -326,6 +326,14 @@ import {
   type NamespaceBuilder,
   Router as _Router,
 } from "./router.sys.mts";
+import type {
+  Tab,
+  HistoryItem,
+  Download,
+  HealthResponse,
+  OkResponse,
+  ErrorResponse,
+} from "./api-types.sys.mts";
 
 function parseURL(path: string): {
   pathname: string;
@@ -555,33 +563,54 @@ class LocalHttpServer implements nsIServerSocketListener {
     const api = createApi(router);
 
     // Health
-    api.get("/health", () => ({ status: 200, body: { status: "ok" } }));
+    api.get<undefined, HealthResponse>("/health", () => ({
+      status: 200,
+      body: { status: "ok" },
+    }));
 
     // BrowserInfo
     api.namespace("/browser", (b: NamespaceBuilder) => {
-      b.get("/tabs", async () => {
+      b.get<undefined, Tab[]>("/tabs", async () => {
         const { BrowserInfo } = BrowserInfoModule();
         const tabs = await BrowserInfo.getRecentTabs();
-        return { status: 200, body: tabs } satisfies RouterHttpResult;
+        return { status: 200, body: tabs } as RouterHttpResult<Tab[]>;
       });
-      b.get("/history", async (ctx: RouterContext) => {
-        const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
-        const { BrowserInfo } = BrowserInfoModule();
-        const history = await BrowserInfo.getRecentHistory(limit);
-        return { status: 200, body: history } as RouterHttpResult;
-      });
-      b.get("/downloads", async (ctx: RouterContext) => {
-        const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
-        const { BrowserInfo } = BrowserInfoModule();
-        const downloads = await BrowserInfo.getRecentDownloads(limit);
-        return { status: 200, body: downloads } as RouterHttpResult;
-      });
-      b.get("/context", async (ctx: RouterContext) => {
+      b.get<undefined, HistoryItem[]>(
+        "/history",
+        async (ctx: RouterContext<undefined>) => {
+          const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
+          const { BrowserInfo } = BrowserInfoModule();
+          const history = await BrowserInfo.getRecentHistory(limit);
+          return {
+            status: 200,
+            body: history,
+          } as RouterHttpResult<HistoryItem[]>;
+        },
+      );
+      b.get<undefined, Download[]>(
+        "/downloads",
+        async (ctx: RouterContext<undefined>) => {
+          const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
+          const { BrowserInfo } = BrowserInfoModule();
+          const downloads = await BrowserInfo.getRecentDownloads(limit);
+          return {
+            status: 200,
+            body: downloads,
+          } as RouterHttpResult<Download[]>;
+        },
+      );
+      b.get<
+        undefined,
+        { history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }
+      >("/context", async (ctx: RouterContext<undefined>) => {
         const h = clampInt(ctx.searchParams.get("historyLimit"), 10, 0, 1000);
         const d = clampInt(ctx.searchParams.get("downloadLimit"), 10, 0, 1000);
         const { BrowserInfo } = BrowserInfoModule();
         const out = await BrowserInfo.getAllContextData(h, d);
-        return { status: 200, body: out } as RouterHttpResult;
+        return {
+          status: 200,
+          body: out,
+        } as RouterHttpResult<{ history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }>;
       });
     });
 
@@ -601,7 +630,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           throw e;
         }
       });
-      s.post("/instances", async () => {
+      s.post<undefined, { instanceId: string }>("/instances", async () => {
         const { WebScraper } = WebScraperModule();
         const id = await WebScraper.createInstance();
         return { status: 200, body: { instanceId: id } };
@@ -612,8 +641,10 @@ class LocalHttpServer implements nsIServerSocketListener {
         WebScraper.destroyInstance(id);
         return { status: 200, body: { ok: true } };
       });
-      s.post("/instances/:id/navigate", async (ctx: RouterContext) => {
-        const json = ctx.json() as { url?: string } | null;
+      s.post<{ url: string }, OkResponse | ErrorResponse>("/instances/:id/navigate", async (
+        ctx: RouterContext<{ url: string }>,
+      ) => {
+        const json = ctx.json();
         if (!json?.url) return { status: 400, body: { error: "url required" } };
         const { WebScraper } = WebScraperModule();
         await WebScraper.navigate(ctx.params.id, json.url);
@@ -652,15 +683,18 @@ class LocalHttpServer implements nsIServerSocketListener {
         const found = await WebScraper.waitForElement(ctx.params.id, sel, to);
         return { status: 200, body: { found } };
       });
-      s.post("/instances/:id/executeScript", async (ctx: RouterContext) => {
-        const json = ctx.json() as { script?: string } | null;
-        if (!json?.script) {
-          return { status: 400, body: { error: "script required" } };
-        }
-        const { WebScraper } = WebScraperModule();
-        await WebScraper.executeScript(ctx.params.id, json.script);
-        return { status: 200, body: { ok: true } };
-      });
+      s.post<{ script: string }, OkResponse | ErrorResponse>(
+        "/instances/:id/executeScript",
+        async (ctx: RouterContext<{ script: string }>) => {
+          const json = ctx.json();
+          if (!json?.script) {
+            return { status: 400, body: { error: "script required" } };
+          }
+          const { WebScraper } = WebScraperModule();
+          await WebScraper.executeScript(ctx.params.id, json.script);
+          return { status: 200, body: { ok: true } };
+        },
+      );
       // Screenshots
       s.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
@@ -731,26 +765,35 @@ class LocalHttpServer implements nsIServerSocketListener {
         const tabs = await TabManagerServices.listTabs();
         return { status: 200, body: tabs };
       });
-      t.post("/instances", async (ctx: RouterContext) => {
-        const json = ctx.json() as
-          | { url?: string; inBackground?: boolean }
-          | null;
-        if (!json?.url) return { status: 400, body: { error: "url required" } };
-        const { TabManagerServices } = TabManagerModule();
-        const id = await TabManagerServices.createInstance(json.url, {
-          inBackground: json.inBackground ?? true,
-        });
-        return { status: 200, body: { instanceId: id } };
-      });
-      t.post("/attach", async (ctx: RouterContext) => {
-        const json = ctx.json() as { browserId?: string } | null;
-        if (!json?.browserId) {
-          return { status: 400, body: { error: "browserId required" } };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        const id = await TabManagerServices.attachToTab(json.browserId);
-        return { status: 200, body: { instanceId: id } };
-      });
+      t.post<
+        { url: string; inBackground?: boolean },
+        { instanceId: string } | ErrorResponse
+      >(
+        "/instances",
+        async (
+          ctx: RouterContext<{ url: string; inBackground?: boolean }>,
+        ) => {
+          const json = ctx.json();
+          if (!json?.url) return { status: 400, body: { error: "url required" } };
+          const { TabManagerServices } = TabManagerModule();
+          const id = await TabManagerServices.createInstance(json.url, {
+            inBackground: json.inBackground ?? true,
+          });
+          return { status: 200, body: { instanceId: id } };
+        },
+      );
+      t.post<{ browserId: string }, { instanceId: string | null } | ErrorResponse>(
+        "/attach",
+        async (ctx: RouterContext<{ browserId: string }>) => {
+          const json = ctx.json();
+          if (!json?.browserId) {
+            return { status: 400, body: { error: "browserId required" } };
+          }
+          const { TabManagerServices } = TabManagerModule();
+          const id = await TabManagerServices.attachToTab(json.browserId);
+          return { status: 200, body: { instanceId: id } };
+        },
+      );
       t.get("/instances/:id", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const info = await TabManagerServices.getInstanceInfo(ctx.params.id);
@@ -761,13 +804,17 @@ class LocalHttpServer implements nsIServerSocketListener {
         await TabManagerServices.destroyInstance(ctx.params.id);
         return { status: 200, body: { ok: true } };
       });
-      t.post("/instances/:id/navigate", async (ctx: RouterContext) => {
-        const json = ctx.json() as { url?: string } | null;
-        if (!json?.url) return { status: 400, body: { error: "url required" } };
-        const { TabManagerServices } = TabManagerModule();
-        await TabManagerServices.navigate(ctx.params.id, json.url);
-        return { status: 200, body: { ok: true } };
-      });
+      t.post<{ url: string }, OkResponse | ErrorResponse>(
+        "/instances/:id/navigate",
+        async (ctx: RouterContext<{ url: string }>) => {
+          const json = ctx.json();
+          if (!json?.url)
+            return { status: 400, body: { error: "url required" } };
+          const { TabManagerServices } = TabManagerModule();
+          await TabManagerServices.navigate(ctx.params.id, json.url);
+          return { status: 200, body: { ok: true } };
+        },
+      );
       t.get("/instances/:id/uri", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const uri = await TabManagerServices.getURI(ctx.params.id);
@@ -820,15 +867,18 @@ class LocalHttpServer implements nsIServerSocketListener {
         );
         return { status: 200, body: { found } };
       });
-      t.post("/instances/:id/executeScript", async (ctx: RouterContext) => {
-        const json = ctx.json() as { script?: string } | null;
-        if (!json?.script) {
-          return { status: 400, body: { error: "script required" } };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        await TabManagerServices.executeScript(ctx.params.id, json.script);
-        return { status: 200, body: { ok: true } };
-      });
+      t.post<{ script: string }, OkResponse | ErrorResponse>(
+        "/instances/:id/executeScript",
+        async (ctx: RouterContext<{ script: string }>) => {
+          const json = ctx.json();
+          if (!json?.script) {
+            return { status: 400, body: { error: "script required" } };
+          }
+          const { TabManagerServices } = TabManagerModule();
+          await TabManagerServices.executeScript(ctx.params.id, json.script);
+          return { status: 200, body: { ok: true } };
+        },
+      );
       t.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const image = await TabManagerServices.takeScreenshot(ctx.params.id);

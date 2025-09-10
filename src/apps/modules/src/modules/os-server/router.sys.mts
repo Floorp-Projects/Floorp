@@ -3,11 +3,11 @@
 export type HttpMethod = "GET" | "POST" | "DELETE" | "OPTIONS";
 
 export interface RouteMatch {
-  handler: Handler;
+  handler: Handler<any, any>;
   params: Record<string, string>;
 }
 
-export interface Context {
+export interface Context<J = unknown> {
   method: HttpMethod;
   pathname: string;
   searchParams: URLSearchParams;
@@ -16,30 +16,42 @@ export interface Context {
   // Path parameters captured from the route pattern, e.g. "/items/:id"
   params: Record<string, string>;
   // Convenience helpers injected by server
-  json<T = unknown>(): T | null;
+  json<T = J>(): T | null;
 }
 
-export interface HttpResult {
+export interface HttpResult<T = unknown> {
   status?: number;
-  body?: unknown;
+  body?: T;
 }
 
-export type Handler = (ctx: Context) => Promise<HttpResult> | HttpResult;
+export type Handler<Req = unknown, Res = unknown> = (
+  ctx: Context<Req>,
+) => Promise<HttpResult<Res>> | HttpResult<Res>;
 
 interface CompiledRoute {
   method: HttpMethod;
   pattern: string;
   regex: RegExp;
   paramNames: string[];
-  handler: Handler;
+  handler: Handler<any, any>;
 }
 
 export class Router {
   private routes: CompiledRoute[] = [];
 
-  register(method: HttpMethod, pattern: string, handler: Handler) {
+  register<Req = unknown, Res = unknown>(
+    method: HttpMethod,
+    pattern: string,
+    handler: Handler<Req, Res>,
+  ) {
     const { regex, paramNames } = compilePattern(pattern);
-    this.routes.push({ method, pattern, regex, paramNames, handler });
+    this.routes.push({
+      method,
+      pattern,
+      regex,
+      paramNames,
+      handler: handler as unknown as Handler<any, any>,
+    });
   }
 
   match(method: string, pathname: string): RouteMatch | null {
@@ -86,15 +98,15 @@ export class NamespaceBuilder {
     return this;
   }
 
-  get(seg: string, handler: Handler) {
+  get<Req = unknown, Res = unknown>(seg: string, handler: Handler<Req, Res>) {
     this.router.register("GET", join(this.base, seg), handler);
     return this;
   }
-  post(seg: string, handler: Handler) {
+  post<Req = unknown, Res = unknown>(seg: string, handler: Handler<Req, Res>) {
     this.router.register("POST", join(this.base, seg), handler);
     return this;
   }
-  delete(seg: string, handler: Handler) {
+  delete<Req = unknown, Res = unknown>(seg: string, handler: Handler<Req, Res>) {
     this.router.register("DELETE", join(this.base, seg), handler);
     return this;
   }
