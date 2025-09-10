@@ -188,6 +188,10 @@ function _warn(...args: unknown[]) {
 function err(...args: unknown[]) {
   console.error("[Floorp OS-Server]", ...args);
 }
+// Timer.sys.mjs から setTimeout を取得 (フォールバック不要の要件)
+const { setTimeout: mozSetTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+) as { setTimeout: (handler: () => void, ms?: number) => number };
 
 const DEFAULT_PORT = 58261;
 
@@ -497,7 +501,7 @@ class LocalHttpServer implements nsIServerSocketListener {
               input.close();
               return;
             }
-            await new Promise((r) => setTimeout(r, 5));
+            await new Promise<void>((resolve) => mozSetTimeout(() => resolve(), 5));
           }
         }
         const split = head.indexOf("\r\n\r\n");
@@ -546,7 +550,7 @@ class LocalHttpServer implements nsIServerSocketListener {
               input.close();
               return;
             }
-            await new Promise((r) => setTimeout(r, 5));
+            await new Promise<void>((resolve) => mozSetTimeout(() => resolve(), 5));
           }
         }
         req.body = new Uint8Array(bodyBytes.slice(0, contentLength));
