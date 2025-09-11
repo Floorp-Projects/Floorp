@@ -1,9 +1,6 @@
 [submodule "src/sapphillon-front"]
 	path = src/sapphillon-front
 	url = https://github.com/surapunoyousei/sapphillon-front
-[submodule "api-types"]
-	path = src/apps/modules/src/modules/os-server/api-types
-	url = https://github.com/Floorp-Projects/floorp-os-apis
 [submodule "src/apps/modules/src/modules/os-server/api-spec"]
 	path = src/apps/modules/src/modules/os-server/api-spec
 	url = /Users/user/dev-source/floorp-dev/floorp-os-api-spec
