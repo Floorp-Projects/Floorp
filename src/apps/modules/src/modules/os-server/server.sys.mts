@@ -329,6 +329,8 @@ import {
   type NamespaceBuilder,
   Router as _Router,
 } from "./router.sys.mts";
+
+// Import API types from OpenAPI specification
 import type {
   Download,
   ErrorResponse,
@@ -336,7 +338,7 @@ import type {
   HistoryItem,
   OkResponse,
   Tab,
-} from "./api-types/index.sys.mts";
+} from "./api-spec/types.ts";
 
 // Helper mappers to conform runtime data (numbers) to published API types (strings for some timestamps)
 function mapHistoryItems(
