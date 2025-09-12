@@ -235,6 +235,13 @@ function getBodyText(req: HttpRequest): string {
   }
 }
 
+// Convert a binary string (from nsIScriptableInputStream.read) to bytes
+function binaryStringToByteArray(s: string): number[] {
+  const out = new Array<number>(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
+  return out;
+}
+
 function getJSON<T = unknown>(req: HttpRequest): T | null {
   const ct = (req.headers["content-type"] || "").toLowerCase();
   if (!ct.includes("application/json")) return null;
@@ -299,6 +306,18 @@ function statusText(code: number): string {
     default:
       return "";
   }
+}
+
+// Write UTF-8 bytes to an nsIOutputStream safely
+function writeUtf8(out: nsIOutputStream, text: string) {
+  const enc = new TextEncoder();
+  const bytes = enc.encode(text);
+  const bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+    Ci.nsIBinaryOutputStream,
+  );
+  bos.setOutputStream(out);
+  // nsIBinaryOutputStream#writeByteArray expects a u8[]; convert from Uint8Array
+  bos.writeByteArray(Array.from(bytes));
 }
 
 function _badRequest(msg = "bad request") {
@@ -497,7 +516,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           } else {
             if (Date.now() > headDeadline) {
               const res = requestTimeout();
-              output.write(res, res.length);
+              writeUtf8(output, res);
               output.close();
               input.close();
               return;
@@ -513,7 +532,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         if (!req) {
           {
             const res = jsonResponse(400, { error: "malformed request" });
-            output.write(res, res.length);
+            writeUtf8(output, res);
           }
           output.close();
           input.close();
@@ -524,31 +543,30 @@ class LocalHttpServer implements nsIServerSocketListener {
           Number.parseInt(req.headers["content-length"] || "0", 10) || 0;
         if (contentLength < 0) {
           const res = _badRequest("invalid content-length");
-          output.write(res, res.length);
+          writeUtf8(output, res);
           output.close();
           input.close();
           return;
         }
         if (contentLength > LocalHttpServer.MAX_BODY_BYTES) {
           const res = payloadTooLarge();
-          output.write(res, res.length);
+          writeUtf8(output, res);
           output.close();
           input.close();
           return;
         }
-        const enc = new TextEncoder();
         const leftover = split >= 0 ? head.slice(split + 4) : "";
-        const bodyBytes: number[] = Array.from(enc.encode(leftover));
+        const bodyBytes: number[] = binaryStringToByteArray(leftover);
         const bodyDeadline = Date.now() + LocalHttpServer.READ_BODY_TIMEOUT_MS;
         while (bodyBytes.length < contentLength) {
           const avail = sis.available();
           if (avail > 0) {
             const piece = sis.read(avail);
-            bodyBytes.push(...enc.encode(piece));
+            bodyBytes.push(...binaryStringToByteArray(piece));
           } else {
             if (Date.now() > bodyDeadline) {
               const res = _badRequest("incomplete body");
-              output.write(res, res.length);
+              writeUtf8(output, res);
               output.close();
               input.close();
               return;
@@ -567,7 +585,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           if (auth !== expect) {
             {
               const res = unauthorized();
-              output.write(res, res.length);
+              writeUtf8(output, res);
             }
             output.close();
             input.close();
@@ -577,14 +595,14 @@ class LocalHttpServer implements nsIServerSocketListener {
 
         // Route (async)
         const response = await this.routeAsync(req);
-        output.write(response, response.length);
+        writeUtf8(output, response);
         output.close();
         input.close();
       } catch (e) {
         try {
           const output = transport.openOutputStream(0, 0, 0);
           const res = serverError(String(e));
-          output.write(res, res.length);
+          writeUtf8(output, res);
           output.close();
         } catch {
           // ignore
