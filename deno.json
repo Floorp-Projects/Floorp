@@ -4,8 +4,7 @@
   ],
   "workspace": [
     "./src/packages/*",
-    "./src/apps/*",
-    "./src/sapphillon-front*"
+    "./src/apps/*"
   ],
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.7",

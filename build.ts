@@ -123,13 +123,15 @@ async function decompressBin() {
           const srcItem = pathe.join(srcContents, item);
           if (item === macConfig.resourcesDirName) {
             const resourcesItems = await fs.readdir(srcItem);
-            await Promise.all(resourcesItems.map((resItem) =>
-              fs.cp(
-                pathe.join(srcItem, resItem),
-                pathe.join(binDir, resItem),
-                { recursive: true },
-              )
-            ));
+            await Promise.all(
+              resourcesItems.map((resItem) =>
+                fs.cp(
+                  pathe.join(srcItem, resItem),
+                  pathe.join(binDir, resItem),
+                  { recursive: true },
+                )
+              ),
+            );
           } else {
             await fs.cp(srcItem, pathe.join(destContents, item), {
               recursive: true,
@@ -344,7 +346,7 @@ async function clobber() {
 let devViteProcess: ProcessPromise | null = null;
 let browserProcess: ProcessPromise | null = null;
 let devInit = false;
-let sapphillonProcess: ProcessPromise | null = null;
+const sapphillonProcess: ProcessPromise | null = null;
 
 async function run(mode: "dev" | "test" | "release" = "dev") {
   await initBin();
@@ -375,20 +377,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
       console.log(chalk.green("🚀 Starting dev servers..."));
       devViteProcess = $`deno run -A ./scripts/launchDev/child-dev.ts ${mode} ${
         buildid2 ?? ""
-      }`.stdio("pipe").nothrow();
-
-      // Start sapphillon-front dev server (only if exists)
-      const sapphillonDir = "src/sapphillon-front";
-      if (await isExists(sapphillonDir)) {
-        console.log(chalk.green("🚀 Starting sapphillon-front dev server..."));
-        sapphillonProcess = $({ cwd: sapphillonDir })`deno task dev`
-          .stdio("pipe")
-          .nothrow();
-      } else {
-        console.log(
-          chalk.yellow("⚠️  sapphillon-front not found. Skipping dev server."),
-        );
-      }
+      }`
+        .stdio("pipe")
+        .nothrow();
 
       let resolve: ((value: void | PromiseLike<void>) => void) | undefined =
         undefined;
@@ -457,9 +448,9 @@ async function run(mode: "dev" | "test" | "release" = "dev") {
   await fs.mkdir("./_dist/profile/test", { recursive: true });
   await savePrefsForProfile("./_dist/profile/test");
 
-  browserProcess = $`deno run -A ./scripts/launchDev/child-browser.ts`.stdio(
-    "pipe",
-  ).nothrow();
+  browserProcess = $`deno run -A ./scripts/launchDev/child-browser.ts`
+    .stdio("pipe")
+    .nothrow();
 
   (async () => {
     for await (const temp of browserProcess.stdout) {
