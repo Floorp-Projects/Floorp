@@ -1,0 +1,15 @@
+diff --git a/browser/modules/UrlbarController.sys.mjs b/browser/modules/UrlbarController.sys.mjs
+index 9e048a2..e1422fd 100644
+--- ./browser/modules/UrlbarController.sys.mjs
++++ ./browser/modules/UrlbarController.sys.mjs
+@@ -67,7 +67,9 @@ export class UrlbarController {
+     }
+     if (
+       !options.input.window.location ||
+-      options.input.window.location.href != AppConstants.BROWSER_CHROME_URL
++      /*@nora:inject:start*/
++      !options.input.window.location.href.startsWith(AppConstants.BROWSER_CHROME_URL)
++      /*@nora:inject:end*/
+     ) {
+       throw new Error("input.window should be an actual browser window.");
+     }

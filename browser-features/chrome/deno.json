@@ -6,7 +6,9 @@
     "@types/uuid": "npm:@types/uuid@^10.0.0",
 
     "es-toolkit": "npm:es-toolkit@^1.36.0",
+    "fp-ts": "npm:fp-ts@^2.16.11",
     "i18next": "npm:i18next@^25.0.1",
+    "io-ts": "npm:io-ts@^2.2.22",
     "solid-js": "npm:solid-js@^1.9.5",
     "solid-styled-jsx": "npm:solid-styled-jsx@^0.27.1",
     "unplugin-swc": "npm:unplugin-swc@^1.5.2",

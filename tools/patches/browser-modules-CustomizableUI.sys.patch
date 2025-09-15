@@ -1,0 +1,28 @@
+diff --git a/browser/modules/CustomizableUI.sys.mjs b/browser/modules/CustomizableUI.sys.mjs
+index 9392b42..8256216 100644
+--- ./browser/modules/CustomizableUI.sys.mjs
++++ ./browser/modules/CustomizableUI.sys.mjs
+@@ -1707,11 +1707,23 @@ var CustomizableUIInternal = {
+ 
+     // Now register all the toolbars
+     for (let area of CustomizableUI.areas) {
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [STATUS_BAR]
++     * * START
++     */
++     if (area !== "statusBar") {
+       let type = CustomizableUI.getAreaType(area);
+       if (type == CustomizableUI.TYPE_TOOLBAR) {
+         let node = document.getElementById(area);
+         this.registerToolbarNode(node);
+       }
++     }
++     /**
++      * * NORANEKO PATCH - 0.1.19
++      * * [STATUS_BAR]
++      * * END
++      * */
+     }
+ 
+     // Handle initial state of vertical tabs.

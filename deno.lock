@@ -35,8 +35,15 @@
     "npm:es-toolkit@^1.39.10": "1.39.10",
     "npm:fast-glob@^3.3.3": "3.3.3",
     "npm:fp-ts@^2.16.10": "2.16.11",
+<<<<<<< HEAD
     "npm:i18next@^25.0.1": "25.5.2_typescript@5.9.2",
     "npm:i18next@^25.4.2": "25.5.2_typescript@5.9.2",
+=======
+    "npm:fp-ts@^2.16.11": "2.16.11",
+    "npm:i18next@^25.0.1": "25.4.2_typescript@5.9.2",
+    "npm:i18next@^25.4.2": "25.4.2_typescript@5.9.2",
+    "npm:i18next@^25.5.2": "25.5.2_typescript@5.9.2",
+>>>>>>> 73c1d4d (add: panel-sidebar from floorp)
     "npm:io-ts@^2.2.22": "2.2.22_fp-ts@2.16.11",
     "npm:lightningcss@^1.30.1": "1.30.1",
     "npm:linkedom@0.18.12": "0.18.12",
@@ -1827,6 +1834,16 @@
         "typescript"
       ]
     },
+    "i18next@25.5.2_typescript@5.9.2": {
+      "integrity": "sha512-lW8Zeh37i/o0zVr+NoCHfNnfvVw+M6FQbRp36ZZ/NyHDJ3NJVpp2HhAUyU9WafL5AssymNoOjMRB48mmx2P6Hw==",
+      "dependencies": [
+        "@babel/runtime",
+        "typescript"
+      ],
+      "optionalPeers": [
+        "typescript"
+      ]
+    },
     "io-ts@2.2.22_fp-ts@2.16.11": {
       "integrity": "sha512-FHCCztTkHoV9mdBsHpocLpdTAfh956ZQcIkWQxxS0U5HT53vtrcuYdQneEJKH6xILaLNzXVl2Cvwtoy8XNN0AA==",
       "dependencies": [
@@ -2895,13 +2912,19 @@
         "npm:chalk@^5.6.0",
         "npm:chokidar@^4.0.3",
         "npm:fast-glob@^3.3.3",
+        "npm:i18next@^25.5.2",
         "npm:lightningcss@^1.30.1",
         "npm:linkedom@0.18.12",
         "npm:oxlint@^1.14.0",
         "npm:pathe@^2.0.3",
         "npm:prettier@^3.6.2",
         "npm:puppeteer-core@^24.17.1",
+<<<<<<< HEAD
         "npm:tailwindcss@^4.1.13",
+=======
+        "npm:rolldown-vite@^7.1.5",
+        "npm:solid-js@^1.9.9",
+>>>>>>> 73c1d4d (add: panel-sidebar from floorp)
         "npm:typescript@^5.9.2",
         "npm:unplugin-swc@^1.5.7",
         "npm:uuid@^11.1.0",
@@ -2924,7 +2947,9 @@
           "npm:@types/uuid@10",
           "npm:chroma-js@^3.1.2",
           "npm:es-toolkit@^1.39.10",
+          "npm:fp-ts@^2.16.11",
           "npm:i18next@^25.4.2",
+          "npm:io-ts@^2.2.22",
           "npm:pathe@^2.0.3",
           "npm:solid-js@^1.9.9",
           "npm:solid-styled-jsx@~0.27.1",
@@ -2970,7 +2995,9 @@
           "npm:@types/uuid@10",
           "npm:chroma-js@^3.1.1",
           "npm:es-toolkit@^1.36.0",
+          "npm:fp-ts@^2.16.11",
           "npm:i18next@^25.0.1",
+          "npm:io-ts@^2.2.22",
           "npm:rolldown-vite@latest",
           "npm:solid-js@^1.9.5",
           "npm:solid-styled-jsx@~0.27.1",

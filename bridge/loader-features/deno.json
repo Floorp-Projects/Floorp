@@ -12,7 +12,9 @@
     "@types/uuid": "npm:@types/uuid@^10.0.0",
 
     "es-toolkit": "npm:es-toolkit@^1.39.10",
+    "fp-ts": "npm:fp-ts@^2.16.11",
     "i18next": "npm:i18next@^25.4.2",
+    "io-ts": "npm:io-ts@^2.2.22",
     "pathe": "npm:pathe@^2.0.3",
     "solid-js": "npm:solid-js@^1.9.9",
     "solid-styled-jsx": "npm:solid-styled-jsx@^0.27.1",
