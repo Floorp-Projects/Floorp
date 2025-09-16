@@ -401,6 +401,15 @@ jobs:
 
           cd ..
 
+      - name: Upload dist on failure (pre-packaging)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-${{ inputs.platform }}-artifact-prepack-dist-on-failure
+          path: ./obj-artifact-build-output/dist
+          if-no-files-found: ignore
+          compression-level: 9
+
       - name: Apply Firefox Preferences Override
         run: |
           cd ./floorp
