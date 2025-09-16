@@ -15,11 +15,7 @@ import {
   runWithOwner,
   Show,
 } from "solid-js";
-import {
-  isFloating,
-  isPanelSidebarEnabled,
-  selectedPanelId,
-} from "../../sidebar/core";
+import { isFloating, isPanelSidebarEnabled, selectedPanelId } from "../../core";
 import { FloatingSplitter } from "./floating-splitter.tsx";
 import { BrowserBox } from "./browser-box.tsx";
 import type { CPanelSidebar } from "./panel-sidebar.tsx";

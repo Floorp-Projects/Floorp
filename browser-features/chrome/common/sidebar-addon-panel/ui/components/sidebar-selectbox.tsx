@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { panelSidebarData } from "../../sidebar/core/data.ts";
-import { PanelSidebarButton } from "./sidebar-panel-button";
-import { showPanelSidebarAddModal } from "./panel-sidebar-modal";
-import type { CPanelSidebar } from "./panel-sidebar";
+import { panelSidebarData } from "../../core/data.ts";
+import { PanelSidebarButton } from "./sidebar-panel-button.tsx";
+import { showPanelSidebarAddModal } from "./panel-sidebar-modal.tsx";
+import type { CPanelSidebar } from "./panel-sidebar.tsx";
 
 export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
   return (

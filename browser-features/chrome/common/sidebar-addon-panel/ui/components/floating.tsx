@@ -11,10 +11,10 @@ import {
   setIsFloatingDragging,
   setPanelSidebarConfig,
   setSelectedPanelId,
-} from "../../sidebar/core/data.ts";
-import { STATIC_PANEL_DATA } from "../../sidebar/core/static-panels.ts";
+} from "../../core/data.ts";
+import { STATIC_PANEL_DATA } from "../../core/static-panels.ts";
 import { isResizeCooldown } from "./floating-splitter.tsx";
-import type { Panel } from "../../sidebar/core/utils/type.ts";
+import type { Panel } from "../../core/utils/type.ts";
 
 declare global {
   interface Window {

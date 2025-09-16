@@ -5,21 +5,21 @@
 
 import { render } from "@nora/solid-xul";
 import { createRoot } from "solid-js";
-import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
-import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
-import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
+import { ChromeSiteBrowser } from "../../panel/browsers/chrome-site-browser.tsx";
+import { ExtensionSiteBrowser } from "../../panel/browsers/extension-site-browser.tsx";
+import { WebSiteBrowser } from "../../panel/browsers/web-site-browser.tsx";
 import {
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
   setSelectedPanelId,
-} from "../../sidebar/core/data.ts";
-import type { Panel, Panels } from "../../sidebar/core/utils/type.ts";
+} from "../../core/data.ts";
+import type { Panel, Panels } from "../../core/utils/type.ts";
 import { createEffect } from "solid-js";
-import { getExtensionSidebarAction } from "../../sidebar/core/extension-panels.ts";
-import { WebsitePanel } from "../website-panel-window-parent.ts";
-import "../../sidebar/core/utils/webRequest.ts";
+import { getExtensionSidebarAction } from "../../core/extension-panels.ts";
+import { WebsitePanel } from "../../panel/website-panel-window-parent.ts";
+import "../../core/utils/webRequest.ts";
 
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();

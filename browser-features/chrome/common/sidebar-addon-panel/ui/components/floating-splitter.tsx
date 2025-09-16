@@ -4,10 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal } from "solid-js";
-import {
-  panelSidebarConfig,
-  setIsFloatingDragging,
-} from "../../sidebar/core/data.ts";
+import { panelSidebarConfig, setIsFloatingDragging } from "../../core/data.ts";
 
 export const [isResizeCooldown, setIsResizeCooldown] =
   createSignal<boolean>(false);
