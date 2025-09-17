@@ -6,7 +6,7 @@
         "features": "Tính năng",
         "featureIntroduction": "",
         "hub": "Floorp Hub",
-        "hubIntro": "About Floorp Hub",
+        "hubIntro": "Về Floorp Hub",
         "customize": "Tùy chỉnh",
         "initialSettings": "Initial Settings",
         "complete": "Xong",
@@ -14,11 +14,11 @@
         "next": "Tiếp"
     },
     "hubPage": {
-        "title": "About Floorp Hub",
-        "subtitle": "A central place for Floorp-specific settings.",
+        "title": "Về Floorp Hub",
+        "subtitle": "Trung tâm cho các cài đặt Floorp",
         "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-        "openHub": "Open about:hub",
+        "description": "Floorp Hub là trang cài đặt riêng của Floopp. Bạn có thể mở bằng cách đi tới \"about:hub\". Bạn cũng có thể truy cập bằng thanh bên trái của trang cài đặt Firefox \"about:preferences\".",
+        "openHub": "Mở about:hub",
         "openPreferences": "Open Settings (about:preferences)",
         "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
         "features": {
@@ -28,7 +28,7 @@
         }
     },
     "customize": {
-        "title": "Customize Floorp",
+        "title": "Tùy chỉnh Floorp",
         "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
         "appearance": {
             "title": "Appearance Settings",

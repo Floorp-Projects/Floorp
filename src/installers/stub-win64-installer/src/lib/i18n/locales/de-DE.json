@@ -5,10 +5,10 @@
             "installComplete": "Installation abgeschlossen"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Installiere den Floorp Browser und starte ein Sicherheitsfokussiertes, schnelles und anpassbares Browser Erlebnis.",
-            "adminRights": "Mit Admin-Rechten installieren",
-            "adminRightsEnabled": "Installieren für alle Benutzer mit Administratorrechten.",
+            "title": "Floorp-Installer",
+            "description": "Installiere den Floorp-Browser und starte ein sicheres, schnelles und anpassbares Browsing-Erlebnis.",
+            "adminRights": "Mit Administratorrechte installieren",
+            "adminRightsEnabled": "Für alle Benutzer mit Administratorrechten installieren.",
             "adminRightsDisabled": "Nur für aktuellen Benutzer installieren.",
             "customPathRequired": "Benutzerdefinierter Installationspfad benötigt Administratorrechte.",
             "installLocation": "Installationspfad",
@@ -38,11 +38,11 @@
         "complete": {
             "success": "Installation erfolgreich",
             "error": "Installation fehlgeschlagen",
-            "launchCheckbox": "Floorp Browser nach der Installation starten",
+            "launchCheckbox": "Floorp-Browser nach der Installation starten",
             "closeButton": "Installationsprogramm schließen",
             "countdownMessage": "Das Installationsprogramm wird in {{count}} Sekunden beendet",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadMessage": "Sie können auch den Legacy-Installer verwenden.",
+            "legacyDownloadButton": "Herunterladen"
         }
     },
     "slides": {
@@ -74,8 +74,8 @@
         },
         "errors": {
             "installer_not_found": "Der Floorp-Installer konnte nicht abgerufen werden.",
-            "download_failed": "Beim Download ist ein Fehler aufgetreten: {{0}}",
-            "signature_verification_failed": "Überprüfung der Installer Signatur fehlgeschlagen. Die Ausführung wurde aus Sicherheitsgründen abgebrochen.",
+            "download_failed": "Beim Herunterladen ist ein Fehler aufgetreten: {{0}}",
+            "signature_verification_failed": "Überprüfung der Installer-Signatur fehlgeschlagen. Die Ausführung wurde aus Sicherheitsgründen abgebrochen.",
             "signature_verification_error": "Bei der Signaturüberprüfung ist ein Fehler aufgetreten: {{0}}",
             "installer_exit_code": "Das Installationsprogramm wurde mit dem Code {{0}} beendet.",
             "installer_execution": "Beim Ausführen des Installationsprogramms ist ein Fehler aufgetreten: {{0}}",
@@ -90,8 +90,8 @@
             "admin_install_failed": "Installation mit Administratorrechten fehlgeschlagen. Exit-Code: {{0}}",
             "user_installer_launch": "Der Installationsprozess konnte nicht mit Benutzerrechten gestartet werden: {{0}}",
             "user_installer_execution": "Beim Ausführen des Installationsprogramms mit Benutzerrechten ist ein Problem aufgetreten: {{0}}",
-            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
-            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+            "cpu_not_supported": "Dieser Prozessor unterstützt SSE4.1 nicht. Floorp benötigt einen Prozessor mit SSE4.1.",
+            "cpu_check_failed": "Prozessoranforderungen konnten nicht überprüft werden. Bitte überprüfen Sie die Systemanforderungen."
         }
     }
 }

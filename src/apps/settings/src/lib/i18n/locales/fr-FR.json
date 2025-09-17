@@ -29,7 +29,7 @@
         "keyboardShortcuts": "Raccourcis clavier",
         "webApps": "Applications Web",
         "profileAndAccount": "Profil et compte",
-        "aboutBrowser": "À propos de { productName }",
+        "aboutBrowser": "À propos de {{productName}}",
         "debug": "Débogage",
         "mouseGesture": "Gestes de la souris",
         "keyboardShortcut": "Raccourcis clavier"
@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Paramètres de base des gestes de la souris",
         "enabled": "Activer les mouvements de la souris",
         "showTrail": "Afficher la trace des gestes",
+        "showLabel": "Show gesture label",
         "sensitivity": "Sensibilité",
         "low": "Faible",
         "high": "Élevé",

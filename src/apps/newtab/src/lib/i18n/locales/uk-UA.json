@@ -1,53 +1,53 @@
 {
-    "title": "Floorp Start",
+    "title": "Домівка Floorp",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name",
+        "addSite": "Додати сайт",
+        "addNewSite": "Додати новий сайт",
+        "url": "URL-адреса",
+        "label": "Мітка",
+        "cancel": "Скасувати",
+        "add": "Додати",
+        "close": "Закрити",
+        "labelPlaceholder": "Назва сайту",
         "pin": "Прикріпити",
         "unpin": "Відкріпити",
         "block": "Заблокувати",
-        "blockTitle": "Block \"{{title}}\"?",
-        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
-        "invalidUrl": "Invalid URL"
+        "blockTitle": "Заблокувати \"{{title}}\"?",
+        "blockConfirm": "Цей сайт буде видалено з ваших улюблених сайтів і більше не пропонуватиметься. Ви можете керувати заблокованими сайтами в налаштуваннях.",
+        "invalidUrl": "Хибна адреса URL"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Поточне зображення:",
-        "imageRecommendation": "Рекомендація: Використовуйте зображення з роздільною здатністю 1920x1080 або вище.",
-        "currentFolder": "Поточна тека:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
+        "newTabSettings": "Налаштування нової вкладки",
+        "displayComponents": "Відображати компоненти",
+        "topSites": "Популярні сайти",
+        "clock": "Годинник",
+        "searchBar": "Рядок пошуку",
+        "backgroundSettings": "Налаштування фону",
+        "noBackground": "Без фону",
+        "randomImage": "Випадкове зображення",
+        "customImage": "Користувацьке зображення",
+        "folderImages": "Зображення з папки",
+        "floorpImages": "Floorp зображення",
+        "currentImage": "Current image:",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Виберіть папку",
+        "selected": "Вибрані",
         "enableSlideshow": "Увімкнути слайд-шоу",
-        "slideshowInterval": "Інтервал (секунди)",
-        "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect."
+        "slideshowInterval": "Інтервал зміни слайдів",
+        "floorpStart": "Домівка Floorp",
+        "disableFloorpStart": "Вимкнути Домівку Floorp (використовувати класичну about:newtab)",
+        "disableFloorpStartDescription": "Якщо цю опцію увімкнути, Домівка Floorp буде замінена класичною новою вкладкою/домашньою сторінкою Firefox.",
+        "restartRequired": "Для повного застосування змін необхідно перезапустити браузер."
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Пошук або введення URL-адреси",
+        "loadingSearchEngines": "Завантаження пошукових систем..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Налаштування"
     },
     "modal": {
-        "close": "Close"
+        "close": "Закрити"
     }
 }

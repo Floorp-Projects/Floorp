@@ -362,6 +362,7 @@
         "generalSettingsDescription": "滑鼠手勢基本設定",
         "enabled": "啟用滑鼠手勢",
         "showTrail": "顯示手勢軌跡",
+        "showLabel": "顯示手勢標籤",
         "sensitivity": "敏感度",
         "low": "低",
         "high": "高",

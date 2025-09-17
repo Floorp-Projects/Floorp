@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Aktivér musebevægelser",
         "showTrail": "Vis bevægelsesspor",
+        "showLabel": "Show gesture label",
         "sensitivity": "Følsomhed",
         "low": "Lav",
         "high": "Høj",

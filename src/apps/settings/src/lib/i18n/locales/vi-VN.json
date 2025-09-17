@@ -119,10 +119,10 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
-            "description": "Configure advanced Lepton theme preferences",
-            "configureLepton": "Configure Lepton",
-            "back": "Back",
+            "title": "Cài đặt Lepton",
+            "description": "Thay đổi các cài đặt nâng cao của Lepton",
+            "configureLepton": "Tùy chỉnh Lepton",
+            "back": "Quay lại",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
                 "description": "These settings are experimental and not officially supported. Issues may occur.",
@@ -157,19 +157,19 @@
             "centered": {
                 "title": "Centered Settings",
                 "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
+                "urlbar": "Căn giữa chữ thanh địa chỉ",
                 "bookmarkbar": "Center Bookmarks Bar items"
             },
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Khi nhập, hiển thị nút \"Đi\"",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
-                "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "title": "Cài đặt thanh thẻ",
+                "asTitlebar": "Thanh thẻ trong thanh tiêu đề",
+                "oneLiner": "Gộp thanh thẻ và thanh điều hướng"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
         "showTrail": "Show gesture trail",
+        "showLabel": "Show gesture label",
         "sensitivity": "Sensitivity",
         "low": "Low",
         "high": "High",

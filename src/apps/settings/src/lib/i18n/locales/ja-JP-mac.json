@@ -362,6 +362,7 @@
         "generalSettingsDescription": "マウスジェスチャーの基本設定",
         "enabled": "マウスジェスチャーを有効にする",
         "showTrail": "ジェスチャーの軌跡を表示",
+        "showLabel": "ジェスチャー中にアクション名を表示",
         "sensitivity": "感度",
         "low": "低",
         "high": "高",

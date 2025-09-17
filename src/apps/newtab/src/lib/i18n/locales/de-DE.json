@@ -1,53 +1,53 @@
 {
-    "title": "Floorp Start",
+    "title": "Floorp-Start",
     "topSites": {
         "addSite": "Seite hinzufügen",
         "addNewSite": "Neue Seite hinzufügen",
-        "url": "Url",
+        "url": "URL",
         "label": "Titel",
         "cancel": "Abbrechen",
         "add": "Neu",
         "close": "Schließen",
         "labelPlaceholder": "Webseitenname",
-        "pin": "Pin",
-        "unpin": "Unpin",
-        "block": "Block",
-        "blockTitle": "Block \"{{title}}\"?",
-        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
-        "invalidUrl": "Invalid URL"
+        "pin": "Anheften",
+        "unpin": "Ablösen",
+        "block": "Blockieren",
+        "blockTitle": "\"{{title}}\" blockieren?",
+        "blockConfirm": "Diese Webseite wird von Ihren Verknüpfungen entfernt und wird nicht mehr vorgeschlagen. Sie können blockierte Webseiten in den Einstellungen verwalten.",
+        "invalidUrl": "Ungültige URL"
     },
     "settings": {
         "newTabSettings": "Neue Tab Einstellungen",
         "displayComponents": "Komponenten anzeigen",
-        "topSites": "Top-Seiten",
+        "topSites": "Verknüpfungen",
         "clock": "Uhr",
         "searchBar": "Suchleiste",
-        "backgroundSettings": "Hintergrund Einstellungen",
+        "backgroundSettings": "Hintergrund-Einstellungen",
         "noBackground": "Ohne Hintergrund",
-        "randomImage": "Zufallsbild",
+        "randomImage": "Zufälliges Bild",
         "customImage": "Benutzerdefiniertes Bild",
         "folderImages": "Bilder aus einem Ordner",
-        "floorpImages": "Floorp Bilder",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommendation: Use images with a resolution of 1920x1080 or higher.",
-        "currentFolder": "Current Folder:",
+        "floorpImages": "Floorp-Bilder",
+        "currentImage": "Aktuelles Bild:",
+        "imageRecommendation": "Empfohlen: 1920x1080 oder höher",
+        "currentFolder": "Aktueller Ordner:",
         "selectFolder": "Ordner auswählen",
         "selected": "Ausgewählt",
-        "enableSlideshow": "Enable Slideshow",
-        "slideshowInterval": "Interval (seconds)",
-        "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect."
+        "enableSlideshow": "Diashow aktivieren",
+        "slideshowInterval": "Slideshow Interval",
+        "floorpStart": "Floorp-Start",
+        "disableFloorpStart": "Floorp-Start deaktivieren (Klassisches about:newtab verwenden)",
+        "disableFloorpStartDescription": "Wenn aktiviert, Floorp-Start wird durch den klassischen Firefox neuen Tab ersetzt.",
+        "restartRequired": "Erfordert einen Neustart des Browsers, um angewendet zu werden."
     },
     "searchBar": {
-        "searchOrEnterUrl": "Suchen oder Url eingeben",
+        "searchOrEnterUrl": "Suchen oder URL eingeben",
         "loadingSearchEngines": "Suchmaschinen werden geladen..."
     },
     "settingsButton": {
         "settings": "Einstellungen"
     },
     "modal": {
-        "close": "Beenden"
+        "close": "Schließen"
     }
 }

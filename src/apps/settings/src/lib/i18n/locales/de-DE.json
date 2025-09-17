@@ -8,38 +8,38 @@
         "darkMode": "Dunkel-Modus"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
-        "description": "After restarting, the opened private windows and private tabs will be lost.",
-        "cancel": "Later",
-        "restart": "Restart Now"
+        "title": "Neustart erforderlich",
+        "description": "Nach dem Neustart werden alle offenen privaten Fenster und Tabs geschlossen.",
+        "cancel": "Später",
+        "restart": "Jetzt neu starten"
     },
     "sidebar": {
-        "firefoxSettings": "Firefox Settings",
-        "about": "About",
-        "aboutNoraneko": "About Noraneko",
+        "firefoxSettings": "Firefox-Einstellungen",
+        "about": "Über",
+        "aboutNoraneko": "Über Noraneko",
         "debug": "Debug",
-        "overview": "Overview",
-        "features": "Features"
+        "overview": "Übersicht",
+        "features": "Funktionen"
     },
     "pages": {
-        "home": "Home",
-        "tabAndAppearance": "Tab & Appearance",
-        "browserSidebar": "Panel Sidebar",
-        "workspaces": "Workspaces",
-        "keyboardShortcuts": "Keyboard Shortcuts",
-        "webApps": "Web Apps",
-        "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}",
+        "home": "Startseite",
+        "tabAndAppearance": "Erscheinungsbild",
+        "browserSidebar": "Seitenleiste",
+        "workspaces": "Arbeitsbereiche",
+        "keyboardShortcuts": "Tastenkürzel",
+        "webApps": "Web-Apps",
+        "profileAndAccount": "Profil und Konten",
+        "aboutBrowser": "Über {{productName}}",
         "debug": "Debug",
-        "mouseGesture": "Mouse Gestures",
-        "keyboardShortcut": "Keyboard Shortcuts"
+        "mouseGesture": "Mausgesten",
+        "keyboardShortcut": "Tastenkürzel"
     },
     "home": {
-        "welcome": "Welcome, {{name}} 👋",
-        "defaultAccountName": "{{productName}} User",
-        "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
+        "welcome": "Hallo, {{name}} 👋",
+        "defaultAccountName": "{{productName}}-Benutzer",
+        "description": "Verwalten Sie Ihr Konto, Datenschutz und Sicherheit, um Ihr {{productName}} Erlebnis zu verbessern.",
         "setup": {
-            "title": "Setup",
+            "title": "Einrichtung",
             "footerLinkText": "Log in to Accounts",
             "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
             "setupProgressTitle": "Setup Progress",
@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
         "showTrail": "Show gesture trail",
+        "showLabel": "Show gesture label",
         "sensitivity": "Sensitivity",
         "low": "Low",
         "high": "High",

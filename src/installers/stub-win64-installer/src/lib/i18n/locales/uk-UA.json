@@ -41,30 +41,30 @@
             "launchCheckbox": "Запускати браузер Floorp після встановлення",
             "closeButton": "Закрити встановлювач",
             "countdownMessage": "Встановлювач закриється через {{count}} секунд",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadMessage": "Ви також можете спробувати стару версію інсталятора.",
+            "legacyDownloadButton": "Завантажити"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "title": "Вітаємо у Floorp",
+            "description": "Ласкаво просимо до останньої версії Floorp, веб-браузера, розробленого з акцентом на розвиток і дослідження в Японії. Вміст, представлений далі, є лише частиною проєкту."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "Регулярні оновлення",
+            "description": "Floorp постійно підтримується та оновлюється, навіть незважаючи на те, що він розробляється спільнотою. Ми забезпечуємо безпечний перегляд сайтів відповідно до принципу, що Інтернет повинен бути вільним для всіх."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "Найновіші функції",
+            "description": "Остання версія Floorp використовує передові веб-функції, розроблені в Mozilla Firefox. Крім того, він був перероблений таким чином, щоб зробити всі бажані інструменти легко доступними кожному."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "Розширена кастомізація",
+            "description": "Оснащений численними можливостями кастомізації для кращого захисту конфіденційності, ніж ваш стандартний браузер. Floorp дозволяє вам реалізувати будь-яку бажану конфігурацію."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "Боремось за тебе",
+            "description": "Floorp блокує шкідливе відстеження. Ми балансуємо між повноцінною роботою веб-сайту та правами користувачів, працюючи над покращенням функціональності та конфіденційності Інтернету."
         }
     },
     "rust": {
@@ -90,8 +90,8 @@
             "admin_install_failed": "Встановлення з правами адміністратора не вдалося. Код виходу: {{0}}",
             "user_installer_launch": "Не вдалося запустити процес інсталятора з правами користувача: {{0}}",
             "user_installer_execution": "Виникла проблема під час запуску інсталятора з правами користувача: {{0}}",
-            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
-            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+            "cpu_not_supported": "Процесор цього пристрою не підтримує SSE4.1. Для роботи Floorp потрібен процесор з підтримкою SSE4.1.",
+            "cpu_check_failed": "Не вдалося перевірити вимоги ЦП. Будь ласка, перевірте системні вимоги."
         }
     }
 }

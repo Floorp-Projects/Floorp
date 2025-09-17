@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Definições básicas de gestos do rato",
         "enabled": "Ativar os gestos do rato",
         "showTrail": "Mostrar rasto de gestos",
+        "showLabel": "Mostrar etiqueta de gesto",
         "sensitivity": "Sensibilidade",
         "low": "Baixo",
         "high": "Alto",

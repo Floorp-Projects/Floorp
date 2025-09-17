@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Pengaturan gestur tetikus dasar",
         "enabled": "Aktifkan gestur tetikus",
         "showTrail": "Tampilkan jejak gestur",
+        "showLabel": "Tampilkan label gestur",
         "sensitivity": "Sensitivitas",
         "low": "Rendah",
         "high": "Tinggi",

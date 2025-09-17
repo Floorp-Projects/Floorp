@@ -1,73 +1,73 @@
 {
     "undo-closed-tab": {
         "label": "Tab wiederherstellen",
-        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+        "tooltiptext": "Letzten geschossenen Tab wieder öffnen {{shortcut}}"
     },
     "workspaces": {
         "modal": {
             "name": "Name",
-            "name-placeholder": "Enter a name for this workspace",
+            "name-placeholder": "Einen Namen für diesen Arbeitsbereich eingeben",
             "container": "Container",
-            "no-container": "No Container",
-            "icon": "Icon",
-            "edit-title": "Edit Workspace",
-            "save": "Save Changes",
-            "cancel": "Cancel"
+            "no-container": "Kein Container",
+            "icon": "Symbol",
+            "edit-title": "Arbeitsbereich bearbeiten",
+            "save": "Änderungen speichern",
+            "cancel": "Abbrechen"
         },
         "icons": {
-            "article": "Article",
-            "book": "Book",
-            "briefcase": "Briefcase",
-            "cart": "Shopping Cart",
+            "article": "Artikel",
+            "book": "Buch",
+            "briefcase": "Koffer",
+            "cart": "Einkaufswagen",
             "chat": "Chat",
             "chill": "",
-            "circle": "Circle",
-            "compass": "Compass",
+            "circle": "Kreis",
+            "compass": "Kompass",
             "code": "Code",
             "dollar": "Dollar",
-            "fence": "Fence",
-            "fingerprint": "Fingerprint",
-            "food": "Food",
-            "fruit": "Fruit",
-            "game": "Game",
-            "gear": "Settings",
-            "gift": "Gift",
-            "key": "Key",
-            "lightning": "Lightning",
-            "network": "Network",
-            "notes": "Notes",
-            "paint": "Paint",
-            "photo": "Photo",
-            "pin": "Pin",
-            "pet": "Pet",
-            "question": "Question",
+            "fence": "Zaun",
+            "fingerprint": "Fingerabdruck",
+            "food": "Essen",
+            "fruit": "Frucht",
+            "game": "Spiel",
+            "gear": "Einstellungen",
+            "gift": "Geschenk",
+            "key": "Schüssel",
+            "lightning": "Blitz",
+            "network": "Netzwerk",
+            "notes": "Notizen",
+            "paint": "Pinsel",
+            "photo": "Foto",
+            "pin": "PIN",
+            "pet": "Pfote",
+            "question": "Fragezeichen",
             "smartphone": "Smartphone",
-            "star": "Star",
-            "tree": "Tree",
-            "vacation": "Vacation",
-            "love": "Love",
-            "moon": "Moon",
-            "music": "Music",
-            "user": "User"
+            "star": "Stern",
+            "tree": "Baum",
+            "vacation": "Flugzeug",
+            "love": "Herz",
+            "moon": "Mond",
+            "music": "Musik",
+            "user": "Benutzer"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Neuer Arbeitsbereich ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
-            "manage": "Manage Workspace"
+            "move-up": "Diesen Arbeitsbereich nach oben schieben",
+            "move-down": "Diesen Arbeitsbereich nach unten schieben",
+            "delete": "Arbeitsbereich löschen",
+            "manage": "Arbeitsbereich verwalten"
         },
         "popup": {
-            "create-new": "Create New Workspace...",
+            "create-new": "Neuen Arbeitsbereich erstellen...",
             "manage": "Arbeitsbereiche verwalten"
         },
         "menu": {
-            "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+            "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben"
         },
         "error": {
-            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
+            "invalidWorkspaceID": "Ungültige ID für Arbeitsbereich (Sortierung nicht aktualisiert)"
         }
     },
     "statusbar": {

@@ -41,8 +41,8 @@
             "launchCheckbox": "Lancez Floorp après l'installation",
             "closeButton": "Fermer l'installateur",
             "countdownMessage": "L'installateur se fermera dans {{count}} secondes",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadMessage": "Vous pouvez également essayer l'ancien programme d'installation.",
+            "legacyDownloadButton": "Télécharger"
         }
     },
     "slides": {

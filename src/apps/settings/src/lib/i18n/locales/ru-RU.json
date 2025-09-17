@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Основные настройки жестов мыши",
         "enabled": "Включите жесты мышью",
         "showTrail": "Показать след от жеста",
+        "showLabel": "Show gesture label",
         "sensitivity": "Чувствительность",
         "low": "Низкая",
         "high": "Высокая",

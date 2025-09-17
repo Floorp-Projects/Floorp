@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
         "showTrail": "Show gesture trail",
+        "showLabel": "Show gesture label",
         "sensitivity": "Sensitivity",
         "low": "Low",
         "high": "High",

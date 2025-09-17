@@ -362,6 +362,7 @@
         "generalSettingsDescription": "鼠标手势基本设置",
         "enabled": "启用鼠标手势",
         "showTrail": "显示手势轨迹",
+        "showLabel": "显示手势标签",
         "sensitivity": "灵敏度",
         "low": "低",
         "high": "高",

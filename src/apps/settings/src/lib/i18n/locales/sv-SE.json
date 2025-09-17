@@ -362,6 +362,7 @@
         "generalSettingsDescription": "Grundläggande inställningar för musgester",
         "enabled": "Aktivera musgester",
         "showTrail": "Visa gestspår",
+        "showLabel": "Show gesture label",
         "sensitivity": "Känslighet",
         "low": "Låg",
         "high": "Hög",
