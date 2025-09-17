@@ -12,7 +12,7 @@ import i18next from "i18next";
 import { createSignal } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
-  "resource:///modules/CustomizableUI.sys.mjs",
+  "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
 declare global {
@@ -38,7 +38,9 @@ export default class UndoClosedTab extends NoraComponentBase {
       "undo-closed-tab",
       null,
       (event: XULCommandEvent) => {
-        (event.view?.document?.getElementById("toolbar-context-undoCloseTab") as XULElement)
+        (event.view?.document?.getElementById(
+          "toolbar-context-undoCloseTab",
+        ) as XULElement)
           ?.doCommand();
       },
       StyleElement(),

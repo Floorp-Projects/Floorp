@@ -20,7 +20,7 @@ import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
-  "resource:///modules/CustomizableUI.sys.mjs",
+  "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
 let lastDisplayedWorkspaceId: string | null = null;

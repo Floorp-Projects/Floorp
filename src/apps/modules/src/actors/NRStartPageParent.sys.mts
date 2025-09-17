@@ -8,39 +8,20 @@ export class NRStartPageParent extends JSWindowActorParent {
     switch (message.name) {
       case "NRStartPage:GetCurrentTopSites": {
         // Debug: Log that we received the message to get current top sites
-        console.debug(
-          "[NRStartPageParent] Received message: NRStartPage:GetCurrentTopSites",
-        );
-
         const { NewTabUtils } = ChromeUtils.importESModule(
           "resource://gre/modules/NewTabUtils.sys.mjs",
         );
-        console.debug("[NRStartPageParent] Imported NewTabUtils");
-
         const { AboutNewTab } = ChromeUtils.importESModule(
           "resource:///modules/AboutNewTab.sys.mjs",
         );
-        console.debug("[NRStartPageParent] Imported AboutNewTab");
-
         let topSites = [];
         try {
           const aboutNewTabSites = AboutNewTab.getTopSites();
-          console.debug(
-            "[NRStartPageParent] AboutNewTab.getTopSites() result:",
-            aboutNewTabSites,
-          );
 
           if (aboutNewTabSites.length > 0) {
             topSites = aboutNewTabSites;
-            console.debug(
-              "[NRStartPageParent] Using AboutNewTab.getTopSites()",
-            );
           } else {
             topSites = await NewTabUtils.activityStreamLinks.getTopSites();
-            console.debug(
-              "[NRStartPageParent] Using NewTabUtils.activityStreamLinks.getTopSites()",
-              topSites,
-            );
           }
         } catch (e) {
           console.error(
@@ -54,10 +35,6 @@ export class NRStartPageParent extends JSWindowActorParent {
           JSON.stringify({
             topsites: topSites,
           }),
-        );
-        console.debug(
-          "[NRStartPageParent] Sent async message with top sites:",
-          topSites,
         );
         break;
       }

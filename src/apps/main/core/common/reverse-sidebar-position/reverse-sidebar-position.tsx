@@ -9,7 +9,7 @@ import iconStyle from "./icon.css?inline";
 import type { TCustomizableUI } from "@types-gecko/CustomizableUI";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
-  "resource:///modules/CustomizableUI.sys.mjs",
+  "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 ) as { CustomizableUI: typeof TCustomizableUI };
 
 export class ReverseSidebarPosition {
