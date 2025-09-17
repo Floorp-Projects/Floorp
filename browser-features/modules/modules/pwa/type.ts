@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-
-
-
 export type Manifest = {
   id: string;
   name: string;

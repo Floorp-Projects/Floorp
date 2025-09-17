@@ -32,8 +32,8 @@ export async function injectXhtmlFromTs(
 /**
  * This creates chrome.manifest, and symlinks the dists to firefox binary dir.
  * for production, only symlinks will be created.
- * @param mode 
- * @param dirName 
+ * @param mode
+ * @param dirName
  */
 export function run(mode: string, dirName = "noraneko-devdir"): void {
   const manifestPath = path.join(BIN_DIR, "chrome.manifest");
