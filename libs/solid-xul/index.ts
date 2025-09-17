@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { createRoot, type JSX, onCleanup } from "solid-js";
 import { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";

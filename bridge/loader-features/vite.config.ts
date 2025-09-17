@@ -1,6 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// SPDX-License-Identifier: MPL-2.0
 
 import { defineConfig } from "vite";
 import path from "node:path";
@@ -8,6 +6,7 @@ import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import deno from "@deno/vite-plugin";
 import swc from "unplugin-swc";
+import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -141,6 +140,7 @@ export default defineConfig({
     },
 
     istanbulPlugin(),
+    genJarmnPlugin("content", "noraneko-content", "content"),
   ],
 
   // 既存の設定...
@@ -166,8 +166,11 @@ export default defineConfig({
     preserveSymlinks: true,
     alias: [
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
-      {find: "@nora/solid-xul",replacement: r("../../libs/solid-xul/index.ts")},
-      {find:"@std/toml",replacement:"@jsr/std__toml"},
+      {
+        find: "@nora/solid-xul",
+        replacement: r("../../libs/solid-xul/index.ts"),
+      },
+      { find: "@std/toml", replacement: "@jsr/std__toml" },
       {
         find: "../../../../../shared",
         replacement: r("../../../../src/shared"),

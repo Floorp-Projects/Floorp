@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 export interface PrefGetParams {
   prefName: string;
   prefType: "string" | "boolean" | "number";

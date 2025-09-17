@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as path from "@std/path";
 
 /**
@@ -39,6 +41,7 @@ export const PROJECT_ROOT = path.resolve(
 export const PATHS = {
   root: PROJECT_ROOT,
   bin_root: path.join(PROJECT_ROOT, "_dist", "bin"),
+  noraneko_out: path.join(PROJECT_ROOT, "_dist", "noraneko"),
   buildid2: path.join(PROJECT_ROOT, "_dist", "buildid2"),
   profile_test: path.join(PROJECT_ROOT, "_dist", "profile", "test"),
   loader_features: path.join(PROJECT_ROOT, "bridge/loader-features"),
@@ -62,6 +65,8 @@ export const BIN_DIR =
 
 export const BIN_ROOT_DIR = PATHS.bin_root;
 export const BIN_PATH = path.join(BIN_DIR, BRANDING.base_name);
+
+export const PROD_BIN_DIR = "../obj-artifact-build-output/dist/bin";
 
 export const BIN_PATH_EXE =
   PLATFORM !== "darwin"

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 export class NRRestartBrowserChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRRestartBrowserChild created!");

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 export function initBeforeSessionStoreInit() {
   const prefs = Services.prefs.getDefaultBranch(null as unknown as string);
 

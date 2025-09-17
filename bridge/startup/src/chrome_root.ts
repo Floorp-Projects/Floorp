@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 // import.meta.env.MODE
 if (import.meta.env.MODE === "dev") {
   //! Do not write `core/index.ts` as `core`

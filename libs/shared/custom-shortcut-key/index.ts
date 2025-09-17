@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { commands } from "./commands.ts";
 import { type CSKData, CSKCommandsCodec, CSKDataCodec } from "./defines.ts";
 import { checkIsSystemShortcut } from "./utils.ts";

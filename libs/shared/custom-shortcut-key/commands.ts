@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as t from 'io-ts';
 
 export const csk_category = [

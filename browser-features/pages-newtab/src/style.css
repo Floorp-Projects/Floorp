@@ -1,0 +1,441 @@
+/* Tailwind entry + runtime UI utilities
+   - Keep CSS in this file so Vite + Tailwind build produces a single stylesheet.
+   - Use @apply for small utility-driven classes (Tailwind v4 zero-config).
+*/
+
+@import "tailwindcss";
+
+/* Design tokens (kept small) */
+:root {
+  --bg: #f9fafb;
+  --muted: #6b7280;
+  --accent: #111827;
+  --white: #ffffff;
+}
+
+/* Improve readability when a background image is applied:
+   - Add a subtle, fixed overlay to darken the background.
+   - Add a backdrop blur to soften busy images.
+   - Switch UI to a light-on-dark palette for contrast.
+   - Keep overlay pointer-events:none so it doesn't block interaction.
+   - Ensure main content stacks above the overlay.
+*/
+
+/* Darkening overlay sits above blur */
+body.has-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0.38));
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Subtle light background behind inline/heading text to ensure legibility.
+   Applies small rounded translucent panels behind headings, labels, dates, and time.
+   Use backdrop-filter so the element itself blurs the underlying image (per-element blur).
+*/
+body.has-bg h1,
+body.has-bg h2,
+body.has-bg h3,
+body.has-bg strong,
+body.has-bg label,
+body.has-bg #time,
+body.has-bg .text-sm,
+body.has-bg .text-xs {
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.125rem 0.35rem;
+  border-radius: 6px;
+  display: inline-block;
+  line-height: 1;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+body.has-bg #date {
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.125rem 0.35rem;
+  border-radius: 6px;
+  display: block;
+  margin-top: 0.25rem;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Keep footer layout intact; make timezone a right-aligned inline badge */
+body.has-bg .footer {
+  background: transparent;
+}
+body.has-bg .footer #tz {
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.125rem 0.35rem;
+  border-radius: 6px;
+  display: inline-block;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff;
+}
+
+/* Slightly stronger surface for the top header area */
+body.has-bg header > div {
+  background: rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Make search bar and controls slightly elevated / translucent */
+body.has-bg .search,
+body.has-bg .shortcuts,
+body.has-bg #addForm {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Keep main content above overlay */
+
+/* Use light text / subtle translucent UI surfaces when a bg image is present */
+body.has-bg {
+  /* force light text even if Tailwind utility classes are present on <body> */
+  color: #ffffff !important;
+  /* subtle text shadow increases legibility over busy images */
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.36);
+  transition: color 160ms ease;
+}
+
+/* Headings, labels and primary copy */
+body.has-bg h1,
+body.has-bg h2,
+body.has-bg h3,
+body.has-bg strong,
+body.has-bg label {
+  color: #ffffff;
+}
+
+/* Muted copy tuned for darkened bg */
+body.has-bg p,
+body.has-bg .text-sm,
+body.has-bg .text-gray-600,
+body.has-bg .text-gray-500 {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+/* Override common Tailwind gray utility classes when a background is present
+   so any elements still using text-gray-* switch to light text for legibility. */
+body.has-bg .text-gray-900,
+body.has-bg .text-gray-800,
+body.has-bg .text-gray-700,
+body.has-bg .text-gray-600,
+body.has-bg .text-gray-500 {
+  color: rgba(255, 255, 255, 0.96) !important;
+}
+
+/* Ensure links and interactive text are clearly visible on top of the bg */
+body.has-bg a,
+body.has-bg button,
+body.has-bg .card,
+body.has-bg .btn-primary {
+  color: #ffffff !important;
+}
+
+/* Slightly dim link hover state for affordance */
+body.has-bg a:hover,
+body.has-bg button:hover,
+body.has-bg .card:hover {
+  opacity: 0.95;
+}
+
+/* Cards / links: translucent surfaces with clear white text */
+body.has-bg .card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+/* Grid-specific card copy */
+body.has-bg #linksGrid .card {
+  color: #ffffff;
+}
+
+/* Toning down hover elevation for dark bg */
+body.has-bg .card:hover,
+body.has-bg .card:focus {
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Inputs and textareas: translucent with light placeholders */
+body.has-bg .input {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+body.has-bg .input::placeholder {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+/* Buttons: icon and text use white for contrast; primary stays solid */
+body.has-bg .btn-icon {
+  color: #ffffff;
+}
+body.has-bg .btn-primary {
+  background: #0b1220;
+  color: #ffffff;
+}
+
+/* Settings panel inner surface: translucent to match the page mood */
+body.has-bg #settingsPanel > .p-4 {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Footer and muted text */
+body.has-bg .footer {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Raise the main container above the overlay so content and controls remain interactive */
+main {
+  position: relative;
+  z-index: 41;
+}
+
+/* Page base */
+html,
+body {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--accent);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial;
+  line-height: 1.4;
+}
+
+/* Buttons */
+.btn-primary {
+  padding: 0.5rem 0.75rem;
+  background: #0b1220;
+  color: #ffffff;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: #071019;
+}
+.btn-primary:focus {
+  outline: none;
+  /* stronger focus ring */
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.22);
+}
+
+/* Icon button (settings) — styled like a compact modern button */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 16px;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+}
+.btn-icon:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+.btn-icon:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+.btn-icon:active {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+/* Cards (quick links) */
+.card {
+  display: block;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  padding: 0.75rem;
+  text-decoration: none;
+}
+.card:hover,
+.card:focus {
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.08);
+  border-color: #cbd5e1;
+  outline: none;
+}
+
+/* Form inputs */
+.input {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2);
+  border-color: #2563eb;
+}
+
+/* Small runtime affordances */
+button,
+.card,
+.input {
+  touch-action: manipulation;
+}
+
+/* Links grid card tweaks */
+#linksGrid .card {
+  padding: 0.85rem 0.6rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Add button */
+#addLinkBtn {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f1720;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+#addLinkBtn:hover {
+  background: #f3f4f6;
+  text-decoration: none;
+}
+
+/* Footer / tiny text */
+.footer {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Ensure footer content is spaced properly so the timezone (#tz) stays right-aligned */
+.footer > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+/* Prevent the left-side span from growing and ensure tz can auto-align right */
+.footer > div > :first-child {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+}
+/* Keep timezone as a normal flex item so footer width matches other sections */
+.footer #tz {
+  margin-left: auto !important;
+  padding-left: 0.5rem;
+  align-self: center;
+  text-align: right;
+  flex: 0 0 auto;
+  display: inline-block;
+  width: auto;
+  min-width: 4ch;
+}
+
+/* Non-has-bg: force tz to absolute right in case flex layout is affected */
+body:not(.has-bg) .footer #tz {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0 !important;
+  padding-left: 0.5rem;
+  text-align: right;
+}
+
+/* Accessibility helpers */
+.hidden {
+  display: none !important;
+}
+
+/* Settings panel: slide in from the right.
+   - Uses the existing `.hidden` toggle in JS to control visibility.
+   - Override global `.hidden` so panel remains in DOM and can animate.
+*/
+#settingsPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 360px;
+  max-width: 100%;
+  z-index: 50;
+  box-sizing: border-box;
+  transform: translateX(100%);
+  transition:
+    transform 220ms ease-in-out,
+    visibility 220ms ease-in-out;
+  display: block;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Ensure .hidden does not remove the panel from DOM; keep it block-level so it can animate */
+#settingsPanel.hidden {
+  display: block !important;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateX(100%);
+}
+
+/* Ensure the inner container fills the panel and can scroll */
+#settingsPanel > .p-4 {
+  height: 100%;
+  overflow: auto;
+  background: var(--white);
+}
+
+/* When the hidden class is removed, slide the panel into view */
+#settingsPanel:not(.hidden) {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  /* Flat, modern look: remove heavy shadow and use subtle border */
+  box-shadow: none;
+  border-left: 1px solid rgba(15, 23, 42, 0.06);
+}

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { render } from "@nora/solid-xul";
 import { csk } from "./csk";
 import { category } from "./csk/category";

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 export class NRAboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type === "DOMContentLoaded") {

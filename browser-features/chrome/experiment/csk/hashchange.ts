@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { createEffect, createSignal } from "solid-js";
 
 export const [hash, setHash] = createSignal("");

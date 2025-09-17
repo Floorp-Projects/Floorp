@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { parse } from "@std/toml";
 import { createRootHMR } from "@nora/solid-xul";
 import i18next from "i18next";

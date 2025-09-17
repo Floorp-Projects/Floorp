@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 //TODO: make reject when the name is invalid
 export class NRSettingsParent extends JSWindowActorParent {
   constructor() {

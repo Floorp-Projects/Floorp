@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 //https://github.com/Floorp-Projects/Floorp-core/blob/b759e6eca79449389b5806b5b7bd6d9bbd718339/browser/base/content/browser-command.js#L46
 /******************************************** StyleSheetService (userContent.css) ******************************/
 

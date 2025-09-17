@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { assertRejects } from "@jsr/std__assert";
 import { onModuleLoaded } from "../../modules-hooks.ts";
 

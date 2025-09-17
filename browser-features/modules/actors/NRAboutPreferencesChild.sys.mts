@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MPL-2.0
+
+
+
 export class NRAboutPreferencesChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type === "DOMContentLoaded") {

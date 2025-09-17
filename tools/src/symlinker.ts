@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as path from "@std/path";
 import { PATHS } from "./defines.ts";
 import { Logger, exists, safeRemove, createSymlink } from "./utils.ts";

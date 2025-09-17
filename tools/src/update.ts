@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as path from "@std/path";
 import { runCommandChecked, exists } from "./utils.ts";
 import { PROJECT_ROOT } from "./defines.ts";

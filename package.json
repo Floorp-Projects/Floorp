@@ -7,6 +7,7 @@
   "keywords": [],
   "author": "",
   "private": true,
+  "license": "MPL-2.0",
   "devDependencies": {
     "@bytecodealliance/preview2-shim": "^0.17.3",
     "@prettier/plugin-oxc": "^0.0.4",
@@ -22,13 +23,14 @@
     "prettier": "^3.6.2",
     "puppeteer-core": "^24.17.1",
     "typescript": "^5.9.2",
-    "vite": "npm:rolldown-vite@^7.1.5",
+    "vite": "^7.1.4",
     "vite-plugin-solid": "^2.11.8"
   },
   "dependencies": {
     "@deno/vite-plugin": "^1.0.5",
     "@swc/core": "^1.13.5",
-    "@tailwindcss/vite": "^4.1.12",
+    "@tailwindcss/vite": "^4.1.13",
+    "tailwindcss": "^4.1.13",
     "unplugin-swc": "^1.5.7",
     "uuid": "^11.1.0",
     "vite-plugin-istanbul": "^7.1.0",

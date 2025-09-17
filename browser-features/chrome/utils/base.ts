@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
 import type { ClassDecorator } from "./decorator";

@@ -1,6 +1,14 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import * as path from "@std/path";
 import { PROJECT_ROOT, PATHS } from "./defines.ts";
-import { Logger, runCommandChecked } from "./utils.ts";
+import {
+  createSymlink,
+  exists,
+  Logger,
+  runCommandChecked,
+  safeRemove,
+} from "./utils.ts";
 import { writeBuildid2 } from "./update.ts";
 
 const logger = new Logger("builder");
@@ -122,6 +130,43 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     await runInParallel(devCommands);
   } else {
     await runInParallel(prodCommands);
+  }
+
+  if (mode.startsWith("production")) {
+    const mounts: Array<[string, string]> = [
+      ["content", "bridge/loader-features/_dist"],
+      ["startup", "bridge/startup/_dist"],
+      ["skin", "browser-features/skin"],
+      ["resource", "bridge/loader-modules/_dist"],
+    ];
+
+    const dirPath = "_dist/noraneko";
+    try {
+      if (exists(dirPath)) {
+        safeRemove(dirPath);
+      }
+    } catch {}
+    Deno.mkdirSync(dirPath);
+
+    for (const [subdir, target] of mounts) {
+      const linkPath = path.resolve(dirPath, subdir);
+      const targetPath = path.resolve(target);
+      try {
+        if (exists(linkPath)) {
+          safeRemove(linkPath);
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        createSymlink(linkPath, targetPath);
+      } catch (e: any) {
+        logger.warn(
+          `Failed to create symlink ${linkPath} -> ${targetPath}: ${e?.message ?? e}`,
+        );
+      }
+    }
   }
 
   logger.success("Build complete.");
