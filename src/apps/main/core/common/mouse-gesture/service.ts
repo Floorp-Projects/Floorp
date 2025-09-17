@@ -175,6 +175,10 @@ function createMouseGestureService() {
 }
 
 function handleContextMenuAfterMouseUp(enabled: boolean) {
+  if (Services.appinfo.OS === "WINNT") {
+    return;
+  }
+
   Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
 }
 
