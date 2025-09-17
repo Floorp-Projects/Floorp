@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 //? originally from https://searchfox.org/mozilla-central/rev/91f80b37a4b2d4c6b05e8403e26bd1f0df3f6057/toolkit/mozapps/extensions/content/shortcuts.js#408
 
 const { AppConstants } = ChromeUtils.importESModule(
