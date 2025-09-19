@@ -76,8 +76,6 @@ jobs:
             echo "Patch directory not found, skipping patch application."
           fi
 
-          git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
-
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
         with:
@@ -145,6 +143,7 @@ jobs:
           EOF
           fi
           ./mach configure
+          git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
 
       - name: Possibly retrieve run ID if not provided
         run: |
