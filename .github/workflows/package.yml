@@ -222,6 +222,7 @@ jobs:
 
       - name: Build
         run: |
+          ./mach configure
           if [ "${{inputs.platform}}" == "Windows-x86_64" ]; then
             MOZ_ARTIFACT_FILE=$(echo ~/artifacts/noraneko-windows-x86_64-moz-artifact/noraneko-windows-x86_64-moz-artifact.zip) ./mach build
           elif [ "${{inputs.platform}}" == "Linux-x86_64" ]; then
