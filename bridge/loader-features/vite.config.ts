@@ -140,7 +140,7 @@ export default defineConfig({
     },
 
     istanbulPlugin(),
-    genJarmnPlugin("content", "noraneko-content", "content"),
+    genJarmnPlugin("content", "noraneko", "content"),
   ],
 
   // 既存の設定...

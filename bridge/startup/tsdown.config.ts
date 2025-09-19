@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { defineConfig } from "tsdown/config";
-import {genJarmnPlugin} from "@nora/vite-plugin-gen-jarmn"
+import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 
 export default [
   defineConfig({
@@ -13,7 +13,7 @@ export default [
     outDir: "_dist",
     platform: "browser",
     treeshake: false,
-    plugins: [genJarmnPlugin("startup","noraneko-startup","content")],
+    plugins: [genJarmnPlugin("startup", "noraneko-startup", "content")],
     external: /^resource:\/\/|^chrome:\/\//g,
   }),
 ];

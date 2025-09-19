@@ -29,6 +29,23 @@ export async function injectXhtmlFromTs(
   logger.success("XHTML injection complete.");
 }
 
+export function createManifest(mode: string, dirPath: string) {
+  const manifestContent = [
+    "content noraneko content/ contentaccessible=yes",
+    "content noraneko-startup startup/ contentaccessible=yes",
+    "skin noraneko classic/1.0 skin/",
+    "resource noraneko resource/ contentaccessible=yes",
+    mode !== "dev"
+      ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
+      : "",
+  ].join("\n");
+
+  Deno.writeTextFileSync(
+    path.join(dirPath, "noraneko.manifest"),
+    manifestContent,
+  );
+}
+
 /**
  * This creates chrome.manifest, and symlinks the dists to firefox binary dir.
  * for production, only symlinks will be created.
@@ -60,20 +77,7 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
     throw e;
   }
 
-  const manifestContent = [
-    "content noraneko content/ contentaccessible=yes",
-    "content noraneko-startup startup/ contentaccessible=yes",
-    "skin noraneko classic/1.0 skin/",
-    "resource noraneko resource/ contentaccessible=yes",
-    mode !== "dev"
-      ? "\ncontent noraneko-settings settings/ contentaccessible=yes"
-      : "",
-  ].join("\n");
-
-  Deno.writeTextFileSync(
-    path.join(dirPath, "noraneko.manifest"),
-    manifestContent,
-  );
+  createManifest(mode, dirPath);
 
   const mounts: Array<[string, string]> = [
     ["content", "bridge/loader-features/_dist"],

@@ -9,5 +9,5 @@ export default defineConfig({
   format: "esm",
   target: "esnext",
   external: /^resource:\/\/|^chrome:\/\//,
-  plugins: [genJarmnPlugin("resource", "noraneko-resource", "resource")],
+  plugins: [genJarmnPlugin("resource", "noraneko", "resource")],
 });
