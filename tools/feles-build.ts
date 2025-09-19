@@ -162,7 +162,7 @@ async function runBuild(phase?: string): Promise<void> {
     const buildid2 = Update.generateUuidV7();
     await Builder.run("production", buildid2);
   } else if (optionsPhase === "after-mach") {
-    await Injector.createManifest("production", "_dist/noraneko");
+    // await Injector.createManifest("production", "_dist/noraneko");
     await Injector.injectXhtmlFromTs(false, true);
   } else {
     console.error(`Unknown phase: ${optionsPhase}`);
