@@ -19,14 +19,18 @@ import { migratePanelSidebarData } from "./data/migration.ts";
 // Define communication interfaces for sidebar addon panel
 interface SidebarAddonPanelServerFunctions {
   onPanelDataUpdate(data: any): void;
-  onPanelConfigUpdate(config: any): void;
   onPanelSelectionChange(panelId: string): void;
 }
 
 interface SidebarAddonPanelClientFunctions {
   requestDataUpdate(): Promise<any>;
-  requestConfigUpdate(): Promise<any>;
   requestPanelSelection(panelId: string): Promise<void>;
+  registerSidebarIcon(options: {
+    name: string;
+    i18nName: string;
+    iconUrl: string;
+    birpcMethodName: string;
+  }): Promise<void>;
 }
 
 @noraComponent(import.meta.hot)
@@ -49,6 +53,9 @@ export default class SidebarAddonPanel extends NoraComponentBase {
 
     // Set up birpc communication with sidebar core
     this.setupBirpcCommunication();
+
+    // Register example sidebar icons (demonstrating the usage)
+    this.registerExampleSidebarIcons();
   }
 
   private setupBirpcCommunication(): void {
@@ -64,14 +71,6 @@ export default class SidebarAddonPanel extends NoraComponentBase {
             "noraneko-addon-panel-internal-update"
           );
         }
-      },
-      onPanelConfigUpdate: (config: any) => {
-        // Handle panel config updates from sidebar core
-        console.debug("SidebarAddonPanel: Received panel config update", config);
-        Services.obs.notifyObservers(
-          { type: "panel-config-update", config } as nsISupports,
-          "noraneko-addon-panel-internal-update"
-        );
       },
       onPanelSelectionChange: (panelId: string) => {
         // Handle panel selection changes from sidebar core
@@ -136,9 +135,8 @@ export default class SidebarAddonPanel extends NoraComponentBase {
   }
 
   public async requestConfigUpdate(): Promise<any> {
-    if (this.rpc) {
-      return await this.rpc.requestConfigUpdate();
-    }
+    // Config updates are no longer networked via birpc
+    console.warn("SidebarAddonPanel: Config updates are no longer supported via birpc");
     return null;
   }
 
@@ -146,6 +144,56 @@ export default class SidebarAddonPanel extends NoraComponentBase {
     if (this.rpc) {
       await this.rpc.requestPanelSelection(panelId);
     }
+  }
+
+  // Method to register sidebar icons with the core sidebar
+  public async registerSidebarIcon(options: {
+    name: string;
+    i18nName: string;
+    iconUrl: string;
+    birpcMethodName: string;
+  }): Promise<void> {
+    if (this.rpc) {
+      await this.rpc.registerSidebarIcon(options);
+    }
+  }
+
+  // Example method that demonstrates registering sidebar icons
+  private async registerExampleSidebarIcons(): Promise<void> {
+    // Wait for rpc to be ready
+    if (!this.rpc) {
+      console.warn("SidebarAddonPanel: RPC not ready, cannot register icons");
+      return;
+    }
+
+    // Register a notes icon
+    await this.registerSidebarIcon({
+      name: "notes",
+      i18nName: "sidebar.notes.title", 
+      iconUrl: "./icons/notes.svg",
+      birpcMethodName: "onNotesIconActivated"
+    });
+
+    // Register a bookmark icon
+    await this.registerSidebarIcon({
+      name: "bookmarks",
+      i18nName: "sidebar.bookmarks.title",
+      iconUrl: "chrome://browser/skin/bookmark.svg", 
+      birpcMethodName: "onBookmarksIconActivated"
+    });
+
+    console.debug("SidebarAddonPanel: Example sidebar icons registered");
+  }
+
+  // Example callback methods that would be triggered by sidebar icon activation
+  public onNotesIconActivated(): void {
+    console.debug("SidebarAddonPanel: Notes icon was activated");
+    // Handle notes panel activation
+  }
+
+  public onBookmarksIconActivated(): void {
+    console.debug("SidebarAddonPanel: Bookmarks icon was activated");
+    // Handle bookmarks panel activation  
   }
 }
 
