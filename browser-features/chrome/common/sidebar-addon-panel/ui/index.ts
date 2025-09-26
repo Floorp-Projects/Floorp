@@ -29,5 +29,5 @@ export { ExtensionSiteBrowser } from "../panel/browsers/extension-site-browser.t
 /* Export types that UI depends on (now provided by core) */
 export * from "../../sidebar/core/utils/type.ts";
 
-/* Export styles as inline-able entries for bundler consumers (still sourced from original file until CSS is moved) */
-export { default as style } from "../../panel-sidebar/components/style.css?inline";
+/* Export styles as inline-able entries for bundler consumers (now sourced from our own styles directory) */
+export { default as style } from "../styles/style.css?inline";

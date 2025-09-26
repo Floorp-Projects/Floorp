@@ -1,0 +1,41 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.modal {
+  & #extension > menupopup > menuitem > .menu-iconic-left {
+    display: inherit !important;
+  }
+
+  & #extension > menupopup > menuitem > .menu-iconic-left {
+    width: 45px !important;
+  }
+
+  & #extension > menupopup > menuitem > .menu-iconic-highlightable-text {
+    display: none;
+  }
+
+  & .menu-iconic-icon {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 4px !important;
+    margin: 4px !important;
+  }
+
+  & #extension > menuitem {
+    height: 30px;
+  }
+
+  & #extension > menuitem {
+    padding-inline-start: 0em;
+  }
+
+  & #extensionSelectPopup > menuitem {
+    height: 40px;
+  }
+
+  & #extensionSelectPopup > menuitem {
+    padding-inline-start: 0em;
+  }
+}
