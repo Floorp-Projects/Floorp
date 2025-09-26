@@ -72,21 +72,18 @@ export default class Sidebar extends NoraComponentBase {
         },
         on: (fn) => {
           // Listen for RPC requests from addon panel
-          this.rpcRequestObserver = {
-            observe: (subject: nsISupports, topic: string, data: string) => {
-              if (topic === "noraneko-sidebar-addon-panel-rpc") {
-                const msgData = (subject as any).data;
-                if (msgData) {
-                  try {
-                    fn(JSON.parse(msgData));
-                  } catch (e) {
-                    console.error("Sidebar: Failed to parse RPC request:", e);
-                  }
+          this.rpcRequestObserver = (subject: nsISupports, topic: string, data: string) => {
+            if (topic === "noraneko-sidebar-addon-panel-rpc") {
+              const msgData = (subject as any).data;
+              if (msgData) {
+                try {
+                  fn(JSON.parse(msgData));
+                } catch (e) {
+                  console.error("Sidebar: Failed to parse RPC request:", e);
                 }
               }
-            },
-            QueryInterface: () => this.rpcRequestObserver,
-          } as nsIObserver;
+            }
+          };
 
           Services.obs.addObserver(this.rpcRequestObserver, "noraneko-sidebar-addon-panel-rpc", false);
         },
