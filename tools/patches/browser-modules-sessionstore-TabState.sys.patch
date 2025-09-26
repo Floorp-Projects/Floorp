@@ -1,0 +1,31 @@
+diff --git a/browser/modules/sessionstore/TabState.sys.mjs b/browser/modules/sessionstore/TabState.sys.mjs
+index 8f7ed55..60c0d21 100644
+--- ./browser/modules/sessionstore/TabState.sys.mjs
++++ ./browser/modules/sessionstore/TabState.sys.mjs
+@@ -69,6 +69,26 @@ class _TabState {
+     let tabData = { entries: [], lastAccessed: tab.lastAccessed };
+     let browser = tab.linkedBrowser;
+ 
++    /*@nora:inject:start*/
++    // WorkspaceId
++    tabData.floorpWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceId"
++    );
++    // lastShowWorkspaceId
++    tabData.floorpLastShowWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceLastShowId"
++    );
++
++    // Private Container
++    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
++
++    // Site Specific Browser
++    tabData.floorpSSB = tab.getAttribute("floorpSSB");
++
++    // WebPanel
++    tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
++    /*@nora:inject:end*/
++
+     if (tab.pinned) {
+       tabData.pinned = true;
+     }

@@ -30,6 +30,8 @@
     "@deno/vite-plugin": "^1.0.5",
     "@swc/core": "^1.13.5",
     "@tailwindcss/vite": "^4.1.13",
+    "i18next": "^25.5.2",
+    "solid-js": "^1.9.9",
     "tailwindcss": "^4.1.13",
     "unplugin-swc": "^1.5.7",
     "uuid": "^11.1.0",

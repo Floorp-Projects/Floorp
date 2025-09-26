@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-
 /**
  * Loads an icon URL into a data URI.
  *

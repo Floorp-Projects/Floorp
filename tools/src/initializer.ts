@@ -55,7 +55,7 @@ export async function run(): Promise<void> {
   }
 
   if (needInit) {
-    Deno.mkdirSync(BIN_DIR, { recursive: true });
+    Deno.mkdirSync(BIN_ROOT_DIR, { recursive: true });
     await decompressBin();
     logger.success("Initialization complete.");
   }
@@ -85,8 +85,90 @@ user_pref("browser.newtabpage.enabled", true);
   logger.info(`Wrote developer preferences to ${userJsPath}`);
 }
 
+async function extractNestedZip(outerZipPath: string, extractToDir: string): Promise<void> {
+  const tempDir = "_dist/temp_extract_"+Date.now();
+  await Deno.mkdir(tempDir);
+  
+  try {
+    logger.info("Extracting outer zip...");
+    
+    // Extract outer zip to temp directory
+    switch (PLATFORM) {
+      case "windows":
+        try {
+          runCommand("tar", ["-xf", outerZipPath, "-C", tempDir]);
+        } catch {
+          runCommand("powershell", [
+            "-NoProfile",
+            "-NonInteractive", 
+            "-Command",
+            `Expand-Archive -LiteralPath '${outerZipPath}' -DestinationPath '${tempDir}' -Force`
+          ]);
+        }
+        break;
+      case "darwin":
+      case "linux":
+        runCommand("unzip", ["-q", outerZipPath, "-d", tempDir]);
+        break;
+    }
+
+    // Find the inner zip file
+    let innerZipPath: string | null = null;
+    for (const entry of Deno.readDirSync(tempDir)) {
+      if (entry.name.endsWith('.zip')) {
+        innerZipPath = path.join(tempDir, entry.name);
+        break;
+      }
+    }
+
+    if (!innerZipPath) {
+      throw new Error("No inner zip file found in the extracted archive");
+    }
+
+    logger.info("Extracting inner zip...");
+    
+    // Extract inner zip to final destination
+    switch (PLATFORM) {
+      case "windows":
+        try {
+          runCommand("tar", ["-xf", innerZipPath, "-C", extractToDir]);
+        } catch {
+          runCommand("powershell", [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command", 
+            `Expand-Archive -LiteralPath '${innerZipPath}' -DestinationPath '${extractToDir}' -Force`
+          ]);
+        }
+        break;
+      case "darwin":
+      case "linux":
+        runCommand("unzip", ["-q", innerZipPath, "-d", extractToDir]);
+        break;
+    }
+
+    // Set proper permissions on Unix-like systems
+    if (PLATFORM !== "windows") {
+      try {
+        runCommand("chmod", ["-R", "755", extractToDir]);
+      } catch {
+        // Ignore chmod errors
+      }
+    }
+
+  } finally {
+    // Clean up temp directory
+    try {
+      Deno.removeSync(tempDir, { recursive: true });
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+}
+
 export async function decompressBin(): Promise<void> {
   const binArchive = getBinArchive();
+  const archivePath = path.resolve(binArchive.filename);
   logger.info(`Binary extraction started: ${binArchive.filename}`);
 
   if (!exists(binArchive.filename)) {
@@ -97,27 +179,53 @@ export async function decompressBin(): Promise<void> {
   }
 
   try {
-    switch (PLATFORM) {
-      case "windows":
-        logger.info("[stub] Windows extraction (Expand-Archive)");
-        break;
-      case "darwin":
-        logger.info("[stub] macOS extraction (hdiutil, xattr, etc.)");
-        break;
-      case "linux":
-        // Use runCommand which throws on failure
-        runCommand("tar", ["-xf", binArchive.filename, "-C", BIN_ROOT_DIR]);
-        runCommand("chmod", ["-R", "755", PATHS.bin_root]);
-        break;
-      default:
-        throw new Error(`Unsupported platform: ${PLATFORM}`);
+    // Handle nested zip extraction
+    if (binArchive.filename.endsWith('.zip')) {
+      await extractNestedZip(archivePath, BIN_ROOT_DIR);
+    } else {
+      // Handle other archive formats (DMG, tar.xz, etc.)
+      switch (PLATFORM) {
+        case "windows":
+          throw new Error("Non-zip archives not supported on Windows");
+          
+        case "darwin": {
+          logger.info("macOS extraction (hdiutil)");
+          const mountPoint = await Deno.makeTempDir({ prefix: "nora_dmg_mount_" });
+          try {
+            runCommand("hdiutil", ["attach", "-nobrowse", "-quiet", "-mountpoint", mountPoint, archivePath]);
+            runCommand("cp", ["-a", `${mountPoint}/.`, BIN_ROOT_DIR]);
+            try {
+              runCommand("xattr", ["-rc", BIN_ROOT_DIR]);
+            } catch {
+              // xattr might not be present; ignore
+            }
+            runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
+          } finally {
+            try {
+              runCommand("hdiutil", ["detach", "-quiet", mountPoint]);
+            } catch {
+              // ignore detach failures
+            }
+          }
+          break;
+        }
+        
+        case "linux": {
+          runCommand("tar", ["-xJf", archivePath, "-C", BIN_ROOT_DIR]);
+          runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
+          break;
+        }
+        
+        default:
+          throw new Error(`Unsupported platform: ${PLATFORM}`);
+      }
     }
-
+    
     Deno.writeTextFileSync(BIN_VERSION, VERSION);
     logger.success("Extraction complete!");
+    
   } catch (e: any) {
     logger.error(`Error during extraction: ${e?.message ?? e}`);
-    // match original behavior: exit with non-zero code
     Deno.exit(1);
   }
 }

@@ -1,0 +1,19 @@
+diff --git a/browser/modules/BrowserGlue.sys.mjs b/browser/modules/BrowserGlue.sys.mjs
+index bde641f7112ad..cfa5d771e6cb2 100644
+--- ./browser/modules/BrowserGlue.sys.mjs
++++ ./browser/modules/BrowserGlue.sys.mjs
+@@ -5,6 +5,14 @@
+ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
++/*@ NORA INJECT START @*/
++try {
++  ChromeUtils.importESModule("resource://noraneko/modules/NoranekoStartup.sys.mjs");
++} catch (e) {
++  console.error("Failed to import noraneko BrowserGlue.sys.mjs", e);
++}
++/*@ NORA INJECT END @*/
++
+ const lazy = {};
+
+ ChromeUtils.defineESModuleGetters(lazy, {
