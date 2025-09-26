@@ -23,14 +23,13 @@ interface SidebarAddonPanelServerFunctions {
 }
 
 interface SidebarAddonPanelClientFunctions {
-  requestDataUpdate(): Promise<any>;
-  requestPanelSelection(panelId: string): Promise<void>;
   registerSidebarIcon(options: {
     name: string;
     i18nName: string;
     iconUrl: string;
     birpcMethodName: string;
   }): Promise<void>;
+  onClicked(iconName: string): Promise<void>;
 }
 
 @noraComponent(import.meta.hot)
@@ -127,26 +126,6 @@ export default class SidebarAddonPanel extends NoraComponentBase {
   }
 
   // Public API methods for requesting data from sidebar core
-  public async requestDataUpdate(): Promise<any> {
-    if (this.rpc) {
-      return await this.rpc.requestDataUpdate();
-    }
-    return null;
-  }
-
-  public async requestConfigUpdate(): Promise<any> {
-    // Config updates are no longer networked via birpc
-    console.warn("SidebarAddonPanel: Config updates are no longer supported via birpc");
-    return null;
-  }
-
-  public async requestPanelSelection(panelId: string): Promise<void> {
-    if (this.rpc) {
-      await this.rpc.requestPanelSelection(panelId);
-    }
-  }
-
-  // Method to register sidebar icons with the core sidebar
   public async registerSidebarIcon(options: {
     name: string;
     i18nName: string;
@@ -155,6 +134,12 @@ export default class SidebarAddonPanel extends NoraComponentBase {
   }): Promise<void> {
     if (this.rpc) {
       await this.rpc.registerSidebarIcon(options);
+    }
+  }
+
+  public async onClicked(iconName: string): Promise<void> {
+    if (this.rpc) {
+      await this.rpc.onClicked(iconName);
     }
   }
 
@@ -188,12 +173,18 @@ export default class SidebarAddonPanel extends NoraComponentBase {
   // Example callback methods that would be triggered by sidebar icon activation
   public onNotesIconActivated(): void {
     console.debug("SidebarAddonPanel: Notes icon was activated");
-    // Handle notes panel activation
+    // Handle notes panel activation - this would be called via onClicked("notes")
   }
 
   public onBookmarksIconActivated(): void {
     console.debug("SidebarAddonPanel: Bookmarks icon was activated");
-    // Handle bookmarks panel activation  
+    // Handle bookmarks panel activation - this would be called via onClicked("bookmarks")
+  }
+
+  // Example method to demonstrate icon click handling
+  public async handleIconClick(iconName: string): Promise<void> {
+    console.debug(`SidebarAddonPanel: Handling click for icon: ${iconName}`);
+    await this.onClicked(iconName);
   }
 }
 

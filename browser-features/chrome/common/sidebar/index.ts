@@ -17,14 +17,13 @@ import {
 
 // Define communication interfaces for sidebar core
 interface SidebarServerFunctions {
-  requestDataUpdate(): Promise<any>;
-  requestPanelSelection(panelId: string): Promise<void>;
   registerSidebarIcon(options: {
     name: string;
     i18nName: string;
     iconUrl: string;
     birpcMethodName: string;
   }): Promise<void>;
+  onClicked(iconName: string): Promise<void>;
 }
 
 interface SidebarClientFunctions {
@@ -55,18 +54,6 @@ export default class Sidebar extends NoraComponentBase {
 
   private setupBirpcCommunication(): void {
     const serverFunctions: SidebarServerFunctions = {
-      requestDataUpdate: async (): Promise<any> => {
-        // Return current panel sidebar data
-        return panelSidebarData();
-      },
-      requestPanelSelection: async (panelId: string): Promise<void> => {
-        // Update selected panel
-        setSelectedPanelId(panelId);
-        // Notify addon panel about the change
-        if (this.addonPanelRpc) {
-          this.addonPanelRpc.onPanelSelectionChange(panelId);
-        }
-      },
       registerSidebarIcon: async (options: {
         name: string;
         i18nName: string;
@@ -93,6 +80,29 @@ export default class Sidebar extends NoraComponentBase {
         }
         
         console.debug(`Sidebar: Registered icon ${options.name} with callback ${options.birpcMethodName}`);
+      },
+      onClicked: async (iconName: string): Promise<void> => {
+        // Handle icon click events
+        const iconRegistration = this.registeredIcons.get(iconName);
+        if (iconRegistration && this.addonPanelRpc) {
+          // Trigger the registered callback method
+          const callbackMethod = (this.addonPanelRpc as any)[iconRegistration.birpcMethodName];
+          if (callbackMethod) {
+            callbackMethod();
+          }
+          
+          // Also notify via Services.obs
+          Services.obs.notifyObservers(
+            { 
+              iconName: iconName,
+              i18nName: iconRegistration.i18nName,
+              iconUrl: iconRegistration.iconUrl 
+            } as nsISupports,
+            "noraneko-sidebar-icon-clicked"
+          );
+        }
+        
+        console.debug(`Sidebar: Icon ${iconName} clicked`);
       },
     };
 
@@ -217,6 +227,12 @@ export default class Sidebar extends NoraComponentBase {
   }): Promise<void> {
     if (this.rpc) {
       await this.rpc.registerSidebarIcon(options);
+    }
+  }
+
+  public async onClicked(iconName: string): Promise<void> {
+    if (this.rpc) {
+      await this.rpc.onClicked(iconName);
     }
   }
 
