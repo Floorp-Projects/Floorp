@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
 import { createBirpc } from "birpc";
 import { ClientFunctions, ServerFunctions } from "../common/NRTestTypes";
 

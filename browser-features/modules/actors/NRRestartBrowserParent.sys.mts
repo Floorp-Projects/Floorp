@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
 export class NRRestartBrowserParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {

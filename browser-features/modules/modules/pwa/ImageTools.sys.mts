@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MPL-2.0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -51,17 +53,31 @@ export const ImageTools = {
 
   scaleImage(container: imgIContainer, width: number, height: number) {
     return new Promise((resolve, reject) => {
-      const stream = ImgTools.encodeScaledImage(
-        container,
-        "image/png",
-        width,
-        height,
-        "",
-      );
+      let stream: nsIInputStream;
+      try {
+        if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
+          stream = ImgTools.encodeImage(container, "image/png", "");
+        } else {
+          stream = ImgTools.encodeScaledImage(
+            container,
+            "image/png",
+            width,
+            height,
+            "",
+          );
+        }
+      } catch (_e) {
+        try {
+          stream = ImgTools.encodeImage(container, "image/png", "");
+        } catch (e2) {
+          reject(e2);
+          return;
+        }
+      }
 
       try {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        (stream as unknown as any).QueryInterface(Ci.nsIAsyncInputStream);
+        (stream as unknown as { QueryInterface: (iid: unknown) => unknown })
+          .QueryInterface(Ci.nsIAsyncInputStream);
       } catch (e) {
         reject(
           Components.Exception(
@@ -130,13 +146,27 @@ export const ImageTools = {
     }
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
-      const stream = ImgTools.encodeScaledImage(
-        container,
-        format,
-        width,
-        height,
-        "",
-      );
+      let stream: nsIInputStream;
+      try {
+        if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
+          stream = ImgTools.encodeImage(container, format, "");
+        } else {
+          stream = ImgTools.encodeScaledImage(
+            container,
+            format,
+            width,
+            height,
+            "",
+          );
+        }
+      } catch (_e) {
+        try {
+          stream = ImgTools.encodeImage(container, format, "");
+        } catch (e2) {
+          reject(e2);
+          return;
+        }
+      }
       NetUtil.asyncCopy(stream, output, (aStatus: number) => {
         if (Components.isSuccessCode(aStatus)) {
           resolve();

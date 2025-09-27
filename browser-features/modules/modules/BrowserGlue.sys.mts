@@ -1,12 +1,13 @@
-// SPDX-License-Identifier: MPL-2.0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
-// @ts-ignore
-import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
+const { ActorManagerParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ActorManagerParent.sys.mjs",
+);
 
 function localPathToResourceURI(path: string) {
-  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_\/]+)\.sys\.mts/);
+  const re = new RegExp(/\.\.\/([a-zA-Z0-9-_/]+)\.sys\.mts/);
   const result = re.exec(path);
   if (!result || result.length != 2) {
     throw Error(
@@ -20,26 +21,6 @@ function localPathToResourceURI(path: string) {
 const JS_WINDOW_ACTORS: {
   [k: string]: WindowActorOptions;
 } = {
-  //https://searchfox.org/mozilla-central/rev/3a34b4616994bd8d2b6ede2644afa62eaec817d1/browser/components/BrowserGlue.sys.mjs#310
-  NRAboutNewTab: {
-    child: {
-      esModuleURI: localPathToResourceURI(
-        "../actors/NRAboutNewTabChild.sys.mts",
-      ),
-
-      events: {
-        DOMContentLoaded: {},
-      },
-    },
-    // The wildcard on about:newtab is for the # parameter
-    // that is used for the newtab devtools. The wildcard for about:home
-    // is similar, and also allows for falling back to loading the
-    // about:home document dynamically if an attempt is made to load
-    // about:home?jscache from the AboutHomeStartupCache as a top-level
-    // load.
-    matches: ["about:home*", "about:welcome", "about:newtab*"],
-    remoteTypes: ["privilegedabout"],
-  },
   NRAboutPreferences: {
     child: {
       esModuleURI: localPathToResourceURI(
@@ -67,7 +48,23 @@ const JS_WINDOW_ACTORS: {
     //* port seems to not be supported
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/JSWindowActor.webidl#99
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
+  NRPanelSidebar: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPanelSidebarParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPanelSidebarChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
   NRTabManager: {
     parent: {
@@ -83,7 +80,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
   NRSyncManager: {
     parent: {
@@ -99,7 +96,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
   NRAppConstants: {
     parent: {
@@ -115,7 +112,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
   NRRestartBrowser: {
     parent: {
@@ -131,7 +128,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
   NRProgressiveWebApp: {
     parent: {
@@ -163,7 +160,123 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
+  NRChromeModal: {
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRChromeModalChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-modal-child/*"],
+  },
+  NRProfileManager: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProfileManagerParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRProfileManagerChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
+
+  NRStartPage: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRStartPageParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRStartPageChild.sys.mts"),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-newtab/*", "about:*"],
+  },
+
+  NRWelcomePage: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWelcomePageParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWelcomePageChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-welcome/*", "about:*"],
+  },
+
+  NRSearchEngine: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRSearchEngineParent.sys.mts",
+      ),
+    },
+
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRSearchEngineChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-welcome/*",
+      "chrome://noraneko-newtab/*",
+      "about:*",
+    ],
+  },
+
+  NRWebScraper: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebScraperChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["http://*/*", "https://*/*", "about:*"],
+    allFrames: true,
+  },
+  NRBrowserOS: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRBrowserOSParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRBrowserOSChild.sys.mts"),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["http://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
 };
 

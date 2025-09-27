@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "../../../../main/core/common/pwa/type.ts";
 
@@ -67,7 +67,11 @@ export class SsbRunnerUtils {
   }
 }
 
-async function startSSBFromCmdLine(id: string) {
+async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
+  if (initialLaunch) {
+    return;
+  }
+
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
@@ -85,7 +89,7 @@ async function startSSBFromCmdLine(id: string) {
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         const ssb = value as Manifest;
-        const win = SsbRunnerUtils.openSsbWindow(ssb, true);
+        const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
         await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
         break;
       }
@@ -100,10 +104,13 @@ export class SSBCommandLineHandler {
     "nsICommandLineHandler",
   ]) as TQueryInterface;
 
+  private isInitialized = false;
+
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
-      startSSBFromCmdLine(id);
+      startSSBFromCmdLine(id, !this.isInitialized);
+      this.isInitialized = true;
       cmdLine.preventDefault = true;
     }
   }

@@ -1,0 +1,195 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.tab-background {
+  &:is([selected], [multiselected]) {
+    background: var(--toolbar-bgcolor);
+  }
+}
+
+#bsb-context-add,
+#bsb-context-link-add {
+  --menuitem-image: url("chrome://floorp/skin/designs/lepton/movetowindow-16.svg");
+}
+
+#undo-closed-tab {
+  list-style-image: url("chrome://global/skin/icons/undo.svg");
+}
+
+#sidebar-reverse-position-toolbar {
+  list-style-image: url("chrome://floorp/skin/icons/verticaltab.svg");
+}
+
+:root[lwt-default-theme-in-dark-mode="true"] #tabbrowser-tabpanels,
+:root[style*="--lwt-accent-color: rgb(28, 27, 34)"]
+  #tabbrowser-tabpanels[flex] {
+  background: var(--toolbar-bgcolor) !important;
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+#panel-sidebar-box,
+#panel-sidebar-splitter,
+#panel-sidebar-splitter-box {
+  :root[inFullscreen]:not([macOSNativeFullscreen])
+    &:not([fullscreentoolbar="true"]) {
+    visibility: collapse !important;
+  }
+}
+
+#tabbrowser-tabbox[flex],
+#tabbrowser-tabpanels,
+browser[type="content-primary"],
+browser[type="content"] > html {
+  background: var(--toolbar-bgcolor) !important;
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+#tabbrowser-tabbox {
+  background: var(--toolbar-bgcolor) !important;
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+#fxa-toolbar-menu-button {
+  display: inherit !important;
+}
+
+:root[privatebrowsingmode] #fxa-toolbar-menu-button {
+  display: inherit !important;
+  background: linear-gradient(90deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
+  margin: auto;
+  color: var(--toolbar-bgcolor) !important;
+  fill: currentColor !important;
+  border-radius: 15px;
+  max-height: 25px;
+}
+
+:root[privatebrowsingmode] .private-text {
+  display: -moz-box !important;
+  font-size: 12px !important;
+  font-weight: bold;
+  margin: auto;
+  padding-right: 10px !important;
+}
+
+:root:not([privatebrowsingmode]) .private-text {
+  display: none !important;
+}
+
+:root[privatebrowsingmode] #fxa-avatar-image {
+  list-style-image: url("chrome://branding/content/about-logo-private.png") !important;
+  scale: 1.2;
+}
+
+:root[privatebrowsingmode] #fxa-toolbar-menu-button:hover {
+  background: var(--panel-separator-zap-gradient) !important;
+  background-color: var(--panel-separator-zap-gradient) !important;
+  filter: brightness(70%);
+}
+
+:root[privatebrowsingmode] #fxa-toolbar-menu-button:active,
+:root[privatebrowsingmode] #fxa-toolbar-menu-button:is([open], [checked]) {
+  background: var(--panel-separator-zap-gradient) !important;
+  background-color: var(--panel-separator-zap-gradient) !important;
+  filter: brightness(50%);
+}
+
+:root[privatebrowsingmode]
+  #fxa-toolbar-menu-button:hover
+  > .toolbarbutton-badge-stack,
+:root[privatebrowsingmode]
+  #fxa-toolbar-menu-button:not([disabled="true"]):is(
+    [open],
+    [checked],
+    :hover:active
+  )
+  > .toolbarbutton-badge-stack {
+  background-color: inherit !important;
+  filter: brightness(50%);
+}
+
+#statusBar:-moz-lwtheme {
+  background-color: var(--lwt-accent-color-inactive, var(--toolbar-bgcolor));
+}
+
+#statusBar {
+  background-color: var(--toolbar-bgcolor);
+  > #status-text {
+    justify-content: center !important;
+    > * {
+      border: none !important;
+    }
+  }
+}
+
+#private-browsing-indicator-with-label {
+  display: none !important;
+}
+
+#customizableui-special-spring1,
+#customizableui-special-spring2,
+#wrapper-customizableui-special-spring1,
+#wrapper-customizableui-special-spring2 {
+  display: none !important;
+}
+
+:root[inDOMFullscreen] :is(.browserContainer) > .browserStack > *,
+:root[inFullscreen]:not([macOSNativeFullscreen])
+  :is(.browserContainer)
+  > .browserStack
+  > * {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+:root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabbox[flex],
+:root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabpanels[flex] {
+  clip-path: inset(0px 0px 0px round 0 0) !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+:root[inFullscreen]:not([macOSNativeFullscreen]) .browser-sidebar2[style] {
+  border: none !important;
+}
+
+/* Floorp View Tab */
+.tabbrowser-tab[label="Floorp View"] {
+  display: none;
+}
+
+/* Hide Firefox Icon for against localization override */
+#identity-icon-label[value="Firefox"] {
+  display: none !important;
+}
+
+/* Tailwind CSS Overrides */
+@layer base {
+  dialog,
+  #fullscreen-warning {
+    margin: auto !important;
+  }
+}
+
+#tabbrowser-tabbox {
+  outline: none !important;
+
+  & * {
+    outline: none !important;
+  }
+}
+
+/* hidden="false" の場合は非表示にしない */
+@layer base {
+  :root [hidden][hidden="false"]:not([hidden="until-found"]) {
+    display: flex !important;
+  }
+}
+
+notification-message[message-bar-type="infobar"] {
+  --info-bar-text-color: var(--lwt-text-color, #222) !important;
+}
+
+:root[sizemode="fullscreen"]:not([inDOMFullscreen="true"]) #nav-bar {
+  display: none !important;
+}

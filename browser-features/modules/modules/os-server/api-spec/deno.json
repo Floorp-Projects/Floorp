@@ -1,0 +1,49 @@
+{
+    "name": "@floorp/os-server-api-spec",
+    "version": "1.0.0",
+    "exports": {
+        ".": "./types.ts",
+        "./openapi": "./openapi.yaml"
+    },
+    "tasks": {
+        "validate": "deno run --allow-read npm:swagger-codegen@3.0.0 validate -i openapi.yaml",
+        "generate-typescript": "deno run --allow-read --allow-write --allow-net npm:@openapitools/openapi-generator-cli@2.7.0 generate -i openapi.yaml -g typescript-fetch -o ./generated/typescript",
+        "build": "deno run --allow-read --allow-write npm:typescript@5.0.0/tsc types.ts --declaration --outDir dist",
+        "lint-spec": "deno run --allow-read npm:@stoplight/spectral-cli@6.11.0 lint openapi.yaml",
+        "docs": "deno run --allow-read --allow-write npm:redoc-cli@0.13.21 build openapi.yaml --output docs/index.html",
+        "check": "deno check types.ts",
+        "fmt": "deno fmt",
+        "lint": "deno lint"
+    },
+    "imports": {
+        "@std/fs": "jsr:@std/fs@^1.0.0",
+        "@std/path": "jsr:@std/path@^1.0.0"
+    },
+    "compilerOptions": {
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "es2022"
+        ],
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true
+    },
+    "fmt": {
+        "useTabs": false,
+        "lineWidth": 80,
+        "indentWidth": 2,
+        "semiColons": true,
+        "singleQuote": false,
+        "proseWrap": "preserve"
+    },
+    "lint": {
+        "rules": {
+            "tags": [
+                "recommended"
+            ]
+        }
+    }
+}

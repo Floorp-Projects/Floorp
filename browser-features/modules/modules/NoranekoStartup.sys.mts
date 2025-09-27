@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
 /**
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,6 +52,15 @@ export function onFinalUIStartup(): void {
   createDefaultUserChromeFiles().catch((error) => {
     console.error("Failed to create default userChrome files:", error);
   });
+
+  // int OS Modules
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-apis/OSGlue.sys.mjs",
+  );
+  // Localhost OS server (self-controlled by prefs)
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-server/server.sys.mjs",
+  );
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
@@ -152,7 +157,10 @@ async function checkNewtabUserPreference(): Promise<boolean> {
     return false;
   }
 
-  const result = Services.prefs.getStringPref("floorp.design.configs");
+  const result = Services.prefs.getStringPref(
+    "floorp.design.configs",
+    undefined,
+  );
 
   if (!result) {
     return true;
@@ -206,8 +214,12 @@ class CustomAboutPage {
   }
 
   getURIFlags(_uri: nsIURI): number {
+    if (!this.uri) {
+      throw new Error("URI is not defined");
+    }
+
     return (
-      Ci.nsIAboutModule.ALLOW_SCRIPT! | Ci.nsIAboutModule.IS_SECURE_CHROME_UI!
+      Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI
     );
   }
 
@@ -223,16 +235,30 @@ async function registerCustomAboutPages(): Promise<void> {
 
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
-      createInstance(aIID: nsIID): any {
+      createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
         return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
-          aIID,
+          iid,
         );
       },
     };
 
-    const registrar = Components.manager.QueryInterface!(
-      Ci.nsIComponentRegistrar,
-    );
+    let registrar: nsIComponentRegistrar | null = null;
+    const cm = Components.manager;
+    if (cm !== undefined && cm !== null) {
+      registrar = cm as unknown as nsIComponentRegistrar;
+      // Some environments require explicit QI; do it when available.
+      try {
+        const maybeQI = (
+          cm as unknown as { QueryInterface?: (iid: nsIID) => unknown }
+        ).QueryInterface;
+        if (typeof maybeQI === "function") {
+          // @ts-ignore: Gecko Components.manager supports QueryInterface at runtime
+          registrar = cm.QueryInterface(Ci.nsIComponentRegistrar);
+        }
+      } catch (e) {
+        console.error("Failed to get nsIComponentRegistrar:", e);
+      }
+    }
     if (!registrar) {
       console.error("Failed to get nsIComponentRegistrar");
       continue;
@@ -246,11 +272,11 @@ async function registerCustomAboutPages(): Promise<void> {
   }
 }
 
-initializeVersionInfo();
 (async () => {
+  await registerCustomAboutPages();
+  initializeVersionInfo();
   await setupNoranekoNewTab();
 })().catch(console.error);
-registerCustomAboutPages();
 
 if (isMainBrowser) {
   Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");

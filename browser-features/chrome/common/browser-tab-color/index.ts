@@ -1,12 +1,13 @@
-// SPDX-License-Identifier: MPL-2.0
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { onCleanup } from "@nora/solid-xul";
-import { TabColorManager } from "./tabcolor-manager.tsx";
+import { createEffect } from "solid-js";
+import { TabColorManager } from "./tabcolor-manager";
 import chroma from "chroma-js";
-import {
-  noraComponent,
-  NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 const { ManifestObtainer } = ChromeUtils.importESModule(
   "resource://gre/modules/ManifestObtainer.sys.mjs",
 );
@@ -24,14 +25,23 @@ export default class BrowserTabColor extends NoraComponentBase {
     } satisfies Pick<nsIWebProgressListener, "onLocationChange">;
 
     manager = new TabColorManager();
-    window.gBrowser.addTabsProgressListener(listener);
-    window.gBrowser.tabContainer.addEventListener(
+    globalThis.gBrowser.addTabsProgressListener(listener);
+    globalThis.gBrowser.tabContainer.addEventListener(
       "TabSelect",
       this.changeTabColor,
     );
+
+    createEffect(() => {
+      if (manager.enableTabColor()) {
+        this.changeTabColor();
+      } else {
+        document?.getElementById("floorp-toolbar-bgcolor")?.remove();
+      }
+    });
+
     onCleanup(() => {
-      window.gBrowser.removeTabsProgressListener(listener);
-      window.gBrowser.tabContainer.removeEventListener(
+      globalThis.gBrowser.removeTabsProgressListener(listener);
+      globalThis.gBrowser.tabContainer.removeEventListener(
         "TabSelect",
         this.changeTabColor,
       );
@@ -40,10 +50,7 @@ export default class BrowserTabColor extends NoraComponentBase {
   }
 
   changeTabColor() {
-    console.log(manager.enableTabColor());
-    if (!manager.enableTabColor()) {
-      return;
-    }
+    if (!manager.enableTabColor()) return;
     getManifest().then((res) => {
       document?.getElementById("floorp-toolbar-bgcolor")?.remove();
       if (res != null) {

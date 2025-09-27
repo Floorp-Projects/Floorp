@@ -1,0 +1,113 @@
+/* タッチUIモードでのパディング調整 */
+:root[uidensity="touch"] #PersonalToolbar .bookmark-item,
+:root[uidensity="touch"] #OtherBookmarks,
+:root[uidensity="touch"] #PersonalToolbar > #import-button {
+  padding-block: 7px !important;
+}
+
+/* コンパクトUIモードでのパディング調整 */
+:root[uidensity="compact"] #PersonalToolbar {
+  --toolbarbutton-outer-padding: 1px !important;
+}
+
+/* ==========================================
+ * メインスタイル定義
+ * ========================================== */
+
+/* ブックマークバーの基本設定 */
+#PersonalToolbar:not([customizing]) {
+  position: relative;
+  margin-bottom: calc(-1px - 20px - 2 * 4px); /* -1px - height - 2*padding */
+  transform: rotateX(90deg);
+  transform-origin: top;
+  transition: transform 135ms linear 600ms !important;
+  z-index: 1;
+
+  /* 透明テーマ対応の背景設定 */
+  background-color: transparent !important;
+  background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
+
+  /* 背景位置の計算（メニューバー有効時は位置がずれる可能性あり） */
+  --uc-bg-y: calc(
+    -2 * (
+        var(--tab-block-margin) + var(--toolbarbutton-inner-padding) +
+          var(--toolbarbutton-outer-padding)
+      ) - var(--tab-min-height) - 24px - var(--bookmark-block-padding)
+  );
+
+  background-position: top left, top left,
+    var(--lwt-background-alignment, top left);
+  background-position-y: top, top, var(--uc-bg-y), var(--uc-bg-y),
+    var(--uc-bg-y);
+  background-image: var(
+      --toolbar-bgimage,
+      linear-gradient(transparent, transparent)
+    ),
+    linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)),
+    var(--lwt-header-image, var(--lwt-additional-images)) !important;
+}
+
+/* ==========================================
+ * 垂直タブモード対応
+ * ========================================== */
+
+/* 注意: -moz-bool-pref は実験的な機能です */
+@media (-moz-bool-pref: "sidebar.verticalTabs") {
+  #PersonalToolbar {
+    --toolbar-bgcolor: transparent;
+  }
+
+  #PersonalToolbar:not([customizing]) {
+    background-color: inherit !important;
+    margin-bottom: calc(0px - 20px - 2 * 4px); /* 0px - height - 2*padding */
+
+    /* 垂直タブモード用の背景位置調整 */
+    --uc-bg-y: calc(
+      0px -
+        (
+          2 * var(--toolbarbutton-inner-padding) +
+            var(--toolbarbutton-outer-padding)
+        ) - 27px - var(--bookmark-block-padding)
+    );
+  }
+}
+
+/* ==========================================
+ * ブックマーク項目のスタイル
+ * ========================================== */
+
+#PlacesToolbarItems > .bookmark-item,
+#OtherBookmarks,
+#PersonalToolbar > #import-button {
+  padding-block: 4px !important;
+}
+
+/* ==========================================
+ * インタラクション時の表示制御
+ * ========================================== */
+
+/* ナビゲーションバーにフォーカスがある時 */
+#nav-bar:focus-within + #PersonalToolbar {
+  transition-delay: 100ms !important;
+  transform: rotateX(0deg); /* 表示 */
+}
+
+/* ツールボックスホバー時の設定 */
+#navigator-toolbox:is(:hover, :focus-within) {
+  border-bottom-color: transparent !important;
+}
+
+#navigator-toolbox:hover > #PersonalToolbar {
+  transition-delay: 100ms !important;
+  transform: rotateX(0deg); /* 表示 */
+}
+
+/* ナビゲーションバーにフォーカスがあり、かつツールボックスホバー時 */
+#navigator-toolbox:hover > #nav-bar:focus-within + #PersonalToolbar {
+  transform: rotateX(0);
+}
+
+/* z-indexの設定 */
+#navigator-toolbox {
+  --browser-area-z-index-toolbox: 4;
+}

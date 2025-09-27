@@ -1,24 +1,27 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
 import { createBirpc } from "birpc";
-import {
+import type {
   NRSettingsParentFunctions,
   PrefGetParams,
   PrefSetParams,
 } from "../common/defines.ts";
 
 export class NRSettingsChild extends JSWindowActorChild {
-  rpc;
+  rpc: ReturnType<typeof createBirpc> | null = null;
   constructor() {
     super();
   }
   actorCreated() {
     console.debug("NRSettingsChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRSettingsChild 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.port === "5186" ||
+      window?.location.port === "5187" ||
+      window?.location.port === "5188" ||
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
+    ) {
+      console.debug("NRSettingsChild 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRSPing.bind(this), window, {
         defineAs: "NRSPing",
       });

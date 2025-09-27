@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: MPL-2.0
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect, createSignal, onCleanup } from "solid-js";
 import type {} from "solid-styled-jsx";
@@ -48,7 +51,6 @@ export class StatusBarManager {
     window.CustomizableUI.registerToolbarNode(
       document.getElementById("nora-statusbar"),
     );
-    window.CustomizableUI.addWidgetToArea("zoom-controls", "nora-statusbar", 1);
 
     //move elem to bottom of window
     document

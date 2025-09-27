@@ -1,10 +1,17 @@
-// SPDX-License-Identifier: MPL-2.0
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSignal } from "solid-js";
 import { Show } from "solid-js";
+import { createRootHMR } from "@nora/solid-xul";
 import shareModeStyle from "./share-mode.css?inline";
 
-export const [shareModeEnabled, setShareModeEnabled] = createSignal(false);
+export const [shareModeEnabled, setShareModeEnabled] = createRootHMR(
+  () => createSignal(false),
+  import.meta.hot,
+);
 export function ShareModeElement() {
   return (
     <>

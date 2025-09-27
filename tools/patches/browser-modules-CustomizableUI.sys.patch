@@ -1,7 +1,7 @@
-diff --git a/browser/modules/CustomizableUI.sys.mjs b/browser/modules/CustomizableUI.sys.mjs
+diff --git a/moz-src/browser/components/customizableui/CustomizableUI.sys.mjs b/moz-src/browser/components/customizableui/CustomizableUI.sys.mjs
 index 9392b42..8256216 100644
---- ./browser/modules/CustomizableUI.sys.mjs
-+++ ./browser/modules/CustomizableUI.sys.mjs
+--- ./moz-src/browser/components/customizableui/CustomizableUI.sys.mjs
++++ ./moz-src/browser/components/customizableui/CustomizableUI.sys.mjs
 @@ -1707,11 +1707,23 @@ var CustomizableUIInternal = {
  
      // Now register all the toolbars

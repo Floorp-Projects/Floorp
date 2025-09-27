@@ -1,14 +1,18 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class NRSyncManagerChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRSyncManagerChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRSyncManager 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
+    ) {
+      console.debug("NRSyncManager 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRGetAccountInfo.bind(this), window, {
         defineAs: "NRGetAccountInfo",
       });

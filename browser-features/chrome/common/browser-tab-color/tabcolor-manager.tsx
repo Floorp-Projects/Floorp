@@ -1,47 +1,32 @@
-// SPDX-License-Identifier: MPL-2.0
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import type {} from "solid-styled-jsx";
+import { config } from "#features-chrome/common/designs/configs.ts";
 
 export class TabColorManager {
-  _enableTabColor = createSignal(
-    Services.prefs.getBoolPref("noraneko.tabcolor.enable", true),
-  );
+  _enableTabColor = createSignal(config().globalConfigs.faviconColor);
   enableTabColor = this._enableTabColor[0];
   setEnableTabColor = this._enableTabColor[1];
+
   constructor() {
-    //? this effect will not called when pref is changed to same value.
-    Services.prefs.addObserver(
-      "noraneko.tabcolor.enable",
-      this.observerTabcolorPref,
-    );
-    onCleanup(() => {
-      Services.prefs.removeObserver(
-        "noraneko.tabcolor.enable",
-        this.observerTabcolorPref,
-      );
-    });
-    if (!window.gFloorp) {
-      window.gFloorp = {};
+    if (!globalThis.gFloorp) {
+      globalThis.gFloorp = {};
     }
-    window.gFloorp.tabColor = {
+    globalThis.gFloorp.tabColor = {
       setEnable: this.setEnableTabColor,
     };
   }
 
   init() {
     createEffect(() => {
-      Services.prefs.setBoolPref(
-        "noraneko.tabcolor.enable",
-        this.enableTabColor(),
-      );
+      const currentConfig = config();
+      if (currentConfig.globalConfigs.faviconColor !== this.enableTabColor()) {
+        this.setEnableTabColor(currentConfig.globalConfigs.faviconColor);
+      }
     });
   }
-
-  //if we use just method, `this` will be broken
-  private observerTabcolorPref = () => {
-    this.setEnableTabColor((_prev) => {
-      return Services.prefs.getBoolPref("noraneko.tabcolor.enable");
-    });
-  };
 }

@@ -1,13 +1,13 @@
-// SPDX-License-Identifier: MPL-2.0
-
-
-
 export class NRRestartBrowserChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRRestartBrowserChild created!");
     const window = this.contentWindow;
-    if (window?.location.port === "5183") {
-      console.debug("NRRestartBrowser 5183!");
+    if (
+      window?.location.port === "5183" ||
+      window?.location.href.startsWith("chrome://") ||
+      window?.location.href.startsWith("about:")
+    ) {
+      console.debug("NRRestartBrowser 5183 ! or Chrome Page!");
       Cu.exportFunction(this.NRRestartBrowser.bind(this), window, {
         defineAs: "NRRestartBrowser",
       });

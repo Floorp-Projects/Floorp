@@ -1,7 +1,10 @@
-// SPDX-License-Identifier: MPL-2.0
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { manager } from "./index.ts";
-import statusbarStyle from "./statusbar.css?inline";
+import { manager } from "./";
+import statusbarUtilsStyle from "./statusbar-utils.css?inline";
 
 export function StatusBarElem() {
   return (
@@ -10,10 +13,8 @@ export function StatusBarElem() {
         id="nora-statusbar"
         toolbarname="Status bar"
         customizable="true"
-        style="border-top: 1px solid var(--chrome-content-separator-color)"
-        class={`nora-statusbar browser-toolbar ${
-          manager.showStatusBar() ? "" : "collapsed"
-        }`}
+        class={`border-t border-[var(--chrome-content-separator-color)] ${manager.showStatusBar() ? "flex items-center" : "hidden"
+          } browser-toolbar w-full !bg-[var(--panel-sidebar-background-color)]`}
         mode="icons"
         context="toolbar-context-menu"
         accesskey="A"
@@ -22,11 +23,11 @@ export function StatusBarElem() {
           id="status-text"
           align="center"
           flex="1"
-          class="statusbar-padding"
+          class="px-2 overflow-hidden"
         />
       </xul:toolbar>
-      <style class="nora-statusbar" jsx>
-        {statusbarStyle}
+      <style class="nora-statusbar-utils" jsx>
+        {statusbarUtilsStyle}
       </style>
     </>
   );
