@@ -1,0 +1,53 @@
+{
+    "title": "Início do Floorp",
+    "topSites": {
+        "addSite": "Adicionar site",
+        "addNewSite": "Adicionar um novo site",
+        "url": "URL",
+        "label": "Etiqueta",
+        "cancel": "Cancelar",
+        "add": "Adicionar",
+        "close": "Fechar",
+        "labelPlaceholder": "Nome do site",
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "block": "Block",
+        "blockTitle": "Block \"{{title}}\"?",
+        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+        "invalidUrl": "Invalid URL"
+    },
+    "settings": {
+        "newTabSettings": "Definições do novo separador",
+        "displayComponents": "Componentes do ecrã",
+        "topSites": "Principais sites",
+        "clock": "Relógio",
+        "searchBar": "Barra de pesquisa",
+        "backgroundSettings": "Definições de fundo",
+        "noBackground": "Sem fundo",
+        "randomImage": "Imagem aleatória",
+        "customImage": "Imagem personalizada",
+        "folderImages": "Imagens da pasta",
+        "floorpImages": "Imagens de Floorp",
+        "currentImage": "Imagem atual:",
+        "imageRecommendation": "Recomendado: 1920x1080 ou superior",
+        "currentFolder": "Pasta atual:",
+        "selectFolder": "Selecionar pasta",
+        "selected": "Selecionado",
+        "enableSlideshow": "Ativar apresentação de diapositivos",
+        "slideshowInterval": "Intervalo de apresentação de diapositivos",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+        "restartRequired": "Requires browser restart to take full effect."
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "Pesquisar ou introduzir URL",
+        "loadingSearchEngines": "A carregar motores de busca..."
+    },
+    "settingsButton": {
+        "settings": "Definições"
+    },
+    "modal": {
+        "close": "Fechar"
+    }
+}

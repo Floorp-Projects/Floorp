@@ -30,7 +30,6 @@ for (const path in _meta) {
   )["fallback-language"] as string;
 }
 
-
 export function initI18N(namespace: string[], defaultNamespace: string) {
   i18next.init({
     lng: "en-US",
@@ -39,6 +38,12 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
     defaultNS: defaultNamespace,
     ns: namespace,
     fallbackLng,
+    interpolation: {
+      escapeValue: false,
+      defaultVariables: {
+        productName: "Floorp",
+      },
+    },
   });
 }
 const [lang, setLang] = createRootHMR(

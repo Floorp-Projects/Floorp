@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: lofi --default, business --prefersdark;
+}
+
+/* DaisyUIプラグイン */
+@layer base {
+  :root {
+    --link-text-color: #007aff;
+  }
+}
+
+/* DaisyUIのテーマ設定 */
+@layer theme {
+  :root {
+    --theme: lofi;
+  }
+  :root[data-theme="dark"] {
+    --theme: business;
+  }
+}

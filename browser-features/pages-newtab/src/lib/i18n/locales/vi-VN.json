@@ -1,0 +1,53 @@
+{
+    "title": "Trang bắt đầu Floorp",
+    "topSites": {
+        "addSite": "Thêm trang",
+        "addNewSite": "Thêm trang mới",
+        "url": "Địa chỉ trang",
+        "label": "Tên",
+        "cancel": "Hủy",
+        "add": "Thêm",
+        "close": "Đóng",
+        "labelPlaceholder": "Tên trang",
+        "pin": "Ghim",
+        "unpin": "Bỏ ghim",
+        "block": "Chặn",
+        "blockTitle": "Block \"{{title}}\"?",
+        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+        "invalidUrl": "Invalid URL"
+    },
+    "settings": {
+        "newTabSettings": "Cài đặt thẻ mới",
+        "displayComponents": "Các thành phần hiển thị",
+        "topSites": "Những trang thường dùng",
+        "clock": "Đồng hồ",
+        "searchBar": "Thanh tìm kiếm",
+        "backgroundSettings": "Cài đặt nền",
+        "noBackground": "Không có nền",
+        "randomImage": "Ảnh ngẫu nhiên",
+        "customImage": "Ảnh tùy chọn",
+        "folderImages": "Ảnh từ thư mục",
+        "floorpImages": "Ảnh của Floorp",
+        "currentImage": "Current image:",
+        "imageRecommendation": "Recommended: 1920x1080 or higher",
+        "currentFolder": "Current folder:",
+        "selectFolder": "Chọn thư mục",
+        "selected": "Đã chọn",
+        "enableSlideshow": "Bật trình chiếu",
+        "slideshowInterval": "Slideshow Interval",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+        "restartRequired": "Requires browser restart to take full effect."
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "Tìm kiếm hoặc nhập địa chỉ",
+        "loadingSearchEngines": "Đang tải các công cụ tìm kiếm..."
+    },
+    "settingsButton": {
+        "settings": "Cài đặt"
+    },
+    "modal": {
+        "close": "Đóng"
+    }
+}

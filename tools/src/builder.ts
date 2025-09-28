@@ -102,6 +102,79 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
       ],
       path.join(PROJECT_ROOT, "bridge/loader-features"),
     ],
+
+    // Converted app builds
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-newtab/content",
+      ],
+      path.join(PROJECT_ROOT, "browser-features/pages-newtab"),
+    ],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-settings/content",
+      ],
+      path.join(PROJECT_ROOT, "src/apps/settings"),
+    ],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-welcome/content",
+      ],
+      path.join(PROJECT_ROOT, "src/apps/welcome"),
+    ],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-notes/content",
+      ],
+      path.join(PROJECT_ROOT, "src/apps/notes"),
+    ],
+    [
+      [
+        "deno",
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-modal-child/content",
+      ],
+      path.join(PROJECT_ROOT, "src/apps/modal-child"),
+    ],
+
     [
       [
         "deno",

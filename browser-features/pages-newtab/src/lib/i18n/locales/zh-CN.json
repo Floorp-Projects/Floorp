@@ -1,0 +1,53 @@
+{
+    "title": "Floorp 起始页",
+    "topSites": {
+        "addSite": "添加站点",
+        "addNewSite": "添加新站点",
+        "url": "网址链接",
+        "label": "标签",
+        "cancel": "取消",
+        "add": "添加",
+        "close": "关闭",
+        "labelPlaceholder": "网站名称",
+        "pin": "置顶",
+        "unpin": "取消置顶",
+        "block": "阻止",
+        "blockTitle": "阻止 “{{title}}”？",
+        "blockConfirm": "此网站将从您的“热门网站”中删除，并不再建议。您可以在设置中管理被阻止的网站。",
+        "invalidUrl": "链接无效"
+    },
+    "settings": {
+        "newTabSettings": "新标签设置",
+        "displayComponents": "显示组件",
+        "topSites": "常用网站",
+        "clock": "时钟",
+        "searchBar": "搜索栏",
+        "backgroundSettings": "背景设置",
+        "noBackground": "无背景",
+        "randomImage": "随机图片",
+        "customImage": "自定义图片",
+        "folderImages": "文件夹中的图片",
+        "floorpImages": "Floorp 内置图片",
+        "currentImage": "当前图片：",
+        "imageRecommendation": "建议使用 1920x1080 或更大的图像",
+        "currentFolder": "当前文件夹：",
+        "selectFolder": "选择文件夹",
+        "selected": "已选择",
+        "enableSlideshow": "启用幻灯片",
+        "slideshowInterval": "幻灯片间隔",
+        "floorpStart": "Floorp 启动",
+        "disableFloorpStart": "禁用 Floorp 启动（使用经典 关于：新标签页）",
+        "disableFloorpStartDescription": "启用时，Floorp 启动将由经典的 Firefox 新标签页 所取代 。",
+        "restartRequired": "需要重启浏览器才能完全生效。"
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "搜索或输入网址",
+        "loadingSearchEngines": "正在加载搜索引擎……"
+    },
+    "settingsButton": {
+        "settings": "设置"
+    },
+    "modal": {
+        "close": "关闭"
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "description": "This file contains the list of translation targets. I will used by f18n repository GitHub Actions.",
+  "source_file": "en-US.json",
+  "targets": [
+  
+    {
+      "source_path": "browser-features/pages-settings/src/lib/i18n/locales",
+      "f18n_path": "settings/"
+    },
+    {
+      "source_path": "browser-features/pages-newtab/src/lib/i18n/locales",
+      "f18n_path": "newtab/"
+    },
+    {
+      "source_path": "browser-features/pages-welcome/src/lib/i18n/locales",
+      "f18n_path": "welcome/"
+    },
+    {
+      "source_path": "src/installers/stub-win64-installer/src/lib/i18n/locales",
+      "f18n_path": "stub-win64-installer/"
+    }
+  ]
+}

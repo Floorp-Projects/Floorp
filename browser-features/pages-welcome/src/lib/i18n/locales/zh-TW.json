@@ -1,0 +1,169 @@
+{
+    "navigation": {
+        "welcome": "歡迎！",
+        "language": "語言",
+        "languageSupport": "語言支援",
+        "features": "功能",
+        "featureIntroduction": "功能介紹",
+        "hub": "Floorp Hub",
+        "hubIntro": "關於 Floorp Hub",
+        "customize": "客製化",
+        "initialSettings": "初始設定",
+        "complete": "完成",
+        "previous": "前一頁",
+        "next": "下一頁"
+    },
+    "hubPage": {
+        "title": "關於 Floorp Hub",
+        "subtitle": "集合 Floorp 專有設定的中心。",
+        "sectionTitle": "Floorp Hub",
+        "description": "Floorp Hub 是一個集合 Floorp 專有設定選項的設定中心。您可以通過在位址欄上鍵入 'about:hub' 開啟。您也可以從 Firefox 設定頁面 'about:preferences' 內左側點選進入。",
+        "openHub": "開啟 about:hub",
+        "openPreferences": "開啟設定 (about:preferences)",
+        "tip": "提示：你也可以從 Firefox 設定側邊欄存取 Floorp Hub。",
+        "features": {
+            "dedicated": "Floorp 專用設定中心",
+            "accessible": "可從 about:hub 或 Firefox 設定存取",
+            "centralized": "將所有 Floorp 專用設定集中於一處"
+        }
+    },
+    "customize": {
+        "title": "客製化 Floorp",
+        "description": "客製化為您喜好的設定。今後您也可以在 Floorp Hub 或設定頁面再次變更設定。",
+        "appearance": {
+            "title": "外觀設定",
+            "description": "您可以依照自己喜好客製化 Floorp 的外觀。選擇亮色或是暗色的佈景主題，或根據您的系統設定自動切換。"
+        },
+        "themes": {
+            "light": "亮色",
+            "dark": "暗色",
+            "system": "遵循系統設定"
+        },
+        "themeInfo": {
+            "light": "亮色佈景主题",
+            "dark": "暗色佈景主題",
+            "system": "系統設定"
+        },
+        "searchEngine": {
+            "title": "預設搜尋引擎",
+            "default": "預設",
+            "search": "搜尋",
+            "noEnginesFound": "未找到搜尋引擎。"
+        },
+        "floorpHub": {
+            "title": "Floorp Hub",
+            "description": "Floorp Hub 是一個集合 Floorp 專有設定選項的設定中心。您可以通過在位址欄上鍵入 'about:hub' 開啟。您也可以從 Firefox 設定頁面 'about:preferences' 內左側點選進入。",
+            "openHub": "開啟 about:hub",
+            "openPreferences": "開啟設定 (about:preferences)"
+        }
+    },
+    "finish": {
+        "title": "設定完成！",
+        "subtitle": "恭喜！您已完成 Floorp 設定。享受舒適安全的網路瀏覽體驗。",
+        "nextSteps": {
+            "title": "下一步 (可選)",
+            "setDefault": "設定為預設瀏覽器",
+            "documentation": "文檔"
+        },
+        "getStarted": "開始使用 Floorp",
+        "hint": "如需更詳細的設定，您可以透過右上方選單按鈕中的設定選項進行調整。"
+    },
+    "welcomePage": {
+        "welcome": "歡迎來到 Floorp！",
+        "description": "Floorp 是一個重視隱私及安全，兼具速度及易用性的網頁瀏覽器。此指南將會介紹 Floorp 的主要功能及設定。",
+        "readyToStart": "準備就緒後，請按下面的按鈕繼續。",
+        "features": "Floorp 的功能",
+        "privacy": "隱私",
+        "privacyDesc": "保護您的數據",
+        "speed": "速度",
+        "speedDesc": "效能最佳化",
+        "customization": "客製化",
+        "customizationDesc": "依照您的喜好安排",
+        "start": "開始使用吧！"
+    },
+    "localizationPage": {
+        "title": "Floorp 可使用您的語言",
+        "subtitle": "檢查語言設定，並視需要變更",
+        "languageSettings": "語言設定",
+        "languageChanged": "語言已變更！",
+        "currentLanguageInfo": "目前的語言資訊",
+        "systemLanguage": "系統語言",
+        "floorpLanguage": "Floorp 語言",
+        "selectLanguage": "選擇語言",
+        "useSystemLanguage": "使用系統語言",
+        "multilingual": "多語言支援",
+        "chooseLanguage": "從多種語言中選擇",
+        "languageChangeNotice": "變更語言將套用新的語言，而無需重新啟動 Floorp。某些附加元件可能不支援語言變更。"
+    },
+    "featuresPage": {
+        "title": "Floorp 的主要功能",
+        "subtitle": "Floorp 具有許多便利的功能。請查看功能概述！",
+        "panelSidebar": {
+            "title": "面板側邊欄",
+            "description": "在瀏覽時可在右側的側邊欄使用便利的功能。您可以在側邊欄中放置如網頁面板、筆記功能、附加元件、書籤等便利功能。",
+            "features": [
+                "將網站釘選到側邊欄",
+                "瀏覽時使用 Floorp Notes 快速記筆記",
+                "支援容器"
+            ]
+        },
+        "workspaces": {
+            "title": "工作空間",
+            "description": "管理多個分頁，提升您的工作效率。使用顯眼的圖示及名稱快速切換工作空間。點擊左上方的工作空間按鈕進入。",
+            "features": [
+                "依目的分類：工作、個人等。",
+                "使用自訂圖示以便視覺識別",
+                "輕鬆管理分頁"
+            ]
+        },
+        "pwa": {
+            "title": "PWA 應用程式支援",
+            "description": "在 Windows 系統上，當您在造訪與 PWA 應用程式相容的網站時，可將其新增為桌面應用程式。一般網站也可以安裝。",
+            "features": [
+                "可作為桌面應用程式獨立運行",
+                "可固定至工作列",
+                "也可在 PWA 應用程式中使用 Firefox 附加元件"
+            ]
+        },
+        "mouseGesture": {
+            "title": "滑鼠手勢",
+            "description": "使用原生實作的滑鼠手勢功能，更直覺地控制瀏覽器。按住右鍵並移動滑鼠即可執行手勢。",
+            "features": [
+                "無需鍵盤快捷鍵即可操作",
+                "可完全客製化的手勢",
+                "快速瀏覽頁面和歷史記錄"
+            ]
+        },
+        "notebook": "筆記",
+        "nextTab": "轉至下一分頁"
+    },
+    "finishPage": {
+        "title": "設定完成！",
+        "subtitle": "恭喜！您已完成 Floorp 設定。現在您可以舒適安全的享受網路瀏覽。",
+        "nextSteps": "下一步 (可選)",
+        "defaultBrowser": "設定為預設瀏覽器",
+        "support": "支援",
+        "documentation": "文檔",
+        "getStarted": "開始使用 Floorp",
+        "hint": "如需更詳細的設定，您可以透過右上方選單按鈕中的設定選項進行調整。",
+        "resourcesLabel": "資源",
+        "defaultBrowserSuccess": "Floorp 已設定為您的預設瀏覽器！"
+    },
+    "whatsNew": {
+        "title": "歡迎來到 Floorp {{version}}！",
+        "subtitle": "看看 Floorp 有什麼新東西！",
+        "tags": {
+            "settings": "設定",
+            "productivity": "生產力",
+            "workspaces": "工作空間",
+            "pwa": "PWA",
+            "gestures": "手勢"
+        },
+        "footer": {
+            "follow": "追蹤",
+            "privacy": "隱私聲明與條款",
+            "about": "關於 Floorp",
+            "copyright": "© {{year}} Floorp Projects。保留所有權利。"
+        }
+    }
+}

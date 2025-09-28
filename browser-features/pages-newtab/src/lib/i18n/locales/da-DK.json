@@ -1,0 +1,53 @@
+{
+    "title": "Floorp start",
+    "topSites": {
+        "addSite": "Add site",
+        "addNewSite": "Add new site",
+        "url": "URL",
+        "label": "Etiket",
+        "cancel": "Annuller",
+        "add": "Tilføj",
+        "close": "Luk",
+        "labelPlaceholder": "Website name",
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "block": "Block",
+        "blockTitle": "Block \"{{title}}\"?",
+        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+        "invalidUrl": "Invalid URL"
+    },
+    "settings": {
+        "newTabSettings": "Indstillinger for ny fane",
+        "displayComponents": "Display Components",
+        "topSites": "Top sider",
+        "clock": "Ur",
+        "searchBar": "Søgefelt",
+        "backgroundSettings": "Baggrundsindstillinger",
+        "noBackground": "Ingen baggrund",
+        "randomImage": "Tilfældigt billede",
+        "customImage": "Brugerdefineret billede",
+        "folderImages": "Billeder fra mappe",
+        "floorpImages": "Floorp-billeder",
+        "currentImage": "Nuværende billede:",
+        "imageRecommendation": "Anbefalet: 1920x1080 eller højere",
+        "currentFolder": "Nuværende mappe:",
+        "selectFolder": "Vælg mappe",
+        "selected": "Valgt",
+        "enableSlideshow": "Enable Slideshow",
+        "slideshowInterval": "Slideshow Interval",
+        "floorpStart": "Floorp Start",
+        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+        "restartRequired": "Requires browser restart to take full effect."
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "Søg eller indtast URL",
+        "loadingSearchEngines": "Indlæser søgemaskiner..."
+    },
+    "settingsButton": {
+        "settings": "Indstillinger"
+    },
+    "modal": {
+        "close": "Luk"
+    }
+}

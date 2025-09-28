@@ -1,0 +1,53 @@
+{
+    "title": "Floorp 起始頁面",
+    "topSites": {
+        "addSite": "添加站點",
+        "addNewSite": "新增網站",
+        "url": "網址",
+        "label": "標籤",
+        "cancel": "取消",
+        "add": "添加",
+        "close": "關閉",
+        "labelPlaceholder": "網站名稱",
+        "pin": "釘選",
+        "unpin": "取消釘選",
+        "block": "阻擋",
+        "blockTitle": "封鎖 \"{{title}}\"？",
+        "blockConfirm": "此網站將從你的 Top Sites 中移除，並且不會再被建議。你可以在設定中管理封鎖的網站。",
+        "invalidUrl": "網址無效"
+    },
+    "settings": {
+        "newTabSettings": "新分頁設定",
+        "displayComponents": "顯示組件",
+        "topSites": "熱門網站",
+        "clock": "時鐘",
+        "searchBar": "搜尋列",
+        "backgroundSettings": "背景設定",
+        "noBackground": "無背景",
+        "randomImage": "隨機圖像",
+        "customImage": "自訂圖像",
+        "folderImages": "資料夾中的圖像",
+        "floorpImages": "Floorp 圖像",
+        "currentImage": "目前的图像:",
+        "imageRecommendation": "建議: 1920x1080 及以上",
+        "currentFolder": "目前的資料夾:",
+        "selectFolder": "選擇資料夾",
+        "selected": "已選取",
+        "enableSlideshow": "啟用幻燈片",
+        "slideshowInterval": "幻燈片播放間隔",
+        "floorpStart": "Floorp 起始頁面",
+        "disableFloorpStart": "停用 Floorp 起始頁面 (使用經典的 about:newtab)",
+        "disableFloorpStartDescription": "啟用後，Floorp Start 將被之前的 Firefox 新標籤頁/首頁取代。",
+        "restartRequired": "需要重新啟動瀏覽器才能完全生效。"
+    },
+    "searchBar": {
+        "searchOrEnterUrl": "搜尋或輸入網址",
+        "loadingSearchEngines": "載入搜尋引擎中..."
+    },
+    "settingsButton": {
+        "settings": "設定"
+    },
+    "modal": {
+        "close": "關閉"
+    }
+}

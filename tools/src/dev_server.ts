@@ -11,9 +11,28 @@ export async function run(writer: any): Promise<void> {
   logger.info("Starting Vite dev servers...");
 
   const servers = [
-    { name: "main", path: path.join(PROJECT_ROOT, "bridge/loader-features") },
     { name: "designs", path: path.join(PROJECT_ROOT, "browser-features/skin") },
-    // { name: "settings", path: path.join(PROJECT_ROOT, "src/ui/settings") },
+    { name: "main", path: path.join(PROJECT_ROOT, "bridge/loader-features") },
+    {
+      name: "modal-child",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-modal-child"),
+    },
+    {
+      name: "newtab",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-newtab"),
+    },
+    {
+      name: "notes",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-notes"),
+    },
+    {
+      name: "settings",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-settings"),
+    },
+    {
+      name: "welcome",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-welcome"),
+    },
   ];
 
   // Ensure logs directory exists
@@ -129,8 +148,14 @@ export function getPortFor(serverName: string): number {
       return 5173;
     case "designs":
       return 5174;
+    case "modal-child":
+      return 5185;
+    case "newtab":
+      return 5186;
     case "settings":
-      return 5175;
+      return 5183;
+    case "welcome":
+      return 5187;
     default:
       return DEV_SERVER.default_port;
   }
