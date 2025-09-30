@@ -28,4 +28,4 @@ jobs:
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   severity-threshold: 5
-                  model: "microsoft/Phi-4-reasoning"
+                  model: "openai/gpt-4.1-mini"
