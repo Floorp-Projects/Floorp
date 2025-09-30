@@ -24,7 +24,7 @@ jobs:
             discussions: write
             models: read
         steps:
-            - uses: benbalter/ai-community-moderator@v1
+            - uses: benbalter/ai-community-moderator@main
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   severity-threshold: 5
