@@ -1,0 +1,31 @@
+name: AI Community Moderator
+
+on:
+    issues:
+        types: [opened, edited]
+    pull_request:
+        types: [opened, edited]
+    issue_comment:
+        types: [created, edited]
+    pull_request_review_comment:
+        types: [created, edited]
+    discussion:
+        types: [created, edited]
+    discussion_comment:
+        types: [created, edited]
+
+jobs:
+    moderate:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            issues: write
+            pull-requests: write
+            discussions: write
+            models: read
+        steps:
+            - uses: benbalter/ai-community-moderator@main
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  severity-threshold: 5
+                  model: "microsoft/Phi-4-reasoning"
