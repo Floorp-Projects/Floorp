@@ -16,6 +16,9 @@ export class DOMLayoutManager {
   private urlbarFixIntervalId: number | null = null;
   private urlbarMutationObserver: MutationObserver | null = null;
   private urlbarStableCounter = 0;
+  private navbarBottomScheduleController: AbortController | null = null;
+  private browserStartupPromise: Promise<void> | null = null;
+  private browserStartupCompleted = false;
 
   private get navBar(): XULElement {
     const element = document?.getElementById("nav-bar") as XULElement;
@@ -51,6 +54,7 @@ export class DOMLayoutManager {
     this.originalNavbarParent = null;
     this.originalNavbarNextSibling = null;
     this.isNavbarAtBottom = false;
+    this.cancelNavbarBottomScheduling();
   }
 
   private setupNavbarPosition() {
@@ -72,6 +76,83 @@ export class DOMLayoutManager {
   }
 
   private moveNavbarToBottom() {
+    if (this.isNavbarAtBottom) {
+      return;
+    }
+    if (this.browserStartupCompleted) {
+      this.executeNavbarToBottom();
+      return;
+    }
+    this.scheduleNavbarToBottomMove();
+  }
+
+  private scheduleNavbarToBottomMove() {
+    if (this.navbarBottomScheduleController) {
+      return;
+    }
+
+    const controller = new AbortController();
+    this.navbarBottomScheduleController = controller;
+
+    this.waitForBrowserStartup()
+      .then(() => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        this.navbarBottomScheduleController = null;
+        this.executeNavbarToBottom();
+      })
+      .catch((error: unknown) => {
+        console.error(
+          `${DOMLayoutManager.DEBUG_PREFIX} Error waiting for browser startup:`,
+          error,
+        );
+
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        this.navbarBottomScheduleController = null;
+        this.executeNavbarToBottom();
+      });
+  }
+
+  private cancelNavbarBottomScheduling() {
+    if (this.navbarBottomScheduleController) {
+      this.navbarBottomScheduleController.abort();
+      this.navbarBottomScheduleController = null;
+    }
+  }
+
+  private removeUrlbarPopoverAttribute() {
+    const urlbar = document?.getElementById("urlbar");
+    if (!urlbar) {
+      return;
+    }
+
+    if (!urlbar.hasAttribute("popover")) {
+      return;
+    }
+
+    try {
+      urlbar.removeAttribute("popover");
+    } catch (error) {
+      console.error(
+        `${DOMLayoutManager.DEBUG_PREFIX} Failed to remove popover attribute from urlbar`,
+        error,
+      );
+    }
+  }
+
+  private executeNavbarToBottom() {
+    if (this.isNavbarAtBottom) {
+      return;
+    }
+    if (config().uiCustomization.navbar.position !== "bottom") {
+      return;
+    }
+
     const navbar = this.navBar;
     const fullscreenWrapper = this.fullscreenWrapper;
 
@@ -79,15 +160,10 @@ export class DOMLayoutManager {
       console.warn(`${DOMLayoutManager.DEBUG_PREFIX} navbar element not found`);
       return;
     }
-
     if (!fullscreenWrapper) {
       console.warn(
         `${DOMLayoutManager.DEBUG_PREFIX} fullscreenWrapper element not found`,
       );
-      return;
-    }
-
-    if (this.isNavbarAtBottom) {
       return;
     }
 
@@ -97,6 +173,8 @@ export class DOMLayoutManager {
 
       fullscreenWrapper.after(navbar);
       this.isNavbarAtBottom = true;
+
+      this.removeUrlbarPopoverAttribute();
 
       // Delay urlbar fix to avoid early DOM mutation causing layout glitches (Issue #1936)
       this.scheduleFixUrlbarInputContainer();
@@ -109,6 +187,7 @@ export class DOMLayoutManager {
   }
 
   private moveNavbarToTop() {
+    this.cancelNavbarBottomScheduling();
     // When changing from bottom to top position, a restart is required
     // to properly restore the original DOM structure
     if (this.isNavbarAtBottom) {
@@ -319,4 +398,162 @@ export class DOMLayoutManager {
       );
     }
   }
+
+  private async waitForBrowserStartup(): Promise<void> {
+    if (this.browserStartupCompleted) {
+      return;
+    }
+
+    if (!this.browserStartupPromise) {
+      this.browserStartupPromise = (async () => {
+        try {
+          await this.waitForDocumentLoad();
+
+          const firefoxWindow = window as typeof window & {
+            delayedStartupPromise?: Promise<unknown>;
+            gBrowserInit?: {
+              delayedStartupPromise?: Promise<unknown>;
+              delayedStartupFinished?: boolean;
+            };
+          };
+
+          const delayedPromise =
+            firefoxWindow.delayedStartupPromise ??
+            firefoxWindow.gBrowserInit?.delayedStartupPromise;
+
+          if (delayedPromise && typeof delayedPromise.then === "function") {
+            try {
+              await delayedPromise;
+              return;
+            } catch (error) {
+              console.warn(
+                `${DOMLayoutManager.DEBUG_PREFIX} delayedStartupPromise rejected`,
+                error,
+              );
+            }
+          }
+
+          await this.waitForDelayedStartup(firefoxWindow);
+        } catch (error) {
+          console.warn(
+            `${DOMLayoutManager.DEBUG_PREFIX} waitForBrowserStartup failed`,
+            error,
+          );
+        }
+      })().finally(() => {
+        this.browserStartupCompleted = true;
+      });
+    }
+
+    await this.browserStartupPromise;
+    this.removeUrlbarPopoverAttribute();
+  }
+
+  private waitForDocumentLoad(): Promise<void> {
+    if (typeof window === "undefined" || document.readyState === "complete") {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      window.addEventListener("load", () => resolve(), { once: true });
+    });
+  }
+
+  private async waitForDelayedStartup(
+    firefoxWindow: typeof window & {
+      gBrowserInit?: { delayedStartupFinished?: boolean };
+    },
+  ): Promise<void> {
+    const OBSERVER_TOPIC = "browser-delayed-startup-finished";
+    const INTERVAL_MS = 50;
+    const MAX_WAIT_MS = 20000;
+
+    if (firefoxWindow.gBrowserInit?.delayedStartupFinished) {
+      return;
+    }
+
+    const servicesContainer = globalThis as typeof globalThis & {
+      Services?: {
+        obs?: {
+          addObserver?: (observer: unknown, topic: string) => void;
+          removeObserver?: (observer: unknown, topic: string) => void;
+        };
+      };
+    };
+
+    await new Promise<void>((resolve) => {
+      const perf = globalThis.performance;
+      const start = perf?.now ? perf.now() : Date.now();
+      let settled = false;
+      let intervalId: number | null = null;
+      const services = servicesContainer.Services;
+
+      type Observer = {
+        observe: (subject: unknown, topic: string, data?: string) => void;
+      };
+
+      let observer: Observer | null = null;
+
+      const finish = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+
+        if (intervalId !== null) {
+          window.clearInterval(intervalId);
+          intervalId = null;
+        }
+
+        if (observer && services?.obs?.removeObserver) {
+          try {
+            services.obs.removeObserver(observer, OBSERVER_TOPIC);
+          } catch (error) {
+            console.warn(
+              `${DOMLayoutManager.DEBUG_PREFIX} Failed to remove delayed-startup observer`,
+              error,
+            );
+          }
+        }
+
+        resolve();
+      };
+
+      if (services?.obs?.addObserver && services.obs.removeObserver) {
+        observer = {
+          observe: (_subject, topic) => {
+            if (topic === OBSERVER_TOPIC) {
+              finish();
+            }
+          },
+        };
+
+        try {
+          services.obs.addObserver(observer, OBSERVER_TOPIC);
+        } catch (error) {
+          console.warn(
+            `${DOMLayoutManager.DEBUG_PREFIX} Failed to add delayed-startup observer`,
+            error,
+          );
+          observer = null;
+        }
+      }
+
+      const checkReady = () => {
+        if (firefoxWindow.gBrowserInit?.delayedStartupFinished) {
+          finish();
+          return;
+        }
+
+        const now = perf?.now ? perf.now() : Date.now();
+        if (now - start >= MAX_WAIT_MS) {
+          finish();
+        }
+      };
+
+      intervalId = window.setInterval(checkReady, INTERVAL_MS);
+      checkReady();
+    });
+  }
 }
+

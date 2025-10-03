@@ -2,24 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#nav-bar {
+:root[data-floorp-navbar-bottom-ready="true"] #nav-bar {
   border-inline: 0 !important;
   border-inline-style: none !important;
   border-right-width: 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
-#urlbar {
+:root[data-floorp-navbar-bottom-ready="true"] #urlbar {
   transform: scale(1, -1) !important;
+  transform-origin: center !important;
+  will-change: transform;
   top: 0px !important;
 }
 
-#urlbar-container {
+:root[data-floorp-navbar-bottom-ready="true"] #urlbar-container {
   transform: scale(1, -1) !important;
+  transform-origin: center !important;
   z-index: 1000 !important;
   --urlbar-container-height: unset !important;
 }
 
-#urlbar-searchmode-switcher {
+:root[data-floorp-navbar-bottom-ready="true"] #urlbar-searchmode-switcher {
   #urlbar:not([unifiedsearchbutton-available]) > .urlbar-input-container > & {
     position: unset !important;
     top: 0 !important;
