@@ -7,7 +7,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/common/breadcrumb.tsx";
 import { SidebarTrigger } from "@/components/common/sidebar.tsx";
-import i18n from "../lib/i18n/i18n.ts";
+import { SettingsSearchInput } from "./SearchInput.tsx";
 
 export function Header() {
   const location = useLocation();
@@ -18,11 +18,11 @@ export function Header() {
   );
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear">
-      <div className="flex items-center gap-2 px-8">
+    <header className="flex flex-wrap items-center gap-3 px-4 md:px-8 transition-[width,height] ease-linear md:h-16">
+      <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Breadcrumb>
-          <BreadcrumbList className=" flex gap-1.5">
+          <BreadcrumbList className="flex gap-1.5">
             {segments.length === 0
               ? (
                 <BreadcrumbItem>
@@ -48,6 +48,9 @@ export function Header() {
             ))}
           </BreadcrumbList>
         </Breadcrumb>
+      </div>
+      <div className="w-full md:ml-auto md:w-auto md:flex-1 md:max-w-md">
+        <SettingsSearchInput />
       </div>
     </header>
   );

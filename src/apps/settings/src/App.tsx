@@ -8,6 +8,7 @@ import Design from "@/app/design/page.tsx";
 import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
+import SearchPage from "@/app/search/page.tsx";
 import About from "./app/about/noraneko.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
@@ -48,6 +49,7 @@ export default function App() {
                 path="/"
                 element={<Navigate to="/overview/home" replace />}
               />
+              <Route path="/search" element={<SearchPage />} />
               <Route path="/overview/home" element={<Dashboard />} />
               <Route path="/features/design" element={<Design />} />
               <Route
