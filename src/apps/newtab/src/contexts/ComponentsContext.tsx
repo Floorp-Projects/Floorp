@@ -30,49 +30,21 @@ export function ComponentsProvider(
   });
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // コンポーネントの状態変化を監視
-  useEffect(() => {
-    console.log(
-      "🔍 [ComponentsContext Debug] Components state changed:",
-      components,
-    );
-  }, [components]);
-
   useEffect(() => {
     const loadSettings = async () => {
-      console.log("🔍 [ComponentsContext Debug] Loading component settings...");
       try {
         const settings = await getNewTabSettings();
-        console.log("🔍 [ComponentsContext Debug] Settings loaded:", settings);
-        console.log(
-          "🔍 [ComponentsContext Debug] Current components state:",
-          components,
-        );
-        console.log(
-          "🔍 [ComponentsContext Debug] Settings components:",
-          settings.components,
-        );
-
         const newComponents = {
           ...components,
           ...settings.components,
         };
-
-        console.log(
-          "🔍 [ComponentsContext Debug] New components state:",
-          newComponents,
-        );
-
         setComponents(newComponents);
       } catch (e) {
         console.error(
-          "🔍 [ComponentsContext Debug] Failed to load component settings:",
+          "[ComponentsContext] Failed to load component settings:",
           e,
         );
       } finally {
-        console.log(
-          "🔍 [ComponentsContext Debug] ComponentsContext initialized",
-        );
         setIsInitialized(true);
       }
     };
