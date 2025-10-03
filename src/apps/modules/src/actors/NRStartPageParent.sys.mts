@@ -161,6 +161,23 @@ export class NRStartPageParent extends JSWindowActorParent {
         }
         break;
       }
+
+      case "NRStartPage:FocusUrlBar": {
+        try {
+          const win = this.browsingContext?.topChromeWindow;
+          if (win && win.document) {
+            const locationCommand = win.document.getElementById(
+              "Browser:OpenLocation",
+            ) as Element & { doCommand?: () => void };
+            if (locationCommand && locationCommand.doCommand) {
+              locationCommand.doCommand();
+            }
+          }
+        } catch (e) {
+          console.error("[NRStartPageParent] Error focusing URL bar:", e);
+        }
+        break;
+      }
     }
   }
 

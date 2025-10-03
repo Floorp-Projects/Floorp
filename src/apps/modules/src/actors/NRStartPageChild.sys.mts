@@ -22,6 +22,9 @@ export class NRStartPageChild extends JSWindowActorChild {
       Cu.exportFunction(this.GetRandomImageFromFolder.bind(this), window, {
         defineAs: "NRGetRandomImageFromFolder",
       });
+      Cu.exportFunction(this.FocusUrlBar.bind(this), window, {
+        defineAs: "NRFocusUrlBar",
+      });
     }
   }
 
@@ -59,6 +62,10 @@ export class NRStartPageChild extends JSWindowActorChild {
   }
 
   resolveGetRandomImageFromFolder: ((image: string) => void) | null = null;
+
+  FocusUrlBar() {
+    this.sendAsyncMessage("NRStartPage:FocusUrlBar");
+  }
 
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
