@@ -62,6 +62,10 @@ export class WebsitePanelWindowChild {
     return Boolean(this.webpanelId);
   }
 
+  get navbar() {
+    return document?.getElementById("nav-bar") as XULElement;
+  }
+
   constructor() {
     if (!this.webpanelId) {
       return;
@@ -167,6 +171,9 @@ export class WebsitePanelWindowChild {
       "chromehidden",
       "toolbar menubar directories extrachrome",
     );
+
+    // hide navbar
+    this.navbar?.setAttribute("hidden", "true");
 
     // Set zoom level
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {
