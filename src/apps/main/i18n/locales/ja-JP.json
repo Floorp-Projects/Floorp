@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "ウェブページ",
                 "sidebar-tool": "ツールサイドバー",
-                "extension": "拡張機能サイドバー"
+                "extension": "拡張機能サイドバー",
+                "builtin": "内蔵ページ (ダウンロード、ブックマーク、履歴)"
             },
             "width": "パネルの幅",
             "url": "ウェブページの URL",

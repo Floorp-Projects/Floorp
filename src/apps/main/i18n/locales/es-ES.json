@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Web Page",
                 "sidebar-tool": "Tool Sidebar",
-                "extension": "Extension Sidebar"
+                "extension": "Extension Sidebar",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Panel Width",
             "url": "Web Page URL",

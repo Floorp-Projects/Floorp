@@ -51,12 +51,12 @@
             "user": "User"
         },
         "service": {
-            "new-workspace": "New Workspace ({{count}})"
+            "new-workspace": "Không gian làm việc mới ({{count}})"
         },
         "context-menu": {
-            "move-up": "Move this Workspace Up",
-            "move-down": "Move this Workspace Down",
-            "delete": "Delete Workspace",
+            "move-up": "Đẩy không gian làm việc lên",
+            "move-down": "Đẩy không gian làm việc xuống",
+            "delete": "Xóa không gian",
             "manage": "Quản lý không gian"
         },
         "popup": {
@@ -118,8 +118,8 @@
             "gecko-open-new-private-window": "Mở cửa sổ riêng tư mới",
             "gecko-close-window": "Đóng cửa sổ",
             "gecko-restore-last-window": "Khôi phục cửa sổ gần nhất",
-            "gecko-show-next-tab": "Show Next Tab",
-            "gecko-show-previous-tab": "Show Previous Tab",
+            "gecko-show-next-tab": "Hiện thẻ tiếp theo",
+            "gecko-show-previous-tab": "Hiện thẻ trước đó",
             "gecko-show-all-tabs-panel": "Show All Tabs Panel",
             "gecko-force-reload": "Force Reload",
             "gecko-zoom-in": "Phóng to",
@@ -131,8 +131,8 @@
             "gecko-send-with-mail": "Send With Mail",
             "gecko-save-page": "Lưu trang",
             "gecko-print-page": "In trang",
-            "gecko-mute-current-tab": "Mute Current Tab",
-            "gecko-show-source-of-page": "Show Source Of Page",
+            "gecko-mute-current-tab": "Tắt tiếng thẻ hiện tại",
+            "gecko-show-source-of-page": "Xem nguồn trang",
             "gecko-show-page-info": "Show Page Info",
             "floorp-rest-mode": "Enable Rest Mode",
             "floorp-hide-user-interface": "Ẩn giao diện",
@@ -141,14 +141,14 @@
             "gecko-search-in-this-page": "Tìm trong trang",
             "gecko-show-next-search-result": "Show Next Search Result",
             "gecko-show-previous-search-result": "Show Previous Search Result",
-            "gecko-search-the-web": "Search The Web",
+            "gecko-search-the-web": "Tìm kiếm",
             "gecko-open-migration-wizard": "Open Migration Wizard",
             "gecko-quit-from-application": "Quit Application",
             "gecko-enter-into-customize-mode": "U",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
-            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+            "floorp-show-pip": "Hiện hình trong hình",
+            "gecko-open-bookmark-add-tool": "Thêm dấu trang",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
             "gecko-open-general-preferences": "Open General Preferences",
@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Web Page",
                 "sidebar-tool": "Tool Sidebar",
-                "extension": "Extension Sidebar"
+                "extension": "Extension Sidebar",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Chiều rộng thanh bên",
             "url": "URL trang",

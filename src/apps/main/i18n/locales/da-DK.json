@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Webside",
                 "sidebar-tool": "Værktøjssidepanel",
-                "extension": "Udvidelsessidepanel"
+                "extension": "Udvidelsessidepanel",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Panelbredde",
             "url": "Webside-URL",

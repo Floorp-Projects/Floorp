@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Webbsida",
                 "sidebar-tool": "Sidofält för verktyg",
-                "extension": "Sidofält för tillägg"
+                "extension": "Sidofält för tillägg",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Panelbredd",
             "url": "Webbsida URL",

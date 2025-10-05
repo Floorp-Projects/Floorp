@@ -32,7 +32,16 @@
         "aboutBrowser": "Tentang {{productName}}",
         "debug": "Awakutu",
         "mouseGesture": "Gestur Tetikus",
-        "keyboardShortcut": "Keyboard Shortcuts"
+        "keyboardShortcut": "Keyboard Shortcuts",
+        "search": {
+            "title": "Search Settings",
+            "resultsFor": "Hasil pencarian untuk \"{{query}}\"",
+            "searchResultsDescription": "Hasil pencarian untuk \"{{query}}\". Hanya pengaturan {{productName}} yang dicari; pengaturan Firefox tidak disertakan.",
+            "noResults": "Hasil tidak ditemukan",
+            "open": "Buka \"{{title}}\"",
+            "matchedText": "Teks yang Cocok",
+            "results": "Hasil Pencarian"
+        }
     },
     "home": {
         "welcome": "Selamat datang, {{name}} 👋",

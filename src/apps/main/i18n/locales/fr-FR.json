@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Page Web",
                 "sidebar-tool": "Outil barre latérale",
-                "extension": "Extension barre latérale"
+                "extension": "Extension barre latérale",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Largeur du panneau",
             "url": "URL de la page Web",

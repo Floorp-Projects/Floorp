@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "Веб-страница",
                 "sidebar-tool": "Боковая панель инструментов",
-                "extension": "Боковая панель расширений"
+                "extension": "Боковая панель расширений",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "Ширина панели",
             "url": "Адрес веб-страницы",

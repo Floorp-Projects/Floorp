@@ -5,29 +5,29 @@
             "installComplete": "Installation complete"
         },
         "installer": {
-            "title": "Floorp Installer",
+            "title": "Trình cài đặt Floorp",
             "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
             "adminRights": "Install with admin rights",
             "adminRightsEnabled": "Install for all users with admin rights.",
             "adminRightsDisabled": "Install for current user only.",
             "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
+            "installLocation": "Địa điểm cài đặt",
             "change": "Change",
             "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "retryButton": "Thử lại"
         },
         "progress": {
-            "installing": "Installing...",
+            "installing": "Đang cài đặt...",
             "slideCounter": "Slide {{current}}/{{total}}"
         },
         "modal": {
             "selectLocation": "Select Installation Location",
             "installPath": "Installation path",
-            "browse": "Browse",
+            "browse": "Duyệt",
             "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
+            "cancel": "Hủy",
             "save": "Save Settings",
-            "close": "Close"
+            "close": "Đóng"
         },
         "exitConfirmation": {
             "title": "Cancel Installation?",

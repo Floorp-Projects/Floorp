@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "網頁",
                 "sidebar-tool": "工具側邊欄",
-                "extension": "擴充側邊欄"
+                "extension": "擴充側邊欄",
+                "builtin": "內建頁面（下載、書籤、歷史記錄）"
             },
             "width": "面板寬度",
             "url": "網頁位址",

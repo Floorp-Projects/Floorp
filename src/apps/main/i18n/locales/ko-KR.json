@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "웹 페이지",
                 "sidebar-tool": "도구 사이드바",
-                "extension": "사이드바 확장"
+                "extension": "사이드바 확장",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
             },
             "width": "패널 너비",
             "url": "웹 페이지 URL",

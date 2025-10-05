@@ -32,7 +32,16 @@
         "aboutBrowser": "关于 {{productName}}",
         "debug": "调试",
         "mouseGesture": "鼠标手势",
-        "keyboardShortcut": "键盘快捷键"
+        "keyboardShortcut": "键盘快捷键",
+        "search": {
+            "title": "搜索设置",
+            "resultsFor": "“{{query}}” 搜索结果",
+            "searchResultsDescription": "“{{query}}” 搜索结果，仅搜索 {{productName}} 设置；不包括 Firefox 设置。",
+            "noResults": "未找到结果",
+            "open": "打开 “{{title}}”",
+            "matchedText": "匹配文本",
+            "results": "搜索结果"
+        }
     },
     "home": {
         "welcome": "欢迎您， {{name}}👋",

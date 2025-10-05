@@ -208,7 +208,8 @@
             "typeOptions": {
                 "web": "网页",
                 "sidebar-tool": "工具侧边栏",
-                "extension": "扩展侧边栏"
+                "extension": "扩展侧边栏",
+                "builtin": "内置页面（下载、书签、历史）"
             },
             "width": "面板宽度",
             "url": "网页地址",
