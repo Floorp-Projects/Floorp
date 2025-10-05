@@ -25,40 +25,81 @@ export class MultirowTabbarClass {
   private styleElement: HTMLStyleElement | null = null;
   // deno-lint-ignore no-explicit-any
   private agentSheetUri: any = null;
+  private isEnabled = false;
 
   constructor() {
-    getTabsToolbar()?.setAttribute("multibar", "true");
-    this.initMultiRowTabs();
-    this.setupReactiveMaxRows();
+    this.setupReactiveMultirow();
   }
 
-  private initMultiRowTabs(): void {
-    const arrowScrollbox = resolveTabsContainer();
-    if (!arrowScrollbox) {
-      return;
-    }
-
-    this.injectCSS(arrowScrollbox);
-    this.dragDropManager.install(arrowScrollbox);
-  }
-
-  private setupReactiveMaxRows(): void {
+  private setupReactiveMultirow(): void {
     const arrowScrollbox = resolveTabsContainer();
     if (!arrowScrollbox) {
       return;
     }
 
     createEffect(() => {
-      const multiRowConfig = config().tabbar.multiRowTabBar;
-      const maxRowEnabled = multiRowConfig.maxRowEnabled ?? false;
-      const maxRows = multiRowConfig.maxRow ?? 3;
+      const isMultirowStyle = config().tabbar.tabbarStyle === "multirow";
 
-      this.updateMaxRowsCSS(arrowScrollbox, maxRowEnabled, maxRows);
+      if (isMultirowStyle && !this.isEnabled) {
+        // Enable multirow tabbar
+        this.enableMultiRowTabs(arrowScrollbox);
+      } else if (!isMultirowStyle && this.isEnabled) {
+        // Disable multirow tabbar
+        this.disableMultiRowTabs();
+      }
+
+      // Update max rows CSS if multirow is enabled
+      if (isMultirowStyle) {
+        const multiRowConfig = config().tabbar.multiRowTabBar;
+        const maxRowEnabled = multiRowConfig.maxRowEnabled ?? false;
+        const maxRows = multiRowConfig.maxRow ?? 3;
+        this.updateMaxRowsCSS(arrowScrollbox, maxRowEnabled, maxRows);
+      }
     });
 
     onCleanup(() => {
       this.cleanup();
     });
+  }
+
+  private enableMultiRowTabs(arrowScrollbox: XULElement): void {
+    getTabsToolbar()?.setAttribute("multibar", "true");
+    this.injectCSS(arrowScrollbox);
+    this.dragDropManager.install(arrowScrollbox);
+    this.isEnabled = true;
+  }
+
+  private disableMultiRowTabs(): void {
+    getTabsToolbar()?.removeAttribute("multibar");
+
+    // Remove injected style
+    if (this.styleElement && this.styleElement.parentNode) {
+      this.styleElement.parentNode.removeChild(this.styleElement);
+      this.styleElement = null;
+    }
+
+    // Uninstall drag drop manager
+    this.dragDropManager.uninstall();
+
+    // Unregister pinned tabs
+    this.pinnedTabs.unregister();
+
+    // Remove agent sheet
+    if (this.agentSheetUri) {
+      try {
+        const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
+          Ci.nsIStyleSheetService,
+        );
+        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET)) {
+          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET);
+        }
+        this.agentSheetUri = null;
+      } catch (e) {
+        console.error("Failed to unregister sheet:", e);
+      }
+    }
+
+    this.isEnabled = false;
   }
 
   private updateMaxRowsCSS(

@@ -21,6 +21,17 @@ export class TabDragDropManager {
   private draggedTabIndex: number | null = null;
   private listenersActive = false;
   private arrowScrollbox: XULElement | null = null;
+  private originalGetDropIndex:
+    | ((event: DragEvent) => number)
+    | undefined
+    | null = null;
+  private originalGetDropEffectForTabDrag:
+    | ((event: DragEvent) => string)
+    | undefined
+    | null = null;
+  private originalOnDragOver: ((event: DragEvent) => void) | undefined | null =
+    null;
+  private dropEventListener: ((e: Event) => void) | null = null;
 
   constructor(
     private readonly resolveTabsContainer: () => XULElement | null,
@@ -31,6 +42,12 @@ export class TabDragDropManager {
     this.arrowScrollbox = arrowScrollbox;
 
     const tabContainer = gBrowser.tabContainer;
+
+    // Save original functions
+    this.originalGetDropIndex = tabContainer._getDropIndex;
+    this.originalGetDropEffectForTabDrag = tabContainer.getDropEffectForTabDrag;
+    this.originalOnDragOver = tabContainer.on_dragover;
+
     tabContainer._getDropIndex = (event: DragEvent): number => {
       const tabToDropAt = this.getTabFromEventTarget(event);
       if (!tabToDropAt) return 0;
@@ -73,13 +90,46 @@ export class TabDragDropManager {
             this.orig_getDropEffectForTabDrag(e);
           tabContainer.on_dragover = this.performTabDragOver;
           tabContainer._onDragOver = this.performTabDragOver;
-          tabContainer.addEventListener("drop", (e: Event) => {
+          this.dropEventListener = (e: Event) => {
             this.performTabDropEvent(e as DragEvent);
-          });
+          };
+          tabContainer.addEventListener("drop", this.dropEventListener);
           this.listenersActive = true;
         }
       }
     });
+  }
+
+  uninstall(): void {
+    if (!this.arrowScrollbox) return;
+
+    const tabContainer = gBrowser.tabContainer;
+
+    // Restore original functions
+    if (this.originalGetDropIndex) {
+      tabContainer._getDropIndex = this.originalGetDropIndex;
+    }
+    if (this.originalGetDropEffectForTabDrag) {
+      tabContainer.getDropEffectForTabDrag =
+        this.originalGetDropEffectForTabDrag;
+      tabContainer._getDropEffectForTabDrag =
+        this.originalGetDropEffectForTabDrag;
+    }
+    if (this.originalOnDragOver) {
+      tabContainer.on_dragover = this.originalOnDragOver;
+      tabContainer._onDragOver = this.originalOnDragOver;
+    }
+
+    // Remove drop event listener
+    if (this.dropEventListener) {
+      tabContainer.removeEventListener("drop", this.dropEventListener);
+      this.dropEventListener = null;
+    }
+
+    // Reset state
+    this.resetState();
+    this.listenersActive = false;
+    this.arrowScrollbox = null;
   }
 
   private getTabFromEventTarget(

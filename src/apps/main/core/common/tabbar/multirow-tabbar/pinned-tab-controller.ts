@@ -40,6 +40,23 @@ export class PinnedTabController {
     this.isRegistered = true;
   }
 
+  unregister(): void {
+    if (!this.isRegistered) return;
+
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
+
+    gBrowser.tabContainer.removeEventListener(
+      "TabUnpinned",
+      this.handleTabUnpinned,
+      false,
+    );
+
+    this.isRegistered = false;
+  }
+
   migratePinnedTabs(
     newContainer: Element,
     pinnedTabs: NodeListOf<Element>,
@@ -81,7 +98,8 @@ export class PinnedTabController {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
     const lastPinnedTab = pinnedTabs[pinnedTabs.length - 1];
-    const indexToInsertBefore = findChildIndex(tabsContainer, lastPinnedTab) + 1;
+    const indexToInsertBefore = findChildIndex(tabsContainer, lastPinnedTab) +
+      1;
 
     tabsContainer.insertBefore(
       tab,
