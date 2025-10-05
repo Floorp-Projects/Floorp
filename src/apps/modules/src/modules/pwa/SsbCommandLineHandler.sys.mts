@@ -18,7 +18,7 @@ export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
-  static openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+  static openSsbWindow(ssb: Manifest, initialLaunch = false) {
     let initialLaunchWin: nsIDOMWindow | null = null;
     if (initialLaunch) {
       initialLaunchWin = Services.ww.openWindow(
@@ -68,10 +68,6 @@ export class SsbRunnerUtils {
 }
 
 async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
-  if (initialLaunch) {
-    return;
-  }
-
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
@@ -104,13 +100,15 @@ export class SSBCommandLineHandler {
     "nsICommandLineHandler",
   ]) as TQueryInterface;
 
-  private isInitialized = false;
+  private hasHandledFirstCall = false;
 
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
-      startSSBFromCmdLine(id, !this.isInitialized);
-      this.isInitialized = true;
+      // Always start the SSB, regardless of whether this is the first call
+      // The initialLaunch parameter controls whether a temporary window is created
+      startSSBFromCmdLine(id, !this.hasHandledFirstCall);
+      this.hasHandledFirstCall = true;
       cmdLine.preventDefault = true;
     }
   }
