@@ -23,32 +23,36 @@ import {
   zPanelSidebarConfig,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
+import { isRight } from "fp-ts/Either";
 
 function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   function getPanelSidebarData(stringData: string) {
     return JSON.parse(stringData).data || {};
   }
+  const dataResult = zPanels.decode(
+    getPanelSidebarData(
+      Services.prefs.getStringPref(
+        PanelSidebarStaticNames.panelSidebarDataPrefName,
+        strDefaultData,
+      ),
+    ),
+  );
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    zPanels.parse(
+    isRight(dataResult) ? dataResult.right : [],
+  );
+  const observer = () => {
+    const result = zPanels.decode(
       getPanelSidebarData(
         Services.prefs.getStringPref(
           PanelSidebarStaticNames.panelSidebarDataPrefName,
           strDefaultData,
         ),
       ),
-    ),
-  );
-  const observer = () =>
-    setPanelSidebarData(
-      zPanels.parse(
-        getPanelSidebarData(
-          Services.prefs.getStringPref(
-            PanelSidebarStaticNames.panelSidebarDataPrefName,
-            strDefaultData,
-          ),
-        ),
-      ),
     );
+    if (isRight(result)) {
+      setPanelSidebarData(result.right);
+    }
+  };
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
     observer,
@@ -98,18 +102,18 @@ function createPanelSidebarConfig(): [
   Accessor<PanelSidebarConfig>,
   Setter<PanelSidebarConfig>,
 ] {
-  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
-    PanelSidebarConfig
-  >(
-    zPanelSidebarConfig.parse(
-      getPanelSidebarConfig(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarConfigPrefName,
-          strDefaultConfig,
-        ),
+  const configResult = zPanelSidebarConfig.decode(
+    getPanelSidebarConfig(
+      Services.prefs.getStringPref(
+        PanelSidebarStaticNames.panelSidebarConfigPrefName,
+        strDefaultConfig,
       ),
     ),
   );
+  const [panelSidebarConfig, setPanelSidebarConfig] =
+    createSignal<PanelSidebarConfig>(
+      isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
+    );
   createEffect(() => {
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
@@ -124,17 +128,19 @@ function createPanelSidebarConfig(): [
       return {};
     }
   }
-  const observer = () =>
-    setPanelSidebarConfig(
-      zPanelSidebarConfig.parse(
-        getPanelSidebarConfig(
-          Services.prefs.getStringPref(
-            PanelSidebarStaticNames.panelSidebarConfigPrefName,
-            strDefaultConfig,
-          ),
+  const observer = () => {
+    const result = zPanelSidebarConfig.decode(
+      getPanelSidebarConfig(
+        Services.prefs.getStringPref(
+          PanelSidebarStaticNames.panelSidebarConfigPrefName,
+          strDefaultConfig,
         ),
       ),
     );
+    if (isRight(result)) {
+      setPanelSidebarConfig(result.right);
+    }
+  };
 
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarConfigPrefName,
@@ -168,14 +174,13 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
 );
 
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
-    boolean
-  >(
-    Services.prefs.getBoolPref(
-      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-      defaultEnabled,
-    ),
-  );
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
+    createSignal<boolean>(
+      Services.prefs.getBoolPref(
+        PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+        defaultEnabled,
+      ),
+    );
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,

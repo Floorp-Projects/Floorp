@@ -230,7 +230,7 @@ export interface LazyModules {
   "resource:///modules/ChromeMigrationUtils.sys.mjs": typeof import("resource:///modules/ChromeMigrationUtils.sys.mjs");
   "resource:///modules/ContentAnalysis.sys.mjs": typeof import("resource:///modules/ContentAnalysis.sys.mjs");
   "resource:///modules/ContentCrashHandlers.sys.mjs": typeof import("resource:///modules/ContentCrashHandlers.sys.mjs");
-  "resource:///modules/CustomizableUI.sys.mjs": typeof import("resource:///modules/CustomizableUI.sys.mjs");
+  "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs": typeof import("moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs");
   "resource:///modules/CustomizableWidgets.sys.mjs": typeof import("resource:///modules/CustomizableWidgets.sys.mjs");
   "resource:///modules/Discovery.sys.mjs": typeof import("resource:///modules/Discovery.sys.mjs");
   "resource:///modules/DownloadSpamProtection.sys.mjs": typeof import("resource:///modules/DownloadSpamProtection.sys.mjs");

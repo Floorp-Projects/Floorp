@@ -12,6 +12,10 @@ export async function applyUserJS(userjs: string) {
     if (line.includes("user_pref")) {
       const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
       let [prefName, value, ..._] = tmp.split(",");
+      if (!prefName || !value) {
+        console.warn("Invalid user_pref line:", line);
+        continue;
+      }
       prefName = prefName.trim().replaceAll('"', "");
       value = value.trim();
       if (value === "true" || value === "false") {

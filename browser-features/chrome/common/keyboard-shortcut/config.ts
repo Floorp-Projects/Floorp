@@ -17,6 +17,7 @@ import {
   zKeyboardShortcutConfig,
 } from "./type.ts";
 import { clearLegacyConfig, migrateLegacyConfig } from "./migration.ts";
+import { isRight } from "fp-ts/Either";
 
 export const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
@@ -77,15 +78,17 @@ function createConfig(): [
     );
   }
 
-  const [config, setConfig] = createSignal<KeyboardShortcutConfig>(
-    zKeyboardShortcutConfig.parse(
-      JSON.parse(
-        Services.prefs.getStringPref(
-          KEYBOARD_SHORTCUT_CONFIG_PREF,
-          strDefaultConfig,
-        ),
+  const parsedConfig = zKeyboardShortcutConfig.decode(
+    JSON.parse(
+      Services.prefs.getStringPref(
+        KEYBOARD_SHORTCUT_CONFIG_PREF,
+        strDefaultConfig,
       ),
     ),
+  );
+
+  const [config, setConfig] = createSignal<KeyboardShortcutConfig>(
+    isRight(parsedConfig) ? parsedConfig.right : defaultConfig,
   );
 
   createEffect(() => {
@@ -97,16 +100,17 @@ function createConfig(): [
 
   const configObserver = () => {
     try {
-      setConfig(
-        zKeyboardShortcutConfig.parse(
-          JSON.parse(
-            Services.prefs.getStringPref(
-              KEYBOARD_SHORTCUT_CONFIG_PREF,
-              strDefaultConfig,
-            ),
+      const result = zKeyboardShortcutConfig.decode(
+        JSON.parse(
+          Services.prefs.getStringPref(
+            KEYBOARD_SHORTCUT_CONFIG_PREF,
+            strDefaultConfig,
           ),
         ),
       );
+      if (isRight(result)) {
+        setConfig(result.right);
+      }
     } catch (e) {
       console.error("Failed to parse keyboard shortcut configuration:", e);
       setConfig(defaultConfig);

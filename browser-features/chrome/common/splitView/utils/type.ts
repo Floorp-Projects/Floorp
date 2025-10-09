@@ -2,27 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
+import * as t from "io-ts";
 
-export const zSplitViewDatum = z.object({
-  tabIds: z.array(z.string()),
-  reverse: z.boolean(),
-  method: z.enum(["row", "column"]),
-  fixedMode: z.boolean().optional(),
-});
+export const zSplitViewDatum = t.intersection([
+  t.type({
+    tabIds: t.array(t.string),
+    reverse: t.boolean,
+    method: t.union([t.literal("row"), t.literal("column")]),
+  }),
+  t.partial({
+    fixedMode: t.boolean,
+  }),
+]);
 
-export const zSplitViewData = z.array(zSplitViewDatum);
+export const zSplitViewData = t.array(zSplitViewDatum);
 
-export const zFixedSplitViewDataGroup = z.object({
-  fixedTabId: z.string().nullable(),
-  options: z.object({
-    reverse: z.boolean(),
-    method: z.enum(["row", "column"]),
+export const zFixedSplitViewDataGroup = t.type({
+  fixedTabId: t.union([t.string, t.null]),
+  options: t.type({
+    reverse: t.boolean,
+    method: t.union([t.literal("row"), t.literal("column")]),
   }),
 });
 
-export const zSplitViewConfigData = z.object({
-  currentViewIndex: z.number(),
+export const zSplitViewConfigData = t.type({
+  currentViewIndex: t.number,
   fixedSplitViewData: zFixedSplitViewDataGroup,
   splitViewData: zSplitViewData,
 });
@@ -45,6 +49,8 @@ export type Tab = XULElement & {
   splitView: boolean;
 };
 
-export type TSplitViewDatum = z.infer<typeof zSplitViewDatum>;
-export type TFixedSplitViewDataGroup = z.infer<typeof zFixedSplitViewDataGroup>;
-export type TSplitViewData = z.infer<typeof zSplitViewData>;
+export type TSplitViewDatum = t.TypeOf<typeof zSplitViewDatum>;
+export type TFixedSplitViewDataGroup = t.TypeOf<
+  typeof zFixedSplitViewDataGroup
+>;
+export type TSplitViewData = t.TypeOf<typeof zSplitViewData>;

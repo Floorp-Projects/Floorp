@@ -6,7 +6,7 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
 import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
 import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
-import { z } from "zod";
+import * as t from "io-ts";
 
 interface FCSS {
   styles: string[];
@@ -14,7 +14,7 @@ interface FCSS {
 }
 
 export function getCSSFromConfig(
-  pref: z.infer<typeof zFloorpDesignConfigs>,
+  pref: t.TypeOf<typeof zFloorpDesignConfigs>,
 ): FCSS {
   switch (pref.globalConfigs.userInterface) {
     case "fluerial": {

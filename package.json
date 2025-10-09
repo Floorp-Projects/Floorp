@@ -33,15 +33,16 @@
     "@solid-primitives/utils": "^6.3.2",
     "@swc/core": "^1.13.5",
     "@tailwindcss/vite": "^4.1.13",
+    "fp-ts": "^2.16.11",
     "i18next": "^25.5.2",
+    "io-ts": "^2.2.22",
     "qr-code-styling": "^1.9.2",
     "solid-js": "^1.9.9",
     "tailwindcss": "^4.1.13",
     "unplugin-swc": "^1.5.7",
     "uuid": "^11.1.0",
     "vite-plugin-istanbul": "^7.1.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.11"
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
 }

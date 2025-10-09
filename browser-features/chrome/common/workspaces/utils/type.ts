@@ -3,63 +3,73 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
+import * as t from "io-ts";
 
-/* zod schemas */
-export const zWorkspace = z.object({
-  name: z.string(),
-  icon: z.string().nullish(),
-  userContextId: z.number(),
-  isSelected: z.boolean().nullish(),
-  isDefault: z.boolean().nullish(),
+/* io-ts codecs */
+export const zWorkspace = t.type({
+  name: t.string,
+  icon: t.union([t.string, t.null, t.undefined]),
+  userContextId: t.number,
+  isSelected: t.union([t.boolean, t.null, t.undefined]),
+  isDefault: t.union([t.boolean, t.null, t.undefined]),
 });
 
-export const zWorkspaceID = z.string().uuid().brand<"WorkspaceID">();
+// Brand type for WorkspaceID
+export type WorkspaceIDBrand = { readonly WorkspaceID: unique symbol };
+export const zWorkspaceID = t.brand(
+  t.string,
+  (s): s is t.Branded<string, WorkspaceIDBrand> =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s),
+  "WorkspaceID",
+);
 
-export const zWorkspacesServicesStoreData = z.object({
+export const zWorkspacesServicesStoreData = t.type({
   defaultID: zWorkspaceID,
-  data: z.map(zWorkspaceID, zWorkspace),
-  order: z.array(zWorkspaceID),
+  data: t.UnknownRecord, // Map is not directly supported, using record
+  order: t.array(zWorkspaceID),
 });
 
-export const zWorkspaceBackupTab = z.object({
-  title: z.string(),
-  url: z.string(),
-  favicon: z.string(),
-  pinned: z.boolean(),
-  selected: z.boolean(),
+export const zWorkspaceBackupTab = t.type({
+  title: t.string,
+  url: t.string,
+  favicon: t.string,
+  pinned: t.boolean,
+  selected: t.boolean,
 });
 
-export const zWorkspaceBackup = z.object({
-  workspace: z.array(
-    zWorkspace.merge(
-      z.object({
-        tabs: z.array(zWorkspaceBackupTab),
+export const zWorkspaceBackup = t.type({
+  workspace: t.array(
+    t.intersection([
+      zWorkspace,
+      t.type({
+        tabs: t.array(zWorkspaceBackupTab),
       }),
-    ),
+    ]),
   ),
 });
 
-export const zWorkspacesServicesBackup = z.object({
-  workspaces: z.array(zWorkspaceBackup),
-  currentWorkspaceId: z.string(),
-  timestamp: z.number(),
+export const zWorkspacesServicesBackup = t.type({
+  workspaces: t.array(zWorkspaceBackup),
+  currentWorkspaceId: t.string,
+  timestamp: t.number,
 });
 
-export const zWorkspacesServicesConfigs = z.object({
-  manageOnBms: z.boolean(),
-  showWorkspaceNameOnToolbar: z.boolean(),
-  closePopupAfterClick: z.boolean(),
+export const zWorkspacesServicesConfigs = t.type({
+  manageOnBms: t.boolean,
+  showWorkspaceNameOnToolbar: t.boolean,
+  closePopupAfterClick: t.boolean,
 });
 
 /* Export as types */
-export type TWorkspaceID = z.infer<typeof zWorkspaceID>;
-export type TWorkspace = z.infer<typeof zWorkspace>;
-export type TWorkspacesStoreData = z.infer<typeof zWorkspacesServicesStoreData>;
-export type TWorkspaceBackupTab = z.infer<typeof zWorkspaceBackupTab>;
-export type TWorkspaceBackup = z.infer<typeof zWorkspaceBackup>;
-export type TWorkspacesBackup = z.infer<typeof zWorkspacesServicesBackup>;
-export type TWorkspacesServicesConfigs = z.infer<
+export type TWorkspaceID = t.TypeOf<typeof zWorkspaceID>;
+export type TWorkspace = t.TypeOf<typeof zWorkspace>;
+export type TWorkspacesStoreData = t.TypeOf<
+  typeof zWorkspacesServicesStoreData
+>;
+export type TWorkspaceBackupTab = t.TypeOf<typeof zWorkspaceBackupTab>;
+export type TWorkspaceBackup = t.TypeOf<typeof zWorkspaceBackup>;
+export type TWorkspacesBackup = t.TypeOf<typeof zWorkspacesServicesBackup>;
+export type TWorkspacesServicesConfigs = t.TypeOf<
   typeof zWorkspacesServicesConfigs
 >;
 

@@ -145,7 +145,7 @@ export function shutdown(): void {
 export function getPortFor(serverName: string): number {
   switch (serverName) {
     case "main":
-      return 5173;
+      return 5181;
     case "designs":
       return 5174;
     case "modal-child":

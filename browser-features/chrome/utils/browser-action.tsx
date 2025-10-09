@@ -6,7 +6,7 @@ import { render } from "@nora/solid-xul";
 import { createRoot, getOwner, type JSXElement } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
-  "resource:///modules/CustomizableUI.sys.mjs",
+  "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
 export namespace BrowserActionUtils {

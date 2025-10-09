@@ -6,6 +6,7 @@
 import { createEffect, createRoot, createSignal, onCleanup } from "solid-js";
 import { type TPwaConfig, zPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
+import { isRight } from "fp-ts/Either";
 
 // Initialize default preferences if they don't exist
 if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.enabled")) {
@@ -29,16 +30,19 @@ class PwaConfig {
         ),
       );
 
-      this.config = createSignal<TPwaConfig>(
-        zPwaConfig.parse(
-          JSON.parse(
-            Services.prefs.getStringPref(
-              "floorp.browser.ssb.config",
-              strDefaultConfig,
-            ),
+      const configResult = zPwaConfig.decode(
+        JSON.parse(
+          Services.prefs.getStringPref(
+            "floorp.browser.ssb.config",
+            strDefaultConfig,
           ),
         ),
       );
+      const initialConfig = isRight(configResult)
+        ? configResult.right
+        : JSON.parse(strDefaultConfig);
+
+      this.config = createSignal<TPwaConfig>(initialConfig);
 
       const [enabled] = this.enabled;
       const [config] = this.config;
@@ -66,17 +70,19 @@ class PwaConfig {
         );
       });
 
-      const configObserver = () =>
-        this.config[1](
-          zPwaConfig.parse(
-            JSON.parse(
-              Services.prefs.getStringPref(
-                "floorp.browser.ssb.config",
-                strDefaultConfig,
-              ),
+      const configObserver = () => {
+        const result = zPwaConfig.decode(
+          JSON.parse(
+            Services.prefs.getStringPref(
+              "floorp.browser.ssb.config",
+              strDefaultConfig,
             ),
           ),
         );
+        if (isRight(result)) {
+          this.config[1](result.right);
+        }
+      };
 
       Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
       onCleanup(() => {

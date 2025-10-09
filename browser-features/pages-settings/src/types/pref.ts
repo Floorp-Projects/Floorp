@@ -3,17 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
-import { zFloorpDesignConfigs } from "../../../../apps/common/scripts/global-types/type.ts";
-import { zWorkspacesServicesConfigs } from "../../../../apps/main/core/common/workspaces/utils/type.ts";
-import { zPanelSidebarConfig } from "../../../../apps/main/core/common/panel-sidebar/utils/type.ts";
+import * as t from "io-ts";
 
 /* Home */
-export const zAccountInfo = z.object({
-  email: z.string(),
-  status: z.string(),
-  displayName: z.string(),
-  avatarURL: z.string(),
+export const zAccountInfo = t.type({
+  email: t.string,
+  status: t.string,
+  displayName: t.string,
+  avatarURL: t.string,
 });
 
 export interface HomeData {
@@ -21,61 +18,74 @@ export interface HomeData {
   accountImage: string;
 }
 
-export type AccountInfo = z.infer<typeof zAccountInfo>;
+export type AccountInfo = t.TypeOf<typeof zAccountInfo>;
 
 /* Tab & Appearance */
-const globalConfig = zFloorpDesignConfigs.shape.globalConfigs.shape;
-const tabbar = zFloorpDesignConfigs.shape.tabbar.shape;
-const tab = zFloorpDesignConfigs.shape.tab.shape;
-
-export const zDesignFormData = z.object({
+// Note: For io-ts, we need to access the codec's props directly
+// This is a simplified version - full implementation would need proper type extraction
+export const zDesignFormData = t.type({
   // Global
-  design: globalConfig.userInterface,
-  faviconColor: z.boolean(),
+  design: t.union([
+    t.literal("fluerial"),
+    t.literal("lepton"),
+    t.literal("photon"),
+    t.literal("protonfix"),
+    t.literal("proton"),
+  ]),
+  faviconColor: t.boolean,
 
   // Tab Bar
-  style: tabbar.tabbarStyle,
-  position: tabbar.tabbarPosition,
-  maxRow: tabbar.multiRowTabBar.shape.maxRow,
-  maxRowEnabled: tabbar.multiRowTabBar.shape.maxRowEnabled,
+  style: t.union([
+    t.literal("horizontal"),
+    t.literal("vertical"),
+    t.literal("multirow"),
+  ]),
+  position: t.union([
+    t.literal("hide-horizontal-tabbar"),
+    t.literal("optimise-to-vertical-tabbar"),
+    t.literal("bottom-of-navigation-toolbar"),
+    t.literal("bottom-of-window"),
+    t.literal("default"),
+  ]),
+  maxRow: t.number,
+  maxRowEnabled: t.boolean,
 
   // Tab
-  tabOpenPosition: tab.tabOpenPosition,
-  tabMinHeight: tab.tabMinHeight,
-  tabMinWidth: tab.tabMinWidth,
-  tabPinTitle: tab.tabPinTitle,
-  tabScroll: tab.tabScroll.shape.enabled,
-  tabScrollReverse: tab.tabScroll.shape.reverse,
-  tabScrollWrap: tab.tabScroll.shape.wrap,
-  tabDubleClickToClose: tab.tabDubleClickToClose,
+  tabOpenPosition: t.number,
+  tabMinHeight: t.number,
+  tabMinWidth: t.number,
+  tabPinTitle: t.boolean,
+  tabScroll: t.boolean,
+  tabScrollReverse: t.boolean,
+  tabScrollWrap: t.boolean,
+  tabDubleClickToClose: t.boolean,
 
   // UI customization
-  navbarPosition: z.enum(["top", "bottom"]),
-  searchBarTop: z.boolean(),
-  disableFullscreenNotification: z.boolean(),
-  deleteBrowserBorder: z.boolean(),
-  hideUnifiedExtensionsButton: z.boolean(),
-  optimizeForTreeStyleTab: z.boolean(),
-  hideForwardBackwardButton: z.boolean(),
-  stgLikeWorkspaces: z.boolean(),
-  multirowTabNewtabInside: z.boolean(),
-  disableFloorpStart: z.boolean(),
-  bookmarkBarFocusExpand: z.boolean(),
-  disableQRCodeButton: z.boolean(),
+  navbarPosition: t.union([t.literal("top"), t.literal("bottom")]),
+  searchBarTop: t.boolean,
+  disableFullscreenNotification: t.boolean,
+  deleteBrowserBorder: t.boolean,
+  hideUnifiedExtensionsButton: t.boolean,
+  optimizeForTreeStyleTab: t.boolean,
+  hideForwardBackwardButton: t.boolean,
+  stgLikeWorkspaces: t.boolean,
+  multirowTabNewtabInside: t.boolean,
+  disableFloorpStart: t.boolean,
+  bookmarkBarFocusExpand: t.boolean,
+  disableQRCodeButton: t.boolean,
 });
 
-export type DesignFormData = z.infer<typeof zDesignFormData>;
+export type DesignFormData = t.TypeOf<typeof zDesignFormData>;
 
 /* Workspaces */
-export const zWorkspacesFormData = z.object({
-  enabled: z.boolean(),
-  manageOnBms: zWorkspacesServicesConfigs.shape.manageOnBms,
-  showWorkspaceNameOnToolbar:
-    zWorkspacesServicesConfigs.shape.showWorkspaceNameOnToolbar,
-  closePopupAfterClick: zWorkspacesServicesConfigs.shape.closePopupAfterClick,
+export const zWorkspacesFormData = t.type({
+  enabled: t.boolean,
+  manageOnBms: t.boolean,
+  showWorkspaceNameOnToolbar: t.boolean,
+  closePopupAfterClick: t.boolean,
 });
 
-export type WorkspacesFormData = z.infer<typeof zWorkspacesFormData>;
+export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
 
 /* About */
 export type ConstantsData = {
@@ -85,109 +95,117 @@ export type ConstantsData = {
 };
 
 /* Accounts */
-export const zAccountsFormData = z.object({
+export const zAccountsFormData = t.type({
   accountInfo: zAccountInfo,
-  accountImage: z.string(),
-  profileDir: z.string(),
-  profileName: z.string(),
-  asyncNoesViaMozillaAccount: z.boolean(),
+  accountImage: t.string,
+  profileDir: t.string,
+  profileName: t.string,
+  asyncNoesViaMozillaAccount: t.boolean,
 });
 
-export type AccountsFormData = z.infer<typeof zAccountsFormData>;
+export type AccountsFormData = t.TypeOf<typeof zAccountsFormData>;
 
 /* Panel Sidebar */
-export const zPanelSidebarFormData = z.object({
-  enabled: z.boolean(),
-  autoUnload: zPanelSidebarConfig.shape.autoUnload,
-  position_start: zPanelSidebarConfig.shape.position_start,
-  displayed: zPanelSidebarConfig.shape.displayed,
-  webExtensionRunningEnabled:
-    zPanelSidebarConfig.shape.webExtensionRunningEnabled,
-  globalWidth: zPanelSidebarConfig.shape.globalWidth,
+export const zPanelSidebarFormData = t.type({
+  enabled: t.boolean,
+  autoUnload: t.boolean,
+  position_start: t.boolean,
+  displayed: t.boolean,
+  webExtensionRunningEnabled: t.boolean,
+  globalWidth: t.number,
 });
 
-export type PanelSidebarFormData = z.infer<typeof zPanelSidebarFormData>;
+export type PanelSidebarFormData = t.TypeOf<typeof zPanelSidebarFormData>;
 
 /* Progressive Web App */
-export const zProgressiveWebAppFormData = z.object({
-  enabled: z.boolean(),
-  showToolbar: z.boolean(),
+export const zProgressiveWebAppFormData = t.type({
+  enabled: t.boolean,
+  showToolbar: t.boolean,
 });
 
-export const zProgressiveWebAppObject = z.record(z.object({
-  id: z.string(),
-  name: z.string(),
-  short_name: z.string().optional(),
-  start_url: z.string(),
-  icon: z.string(),
-  scope: z.string().optional(),
-}));
+export const zProgressiveWebAppObject = t.record(
+  t.string,
+  t.intersection([
+    t.type({
+      id: t.string,
+      name: t.string,
+      start_url: t.string,
+      icon: t.string,
+    }),
+    t.partial({
+      short_name: t.string,
+      scope: t.string,
+    }),
+  ]),
+);
 
-export type TProgressiveWebAppFormData = z.infer<
+export type TProgressiveWebAppFormData = t.TypeOf<
   typeof zProgressiveWebAppFormData
 >;
-export type TProgressiveWebAppObject = z.infer<typeof zProgressiveWebAppObject>;
+export type TProgressiveWebAppObject = t.TypeOf<
+  typeof zProgressiveWebAppObject
+>;
 
 export type InstalledApp = TProgressiveWebAppObject[string];
 
 /* Mouse Gesture */
-export const zGestureDirection = z.enum([
-  "up",
-  "down",
-  "left",
-  "right",
-  "upRight",
-  "upLeft",
-  "downRight",
-  "downLeft",
+export const zGestureDirection = t.union([
+  t.literal("up"),
+  t.literal("down"),
+  t.literal("left"),
+  t.literal("right"),
+  t.literal("upRight"),
+  t.literal("upLeft"),
+  t.literal("downRight"),
+  t.literal("downLeft"),
 ]);
 
-export const zGestureAction = z.object({
-  pattern: z.array(zGestureDirection),
-  action: z.string(),
+export const zGestureAction = t.type({
+  pattern: t.array(zGestureDirection),
+  action: t.string,
 });
 
-export const zMouseGestureConfig = z.object({
-  enabled: z.boolean(),
-  sensitivity: z.number(),
-  showTrail: z.boolean(),
-  showLabel: z.boolean(),
-  trailColor: z.string(),
-  trailWidth: z.number(),
-  actions: z.array(zGestureAction),
+export const zMouseGestureConfig = t.type({
+  enabled: t.boolean,
+  sensitivity: t.number,
+  showTrail: t.boolean,
+  showLabel: t.boolean,
+  trailColor: t.string,
+  trailWidth: t.number,
+  actions: t.array(zGestureAction),
 });
 
-export type GestureAction = z.infer<typeof zGestureAction>;
-export type MouseGestureConfig = z.infer<typeof zMouseGestureConfig>;
-export type GestureDirection = z.infer<typeof zGestureDirection>;
+export type GestureAction = t.TypeOf<typeof zGestureAction>;
+export type MouseGestureConfig = t.TypeOf<typeof zMouseGestureConfig>;
+export type GestureDirection = t.TypeOf<typeof zGestureDirection>;
 
 export const zMouseGestureFormData = zMouseGestureConfig;
-export type MouseGestureFormData = z.infer<typeof zMouseGestureFormData>;
+export type MouseGestureFormData = t.TypeOf<typeof zMouseGestureFormData>;
 
 /* Keyboard Shortcut */
-export const zShortcutModifiers = z.object({
-  alt: z.boolean(),
-  ctrl: z.boolean(),
-  meta: z.boolean(),
-  shift: z.boolean(),
+export const zShortcutModifiers = t.type({
+  alt: t.boolean,
+  ctrl: t.boolean,
+  meta: t.boolean,
+  shift: t.boolean,
 });
 
-export const zShortcutConfig = z.object({
+export const zShortcutConfig = t.type({
   modifiers: zShortcutModifiers,
-  key: z.string(),
-  action: z.string(),
+  key: t.string,
+  action: t.string,
 });
 
-export const zKeyboardShortcutConfig = z.object({
-  enabled: z.boolean(),
-  shortcuts: z.record(zShortcutConfig),
+export const zKeyboardShortcutConfig = t.type({
+  enabled: t.boolean,
+  shortcuts: t.record(t.string, zShortcutConfig),
 });
 
-export type ShortcutModifiers = z.infer<typeof zShortcutModifiers>;
-export type ShortcutConfig = z.infer<typeof zShortcutConfig>;
-export type KeyboardShortcutConfig = z.infer<typeof zKeyboardShortcutConfig>;
+export type ShortcutModifiers = t.TypeOf<typeof zShortcutModifiers>;
+export type ShortcutConfig = t.TypeOf<typeof zShortcutConfig>;
+export type KeyboardShortcutConfig = t.TypeOf<typeof zKeyboardShortcutConfig>;
 
 export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
-export type KeyboardShortcutFormData = z.infer<
+export type KeyboardShortcutFormData = t.TypeOf<
   typeof zKeyboardShortcutFormData
 >;

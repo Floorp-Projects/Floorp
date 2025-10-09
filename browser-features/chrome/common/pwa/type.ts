@@ -1,9 +1,9 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
+import * as t from "io-ts";
 
 export type Manifest = {
   id: string;
@@ -64,8 +64,8 @@ export type LegacyPWAEntry = {
   };
 };
 
-export const zPwaConfig = z.object({
-  showToolbar: z.boolean(),
+export const zPwaConfig = t.type({
+  showToolbar: t.boolean,
 });
 
-export type TPwaConfig = z.infer<typeof zPwaConfig>;
+export type TPwaConfig = t.TypeOf<typeof zPwaConfig>;

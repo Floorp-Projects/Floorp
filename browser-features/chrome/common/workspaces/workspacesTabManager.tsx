@@ -18,6 +18,7 @@ import {
 import { configStore, enabled } from "./data/config.ts";
 import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
 import type { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
+import { isRight } from "fp-ts/Either";
 
 interface TabEvent extends Event {
   target: XULElement;
@@ -289,16 +290,15 @@ export class WorkspacesTabManager {
       return null;
     }
     const clean = raw.replace(/[{}]/g, "");
-    const parseResult = zWorkspaceID.safeParse(clean);
-    if (!parseResult.success) {
+    const parseResult = zWorkspaceID.decode(clean);
+    if (!isRight(parseResult)) {
       console.warn(
         "WorkspacesTabManager: invalid workspace id format:",
         raw,
-        parseResult.error,
       );
       return null;
     }
-    const wsId = parseResult.data;
+    const wsId = parseResult.right;
     if (!this.dataManagerCtx.isWorkspaceID(wsId)) {
       console.warn(
         "WorkspacesTabManager: workspace id not found in store:",
@@ -382,8 +382,8 @@ export class WorkspacesTabManager {
       select,
       url,
     });
-    const targetURL =
-      url ?? Services.prefs.getStringPref("browser.startup.homepage");
+    const targetURL = url ??
+      Services.prefs.getStringPref("browser.startup.homepage");
     console.debug(
       "gBrowser.addTab called in createTabForWorkspace with url:",
       targetURL,

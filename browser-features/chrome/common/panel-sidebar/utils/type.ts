@@ -3,50 +3,58 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { z } from "zod";
+import * as t from "io-ts";
 
-/* zod schemas */
-export const zPanel = z.object({
-  id: z.string(),
-  type: z.enum(["web", "static", "extension"]),
-  width: z.number(),
-  url: z.string().nullish(),
-  icon: z.string().nullish(),
-  userContextId: z.number().nullish(),
-  zoomLevel: z.number().nullish(),
-  userAgent: z.boolean().nullish(),
-  extensionId: z.string().nullish(),
+/* io-ts codecs */
+export const zPanel = t.type({
+  id: t.string,
+  type: t.union([
+    t.literal("web"),
+    t.literal("static"),
+    t.literal("extension"),
+  ]),
+  width: t.number,
+  url: t.union([t.string, t.null, t.undefined]),
+  icon: t.union([t.string, t.null, t.undefined]),
+  userContextId: t.union([t.number, t.null, t.undefined]),
+  zoomLevel: t.union([t.number, t.null, t.undefined]),
+  userAgent: t.union([t.boolean, t.null, t.undefined]),
+  extensionId: t.union([t.string, t.null, t.undefined]),
 });
 
-export const zPanels = z.array(zPanel);
+export const zPanels = t.array(zPanel);
 
-export const zWindowPanelSidebarState = z.object({
+export const zWindowPanelSidebarState = t.type({
   panels: zPanels,
-  currentPanelId: z.string().nullish(),
+  currentPanelId: t.union([t.string, t.null, t.undefined]),
 });
 
-export const zPanelSidebarConfig = z.object({
-  globalWidth: z.number(),
-  autoUnload: z.boolean(),
-  position_start: z.boolean(),
-  displayed: z.boolean(),
-  webExtensionRunningEnabled: z.boolean(),
-  floatingWidth: z.number().optional(),
-  floatingHeight: z.number().optional(),
-  floatingPositionLeft: z.number().optional(),
-  floatingPositionTop: z.number().optional(),
-});
+export const zPanelSidebarConfig = t.intersection([
+  t.type({
+    globalWidth: t.number,
+    autoUnload: t.boolean,
+    position_start: t.boolean,
+    displayed: t.boolean,
+    webExtensionRunningEnabled: t.boolean,
+  }),
+  t.partial({
+    floatingWidth: t.number,
+    floatingHeight: t.number,
+    floatingPositionLeft: t.number,
+    floatingPositionTop: t.number,
+  }),
+]);
 
-export const zPanelSidebarData = z.object({
+export const zPanelSidebarData = t.type({
   data: zPanels,
 });
 
 /* Export as types */
-export type Panel = z.infer<typeof zPanel>;
-export type Panels = z.infer<typeof zPanels>;
-export type WindowPanelSidebarState = z.infer<typeof zWindowPanelSidebarState>;
-export type PanelSidebarConfig = z.infer<typeof zPanelSidebarConfig>;
-export type PanelSidebarData = z.infer<typeof zPanelSidebarData>;
+export type Panel = t.TypeOf<typeof zPanel>;
+export type Panels = t.TypeOf<typeof zPanels>;
+export type WindowPanelSidebarState = t.TypeOf<typeof zWindowPanelSidebarState>;
+export type PanelSidebarConfig = t.TypeOf<typeof zPanelSidebarConfig>;
+export type PanelSidebarData = t.TypeOf<typeof zPanelSidebarData>;
 
 export type Sidebar = {
   title: string;

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as t from "io-ts";
 
 /**
  * ワークスペースの詳細情報
@@ -36,27 +36,31 @@ export interface Floorp11Workspaces {
   windows: Record<string, WindowWorkspaces>;
 }
 
-// Zod スキーマ定義
-export const zWorkspaceDetail = z.object({
-  name: z.string(),
-  tabs: z.array(z.unknown()),
-  defaultWorkspace: z.boolean(),
-  id: z.string(),
-  icon: z.string().nullable(),
-  userContextId: z.coerce.number().optional(),
-  isPrivateContainerWorkspace: z.boolean().optional(),
+// io-ts コーデック定義
+export const zWorkspaceDetail = t.intersection([
+  t.type({
+    name: t.string,
+    tabs: t.array(t.unknown),
+    defaultWorkspace: t.boolean,
+    id: t.string,
+    icon: t.union([t.string, t.null]),
+  }),
+  t.partial({
+    userContextId: t.number,
+    isPrivateContainerWorkspace: t.boolean,
+  }),
+]);
+
+export const zWorkspacePreference = t.partial({
+  selectedWorkspaceId: t.string,
+  defaultWorkspace: t.string,
 });
 
-export const zWorkspacePreference = z.object({
-  selectedWorkspaceId: z.string().optional(),
-  defaultWorkspace: z.string().optional(),
-});
-
-export const zWindowWorkspaces = z.record(
-  z.string(),
-  z.union([zWorkspaceDetail, zWorkspacePreference]),
+export const zWindowWorkspaces = t.record(
+  t.string,
+  t.union([zWorkspaceDetail, zWorkspacePreference]),
 );
 
-export const zFloorp11WorkspacesSchema = z.object({
-  windows: z.record(z.string(), zWindowWorkspaces),
+export const zFloorp11WorkspacesSchema = t.type({
+  windows: t.record(t.string, zWindowWorkspaces),
 });

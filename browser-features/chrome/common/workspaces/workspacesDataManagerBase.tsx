@@ -6,6 +6,7 @@ import {
   workspacesDataStore,
 } from "./data/data";
 import type { TWorkspaceID } from "./utils/type";
+import { isRight } from "fp-ts/Either";
 
 export interface WorkspacesDataManagerBase {
   createWorkspace(name: string): TWorkspaceID;
@@ -26,9 +27,13 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @deprecated Use WorkspacesServices.createWorkspace
    */
   public createWorkspace(name: string): TWorkspaceID {
-    const id = zWorkspaceID.parse(
+    const idResult = zWorkspaceID.decode(
       Services.uuid.generateUUID().toString().replaceAll(/[{}]/g, ""),
     );
+    if (!isRight(idResult)) {
+      throw new Error("Failed to generate valid workspace ID");
+    }
+    const id = idResult.right;
     const workspace: TWorkspace = {
       name,
       icon: null,
@@ -66,12 +71,12 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
 
   public isWorkspaceID(id: string): id is TWorkspaceID {
     // WorkspaceID の形式を検証
-    const parseResult = zWorkspaceID.safeParse(id);
-    if (!parseResult.success) {
+    const parseResult = zWorkspaceID.decode(id);
+    if (!isRight(parseResult)) {
       console.warn("WorkspacesDataManager: invalid WorkspaceID format:", id);
       return false;
     }
-    const parsedId = parseResult.data;
+    const parsedId = parseResult.right;
     const exists = workspacesDataStore.data.has(parsedId);
     if (!exists) {
       console.warn("WorkspacesDataManager: WorkspaceID not found:", parsedId);

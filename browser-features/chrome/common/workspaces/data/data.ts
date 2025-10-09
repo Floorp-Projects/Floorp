@@ -20,18 +20,24 @@ import {
   unwrap,
 } from "solid-js/store";
 import { trackStore } from "@solid-primitives/deep";
+import { isRight } from "fp-ts/Either";
 
 function getDefaultStore() {
-  const result = zWorkspacesServicesStoreData.safeParse(
+  const result = zWorkspacesServicesStoreData.decode(
     JSON.parse(
       Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
       (k, v) => (k == "data" ? new Map(v) : v),
     ),
   );
-  if (result.success) {
-    return result.data;
+  if (isRight(result)) {
+    return result.right;
   } else {
-    const stubID = zWorkspaceID.parse("00000000-0000-0000-0000-000000000000");
+    const stubIDResult = zWorkspaceID.decode(
+      "00000000-0000-0000-0000-000000000000",
+    );
+    const stubID = isRight(stubIDResult)
+      ? stubIDResult.right
+      : ("00000000-0000-0000-0000-000000000000" as TWorkspaceID);
     return {
       defaultID: stubID,
       data: new Map(),
@@ -44,30 +50,28 @@ function createWorkspacesData(): [
   Store<TWorkspacesStoreData>,
   SetStoreFunction<TWorkspacesStoreData>,
 ] {
-  const [workspacesDataStore, setWorkspacesDataStore] = createStore(
-    getDefaultStore(),
-  );
+  const [workspacesDataStore, setWorkspacesDataStore] =
+    createStore(getDefaultStore());
 
   createEffect(() => {
     trackStore(workspacesDataStore);
     Services.prefs.setStringPref(
       WORKSPACE_DATA_PREF_NAME,
-      JSON.stringify(
-        unwrap(workspacesDataStore),
-        (k, v) => k == "data" ? [...v] : v,
+      JSON.stringify(unwrap(workspacesDataStore), (k, v) =>
+        k == "data" ? [...v] : v,
       ),
     );
   });
 
   const observer = () => {
-    const result = zWorkspacesServicesStoreData.safeParse(
+    const result = zWorkspacesServicesStoreData.decode(
       JSON.parse(
         Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
         (k, v) => (k == "data" ? new Map(v) : v),
       ),
     );
-    if (result.success) {
-      const _storedData = result.data;
+    if (isRight(result)) {
+      const _storedData = result.right;
       setWorkspacesDataStore("data", _storedData.data);
       setWorkspacesDataStore("defaultID", _storedData.defaultID);
       setWorkspacesDataStore("order", _storedData.order);
@@ -95,9 +99,8 @@ function createSelectedWorkspaceID(): [
   Accessor<TWorkspaceID | null>,
   Setter<TWorkspaceID | null>,
 ] {
-  const [selectedWorkspaceID, setSelectedWorkspaceID] = createSignal<
-    TWorkspaceID | null
-  >(null);
+  const [selectedWorkspaceID, setSelectedWorkspaceID] =
+    createSignal<TWorkspaceID | null>(null);
   return [selectedWorkspaceID, setSelectedWorkspaceID];
 }
 

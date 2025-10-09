@@ -18,6 +18,7 @@ import {
 import { type TFloorpDesignConfigs, zFloorpDesignConfigs } from "./type.ts";
 import {} from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
+import { isRight } from "fp-ts/Either";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -259,7 +260,12 @@ function createConfig(): [
   Accessor<TFloorpDesignConfigs>,
   Setter<TFloorpDesignConfigs>,
 ] {
-  const defaultConfig = zFloorpDesignConfigs.parse(JSON.parse(getOldConfigs));
+  const defaultConfigResult = zFloorpDesignConfigs.decode(
+    JSON.parse(getOldConfigs),
+  );
+  const defaultConfig = isRight(defaultConfigResult)
+    ? defaultConfigResult.right
+    : (oldObjectConfigs as TFloorpDesignConfigs);
 
   let initialConfig = defaultConfig;
   try {
@@ -270,7 +276,8 @@ function createConfig(): [
     const parsedConfig = JSON.parse(configStr);
     // Merge existing config with defaults to tolerate newly added fields
     const merged = deepMerge(defaultConfig, parsedConfig);
-    initialConfig = zFloorpDesignConfigs.parse(merged);
+    const mergedResult = zFloorpDesignConfigs.decode(merged);
+    initialConfig = isRight(mergedResult) ? mergedResult.right : defaultConfig;
   } catch (e) {
     console.error("Failed to parse initial design configs, using defaults:", e);
   }
@@ -285,7 +292,10 @@ function createConfig(): [
       );
       const parsedConfig = JSON.parse(configStr);
       const merged = deepMerge(defaultConfig, parsedConfig);
-      setConfig(zFloorpDesignConfigs.parse(merged));
+      const mergedResult = zFloorpDesignConfigs.decode(merged);
+      if (isRight(mergedResult)) {
+        setConfig(mergedResult.right);
+      }
     } catch (e) {
       console.error("Failed to parse design configs:", e);
     }
