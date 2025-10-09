@@ -10,6 +10,7 @@
 
 #ssb-content-hbox {
   display: flex;
+  align-items: center; /* items-center */
 }
 
 #ssb-content-icon {
@@ -26,6 +27,9 @@
   margin-top: 15px;
   height: 35px;
   margin-bottom: 5px;
+  display: flex;
+  justify-content: flex-end; /* justify-end */
+  column-gap: 8px; /* space-x-2 */
 }
 
 .ssb-app-info-button > .toolbarbutton-icon {
@@ -39,6 +43,11 @@
 
 #ssb-content-label-vbox {
   flex: 6;
+}
+
+#ssb-content-label {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700;   /* font-bold */
 }
 
 #ssb-installing-icon {

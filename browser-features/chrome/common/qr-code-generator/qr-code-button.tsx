@@ -24,7 +24,7 @@ export function QRCodePageActionButton() {
       <xul:hbox
         id="QRCodeGeneratePageAction"
         data-l10n-id="qrcode-generate-page-action"
-        class="urlbar-page-action rounded"
+        class="urlbar-page-action"
         style={{
           "list-style-image": `url("${qrCodeIcon}")`,
         }}

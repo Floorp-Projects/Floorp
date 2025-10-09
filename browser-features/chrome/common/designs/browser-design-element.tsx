@@ -48,11 +48,6 @@ export function BrowserDesignElement() {
     <>
       <Switch>
         <Match when={import.meta.env.PROD}>
-          <link
-            class="nora-tailwind"
-            rel="stylesheet"
-            href={`chrome://noraneko/content/assets/core.css`}
-          />
           <For each={getCSS().styles}>
             {(style) => (
               <link

@@ -22,24 +22,22 @@ export function QRCodePanel() {
       id="qrcode-panel"
       type="arrow"
       position="bottomright topright"
-      class="rounded-lg"
       onPopupShowing={() => manager.handlePopupShowing()}
     >
-      <xul:vbox id="qrcode-box" class="p-0">
-        <xul:vbox class="panel-header border-b p-3 rounded-t-lg">
+      <xul:vbox id="qrcode-box">
+        <xul:vbox class="panel-header qrcode-header">
           <xul:label
             data-l10n-id="qrcode-generate-page-action-title"
-            class="m-0 text-xl font-semibold text-gray-800 dark:text-gray-200"
+            class="qrcode-title"
           >
             {title()}
           </xul:label>
         </xul:vbox>
 
-        <xul:toolbarseparator class="border-t" />
+        <xul:toolbarseparator class="qrcode-separator" />
 
         <xul:vbox
           id="qrcode-img-vbox"
-          class="p-2 flex items-center justify-center rounded-lg m-3 shadow-inner min-h-64"
         />
       </xul:vbox>
     </xul:panel>

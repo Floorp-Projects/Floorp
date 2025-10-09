@@ -1,6 +1,7 @@
 import { render } from "@nora/solid-xul";
 import { QRCodePageActionButton } from "./qr-code-button.tsx";
 import { QRCodePanel } from "./qr-code-panel.tsx";
+import style from "./style.css?inline";
 import { QRCodeManager } from "./qr-code-manager.tsx";
 import {
   noraComponent,
@@ -14,6 +15,12 @@ export let manager: QRCodeManager;
 export default class QRCodeGenerator extends NoraComponentBase {
   init() {
     manager = new QRCodeManager();
+    // Attach local styles once
+    const styleEl = document?.createElement("style");
+    if (styleEl) {
+      styleEl.textContent = style;
+      document?.head.appendChild(styleEl);
+    }
     const mainPopupSet = document?.getElementById("mainPopupSet");
     if (mainPopupSet) {
       render(QRCodePanel, mainPopupSet, {

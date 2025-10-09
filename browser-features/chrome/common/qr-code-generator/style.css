@@ -1,0 +1,43 @@
+/* Styles migrated from Tailwind utilities */
+
+#qrcode-panel {
+  border-radius: 8px;
+}
+
+#qrcode-box {
+  padding: 0;
+}
+
+.qrcode-header {
+  border-bottom: 1px solid var(--chrome-content-separator-color);
+  padding: 12px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.qrcode-title {
+  margin: 0;
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600;    /* font-semibold */
+  color: var(--toolbar-color);
+}
+
+.qrcode-separator {
+  border-top: 1px solid var(--chrome-content-separator-color);
+}
+
+#qrcode-img-vbox {
+  padding: 8px;            /* p-2 */
+  display: flex;           /* flex */
+  align-items: center;     /* items-center */
+  justify-content: center; /* justify-center */
+  border-radius: 8px;      /* rounded-lg */
+  margin: 12px;            /* m-3 */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.25); /* shadow-inner approximation */
+  min-height: 256px;       /* min-h-64 */
+}
+
+#QRCodeGeneratePageAction {
+  border-radius: 4px; /* rounded */
+}
+

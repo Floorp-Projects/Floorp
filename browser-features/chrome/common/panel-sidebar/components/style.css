@@ -108,6 +108,10 @@
   min-width: var(--panel-sidebar-panel-size);
   min-height: var(--panel-sidebar-panel-size);
   margin: 5px 1px 0;
+  /* Tailwind fallback: center content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .panel-sidebar-panel.dragging {
@@ -198,8 +202,13 @@
     *|*:root[chromehidden~="toolbar"],
     :root[invisibleBMS]
   )
-  #panel-sidebar-select-box {
+#panel-sidebar-select-box {
   display: none;
+}
+
+/* Wrapper for each panel button (replaces Tailwind `.relative`) */
+.panel-sidebar-button-wrapper {
+  position: relative;
 }
 
 :root[invisibleBMS] {

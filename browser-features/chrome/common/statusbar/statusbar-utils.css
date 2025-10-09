@@ -1,5 +1,10 @@
 #nora-statusbar {
   visibility: visible !important;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid var(--chrome-content-separator-color);
+  background: var(--panel-sidebar-background-color) !important;
 
   :root[inFullscreen]:not([macOSNativeFullscreen])
     &:not([fullscreentoolbar="true"]) {
@@ -15,6 +20,11 @@
     border: none !important;
     box-shadow: none !important;
   }
+}
+
+#nora-statusbar #status-text {
+  padding-inline: 8px; /* px-2 */
+  overflow: hidden;
 }
 
 #toggle_nora-statusbar {

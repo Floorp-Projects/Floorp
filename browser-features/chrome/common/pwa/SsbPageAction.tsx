@@ -154,7 +154,7 @@ export class SsbPageAction {
                   </h1>
                 </xul:vbox>
                 <xul:toolbarseparator />
-                <xul:hbox id="ssb-content-hbox" class="items-center">
+                <xul:hbox id="ssb-content-hbox">
                   <xul:vbox id="ssb-content-icon-vbox">
                     <img
                       id="ssb-content-icon"
@@ -165,10 +165,7 @@ export class SsbPageAction {
                     />
                   </xul:vbox>
                   <xul:vbox id="ssb-content-label-vbox">
-                    <xul:label
-                      id="ssb-content-label"
-                      class="text-2xl font-bold"
-                    >
+                    <xul:label id="ssb-content-label">
                       {title()}
                     </xul:label>
                     <xul:description id="ssb-content-description">
@@ -176,7 +173,7 @@ export class SsbPageAction {
                     </xul:description>
                   </xul:vbox>
                 </xul:hbox>
-                <xul:hbox id="ssb-button-hbox" class="justify-end space-x-2">
+                <xul:hbox id="ssb-button-hbox">
                   {isInstalling() && (
                     <xul:vbox id="ssb-installing-vbox">
                       <img

@@ -97,11 +97,11 @@ export function PanelSidebarButton(props: {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onContextMenu={handleContextMenu}
-      class="relative"
+      class="panel-sidebar-button-wrapper"
     >
       <div
         id={props.panel.id}
-        class={`${props.panel.type} panel-sidebar-panel flex items-center justify-center`}
+        class={`${props.panel.type} panel-sidebar-panel`}
         data-checked={selectedPanelId() === props.panel.id}
         data-panel-id={props.panel.id}
         onClick={() => {

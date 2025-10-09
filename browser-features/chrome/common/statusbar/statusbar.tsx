@@ -13,8 +13,14 @@ export function StatusBarElem() {
         id="nora-statusbar"
         toolbarname="Status bar"
         customizable="true"
-        class={`border-t border-[var(--chrome-content-separator-color)] ${manager.showStatusBar() ? "flex items-center" : "hidden"
-          } browser-toolbar w-full !bg-[var(--panel-sidebar-background-color)]`}
+        class={`browser-toolbar`}
+        style={{
+          display: manager.showStatusBar() ? "flex" : "none",
+          alignItems: "center",
+          width: "100%",
+          borderTop: "1px solid var(--chrome-content-separator-color)",
+          background: "var(--panel-sidebar-background-color)",
+        }}
         mode="icons"
         context="toolbar-context-menu"
         accesskey="A"
@@ -23,7 +29,7 @@ export function StatusBarElem() {
           id="status-text"
           align="center"
           flex="1"
-          class="px-2 overflow-hidden"
+          class="status-text"
         />
       </xul:toolbar>
       <style class="nora-statusbar-utils" jsx>
