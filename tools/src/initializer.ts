@@ -189,25 +189,39 @@ export async function decompressBin(): Promise<void> {
           throw new Error("Non-zip archives not supported on Windows");
           
         case "darwin": {
-          logger.info("macOS extraction (hdiutil)");
-          const mountPoint = await Deno.makeTempDir({ prefix: "nora_dmg_mount_" });
-          try {
+            logger.info("macOS extraction (hdiutil)");
+            const mountPoint = await Deno.makeTempDir({ prefix: "nora_dmg_mount_" });
+            try {
             runCommand("hdiutil", ["attach", "-nobrowse", "-quiet", "-mountpoint", mountPoint, archivePath]);
-            runCommand("cp", ["-a", `${mountPoint}/.`, BIN_ROOT_DIR]);
+            const subdir = path.join(BIN_ROOT_DIR, BRANDING.base_name);
+            Deno.mkdirSync(subdir, { recursive: true });
+            runCommand("cp", ["-a", `${mountPoint}/.`, subdir]);
+
+            // Rename .app if it contains "Debug"
+            for (const entry of Deno.readDirSync(subdir)) {
+              if (entry.isDirectory && entry.name.endsWith('.app') && entry.name.includes('Debug')) {
+                const oldPath = path.join(subdir, entry.name);
+                const newName = entry.name.replace(/Debug/g, '');
+                const newPath = path.join(subdir, newName);
+                logger.info(`Renaming ${entry.name} to ${newName}`);
+                Deno.renameSync(oldPath, newPath);
+              }
+            }
+
             try {
               runCommand("xattr", ["-rc", BIN_ROOT_DIR]);
             } catch {
               // xattr might not be present; ignore
             }
             runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
-          } finally {
+            } finally {
             try {
               runCommand("hdiutil", ["detach", "-quiet", mountPoint]);
             } catch {
               // ignore detach failures
             }
-          }
-          break;
+            }
+            break;
         }
         
         case "linux": {

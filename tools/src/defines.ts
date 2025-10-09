@@ -8,8 +8,8 @@ import * as path from "@std/path";
  */
 
 export const BRANDING = {
-  base_name: "noraneko",
-  display_name: "Noraneko",
+  base_name: "floorp",
+  display_name: "Floorp",
   dev_suffix: "noraneko-dev",
 } as const;
 
