@@ -17,19 +17,19 @@ export function SearchBar() {
   return (
     <div className="relative">
       <div
-        className="bg-gray-700 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 cursor-pointer hover:bg-gray-600 transition-colors"
+        className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
         onClick={handleClick}
       >
         <div className="relative flex-1">
           <input
             type="text"
             placeholder={t("searchBar.searchOrEnterUrl")}
-            className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-100 cursor-pointer"
+            className="w-full bg-transparent border-none outline-none px-2 py-1 text-gray-100 cursor-pointer group-hover:text-white transition-colors"
             readOnly
           />
         </div>
 
-        <div className="p-2 text-gray-400">
+        <div className="p-2 text-gray-400 group-hover:text-white transition-colors">
           <Search size={18} />
         </div>
       </div>
