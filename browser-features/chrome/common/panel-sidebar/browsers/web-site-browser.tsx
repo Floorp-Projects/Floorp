@@ -19,7 +19,6 @@ export function WebSiteBrowser({ id, type, url, userContextId }: Panel) {
       disableglobalhistory="true"
       messagemanagergroup="browsers"
       autocompletepopup="PopupAutoComplete"
-      initialBrowsingContextGroupId="40"
       usercontextid={`${userContextId ?? 0}`}
       src={`chrome://browser/content/browser.xhtml?floorpWebPanelId=${id}`}
     />

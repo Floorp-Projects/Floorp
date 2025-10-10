@@ -152,6 +152,8 @@ export function getPortFor(serverName: string): number {
       return 5185;
     case "newtab":
       return 5186;
+    case "notes":
+      return 5188;
     case "settings":
       return 5183;
     case "welcome":

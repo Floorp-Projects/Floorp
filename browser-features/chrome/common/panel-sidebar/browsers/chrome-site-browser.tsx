@@ -21,12 +21,13 @@ export function ChromeSiteBrowser({ id, type, url }: Panel) {
       disableglobalhistory="true"
       messagemanagergroup="browsers"
       autocompletepopup="PopupAutoComplete"
-      initialBrowsingContextGroupId="40"
-      {...(panel.url?.startsWith("http") && import.meta.env.MODE === "dev" ? {
-        type: "content",
-        remote: "true",
-        maychangeremoteness: "true",
-      } : {})}
+      {...(panel.url?.startsWith("http") && import.meta.env.DEV
+        ? {
+          type: "content",
+          remote: "true",
+          maychangeremoteness: "true",
+        }
+        : {})}
       src={panel.url}
     />
   );
