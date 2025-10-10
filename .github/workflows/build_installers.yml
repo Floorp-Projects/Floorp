@@ -1,4 +1,4 @@
-name: "12 (A) 📦️ Build Installers"
+name: "(D) 📦️ Build Installers"
 
 on:
   workflow_dispatch:
