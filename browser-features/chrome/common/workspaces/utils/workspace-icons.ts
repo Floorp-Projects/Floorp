@@ -58,15 +58,15 @@ export class WorkspaceIcons {
       eager: true,
     }) as ModuleStrings;
 
-    const isDevelopment = import.meta.env?.MODE === "dev" || false;
+    const baseUrl =
+      import.meta.env?.VITE_WORKSPACE_ICON_ORIGIN ??
+      "http://localhost:5181/link-features-chrome/common/workspaces/icons";
+
     for (const path in this.moduleStrings) {
-      const iconUrl = isDevelopment
-        ? `http://localhost:5181/core/common/workspaces/icons/${
-          path.split("/").pop()
-        }`
-        : this.moduleStrings[path];
-      const iconName = path.split("/").pop()?.replace(".svg", "") || "";
-      this.resolvedIcons[iconName] = iconUrl;
+      const fileName = path.split("/").pop() ?? "";
+      const iconName = fileName.replace(".svg", "");
+      const normalizedBase = baseUrl.replace(/\/$/, "");
+      this.resolvedIcons[iconName] = `${normalizedBase}/${fileName}`;
     }
   }
 
