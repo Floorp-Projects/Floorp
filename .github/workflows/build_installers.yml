@@ -1,0 +1,71 @@
+name: "12 (A) 📦️ Build Installers"
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: |
+          cd src/installers/stub-win64-installer
+          pnpm install
+
+      - name: Build installer
+        run: |
+          deno task installer-win64-stub-build
+
+      - name: Copy installer to target
+        run: |
+          mkdir -p ./output
+          cp -r ./target/release/stub-installer.exe ./output/floorp-stub.installer.exe
+
+      - name: Publish Unsigned Installer 🎁
+        id: publish-unsigned-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-stub-installer-unsigned
+          path: output/floorp-stub.installer.exe
+          retention-days: 30
+
+      - name: Sign Installer 🖊️
+        id: Sign-installer
+        uses: signpath/github-action-submit-signing-request@v1.1
+        with:
+          api-token: "${{ secrets.SIGNPATH_API_TOKEN }}"
+          organization-id: "3b13ba3b-8062-4df7-a4a6-217a5ec352c4"
+          project-slug: "Floorp"
+          signing-policy-slug: "release-signing"
+          artifact-configuration-slug: "stub-v2-signing"
+          github-artifact-id: "${{ steps.publish-unsigned-installer.outputs.artifact-id }}"
+          wait-for-completion-timeout-in-seconds: 7200
+          wait-for-completion: true
+          output-artifact-directory: output/signed_installer
+
+      - name: Upload final installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-stub-installer
+          path: ./output/signed_installer/floorp-stub.installer.exe
+          retention-days: 30
