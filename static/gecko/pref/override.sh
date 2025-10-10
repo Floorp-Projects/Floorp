@@ -5,9 +5,16 @@
 
 set -euo pipefail
 
+# ANSI color codes
+COLOR_RESET='\033[0m'
+COLOR_BLUE='\033[34m'
+COLOR_GREEN='\033[32m'
+COLOR_YELLOW='\033[33m'
+COLOR_RED='\033[31m'
+
 # Check command line arguments
 if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <path-to-firefox.js>" >&2
+    echo -e "${COLOR_RED}Error: Usage: $0 <path-to-firefox.js>${COLOR_RESET}" >&2
     exit 1
 fi
 
@@ -19,22 +26,19 @@ OVERRIDE_INI="${SCRIPT_DIR}/override.ini"
 
 # Check if override.ini exists
 if [[ ! -f "$OVERRIDE_INI" ]]; then
-    echo "Error: override.ini not found at $OVERRIDE_INI" >&2
+    echo -e "${COLOR_RED}Error: override.ini not found at $OVERRIDE_INI${COLOR_RESET}" >&2
     exit 1
 fi
 
 # Check if firefox.js file exists
 if [[ ! -f "$FIREFOX_JS_PATH" ]]; then
-    echo "Error: firefox.js not found at $FIREFOX_JS_PATH" >&2
+    echo -e "${COLOR_RED}Error: firefox.js not found at $FIREFOX_JS_PATH${COLOR_RESET}" >&2
     exit 1
 fi
 
 # Create temporary file
 TEMP_FILE=$(mktemp)
 trap 'rm -f "$TEMP_FILE"' EXIT
-
-# Read override.ini and apply settings
-echo "Applying override.ini settings..."
 
 # Copy existing firefox.js
 cp "$FIREFOX_JS_PATH" "$TEMP_FILE"
@@ -78,11 +82,9 @@ while IFS= read -r line; do
         if grep -q "pref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
             # Replace existing preference (using | as delimiter to avoid conflicts with URLs)
             sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|pref(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
-            echo "Updated: $pref_name = $formatted_value"
         else
             # Add as new preference
             NEW_PREFS+=("pref(\"$pref_name\", $formatted_value);")
-            echo "Added: $pref_name = $formatted_value"
         fi
     fi
 done < "$OVERRIDE_INI"
@@ -97,7 +99,8 @@ if [[ ${#NEW_PREFS[@]} -gt 0 ]]; then
 fi
 
 # Apply changes to firefox.js
-mv "$TEMP_FILE" "$FIREFOX_JS_PATH"
-
-echo "Firefox preferences update completed."
-echo "Modified file: $FIREFOX_JS_PATH"
+if ! mv "$TEMP_FILE" "$FIREFOX_JS_PATH" 2>/dev/null; then
+    echo -e "${COLOR_RED}✗ Error: Failed to apply changes to firefox.js${COLOR_RESET}" >&2
+    echo -e "${COLOR_RED}→ Check file permissions for: $FIREFOX_JS_PATH${COLOR_RESET}" >&2
+    exit 1
+fi

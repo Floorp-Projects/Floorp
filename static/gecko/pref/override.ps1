@@ -6,19 +6,26 @@ param(
 # Firefox preferences override script
 # Receives firefox.js path as command line argument and overrides settings with override.ini
 
+# ANSI color codes
+$ColorReset = "`e[0m"
+$ColorBlue = "`e[34m"
+$ColorGreen = "`e[32m"
+$ColorYellow = "`e[33m"
+$ColorRed = "`e[31m"
+
 # Get script directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $OverrideIni = Join-Path $ScriptDir "override.ini"
 
 # Check if override.ini exists
 if (-not (Test-Path $OverrideIni)) {
-    Write-Error "Error: override.ini not found at $OverrideIni"
+    Write-Host "${ColorRed}Error: override.ini not found at $OverrideIni${ColorReset}" -ForegroundColor Red
     exit 1
 }
 
 # Check if firefox.js file exists
 if (-not (Test-Path $FirefoxJsPath)) {
-    Write-Error "Error: firefox.js not found at $FirefoxJsPath"
+    Write-Host "${ColorRed}Error: firefox.js not found at $FirefoxJsPath${ColorReset}" -ForegroundColor Red
     exit 1
 }
 
@@ -26,8 +33,6 @@ if (-not (Test-Path $FirefoxJsPath)) {
 $TempFile = [System.IO.Path]::GetTempFileName()
 
 try {
-    Write-Host "Applying override.ini settings..."
-
     # Copy existing firefox.js
     Copy-Item $FirefoxJsPath $TempFile
 
@@ -75,12 +80,10 @@ try {
                 # Replace existing preference
                 $replacement = "pref(`"$prefName`", $formattedValue);"
                 $FirefoxContent = $FirefoxContent -replace $existingPrefPattern, $replacement
-                Write-Host "Updated: $prefName = $formattedValue"
             } else {
                 # Add as new preference
                 $newPref = "pref(`"$prefName`", $formattedValue);"
                 $NewPrefs += $newPref
-                Write-Host "Added: $prefName = $formattedValue"
             }
         }
     }
@@ -100,11 +103,10 @@ try {
     # Apply changes to firefox.js
     Move-Item $TempFile $FirefoxJsPath -Force
 
-    Write-Host "Firefox preferences update completed."
-    Write-Host "Modified file: $FirefoxJsPath"
-
 } catch {
-    Write-Error "An error occurred: $($_.Exception.Message)"
+    Write-Host "${ColorRed}✗ An error occurred: $($_.Exception.Message)${ColorReset}" -ForegroundColor Red
+    Write-Host "${ColorRed}Stack trace:${ColorReset}" -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace -ForegroundColor Red
     exit 1
 } finally {
     # Clean up temporary file if it still exists
