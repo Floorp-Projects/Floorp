@@ -1,55 +1,118 @@
-import { zFloorpDesignConfigs } from "../../../../../common/scripts/global-types/type.ts";
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import type { zFloorpDesignConfigs } from "../../designs/type.ts";
+import type * as t from "io-ts";
+
+// UserJS imports
 import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
 import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";
 import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
-import leptonTabStyles from "@nora/skin/lepton/css/leptonContent.css?url";
-import fluerialStyles from "@nora/skin/fluerial/css/fluerial.css?url";
-import leptonChromeStyles from "@nora/skin/lepton/css/leptonChrome.css?url";
-import * as t from "io-ts";
+
+// CSS raw imports for development
+import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
+import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
 
 interface FCSS {
-  styles: string[];
+  styles?: string[]; // chrome:// URLs for production
+  stylesRaw?: string[]; // Raw CSS content for development
+  iconBasePath?: string; // Base path for icons in development
   userjs: string | null;
 }
 
+/**
+ * Get the chrome:// URL for a skin CSS file (production only)
+ */
+const getStylePath = (path: string): string => {
+  return `chrome://noraneko-skin/skin/${path}`;
+};
+
+/**
+ * Get CSS configuration based on the selected UI theme
+ */
 export function getCSSFromConfig(
   pref: t.TypeOf<typeof zFloorpDesignConfigs>,
 ): FCSS {
-  switch (pref.globalConfigs.userInterface) {
+  const isDev = import.meta.env.DEV;
+  const uiTheme = pref.globalConfigs.userInterface;
+
+  switch (uiTheme) {
     case "fluerial": {
-      return { styles: [fluerialStyles], userjs: null };
-    }
-    case "lepton": {
+      if (isDev) {
+        return {
+          stylesRaw: [fluerialStylesRaw],
+          iconBasePath: "http://localhost:5174/fluerial/icons",
+          userjs: null,
+        };
+      }
       return {
-        styles: [leptonChromeStyles, leptonTabStyles],
+        styles: [getStylePath("fluerial/css/fluerial.css")],
+        userjs: null,
+      };
+    }
+
+    case "lepton": {
+      if (isDev) {
+        return {
+          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          iconBasePath: "http://localhost:5174/lepton/icons",
+          userjs: leptonUserJs,
+        };
+      }
+      return {
+        styles: [
+          getStylePath("lepton/css/leptonChrome.css"),
+          getStylePath("lepton/css/leptonContent.css"),
+        ],
         userjs: leptonUserJs,
       };
     }
+
     case "photon": {
+      if (isDev) {
+        return {
+          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          iconBasePath: "http://localhost:5174/lepton/icons",
+          userjs: photonUserJs,
+        };
+      }
       return {
-        styles: [leptonChromeStyles, leptonTabStyles],
+        styles: [
+          getStylePath("lepton/css/leptonChrome.css"),
+          getStylePath("lepton/css/leptonContent.css"),
+        ],
         userjs: photonUserJs,
       };
     }
+
     case "protonfix": {
+      if (isDev) {
+        return {
+          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          iconBasePath: "http://localhost:5174/lepton/icons",
+          userjs: protonfixUserJs,
+        };
+      }
       return {
-        styles: [leptonChromeStyles, leptonTabStyles],
+        styles: [
+          getStylePath("lepton/css/leptonChrome.css"),
+          getStylePath("lepton/css/leptonContent.css"),
+        ],
         userjs: protonfixUserJs,
       };
     }
+
     case "proton": {
-      return {
-        styles: [],
-        userjs: null,
-      };
+      return { userjs: null };
     }
+
     default: {
-      pref.globalConfigs.userInterface satisfies never;
-      return {
-        styles: [],
-        userjs: null,
-      };
+      console.warn(`[getCSSFromConfig] Unknown UI theme: ${uiTheme}`);
+      uiTheme satisfies never;
+      return { userjs: null };
     }
   }
 }

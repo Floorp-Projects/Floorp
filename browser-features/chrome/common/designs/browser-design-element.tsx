@@ -3,71 +3,99 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, For, Match, Switch } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs.ts";
 import { getCSSFromConfig } from "./utils/css.ts";
 
-export function BrowserDesignElement() {
-  const getCSS = () => {
-    return getCSSFromConfig(config());
-  };
+const AGENT_SHEET = Ci.nsIStyleSheetService.AGENT_SHEET as number;
+const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
+  Ci.nsIStyleSheetService,
+);
 
+export function BrowserDesignElement() {
+  const getCSS = () => getCSSFromConfig(config());
+
+  // Apply UserJS preferences
   createEffect(() => {
-    const userjs = getCSS().userjs;
-    if (userjs) applyUserJS(userjs);
+    const { userjs } = getCSS();
+    if (userjs) {
+      applyUserJS(userjs);
+    }
   });
 
-  const [devStyle, setDevStyle] = createSignal([] as string[]);
+  // Register CSS using StyleSheetService
+  createEffect(() => {
+    const { styles, stylesRaw, iconBasePath } = getCSS();
+    const registeredURIs: nsIURI[] = [];
 
-  if (import.meta.env.DEV) {
-    createEffect(async () => {
-      const arr: string[] = [];
-      const styles = getCSS().styles;
-      if (!styles.length) return;
+    // Development mode: Use raw CSS with icon path replacement
+    if (stylesRaw?.length) {
+      for (let i = 0; i < stylesRaw.length; i++) {
+        let cssContent = stylesRaw[i];
 
-      const rawPath = styles[0].replace("css/leptonChrome.css", "icons");
-      const iconsDirPath = rawPath.startsWith("/@fs/")
-        ? `file://${rawPath.slice(4)}`
-        : `/src/${rawPath}`;
-      for (const link of styles) {
-        arr.push(
-          (await import(/* @vite-ignore */ `${link}?raw`)).default.replaceAll(
-            "../icons",
-            iconsDirPath,
-          ),
-        );
+        try {
+          // Replace relative icon paths with absolute URLs
+          if (iconBasePath) {
+            cssContent = cssContent.replaceAll(/\.\.\/icons/g, iconBasePath);
+          }
+
+          // Create data URI and register
+          const dataUri = `data:text/css;charset=utf-8,${
+            encodeURIComponent(cssContent)
+          }`;
+          const uri = Services.io.newURI(dataUri);
+
+          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
+            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+            registeredURIs.push(uri);
+          }
+        } catch (error) {
+          console.error(
+            `[BrowserDesignElement] Failed to register raw CSS ${i + 1}:`,
+            error,
+          );
+        }
       }
+    } // Production mode: Use chrome:// URLs
+    else if (styles?.length) {
+      for (const styleUrl of styles) {
+        try {
+          const uri = Services.io.newURI(styleUrl);
 
-      setDevStyle(arr);
+          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
+            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+            registeredURIs.push(uri);
+          }
+        } catch (error) {
+          console.error(
+            `[BrowserDesignElement] Failed to register CSS: ${styleUrl}`,
+            error,
+          );
+        }
+      }
+    }
+
+    // Cleanup: Unregister sheets when component unmounts or styles change
+    onCleanup(() => {
+      for (const uri of registeredURIs) {
+        try {
+          if (sss.sheetRegistered(uri, AGENT_SHEET)) {
+            sss.unregisterSheet(uri, AGENT_SHEET);
+          }
+        } catch (error) {
+          console.error(
+            "[BrowserDesignElement] Failed to unregister CSS:",
+            error,
+          );
+        }
+      }
     });
-  }
+  });
 
   return (
     <>
-      <Switch>
-        <Match when={import.meta.env.PROD}>
-          <For each={getCSS().styles}>
-            {(style) => (
-              <link
-                class="nora-designs"
-                rel="stylesheet"
-                href={`${style}`}
-              />
-            )}
-          </For>
-        </Match>
-        <Match when={import.meta.env.DEV}>
-          <For each={devStyle()}>
-            {(style) => (
-              <style>
-                {style}
-              </style>
-            )}
-          </For>
-        </Match>
-      </Switch>
       <style>{styleBrowser}</style>
     </>
   );

@@ -3,55 +3,127 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const regex =
-  /\/\/.*?$|\/\*[\s\S]*?\*\/|^(?:[\t ]*(?:\r?\n|\r))+|\/\/\s*user_pref\(.*?\);\s*$/gm;
+/**
+ * Parse and apply user.js preferences to Firefox
+ */
+export function applyUserJS(userjs: string): void {
+  const lines = userjs.split("\n");
+  const cleanedLines: string[] = [];
+  let currentLine = "";
 
-export async function applyUserJS(userjs: string) {
-  const p_userjs = userjs.replace(regex, "\n");
-  for (const line of p_userjs.split("\n")) {
-    if (line.includes("user_pref")) {
-      const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
-      let [prefName, value, ..._] = tmp.split(",");
-      if (!prefName || !value) {
-        console.warn("Invalid user_pref line:", line);
+  // Accumulate multi-line user_pref statements
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip comment-only lines and empty lines
+    if (
+      trimmed.startsWith("//") ||
+      trimmed.startsWith("/*") ||
+      trimmed.startsWith("*") ||
+      trimmed === ""
+    ) {
+      continue;
+    }
+
+    // Accumulate lines until we hit a semicolon
+    currentLine += " " + line;
+    if (currentLine.includes(");")) {
+      cleanedLines.push(currentLine.trim());
+      currentLine = "";
+    }
+  }
+
+  let appliedCount = 0;
+  let skippedCount = 0;
+
+  // Process each user_pref line
+  for (const line of cleanedLines) {
+    if (!line.includes("user_pref")) continue;
+
+    try {
+      // Extract content between user_pref( and );
+      const match = line.match(/user_pref\s*\(\s*(.+?)\s*\)\s*;/s);
+      if (!match) {
+        console.warn("[applyUserJS] Could not parse:", line);
+        skippedCount++;
         continue;
       }
-      prefName = prefName.trim().replaceAll('"', "");
-      value = value.trim();
+
+      // Split by comma, respecting commas inside strings
+      const content = match[1];
+      const parts = content.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+      if (parts.length < 2) {
+        console.warn("[applyUserJS] Invalid format:", line);
+        skippedCount++;
+        continue;
+      }
+
+      const prefName = parts[0].trim().replace(/^["']|["']$/g, "");
+      const value = parts.slice(1).join(",").trim();
+
+      // Apply preference based on value type
       if (value === "true" || value === "false") {
         Services.prefs
           .getDefaultBranch("")
           .setBoolPref(prefName, value === "true");
-      } else if (value.includes('"')) {
+        appliedCount++;
+      } else if (value.startsWith('"') || value.startsWith("'")) {
+        const stringValue = value.replace(/^["']|["']$/g, "");
         Services.prefs
           .getDefaultBranch("")
-          .setStringPref(prefName, value.replace('"', ""));
-      } else if (!Number.isNaN(value)) {
-        Services.prefs
-          .getDefaultBranch("")
-          .setIntPref(prefName, value as unknown as number);
+          .setStringPref(prefName, stringValue);
+        appliedCount++;
+      } else if (!Number.isNaN(Number(value))) {
+        Services.prefs.getDefaultBranch("").setIntPref(prefName, Number(value));
+        appliedCount++;
+      } else {
+        console.warn(
+          `[applyUserJS] Unknown value type: ${prefName} = ${value}`,
+        );
+        skippedCount++;
       }
+    } catch (error) {
+      console.error("[applyUserJS] Error processing line:", line, error);
+      skippedCount++;
     }
+  }
+
+  if (skippedCount > 0) {
+    console.warn(
+      `[applyUserJS] Applied ${appliedCount} preferences, skipped ${skippedCount}`,
+    );
   }
 }
 
-export async function resetPreferencesWithUserJsContents(path: string) {
+/**
+ * Reset preferences that were set by a user.js file
+ */
+export async function resetPreferencesWithUserJsContents(
+  path: string,
+): Promise<void> {
   const userjs = await (await fetch(path)).text();
-  const p_userjs = userjs.replace(regex, "\n");
-  for (const line of p_userjs.split("\n")) {
-    if (line.includes("user_pref")) {
-      const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
-      let [prefName] = tmp.split(",");
-      prefName = prefName.trim().replaceAll('"', "");
-      if (
-        // Due to unload userChrome.css, we need to skip this pref
-        prefName.startsWith(
-          "toolkit.legacyUserProfileCustomizations.stylesheets",
-        )
-      ) {
-        continue;
-      }
-      Services.prefs.clearUserPref(prefName);
+  const regex =
+    /\/\/.*?$|\/\*[\s\S]*?\*\/|^(?:[\t ]*(?:\r?\n|\r))+|\/\/\s*user_pref\(.*?\);\s*$/gm;
+  const cleaned = userjs.replace(regex, "\n");
+
+  for (const line of cleaned.split("\n")) {
+    if (!line.includes("user_pref")) continue;
+
+    const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
+    const [prefName] = tmp.split(",");
+    const cleanPrefName = prefName.trim().replaceAll('"', "");
+
+    // Skip toolkit.legacyUserProfileCustomizations.stylesheets
+    // to avoid unloading userChrome.css
+    if (
+      cleanPrefName.startsWith(
+        "toolkit.legacyUserProfileCustomizations.stylesheets",
+      )
+    ) {
+      continue;
     }
+
+    Services.prefs.clearUserPref(cleanPrefName);
   }
 }

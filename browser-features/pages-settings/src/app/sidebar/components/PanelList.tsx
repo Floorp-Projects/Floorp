@@ -34,7 +34,7 @@ import {
 import type {
   Panel,
   Panels,
-} from "../../../../../../apps/main/core/common/panel-sidebar/utils/type.ts";
+} from "#features-chrome/common/panel-sidebar/utils/type.ts";
 import { PanelEditModal } from "./PanelEditModal.tsx";
 import {
   AlertTriangle,
@@ -49,7 +49,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../../../newtab/src/components/common/card.tsx";
+} from "../../../components/common/card.tsx";
 
 const SortablePanel = ({
   panel,
