@@ -29,14 +29,12 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
       <xul:vbox id="panel-sidebar-bottomButtonBox">
         <xul:toolbarbutton
           class="panel-sidebar-panel"
-          data-l10n-id="sidebar-addons-button"
           onCommand={() =>
             window.BrowserAddonUI.openAddonsMgr("addons://list/extension")}
           id="panel-sidebar-addons-icon"
         />
         <xul:toolbarbutton
           class="panel-sidebar-panel"
-          data-l10n-id="sidebar-passwords-button"
           onCommand={() =>
             window.LoginHelper.openPasswordManager(window, {
               entryPoint: "mainmenu",
@@ -45,7 +43,6 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
         />
         <xul:toolbarbutton
           class="panel-sidebar-panel"
-          data-l10n-id="sidebar-preferences-button"
           onCommand={() => window.openPreferences()}
           id="panel-sidebar-preferences-icon"
         />

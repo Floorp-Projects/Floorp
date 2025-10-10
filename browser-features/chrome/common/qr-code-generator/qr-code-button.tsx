@@ -23,7 +23,6 @@ export function QRCodePageActionButton() {
     <Show when={!config().uiCustomization.qrCode.disableButton}>
       <xul:hbox
         id="QRCodeGeneratePageAction"
-        data-l10n-id="qrcode-generate-page-action"
         class="urlbar-page-action"
         style={{
           "list-style-image": `url("${qrCodeIcon}")`,

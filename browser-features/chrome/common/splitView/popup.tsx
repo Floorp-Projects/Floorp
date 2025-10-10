@@ -52,15 +52,13 @@ export function Popup(props: { ctx: CSplitView }) {
       <xul:vbox id="splitView-box">
         <xul:vbox class="panel-header">
           <h1>
-            {texts().title}
-            <span data-l10n-id="split-view-title" />
+            {texts().title as string}
           </h1>
         </xul:vbox>
         <xul:toolbarseparator />
         <xul:vbox id="splitView-vbox">
           <h3 class="splitView-title">
-            {texts().position}
-            <span data-l10n-id="split-view-position" />
+            {texts().position as string}
           </h3>
           <xul:hbox id="splitView-position-selector">
             <xul:vbox
@@ -70,11 +68,10 @@ export function Popup(props: { ctx: CSplitView }) {
                 gSplitView.handleSplitViewPanelRevseOptionClick(false)}
             >
               <label
-                data-l10n-id="split-view-position-left"
                 class="splitView-select-label"
                 for="splitView-position-selector-content-left"
               >
-                {texts().positionLeft}
+                {texts().positionLeft as string}
               </label>
               <xul:hbox
                 id="splitView-position-selector-content-left"
@@ -91,11 +88,10 @@ export function Popup(props: { ctx: CSplitView }) {
                 gSplitView.handleSplitViewPanelRevseOptionClick(true)}
             >
               <label
-                data-l10n-id="split-view-position-right"
                 class="splitView-select-label"
                 for="splitView-position-selector-content-right"
               >
-                {texts().positionRight}
+                {texts().positionRight as string}
               </label>
               <xul:hbox
                 id="splitView-position-selector-content-right"
@@ -107,7 +103,7 @@ export function Popup(props: { ctx: CSplitView }) {
             </xul:vbox>
           </xul:hbox>
           <xul:toolbarseparator />
-          <h3 class="splitView-title">{texts().title}</h3>
+          <h3 class="splitView-title">{texts().title as string}</h3>
           <xul:hbox id="splitView-flex-selector">
             <xul:vbox
               id="splitView-flex-selector-row"
@@ -116,11 +112,10 @@ export function Popup(props: { ctx: CSplitView }) {
                 gSplitView.handleSplitViewPanelTypeOptionClick("row")}
             >
               <label
-                data-l10n-id="split-view-flex-row"
                 class="splitView-select-label"
                 for="splitView-flex-selector-content-row"
               >
-                {texts().flexRow}
+                {texts().flexRow as string}
               </label>
               <xul:hbox
                 id="splitView-flex-selector-content-row"
@@ -137,11 +132,10 @@ export function Popup(props: { ctx: CSplitView }) {
                 gSplitView.handleSplitViewPanelTypeOptionClick("column")}
             >
               <label
-                data-l10n-id="split-view-flex-column"
                 class="splitView-select-label"
                 for="splitView-flex-selector-content-column"
               >
-                {texts().flexColumn}
+                {texts().flexColumn as string}
               </label>
               <xul:vbox
                 id="splitView-flex-selector-content-column"
@@ -154,12 +148,11 @@ export function Popup(props: { ctx: CSplitView }) {
           </xul:hbox>
           <button
             id="splitView-remove-button"
-            data-l10n-id="split-view-remove-button"
             class="footer-button"
             type="button"
             onClick={() => gSplitView.unsplitCurrentView()}
           >
-            {texts().removeButton}
+            {texts().removeButton as string}
           </button>
         </xul:vbox>
       </xul:vbox>

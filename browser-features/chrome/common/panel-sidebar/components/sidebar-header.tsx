@@ -25,26 +25,22 @@ export function SidebarHeader(props: { ctx: CPanelSidebar }) {
         <xul:toolbarbutton
           id="panel-sidebar-back"
           class="panel-sidebar-actions toolbarbutton-1 chromeclass-toolbar-additional"
-          data-l10n-id="sidebar-back-button"
           onCommand={() => PanelNavigator.back(selectedPanelId() ?? "")}
         />
         <xul:toolbarbutton
           id="panel-sidebar-forward"
           onCommand={() => PanelNavigator.forward(selectedPanelId() ?? "")}
           class="panel-sidebar-actions"
-          data-l10n-id="sidebar-forward-button"
         />
         <xul:toolbarbutton
           id="panel-sidebar-reload"
           onCommand={() => PanelNavigator.reload(selectedPanelId() ?? "")}
           class="panel-sidebar-actions"
-          data-l10n-id="sidebar-reload-button"
         />
         <xul:toolbarbutton
           id="panel-sidebar-go-index"
           onCommand={() => PanelNavigator.goIndexPage(selectedPanelId() ?? "")}
           class="panel-sidebar-actions"
-          data-l10n-id="sidebar-go-index-button"
         />
       </Show>
       <xul:spacer flex="1" />
@@ -52,7 +48,6 @@ export function SidebarHeader(props: { ctx: CPanelSidebar }) {
         id="panel-sidebar-float"
         onCommand={() => setIsFloating(!isFloating())}
         class="panel-sidebar-actions"
-        data-l10n-id="sidebar-float-button"
       />
       <Show
         when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===

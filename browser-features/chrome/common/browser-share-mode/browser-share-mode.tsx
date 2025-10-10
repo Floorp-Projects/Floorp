@@ -16,7 +16,6 @@ export function ShareModeElement() {
   return (
     <>
       <xul:menuitem
-        data-l10n-id="sharemode-menuitem"
         label="Toggle Share Mode"
         type="checkbox"
         id="toggle_sharemode"

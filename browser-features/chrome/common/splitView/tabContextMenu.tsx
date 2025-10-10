@@ -48,13 +48,11 @@ export class SplitViewContextMenu {
         <xul:menuseparator />
         <xul:menuitem
           id="context_splittabs"
-          data-l10n-id="split-view-tab-context-split-tabs"
           label={texts().splitTabs}
           onCommand={() => gSplitView.contextSplitTabs()}
         />
         <xul:menuitem
           id="context_split_fixedtab"
-          data-l10n-id="split-view-tab-context-split-fixed-tab"
           label={texts().splitFixedTab}
           onCommand={() => gSplitView.splitContextFixedTab()}
         />

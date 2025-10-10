@@ -7,7 +7,6 @@ import { BIN_DIR } from "../../../tools/src/defines.ts";
 const logger = new Logger("pref");
 
 const PREF_OVERRIDE_DIR = "static/gecko/pref";
-const PREF_APPLIED_TMP = "_dist/bin/applied_patches/pref_applied";
 
 function binDir(): string {
   return BIN_DIR;
@@ -19,20 +18,8 @@ export function prefNeeded(): boolean {
   // If override.ini doesn't exist, no pref override needed
   if (!exists(overrideIniPath)) return false;
 
-  // If applied marker doesn't exist, pref is needed
-  if (!exists(PREF_APPLIED_TMP)) return true;
-
-  // Compare override.ini with applied version
-  try {
-    const currentIni = Deno.readTextFileSync(overrideIniPath);
-    const appliedIni = Deno.readTextFileSync(PREF_APPLIED_TMP);
-
-    // If content changed, pref is needed
-    return currentIni !== appliedIni;
-  } catch {
-    // If can't read, assume pref is needed
-    return true;
-  }
+  // Always return true if override.ini exists
+  return true;
 }
 
 export function applyPrefs(): void {
@@ -109,24 +96,6 @@ export function applyPrefs(): void {
         console.error(result.stdout);
       }
       throw new Error("Preference override failed");
-    }
-
-    // Display script output only if there's an error in stdout
-    if (result.stdout.trim() && result.stdout.includes("Error")) {
-      logger.error("Script output:");
-      console.error(result.stdout);
-    }
-
-    // Mark as applied by copying override.ini to applied marker
-    try {
-      const appliedDir = path.dirname(PREF_APPLIED_TMP);
-      Deno.mkdirSync(appliedDir, { recursive: true });
-      Deno.copyFileSync(overrideIniPath, PREF_APPLIED_TMP);
-    } catch (e: unknown) {
-      const error = e as Error;
-      logger.warn(
-        `Failed to mark preference as applied: ${error?.message ?? error}`,
-      );
     }
 
     logger.success("Preferences override applied successfully");

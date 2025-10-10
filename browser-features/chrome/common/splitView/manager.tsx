@@ -33,7 +33,6 @@ export class SplitViewManager {
     return (
       <Show when={currentSplitView() !== -1}>
         <xul:hbox
-          data-l10n-id="splitView-action"
           class="urlbar-page-action"
           role="button"
           popup="splitView-panel"

@@ -19,7 +19,6 @@ export function ContextMenu() {
 
   return (
     <xul:menuitem
-      data-l10n-id="status-bar"
       label={label()}
       type="checkbox"
       id="toggle_statusBar"

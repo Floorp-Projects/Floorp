@@ -63,7 +63,6 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
           <xul:toolbarbutton
             id="workspacesCreateNewWorkspaceButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
-            data-l10n-id="workspaces-create-new-workspace-button"
             label={texts().createNew}
             context="tab-stacks-toolbar-item-context-menu"
             onCommand={() => props.ctx.createNoNameWorkspace()}
@@ -71,7 +70,6 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
           <xul:toolbarbutton
             id="workspacesManageworkspacesServicesButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
-            data-l10n-id="workspaces-manage-workspaces-button"
             label={texts().manage}
             context="tab-stacks-toolbar-item-context-menu"
             onCommand={() => props.ctx.manageWorkspaceFromDialog()}

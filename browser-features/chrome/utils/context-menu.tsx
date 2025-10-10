@@ -97,7 +97,6 @@ export namespace ContextMenuUtils {
 export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
   return (
     <xul:menuitem
-      data-l10n-id={l10n}
       label={l10n}
       id={id}
       onCommand={runFunction}

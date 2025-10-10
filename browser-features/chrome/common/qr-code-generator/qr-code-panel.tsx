@@ -27,7 +27,6 @@ export function QRCodePanel() {
       <xul:vbox id="qrcode-box">
         <xul:vbox class="panel-header qrcode-header">
           <xul:label
-            data-l10n-id="qrcode-generate-page-action-title"
             class="qrcode-title"
           >
             {title()}
