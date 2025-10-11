@@ -264,19 +264,22 @@ const JS_WINDOW_ACTORS: {
     matches: ["http://*/*", "https://*/*", "about:*"],
     allFrames: true,
   },
-  NRBrowserOS: {
+  NROSAutomotor: {
     parent: {
       esModuleURI: localPathToResourceURI(
-        "../actors/NRBrowserOSParent.sys.mts",
+        "../actors/NROSAutomotorParent.sys.mts",
       ),
     },
     child: {
-      esModuleURI: localPathToResourceURI("../actors/NRBrowserOSChild.sys.mts"),
+      esModuleURI: localPathToResourceURI(
+        "../actors/NROSAutomotorChild.sys.mts",
+      ),
       events: {
+        DOMContentLoaded: {},
         DOMDocElementInserted: {},
       },
     },
-    matches: ["http://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
 };
 

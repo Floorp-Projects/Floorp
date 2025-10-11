@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
   Briefcase,
+  Cpu,
   Grip,
   House,
   MousePointer,
@@ -54,6 +55,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Option,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
+    {
+      title: "Floorp OS",
+      url: "/features/floorp-os",
+      icon: Cpu,
+    },
     {
       title: t("pages.profileAndAccount"),
       url: "/features/accounts",
