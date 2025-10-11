@@ -250,8 +250,3 @@ Notice: If you are a developer of "showdown" and your name is not listed, please
 - [Fushra Pulse](https://pulsebrowser.app/)
 - [Mozilla Public License 2.0](https://github.com/pulse-browser/browser/blob/main/LICENSE)
 - Author: [Fushra](https://github.com/Fushra)
-
-## Repository View Counter
-
-<div align='center'><a href='https://www.websitecounterfree.com'><img src='https://www.websitecounterfree.com/c.php?d=9&id=38248&s=1' border='0' alt='Free Website Counter'></a><br/><small>
-<a href='https://www.websitecounterfree.com'>Free Website Counter: Since 2023 7/22</a></small></div>
