@@ -11,8 +11,7 @@ import {
   type Setter,
 } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
-import * as t from "io-ts";
-import { isRight } from "fp-ts/Either";
+import { z } from "zod";
 import { getActionDisplayName } from "./utils/gestures";
 
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
@@ -29,37 +28,40 @@ export type GestureDirection =
   | "downLeft";
 export type GesturePattern = GestureDirection[];
 
-export const zGestureAction = t.type({
-  pattern: t.array(
-    t.union([
-      t.literal("up"),
-      t.literal("down"),
-      t.literal("left"),
-      t.literal("right"),
-      t.literal("upRight"),
-      t.literal("upLeft"),
-      t.literal("downRight"),
-      t.literal("downLeft"),
+export const zGestureAction = z.object({
+  pattern: z.array(
+    z.enum([
+      "up",
+      "down",
+      "left",
+      "right",
+      "upRight",
+      "upLeft",
+      "downRight",
+      "downLeft",
     ]),
   ),
-  action: t.string,
+  action: z.string(),
 });
-export type GestureAction = t.TypeOf<typeof zGestureAction>;
+export type GestureAction = z.infer<typeof zGestureAction>;
 
-export const zMouseGestureConfig = t.type({
-  enabled: t.boolean,
-  sensitivity: t.number,
-  showTrail: t.boolean,
-  showLabel: t.boolean,
-  trailColor: t.string,
-  trailWidth: t.number,
-  contextMenu: t.type({
-    minDistance: t.number,
-    preventionTimeout: t.number,
+export const zMouseGestureConfig = z.object({
+  enabled: z.boolean().default(false),
+  sensitivity: z.number().min(1).max(100).default(40),
+  showTrail: z.boolean().default(true),
+  showLabel: z.boolean().default(true),
+  trailColor: z.string().default("#37ff00"),
+  trailWidth: z.number().min(1).max(10).default(2),
+  contextMenu: z.object({
+    minDistance: z.number().min(1).max(50).default(5),
+    preventionTimeout: z.number().min(0).max(1000).default(200),
+  }).default({
+    minDistance: 5,
+    preventionTimeout: 200,
   }),
-  actions: t.array(zGestureAction),
+  actions: z.array(zGestureAction).default([]),
 });
-export type MouseGestureConfig = t.TypeOf<typeof zMouseGestureConfig>;
+export type MouseGestureConfig = z.infer<typeof zMouseGestureConfig>;
 
 export const defaultConfig: MouseGestureConfig = {
   enabled: false,
@@ -147,14 +149,15 @@ function createConfig(): [
   Accessor<MouseGestureConfig>,
   Setter<MouseGestureConfig>,
 ] {
-  const parsedConfig = zMouseGestureConfig.decode(
-    JSON.parse(
-      Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
-    ),
-  );
-
   const [config, setConfig] = createSignal<MouseGestureConfig>(
-    isRight(parsedConfig) ? parsedConfig.right : defaultConfig,
+    zMouseGestureConfig.parse(
+      JSON.parse(
+        Services.prefs.getStringPref(
+          MOUSE_GESTURE_CONFIG_PREF,
+          strDefaultConfig,
+        ),
+      ),
+    ),
   );
 
   createEffect(() => {
@@ -166,17 +169,16 @@ function createConfig(): [
 
   const configObserver = () => {
     try {
-      const result = zMouseGestureConfig.decode(
-        JSON.parse(
-          Services.prefs.getStringPref(
-            MOUSE_GESTURE_CONFIG_PREF,
-            strDefaultConfig,
+      setConfig(
+        zMouseGestureConfig.parse(
+          JSON.parse(
+            Services.prefs.getStringPref(
+              MOUSE_GESTURE_CONFIG_PREF,
+              strDefaultConfig,
+            ),
           ),
         ),
       );
-      if (isRight(result)) {
-        setConfig(result.right);
-      }
     } catch (e) {
       console.error("Failed to parse mouse gesture configuration:", e);
       setConfig(defaultConfig);
