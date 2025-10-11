@@ -1,22 +1,39 @@
 {
-  "description": "This file contains the list of translation targets. I will used by f18n repository GitHub Actions.",
-  "source_file": "en-US.json",
+  "description": "Translation targets consumed by the f18n-central automation. Each target maps Floorp source content to its counterpart in the f18n repository.",
   "targets": [
-  
     {
+      "name": "main",
+      "type": "directory",
+      "source_path": "i18n",
+      "source_locale": "en-US",
+      "f18n_path": "main/"
+    },
+    {
+      "name": "settings",
+      "type": "file",
       "source_path": "browser-features/pages-settings/src/lib/i18n/locales",
+      "source_file": "en-US.json",
       "f18n_path": "settings/"
     },
     {
+      "name": "newtab",
+      "type": "file",
       "source_path": "browser-features/pages-newtab/src/lib/i18n/locales",
+      "source_file": "en-US.json",
       "f18n_path": "newtab/"
     },
     {
+      "name": "welcome",
+      "type": "file",
       "source_path": "browser-features/pages-welcome/src/lib/i18n/locales",
+      "source_file": "en-US.json",
       "f18n_path": "welcome/"
     },
     {
+      "name": "stub-win64-installer",
+      "type": "file",
       "source_path": "src/installers/stub-win64-installer/src/lib/i18n/locales",
+      "source_file": "en-US.json",
       "f18n_path": "stub-win64-installer/"
     }
   ]

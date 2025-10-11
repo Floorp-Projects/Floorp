@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="24.2717 39.0673 971.099 940.477" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<path d="M392.96 39.0816C354.692 38.4764 309.795 57.1876 286.41 85.0193L53.3929 362.336C26.6661 394.143 16.4896 451.602 30.6727 490.652L154.334 831.115C168.517 870.165 213.173 907.698 254.083 914.94L610.763 978.056C651.674 985.298 706.505 965.403 733.231 933.596L966.248 656.279C992.978 624.472 1003.15 567.014 988.968 527.963L948.839 417.518L518.544 59.9566L408.878 40.5592C403.764 39.6539 398.426 39.168 392.96 39.0816Z" id="Fill"/>
+<filter color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" height="558.548" id="Filter" width="674.249" x="483.716" y="-93.3077">
+<feGaussianBlur in="SourceGraphic" result="Blur" stdDeviation="16"/>
+</filter>
+</defs>
+<g id="レイヤー-1">
+<g opacity="1">
+<use fill="#5309e8" fill-rule="nonzero" opacity="1" stroke="none" xlink:href="#Fill"/>
+<clipPath clip-rule="nonzero" id="ClipPath">
+<use xlink:href="#Fill"/>
+</clipPath>
+<g clip-path="url(#ClipPath)">
+<path d="M562.625 206.184C482.92 192.074 406.832 245.274 392.722 324.979C378.612 404.684 431.823 480.711 511.528 494.821C591.233 508.931 667.249 455.782 681.359 376.076C695.469 296.371 642.331 220.294 562.625 206.184ZM503.364 540.757C385.887 520.308 272.93 573.958 214.03 667.67C210.936 671.524 173.431 714.717 221.382 723.304C388.452 753.22 538.354 779.757 705.541 809.014C753.526 817.411 733.128 763.967 731.546 759.286C708.397 651.048 620.722 561.881 503.364 540.757Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M1117.97 425.24L523.716-53.3077L561.946 300.127C580.211 354.57 638.094 406.761 691.241 416.69L1117.97 425.24Z" fill="#000000" fill-rule="nonzero" filter="url(#Filter)" opacity="0.32" stroke="none"/>
+<path d="M948.839 417.518L518.544 59.9566L602.077 289.975C616.26 329.025 660.916 366.557 701.826 373.799L948.839 417.518Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+</g>
+</g>
+</svg>

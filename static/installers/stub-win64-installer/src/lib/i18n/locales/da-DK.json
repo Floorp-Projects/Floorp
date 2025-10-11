@@ -1,0 +1,97 @@
+{
+    "app": {
+        "status": {
+            "installing": "Installerer i baggrunden...",
+            "installComplete": "Installation fuldført"
+        },
+        "installer": {
+            "title": "Floorp-installation",
+            "description": "Installer Floorp-browseren og få en privatlivsfokuseret, hurtig og tilpasningsvenlig browseroplevelse.",
+            "adminRights": "Installer med administratorrettigheder",
+            "adminRightsEnabled": "Installer for alle brugere med administratorrettigheder.",
+            "adminRightsDisabled": "Installer kun for den aktuelle bruger.",
+            "customPathRequired": "Brugerdefineret installationssti kræver administratorrettigheder.",
+            "installLocation": "Installationsplacering",
+            "change": "Skift",
+            "installButton": "Start installationen",
+            "retryButton": "Prøv igen"
+        },
+        "progress": {
+            "installing": "Installerer...",
+            "slideCounter": "Slide {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "Vælg installationsplacering",
+            "installPath": "Installationssti",
+            "browse": "Gennemse",
+            "resetDefault": "Nulstil til standard",
+            "cancel": "Annuller",
+            "save": "Gem indstillinger",
+            "close": "Luk"
+        },
+        "exitConfirmation": {
+            "title": "Afbryd installation?",
+            "message": "Hvis du afbryder installationsprocessen, bliver Floorp ikke installeret.",
+            "cancelButton": "Afbryd",
+            "confirmButton": "Afbryd installation"
+        },
+        "complete": {
+            "success": "Installation lykkedes",
+            "error": "Installation mislykkedes",
+            "launchCheckbox": "Start Floorp-browseren efter installation",
+            "closeButton": "Luk installationsprogram",
+            "countdownMessage": "Installationsprogram lukker om {{count}} sekunder",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
+        }
+    },
+    "slides": {
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+        },
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+        },
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+        },
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+        },
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "Floorp-installationsprogrammet er blevet hentet (udviklingstilstand)",
+            "installation_complete": "Floorp-installation gennemført."
+        },
+        "errors": {
+            "installer_not_found": "Kunne ikke hente Floorp-installationsprogram.",
+            "download_failed": "En fejl opstod under download: {{0}}",
+            "signature_verification_failed": "Signaturverificering mislykkedes. Udførelse afbrudt af sikkerhedshensyn.",
+            "signature_verification_error": "Der opstod en fejl under signaturbekræftelse: {{0}}",
+            "installer_exit_code": "Installationen afsluttede med kode {{0}}.",
+            "installer_execution": "Der opstod en fejl under kørsel af installationen: {{0}}",
+            "browser_not_found": "Floorp-browser ikke fundet. Installationen lykkedes, men den eksekverbare browser kunne ikke findes.",
+            "browser_launch_failed": "Kunne ikke starte browser: {{0}}",
+            "file_not_found": "Fil ikke fundet: {{0}}",
+            "not_a_file": "Sti er ikke en fil: {{0}}",
+            "admin_rights_denied": "Administratorrettigheder blev nægtet. Du valgte administratorrettighedstilstand, men tilladelse blev nægtet.",
+            "exit_code_not_found": "Kunne ikke hente installationens exit-kode. Administratorrettigheder er muligvis blevet nægtet.",
+            "powershell_script_creation": "Kunne ikke oprette PowerShell-script: {{0}}",
+            "powershell_process": "Kunne ikke starte PowerShell-process: {{0}}",
+            "admin_install_failed": "Installation med administratorrettigheder mislykkedes. Exit-kode: {{0}}",
+            "user_installer_launch": "Kunne ikke starte installationsprocessen med brugerrettigheder: {{0}}",
+            "user_installer_execution": "Der opstod et problem under kørsel af installationen med brugerrettigheder: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+        }
+    }
+}

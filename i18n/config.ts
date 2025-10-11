@@ -33,7 +33,7 @@ for (const path in _meta) {
 export function initI18N(namespace: string[], defaultNamespace: string) {
   i18next.init({
     lng: "en-US",
-    debug: true,
+    debug: false,
     resources: modules,
     defaultNS: defaultNamespace,
     ns: namespace,
