@@ -336,17 +336,17 @@ export function TopSites() {
           onCancel={() => setShowAddModal(false)}
         />
       )}
-      <div className="bg-gray-800/50 rounded-lg shadow-sm p-3 inline-block">
+      <div className="bg-transparent p-3 inline-block">
         <div className="flex flex-wrap gap-x-0.5">
           {pinnedSites.map((site) => (
             <a
               key={site.url}
               href={site.url}
-              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:backdrop-blur-sm hover:bg-gray-700/50"
               onContextMenu={(e) => handleContextMenu(e, site)}
             >
               <div className="relative w-8 h-8">
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${
                       new URL(site.url).hostname
@@ -356,11 +356,13 @@ export function TopSites() {
                   />
                 </div>
                 <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">
-                  <PinIcon className="w-4 h-4 text-white" />
+                  <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center shadow-sm">
+                    <PinIcon className="w-3 h-3 text-white" />
+                  </div>
                 </div>
               </div>
               <span
-                className="text-xs text-center text-gray-300 leading-tight max-w-full inline-block overflow-hidden text-ellipsis"
+                className="text-[11px] text-center text-gray-200 leading-tight max-w-full inline-block overflow-hidden text-ellipsis text-shadow-lg/20 group-hover:text-white transition-colors"
                 title={site.title}
               >
                 {truncateTopSiteTitle(site.title)}
@@ -371,10 +373,10 @@ export function TopSites() {
             <a
               key={site.url}
               href={site.url}
-              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:backdrop-blur-sm hover:bg-gray-700/50"
               onContextMenu={(e) => handleContextMenu(e, site)}
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700/80 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
                 {site.favicon || site.smallFavicon
                   ? (
                     <img
@@ -390,7 +392,7 @@ export function TopSites() {
                   )}
               </div>
               <span
-                className="text-xs text-center text-gray-300 leading-tight max-w-full inline-block overflow-hidden text-ellipsis"
+                className="text-[11px] text-center text-gray-200 leading-tight max-w-full inline-block overflow-hidden text-ellipsis text-shadow-lg/20 group-hover:text-white transition-colors"
                 title={site.title}
               >
                 {truncateTopSiteTitle(site.title)}
@@ -401,13 +403,13 @@ export function TopSites() {
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="group flex flex-col items-center w-16 p-2 rounded-lg border border-dashed border-gray-500/50 text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-gray-700/50 transition-colors"
+            className="group flex flex-col items-center w-16 p-2 rounded-lg border border-dashed border-gray-400/50 text-gray-300 hover:text-white hover:backdrop-blur-sm hover:bg-gray-700/50 transition-all"
             title={t("topSites.addSite")}
           >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-700/40 group-hover:scale-110 transform transition-transform mb-1">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-700 group-hover:scale-110 transform transition-transform mb-1">
               <span className="text-2xl leading-none">＋</span>
             </div>
-            <span className="text-[10px] text-center leading-tight line-clamp-2">
+            <span className="text-[10px] text-center leading-tight line-clamp-2 text-shadow-lg/20 group-hover:text-white transition-colors">
               {t("topSites.addSite")}
             </span>
           </button>
