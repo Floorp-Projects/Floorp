@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/common/button.tsx";
 import {
   Card,
@@ -46,6 +47,7 @@ interface FloorpOSStatus {
 }
 
 export default function FloorpOS() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<FloorpOSStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -58,7 +60,7 @@ export default function FloorpOS() {
   const loadStatus = async () => {
     try {
       if (!globalThis.OSAutomotor) {
-        setError("OSAutomotor API is not available");
+        setError(t("floorpOS.errors.apiUnavailable"));
         return;
       }
 
@@ -67,27 +69,27 @@ export default function FloorpOS() {
       setError("");
     } catch (err) {
       console.error("Failed to load status:", err);
-      setError(String(err));
+      setError(t("floorpOS.errors.loadStatus", { reason: String(err) }));
     }
   };
 
   const handleEnable = async () => {
     setLoading(true);
-    setMessage("Enabling Floorp OS...");
+    setMessage(t("floorpOS.messages.enabling"));
     setError("");
 
     try {
       const result = await globalThis.OSAutomotor.enable();
       if (result.success) {
-        setMessage("Floorp OS enabled successfully!");
+        setMessage(t("floorpOS.messages.enableSuccess"));
         await loadStatus();
       } else {
-        setError(result.error || "Failed to enable Floorp OS");
+        setError(result.error ?? t("floorpOS.errors.enable"));
         setMessage("");
       }
     } catch (err) {
       console.error("Error enabling Floorp OS:", err);
-      setError(String(err));
+      setError(t("floorpOS.errors.enableAction", { reason: String(err) }));
       setMessage("");
     } finally {
       setLoading(false);
@@ -96,21 +98,21 @@ export default function FloorpOS() {
 
   const handleDisable = async () => {
     setLoading(true);
-    setMessage("Disabling Floorp OS...");
+    setMessage(t("floorpOS.messages.disabling"));
     setError("");
 
     try {
       const result = await globalThis.OSAutomotor.disable();
       if (result.success) {
-        setMessage("Floorp OS disabled successfully!");
+        setMessage(t("floorpOS.messages.disableSuccess"));
         await loadStatus();
       } else {
-        setError(result.error || "Failed to disable Floorp OS");
+        setError(result.error ?? t("floorpOS.errors.disable"));
         setMessage("");
       }
     } catch (err) {
       console.error("Error disabling Floorp OS:", err);
-      setError(String(err));
+      setError(t("floorpOS.errors.disableAction", { reason: String(err) }));
       setMessage("");
     } finally {
       setLoading(false);
@@ -121,9 +123,9 @@ export default function FloorpOS() {
     return (
       <div className="p-6 space-y-3">
         <div className="flex flex-col items-start pl-6">
-          <h1 className="text-3xl font-bold mb-2">Floorp OS</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("floorpOS.title")}</h1>
           <p className="text-sm mb-8">
-            Loading...
+            {t("floorpOS.loading")}
           </p>
         </div>
       </div>
@@ -133,9 +135,9 @@ export default function FloorpOS() {
   return (
     <div className="p-6 space-y-3">
       <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">Floorp OS</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("floorpOS.title")}</h1>
         <p className="text-sm mb-8">
-          Manage Floorp OS backend modules and services
+          {t("floorpOS.description")}
         </p>
       </div>
 
@@ -144,34 +146,36 @@ export default function FloorpOS() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Status
+              {t("floorpOS.statusCard.title")}
               {status.enabled
                 ? (
                   <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-100">
                     <CheckCircle className="mr-1 h-3 w-3" />
-                    Enabled
+                    {t("floorpOS.statusCard.enabledBadge")}
                   </span>
                 )
                 : (
                   <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-100">
                     <XCircle className="mr-1 h-3 w-3" />
-                    Disabled
+                    {t("floorpOS.statusCard.disabledBadge")}
                   </span>
                 )}
             </CardTitle>
             <CardDescription>
-              Current status of Floorp OS
+              {t("floorpOS.statusCard.description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Platform Support</p>
+                  <p className="text-sm font-medium">
+                    {t("floorpOS.statusCard.platformSupport")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {status.platformSupported
-                      ? "Your platform is supported"
-                      : "Your platform is not supported"}
+                      ? t("floorpOS.statusCard.platformSupported")
+                      : t("floorpOS.statusCard.platformUnsupported")}
                   </p>
                 </div>
                 {status.platformSupported
@@ -181,9 +185,13 @@ export default function FloorpOS() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Installed Version</p>
+                  <p className="text-sm font-medium">
+                    {t("floorpOS.statusCard.installedVersion")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {status.installedVersion || "Not installed"}
+                    {status.installedVersion
+                      ? status.installedVersion
+                      : t("floorpOS.statusCard.notInstalled")}
                   </p>
                 </div>
                 {status.installedVersion && (
@@ -193,9 +201,13 @@ export default function FloorpOS() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Service Status</p>
+                  <p className="text-sm font-medium">
+                    {t("floorpOS.statusCard.serviceStatus")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {status.enabled ? "Running" : "Stopped"}
+                    {status.enabled
+                      ? t("floorpOS.statusCard.running")
+                      : t("floorpOS.statusCard.stopped")}
                   </p>
                 </div>
                 <Power
@@ -211,9 +223,9 @@ export default function FloorpOS() {
         {/* Controls Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Controls</CardTitle>
+            <CardTitle>{t("floorpOS.controlsCard.title")}</CardTitle>
             <CardDescription>
-              Enable or disable Floorp OS
+              {t("floorpOS.controlsCard.description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -226,7 +238,7 @@ export default function FloorpOS() {
                 className="flex-1"
               >
                 <Power className="mr-2 h-4 w-4" />
-                Enable Floorp OS
+                {t("floorpOS.controlsCard.enable")}
               </Button>
               <Button
                 onClick={handleDisable}
@@ -235,7 +247,7 @@ export default function FloorpOS() {
                 className="flex-1"
               >
                 <Power className="mr-2 h-4 w-4" />
-                Disable Floorp OS
+                {t("floorpOS.controlsCard.disable")}
               </Button>
             </div>
 
@@ -245,7 +257,7 @@ export default function FloorpOS() {
               variant="secondary"
               className="w-full"
             >
-              Refresh Status
+              {t("floorpOS.controlsCard.refresh")}
             </Button>
 
             {message && (

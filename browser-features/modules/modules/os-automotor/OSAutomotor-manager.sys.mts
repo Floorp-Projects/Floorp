@@ -55,8 +55,6 @@ class OSAutomotorManager {
    * Initialize the OSAutomotor manager
    */
   private async initialize(): Promise<void> {
-    console.info("[Floorp OS] Initializing OSAutomotor Manager");
-
     // Check if Floorp OS is enabled
     const isEnabled = Services.prefs.getBoolPref(FLOORP_OS_ENABLED_PREF, false);
 
@@ -72,9 +70,6 @@ class OSAutomotorManager {
   private getPlatformInfo(): PlatformInfo {
     const os = AppConstants.platform;
     const arch = String(Services.sysinfo.get("arch"));
-
-    // Debug logging
-    console.info(`[Floorp OS] Platform detection - OS: ${os}, Arch: ${arch}`);
 
     // Windows x86_64 (support multiple arch strings)
     if (
@@ -139,7 +134,6 @@ class OSAutomotorManager {
     }
 
     // Unsupported platform
-    console.warn(`[Floorp OS] Unsupported platform - OS: ${os}, Arch: ${arch}`);
     return {
       supported: false,
       binaryName: "",
@@ -181,8 +175,6 @@ class OSAutomotorManager {
     const floorpOSDir = PathUtils.join(profileDir, "floorp-os");
     const binaryPath = this.getBinaryPath();
 
-    console.info(`[Floorp OS] Downloading binary from: ${downloadUrl}`);
-
     try {
       // Create floorp-os directory if it doesn't exist
       if (!(await IOUtils.exists(floorpOSDir))) {
@@ -223,12 +215,9 @@ class OSAutomotorManager {
       }
 
       // Store the binary path in preferences
+      // Store the binary path in preferences
       Services.prefs.setStringPref(FLOORP_OS_BINARY_PATH_PREF, binaryPath);
       Services.prefs.setStringPref(FLOORP_OS_VERSION_PREF, CURRENT_VERSION);
-
-      console.info(
-        `[Floorp OS] Binary downloaded successfully to: ${binaryPath}`,
-      );
     } catch (error) {
       console.error("[Floorp OS] Failed to download binary:", error);
       throw error;
@@ -261,10 +250,7 @@ class OSAutomotorManager {
     const binaryExists = await IOUtils.exists(binaryPath);
 
     if (!binaryExists || storedVersion !== CURRENT_VERSION) {
-      console.info("[Floorp OS] Binary not found or outdated. Downloading...");
       await this.downloadBinary();
-    } else {
-      console.info("[Floorp OS] Binary is already installed and up-to-date");
     }
   }
 
@@ -273,7 +259,6 @@ class OSAutomotorManager {
    */
   private async startFloorpOS(): Promise<void> {
     if (this._binaryProcess) {
-      console.warn("[Floorp OS] Binary is already running");
       return;
     }
 
@@ -281,8 +266,9 @@ class OSAutomotorManager {
     const binaryExists = await IOUtils.exists(binaryPath);
 
     if (!binaryExists) {
-      console.error("[Floorp OS] Binary not found");
-      return;
+      const error = new Error("Binary not found");
+      console.error("[Floorp OS] Binary not found at:", binaryPath);
+      throw error;
     }
 
     try {
@@ -299,10 +285,9 @@ class OSAutomotorManager {
       process.runAsync(args, args.length);
 
       this._binaryProcess = process;
-
-      console.info("[Floorp OS] Binary started successfully");
     } catch (error) {
       console.error("[Floorp OS] Failed to start binary:", error);
+      throw error;
     }
   }
 
@@ -314,7 +299,6 @@ class OSAutomotorManager {
       try {
         this._binaryProcess.kill();
         this._binaryProcess = null;
-        console.info("[Floorp OS] Binary stopped successfully");
       } catch (error) {
         console.error("[Floorp OS] Failed to stop binary:", error);
       }
@@ -329,9 +313,21 @@ class OSAutomotorManager {
       throw new Error("Platform not supported");
     }
 
-    Services.prefs.setBoolPref(FLOORP_OS_ENABLED_PREF, true);
-    await this.ensureBinaryInstalled();
-    await this.startFloorpOS();
+    try {
+      // Download and verify binary first
+      await this.ensureBinaryInstalled();
+
+      // Start the binary
+      await this.startFloorpOS();
+
+      // Only set enabled to true if everything succeeded
+      Services.prefs.setBoolPref(FLOORP_OS_ENABLED_PREF, true);
+    } catch (error) {
+      // Make sure enabled is set to false on error
+      Services.prefs.setBoolPref(FLOORP_OS_ENABLED_PREF, false);
+      console.error("[Floorp OS] Failed to enable:", error);
+      throw error;
+    }
   }
 
   /**

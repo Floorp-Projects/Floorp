@@ -356,6 +356,46 @@
         "rename": "名前を変更",
         "uninstall": "アンインストール"
     },
+    "floorpOS": {
+        "title": "Floorp OS",
+        "description": "Floorp OS のバックエンドモジュールとサービスを管理します",
+        "loading": "読み込み中...",
+        "statusCard": {
+            "title": "ステータス",
+            "description": "Floorp OS の現在の状態",
+            "platformSupport": "対応プラットフォーム",
+            "platformSupported": "このプラットフォームはサポートされています",
+            "platformUnsupported": "このプラットフォームはサポート対象外です",
+            "installedVersion": "インストール済みバージョン",
+            "notInstalled": "未インストール",
+            "serviceStatus": "サービスの状態",
+            "running": "実行中",
+            "stopped": "停止中",
+            "enabledBadge": "有効",
+            "disabledBadge": "無効"
+        },
+        "controlsCard": {
+            "title": "操作",
+            "description": "Floorp OS を有効化または無効化します",
+            "enable": "Floorp OS を有効化",
+            "disable": "Floorp OS を無効化",
+            "refresh": "状態を更新"
+        },
+        "messages": {
+            "enabling": "Floorp OS を有効化しています...",
+            "disabling": "Floorp OS を無効化しています...",
+            "enableSuccess": "Floorp OS を有効化しました。",
+            "disableSuccess": "Floorp OS を無効化しました。"
+        },
+        "errors": {
+            "apiUnavailable": "OSAutomotor API を利用できません。",
+            "loadStatus": "ステータスの取得に失敗しました: {{reason}}",
+            "enable": "Floorp OS の有効化に失敗しました。",
+            "disable": "Floorp OS の無効化に失敗しました。",
+            "enableAction": "Floorp OS の有効化でエラーが発生しました: {{reason}}",
+            "disableAction": "Floorp OS の無効化でエラーが発生しました: {{reason}}"
+        }
+    },
     "mouseGesture": {
         "description": "マウス操作でブラウザーをコントロールします。",
         "generalSettings": "一般設定",
