@@ -1,0 +1,68 @@
+.tabbrowser-tab[dragtarget] {
+  z-index: 1 !important;
+  position: initial !important;
+}
+
+.tabbrowser-tab {
+  left: 0 !important;
+}
+
+#tabbrowser-arrowscrollbox-periphery {
+  transform: none !important;
+}
+
+#tabbrowser-tabs[overflow="true"]
+  > #tabbrowser-arrowscrollbox
+  > #tabs-newtab-button,
+#TabsToolbar:not([customizing="true"])
+  #tabbrowser-tabs[hasadjacentnewtabbutton]
+  > #tabbrowser-arrowscrollbox
+  > #tabs-newtab-button {
+  display: inline-flex !important;
+}
+
+#tabbrowser-tabs,
+#tabbrowser-arrowscrollbox,
+.tabbrowser-tab[style^="margin-inline-start"],
+#tabbrowser-tabs[positionpinnedtabs]
+  > #tabbrowser-arrowscrollbox
+  > .tabbrowser-tab[pinned] {
+  margin-inline-start: 0 !important;
+}
+
+#tabbrowser-tabs {
+  max-height: none !important;
+}
+
+#tabbrowser-tabs[positionpinnedtabs]
+  > #tabbrowser-arrowscrollbox
+  > .tabbrowser-tab[pinned] {
+  position: initial !important;
+}
+
+#tabbrowser-tabs[positionpinnedtabs] {
+  padding-inline-start: 0 !important;
+}
+
+#TabsToolbar .titlebar-buttonbox-container {
+  display: block !important;
+}
+
+.tab-group-label-container {
+  left: 0 !important;
+}
+
+.scrollbox-clip {
+  overflow: visible;
+  display: block;
+}
+
+scrollbox {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: var(--tab-min-height);
+}
+
+scrollbox > slot {
+  flex-wrap: wrap;
+}

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { noraComponent, NoraComponentBase } from "@core/utils/base.ts";
+import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { mouseGestureService } from "./service.ts";
 export { mouseGestureService } from "./service.ts";
 export type {
