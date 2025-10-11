@@ -1,0 +1,97 @@
+{
+    "app": {
+        "status": {
+            "installing": "正在背景安裝中...",
+            "installComplete": "安裝已完成"
+        },
+        "installer": {
+            "title": "Floorp 安裝程式",
+            "description": "安裝 Floorp 瀏覽器，開啟一份注重隱私、快速且可自由客製化的瀏覽體驗。",
+            "adminRights": "使用管理員權限安裝",
+            "adminRightsEnabled": "為所有具有管理權限的使用者安裝。",
+            "adminRightsDisabled": "僅為目前使用者安裝。",
+            "customPathRequired": "自訂安裝路徑需要管理員權限。",
+            "installLocation": "安裝位置",
+            "change": "變更",
+            "installButton": "開始安裝",
+            "retryButton": "重試"
+        },
+        "progress": {
+            "installing": "正在安裝中...",
+            "slideCounter": "幻燈片 {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "選擇安裝位置",
+            "installPath": "安裝路徑",
+            "browse": "瀏覽",
+            "resetDefault": "重設為預設值",
+            "cancel": "取消",
+            "save": "儲存設定",
+            "close": "關閉"
+        },
+        "exitConfirmation": {
+            "title": "要取消安裝嗎？",
+            "message": "取消安裝程序意味著將會取消安裝 Floorp。",
+            "cancelButton": "取消",
+            "confirmButton": "取消安裝"
+        },
+        "complete": {
+            "success": "安裝成功",
+            "error": "安裝失敗",
+            "launchCheckbox": "安裝後啟動 Floorp 瀏覽器",
+            "closeButton": "關閉安裝程式",
+            "countdownMessage": "安裝程式會在 {{count}} 秒後關閉",
+            "legacyDownloadMessage": "你也可以試試傳統的安裝程式。",
+            "legacyDownloadButton": "下載"
+        }
+    },
+    "slides": {
+        "slide1": {
+            "title": "歡迎使用 Floorp",
+            "description": "歡迎來的最新版本的 Floorp，在日本研發的一款瀏覽器。接下來介紹的內容僅是此企劃的一部分。"
+        },
+        "slide2": {
+            "title": "定期更新",
+            "description": "即使 Floorp 只是一個由社群愛好者運作的企劃，我們仍然會持續的維護與更新。以堅信每個人都有權利自由的存取網路為原則，提供一份安全的瀏覽體驗。"
+        },
+        "slide3": {
+            "title": "最新功能",
+            "description": "最新版本的 Floorp 運用著由 Mozilla Firefox 研發的最先進的網路功能。並在其基礎上重新設計，讓每個人都能輕鬆的使用各種功能。"
+        },
+        "slide4": {
+            "title": "高度客製化",
+            "description": "比您預設的瀏覽器更能保護隱私，且配備有多種客製化選項。Floorp 允許您按照自己的喜好調整。"
+        },
+        "slide5": {
+            "title": "為了您而戰鬥著",
+            "description": "Floorp 能夠阻擋有害的追蹤。我們在網站運作和用戶權利之間找尋平衡點，努力爭取網路功能及隱私保障之間的相容，以改善網路。"
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "已下載 Floorp 安裝程式 (開發模式)",
+            "installation_complete": "Floorp 安裝完成。"
+        },
+        "errors": {
+            "installer_not_found": "擷取 Floorp 安裝程式失敗。",
+            "download_failed": "下載過程中發生錯誤： {{0}}",
+            "signature_verification_failed": "安裝程式簽名驗證失敗。由於安全原因而中止執行。",
+            "signature_verification_error": "簽名驗證時發生錯誤： {{0}}",
+            "installer_exit_code": "安裝程式退出，代碼為 {{0}}。",
+            "installer_execution": "執行安裝程式時發生錯誤： {{0}}",
+            "browser_not_found": "找不到 Floorp 瀏覽器。安裝成功，但無法找到瀏覽器可執行檔。",
+            "browser_launch_failed": "無法啟動瀏覽器： {{0}}",
+            "file_not_found": "找不到檔案： {{0}}",
+            "not_a_file": "路徑不是檔案： {{0}}",
+            "admin_rights_denied": "管理員權限被拒絕。雖然您已選擇了管理員權限模式，但權限被拒絕。",
+            "exit_code_not_found": "無法取得安裝程式的退出代碼。管理員權限可能已被拒絕。",
+            "powershell_script_creation": "建立 PowerShell 指令腳本失敗： {{0}}",
+            "powershell_process": "啟動 PowerShell 程序失敗： {{0}}",
+            "admin_install_failed": "使用管理員權限安裝失敗。退出代碼： {{0}}",
+            "user_installer_launch": "以使用者權限啟動安裝程式程序失敗： {{0}}",
+            "user_installer_execution": "以使用者權限執行安裝程式時發生問題： {{0}}",
+            "cpu_not_supported": "此裝置的 CPU 不支援 SSE4.1。Floorp 需要支援 SSE4.1 的處理器。",
+            "cpu_check_failed": "驗證 CPU 要求失敗。請檢查系統要求。"
+        }
+    }
+}

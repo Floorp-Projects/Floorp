@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "닫은 탭 되돌리기",
+        "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "이름",
+            "name-placeholder": "이 워크스페이스의 이름을 입력",
+            "container": "컨테이너",
+            "no-container": "컨테이너 없음",
+            "icon": "아이콘",
+            "edit-title": "워크스페이스 편집",
+            "save": "저장",
+            "cancel": "취소"
+        },
+        "icons": {
+            "article": "기사",
+            "book": "책",
+            "briefcase": "서류 가방",
+            "cart": "쇼핑 카트",
+            "chat": "채팅",
+            "chill": "칠",
+            "circle": "원",
+            "compass": "나침반",
+            "code": "코드",
+            "dollar": "달러",
+            "fence": "울타리",
+            "fingerprint": "지문",
+            "food": "음식",
+            "fruit": "과일",
+            "game": "게임",
+            "gear": "설정",
+            "gift": "선물",
+            "key": "열쇠",
+            "lightning": "번개",
+            "network": "네트워크",
+            "notes": "메모",
+            "paint": "페인트",
+            "photo": "사진",
+            "pin": "핀",
+            "pet": "반려동물",
+            "question": "질문",
+            "smartphone": "스마트폰",
+            "star": "별",
+            "tree": "나무",
+            "vacation": "휴가",
+            "love": "하트",
+            "moon": "달",
+            "music": "음악",
+            "user": "사용자"
+        },
+        "service": {
+            "new-workspace": "새 워크스페이스 ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "이 워크스페이스를 위로 옮기기",
+            "move-down": "이 워크스페이스를 아래로 옮기기",
+            "delete": "워크스페이스 삭제",
+            "manage": "워크스페이스 관리"
+        },
+        "popup": {
+            "create-new": "새로운 워크스페이스 만들기...",
+            "manage": "워크스페이스 관리"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "탭을 다른 워크스페이스로 이동"
+        },
+        "error": {
+            "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
+        }
+    },
+    "statusbar": {
+        "toggle": "상태 표시줄{{mark}}"
+    },
+    "splitview": {
+        "title": "분할 보기",
+        "position": "위치",
+        "position-left": "왼쪽",
+        "position-right": "오른쪽",
+        "flex-row": "평행",
+        "flex-column": "수직",
+        "remove-button": "현재 보기 제거",
+        "tab-context": {
+            "split-tabs": "탭 분할",
+            "split-fixed-tab": "분할하여 고정 표시"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "웹 앱",
+            "install-current": "현재 페이지를 프로그레시브 웹 앱으로서 설치",
+            "open-installed": "설치된 웹 앱 열기"
+        },
+        "page-action": {
+            "title": "애플리케이션 열기",
+            "install": "애플리케이션 설치",
+            "open": "애플리케이션 열기",
+            "cancel": "취소",
+            "site-icon": "사이트 아이콘"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "사생활 보호 컨테이너으로 열기",
+        "name": "사생활 보호 컨테이너"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "뒤로 가기",
+            "gecko-forward": "앞으로 가기",
+            "gecko-reload": "새로 고침",
+            "gecko-close-tab": "탭 닫기",
+            "gecko-open-new-tab": "새 탭 열기",
+            "gecko-duplicate-tab": "탭 복제",
+            "gecko-reload-all-tabs": "모든 탭 새로 고침",
+            "gecko-restore-last-tab": "닫힌 탭 다시 열기",
+            "gecko-open-new-window": "새 창 열기",
+            "gecko-open-new-private-window": "새 사생활 보호 창 열기",
+            "gecko-close-window": "창 닫기",
+            "gecko-restore-last-window": "마지막 창 복원",
+            "gecko-show-next-tab": "다음 탭 표시",
+            "gecko-show-previous-tab": "이전 탭 표시",
+            "gecko-show-all-tabs-panel": "모든 탭 패널 표시",
+            "gecko-force-reload": "강제 새로 고림",
+            "gecko-zoom-in": "확대",
+            "gecko-zoom-out": "축소",
+            "gecko-reset-zoom": "비율 초기화",
+            "gecko-bookmark-this-page": "이 페이지를 북마크",
+            "gecko-open-home-page": "홈 페이지 열기",
+            "gecko-open-addons-manager": "부가 기능 관리자 열기",
+            "gecko-send-with-mail": "메일로 보내기",
+            "gecko-save-page": "페이지 저장",
+            "gecko-print-page": "페이지 인쇄",
+            "gecko-mute-current-tab": "현재 탭 음소거",
+            "gecko-show-source-of-page": "페이지 소스 보기",
+            "gecko-show-page-info": "페이지 정보 표시",
+            "floorp-rest-mode": "휴식 모드 사용",
+            "floorp-hide-user-interface": "인터페이스 숨기기",
+            "floorp-toggle-navigation-panel": "내비게이션 패널 토글",
+            "gecko-stop": "중지",
+            "gecko-search-in-this-page": "이 페이지에서 찾기",
+            "gecko-show-next-search-result": "다음 검색 결과 표시",
+            "gecko-show-previous-search-result": "이전 검색 결과 표시",
+            "gecko-search-the-web": "탭 검색",
+            "gecko-open-migration-wizard": "이전 마법사 열기",
+            "gecko-quit-from-application": "앱 종료",
+            "gecko-enter-into-customize-mode": "맞춤 모드로 전환",
+            "gecko-enter-into-offline-mode": "오프라인 모드로 전환",
+            "gecko-open-screen-capture": "화면 캡처 열기",
+            "floorp-show-pip": "화면 속 화면 보기",
+            "gecko-open-bookmark-add-tool": "북마크 추가 도구 열기",
+            "gecko-open-bookmarks-manager": "북마크 관리자 열기",
+            "gecko-toggle-bookmark-toolbar": "북마크 도구 모음 전환",
+            "gecko-open-general-preferences": "일반 환경 설정 열기",
+            "gecko-open-privacy-preferences": "일반 설정 열기",
+            "gecko-open-workspaces-preferences": "워크스페이스 설정 열기",
+            "gecko-open-containers-preferences": "컨테이너 설정 열기",
+            "gecko-open-search-preferences": "검색 설정 열기",
+            "gecko-open-sync-preferences": "동기화 설정 열기",
+            "gecko-open-task-manager": "작업 관리자 열기",
+            "gecko-forget-history": "기록 삭제",
+            "gecko-quick-forget-history": "빠른 기록 삭제",
+            "gecko-clear-recent-history": "최근 기록 지우기",
+            "gecko-restore-last-session": "마지막 세션 복원",
+            "gecko-search-history": "검색 기록",
+            "gecko-manage-history": "기록 관리",
+            "gecko-open-downloads": "다운로드 열기",
+            "gecko-show-bookmark-sidebar": "북마크 사이드바 보기",
+            "gecko-show-history-sidebar": "기록 사이드바 열기",
+            "gecko-show-synced-tabs-sidebar": "동기화된 탭 사이드바 보기",
+            "gecko-reverse-sidebar": "사이드바 위치 반전",
+            "gecko-hide-sidebar": "사이드바 숨기기",
+            "gecko-toggle-sidebar": "사이드바 전환",
+            "gecko-scroll-up": "위로 스크롤",
+            "gecko-scroll-down": "아래로 스크롤",
+            "gecko-scroll-right": "오른쪽으로 스크롤",
+            "gecko-scroll-left": "왼쪽으로 스크롤",
+            "gecko-scroll-to-top": "맨 위로 스크롤",
+            "gecko-scroll-to-bottom": "맨 아래로 스크롤"
+        },
+        "descriptions": {
+            "gecko-back": "이전 페이지로 돌아가기",
+            "gecko-forward": "다음 페이지로 이동",
+            "gecko-reload": "이 페이지 다시 불러오기",
+            "gecko-close-tab": "이 탭 닫기",
+            "gecko-open-new-tab": "새 탭 열기",
+            "gecko-duplicate-tab": "이 탭을 복제",
+            "gecko-reload-all-tabs": "모든 탭 다시 불러오기",
+            "gecko-restore-last-tab": "최근 닫은 탭 다시 열기"
+        }
+    },
+    "qrCode": {
+        "pageAction": "QR 코드 생성",
+        "modalTitle": "QR 코드 생성기",
+        "loading": "QR 코드를 생성하는 중...",
+        "copyButton": "이미지 복사",
+        "downloadButton": "다운로드",
+        "closeButton": "닫기",
+        "copySuccess": "QR 코드가 클립보드에 복사되었습니다!",
+        "copyError": "QR 코드 복사에 실패했습니다",
+        "generateError": "QR 코드 생성에 실패했습니다"
+    },
+    "qrcode-generate-page-action": "이 페이지의 QR 코드 생성",
+    "qrcode-generate-page-action-title": "QR 코드 생성기",
+    "panelSidebar": {
+        "modal": {
+            "type": "패널 유형",
+            "typeOptions": {
+                "web": "웹 페이지",
+                "sidebar-tool": "도구 사이드바",
+                "extension": "사이드바 확장",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+            },
+            "width": "패널 너비",
+            "url": "웹 페이지 URL",
+            "container": "컨테이너",
+            "noContainer": "컨테이너 없음",
+            "userAgent": "모바일 사용자 에이전트 사용",
+            "extension": "확장 표시",
+            "sideBarTool": "사이드바 도구 표시",
+            "title": "패널 추가",
+            "add": "추가",
+            "cancel": "취소"
+        },
+        "contextMenu": {
+            "unload": "이 웹 패널 비활성화",
+            "mute": "이 웹 패널 음소거/음소거 해제",
+            "changeZoom": "비율 변경",
+            "zoomIn": "확대",
+            "zoomOut": "축소",
+            "resetZoom": "비율 초기화",
+            "changeUA": "이 엡 패널에서 사용자 에이전트를 모바일/데스크톱 버전으로 전환",
+            "delete": "이 패널 삭제"
+        }
+    },
+    "chrome_css": {
+        "menu": "스타일",
+        "rebuild": "스타일 시트 재작성",
+        "create": "새로운 스타일 시트 만들기",
+        "open_folder": "스타일 시트 폴더 열기",
+        "edit_user_chrome": "userChrome.css 편집",
+        "edit_user_content": "userContent.css 편집",
+        "rebuild_complete": "스타일 시트 재작성",
+        "editor_path_not_found": "편집기 경로를 찾을 수 없습니다",
+        "set_pref_description": "편집기 경로를 설정하세요",
+        "please_enter_filename": "파일 이름을 입력하세요",
+        "file_created": "파일이 생성되었습니다",
+        "file_created_successfully": "파일이 성공적으로 생성되었습니다",
+        "open_file_in_editor": "파일을 편집기로 열까요?",
+        "error_title": "오류",
+        "folder_open_failed": "CSS 폴더를 여는 데 실패했습니다",
+        "edit_failed": "파일 수정에 실패했습니다"
+    },
+    "reboot": {
+        "menu": {
+            "title": "다시 시작",
+            "normal-restart": "다시 시작",
+            "restart-cache-clear": "캐시 지우고 다시 시작",
+            "restart-safe-mode": "안전 모드로 다시 시작",
+            "restart-profile-manager": "프로필 관리자와 함께 다시 시작"
+        }
+    }
+}

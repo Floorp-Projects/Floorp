@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "Вернуть закрытую вкладку",
+        "tooltiptext": "Переоткрыть последнюю закрытую вкладку {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Название",
+            "name-placeholder": "Введите название для рабочего пространства",
+            "container": "Контейнер",
+            "no-container": "Нет контейнера",
+            "icon": "Значок",
+            "edit-title": "Редактировать рабочее пространство",
+            "save": "Сохранить изменения",
+            "cancel": "Отменить"
+        },
+        "icons": {
+            "article": "Статья",
+            "book": "Книга",
+            "briefcase": "Дипломат",
+            "cart": "Корзина для покупок",
+            "chat": "Чат",
+            "chill": "Холод",
+            "circle": "Круг",
+            "compass": "Компас",
+            "code": "Код",
+            "dollar": "Доллар",
+            "fence": "Забор",
+            "fingerprint": "Отпечаток пальца",
+            "food": "Еда",
+            "fruit": "Фрукт",
+            "game": "Игра",
+            "gear": "Настройки",
+            "gift": "Подарок",
+            "key": "Ключ",
+            "lightning": "Молния",
+            "network": "Сеть",
+            "notes": "Заметки",
+            "paint": "Краска",
+            "photo": "Фото",
+            "pin": "Кнопка",
+            "pet": "Питомец",
+            "question": "Вопросительный знак",
+            "smartphone": "Смартфон",
+            "star": "Звезда",
+            "tree": "Дерево",
+            "vacation": "Отпуск",
+            "love": "Любовь",
+            "moon": "Луна",
+            "music": "Музыка",
+            "user": "Пользователь"
+        },
+        "service": {
+            "new-workspace": "Новое рабочее пространство ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Переместить это рабочее пространство вверх",
+            "move-down": "Переместить это рабочее пространство вниз",
+            "delete": "Удалить рабочее пространство",
+            "manage": "Управление рабочим пространством"
+        },
+        "popup": {
+            "create-new": "Создать новое рабочее пространство...",
+            "manage": "Управление рабочими пространствами"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Переместить вкладку в другое рабочее пространство"
+        },
+        "error": {
+            "invalidWorkspaceID": "Неправильный идентификатор рабочих пространств (возможно не обновлён порядок)"
+        }
+    },
+    "statusbar": {
+        "toggle": "Строка состояния{{mark}}"
+    },
+    "splitview": {
+        "title": "Разделённый вид",
+        "position": "Расположение",
+        "position-left": "Слева",
+        "position-right": "Справа",
+        "flex-row": "Строка",
+        "flex-column": "Столбец",
+        "remove-button": "Удалить текущий вид",
+        "tab-context": {
+            "split-tabs": "Разделить вкладки",
+            "split-fixed-tab": "Разделить на фиксированную вкладку"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Веб-приложения",
+            "install-current": "Установить текущую страницу как прогрессивное веб-приложение",
+            "open-installed": "Открыть установленные приложения"
+        },
+        "page-action": {
+            "title": "Открыть приложение",
+            "install": "Установить приложение",
+            "open": "Открыть приложение",
+            "cancel": "Отменить",
+            "site-icon": "Значок сайта"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Открыть в приватном контейнере",
+        "name": "Приватный контейнер"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "Назад",
+            "gecko-forward": "Вперёд",
+            "gecko-reload": "Перезагрузить",
+            "gecko-close-tab": "Закрыть вкладку",
+            "gecko-open-new-tab": "Новая вкладка",
+            "gecko-duplicate-tab": "Дублировать вкладку",
+            "gecko-reload-all-tabs": "Перезагрузить все вкладки",
+            "gecko-restore-last-tab": "Переоткрыть закрытую вкладку",
+            "gecko-open-new-window": "Открыть новое окно",
+            "gecko-open-new-private-window": "Открыть новое приватное окно",
+            "gecko-close-window": "Закрыть окно",
+            "gecko-restore-last-window": "Восстановить последнее окно",
+            "gecko-show-next-tab": "Показать следующую вкладку",
+            "gecko-show-previous-tab": "Показать предыдущую вкладку",
+            "gecko-show-all-tabs-panel": "Показать панель всех вкладок",
+            "gecko-force-reload": "Принудительно перезагрузить",
+            "gecko-zoom-in": "Приблизить",
+            "gecko-zoom-out": "Отдалить",
+            "gecko-reset-zoom": "Сбросить масштабирование",
+            "gecko-bookmark-this-page": "Добавить эту страницу в закладки",
+            "gecko-open-home-page": "Открыть главную страницу",
+            "gecko-open-addons-manager": "Открыть менеджер дополнений",
+            "gecko-send-with-mail": "Отправить на электронную почту",
+            "gecko-save-page": "Сохранить страницу",
+            "gecko-print-page": "Распечатать страницу",
+            "gecko-mute-current-tab": "Отключить звук на текущей вкладке",
+            "gecko-show-source-of-page": "Показать исходный код страницы",
+            "gecko-show-page-info": "Показать информацию о странице",
+            "floorp-rest-mode": "Включить режим отдыха",
+            "floorp-hide-user-interface": "Скрыть интерфейс",
+            "floorp-toggle-navigation-panel": "Включить или выключить панель навигации",
+            "gecko-stop": "Остановить",
+            "gecko-search-in-this-page": "Search In This Page",
+            "gecko-show-next-search-result": "Show Next Search Result",
+            "gecko-show-previous-search-result": "Show Previous Search Result",
+            "gecko-search-the-web": "Search The Web",
+            "gecko-open-migration-wizard": "Open Migration Wizard",
+            "gecko-quit-from-application": "Quit Application",
+            "gecko-enter-into-customize-mode": "Enter Customize Mode",
+            "gecko-enter-into-offline-mode": "Enter Offline Mode",
+            "gecko-open-screen-capture": "Open Screen Capture",
+            "floorp-show-pip": "Показать в режиме картинки в картинке",
+            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+            "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
+            "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
+            "gecko-open-general-preferences": "Open General Preferences",
+            "gecko-open-privacy-preferences": "Open Privacy Preferences",
+            "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
+            "gecko-open-containers-preferences": "Open Containers Preferences",
+            "gecko-open-search-preferences": "Open Search Preferences",
+            "gecko-open-sync-preferences": "Open Sync Preferences",
+            "gecko-open-task-manager": "Open Task Manager",
+            "gecko-forget-history": "Forget History",
+            "gecko-quick-forget-history": "Quick Forget History",
+            "gecko-clear-recent-history": "Clear Recent History",
+            "gecko-restore-last-session": "Restore Last Session",
+            "gecko-search-history": "Search History",
+            "gecko-manage-history": "Manage History",
+            "gecko-open-downloads": "Open Downloads",
+            "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
+            "gecko-show-history-sidebar": "Show History Sidebar",
+            "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
+            "gecko-reverse-sidebar": "Reverse Sidebar Position",
+            "gecko-hide-sidebar": "Hide Sidebar",
+            "gecko-toggle-sidebar": "Toggle Sidebar",
+            "gecko-scroll-up": "Scroll Up",
+            "gecko-scroll-down": "Scroll Down",
+            "gecko-scroll-right": "Scroll Right",
+            "gecko-scroll-left": "Scroll Left",
+            "gecko-scroll-to-top": "Scroll to Top",
+            "gecko-scroll-to-bottom": "Scroll to Bottom"
+        },
+        "descriptions": {
+            "gecko-back": "Navigate back to the previous page",
+            "gecko-forward": "Navigate forward to the next page",
+            "gecko-reload": "Reload the current page",
+            "gecko-close-tab": "Close the current tab",
+            "gecko-open-new-tab": "Open a new tab",
+            "gecko-duplicate-tab": "Duplicate the current tab",
+            "gecko-reload-all-tabs": "Reload all tabs",
+            "gecko-restore-last-tab": "Reopen the last closed tab"
+        }
+    },
+    "qrCode": {
+        "pageAction": "Generate QR Code",
+        "modalTitle": "QR Code Generator",
+        "loading": "Generating QR Code...",
+        "copyButton": "Copy Image",
+        "downloadButton": "Скачать",
+        "closeButton": "Закрыть",
+        "copySuccess": "QR code copied to clipboard!",
+        "copyError": "Failed to copy QR code",
+        "generateError": "Failed to generate QR code"
+    },
+    "qrcode-generate-page-action": "Generate QR Code for this page",
+    "qrcode-generate-page-action-title": "QR Code Generator",
+    "panelSidebar": {
+        "modal": {
+            "type": "Panel Type",
+            "typeOptions": {
+                "web": "Веб-страница",
+                "sidebar-tool": "Боковая панель инструментов",
+                "extension": "Боковая панель расширений",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+            },
+            "width": "Ширина панели",
+            "url": "Адрес веб-страницы",
+            "container": "Контейнер",
+            "noContainer": "Без контейнера",
+            "userAgent": "Использовать пользовательский агент мобильного устройства",
+            "extension": "Display Extension",
+            "sideBarTool": "Display Sidebar Tool",
+            "title": "Add Panel",
+            "add": "Add",
+            "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Unload this webpanel",
+            "mute": "Mute/Unmute this webpanel",
+            "changeZoom": "Change zoom level",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "resetZoom": "Reset zoom",
+            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+            "delete": "Delete this panel"
+        }
+    },
+    "chrome_css": {
+        "menu": "Style",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Edit userChrome.css",
+        "edit_user_content": "Edit userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor Path Not Found",
+        "set_pref_description": "Please set the editor path",
+        "please_enter_filename": "Please enter a filename",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Ошибка",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Перезапустить",
+            "normal-restart": "Перезапустить",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
+    }
+}

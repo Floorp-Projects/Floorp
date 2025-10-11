@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "Herstel gesloten tabblad",
+        "tooltiptext": "Heropen het laatst gesloten tabblad {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Naam",
+            "name-placeholder": "Geef een naam voor deze workspace",
+            "container": "Container",
+            "no-container": "Geen container",
+            "icon": "Pictogram",
+            "edit-title": "Workspace bewerken",
+            "save": "Wijzigingen opslaan",
+            "cancel": "Annuleren"
+        },
+        "icons": {
+            "article": "Artikel",
+            "book": "Boek",
+            "briefcase": "Koffer",
+            "cart": "Winkelwagen",
+            "chat": "Chat",
+            "chill": "Chill",
+            "circle": "Cirkel",
+            "compass": "Kompas",
+            "code": "Code",
+            "dollar": "Dollar",
+            "fence": "Hek",
+            "fingerprint": "Vingerafdruk",
+            "food": "Voedsel",
+            "fruit": "Fruit",
+            "game": "Spel",
+            "gear": "Instellingen",
+            "gift": "Cadeau",
+            "key": "Sleutel",
+            "lightning": "Bliksem",
+            "network": "Netwerk",
+            "notes": "Notities",
+            "paint": "Verf",
+            "photo": "Foto",
+            "pin": "Punaise",
+            "pet": "Huisdier",
+            "question": "Vraag",
+            "smartphone": "Smartphone",
+            "star": "Ster",
+            "tree": "Boom",
+            "vacation": "Vakantie",
+            "love": "Liefde",
+            "moon": "Maan",
+            "music": "Muziek",
+            "user": "Gebruiker"
+        },
+        "service": {
+            "new-workspace": "Nieuwe Workspace ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Deze workspace naar boven verplaatsen",
+            "move-down": "Deze workspace naar beneden verplaatsen",
+            "delete": "Workspace verwijderen",
+            "manage": "Workspace beheren"
+        },
+        "popup": {
+            "create-new": "Nieuwe workspace maken...",
+            "manage": "Workspaces beheren"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace"
+        },
+        "error": {
+            "invalidWorkspaceID": "Geen geldig ID voor Workspaces (misschien is de volgorde niet bijgewerkt)"
+        }
+    },
+    "statusbar": {
+        "toggle": "Statusbalk{{mark}}"
+    },
+    "splitview": {
+        "title": "Gesplitste weergave",
+        "position": "Positie",
+        "position-left": "Links",
+        "position-right": "Rechts",
+        "flex-row": "Rij",
+        "flex-column": "Kolom",
+        "remove-button": "Huidige weergave verwijderen",
+        "tab-context": {
+            "split-tabs": "Tabbladen splitsen",
+            "split-fixed-tab": "Splitsen naar vast tabblad"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Web Apps",
+            "install-current": "Huidige pagina installeren als Progressive Web App",
+            "open-installed": "Geïnstalleerde apps openen"
+        },
+        "page-action": {
+            "title": "Open applicatie",
+            "install": "Installeer applicatie",
+            "open": "Open applicatie",
+            "cancel": "Annuleren",
+            "site-icon": "Sitepictogram"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Openen in Privécontainer",
+        "name": "Privécontainer"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "Terug",
+            "gecko-forward": "Volgende",
+            "gecko-reload": "Herladen",
+            "gecko-close-tab": "Tabblad sluiten",
+            "gecko-open-new-tab": "Nieuw tabblad",
+            "gecko-duplicate-tab": "Tabblad dupliceren",
+            "gecko-reload-all-tabs": "Alle tabbladen herladen",
+            "gecko-restore-last-tab": "Gesloten tabblad heropenen",
+            "gecko-open-new-window": "Nieuw venster openen",
+            "gecko-open-new-private-window": "Nieuw privévenster openen",
+            "gecko-close-window": "Sluit venster",
+            "gecko-restore-last-window": "Laatste venster herstellen",
+            "gecko-show-next-tab": "Volgend tabblad tonen",
+            "gecko-show-previous-tab": "Vorig tabblad tonen",
+            "gecko-show-all-tabs-panel": "Toon alle tabbladen",
+            "gecko-force-reload": "Geforceerd Herladen",
+            "gecko-zoom-in": "Inzoomen",
+            "gecko-zoom-out": "Uitzoomen",
+            "gecko-reset-zoom": "Zoom herstellen",
+            "gecko-bookmark-this-page": "Maak een bladwijzer van deze pagina",
+            "gecko-open-home-page": "Startpagina openen",
+            "gecko-open-addons-manager": "Addons-beheer openen",
+            "gecko-send-with-mail": "Verzenden met e-mail",
+            "gecko-save-page": "Pagina opslaan",
+            "gecko-print-page": "Pagina afdrukken",
+            "gecko-mute-current-tab": "Huidig tabblad dempen",
+            "gecko-show-source-of-page": "Toon broncode van pagina",
+            "gecko-show-page-info": "Toon pagina-info",
+            "floorp-rest-mode": "Rustmodus inschakelen",
+            "floorp-hide-user-interface": "Interface verbergen",
+            "floorp-toggle-navigation-panel": "Navigatiepaneel in-/uitschakelen",
+            "gecko-stop": "Stop",
+            "gecko-search-in-this-page": "Zoeken op deze pagina",
+            "gecko-show-next-search-result": "Toon volgend zoekresultaat",
+            "gecko-show-previous-search-result": "Toon vorig zoekresultaat",
+            "gecko-search-the-web": "Zoeken op het internet",
+            "gecko-open-migration-wizard": "Open migratiewizard",
+            "gecko-quit-from-application": "Applicatie afsluiten",
+            "gecko-enter-into-customize-mode": "Personaliseringsmodus openen",
+            "gecko-enter-into-offline-mode": "Offline-modus openen",
+            "gecko-open-screen-capture": "Schermopname maken",
+            "floorp-show-pip": "Picture-in-Picture openen",
+            "gecko-open-bookmark-add-tool": "Bladwijzer Tool openen",
+            "gecko-open-bookmarks-manager": "Bladwijzer Manager openen",
+            "gecko-toggle-bookmark-toolbar": "Toggle Bladwijzerwerkbalk",
+            "gecko-open-general-preferences": "Algemene voorkeuren openen",
+            "gecko-open-privacy-preferences": "Privacyvoorkeuren openen",
+            "gecko-open-workspaces-preferences": "Workspacevoorkeuren openen",
+            "gecko-open-containers-preferences": "Containervoorkeuren openen",
+            "gecko-open-search-preferences": "Zoekvoorkeuren openen",
+            "gecko-open-sync-preferences": "Synchronisatievoorkeuren openen",
+            "gecko-open-task-manager": "Taakbeheer openen",
+            "gecko-forget-history": "Geschiedenis vergeten",
+            "gecko-quick-forget-history": "Geschiedenis snel vergeten",
+            "gecko-clear-recent-history": "Recente geschiedenis wissen",
+            "gecko-restore-last-session": "Laatste sessie herstellen",
+            "gecko-search-history": "Zoekgeschiedenis",
+            "gecko-manage-history": "Geschiedenis beheren",
+            "gecko-open-downloads": "Downloads openen",
+            "gecko-show-bookmark-sidebar": "Bladwijzerzijbalk weergeven",
+            "gecko-show-history-sidebar": "Geschiedeniszijbalk weergeven",
+            "gecko-show-synced-tabs-sidebar": "Zijbalk met gesynchroniseerde tabbladen weergeven",
+            "gecko-reverse-sidebar": "Positie zijbalk omkeren",
+            "gecko-hide-sidebar": "Zijbalk verbergen",
+            "gecko-toggle-sidebar": "Zijbalk in-/uitschakelen",
+            "gecko-scroll-up": "Scroll omhoog",
+            "gecko-scroll-down": "Scroll omlaag",
+            "gecko-scroll-right": "Scroll naar rechts",
+            "gecko-scroll-left": "Scroll naar links",
+            "gecko-scroll-to-top": "Scroll helemaal naar boven",
+            "gecko-scroll-to-bottom": "Scroll helemaal naar beneden"
+        },
+        "descriptions": {
+            "gecko-back": "Ga terug naar de vorige pagina",
+            "gecko-forward": "Ga verder naar de volgende pagina",
+            "gecko-reload": "Huidige pagina opnieuw laden",
+            "gecko-close-tab": "Huidige tabblad sluiten",
+            "gecko-open-new-tab": "Nieuw tabblad openen",
+            "gecko-duplicate-tab": "Huidige tabblad dupliceren",
+            "gecko-reload-all-tabs": "Alle tabbladen herladen",
+            "gecko-restore-last-tab": "Laatst gesloten tabblad heropenen"
+        }
+    },
+    "qrCode": {
+        "pageAction": "QR-code genereren",
+        "modalTitle": "QR Code Generator",
+        "loading": "QR-code genereren...",
+        "copyButton": "Afbeelding kopiëren",
+        "downloadButton": "Downloaden",
+        "closeButton": "Sluiten",
+        "copySuccess": "QR-code gekopieerd naar klembord!",
+        "copyError": "Kopiëren QR-code is mislukt",
+        "generateError": "QR-code genereren is mislukt"
+    },
+    "qrcode-generate-page-action": "QR-code genereren voor deze pagina",
+    "qrcode-generate-page-action-title": "QR Code Generator",
+    "panelSidebar": {
+        "modal": {
+            "type": "Paneel Type",
+            "typeOptions": {
+                "web": "Webpagina",
+                "sidebar-tool": "Zijbalk Tool",
+                "extension": "Zijbalk Extensie",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+            },
+            "width": "Paneelbreedte",
+            "url": "URL van webpagina",
+            "container": "Container",
+            "noContainer": "Geen container",
+            "userAgent": "Mobiele User Agent gebruiken",
+            "extension": "Toon extensie",
+            "sideBarTool": "Zijbalk Tool weergeven",
+            "title": "Paneel toevoegen",
+            "add": "Toevoegen",
+            "cancel": "Annuleren"
+        },
+        "contextMenu": {
+            "unload": "Dit webpaneel ontladen",
+            "mute": "Geluid van dit webpaneel uit/aan",
+            "changeZoom": "Zoomniveau wijzigen",
+            "zoomIn": "Inzoomen",
+            "zoomOut": "Uitzoomen",
+            "resetZoom": "Zoom herstellen",
+            "changeUA": "Schakel in dit Webpanel de User Agent naar de Mobiele/Desktop versie",
+            "delete": "Dit paneel verwijderen"
+        }
+    },
+    "chrome_css": {
+        "menu": "Style",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Bewerk userChrome.css",
+        "edit_user_content": "Bewerk userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor pad niet gevonden",
+        "set_pref_description": "Stel het pad van de editor in",
+        "please_enter_filename": "Voer een bestandsnaam in",
+        "file_created": "Bestand aangemaakt",
+        "file_created_successfully": "Bestand succesvol aangemaakt",
+        "open_file_in_editor": "Bestand openen in editor?",
+        "error_title": "Fout",
+        "folder_open_failed": "CSS-map openen mislukt",
+        "edit_failed": "Bestand bewerken mislukt"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Herstarten",
+            "normal-restart": "Herstarten",
+            "restart-cache-clear": "Herstart en cache wissen",
+            "restart-safe-mode": "Herstarten in veilige modus",
+            "restart-profile-manager": "Herstarten met Profielbeheerder"
+        }
+    }
+}

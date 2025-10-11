@@ -1,0 +1,97 @@
+{
+    "app": {
+        "status": {
+            "installing": "Installing in the background...",
+            "installComplete": "Installation complete"
+        },
+        "installer": {
+            "title": "Floorp Installer",
+            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
+            "adminRights": "Install with admin rights",
+            "adminRightsEnabled": "Install for all users with admin rights.",
+            "adminRightsDisabled": "Install for current user only.",
+            "customPathRequired": "Custom installation path requires admin rights.",
+            "installLocation": "Install location",
+            "change": "Change",
+            "installButton": "Start Installation",
+            "retryButton": "Retry"
+        },
+        "progress": {
+            "installing": "Installing...",
+            "slideCounter": "Slide {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "Select Installation Location",
+            "installPath": "Installation path",
+            "browse": "Browse",
+            "resetDefault": "Reset to Default",
+            "cancel": "Cancel",
+            "save": "Save Settings",
+            "close": "Close"
+        },
+        "exitConfirmation": {
+            "title": "Cancel Installation?",
+            "message": "Canceling the installation process will prevent Floorp from being installed.",
+            "cancelButton": "Cancel",
+            "confirmButton": "Cancel Installation"
+        },
+        "complete": {
+            "success": "Installation Successful",
+            "error": "Installation Failed",
+            "launchCheckbox": "Launch Floorp browser after installation",
+            "closeButton": "Close Installer",
+            "countdownMessage": "Installer will close in {{count}} seconds",
+            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadButton": "Download"
+        }
+    },
+    "slides": {
+        "slide1": {
+            "title": "Welcome to Floorp",
+            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+        },
+        "slide2": {
+            "title": "Regular Updates",
+            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+        },
+        "slide3": {
+            "title": "Latest Features",
+            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+        },
+        "slide4": {
+            "title": "Advanced Customization",
+            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+        },
+        "slide5": {
+            "title": "Fighting for You",
+            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
+            "installation_complete": "Floorp installation completed successfully."
+        },
+        "errors": {
+            "installer_not_found": "Failed to retrieve Floorp installer.",
+            "download_failed": "An error occurred during download: {{0}}",
+            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
+            "signature_verification_error": "An error occurred during signature verification: {{0}}",
+            "installer_exit_code": "Installer exited with code {{0}}.",
+            "installer_execution": "An error occurred while running the installer: {{0}}",
+            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
+            "browser_launch_failed": "Failed to launch browser: {{0}}",
+            "file_not_found": "File not found: {{0}}",
+            "not_a_file": "Path is not a file: {{0}}",
+            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
+            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
+            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
+            "powershell_process": "Failed to start PowerShell process: {{0}}",
+            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
+            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
+            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}",
+            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
+            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+        }
+    }
+}

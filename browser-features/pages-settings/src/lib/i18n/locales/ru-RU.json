@@ -32,7 +32,16 @@
         "aboutBrowser": "О {{productName}}",
         "debug": "Отладка",
         "mouseGesture": "Жесты мышью",
-        "keyboardShortcut": "Сочетания клавиш"
+        "keyboardShortcut": "Сочетания клавиш",
+        "search": {
+            "title": "Search Settings",
+            "resultsFor": "Search results for \"{{query}}\"",
+            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
+            "noResults": "No results found",
+            "open": "Open \"{{title}}\"",
+            "matchedText": "Matched Text",
+            "results": "Search Results"
+        }
     },
     "home": {
         "welcome": "Добро пожаловать, {{name}} 👋",

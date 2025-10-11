@@ -32,7 +32,16 @@
         "aboutBrowser": "Om {{productName}}",
         "debug": "Fejlfinding",
         "mouseGesture": "Musebevægelser",
-        "keyboardShortcut": "Tastaturgenveje"
+        "keyboardShortcut": "Tastaturgenveje",
+        "search": {
+            "title": "Search Settings",
+            "resultsFor": "Search results for \"{{query}}\"",
+            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
+            "noResults": "No results found",
+            "open": "Open \"{{title}}\"",
+            "matchedText": "Matched Text",
+            "results": "Search Results"
+        }
     },
     "home": {
         "welcome": "Velkommen, {{name}} 👋",

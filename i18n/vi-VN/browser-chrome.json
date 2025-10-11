@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "Mở lại thẻ đã đóng",
+        "tooltiptext": "Reopen the last closed tab {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Tên",
+            "name-placeholder": "Nhập tên cho không gian làm việc",
+            "container": "Ngăn chứa",
+            "no-container": "Không ngăn chứa",
+            "icon": "Biểu tượng",
+            "edit-title": "Chỉnh không gian làm việc",
+            "save": "Lưu thay đổi",
+            "cancel": "Hủy"
+        },
+        "icons": {
+            "article": "Article",
+            "book": "Sách",
+            "briefcase": "Briefcase",
+            "cart": "Xe đẩy",
+            "chat": "Trò chuyện",
+            "chill": "Vui",
+            "circle": "Hình tròn",
+            "compass": "La bàn",
+            "code": "Lập trình",
+            "dollar": "Dollar",
+            "fence": "Fence",
+            "fingerprint": "Dấu vân tay",
+            "food": "Food",
+            "fruit": "Fruit",
+            "game": "Game",
+            "gear": "Settings",
+            "gift": "Gift",
+            "key": "Key",
+            "lightning": "Lightning",
+            "network": "Network",
+            "notes": "Notes",
+            "paint": "Paint",
+            "photo": "Photo",
+            "pin": "Pin",
+            "pet": "Pet",
+            "question": "Question",
+            "smartphone": "Smartphone",
+            "star": "Star",
+            "tree": "Tree",
+            "vacation": "Vacation",
+            "love": "Love",
+            "moon": "Moon",
+            "music": "Music",
+            "user": "User"
+        },
+        "service": {
+            "new-workspace": "Không gian làm việc mới ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Đẩy không gian làm việc lên",
+            "move-down": "Đẩy không gian làm việc xuống",
+            "delete": "Xóa không gian",
+            "manage": "Quản lý không gian"
+        },
+        "popup": {
+            "create-new": "Tạo không gian làm việc mới...",
+            "manage": "Quản lý các không gian"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Di chuyển thẻ sang không gian khác"
+        },
+        "error": {
+            "invalidWorkspaceID": "ID không hợp lệ cho không gian (có thể vị trí chưa được cập nhật)"
+        }
+    },
+    "statusbar": {
+        "toggle": "Thanh trạng thái {{mark}}"
+    },
+    "splitview": {
+        "title": "Chia màn hình",
+        "position": "Vị trí",
+        "position-left": "Trái",
+        "position-right": "Phải",
+        "flex-row": "Hàng",
+        "flex-column": "Cột",
+        "remove-button": "Bỏ chia thẻ",
+        "tab-context": {
+            "split-tabs": "Chia thẻ",
+            "split-fixed-tab": "Chia thẻ ở vị trí cố định"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Ứng dụng Web",
+            "install-current": "Cài đặt trang hiện tại như một ứng dụng Web",
+            "open-installed": "Mở các ứng dụng đã cài"
+        },
+        "page-action": {
+            "title": "Mở ứng dụng",
+            "install": "Cài đặt ứng dụng",
+            "open": "Mở ứng dụng",
+            "cancel": "Hủy",
+            "site-icon": "Site icon"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Mở trong ngăn chứa riêng tư",
+        "name": "Ngăn chứa riêng tư"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "Quay lại",
+            "gecko-forward": "Tiến lên",
+            "gecko-reload": "Tải lại",
+            "gecko-close-tab": "Đóng thẻ",
+            "gecko-open-new-tab": "Thẻ mới",
+            "gecko-duplicate-tab": "Nhân đôi thẻ",
+            "gecko-reload-all-tabs": "Tải lại mọi thẻ",
+            "gecko-restore-last-tab": "Mở lại thẻ dã đóng",
+            "gecko-open-new-window": "Mở cửa sổ mới",
+            "gecko-open-new-private-window": "Mở cửa sổ riêng tư mới",
+            "gecko-close-window": "Đóng cửa sổ",
+            "gecko-restore-last-window": "Khôi phục cửa sổ gần nhất",
+            "gecko-show-next-tab": "Hiện thẻ tiếp theo",
+            "gecko-show-previous-tab": "Hiện thẻ trước đó",
+            "gecko-show-all-tabs-panel": "Show All Tabs Panel",
+            "gecko-force-reload": "Force Reload",
+            "gecko-zoom-in": "Phóng to",
+            "gecko-zoom-out": "Thu nhỏ",
+            "gecko-reset-zoom": "Đặt lại thu phóng",
+            "gecko-bookmark-this-page": "Đánh dấu trang này",
+            "gecko-open-home-page": "Mở trang chủ",
+            "gecko-open-addons-manager": "Open Addons Manager",
+            "gecko-send-with-mail": "Send With Mail",
+            "gecko-save-page": "Lưu trang",
+            "gecko-print-page": "In trang",
+            "gecko-mute-current-tab": "Tắt tiếng thẻ hiện tại",
+            "gecko-show-source-of-page": "Xem nguồn trang",
+            "gecko-show-page-info": "Show Page Info",
+            "floorp-rest-mode": "Enable Rest Mode",
+            "floorp-hide-user-interface": "Ẩn giao diện",
+            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+            "gecko-stop": "Dừng",
+            "gecko-search-in-this-page": "Tìm trong trang",
+            "gecko-show-next-search-result": "Show Next Search Result",
+            "gecko-show-previous-search-result": "Show Previous Search Result",
+            "gecko-search-the-web": "Tìm kiếm",
+            "gecko-open-migration-wizard": "Open Migration Wizard",
+            "gecko-quit-from-application": "Quit Application",
+            "gecko-enter-into-customize-mode": "U",
+            "gecko-enter-into-offline-mode": "Enter Offline Mode",
+            "gecko-open-screen-capture": "Open Screen Capture",
+            "floorp-show-pip": "Hiện hình trong hình",
+            "gecko-open-bookmark-add-tool": "Thêm dấu trang",
+            "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
+            "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
+            "gecko-open-general-preferences": "Open General Preferences",
+            "gecko-open-privacy-preferences": "Open Privacy Preferences",
+            "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
+            "gecko-open-containers-preferences": "Open Containers Preferences",
+            "gecko-open-search-preferences": "Open Search Preferences",
+            "gecko-open-sync-preferences": "Open Sync Preferences",
+            "gecko-open-task-manager": "Open Task Manager",
+            "gecko-forget-history": "Forget History",
+            "gecko-quick-forget-history": "Quick Forget History",
+            "gecko-clear-recent-history": "Clear Recent History",
+            "gecko-restore-last-session": "Restore Last Session",
+            "gecko-search-history": "Tìm kiếm lịch sử",
+            "gecko-manage-history": "Quản lí lịch sử",
+            "gecko-open-downloads": "Open Downloads",
+            "gecko-show-bookmark-sidebar": "Hiển thị thanh dấu trang bên",
+            "gecko-show-history-sidebar": "Hiển thị thanh lịch sử bên",
+            "gecko-show-synced-tabs-sidebar": "Hiển thị thanh thẻ đồng bộ bên",
+            "gecko-reverse-sidebar": "Reverse Sidebar Position",
+            "gecko-hide-sidebar": "Ẩn thanh bên",
+            "gecko-toggle-sidebar": "Đóng mở thanh bên",
+            "gecko-scroll-up": "Cuộn lên",
+            "gecko-scroll-down": "Cuộn xuống",
+            "gecko-scroll-right": "Cuộn phải ",
+            "gecko-scroll-left": "Cuộn trái",
+            "gecko-scroll-to-top": "Cuộn lên đầu",
+            "gecko-scroll-to-bottom": "Cuộn xuống cuối"
+        },
+        "descriptions": {
+            "gecko-back": "Quay lại trang trước",
+            "gecko-forward": "Tiến tới trang sau",
+            "gecko-reload": "Tải lại trang hiện tại",
+            "gecko-close-tab": "Đóng trang hiện tại",
+            "gecko-open-new-tab": "Mở thẻ mới",
+            "gecko-duplicate-tab": "Nhân đôi thẻ hiện tại",
+            "gecko-reload-all-tabs": "Tải lại tất cả thẻ",
+            "gecko-restore-last-tab": "Mở lại thẻ đóng gần nhất"
+        }
+    },
+    "qrCode": {
+        "pageAction": "Tạo mã QR",
+        "modalTitle": "Trình tạo mã QR",
+        "loading": "Đang tạo mã QR...",
+        "copyButton": "Sao chép ảnh",
+        "downloadButton": "Tải xuống",
+        "closeButton": "Đóng",
+        "copySuccess": "Đã sao chép mã QR vào bảng nhớ tạm!",
+        "copyError": "Sao chép mã QR thất bại ",
+        "generateError": "Tạo mã thất bại"
+    },
+    "qrcode-generate-page-action": "Tạo mã QR cho trang này",
+    "qrcode-generate-page-action-title": "Tạo mã QR",
+    "panelSidebar": {
+        "modal": {
+            "type": "Panel Type",
+            "typeOptions": {
+                "web": "Web Page",
+                "sidebar-tool": "Tool Sidebar",
+                "extension": "Extension Sidebar",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+            },
+            "width": "Chiều rộng thanh bên",
+            "url": "URL trang",
+            "container": "Container",
+            "noContainer": "No Container",
+            "userAgent": "Use Mobile User Agent",
+            "extension": "Display Extension",
+            "sideBarTool": "Display Sidebar Tool",
+            "title": "Add Panel",
+            "add": "Add",
+            "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Unload this webpanel",
+            "mute": "Mute/Unmute this webpanel",
+            "changeZoom": "Change zoom level",
+            "zoomIn": "Thu gần",
+            "zoomOut": "Phóng to",
+            "resetZoom": "Đặt lại thu phóng",
+            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+            "delete": "Delete this panel"
+        }
+    },
+    "chrome_css": {
+        "menu": "Style",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Edit userChrome.css",
+        "edit_user_content": "Edit userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor Path Not Found",
+        "set_pref_description": "Please set the editor path",
+        "please_enter_filename": "Please enter a filename",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Open file in editor?",
+        "error_title": "Error",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Khởi động lại",
+            "normal-restart": "Khởi động lại",
+            "restart-cache-clear": "Khởi động lại và xóa bộ nhớ đệm",
+            "restart-safe-mode": "Restart in Safe Mode",
+            "restart-profile-manager": "Khởi động lại với trình quản lí hồ sơ"
+        }
+    }
+}

@@ -1,6 +1,263 @@
 {
-  "undo-closed-tab": {
-    "label": "閉じたタブを開く",
-    "tooltiptext": "閉じたタブを開く"
-  }
+    "undo-closed-tab": {
+        "label": "閉じたタブを元に戻す",
+        "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "名前",
+            "name-placeholder": "このワークスペースの名前を入力",
+            "container": "コンテナー",
+            "no-container": "コンテナーなし",
+            "icon": "アイコン",
+            "edit-title": "ワークスペースを編集",
+            "save": "保存",
+            "cancel": "キャンセル"
+        },
+        "icons": {
+            "article": "記事",
+            "book": "本",
+            "briefcase": "ブリーフケース",
+            "cart": "カート",
+            "chat": "チャット",
+            "chill": "チル",
+            "circle": "丸",
+            "compass": "コンパス",
+            "code": "コード",
+            "dollar": "ドル",
+            "fence": "フェンス",
+            "fingerprint": "指紋",
+            "food": "食べ物",
+            "fruit": "果物",
+            "game": "ゲーム",
+            "gear": "設定",
+            "gift": "ギフト",
+            "key": "鍵",
+            "lightning": "稲妻",
+            "network": "ネットワーク",
+            "notes": "メモ",
+            "paint": "ペイント",
+            "photo": "写真",
+            "pin": "ピン",
+            "pet": "ペット",
+            "question": "ハテナ",
+            "smartphone": "スマートフォン",
+            "star": "星",
+            "tree": "木",
+            "vacation": "休暇",
+            "love": "ハート",
+            "moon": "月",
+            "music": "音楽",
+            "user": "ユーザー"
+        },
+        "service": {
+            "new-workspace": "新しいワークスペース ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "このワークスペースを上に移動",
+            "move-down": "このワークスペースを下に移動",
+            "delete": "ワークスペースを削除",
+            "manage": "ワークスペースを管理"
+        },
+        "popup": {
+            "create-new": "新しいワークスペースを作成...",
+            "manage": "ワークスペースを管理"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"
+        },
+        "error": {
+            "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
+        }
+    },
+    "statusbar": {
+        "toggle": "ステータスバー{{mark}}"
+    },
+    "splitview": {
+        "title": "分割ビュー",
+        "position": "位置",
+        "position-left": "左",
+        "position-right": "右",
+        "flex-row": "横並び",
+        "flex-column": "縦並び",
+        "remove-button": "現在のビューを解除",
+        "tab-context": {
+            "split-tabs": "これらのタブを分割",
+            "split-fixed-tab": "分割して固定表示"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "ウェブアプリ",
+            "install-current": "現在のページをプログレッシブウェブアプリとしてインストール",
+            "open-installed": "インストールしたアプリを開く"
+        },
+        "page-action": {
+            "title": "アプリを開く",
+            "install": "アプリをインストール",
+            "open": "アプリを開く",
+            "cancel": "キャンセル",
+            "site-icon": "サイトのアイコン"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "プライベートコンテナーで開く",
+        "name": "プライベートコンテナー"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "戻る",
+            "gecko-forward": "進む",
+            "gecko-reload": "再読み込み",
+            "gecko-close-tab": "タブを閉じる",
+            "gecko-open-new-tab": "新しいタブ",
+            "gecko-duplicate-tab": "タブを複製",
+            "gecko-reload-all-tabs": "すべてのタブを再読み込み",
+            "gecko-restore-last-tab": "閉じたタブを開きなおす",
+            "gecko-open-new-window": "新しいウィンドウを開く",
+            "gecko-open-new-private-window": "新しいプライベートウィンドウを開く",
+            "gecko-close-window": "ウィンドウを閉じる",
+            "gecko-restore-last-window": "最後に閉じたウィンドウを復元",
+            "gecko-show-next-tab": "次のタブを表示",
+            "gecko-show-previous-tab": "前のタブを表示",
+            "gecko-show-all-tabs-panel": "タブを一覧表示",
+            "gecko-force-reload": "強制的に再読み込み",
+            "gecko-zoom-in": "拡大",
+            "gecko-zoom-out": "縮小",
+            "gecko-reset-zoom": "拡大率をリセット",
+            "gecko-bookmark-this-page": "このページをブックマーク",
+            "gecko-open-home-page": "ホームページを開く",
+            "gecko-open-addons-manager": "アドオンマネージャーを開く",
+            "gecko-send-with-mail": "メールで送信",
+            "gecko-save-page": "ページを保存",
+            "gecko-print-page": "ページを印刷",
+            "gecko-mute-current-tab": "現在のタブをミュート",
+            "gecko-show-source-of-page": "ページのソースを表示",
+            "gecko-show-page-info": "ページの情報を表示",
+            "floorp-rest-mode": "休憩モードを有効にする",
+            "floorp-hide-user-interface": "インターフェイスを隠す",
+            "floorp-toggle-navigation-panel": "ナビゲーションパネルの表示を切り替える",
+            "gecko-stop": "読み込みを中止",
+            "gecko-search-in-this-page": "ページ内を検索",
+            "gecko-show-next-search-result": "次の検索結果を表示",
+            "gecko-show-previous-search-result": "前の検索結果を表示",
+            "gecko-search-the-web": "ウェブを検索",
+            "gecko-open-migration-wizard": "移行ウィザードを開く",
+            "gecko-quit-from-application": "アプリを終了",
+            "gecko-enter-into-customize-mode": "カスタマイズモードに入る",
+            "gecko-enter-into-offline-mode": "オフラインモードに入る",
+            "gecko-open-screen-capture": "スクリーンショットツールを開く",
+            "floorp-show-pip": "ピクチャーインピクチャーを表示",
+            "gecko-open-bookmark-add-tool": "ブックマーク追加ツールを開く",
+            "gecko-open-bookmarks-manager": "ブックマークマネージャーを開く",
+            "gecko-toggle-bookmark-toolbar": "ブックマークツールバーの表示を切り替える",
+            "gecko-open-general-preferences": "一般設定を開く",
+            "gecko-open-privacy-preferences": "プライバシー設定を開く",
+            "gecko-open-workspaces-preferences": "ワークスペース設定を開く",
+            "gecko-open-containers-preferences": "コンテナー設定を開く",
+            "gecko-open-search-preferences": "検索設定を開く",
+            "gecko-open-sync-preferences": "同期設定を開く",
+            "gecko-open-task-manager": "タスクマネージャーを開く",
+            "gecko-forget-history": "履歴を忘れる",
+            "gecko-quick-forget-history": "履歴をすぐに消去",
+            "gecko-clear-recent-history": "最近の履歴を消去",
+            "gecko-restore-last-session": "前回のセッションを復元",
+            "gecko-search-history": "履歴を検索",
+            "gecko-manage-history": "履歴を管理",
+            "gecko-open-downloads": "ダウンロードを開く",
+            "gecko-show-bookmark-sidebar": "ブックマークサイドバーを表示",
+            "gecko-show-history-sidebar": "履歴サイドバーを表示",
+            "gecko-show-synced-tabs-sidebar": "同期タブサイドバーを表示",
+            "gecko-reverse-sidebar": "サイドバーの位置を反転",
+            "gecko-hide-sidebar": "サイドバーを隠す",
+            "gecko-toggle-sidebar": "サイドバーの表示を切り替える",
+            "gecko-scroll-up": "上にスクロール",
+            "gecko-scroll-down": "下にスクロール",
+            "gecko-scroll-right": "右にスクロール",
+            "gecko-scroll-left": "左にスクロール",
+            "gecko-scroll-to-top": "最上部までスクロール",
+            "gecko-scroll-to-bottom": "最下部までスクロール"
+        },
+        "descriptions": {
+            "gecko-back": "前のページに戻る",
+            "gecko-forward": "次のページに進む",
+            "gecko-reload": "現在のページを再読み込み",
+            "gecko-close-tab": "現在のタブを閉じる",
+            "gecko-open-new-tab": "新しいタブを開く",
+            "gecko-duplicate-tab": "現在のタブを複製",
+            "gecko-reload-all-tabs": "すべてのタブを再読み込み",
+            "gecko-restore-last-tab": "最後に閉じたタブを開きなおす"
+        }
+    },
+    "qrCode": {
+        "pageAction": "QR コードを生成",
+        "modalTitle": "QR コードジェネレーター",
+        "loading": "QR コードを生成中...",
+        "copyButton": "画像をコピー",
+        "downloadButton": "ダウンロード",
+        "closeButton": "閉じる",
+        "copySuccess": "QR コードをクリップボードにコピーしました！",
+        "copyError": "QR コードのコピーに失敗しました",
+        "generateError": "QR コードの生成に失敗しました"
+    },
+    "qrcode-generate-page-action": "このページの QR コードを生成",
+    "qrcode-generate-page-action-title": "QR コードジェネレーター",
+    "panelSidebar": {
+        "modal": {
+            "type": "パネルの種類",
+            "typeOptions": {
+                "web": "ウェブページ",
+                "sidebar-tool": "ツールサイドバー",
+                "extension": "拡張機能サイドバー",
+                "builtin": "内蔵ページ (ダウンロード、ブックマーク、履歴)"
+            },
+            "width": "パネルの幅",
+            "url": "ウェブページの URL",
+            "container": "コンテナー",
+            "noContainer": "コンテナーなし",
+            "userAgent": "モバイル版のユーザーエージェントを使用",
+            "extension": "拡張機能を表示",
+            "sideBarTool": "ツールを表示",
+            "title": "パネルを追加",
+            "add": "追加",
+            "cancel": "キャンセル"
+        },
+        "contextMenu": {
+            "unload": "このウェブパネルを解放",
+            "mute": "このウェブパネルをミュート/ミュート解除",
+            "changeZoom": "拡大率を変更",
+            "zoomIn": "拡大",
+            "zoomOut": "縮小",
+            "resetZoom": "拡大率をリセット",
+            "changeUA": "このウェブパネルのユーザーエージェントをモバイル/デスクトップに切り替える",
+            "delete": "このパネルを削除"
+        }
+    },
+    "chrome_css": {
+        "menu": "スタイル",
+        "rebuild": "スタイルシートを再構築",
+        "create": "新しいスタイルシートを作成",
+        "open_folder": "スタイルシートのフォルダーを開く",
+        "edit_user_chrome": "userChrome.css を編集",
+        "edit_user_content": "userContent.css を編集",
+        "rebuild_complete": "スタイルシートを再構築しました",
+        "editor_path_not_found": "エディターのパスが見つかりません",
+        "set_pref_description": "エディターのパスを指定してください",
+        "please_enter_filename": "ファイル名を入力してください",
+        "file_created": "ファイルを作成しました",
+        "file_created_successfully": "ファイルは正常に作成されました",
+        "open_file_in_editor": "エディターでファイルを開きますか？",
+        "error_title": "エラー",
+        "folder_open_failed": "CSS フォルダーを開けませんでした",
+        "edit_failed": "ファイルを編集できませんでした"
+    },
+    "reboot": {
+        "menu": {
+            "title": "再起動",
+            "normal-restart": "再起動",
+            "restart-cache-clear": "キャッシュを消去して再起動",
+            "restart-safe-mode": "セーフモードで再起動",
+            "restart-profile-manager": "再起動してプロファイルマネージャーを表示"
+        }
+    }
 }

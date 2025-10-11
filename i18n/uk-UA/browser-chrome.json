@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "Відновити закриту вкладку",
+        "tooltiptext": "Перевідкрити останню закриту вкладку {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Назва",
+            "name-placeholder": "Введіть назву для цього робочого простору",
+            "container": "Контейнер",
+            "no-container": "Без контейнера",
+            "icon": "Іконка",
+            "edit-title": "Редагувати робочий простір",
+            "save": "Зберегти зміни",
+            "cancel": "Скасувати"
+        },
+        "icons": {
+            "article": "Стаття",
+            "book": "Книга",
+            "briefcase": "Портфель",
+            "cart": "Кошик для покупок",
+            "chat": "Чат",
+            "chill": "Холод",
+            "circle": "Коло",
+            "compass": "Компас",
+            "code": "Код",
+            "dollar": "Долар",
+            "fence": "Огорожа",
+            "fingerprint": "Відбиток пальця",
+            "food": "Їжа",
+            "fruit": "Фрукт",
+            "game": "Гра",
+            "gear": "Налаштування",
+            "gift": "Подарунок",
+            "key": "Ключ",
+            "lightning": "Блискавка",
+            "network": "Мережа",
+            "notes": "Нотатки",
+            "paint": "Фарба",
+            "photo": "Фото",
+            "pin": "Закріпити",
+            "pet": "Домашній улюбленець",
+            "question": "Знак запитання",
+            "smartphone": "Смартфон",
+            "star": "Зірка",
+            "tree": "Дерево",
+            "vacation": "Відпустка",
+            "love": "Любов",
+            "moon": "Місяць",
+            "music": "Музика",
+            "user": "Користувач"
+        },
+        "service": {
+            "new-workspace": "Новий робочий простір ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Перемістити цей робочий простір вгору",
+            "move-down": "Перемістити цей робочий простір вниз",
+            "delete": "Видалити робочий простір",
+            "manage": "Керування робочим простором"
+        },
+        "popup": {
+            "create-new": "Створити новий робочий простір...",
+            "manage": "Керування робочими просторами"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Перемістити вкладку в іншу робочу область"
+        },
+        "error": {
+            "invalidWorkspaceID": "Недійсний ідентифікатор робочої області (можливо, порядок не оновлено)"
+        }
+    },
+    "statusbar": {
+        "toggle": "Рядок стану{{mark}}"
+    },
+    "splitview": {
+        "title": "Розділений екран",
+        "position": "Розташування",
+        "position-left": "Лівий",
+        "position-right": "Правий",
+        "flex-row": "Рядок",
+        "flex-column": "Стовпчик",
+        "remove-button": "Видалити поточний вигляд",
+        "tab-context": {
+            "split-tabs": "Розділити вкладки",
+            "split-fixed-tab": "Розділити на фіксовану вкладку"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Вебзастосунок",
+            "install-current": "Встановити поточну сторінку як прогресивний вебзастосунок",
+            "open-installed": "Відкрити встановлені застосунки"
+        },
+        "page-action": {
+            "title": "Відкрити застосунок",
+            "install": "Встановити застосунок",
+            "open": "Відкрити застосунок",
+            "cancel": "Скасувати",
+            "site-icon": "Іконка сайту"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Відкрити в приватному контейнері",
+        "name": "Приватний контейнер"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "Назад",
+            "gecko-forward": "Вперед",
+            "gecko-reload": "Перезавантажити",
+            "gecko-close-tab": "Закрити вкладку",
+            "gecko-open-new-tab": "Нова вкладка",
+            "gecko-duplicate-tab": "Дублювати вкладку",
+            "gecko-reload-all-tabs": "Перезавантажити всі вкладки",
+            "gecko-restore-last-tab": "Відкрити закриту вкладку",
+            "gecko-open-new-window": "Відкрити нове вікно",
+            "gecko-open-new-private-window": "Відкрити нове приватне вікно",
+            "gecko-close-window": "Закрити вікно",
+            "gecko-restore-last-window": "Відновити останнє вікно",
+            "gecko-show-next-tab": "Показати наступну вкладку",
+            "gecko-show-previous-tab": "Показати попередню вкладку",
+            "gecko-show-all-tabs-panel": "Показати всі вкладки на панелі",
+            "gecko-force-reload": "Примусове перезавантаження",
+            "gecko-zoom-in": "Збільшити",
+            "gecko-zoom-out": "Зменшити",
+            "gecko-reset-zoom": "Скинути масштаб",
+            "gecko-bookmark-this-page": "Додати сторінку до закладок",
+            "gecko-open-home-page": "Відкрити домашню сторінку",
+            "gecko-open-addons-manager": "Відкрити менеджер застосунків",
+            "gecko-send-with-mail": "Надіслати поштою",
+            "gecko-save-page": "Зберегти сторінку",
+            "gecko-print-page": "Надрукувати сторінку",
+            "gecko-mute-current-tab": "Заглушити поточну вкладку",
+            "gecko-show-source-of-page": "Показати джерело сторінки",
+            "gecko-show-page-info": "Показати інформацію про сторінку",
+            "floorp-rest-mode": "Увімкнути режим відпочинку",
+            "floorp-hide-user-interface": "Приховати інтерфейс",
+            "floorp-toggle-navigation-panel": "Увімкнути/вимкнути панель навігації",
+            "gecko-stop": "Зупинити",
+            "gecko-search-in-this-page": "Пошук на цій сторінці",
+            "gecko-show-next-search-result": "Показати наступний результат пошуку",
+            "gecko-show-previous-search-result": "Показати попередній результат пошуку",
+            "gecko-search-the-web": "Пошук в Інтернеті",
+            "gecko-open-migration-wizard": "Відкрити майстер міграції",
+            "gecko-quit-from-application": "Вийти із застосунку",
+            "gecko-enter-into-customize-mode": "Enter Customize Mode",
+            "gecko-enter-into-offline-mode": "Увійдіть в автономний режим",
+            "gecko-open-screen-capture": "Open Screen Capture",
+            "floorp-show-pip": "Показати картинку в картинці",
+            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+            "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
+            "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
+            "gecko-open-general-preferences": "Відкрити Загальні налаштування",
+            "gecko-open-privacy-preferences": "Відкрити налаштування конфіденційності",
+            "gecko-open-workspaces-preferences": "Відкрити налаштування робочих просторів",
+            "gecko-open-containers-preferences": "Відкрити налаштування контейнерів",
+            "gecko-open-search-preferences": "Відкрити налаштування пошуку",
+            "gecko-open-sync-preferences": "Open Sync Preferences",
+            "gecko-open-task-manager": "Відкрити диспетчер завдань",
+            "gecko-forget-history": "Очистити історію",
+            "gecko-quick-forget-history": "Quick Forget History",
+            "gecko-clear-recent-history": "Очистити нещодавню історію",
+            "gecko-restore-last-session": "Відновити останню сесію",
+            "gecko-search-history": "Історія пошуку",
+            "gecko-manage-history": "Керувати історією",
+            "gecko-open-downloads": "Відкрити завантаження",
+            "gecko-show-bookmark-sidebar": "Показати бічну панель закладок",
+            "gecko-show-history-sidebar": "Show History Sidebar",
+            "gecko-show-synced-tabs-sidebar": "Показати бічну панель синхронізованих вкладок",
+            "gecko-reverse-sidebar": "Зворотне положення бічної панелі",
+            "gecko-hide-sidebar": "Приховати бічну панель",
+            "gecko-toggle-sidebar": "Toggle Sidebar",
+            "gecko-scroll-up": "Прокрутити вгору",
+            "gecko-scroll-down": "Прокрутити вниз",
+            "gecko-scroll-right": "Прокрутити праворуч",
+            "gecko-scroll-left": "Прокрутити ліворуч",
+            "gecko-scroll-to-top": "Scroll to Top",
+            "gecko-scroll-to-bottom": "Scroll to Bottom"
+        },
+        "descriptions": {
+            "gecko-back": "Navigate back to the previous page",
+            "gecko-forward": "Navigate forward to the next page",
+            "gecko-reload": "Reload the current page",
+            "gecko-close-tab": "Close the current tab",
+            "gecko-open-new-tab": "Відкрити нову вкладку",
+            "gecko-duplicate-tab": "Duplicate the current tab",
+            "gecko-reload-all-tabs": "Перезавантажити всі вкладки",
+            "gecko-restore-last-tab": "Відкрити останню закриту вкладку"
+        }
+    },
+    "qrCode": {
+        "pageAction": "Згенерувати QR-код",
+        "modalTitle": "Генератор QR-кодів",
+        "loading": "Генерація QR-коду...",
+        "copyButton": "Копіювати зображення",
+        "downloadButton": "Завантажити",
+        "closeButton": "Закрити",
+        "copySuccess": "QR-код скопійовано в буфер обміну!",
+        "copyError": "Не вдалося скопіювати QR-код",
+        "generateError": "Не вдалося згенерувати QR код"
+    },
+    "qrcode-generate-page-action": "Генерувати QR-код для цієї сторінки",
+    "qrcode-generate-page-action-title": "Генератор QR-кодів",
+    "panelSidebar": {
+        "modal": {
+            "type": "Тип панелі",
+            "typeOptions": {
+                "web": "Вебсторінка",
+                "sidebar-tool": "Бічна панель інструментів",
+                "extension": "Бічна панель розширень",
+                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+            },
+            "width": "Ширина панелі",
+            "url": "URL вебсторінки",
+            "container": "Контейнер",
+            "noContainer": "Без контейнера",
+            "userAgent": "Використовувати мобільний агент користувача",
+            "extension": "Показати розширення",
+            "sideBarTool": "Display Sidebar Tool",
+            "title": "Додати панель",
+            "add": "Додати",
+            "cancel": "Скасувати"
+        },
+        "contextMenu": {
+            "unload": "Unload this webpanel",
+            "mute": "Mute/Unmute this webpanel",
+            "changeZoom": "Change zoom level",
+            "zoomIn": "Збільшити",
+            "zoomOut": "Зменшити",
+            "resetZoom": "Скинути масштаб",
+            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+            "delete": "Видалити цю панель"
+        }
+    },
+    "chrome_css": {
+        "menu": "Стиль",
+        "rebuild": "Rebuild Style Sheets",
+        "create": "Create New Style Sheet",
+        "open_folder": "Open Style Sheets Folder",
+        "edit_user_chrome": "Редагувати userChrome.css",
+        "edit_user_content": "Редагувати userContent.css",
+        "rebuild_complete": "Style sheets rebuilt",
+        "editor_path_not_found": "Editor Path Not Found",
+        "set_pref_description": "Please set the editor path",
+        "please_enter_filename": "Please enter a filename",
+        "file_created": "File Created",
+        "file_created_successfully": "File created successfully",
+        "open_file_in_editor": "Відкрити файл у редакторі?",
+        "error_title": "Помилка",
+        "folder_open_failed": "Failed to open CSS folder",
+        "edit_failed": "Failed to edit file"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Перезапустити",
+            "normal-restart": "Перезапустити",
+            "restart-cache-clear": "Restart with Cache Clear",
+            "restart-safe-mode": "Перезавантажити в безпечному режимі",
+            "restart-profile-manager": "Restart with Profile Manager"
+        }
+    }
+}

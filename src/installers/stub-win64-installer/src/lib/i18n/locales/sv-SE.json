@@ -1,0 +1,97 @@
+{
+    "app": {
+        "status": {
+            "installing": "Installerar i bakgrunden...",
+            "installComplete": "Installation slutförd"
+        },
+        "installer": {
+            "title": "Installationsprogram för Floorp",
+            "description": "Installera Floorp webbläsaren och få en snabb och anpassningsbar surfupplevelse med fokus på integritet.",
+            "adminRights": "Installera med administratörsrättigheter",
+            "adminRightsEnabled": "Installera för alla användare med administratörsrättigheter.",
+            "adminRightsDisabled": "Installera endast för nuvarande användare.",
+            "customPathRequired": "Anpassad installationssökväg kräver administratörsrättigheter.",
+            "installLocation": "Installationsplats",
+            "change": "Ändra",
+            "installButton": "Starta installationen",
+            "retryButton": "Försök igen"
+        },
+        "progress": {
+            "installing": "Installerar...",
+            "slideCounter": "Bild {{current}}/{{total}}"
+        },
+        "modal": {
+            "selectLocation": "Välj installationsplats",
+            "installPath": "Installationssökväg",
+            "browse": "Bläddra",
+            "resetDefault": "Återställ till standard",
+            "cancel": "Avbryt",
+            "save": "Spara inställningar",
+            "close": "Stäng"
+        },
+        "exitConfirmation": {
+            "title": "Avbryt installation?",
+            "message": "Om du avbryter installationsprocessen förhindras Floorp från att installeras.",
+            "cancelButton": "Avbryt",
+            "confirmButton": "Avbryt installation"
+        },
+        "complete": {
+            "success": "Installation lyckades",
+            "error": "Installation misslyckades",
+            "launchCheckbox": "Starta Floorp webbläsare efter installation",
+            "closeButton": "Stäng installationsprogrammet",
+            "countdownMessage": "Installationsprogrammet stängs om {{count}} sekunder",
+            "legacyDownloadMessage": "Du kan också prova det äldre installationsprogrammet.",
+            "legacyDownloadButton": "Ladda ner"
+        }
+    },
+    "slides": {
+        "slide1": {
+            "title": "Välkommen till Floorp",
+            "description": "Välkommen till den senaste versionen av Floorp, en webbläsare som utvecklats med fokus på utveckling och forskning i Japan. Innehållet som presenteras härnäst är bara en del av projektet."
+        },
+        "slide2": {
+            "title": "Regelbundna uppdateringar",
+            "description": "Floorp underhålls och uppdateras kontinuerligt, även som ett gemenskaps baserat projekt. Vi levererar säker surfning i linje med principen att webben ska vara fritt tillgänglig för alla."
+        },
+        "slide3": {
+            "title": "Senaste funktioner",
+            "description": "Den senaste versionen av Floorp utnyttjar avancerade webbfunktioner som utvecklats av Mozillas Firefox. Den har också omarbetats för att göra verktyg som alla vill ha lättillgängliga."
+        },
+        "slide4": {
+            "title": "Avancerad anpassning",
+            "description": "Utrustad med många anpassningsalternativ för att upprätthålla integriteten bättre än din standardwebbläsare. Floorp låter dig förverkliga din önskade konfiguration."
+        },
+        "slide5": {
+            "title": "Kämpar för dig",
+            "description": "Floorp blockerar skadlig spårning. Vi balanserar webbplatsens drift och användarnas rättigheter och arbetar för att förbättra webben både vad gäller funktionalitet och integritet."
+        }
+    },
+    "rust": {
+        "success": {
+            "downloaded_dev_mode": "Floorp-installationsprogrammet har laddats ner (utvecklingsläge)",
+            "installation_complete": "Floorp-installationen slutfördes framgångsrikt."
+        },
+        "errors": {
+            "installer_not_found": "Misslyckades med att hämta Floorp-installationsprogrammet.",
+            "download_failed": "Ett fel inträffade under nedladdningen: {{0}}",
+            "signature_verification_failed": "Verifiering av installationsprogrammets signatur misslyckades. Exekveringen avbröts av säkerhetsskäl.",
+            "signature_verification_error": "Ett fel inträffade under signaturverifieringen: {{0}}",
+            "installer_exit_code": "Installationsprogrammet avslutades med kod {{0}}.",
+            "installer_execution": "Ett fel inträffade när installationsprogrammet kördes: {{0}}",
+            "browser_not_found": "Floorp webbläsare hittades inte. Installationen lyckades, men webbläsarens körbara fil kunde inte hittas.",
+            "browser_launch_failed": "Misslyckades med att starta webbläsaren: {{0}}",
+            "file_not_found": "Fil hittades inte: {{0}}",
+            "not_a_file": "Sökväg är inte en fil: {{0}}",
+            "admin_rights_denied": "Administratörsrättigheter nekades. Du valde läget för administratörsrättigheter, men behörigheten nekades.",
+            "exit_code_not_found": "Kunde inte hämta installationsprogrammets avslutningskod. Administratörsrättigheter kan ha nekats.",
+            "powershell_script_creation": "Misslyckades med att skapa PowerShell-skript: {{0}}",
+            "powershell_process": "Misslyckades med att starta PowerShell-process: {{0}}",
+            "admin_install_failed": "Installation med administratörsrättigheter misslyckades. Avsluta kod: {{0}}",
+            "user_installer_launch": "Misslyckades med att starta installationsprocessen med användarrättigheter: {{0}}",
+            "user_installer_execution": "Ett problem uppstod när installationsprogrammet kördes med användarrättigheter: {{0}}",
+            "cpu_not_supported": "Denna enhets CPU stöder inte SSE4.1. Floorp kräver en processor med SSE4.1 stöd.",
+            "cpu_check_failed": "Mislsyckades med att verifiera CPU-krav. Kontrollera systemkrav."
+        }
+    }
+}

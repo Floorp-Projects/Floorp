@@ -1,0 +1,263 @@
+{
+    "undo-closed-tab": {
+        "label": "Anular separador fechado",
+        "tooltiptext": "Reabrir o último separador fechado {{shortcut}}"
+    },
+    "workspaces": {
+        "modal": {
+            "name": "Nome",
+            "name-placeholder": "Introduzir um nome para este espaço de trabalho",
+            "container": "Contentor",
+            "no-container": "Sem contentor",
+            "icon": "Ícone",
+            "edit-title": "Editar espaço de trabalho",
+            "save": "Guardar alterações",
+            "cancel": "Cancelar"
+        },
+        "icons": {
+            "article": "Artigo",
+            "book": "Livro",
+            "briefcase": "Pasta",
+            "cart": "Carrinho de compras",
+            "chat": "Conversa",
+            "chill": "Frio",
+            "circle": "Círculo",
+            "compass": "Bússola",
+            "code": "Código",
+            "dollar": "Dólar",
+            "fence": "Vedação",
+            "fingerprint": "Impressão digital",
+            "food": "Alimentação",
+            "fruit": "Fruta",
+            "game": "Jogo",
+            "gear": "Definições",
+            "gift": "Prenda",
+            "key": "Chave",
+            "lightning": "Relâmpagos",
+            "network": "Rede",
+            "notes": "Notas",
+            "paint": "Pintura",
+            "photo": "Fotografia",
+            "pin": "Afixar",
+            "pet": "Animal de estimação",
+            "question": "Questão",
+            "smartphone": "Smartphone",
+            "star": "Estrela",
+            "tree": "Árvore",
+            "vacation": "Férias",
+            "love": "Amor",
+            "moon": "Lua",
+            "music": "Música",
+            "user": "Utilizador"
+        },
+        "service": {
+            "new-workspace": "Novo espaço de trabalho ({{count}})"
+        },
+        "context-menu": {
+            "move-up": "Mover este espaço de trabalho para cima",
+            "move-down": "Mover este espaço de trabalho para baixo",
+            "delete": "Eliminar espaço de trabalho",
+            "manage": "Gerir o espaço de trabalho"
+        },
+        "popup": {
+            "create-new": "Criar novo espaço de trabalho...",
+            "manage": "Gerir espaços de trabalho"
+        },
+        "menu": {
+            "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho"
+        },
+        "error": {
+            "invalidWorkspaceID": "ID não válido para espaços de trabalho (talvez a ordem não esteja atualizada)"
+        }
+    },
+    "statusbar": {
+        "toggle": "Barra de estado{{mark}}"
+    },
+    "splitview": {
+        "title": "Vista dividida",
+        "position": "Posição",
+        "position-left": "Esquerda",
+        "position-right": "Certo",
+        "flex-row": "Fila",
+        "flex-column": "Coluna",
+        "remove-button": "Remover vista atual",
+        "tab-context": {
+            "split-tabs": "Separadores divididos",
+            "split-fixed-tab": "Dividir em separador fixo"
+        }
+    },
+    "ssb": {
+        "menu": {
+            "webapps": "Aplicações Web",
+            "install-current": "Instalar a página atual como Aplicação Web Progressiva",
+            "open-installed": "Abrir aplicações instaladas"
+        },
+        "page-action": {
+            "title": "Abrir aplicação",
+            "install": "Instalar a aplicação",
+            "open": "Abrir aplicação",
+            "cancel": "Cancelar",
+            "site-icon": "Ícone do sítio"
+        }
+    },
+    "privateContainer": {
+        "openInPrivateContainer": "Abrir num contentor privado",
+        "name": "Contentor privado"
+    },
+    "mouseGesture": {
+        "actions": {
+            "gecko-back": "Voltar",
+            "gecko-forward": "Avançar",
+            "gecko-reload": "Recarregar",
+            "gecko-close-tab": "Fechar separador",
+            "gecko-open-new-tab": "Novo separador",
+            "gecko-duplicate-tab": "Duplicar Separador",
+            "gecko-reload-all-tabs": "Recarregar todos os separadores",
+            "gecko-restore-last-tab": "Reabrir separador fechado",
+            "gecko-open-new-window": "Abrir nova janela",
+            "gecko-open-new-private-window": "Abrir nova janela privada",
+            "gecko-close-window": "Fechar janela",
+            "gecko-restore-last-window": "Restaurar a última janela",
+            "gecko-show-next-tab": "Mostrar separador seguinte",
+            "gecko-show-previous-tab": "Mostrar separador anterior",
+            "gecko-show-all-tabs-panel": "Painel Mostrar todos os separadores",
+            "gecko-force-reload": "Forçar Recarregamento",
+            "gecko-zoom-in": "Ampliar",
+            "gecko-zoom-out": "Reduzir o zoom",
+            "gecko-reset-zoom": "Repor o zoom",
+            "gecko-bookmark-this-page": "Adicionar aos favoritos",
+            "gecko-open-home-page": "Abrir a página inicial",
+            "gecko-open-addons-manager": "Abrir o Gestor de Complementos",
+            "gecko-send-with-mail": "Enviar por correio eletrónico",
+            "gecko-save-page": "Guardar página",
+            "gecko-print-page": "Imprimir página",
+            "gecko-mute-current-tab": "Silenciar o separador atual",
+            "gecko-show-source-of-page": "Mostrar origem da página",
+            "gecko-show-page-info": "Mostrar informações da página",
+            "floorp-rest-mode": "Ativar o modo de repouso",
+            "floorp-hide-user-interface": "Ocultar interface",
+            "floorp-toggle-navigation-panel": "Alternar painel de navegação",
+            "gecko-stop": "Parar",
+            "gecko-search-in-this-page": "Pesquisar nesta página",
+            "gecko-show-next-search-result": "Mostrar o próximo resultado da pesquisa",
+            "gecko-show-previous-search-result": "Mostrar resultado de pesquisa anterior",
+            "gecko-search-the-web": "Pesquisar na Web",
+            "gecko-open-migration-wizard": "Abrir o Assistente de Migração",
+            "gecko-quit-from-application": "Sair da aplicação",
+            "gecko-enter-into-customize-mode": "Entrar no modo Personalizar",
+            "gecko-enter-into-offline-mode": "Entrar no modo offline",
+            "gecko-open-screen-capture": "Abrir a captura de ecrã",
+            "floorp-show-pip": "Mostrar Picture-in-Picture",
+            "gecko-open-bookmark-add-tool": "Abrir a ferramenta Adicionar favoritos",
+            "gecko-open-bookmarks-manager": "Abrir o Gestor de Favoritos",
+            "gecko-toggle-bookmark-toolbar": "Alternar a barra de ferramentas dos favoritos",
+            "gecko-open-general-preferences": "Abrir Preferências gerais",
+            "gecko-open-privacy-preferences": "Abrir preferências de privacidade",
+            "gecko-open-workspaces-preferences": "Preferências de espaços de trabalho abertos",
+            "gecko-open-containers-preferences": "Abrir preferências de contentores",
+            "gecko-open-search-preferences": "Abrir preferências de pesquisa",
+            "gecko-open-sync-preferences": "Abrir as Preferências de sincronização",
+            "gecko-open-task-manager": "Abrir o Gestor de Tarefas",
+            "gecko-forget-history": "Esquecer a história",
+            "gecko-quick-forget-history": "Esquecimento rápido do histórico",
+            "gecko-clear-recent-history": "Limpar histórico recente",
+            "gecko-restore-last-session": "Restaurar a última sessão",
+            "gecko-search-history": "Histórico de pesquisa",
+            "gecko-manage-history": "Gerir o histórico",
+            "gecko-open-downloads": "Transferências abertas",
+            "gecko-show-bookmark-sidebar": "Mostrar barra lateral de favoritos",
+            "gecko-show-history-sidebar": "Mostrar barra lateral do histórico",
+            "gecko-show-synced-tabs-sidebar": "Mostrar barra lateral de separadores sincronizados",
+            "gecko-reverse-sidebar": "Inverter a posição da barra lateral",
+            "gecko-hide-sidebar": "Ocultar barra lateral",
+            "gecko-toggle-sidebar": "Alternar barra lateral",
+            "gecko-scroll-up": "Deslocar para cima",
+            "gecko-scroll-down": "Deslocação para baixo",
+            "gecko-scroll-right": "Deslocação para a direita",
+            "gecko-scroll-left": "Deslocação para a esquerda",
+            "gecko-scroll-to-top": "Deslocar para o topo",
+            "gecko-scroll-to-bottom": "Deslocação para baixo"
+        },
+        "descriptions": {
+            "gecko-back": "Navegar de volta para a página anterior",
+            "gecko-forward": "Avançar para a página seguinte",
+            "gecko-reload": "Recarregar a página atual",
+            "gecko-close-tab": "Fechar o separador atual",
+            "gecko-open-new-tab": "Abrir um novo separador",
+            "gecko-duplicate-tab": "Duplicar o separador atual",
+            "gecko-reload-all-tabs": "Recarregar todos os separadores",
+            "gecko-restore-last-tab": "Reabrir o último separador fechado"
+        }
+    },
+    "qrCode": {
+        "pageAction": "Gerar código QR",
+        "modalTitle": "",
+        "loading": "Geração de código QR...",
+        "copyButton": "Copiar imagem",
+        "downloadButton": "Descarregar",
+        "closeButton": "Fechar",
+        "copySuccess": "Código QR copiado para a área de transferência!",
+        "copyError": "Falha ao copiar o código QR",
+        "generateError": "Falha ao gerar o código QR"
+    },
+    "qrcode-generate-page-action": "Gerar código QR para esta página",
+    "qrcode-generate-page-action-title": "Gerador de código QR",
+    "panelSidebar": {
+        "modal": {
+            "type": "Panel Type",
+            "typeOptions": {
+                "web": "Web Page",
+                "sidebar-tool": "Barra lateral de ferramentas",
+                "extension": "Extension Sidebar",
+                "builtin": "Páginas incorporadas (transferências, marcadores, histórico)"
+            },
+            "width": "Panel Width",
+            "url": "Web Page URL",
+            "container": "Container",
+            "noContainer": "No Container",
+            "userAgent": "Use Mobile User Agent",
+            "extension": "Display Extension",
+            "sideBarTool": "Display Sidebar Tool",
+            "title": "Add Panel",
+            "add": "Add",
+            "cancel": "Cancel"
+        },
+        "contextMenu": {
+            "unload": "Descarregar este painel Web",
+            "mute": "Silenciar/Ativar este painel Web",
+            "changeZoom": "Alterar o nível de zoom",
+            "zoomIn": "Ampliar",
+            "zoomOut": "Reduzir",
+            "resetZoom": "Repor o zoom",
+            "changeUA": "Mudar o agente do utilizador para a versão móvel/desktop neste Webpanel",
+            "delete": "Eliminar este painel"
+        }
+    },
+    "chrome_css": {
+        "menu": "Estilo",
+        "rebuild": "Reconstruir folhas de estilo",
+        "create": "Criar nova folha de estilo",
+        "open_folder": "Abrir a pasta de folhas de estilo",
+        "edit_user_chrome": "Editar userChrome.css",
+        "edit_user_content": "Editar userContent.css",
+        "rebuild_complete": "Folhas de estilo reconstruídas",
+        "editor_path_not_found": "Caminho do editor não encontrado",
+        "set_pref_description": "Defina o caminho do editor",
+        "please_enter_filename": "Introduza um nome de ficheiro",
+        "file_created": "Ficheiro criado",
+        "file_created_successfully": "Ficheiro criado com sucesso",
+        "open_file_in_editor": "Abrir o ficheiro no editor?",
+        "error_title": "Erro",
+        "folder_open_failed": "Falha ao abrir a pasta CSS",
+        "edit_failed": "Falha ao editar o ficheiro"
+    },
+    "reboot": {
+        "menu": {
+            "title": "Reiniciar",
+            "normal-restart": "Reiniciar",
+            "restart-cache-clear": "Reiniciar com limpeza de cache",
+            "restart-safe-mode": "Reiniciar no modo de segurança",
+            "restart-profile-manager": "Reiniciar com o Profile Manager"
+        }
+    }
+}

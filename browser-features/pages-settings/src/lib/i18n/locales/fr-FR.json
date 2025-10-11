@@ -32,7 +32,16 @@
         "aboutBrowser": "À propos de {{productName}}",
         "debug": "Débogage",
         "mouseGesture": "Gestes de la souris",
-        "keyboardShortcut": "Raccourcis clavier"
+        "keyboardShortcut": "Raccourcis clavier",
+        "search": {
+            "title": "Search Settings",
+            "resultsFor": "Search results for \"{{query}}\"",
+            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
+            "noResults": "No results found",
+            "open": "Open \"{{title}}\"",
+            "matchedText": "Matched Text",
+            "results": "Search Results"
+        }
     },
     "home": {
         "welcome": "Bienvenue, {{name}}👋",

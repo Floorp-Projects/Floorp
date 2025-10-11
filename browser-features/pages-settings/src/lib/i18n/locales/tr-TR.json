@@ -32,7 +32,16 @@
         "aboutBrowser": "{{productName}} Hakkında",
         "debug": "Hata Ayıklama",
         "mouseGesture": "Fare Hareketleri",
-        "keyboardShortcut": "Klavye Kısayolları"
+        "keyboardShortcut": "Klavye Kısayolları",
+        "search": {
+            "title": "Arama Ayarları",
+            "resultsFor": "\"{{query}}\" için arama sonuçları",
+            "searchResultsDescription": "\"{{query}}\" için arama sonuçları. Yalnızca {{productName}} ayarları aranır; Firefox ayarları dahil değildir.",
+            "noResults": "Hiçbir sonuç bulunamadı",
+            "open": "Aç \"{{title}}\"",
+            "matchedText": "Eşleşen Metin",
+            "results": "Arama Sonuçları"
+        }
     },
     "home": {
         "welcome": "Hoş Geldin {{name}}👋",
@@ -362,7 +371,7 @@
         "generalSettingsDescription": "Temel fare hareketi ayarları",
         "enabled": "Fare hareketlerini etkinleştir",
         "showTrail": "Hareket izini göster",
-        "showLabel": "Show gesture label",
+        "showLabel": "Hareket izini göster",
         "sensitivity": "Hassasiyet",
         "low": "Düşük",
         "high": "Yüksek",
