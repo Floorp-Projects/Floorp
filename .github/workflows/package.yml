@@ -868,12 +868,12 @@ jobs:
           set -euo pipefail
           mkdir -p ~/downloads
           PLATFORM="${{ inputs.platform }}"
-          files=("${PLATFORM}-dist-host.zip")
           case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-dist-host.zip" "windows-x86_64-dist-host.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-dist-host.zip" "linux-x86_64-dist-host.zip") ;;
-            "Linux-aarch64") files+=("linux-aarch64-dist-host.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-dist-host.zip" "macOS-universal-dist-host.zip") ;;
+            "Windows-x86_64"|"Windows-x64") files=("windows-x86_64-dist-host.zip") ;;
+            "Linux-x86_64"|"Linux-x64") files=("linux-x86_64-dist-host.zip") ;;
+            "Linux-aarch64") files=("linux-aarch64-dist-host.zip") ;;
+            "macOS-x86_64"|"macOS-x64") files=("macOS-universal-dist-host.zip") ;;
+            *) files=() ;;
           esac
           success=0
           for file in "${files[@]}"; do
@@ -906,12 +906,12 @@ jobs:
           set -euo pipefail
           mkdir -p ~/downloads ~/noraneko-dev
           PLATFORM="${{ inputs.platform }}"
-          files=("${PLATFORM}-application-ini.zip")
           case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-application-ini.zip" "windows-x86_64-application-ini.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-application-ini.zip" "linux-x86_64-application-ini.zip") ;;
-            "Linux-aarch64") files+=("linux-aarch64-application-ini.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-application-ini.zip" "macOS-universal-application-ini.zip") ;;
+            "Windows-x86_64"|"Windows-x64") files=("windows-x86_64-application-ini.zip") ;;
+            "Linux-x86_64"|"Linux-x64") files=("linux-x86_64-application-ini.zip") ;;
+            "Linux-aarch64") files=("linux-aarch64-application-ini.zip") ;;
+            "macOS-x86_64"|"macOS-x64") files=("macOS-universal-application-ini.zip") ;;
+            *) files=() ;;
           esac
           success=0
           for file in "${files[@]}"; do
