@@ -631,7 +631,7 @@ jobs:
           mkdir -p ~/noraneko-installer
           if [[ "${{ inputs.platform }}" == "Linux-x86_64" || "${{ inputs.platform }}" == "Linux-x64" ]]; then
             sudo apt update
-            sudo apt install -y build-essential debhelper
+            sudo apt install -y build-essential debhelper fakeroot
           fi
 
       - name: Repackage Linux DEB
