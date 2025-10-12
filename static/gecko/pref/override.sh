@@ -29,6 +29,37 @@ if [[ ! -f "$OVERRIDE_INI" ]]; then
     echo -e "${COLOR_RED}Error: override.ini not found at $OVERRIDE_INI${COLOR_RESET}" >&2
     exit 1
 fi
+#!/bin/bash
+
+# Firefox preferences override script
+# Receives firefox.js path as command line argument and overrides settings with override.ini
+
+set -euo pipefail
+
+# ANSI color codes
+COLOR_RESET='\033[0m'
+COLOR_BLUE='\033[34m'
+COLOR_GREEN='\033[32m'
+COLOR_YELLOW='\033[33m'
+COLOR_RED='\033[31m'
+
+# Check command line arguments
+if [[ $# -ne 1 ]]; then
+    echo -e "${COLOR_RED}Error: Usage: $0 <path-to-firefox.js>${COLOR_RESET}" >&2
+    exit 1
+fi
+
+FIREFOX_JS_PATH="$1"
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OVERRIDE_INI="${SCRIPT_DIR}/override.ini"
+
+# Check if override.ini exists
+if [[ ! -f "$OVERRIDE_INI" ]]; then
+    echo -e "${COLOR_RED}Error: override.ini not found at $OVERRIDE_INI${COLOR_RESET}" >&2
+    exit 1
+fi
 
 # Check if firefox.js file exists
 if [[ ! -f "$FIREFOX_JS_PATH" ]]; then
@@ -62,7 +93,7 @@ while IFS= read -r line; do
         pref_value=$(echo "$pref_value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
         # Handle values that are not quoted
-        if [[ "$pref_value" =~ ^\".*\"$ ]]; then
+        if [[ "$pref_value" =~ ^".*"$ ]]; then
             # Already quoted
             formatted_value="$pref_value"
         elif [[ "$pref_value" =~ ^(true|false)$ ]]; then

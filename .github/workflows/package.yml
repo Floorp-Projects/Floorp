@@ -637,8 +637,81 @@ jobs:
       - name: Repackage Linux DEB
         if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
         run: |
+          set -euo pipefail
+          set -x
+
           VERSION=$(cat ./noraneko/static/gecko/config/version.txt)
-          ./mach repackage deb --input "$(echo obj-*/dist/$INSTALLER_PATH)" --output ~/noraneko-installer/noraneko.deb --arch x86_64 --version "$VERSION" --build-number 1 --templates browser/installer/linux/app/debian --release-product firefox --release-type release
+          INPUT_ARCHIVE="$(echo obj-*/dist/$INSTALLER_PATH)"
+
+          if [ ! -f "$INPUT_ARCHIVE" ]; then
+            echo "Installer archive not found: $INPUT_ARCHIVE" >&2
+            exit 1
+          fi
+
+          WORKDIR=$(mktemp -d)
+          echo "Using temp workdir: $WORKDIR"
+
+          # Ensure cleanup on exit
+          trap 'rc=$?; rm -rf "$WORKDIR" || true; exit $rc' EXIT
+
+          # Extract archive
+          mkdir -p "$WORKDIR/src"
+          tar -xJf "$INPUT_ARCHIVE" -C "$WORKDIR/src"
+
+          # Find top-level candidate directory
+          candidate=$(find "$WORKDIR/src" -maxdepth 1 -mindepth 1 -type d -print -quit || true)
+          if [ -z "$candidate" ]; then
+            mkdir -p "$WORKDIR/floorp"
+            shopt -s dotglob || true
+            mv "$WORKDIR/src"/* "$WORKDIR/floorp/" 2>/dev/null || true
+          else
+            cand_basename=$(basename "$candidate")
+            if [ "$cand_basename" != "floorp" ]; then
+              echo "Adjusting top-level directory from $cand_basename to floorp"
+              mkdir -p "$WORKDIR/floorp"
+              mv "$candidate"/* "$WORKDIR/floorp/" || true
+            else
+              echo "Archive already contains floorp/ top-level"
+              mkdir -p "$WORKDIR/floorp"
+              mv "$candidate"/* "$WORKDIR/floorp/" || true
+            fi
+          fi
+
+          # Provide firefox/ copy for packaging scripts that expect it
+          mkdir -p "$WORKDIR/firefox"
+          cp -a "$WORKDIR/floorp/." "$WORKDIR/firefox/" || true
+
+          # Remove duplicate metadata that can confuse mach
+          rm -f "$WORKDIR/firefox/application.ini" "$WORKDIR/firefox/platform.ini" || true
+
+          # Mark packaged app for mach's checks
+          touch "$WORKDIR/floorp/is-packaged-app" "$WORKDIR/firefox/is-packaged-app" || true
+
+          ADJUSTED_ARCHIVE="$WORKDIR/adjusted-installer.tar.xz"
+          (cd "$WORKDIR" && tar -cJf "$ADJUSTED_ARCHIVE" floorp firefox)
+
+          echo "Adjusted archive created: $ADJUSTED_ARCHIVE"
+          tar -tJf "$ADJUSTED_ARCHIVE" | sed -n '1,200p' || true
+
+          INSPECT_DIR="$WORKDIR/inspect"
+          mkdir -p "$INSPECT_DIR"
+          tar -xJf "$ADJUSTED_ARCHIVE" -C "$INSPECT_DIR"
+          echo "Inspect listing (first 200 lines):"
+          ls -laR "$INSPECT_DIR" | sed -n '1,200p' || true
+
+          # Run repackager
+          OUTPUT_DEB=~/noraneko-installer/noraneko.deb
+          mkdir -p "$(dirname "$OUTPUT_DEB")"
+
+          echo "Invoking mach repackage deb..."
+          if ./mach repackage deb --input "$ADJUSTED_ARCHIVE" --output "$OUTPUT_DEB" --arch x86_64 --version "$VERSION" --build-number 1 --templates browser/installer/linux/app/debian --release-product firefox --release-type release; then
+            echo "mach repackage deb succeeded -> $OUTPUT_DEB"
+            ls -la "$OUTPUT_DEB" || true
+          else
+            echo "mach repackage deb failed. Dumping $WORKDIR for debugging" >&2
+            ls -laR "$WORKDIR" || true
+            exit 1
+          fi
 
       - name: Upload Noraneko Artifact
         uses: actions/upload-artifact@v4
