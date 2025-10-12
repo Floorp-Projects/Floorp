@@ -13,6 +13,24 @@ import { writeBuildid2 } from "./update.ts";
 
 const logger = new Logger("builder");
 
+/**
+ * Get the full path to the deno executable.
+ * This ensures we can find deno even if PATH resolution is problematic.
+ */
+function getDenoPath(): string {
+  // First, check if DENO_EXECUTABLE_PATH is set (by CI/CD)
+  const envPath = Deno.env.get("DENO_EXECUTABLE_PATH");
+  if (envPath) {
+    logger.debug(`Using Deno executable from DENO_EXECUTABLE_PATH: ${envPath}`);
+    return envPath;
+  }
+
+  // Otherwise, use Deno.execPath() which gives us the current deno executable
+  const denoPath = Deno.execPath();
+  logger.debug(`Using Deno executable from Deno.execPath(): ${denoPath}`);
+  return denoPath;
+}
+
 export function packageVersion(): string {
   const pkgPath = path.join(PROJECT_ROOT, "package.json");
   const content = Deno.readTextFileSync(pkgPath);
@@ -55,15 +73,16 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
   }
 
   const version = packageVersion();
+  const deno = getDenoPath(); // Get the full path to deno executable
 
   const devCommands: CommandTuple[] = [
     [
-      ["deno", "task", "build", `--env.MODE=${mode}`],
+      [deno, "task", "build", `--env.MODE=${mode}`],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
       [
-        "deno",
+        deno,
         "task",
         "build",
         `--env.__BUILDID2__=${buildid2}`,
@@ -73,7 +92,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -87,12 +106,12 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
   const prodCommands: CommandTuple[] = [
     [
-      ["deno", "task", "build", "--env.MODE=production"],
+      [deno, "task", "build", "--env.MODE=production"],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -106,7 +125,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     // Converted app builds
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -120,7 +139,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -130,11 +149,11 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         "--base",
         "chrome://noraneko-settings/content",
       ],
-      path.join(PROJECT_ROOT, "src/apps/settings"),
+      path.join(PROJECT_ROOT, "browser-features/pages-settings"),
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -144,11 +163,11 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         "--base",
         "chrome://noraneko-welcome/content",
       ],
-      path.join(PROJECT_ROOT, "src/apps/welcome"),
+      path.join(PROJECT_ROOT, "browser-features/pages-welcome"),
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -158,11 +177,11 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         "--base",
         "chrome://noraneko-notes/content",
       ],
-      path.join(PROJECT_ROOT, "src/apps/notes"),
+      path.join(PROJECT_ROOT, "browser-features/pages-notes"),
     ],
     [
       [
-        "deno",
+        deno,
         "run",
         "-A",
         "vite",
@@ -172,12 +191,12 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         "--base",
         "chrome://noraneko-modal-child/content",
       ],
-      path.join(PROJECT_ROOT, "src/apps/modal-child"),
+      path.join(PROJECT_ROOT, "browser-features/pages-modal-child"),
     ],
 
     [
       [
-        "deno",
+        deno,
         "task",
         "build",
         `--env.__BUILDID2__=${buildid2}`,
@@ -187,7 +206,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     ],
     // [
     //   [
-    //     "deno",
+    //     deno,
     //     "run",
     //     "-A",
     //     "vite",

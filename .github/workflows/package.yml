@@ -127,6 +127,17 @@ jobs:
           deno task feles-build misc writeVersion
           cd ..
 
+      - name: Copy branding files from runtime
+        run: |
+          if [ -d ".github/assets/branding" ]; then
+            echo "Copying branding files from .github/assets/branding to browser/branding..."
+            cp -r .github/assets/branding/* ./browser/branding/
+            echo "Branding files copied successfully."
+            ls -la ./browser/branding/
+          else
+            echo "Warning: .github/assets/branding directory not found, skipping branding copy."
+          fi
+
       - name: Mach configure
         env:
           IS_BETA: ${{ inputs.beta }}
@@ -212,12 +223,14 @@ jobs:
 
           if [ "${IS_BETA}" = "true" ]; then
             UPDATE_CHANNEL="beta"
-            if BETA_BRANDING=$(find_branding_dir "noraneko-daylight" "noraneko-alpha" "floorp-daylight"); then
+            if BETA_BRANDING=$(find_branding_dir "floorp-daylight" "noraneko-daylight" "noraneko-alpha"); then
               sed -i "s|MOZ_BRANDING_DIRECTORY=browser/branding/unofficial|MOZ_BRANDING_DIRECTORY=browser/branding/${BETA_BRANDING}|g" "${CONFVARS}"
               echo "ac_add_options --enable-update-channel=${UPDATE_CHANNEL}" >> mozconfig
               echo "ac_add_options --with-branding=browser/branding/${BETA_BRANDING}" >> mozconfig
             else
               echo "Unable to locate beta branding directory" >&2
+              echo "Available branding directories:" >&2
+              ls -la ./browser/branding/ >&2
               exit 1
             fi
             BASE_URL="github.com/${{ github.repository }}/releases/download/beta/"
@@ -229,12 +242,14 @@ jobs:
             )
           else
             UPDATE_CHANNEL="release"
-            if RELEASE_BRANDING=$(find_branding_dir "noraneko-official" "floorp-official" "noraneko"); then
+            if RELEASE_BRANDING=$(find_branding_dir "floorp-official" "noraneko-official" "noraneko"); then
               sed -i "s|MOZ_BRANDING_DIRECTORY=browser/branding/unofficial|MOZ_BRANDING_DIRECTORY=browser/branding/${RELEASE_BRANDING}|g" "${CONFVARS}"
               echo "ac_add_options --enable-update-channel=${UPDATE_CHANNEL}" >> mozconfig
               echo "ac_add_options --with-branding=browser/branding/${RELEASE_BRANDING}" >> mozconfig
             else
               echo "Unable to locate release branding directory" >&2
+              echo "Available branding directories:" >&2
+              ls -la ./browser/branding/ >&2
               exit 1
             fi
             VERSION_DISPLAY="$(cat ./browser/config/version_display.txt | tr -d '\r\n')"
@@ -297,28 +312,31 @@ jobs:
 
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
-              echo "ARTIFACT_NAME=floorp-win-amd64-moz-artifact" >> $GITHUB_ENV
-              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-win-amd64-moz-artifact.zip" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=win-amd64" >> $GITHUB_ENV
+              echo "ARTIFACT_NAME=floorp-windows-x86_64-moz-artifact" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-windows-x86_64-moz-artifact.zip" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=windows-x86_64" >> $GITHUB_ENV
               echo "INSTALLER_PATH=*installer.exe" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-win64.installer.exe" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=floorp-windows-x86_64.installer.exe" >> $GITHUB_ENV
               echo "WORKSPACE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
               ;;
             "Linux-x86_64")
-              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-linux-amd64-moz-artifact.tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=linux-amd64" >> $GITHUB_ENV
+              echo "ARTIFACT_NAME=floorp-linux-x86_64-moz-artifact" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-linux-x86_64-moz-artifact.tar.xz" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=linux-x86_64" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-linux-amd64.tar.xz" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=floorp-linux-x86_64.tar.xz" >> $GITHUB_ENV
               ;;
             "Linux-aarch64")
+              echo "ARTIFACT_NAME=floorp-linux-aarch64-moz-artifact" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME=floorp-linux-aarch64-moz-artifact.tar.xz" >> $GITHUB_ENV
               echo "OUTPUT_NAME=linux-aarch64" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV
               echo "OUTPUT_INSTALLER_NAME=floorp-linux-aarch64.tar.xz" >> $GITHUB_ENV
               ;;
             "macOS-x86_64")
-              echo "ARTIFACT_NAME=floorp-mac-universal-moz-artifact-release" >> $GITHUB_ENV
-              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-mac-universal-moz-artifact-release.zip" >> $GITHUB_ENV
+              echo "ARTIFACT_NAME=floorp-mac-universal-moz-artifact" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME=floorp-macOS-universal-moz-artifact.dmg" >> $GITHUB_ENV
+              echo "ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK=floorp-macOS.update_framework_artifacts.zip" >> $GITHUB_ENV
               echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp-*dmg" >> $GITHUB_ENV
               echo "OUTPUT_INSTALLER_NAME=floorp-macOS-universal.dmg" >> $GITHUB_ENV
@@ -344,7 +362,16 @@ jobs:
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           mkdir -p ~/downloads
-          curl -L https://github.com/${{ github.repository }}-runtime/releases/latest/download/${{ env.ARTIFACT_FROM_RELEASE_NAME }} -o ~/downloads/${{ env.ARTIFACT_FROM_RELEASE_NAME }}
+          PLATFORM="${{ inputs.platform }}"
+          case "$PLATFORM" in
+            "macOS-x64"|"macOS-x86_64")
+              curl -L "https://github.com/${{ github.repository }}-runtime/releases/latest/download/${ARTIFACT_FROM_RELEASE_NAME}" -o "$HOME/downloads/${ARTIFACT_FROM_RELEASE_NAME}"
+              curl -L "https://github.com/${{ github.repository }}-runtime/releases/latest/download/${ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK}" -o "$HOME/downloads/${ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK}"
+              ;;
+            *)
+              curl -L "https://github.com/${{ github.repository }}-runtime/releases/latest/download/${ARTIFACT_FROM_RELEASE_NAME}" -o "$HOME/downloads/${ARTIFACT_FROM_RELEASE_NAME}"
+              ;;
+          esac
 
       - name: Make Downloaded Artifact to Mozilla Artifact (Actions)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -371,7 +398,12 @@ jobs:
           PLATFORM="${{ inputs.platform }}"
           case "$PLATFORM" in
             "macOS-x64"|"macOS-x86_64")
-              unzip floorp-mac-universal-moz-artifact-release.zip -d ~/artifacts
+              if [ -f "$ARTIFACT_FROM_RELEASE_NAME" ]; then
+                cp "$ARTIFACT_FROM_RELEASE_NAME" ~/artifacts/
+              fi
+              if [ -n "$ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK" ] && [ -f "$ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK" ]; then
+                cp "$ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK" ~/artifacts/
+              fi
               ;;
             *)
               cp -r ./* ~/artifacts
@@ -381,6 +413,43 @@ jobs:
 
       - name: Build Noraneko
         run: |
+          # Find the actual deno executable, resolving symlinks
+          DENO_PATH=$(which deno)
+          echo "Deno symlink path: $DENO_PATH"
+
+          # Debug: Check what's in the deno directory
+          echo "Contents of /opt/hostedtoolcache/deno/2.5.4/x64/:"
+          ls -la /opt/hostedtoolcache/deno/2.5.4/x64/ || echo "Directory not accessible"
+
+          echo "Looking for deno binary:"
+          find /opt/hostedtoolcache/deno/2.5.4/ -name "deno" -type f 2>/dev/null || echo "No deno binary found"
+
+          # Try to find the actual deno binary
+          REAL_DENO_PATH=""
+          for possible_path in \
+            /opt/hostedtoolcache/deno/2.5.4/x64/bin/deno \
+            /opt/hostedtoolcache/deno/2.5.4/x64/deno \
+            /home/runner/.deno/bin/deno \
+            "$DENO_PATH"; do
+            echo "Checking: $possible_path"
+            if [ -f "$possible_path" ] && [ -x "$possible_path" ]; then
+              REAL_DENO_PATH="$possible_path"
+              echo "Found executable deno at: $REAL_DENO_PATH"
+              break
+            fi
+          done
+
+          if [ -z "$REAL_DENO_PATH" ]; then
+            echo "Error: Could not find deno binary"
+            exit 1
+          fi
+
+          echo "Deno version: $(deno --version)"
+
+          # Export the real deno path for use in TypeScript build tools
+          export DENO_EXECUTABLE_PATH="$REAL_DENO_PATH"
+          echo "DENO_EXECUTABLE_PATH set to: $DENO_EXECUTABLE_PATH"
+
           cd ./noraneko
           NODE_ENV='production' deno task feles-build build --phase before-mach
           cd ..
@@ -728,9 +797,10 @@ jobs:
           PLATFORM="${{ inputs.platform }}"
           files=("${PLATFORM}-dist-host.zip")
           case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-dist-host.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-dist-host.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-dist-host.zip") ;;
+            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-dist-host.zip" "windows-x86_64-dist-host.zip") ;;
+            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-dist-host.zip" "linux-x86_64-dist-host.zip") ;;
+            "Linux-aarch64") files+=("linux-aarch64-dist-host.zip") ;;
+            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-dist-host.zip" "macOS-universal-dist-host.zip") ;;
           esac
           success=0
           for file in "${files[@]}"; do
@@ -765,9 +835,10 @@ jobs:
           PLATFORM="${{ inputs.platform }}"
           files=("${PLATFORM}-application-ini.zip")
           case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-application-ini.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-application-ini.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-application-ini.zip") ;;
+            "Windows-x86_64"|"Windows-x64") files+=("Windows-x64-application-ini.zip" "windows-x86_64-application-ini.zip") ;;
+            "Linux-x86_64"|"Linux-x64") files+=("Linux-x64-application-ini.zip" "linux-x86_64-application-ini.zip") ;;
+            "Linux-aarch64") files+=("linux-aarch64-application-ini.zip") ;;
+            "macOS-x86_64"|"macOS-x64") files+=("macOS-x64-application-ini.zip" "macOS-universal-application-ini.zip") ;;
           esac
           success=0
           for file in "${files[@]}"; do
@@ -798,8 +869,8 @@ jobs:
 
           chmod +x "$OBJ_PATH/dist/host/bin/mar"
 
-          awk -F "=" '/^Version/ {print $2}' "$HOME/noraneko-dev/nora-application.ini" > "$MAR_DIR/version.txt"
-          awk -F "=" '/^BuildID/ {print $2}' "$HOME/noraneko-dev/nora-application.ini" > "$MAR_DIR/buildid.txt"
+          awk -F "=" '/^Version/ {print $2}' "$HOME/noraneko-dev/floorp-application.ini" > "$MAR_DIR/version.txt"
+          awk -F "=" '/^BuildID/ {print $2}' "$HOME/noraneko-dev/floorp-application.ini" > "$MAR_DIR/buildid.txt"
 
           if [ -f ./noraneko/static/gecko/config/version.txt ]; then
             cp ./noraneko/static/gecko/config/version.txt "$MAR_DIR/noraneko_version.txt"

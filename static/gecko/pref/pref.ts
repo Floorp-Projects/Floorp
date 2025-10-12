@@ -8,9 +8,22 @@ const logger = new Logger("pref");
 
 const PREF_OVERRIDE_DIR = "static/gecko/pref";
 
+function ensureScriptPermissions(): void {
+  if (Deno.build.os === "windows") return;
+
+  const overrideScriptPath = path.join(PREF_OVERRIDE_DIR, "override.sh");
+  try {
+    Deno.chmodSync(overrideScriptPath, 0o755);
+  } catch (error) {
+    logger.warn(`Failed to set execute permission on override.sh: ${error}`);
+  }
+}
+
 function binDir(): string {
   return BIN_DIR;
 }
+
+ensureScriptPermissions();
 
 export function prefNeeded(): boolean {
   const overrideIniPath = path.join(PREF_OVERRIDE_DIR, "override.ini");
@@ -79,11 +92,25 @@ export function applyPrefs(): void {
         undefined,
       );
     } else {
-      // Run bash script on Unix-like systems
-      runCommandChecked("chmod", ["+x", overrideScriptPath], undefined);
+      // Ensure executable bit is set and call via bash for safety
+      try {
+        Deno.chmodSync(overrideScriptPath, 0o755);
+      } catch (chmodError) {
+        logger.warn(
+          `Failed to chmod override script directly: ${chmodError}; falling back to shell chmod`,
+        );
+        const chmodResult = runCommandChecked(
+          "chmod",
+          ["+x", overrideScriptPath],
+          undefined,
+        );
+        if (!chmodResult.success) {
+          logger.warn(`chmod command failed: ${chmodResult.stderr.trim()}`);
+        }
+      }
       result = runCommandChecked(
-        overrideScriptPath,
-        [firefoxJsPath],
+        "bash",
+        [overrideScriptPath, firefoxJsPath],
         undefined,
       );
     }
