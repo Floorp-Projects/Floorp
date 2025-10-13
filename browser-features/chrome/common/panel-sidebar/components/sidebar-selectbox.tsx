@@ -8,6 +8,7 @@ import { panelSidebarData } from "../data/data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { showPanelSidebarAddModal } from "./panel-sidebar-modal";
 import type { CPanelSidebar } from "./panel-sidebar";
+import { WorkspacesPanels } from "../../workspaces/toolbar/workspaces-panels.tsx";
 
 export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
   return (
@@ -15,6 +16,7 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
       id="panel-sidebar-select-box"
       class="webpanel-box chromeclass-extrachrome chromeclass-directories instant customization-target"
     >
+      <WorkspacesPanels />
       <For each={panelSidebarData()}>
         {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
       </For>

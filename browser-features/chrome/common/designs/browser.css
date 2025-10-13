@@ -187,3 +187,7 @@ notification-message[message-bar-type="infobar"] {
 :root[sizemode="fullscreen"]:not([inDOMFullscreen="true"]) #nav-bar {
   display: none !important;
 }
+
+/* Panel Sidebar */
+#workspaces-panel-sidebar-section {;
+}

@@ -81,14 +81,6 @@ export function runCommandChecked(
   args: string[] = [],
   cwd?: string,
 ): CommandResult {
-  // Debug: Check if we're trying to run 'deno' and if PATH is set
-  if (command === "deno") {
-    const env = Deno.env.toObject();
-    console.error(`[DEBUG] Running deno command with PATH: ${env.PATH}`);
-    console.error(`[DEBUG] Command: ${command} ${args.join(" ")}`);
-    console.error(`[DEBUG] CWD: ${cwd ?? Deno.cwd()}`);
-  }
-
   const cmd = new Deno.Command(command, {
     args,
     cwd: cwd ?? undefined,

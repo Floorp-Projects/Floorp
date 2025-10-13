@@ -105,19 +105,19 @@ export function BasicSettings() {
               />
             </div>
 
-            {/* <div className="flex items-center justify-between gap-2">
-            <label htmlFor="manage-bms" className="flex flex-col gap-1.5">
-              <span>{t("workspaces.manageOnBms")}</span>
-              <span className="font-normal text-sm text-base-content/70">
-                {t("workspaces.manageOnBmsDescription")}
-              </span>
-            </label>
-            <Switch
-              id="manage-bms"
-              checked={getValues("manageOnBms")}
-              onChange={(e) => setValue("manageOnBms", e.target.checked)}
-            />
-          </div> */}
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="manage-bms" className="flex flex-col gap-1.5">
+                <span>{t("workspaces.manageOnBms")}</span>
+                <span className="font-normal text-sm text-base-content/70">
+                  {t("workspaces.manageOnBmsDescription")}
+                </span>
+              </label>
+              <Switch
+                id="manage-bms"
+                checked={getValues("manageOnBms")}
+                onChange={(e) => setValue("manageOnBms", e.target.checked)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
