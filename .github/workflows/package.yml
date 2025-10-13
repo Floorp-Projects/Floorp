@@ -1037,6 +1037,65 @@ jobs:
           cp "$MAR_DIR"/*.mar "$PUBLISH_DIR/"
           echo "MAR package created successfully!"
 
+      - name: Verify installer workspace
+        run: |
+          set -euo pipefail
+          mkdir -p ~/noraneko-installer
+
+          # If already populated, show contents and continue
+          if [ -n "$(find ~/noraneko-installer -mindepth 1 -print -quit 2>/dev/null)" ]; then
+            echo "Installer workspace already populated:"
+            ls -la ~/noraneko-installer || true
+          else
+            echo "Installer workspace is empty, searching common locations..."
+            CANDIDATES=(
+              "$GITHUB_WORKSPACE/noraneko-unsigned-installer/installer"
+              "$GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME"
+              "$GITHUB_WORKSPACE/noraneko-unsigned-installer"
+              "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer"
+              "./obj-artifact-build-output/dist"
+              "$HOME/downloads"
+              "$HOME/artifacts"
+              "$GITHUB_WORKSPACE"
+            )
+            COPIED=0
+            for d in "${CANDIDATES[@]}"; do
+              # do not use eval; just take the literal candidate path
+              expanded="$d"
+              if [ -e "$expanded" ]; then
+                echo "Inspecting candidate: $expanded"
+                files_found=""
+                for pat in "*${OUTPUT_INSTALLER_NAME}*" "*installer*" "*.dmg" "*.tar.xz" "*.deb" "*.exe" "*.7z" "*.zip"; do
+                  candidate=$(find "$expanded" -maxdepth 2 -type f -name "$pat" -print -quit 2>/dev/null || true)
+                  if [ -n "$candidate" ]; then
+                    files_found="$candidate"
+                    break
+                  fi
+                done
+                if [ -n "$files_found" ]; then
+                  echo "Found installer(s) in $expanded, copying to ~/noraneko-installer"
+                  cp -a "$expanded"/* ~/noraneko-installer/ || true
+                  COPIED=1
+                  break
+                fi
+              fi
+            done
+            if [ "$COPIED" -eq 0 ]; then
+              echo "Failed to locate installer files. Diagnostics:" >&2
+              echo "Listing possible locations:" >&2
+              for d in "${CANDIDATES[@]}"; do
+                eval expanded="$d"
+                echo "== $expanded ==" >&2
+                ls -la "$expanded" 2>/dev/null || echo " (not found)" >&2
+              done
+              echo "Environment variables:" >&2
+              echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >&2
+              echo "OUTPUT_INSTALLER_NAME=$OUTPUT_INSTALLER_NAME" >&2
+              echo "INSTALLER_PATH=$INSTALLER_PATH" >&2
+              exit 1
+            fi
+          fi
+
       - name: Publish dist
         uses: actions/upload-artifact@v4
         with:
