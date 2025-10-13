@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@std/bytes@^1.0.6": "1.0.6",
+    "jsr:@std/cli@1.0.6": "1.0.6",
     "jsr:@std/cli@^1.0.21": "1.0.22",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fs@^1.0.17": "1.0.19",
@@ -118,6 +119,9 @@
   "jsr": {
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/cli@1.0.6": {
+      "integrity": "d22d8b38c66c666d7ad1f2a66c5b122da1704f985d3c47f01129f05abb6c5d3d"
     },
     "@std/cli@1.0.22": {
       "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"

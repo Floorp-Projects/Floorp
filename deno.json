@@ -34,7 +34,8 @@
     "node_modules/**/*"
   ],
   "tasks": {
-    "feles-build": "deno run -A tools/feles-build.ts"
+    "feles-build": "deno run -A tools/feles-build.ts",
+    "act": "deno run -A tools/act/run-package-workflow.ts"
   },
   "nodeModulesDir": "auto"
 }

@@ -118,6 +118,7 @@ jobs:
 
       - name: Setup
         run: |
+          sudo apt update
           sudo apt install msitools -y
           ./mach --no-interactive bootstrap --application-choice browser_artifact_mode
 
