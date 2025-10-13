@@ -15,7 +15,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <div
         className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-sm flex items-center p-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
         onClick={handleClick}

@@ -11,6 +11,7 @@ interface ComponentsState {
   topSites: boolean;
   clock: boolean;
   searchBar: boolean;
+  firefoxLayout: boolean;
 }
 
 interface ComponentsContextType {
@@ -27,6 +28,7 @@ export function ComponentsProvider(
     topSites: true,
     clock: true,
     searchBar: true,
+    firefoxLayout: false,
   });
   const [isInitialized, setIsInitialized] = useState(false);
 

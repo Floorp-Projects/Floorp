@@ -2,20 +2,23 @@ import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   getNewTabSettings,
   type NewTabSettings,
-  type PinnedSite,
+  type PinnedSite as PinnedSiteType,
   saveNewTabSettings,
 } from "@/utils/dataManager.ts";
 import { useTranslation } from "react-i18next";
 import { PinIcon } from "lucide-react";
 import { callNRWithRetry } from "@/utils/nrRetry.ts";
+import { TopSiteTile } from "./TopSiteTile.tsx";
 
-interface TopSite {
+export interface TopSite {
   url: string;
   title: string;
   label?: string;
   favicon?: string;
   smallFavicon?: string | null;
 }
+
+export type PinnedSite = PinnedSiteType;
 
 const TRUNCATE_TITLE_MAX = 18;
 function truncateTopSiteTitle(
@@ -190,7 +193,7 @@ function AddSiteModal({
   );
 }
 
-export function TopSites() {
+export function TopSites({ isFirefoxMode = false }: { isFirefoxMode?: boolean }) {
   const { t } = useTranslation();
   const [sites, setSites] = useState<TopSite[]>([]);
   const [pinnedSites, setPinnedSites] = useState<PinnedSite[]>([]);
@@ -336,80 +339,48 @@ export function TopSites() {
           onCancel={() => setShowAddModal(false)}
         />
       )}
-      <div className="bg-gray-800/50 p-3 rounded-lg inline-block backdrop-blur-sm">
+      <div
+        className={`bg-gray-800/50 p-3 rounded-lg inline-block backdrop-blur-sm`}
+      >
         <div className="flex flex-wrap gap-x-0.5">
           {pinnedSites.map((site) => (
-            <a
+            <TopSiteTile
               key={site.url}
-              href={site.url}
-              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:backdrop-blur-sm hover:bg-gray-700/50"
-              onContextMenu={(e) => handleContextMenu(e, site)}
-            >
-              <div className="relative w-8 h-8">
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${
-                      new URL(site.url).hostname
-                    }&sz=32`}
-                    alt={site.title}
-                    className="w-6 h-6 object-contain"
-                  />
-                </div>
-                <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center shadow-sm">
-                    <PinIcon className="w-3 h-3 text-white" />
-                  </div>
-                </div>
-              </div>
-              <span
-                className="text-[11px] text-center text-gray-200 leading-tight max-w-full inline-block overflow-hidden text-ellipsis text-shadow-lg/20 group-hover:text-white transition-colors"
-                title={site.title}
-              >
-                {truncateTopSiteTitle(site.title)}
-              </span>
-            </a>
+              site={site}
+              isPinned={true}
+              isFirefoxMode={isFirefoxMode}
+              onContextMenu={handleContextMenu}
+            />
           ))}
           {sites.map((site) => (
-            <a
+            <TopSiteTile
               key={site.url}
-              href={site.url}
-              className="group flex flex-col items-center w-16 p-2 rounded-lg transition-all duration-200 hover:backdrop-blur-sm hover:bg-gray-700/50"
-              onContextMenu={(e) => handleContextMenu(e, site)}
-            >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1">
-                {site.favicon || site.smallFavicon
-                  ? (
-                    <img
-                      src={site.favicon || site.smallFavicon!}
-                      alt={site.title}
-                      className="w-6 h-6 object-contain"
-                    />
-                  )
-                  : (
-                    <span className="text-lg font-semibold text-gray-300">
-                      {(site.title || "?")[0]}
-                    </span>
-                  )}
-              </div>
-              <span
-                className="text-[11px] text-center text-gray-200 leading-tight max-w-full inline-block overflow-hidden text-ellipsis text-shadow-lg/20 group-hover:text-white transition-colors"
-                title={site.title}
-              >
-                {truncateTopSiteTitle(site.title)}
-              </span>
-            </a>
+              site={site}
+              isPinned={false}
+              isFirefoxMode={isFirefoxMode}
+              onContextMenu={handleContextMenu}
+            />
           ))}
           {/* Add new site tile */}
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="group flex flex-col items-center w-16 p-2 rounded-lg border border-dashed border-gray-400/50 text-gray-300 hover:text-white hover:backdrop-blur-sm hover:bg-gray-700/50 transition-all"
+            className={`group flex flex-col items-center p-2 rounded-lg border border-dashed border-gray-400/50 text-gray-300 hover:text-white hover:backdrop-blur-sm hover:bg-gray-700/50 transition-all ${
+              isFirefoxMode ? "w-20 md:w-24" : "w-16"
+            }`}
             title={t("topSites.addSite")}
           >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-700 group-hover:scale-110 transform transition-transform mb-1">
+            <div
+              className={`rounded-lg flex items-center justify-center bg-gray-700 group-hover:scale-110 transform transition-transform mb-1 ${
+                isFirefoxMode ? "w-10 h-10 md:w-12 md:h-12" : "w-8 h-8"
+              }`}
+            >
               <span className="text-2xl leading-none">＋</span>
             </div>
-            <span className="text-[10px] text-center leading-tight line-clamp-2 text-shadow-lg/20 group-hover:text-white transition-colors">
+            <span
+              className="text-center leading-tight line-clamp-2 text-shadow-lg/20 group-hover:text-white transition-colors"
+              style={{ fontSize: isFirefoxMode ? "12px" : "10px" }}
+            >
               {t("topSites.addSite")}
             </span>
           </button>
