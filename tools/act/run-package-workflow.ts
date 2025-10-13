@@ -3,8 +3,9 @@
 import { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
 
 const DEFAULT_PLATFORMS = ["Linux-x64"] as const;
+const PLATFORMS = ["Windows-x64", "Linux-x64", "Linux-aarch64", "macOS-x64"];
 
-type Platform = (typeof DEFAULT_PLATFORMS)[number];
+type Platform = (typeof PLATFORMS)[number];
 
 const parsed = parseArgs(Deno.args, {
   string: [
@@ -160,13 +161,13 @@ function resolvePlatforms(value?: string | string[]): Platform[] {
     : value.split(",");
   const cleaned = raw.map((entry) => entry.trim()).filter(Boolean);
   const unknown = cleaned.filter(
-    (entry) => !DEFAULT_PLATFORMS.includes(entry as Platform),
+    (entry) => !PLATFORMS.includes(entry as Platform),
   );
   if (unknown.length > 0) {
     console.warn(`Warning: unknown platforms ignored -> ${unknown.join(", ")}`);
   }
   const known = cleaned.filter((entry): entry is Platform =>
-    DEFAULT_PLATFORMS.includes(entry as Platform),
+    PLATFORMS.includes(entry as Platform),
   );
   return Array.from(new Set(known));
 }
