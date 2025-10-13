@@ -385,16 +385,24 @@ jobs:
           mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
 
           if [ "${{inputs.platform}}" == "macOS-x64" ]; then
-            for patch_file in ./scripts/git-patches/patches/*.patch; do
-              for resource_dir in ../obj-artifact-build-output/dist/*.app/Contents/Resources; do
-                if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                  patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
-                else
-                  echo "Dry-run failed for $patch_file in $resource_dir" >&2
-                  exit 1
-                fi
+            # 未展開の glob がそのまま文字列になって patch に渡るのを避けるため、
+            # 配列に展開して先頭要素の存在を -e でチェックします。
+            patch_files=(./scripts/git-patches/patches/*.patch)
+            resource_dirs=(../obj-artifact-build-output/dist/*.app/Contents/Resources)
+            if [ -e "${patch_files[0]}" ] && [ -e "${resource_dirs[0]}" ]; then
+              for patch_file in "${patch_files[@]}"; do
+                for resource_dir in "${resource_dirs[@]}"; do
+                  if [ -e "$resource_dir" ]; then
+                    if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                      patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
+                    else
+                      echo "Dry-run failed for $patch_file in $resource_dir" >&2
+                      exit 1
+                    fi
+                  fi
+                done
               done
-            done
+            fi
           else
             git apply --reject ./scripts/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
           fi

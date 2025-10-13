@@ -528,17 +528,27 @@ jobs:
           rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
           rm -rf ../obj-artifact-build-output/dist/bin
           mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
-          if [[ "${{inputs.platform}}" == "macOS-x86_64" || "${{inputs.platform}}" == "macOS-x64" ]]; then
-            for patch_file in ./tools/build/tasks/git-patches/patches/*.patch; do
-              for resource_dir in ../obj-artifact-build-output/dist/*.app/Contents/Resources; do
-                if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                  patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
-                else
-                  echo "Dry-run failed for $patch_file in $resource_dir" >&2
-                  exit 1
-                fi
+          if [[ "${{inputs.platform}}" == "macOS-x64" ]]; then
+            # macOS .app の Resources に対してパッチを適用するが、
+            # ワイルドカードが未展開のまま文字列になる環境(CI等)では
+            # そのまま patch に渡るとエラーとなるため、配列展開して
+            # 先頭要素の存在を -e でチェックしてからループする。
+            patch_files=(./tools/build/tasks/git-patches/patches/*.patch)
+            resource_dirs=(../obj-artifact-build-output/dist/*.app/Contents/Resources)
+            if [ -e "${patch_files[0]}" ] && [ -e "${resource_dirs[0]}" ]; then
+              for patch_file in "${patch_files[@]}"; do
+                for resource_dir in "${resource_dirs[@]}"; do
+                  if [ -e "$resource_dir" ]; then
+                    if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                      patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
+                    else
+                      echo "Dry-run failed for $patch_file in $resource_dir" >&2
+                      exit 1
+                    fi
+                  fi
+                done
               done
-            done
+            fi
           else
             if ls ./tools/build/tasks/git-patches/patches/*.patch >/dev/null 2>&1; then
               git apply --reject ./tools/build/tasks/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
@@ -558,7 +568,7 @@ jobs:
       - name: Apply Firefox Preferences Override
         run: |
           cd ./noraneko
-          if [[ "${{inputs.platform}}" == "macOS-x86_64" || "${{inputs.platform}}" == "macOS-x64" ]]; then
+          if [[ "${{inputs.platform}}" == "macOS-x64" ]]; then
             for app_bundle in ../obj-artifact-build-output/dist/*.app; do
               if [ -d "$app_bundle" ]; then
                 FIREFOX_JS_PATH="$app_bundle/Contents/Resources/browser/defaults/preferences/firefox.js"
@@ -810,7 +820,7 @@ jobs:
               patchelf --add-rpath '$ORIGIN' "$DIST_DIR/updater"
             fi
             mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-          elif [[ "${{inputs.platform}}" == "macOS-x86_64" || "${{inputs.platform}}" == "macOS-x64" ]]; then
+          elif [[ "${{inputs.platform}}" == "macOS-x86_64" ]]; then
             if [ "${{inputs.skip_signing}}" == "true" ]; then
               mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
             else
