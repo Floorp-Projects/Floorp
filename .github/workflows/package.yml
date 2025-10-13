@@ -128,6 +128,22 @@ jobs:
           deno task feles-build misc writeVersion
           cd ..
 
+      - name: Normalize platform
+        run: |
+          #!/bin/bash
+          set -euo pipefail
+
+          raw_platform="${{ inputs.platform }}"
+          canon_platform="$raw_platform"
+          case "$raw_platform" in
+            *-x64) canon_platform="${raw_platform%-x64}-x86_64" ;;
+          esac
+
+          {
+            echo "INPUT_PLATFORM=$raw_platform"
+            echo "CANON_PLATFORM=$canon_platform"
+          } >> "$GITHUB_ENV"
+
       - name: Copy branding files from runtime
         run: |
           if [ -d ".github/assets/branding" ]; then
@@ -146,15 +162,13 @@ jobs:
           #!/bin/bash
           set -euo pipefail
 
-          PLATFORM="${{ inputs.platform }}"
+          PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
           IS_BETA="${IS_BETA}"
 
-          CANON_PLATFORM="$PLATFORM"
-          case "$PLATFORM" in
-            "Windows-x64") CANON_PLATFORM="Windows-x86_64" ;;
-            "Linux-x64") CANON_PLATFORM="Linux-x86_64" ;;
-            "macOS-x64") CANON_PLATFORM="macOS-x86_64" ;;
-          esac
+          CANON_PLATFORM="${CANON_PLATFORM:-$PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
 
           declare -A MOZCONFIGS=(
             ["Windows-x86_64"]="./.github/workflows/mozconfigs/windows-x86_64.mozconfig"
@@ -300,16 +314,15 @@ jobs:
         shell: bash
         env:
           FORCE_COLOR: 3
-          BUILD_PLATFORM: ${{ inputs.platform }}
         run: |
           #!/bin/bash
           set -e
-          CANON_PLATFORM="$BUILD_PLATFORM"
-          case "$BUILD_PLATFORM" in
-            "Windows-x64") CANON_PLATFORM="Windows-x86_64" ;;
-            "Linux-x64") CANON_PLATFORM="Linux-x86_64" ;;
-            "macOS-x64") CANON_PLATFORM="macOS-x86_64" ;;
-          esac
+
+          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
 
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
@@ -343,11 +356,12 @@ jobs:
               echo "OUTPUT_INSTALLER_NAME=floorp-macOS-universal.dmg" >> $GITHUB_ENV
               ;;
             *)
-              echo "Unknown platform: $BUILD_PLATFORM"
+              echo "Unknown canonical platform: $CANON_PLATFORM"
               exit 1
               ;;
           esac
-          echo "Environment variables set for platform: $BUILD_PLATFORM (canonical: $CANON_PLATFORM)"
+
+          echo "Environment variables set for platform: $RAW_PLATFORM (canonical: $CANON_PLATFORM)"
 
       - name: Download mozilla artifact from Actions
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -363,9 +377,12 @@ jobs:
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           mkdir -p ~/downloads
-          PLATFORM="${{ inputs.platform }}"
-          case "$PLATFORM" in
-            "macOS-x64"|"macOS-x86_64")
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          case "$CANON_PLATFORM" in
+            "macOS-x86_64")
               curl -L "https://github.com/${{ github.repository }}-runtime/releases/latest/download/${ARTIFACT_FROM_RELEASE_NAME}" -o "$HOME/downloads/${ARTIFACT_FROM_RELEASE_NAME}"
               curl -L "https://github.com/${{ github.repository }}-runtime/releases/latest/download/${ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK}" -o "$HOME/downloads/${ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK}"
               ;;
@@ -379,9 +396,12 @@ jobs:
         run: |
           mkdir -p ~/artifacts
           cd ~/downloads
-          PLATFORM="${{ inputs.platform }}"
-          case "$PLATFORM" in
-            "Windows-x64"|"Windows-x86_64")
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          case "$CANON_PLATFORM" in
+            "Windows-x86_64")
               TARGET_NAME="${ARTIFACT_NAME:-floorp-win-amd64-moz-artifact}"
               zip -r "$HOME/artifacts/${TARGET_NAME}.zip" ./*
               ;;
@@ -396,9 +416,12 @@ jobs:
         run: |
           mkdir -p ~/artifacts
           cd ~/downloads
-          PLATFORM="${{ inputs.platform }}"
-          case "$PLATFORM" in
-            "macOS-x64"|"macOS-x86_64")
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          case "$CANON_PLATFORM" in
+            "macOS-x86_64")
               if [ -f "$ARTIFACT_FROM_RELEASE_NAME" ]; then
                 cp "$ARTIFACT_FROM_RELEASE_NAME" ~/artifacts/
               fi
@@ -473,13 +496,11 @@ jobs:
             return 1
           }
 
-          PLATFORM="${{ inputs.platform }}"
-          CANON_PLATFORM="$PLATFORM"
-          case "$PLATFORM" in
-            "Windows-x64") CANON_PLATFORM="Windows-x86_64" ;;
-            "Linux-x64") CANON_PLATFORM="Linux-x86_64" ;;
-            "macOS-x64") CANON_PLATFORM="macOS-x86_64" ;;
-          esac
+          PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
 
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
@@ -528,7 +549,11 @@ jobs:
           rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
           rm -rf ../obj-artifact-build-output/dist/bin
           mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
-          if [[ "${{inputs.platform}}" == "macOS-x64" ]]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             # macOS .app の Resources に対してパッチを適用するが、
             # ワイルドカードが未展開のまま文字列になる環境(CI等)では
             # そのまま patch に渡るとエラーとなるため、配列展開して
@@ -568,7 +593,11 @@ jobs:
       - name: Apply Firefox Preferences Override
         run: |
           cd ./noraneko
-          if [[ "${{inputs.platform}}" == "macOS-x64" ]]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             for app_bundle in ../obj-artifact-build-output/dist/*.app; do
               if [ -d "$app_bundle" ]; then
                 FIREFOX_JS_PATH="$app_bundle/Contents/Resources/browser/defaults/preferences/firefox.js"
@@ -604,7 +633,11 @@ jobs:
 
       - name: Replace Icon (Beta)
         run: |
-          if [[ "${{inputs.platform}}" == "Windows-x86_64" || "${{inputs.platform}}" == "Windows-x64" ]] && [ "${{inputs.beta}}" == "true" ]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          if [[ "$CANON_PLATFORM" == "Windows-x86_64" ]] && [ "${{inputs.beta}}" == "true" ]; then
             sudo apt update
             sudo apt install -y wine winetricks
             curl -Lo ./rcedit-x64.exe https://github.com/electron/rcedit/releases/latest/download/rcedit-x64.exe
@@ -734,7 +767,11 @@ jobs:
       - name: Prepare un-packaging installer files for windows-codesigning (binary)
         run: |
           mkdir -p ~/noraneko-installer
-          if [[ "${{inputs.platform}}" == "Windows-x86_64" || "${{inputs.platform}}" == "Windows-x64" ]]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          if [[ "$CANON_PLATFORM" == "Windows-x86_64" ]]; then
             sudo apt update
             sudo apt install -y p7zip-full
             mkdir -p "$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary" "$GITHUB_WORKSPACE/noraneko-unsigned-installer/installer"
@@ -767,7 +804,11 @@ jobs:
 
       - name: Prepare installer with codesigning and re-packaging (installer)
         run: |
-          if [[ "${{inputs.platform}}" == "Windows-x86_64" || "${{inputs.platform}}" == "Windows-x64" ]]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          if [[ "$CANON_PLATFORM" == "Windows-x86_64" ]]; then
             if [ "${{inputs.skip_signing}}" == "true" ]; then
               cd "$GITHUB_WORKSPACE/noraneko-unsigned-installer/binary"
             else
@@ -802,65 +843,82 @@ jobs:
 
       - name: Prepare installer with codesigning and re-packaging (without windows)
         run: |
+          set -euo pipefail
+
           mkdir -p ~/noraneko-installer
-          if [[ "${{inputs.platform}}" == "Windows-x86_64" || "${{inputs.platform}}" == "Windows-x64" ]]; then
-            if [ "${{inputs.skip_signing}}" == "true" ]; then
-              mv "$GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME" ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-            else
-              mv "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME" ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-            fi
-          elif [[ "${{inputs.platform}}" == "Linux-"* ]]; then
-            sudo apt update
-            sudo apt install -y patchelf
-            DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
-            if [ -z "$DIST_DIR" ]; then
-              DIST_DIR="obj-artifact-build-output/dist"
-            fi
-            if [ -f "$DIST_DIR/updater" ]; then
-              patchelf --add-rpath '$ORIGIN' "$DIST_DIR/updater"
-            fi
-            mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-          elif [[ "${{inputs.platform}}" == "macOS-x86_64" ]]; then
-            if [ "${{inputs.skip_signing}}" == "true" ]; then
-              mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-            else
-              mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-              mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-              ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
-              cargo install apple-codesign --locked
-              echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
-              base64 --decode floorp-cert.txt > floorpCert.p12
-              echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
-              APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
-              echo "Found app file: $APP_FILE"
-              ./mach macos-sign -v -r -c "release" \
-                -a "$APP_FILE" \
-                --rcodesign-p12-file floorpCert.p12 \
-                --rcodesign-p12-password-file floorpCertPassword.passwd
-              if [ "${{inputs.beta}}" == "true" ]; then
-                DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/daylight/DS_Store"
-                BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/daylight/background.tiff"
-                VOLUME_NAME="Noraneko Daylight Installer"
+
+          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+
+          case "$CANON_PLATFORM" in
+            "Windows-x86_64")
+              if [ "${{inputs.skip_signing}}" == "true" ]; then
+                mv "$GITHUB_WORKSPACE/noraneko-unsigned-installer/installer/$OUTPUT_INSTALLER_NAME" ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               else
-                DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/official/DS_Store"
-                BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/official/background.tiff"
-                VOLUME_NAME="Noraneko Installer"
+                mv "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_installer/$OUTPUT_INSTALLER_NAME" ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               fi
-              ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
-              printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
-              rcodesign notary-submit \
-                --api-key-file ~/mac-code-signing/key.json \
-                --wait \
-                ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+              ;;
+            "Linux-x86_64"|"Linux-aarch64")
+              sudo apt update
+              sudo apt install -y patchelf
               DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
               if [ -z "$DIST_DIR" ]; then
                 DIST_DIR="obj-artifact-build-output/dist"
               fi
-              rm -rf "$DIST_DIR"/*.app
-              cp -r ~/mac-code-signing/old/*.app "$DIST_DIR"
-              mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-            fi
-          fi
+              if [ -f "$DIST_DIR/updater" ]; then
+                patchelf --add-rpath '$ORIGIN' "$DIST_DIR/updater"
+              fi
+              mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              ;;
+            "macOS-x86_64")
+              if [ "${{inputs.skip_signing}}" == "true" ]; then
+                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              else
+                mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
+                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+                ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
+                cargo install apple-codesign --locked
+                echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
+                base64 --decode floorp-cert.txt > floorpCert.p12
+                echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
+                APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
+                echo "Found app file: $APP_FILE"
+                ./mach macos-sign -v -r -c "release" \
+                  -a "$APP_FILE" \
+                  --rcodesign-p12-file floorpCert.p12 \
+                  --rcodesign-p12-password-file floorpCertPassword.passwd
+                if [ "${{inputs.beta}}" == "true" ]; then
+                  DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/daylight/DS_Store"
+                  BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/daylight/background.tiff"
+                  VOLUME_NAME="Noraneko Daylight Installer"
+                else
+                  DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/official/DS_Store"
+                  BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/official/background.tiff"
+                  VOLUME_NAME="Noraneko Installer"
+                fi
+                ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+                printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
+                rcodesign notary-submit \
+                  --api-key-file ~/mac-code-signing/key.json \
+                  --wait \
+                  ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
+                DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
+                if [ -z "$DIST_DIR" ]; then
+                  DIST_DIR="obj-artifact-build-output/dist"
+                fi
+                rm -rf "$DIST_DIR"/*.app
+                cp -r ~/mac-code-signing/old/*.app "$DIST_DIR"
+                mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              fi
+              ;;
+            *)
+              echo "Unsupported canonical platform for installer preparation: $CANON_PLATFORM" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Download artifact of MAR tools (Actions)
         if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
@@ -878,12 +936,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/downloads
-          PLATFORM="${{ inputs.platform }}"
-          case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files=("windows-x86_64-dist-host.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files=("linux-x86_64-dist-host.zip") ;;
+          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          case "$CANON_PLATFORM" in
+            "Windows-x86_64") files=("windows-x86_64-dist-host.zip") ;;
+            "Linux-x86_64") files=("linux-x86_64-dist-host.zip") ;;
             "Linux-aarch64") files=("linux-aarch64-dist-host.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files=("macOS-universal-dist-host.zip") ;;
+            "macOS-x86_64") files=("macOS-universal-dist-host.zip") ;;
             *) files=() ;;
           esac
           success=0
@@ -916,12 +978,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/downloads ~/noraneko-dev
-          PLATFORM="${{ inputs.platform }}"
-          case "$PLATFORM" in
-            "Windows-x86_64"|"Windows-x64") files=("windows-x86_64-application-ini.zip") ;;
-            "Linux-x86_64"|"Linux-x64") files=("linux-x86_64-application-ini.zip") ;;
+          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+          case "$CANON_PLATFORM" in
+            "Windows-x86_64") files=("windows-x86_64-application-ini.zip") ;;
+            "Linux-x86_64") files=("linux-x86_64-application-ini.zip") ;;
             "Linux-aarch64") files=("linux-aarch64-application-ini.zip") ;;
-            "macOS-x86_64"|"macOS-x64") files=("macOS-universal-application-ini.zip") ;;
+            "macOS-x86_64") files=("macOS-universal-application-ini.zip") ;;
             *) files=() ;;
           esac
           success=0
@@ -989,7 +1055,12 @@ jobs:
 
           touch "$DIST_DIR/precomplete"
 
-          if [[ "${{ inputs.platform }}" == "Windows-x86_64" || "${{ inputs.platform }}" == "Windows-x64" ]] && [ "${{ inputs.skip_signing }}" != "true" ] && [ -d "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary/core" ]; then
+          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+
+          if [[ "$CANON_PLATFORM" == "Windows-x86_64" ]] && [ "${{ inputs.skip_signing }}" != "true" ] && [ -d "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary/core" ]; then
             echo "Replacing unsigned binaries with signed versions for MAR generation"
             rm -rf "$DIST_DIR"/*
             cp -r "$GITHUB_WORKSPACE/noraneko-unsigned-installer/signed_binary/core/"* "$DIST_DIR/"
@@ -997,7 +1068,7 @@ jobs:
 
           CHANNEL_ID="${UPDATE_CHANNEL:-release}"
 
-          if [[ "${{ inputs.platform }}" == "macOS-x86_64" || "${{ inputs.platform }}" == "macOS-x64" ]]; then
+          if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             APP_FILE=$(find "$DIST_DIR" -name "*.app" -type d | head -n 1)
             if [ -z "$APP_FILE" ]; then
               echo "macOS app bundle not found for MAR packaging" >&2
