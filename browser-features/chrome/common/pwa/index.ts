@@ -35,5 +35,30 @@ export default class Pwa extends NoraComponentBase {
     new PwaWindowSupport(ctx);
 
     Pwa.ctx = ctx;
+    // Check if a startup SSB id was stored by the command line handler.
+    // Run it immediately (init is invoked after the browser UI is ready in
+    // NoraComponent lifecycle) and clear the pref to avoid repeated launches.
+    (async () => {
+      console.debug("Checking for startup SSB id...");
+      try {
+        const id = Services.prefs.getCharPref("floorp.ssb.startup.id", "");
+        if (id) {
+          const ssbObj = await ctx.getSsbObj(id);
+          if (ssbObj) {
+            await ctx.runSsbByUrl(ssbObj.start_url);
+          }
+          try {
+            Services.prefs.clearUserPref("floorp.ssb.startup.id");
+          } catch (e) {
+            console.error("Failed to clear floorp.ssb.startup.id", e);
+          }
+        }
+      } catch (e) {
+        // If the pref doesn't exist or any error occurs, ignore it so startup
+        // proceeds normally.
+        // eslint-disable-next-line no-console
+        console.debug("No startup SSB id or failed to start SSB:", e);
+      }
+    })();
   }
 }

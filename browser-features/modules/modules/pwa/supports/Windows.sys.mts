@@ -10,10 +10,9 @@ const { ImageTools } = ChromeUtils.importESModule(
 );
 
 export class WindowsSupport {
-  private static shellService = Cc["@mozilla.org/browser/shell-service;1"]
-    .getService(
-      Ci.nsIWindowsShellService,
-    );
+  private static shellService = Cc[
+    "@mozilla.org/browser/shell-service;1"
+  ].getService(Ci.nsIWindowsShellService);
 
   private static uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
     Ci.nsIWindowsUIUtils,
@@ -96,10 +95,10 @@ export class WindowsSupport {
    */
   async applyOSIntegration(ssb: Manifest, aWindow: Window) {
     WindowsSupport.taskbar.setGroupIdForWindow(
-      aWindow,
+      aWindow as unknown as mozIDOMWindowProxy,
       this.buildGroupId(ssb.id),
     );
-    const getIcon = async (size: number) => {
+    const getIcon = async (_size: number) => {
       const icon = ssb.icon;
       if (!icon) {
         return null;
@@ -120,7 +119,7 @@ export class WindowsSupport {
     ]);
 
     if (icons[0] || icons[1]) {
-      WindowsSupport.uiUtils.setWindowIcon(aWindow, icons[0], icons[1]);
+      WindowsSupport.uiUtils.setWindowIcon(aWindow as unknown as mozIDOMWindowProxy, icons[0], icons[1]);
     }
   }
 }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Manifest } from "../../../../main/core/common/pwa/type.ts";
+import type { Manifest } from "#features-chrome/common/pwa/type.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -109,6 +109,28 @@ export class SSBCommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
+      // If there is no Floorp browser window open, do not launch the PWA now.
+      // Instead, persist the requested SSB id to a preference so the regular
+      // Floorp startup can handle launching it later. This avoids requiring
+      // the user to click the taskbar shortcut twice.
+      const hasBrowserWindow =
+        !!Services.wm.getMostRecentWindow("navigator:browser");
+
+      if (!hasBrowserWindow) {
+        try {
+          Services.prefs.setCharPref("floorp.ssb.startup.id", id);
+        } catch (e) {
+          // If pref set fails for some reason, log and continue without
+          // preventing default startup so the application still launches.
+          console.error("Failed to set floorp.ssb.startup.id", e);
+        }
+
+        // Let normal startup continue (do not preventDefault). The PWA will
+        // not be started now.
+        return;
+      }
+
+      // If a browser window already exists, start the SSB immediately.
       startSSBFromCmdLine(id, !this.isInitialized);
       this.isInitialized = true;
       cmdLine.preventDefault = true;
