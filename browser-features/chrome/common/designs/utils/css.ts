@@ -27,7 +27,7 @@ interface FCSS {
  * Get the chrome:// URL for a skin CSS file (production only)
  */
 const getStylePath = (path: string): string => {
-  return `chrome://noraneko-skin/skin/${path}`;
+  return `chrome://noraneko/skin/${path}`;
 };
 
 /**

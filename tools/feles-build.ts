@@ -98,7 +98,10 @@ async function runStage(): Promise<void> {
   await Builder.run("production", buildid2);
 
   // Inject manifests but keep dev-style directory so dev servers and browser use the built assets
-  Injector.run("dev");
+  // For stage we want production-like manifest content (no dev-only entries),
+  // but keep the dev-style directory layout. Pass "production" so createManifest
+  // does not append dev entries.
+  Injector.run("production");
   await Injector.injectXhtmlFromTs(true);
   DevEnvManager.setup();
 

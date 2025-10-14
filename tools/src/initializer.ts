@@ -157,7 +157,7 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
     }
 
   } finally {
-    // Clean up temp directory
+    // Clean up temp directory　
     try {
       Deno.removeSync(tempDir, { recursive: true });
     } catch {
