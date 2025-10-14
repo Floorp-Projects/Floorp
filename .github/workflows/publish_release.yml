@@ -101,7 +101,7 @@ jobs:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-win-amd64-mar-full
+          name: noraneko-windows-x86_64-mar-full
           run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win
           github-token: ${{ github.token }}
@@ -109,7 +109,7 @@ jobs:
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-linux-amd64-mar-full
+          name: noraneko-linux-x86_64-mar-full
           run-id: ${{ env.LINUX_RUN_ID }}
           path: ~/noraneko-publish/linux
           github-token: ${{ github.token }}
@@ -125,7 +125,7 @@ jobs:
       - name: Download Windows installer
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-win-amd64-installer
+          name: noraneko-windows-x86_64-installer
           run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win-dist
           github-token: ${{ github.token }}
@@ -133,7 +133,7 @@ jobs:
       - name: Download Linux installer
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-linux-amd64-installer
+          name: noraneko-linux-x86_64-installer
           run-id: ${{ env.LINUX_RUN_ID }}
           path: ~/noraneko-publish/linux-dist
           github-token: ${{ github.token }}

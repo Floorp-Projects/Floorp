@@ -32,7 +32,7 @@
     {
       "name": "stub-win64-installer",
       "type": "file",
-      "source_path": "src/installers/stub-win64-installer/src/lib/i18n/locales",
+      "source_path": "static/installers/stub-win64-installer/src/lib/i18n/locales",
       "source_file": "en-US.json",
       "f18n_path": "stub-win64-installer/"
     }
