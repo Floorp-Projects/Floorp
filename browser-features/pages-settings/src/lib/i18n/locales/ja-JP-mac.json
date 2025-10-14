@@ -32,16 +32,7 @@
         "aboutBrowser": "{{productName}} について",
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
-        "keyboardShortcut": "キーボードショートカット",
-        "search": {
-            "title": "検索の設定",
-            "resultsFor": "\"{{query}}\" の検索結果",
-            "searchResultsDescription": "\"{{query}}\" の検索結果です。 {{productName}} の設定のみ表示されます。 Firefox の設定は含まれません。",
-            "noResults": "何も見つかりませんでした",
-            "open": "\"{{title}}\" を開く",
-            "matchedText": "一致したテキスト",
-            "results": "検索結果"
-        }
+        "keyboardShortcut": "キーボードショートカット"
     },
     "home": {
         "welcome": "ようこそ、 {{name}} さん 👋",
@@ -364,6 +355,46 @@
         "cancel": "キャンセル",
         "rename": "名前を変更",
         "uninstall": "アンインストール"
+    },
+    "floorpOS": {
+        "title": "Floorp OS",
+        "description": "Manage Floorp OS backend modules and services",
+        "loading": "Loading...",
+        "statusCard": {
+            "title": "Status",
+            "description": "Current status of Floorp OS",
+            "platformSupport": "Platform Support",
+            "platformSupported": "Your platform is supported",
+            "platformUnsupported": "Your platform is not supported",
+            "installedVersion": "Installed Version",
+            "notInstalled": "Not installed",
+            "serviceStatus": "Service Status",
+            "running": "Running",
+            "stopped": "Stopped",
+            "enabledBadge": "Enabled",
+            "disabledBadge": "Disabled"
+        },
+        "controlsCard": {
+            "title": "Controls",
+            "description": "Enable or disable Floorp OS",
+            "enable": "Enable Floorp OS",
+            "disable": "Disable Floorp OS",
+            "refresh": "Refresh Status"
+        },
+        "messages": {
+            "enabling": "Enabling Floorp OS...",
+            "disabling": "Disabling Floorp OS...",
+            "enableSuccess": "Floorp OS enabled successfully!",
+            "disableSuccess": "Floorp OS disabled successfully!"
+        },
+        "errors": {
+            "apiUnavailable": "OSAutomotor API is not available.",
+            "loadStatus": "Failed to load status: {{reason}}",
+            "enable": "Failed to enable Floorp OS.",
+            "disable": "Failed to disable Floorp OS.",
+            "enableAction": "Error enabling Floorp OS: {{reason}}",
+            "disableAction": "Error disabling Floorp OS: {{reason}}"
+        }
     },
     "mouseGesture": {
         "description": "マウス操作でブラウザーをコントロールします。",

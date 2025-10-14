@@ -32,16 +32,7 @@
         "aboutBrowser": "Про {{productName}}",
         "debug": "Налагодження",
         "mouseGesture": "Жести мишею",
-        "keyboardShortcut": "Комбінації клавіш",
-        "search": {
-            "title": "Налаштування пошуку",
-            "resultsFor": "Результати пошуку \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "Нічого не знайдено",
-            "open": "Відкрийте \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Результати пошуку"
-        }
+        "keyboardShortcut": "Комбінації клавіш"
     },
     "home": {
         "welcome": "Ласкаво просимо, {{name}}👋",
@@ -364,6 +355,46 @@
         "cancel": "Скасувати",
         "rename": "Перейменувати",
         "uninstall": "Видалити"
+    },
+    "floorpOS": {
+        "title": "Floorp OS",
+        "description": "Manage Floorp OS backend modules and services",
+        "loading": "Loading...",
+        "statusCard": {
+            "title": "Status",
+            "description": "Current status of Floorp OS",
+            "platformSupport": "Platform Support",
+            "platformSupported": "Your platform is supported",
+            "platformUnsupported": "Your platform is not supported",
+            "installedVersion": "Installed Version",
+            "notInstalled": "Not installed",
+            "serviceStatus": "Service Status",
+            "running": "Running",
+            "stopped": "Stopped",
+            "enabledBadge": "Enabled",
+            "disabledBadge": "Disabled"
+        },
+        "controlsCard": {
+            "title": "Controls",
+            "description": "Enable or disable Floorp OS",
+            "enable": "Enable Floorp OS",
+            "disable": "Disable Floorp OS",
+            "refresh": "Refresh Status"
+        },
+        "messages": {
+            "enabling": "Enabling Floorp OS...",
+            "disabling": "Disabling Floorp OS...",
+            "enableSuccess": "Floorp OS enabled successfully!",
+            "disableSuccess": "Floorp OS disabled successfully!"
+        },
+        "errors": {
+            "apiUnavailable": "OSAutomotor API is not available.",
+            "loadStatus": "Failed to load status: {{reason}}",
+            "enable": "Failed to enable Floorp OS.",
+            "disable": "Failed to disable Floorp OS.",
+            "enableAction": "Error enabling Floorp OS: {{reason}}",
+            "disableAction": "Error disabling Floorp OS: {{reason}}"
+        }
     },
     "mouseGesture": {
         "description": "Керування браузером за допомогою руху миші.",

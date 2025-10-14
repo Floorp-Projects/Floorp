@@ -38,7 +38,8 @@
         "floorpStart": "Домівка Floorp",
         "disableFloorpStart": "Вимкнути Домівку Floorp (використовувати класичну about:newtab)",
         "disableFloorpStartDescription": "Якщо цю опцію увімкнути, Домівка Floorp буде замінена класичною новою вкладкою/домашньою сторінкою Firefox.",
-        "restartRequired": "Для повного застосування змін необхідно перезапустити браузер."
+        "restartRequired": "Для повного застосування змін необхідно перезапустити браузер.",
+        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Пошук або введення URL-адреси",

@@ -1,263 +1,263 @@
 {
-    "undo-closed-tab": {
-        "label": "Fortryd lukket fane",
-        "tooltiptext": "Genåbn den sidst lukkede fane {{shortcut}}"
+  "undo-closed-tab": {
+    "label": "Fortryd lukket fane",
+    "tooltiptext": "Genåbn den sidst lukkede fane {{shortcut}}"
+  },
+  "workspaces": {
+    "modal": {
+      "name": "Navn",
+      "name-placeholder": "Indtast et navn til dette arbejdsområde",
+      "container": "Beholder",
+      "no-container": "Ingen beholder",
+      "icon": "Ikon",
+      "edit-title": "Rediger arbejdsområde",
+      "save": "Gem ændringer",
+      "cancel": "Annuller"
     },
-    "workspaces": {
-        "modal": {
-            "name": "Navn",
-            "name-placeholder": "Indtast et navn til dette arbejdsområde",
-            "container": "Beholder",
-            "no-container": "Ingen beholder",
-            "icon": "Ikon",
-            "edit-title": "Rediger arbejdsområde",
-            "save": "Gem ændringer",
-            "cancel": "Annuller"
-        },
-        "icons": {
-            "article": "Artikel",
-            "book": "Bog",
-            "briefcase": "Taske",
-            "cart": "Indkøbskurv",
-            "chat": "Chat",
-            "chill": "Chill",
-            "circle": "Cirkel",
-            "compass": "Kompas",
-            "code": "Kode",
-            "dollar": "Dollar",
-            "fence": "Hegn",
-            "fingerprint": "Fingeraftryk",
-            "food": "Mad",
-            "fruit": "Frugt",
-            "game": "Spil",
-            "gear": "Indstillinger",
-            "gift": "Gave",
-            "key": "Nøgle",
-            "lightning": "Lyn",
-            "network": "Netværk",
-            "notes": "Noter",
-            "paint": "Maling",
-            "photo": "Foto",
-            "pin": "Nål",
-            "pet": "Kæledyr",
-            "question": "Spørgsmål",
-            "smartphone": "Smartphone",
-            "star": "Stjerne",
-            "tree": "Træ",
-            "vacation": "Ferie",
-            "love": "Kærlighed",
-            "moon": "Måne",
-            "music": "Musik",
-            "user": "Bruger"
-        },
-        "service": {
-            "new-workspace": "Nyt arbejdsområde ({{count}})"
-        },
-        "context-menu": {
-            "move-up": "Flyt arbejdsområdet op",
-            "move-down": "Flyt arbejdsområdet ned",
-            "delete": "Slet arbejdsområde",
-            "manage": "Administrer arbejdsområde"
-        },
-        "popup": {
-            "create-new": "Opret nyt arbejdsområde...",
-            "manage": "Administrer arbejdsområder"
-        },
-        "menu": {
-            "moveTabToAnotherWorkspace": "Flyt fane til andet arbejdsområde"
-        },
-        "error": {
-            "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
-        }
+    "icons": {
+      "article": "Artikel",
+      "book": "Bog",
+      "briefcase": "Taske",
+      "cart": "Indkøbskurv",
+      "chat": "Chat",
+      "chill": "Chill",
+      "circle": "Cirkel",
+      "compass": "Kompas",
+      "code": "Kode",
+      "dollar": "Dollar",
+      "fence": "Hegn",
+      "fingerprint": "Fingeraftryk",
+      "food": "Mad",
+      "fruit": "Frugt",
+      "game": "Spil",
+      "gear": "Indstillinger",
+      "gift": "Gave",
+      "key": "Nøgle",
+      "lightning": "Lyn",
+      "network": "Netværk",
+      "notes": "Noter",
+      "paint": "Maling",
+      "photo": "Foto",
+      "pin": "Nål",
+      "pet": "Kæledyr",
+      "question": "Spørgsmål",
+      "smartphone": "Smartphone",
+      "star": "Stjerne",
+      "tree": "Træ",
+      "vacation": "Ferie",
+      "love": "Kærlighed",
+      "moon": "Måne",
+      "music": "Musik",
+      "user": "Bruger"
     },
-    "statusbar": {
-        "toggle": "Statuslinje{{mark}}"
+    "service": {
+      "new-workspace": "Nyt arbejdsområde ({{count}})"
     },
-    "splitview": {
-        "title": "Opdelt visning",
-        "position": "Position",
-        "position-left": "Venstre",
-        "position-right": "Højre",
-        "flex-row": "Række",
-        "flex-column": "Kolonne",
-        "remove-button": "Fjern nuværende visning",
-        "tab-context": {
-            "split-tabs": "Opdel faner",
-            "split-fixed-tab": "Opdel til fast fane"
-        }
+    "context-menu": {
+      "move-up": "Flyt arbejdsområdet op",
+      "move-down": "Flyt arbejdsområdet ned",
+      "delete": "Slet arbejdsområde",
+      "manage": "Administrer arbejdsområde"
     },
-    "ssb": {
-        "menu": {
-            "webapps": "Webapps",
-            "install-current": "Installer nuværende side som progressiv webapp",
-            "open-installed": "Åbn installerede apps"
-        },
-        "page-action": {
-            "title": "Åbn applikation",
-            "install": "Installer applikation",
-            "open": "Åbn applikation",
-            "cancel": "Annuller",
-            "site-icon": "Webstedsikon"
-        }
+    "popup": {
+      "create-new": "Opret nyt arbejdsområde...",
+      "manage": "Administrer arbejdsområder"
     },
-    "privateContainer": {
-        "openInPrivateContainer": "Åbn i privat beholder",
-        "name": "Privat beholder"
+    "menu": {
+      "moveTabToAnotherWorkspace": "Flyt fane til andet arbejdsområde"
     },
-    "mouseGesture": {
-        "actions": {
-            "gecko-back": "Tilbage",
-            "gecko-forward": "Frem",
-            "gecko-reload": "Genindlæs",
-            "gecko-close-tab": "Luk fane",
-            "gecko-open-new-tab": "Ny fane",
-            "gecko-duplicate-tab": "Dupliker fane",
-            "gecko-reload-all-tabs": "Genindlæs alle faner",
-            "gecko-restore-last-tab": "Genåbn lukket fane",
-            "gecko-open-new-window": "Åbn nyt vindue",
-            "gecko-open-new-private-window": "Åbn nyt privat vindue",
-            "gecko-close-window": "Luk vindue",
-            "gecko-restore-last-window": "Gendan sidste vindue",
-            "gecko-show-next-tab": "Vis næste fane",
-            "gecko-show-previous-tab": "Vis forrige fane",
-            "gecko-show-all-tabs-panel": "Vis panelet for alle faner",
-            "gecko-force-reload": "Tving genindlæsning",
-            "gecko-zoom-in": "Zoom ind",
-            "gecko-zoom-out": "Zoom ud",
-            "gecko-reset-zoom": "Nulstil zoom",
-            "gecko-bookmark-this-page": "Bogmærk denne side",
-            "gecko-open-home-page": "Åbn startside",
-            "gecko-open-addons-manager": "Åbn tilføjelsesadministrator",
-            "gecko-send-with-mail": "Send med mail",
-            "gecko-save-page": "Gem side",
-            "gecko-print-page": "Udskriv side",
-            "gecko-mute-current-tab": "Slå lyden fra på aktuel fane",
-            "gecko-show-source-of-page": "Vis sidens kildekode",
-            "gecko-show-page-info": "Vis sideoplysninger",
-            "floorp-rest-mode": "Aktivér hviletilstand",
-            "floorp-hide-user-interface": "Skjul brugerflade",
-            "floorp-toggle-navigation-panel": "Vis/skjul navigationspanel",
-            "gecko-stop": "Stop",
-            "gecko-search-in-this-page": "Søg på denne side",
-            "gecko-show-next-search-result": "Vis næste søgeresultat",
-            "gecko-show-previous-search-result": "Vis forrige søgeresultat",
-            "gecko-search-the-web": "Søg på nettet",
-            "gecko-open-migration-wizard": "Åbn migrationsguide",
-            "gecko-quit-from-application": "Afslut applikation",
-            "gecko-enter-into-customize-mode": "Gå ind i tilpasningstilstand",
-            "gecko-enter-into-offline-mode": "Gå ind i offline-tilstand",
-            "gecko-open-screen-capture": "Åbn skærmoptagelse",
-            "floorp-show-pip": "Vis billede-i-billede",
-            "gecko-open-bookmark-add-tool": "Åbn værktøj til bogmærketilføjelse",
-            "gecko-open-bookmarks-manager": "Åbn bogmærkehåndtering",
-            "gecko-toggle-bookmark-toolbar": "Vis/skjul bogmærkelinje",
-            "gecko-open-general-preferences": "Åbn generelle indstillinger",
-            "gecko-open-privacy-preferences": "Åbn privatlivsindstillinger",
-            "gecko-open-workspaces-preferences": "Åbn indstillinger for arbejdsområder",
-            "gecko-open-containers-preferences": "Åbn indstillinger for beholdere",
-            "gecko-open-search-preferences": "Åbn søgeindstillinger",
-            "gecko-open-sync-preferences": "Åbn synkroniseringsindstillinger",
-            "gecko-open-task-manager": "Åbn jobliste",
-            "gecko-forget-history": "Glem historik",
-            "gecko-quick-forget-history": "Hurtig glem historik",
-            "gecko-clear-recent-history": "Ryd seneste historik",
-            "gecko-restore-last-session": "Gendan sidste session",
-            "gecko-search-history": "Søg i historik",
-            "gecko-manage-history": "Administrer historik",
-            "gecko-open-downloads": "Åbn downloads",
-            "gecko-show-bookmark-sidebar": "Vis Bogmærker-sidepanel",
-            "gecko-show-history-sidebar": "Vis Historik-sidepanel",
-            "gecko-show-synced-tabs-sidebar": "Vis Synkroniserede Faner-sidepanel",
-            "gecko-reverse-sidebar": "Omvendt position af sidepanel",
-            "gecko-hide-sidebar": "Skjul sidepanel",
-            "gecko-toggle-sidebar": "Vis/skjul sidepanel",
-            "gecko-scroll-up": "Rul op",
-            "gecko-scroll-down": "Rul ned",
-            "gecko-scroll-right": "Rul til højre",
-            "gecko-scroll-left": "Rul til venstre",
-            "gecko-scroll-to-top": "Rul til toppen",
-            "gecko-scroll-to-bottom": "Rul til bunden"
-        },
-        "descriptions": {
-            "gecko-back": "Naviger tilbage til den forrige side",
-            "gecko-forward": "Naviger frem til den næste side",
-            "gecko-reload": "Genindlæs nuværende side",
-            "gecko-close-tab": "Luk nuværende fane",
-            "gecko-open-new-tab": "Åbn en ny fane",
-            "gecko-duplicate-tab": "Dupliker nuværende fane",
-            "gecko-reload-all-tabs": "Genindlæs alle faner",
-            "gecko-restore-last-tab": "Genåbn den sidst lukkede fane"
-        }
-    },
-    "qrCode": {
-        "pageAction": "Generate QR Code",
-        "modalTitle": "QR Code Generator",
-        "loading": "Generating QR Code...",
-        "copyButton": "Copy Image",
-        "downloadButton": "Download",
-        "closeButton": "Luk",
-        "copySuccess": "QR code copied to clipboard!",
-        "copyError": "Failed to copy QR code",
-        "generateError": "Failed to generate QR code"
-    },
-    "qrcode-generate-page-action": "Generate QR Code for this page",
-    "qrcode-generate-page-action-title": "QR Code Generator",
-    "panelSidebar": {
-        "modal": {
-            "type": "Paneltype",
-            "typeOptions": {
-                "web": "Webside",
-                "sidebar-tool": "Værktøjssidepanel",
-                "extension": "Udvidelsessidepanel",
-                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
-            },
-            "width": "Panelbredde",
-            "url": "Webside-URL",
-            "container": "Beholder",
-            "noContainer": "Ingen beholder",
-            "userAgent": "Brug mobil brugeragent",
-            "extension": "Vis udvidelse",
-            "sideBarTool": "Vis værktøjssidepanel",
-            "title": "Tilføj panel",
-            "add": "Tilføj",
-            "cancel": "Annuller"
-        },
-        "contextMenu": {
-            "unload": "Stop indlæsning af dette webpanel",
-            "mute": "Slå lyden fra/til på dette webpanel",
-            "changeZoom": "Skift zoomniveau",
-            "zoomIn": "Zoom ind",
-            "zoomOut": "Zoom ud",
-            "resetZoom": "Nulstil zoom",
-            "changeUA": "Skift brugeragent til mobil-/computerversion på dette webpanel",
-            "delete": "Slet dette panel"
-        }
-    },
-    "chrome_css": {
-        "menu": "Stil",
-        "rebuild": "Gendan stylesheets",
-        "create": "Opret ny stylesheet",
-        "open_folder": "Åbn stylesheets-mappen",
-        "edit_user_chrome": "Rediger userChrome.css",
-        "edit_user_content": "Rediger userContent.css",
-        "rebuild_complete": "Stylesheets gendannet",
-        "editor_path_not_found": "Editorsti ikke fundet",
-        "set_pref_description": "Angiv venligst stien til editoren",
-        "please_enter_filename": "Indtast venligst et filnavn",
-        "file_created": "File Created",
-        "file_created_successfully": "File created successfully",
-        "open_file_in_editor": "Open file in editor?",
-        "error_title": "Error",
-        "folder_open_failed": "Failed to open CSS folder",
-        "edit_failed": "Failed to edit file"
-    },
-    "reboot": {
-        "menu": {
-            "title": "Genstart",
-            "normal-restart": "Genstart",
-            "restart-cache-clear": "Restart with Cache Clear",
-            "restart-safe-mode": "Restart in Safe Mode",
-            "restart-profile-manager": "Restart with Profile Manager"
-        }
+    "error": {
+      "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
     }
+  },
+  "statusbar": {
+    "toggle": "Statuslinje{{mark}}"
+  },
+  "splitview": {
+    "title": "Opdelt visning",
+    "position": "Position",
+    "position-left": "Venstre",
+    "position-right": "Højre",
+    "flex-row": "Række",
+    "flex-column": "Kolonne",
+    "remove-button": "Fjern nuværende visning",
+    "tab-context": {
+      "split-tabs": "Opdel faner",
+      "split-fixed-tab": "Opdel til fast fane"
+    }
+  },
+  "ssb": {
+    "menu": {
+      "webapps": "Webapps",
+      "install-current": "Installer nuværende side som progressiv webapp",
+      "open-installed": "Åbn installerede apps"
+    },
+    "page-action": {
+      "title": "Åbn applikation",
+      "install": "Installer applikation",
+      "open": "Åbn applikation",
+      "cancel": "Annuller",
+      "site-icon": "Webstedsikon"
+    }
+  },
+  "privateContainer": {
+    "openInPrivateContainer": "Åbn i privat beholder",
+    "name": "Privat beholder"
+  },
+  "mouseGesture": {
+    "actions": {
+      "gecko-back": "Tilbage",
+      "gecko-forward": "Frem",
+      "gecko-reload": "Genindlæs",
+      "gecko-close-tab": "Luk fane",
+      "gecko-open-new-tab": "Ny fane",
+      "gecko-duplicate-tab": "Dupliker fane",
+      "gecko-reload-all-tabs": "Genindlæs alle faner",
+      "gecko-restore-last-tab": "Genåbn lukket fane",
+      "gecko-open-new-window": "Åbn nyt vindue",
+      "gecko-open-new-private-window": "Åbn nyt privat vindue",
+      "gecko-close-window": "Luk vindue",
+      "gecko-restore-last-window": "Gendan sidste vindue",
+      "gecko-show-next-tab": "Vis næste fane",
+      "gecko-show-previous-tab": "Vis forrige fane",
+      "gecko-show-all-tabs-panel": "Vis panelet for alle faner",
+      "gecko-force-reload": "Tving genindlæsning",
+      "gecko-zoom-in": "Zoom ind",
+      "gecko-zoom-out": "Zoom ud",
+      "gecko-reset-zoom": "Nulstil zoom",
+      "gecko-bookmark-this-page": "Bogmærk denne side",
+      "gecko-open-home-page": "Åbn startside",
+      "gecko-open-addons-manager": "Åbn tilføjelsesadministrator",
+      "gecko-send-with-mail": "Send med mail",
+      "gecko-save-page": "Gem side",
+      "gecko-print-page": "Udskriv side",
+      "gecko-mute-current-tab": "Slå lyden fra på aktuel fane",
+      "gecko-show-source-of-page": "Vis sidens kildekode",
+      "gecko-show-page-info": "Vis sideoplysninger",
+      "floorp-rest-mode": "Aktivér hviletilstand",
+      "floorp-hide-user-interface": "Skjul brugerflade",
+      "floorp-toggle-navigation-panel": "Vis/skjul navigationspanel",
+      "gecko-stop": "Stop",
+      "gecko-search-in-this-page": "Søg på denne side",
+      "gecko-show-next-search-result": "Vis næste søgeresultat",
+      "gecko-show-previous-search-result": "Vis forrige søgeresultat",
+      "gecko-search-the-web": "Søg på nettet",
+      "gecko-open-migration-wizard": "Åbn migrationsguide",
+      "gecko-quit-from-application": "Afslut applikation",
+      "gecko-enter-into-customize-mode": "Gå ind i tilpasningstilstand",
+      "gecko-enter-into-offline-mode": "Gå ind i offline-tilstand",
+      "gecko-open-screen-capture": "Åbn skærmoptagelse",
+      "floorp-show-pip": "Vis billede-i-billede",
+      "gecko-open-bookmark-add-tool": "Åbn værktøj til bogmærketilføjelse",
+      "gecko-open-bookmarks-manager": "Åbn bogmærkehåndtering",
+      "gecko-toggle-bookmark-toolbar": "Vis/skjul bogmærkelinje",
+      "gecko-open-general-preferences": "Åbn generelle indstillinger",
+      "gecko-open-privacy-preferences": "Åbn privatlivsindstillinger",
+      "gecko-open-workspaces-preferences": "Åbn indstillinger for arbejdsområder",
+      "gecko-open-containers-preferences": "Åbn indstillinger for beholdere",
+      "gecko-open-search-preferences": "Åbn søgeindstillinger",
+      "gecko-open-sync-preferences": "Åbn synkroniseringsindstillinger",
+      "gecko-open-task-manager": "Åbn jobliste",
+      "gecko-forget-history": "Glem historik",
+      "gecko-quick-forget-history": "Hurtig glem historik",
+      "gecko-clear-recent-history": "Ryd seneste historik",
+      "gecko-restore-last-session": "Gendan sidste session",
+      "gecko-search-history": "Søg i historik",
+      "gecko-manage-history": "Administrer historik",
+      "gecko-open-downloads": "Åbn downloads",
+      "gecko-show-bookmark-sidebar": "Vis Bogmærker-sidepanel",
+      "gecko-show-history-sidebar": "Vis Historik-sidepanel",
+      "gecko-show-synced-tabs-sidebar": "Vis Synkroniserede Faner-sidepanel",
+      "gecko-reverse-sidebar": "Omvendt position af sidepanel",
+      "gecko-hide-sidebar": "Skjul sidepanel",
+      "gecko-toggle-sidebar": "Vis/skjul sidepanel",
+      "gecko-scroll-up": "Rul op",
+      "gecko-scroll-down": "Rul ned",
+      "gecko-scroll-right": "Rul til højre",
+      "gecko-scroll-left": "Rul til venstre",
+      "gecko-scroll-to-top": "Rul til toppen",
+      "gecko-scroll-to-bottom": "Rul til bunden"
+    },
+    "descriptions": {
+      "gecko-back": "Naviger tilbage til den forrige side",
+      "gecko-forward": "Naviger frem til den næste side",
+      "gecko-reload": "Genindlæs nuværende side",
+      "gecko-close-tab": "Luk nuværende fane",
+      "gecko-open-new-tab": "Åbn en ny fane",
+      "gecko-duplicate-tab": "Dupliker nuværende fane",
+      "gecko-reload-all-tabs": "Genindlæs alle faner",
+      "gecko-restore-last-tab": "Genåbn den sidst lukkede fane"
+    }
+  },
+  "qrCode": {
+    "pageAction": "Generate QR Code",
+    "modalTitle": "QR Code Generator",
+    "loading": "Generating QR Code...",
+    "copyButton": "Copy Image",
+    "downloadButton": "Download",
+    "closeButton": "Luk",
+    "copySuccess": "QR code copied to clipboard!",
+    "copyError": "Failed to copy QR code",
+    "generateError": "Failed to generate QR code"
+  },
+  "qrcode-generate-page-action": "Generate QR Code for this page",
+  "qrcode-generate-page-action-title": "QR Code Generator",
+  "panelSidebar": {
+    "modal": {
+      "type": "Paneltype",
+      "typeOptions": {
+        "web": "Webside",
+        "sidebar-tool": "Værktøjssidepanel",
+        "extension": "Udvidelsessidepanel",
+        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+      },
+      "width": "Panelbredde",
+      "url": "Webside-URL",
+      "container": "Beholder",
+      "noContainer": "Ingen beholder",
+      "userAgent": "Brug mobil brugeragent",
+      "extension": "Vis udvidelse",
+      "sideBarTool": "Vis værktøjssidepanel",
+      "title": "Tilføj panel",
+      "add": "Tilføj",
+      "cancel": "Annuller"
+    },
+    "contextMenu": {
+      "unload": "Stop indlæsning af dette webpanel",
+      "mute": "Slå lyden fra/til på dette webpanel",
+      "changeZoom": "Skift zoomniveau",
+      "zoomIn": "Zoom ind",
+      "zoomOut": "Zoom ud",
+      "resetZoom": "Nulstil zoom",
+      "changeUA": "Skift brugeragent til mobil-/computerversion på dette webpanel",
+      "delete": "Slet dette panel"
+    }
+  },
+  "chrome_css": {
+    "menu": "Stil",
+    "rebuild": "Gendan stylesheets",
+    "create": "Opret ny stylesheet",
+    "open_folder": "Åbn stylesheets-mappen",
+    "edit_user_chrome": "Rediger userChrome.css",
+    "edit_user_content": "Rediger userContent.css",
+    "rebuild_complete": "Stylesheets gendannet",
+    "editor_path_not_found": "Editorsti ikke fundet",
+    "set_pref_description": "Angiv venligst stien til editoren",
+    "please_enter_filename": "Indtast venligst et filnavn",
+    "file_created": "File Created",
+    "file_created_successfully": "File created successfully",
+    "open_file_in_editor": "Open file in editor?",
+    "error_title": "Error",
+    "folder_open_failed": "Failed to open CSS folder",
+    "edit_failed": "Failed to edit file"
+  },
+  "reboot": {
+    "menu": {
+      "title": "Genstart",
+      "normal-restart": "Genstart",
+      "restart-cache-clear": "Restart with Cache Clear",
+      "restart-safe-mode": "Restart in Safe Mode",
+      "restart-profile-manager": "Restart with Profile Manager"
+    }
+  }
 }

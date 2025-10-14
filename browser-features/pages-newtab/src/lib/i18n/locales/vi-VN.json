@@ -38,7 +38,8 @@
         "floorpStart": "Floorp Bắt Đầu",
         "disableFloorpStart": "Tắt Floorp Bắt Đầu (dùng about:newtab chán phèo)",
         "disableFloorpStartDescription": "Khi bật, Floorp Bắt Đầu sẽ đá trang thẻ mới của Firefox ra chuồng gà.",
-        "restartRequired": "Trình duyệt cần khởi động lại để thay đổi được áp dụng hoàn toàn."
+        "restartRequired": "Trình duyệt cần khởi động lại để thay đổi được áp dụng hoàn toàn.",
+        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Tìm kiếm hoặc nhập địa chỉ",

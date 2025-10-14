@@ -38,7 +38,8 @@
         "floorpStart": "Floorp Başlangıç",
         "disableFloorpStart": "Floorp Başlangıç'ı devre dışı bırakın (klasik about:newtab kullanın)",
         "disableFloorpStartDescription": "Etkinleştirildiğinde, Floorp Başlangıç'ın yerini klasik Firefox yeni sekmesi / ana sayfası alacaktır.",
-        "restartRequired": "Değişikliklerin tam olarak uygulanması için tarayıcının yeniden başlatılması gerekir."
+        "restartRequired": "Değişikliklerin tam olarak uygulanması için tarayıcının yeniden başlatılması gerekir.",
+        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Arama yapın veya adres girin",

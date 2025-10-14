@@ -1,263 +1,263 @@
 {
-    "undo-closed-tab": {
-        "label": "復原已關閉分頁",
-        "tooltiptext": "重新開啟上次關閉的索引標籤 {{shortcut}}"
+  "undo-closed-tab": {
+    "label": "復原已關閉分頁",
+    "tooltiptext": "重新開啟上次關閉的索引標籤 {{shortcut}}"
+  },
+  "workspaces": {
+    "modal": {
+      "name": "名稱",
+      "name-placeholder": "為此工作區命名",
+      "container": "容器",
+      "no-container": "無容器",
+      "icon": "圖示",
+      "edit-title": "編輯工作區",
+      "save": "儲存變更",
+      "cancel": "取消"
     },
-    "workspaces": {
-        "modal": {
-            "name": "名稱",
-            "name-placeholder": "為此工作區命名",
-            "container": "容器",
-            "no-container": "無容器",
-            "icon": "圖示",
-            "edit-title": "編輯工作區",
-            "save": "儲存變更",
-            "cancel": "取消"
-        },
-        "icons": {
-            "article": "文章",
-            "book": "書本",
-            "briefcase": "公事包",
-            "cart": "購物車",
-            "chat": "聊天",
-            "chill": "輕鬆",
-            "circle": "圓圈",
-            "compass": "指南",
-            "code": "程式碼",
-            "dollar": "美元",
-            "fence": "柵欄",
-            "fingerprint": "指紋",
-            "food": "美食",
-            "fruit": "水果",
-            "game": "遊戲",
-            "gear": "設定",
-            "gift": "禮物",
-            "key": "鎖匙",
-            "lightning": "閃電",
-            "network": "網路",
-            "notes": "筆記",
-            "paint": "繪畫",
-            "photo": "相片",
-            "pin": "釘選",
-            "pet": "寵物",
-            "question": "問題",
-            "smartphone": "智慧型手機",
-            "star": "星星",
-            "tree": "樹木",
-            "vacation": "假日",
-            "love": "愛心",
-            "moon": "月亮",
-            "music": "音樂",
-            "user": "用户"
-        },
-        "service": {
-            "new-workspace": "新工作區 ({{count}})"
-        },
-        "context-menu": {
-            "move-up": "向上移動此工作區",
-            "move-down": "向下移動此工作區",
-            "delete": "刪除工作區",
-            "manage": "管理工作區"
-        },
-        "popup": {
-            "create-new": "建立新工作區...",
-            "manage": "管理工作區"
-        },
-        "menu": {
-            "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間"
-        },
-        "error": {
-            "invalidWorkspaceID": "工作空間的 ID 無效（或許是因為排序未更新）"
-        }
+    "icons": {
+      "article": "文章",
+      "book": "書本",
+      "briefcase": "公事包",
+      "cart": "購物車",
+      "chat": "聊天",
+      "chill": "輕鬆",
+      "circle": "圓圈",
+      "compass": "指南",
+      "code": "程式碼",
+      "dollar": "美元",
+      "fence": "柵欄",
+      "fingerprint": "指紋",
+      "food": "美食",
+      "fruit": "水果",
+      "game": "遊戲",
+      "gear": "設定",
+      "gift": "禮物",
+      "key": "鎖匙",
+      "lightning": "閃電",
+      "network": "網路",
+      "notes": "筆記",
+      "paint": "繪畫",
+      "photo": "相片",
+      "pin": "釘選",
+      "pet": "寵物",
+      "question": "問題",
+      "smartphone": "智慧型手機",
+      "star": "星星",
+      "tree": "樹木",
+      "vacation": "假日",
+      "love": "愛心",
+      "moon": "月亮",
+      "music": "音樂",
+      "user": "用户"
     },
-    "statusbar": {
-        "toggle": "狀態列{{mark}}"
+    "service": {
+      "new-workspace": "新工作區 ({{count}})"
     },
-    "splitview": {
-        "title": "分離檢視",
-        "position": "位置",
-        "position-left": "左",
-        "position-right": "右",
-        "flex-row": "行",
-        "flex-column": "列",
-        "remove-button": "移除目前的視圖",
-        "tab-context": {
-            "split-tabs": "分割分頁",
-            "split-fixed-tab": "分割為固定分頁"
-        }
+    "context-menu": {
+      "move-up": "向上移動此工作區",
+      "move-down": "向下移動此工作區",
+      "delete": "刪除工作區",
+      "manage": "管理工作區"
     },
-    "ssb": {
-        "menu": {
-            "webapps": "PWA 應用程式",
-            "install-current": "將目前頁面安裝為 PWA 應用程式",
-            "open-installed": "開啟已安裝的 PWA 應用程式"
-        },
-        "page-action": {
-            "title": "開啟應用程式",
-            "install": "安裝應用程式",
-            "open": "開啟應用程式",
-            "cancel": "取消",
-            "site-icon": "網站圖示"
-        }
+    "popup": {
+      "create-new": "建立新工作區...",
+      "manage": "管理工作區"
     },
-    "privateContainer": {
-        "openInPrivateContainer": "在私隱容器中開啟",
-        "name": "私隱容器"
+    "menu": {
+      "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間"
     },
-    "mouseGesture": {
-        "actions": {
-            "gecko-back": "返回",
-            "gecko-forward": "前進",
-            "gecko-reload": "重新載入",
-            "gecko-close-tab": "關閉分頁",
-            "gecko-open-new-tab": "新分頁",
-            "gecko-duplicate-tab": "複製分頁",
-            "gecko-reload-all-tabs": "重新載入所有的分頁",
-            "gecko-restore-last-tab": "恢復先前關閉的分頁",
-            "gecko-open-new-window": "開啟新視窗",
-            "gecko-open-new-private-window": "開啟新的私隱視窗",
-            "gecko-close-window": "關閉視窗",
-            "gecko-restore-last-window": "恢復上一個視窗",
-            "gecko-show-next-tab": "顯示下一個分頁",
-            "gecko-show-previous-tab": "顯示上一個分頁",
-            "gecko-show-all-tabs-panel": "顯示所有分頁面板",
-            "gecko-force-reload": "強制重新載入",
-            "gecko-zoom-in": "放大",
-            "gecko-zoom-out": "縮小",
-            "gecko-reset-zoom": "重設縮放大小",
-            "gecko-bookmark-this-page": "將此頁加入書籤",
-            "gecko-open-home-page": "開啟首頁",
-            "gecko-open-addons-manager": "開啟附加元件管理員",
-            "gecko-send-with-mail": "通過電子郵件發送",
-            "gecko-save-page": "儲存頁面",
-            "gecko-print-page": "列印頁面",
-            "gecko-mute-current-tab": "靜音目前的分頁",
-            "gecko-show-source-of-page": "檢視頁面原始碼",
-            "gecko-show-page-info": "檢視頁面資訊",
-            "floorp-rest-mode": "啟用休息模式",
-            "floorp-hide-user-interface": "隱藏介面",
-            "floorp-toggle-navigation-panel": "切換導覽面板",
-            "gecko-stop": "停止",
-            "gecko-search-in-this-page": "在本頁搜尋",
-            "gecko-show-next-search-result": "顯示下一個搜尋結果",
-            "gecko-show-previous-search-result": "顯示上一個搜尋結果",
-            "gecko-search-the-web": "在網路上搜尋",
-            "gecko-open-migration-wizard": "開啟遷移導引",
-            "gecko-quit-from-application": "結束應用程式",
-            "gecko-enter-into-customize-mode": "進入客製化模式",
-            "gecko-enter-into-offline-mode": "進入離線模式",
-            "gecko-open-screen-capture": "開啟螢幕擷圖工具",
-            "floorp-show-pip": "顯示子母畫面",
-            "gecko-open-bookmark-add-tool": "開啟新增書籤工具",
-            "gecko-open-bookmarks-manager": "開啟書籤管理員",
-            "gecko-toggle-bookmark-toolbar": "切換書籤工具列",
-            "gecko-open-general-preferences": "開啟一般設定",
-            "gecko-open-privacy-preferences": "開啟隱私安全設定",
-            "gecko-open-workspaces-preferences": "開啟工作空間設定",
-            "gecko-open-containers-preferences": "開啟容器設定",
-            "gecko-open-search-preferences": "開啟搜尋設定",
-            "gecko-open-sync-preferences": "開啟同步設定",
-            "gecko-open-task-manager": "開啟工作管理員",
-            "gecko-forget-history": "清除歷史記錄",
-            "gecko-quick-forget-history": "快速清除歷史記錄",
-            "gecko-clear-recent-history": "清除最近的歷史紀錄",
-            "gecko-restore-last-session": "恢復上次的瀏覽進程",
-            "gecko-search-history": "搜尋記錄",
-            "gecko-manage-history": "管理歷史記錄",
-            "gecko-open-downloads": "開啟下載資料夾",
-            "gecko-show-bookmark-sidebar": "顯示書籤側邊欄",
-            "gecko-show-history-sidebar": "顯示歷史側邊欄",
-            "gecko-show-synced-tabs-sidebar": "顯示已同步分頁側邊欄",
-            "gecko-reverse-sidebar": "反轉側邊欄位置",
-            "gecko-hide-sidebar": "隱藏側邊欄",
-            "gecko-toggle-sidebar": "切換側邊欄",
-            "gecko-scroll-up": "向上捲動",
-            "gecko-scroll-down": "向下捲動",
-            "gecko-scroll-right": "向右捲動",
-            "gecko-scroll-left": "向左捲動",
-            "gecko-scroll-to-top": "捲動至頂端",
-            "gecko-scroll-to-bottom": "捲動至底端"
-        },
-        "descriptions": {
-            "gecko-back": "返回上一頁",
-            "gecko-forward": "前進下一頁",
-            "gecko-reload": "重新載入目前頁面",
-            "gecko-close-tab": "關閉目前的分頁",
-            "gecko-open-new-tab": "開啟新分頁",
-            "gecko-duplicate-tab": "複製目前的分頁",
-            "gecko-reload-all-tabs": "重新載入所有的分頁",
-            "gecko-restore-last-tab": "重新開啟上次關閉的分頁"
-        }
-    },
-    "qrCode": {
-        "pageAction": "產生 QR 碼",
-        "modalTitle": "QR 碼產生器",
-        "loading": "正在產生 QR 碼……",
-        "copyButton": "複製圖片",
-        "downloadButton": "下載",
-        "closeButton": "關閉",
-        "copySuccess": "QR 碼已複製到剪貼簿！",
-        "copyError": "複製 QR 碼失敗",
-        "generateError": "產生 QR 碼失敗"
-    },
-    "qrcode-generate-page-action": "為此頁生成 QR 碼",
-    "qrcode-generate-page-action-title": "QR 碼產生器",
-    "panelSidebar": {
-        "modal": {
-            "type": "面板類型",
-            "typeOptions": {
-                "web": "網頁",
-                "sidebar-tool": "工具側邊欄",
-                "extension": "擴充側邊欄",
-                "builtin": "內建頁面（下載、書籤、歷史記錄）"
-            },
-            "width": "面板寬度",
-            "url": "網頁位址",
-            "container": "容器",
-            "noContainer": "無容器",
-            "userAgent": "使用移動端 User Agent",
-            "extension": "顯示擴充套件",
-            "sideBarTool": "顯示側邊欄工具",
-            "title": "新增面板",
-            "add": "新增",
-            "cancel": "取消"
-        },
-        "contextMenu": {
-            "unload": "卸下此面板",
-            "mute": "靜音/取消靜音此面板",
-            "changeZoom": "縮放大小調整",
-            "zoomIn": "放大",
-            "zoomOut": "縮小",
-            "resetZoom": "重設縮放",
-            "changeUA": "在此面板將 User Agent 切換為行動/桌上型電腦版本",
-            "delete": "刪除此面板"
-        }
-    },
-    "chrome_css": {
-        "menu": "樣式",
-        "rebuild": "重建樣式檔",
-        "create": "建立新的樣式檔",
-        "open_folder": "開啟樣式檔資料夾",
-        "edit_user_chrome": "編輯 userChrome.css",
-        "edit_user_content": "編輯 userContent.css",
-        "rebuild_complete": "樣式檔重建完成",
-        "editor_path_not_found": "未找到編輯器路徑",
-        "set_pref_description": "請設定編輯器路徑",
-        "please_enter_filename": "請鍵入檔案名",
-        "file_created": "已新增檔案",
-        "file_created_successfully": "已成功新增檔案",
-        "open_file_in_editor": "在編輯器中開啟檔案？",
-        "error_title": "錯誤",
-        "folder_open_failed": "開啟 CSS 資料夾失敗",
-        "edit_failed": "編輯檔案失敗"
-    },
-    "reboot": {
-        "menu": {
-            "title": "重新啟動",
-            "normal-restart": "重新啟動",
-            "restart-cache-clear": "清除快取並重新啟動",
-            "restart-safe-mode": "在安全模式下重新啟動",
-            "restart-profile-manager": "重新啟動並開啟設定檔管理員"
-        }
+    "error": {
+      "invalidWorkspaceID": "工作空間的 ID 無效（或許是因為排序未更新）"
     }
+  },
+  "statusbar": {
+    "toggle": "狀態列{{mark}}"
+  },
+  "splitview": {
+    "title": "分離檢視",
+    "position": "位置",
+    "position-left": "左",
+    "position-right": "右",
+    "flex-row": "行",
+    "flex-column": "列",
+    "remove-button": "移除目前的視圖",
+    "tab-context": {
+      "split-tabs": "分割分頁",
+      "split-fixed-tab": "分割為固定分頁"
+    }
+  },
+  "ssb": {
+    "menu": {
+      "webapps": "PWA 應用程式",
+      "install-current": "將目前頁面安裝為 PWA 應用程式",
+      "open-installed": "開啟已安裝的 PWA 應用程式"
+    },
+    "page-action": {
+      "title": "開啟應用程式",
+      "install": "安裝應用程式",
+      "open": "開啟應用程式",
+      "cancel": "取消",
+      "site-icon": "網站圖示"
+    }
+  },
+  "privateContainer": {
+    "openInPrivateContainer": "在私隱容器中開啟",
+    "name": "私隱容器"
+  },
+  "mouseGesture": {
+    "actions": {
+      "gecko-back": "返回",
+      "gecko-forward": "前進",
+      "gecko-reload": "重新載入",
+      "gecko-close-tab": "關閉分頁",
+      "gecko-open-new-tab": "新分頁",
+      "gecko-duplicate-tab": "複製分頁",
+      "gecko-reload-all-tabs": "重新載入所有的分頁",
+      "gecko-restore-last-tab": "恢復先前關閉的分頁",
+      "gecko-open-new-window": "開啟新視窗",
+      "gecko-open-new-private-window": "開啟新的私隱視窗",
+      "gecko-close-window": "關閉視窗",
+      "gecko-restore-last-window": "恢復上一個視窗",
+      "gecko-show-next-tab": "顯示下一個分頁",
+      "gecko-show-previous-tab": "顯示上一個分頁",
+      "gecko-show-all-tabs-panel": "顯示所有分頁面板",
+      "gecko-force-reload": "強制重新載入",
+      "gecko-zoom-in": "放大",
+      "gecko-zoom-out": "縮小",
+      "gecko-reset-zoom": "重設縮放大小",
+      "gecko-bookmark-this-page": "將此頁加入書籤",
+      "gecko-open-home-page": "開啟首頁",
+      "gecko-open-addons-manager": "開啟附加元件管理員",
+      "gecko-send-with-mail": "通過電子郵件發送",
+      "gecko-save-page": "儲存頁面",
+      "gecko-print-page": "列印頁面",
+      "gecko-mute-current-tab": "靜音目前的分頁",
+      "gecko-show-source-of-page": "檢視頁面原始碼",
+      "gecko-show-page-info": "檢視頁面資訊",
+      "floorp-rest-mode": "啟用休息模式",
+      "floorp-hide-user-interface": "隱藏介面",
+      "floorp-toggle-navigation-panel": "切換導覽面板",
+      "gecko-stop": "停止",
+      "gecko-search-in-this-page": "在本頁搜尋",
+      "gecko-show-next-search-result": "顯示下一個搜尋結果",
+      "gecko-show-previous-search-result": "顯示上一個搜尋結果",
+      "gecko-search-the-web": "在網路上搜尋",
+      "gecko-open-migration-wizard": "開啟遷移導引",
+      "gecko-quit-from-application": "結束應用程式",
+      "gecko-enter-into-customize-mode": "進入客製化模式",
+      "gecko-enter-into-offline-mode": "進入離線模式",
+      "gecko-open-screen-capture": "開啟螢幕擷圖工具",
+      "floorp-show-pip": "顯示子母畫面",
+      "gecko-open-bookmark-add-tool": "開啟新增書籤工具",
+      "gecko-open-bookmarks-manager": "開啟書籤管理員",
+      "gecko-toggle-bookmark-toolbar": "切換書籤工具列",
+      "gecko-open-general-preferences": "開啟一般設定",
+      "gecko-open-privacy-preferences": "開啟隱私安全設定",
+      "gecko-open-workspaces-preferences": "開啟工作空間設定",
+      "gecko-open-containers-preferences": "開啟容器設定",
+      "gecko-open-search-preferences": "開啟搜尋設定",
+      "gecko-open-sync-preferences": "開啟同步設定",
+      "gecko-open-task-manager": "開啟工作管理員",
+      "gecko-forget-history": "清除歷史記錄",
+      "gecko-quick-forget-history": "快速清除歷史記錄",
+      "gecko-clear-recent-history": "清除最近的歷史紀錄",
+      "gecko-restore-last-session": "恢復上次的瀏覽進程",
+      "gecko-search-history": "搜尋記錄",
+      "gecko-manage-history": "管理歷史記錄",
+      "gecko-open-downloads": "開啟下載資料夾",
+      "gecko-show-bookmark-sidebar": "顯示書籤側邊欄",
+      "gecko-show-history-sidebar": "顯示歷史側邊欄",
+      "gecko-show-synced-tabs-sidebar": "顯示已同步分頁側邊欄",
+      "gecko-reverse-sidebar": "反轉側邊欄位置",
+      "gecko-hide-sidebar": "隱藏側邊欄",
+      "gecko-toggle-sidebar": "切換側邊欄",
+      "gecko-scroll-up": "向上捲動",
+      "gecko-scroll-down": "向下捲動",
+      "gecko-scroll-right": "向右捲動",
+      "gecko-scroll-left": "向左捲動",
+      "gecko-scroll-to-top": "捲動至頂端",
+      "gecko-scroll-to-bottom": "捲動至底端"
+    },
+    "descriptions": {
+      "gecko-back": "返回上一頁",
+      "gecko-forward": "前進下一頁",
+      "gecko-reload": "重新載入目前頁面",
+      "gecko-close-tab": "關閉目前的分頁",
+      "gecko-open-new-tab": "開啟新分頁",
+      "gecko-duplicate-tab": "複製目前的分頁",
+      "gecko-reload-all-tabs": "重新載入所有的分頁",
+      "gecko-restore-last-tab": "重新開啟上次關閉的分頁"
+    }
+  },
+  "qrCode": {
+    "pageAction": "產生 QR 碼",
+    "modalTitle": "QR 碼產生器",
+    "loading": "正在產生 QR 碼……",
+    "copyButton": "複製圖片",
+    "downloadButton": "下載",
+    "closeButton": "關閉",
+    "copySuccess": "QR 碼已複製到剪貼簿！",
+    "copyError": "複製 QR 碼失敗",
+    "generateError": "產生 QR 碼失敗"
+  },
+  "qrcode-generate-page-action": "為此頁生成 QR 碼",
+  "qrcode-generate-page-action-title": "QR 碼產生器",
+  "panelSidebar": {
+    "modal": {
+      "type": "面板類型",
+      "typeOptions": {
+        "web": "網頁",
+        "sidebar-tool": "工具側邊欄",
+        "extension": "擴充側邊欄",
+        "builtin": "內建頁面（下載、書籤、歷史記錄）"
+      },
+      "width": "面板寬度",
+      "url": "網頁位址",
+      "container": "容器",
+      "noContainer": "無容器",
+      "userAgent": "使用移動端 User Agent",
+      "extension": "顯示擴充套件",
+      "sideBarTool": "顯示側邊欄工具",
+      "title": "新增面板",
+      "add": "新增",
+      "cancel": "取消"
+    },
+    "contextMenu": {
+      "unload": "卸下此面板",
+      "mute": "靜音/取消靜音此面板",
+      "changeZoom": "縮放大小調整",
+      "zoomIn": "放大",
+      "zoomOut": "縮小",
+      "resetZoom": "重設縮放",
+      "changeUA": "在此面板將 User Agent 切換為行動/桌上型電腦版本",
+      "delete": "刪除此面板"
+    }
+  },
+  "chrome_css": {
+    "menu": "樣式",
+    "rebuild": "重建樣式檔",
+    "create": "建立新的樣式檔",
+    "open_folder": "開啟樣式檔資料夾",
+    "edit_user_chrome": "編輯 userChrome.css",
+    "edit_user_content": "編輯 userContent.css",
+    "rebuild_complete": "樣式檔重建完成",
+    "editor_path_not_found": "未找到編輯器路徑",
+    "set_pref_description": "請設定編輯器路徑",
+    "please_enter_filename": "請鍵入檔案名",
+    "file_created": "已新增檔案",
+    "file_created_successfully": "已成功新增檔案",
+    "open_file_in_editor": "在編輯器中開啟檔案？",
+    "error_title": "錯誤",
+    "folder_open_failed": "開啟 CSS 資料夾失敗",
+    "edit_failed": "編輯檔案失敗"
+  },
+  "reboot": {
+    "menu": {
+      "title": "重新啟動",
+      "normal-restart": "重新啟動",
+      "restart-cache-clear": "清除快取並重新啟動",
+      "restart-safe-mode": "在安全模式下重新啟動",
+      "restart-profile-manager": "重新啟動並開啟設定檔管理員"
+    }
+  }
 }

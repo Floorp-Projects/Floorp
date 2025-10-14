@@ -38,7 +38,8 @@
         "floorpStart": "Floorp-Start",
         "disableFloorpStart": "Floorp-Start deaktivieren (Klassisches about:newtab verwenden)",
         "disableFloorpStartDescription": "Wenn aktiviert, Floorp-Start wird durch den klassischen Firefox neuen Tab ersetzt.",
-        "restartRequired": "Erfordert einen Neustart des Browsers, um angewendet zu werden."
+        "restartRequired": "Erfordert einen Neustart des Browsers, um angewendet zu werden.",
+        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Suchen oder URL eingeben",

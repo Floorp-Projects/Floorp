@@ -1,263 +1,263 @@
 {
-    "undo-closed-tab": {
-        "label": "Tab wiederherstellen",
-        "tooltiptext": "Letzten geschossenen Tab wieder öffnen {{shortcut}}"
+  "undo-closed-tab": {
+    "label": "Tab wiederherstellen",
+    "tooltiptext": "Letzten geschossenen Tab wieder öffnen {{shortcut}}"
+  },
+  "workspaces": {
+    "modal": {
+      "name": "Name",
+      "name-placeholder": "Einen Namen für diesen Arbeitsbereich eingeben",
+      "container": "Container",
+      "no-container": "Kein Container",
+      "icon": "Symbol",
+      "edit-title": "Arbeitsbereich bearbeiten",
+      "save": "Änderungen speichern",
+      "cancel": "Abbrechen"
     },
-    "workspaces": {
-        "modal": {
-            "name": "Name",
-            "name-placeholder": "Einen Namen für diesen Arbeitsbereich eingeben",
-            "container": "Container",
-            "no-container": "Kein Container",
-            "icon": "Symbol",
-            "edit-title": "Arbeitsbereich bearbeiten",
-            "save": "Änderungen speichern",
-            "cancel": "Abbrechen"
-        },
-        "icons": {
-            "article": "Artikel",
-            "book": "Buch",
-            "briefcase": "Koffer",
-            "cart": "Einkaufswagen",
-            "chat": "Chat",
-            "chill": "",
-            "circle": "Kreis",
-            "compass": "Kompass",
-            "code": "Code",
-            "dollar": "Dollar",
-            "fence": "Zaun",
-            "fingerprint": "Fingerabdruck",
-            "food": "Essen",
-            "fruit": "Frucht",
-            "game": "Spiel",
-            "gear": "Einstellungen",
-            "gift": "Geschenk",
-            "key": "Schüssel",
-            "lightning": "Blitz",
-            "network": "Netzwerk",
-            "notes": "Notizen",
-            "paint": "Pinsel",
-            "photo": "Foto",
-            "pin": "PIN",
-            "pet": "Pfote",
-            "question": "Fragezeichen",
-            "smartphone": "Smartphone",
-            "star": "Stern",
-            "tree": "Baum",
-            "vacation": "Flugzeug",
-            "love": "Herz",
-            "moon": "Mond",
-            "music": "Musik",
-            "user": "Benutzer"
-        },
-        "service": {
-            "new-workspace": "Neuer Arbeitsbereich ({{count}})"
-        },
-        "context-menu": {
-            "move-up": "Diesen Arbeitsbereich nach oben schieben",
-            "move-down": "Diesen Arbeitsbereich nach unten schieben",
-            "delete": "Arbeitsbereich löschen",
-            "manage": "Arbeitsbereich verwalten"
-        },
-        "popup": {
-            "create-new": "Neuen Arbeitsbereich erstellen...",
-            "manage": "Arbeitsbereiche verwalten"
-        },
-        "menu": {
-            "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben"
-        },
-        "error": {
-            "invalidWorkspaceID": "Ungültige ID für Arbeitsbereich (Sortierung nicht aktualisiert)"
-        }
+    "icons": {
+      "article": "Artikel",
+      "book": "Buch",
+      "briefcase": "Koffer",
+      "cart": "Einkaufswagen",
+      "chat": "Chat",
+      "chill": "",
+      "circle": "Kreis",
+      "compass": "Kompass",
+      "code": "Code",
+      "dollar": "Dollar",
+      "fence": "Zaun",
+      "fingerprint": "Fingerabdruck",
+      "food": "Essen",
+      "fruit": "Frucht",
+      "game": "Spiel",
+      "gear": "Einstellungen",
+      "gift": "Geschenk",
+      "key": "Schüssel",
+      "lightning": "Blitz",
+      "network": "Netzwerk",
+      "notes": "Notizen",
+      "paint": "Pinsel",
+      "photo": "Foto",
+      "pin": "PIN",
+      "pet": "Pfote",
+      "question": "Fragezeichen",
+      "smartphone": "Smartphone",
+      "star": "Stern",
+      "tree": "Baum",
+      "vacation": "Flugzeug",
+      "love": "Herz",
+      "moon": "Mond",
+      "music": "Musik",
+      "user": "Benutzer"
     },
-    "statusbar": {
-        "toggle": "Status Bar{{mark}}"
+    "service": {
+      "new-workspace": "Neuer Arbeitsbereich ({{count}})"
     },
-    "splitview": {
-        "title": "Split View",
-        "position": "Position",
-        "position-left": "Left",
-        "position-right": "Right",
-        "flex-row": "Row",
-        "flex-column": "Column",
-        "remove-button": "Remove Current View",
-        "tab-context": {
-            "split-tabs": "Split Tabs",
-            "split-fixed-tab": "Split to Fixed Tab"
-        }
+    "context-menu": {
+      "move-up": "Diesen Arbeitsbereich nach oben schieben",
+      "move-down": "Diesen Arbeitsbereich nach unten schieben",
+      "delete": "Arbeitsbereich löschen",
+      "manage": "Arbeitsbereich verwalten"
     },
-    "ssb": {
-        "menu": {
-            "webapps": "Web Apps",
-            "install-current": "Install Current Page as Progressive Web App",
-            "open-installed": "Open Installed Apps"
-        },
-        "page-action": {
-            "title": "Open Application",
-            "install": "Install Application",
-            "open": "Open Application",
-            "cancel": "Cancel",
-            "site-icon": "Site icon"
-        }
+    "popup": {
+      "create-new": "Neuen Arbeitsbereich erstellen...",
+      "manage": "Arbeitsbereiche verwalten"
     },
-    "privateContainer": {
-        "openInPrivateContainer": "Open in Private Container",
-        "name": "Private Container"
+    "menu": {
+      "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben"
     },
-    "mouseGesture": {
-        "actions": {
-            "gecko-back": "Back",
-            "gecko-forward": "Forward",
-            "gecko-reload": "Reload",
-            "gecko-close-tab": "Close Tab",
-            "gecko-open-new-tab": "New Tab",
-            "gecko-duplicate-tab": "Duplicate Tab",
-            "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
-            "gecko-open-new-window": "Open New Window",
-            "gecko-open-new-private-window": "Open New Private Window",
-            "gecko-close-window": "Close Window",
-            "gecko-restore-last-window": "Restore Last Window",
-            "gecko-show-next-tab": "Show Next Tab",
-            "gecko-show-previous-tab": "Show Previous Tab",
-            "gecko-show-all-tabs-panel": "Show All Tabs Panel",
-            "gecko-force-reload": "Force Reload",
-            "gecko-zoom-in": "Zoom In",
-            "gecko-zoom-out": "Zoom Out",
-            "gecko-reset-zoom": "Reset Zoom",
-            "gecko-bookmark-this-page": "Bookmark This Page",
-            "gecko-open-home-page": "Open Home Page",
-            "gecko-open-addons-manager": "Open Addons Manager",
-            "gecko-send-with-mail": "Send With Mail",
-            "gecko-save-page": "Save Page",
-            "gecko-print-page": "Print Page",
-            "gecko-mute-current-tab": "Mute Current Tab",
-            "gecko-show-source-of-page": "Show Source Of Page",
-            "gecko-show-page-info": "Show Page Info",
-            "floorp-rest-mode": "Enable Rest Mode",
-            "floorp-hide-user-interface": "Hide Interface",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
-            "gecko-stop": "Stop",
-            "gecko-search-in-this-page": "Search In This Page",
-            "gecko-show-next-search-result": "Show Next Search Result",
-            "gecko-show-previous-search-result": "Show Previous Search Result",
-            "gecko-search-the-web": "Search The Web",
-            "gecko-open-migration-wizard": "Open Migration Wizard",
-            "gecko-quit-from-application": "Quit Application",
-            "gecko-enter-into-customize-mode": "Enter Customize Mode",
-            "gecko-enter-into-offline-mode": "Enter Offline Mode",
-            "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
-            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
-            "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
-            "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
-            "gecko-open-general-preferences": "Open General Preferences",
-            "gecko-open-privacy-preferences": "Open Privacy Preferences",
-            "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
-            "gecko-open-containers-preferences": "Open Containers Preferences",
-            "gecko-open-search-preferences": "Open Search Preferences",
-            "gecko-open-sync-preferences": "Open Sync Preferences",
-            "gecko-open-task-manager": "Open Task Manager",
-            "gecko-forget-history": "Forget History",
-            "gecko-quick-forget-history": "Quick Forget History",
-            "gecko-clear-recent-history": "Clear Recent History",
-            "gecko-restore-last-session": "Restore Last Session",
-            "gecko-search-history": "Search History",
-            "gecko-manage-history": "Manage History",
-            "gecko-open-downloads": "Open Downloads",
-            "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
-            "gecko-show-history-sidebar": "Show History Sidebar",
-            "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
-            "gecko-reverse-sidebar": "Reverse Sidebar Position",
-            "gecko-hide-sidebar": "Hide Sidebar",
-            "gecko-toggle-sidebar": "Toggle Sidebar",
-            "gecko-scroll-up": "Scroll Up",
-            "gecko-scroll-down": "Scroll Down",
-            "gecko-scroll-right": "Scroll Right",
-            "gecko-scroll-left": "Scroll Left",
-            "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
-        },
-        "descriptions": {
-            "gecko-back": "Navigate back to the previous page",
-            "gecko-forward": "Navigate forward to the next page",
-            "gecko-reload": "Reload the current page",
-            "gecko-close-tab": "Close the current tab",
-            "gecko-open-new-tab": "Open a new tab",
-            "gecko-duplicate-tab": "Duplicate the current tab",
-            "gecko-reload-all-tabs": "Reload all tabs",
-            "gecko-restore-last-tab": "Reopen the last closed tab"
-        }
-    },
-    "qrCode": {
-        "pageAction": "Generate QR Code",
-        "modalTitle": "QR Code Generator",
-        "loading": "Generating QR Code...",
-        "copyButton": "Copy Image",
-        "downloadButton": "Herunterladen",
-        "closeButton": "Schließen",
-        "copySuccess": "QR code copied to clipboard!",
-        "copyError": "Failed to copy QR code",
-        "generateError": "Failed to generate QR code"
-    },
-    "qrcode-generate-page-action": "Generate QR Code for this page",
-    "qrcode-generate-page-action-title": "QR Code Generator",
-    "panelSidebar": {
-        "modal": {
-            "type": "Panel Type",
-            "typeOptions": {
-                "web": "Web Page",
-                "sidebar-tool": "Tool Sidebar",
-                "extension": "Extension Sidebar",
-                "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
-            },
-            "width": "Panel Width",
-            "url": "Web Page URL",
-            "container": "Container",
-            "noContainer": "Kein Container",
-            "userAgent": "Use Mobile User Agent",
-            "extension": "Display Extension",
-            "sideBarTool": "Display Sidebar Tool",
-            "title": "Add Panel",
-            "add": "Neu",
-            "cancel": "Abbrechen"
-        },
-        "contextMenu": {
-            "unload": "Unload this webpanel",
-            "mute": "Mute/Unmute this webpanel",
-            "changeZoom": "Change zoom level",
-            "zoomIn": "Zoom in",
-            "zoomOut": "Zoom out",
-            "resetZoom": "Reset zoom",
-            "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
-            "delete": "Delete this panel"
-        }
-    },
-    "chrome_css": {
-        "menu": "Style",
-        "rebuild": "Rebuild Style Sheets",
-        "create": "Create New Style Sheet",
-        "open_folder": "Open Style Sheets Folder",
-        "edit_user_chrome": "Edit userChrome.css",
-        "edit_user_content": "Edit userContent.css",
-        "rebuild_complete": "Style sheets rebuilt",
-        "editor_path_not_found": "Editor Path Not Found",
-        "set_pref_description": "Please set the editor path",
-        "please_enter_filename": "Please enter a filename",
-        "file_created": "File Created",
-        "file_created_successfully": "File created successfully",
-        "open_file_in_editor": "Open file in editor?",
-        "error_title": "Error",
-        "folder_open_failed": "Failed to open CSS folder",
-        "edit_failed": "Failed to edit file"
-    },
-    "reboot": {
-        "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
-            "restart-cache-clear": "Restart with Cache Clear",
-            "restart-safe-mode": "Restart in Safe Mode",
-            "restart-profile-manager": "Restart with Profile Manager"
-        }
+    "error": {
+      "invalidWorkspaceID": "Ungültige ID für Arbeitsbereich (Sortierung nicht aktualisiert)"
     }
+  },
+  "statusbar": {
+    "toggle": "Status Bar{{mark}}"
+  },
+  "splitview": {
+    "title": "Split View",
+    "position": "Position",
+    "position-left": "Left",
+    "position-right": "Right",
+    "flex-row": "Row",
+    "flex-column": "Column",
+    "remove-button": "Remove Current View",
+    "tab-context": {
+      "split-tabs": "Split Tabs",
+      "split-fixed-tab": "Split to Fixed Tab"
+    }
+  },
+  "ssb": {
+    "menu": {
+      "webapps": "Web Apps",
+      "install-current": "Install Current Page as Progressive Web App",
+      "open-installed": "Open Installed Apps"
+    },
+    "page-action": {
+      "title": "Open Application",
+      "install": "Install Application",
+      "open": "Open Application",
+      "cancel": "Cancel",
+      "site-icon": "Site icon"
+    }
+  },
+  "privateContainer": {
+    "openInPrivateContainer": "Open in Private Container",
+    "name": "Private Container"
+  },
+  "mouseGesture": {
+    "actions": {
+      "gecko-back": "Back",
+      "gecko-forward": "Forward",
+      "gecko-reload": "Reload",
+      "gecko-close-tab": "Close Tab",
+      "gecko-open-new-tab": "New Tab",
+      "gecko-duplicate-tab": "Duplicate Tab",
+      "gecko-reload-all-tabs": "Reload All Tabs",
+      "gecko-restore-last-tab": "Reopen Closed Tab",
+      "gecko-open-new-window": "Open New Window",
+      "gecko-open-new-private-window": "Open New Private Window",
+      "gecko-close-window": "Close Window",
+      "gecko-restore-last-window": "Restore Last Window",
+      "gecko-show-next-tab": "Show Next Tab",
+      "gecko-show-previous-tab": "Show Previous Tab",
+      "gecko-show-all-tabs-panel": "Show All Tabs Panel",
+      "gecko-force-reload": "Force Reload",
+      "gecko-zoom-in": "Zoom In",
+      "gecko-zoom-out": "Zoom Out",
+      "gecko-reset-zoom": "Reset Zoom",
+      "gecko-bookmark-this-page": "Bookmark This Page",
+      "gecko-open-home-page": "Open Home Page",
+      "gecko-open-addons-manager": "Open Addons Manager",
+      "gecko-send-with-mail": "Send With Mail",
+      "gecko-save-page": "Save Page",
+      "gecko-print-page": "Print Page",
+      "gecko-mute-current-tab": "Mute Current Tab",
+      "gecko-show-source-of-page": "Show Source Of Page",
+      "gecko-show-page-info": "Show Page Info",
+      "floorp-rest-mode": "Enable Rest Mode",
+      "floorp-hide-user-interface": "Hide Interface",
+      "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+      "gecko-stop": "Stop",
+      "gecko-search-in-this-page": "Search In This Page",
+      "gecko-show-next-search-result": "Show Next Search Result",
+      "gecko-show-previous-search-result": "Show Previous Search Result",
+      "gecko-search-the-web": "Search The Web",
+      "gecko-open-migration-wizard": "Open Migration Wizard",
+      "gecko-quit-from-application": "Quit Application",
+      "gecko-enter-into-customize-mode": "Enter Customize Mode",
+      "gecko-enter-into-offline-mode": "Enter Offline Mode",
+      "gecko-open-screen-capture": "Open Screen Capture",
+      "floorp-show-pip": "Show Picture-in-Picture",
+      "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+      "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
+      "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
+      "gecko-open-general-preferences": "Open General Preferences",
+      "gecko-open-privacy-preferences": "Open Privacy Preferences",
+      "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
+      "gecko-open-containers-preferences": "Open Containers Preferences",
+      "gecko-open-search-preferences": "Open Search Preferences",
+      "gecko-open-sync-preferences": "Open Sync Preferences",
+      "gecko-open-task-manager": "Open Task Manager",
+      "gecko-forget-history": "Forget History",
+      "gecko-quick-forget-history": "Quick Forget History",
+      "gecko-clear-recent-history": "Clear Recent History",
+      "gecko-restore-last-session": "Restore Last Session",
+      "gecko-search-history": "Search History",
+      "gecko-manage-history": "Manage History",
+      "gecko-open-downloads": "Open Downloads",
+      "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
+      "gecko-show-history-sidebar": "Show History Sidebar",
+      "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
+      "gecko-reverse-sidebar": "Reverse Sidebar Position",
+      "gecko-hide-sidebar": "Hide Sidebar",
+      "gecko-toggle-sidebar": "Toggle Sidebar",
+      "gecko-scroll-up": "Scroll Up",
+      "gecko-scroll-down": "Scroll Down",
+      "gecko-scroll-right": "Scroll Right",
+      "gecko-scroll-left": "Scroll Left",
+      "gecko-scroll-to-top": "Scroll to Top",
+      "gecko-scroll-to-bottom": "Scroll to Bottom"
+    },
+    "descriptions": {
+      "gecko-back": "Navigate back to the previous page",
+      "gecko-forward": "Navigate forward to the next page",
+      "gecko-reload": "Reload the current page",
+      "gecko-close-tab": "Close the current tab",
+      "gecko-open-new-tab": "Open a new tab",
+      "gecko-duplicate-tab": "Duplicate the current tab",
+      "gecko-reload-all-tabs": "Reload all tabs",
+      "gecko-restore-last-tab": "Reopen the last closed tab"
+    }
+  },
+  "qrCode": {
+    "pageAction": "Generate QR Code",
+    "modalTitle": "QR Code Generator",
+    "loading": "Generating QR Code...",
+    "copyButton": "Copy Image",
+    "downloadButton": "Herunterladen",
+    "closeButton": "Schließen",
+    "copySuccess": "QR code copied to clipboard!",
+    "copyError": "Failed to copy QR code",
+    "generateError": "Failed to generate QR code"
+  },
+  "qrcode-generate-page-action": "Generate QR Code for this page",
+  "qrcode-generate-page-action-title": "QR Code Generator",
+  "panelSidebar": {
+    "modal": {
+      "type": "Panel Type",
+      "typeOptions": {
+        "web": "Web Page",
+        "sidebar-tool": "Tool Sidebar",
+        "extension": "Extension Sidebar",
+        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+      },
+      "width": "Panel Width",
+      "url": "Web Page URL",
+      "container": "Container",
+      "noContainer": "Kein Container",
+      "userAgent": "Use Mobile User Agent",
+      "extension": "Display Extension",
+      "sideBarTool": "Display Sidebar Tool",
+      "title": "Add Panel",
+      "add": "Neu",
+      "cancel": "Abbrechen"
+    },
+    "contextMenu": {
+      "unload": "Unload this webpanel",
+      "mute": "Mute/Unmute this webpanel",
+      "changeZoom": "Change zoom level",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetZoom": "Reset zoom",
+      "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
+      "delete": "Delete this panel"
+    }
+  },
+  "chrome_css": {
+    "menu": "Style",
+    "rebuild": "Rebuild Style Sheets",
+    "create": "Create New Style Sheet",
+    "open_folder": "Open Style Sheets Folder",
+    "edit_user_chrome": "Edit userChrome.css",
+    "edit_user_content": "Edit userContent.css",
+    "rebuild_complete": "Style sheets rebuilt",
+    "editor_path_not_found": "Editor Path Not Found",
+    "set_pref_description": "Please set the editor path",
+    "please_enter_filename": "Please enter a filename",
+    "file_created": "File Created",
+    "file_created_successfully": "File created successfully",
+    "open_file_in_editor": "Open file in editor?",
+    "error_title": "Error",
+    "folder_open_failed": "Failed to open CSS folder",
+    "edit_failed": "Failed to edit file"
+  },
+  "reboot": {
+    "menu": {
+      "title": "Restart",
+      "normal-restart": "Restart",
+      "restart-cache-clear": "Restart with Cache Clear",
+      "restart-safe-mode": "Restart in Safe Mode",
+      "restart-profile-manager": "Restart with Profile Manager"
+    }
+  }
 }

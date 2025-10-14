@@ -38,7 +38,8 @@
         "floorpStart": "Floorp 启动",
         "disableFloorpStart": "禁用 Floorp 启动（使用经典 关于：新标签页）",
         "disableFloorpStartDescription": "启用时，Floorp 启动将由经典的 Firefox 新标签页 所取代 。",
-        "restartRequired": "需要重启浏览器才能完全生效。"
+        "restartRequired": "需要重启浏览器才能完全生效。",
+        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "搜索或输入网址",

@@ -1,263 +1,263 @@
 {
-    "undo-closed-tab": {
-        "label": "Urungkan Tutup Tab",
-        "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
+  "undo-closed-tab": {
+    "label": "Urungkan Tutup Tab",
+    "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
+  },
+  "workspaces": {
+    "modal": {
+      "name": "Nama",
+      "name-placeholder": "Masukkan nama untuk ruang kerja ini",
+      "container": "Kontainer",
+      "no-container": "No Container",
+      "icon": "Ikon",
+      "edit-title": "Sunting Ruang Kerja",
+      "save": "Simpan Perubahan",
+      "cancel": "Batal"
     },
-    "workspaces": {
-        "modal": {
-            "name": "Nama",
-            "name-placeholder": "Masukkan nama untuk ruang kerja ini",
-            "container": "Kontainer",
-            "no-container": "No Container",
-            "icon": "Ikon",
-            "edit-title": "Sunting Ruang Kerja",
-            "save": "Simpan Perubahan",
-            "cancel": "Batal"
-        },
-        "icons": {
-            "article": "Artikel",
-            "book": "Buku",
-            "briefcase": "Tas Kerja",
-            "cart": "Troli Belanja",
-            "chat": "Obrolan",
-            "chill": "Santai",
-            "circle": "Lingkaran",
-            "compass": "Kompas",
-            "code": "Kode",
-            "dollar": "Dolar",
-            "fence": "Pagar",
-            "fingerprint": "Sidik Jari",
-            "food": "Makanan",
-            "fruit": "Buah",
-            "game": "Permainan",
-            "gear": "Pengaturan",
-            "gift": "Kado",
-            "key": "Kunci",
-            "lightning": "Petir",
-            "network": "Jaringan",
-            "notes": "Catatan",
-            "paint": "Paint",
-            "photo": "Foto",
-            "pin": "Pin",
-            "pet": "Peliharaan",
-            "question": "Pertanyaan",
-            "smartphone": "Ponsel",
-            "star": "Bintang",
-            "tree": "Pohon",
-            "vacation": "Liburan",
-            "love": "Love",
-            "moon": "Bulan",
-            "music": "Musik",
-            "user": "Pengguna"
-        },
-        "service": {
-            "new-workspace": "Ruang Kerja Baru ({{count}})"
-        },
-        "context-menu": {
-            "move-up": "Pindahkan Ruang Kerja ini ke atas",
-            "move-down": "Pindahkan Ruang Kerja ini ke bawah",
-            "delete": "Hapus Ruang Kerja",
-            "manage": "Kelola Ruang Kerja"
-        },
-        "popup": {
-            "create-new": "Buat Ruang Kerja Baru …",
-            "manage": "Kelola Ruang Kerja"
-        },
-        "menu": {
-            "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain"
-        },
-        "error": {
-            "invalidWorkspaceID": "ID Ruang Kerja tidak valid (mungkin urutan belum diperbarui)"
-        }
+    "icons": {
+      "article": "Artikel",
+      "book": "Buku",
+      "briefcase": "Tas Kerja",
+      "cart": "Troli Belanja",
+      "chat": "Obrolan",
+      "chill": "Santai",
+      "circle": "Lingkaran",
+      "compass": "Kompas",
+      "code": "Kode",
+      "dollar": "Dolar",
+      "fence": "Pagar",
+      "fingerprint": "Sidik Jari",
+      "food": "Makanan",
+      "fruit": "Buah",
+      "game": "Permainan",
+      "gear": "Pengaturan",
+      "gift": "Kado",
+      "key": "Kunci",
+      "lightning": "Petir",
+      "network": "Jaringan",
+      "notes": "Catatan",
+      "paint": "Paint",
+      "photo": "Foto",
+      "pin": "Pin",
+      "pet": "Peliharaan",
+      "question": "Pertanyaan",
+      "smartphone": "Ponsel",
+      "star": "Bintang",
+      "tree": "Pohon",
+      "vacation": "Liburan",
+      "love": "Love",
+      "moon": "Bulan",
+      "music": "Musik",
+      "user": "Pengguna"
     },
-    "statusbar": {
-        "toggle": "Bilah Status{{mark}}"
+    "service": {
+      "new-workspace": "Ruang Kerja Baru ({{count}})"
     },
-    "splitview": {
-        "title": "Tampilan Belah",
-        "position": "Posisi",
-        "position-left": "Kiri",
-        "position-right": "Kanan",
-        "flex-row": "Baris",
-        "flex-column": "Kolom",
-        "remove-button": "Hapus Tampilan Saat Ini",
-        "tab-context": {
-            "split-tabs": "Tab Belah",
-            "split-fixed-tab": "Split to Fixed Tab"
-        }
+    "context-menu": {
+      "move-up": "Pindahkan Ruang Kerja ini ke atas",
+      "move-down": "Pindahkan Ruang Kerja ini ke bawah",
+      "delete": "Hapus Ruang Kerja",
+      "manage": "Kelola Ruang Kerja"
     },
-    "ssb": {
-        "menu": {
-            "webapps": "Aplikasi Web",
-            "install-current": "Pasang Halaman Saat Ini sebagai Aplikasi Web Progresif",
-            "open-installed": "Buka Aplikasi Terpasang"
-        },
-        "page-action": {
-            "title": "Buka Aplikasi",
-            "install": "Pasang Aplikasi",
-            "open": "Buka Aplikasi",
-            "cancel": "Batal",
-            "site-icon": "Ikon situs"
-        }
+    "popup": {
+      "create-new": "Buat Ruang Kerja Baru …",
+      "manage": "Kelola Ruang Kerja"
     },
-    "privateContainer": {
-        "openInPrivateContainer": "Buka di Kontainer Pribadi",
-        "name": "Kontainer Pribadi"
+    "menu": {
+      "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain"
     },
-    "mouseGesture": {
-        "actions": {
-            "gecko-back": "Kembali",
-            "gecko-forward": "Maju",
-            "gecko-reload": "Muat Ulang",
-            "gecko-close-tab": "Tutup Tab",
-            "gecko-open-new-tab": "Tab Baru",
-            "gecko-duplicate-tab": "Gandakan Tab",
-            "gecko-reload-all-tabs": "Muat Ulang Semua Tab",
-            "gecko-restore-last-tab": "Buka Kembali Tab Tertutup",
-            "gecko-open-new-window": "Buka Jendela Baru",
-            "gecko-open-new-private-window": "Buka Jendela Pribadi Baru",
-            "gecko-close-window": "Tutup Jendela",
-            "gecko-restore-last-window": "Pulihkan Jendela Terakhir",
-            "gecko-show-next-tab": "Tampilkan Tab Berikutnya",
-            "gecko-show-previous-tab": "Tampilkan Tab Sebelumnya",
-            "gecko-show-all-tabs-panel": "Tampilkan Semua Panel Tab",
-            "gecko-force-reload": "Muat Ulang Paksa",
-            "gecko-zoom-in": "Zum Masuk",
-            "gecko-zoom-out": "Zum Keluar",
-            "gecko-reset-zoom": "Kembalikan Zum",
-            "gecko-bookmark-this-page": "Markahi Laman Ini",
-            "gecko-open-home-page": "Buka Beranda",
-            "gecko-open-addons-manager": "Buka Pengelola Pengaya",
-            "gecko-send-with-mail": "Kirim via Surel",
-            "gecko-save-page": "Simpan Halaman",
-            "gecko-print-page": "Cetak Halaman",
-            "gecko-mute-current-tab": "Senyapkan Tab Saat Ini",
-            "gecko-show-source-of-page": "Tampilkan Sumber Halaman",
-            "gecko-show-page-info": "Tampilkan Info Halaman",
-            "floorp-rest-mode": "Nyalakan Mode Rehat",
-            "floorp-hide-user-interface": "Sembunyikan Antarmuka",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
-            "gecko-stop": "Berhenti",
-            "gecko-search-in-this-page": "Cari di Halaman Ini",
-            "gecko-show-next-search-result": "Tampilkan Hasil Pencarian Berikutnya",
-            "gecko-show-previous-search-result": "Tampilkan Hasil Pencarian Sebelumnya",
-            "gecko-search-the-web": "Cari di Internet",
-            "gecko-open-migration-wizard": "Buka Wisaya Migrasi",
-            "gecko-quit-from-application": "Keluar Aplikasi",
-            "gecko-enter-into-customize-mode": "Masuki Mode Kustomisasi",
-            "gecko-enter-into-offline-mode": "Masuki Mode Luring",
-            "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
-            "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
-            "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
-            "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
-            "gecko-open-general-preferences": "Open General Preferences",
-            "gecko-open-privacy-preferences": "Open Privacy Preferences",
-            "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
-            "gecko-open-containers-preferences": "Open Containers Preferences",
-            "gecko-open-search-preferences": "Open Search Preferences",
-            "gecko-open-sync-preferences": "Open Sync Preferences",
-            "gecko-open-task-manager": "Open Task Manager",
-            "gecko-forget-history": "Forget History",
-            "gecko-quick-forget-history": "Quick Forget History",
-            "gecko-clear-recent-history": "Clear Recent History",
-            "gecko-restore-last-session": "Restore Last Session",
-            "gecko-search-history": "Search History",
-            "gecko-manage-history": "Manage History",
-            "gecko-open-downloads": "Open Downloads",
-            "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
-            "gecko-show-history-sidebar": "Show History Sidebar",
-            "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
-            "gecko-reverse-sidebar": "Reverse Sidebar Position",
-            "gecko-hide-sidebar": "Hide Sidebar",
-            "gecko-toggle-sidebar": "Toggle Sidebar",
-            "gecko-scroll-up": "Scroll Up",
-            "gecko-scroll-down": "Scroll Down",
-            "gecko-scroll-right": "Scroll Right",
-            "gecko-scroll-left": "Scroll Left",
-            "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
-        },
-        "descriptions": {
-            "gecko-back": "Navigate back to the previous page",
-            "gecko-forward": "Navigate forward to the next page",
-            "gecko-reload": "Reload the current page",
-            "gecko-close-tab": "Close the current tab",
-            "gecko-open-new-tab": "Open a new tab",
-            "gecko-duplicate-tab": "Duplicate the current tab",
-            "gecko-reload-all-tabs": "Reload all tabs",
-            "gecko-restore-last-tab": "Reopen the last closed tab"
-        }
-    },
-    "qrCode": {
-        "pageAction": "Buat Kode QR",
-        "modalTitle": "Pembuat Kode QR",
-        "loading": "Membuat kode QR …",
-        "copyButton": "Salin Gambar",
-        "downloadButton": "Unduh",
-        "closeButton": "Tutup",
-        "copySuccess": "Kode QR disaln ke papan kerani!",
-        "copyError": "Gagal menyalin kode QR",
-        "generateError": "Gagal membuat kode QR"
-    },
-    "qrcode-generate-page-action": "Buat kode QR untuk halaman ini",
-    "qrcode-generate-page-action-title": "Pembuat Kode QR",
-    "panelSidebar": {
-        "modal": {
-            "type": "Jenis Panel",
-            "typeOptions": {
-                "web": "Halaman Web",
-                "sidebar-tool": "Bilah Sisi Alat",
-                "extension": "Bilah Sisi Ekstensi",
-                "builtin": "Halaman Bawaan (Unduhan, Markah, Riwayat)"
-            },
-            "width": "Lebar Panel",
-            "url": "URL Halaman Web",
-            "container": "Kontainer",
-            "noContainer": "Tanpa Kontainer",
-            "userAgent": "Gunakan Agen Pengguna Seluler",
-            "extension": "Tampilkan Ekstensi",
-            "sideBarTool": "Tampilkan Alat Bilah Samping",
-            "title": "Tambahkan Panel",
-            "add": "Tambah",
-            "cancel": "Batal"
-        },
-        "contextMenu": {
-            "unload": "Bongkar panel ini",
-            "mute": "Senyapkan/Suarakan panel ini",
-            "changeZoom": "Ubah tingkat zum",
-            "zoomIn": "Zum masuk",
-            "zoomOut": "Zum keluar",
-            "resetZoom": "Ukuran semula",
-            "changeUA": "Ganti agen Pengguna ke versi Seluler/Desktop pada panel ini",
-            "delete": "Hapus panel ini"
-        }
-    },
-    "chrome_css": {
-        "menu": "Gaya",
-        "rebuild": "Buat Ulang Lembar Gaya",
-        "create": "Buat Lembar Gaya Baru",
-        "open_folder": "Buka Folder Lembar Gaya",
-        "edit_user_chrome": "Sunting userChrome.css",
-        "edit_user_content": "Sunting userContent.css",
-        "rebuild_complete": "Lembar gaya dibangun kembali",
-        "editor_path_not_found": "Jalur Penyunting Tidak Ditemukan",
-        "set_pref_description": "Silakan atur jalur penyunting",
-        "please_enter_filename": "Silakan masukkan nama berkas",
-        "file_created": "Berkas Dibuat",
-        "file_created_successfully": "Berkas berhasil dibuat",
-        "open_file_in_editor": "Buka berkas di editor?",
-        "error_title": "Galat",
-        "folder_open_failed": "Gagal membuka folder CSS",
-        "edit_failed": "Gagal menyunting berkas"
-    },
-    "reboot": {
-        "menu": {
-            "title": "Mulai Ulang",
-            "normal-restart": "Mulai Ulang",
-            "restart-cache-clear": "Mulai Ulang dengan Pembersihan Cache",
-            "restart-safe-mode": "Mulai Ulang dalam Mode Aman",
-            "restart-profile-manager": "Mulai Ulang dengan Manajer Profil"
-        }
+    "error": {
+      "invalidWorkspaceID": "ID Ruang Kerja tidak valid (mungkin urutan belum diperbarui)"
     }
+  },
+  "statusbar": {
+    "toggle": "Bilah Status{{mark}}"
+  },
+  "splitview": {
+    "title": "Tampilan Belah",
+    "position": "Posisi",
+    "position-left": "Kiri",
+    "position-right": "Kanan",
+    "flex-row": "Baris",
+    "flex-column": "Kolom",
+    "remove-button": "Hapus Tampilan Saat Ini",
+    "tab-context": {
+      "split-tabs": "Tab Belah",
+      "split-fixed-tab": "Split to Fixed Tab"
+    }
+  },
+  "ssb": {
+    "menu": {
+      "webapps": "Aplikasi Web",
+      "install-current": "Pasang Halaman Saat Ini sebagai Aplikasi Web Progresif",
+      "open-installed": "Buka Aplikasi Terpasang"
+    },
+    "page-action": {
+      "title": "Buka Aplikasi",
+      "install": "Pasang Aplikasi",
+      "open": "Buka Aplikasi",
+      "cancel": "Batal",
+      "site-icon": "Ikon situs"
+    }
+  },
+  "privateContainer": {
+    "openInPrivateContainer": "Buka di Kontainer Pribadi",
+    "name": "Kontainer Pribadi"
+  },
+  "mouseGesture": {
+    "actions": {
+      "gecko-back": "Kembali",
+      "gecko-forward": "Maju",
+      "gecko-reload": "Muat Ulang",
+      "gecko-close-tab": "Tutup Tab",
+      "gecko-open-new-tab": "Tab Baru",
+      "gecko-duplicate-tab": "Gandakan Tab",
+      "gecko-reload-all-tabs": "Muat Ulang Semua Tab",
+      "gecko-restore-last-tab": "Buka Kembali Tab Tertutup",
+      "gecko-open-new-window": "Buka Jendela Baru",
+      "gecko-open-new-private-window": "Buka Jendela Pribadi Baru",
+      "gecko-close-window": "Tutup Jendela",
+      "gecko-restore-last-window": "Pulihkan Jendela Terakhir",
+      "gecko-show-next-tab": "Tampilkan Tab Berikutnya",
+      "gecko-show-previous-tab": "Tampilkan Tab Sebelumnya",
+      "gecko-show-all-tabs-panel": "Tampilkan Semua Panel Tab",
+      "gecko-force-reload": "Muat Ulang Paksa",
+      "gecko-zoom-in": "Zum Masuk",
+      "gecko-zoom-out": "Zum Keluar",
+      "gecko-reset-zoom": "Kembalikan Zum",
+      "gecko-bookmark-this-page": "Markahi Laman Ini",
+      "gecko-open-home-page": "Buka Beranda",
+      "gecko-open-addons-manager": "Buka Pengelola Pengaya",
+      "gecko-send-with-mail": "Kirim via Surel",
+      "gecko-save-page": "Simpan Halaman",
+      "gecko-print-page": "Cetak Halaman",
+      "gecko-mute-current-tab": "Senyapkan Tab Saat Ini",
+      "gecko-show-source-of-page": "Tampilkan Sumber Halaman",
+      "gecko-show-page-info": "Tampilkan Info Halaman",
+      "floorp-rest-mode": "Nyalakan Mode Rehat",
+      "floorp-hide-user-interface": "Sembunyikan Antarmuka",
+      "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+      "gecko-stop": "Berhenti",
+      "gecko-search-in-this-page": "Cari di Halaman Ini",
+      "gecko-show-next-search-result": "Tampilkan Hasil Pencarian Berikutnya",
+      "gecko-show-previous-search-result": "Tampilkan Hasil Pencarian Sebelumnya",
+      "gecko-search-the-web": "Cari di Internet",
+      "gecko-open-migration-wizard": "Buka Wisaya Migrasi",
+      "gecko-quit-from-application": "Keluar Aplikasi",
+      "gecko-enter-into-customize-mode": "Masuki Mode Kustomisasi",
+      "gecko-enter-into-offline-mode": "Masuki Mode Luring",
+      "gecko-open-screen-capture": "Open Screen Capture",
+      "floorp-show-pip": "Show Picture-in-Picture",
+      "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
+      "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
+      "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
+      "gecko-open-general-preferences": "Open General Preferences",
+      "gecko-open-privacy-preferences": "Open Privacy Preferences",
+      "gecko-open-workspaces-preferences": "Open Workspaces Preferences",
+      "gecko-open-containers-preferences": "Open Containers Preferences",
+      "gecko-open-search-preferences": "Open Search Preferences",
+      "gecko-open-sync-preferences": "Open Sync Preferences",
+      "gecko-open-task-manager": "Open Task Manager",
+      "gecko-forget-history": "Forget History",
+      "gecko-quick-forget-history": "Quick Forget History",
+      "gecko-clear-recent-history": "Clear Recent History",
+      "gecko-restore-last-session": "Restore Last Session",
+      "gecko-search-history": "Search History",
+      "gecko-manage-history": "Manage History",
+      "gecko-open-downloads": "Open Downloads",
+      "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
+      "gecko-show-history-sidebar": "Show History Sidebar",
+      "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
+      "gecko-reverse-sidebar": "Reverse Sidebar Position",
+      "gecko-hide-sidebar": "Hide Sidebar",
+      "gecko-toggle-sidebar": "Toggle Sidebar",
+      "gecko-scroll-up": "Scroll Up",
+      "gecko-scroll-down": "Scroll Down",
+      "gecko-scroll-right": "Scroll Right",
+      "gecko-scroll-left": "Scroll Left",
+      "gecko-scroll-to-top": "Scroll to Top",
+      "gecko-scroll-to-bottom": "Scroll to Bottom"
+    },
+    "descriptions": {
+      "gecko-back": "Navigate back to the previous page",
+      "gecko-forward": "Navigate forward to the next page",
+      "gecko-reload": "Reload the current page",
+      "gecko-close-tab": "Close the current tab",
+      "gecko-open-new-tab": "Open a new tab",
+      "gecko-duplicate-tab": "Duplicate the current tab",
+      "gecko-reload-all-tabs": "Reload all tabs",
+      "gecko-restore-last-tab": "Reopen the last closed tab"
+    }
+  },
+  "qrCode": {
+    "pageAction": "Buat Kode QR",
+    "modalTitle": "Pembuat Kode QR",
+    "loading": "Membuat kode QR …",
+    "copyButton": "Salin Gambar",
+    "downloadButton": "Unduh",
+    "closeButton": "Tutup",
+    "copySuccess": "Kode QR disaln ke papan kerani!",
+    "copyError": "Gagal menyalin kode QR",
+    "generateError": "Gagal membuat kode QR"
+  },
+  "qrcode-generate-page-action": "Buat kode QR untuk halaman ini",
+  "qrcode-generate-page-action-title": "Pembuat Kode QR",
+  "panelSidebar": {
+    "modal": {
+      "type": "Jenis Panel",
+      "typeOptions": {
+        "web": "Halaman Web",
+        "sidebar-tool": "Bilah Sisi Alat",
+        "extension": "Bilah Sisi Ekstensi",
+        "builtin": "Halaman Bawaan (Unduhan, Markah, Riwayat)"
+      },
+      "width": "Lebar Panel",
+      "url": "URL Halaman Web",
+      "container": "Kontainer",
+      "noContainer": "Tanpa Kontainer",
+      "userAgent": "Gunakan Agen Pengguna Seluler",
+      "extension": "Tampilkan Ekstensi",
+      "sideBarTool": "Tampilkan Alat Bilah Samping",
+      "title": "Tambahkan Panel",
+      "add": "Tambah",
+      "cancel": "Batal"
+    },
+    "contextMenu": {
+      "unload": "Bongkar panel ini",
+      "mute": "Senyapkan/Suarakan panel ini",
+      "changeZoom": "Ubah tingkat zum",
+      "zoomIn": "Zum masuk",
+      "zoomOut": "Zum keluar",
+      "resetZoom": "Ukuran semula",
+      "changeUA": "Ganti agen Pengguna ke versi Seluler/Desktop pada panel ini",
+      "delete": "Hapus panel ini"
+    }
+  },
+  "chrome_css": {
+    "menu": "Gaya",
+    "rebuild": "Buat Ulang Lembar Gaya",
+    "create": "Buat Lembar Gaya Baru",
+    "open_folder": "Buka Folder Lembar Gaya",
+    "edit_user_chrome": "Sunting userChrome.css",
+    "edit_user_content": "Sunting userContent.css",
+    "rebuild_complete": "Lembar gaya dibangun kembali",
+    "editor_path_not_found": "Jalur Penyunting Tidak Ditemukan",
+    "set_pref_description": "Silakan atur jalur penyunting",
+    "please_enter_filename": "Silakan masukkan nama berkas",
+    "file_created": "Berkas Dibuat",
+    "file_created_successfully": "Berkas berhasil dibuat",
+    "open_file_in_editor": "Buka berkas di editor?",
+    "error_title": "Galat",
+    "folder_open_failed": "Gagal membuka folder CSS",
+    "edit_failed": "Gagal menyunting berkas"
+  },
+  "reboot": {
+    "menu": {
+      "title": "Mulai Ulang",
+      "normal-restart": "Mulai Ulang",
+      "restart-cache-clear": "Mulai Ulang dengan Pembersihan Cache",
+      "restart-safe-mode": "Mulai Ulang dalam Mode Aman",
+      "restart-profile-manager": "Mulai Ulang dengan Manajer Profil"
+    }
+  }
 }

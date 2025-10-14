@@ -32,16 +32,7 @@
         "aboutBrowser": "Acerca de {{productName}}",
         "debug": "Depurar",
         "mouseGesture": "Gestos do rato",
-        "keyboardShortcut": "Atalhos de teclado",
-        "search": {
-            "title": "Definições de pesquisa",
-            "resultsFor": "Resultados da pesquisa para \"{{query}}\"",
-            "searchResultsDescription": "Resultados da pesquisa para \"{{query}}\". Apenas as definições de {{productName}} são pesquisadas; as definições do Firefox não estão incluídas.",
-            "noResults": "Não foram encontrados resultados",
-            "open": "Abrir \"{{title}}\"",
-            "matchedText": "Texto correspondente",
-            "results": "Resultados da pesquisa"
-        }
+        "keyboardShortcut": "Atalhos de teclado"
     },
     "home": {
         "welcome": "Bem-vindo, {{name}}👋",
@@ -364,6 +355,46 @@
         "cancel": "Cancelar",
         "rename": "Mudar o nome",
         "uninstall": "Desinstalar"
+    },
+    "floorpOS": {
+        "title": "Floorp OS",
+        "description": "Manage Floorp OS backend modules and services",
+        "loading": "Loading...",
+        "statusCard": {
+            "title": "Status",
+            "description": "Current status of Floorp OS",
+            "platformSupport": "Platform Support",
+            "platformSupported": "Your platform is supported",
+            "platformUnsupported": "Your platform is not supported",
+            "installedVersion": "Installed Version",
+            "notInstalled": "Not installed",
+            "serviceStatus": "Service Status",
+            "running": "Running",
+            "stopped": "Stopped",
+            "enabledBadge": "Enabled",
+            "disabledBadge": "Disabled"
+        },
+        "controlsCard": {
+            "title": "Controls",
+            "description": "Enable or disable Floorp OS",
+            "enable": "Enable Floorp OS",
+            "disable": "Disable Floorp OS",
+            "refresh": "Refresh Status"
+        },
+        "messages": {
+            "enabling": "Enabling Floorp OS...",
+            "disabling": "Disabling Floorp OS...",
+            "enableSuccess": "Floorp OS enabled successfully!",
+            "disableSuccess": "Floorp OS disabled successfully!"
+        },
+        "errors": {
+            "apiUnavailable": "OSAutomotor API is not available.",
+            "loadStatus": "Failed to load status: {{reason}}",
+            "enable": "Failed to enable Floorp OS.",
+            "disable": "Failed to disable Floorp OS.",
+            "enableAction": "Error enabling Floorp OS: {{reason}}",
+            "disableAction": "Error disabling Floorp OS: {{reason}}"
+        }
     },
     "mouseGesture": {
         "description": "Controle o seu navegador com os movimentos do rato.",

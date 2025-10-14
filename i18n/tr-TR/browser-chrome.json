@@ -1,263 +1,263 @@
 {
-    "undo-closed-tab": {
-        "label": "Kapanan Sekmeyi Geri Al",
-        "tooltiptext": "En son kapatılan sekmeyi yeniden aç {{shortcut}}"
+  "undo-closed-tab": {
+    "label": "Kapanan Sekmeyi Geri Al",
+    "tooltiptext": "En son kapatılan sekmeyi yeniden aç {{shortcut}}"
+  },
+  "workspaces": {
+    "modal": {
+      "name": "Başlık",
+      "name-placeholder": "Bu çalışma alanı için bir ad girin",
+      "container": "Kapsayıcı",
+      "no-container": "Kapsayıcı Yok",
+      "icon": "Simge",
+      "edit-title": "Çalışma Alanını Düzenle",
+      "save": "Değişiklikleri Kaydet",
+      "cancel": "İptal Et"
     },
-    "workspaces": {
-        "modal": {
-            "name": "Başlık",
-            "name-placeholder": "Bu çalışma alanı için bir ad girin",
-            "container": "Kapsayıcı",
-            "no-container": "Kapsayıcı Yok",
-            "icon": "Simge",
-            "edit-title": "Çalışma Alanını Düzenle",
-            "save": "Değişiklikleri Kaydet",
-            "cancel": "İptal Et"
-        },
-        "icons": {
-            "article": "Bölüm",
-            "book": "Kitap",
-            "briefcase": "İş Çantası",
-            "cart": "Alışveriş Sepeti",
-            "chat": "Sohbet",
-            "chill": "Rahat",
-            "circle": "Daire",
-            "compass": "Pusula",
-            "code": "Kod",
-            "dollar": "Dolar",
-            "fence": "Çit",
-            "fingerprint": "Parmak İzi",
-            "food": "Yemek",
-            "fruit": "Meyve",
-            "game": "Oyun",
-            "gear": "Ayarlar",
-            "gift": "Hediye",
-            "key": "Anahtar",
-            "lightning": "Şimşek",
-            "network": "Ağ",
-            "notes": "Notlar",
-            "paint": "Resim",
-            "photo": "Fotoğraf",
-            "pin": "İğne",
-            "pet": "Evcil hayvan",
-            "question": "Soru",
-            "smartphone": "Akıllı Telefon",
-            "star": "Yıldız",
-            "tree": "Ağaç",
-            "vacation": "Tatil",
-            "love": "Aşk",
-            "moon": "Ay",
-            "music": "Müzik",
-            "user": "Kullanıcı"
-        },
-        "service": {
-            "new-workspace": "Yeni Çalışma Alanı ({{count}})"
-        },
-        "context-menu": {
-            "move-up": "Bu Çalışma Alanını Yukarı Taşı",
-            "move-down": "Bu Çalışma Alanını Aşağı Taşı",
-            "delete": "Çalışma Alanını Sil",
-            "manage": "Çalışma Alanlanını Yönet"
-        },
-        "popup": {
-            "create-new": "Yeni Çalışma Alanı Oluştur...",
-            "manage": "Çalışma Alanlarını Yönet"
-        },
-        "menu": {
-            "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı"
-        },
-        "error": {
-            "invalidWorkspaceID": "Geçersiz çalışma alanı ID'si (sıralama güncel olmayabilir)"
-        }
+    "icons": {
+      "article": "Bölüm",
+      "book": "Kitap",
+      "briefcase": "İş Çantası",
+      "cart": "Alışveriş Sepeti",
+      "chat": "Sohbet",
+      "chill": "Rahat",
+      "circle": "Daire",
+      "compass": "Pusula",
+      "code": "Kod",
+      "dollar": "Dolar",
+      "fence": "Çit",
+      "fingerprint": "Parmak İzi",
+      "food": "Yemek",
+      "fruit": "Meyve",
+      "game": "Oyun",
+      "gear": "Ayarlar",
+      "gift": "Hediye",
+      "key": "Anahtar",
+      "lightning": "Şimşek",
+      "network": "Ağ",
+      "notes": "Notlar",
+      "paint": "Resim",
+      "photo": "Fotoğraf",
+      "pin": "İğne",
+      "pet": "Evcil hayvan",
+      "question": "Soru",
+      "smartphone": "Akıllı Telefon",
+      "star": "Yıldız",
+      "tree": "Ağaç",
+      "vacation": "Tatil",
+      "love": "Aşk",
+      "moon": "Ay",
+      "music": "Müzik",
+      "user": "Kullanıcı"
     },
-    "statusbar": {
-        "toggle": "Durum Çubuğu{{mark}}"
+    "service": {
+      "new-workspace": "Yeni Çalışma Alanı ({{count}})"
     },
-    "splitview": {
-        "title": "Bölünmüş Görünüm",
-        "position": "Konum",
-        "position-left": "Sol",
-        "position-right": "Sağ",
-        "flex-row": "Satır",
-        "flex-column": "Sütun",
-        "remove-button": "Geçerli Görünümü Kaldır",
-        "tab-context": {
-            "split-tabs": "Bölünmüş Sekmeler",
-            "split-fixed-tab": "Sabit Sekmeye Böl"
-        }
+    "context-menu": {
+      "move-up": "Bu Çalışma Alanını Yukarı Taşı",
+      "move-down": "Bu Çalışma Alanını Aşağı Taşı",
+      "delete": "Çalışma Alanını Sil",
+      "manage": "Çalışma Alanlanını Yönet"
     },
-    "ssb": {
-        "menu": {
-            "webapps": "Web Uygulamaları",
-            "install-current": "Geçerli Sayfayı Progressive Web Uygulaması Olarak Yükle",
-            "open-installed": "Yüklü Web Uygulamalarını Aç"
-        },
-        "page-action": {
-            "title": "Uygulamayı aç",
-            "install": "Uygulamayı Yükle",
-            "open": "Uygulamayı Aç",
-            "cancel": "İptal Et",
-            "site-icon": "Site simgesi"
-        }
+    "popup": {
+      "create-new": "Yeni Çalışma Alanı Oluştur...",
+      "manage": "Çalışma Alanlarını Yönet"
     },
-    "privateContainer": {
-        "openInPrivateContainer": "Gizli Kapsayıcıda Aç",
-        "name": "Gizlil Kapsayıcı"
+    "menu": {
+      "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı"
     },
-    "mouseGesture": {
-        "actions": {
-            "gecko-back": "Geri",
-            "gecko-forward": "İleri",
-            "gecko-reload": "Yeniden Yükle",
-            "gecko-close-tab": "Sekmeyi Kapat",
-            "gecko-open-new-tab": "Yeni Sekme",
-            "gecko-duplicate-tab": "Sekmeyi Çoğalt",
-            "gecko-reload-all-tabs": "Bütün Sekmeleri Yeniden Yükle",
-            "gecko-restore-last-tab": "Kapatılan Sekmeyi Yeniden Aç",
-            "gecko-open-new-window": "Yeni Pencere Aç",
-            "gecko-open-new-private-window": "Yeni Gizli Pencere Aç",
-            "gecko-close-window": "Pencereyi Kapat",
-            "gecko-restore-last-window": "Son Pencereyi Geri Yükle",
-            "gecko-show-next-tab": "Sonraki Sekmeyi Göster",
-            "gecko-show-previous-tab": "Önceki Sekmeyi Göster",
-            "gecko-show-all-tabs-panel": "Tüm Sekmeleri Göster Paneli",
-            "gecko-force-reload": "Yeniden Yüklemeye Zorla",
-            "gecko-zoom-in": "Yakınlaştır",
-            "gecko-zoom-out": "Uzaklaştır",
-            "gecko-reset-zoom": "Yakınlaştırmayı Sıfırla",
-            "gecko-bookmark-this-page": "Bu Sayfayı Yer İmlerine Ekle",
-            "gecko-open-home-page": "Ana Sayfayı Aç",
-            "gecko-open-addons-manager": "Eklenti Yöneticisini Aç",
-            "gecko-send-with-mail": "E-Posta ile Gönder",
-            "gecko-save-page": "Sayfayı Kaydet",
-            "gecko-print-page": "Sayfayı Yazdır",
-            "gecko-mute-current-tab": "Geçerli Sekmeyi Sustur",
-            "gecko-show-source-of-page": "Sayfa Kaynağını Göster",
-            "gecko-show-page-info": "Sayfa Bilgilerini Göster",
-            "floorp-rest-mode": "Dinlenme Modunu Etkinleştir",
-            "floorp-hide-user-interface": "Arayüzü Gizle",
-            "floorp-toggle-navigation-panel": "Gezinme Panelini Aç/Kapat",
-            "gecko-stop": "Dur",
-            "gecko-search-in-this-page": "Bu Sayfada Ara",
-            "gecko-show-next-search-result": "Sonraki Sonucunu Göster",
-            "gecko-show-previous-search-result": "Önceki Sonucunu Göster",
-            "gecko-search-the-web": "Web'de Ara",
-            "gecko-open-migration-wizard": "Geçiş Sihirbazını Aç",
-            "gecko-quit-from-application": "Uygulamadan Çık",
-            "gecko-enter-into-customize-mode": "Özelleştirme Moduna Girin",
-            "gecko-enter-into-offline-mode": "Çevrimdışı Moda Geç",
-            "gecko-open-screen-capture": "Ekran Yakalamayı Aç",
-            "floorp-show-pip": "Resim İçinde Resim Göster",
-            "gecko-open-bookmark-add-tool": "Yer İmi Ekleme Aracını Açın",
-            "gecko-open-bookmarks-manager": "Yer İmleri Yöneticisini Açın",
-            "gecko-toggle-bookmark-toolbar": "Yer İmi Araç Çubuğunu Aç/Kapat",
-            "gecko-open-general-preferences": "Genel Ayarları Aç",
-            "gecko-open-privacy-preferences": "Gizlilik Ayarlarını Aç",
-            "gecko-open-workspaces-preferences": "Çalışma Alanları Ayarlarını Aç",
-            "gecko-open-containers-preferences": "Kapsayıcı Ayarlarını Aç",
-            "gecko-open-search-preferences": "Arama Ayarlarını Aç",
-            "gecko-open-sync-preferences": "Senkronizasyon Ayarlarını Aç",
-            "gecko-open-task-manager": "Görev Yöneticisi Aç",
-            "gecko-forget-history": "Geçmişi Sil",
-            "gecko-quick-forget-history": "Geçmişi Hızlı Sil",
-            "gecko-clear-recent-history": "Yakın Geçmişi Sil",
-            "gecko-restore-last-session": "Son Oturumu Geri Yükle",
-            "gecko-search-history": "Arama Geçmişi",
-            "gecko-manage-history": "Geçmişi Yönet",
-            "gecko-open-downloads": "İndirilenler'i Aç",
-            "gecko-show-bookmark-sidebar": "Yer İmi Kenar Çubuğunu Göster",
-            "gecko-show-history-sidebar": "Geçmiş Kenar Çubuğunu Göster",
-            "gecko-show-synced-tabs-sidebar": "Senkronize Sekmeler Kenar Çubuğunu Göster",
-            "gecko-reverse-sidebar": "Ters Kenar Çubuğu Konumu",
-            "gecko-hide-sidebar": "Kenar Çubuğunu Gizle",
-            "gecko-toggle-sidebar": "Kenar Çubuğunu Aç/Kapat",
-            "gecko-scroll-up": "Yukarı Kaydır",
-            "gecko-scroll-down": "Aşağı Kaydır",
-            "gecko-scroll-right": "Sağa Kaydır",
-            "gecko-scroll-left": "Sola Kaydır",
-            "gecko-scroll-to-top": "En Üste Dön",
-            "gecko-scroll-to-bottom": "En alta Kaydır"
-        },
-        "descriptions": {
-            "gecko-back": "Önceki Sayfaya Geri Dön",
-            "gecko-forward": "Sonraki Sayfaya İlerleyin",
-            "gecko-reload": "Geçerli Sayfayı Yeniden Yükle",
-            "gecko-close-tab": "Geçerli Sayfayı Kapat",
-            "gecko-open-new-tab": "Yeni Sekme Aç",
-            "gecko-duplicate-tab": "Geçerli Sekmeyi Çoğalt",
-            "gecko-reload-all-tabs": "Tüm Sekmeleri Yenileden Yükle",
-            "gecko-restore-last-tab": "Son Kapatılan Sekmeyi Yeniden Aç"
-        }
-    },
-    "qrCode": {
-        "pageAction": "QR kod oluştur",
-        "modalTitle": "QR Kod Oluşturucu",
-        "loading": "QR Kod Oluşturuluyor...",
-        "copyButton": "Resmi Kopyala",
-        "downloadButton": "İndir",
-        "closeButton": "Kapat",
-        "copySuccess": "QR kod panoya kopyalandı",
-        "copyError": "QR kod kopyalanamadı",
-        "generateError": "QR kod oluşturulamadı"
-    },
-    "qrcode-generate-page-action": "Bu sayfa için QR Kod oluşturun",
-    "qrcode-generate-page-action-title": "QR Kod Oluşturucu",
-    "panelSidebar": {
-        "modal": {
-            "type": "Panel Türü",
-            "typeOptions": {
-                "web": "Web Sayfası",
-                "sidebar-tool": "Araç Kenar Çubuğu",
-                "extension": "Uzantı Kenar Çubuğu",
-                "builtin": "Yerleşik Sayfalar (İndirmeler, Yer İmleri, Geçmiş)"
-            },
-            "width": "Panel Genişliği",
-            "url": "Web Sayfası URL'si",
-            "container": "Kapsayıcı",
-            "noContainer": "Kapsayıcı Yok",
-            "userAgent": "Mobil Kullanıcı Aracısını Kullan",
-            "extension": "Ekran Uzantısı",
-            "sideBarTool": "Kenar Çubuğu Aracını Görüntüle",
-            "title": "Panel Ekle",
-            "add": "Ekle",
-            "cancel": "İptal Et"
-        },
-        "contextMenu": {
-            "unload": "Bu web panelini başalt",
-            "mute": "Bu web panelini sustur/ sesini aç",
-            "changeZoom": "Yakınlaştırma düzeyini değiştir",
-            "zoomIn": "Yakınlaştır",
-            "zoomOut": "Uzaklaştır",
-            "resetZoom": "Yakınlaştırmayı sıfırla",
-            "changeUA": "Bu Webpanel'de Kullanıcı aracısını Mobil/Masaüstü Sürümüne geçirin",
-            "delete": "Bu paneli sil"
-        }
-    },
-    "chrome_css": {
-        "menu": "Sitil",
-        "rebuild": "Stil Sayfalarını Yeniden Oluştur",
-        "create": "Yeni Stil Sayfası Oluştur",
-        "open_folder": "Stil Sayfaları Klasörünü Aç",
-        "edit_user_chrome": "userChrome.css dosyasını düzenle",
-        "edit_user_content": "userContent.css dosyasını düzenle",
-        "rebuild_complete": "Stil sayfaları yeniden oluşturuldu",
-        "editor_path_not_found": "Editör Yolu Bulunamadı",
-        "set_pref_description": "Lütfen editör yolunu ayarlayın",
-        "please_enter_filename": "Lütfen bir dosya adı girin",
-        "file_created": "Dosya Oluşturuldu",
-        "file_created_successfully": "Dosya başarıyla oluşturuldu!",
-        "open_file_in_editor": "Dosya editörde açılsın mı?",
-        "error_title": "Hata",
-        "folder_open_failed": "CSS klasörü açılamadı",
-        "edit_failed": "Dosya düzenlenemedi"
-    },
-    "reboot": {
-        "menu": {
-            "title": "Yeniden Başlat",
-            "normal-restart": "Yeniden Başlat",
-            "restart-cache-clear": "Önbelleği Temizleme ve Yeniden Başlat",
-            "restart-safe-mode": "Güvenli Modda Yeniden Başlat",
-            "restart-profile-manager": "Profil Yöneticisi ile Yeniden Başlat"
-        }
+    "error": {
+      "invalidWorkspaceID": "Geçersiz çalışma alanı ID'si (sıralama güncel olmayabilir)"
     }
+  },
+  "statusbar": {
+    "toggle": "Durum Çubuğu{{mark}}"
+  },
+  "splitview": {
+    "title": "Bölünmüş Görünüm",
+    "position": "Konum",
+    "position-left": "Sol",
+    "position-right": "Sağ",
+    "flex-row": "Satır",
+    "flex-column": "Sütun",
+    "remove-button": "Geçerli Görünümü Kaldır",
+    "tab-context": {
+      "split-tabs": "Bölünmüş Sekmeler",
+      "split-fixed-tab": "Sabit Sekmeye Böl"
+    }
+  },
+  "ssb": {
+    "menu": {
+      "webapps": "Web Uygulamaları",
+      "install-current": "Geçerli Sayfayı Progressive Web Uygulaması Olarak Yükle",
+      "open-installed": "Yüklü Web Uygulamalarını Aç"
+    },
+    "page-action": {
+      "title": "Uygulamayı aç",
+      "install": "Uygulamayı Yükle",
+      "open": "Uygulamayı Aç",
+      "cancel": "İptal Et",
+      "site-icon": "Site simgesi"
+    }
+  },
+  "privateContainer": {
+    "openInPrivateContainer": "Gizli Kapsayıcıda Aç",
+    "name": "Gizlil Kapsayıcı"
+  },
+  "mouseGesture": {
+    "actions": {
+      "gecko-back": "Geri",
+      "gecko-forward": "İleri",
+      "gecko-reload": "Yeniden Yükle",
+      "gecko-close-tab": "Sekmeyi Kapat",
+      "gecko-open-new-tab": "Yeni Sekme",
+      "gecko-duplicate-tab": "Sekmeyi Çoğalt",
+      "gecko-reload-all-tabs": "Bütün Sekmeleri Yeniden Yükle",
+      "gecko-restore-last-tab": "Kapatılan Sekmeyi Yeniden Aç",
+      "gecko-open-new-window": "Yeni Pencere Aç",
+      "gecko-open-new-private-window": "Yeni Gizli Pencere Aç",
+      "gecko-close-window": "Pencereyi Kapat",
+      "gecko-restore-last-window": "Son Pencereyi Geri Yükle",
+      "gecko-show-next-tab": "Sonraki Sekmeyi Göster",
+      "gecko-show-previous-tab": "Önceki Sekmeyi Göster",
+      "gecko-show-all-tabs-panel": "Tüm Sekmeleri Göster Paneli",
+      "gecko-force-reload": "Yeniden Yüklemeye Zorla",
+      "gecko-zoom-in": "Yakınlaştır",
+      "gecko-zoom-out": "Uzaklaştır",
+      "gecko-reset-zoom": "Yakınlaştırmayı Sıfırla",
+      "gecko-bookmark-this-page": "Bu Sayfayı Yer İmlerine Ekle",
+      "gecko-open-home-page": "Ana Sayfayı Aç",
+      "gecko-open-addons-manager": "Eklenti Yöneticisini Aç",
+      "gecko-send-with-mail": "E-Posta ile Gönder",
+      "gecko-save-page": "Sayfayı Kaydet",
+      "gecko-print-page": "Sayfayı Yazdır",
+      "gecko-mute-current-tab": "Geçerli Sekmeyi Sustur",
+      "gecko-show-source-of-page": "Sayfa Kaynağını Göster",
+      "gecko-show-page-info": "Sayfa Bilgilerini Göster",
+      "floorp-rest-mode": "Dinlenme Modunu Etkinleştir",
+      "floorp-hide-user-interface": "Arayüzü Gizle",
+      "floorp-toggle-navigation-panel": "Gezinme Panelini Aç/Kapat",
+      "gecko-stop": "Dur",
+      "gecko-search-in-this-page": "Bu Sayfada Ara",
+      "gecko-show-next-search-result": "Sonraki Sonucunu Göster",
+      "gecko-show-previous-search-result": "Önceki Sonucunu Göster",
+      "gecko-search-the-web": "Web'de Ara",
+      "gecko-open-migration-wizard": "Geçiş Sihirbazını Aç",
+      "gecko-quit-from-application": "Uygulamadan Çık",
+      "gecko-enter-into-customize-mode": "Özelleştirme Moduna Girin",
+      "gecko-enter-into-offline-mode": "Çevrimdışı Moda Geç",
+      "gecko-open-screen-capture": "Ekran Yakalamayı Aç",
+      "floorp-show-pip": "Resim İçinde Resim Göster",
+      "gecko-open-bookmark-add-tool": "Yer İmi Ekleme Aracını Açın",
+      "gecko-open-bookmarks-manager": "Yer İmleri Yöneticisini Açın",
+      "gecko-toggle-bookmark-toolbar": "Yer İmi Araç Çubuğunu Aç/Kapat",
+      "gecko-open-general-preferences": "Genel Ayarları Aç",
+      "gecko-open-privacy-preferences": "Gizlilik Ayarlarını Aç",
+      "gecko-open-workspaces-preferences": "Çalışma Alanları Ayarlarını Aç",
+      "gecko-open-containers-preferences": "Kapsayıcı Ayarlarını Aç",
+      "gecko-open-search-preferences": "Arama Ayarlarını Aç",
+      "gecko-open-sync-preferences": "Senkronizasyon Ayarlarını Aç",
+      "gecko-open-task-manager": "Görev Yöneticisi Aç",
+      "gecko-forget-history": "Geçmişi Sil",
+      "gecko-quick-forget-history": "Geçmişi Hızlı Sil",
+      "gecko-clear-recent-history": "Yakın Geçmişi Sil",
+      "gecko-restore-last-session": "Son Oturumu Geri Yükle",
+      "gecko-search-history": "Arama Geçmişi",
+      "gecko-manage-history": "Geçmişi Yönet",
+      "gecko-open-downloads": "İndirilenler'i Aç",
+      "gecko-show-bookmark-sidebar": "Yer İmi Kenar Çubuğunu Göster",
+      "gecko-show-history-sidebar": "Geçmiş Kenar Çubuğunu Göster",
+      "gecko-show-synced-tabs-sidebar": "Senkronize Sekmeler Kenar Çubuğunu Göster",
+      "gecko-reverse-sidebar": "Ters Kenar Çubuğu Konumu",
+      "gecko-hide-sidebar": "Kenar Çubuğunu Gizle",
+      "gecko-toggle-sidebar": "Kenar Çubuğunu Aç/Kapat",
+      "gecko-scroll-up": "Yukarı Kaydır",
+      "gecko-scroll-down": "Aşağı Kaydır",
+      "gecko-scroll-right": "Sağa Kaydır",
+      "gecko-scroll-left": "Sola Kaydır",
+      "gecko-scroll-to-top": "En Üste Dön",
+      "gecko-scroll-to-bottom": "En alta Kaydır"
+    },
+    "descriptions": {
+      "gecko-back": "Önceki Sayfaya Geri Dön",
+      "gecko-forward": "Sonraki Sayfaya İlerleyin",
+      "gecko-reload": "Geçerli Sayfayı Yeniden Yükle",
+      "gecko-close-tab": "Geçerli Sayfayı Kapat",
+      "gecko-open-new-tab": "Yeni Sekme Aç",
+      "gecko-duplicate-tab": "Geçerli Sekmeyi Çoğalt",
+      "gecko-reload-all-tabs": "Tüm Sekmeleri Yenileden Yükle",
+      "gecko-restore-last-tab": "Son Kapatılan Sekmeyi Yeniden Aç"
+    }
+  },
+  "qrCode": {
+    "pageAction": "QR kod oluştur",
+    "modalTitle": "QR Kod Oluşturucu",
+    "loading": "QR Kod Oluşturuluyor...",
+    "copyButton": "Resmi Kopyala",
+    "downloadButton": "İndir",
+    "closeButton": "Kapat",
+    "copySuccess": "QR kod panoya kopyalandı",
+    "copyError": "QR kod kopyalanamadı",
+    "generateError": "QR kod oluşturulamadı"
+  },
+  "qrcode-generate-page-action": "Bu sayfa için QR Kod oluşturun",
+  "qrcode-generate-page-action-title": "QR Kod Oluşturucu",
+  "panelSidebar": {
+    "modal": {
+      "type": "Panel Türü",
+      "typeOptions": {
+        "web": "Web Sayfası",
+        "sidebar-tool": "Araç Kenar Çubuğu",
+        "extension": "Uzantı Kenar Çubuğu",
+        "builtin": "Yerleşik Sayfalar (İndirmeler, Yer İmleri, Geçmiş)"
+      },
+      "width": "Panel Genişliği",
+      "url": "Web Sayfası URL'si",
+      "container": "Kapsayıcı",
+      "noContainer": "Kapsayıcı Yok",
+      "userAgent": "Mobil Kullanıcı Aracısını Kullan",
+      "extension": "Ekran Uzantısı",
+      "sideBarTool": "Kenar Çubuğu Aracını Görüntüle",
+      "title": "Panel Ekle",
+      "add": "Ekle",
+      "cancel": "İptal Et"
+    },
+    "contextMenu": {
+      "unload": "Bu web panelini başalt",
+      "mute": "Bu web panelini sustur/ sesini aç",
+      "changeZoom": "Yakınlaştırma düzeyini değiştir",
+      "zoomIn": "Yakınlaştır",
+      "zoomOut": "Uzaklaştır",
+      "resetZoom": "Yakınlaştırmayı sıfırla",
+      "changeUA": "Bu Webpanel'de Kullanıcı aracısını Mobil/Masaüstü Sürümüne geçirin",
+      "delete": "Bu paneli sil"
+    }
+  },
+  "chrome_css": {
+    "menu": "Sitil",
+    "rebuild": "Stil Sayfalarını Yeniden Oluştur",
+    "create": "Yeni Stil Sayfası Oluştur",
+    "open_folder": "Stil Sayfaları Klasörünü Aç",
+    "edit_user_chrome": "userChrome.css dosyasını düzenle",
+    "edit_user_content": "userContent.css dosyasını düzenle",
+    "rebuild_complete": "Stil sayfaları yeniden oluşturuldu",
+    "editor_path_not_found": "Editör Yolu Bulunamadı",
+    "set_pref_description": "Lütfen editör yolunu ayarlayın",
+    "please_enter_filename": "Lütfen bir dosya adı girin",
+    "file_created": "Dosya Oluşturuldu",
+    "file_created_successfully": "Dosya başarıyla oluşturuldu!",
+    "open_file_in_editor": "Dosya editörde açılsın mı?",
+    "error_title": "Hata",
+    "folder_open_failed": "CSS klasörü açılamadı",
+    "edit_failed": "Dosya düzenlenemedi"
+  },
+  "reboot": {
+    "menu": {
+      "title": "Yeniden Başlat",
+      "normal-restart": "Yeniden Başlat",
+      "restart-cache-clear": "Önbelleği Temizleme ve Yeniden Başlat",
+      "restart-safe-mode": "Güvenli Modda Yeniden Başlat",
+      "restart-profile-manager": "Profil Yöneticisi ile Yeniden Başlat"
+    }
+  }
 }
