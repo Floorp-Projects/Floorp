@@ -41,7 +41,7 @@ export function generateUuidV7(): string {
 export function generateUpdateXml(metaPath: string, outputPath: string): void {
   const meta = JSON.parse(Deno.readTextFileSync(metaPath));
   const patchUrl =
-    "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-amd64-full.mar";
+    "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-x86_64-full.mar";
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <updates>
   <update type="minor" displayVersion="${meta["version_display"]}" appVersion="${meta["version"]}" platformVersion="${meta["version"]}" buildID="${meta["buildid"]}" appVersion2="${meta["noraneko_version"]}">

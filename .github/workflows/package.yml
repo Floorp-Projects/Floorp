@@ -402,7 +402,7 @@ jobs:
           fi
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
-              TARGET_NAME="${ARTIFACT_NAME:-floorp-win-amd64-moz-artifact}"
+              TARGET_NAME="${ARTIFACT_NAME:-floorp-win-x86_64-moz-artifact}"
               zip -r "$HOME/artifacts/${TARGET_NAME}.zip" ./*
               ;;
             *)
@@ -512,7 +512,7 @@ jobs:
               MOZ_ARTIFACT_FILE="$ARTIFACT" ./mach build
               ;;
             "Linux-x86_64")
-              ARTIFACT=$(find_first "floorp-linux-amd64-moz-artifact*.tar.xz" "noraneko-linux-amd64-moz-artifact*.tar.xz" "*linux*x86_64*moz-artifact*.tar.xz")
+              ARTIFACT=$(find_first "floorp-linux-x86_64-moz-artifact*.tar.xz" "noraneko-linux-x86_64-moz-artifact*.tar.xz" "*linux*x86_64*moz-artifact*.tar.xz")
               if [ -z "$ARTIFACT" ]; then
                 echo "Linux x86_64 artifact not found in ~/artifacts" >&2
                 exit 1

@@ -55,7 +55,7 @@ jobs:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-win-amd64-mar-full
+          name: noraneko-win-x86_64-mar-full
           run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win
           github-token: ${{ github.token }}
@@ -63,7 +63,7 @@ jobs:
       - name: Download Windows installer
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-win-amd64-installer
+          name: noraneko-win-x86_64-installer
           run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win-dist
           github-token: ${{ github.token }}
