@@ -21,6 +21,7 @@ export interface NewTabSettings {
     topSites: boolean;
     clock: boolean;
     searchBar?: boolean;
+    firefoxLayout?: boolean;
   };
   background: {
     type: "none" | "random" | "custom" | "folderPath" | "floorp";
@@ -56,6 +57,7 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     topSites: true,
     clock: true,
     searchBar: true,
+    firefoxLayout: true,
   },
   background: {
     type: "random",
