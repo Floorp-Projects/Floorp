@@ -215,27 +215,6 @@ export class MouseGestureController {
     }
   };
 
-  private quantizeDirection(dx: number, dy: number): GestureDirection | null {
-    if (!dx && !dy) {
-      return null;
-    }
-
-    const angle = Math.atan2(dy, dx);
-    const deg = (angle * 180) / Math.PI;
-    const norm = (deg + 360) % 360;
-
-    if (norm >= 337.5 || norm < 22.5) return "right";
-    if (norm >= 22.5 && norm < 67.5) return "downRight";
-    if (norm >= 67.5 && norm < 112.5) return "down";
-    if (norm >= 112.5 && norm < 157.5) return "downLeft";
-    if (norm >= 157.5 && norm < 202.5) return "left";
-    if (norm >= 202.5 && norm < 247.5) return "upLeft";
-    if (norm >= 247.5 && norm < 292.5) return "up";
-    if (norm >= 292.5 && norm < 337.5) return "upRight";
-
-    return null;
-  }
-
   private findMatchingAction(
     config: ReturnType<typeof getConfig>,
     pattern: GestureDirection[] = this.gesturePattern,
@@ -245,116 +224,73 @@ export class MouseGestureController {
     }
 
     const patternString = patternToString(pattern);
-    return (
-      config.actions.find(
-        (action) => patternToString(action.pattern) === patternString,
-      ) || null
+
+    // 早期拒否: トレイル全体の方向とアクションの主要方向が明らかに異なる場合は無視
+    // トレイルが十分な距離を移動しているか確認
+    const totalTrailDistance = this.getTotalTrailDistance();
+    const minTotalForMatch = Math.max(10, config.contextMenu.minDistance);
+
+    for (const action of config.actions) {
+      // 完全一致があれば即時返却
+      if (patternToString(action.pattern) === patternString) {
+        return action;
+      }
+    }
+
+    // 明らかに違うジェスチャの早期拒否: 全体のトレイル方向ベクトルを計算
+    if (totalTrailDistance < minTotalForMatch) {
+      // 移動が小さすぎる場合はどのアクションともマッチしない
+      return null;
+    }
+
+    const start = this.mouseTrail[0];
+    const end = this.mouseTrail[this.mouseTrail.length - 1];
+    const overallDx = end.x - start.x;
+    const overallDy = end.y - start.y;
+    const overallMag = Math.hypot(overallDx, overallDy);
+    if (overallMag === 0) return null;
+
+    const overallNx = overallDx / overallMag;
+    const overallNy = overallDy / overallMag;
+
+    // 各アクションの代表方向（パターンの最初の方向）とのコサイン類似度を確認
+    // 感度に応じて閾値を変化させる（感度が高いほど厳しく）
+    const sensitivityFactorForThreshold = (config.sensitivity || 40) / 100; // 0-1
+    const earlyRejectCosineThreshold = Math.max(
+      0.2,
+      0.55 - sensitivityFactorForThreshold * 0.5,
     );
-  }
 
-  private getFallbackSegmentThreshold(
-    config: ReturnType<typeof getConfig>,
-  ): number {
-    const base = Math.max(2, Math.ceil(config.contextMenu.minDistance * 0.7));
-    const scaled = Math.max(base, Math.round(config.sensitivity * 0.12));
-    const ceiling = Math.max(base, Math.round(config.sensitivity * 0.32));
-    return Math.min(scaled, ceiling);
-  }
-
-  private inferPatternFromTrail(
-    config: ReturnType<typeof getConfig>,
-  ): GestureDirection[] {
-    if (this.mouseTrail.length < 2) {
-      return [];
-    }
-
-    const threshold = this.getFallbackSegmentThreshold(config);
-    const toleranceDistance = Math.max(
-      threshold * 0.45,
-      Math.round(config.contextMenu.minDistance * 0.75),
-    );
-    const pattern: GestureDirection[] = [];
-
-    let currentDirection: GestureDirection | null = null;
-    let currentDistance = 0;
-
-    for (let i = 1; i < this.mouseTrail.length; i++) {
-      const prev = this.mouseTrail[i - 1];
-      const point = this.mouseTrail[i];
-      const dx = point.x - prev.x;
-      const dy = point.y - prev.y;
-      const stepDistance = Math.hypot(dx, dy);
-
-      if (stepDistance === 0) {
-        continue;
-      }
-
-      const stepDirection = this.quantizeDirection(dx, dy);
-      if (!stepDirection) {
-        continue;
-      }
-
-      if (currentDirection === stepDirection || currentDirection === null) {
-        currentDirection = stepDirection;
-        currentDistance += stepDistance;
-        continue;
-      }
-
-      if (
-        currentDirection &&
-        (currentDistance >= threshold || currentDistance >= toleranceDistance)
-      ) {
-        if (
-          pattern.length === 0 ||
-          pattern[pattern.length - 1] !== currentDirection
-        ) {
-          pattern.push(currentDirection);
-        }
-      }
-
-      currentDirection = stepDirection;
-      currentDistance = stepDistance;
-    }
-
-    if (
-      currentDirection &&
-      (currentDistance >= threshold || currentDistance >= toleranceDistance)
-    ) {
-      if (
-        pattern.length === 0 ||
-        pattern[pattern.length - 1] !== currentDirection
-      ) {
-        pattern.push(currentDirection);
+    const candidates = [] as typeof config.actions;
+    for (const action of config.actions) {
+      const repDir = action.pattern[0];
+      if (!repDir) continue;
+      const repVec = this.patternToVectors([repDir])[0];
+      const cos = overallNx * repVec.dx + overallNy * repVec.dy;
+      if (cos >= earlyRejectCosineThreshold) {
+        candidates.push(action);
       }
     }
 
-    if (pattern.length === 0) {
-      const start = this.mouseTrail[0];
-      const end = this.mouseTrail[this.mouseTrail.length - 1];
-      const dx = end.x - start.x;
-      const dy = end.y - start.y;
-      const overallDistance = Math.hypot(dx, dy);
-      const overallDirection = this.quantizeDirection(dx, dy);
-      const minimumOverall = Math.max(
-        Math.round(config.contextMenu.minDistance * 0.85),
-        Math.min(threshold, config.contextMenu.minDistance + 1),
-      );
+    if (candidates.length === 0) return null;
 
-      if (overallDirection && overallDistance >= minimumOverall) {
-        return [overallDirection];
+    // 候補のみについて詳細類似度を計算して最良を選択
+    let best: (typeof config.actions)[number] | null = null;
+    let bestSim = 0;
+    for (const action of candidates) {
+      const sim = this.calculatePatternSimilarity(action.pattern);
+      if (sim > bestSim) {
+        bestSim = sim;
+        best = action;
       }
     }
 
-    return pattern;
-  }
+    // 感度に応じた最小類似度を要求（感度が高いほど高い類似度を要求）
+    const sensitivityFactor = (config.sensitivity || 40) / 100;
+    const minSimilarity = Math.max(0.35, 0.6 + sensitivityFactor * 0.35);
+    if (best && bestSim >= minSimilarity) return best;
 
-  private getDirectionalRegistrationThreshold(
-    config: ReturnType<typeof getConfig>,
-  ): number {
-    const base = Math.max(2, Math.ceil(config.contextMenu.minDistance * 0.6));
-    const scaled = Math.max(base, Math.round(config.sensitivity * 0.12));
-    const ceiling = Math.max(base, Math.round(config.sensitivity * 0.35));
-    return Math.min(scaled, ceiling);
+    return null;
   }
 
   /**
@@ -459,28 +395,35 @@ export class MouseGestureController {
   private calculateSingleDirectionSimilarity(
     targetDirection: GestureDirection,
   ): number {
+    // 単一方向パターンの類似度は、トレイル全体の各セグメントを
+    // 方向ベクトルに投影して重み付き平均を取ることで評価する。
+    // これにより開始点・終了点だけで判断するよりも全体の動きを反映できる。
     if (this.mouseTrail.length < 2) return 0;
 
-    const start = this.mouseTrail[0];
-    const end = this.mouseTrail[this.mouseTrail.length - 1];
-    const totalDx = end.x - start.x;
-    const totalDy = end.y - start.y;
-    const totalMagnitude = Math.hypot(totalDx, totalDy);
-
-    if (totalMagnitude === 0) return 0;
-
-    const normalizedDx = totalDx / totalMagnitude;
-    const normalizedDy = totalDy / totalMagnitude;
+    const trailVectors = this.normalizeTrail();
+    if (trailVectors.length === 0) return 0;
 
     const targetVectors = this.patternToVectors([targetDirection]);
     if (targetVectors.length === 0) return 0;
 
     const targetVec = targetVectors[0];
 
-    const cosineSimilarity = normalizedDx * targetVec.dx +
-      normalizedDy * targetVec.dy;
+    // 各トレイルベクトルのコサイン類似度を、そのセグメント長で重み付けして合算
+    let weightedSum = 0;
+    let totalWeight = 0;
 
-    return Math.max(0, cosineSimilarity);
+    for (const seg of trailVectors) {
+      const dot = seg.dx * targetVec.dx + seg.dy * targetVec.dy;
+      // seg.magnitude は実際のピクセル距離なのでこれを重みに使う
+      const weight = seg.magnitude;
+      weightedSum += Math.max(0, dot) * weight; // 負の類似度は0にクリップ
+      totalWeight += weight;
+    }
+
+    if (totalWeight === 0) return 0;
+
+    const avgSimilarity = weightedSum / totalWeight; // 0-1
+    return Math.max(0, Math.min(1, avgSimilarity));
   }
 
   /**
@@ -549,18 +492,28 @@ export class MouseGestureController {
       .map(() => Array(m + 1).fill(Number.POSITIVE_INFINITY));
     dtw[0][0] = 0;
 
+    // トレイル側のセグメント長を考慮してコストに重み付けを行う
+    const trailTotalWeight = Math.max(
+      1,
+      trailVectors.reduce((s, v) => s + v.magnitude, 0),
+    );
+
     for (let i = 1; i <= n; i++) {
       for (let j = 1; j <= m; j++) {
         const trailVec = trailVectors[i - 1];
         const idealVec = idealVectors[j - 1];
 
         // コサイン類似度を計算
-        const dotProduct = trailVec.dx * idealVec.dx +
-          trailVec.dy * idealVec.dy;
+        const dotProduct =
+          trailVec.dx * idealVec.dx + trailVec.dy * idealVec.dy;
         const cosineSimilarity = Math.max(0, dotProduct); // 0-1の範囲に正規化
-        const cost = 1 - cosineSimilarity;
+        const localCost = 1 - cosineSimilarity;
 
-        dtw[i][j] = cost +
+        // 重み付きローカルコスト: セグメント長を重みとして利用
+        const weightedLocalCost = localCost * trailVec.magnitude;
+
+        dtw[i][j] =
+          weightedLocalCost +
           Math.min(
             dtw[i - 1][j], // 挿入
             dtw[i][j - 1], // 削除
@@ -569,9 +522,8 @@ export class MouseGestureController {
       }
     }
 
-    // 正規化された類似度を返す（0-1の範囲）
-    const maxCost = Math.max(n, m);
-    const normalizedDistance = dtw[n][m] / maxCost;
+    // 正規化: 合計の重みで割ることで 0-1 程度に収める
+    const normalizedDistance = dtw[n][m] / trailTotalWeight;
     return Math.max(0, 1 - normalizedDistance);
   }
 }
