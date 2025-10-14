@@ -34,13 +34,13 @@
         "mouseGesture": "Жесты мышью",
         "keyboardShortcut": "Сочетания клавиш",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
-            "open": "Open \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Search Results"
+            "title": "Параметры поиска",
+            "resultsFor": "Результаты поиска по \"{{query}}\"",
+            "searchResultsDescription": "Результаты поиска по запросу «{{query}}». Поиск выполняется только в настройках {{productName}}; настройки Firefox не включены.",
+            "noResults": "Ничего не найдено",
+            "open": "Открыть \"{{title}}\"",
+            "matchedText": "Совпадающий текст",
+            "results": "Результаты поиска"
         }
     },
     "home": {
@@ -128,10 +128,10 @@
             "minHeightError": "Высота вкладки должна быть от {{min}} до {{max}} пикселей."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "Настройки Lepton",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
-            "back": "Back",
+            "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
                 "description": "These settings are experimental and not officially supported. Issues may occur.",
@@ -140,56 +140,56 @@
             },
             "autohide": {
                 "title": "Auto-hide Settings",
-                "tab": "Automatically hide tabs",
-                "navbar": "Automatically hide Toolbar",
-                "sidebar": "Automatically hide Sidebar",
-                "backButton": "Automatically hide back button",
-                "forwardButton": "Automatically hide forward button",
-                "pageAction": "Automatically hide buttons on the Address Bar"
+                "tab": "Автоматически скрывать вкладки",
+                "navbar": "Автоматически скрывать панель инструментов",
+                "sidebar": "Автоматически скрывать боковую панель",
+                "backButton": "Автоматически скрывать кнопку \"Назад\"",
+                "forwardButton": "Автоматически скрывать кнопку \"Вперёд\"",
+                "pageAction": "Автоматически скрывать кнопки на адресной строке"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
-                "tabbar": "Hide Tab Bar",
-                "navbar": "Hide Toolbar",
-                "sidebarHeader": "Hide Sidebar Headers",
-                "urlbarIconbox": "Hide Address Bar icons",
-                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
-                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
-                "disabledMenu": "Hide disabled context menu items"
+                "tabIcon": "Скрыть значки вкладок",
+                "tabbar": "Скрыть панель вкладок",
+                "navbar": "Скрыть панель инструментов",
+                "sidebarHeader": "Скрыть заголовки боковой панели",
+                "urlbarIconbox": "Скрыть значки адресной строки",
+                "bookmarkbarIcon": "Скрыть значки панели закладок",
+                "bookmarkbarLabel": "Скрыть надписи на панели закладок",
+                "disabledMenu": "Скрыть отключенные пункты контекстного меню"
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Отключить контекстное меню и значки меню панели Lepton",
+                "menu": "Включить значки контекстного меню Lepton"
             },
             "centered": {
                 "title": "Centered Settings",
-                "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
-                "bookmarkbar": "Center Bookmarks Bar items"
+                "tab": "Центрировать метки на вкладках",
+                "urlbar": "Центрировать текст в адресной строке",
+                "bookmarkbar": "Центрировать элементы панели закладок"
             },
             "urlView": {
                 "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "moveIconToLeft": "Переместить значки адресной строки в левую сторону",
+                "goButtonWhenTyping": "При наборе текста отображать кнопку «Перейти»",
+                "alwaysShowPageActions": "Всегда показывать действия страницы в адресной строке"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "asTitlebar": "Панель вкладок в строке заголовка",
+                "oneLiner": "Объединить панель вкладок и панель инструментов"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
+                "overlap": "Отображать боковую панель поверх содержимого сайта"
             }
         },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "Для полной активации или деактивации функции пользовательского интерфейса требуется перезапуск {{productName}}.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Панель навигации",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Округлить углы страниц",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -209,7 +209,7 @@
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "newtab": {
-                "title": "New Tab",
+                "title": "Новая вкладка",
                 "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
@@ -303,12 +303,12 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Значок",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
-        "useUserAgent": "Use Mobile User Agent",
+        "container": "Контейнер",
+        "noContainer": "Нет контейнера",
+        "useUserAgent": "Использовать пользовательский агент мобильного устройства",
         "panelType": "Panel Type",
         "panelList": "Panel List",
         "type": {
@@ -318,16 +318,16 @@
         },
         "staticPanels": {
             "bmt": "Browser Manager Tool",
-            "bookmarks": "Bookmarks",
-            "history": "History",
-            "downloads": "Downloads",
-            "notes": "Notes"
+            "bookmarks": "Закладок",
+            "history": "Истории",
+            "downloads": "Загрузок",
+            "notes": "Заметки"
         },
-        "url": "URL",
+        "url": "URL-адрес",
         "untitled": "Untitled",
         "confirmDeleteTitle": "Delete Panel",
         "confirmDelete": "Are you sure you want to delete this panel?",
-        "delete": "Delete",
+        "delete": "Удалить",
         "addPanel": "Add Panel",
         "editPanel": "Edit Panel",
         "errors": {
@@ -338,8 +338,8 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
-        "cancel": "Cancel"
+        "save": "Сохранить",
+        "cancel": "Отменить"
     },
     "progressiveWebApp": {
         "title": "Веб приложения",
@@ -391,7 +391,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
+            "gecko-restore-last-tab": "Переоткрыть закрытую вкладку",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

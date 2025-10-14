@@ -204,7 +204,7 @@
     "qrcode-generate-page-action-title": "Gerador de código QR",
     "panelSidebar": {
         "modal": {
-            "type": "Panel Type",
+            "type": "Tipo de painel",
             "typeOptions": {
                 "web": "Web Page",
                 "sidebar-tool": "Barra lateral de ferramentas",
@@ -213,14 +213,14 @@
             },
             "width": "Panel Width",
             "url": "Web Page URL",
-            "container": "Container",
-            "noContainer": "No Container",
-            "userAgent": "Use Mobile User Agent",
+            "container": "Contentor",
+            "noContainer": "Sem contentor",
+            "userAgent": "Utilizar o Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
-            "title": "Add Panel",
-            "add": "Add",
-            "cancel": "Cancel"
+            "title": "Adicionar painel",
+            "add": "Adicionar",
+            "cancel": "Cancelar"
         },
         "contextMenu": {
             "unload": "Descarregar este painel Web",

@@ -34,7 +34,7 @@
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
         "search": {
-            "title": "Search Settings",
+            "title": "Paieškos nustatymai",
             "resultsFor": "Search results for \"{{query}}\"",
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
             "noResults": "No results found",
@@ -128,10 +128,10 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "„Lepton“ nustatymai",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
-            "back": "Back",
+            "back": "Atgal",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
                 "description": "These settings are experimental and not officially supported. Issues may occur.",
@@ -144,12 +144,12 @@
                 "navbar": "Automatically hide Toolbar",
                 "sidebar": "Automatically hide Sidebar",
                 "backButton": "Automatically hide back button",
-                "forwardButton": "Automatically hide forward button",
+                "forwardButton": "Automatiškai paslėpti pirmyn mygtuką",
                 "pageAction": "Automatically hide buttons on the Address Bar"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Paslėpti skirtukų piktogramas",
                 "tabbar": "Hide Tab Bar",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
@@ -160,25 +160,25 @@
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Išjungti „Lepton“ kontekstinio meniu ir skydelio meniu piktogramas",
+                "menu": "Įjungti „Lepton“ kontekstinio meniu piktogramas"
             },
             "centered": {
                 "title": "Centered Settings",
-                "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
-                "bookmarkbar": "Center Bookmarks Bar items"
+                "tab": "Centruoti etikėtes skirtukuose",
+                "urlbar": "Centruoti tekstą adresinėje juostoje",
+                "bookmarkbar": "Centruoti žymeklių juostos elementus"
             },
             "urlView": {
                 "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "moveIconToLeft": "Perkelti adresinės juostos piktogramas į kairę pusė",
+                "goButtonWhenTyping": "Rašydami tekstą, rodyti „Go“ mygtuką",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "asTitlebar": "Skirtukų juosta antraštinėje juostoje",
+                "oneLiner": "Sujungti skirtukų juostą ir įrankių juostą"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Naršymo juosta",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Suapvalinti puslapių kampus",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -209,7 +209,7 @@
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "newtab": {
-                "title": "New Tab",
+                "title": "Nauja kortelė",
                 "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
@@ -303,11 +303,11 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Piktograma",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
+        "container": "Konteineris",
+        "noContainer": "Nėra konteinerio",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -318,10 +318,10 @@
         },
         "staticPanels": {
             "bmt": "Browser Manager Tool",
-            "bookmarks": "Bookmarks",
+            "bookmarks": "Žymės",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Užrašai"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Atšaukti"
     },
     "progressiveWebApp": {
         "title": "Web Apps",
@@ -391,7 +391,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
+            "gecko-restore-last-tab": "Iš naujo atverti užverstą kortelę",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

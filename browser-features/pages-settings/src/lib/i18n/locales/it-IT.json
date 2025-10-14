@@ -141,26 +141,26 @@
             "autohide": {
                 "title": "Auto-hide Settings",
                 "tab": "Automatically hide tabs",
-                "navbar": "Automatically hide Toolbar",
-                "sidebar": "Automatically hide Sidebar",
+                "navbar": "Nascondi automaticamente la Barra degli Strumenti",
+                "sidebar": "Nascondi automaticamente la Barra Laterale",
                 "backButton": "Automatically hide back button",
                 "forwardButton": "Automatically hide forward button",
-                "pageAction": "Automatically hide buttons on the Address Bar"
+                "pageAction": "Nascondi automaticamente i pulsanti sulla Barra degli Indirizzi"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Nascondi Icone Delle Schede",
                 "tabbar": "Hide Tab Bar",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
-                "urlbarIconbox": "Hide Address Bar icons",
-                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
-                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
-                "disabledMenu": "Hide disabled context menu items"
+                "urlbarIconbox": "Nascondi icone Barra Indirizzi",
+                "bookmarkbarIcon": "Nascondi icone della Barra dei Segnalibri",
+                "bookmarkbarLabel": "Nascondi etichette della Barra dei Segnalibri",
+                "disabledMenu": "Nascondi le voci del menu contestuale se disabilitate"
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
+                "disabled": "Disabilita le icone del menu contestuale di Lepton",
                 "menu": "Enable Lepton's context menu icons"
             },
             "centered": {
@@ -172,24 +172,24 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Durante la digitazione, mostra un pulsante \"Vai\"",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "asTitlebar": "Barra delle Schede dentro la Barra del Titolo",
+                "oneLiner": "Combina Barra delle Schede e Barra degli Strumenti"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
+                "overlap": "Mostra la Barra Laterale sul contenuto del sito web"
             }
         },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Barra di Navigazione",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -307,7 +307,7 @@
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
-        "noContainer": "No Container",
+        "noContainer": "Nessuno spazio di lavoro",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -321,7 +321,7 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Note"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Annulla"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

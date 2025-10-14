@@ -219,22 +219,22 @@
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
-            "add": "Add",
-            "cancel": "Cancel"
+            "add": "Добавить",
+            "cancel": "Отменить"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",
             "mute": "Mute/Unmute this webpanel",
             "changeZoom": "Change zoom level",
-            "zoomIn": "Zoom in",
-            "zoomOut": "Zoom out",
-            "resetZoom": "Reset zoom",
+            "zoomIn": "Приблизить",
+            "zoomOut": "Отдалить",
+            "resetZoom": "Сбросить масштаб",
             "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
             "delete": "Delete this panel"
         }
     },
     "chrome_css": {
-        "menu": "Style",
+        "menu": "Стиль",
         "rebuild": "Rebuild Style Sheets",
         "create": "Create New Style Sheet",
         "open_folder": "Open Style Sheets Folder",

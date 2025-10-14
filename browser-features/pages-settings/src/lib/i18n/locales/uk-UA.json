@@ -34,13 +34,13 @@
         "mouseGesture": "Жести мишею",
         "keyboardShortcut": "Комбінації клавіш",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
+            "title": "Налаштування пошуку",
+            "resultsFor": "Результати пошуку \"{{query}}\"",
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
-            "open": "Open \"{{title}}\"",
+            "noResults": "Нічого не знайдено",
+            "open": "Відкрийте \"{{title}}\"",
             "matchedText": "Matched Text",
-            "results": "Search Results"
+            "results": "Результати пошуку"
         }
     },
     "home": {
@@ -144,41 +144,41 @@
                 "navbar": "Автоматично приховувати панель інструментів",
                 "sidebar": "Автоматично приховувати бічну панель",
                 "backButton": "Автоматично приховувати кнопку Назад",
-                "forwardButton": "Automatically hide forward button",
-                "pageAction": "Automatically hide buttons on the Address Bar"
+                "forwardButton": "Автоматично приховувати кнопку \"Вперед\"",
+                "pageAction": "Автоматично приховувати кнопки на адресній панелі"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Приховувати значки вкладок",
                 "tabbar": "Приховати панель вкладок",
                 "navbar": "Приховати панель інструментів",
-                "sidebarHeader": "Hide Sidebar Headers",
-                "urlbarIconbox": "Hide Address Bar icons",
-                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
-                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
-                "disabledMenu": "Hide disabled context menu items"
+                "sidebarHeader": "Приховувати заголовки бічних панелей",
+                "urlbarIconbox": "Приховувати значки адресного рядка",
+                "bookmarkbarIcon": "Приховувати значки в панелі закладок",
+                "bookmarkbarLabel": "Приховувати значки в панелі закладок",
+                "disabledMenu": "Приховувати вимкнені пункти контекстного меню"
             },
             "icon": {
                 "title": "Налаштування значків",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Вимкнути іконки контекстного меню та меню панелі Lepton",
+                "menu": "Увімкнути іконки контекстного меню Lepton"
             },
             "centered": {
                 "title": "Centered Settings",
-                "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
+                "tab": "Центрувати мітки у вкладках",
+                "urlbar": "Центрувати текст в адресному рядку",
                 "bookmarkbar": "Центрувати елементи панелі закладок"
             },
             "urlView": {
                 "title": "Параметри перегляду URL",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "moveIconToLeft": "Перемістити значки панелі адрес на ліву сторону",
+                "goButtonWhenTyping": "Під час введення тексту показувати кнопку \"Вперед\"",
+                "alwaysShowPageActions": "Завжди показувати дії над сторінкою в адресному рядку"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "asTitlebar": "Панель вкладок у рядку заголовка",
+                "oneLiner": "З'єднати панелі вкладок і панелі інструментів"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Округлити кути сторінок",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -308,7 +308,7 @@
         "zoomLevel": "Zoom Level",
         "container": "Контейнер",
         "noContainer": "Без контейнера",
-        "useUserAgent": "Use Mobile User Agent",
+        "useUserAgent": "Використовувати мобільний агент користувача",
         "panelType": "Тип панелі",
         "panelList": "Список панелей",
         "type": {

@@ -214,13 +214,13 @@
             "width": "Panel Width",
             "url": "Web Page URL",
             "container": "Container",
-            "noContainer": "No Container",
+            "noContainer": "Sem Contêiner",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
             "add": "Add",
-            "cancel": "Cancel"
+            "cancel": "Cancelar"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",
@@ -253,8 +253,8 @@
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
+            "title": "Reiniciar",
+            "normal-restart": "Reiniciar",
             "restart-cache-clear": "Restart with Cache Clear",
             "restart-safe-mode": "Restart in Safe Mode",
             "restart-profile-manager": "Restart with Profile Manager"

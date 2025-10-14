@@ -128,7 +128,7 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "Ustawienia Leptona",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
             "back": "Back",
@@ -149,7 +149,7 @@
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Ukryj ikony kart",
                 "tabbar": "Hide Tab Bar",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
@@ -165,19 +165,19 @@
             },
             "centered": {
                 "title": "Centered Settings",
-                "tab": "Center labels in tabs",
+                "tab": "Wyśrodkuj etykiety w kartach",
                 "urlbar": "Center text in the Address Bar",
                 "bookmarkbar": "Center Bookmarks Bar items"
             },
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Podczas wpisywania, pokaż przycisk \"Przejdź\"",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
+                "asTitlebar": "Pasek kart na pasku tytułu",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Pasek nawigacji",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -307,7 +307,7 @@
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
-        "noContainer": "No Container",
+        "noContainer": "Bez kontenera",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -321,7 +321,7 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notatki"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Anuluj"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

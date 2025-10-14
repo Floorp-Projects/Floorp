@@ -34,7 +34,7 @@
         "mouseGesture": "Mausgesten",
         "keyboardShortcut": "Tastenkürzel",
         "search": {
-            "title": "Search Settings",
+            "title": "In Einstellungen suchen",
             "resultsFor": "Search results for \"{{query}}\"",
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
             "noResults": "No results found",
@@ -128,7 +128,7 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "Lepton-Einstellungen",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
             "back": "Back",
@@ -149,10 +149,10 @@
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Tab-Symbole ausblenden",
                 "tabbar": "Hide Tab Bar",
-                "navbar": "Hide Toolbar",
-                "sidebarHeader": "Hide Sidebar Headers",
+                "navbar": "Werkzeugleiste verstecken",
+                "sidebarHeader": "Sidebarüberschriften ausblenden",
                 "urlbarIconbox": "Hide Address Bar icons",
                 "bookmarkbarIcon": "Hide Bookmarks Bar icons",
                 "bookmarkbarLabel": "Hide Bookmarks Bar labels",
@@ -172,12 +172,12 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Beim Tippen eine \"Go\"-Taste anzeigen",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
+                "asTitlebar": "Tableiste in der Titelleiste",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Navigationsleiste",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Abrunden der Seitenecken",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -303,11 +303,11 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Symbol",
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
-        "noContainer": "No Container",
+        "noContainer": "Kein Container",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -321,7 +321,7 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notizen"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Abbrechen"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

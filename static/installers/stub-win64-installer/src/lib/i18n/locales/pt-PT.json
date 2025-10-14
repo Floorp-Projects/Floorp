@@ -42,7 +42,7 @@
             "closeButton": "Fechar o instalador",
             "countdownMessage": "O instalador fechará em {{count}} segundos",
             "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadButton": "Descarregar"
         }
     },
     "slides": {

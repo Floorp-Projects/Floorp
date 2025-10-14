@@ -42,7 +42,7 @@
             "closeButton": "Закрыть установщик",
             "countdownMessage": "Установщик будет закрыт через {{count}} секунд",
             "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadButton": "Скачать"
         }
     },
     "slides": {

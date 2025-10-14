@@ -34,7 +34,7 @@
         "mouseGesture": "Gestur Tetikus",
         "keyboardShortcut": "Keyboard Shortcuts",
         "search": {
-            "title": "Search Settings",
+            "title": "Telusuri Pengaturan",
             "resultsFor": "Hasil pencarian untuk \"{{query}}\"",
             "searchResultsDescription": "Hasil pencarian untuk \"{{query}}\". Hanya pengaturan {{productName}} yang dicari; pengaturan Firefox tidak disertakan.",
             "noResults": "Hasil tidak ditemukan",
@@ -167,18 +167,18 @@
                 "title": "Centered Settings",
                 "tab": "Center labels in tabs",
                 "urlbar": "Center text in the Address Bar",
-                "bookmarkbar": "Center Bookmarks Bar items"
+                "bookmarkbar": "Tengahkan item Bilah Markah"
             },
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Saat mengetik, tampilkan tombol \"Kunjungi\"",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "asTitlebar": "Bilah Tab di Bilah Judul",
+                "oneLiner": "Gabungkan Bilah Tab dan Bilah Alat"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
@@ -309,7 +309,7 @@
         "container": "Kontainer",
         "noContainer": "Tanpa Kontainer",
         "useUserAgent": "Gunakan Agen Pengguna Seluler",
-        "panelType": "Panel Type",
+        "panelType": "Jenis Panel",
         "panelList": "Panel List",
         "type": {
             "web": "Web",

@@ -214,21 +214,21 @@
             "width": "Panel Width",
             "url": "Web Page URL",
             "container": "Container",
-            "noContainer": "No Container",
+            "noContainer": "Ingen beholder",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
             "add": "Add",
-            "cancel": "Cancel"
+            "cancel": "Avbryt"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",
             "mute": "Mute/Unmute this webpanel",
             "changeZoom": "Change zoom level",
-            "zoomIn": "Zoom in",
-            "zoomOut": "Zoom out",
-            "resetZoom": "Reset zoom",
+            "zoomIn": "Zoom inn",
+            "zoomOut": "Zoom ut",
+            "resetZoom": "Nullstill zoom",
             "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
             "delete": "Delete this panel"
         }
@@ -253,8 +253,8 @@
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
+            "title": "Omstart",
+            "normal-restart": "Omstart",
             "restart-cache-clear": "Restart with Cache Clear",
             "restart-safe-mode": "Restart in Safe Mode",
             "restart-profile-manager": "Restart with Profile Manager"

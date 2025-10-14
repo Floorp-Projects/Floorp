@@ -213,14 +213,14 @@
             },
             "width": "Panel Width",
             "url": "Web Page URL",
-            "container": "Container",
-            "noContainer": "No Container",
+            "container": "Contenedor",
+            "noContainer": "Ningún contenedor",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
             "add": "Add",
-            "cancel": "Cancel"
+            "cancel": "Cancelar"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",

@@ -131,7 +131,7 @@
             "title": "Lepton Settings",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
-            "back": "Back",
+            "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
                 "description": "These settings are experimental and not officially supported. Issues may occur.",
@@ -149,7 +149,7 @@
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
+                "tabIcon": "Tabbladpictogrammen verbergen",
                 "tabbar": "Hide Tab Bar",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
@@ -172,12 +172,12 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Toon tijdens het typen een \"Ga\"-knop",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
+                "asTitlebar": "Tabbalk in de titelbalk",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Navigatiebalk",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -209,7 +209,7 @@
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "newtab": {
-                "title": "New Tab",
+                "title": "Nieuw tabblad",
                 "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
@@ -303,13 +303,13 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Pictogram",
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
-        "noContainer": "No Container",
-        "useUserAgent": "Use Mobile User Agent",
-        "panelType": "Panel Type",
+        "noContainer": "Geen container",
+        "useUserAgent": "Mobiele User Agent gebruiken",
+        "panelType": "Paneel Type",
         "panelList": "Panel List",
         "type": {
             "web": "Web",
@@ -321,14 +321,14 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notities"
         },
         "url": "URL",
         "untitled": "Untitled",
         "confirmDeleteTitle": "Delete Panel",
         "confirmDelete": "Are you sure you want to delete this panel?",
         "delete": "Delete",
-        "addPanel": "Add Panel",
+        "addPanel": "Paneel toevoegen",
         "editPanel": "Edit Panel",
         "errors": {
             "typeRequired": "Panel type is required",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Annuleren"
     },
     "progressiveWebApp": {
         "title": "Web Apps",
@@ -391,7 +391,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
+            "gecko-restore-last-tab": "Gesloten tabblad heropenen",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

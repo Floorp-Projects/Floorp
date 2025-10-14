@@ -52,9 +52,9 @@
         },
         "floorpHub": {
             "title": "Trung tâm Floorp",
-            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-            "openHub": "Open about:hub",
-            "openPreferences": "Open Settings (about:preferences)"
+            "description": "Floorp Hub là trang cài đặt riêng của Floopp. Bạn có thể mở bằng cách đi tới \"about:hub\". Bạn cũng có thể truy cập bằng thanh bên trái của trang cài đặt Firefox \"about:preferences\".",
+            "openHub": "Mở about:hub",
+            "openPreferences": "Mở cài đặt (about:preferences)"
         }
     },
     "finish": {
@@ -153,9 +153,9 @@
         "title": "Welcome to Floorp {{version}}!",
         "subtitle": "Check out what's new in Floorp!",
         "tags": {
-            "settings": "Settings",
+            "settings": "Cài đặt",
             "productivity": "Productivity",
-            "workspaces": "Workspaces",
+            "workspaces": "Không gian làm việc",
             "pwa": "PWA",
             "gestures": "Gestures"
         },

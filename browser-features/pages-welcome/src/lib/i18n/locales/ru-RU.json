@@ -153,9 +153,9 @@
         "title": "Welcome to Floorp {{version}}!",
         "subtitle": "Check out what's new in Floorp!",
         "tags": {
-            "settings": "Settings",
+            "settings": "Настройки",
             "productivity": "Productivity",
-            "workspaces": "Workspaces",
+            "workspaces": "Рабочие пространства",
             "pwa": "PWA",
             "gestures": "Gestures"
         },

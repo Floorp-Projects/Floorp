@@ -195,7 +195,7 @@
         "loading": "Generating QR Code...",
         "copyButton": "Copy Image",
         "downloadButton": "Download",
-        "closeButton": "Close",
+        "closeButton": "Luk",
         "copySuccess": "QR code copied to clipboard!",
         "copyError": "Failed to copy QR code",
         "generateError": "Failed to generate QR code"
@@ -253,8 +253,8 @@
     },
     "reboot": {
         "menu": {
-            "title": "Restart",
-            "normal-restart": "Restart",
+            "title": "Genstart",
+            "normal-restart": "Genstart",
             "restart-cache-clear": "Restart with Cache Clear",
             "restart-safe-mode": "Restart in Safe Mode",
             "restart-profile-manager": "Restart with Profile Manager"

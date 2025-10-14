@@ -42,12 +42,12 @@
             "closeButton": "Close Installer",
             "countdownMessage": "Installer will close in {{count}} seconds",
             "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadButton": "Tải xuống"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
+            "title": "Chào mừng đến Floorp",
             "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
         "slide2": {

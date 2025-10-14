@@ -128,7 +128,7 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "إعدادات Lepton",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
             "back": "Back",
@@ -145,12 +145,12 @@
                 "sidebar": "Automatically hide Sidebar",
                 "backButton": "Automatically hide back button",
                 "forwardButton": "Automatically hide forward button",
-                "pageAction": "Automatically hide buttons on the Address Bar"
+                "pageAction": "إخفاء الأزرار تلقائيا في شريط العنوان"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
-                "tabbar": "Hide Tab Bar",
+                "tabIcon": "إخفاء أيقونات علامة التبويب",
+                "tabbar": "إخفاء شريط علامة التبويب",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
                 "urlbarIconbox": "Hide Address Bar icons",
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "شريط التنقل",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "تدوير زوايا الصفحات",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },

@@ -149,8 +149,8 @@
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
-                "tabbar": "Hide Tab Bar",
+                "tabIcon": "Ocultar ícones de abas",
+                "tabbar": "Ocultar Barra de Abas",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
                 "urlbarIconbox": "Hide Address Bar icons",
@@ -172,12 +172,12 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Ao digitar, mostrar um botão \"Ir\"",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
+                "asTitlebar": "Barra de Abas na Barra de Título",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Barra de Ferramentas",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -307,7 +307,7 @@
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Container",
-        "noContainer": "No Container",
+        "noContainer": "Sem Contêiner",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -321,13 +321,13 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notas"
         },
         "url": "URL",
         "untitled": "Untitled",
         "confirmDeleteTitle": "Delete Panel",
         "confirmDelete": "Are you sure you want to delete this panel?",
-        "delete": "Delete",
+        "delete": "Excluir",
         "addPanel": "Add Panel",
         "editPanel": "Edit Panel",
         "errors": {
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancelar"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

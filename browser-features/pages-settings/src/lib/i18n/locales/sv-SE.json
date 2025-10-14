@@ -34,13 +34,13 @@
         "mouseGesture": "Musgester",
         "keyboardShortcut": "Tangentbordsgenvägar",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
-            "open": "Open \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Search Results"
+            "title": "Sökinställningar",
+            "resultsFor": "Sökresultat för \"{{query}}\"",
+            "searchResultsDescription": "Sökresultat för \"{{query}}\". Endast {{productName}} inställningar söks; Firefox inställningar ingår inte.",
+            "noResults": "Inga resultat hittades",
+            "open": "Öppna \"{{title}}\"",
+            "matchedText": "Matchad text",
+            "results": "Sökresultat"
         }
     },
     "home": {

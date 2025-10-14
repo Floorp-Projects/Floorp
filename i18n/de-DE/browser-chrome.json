@@ -194,8 +194,8 @@
         "modalTitle": "QR Code Generator",
         "loading": "Generating QR Code...",
         "copyButton": "Copy Image",
-        "downloadButton": "Download",
-        "closeButton": "Close",
+        "downloadButton": "Herunterladen",
+        "closeButton": "Schließen",
         "copySuccess": "QR code copied to clipboard!",
         "copyError": "Failed to copy QR code",
         "generateError": "Failed to generate QR code"
@@ -214,13 +214,13 @@
             "width": "Panel Width",
             "url": "Web Page URL",
             "container": "Container",
-            "noContainer": "No Container",
+            "noContainer": "Kein Container",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
-            "add": "Add",
-            "cancel": "Cancel"
+            "add": "Neu",
+            "cancel": "Abbrechen"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",

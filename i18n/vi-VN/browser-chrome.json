@@ -213,14 +213,14 @@
             },
             "width": "Chiều rộng thanh bên",
             "url": "URL trang",
-            "container": "Container",
-            "noContainer": "No Container",
+            "container": "Ngăn chứa",
+            "noContainer": "Không ngăn chứa",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
-            "add": "Add",
-            "cancel": "Cancel"
+            "add": "Thêm",
+            "cancel": "Hủy"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",
@@ -234,7 +234,7 @@
         }
     },
     "chrome_css": {
-        "menu": "Style",
+        "menu": "Phong cách",
         "rebuild": "Rebuild Style Sheets",
         "create": "Create New Style Sheet",
         "open_folder": "Open Style Sheets Folder",

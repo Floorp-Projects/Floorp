@@ -42,12 +42,12 @@
             "closeButton": "설치 관리자 닫기",
             "countdownMessage": "{{count}}초 후 설치 프로그램이 닫힙니다",
             "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "legacyDownloadButton": "다운로드"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
+            "title": "Floorp에 오신 것을 환영합니다",
             "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
         },
         "slide2": {

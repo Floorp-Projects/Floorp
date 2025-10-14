@@ -9,7 +9,7 @@
         "add": "Добавить",
         "close": "Закрыть",
         "labelPlaceholder": "Имя сайта",
-        "pin": "Pin",
+        "pin": "Кнопка",
         "unpin": "Unpin",
         "block": "Block",
         "blockTitle": "Block \"{{title}}\"?",

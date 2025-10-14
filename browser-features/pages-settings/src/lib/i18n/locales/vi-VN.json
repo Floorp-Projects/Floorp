@@ -34,7 +34,7 @@
         "mouseGesture": "Cử chỉ chuột",
         "keyboardShortcut": "Phím tắt",
         "search": {
-            "title": "Search Settings",
+            "title": "Tìm kiếm cài đặt",
             "resultsFor": "Search results for \"{{query}}\"",
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
             "noResults": "No results found",
@@ -140,40 +140,40 @@
             },
             "autohide": {
                 "title": "Auto-hide Settings",
-                "tab": "Automatically hide tabs",
-                "navbar": "Automatically hide Toolbar",
-                "sidebar": "Automatically hide Sidebar",
-                "backButton": "Automatically hide back button",
-                "forwardButton": "Automatically hide forward button",
-                "pageAction": "Automatically hide buttons on the Address Bar"
+                "tab": "Tự động ẩn các thẻ",
+                "navbar": "Tự động ẩn thanh công cụ",
+                "sidebar": "Tự động ẩn thanh lề",
+                "backButton": "Tự động ẩn nút quay lại",
+                "forwardButton": "Tự động ẩn nút chuyển tiếp",
+                "pageAction": "Tự động ẩn các nút trên thanh địa chỉ"
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
-                "tabbar": "Hide Tab Bar",
-                "navbar": "Hide Toolbar",
-                "sidebarHeader": "Hide Sidebar Headers",
-                "urlbarIconbox": "Hide Address Bar icons",
-                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
-                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
-                "disabledMenu": "Hide disabled context menu items"
+                "tabIcon": "Ẩn biểu tượng thẻ",
+                "tabbar": "Ẩn",
+                "navbar": "Ẩn thanh công cụ",
+                "sidebarHeader": "Ẩn tiêu đề cạnh lề",
+                "urlbarIconbox": "Ẩn icon thanh địa chỉ",
+                "bookmarkbarIcon": "Ẩn icon thanh dấu trang",
+                "bookmarkbarLabel": "Ẩn nhãn thanh dấu trang",
+                "disabledMenu": "Ẩn các mục bị vô hiệu hoá khi nhấp chuột phải"
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Vô hiệu hoá context menu của Lepton và biểu tượng thanh công cụ",
+                "menu": "Hiện biểu tượng context menu của Lepton"
             },
             "centered": {
                 "title": "Centered Settings",
-                "tab": "Center labels in tabs",
+                "tab": "Canh giữa nhãn trong các thẻ",
                 "urlbar": "Căn giữa chữ thanh địa chỉ",
-                "bookmarkbar": "Center Bookmarks Bar items"
+                "bookmarkbar": "Canh giữa các thẻ trên thanh dấu trang"
             },
             "urlView": {
                 "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "moveIconToLeft": "Chuyển biểu tượng thanh địa chỉ sang bên trái",
                 "goButtonWhenTyping": "Khi nhập, hiển thị nút \"Đi\"",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "alwaysShowPageActions": "Luôn hiển thị các thao tác trong thanh địa chỉ"
             },
             "tabbar": {
                 "title": "Cài đặt thanh thẻ",
@@ -182,14 +182,14 @@
             },
             "sidebar": {
                 "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
+                "overlap": "Hiện thanh lề đè lên nội dung trang web"
             }
         },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Thanh điều hướng",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Bo tròn các góc của trang",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -209,7 +209,7 @@
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "newtab": {
-                "title": "New Tab",
+                "title": "Thẻ mới",
                 "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
@@ -303,11 +303,11 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Biểu tượng",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
+        "container": "Ngăn chứa",
+        "noContainer": "Không ngăn chứa",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -318,16 +318,16 @@
         },
         "staticPanels": {
             "bmt": "Browser Manager Tool",
-            "bookmarks": "Bookmarks",
-            "history": "History",
-            "downloads": "Downloads",
+            "bookmarks": "Dấu trang",
+            "history": "Lịch sử",
+            "downloads": "Tải xuống",
             "notes": "Notes"
         },
-        "url": "URL",
+        "url": "Địa chỉ trang",
         "untitled": "Untitled",
         "confirmDeleteTitle": "Delete Panel",
         "confirmDelete": "Are you sure you want to delete this panel?",
-        "delete": "Delete",
+        "delete": "Xoá",
         "addPanel": "Add Panel",
         "editPanel": "Edit Panel",
         "errors": {
@@ -338,8 +338,8 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
-        "cancel": "Cancel"
+        "save": "Lưu",
+        "cancel": "Hủy"
     },
     "progressiveWebApp": {
         "title": "Web Apps",
@@ -391,7 +391,7 @@
             "gecko-open-new-tab": "New Tab",
             "gecko-duplicate-tab": "Duplicate Tab",
             "gecko-reload-all-tabs": "Reload All Tabs",
-            "gecko-restore-last-tab": "Reopen Closed Tab",
+            "gecko-restore-last-tab": "Mở lại thẻ dã đóng",
             "gecko-open-new-window": "Open New Window",
             "gecko-open-new-private-window": "Open New Private Window",
             "gecko-close-window": "Close Window",

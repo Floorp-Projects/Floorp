@@ -214,13 +214,13 @@
             "width": "Panel Width",
             "url": "Web Page URL",
             "container": "Container",
-            "noContainer": "No Container",
+            "noContainer": "Nessuno spazio di lavoro",
             "userAgent": "Use Mobile User Agent",
             "extension": "Display Extension",
             "sideBarTool": "Display Sidebar Tool",
             "title": "Add Panel",
             "add": "Add",
-            "cancel": "Cancel"
+            "cancel": "Annulla"
         },
         "contextMenu": {
             "unload": "Unload this webpanel",
@@ -228,7 +228,7 @@
             "changeZoom": "Change zoom level",
             "zoomIn": "Zoom in",
             "zoomOut": "Zoom out",
-            "resetZoom": "Reset zoom",
+            "resetZoom": "Reimposta ingrandimento",
             "changeUA": "Switch User agent to Mobile/Desktop Version at this Webpanel",
             "delete": "Delete this panel"
         }

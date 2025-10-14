@@ -128,10 +128,10 @@
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
         "lepton-preferences": {
-            "title": "Lepton Settings",
+            "title": "Configuración de Lepton",
             "description": "Configure advanced Lepton theme preferences",
             "configureLepton": "Configure Lepton",
-            "back": "Back",
+            "back": "Atrás",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
                 "description": "These settings are experimental and not officially supported. Issues may occur.",
@@ -149,8 +149,8 @@
             },
             "hidden": {
                 "title": "Hide Settings",
-                "tabIcon": "Hide tab icons",
-                "tabbar": "Hide Tab Bar",
+                "tabIcon": "Ocultar iconos de pestañas",
+                "tabbar": "Ocultar barra de pestañas",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",
                 "urlbarIconbox": "Hide Address Bar icons",
@@ -172,12 +172,12 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "goButtonWhenTyping": "Al escribir, mostrar botón «Ir»",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Tab Bar in the Title Bar",
+                "asTitlebar": "Barra de pestañas sobre barra de título",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
@@ -189,7 +189,7 @@
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
-                "title": "Navigation Bar",
+                "title": "Barra de navegación",
                 "positionWithExperiment": "Position (Experiment)",
                 "top": "Top",
                 "bottom": "Bottom",
@@ -198,7 +198,7 @@
             "display": {
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
-                "deleteBrowserBorder": "Round the corners of pages",
+                "deleteBrowserBorder": "Redondear esquinas de las páginas",
                 "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
@@ -209,7 +209,7 @@
                 "stgLikeWorkspaces": "Simple Tab Groups like workspaces"
             },
             "newtab": {
-                "title": "New Tab",
+                "title": "Pestaña nueva",
                 "disableFloorpStart": "Disable Floorp Start"
             },
             "multirowTab": {
@@ -303,11 +303,11 @@
         "extensionPanel": "Extension Panel",
         "selectStaticPanel": "Select a Sidebar Tool",
         "selectExtension": "Select an extension",
-        "icon": "Icon",
+        "icon": "Icono",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
+        "container": "Contenedor",
+        "noContainer": "Ningún contenedor",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -321,7 +321,7 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notas"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -339,7 +339,7 @@
             "invalidWidth": "Width must be at least 100 pixels"
         },
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancelar"
     },
     "progressiveWebApp": {
         "title": "Web Apps",

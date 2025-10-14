@@ -34,13 +34,13 @@
         "mouseGesture": "Gestes de la souris",
         "keyboardShortcut": "Raccourcis clavier",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
-            "open": "Open \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Search Results"
+            "title": "Paramètres de recherche",
+            "resultsFor": "Résultats de la recherche pour \"{{query}}\"",
+            "searchResultsDescription": "Résultats de la recherche pour \"{{query}}\". Seuls les paramètres de {{productName}} sont recherchés, les paramètres de Firefox ne sont pas inclus.",
+            "noResults": "Aucun résultat",
+            "open": "Ouvrir \"{{title}}\"",
+            "matchedText": "Texte correspondant",
+            "results": "Résultats de la recherche"
         }
     },
     "home": {
