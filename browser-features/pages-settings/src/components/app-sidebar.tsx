@@ -20,6 +20,8 @@ import {
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
 import { NavFeatures } from "@/components/nav-features.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { rpc } from "../lib/rpc/rpc.ts";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
@@ -28,7 +30,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: t("pages.home"), url: "/overview/home", icon: House },
   ];
 
-  const features = [
+  const [isFloorpOSEnabled, setIsFloorpOSEnabled] = useState<boolean | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const val = await rpc.getBoolPref(
+          "floorp.experiment.floorpos.enabled",
+          false,
+        );
+        if (mounted) setIsFloorpOSEnabled(Boolean(val));
+      } catch (e) {
+        console.error(
+          "failed to get pref floorp.experiment.floorpos.enabled",
+          e,
+        );
+        if (mounted) setIsFloorpOSEnabled(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const features = useMemo(() => [
     {
       title: t("pages.tabAndAppearance"),
       url: "/features/design",
@@ -55,17 +83,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Option,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
-    {
-      title: "Floorp OS",
-      url: "/features/floorp-os",
-      icon: Cpu,
-    },
+    // Floorp OS entry is conditional based on pref floorp.experiment.floorpos.enabled
+    ...(isFloorpOSEnabled
+      ? [
+        {
+          title: "Floorp OS",
+          url: "/features/floorp-os",
+          icon: Cpu,
+        },
+      ]
+      : []),
     {
       title: t("pages.profileAndAccount"),
       url: "/features/accounts",
       icon: UserRoundPen,
     },
-  ];
+  ], [isFloorpOSEnabled, t]);
 
   const about = [
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
