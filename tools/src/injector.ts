@@ -101,11 +101,11 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
     ["startup", "bridge/startup/_dist"],
     ["skin", "browser-features/skin"],
     ["resource", "bridge/loader-modules/_dist"],
-    ["pages-newtab", "browser-features/pages-newtab/dist"],
-    ["pages-settings", "browser-features/pages-settings/dist"],
-    ["pages-welcome", "browser-features/pages-welcome/dist"],
-    ["pages-notes", "browser-features/pages-notes/dist"],
-    ["pages-modal-child", "browser-features/pages-modal-child/dist"],
+    ["pages-newtab", "browser-features/pages-newtab/_dist"],
+    ["pages-settings", "browser-features/pages-settings/_dist"],
+    ["pages-welcome", "browser-features/pages-welcome/_dist"],
+    ["pages-notes", "browser-features/pages-notes/_dist"],
+    ["pages-modal-child", "browser-features/pages-modal-child/_dist"],
   ];
 
   for (const [subdir, target] of mounts) {
