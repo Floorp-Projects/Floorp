@@ -15,6 +15,9 @@ export async function generateJarManifest(
   for (const i of Object.values(viteManifest)) {
     arr.push((i as { fileName: string })["fileName"].replaceAll("\\", "/"));
   }
+  // Vite emits the HTML entry point outside of the Rollup bundle.
+  arr.push("index.html");
+
   console.log("generate end jar.mn");
 
   return `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes\n ${Array.from(
