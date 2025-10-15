@@ -748,7 +748,7 @@ jobs:
           mkdir -p "$(dirname "$OUTPUT_DEB")"
 
           echo "Invoking mach repackage deb..."
-          if ./mach repackage deb --input "$ADJUSTED_ARCHIVE" --output "$OUTPUT_DEB" --arch x86_64 --version "$VERSION" --build-number 1 --templates browser/installer/linux/app/debian --release-product firefox --release-type release; then
+          if ./mach repackage deb --input "$ADJUSTED_ARCHIVE" --output "$OUTPUT_DEB" --arch x86_64 --version "$VERSION" --build-number 1 --templates browser/installer/linux/app/debian --release-product firefox --release-type release --product firefox; then
             echo "mach repackage deb succeeded -> $OUTPUT_DEB"
             ls -la "$OUTPUT_DEB" || true
           else
