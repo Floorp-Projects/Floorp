@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { genJarmnPlugin } from "#libs/vite-plugin-gen-jarmn/plugin.ts";
+import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 
 export default defineConfig({
   build: {

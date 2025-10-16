@@ -85,13 +85,16 @@ user_pref("browser.newtabpage.enabled", true);
   logger.info(`Wrote developer preferences to ${userJsPath}`);
 }
 
-async function extractNestedZip(outerZipPath: string, extractToDir: string): Promise<void> {
-  const tempDir = "_dist/temp_extract_"+Date.now();
+async function extractNestedZip(
+  outerZipPath: string,
+  extractToDir: string,
+): Promise<void> {
+  const tempDir = "_dist/temp_extract_" + Date.now();
   await Deno.mkdir(tempDir);
-  
+
   try {
     logger.info("Extracting outer zip...");
-    
+
     // Extract outer zip to temp directory
     switch (PLATFORM) {
       case "windows":
@@ -100,9 +103,9 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
         } catch {
           runCommand("powershell", [
             "-NoProfile",
-            "-NonInteractive", 
+            "-NonInteractive",
             "-Command",
-            `Expand-Archive -LiteralPath '${outerZipPath}' -DestinationPath '${tempDir}' -Force`
+            `Expand-Archive -LiteralPath '${outerZipPath}' -DestinationPath '${tempDir}' -Force`,
           ]);
         }
         break;
@@ -115,7 +118,7 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
     // Find the inner zip file
     let innerZipPath: string | null = null;
     for (const entry of Deno.readDirSync(tempDir)) {
-      if (entry.name.endsWith('.zip')) {
+      if (entry.name.endsWith(".zip")) {
         innerZipPath = path.join(tempDir, entry.name);
         break;
       }
@@ -126,7 +129,7 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
     }
 
     logger.info("Extracting inner zip...");
-    
+
     // Extract inner zip to final destination
     switch (PLATFORM) {
       case "windows":
@@ -136,8 +139,8 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
           runCommand("powershell", [
             "-NoProfile",
             "-NonInteractive",
-            "-Command", 
-            `Expand-Archive -LiteralPath '${innerZipPath}' -DestinationPath '${extractToDir}' -Force`
+            "-Command",
+            `Expand-Archive -LiteralPath '${innerZipPath}' -DestinationPath '${extractToDir}' -Force`,
           ]);
         }
         break;
@@ -155,9 +158,8 @@ async function extractNestedZip(outerZipPath: string, extractToDir: string): Pro
         // Ignore chmod errors
       }
     }
-
   } finally {
-    // Clean up temp directory　
+    // Clean up temp directory
     try {
       Deno.removeSync(tempDir, { recursive: true });
     } catch {
@@ -180,31 +182,42 @@ export async function decompressBin(): Promise<void> {
 
   try {
     // Handle nested zip extraction
-    if (binArchive.filename.endsWith('.zip')) {
+    if (binArchive.filename.endsWith(".zip")) {
       await extractNestedZip(archivePath, BIN_ROOT_DIR);
     } else {
       // Handle other archive formats (DMG, tar.xz, etc.)
       switch (PLATFORM) {
         case "windows":
           throw new Error("Non-zip archives not supported on Windows");
-          
+
         case "darwin": {
-            logger.info("macOS extraction (hdiutil)");
-            const mountPoint = await Deno.makeTempDir({ prefix: "nora_dmg_mount_" });
-            try {
-            runCommand("hdiutil", ["attach", "-nobrowse", "-quiet", "-mountpoint", mountPoint, archivePath]);
+          logger.info("macOS extraction (hdiutil)");
+          const mountPoint = await Deno.makeTempDir({
+            prefix: "nora_dmg_mount_",
+          });
+          try {
+            runCommand("hdiutil", [
+              "attach",
+              "-nobrowse",
+              "-quiet",
+              "-mountpoint",
+              mountPoint,
+              archivePath,
+            ]);
             const subdir = path.join(BIN_ROOT_DIR, BRANDING.base_name);
             Deno.mkdirSync(subdir, { recursive: true });
             runCommand("cp", ["-a", `${mountPoint}/.`, subdir]);
 
-            // Rename .app if it contains "Debug"
+            // Rename any .app to BRANDING.display_name.app
             for (const entry of Deno.readDirSync(subdir)) {
-              if (entry.isDirectory && entry.name.endsWith('.app') && entry.name.includes('Debug')) {
+              if (entry.isDirectory && entry.name.endsWith(".app")) {
                 const oldPath = path.join(subdir, entry.name);
-                const newName = entry.name.replace(/Debug/g, '');
+                const newName = BRANDING.display_name + ".app";
                 const newPath = path.join(subdir, newName);
-                logger.info(`Renaming ${entry.name} to ${newName}`);
-                Deno.renameSync(oldPath, newPath);
+                if (entry.name !== newName) {
+                  logger.info(`Renaming ${entry.name} to ${newName}`);
+                  Deno.renameSync(oldPath, newPath);
+                }
               }
             }
 
@@ -214,31 +227,39 @@ export async function decompressBin(): Promise<void> {
               // xattr might not be present; ignore
             }
             runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
-            } finally {
+            // Patch Info.plist to inject developer repo/obj path equal to
+            // the extracted directory so GetRepoDir can find it without
+            // editing C++ sources.
+            try {
+              const macUtils = await import("./macos_utils.ts");
+              await macUtils.patchAppInfoPlists(subdir, subdir, subdir);
+            } catch (e) {
+              logger.warn(`macOS Info.plist patch skipped: ${e?.message ?? e}`);
+            }
+          } finally {
             try {
               runCommand("hdiutil", ["detach", "-quiet", mountPoint]);
             } catch {
               // ignore detach failures
             }
-            }
-            break;
+          }
+          break;
         }
-        
+
         case "linux": {
           runCommand("tar", ["-xJf", archivePath, "-C", BIN_ROOT_DIR]);
           runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
           break;
         }
-        
+
         default:
           throw new Error(`Unsupported platform: ${PLATFORM}`);
       }
     }
-    
+
     Deno.writeTextFileSync(BIN_VERSION, VERSION);
     logger.success("Extraction complete!");
-    
-  } catch (e: any) {
+  } catch (e) {
     logger.error(`Error during extraction: ${e?.message ?? e}`);
     Deno.exit(1);
   }

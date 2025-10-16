@@ -29,37 +29,6 @@ if [[ ! -f "$OVERRIDE_INI" ]]; then
     echo -e "${COLOR_RED}Error: override.ini not found at $OVERRIDE_INI${COLOR_RESET}" >&2
     exit 1
 fi
-#!/bin/bash
-
-# Firefox preferences override script
-# Receives firefox.js path as command line argument and overrides settings with override.ini
-
-set -euo pipefail
-
-# ANSI color codes
-COLOR_RESET='\033[0m'
-COLOR_BLUE='\033[34m'
-COLOR_GREEN='\033[32m'
-COLOR_YELLOW='\033[33m'
-COLOR_RED='\033[31m'
-
-# Check command line arguments
-if [[ $# -ne 1 ]]; then
-    echo -e "${COLOR_RED}Error: Usage: $0 <path-to-firefox.js>${COLOR_RESET}" >&2
-    exit 1
-fi
-
-FIREFOX_JS_PATH="$1"
-
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OVERRIDE_INI="${SCRIPT_DIR}/override.ini"
-
-# Check if override.ini exists
-if [[ ! -f "$OVERRIDE_INI" ]]; then
-    echo -e "${COLOR_RED}Error: override.ini not found at $OVERRIDE_INI${COLOR_RESET}" >&2
-    exit 1
-fi
 
 # Check if firefox.js file exists
 if [[ ! -f "$FIREFOX_JS_PATH" ]]; then
@@ -89,22 +58,27 @@ while IFS= read -r line; do
         pref_name="${BASH_REMATCH[1]// /}"  # Remove leading/trailing spaces
         pref_value="${BASH_REMATCH[2]}"
 
-        # Remove leading/trailing spaces and handle quotes properly
+        # Remove leading/trailing spaces
         pref_value=$(echo "$pref_value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-        # Handle values that are not quoted
-        if [[ "$pref_value" =~ ^".*"$ ]]; then
-            # Already quoted
-            formatted_value="$pref_value"
-        elif [[ "$pref_value" =~ ^(true|false)$ ]]; then
+        # Strip surrounding quotes (one or more) to normalize
+        stripped_value=$(printf '%s' "$pref_value" | sed -E 's/^"+//;s/"+$//')
+
+        # Determine final formatted value
+        if [[ "$stripped_value" =~ ^(true|false)$ ]]; then
             # Boolean value
-            formatted_value="$pref_value"
-        elif [[ "$pref_value" =~ ^[0-9]+$ ]]; then
+            formatted_value="$stripped_value"
+        elif [[ "$stripped_value" =~ ^[0-9]+$ ]]; then
             # Numeric value
-            formatted_value="$pref_value"
+            formatted_value="$stripped_value"
+        elif [[ -z "$stripped_value" ]]; then
+            # Empty string -> produce ""
+            formatted_value='""'
         else
-            # Treat as string
-            formatted_value="\"$pref_value\""
+            # String value -> wrap in single pair of double quotes
+            # Escape any existing double quotes inside the string
+            safe_value=$(printf '%s' "$stripped_value" | sed 's/"/\\"/g')
+            formatted_value="\"$safe_value\""
         fi
 
         # Search for existing preference
