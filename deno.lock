@@ -5344,6 +5344,11 @@
           ]
         }
       },
+      "libs/vite-plugin-disable-csp": {
+        "dependencies": [
+          "npm:rolldown@^1.0.0-beta.32"
+        ]
+      },
       "libs/vite-plugin-gen-jarmn": {
         "dependencies": [
           "npm:rolldown@^1.0.0-beta.32"
