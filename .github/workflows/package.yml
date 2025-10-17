@@ -545,44 +545,98 @@ jobs:
 
       - name: Inject Noraneko
         run: |
+          set -euo pipefail
+
           cd ./noraneko
           deno task feles-build build --phase after-mach
-          rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
-          rm -rf ../obj-artifact-build-output/dist/bin
-          mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
+
+          DIST_ROOT="../obj-artifact-build-output/dist"
+          BIN_DIR="$DIST_ROOT/bin"
+          TMP_BIN="$DIST_ROOT/tmp__bin"
+          if [ ! -d "$BIN_DIR" ]; then
+            echo "Expected bin directory $BIN_DIR not found." >&2
+            cd ..
+            exit 1
+          fi
+          rm -rf "$TMP_BIN"
+          rsync -aL "$BIN_DIR/" "$TMP_BIN"
+          rm -rf "$BIN_DIR"
+          mv "$TMP_BIN" "$BIN_DIR"
+
           CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
           if [[ "$CANON_PLATFORM" == *-x64 ]]; then
             CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
           fi
-          if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
-            # macOS .app の Resources に対してパッチを適用するが、
-            # ワイルドカードが未展開のまま文字列になる環境(CI等)では
-            # そのまま patch に渡るとエラーとなるため、配列展開して
-            # 実際に存在するディレクトリのみ処理する。
-            shopt -s nullglob
-            patch_files=(./tools/build/tasks/git-patches/patches/*.patch)
-            resource_dirs=(
-              ../obj-artifact-build-output/dist/*.app/Contents/Resources
-              ../obj-artifact-build-output/dist/floorp/*.app/Contents/Resources
-            )
-            if [ ${#patch_files[@]} -gt 0 ] && [ ${#resource_dirs[@]} -gt 0 ]; then
-              for patch_file in "${patch_files[@]}"; do
-                for resource_dir in "${resource_dirs[@]}"; do
-                  if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                    patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
-                  else
-                    echo "Dry-run failed for $patch_file in $resource_dir" >&2
-                    exit 1
-                  fi
-                done
-              done
-            fi
-            shopt -u nullglob || true
-          else
-            if ls ./tools/build/tasks/git-patches/patches/*.patch >/dev/null 2>&1; then
-              git apply --reject ./tools/build/tasks/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
-            fi
+
+          PATCH_DIR="./tools/patches"
+          if [ ! -d "$PATCH_DIR" ]; then
+            echo "Patch directory $PATCH_DIR not found; skipping patch application."
+            cd ..
+            exit 0
           fi
+
+          shopt -s nullglob
+          patch_files=("$PATCH_DIR"/*.patch)
+          shopt -u nullglob || true
+
+          if [ ${#patch_files[@]} -eq 0 ]; then
+            echo "No patch files found in $PATCH_DIR; skipping patch application."
+            cd ..
+            exit 0
+          fi
+
+          if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
+            shopt -s nullglob
+            resource_patterns=(
+              "$DIST_ROOT"/*.app/Contents/Resources
+              "$DIST_ROOT"/floorp/*.app/Contents/Resources
+            )
+            resources=()
+            for pattern in "${resource_patterns[@]}"; do
+              for resolved in $pattern; do
+                if [ -d "$resolved" ]; then
+                  resources+=("$resolved")
+                fi
+              done
+            done
+            shopt -u nullglob || true
+
+            if [ ${#resources[@]} -eq 0 ]; then
+              echo "No macOS Resources directories found for patch application." >&2
+              cd ..
+              exit 1
+            fi
+
+            for patch_file in "${patch_files[@]}"; do
+              applied=false
+              for resource_dir in "${resources[@]}"; do
+                echo "Applying $(basename "$patch_file") to $resource_dir"
+                if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                  patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
+                  applied=true
+                else
+                  echo "Dry-run failed for $patch_file in $resource_dir" >&2
+                fi
+              done
+              if [ "$applied" = false ]; then
+                echo "Patch $(basename "$patch_file") could not be applied to any resource directory." >&2
+                cd ..
+                exit 1
+              fi
+            done
+          else
+            if [ ! -d "$BIN_DIR" ]; then
+              echo "Target directory $BIN_DIR not found." >&2
+              cd ..
+              exit 1
+            fi
+
+            for patch_file in "${patch_files[@]}"; do
+              echo "Applying $(basename "$patch_file") to $BIN_DIR"
+              git apply --reject --whitespace=fix --unsafe-paths --directory "$BIN_DIR" "$patch_file"
+            done
+          fi
+
           cd ..
 
       - name: Upload dist on failure (pre-packaging)
