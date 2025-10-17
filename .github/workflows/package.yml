@@ -547,42 +547,27 @@ jobs:
         run: |
           cd ./noraneko
           deno task feles-build build --phase after-mach
+
+          # https://www.spinics.net/lists/git/msg391750.html
           rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
           rm -rf ../obj-artifact-build-output/dist/bin
           mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
-          CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
-          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
-            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
-          fi
+
           if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
-            # macOS .app の Resources に対してパッチを適用するが、
-            # ワイルドカードが未展開のまま文字列になる環境(CI等)では
-            # そのまま patch に渡るとエラーとなるため、配列展開して
-            # 実際に存在するディレクトリのみ処理する。
-            shopt -s nullglob
-            patch_files=(./tools/build/tasks/git-patches/patches/*.patch)
-            resource_dirs=(
-              ../obj-artifact-build-output/dist/*.app/Contents/Resources
-              ../obj-artifact-build-output/dist/floorp/*.app/Contents/Resources
-            )
-            if [ ${#patch_files[@]} -gt 0 ] && [ ${#resource_dirs[@]} -gt 0 ]; then
-              for patch_file in "${patch_files[@]}"; do
-                for resource_dir in "${resource_dirs[@]}"; do
-                  if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                    patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
-                  else
-                    echo "Dry-run failed for $patch_file in $resource_dir" >&2
-                    exit 1
-                  fi
-                done
+            for patch_file in ./tools/patches/*.patch; do
+              for resource_dir in ../obj-artifact-build-output/dist/*.app/Contents/Resources; do
+                if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                  patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
+                else
+                  echo "Dry-run failed for $patch_file in $resource_dir" >&2
+                  exit 1
+                fi
               done
-            fi
-            shopt -u nullglob || true
+            done
           else
-            if ls ./tools/build/tasks/git-patches/patches/*.patch >/dev/null 2>&1; then
-              git apply --reject ./tools/build/tasks/git-patches/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
-            fi
+            git apply --reject ./tools/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
           fi
+
           cd ..
 
       - name: Upload dist on failure (pre-packaging)
