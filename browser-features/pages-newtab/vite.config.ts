@@ -11,7 +11,7 @@ export default defineConfig(({ command }) => ({
     outDir: "_dist",
   },
   plugins: [
-    includeIndexHtmlPlugin(),
+    includeIndexHtmlPlugin({ isIndexOwner: true }),
     tailwindcss(),
     react({
       jsxImportSource: "react",

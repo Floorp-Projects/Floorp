@@ -134,6 +134,10 @@ jobs:
           set -euo pipefail
 
           raw_platform="${{ inputs.platform }}"
+          # If inputs.platform is empty (act or other runners), fall back to a sensible default
+          if [ -z "${raw_platform}" ]; then
+            raw_platform="Linux-x64"
+          fi
           canon_platform="$raw_platform"
           case "$raw_platform" in
             *-x64) canon_platform="${raw_platform%-x64}-x86_64" ;;
@@ -170,23 +174,20 @@ jobs:
             CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
           fi
 
-          declare -A MOZCONFIGS=(
-            ["Windows-x86_64"]="./.github/workflows/mozconfigs/windows-x86_64.mozconfig"
-            ["Linux-x86_64"]="./.github/workflows/mozconfigs/linux-x86_64.mozconfig"
-            ["Linux-aarch64"]="./.github/workflows/mozconfigs/linux-aarch64.mozconfig"
-            ["macOS-x86_64"]="./.github/workflows/mozconfigs/macos-x86_64.mozconfig"
-          )
+          # Use a portable case-based mapping instead of associative arrays.
+          # Some runner environments (or shells) may not support bash associative arrays
+          # reliably; using case ensures compatibility under act/local runs.
+          MOZCONFIG=""
+          case "$CANON_PLATFORM" in
+            "Windows-x86_64") MOZCONFIG="./.github/workflows/mozconfigs/windows-x86_64.mozconfig"; FALLBACK_MOZCONFIG="./.github/workflows/mozconfigs/win64.mozconfig" ;; 
+            "Linux-x86_64") MOZCONFIG="./.github/workflows/mozconfigs/linux-x86_64.mozconfig"; FALLBACK_MOZCONFIG="./.github/workflows/mozconfigs/linux64.mozconfig" ;; 
+            "Linux-aarch64") MOZCONFIG="./.github/workflows/mozconfigs/linux-aarch64.mozconfig"; FALLBACK_MOZCONFIG="./.github/workflows/mozconfigs/linux64-aarch64.mozconfig" ;; 
+            "macOS-x86_64") MOZCONFIG="./.github/workflows/mozconfigs/macos-x86_64.mozconfig"; FALLBACK_MOZCONFIG="./.github/workflows/mozconfigs/macosx64-x86_64.mozconfig" ;; 
+            *) MOZCONFIG=""; FALLBACK_MOZCONFIG="" ;; 
+          esac
 
-          declare -A FALLBACK_MOZCONFIGS=(
-            ["Windows-x86_64"]="./.github/workflows/mozconfigs/win64.mozconfig"
-            ["Linux-x86_64"]="./.github/workflows/mozconfigs/linux64.mozconfig"
-            ["Linux-aarch64"]="./.github/workflows/mozconfigs/linux64-aarch64.mozconfig"
-            ["macOS-x86_64"]="./.github/workflows/mozconfigs/macosx64-x86_64.mozconfig"
-          )
-
-          MOZCONFIG="${MOZCONFIGS[$CANON_PLATFORM]}"
           if [ -z "${MOZCONFIG}" ] || [ ! -f "${MOZCONFIG}" ]; then
-            MOZCONFIG="${FALLBACK_MOZCONFIGS[$CANON_PLATFORM]}"
+            MOZCONFIG="${FALLBACK_MOZCONFIG}"
           fi
 
           if [ -z "${MOZCONFIG}" ] || [ ! -f "${MOZCONFIG}" ]; then

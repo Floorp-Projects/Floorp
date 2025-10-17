@@ -3,24 +3,36 @@
 // Importing the Plugin type may require import-map or environment configuration.
 // To avoid import resolution issues in different runtimes, we use an untyped export
 // that is compatible with rollup/vite plugin shape.
-export function includeIndexHtmlPlugin(opts?: { path?: string }) {
+export function includeIndexHtmlPlugin(opts?: {
+  path?: string;
+  isIndexOwner?: boolean;
+}) {
   return {
     name: "include-index-html-plugin",
     async generateBundle(
       _options,
       bundle: Record<string, { fileName?: string }>,
     ) {
-      // If index.html already present anywhere in the bundle (root or nested), do nothing
-      if (
-        Object.values(bundle).some((v) => {
-          const fn = v.fileName ?? "";
-          return (
-            fn === "index.html" ||
-            fn.endsWith("/index.html") ||
-            fn.endsWith("\\index.html")
-          );
-        })
-      ) {
+      // Determine whether bundle already contains index.html (any path)
+      const hasIndexInBundle = Object.values(bundle).some((v) => {
+        const fn = v.fileName ?? "";
+        return (
+          fn === "index.html" ||
+          fn.endsWith("/index.html") ||
+          fn.endsWith("\\index.html")
+        );
+      });
+
+      // If an index is already present in bundle, don't emit anything.
+      if (hasIndexInBundle) {
+        return;
+      }
+
+      // If this plugin is not the designated index owner and the bundle is
+      // missing index.html, do nothing. The 'owner' feature should set
+      // isIndexOwner: true so that exactly one feature emits index.html.
+      const isOwner = !!opts?.isIndexOwner;
+      if (!isOwner) {
         return;
       }
 
