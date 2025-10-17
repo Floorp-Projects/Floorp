@@ -17,7 +17,7 @@ export default defineConfig(({ command }) => ({
       jsxImportSource: "react",
     }),
     tsconfigPaths(),
-    genJarmnPlugin("content-newtab", "noraneko-newtab", "content"),
+    genJarmnPlugin("content-notes", "noraneko-notes", "content"),
     disableCspInDevPlugin(command === "serve"),
   ],
   optimizeDeps: {
