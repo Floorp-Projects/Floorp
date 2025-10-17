@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
 import { disableCspInDevPlugin } from "@nora/vite-plugin-disable-csp";
-import { includeIndexHtmlPlugin } from "@nora/vite-plugin-include-index-html";
 
 export default defineConfig(({ command }) => ({
   build: {

@@ -1,7 +1,0 @@
-{
-  "name": "@nora/vite-plugin-include-index-html",
-  "imports": {
-    "rolldown": "npm:rolldown@^1.0.0-beta.32"
-  },
-  "exports": "./plugin.ts"
-}
