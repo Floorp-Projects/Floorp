@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import i18n from "i18next";
+import { initI18nextInstance } from "@/lib/i18n/i18n.ts";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -14,13 +14,21 @@ export default function useI18nInit() {
   useEffect(() => {
     (async () => {
       try {
-        const locale =
-          await globalThis.NRI18n?.getPrimaryBrowserLocaleMapped?.();
-        console.log("Initializing language to:", locale);
-        i18n.changeLanguage(locale || "en-US");
+        await initI18nextInstance();
+        const locale = await // deno-lint-ignore no-explicit-any
+        (globalThis as any).NRI18n?.getPrimaryBrowserLocaleMapped?.();
+        if (locale) {
+          const i18n = (await import("@/lib/i18n/i18n.ts")).default;
+          await i18n.changeLanguage(locale);
+        }
       } catch (e) {
-        console.error("Failed to get browser locale:", e);
-        i18n.changeLanguage("en-US");
+        console.error("Failed to get browser locale or initialize i18n:", e);
+        try {
+          const i18n = (await import("@/lib/i18n/i18n.ts")).default;
+          await i18n.changeLanguage("en-US");
+        } catch (e2) {
+          console.error("Failed to apply fallback language:", e2);
+        }
       }
     })();
   }, []);

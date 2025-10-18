@@ -4,8 +4,6 @@ import { RichTextEditor } from "./components/editor/RichTextEditor.tsx";
 import { SerializedEditorState, SerializedLexicalNode } from "lexical";
 import { getNotes, NotesData, saveNotes } from "./lib/dataManager.ts";
 import { useTranslation } from "react-i18next";
-import { initI18n } from "../../../i18n/useI18nInit.ts";
-import "./lib/i18n/i18n.ts";
 
 interface Note {
   id: string;
@@ -122,12 +120,6 @@ function App() {
   ) => {
     updateCurrentNote(JSON.stringify(editorState));
   };
-
-  useEffect(() => {
-    (async () => {
-      await initI18n();
-    })();
-  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-base-100 text-base-content">

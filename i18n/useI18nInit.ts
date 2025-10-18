@@ -20,17 +20,59 @@ export async function initI18n() {
       console.info(
         "[initI18n] i18n not initialized yet; waiting for 'initialized' event",
       );
+
+      // Wait for either the i18next instance 'initialized' event OR a
+      // global event dispatched by other bundles. A timeout fallback is
+      // used to avoid hanging indefinitely if neither arrives.
       await new Promise<void>((resolve) => {
-        const onInit = () => {
+        let settled = false;
+
+        const cleanup = () => {
           try {
             i18n.off("initialized", onInit);
           } catch {
             /* ignore */
           }
+          try {
+            globalThis.removeEventListener(
+              "noraneko:i18n-initialized",
+              onGlobal,
+            );
+          } catch {
+            /* ignore */
+          }
+          clearTimeout(timer);
+        };
+
+        const onInit = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
           console.info("[initI18n] received i18n 'initialized' event");
           resolve();
         };
+
+        const onGlobal = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          console.info("[initI18n] received global i18n initialized event");
+          resolve();
+        };
+
+        // If nothing happens in 5s, give up waiting and continue.
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          console.warn(
+            "[initI18n] timeout waiting for i18n initialized; continuing",
+          );
+          resolve();
+        }, 5000);
+
         i18n.on("initialized", onInit);
+        globalThis.addEventListener("noraneko:i18n-initialized", onGlobal);
       });
     } else {
       console.info("[initI18n] i18n.isInitialized === true");

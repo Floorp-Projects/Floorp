@@ -4,7 +4,7 @@ import "@/globals.css";
 import App from "@/App.tsx";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
-import "@/lib/i18n/i18n.ts";
+import { I18nProvider } from "@/lib/i18n/I18nProvider.tsx";
 
 const getInitialEntry = () => {
   const hash = globalThis.location.hash.slice(1);
@@ -26,9 +26,11 @@ globalThis.addEventListener("hashchange", () => {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="system">
-      <MemoryRouter initialEntries={[getInitialEntry()]}>
-        <App />
-      </MemoryRouter>
+      <I18nProvider>
+        <MemoryRouter initialEntries={[getInitialEntry()]}>
+          <App />
+        </MemoryRouter>
+      </I18nProvider>
     </ThemeProvider>
   </StrictMode>,
 );

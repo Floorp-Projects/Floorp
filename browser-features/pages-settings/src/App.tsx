@@ -20,17 +20,11 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
 import useHashSync from "@/hooks/useHashSync.ts";
-import { initI18n } from "../../../i18n/useI18nInit.ts";
-import { useEffect } from "react";
 
 export default function App() {
   const location = useLocation();
   useHashSync(location.pathname);
-  useEffect(() => {
-    (async () => {
-      await initI18n();
-    })();
-  }, []);
+
   return (
     <div className="flex flex-col w-screen">
       <AppBackground />

@@ -16,10 +16,24 @@ for (const [path, content] of Object.entries(translations)) {
   };
 }
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
+export async function initI18nextInstance() {
+  // Configure instance
+  i18n.use(LanguageDetector).use(initReactI18next);
+
+  // Dispatch a global event when initialized so other bundles can react.
+  try {
+    i18n.on("initialized", () => {
+      try {
+        globalThis.dispatchEvent(new Event("noraneko:i18n-initialized"));
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+
+  await i18n.init({
     lng: "en-US",
     debug: false,
     resources: modules,
@@ -40,5 +54,8 @@ i18n
       useSuspense: false,
     },
   });
+
+  return i18n;
+}
 
 export default i18n;

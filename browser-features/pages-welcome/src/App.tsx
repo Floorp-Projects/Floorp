@@ -1,8 +1,7 @@
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import ProgressBar from "./components/ProgressBar.tsx";
 import { rpc } from "./lib/rpc/rpc.ts";
-import { initI18n } from "../../../i18n/useI18nInit.ts";
 import WhatsNewPage from "./app/whatsnew/page.tsx";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
@@ -13,12 +12,6 @@ const CustomizePage = lazy(() => import("./app/customize/page.tsx"));
 const FinishPage = lazy(() => import("./app/finish/page.tsx"));
 
 function App() {
-  useEffect(() => {
-    (async () => {
-      await initI18n();
-    })();
-  }, []);
-
   //* Set welcome page shown to true (kept for first-run compatibility)
   rpc.setBoolPref("floorp.browser.welcome.page.shown", true);
 

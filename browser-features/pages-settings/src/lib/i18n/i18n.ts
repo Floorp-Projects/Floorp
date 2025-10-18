@@ -16,35 +16,47 @@ for (const [path, content] of Object.entries(translations)) {
   };
 }
 
-console.info("[i18n] initializing i18n (pages-settings)");
+export async function initI18nextInstance() {
+  console.info("[i18n] initializing i18n (pages-settings)");
 
-i18n.use(LanguageDetector).use(initReactI18next);
+  i18n.use(LanguageDetector).use(initReactI18next);
 
-// Attach listener before init to capture the event
-i18n.on("initialized", (opts) => {
-  console.info("[i18n] 'initialized' event fired (pages-settings)", opts);
-});
+  try {
+    i18n.on("initialized", (opts) => {
+      console.info("[i18n] 'initialized' event fired (pages-settings)", opts);
+      try {
+        globalThis.dispatchEvent(new Event("noraneko:i18n-initialized"));
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch {
+    /* ignore */
+  }
 
-i18n.init({
-  lng: "en-US",
-  debug: false,
-  resources: modules,
-  defaultNS: "translations",
-  ns: ["translations"],
-  fallbackLng: "en-US",
-  detection: {
-    order: ["navigator", "querystring", "htmlTag"],
-    caches: [],
-  },
-  interpolation: {
-    escapeValue: false,
-    defaultVariables: {
-      productName: "Floorp",
+  await i18n.init({
+    lng: "en-US",
+    debug: false,
+    resources: modules,
+    defaultNS: "translations",
+    ns: ["translations"],
+    fallbackLng: "en-US",
+    detection: {
+      order: ["navigator", "querystring", "htmlTag"],
+      caches: [],
     },
-  },
-  react: {
-    useSuspense: false,
-  },
-});
+    interpolation: {
+      escapeValue: false,
+      defaultVariables: {
+        productName: "Floorp",
+      },
+    },
+    react: {
+      useSuspense: false,
+    },
+  });
+
+  return i18n;
+}
 
 export default i18n;
