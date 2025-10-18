@@ -10,7 +10,6 @@ export default defineConfig(({ command }) => ({
     outDir: "_dist",
   },
   plugins: [
-    includeIndexHtmlPlugin({ isIndexOwner: true }),
     tailwindcss(),
     react({
       jsxImportSource: "react",
