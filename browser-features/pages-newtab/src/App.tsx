@@ -8,10 +8,16 @@ import { DefaultLayout } from "./components/DefaultLayout.tsx";
 import { FirefoxNewTabLayout } from "./components/FirefoxNewTabLayout.tsx";
 import "./globals.css";
 import { useComponents } from "./contexts/ComponentsContext.tsx";
+import { initI18n } from "../../../i18n/useI18nInit.ts";
+import { useEffect } from "react";
 
 function NewTabContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { components } = useComponents();
+
+  useEffect(() => {
+    initI18n();
+  }, []);
 
   return (
     <>

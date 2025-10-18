@@ -281,6 +281,18 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
+  NRI18n: {
+    parent: {
+      esModuleURI: localPathToResourceURI("../actors/NRI18nParent.sys.mts"),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRI18nChild.sys.mts"),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);

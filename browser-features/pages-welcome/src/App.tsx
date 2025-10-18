@@ -1,9 +1,8 @@
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import ProgressBar from "./components/ProgressBar.tsx";
-import { getLocaleData } from "./app/localization/dataManager.ts";
-import { useTranslation } from "react-i18next";
 import { rpc } from "./lib/rpc/rpc.ts";
+import { initI18n } from "../../../i18n/useI18nInit.ts";
 import WhatsNewPage from "./app/whatsnew/page.tsx";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
@@ -14,21 +13,9 @@ const CustomizePage = lazy(() => import("./app/customize/page.tsx"));
 const FinishPage = lazy(() => import("./app/finish/page.tsx"));
 
 function App() {
-  const { i18n } = useTranslation();
-
   useEffect(() => {
-    const initializeLanguage = async () => {
-      try {
-        const localeData = await getLocaleData();
-        const systemLanguage = localeData.localeInfo.systemLocale.language;
-        await i18n.changeLanguage(systemLanguage);
-      } catch (error) {
-        console.error("Failed to initialize language:", error);
-      }
-    };
-
-    initializeLanguage();
-  }, [i18n]);
+    initI18n();
+  }, []);
 
   //* Set welcome page shown to true (kept for first-run compatibility)
   rpc.setBoolPref("floorp.browser.welcome.page.shown", true);

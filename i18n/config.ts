@@ -6,6 +6,10 @@ import i18next from "i18next";
 import { createEffect, createSignal } from "solid-js";
 import { Resources } from "./default.d.ts";
 
+const { I18nUtils } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+);
+
 export let resources: Resources;
 
 const _modules = import.meta.glob("./*/*.json", { eager: true });
@@ -32,7 +36,7 @@ for (const path in _meta) {
 
 export function initI18N(namespace: string[], defaultNamespace: string) {
   i18next.init({
-    lng: "en-US",
+    lng: I18nUtils.getPrimaryBrowserLocaleMapped(),
     debug: false,
     resources: modules,
     defaultNS: defaultNamespace,
@@ -50,6 +54,11 @@ const [lang, setLang] = createRootHMR(
   () => createSignal("ja-JP"),
   import.meta.hot,
 );
+
+I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
+  await i18next.changeLanguage(newLocale);
+  setLang(newLocale);
+});
 
 /**
  * @param observer

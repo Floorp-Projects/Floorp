@@ -19,23 +19,16 @@ import { AppBackground } from "@/components/app-background.tsx";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
+import useHashSync from "@/hooks/useHashSync.ts";
+import { initI18n } from "../../../i18n/useI18nInit.ts";
 import { useEffect } from "react";
 
-function useHashSync() {
-  const location = useLocation();
-  useEffect(() => {
-    if (location.pathname) {
-      const currentHash = globalThis.location.hash.slice(1);
-      if (currentHash !== location.pathname) {
-        globalThis.location.hash = location.pathname;
-        document.documentElement.dataset.isRouteChanged = "true";
-      }
-    }
-  }, [location.pathname]);
-}
-
 export default function App() {
-  useHashSync();
+  const location = useLocation();
+  useHashSync(location.pathname);
+  useEffect(() => {
+    initI18n();
+  }, []);
   return (
     <div className="flex flex-col w-screen">
       <AppBackground />
