@@ -27,7 +27,9 @@ export default function App() {
   const location = useLocation();
   useHashSync(location.pathname);
   useEffect(() => {
-    initI18n();
+    (async () => {
+      await initI18n();
+    })();
   }, []);
   return (
     <div className="flex flex-col w-screen">

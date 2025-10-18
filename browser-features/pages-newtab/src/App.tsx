@@ -16,7 +16,9 @@ function NewTabContent() {
   const { components } = useComponents();
 
   useEffect(() => {
-    initI18n();
+    (async () => {
+      await initI18n();
+    })();
   }, []);
 
   return (

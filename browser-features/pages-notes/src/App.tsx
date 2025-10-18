@@ -124,7 +124,9 @@ function App() {
   };
 
   useEffect(() => {
-    initI18n();
+    (async () => {
+      await initI18n();
+    })();
   }, []);
 
   return (

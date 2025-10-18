@@ -14,7 +14,9 @@ const FinishPage = lazy(() => import("./app/finish/page.tsx"));
 
 function App() {
   useEffect(() => {
-    initI18n();
+    (async () => {
+      await initI18n();
+    })();
   }, []);
 
   //* Set welcome page shown to true (kept for first-run compatibility)
