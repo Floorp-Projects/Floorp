@@ -11,9 +11,9 @@ import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { iconUrlParser } from "#features-chrome/utils/iconUrlParser.ts";
 import style from "./style.css?inline";
-import PWAINSTALL_SVG from "./icons/pwa-install.svg";
-import PWALAUNCH_SVG from "./icons/pwa-launch.svg";
-import INSTALLING_GIF from "./icons/installing.gif";
+import PWAINSTALL_SVG from "./icons/pwa-install.svg?inline";
+import PWALAUNCH_SVG from "./icons/pwa-launch.svg?inline";
+import INSTALLING_GIF from "./icons/installing.gif?inline";
 
 export class SsbPageAction {
   private isInstalling = createSignal(false);
