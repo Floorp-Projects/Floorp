@@ -21,6 +21,7 @@ interface FCSS {
   stylesRaw?: string[]; // Raw CSS content for development
   iconBasePath?: string; // Base path for icons in development
   userjs: string | null;
+  useTabColorAsToolbarColor?: boolean;
 }
 
 /**
@@ -46,11 +47,13 @@ export function getCSSFromConfig(
           stylesRaw: [fluerialStylesRaw],
           iconBasePath: "http://localhost:5174/fluerial/icons",
           userjs: null,
+          useTabColorAsToolbarColor: true,
         };
       }
       return {
         styles: [getStylePath("fluerial/css/fluerial.css")],
         userjs: null,
+        useTabColorAsToolbarColor: true,
       };
     }
 
@@ -94,6 +97,7 @@ export function getCSSFromConfig(
           stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
           iconBasePath: "http://localhost:5174/lepton/icons",
           userjs: protonfixUserJs,
+          useTabColorAsToolbarColor: true,
         };
       }
       return {
@@ -102,6 +106,7 @@ export function getCSSFromConfig(
           getStylePath("lepton/css/leptonContent.css"),
         ],
         userjs: protonfixUserJs,
+        useTabColorAsToolbarColor: true,
       };
     }
 

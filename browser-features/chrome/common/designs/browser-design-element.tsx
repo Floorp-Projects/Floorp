@@ -25,10 +25,46 @@ export function BrowserDesignElement() {
     }
   });
 
+  let tabColorSheetURI: nsIURI | null = null;
+
   // Register CSS using StyleSheetService
   createEffect(() => {
-    const { styles, stylesRaw, iconBasePath } = getCSS();
+    const { styles, stylesRaw, iconBasePath, useTabColorAsToolbarColor } =
+      getCSS();
     const registeredURIs: nsIURI[] = [];
+
+    if (useTabColorAsToolbarColor === true) {
+      console.log(
+        "[BrowserDesignElement] Applying tab color as toolbar color CSS",
+      );
+      if (!tabColorSheetURI) {
+        const css = `
+        .tab-background {
+          &:is([selected], [multiselected]) {
+            background: var(--toolbar-bgcolor) !important;
+          }
+        }
+      `;
+        try {
+          const dataUri = `data:text/css;charset=utf-8,${
+            encodeURIComponent(css)
+          }`;
+          const uri = Services.io.newURI(dataUri);
+          sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+          tabColorSheetURI = uri;
+        } catch (error) {
+          console.error(
+            `[BrowserDesignElement] Failed to register tab color CSS:`,
+            error,
+          );
+        }
+      }
+    } else if (tabColorSheetURI) {
+      if (sss.sheetRegistered(tabColorSheetURI, AGENT_SHEET)) {
+        sss.unregisterSheet(tabColorSheetURI, AGENT_SHEET);
+      }
+      tabColorSheetURI = null;
+    }
 
     // Development mode: Use raw CSS with icon path replacement
     if (stylesRaw?.length) {
