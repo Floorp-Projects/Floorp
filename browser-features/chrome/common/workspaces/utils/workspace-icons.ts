@@ -53,20 +53,28 @@ export class WorkspaceIcons {
 
   constructor() {
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
-      query: "?url",
+      query: "?raw",
       import: "default",
       eager: true,
     }) as ModuleStrings;
 
-    const baseUrl =
-      import.meta.env?.VITE_WORKSPACE_ICON_ORIGIN ??
-      "http://localhost:5181/link-features-chrome/common/workspaces/icons";
-
     for (const path in this.moduleStrings) {
-      const fileName = path.split("/").pop() ?? "";
-      const iconName = fileName.replace(".svg", "");
-      const normalizedBase = baseUrl.replace(/\/$/, "");
-      this.resolvedIcons[iconName] = `${normalizedBase}/${fileName}`;
+      const iconName = path.split("/").pop()?.replace(".svg", "") ?? "";
+      if (iconName) {
+        try {
+          const svgContent = this.moduleStrings[path];
+          const svgBytes = new TextEncoder().encode(svgContent);
+          let binString = "";
+          svgBytes.forEach((byte) => {
+            binString += String.fromCharCode(byte);
+          });
+          this.resolvedIcons[iconName] = `data:image/svg+xml;base64,${btoa(
+            binString,
+          )}`;
+        } catch (e) {
+          console.error(`Failed to process and encode icon: ${iconName}`, e);
+        }
+      }
     }
   }
 

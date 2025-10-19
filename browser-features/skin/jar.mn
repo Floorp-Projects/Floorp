@@ -1,9 +1,6 @@
 noraneko.jar:
 % skin noraneko-skin %nora-skin/ contentaccessible=yes
 
-  skin/noraneko/deno.json (deno.json)
-  skin/noraneko/moz.build (moz.build)
-  skin/noraneko/package.json (package.json)
   skin/noraneko/fluerial/css/fluerial.css (fluerial/css/fluerial.css)
   skin/noraneko/fluerial/icons/add_FILL0_wght700_GRAD200_opsz48.svg (fluerial/icons/add_FILL0_wght700_GRAD200_opsz48.svg)
   skin/noraneko/fluerial/icons/arrow_back_FILL0_wght700_GRAD200_opsz48.svg (fluerial/icons/arrow_back_FILL0_wght700_GRAD200_opsz48.svg)
@@ -242,6 +239,3 @@ noraneko.jar:
   skin/noraneko/lepton/userjs/lepton.js (lepton/userjs/lepton.js)
   skin/noraneko/lepton/userjs/photon.js (lepton/userjs/photon.js)
   skin/noraneko/lepton/userjs/protonfix.js (lepton/userjs/protonfix.js)
-  skin/noraneko/node_modules/.vite/deps/package.json (node_modules/.vite/deps/package.json)
-  skin/noraneko/node_modules/.vite/deps/_metadata.json (node_modules/.vite/deps/_metadata.json)
-  skin/noraneko/noraneko/cat_hand_black.png (noraneko/cat_hand_black.png)
