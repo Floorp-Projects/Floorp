@@ -79,7 +79,7 @@ export function GeneralSettings({
 
                     <div className="flex items-center justify-between py-2">
                         <span className="text-base-content/90">
-                            {t("mouseGesture.rockerGesturesEnabled", "Enable Rocker Gestures")}
+                            {t("mouseGesture.rockerGesturesEnabled")}
                         </span>
                         <Switch
                             checked={config.rockerGesturesEnabled ?? true}
