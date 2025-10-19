@@ -176,7 +176,9 @@
       "gecko-scroll-right": "오른쪽으로 스크롤",
       "gecko-scroll-left": "왼쪽으로 스크롤",
       "gecko-scroll-to-top": "맨 위로 스크롤",
-      "gecko-scroll-to-bottom": "맨 아래로 스크롤"
+      "gecko-scroll-to-bottom": "맨 아래로 스크롤",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "이전 페이지로 돌아가기",

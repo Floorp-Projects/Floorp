@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Scroll naar rechts",
       "gecko-scroll-left": "Scroll naar links",
       "gecko-scroll-to-top": "Scroll helemaal naar boven",
-      "gecko-scroll-to-bottom": "Scroll helemaal naar beneden"
+      "gecko-scroll-to-bottom": "Scroll helemaal naar beneden",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Ga terug naar de vorige pagina",

@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Rul til højre",
       "gecko-scroll-left": "Rul til venstre",
       "gecko-scroll-to-top": "Rul til toppen",
-      "gecko-scroll-to-bottom": "Rul til bunden"
+      "gecko-scroll-to-bottom": "Rul til bunden",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Naviger tilbage til den forrige side",

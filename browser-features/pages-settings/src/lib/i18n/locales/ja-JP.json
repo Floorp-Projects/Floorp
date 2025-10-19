@@ -414,8 +414,8 @@
         "pattern": "パターン",
         "action": "アクション",
         "actionDescription": "ジェスチャーの説明",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesEnabled": "ロッカージェスチャーを有効にする",
+        "rockerGesturesDescription": "右クリックしながら左に動かすとページを戻り、右クリックしながら右に動かすと進みます。 (実験的)",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",
@@ -488,8 +488,8 @@
             "gecko-scroll-left": "左にスクロール",
             "gecko-scroll-to-top": "最上部までスクロール",
             "gecko-scroll-to-bottom": "最下部までスクロール",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "次のワークスペースに切り替える",
+            "gecko-workspace-previous": "前のワークスペースに切り替える"
         },
         "edit": "編集",
         "duplicate": "複製",

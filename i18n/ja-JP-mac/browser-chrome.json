@@ -176,7 +176,9 @@
       "gecko-scroll-right": "右にスクロール",
       "gecko-scroll-left": "左にスクロール",
       "gecko-scroll-to-top": "最上部までスクロール",
-      "gecko-scroll-to-bottom": "最下部までスクロール"
+      "gecko-scroll-to-bottom": "最下部までスクロール",
+      "gecko-workspace-next": "次のワークスペースに切り替える",
+      "gecko-workspace-previous": "前のワークスペースに切り替える"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",

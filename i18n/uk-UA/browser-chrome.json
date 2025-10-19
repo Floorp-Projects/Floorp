@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Прокрутити праворуч",
       "gecko-scroll-left": "Прокрутити ліворуч",
       "gecko-scroll-to-top": "Scroll to Top",
-      "gecko-scroll-to-bottom": "Scroll to Bottom"
+      "gecko-scroll-to-bottom": "Scroll to Bottom",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",

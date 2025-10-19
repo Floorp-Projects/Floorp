@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Sağa Kaydır",
       "gecko-scroll-left": "Sola Kaydır",
       "gecko-scroll-to-top": "En Üste Dön",
-      "gecko-scroll-to-bottom": "En alta Kaydır"
+      "gecko-scroll-to-bottom": "En alta Kaydır",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Önceki Sayfaya Geri Dön",

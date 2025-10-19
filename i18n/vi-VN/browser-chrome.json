@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Cuộn phải ",
       "gecko-scroll-left": "Cuộn trái",
       "gecko-scroll-to-top": "Cuộn lên đầu",
-      "gecko-scroll-to-bottom": "Cuộn xuống cuối"
+      "gecko-scroll-to-bottom": "Cuộn xuống cuối",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Quay lại trang trước",

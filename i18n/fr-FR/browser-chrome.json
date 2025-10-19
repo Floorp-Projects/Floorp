@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Défiler vers la droite",
       "gecko-scroll-left": "Défiler vers la gauche",
       "gecko-scroll-to-top": "Défiler vers le haut",
-      "gecko-scroll-to-bottom": "Défilement vers le bas"
+      "gecko-scroll-to-bottom": "Défilement vers le bas",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Retourner à la page précédente",

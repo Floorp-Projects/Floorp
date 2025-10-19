@@ -176,7 +176,9 @@
       "gecko-scroll-right": "Scrolla höger",
       "gecko-scroll-left": "Scrolla vänster",
       "gecko-scroll-to-top": "Scrolla till toppen",
-      "gecko-scroll-to-bottom": "Scrolla till botten"
+      "gecko-scroll-to-bottom": "Scrolla till botten",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "Navigera tillbaka till föregående sida",

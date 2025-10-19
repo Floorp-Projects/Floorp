@@ -176,7 +176,9 @@
       "gecko-scroll-right": "向右捲動",
       "gecko-scroll-left": "向左捲動",
       "gecko-scroll-to-top": "捲動至頂端",
-      "gecko-scroll-to-bottom": "捲動至底端"
+      "gecko-scroll-to-bottom": "捲動至底端",
+      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-previous": "Switch to Previous Workspace"
     },
     "descriptions": {
       "gecko-back": "返回上一頁",
