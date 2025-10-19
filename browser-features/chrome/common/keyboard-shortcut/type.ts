@@ -19,10 +19,18 @@ export const zShortcutConfig = t.type({
   action: t.string,
 });
 
-export const zKeyboardShortcutConfig = t.type({
-  enabled: t.boolean,
+const zKeyboardShortcutConfigRequired = t.type({
   shortcuts: t.record(t.string, zShortcutConfig),
 });
+
+const zKeyboardShortcutConfigOptional = t.partial({
+  enabled: t.boolean,
+});
+
+export const zKeyboardShortcutConfig = t.intersection([
+  zKeyboardShortcutConfigRequired,
+  zKeyboardShortcutConfigOptional,
+]);
 
 export type Modifiers = t.TypeOf<typeof zModifiers>;
 export type ShortcutConfig = t.TypeOf<typeof zShortcutConfig>;

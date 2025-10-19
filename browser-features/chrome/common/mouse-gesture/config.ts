@@ -42,8 +42,7 @@ const ContextMenuCodec = t.type({
   preventionTimeout: t.number,
 });
 
-export const MouseGestureConfigCodec = t.type({
-  enabled: t.boolean,
+const MouseGestureConfigRequired = t.type({
   rockerGesturesEnabled: t.boolean,
   sensitivity: t.number,
   showTrail: t.boolean,
@@ -53,6 +52,15 @@ export const MouseGestureConfigCodec = t.type({
   contextMenu: ContextMenuCodec,
   actions: t.array(GestureActionCodec),
 });
+
+const MouseGestureConfigOptional = t.partial({
+  enabled: t.boolean,
+});
+
+export const MouseGestureConfigCodec = t.intersection([
+  MouseGestureConfigRequired,
+  MouseGestureConfigOptional,
+]);
 export type MouseGestureConfig = t.TypeOf<typeof MouseGestureConfigCodec>;
 
 export const defaultConfig: MouseGestureConfig = {

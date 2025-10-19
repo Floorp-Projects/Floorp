@@ -29,6 +29,7 @@ export class MouseGestureController {
   private activeActionName = "";
   private eventListenersAttached = false;
   private pressedButtons = new Set<number>(); // For rocker gestures
+  private isRockerGestureFired = false;
 
   constructor() {
     this.display = new GestureDisplay();
@@ -85,7 +86,7 @@ export class MouseGestureController {
     const config = getConfig();
 
     // Rocker Gestures
-    if (config.rockerGesturesEnabled || false) {
+    if (config.rockerGesturesEnabled) {
       const [LEFT, RIGHT] = [0, 2];
       let action: string | null = null;
 
@@ -102,12 +103,8 @@ export class MouseGestureController {
         executeGestureAction(action);
         event.preventDefault();
         event.stopPropagation();
-        this.resetGestureState();
+        this.isRockerGestureFired = true;
         this.isContextMenuPrevented = true;
-        this.preventionTimeoutId = setTimeout(() => {
-          this.isContextMenuPrevented = false;
-          this.preventionTimeoutId = null;
-        }, config.contextMenu.preventionTimeout);
         return;
       }
     }
@@ -178,6 +175,21 @@ export class MouseGestureController {
   private handleMouseUp = (event: MouseEvent): void => {
     this.pressedButtons.delete(event.button);
 
+    if (this.isRockerGestureFired) {
+      if (this.pressedButtons.size === 0) {
+        this.resetGestureState();
+        this.isContextMenuPrevented = true;
+        if (this.preventionTimeoutId) clearTimeout(this.preventionTimeoutId);
+        this.preventionTimeoutId = setTimeout(() => {
+          this.isContextMenuPrevented = false;
+          this.preventionTimeoutId = null;
+        }, getConfig().contextMenu.preventionTimeout);
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (!this.isGestureActive || event.button !== 2 || !isEnabled()) return;
 
     const config = getConfig();
@@ -238,6 +250,7 @@ export class MouseGestureController {
 
   private resetGestureState(): void {
     this.isGestureActive = false;
+    this.isRockerGestureFired = false;
     this.gesturePattern = [];
     this.accumulatedDX = 0;
     this.accumulatedDY = 0;

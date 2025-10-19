@@ -64,6 +64,7 @@ export const useMouseGestureConfig = () => {
       const configToSave = { ...newConfig };
       // deno-lint-ignore no-unused-vars
       const { enabled, ...configWithoutEnabled } = configToSave;
+      console.log("Saving configWithoutEnabled", configWithoutEnabled);
       await rpc.setStringPref(
         MOUSE_GESTURE_CONFIG_PREF,
         JSON.stringify(configWithoutEnabled),

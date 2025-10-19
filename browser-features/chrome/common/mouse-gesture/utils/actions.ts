@@ -309,4 +309,12 @@ export const actions: GestureActionRegistration[] = [
     name: "gecko-scroll-to-bottom",
     fn: () => window.goDoCommand("cmd_scrollBottom"),
   },
+  {
+    name: "gecko-workspace-next",
+    fn: () => window.workspacesFuncs.changeWorkspaceToNext(),
+  },
+  {
+    name: "gecko-workspace-previous",
+    fn: () => window.workspacesFuncs.changeWorkspaceToPrevious(),
+  },
 ];

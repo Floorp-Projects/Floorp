@@ -25,6 +25,12 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
     this.modalCtx = new WorkspaceManageModal(this, this.iconCtx);
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).workspacesFuncs = {
+      createNoNameWorkspace: this.createNoNameWorkspace.bind(this),
+      changeWorkspaceToNext: this.changeWorkspaceToNext.bind(this),
+      changeWorkspaceToPrevious: this.changeWorkspaceToPrevious.bind(this),
+    };
 
     if (workspacesDataStore.data.size === 0) {
       const id = this.createNoNameWorkspace();
@@ -65,9 +71,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
     this.tabManagerCtx.removeTabByWorkspaceId(workspaceID);
-    setWorkspacesDataStore(
-      "order",
-      (prev) => prev.filter((v) => v !== workspaceID),
+    setWorkspacesDataStore("order", (prev) =>
+      prev.filter((v) => v !== workspaceID),
     );
     this.dataManagerCtx.deleteWorkspace(workspaceID);
   }
@@ -97,6 +102,24 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     setWorkspacesDataStore("order", (prev) => [...prev, id]);
     this.changeWorkspace(id);
     return id;
+  }
+
+  changeWorkspaceToNext(): void {
+    const order = workspacesDataStore.order;
+    const currentID = this.getSelectedWorkspaceID();
+    const currentIndex = order.indexOf(currentID);
+    const nextIndex = (currentIndex + 1) % order.length;
+    const nextID = order[nextIndex];
+    this.changeWorkspace(nextID);
+  }
+
+  changeWorkspaceToPrevious(): void {
+    const order = workspacesDataStore.order;
+    const currentID = this.getSelectedWorkspaceID();
+    const currentIndex = order.indexOf(currentID);
+    const previousIndex = (currentIndex - 1 + order.length) % order.length;
+    const previousID = order[previousIndex];
+    this.changeWorkspace(previousID);
   }
 
   reorderWorkspaceUp(id: TWorkspaceID): void {

@@ -84,6 +84,8 @@ export const GESTURE_ACTIONS = [
   "gecko-scroll-left",
   "gecko-scroll-to-top",
   "gecko-scroll-to-bottom",
+  "gecko-workspace-next",
+  "gecko-workspace-previous",
 ] as const;
 
 export const useAvailableActions = () => {
