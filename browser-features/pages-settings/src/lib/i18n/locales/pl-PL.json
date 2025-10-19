@@ -414,6 +414,8 @@
         "pattern": "Pattern",
         "action": "Action",
         "actionDescription": "Description of the gesture",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Scroll Right",
             "gecko-scroll-left": "Scroll Left",
             "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
+            "gecko-scroll-to-bottom": "Scroll to Bottom",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",

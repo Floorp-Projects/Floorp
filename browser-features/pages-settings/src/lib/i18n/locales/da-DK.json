@@ -414,6 +414,8 @@
         "pattern": "Mønster",
         "action": "Handling",
         "actionDescription": "Beskrivelse af bevægelsen",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Gå tilbage",
             "gecko-forward": "Gå frem",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Rul til højre",
             "gecko-scroll-left": "Rul til venstre",
             "gecko-scroll-to-top": "Rul til toppen",
-            "gecko-scroll-to-bottom": "Rul til bunden"
+            "gecko-scroll-to-bottom": "Rul til bunden",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Rediger",
         "duplicate": "Dupliker",

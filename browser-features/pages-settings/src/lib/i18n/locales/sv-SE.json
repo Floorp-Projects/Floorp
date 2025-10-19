@@ -414,6 +414,8 @@
         "pattern": "Mönster",
         "action": "Åtgärd",
         "actionDescription": "Beskrivning av gest",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Gå tillbaka",
             "gecko-forward": "Gå framåt",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Scrolla höger",
             "gecko-scroll-left": "Scrolla vänster",
             "gecko-scroll-to-top": "Scrolla till toppen",
-            "gecko-scroll-to-bottom": "Scrolla till botten"
+            "gecko-scroll-to-bottom": "Scrolla till botten",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Redigera",
         "duplicate": "Duplicera",

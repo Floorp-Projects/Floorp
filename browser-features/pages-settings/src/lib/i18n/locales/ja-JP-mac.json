@@ -358,42 +358,42 @@
     },
     "floorpOS": {
         "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
-        "loading": "Loading...",
+        "description": "Floorp OS のバックエンドモジュールとサービスを管理",
+        "loading": "読み込み中...",
         "statusCard": {
-            "title": "Status",
-            "description": "Current status of Floorp OS",
-            "platformSupport": "Platform Support",
-            "platformSupported": "Your platform is supported",
-            "platformUnsupported": "Your platform is not supported",
-            "installedVersion": "Installed Version",
-            "notInstalled": "Not installed",
-            "serviceStatus": "Service Status",
-            "running": "Running",
-            "stopped": "Stopped",
-            "enabledBadge": "Enabled",
-            "disabledBadge": "Disabled"
+            "title": "状態",
+            "description": "Floorp OS の現在の状態",
+            "platformSupport": "プラットフォーム対応",
+            "platformSupported": "お使いのプラットフォームはサポートされています",
+            "platformUnsupported": "お使いのプラットフォームはサポートされていません",
+            "installedVersion": "インストール済のバージョン",
+            "notInstalled": "インストールされていません",
+            "serviceStatus": "サービスの状態",
+            "running": "実行中",
+            "stopped": "停止中",
+            "enabledBadge": "有効",
+            "disabledBadge": "無効"
         },
         "controlsCard": {
-            "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
-            "refresh": "Refresh Status"
+            "title": "制御",
+            "description": "Floorp OS の有効化または無効化",
+            "enable": "Floorp OS を有効にする",
+            "disable": "Floorp OS を無効にする",
+            "refresh": "状態を更新"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Floorp OS を有効化中...",
+            "disabling": "Floorp OS を無効化中...",
+            "enableSuccess": "Floorp OS は正常に有効になりました！",
+            "disableSuccess": "Floorp OS は正常に無効になりました！"
         },
         "errors": {
-            "apiUnavailable": "OSAutomotor API is not available.",
-            "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "apiUnavailable": "OSAutomotor API は使用できません。",
+            "loadStatus": "状態の読み込みに失敗しました: {{reason}}",
+            "enable": "Floorp OS の有効化に失敗しました。",
+            "disable": "Floorp OS の無効化に失敗しました。",
+            "enableAction": "Floorp OS の有効化でエラーが発生しました: {{reason}}",
+            "disableAction": "Floorp OS の無効化でエラーが発生しました: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -414,6 +414,8 @@
         "pattern": "パターン",
         "action": "アクション",
         "actionDescription": "ジェスチャーの説明",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "右にスクロール",
             "gecko-scroll-left": "左にスクロール",
             "gecko-scroll-to-top": "最上部までスクロール",
-            "gecko-scroll-to-bottom": "最下部までスクロール"
+            "gecko-scroll-to-bottom": "最下部までスクロール",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "編集",
         "duplicate": "複製",

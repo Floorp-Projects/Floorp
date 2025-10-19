@@ -58,7 +58,7 @@
         "manageExtensions": {
             "title": "Manage Extensions",
             "description": "{{productName}} allows you to manage extensions available on addons.mozilla.org.",
-            "footerLinkText": "Manage Extensions"
+            "footerLinkText": "Quản lí tiện ích"
         },
         "browserSupport": {
             "title": "{{productName}} Support",
@@ -67,16 +67,16 @@
         }
     },
     "design": {
-        "tabAndAppearance": "Tab & Appearance",
+        "tabAndAppearance": "Thẻ & Diện mạo",
         "customizePositionOfToolbars": "Customize toolbar positions, tab bar style, and {{productName}}'s appearance.",
-        "interface": "Interface",
+        "interface": "Giao diện",
         "aboutInterfaceDesign": "About Interface Design",
         "proton": "Proton",
         "lepton": "Lepton",
         "photon": "Photon",
         "protonfix": "Proton sửa đổi",
         "fluerial": "Fluerial",
-        "interfaceDescription": "Choose the interface design. \"Lepton\" is the default.",
+        "interfaceDescription": "Chọn giao diện mà bạn muốn. \"Lepton\" là kiểu mặc định",
         "otherInterfaceSettings": "Cài đặt giao diện khác",
         "useFaviconColorToBackgroundOfNavigationBar": "Dùng màu của biểu tượng thẻ làm màu nền",
         "tabBar": "Thẻ",
@@ -106,11 +106,11 @@
             "scrollWrap": "Loop tab scroll",
             "scrollPrefInfo": "\"{{reverseScrollPrefName}}\" & \"{{scrollWrapPrefName}}\" will only work if \"{{scrollPrefName}}\" is enabled.",
             "pinTitle": "Show pinned tab titles",
-            "openPosition": "New tab opening position",
-            "openPositionDescription": "Specify where new tabs open. Following Firefox's behavior will vary the position based on how you open links.",
-            "openDefault": "Follow Firefox's behavior",
-            "openLast": "Open at the end of the tab bar",
-            "openNext": "Open next to the current tab",
+            "openPosition": "Vị trí thẻ mới",
+            "openPositionDescription": "Quy định vị trí của thẻ mới. Hành vi của Firefox khá đa dạng tùy vào cách bạn mở liên kết",
+            "openDefault": "Tuân theo hành vi của Firefox",
+            "openLast": "Ở cuối danh sách thẻ",
+            "openNext": "Cạnh thẻ hiện tại",
             "other": "Other Tab Settings",
             "doubleClickToClose": "Close tab by double-clicking",
             "minWidth": "Minimum tab width",
@@ -124,9 +124,9 @@
             "configureLepton": "Tùy chỉnh Lepton",
             "back": "Quay lại",
             "experimentalWarning": {
-                "title": "⚠️ Experimental Features",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "title": "⚠️ Tính năng thử nghiệm",
+                "description": "Các tính năng sau là thử nghiệm và không được hỗ trợ chính thứ. Có thể có vấn đề nảy sinh.",
+                "leptonRepository": "Lepton là giao diện CSS cho Firefox.",
                 "visitRepository": "Visit Repository Page"
             },
             "autohide": {
@@ -177,21 +177,21 @@
             }
         },
         "uiCustomization": {
-            "title": "UI Customization",
+            "title": "Tùy chỉnh giao diện",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
             "navbar": {
                 "title": "Thanh điều hướng",
-                "positionWithExperiment": "Position (Experiment)",
-                "top": "Top",
-                "bottom": "Bottom",
+                "positionWithExperiment": "Vị trí (thử nghiệm)",
+                "top": "Đầu",
+                "bottom": "Cuối",
                 "searchBarTop": "Move page inside search bar"
             },
             "display": {
                 "title": "Display",
-                "disableFullscreenNotification": "Disable fullscreen notification",
+                "disableFullscreenNotification": "Tắt thông báo toàn màn hình",
                 "deleteBrowserBorder": "Bo tròn các góc của trang",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button",
-                "disableQRCodeButton": "Disable QR code button"
+                "hideUnifiedExtensionsButton": "Ẩn nút tiện ích",
+                "disableQRCodeButton": "Ẩn nút QR"
             },
             "special": {
                 "title": "Special Features",
@@ -414,6 +414,8 @@
         "pattern": "Pattern",
         "action": "Action",
         "actionDescription": "Description of the gesture",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Scroll Right",
             "gecko-scroll-left": "Scroll Left",
             "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
+            "gecko-scroll-to-bottom": "Scroll to Bottom",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",

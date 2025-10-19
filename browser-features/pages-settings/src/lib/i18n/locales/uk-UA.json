@@ -414,6 +414,8 @@
         "pattern": "Шаблон",
         "action": "Дія",
         "actionDescription": "Опис жесту",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Повернутися",
             "gecko-forward": "Вперед",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Прокрутити праворуч",
             "gecko-scroll-left": "Прокрутити ліворуч",
             "gecko-scroll-to-top": "Scroll to Top",
-            "gecko-scroll-to-bottom": "Scroll to Bottom"
+            "gecko-scroll-to-bottom": "Scroll to Bottom",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Редагувати",
         "duplicate": "Дублювати",

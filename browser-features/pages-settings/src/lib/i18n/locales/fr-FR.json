@@ -414,6 +414,8 @@
         "pattern": "Schéma",
         "action": "Action",
         "actionDescription": "Description du geste",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "Précédent",
             "gecko-forward": "Suivant",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "Défiler vers la droite",
             "gecko-scroll-left": "Défiler vers la gauche",
             "gecko-scroll-to-top": "Défiler vers le haut",
-            "gecko-scroll-to-bottom": "Défilement vers le bas"
+            "gecko-scroll-to-bottom": "Défilement vers le bas",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "Modifier",
         "duplicate": "Dupliquer",

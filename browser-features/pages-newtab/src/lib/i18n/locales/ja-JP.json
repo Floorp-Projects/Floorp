@@ -39,7 +39,7 @@
         "disableFloorpStart": "Floorp Start を無効にする (クラシックな about:newtab を使用)",
         "disableFloorpStartDescription": "有効にすると、Floorp Start は従来の Firefox の新しいタブ / ホームページで置き換えられます。",
         "restartRequired": "完全に有効にするにはブラウザーの再起動が必要です。",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "firefoxLayout": "従来のレイアウトを使用 (Firefox Home 風)"
     },
     "searchBar": {
         "searchOrEnterUrl": "検索または URL を入力",

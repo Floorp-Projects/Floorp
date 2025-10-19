@@ -358,42 +358,42 @@
     },
     "floorpOS": {
         "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
-        "loading": "Loading...",
+        "description": "管理 Floorp OS 后端模块和服务",
+        "loading": "加载中……",
         "statusCard": {
-            "title": "Status",
-            "description": "Current status of Floorp OS",
-            "platformSupport": "Platform Support",
-            "platformSupported": "Your platform is supported",
-            "platformUnsupported": "Your platform is not supported",
-            "installedVersion": "Installed Version",
-            "notInstalled": "Not installed",
-            "serviceStatus": "Service Status",
-            "running": "Running",
-            "stopped": "Stopped",
-            "enabledBadge": "Enabled",
-            "disabledBadge": "Disabled"
+            "title": "状态",
+            "description": "Floorp OS 的当前状态",
+            "platformSupport": "平台支持",
+            "platformSupported": "支持您的平台",
+            "platformUnsupported": "不支持您的平台",
+            "installedVersion": "已安装版本",
+            "notInstalled": "未安装",
+            "serviceStatus": "服务状态",
+            "running": "运行中",
+            "stopped": "已停止",
+            "enabledBadge": "已启用",
+            "disabledBadge": "已禁用"
         },
         "controlsCard": {
-            "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
-            "refresh": "Refresh Status"
+            "title": "控制",
+            "description": "启用或禁用 Floorp OS",
+            "enable": "启用 Floorp OS",
+            "disable": "禁用 Floorp OS",
+            "refresh": "刷新状态"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "启用 Floorp OS……",
+            "disabling": "禁用 Floorp OS……",
+            "enableSuccess": "Floorp OS 启用成功！",
+            "disableSuccess": "Floorp OS 禁用成功！"
         },
         "errors": {
-            "apiUnavailable": "OSAutomotor API is not available.",
-            "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "apiUnavailable": "OSAutomotor API 不可用。",
+            "loadStatus": "加载失败状态：{{reason}}",
+            "enable": "启用 Floorp OS 失败。",
+            "disable": "禁用 Floorp OS 失败。",
+            "enableAction": "启用 Floorp OS 出错：{{reason}}",
+            "disableAction": "禁用 Floorp OS 出错：{{reason}}"
         }
     },
     "mouseGesture": {
@@ -414,6 +414,8 @@
         "pattern": "手势",
         "action": "动作",
         "actionDescription": "手势说明",
+        "rockerGesturesEnabled": "Enable rocker gestures",
+        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
         "actions": {
             "gecko-back": "转到上一页",
             "gecko-forward": "转到下一页",
@@ -485,7 +487,9 @@
             "gecko-scroll-right": "向右滚动",
             "gecko-scroll-left": "向左滚动",
             "gecko-scroll-to-top": "滚动到顶部",
-            "gecko-scroll-to-bottom": "滚动到底部"
+            "gecko-scroll-to-bottom": "滚动到底部",
+            "gecko-workspace-next": "Switch to Next Workspace",
+            "gecko-workspace-previous": "Switch to Previous Workspace"
         },
         "edit": "编辑",
         "duplicate": "复制",
