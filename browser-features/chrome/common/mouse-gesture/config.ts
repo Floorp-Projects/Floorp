@@ -44,6 +44,7 @@ const ContextMenuCodec = t.type({
 
 export const MouseGestureConfigCodec = t.type({
   enabled: t.boolean,
+  rockerGesturesEnabled: t.boolean,
   sensitivity: t.number,
   showTrail: t.boolean,
   showLabel: t.boolean,
@@ -56,6 +57,7 @@ export type MouseGestureConfig = t.TypeOf<typeof MouseGestureConfigCodec>;
 
 export const defaultConfig: MouseGestureConfig = {
   enabled: false,
+  rockerGesturesEnabled: true,
   sensitivity: 40,
   showTrail: true,
   showLabel: true,

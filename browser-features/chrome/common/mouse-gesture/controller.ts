@@ -28,6 +28,7 @@ export class MouseGestureController {
   private display: GestureDisplay;
   private activeActionName = "";
   private eventListenersAttached = false;
+  private pressedButtons = new Set<number>(); // For rocker gestures
 
   constructor() {
     this.display = new GestureDisplay();
@@ -76,7 +77,42 @@ export class MouseGestureController {
   }
 
   private handleMouseDown = (event: MouseEvent): void => {
-    if (event.button !== 2 || !isEnabled()) {
+    if (!isEnabled()) {
+      return;
+    }
+
+    this.pressedButtons.add(event.button);
+    const config = getConfig();
+
+    // Rocker Gestures
+    if (config.rockerGesturesEnabled || false) {
+      const [LEFT, RIGHT] = [0, 2];
+      let action: string | null = null;
+
+      // Right -> Left
+      if (this.isGestureActive && event.button === LEFT) {
+        action = "gecko-back";
+      }
+      // Left -> Right
+      else if (this.pressedButtons.has(LEFT) && event.button === RIGHT) {
+        action = "gecko-forward";
+      }
+
+      if (action) {
+        executeGestureAction(action);
+        event.preventDefault();
+        event.stopPropagation();
+        this.resetGestureState();
+        this.isContextMenuPrevented = true;
+        this.preventionTimeoutId = setTimeout(() => {
+          this.isContextMenuPrevented = false;
+          this.preventionTimeoutId = null;
+        }, config.contextMenu.preventionTimeout);
+        return;
+      }
+    }
+
+    if (event.button !== 2 || this.isGestureActive) {
       return;
     }
 
@@ -140,6 +176,8 @@ export class MouseGestureController {
   };
 
   private handleMouseUp = (event: MouseEvent): void => {
+    this.pressedButtons.delete(event.button);
+
     if (!this.isGestureActive || event.button !== 2 || !isEnabled()) return;
 
     const config = getConfig();
@@ -206,6 +244,7 @@ export class MouseGestureController {
     this.mouseTrail = [];
     this.activeActionName = "";
     this.display.hide();
+    this.pressedButtons.clear();
   }
 
   private handleContextMenu = (event: MouseEvent): void => {

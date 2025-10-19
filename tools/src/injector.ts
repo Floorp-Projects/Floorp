@@ -24,7 +24,11 @@ export async function injectXhtmlFromTs(
   if (isCI) {
     // The real project root in CI is one level above the script's calculated PROJECT_ROOT.
     const ciProjectRoot = path.resolve(PROJECT_ROOT, "..");
-    const distDir = path.join(ciProjectRoot, "obj-artifact-build-output", "dist");
+    const distDir = path.join(
+      ciProjectRoot,
+      "obj-artifact-build-output",
+      "dist",
+    );
 
     const canonPlatform = Deno.env.get("CANON_PLATFORM");
     if (canonPlatform === "macOS-x86_64") {
@@ -32,9 +36,16 @@ export async function injectXhtmlFromTs(
       try {
         for await (const dirEntry of Deno.readDir(distDir)) {
           if (dirEntry.isDirectory && dirEntry.name.endsWith(".app")) {
-            binPath = path.join(distDir, dirEntry.name, "Contents", "Resources");
+            binPath = path.join(
+              distDir,
+              dirEntry.name,
+              "Contents",
+              "Resources",
+            );
             appBundleFound = true;
-            logger.info(`Found macOS app bundle, setting binPath to: ${binPath}`);
+            logger.info(
+              `Found macOS app bundle, setting binPath to: ${binPath}`,
+            );
             break;
           }
         }
@@ -74,7 +85,7 @@ export function createManifest(mode: string, dirPath: string) {
   let manifestContent = [
     "content noraneko content/ contentaccessible=yes",
     "content noraneko-startup startup/ contentaccessible=yes",
-    "skin noraneko classic/1.0 skin/",
+    "content noraneko-skin skin/ contentaccessible=yes",
     "resource noraneko resource/ contentaccessible=yes",
   ].join("\n");
 

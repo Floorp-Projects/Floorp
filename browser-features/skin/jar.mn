@@ -1,5 +1,5 @@
 noraneko.jar:
-% skin noraneko %nora-skin/ contentaccessible=yes
+% content noraneko-skin %skin/ contentaccessible=yes
 
   skin/fluerial/css/fluerial.css (fluerial/css/fluerial.css)
   skin/fluerial/icons/add_FILL0_wght700_GRAD200_opsz48.svg (fluerial/icons/add_FILL0_wght700_GRAD200_opsz48.svg)

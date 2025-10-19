@@ -174,12 +174,19 @@ function createMouseGestureService() {
   return new MouseGestureService();
 }
 
+let lastEnabledState: boolean | null = null;
+
 function handleContextMenuAfterMouseUp(enabled: boolean) {
   if (Services.appinfo.OS === "WINNT") {
     return;
   }
 
+  if (lastEnabledState === enabled) {
+    return;
+  }
+
   Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
+  lastEnabledState = enabled;
 }
 
 export const mouseGestureService = createRootHMR(

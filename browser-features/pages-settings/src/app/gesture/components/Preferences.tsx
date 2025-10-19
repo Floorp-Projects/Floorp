@@ -79,6 +79,17 @@ export function GeneralSettings({
 
                     <div className="flex items-center justify-between py-2">
                         <span className="text-base-content/90">
+                            {t("mouseGesture.rockerGesturesEnabled", "Enable Rocker Gestures")}
+                        </span>
+                        <Switch
+                            checked={config.rockerGesturesEnabled ?? true}
+                            onChange={() => updateConfig({ rockerGesturesEnabled: !(config.rockerGesturesEnabled ?? true) })}
+                            disabled={!config.enabled}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                        <span className="text-base-content/90">
                             {t("mouseGesture.showTrail")}
                         </span>
                         <Switch
