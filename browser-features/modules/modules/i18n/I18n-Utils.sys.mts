@@ -9,7 +9,7 @@ class i18nUtils {
   }
 
   private get operatingSystemLocale(): string {
-    return Services.locale.regionalPrefsLocales?.[0] || this.fallBackLocale;
+    return Services.locale.requestedLocales?.[0] || this.fallBackLocale;
   }
 
   // Map of language-only codes to preferred BCP47 locales
@@ -121,6 +121,21 @@ class i18nUtils {
 
   public removeLocaleChangeListener(cb: (newLocale: string) => void): void {
     this.listeners = this.listeners.filter((l) => l !== cb);
+  }
+
+  public getOperatingSystemLocale(): string {
+    // Return the mapped/normalized operating system locale so callers
+    // always receive a regionalized BCP47 locale when possible.
+    try {
+      const os = this.operatingSystemLocale;
+      return this.mapLocale(os);
+    } catch {
+      return this.fallBackLocale;
+    }
+  }
+
+  public normalizeLocale(locale: string): string {
+    return this.mapLocale(locale);
   }
 
   private static instance: i18nUtils;

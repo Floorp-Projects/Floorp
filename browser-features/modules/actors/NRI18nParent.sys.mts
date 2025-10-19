@@ -69,6 +69,32 @@ export class NRI18nParent extends JSWindowActorParent {
           return String(e);
         }
       }
+
+      case "I18n:GetOSLocale": {
+        try {
+          const { I18nUtils } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+          );
+          const locale = I18nUtils.getOperatingSystemLocale();
+          return locale;
+        } catch (e) {
+          Cu.reportError(e);
+          return String(e);
+        }
+      }
+
+      case "I18n:NormalizeLocale": {
+        try {
+          const { I18nUtils } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+          );
+          const locale = I18nUtils.normalizeLocale(message.data);
+          return locale;
+        } catch (e) {
+          Cu.reportError(e);
+          return String(e);
+        }
+      }
     }
   }
 

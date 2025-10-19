@@ -14,6 +14,7 @@ export class NRI18nChild extends JSWindowActorChild {
         window.location.port === "5183" ||
         window.location.port === "5186" ||
         window.location.port === "5188" ||
+        window.location.port === "5187" ||
         window.location.href.startsWith("chrome://") ||
         window.location.href.startsWith("about:")
       ) {
@@ -71,6 +72,14 @@ export class NRI18nChild extends JSWindowActorChild {
         // Expose getPrimaryBrowserLocaleMapped
         exportAsync("getPrimaryBrowserLocaleMapped", () => {
           return this.sendQuery("I18n:GetPrimaryLocale");
+        });
+
+        exportAsync("getOperatingSystemLocale", () => {
+          return this.sendQuery("I18n:GetOSLocale");
+        });
+
+        exportAsync("normalizeLocale", (locale: string) => {
+          return this.sendQuery("I18n:NormalizeLocale", locale);
         });
 
         // Expose GetConstants (returns JSON string of constants)

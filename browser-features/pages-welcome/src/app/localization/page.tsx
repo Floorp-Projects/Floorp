@@ -89,13 +89,18 @@ export default function LocalizationPage() {
         try {
             setInstallingLanguage(true);
 
+            // @ts-ignore
+            const normalizedLocale = await window.NRI18n.normalizeLocale(locale);
+
             if (!localeData?.installedLocales.includes(locale)) {
                 const targetLangPack = localeData?.availableLocales.find(langPack => getLocaleFromLangPack(langPack) === locale);
-                await installLangPack(targetLangPack!);
+                if (targetLangPack) {
+                    await installLangPack(targetLangPack);
+                }
             }
 
             await setAppLocale(locale);
-            await i18n.changeLanguage(locale);
+            await i18n.changeLanguage(normalizedLocale);
 
             setInstallingLanguage(false);
             setSelectedLocale(locale);

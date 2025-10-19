@@ -1,6 +1,5 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 
 const translations = import.meta.glob("./locales/*.json", {
   eager: true,
@@ -16,29 +15,34 @@ for (const [path, content] of Object.entries(translations)) {
   };
 }
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    lng: "en-US",
-    debug: false,
-    resources: modules,
-    defaultNS: "translations",
-    ns: ["translations"],
-    fallbackLng: "en-US",
-    detection: {
-      order: ["navigator", "querystring", "htmlTag"],
-      caches: [],
-    },
-    interpolation: {
-      escapeValue: false,
-      defaultVariables: {
-        productName: "Floorp",
+export const initializeI18n = async () => {
+  let osLocale = "en-US";
+  try {
+    // @ts-ignore
+    osLocale = await window.NRI18n.getOperatingSystemLocale();
+  } catch (e) {
+    console.error("Failed to get OS locale from NRI18n, falling back to en-US", e);
+  }
+
+  await i18n
+    .use(initReactI18next)
+    .init({
+      lng: osLocale,
+      debug: true,
+      resources: modules,
+      defaultNS: "translations",
+      ns: ["translations"],
+      fallbackLng: "en-US",
+      interpolation: {
+        escapeValue: false,
+        defaultVariables: {
+          productName: "Floorp",
+        },
       },
-    },
-    react: {
-      useSuspense: false,
-    },
-  });
+      react: {
+        useSuspense: false,
+      },
+    });
+};
 
 export default i18n;
