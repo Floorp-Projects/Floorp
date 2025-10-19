@@ -17,7 +17,45 @@ export async function injectXhtmlFromTs(
   isCI = false,
 ): Promise<void> {
   const scriptPath = path.join(PROJECT_ROOT, "tools", "scripts", "xhtml.ts");
-  const binPath = !isCI ? BIN_DIR : PROD_BIN_DIR;
+  let binPath = !isCI ? BIN_DIR : PROD_BIN_DIR;
+
+  // In CI, the default PROJECT_ROOT is incorrect because scripts run from a subdir.
+  // We must manually construct the correct path to the build artifacts.
+  if (isCI) {
+    // The real project root in CI is one level above the script's calculated PROJECT_ROOT.
+    const ciProjectRoot = path.resolve(PROJECT_ROOT, "..");
+    const distDir = path.join(ciProjectRoot, "obj-artifact-build-output", "dist");
+
+    const canonPlatform = Deno.env.get("CANON_PLATFORM");
+    if (canonPlatform === "macOS-x86_64") {
+      let appBundleFound = false;
+      try {
+        for await (const dirEntry of Deno.readDir(distDir)) {
+          if (dirEntry.isDirectory && dirEntry.name.endsWith(".app")) {
+            binPath = path.join(distDir, dirEntry.name, "Contents", "Resources");
+            appBundleFound = true;
+            logger.info(`Found macOS app bundle, setting binPath to: ${binPath}`);
+            break;
+          }
+        }
+      } catch (e) {
+        logger.warn(
+          `Could not read dist directory ${distDir} for macOS .app bundle search: ${e.message}`,
+        );
+      }
+      if (!appBundleFound) {
+        logger.warn(
+          `macOS platform detected, but no .app bundle found in ${distDir}. Using default PROD_BIN_DIR.`,
+        );
+        // The default PROD_BIN_DIR is also relative to the wrong root, so we construct an absolute path.
+        binPath = path.join(distDir, "bin");
+      }
+    } else {
+      // For non-macOS CI builds, the path is obj-artifact-build-output/dist/bin
+      binPath = path.join(distDir, "bin");
+      logger.info(`CI platform detected, setting binPath to: ${binPath}`);
+    }
+  }
 
   const args = ["run", "--allow-read", "--allow-write", scriptPath, binPath];
   if (isDev) args.push("--dev");

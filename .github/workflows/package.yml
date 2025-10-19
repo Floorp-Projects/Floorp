@@ -883,13 +883,13 @@ jobs:
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
                 if [ "${{inputs.beta}}" == "true" ]; then
-                  DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/daylight/DS_Store"
-                  BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/daylight/background.tiff"
-                  VOLUME_NAME="Noraneko Daylight Installer"
+                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
+                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
+                  VOLUME_NAME="Floorp Daylight Installer"
                 else
-                  DS_STORE_PATH="./noraneko/.github/workflows/assets/mac/official/DS_Store"
-                  BACKGROUND_PATH="./noraneko/.github/workflows/assets/mac/official/background.tiff"
-                  VOLUME_NAME="Noraneko Installer"
+                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/DS_Store"
+                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/background.tiff"
+                  VOLUME_NAME="Floorp Installer"
                 fi
                 ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
                 printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
