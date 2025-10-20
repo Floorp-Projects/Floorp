@@ -34,8 +34,11 @@ for (const path in _meta) {
   )["fallback-language"] as string;
 }
 
+let i18nInitializedPromise: Promise<any> | null = null;
+let pendingLocale: string | null = null;
+
 export function initI18N(namespace: string[], defaultNamespace: string) {
-  i18next.init({
+  i18nInitializedPromise = i18next.init({
     lng: I18nUtils.getPrimaryBrowserLocaleMapped(),
     debug: false,
     resources: modules,
@@ -49,6 +52,15 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
       },
     },
   });
+
+  i18nInitializedPromise.then(() => {
+    if (pendingLocale) {
+      i18next.changeLanguage(pendingLocale).then(() => {
+        setLang(pendingLocale!);
+        pendingLocale = null;
+      });
+    }
+  });
 }
 const [lang, setLang] = createRootHMR(
   () => createSignal("ja-JP"),
@@ -56,6 +68,12 @@ const [lang, setLang] = createRootHMR(
 );
 
 I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
+  if (!i18nInitializedPromise) {
+    pendingLocale = newLocale;
+    return;
+  }
+
+  await i18nInitializedPromise;
   await i18next.changeLanguage(newLocale);
   setLang(newLocale);
 });
