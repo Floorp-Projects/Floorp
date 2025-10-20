@@ -231,7 +231,10 @@ export function TopSites({ isFirefoxMode = false }: { isFirefoxMode?: boolean })
     );
 
     if (filteredSites.length <= 3) {
-      setSites(DEFAULT_SUGGESTED_SITES);
+      const unblockedSuggestedSites = DEFAULT_SUGGESTED_SITES.filter(
+        (site) => !settings.topSites.blocked.includes(site.url),
+      );
+      setSites(unblockedSuggestedSites);
     } else {
       setSites(filteredSites);
     }

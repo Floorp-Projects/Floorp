@@ -1,6 +1,6 @@
 import { type MouseEvent } from "react";
 import { PinIcon } from "lucide-react";
-import type { TopSite, PinnedSite } from "./index.tsx";
+import type { PinnedSite, TopSite } from "./index.tsx";
 
 const TRUNCATE_TITLE_MAX = 18;
 function truncateTopSiteTitle(
@@ -15,14 +15,21 @@ interface TopSiteTileProps {
   site: TopSite | PinnedSite;
   isPinned: boolean;
   isFirefoxMode: boolean;
-  onContextMenu: (e: MouseEvent<HTMLAnchorElement>, site: TopSite | PinnedSite) => void;
+  onContextMenu: (
+    e: MouseEvent<HTMLAnchorElement>,
+    site: TopSite | PinnedSite,
+  ) => void;
 }
 
-export function TopSiteTile({ site, isPinned, isFirefoxMode, onContextMenu }: TopSiteTileProps) {
+export function TopSiteTile(
+  { site, isPinned, isFirefoxMode, onContextMenu }: TopSiteTileProps,
+) {
   const isPinnedSite = isPinned;
-  const faviconUrl = isPinnedSite
-    ? `https://www.google.com/s2/favicons?domain=${new URL(site.url).hostname}&sz=64`
-    : (site as TopSite).favicon || (site as TopSite).smallFavicon;
+  const faviconUrl = (site as TopSite).favicon ||
+    (site as TopSite).smallFavicon ||
+    `https://www.google.com/s2/favicons?domain=${
+      new URL(site.url).hostname
+    }&sz=64`;
 
   return (
     <a
@@ -34,26 +41,30 @@ export function TopSiteTile({ site, isPinned, isFirefoxMode, onContextMenu }: To
       onContextMenu={(e) => onContextMenu(e, site)}
     >
       <div
-        className={`relative ${isFirefoxMode ? "w-10 h-10 md:w-12 md:h-12" : "w-8 h-8"}`}
+        className={`relative mb-2 ${
+          isFirefoxMode ? "w-10 h-10 md:w-12 md:h-12" : "w-8 h-8"
+        }`}
       >
         <div
-          className={`rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 mb-1 ${
+          className={`rounded-lg overflow-hidden bg-gray-700 flex items-center justify-center transform transition-transform group-hover:scale-110 ${
             isFirefoxMode ? "w-10 h-10 md:w-12 md:h-12" : "w-8 h-8"
           }`}
         >
-          {faviconUrl ? (
-            <img
-              src={faviconUrl}
-              alt={site.title}
-              className={`${
-                isFirefoxMode ? "w-6 h-6 md:w-8 md:h-8" : "w-6 h-6"
-              } object-contain`}
-            />
-          ) : (
-            <span className="text-lg font-semibold text-gray-300">
-              {(site.title || "?")[0]}
-            </span>
-          )}
+          {faviconUrl
+            ? (
+              <img
+                src={faviconUrl}
+                alt={site.title}
+                className={`${
+                  isFirefoxMode ? "w-6 h-6 md:w-8 md:h-8" : "w-6 h-6"
+                } object-contain`}
+              />
+            )
+            : (
+              <span className="text-lg font-semibold text-gray-300">
+                {(site.title || "?")[0]}
+              </span>
+            )}
         </div>
         {isPinnedSite && (
           <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">
