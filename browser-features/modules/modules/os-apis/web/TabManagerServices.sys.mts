@@ -350,9 +350,8 @@ class TabManager {
   public executeScript(
     instanceId: string,
     script: string,
-  ): Promise<void> {
-    return this._queryActor(instanceId, "WebScraper:ExecuteScript", { script })
-      .then(() => undefined);
+  ): Promise<any> {
+    return this._queryActor<any>(instanceId, "WebScraper:ExecuteScript", { script });
   }
 
   public takeScreenshot(instanceId: string): Promise<string | null> {

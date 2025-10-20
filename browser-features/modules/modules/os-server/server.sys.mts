@@ -99,8 +99,8 @@ interface WebScraperAPI {
     instanceId: string,
     selector: string,
     timeout?: number,
-  ): Promise<boolean>;
-  executeScript(instanceId: string, script: string): Promise<void>;
+  ): Promise<boolean | null>;
+  executeScript(instanceId: string, script: string): Promise<any>;
   takeScreenshot(instanceId: string): Promise<string | null>;
   takeElementScreenshot(
     instanceId: string,
@@ -153,7 +153,7 @@ interface TabManagerAPI {
     selector: string,
     timeout?: number,
   ): Promise<boolean | null>;
-  executeScript(instanceId: string, script: string): Promise<void>;
+  executeScript(instanceId: string, script: string): Promise<any>;
   takeScreenshot(instanceId: string): Promise<string | null>;
   takeElementScreenshot(
     instanceId: string,
@@ -271,7 +271,8 @@ function jsonResponse(
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     ...extraHeaders,
   };
-  const head = `HTTP/1.1 ${status} ${statusText(status)}\r\n` +
+  const head =
+    `HTTP/1.1 ${status} ${statusText(status)}\r\n` +
     Object.entries(headers)
       .map(([k, v]) => `${k}: ${v}`)
       .join("\r\n") +
@@ -361,9 +362,12 @@ import type {
 
 // Helper mappers to conform runtime data (numbers) to published API types (strings for some timestamps)
 function mapHistoryItems(
-  items: Array<
-    { url: string; title: string; lastVisitDate: number; visitCount: number }
-  >,
+  items: Array<{
+    url: string;
+    title: string;
+    lastVisitDate: number;
+    visitCount: number;
+  }>,
 ): HistoryItem[] {
   return items.map((h) => ({
     url: h.url,
@@ -373,15 +377,13 @@ function mapHistoryItems(
   })) as HistoryItem[];
 }
 function mapDownloads(
-  items: Array<
-    {
-      id: number;
-      url: string;
-      filename: string;
-      status: string;
-      startTime: number;
-    }
-  >,
+  items: Array<{
+    id: number;
+    url: string;
+    filename: string;
+    status: string;
+    startTime: number;
+  }>,
 ): Download[] {
   return items.map((d) => ({
     id: d.id,
@@ -409,7 +411,8 @@ function corsPreflight(): string {
     "Content-Length": "0",
     Connection: "close",
   };
-  const head = `HTTP/1.1 204 No Content\r\n` +
+  const head =
+    `HTTP/1.1 204 No Content\r\n` +
     Object.entries(headers)
       .map(([k, v]) => `${k}: ${v}`)
       .join("\r\n") +
@@ -522,7 +525,7 @@ class LocalHttpServer implements nsIServerSocketListener {
               return;
             }
             await new Promise<void>((resolve) =>
-              setTimeout(() => resolve(), 5)
+              setTimeout(() => resolve(), 5),
             );
           }
         }
@@ -572,7 +575,7 @@ class LocalHttpServer implements nsIServerSocketListener {
               return;
             }
             await new Promise<void>((resolve) =>
-              setTimeout(() => resolve(), 5)
+              setTimeout(() => resolve(), 5),
             );
           }
         }
@@ -701,9 +704,7 @@ class LocalHttpServer implements nsIServerSocketListener {
       });
       s.post<{ url: string }, OkResponse | ErrorResponse>(
         "/instances/:id/navigate",
-        async (
-          ctx: RouterContext<{ url: string }>,
-        ) => {
+        async (ctx: RouterContext<{ url: string }>) => {
           const json = ctx.json();
           if (!json?.url) {
             return { status: 400, body: { error: "url required" } };
@@ -737,16 +738,17 @@ class LocalHttpServer implements nsIServerSocketListener {
         return { status: 200, body: { ok: okClicked } };
       });
       s.post("/instances/:id/waitForElement", async (ctx: RouterContext) => {
-        const json = ctx.json() as
-          | { selector?: string; timeout?: number }
-          | null;
+        const json = ctx.json() as {
+          selector?: string;
+          timeout?: number;
+        } | null;
         const sel = json?.selector ?? "";
         const to = json?.timeout ?? 5000;
         const { WebScraper } = WebScraperModule();
         const found = await WebScraper.waitForElement(ctx.params.id, sel, to);
         return { status: 200, body: { found } };
       });
-      s.post<{ script: string }, OkResponse | ErrorResponse>(
+      s.post<{ script: string }, { result: any } | ErrorResponse>(
         "/instances/:id/executeScript",
         async (ctx: RouterContext<{ script: string }>) => {
           const json = ctx.json();
@@ -754,8 +756,11 @@ class LocalHttpServer implements nsIServerSocketListener {
             return { status: 400, body: { error: "script required" } };
           }
           const { WebScraper } = WebScraperModule();
-          await WebScraper.executeScript(ctx.params.id, json.script);
-          return { status: 200, body: { ok: true } };
+          const result = await WebScraper.executeScript(
+            ctx.params.id,
+            json.script,
+          );
+          return { status: 200, body: { result } };
         },
       );
       // Screenshots
@@ -791,9 +796,9 @@ class LocalHttpServer implements nsIServerSocketListener {
       });
       // Forms
       s.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
-        const json = ctx.json() as
-          | { formData?: { [selector: string]: string } }
-          | null;
+        const json = ctx.json() as {
+          formData?: { [selector: string]: string };
+        } | null;
         const { WebScraper } = WebScraperModule();
         const okFilled = await WebScraper.fillForm(
           ctx.params.id,
@@ -833,9 +838,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         { instanceId: string } | ErrorResponse
       >(
         "/instances",
-        async (
-          ctx: RouterContext<{ url: string; inBackground?: boolean }>,
-        ) => {
+        async (ctx: RouterContext<{ url: string; inBackground?: boolean }>) => {
           const json = ctx.json();
           if (!json?.url) {
             return { status: 400, body: { error: "url required" } };
@@ -850,18 +853,15 @@ class LocalHttpServer implements nsIServerSocketListener {
       t.post<
         { browserId: string },
         { instanceId: string | null } | ErrorResponse
-      >(
-        "/attach",
-        async (ctx: RouterContext<{ browserId: string }>) => {
-          const json = ctx.json();
-          if (!json?.browserId) {
-            return { status: 400, body: { error: "browserId required" } };
-          }
-          const { TabManagerServices } = TabManagerModule();
-          const id = await TabManagerServices.attachToTab(json.browserId);
-          return { status: 200, body: { instanceId: id } };
-        },
-      );
+      >("/attach", async (ctx: RouterContext<{ browserId: string }>) => {
+        const json = ctx.json();
+        if (!json?.browserId) {
+          return { status: 400, body: { error: "browserId required" } };
+        }
+        const { TabManagerServices } = TabManagerModule();
+        const id = await TabManagerServices.attachToTab(json.browserId);
+        return { status: 200, body: { instanceId: id } };
+      });
       t.get("/instances/:id", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const info = await TabManagerServices.getInstanceInfo(ctx.params.id);
@@ -897,10 +897,7 @@ class LocalHttpServer implements nsIServerSocketListener {
       t.get("/instances/:id/element", async (ctx: RouterContext) => {
         const sel = ctx.searchParams.get("selector") ?? "";
         const { TabManagerServices } = TabManagerModule();
-        const element = await TabManagerServices.getElement(
-          ctx.params.id,
-          sel,
-        );
+        const element = await TabManagerServices.getElement(ctx.params.id, sel);
         return { status: 200, body: element != null ? { element } : {} };
       });
       t.get("/instances/:id/elementText", async (ctx: RouterContext) => {
@@ -923,9 +920,10 @@ class LocalHttpServer implements nsIServerSocketListener {
         return { status: 200, body: { ok: okClicked } };
       });
       t.post("/instances/:id/waitForElement", async (ctx: RouterContext) => {
-        const json = ctx.json() as
-          | { selector?: string; timeout?: number }
-          | null;
+        const json = ctx.json() as {
+          selector?: string;
+          timeout?: number;
+        } | null;
         const sel = json?.selector ?? "";
         const to = json?.timeout ?? 5000;
         const { TabManagerServices } = TabManagerModule();
@@ -936,7 +934,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         );
         return { status: 200, body: { found } };
       });
-      t.post<{ script: string }, OkResponse | ErrorResponse>(
+      t.post<{ script: string }, { result: any } | ErrorResponse>(
         "/instances/:id/executeScript",
         async (ctx: RouterContext<{ script: string }>) => {
           const json = ctx.json();
@@ -944,8 +942,11 @@ class LocalHttpServer implements nsIServerSocketListener {
             return { status: 400, body: { error: "script required" } };
           }
           const { TabManagerServices } = TabManagerModule();
-          await TabManagerServices.executeScript(ctx.params.id, json.script);
-          return { status: 200, body: { ok: true } };
+          const result = await TabManagerServices.executeScript(
+            ctx.params.id,
+            json.script,
+          );
+          return { status: 200, body: { result } };
         },
       );
       t.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
@@ -981,9 +982,9 @@ class LocalHttpServer implements nsIServerSocketListener {
         return { status: 200, body: image != null ? { image } : {} };
       });
       t.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
-        const json = ctx.json() as
-          | { formData?: { [selector: string]: string } }
-          | null;
+        const json = ctx.json() as {
+          formData?: { [selector: string]: string };
+        } | null;
         const { TabManagerServices } = TabManagerModule();
         const okFilled = await TabManagerServices.fillForm(
           ctx.params.id,

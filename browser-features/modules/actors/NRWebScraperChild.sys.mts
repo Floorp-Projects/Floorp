@@ -364,15 +364,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param script - JavaScript code to execute
    * @returns any - The result of the script execution, or null if error
    */
-  executeScript(script: string): null {
+  executeScript(script: string): any {
     try {
       if (this.contentWindow) {
-        const func = new this.contentWindow.Function(script);
-        // execute side-effects only; ignore return value
-        func.call(this.contentWindow);
+        return this.contentWindow.eval(script);
       }
-    } catch (_e) {
-      // swallow errors to keep API "no return" contract
+    } catch (e) {
+      // Rethrow error to be caught by the caller in the parent process
+      throw e;
     }
     return null;
   }

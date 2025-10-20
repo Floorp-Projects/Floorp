@@ -438,16 +438,17 @@ class webScraper {
   public async executeScript(
     instanceId: string,
     script: string,
-  ): Promise<void> {
+  ): Promise<any> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
     const actor = await this._getActorForBrowser(browser);
-    if (!actor) return;
-    await actor.sendQuery("WebScraper:ExecuteScript", { script });
-    return;
+    if (!actor) {
+      return null;
+    }
+    return await actor.sendQuery("WebScraper:ExecuteScript", { script });
   }
 
   /**

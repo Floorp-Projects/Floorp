@@ -294,11 +294,11 @@ paths:
               $ref: "#/components/schemas/ExecuteScriptRequest"
       responses:
         "200":
-          description: Script executed successfully
+          description: The result of the script execution.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                $ref: "#/components/schemas/ExecuteScriptResponse"
 
   /scraper/instances/{id}/screenshot:
     get:
@@ -668,11 +668,11 @@ paths:
               $ref: "#/components/schemas/ExecuteScriptRequest"
       responses:
         "200":
-          description: Script executed successfully
+          description: The result of the script execution.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                $ref: "#/components/schemas/ExecuteScriptResponse"
 
   /tabs/instances/{id}/screenshot:
     get:
@@ -1095,6 +1095,13 @@ components:
           description: JavaScript code to execute
       required:
         - script
+
+    ExecuteScriptResponse:
+      type: object
+      properties:
+        result:
+          description: "The value returned by the script execution. Can be any JSON-serializable type."
+          nullable: true
 
     # Screenshots
     ImageResponse:
