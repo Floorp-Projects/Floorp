@@ -17,13 +17,10 @@ for (const [path, content] of Object.entries(translations)) {
 }
 
 export async function initI18nextInstance() {
-  console.info("[i18n] initializing i18n (pages-settings)");
-
   i18n.use(LanguageDetector).use(initReactI18next);
 
   try {
-    i18n.on("initialized", (opts) => {
-      console.info("[i18n] 'initialized' event fired (pages-settings)", opts);
+    i18n.on("initialized", () => {
       try {
         globalThis.dispatchEvent(new Event("noraneko:i18n-initialized"));
       } catch {

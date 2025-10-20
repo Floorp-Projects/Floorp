@@ -16,6 +16,7 @@ import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
 import Debug from "./app/debug/page.tsx";
 import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
 import { AppBackground } from "@/components/app-background.tsx";
+import SearchPage from "@/app/search/page.tsx";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
@@ -38,6 +39,7 @@ export default function App() {
                 path="/"
                 element={<Navigate to="/overview/home" replace />}
               />
+              <Route path="/search" element={<SearchPage />} />
               <Route path="/overview/home" element={<Dashboard />} />
               <Route path="/features/design" element={<Design />} />
               <Route
