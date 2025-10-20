@@ -1,5 +1,6 @@
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
+  DEFAULT_SUGGESTED_SITES,
   getNewTabSettings,
   type NewTabSettings,
   type PinnedSite as PinnedSiteType,
@@ -229,7 +230,11 @@ export function TopSites({ isFirefoxMode = false }: { isFirefoxMode?: boolean })
       },
     );
 
-    setSites(filteredSites);
+    if (filteredSites.length <= 3) {
+      setSites(DEFAULT_SUGGESTED_SITES);
+    } else {
+      setSites(filteredSites);
+    }
   };
 
   useEffect(() => {

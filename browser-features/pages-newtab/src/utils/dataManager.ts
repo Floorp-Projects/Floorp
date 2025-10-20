@@ -52,6 +52,14 @@ export interface RandomImageResult {
   success: boolean;
 }
 
+export const DEFAULT_SUGGESTED_SITES: PinnedSite[] = [
+  { url: "https://youtube.com", title: "YouTube" },
+  { url: "https://x.com", title: "X" },
+  { url: "https://www.reddit.com/", title: "Reddit" },
+  { url: "https://wikipedia.org/", title: "Wikipedia" },
+  { url: "https://instagram.com", title: "Instagram" },
+];
+
 const DEFAULT_SETTINGS: NewTabSettings = {
   components: {
     topSites: true,
@@ -72,7 +80,13 @@ const DEFAULT_SETTINGS: NewTabSettings = {
     searchEngine: "default",
   },
   topSites: {
-    pinned: [],
+    pinned: [
+      { url: "https://www.cube-soft.jp/", title: "Cubesoft (Sponsor)" },
+      {
+        url: "https://docs.floorp.app/docs/features/",
+        title: "Floorp Support",
+      },
+    ],
     blocked: [],
   },
 };
