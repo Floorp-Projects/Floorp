@@ -42,7 +42,7 @@ jobs:
       - name: Copy installer to target
         run: |
           mkdir -p ./output
-          cp -r ./target/release/stub-installer.exe ./output/floorp-stub.installer.exe
+          cp -r ./static/installers/stub-win64-installer/src-tauri/target/release/stub-installer.exe ./output/floorp-stub.installer.exe
 
       - name: Publish Unsigned Installer 🎁
         id: publish-unsigned-installer

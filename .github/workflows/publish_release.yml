@@ -93,29 +93,16 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Download Stub Installers from latest release
-        env:
-          GITHUB_OWNER: Floorp-Projects
-          GITHUB_REPO: Floorp
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           set -eux
           mkdir -p ~/noraneko-publish/stub-installers
-          # Ensure jq is available (will be installed in Setup step too)
-          if ! command -v jq >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y jq
-          fi
 
-          # Query latest release assets via GitHub API and download matching stub installer files
-          API_URL="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest"
+          # Download the known stub installer directly. No token required.
+          URL="https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-stub.installer.exe"
+          OUT="$HOME/noraneko-publish/stub-installers/$(basename "$URL")"
 
-          echo "Fetching latest release metadata from $API_URL"
-          response=$(curl -sSf -H "Authorization: token ${GITHUB_TOKEN}" "$API_URL")
-
-          # Find assets with names that look like stub installers (floorp-stub*.exe or *-stub.installer.exe)
-          echo "$response" | jq -r '.assets[] | select(.name | test("stub"; "i")) | .name + "|" + .browser_download_url' | while IFS='|' read -r name url; do
-            echo "Downloading $name"
-            curl -L --fail -H "Authorization: token ${GITHUB_TOKEN}" -o "~/noraneko-publish/stub-installers/$name" "$url"
-          done
+          echo "Downloading stub installer from $URL to $OUT"
+          curl -L --fail -o "$OUT" "$URL"
 
           echo "Downloaded contents of ~/noraneko-publish/stub-installers:"
           ls -la ~/noraneko-publish/stub-installers || true
