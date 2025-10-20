@@ -232,7 +232,7 @@ jobs:
           -d '{ 
             "ref": "main",
             "inputs": {
-              "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-win-x86_64-full.mar",
+              "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-windows-x86_64-full.mar",
               "linux-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-x86_64-full.mar",
               "linux-aarch64-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-aarch64-full.mar",
               "mac-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-mac-universal-full.mar",
