@@ -347,13 +347,6 @@ class TabManager {
     });
   }
 
-  public executeScript(
-    instanceId: string,
-    script: string,
-  ): Promise<any> {
-    return this._queryActor<any>(instanceId, "WebScraper:ExecuteScript", { script });
-  }
-
   public takeScreenshot(instanceId: string): Promise<string | null> {
     return this._queryActor<string>(instanceId, "WebScraper:TakeScreenshot");
   }

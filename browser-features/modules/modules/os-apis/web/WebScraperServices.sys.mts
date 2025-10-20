@@ -422,36 +422,6 @@ class webScraper {
   }
 
   /**
-   * Executes JavaScript code in a browser instance
-   *
-   * This method:
-   * - Validates the browser instance exists
-   * - Gets the NRWebScraper actor from the current window global
-   * - Sends a query to execute JavaScript in the content context
-   * - Returns the result of the script execution
-   *
-   * @param instanceId - The unique identifier of the browser instance
-   * @param script - JavaScript code to execute
-   * @returns Promise<any> - The result of the script execution, or null if error
-   * @throws Error - If the browser instance is not found
-   */
-  public async executeScript(
-    instanceId: string,
-    script: string,
-  ): Promise<any> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(browser);
-    if (!actor) {
-      return null;
-    }
-    return await actor.sendQuery("WebScraper:ExecuteScript", { script });
-  }
-
-  /**
    * Takes a screenshot of the current viewport
    *
    * This method captures the visible area of the page and returns it

@@ -39,7 +39,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * - "WebScraper:InputElement": Sets values for input elements or textareas
    * - "WebScraper:ClickElement": Clicks on an element
    * - "WebScraper:WaitForElement": Waits for an element to appear
-   * - "WebScraper:ExecuteScript": Executes JavaScript in the content context
    * - "WebScraper:TakeScreenshot": Takes a screenshot of the viewport
    * - "WebScraper:TakeElementScreenshot": Takes a screenshot of a specific element
    * - "WebScraper:TakeFullPageScreenshot": Takes a screenshot of the full page
@@ -98,11 +97,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
             message.data.selector,
             message.data.timeout || 5000,
           );
-        }
-        break;
-      case "WebScraper:ExecuteScript":
-        if (message.data) {
-          return this.executeScript(message.data.script || "");
         }
         break;
       case "WebScraper:TakeScreenshot":
@@ -246,18 +240,22 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   clickElement(selector: string): boolean {
     try {
-      const element = this.document?.querySelector(selector) as
-        | HTMLElement
-        | null;
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
       if (!element) return false;
 
       try {
         element.scrollIntoView({ block: "center", inline: "center" });
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       try {
         (element as unknown as { focus?: () => void }).focus?.();
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       const rects = element.getClientRects?.();
       if (rects && rects.length === 0) {
@@ -280,19 +278,29 @@ export class NRWebScraperChild extends JSWindowActorChild {
       };
       try {
         element.dispatchEvent(new PointerEvent("pointerdown", evInit));
-      } catch (_e) { /* ignore */ }
+      } catch (_e) {
+        /* ignore */
+      }
       try {
         element.dispatchEvent(new MouseEvent("mousedown", evInit));
-      } catch (_e) { /* ignore */ }
+      } catch (_e) {
+        /* ignore */
+      }
       try {
         element.dispatchEvent(new MouseEvent("mouseup", evInit));
-      } catch (_e) { /* ignore */ }
+      } catch (_e) {
+        /* ignore */
+      }
       try {
         element.dispatchEvent(new MouseEvent("click", evInit));
-      } catch (_e) { /* ignore */ }
+      } catch (_e) {
+        /* ignore */
+      }
       try {
         element.click();
-      } catch (_e) { /* ignore */ }
+      } catch (_e) {
+        /* ignore */
+      }
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
@@ -344,7 +352,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
       try {
         const win = this.contentWindow;
         const doc = win?.document;
-        if (doc && doc.documentElement && (doc.body || doc.readyState === "interactive" || doc.readyState === "complete")) {
+        if (
+          doc &&
+          doc.documentElement &&
+          (doc.body ||
+            doc.readyState === "interactive" ||
+            doc.readyState === "complete")
+        ) {
           return true;
         }
         await new Promise((r) => setTimeout(r, 100));
@@ -353,27 +367,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
     }
     return false;
-  }
-
-  /**
-   * Executes JavaScript code in the content context
-   *
-   * This method safely executes JavaScript code in the content window
-   * and returns the result. It includes error handling to prevent crashes.
-   *
-   * @param script - JavaScript code to execute
-   * @returns any - The result of the script execution, or null if error
-   */
-  executeScript(script: string): any {
-    try {
-      if (this.contentWindow) {
-        return this.contentWindow.eval(script);
-      }
-    } catch (e) {
-      // Rethrow error to be caught by the caller in the parent process
-      throw e;
-    }
-    return null;
   }
 
   /**
@@ -616,9 +609,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
   submit(selector: string): boolean {
     try {
       const root = this.document?.querySelector(selector) as Element | null;
-      const form = (root as HTMLFormElement | null)?.tagName === "FORM"
-        ? (root as HTMLFormElement)
-        : root?.closest?.("form") as HTMLFormElement | null;
+      const form =
+        (root as HTMLFormElement | null)?.tagName === "FORM"
+          ? (root as HTMLFormElement)
+          : (root?.closest?.("form") as HTMLFormElement | null);
 
       if (!form) return false;
 

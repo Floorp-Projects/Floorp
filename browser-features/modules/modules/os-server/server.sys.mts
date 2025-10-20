@@ -100,7 +100,6 @@ interface WebScraperAPI {
     selector: string,
     timeout?: number,
   ): Promise<boolean | null>;
-  executeScript(instanceId: string, script: string): Promise<any>;
   takeScreenshot(instanceId: string): Promise<string | null>;
   takeElementScreenshot(
     instanceId: string,
@@ -153,7 +152,6 @@ interface TabManagerAPI {
     selector: string,
     timeout?: number,
   ): Promise<boolean | null>;
-  executeScript(instanceId: string, script: string): Promise<any>;
   takeScreenshot(instanceId: string): Promise<string | null>;
   takeElementScreenshot(
     instanceId: string,
@@ -748,21 +746,6 @@ class LocalHttpServer implements nsIServerSocketListener {
         const found = await WebScraper.waitForElement(ctx.params.id, sel, to);
         return { status: 200, body: { found } };
       });
-      s.post<{ script: string }, { result: any } | ErrorResponse>(
-        "/instances/:id/executeScript",
-        async (ctx: RouterContext<{ script: string }>) => {
-          const json = ctx.json();
-          if (!json?.script) {
-            return { status: 400, body: { error: "script required" } };
-          }
-          const { WebScraper } = WebScraperModule();
-          const result = await WebScraper.executeScript(
-            ctx.params.id,
-            json.script,
-          );
-          return { status: 200, body: { result } };
-        },
-      );
       // Screenshots
       s.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { WebScraper } = WebScraperModule();
@@ -934,21 +917,6 @@ class LocalHttpServer implements nsIServerSocketListener {
         );
         return { status: 200, body: { found } };
       });
-      t.post<{ script: string }, { result: any } | ErrorResponse>(
-        "/instances/:id/executeScript",
-        async (ctx: RouterContext<{ script: string }>) => {
-          const json = ctx.json();
-          if (!json?.script) {
-            return { status: 400, body: { error: "script required" } };
-          }
-          const { TabManagerServices } = TabManagerModule();
-          const result = await TabManagerServices.executeScript(
-            ctx.params.id,
-            json.script,
-          );
-          return { status: 200, body: { result } };
-        },
-      );
       t.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
         const { TabManagerServices } = TabManagerModule();
         const image = await TabManagerServices.takeScreenshot(ctx.params.id);

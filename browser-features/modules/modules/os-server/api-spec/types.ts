@@ -105,11 +105,6 @@ export interface FoundResponse {
   found: boolean;
 }
 
-// Script Execution
-export interface ExecuteScriptRequest {
-  script: string;
-}
-
 // Screenshots
 export interface ImageResponse {
   image?: string; // base64 encoded

@@ -280,26 +280,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/FoundResponse"
 
-  /scraper/instances/{id}/executeScript:
-    post:
-      summary: Execute JavaScript in scraper instance
-      operationId: executeScraperScript
-      parameters:
-        - $ref: "#/components/parameters/InstanceId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ExecuteScriptRequest"
-      responses:
-        "200":
-          description: The result of the script execution.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExecuteScriptResponse"
-
   /scraper/instances/{id}/screenshot:
     get:
       summary: Take screenshot of scraper instance
@@ -653,26 +633,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FoundResponse"
-
-  /tabs/instances/{id}/executeScript:
-    post:
-      summary: Execute JavaScript in tab instance
-      operationId: executeTabScript
-      parameters:
-        - $ref: "#/components/parameters/InstanceId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ExecuteScriptRequest"
-      responses:
-        "200":
-          description: The result of the script execution.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExecuteScriptResponse"
 
   /tabs/instances/{id}/screenshot:
     get:
@@ -1085,23 +1045,6 @@ components:
           description: Whether the element was found
       required:
         - found
-
-    # Script Execution
-    ExecuteScriptRequest:
-      type: object
-      properties:
-        script:
-          type: string
-          description: JavaScript code to execute
-      required:
-        - script
-
-    ExecuteScriptResponse:
-      type: object
-      properties:
-        result:
-          description: "The value returned by the script execution. Can be any JSON-serializable type."
-          nullable: true
 
     # Screenshots
     ImageResponse:
