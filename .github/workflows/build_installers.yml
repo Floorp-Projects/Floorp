@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: write
+
 jobs:
   build-installer:
     runs-on: windows-latest
@@ -29,12 +32,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd src/installers/stub-win64-installer
+          cd ./static/installers/stub-win64-installer
           pnpm install
 
       - name: Build installer
         run: |
-          deno task installer-win64-stub-build
+          cd ./static/installers/stub-win64-installer && pnpm tauri build
 
       - name: Copy installer to target
         run: |
@@ -69,3 +72,63 @@ jobs:
           name: floorp-stub-installer
           path: ./output/signed_installer/floorp-stub.installer.exe
           retention-days: 30
+
+      - name: Get latest release info
+        id: get_latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_OWNER: Floorp-Projects
+          GITHUB_REPO: Floorp
+          FILE_NAME: floorp-stub.installer.exe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $owner = $env:GITHUB_OWNER
+          $repo = $env:GITHUB_REPO
+          $token = $env:GITHUB_TOKEN
+          $fileName = $env:FILE_NAME
+
+          Write-Host "Fetching latest release for $owner/$repo"
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers @{ Authorization = "token $token"; Accept = 'application/vnd.github+json' }
+          $tag = $release.tag_name
+          Write-Host "Latest tag: $tag"
+
+          # Find asset id for the stub installer if present
+          $asset = $release.assets | Where-Object { $_.name -eq $fileName }
+          if ($asset) {
+            $assetId = $asset.id
+            Write-Host "Found existing asset id: $assetId"
+          } else {
+            $assetId = ''
+            Write-Host "No existing asset named $fileName"
+          }
+
+          # write outputs
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "asset_id=$assetId" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Delete existing stub asset (if any)
+        if: ${{ steps.get_latest.outputs.asset_id != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: Floorp-Projects
+          GITHUB_REPO: Floorp
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assetId = '${{ steps.get_latest.outputs.asset_id }}'
+          $owner = $env:GITHUB_OWNER
+          $repo = $env:GITHUB_REPO
+          $token = $env:GITHUB_TOKEN
+
+          Write-Host "Deleting asset id $assetId"
+          $url = "https://api.github.com/repos/$owner/$repo/releases/assets/$assetId"
+          Invoke-RestMethod -Method Delete -Uri $url -Headers @{ Authorization = "token $token"; Accept = 'application/vnd.github+json' }
+          Write-Host "Deleted asset $assetId"
+
+      - name: Upload signed installer to latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./output/signed_installer/floorp-stub.installer.exe
+          tag_name: ${{ steps.get_latest.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}

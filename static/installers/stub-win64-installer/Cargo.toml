@@ -1,5 +1,5 @@
 [package]
-name = "stub-win64-installer"
+name = "stub-windows-x86_64-installer"
 version = "0.1.0"
 edition = "2021"
 

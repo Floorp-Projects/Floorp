@@ -404,8 +404,8 @@ async fn get_latest_installer_url() -> Option<String> {
 
     for asset in json["assets"].as_array()? {
         let name = asset["name"].as_str()?;
-        // Look specifically for floorp-win64.installer.exe
-        if name == "floorp-win64.installer.exe" {
+        // Look specifically for floorp-windows-x86_64.installer.exe
+        if name == "floorp-windows-x86_64.installer.exe" {
             println!("[INFO] Found target installer: {}", name);
             return asset["browser_download_url"]
                 .as_str()
@@ -413,7 +413,7 @@ async fn get_latest_installer_url() -> Option<String> {
         }
     }
 
-    println!("[WARN] floorp-win64.installer.exe not found in release assets");
+    println!("[WARN] floorp-windows-x86_64.installer.exe not found in release assets");
     None
 }
 

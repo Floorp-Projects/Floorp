@@ -92,6 +92,34 @@ jobs:
           path: ~/noraneko-publish/linux-aarch64-dist
           github-token: ${{ github.token }}
 
+      - name: Download Stub Installers from latest release
+        env:
+          GITHUB_OWNER: Floorp-Projects
+          GITHUB_REPO: Floorp
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          set -eux
+          mkdir -p ~/noraneko-publish/stub-installers
+          # Ensure jq is available (will be installed in Setup step too)
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+
+          # Query latest release assets via GitHub API and download matching stub installer files
+          API_URL="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest"
+
+          echo "Fetching latest release metadata from $API_URL"
+          response=$(curl -sSf -H "Authorization: token ${GITHUB_TOKEN}" "$API_URL")
+
+          # Find assets with names that look like stub installers (floorp-stub*.exe or *-stub.installer.exe)
+          echo "$response" | jq -r '.assets[] | select(.name | test("stub"; "i")) | .name + "|" + .browser_download_url' | while IFS='|' read -r name url; do
+            echo "Downloading $name"
+            curl -L --fail -H "Authorization: token ${GITHUB_TOKEN}" -o "~/noraneko-publish/stub-installers/$name" "$url"
+          done
+
+          echo "Downloaded contents of ~/noraneko-publish/stub-installers:"
+          ls -la ~/noraneko-publish/stub-installers || true
+
       - name: Setup
         id: setup
         run: |
@@ -200,6 +228,7 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
             ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
+            ${{ env.ROOT_DIR }}/noraneko-publish/stub-installers/**
             ${{ env.ROOT_DIR }}/noraneko-publish/hashes.txt
           tag_name: "v${{ env.NR_VERSION }}"
           name: "Floorp ${{ env.NR_VERSION }}"
