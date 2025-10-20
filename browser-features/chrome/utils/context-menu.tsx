@@ -1,7 +1,9 @@
-// SPDX-License-Identifier: MPL-2.0
-
 import { render } from "@nora/solid-xul";
+import i18next from "i18next";
+import { createSignal } from "solid-js";
 import type { JSXElement } from "solid-js";
+import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { createRootHMR } from "@nora/solid-xul";
 
 export namespace ContextMenuUtils {
   const checkItems: (() => void)[] = [];
@@ -95,9 +97,16 @@ export namespace ContextMenuUtils {
 }
 
 export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
+  const [label, setLabel] = createSignal(i18next.t(l10n));
+
+  createRootHMR(() => {
+    addI18nObserver(() => {
+      setLabel(i18next.t(l10n));
+    });
+  }, import.meta.hot);
   return (
     <xul:menuitem
-      label={l10n}
+      label={label()}
       id={id}
       onCommand={runFunction}
     />

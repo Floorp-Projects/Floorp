@@ -728,11 +728,33 @@ class PanelMenu {
   }
 }
 
+import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+
 /**
  * Wrapper component for Chrome CSS Menu
  */
 const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
-  const label = i18next.t("chrome_css.menu");
+  const [translations, setTranslations] = createSignal({
+    menu: i18next.t("chrome_css.menu"),
+    rebuild: i18next.t("chrome_css.rebuild"),
+    create: i18next.t("chrome_css.create"),
+    open_folder: i18next.t("chrome_css.open_folder"),
+    edit_user_chrome: i18next.t("chrome_css.edit_user_chrome"),
+    edit_user_content: i18next.t("chrome_css.edit_user_content"),
+  });
+
+  createRootHMR(() => {
+    addI18nObserver(() => {
+      setTranslations({
+        menu: i18next.t("chrome_css.menu"),
+        rebuild: i18next.t("chrome_css.rebuild"),
+        create: i18next.t("chrome_css.create"),
+        open_folder: i18next.t("chrome_css.open_folder"),
+        edit_user_chrome: i18next.t("chrome_css.edit_user_chrome"),
+        edit_user_content: i18next.t("chrome_css.edit_user_content"),
+      });
+    });
+  }, import.meta.hot);
 
   const showSubView = async () => {
     try {
@@ -750,7 +772,7 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
       <xul:toolbarbutton
         id="appMenu-usercss-button"
         class="subviewbutton subviewbutton-nav"
-        label={label}
+        label={translations().menu}
         closemenu="none"
         onCommand={() => showSubView()}
       />
@@ -759,32 +781,32 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
           <xul:toolbarbutton
             id="appMenu-usercss-rebuild-button"
             class="subviewbutton"
-            label={i18next.t("chrome_css.rebuild")}
+            label={translations().rebuild}
             onCommand={() => props.service.rebuild()}
           />
           <xul:toolbarseparator />
           <xul:toolbarbutton
             id="appMenu-usercss-create-button"
             class="subviewbutton"
-            label={i18next.t("chrome_css.create")}
+            label={translations().create}
             onCommand={() => props.service.create()}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-open-folder-button"
             class="subviewbutton"
-            label={i18next.t("chrome_css.open_folder")}
+            label={translations().open_folder}
             onCommand={() => props.service.openFolder()}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-edit-chrome-button"
             class="subviewbutton"
-            label={i18next.t("chrome_css.edit_user_chrome")}
+            label={translations().edit_user_chrome}
             onCommand={() => props.service.editUserCSS("userChrome.css")}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-edit-content-button"
             class="subviewbutton"
-            label={i18next.t("chrome_css.edit_user_content")}
+            label={translations().edit_user_content}
             onCommand={() => props.service.editUserCSS("userContent.css")}
           />
           <xul:toolbarseparator />
