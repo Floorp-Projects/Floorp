@@ -32,16 +32,7 @@
         "aboutBrowser": "{{productName}} について",
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
-        "keyboardShortcut": "キーボードショートカット",
-        "search": {
-            "title": "設定を検索",
-            "resultsFor": "「{{query}}」の検索結果",
-            "searchResultsDescription": "「{{query}}」の検索結果です。{{productName}}の設定のみが検索対象となり、Firefoxの設定は含まれません。",
-            "noResults": "検索結果が見つかりませんでした",
-            "open": "「{{title}}」を開く",
-            "matchedText": "一致したテキスト",
-            "results": "検索結果"
-        }
+        "keyboardShortcut": "キーボードショートカット"
     },
     "home": {
         "welcome": "ようこそ、 {{name}} さん 👋",
