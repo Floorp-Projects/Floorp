@@ -281,11 +281,7 @@ paths:
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    element:
-                      type: string
-                      nullable: true
+                  $ref: "#/components/schemas/ElementResponse"
 
     /scraper/instances/{id}/elementTextContent:
       get:
@@ -701,11 +697,7 @@ paths:
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    element:
-                      type: string
-                      nullable: true
+                  $ref: "#/components/schemas/ElementResponse"
 
     /tabs/instances/{id}/elementTextContent:
       get:
@@ -1154,6 +1146,14 @@ components:
         value:
           type: string
           description: Element value
+          nullable: true
+
+    ElementResponse:
+      type: object
+      properties:
+        element:
+          type: string
+          description: Element HTML or null when not found
           nullable: true
 
     WaitForElementRequest:

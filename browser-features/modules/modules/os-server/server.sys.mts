@@ -761,7 +761,8 @@ class LocalHttpServer implements nsIServerSocketListener {
         const txt = ctx.searchParams.get("text") ?? "";
         const { WebScraper } = WebScraperModule();
         const elem = await WebScraper.getElementByText(ctx.params.id, txt);
-        return { status: 200, body: elem != null ? { element: elem } : {} };
+        if (!elem) return { status: 200, body: { element: null } };
+        return { status: 200, body: { element: elem } };
       });
 
       // Get element text content by selector (alias)
@@ -951,7 +952,8 @@ class LocalHttpServer implements nsIServerSocketListener {
           ctx.params.id,
           txt,
         );
-        return { status: 200, body: elem != null ? { element: elem } : {} };
+        if (!elem) return { status: 200, body: { element: null } };
+        return { status: 200, body: { element: elem } };
       });
 
       // Get element text content by selector (alias)
