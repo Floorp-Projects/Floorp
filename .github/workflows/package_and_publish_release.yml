@@ -55,9 +55,4 @@ jobs:
     needs:
       [package-windows, package-linux, package-macos, package-linux-aarch64]
     uses: ./.github/workflows/publish_release.yml
-    with:
-      win_runtime_artifact_workflow_call: ${{ needs.package-windows.outputs.run_id }}
-      linux_runtime_artifact_workflow_call: ${{ needs.package-linux.outputs.run_id }}
-      mac_runtime_artifact_workflow_call: ${{ needs.package-macos.outputs.run_id }}
-      linux_aarch64_runtime_artifact_workflow_call: ${{ needs.package-linux-aarch64.outputs.run_id }}
     secrets: inherit

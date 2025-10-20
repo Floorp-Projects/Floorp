@@ -6,23 +6,7 @@ name: "(P) |α| Publish Release"
 
 on:
   workflow_call:
-    inputs:
-      win_runtime_artifact_workflow_call:
-        type: string
-        required: false
-        default: ""
-      linux_runtime_artifact_workflow_call:
-        type: string
-        required: false
-        default: ""
-      mac_runtime_artifact_workflow_call:
-        type: string
-        required: false
-        default: ""
-      linux_aarch64_runtime_artifact_workflow_call:
-        type: string
-        required: false
-        default: ""
+
 permissions:
   contents: write
 
@@ -52,57 +36,10 @@ jobs:
           fetch-depth: 1
           ref: main
 
-      - name: Retrieve run IDs
-        run: |
-          if [ -z "${{ inputs.win_runtime_artifact_workflow_call }}" ]; then
-            WINDOWS_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Windows-x64"))][0].id')
-            echo "WINDOWS_RUN_ID=$WINDOWS_ID" >> $GITHUB_ENV
-          else
-            echo "WINDOWS_RUN_ID=${{ inputs.win_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
-          fi
-
-          if [ -z "${{ inputs.linux_runtime_artifact_workflow_call }}" ]; then
-            LINUX_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-x64"))][0].id')
-            echo "LINUX_RUN_ID=$LINUX_ID" >> $GITHUB_ENV
-          else
-            echo "LINUX_RUN_ID=${{ inputs.linux_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
-          fi
-
-          if [ -z "${{ inputs.mac_runtime_artifact_workflow_call }}" ]; then
-            MAC_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("macOS-x64"))][0].id')
-            echo "MAC_RUN_ID=$MAC_ID" >> $GITHUB_ENV
-          else
-            echo "MAC_RUN_ID=${{ inputs.mac_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
-          fi
-
-          if [ -z "${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" ]; then
-            LINUX_AARCH64_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/package.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Linux-aarch64"))][0].id')
-            echo "LINUX_AARCH64_RUN_ID=$LINUX_AARCH64_ID" >> $GITHUB_ENV
-          else
-            echo "LINUX_AARCH64_RUN_ID=${{ inputs.linux_aarch64_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
-          fi
-
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: floorp-windows-x86_64-mar-full
-          run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win
           github-token: ${{ github.token }}
 
@@ -110,7 +47,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: floorp-linux-x86_64-mar-full
-          run-id: ${{ env.LINUX_RUN_ID }}
           path: ~/noraneko-publish/linux
           github-token: ${{ github.token }}
 
@@ -118,7 +54,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: floorp-mac-universal-mar-full
-          run-id: ${{ env.MAC_RUN_ID }}
           path: ~/noraneko-publish/mac
           github-token: ${{ github.token }}
 
@@ -126,7 +61,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: noraneko-windows-x86_64-installer
-          run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win-dist
           github-token: ${{ github.token }}
 
@@ -134,7 +68,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: noraneko-linux-x86_64-installer
-          run-id: ${{ env.LINUX_RUN_ID }}
           path: ~/noraneko-publish/linux-dist
           github-token: ${{ github.token }}
 
@@ -142,7 +75,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: noraneko-mac-universal-installer
-          run-id: ${{ env.MAC_RUN_ID }}
           path: ~/noraneko-publish/mac-dist
           github-token: ${{ github.token }}
 
@@ -150,7 +82,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: floorp-linux-aarch64-mar-full
-          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
           path: ~/noraneko-publish/linux-aarch64
           github-token: ${{ github.token }}
 
@@ -158,7 +89,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: noraneko-linux-aarch64-installer
-          run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
           path: ~/noraneko-publish/linux-aarch64-dist
           github-token: ${{ github.token }}
 
@@ -299,7 +229,7 @@ jobs:
           -H "Authorization: token ${{ secrets.UPDATE_SERVER_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-stable-updatexml-files.yml/dispatches" \
-          -d '{
+          -d '{ 
             "ref": "main",
             "inputs": {
               "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-win-x86_64-full.mar",
