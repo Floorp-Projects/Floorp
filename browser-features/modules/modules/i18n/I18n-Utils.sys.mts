@@ -1,3 +1,7 @@
+const { LangPackMatcher } = ChromeUtils.importESModule(
+  "resource://gre/modules/LangPackMatcher.sys.mjs",
+);
+
 class i18nUtils {
   private static readonly LOCALE_OBSERVER_KEY = "intl:app-locales-changed";
   private get browserRequestedLocales(): string[] {
@@ -10,6 +14,31 @@ class i18nUtils {
 
   private get operatingSystemLocale(): string {
     return Services.locale.requestedLocales?.[0] || this.fallBackLocale;
+  }
+
+  private get isUserLocaleSet(): boolean {
+    const pref = "intl.locale.requested";
+    return Services.prefs.prefHasUserValue(pref);
+  }
+
+  private get getRequestedLocaleFromPref(): string {
+    const pref = "intl.locale.requested";
+    return Services.prefs
+      .getStringPref(pref, this.fallBackLocale)
+      .split(",")[0];
+  }
+
+  private async getLangPackInfoFromPref(): Promise<any | null> {
+    const requestedLocale = this.getRequestedLocaleFromPref;
+    const availableLangPacks =
+      await LangPackMatcher.mockable.getAvailableLangpacks();
+
+    for (const langPack of availableLangPacks) {
+      if (langPack.target_locale === requestedLocale) {
+        return langPack;
+      }
+    }
+    return null;
   }
 
   // Map of language-only codes to preferred BCP47 locales
@@ -91,6 +120,14 @@ class i18nUtils {
       // If registration fails, keep going; listeners can still be added and removed
       // but they won't be triggered by the observer.
     }
+
+    // Install the requested lang pack on startup. Use the user-set pref
+    // when present; otherwise attempt negotiation. Avoid duplicating the
+    // install/catch logic.
+    const usePref = this.isUserLocaleSet;
+    this.installLangPackAsRequested(usePref).catch(() => {
+      console.error("Failed to install lang pack on startup");
+    });
   }
 
   private onLocaleChanged(_subject: unknown, topic: string, _data: string) {
@@ -136,6 +173,29 @@ class i18nUtils {
 
   public normalizeLocale(locale: string): string {
     return this.mapLocale(locale);
+  }
+
+  public async installLangPackAsRequested(refPref = false): Promise<void> {
+    if (refPref) {
+      const langPackInfo = await this.getLangPackInfoFromPref();
+      if (langPackInfo) {
+        await LangPackMatcher.ensureLangPackInstalled(langPackInfo);
+        return;
+      }
+    } else {
+      const langPackInfo =
+        await LangPackMatcher.negotiateLangPackForLanguageMismatch();
+      if (langPackInfo) {
+        const langpack = langPackInfo.langPack;
+        await LangPackMatcher.ensureLangPackInstalled(langpack);
+        return;
+      }
+    }
+    throw new Error("No lang pack info found for requested locale");
+  }
+
+  public installLangPack(locale: string): Promise<void> {
+    return LangPackMatcher.ensureLangPackInstalled(locale);
   }
 
   private static instance: i18nUtils;

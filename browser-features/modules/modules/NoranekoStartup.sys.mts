@@ -61,6 +61,10 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/os-server/server.sys.mjs",
   );
+  // init i18n
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+  );
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {

@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import { initializeI18n } from "../../../../../../src/apps/i18n-supports/i18n-shared.ts";
+import { initializeI18n } from "./i18n-shared.ts";
 
 const translations = import.meta.glob("./locales/*.json", {
   eager: true,
