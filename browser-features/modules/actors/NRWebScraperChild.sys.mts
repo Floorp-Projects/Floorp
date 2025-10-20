@@ -53,6 +53,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     data?: {
       selector: string;
       value: string;
+      textContent?: string;
       timeout?: number;
       script?: string;
       rect?: { x?: number; y?: number; width?: number; height?: number };
@@ -66,6 +67,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
       case "WebScraper:GetHTML":
         return this.getHTML();
+      case "WebScraper:GetElements":
+        if (message.data) {
+          return this.getElements(message.data.selector);
+        }
+        break;
+      case "WebScraper:GetElementByText":
+        if (message.data) {
+          return this.getElementByText(message.data.textContent);
+        }
+        break;
+      case "WebScraper:GetElementTextContent":
+        if (message.data) {
+          return this.getElementTextContent(message.data.selector);
+        }
+        break;
       case "WebScraper:GetElement":
         if (message.data) {
           return this.getElement(message.data.selector);
@@ -169,11 +185,74 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector);
       if (element) {
-        return element.outerHTML;
+        return String((element as Element).outerHTML);
       }
       return null;
     } catch (e) {
       console.error("NRWebScraperChild: Error getting element:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Returns an array of outerHTML strings for all elements matching selector
+   */
+  getElements(selector: string): string[] {
+    try {
+      const nodeList = this.document?.querySelectorAll(selector) as
+        | NodeListOf<Element>
+        | undefined;
+      if (!nodeList) return [];
+      const results: string[] = [];
+      nodeList.forEach((el) => {
+        const o = (el as Element).outerHTML;
+        if (o != null) results.push(String(o));
+      });
+      return results;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting elements:", e);
+      return [];
+    }
+  }
+
+  /**
+   * Returns the outerHTML of the first element whose textContent includes the provided text
+   */
+  getElementByText(textContent: string): string | null {
+    try {
+      const nodeList = this.document?.querySelectorAll("*") as
+        | NodeListOf<Element>
+        | undefined;
+      if (!nodeList) return null;
+      const elArray = Array.from(nodeList as NodeListOf<Element>) as Element[];
+      for (const el of elArray) {
+        const txt = el.textContent;
+        if (txt && txt.includes(textContent)) {
+          return String(el.outerHTML);
+        }
+      }
+      return null;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting element by text:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Returns trimmed textContent of the first matching selector
+   */
+  getElementTextContent(selector: string): string | null {
+    try {
+      const element = this.document?.querySelector(selector);
+      if (element) {
+        return element.textContent?.trim() || null;
+      }
+      return null;
+    } catch (e) {
+      console.error(
+        "NRWebScraperChild: Error getting element text content:",
+        e,
+      );
       return null;
     }
   }
@@ -264,7 +343,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const style = globalThis.getComputedStyle(element);
       if (
-        style?.display === "none" ||
+        style?.getPropertyValue("display") === "none" ||
         style?.getPropertyValue("visibility") === "hidden"
       ) {
         return false;
@@ -278,28 +357,28 @@ export class NRWebScraperChild extends JSWindowActorChild {
       };
       try {
         element.dispatchEvent(new PointerEvent("pointerdown", evInit));
-      } catch (_e) {
-        /* ignore */
+      } catch (e) {
+        void e;
       }
       try {
         element.dispatchEvent(new MouseEvent("mousedown", evInit));
-      } catch (_e) {
-        /* ignore */
+      } catch (e) {
+        void e;
       }
       try {
         element.dispatchEvent(new MouseEvent("mouseup", evInit));
-      } catch (_e) {
-        /* ignore */
+      } catch (e) {
+        void e;
       }
       try {
         element.dispatchEvent(new MouseEvent("click", evInit));
-      } catch (_e) {
-        /* ignore */
+      } catch (e) {
+        void e;
       }
       try {
         element.click();
-      } catch (_e) {
-        /* ignore */
+      } catch (e) {
+        void e;
       }
       return true;
     } catch (e) {
@@ -362,7 +441,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return true;
         }
         await new Promise((r) => setTimeout(r, 100));
-      } catch (_) {
+      } catch (e) {
+        void e;
         await new Promise((r) => setTimeout(r, 100));
       }
     }
@@ -617,12 +697,25 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (!form) return false;
 
       try {
-        // Prefer requestSubmit to trigger submitter/default handling
-        (form as any).requestSubmit
-          ? (form as any).requestSubmit()
-          : form.submit();
-      } catch {
-        form.submit();
+        // Prefer requestSubmit if available, otherwise fallback to submit.
+        const maybeRequestSubmit = (
+          form as HTMLFormElement & {
+            requestSubmit?: () => void;
+          }
+        ).requestSubmit;
+        if (typeof maybeRequestSubmit === "function") {
+          maybeRequestSubmit.call(form);
+        } else {
+          form.submit();
+        }
+      } catch (e) {
+        // If anything goes wrong, try a plain submit and swallow errors.
+        void e;
+        try {
+          form.submit();
+        } catch (e2) {
+          void e2;
+        }
       }
       return true;
     } catch (e) {

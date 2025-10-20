@@ -240,6 +240,72 @@ paths:
               schema:
                 $ref: "#/components/schemas/TextResponse"
 
+    /scraper/instances/{id}/elements:
+      get:
+        summary: Get all matching elements' outerHTML
+        operationId: getScraperElements
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: selector
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: List of elements outerHTML
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    elements:
+                      type: array
+                      items:
+                        type: string
+
+    /scraper/instances/{id}/elementByText:
+      get:
+        summary: Find first element containing text
+        operationId: getScraperElementByText
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: text
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: Element HTML or empty
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    element:
+                      type: string
+                      nullable: true
+
+    /scraper/instances/{id}/elementTextContent:
+      get:
+        summary: Get trimmed text content for selector
+        operationId: getScraperElementTextContent
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: selector
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: Element text content
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/TextResponse"
+
   /scraper/instances/{id}/click:
     post:
       summary: Click an element in scraper instance
@@ -593,6 +659,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TextResponse"
+
+    /tabs/instances/{id}/elements:
+      get:
+        summary: Get all matching elements' outerHTML for tab
+        operationId: getTabElements
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: selector
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: List of elements outerHTML
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    elements:
+                      type: array
+                      items:
+                        type: string
+
+    /tabs/instances/{id}/elementByText:
+      get:
+        summary: Find first element containing text in tab
+        operationId: getTabElementByText
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: text
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: Element HTML or empty
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    element:
+                      type: string
+                      nullable: true
+
+    /tabs/instances/{id}/elementTextContent:
+      get:
+        summary: Get trimmed text content for selector in tab
+        operationId: getTabElementTextContent
+        parameters:
+          - $ref: "#/components/parameters/InstanceId"
+          - name: selector
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: Element text content
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/TextResponse"
 
   /tabs/instances/{id}/click:
     post:

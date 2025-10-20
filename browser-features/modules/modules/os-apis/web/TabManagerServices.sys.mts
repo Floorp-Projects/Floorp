@@ -66,15 +66,17 @@ class TabManager {
         resolved = true;
         // After load, ensure content actor is ready and body exists
         try {
-          let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-            "NRWebScraper",
-          );
+          let actor =
+            browser.browsingContext?.currentWindowGlobal?.getActor(
+              "NRWebScraper",
+            );
           if (!actor) {
             for (let i = 0; i < 150; i++) {
               await new Promise((r) => setTimeout(r, 100));
-              actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-                "NRWebScraper",
-              );
+              actor =
+                browser.browsingContext?.currentWindowGlobal?.getActor(
+                  "NRWebScraper",
+                );
               if (actor) break;
             }
           }
@@ -117,12 +119,7 @@ class TabManager {
           browser.webProgress.removeProgressListener(progressListener);
           complete();
         },
-        onStateChange(
-          progress: any,
-          _request: any,
-          flags: any,
-          _status: any,
-        ) {
+        onStateChange(progress: any, _request: any, flags: any, _status: any) {
           if (!progress.isTopLevel) return;
           const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
           if (flags & STATE_STOP) {
@@ -155,17 +152,17 @@ class TabManager {
   ): Promise<T | null> {
     try {
       const { browser } = this._getInstance(instanceId);
-      let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-        "NRWebScraper",
-      );
+      let actor =
+        browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
 
       // Retry a few times after navigation for actor readiness
       if (!actor) {
         for (let i = 0; i < 150; i++) {
           await new Promise((r) => setTimeout(r, 100));
-          actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-            "NRWebScraper",
-          );
+          actor =
+            browser.browsingContext?.currentWindowGlobal?.getActor(
+              "NRWebScraper",
+            );
           if (actor) break;
         }
       }
@@ -309,6 +306,34 @@ class TabManager {
     return this._queryActor<string>(instanceId, "WebScraper:GetHTML");
   }
 
+  public getElements(instanceId: string, selector: string): Promise<string[]> {
+    return this._queryActor<string[]>(instanceId, "WebScraper:GetElements", {
+      selector,
+    }).then((r) => r ?? []);
+  }
+
+  public getElementByText(
+    instanceId: string,
+    textContent: string,
+  ): Promise<string | null> {
+    return this._queryActor<string | null>(
+      instanceId,
+      "WebScraper:GetElementByText",
+      { textContent },
+    );
+  }
+
+  public getElementTextContent(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    return this._queryActor<string | null>(
+      instanceId,
+      "WebScraper:GetElementTextContent",
+      { selector },
+    );
+  }
+
   public getElement(
     instanceId: string,
     selector: string,
@@ -398,10 +423,7 @@ class TabManager {
     });
   }
 
-  public submit(
-    instanceId: string,
-    selector: string,
-  ): Promise<boolean | null> {
+  public submit(instanceId: string, selector: string): Promise<boolean | null> {
     return this._queryActor<boolean>(instanceId, "WebScraper:Submit", {
       selector,
     });

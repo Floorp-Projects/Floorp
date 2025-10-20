@@ -47,14 +47,12 @@ class webScraper {
     tries = 100,
     delayMs = 100,
   ): Promise<any | null> {
-    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "NRWebScraper",
-    );
+    let actor =
+      browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
     for (let i = 0; !actor && i < tries; i++) {
       await new Promise((r) => setTimeout(r, delayMs));
-      actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-        "NRWebScraper",
-      );
+      actor =
+        browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
     }
     return actor ?? null;
   }
@@ -332,6 +330,91 @@ class webScraper {
     return await actor.sendQuery("WebScraper:GetElement", { selector });
   }
 
+  /** Get all elements matching a selector from a browser instance
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query with a CSS selector to find and return all matching elements
+   * - Returns an array of elements' HTML content, or an empty array if none found
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target elements
+   * @returns Promise<string[]> - An array of matching elements' HTML content
+   * @throws Error - If the browser instance is not found
+   */
+  public async getElements(
+    instanceId: string,
+    selector: string,
+  ): Promise<string[]> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return [];
+    return await actor.sendQuery("WebScraper:GetElements", { selector });
+  }
+
+  /**  Get Element By Text Content
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query with text content to find and return the matching element
+   * - Returns null if the actor is not available or element not found
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param textContent - The text content to search forS
+   * @returns Promise<string | null> - The element's HTML content, or null if not found
+   * @throws Error - If the browser instance is not found
+   */
+
+  public async getElementByText(
+    instanceId: string,
+    textContent: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return await actor.sendQuery("WebScraper:GetElementByText", {
+      textContent,
+    });
+  }
+
+  /** Get Element Text Content
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query with a CSS selector to find and return the text content of the element
+   * - Returns null if the actor is not available or element not found
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<string | null> - The element's text content, or null if not found
+   * @throws Error - If the browser instance is not found
+   */
+
+  public async getElementTextContent(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return await actor.sendQuery("WebScraper:GetElementTextContent", {
+      selector,
+    });
+  }
+
+
   /**
    * Retrieves the text content of an element from a browser instance
    *
@@ -564,10 +647,7 @@ class webScraper {
   /**
    * Submits form associated with the selector element or the form itself
    */
-  public async submit(
-    instanceId: string,
-    selector: string,
-  ): Promise<boolean> {
+  public async submit(instanceId: string, selector: string): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);

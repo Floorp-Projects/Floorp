@@ -93,6 +93,15 @@ interface WebScraperAPI {
   getURI(instanceId: string): Promise<string | null>;
   getHTML(instanceId: string): Promise<string | null>;
   getElement(instanceId: string, selector: string): Promise<string | null>;
+  getElements(instanceId: string, selector: string): Promise<string[]>;
+  getElementByText(
+    instanceId: string,
+    textContent: string,
+  ): Promise<string | null>;
+  getElementTextContent(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null>;
   getElementText(instanceId: string, selector: string): Promise<string | null>;
   clickElement(instanceId: string, selector: string): Promise<boolean>;
   waitForElement(
@@ -146,6 +155,15 @@ interface TabManagerAPI {
   getHTML(instanceId: string): Promise<string | null>;
   getElement(instanceId: string, selector: string): Promise<string | null>;
   getElementText(instanceId: string, selector: string): Promise<string | null>;
+  getElements(instanceId: string, selector: string): Promise<string[]>;
+  getElementByText(
+    instanceId: string,
+    textContent: string,
+  ): Promise<string | null>;
+  getElementTextContent(
+    instanceId: string,
+    selector: string,
+  ): Promise<string | null>;
   clickElement(instanceId: string, selector: string): Promise<boolean | null>;
   waitForElement(
     instanceId: string,
@@ -228,14 +246,15 @@ function getBodyText(req: HttpRequest): string {
   try {
     const dec = new TextDecoder();
     return dec.decode(req.body);
-  } catch (_) {
+  } catch (e) {
+    void e;
     return "";
   }
 }
 
 // Convert a binary string (from nsIScriptableInputStream.read) to bytes
 function binaryStringToByteArray(s: string): number[] {
-  const out = new Array<number>(s.length);
+  const out = Array.from({ length: s.length }, () => 0) as number[];
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
   return out;
 }
@@ -247,7 +266,8 @@ function getJSON<T = unknown>(req: HttpRequest): T | null {
   if (!txt) return null;
   try {
     return JSON.parse(txt) as T;
-  } catch (_) {
+  } catch (e) {
+    void e;
     return null;
   }
 }
@@ -478,8 +498,8 @@ class LocalHttpServer implements nsIServerSocketListener {
     if (!this._server) return;
     try {
       this._server.close();
-    } catch (_) {
-      // ignore close errors
+    } catch (e) {
+      void e; // ignore close errors
     }
     this._server = null;
     Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -728,6 +748,29 @@ class LocalHttpServer implements nsIServerSocketListener {
         const text = await WebScraper.getElementText(ctx.params.id, sel);
         return { status: 200, body: text != null ? { text } : {} };
       });
+      // Get all matching elements (outerHTML array)
+      s.get("/instances/:id/elements", async (ctx: RouterContext) => {
+        const sel = ctx.searchParams.get("selector") ?? "";
+        const { WebScraper } = WebScraperModule();
+        const elems = await WebScraper.getElements(ctx.params.id, sel);
+        return { status: 200, body: { elements: elems } };
+      });
+
+      // Get element by text content
+      s.get("/instances/:id/elementByText", async (ctx: RouterContext) => {
+        const txt = ctx.searchParams.get("text") ?? "";
+        const { WebScraper } = WebScraperModule();
+        const elem = await WebScraper.getElementByText(ctx.params.id, txt);
+        return { status: 200, body: elem != null ? { element: elem } : {} };
+      });
+
+      // Get element text content by selector (alias)
+      s.get("/instances/:id/elementTextContent", async (ctx: RouterContext) => {
+        const sel = ctx.searchParams.get("selector") ?? "";
+        const { WebScraper } = WebScraperModule();
+        const text = await WebScraper.getElementTextContent(ctx.params.id, sel);
+        return { status: 200, body: text != null ? { text } : {} };
+      });
       s.post("/instances/:id/click", async (ctx: RouterContext) => {
         const json = ctx.json() as { selector?: string } | null;
         const sel = json?.selector ?? "";
@@ -887,6 +930,35 @@ class LocalHttpServer implements nsIServerSocketListener {
         const sel = ctx.searchParams.get("selector") ?? "";
         const { TabManagerServices } = TabManagerModule();
         const text = await TabManagerServices.getElementText(
+          ctx.params.id,
+          sel,
+        );
+        return { status: 200, body: text != null ? { text } : {} };
+      });
+      // Get all matching elements (outerHTML array)
+      t.get("/instances/:id/elements", async (ctx: RouterContext) => {
+        const sel = ctx.searchParams.get("selector") ?? "";
+        const { TabManagerServices } = TabManagerModule();
+        const elems = await TabManagerServices.getElements(ctx.params.id, sel);
+        return { status: 200, body: { elements: elems } };
+      });
+
+      // Get element by text content
+      t.get("/instances/:id/elementByText", async (ctx: RouterContext) => {
+        const txt = ctx.searchParams.get("text") ?? "";
+        const { TabManagerServices } = TabManagerModule();
+        const elem = await TabManagerServices.getElementByText(
+          ctx.params.id,
+          txt,
+        );
+        return { status: 200, body: elem != null ? { element: elem } : {} };
+      });
+
+      // Get element text content by selector (alias)
+      t.get("/instances/:id/elementTextContent", async (ctx: RouterContext) => {
+        const sel = ctx.searchParams.get("selector") ?? "";
+        const { TabManagerServices } = TabManagerModule();
+        const text = await TabManagerServices.getElementTextContent(
           ctx.params.id,
           sel,
         );
