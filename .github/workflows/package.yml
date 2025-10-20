@@ -1006,7 +1006,7 @@ jobs:
           OBJ_PATH=$(echo ./obj-*)
           MAR_DIR="$HOME/noraneko-mar"
           PUBLISH_DIR="$HOME/noraneko-publish"
-          MAR_FILE="$MAR_DIR/noraneko-$OUTPUT_NAME-full.mar"
+          MAR_FILE="$MAR_DIR/floorp-$OUTPUT_NAME-full.mar"
           mkdir -p "$MAR_DIR" "$PUBLISH_DIR"
 
           chmod +x "$OBJ_PATH/dist/host/bin/mar"
@@ -1169,5 +1169,5 @@ jobs:
       - name: Publish MAR
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-${{ env.OUTPUT_NAME }}-mar-full${{ inputs.skip_signing && '-unsigned' || '' }}
+          name: floorp-${{ env.OUTPUT_NAME }}-mar-full${{ inputs.skip_signing && '-unsigned' || '' }}
           path: ~/noraneko-publish/*

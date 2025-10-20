@@ -101,7 +101,7 @@ jobs:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-windows-x86_64-mar-full
+          name: floorp-windows-x86_64-mar-full
           run-id: ${{ env.WINDOWS_RUN_ID }}
           path: ~/noraneko-publish/win
           github-token: ${{ github.token }}
@@ -109,7 +109,7 @@ jobs:
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-linux-x86_64-mar-full
+          name: floorp-linux-x86_64-mar-full
           run-id: ${{ env.LINUX_RUN_ID }}
           path: ~/noraneko-publish/linux
           github-token: ${{ github.token }}
@@ -117,7 +117,7 @@ jobs:
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-mac-universal-mar-full
+          name: floorp-mac-universal-mar-full
           run-id: ${{ env.MAC_RUN_ID }}
           path: ~/noraneko-publish/mac
           github-token: ${{ github.token }}
@@ -149,7 +149,7 @@ jobs:
       - name: Download Linux aarch64 artifact
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-linux-aarch64-mar-full
+          name: floorp-linux-aarch64-mar-full
           run-id: ${{ env.LINUX_AARCH64_RUN_ID }}
           path: ~/noraneko-publish/linux-aarch64
           github-token: ${{ github.token }}
