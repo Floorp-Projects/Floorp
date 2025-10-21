@@ -47,7 +47,9 @@ export namespace BrowserActionUtils {
           onCreatedFunc?.(aNode);
         },
       });
-      CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+      if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+        CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+      }
     })();
   }
 
@@ -94,6 +96,8 @@ export namespace BrowserActionUtils {
         createRoot(() => onViewShowingFunc?.(event), owner);
       },
     });
-    CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+    if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
+      CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+    }
   }
 }
