@@ -31,7 +31,8 @@ export class Overrides {
   }
 
   private loadOverrides() {
-    for (const moduleName of this.loadedModules) {
+    for (const modulePath of this.loadedModules) {
+      const moduleName = modulePath.replace("./", "").replace("/index.ts", "");
       if (modules.override[moduleName]) {
         (async () => {
           (
