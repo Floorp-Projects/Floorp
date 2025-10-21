@@ -264,15 +264,13 @@ export class WorkspacesTabManager {
 
     // Hide tab groups that have no visible tabs, show those that do
     const tabGroups = globalThis.gBrowser.tabGroups;
-    const currentWorkspaceTabs = document?.querySelectorAll(
-      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${currentWorkspaceId}"]`,
-    ) as NodeListOf<XULElement>;
-
-    for (const tg of tabGroups) {
-      const hasVisibleTab = tg.tabs.some((tab: XULElement) => {
-        return Array.from(currentWorkspaceTabs).includes(tab);
-      });
-      tg.hidden = !hasVisibleTab;
+    for (const group of tabGroups) {
+      const hasVisibleTabInGroup = (
+        group.tabs as Array<XULElement>
+      ).some(
+        (tab) => this.getWorkspaceIdFromAttribute(tab) === currentWorkspaceId,
+      );
+      group.style.display = hasVisibleTabInGroup ? "" : "none";
     }
   }
 
