@@ -69,7 +69,7 @@ export class WebsitePanelWindowChild {
 
     globalThis.floorpWebPanelWindow = true;
     globalThis.SessionStore.promiseInitialized.then(() =>
-      this.createWebpanelWindow()
+      this.createWebpanelWindow(),
     );
   }
 
@@ -135,10 +135,9 @@ export class WebsitePanelWindowChild {
     // flag for userAgent
     globalThis.floorpBmsUserAgent = userAgent;
 
-    document?.getElementById("navigator-toolbox")?.setAttribute(
-      "hidden",
-      "true",
-    );
+    document
+      ?.getElementById("navigator-toolbox")
+      ?.setAttribute("hidden", "true");
     document?.getElementById("browser")?.setAttribute("data-is-child", "true");
     globalThis.bmsLoadedURI = loadURL;
 
@@ -168,12 +167,15 @@ export class WebsitePanelWindowChild {
       "toolbar menubar directories extrachrome",
     );
 
+    document?.getElementById("nav-bar")?.style.setProperty("display", "none");
+
     // Set zoom level
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {
       this.setZoomLevel();
     });
 
-    document?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")
+    document
+      ?.querySelector(".titlebar-buttonbox-container[skipintoolbarset]")
       ?.remove();
   }
 }
