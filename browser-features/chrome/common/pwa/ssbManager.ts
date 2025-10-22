@@ -71,6 +71,11 @@ export class SiteSpecificBrowserManager {
 
   public async getIcon(browser: Browser) {
     const currentTabSsb = await this.getCurrentTabSsb(browser);
+
+    if (!currentTabSsb) {
+      return "";
+    }
+
     return currentTabSsb.icon;
   }
 
@@ -84,6 +89,11 @@ export class SiteSpecificBrowserManager {
 
     if (isInstalled) {
       const currentTabSsb = await this.getCurrentTabSsb(browser);
+
+      if (!currentTabSsb) {
+        return;
+      }
+
       const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
 
       if (ssbObj) {
@@ -93,6 +103,10 @@ export class SiteSpecificBrowserManager {
       const manifest = await this.createFromBrowser(browser, {
         useWebManifest: asPwa,
       });
+
+      if (!manifest) {
+        return;
+      }
 
       await this.install(manifest);
 
@@ -110,6 +124,10 @@ export class SiteSpecificBrowserManager {
 
     const currentTabSsb = await this.getCurrentTabSsb(browser);
     const ssbData = await this.dataManager.getCurrentSsbData();
+
+    if (!currentTabSsb) {
+      return false;
+    }
 
     for (const key in ssbData) {
       if (
@@ -142,7 +160,7 @@ export class SiteSpecificBrowserManager {
   private async createFromBrowser(
     browser: Browser,
     options: { useWebManifest: boolean },
-  ): Promise<Manifest> {
+  ): Promise<Manifest | null> {
     return await this.manifestProcesser.getManifestFromBrowser(
       browser,
       options.useWebManifest,
@@ -209,11 +227,10 @@ export class SiteSpecificBrowserManager {
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
-    const currentPageHasSsbManifest = await this.manifestProcesser
-      .getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
-      browser,
-    );
+    const currentPageHasSsbManifest =
+      await this.manifestProcesser.getManifestFromBrowser(browser, true);
+    const currentPageIsInstalled =
+      await this.checkCurrentPageIsInstalled(browser);
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&

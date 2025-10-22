@@ -13,6 +13,8 @@ export class DOMLayoutManager {
   private originalNavbarParent: Element | null = null;
   private originalNavbarNextSibling: Element | null = null;
   private isNavbarAtBottom = false;
+  // Store original inline style attribute of floorp tabbar container so we can restore it
+  private originalTabbarManageContainerStyle: string | null = null;
   private urlbarFixIntervalId: number | null = null;
   private urlbarMutationObserver: MutationObserver | null = null;
   private urlbarStableCounter = 0;
@@ -174,6 +176,30 @@ export class DOMLayoutManager {
 
       this.removeUrlbarPopoverAttribute();
 
+      // Hide the floorp tabbar window manage container when navbar is at bottom
+      try {
+        const tabbarManage = document?.getElementById(
+          "floorp-tabbar-window-manage-container",
+        );
+        if (tabbarManage) {
+          // Save original inline style attribute so we can restore it later
+          this.originalTabbarManageContainerStyle =
+            tabbarManage.getAttribute("style");
+          // Set display:none via attribute to avoid typing/library issues
+          const newStyle = (
+            this.originalTabbarManageContainerStyle ?? ""
+          ).trim();
+          const appended =
+            newStyle.length > 0 ? `${newStyle};display:none;` : "display:none;";
+          tabbarManage.setAttribute("style", appended);
+        }
+      } catch (error: unknown) {
+        console.warn(
+          `${DOMLayoutManager.DEBUG_PREFIX} Failed to hide floorp tabbar manage container`,
+          error,
+        );
+      }
+
       // Delay urlbar fix to avoid early DOM mutation causing layout glitches (Issue #1936)
       this.scheduleFixUrlbarInputContainer();
     } catch (error: unknown) {
@@ -200,6 +226,37 @@ export class DOMLayoutManager {
     }
 
     // If navbar is already at top, no action needed
+  }
+
+  /** Restore the floorp tabbar manage container inline style if it was changed. */
+  private restoreTabbarManageContainer() {
+    if (this.originalTabbarManageContainerStyle === null) {
+      // No saved style, nothing to do
+      return;
+    }
+
+    try {
+      const tabbarManage = document?.getElementById(
+        "floorp-tabbar-window-manage-container",
+      );
+      if (!tabbarManage) return;
+
+      if (this.originalTabbarManageContainerStyle === null) {
+        tabbarManage.removeAttribute("style");
+      } else {
+        tabbarManage.setAttribute(
+          "style",
+          this.originalTabbarManageContainerStyle,
+        );
+      }
+    } catch (error: unknown) {
+      console.warn(
+        `${DOMLayoutManager.DEBUG_PREFIX} Failed to restore floorp tabbar manage container style`,
+        error,
+      );
+    } finally {
+      this.originalTabbarManageContainerStyle = null;
+    }
   }
 
   /**
@@ -454,7 +511,7 @@ export class DOMLayoutManager {
     }
 
     return new Promise((resolve) => {
-      window.addEventListener("load", () => resolve(), { once: true });
+      globalThis.addEventListener("load", () => resolve(), { once: true });
     });
   }
 
@@ -500,7 +557,7 @@ export class DOMLayoutManager {
         settled = true;
 
         if (intervalId !== null) {
-          window.clearInterval(intervalId);
+          globalThis.clearInterval(intervalId as unknown as number);
           intervalId = null;
         }
 
@@ -550,7 +607,10 @@ export class DOMLayoutManager {
         }
       };
 
-      intervalId = window.setInterval(checkReady, INTERVAL_MS);
+      intervalId = globalThis.setInterval(
+        checkReady,
+        INTERVAL_MS,
+      ) as unknown as number;
       checkReady();
     });
   }

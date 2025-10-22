@@ -53,6 +53,11 @@ export class ProgressiveWebApp {
       browser,
       true,
     );
+
+    if (!manifest) {
+      return;
+    }
+
     await this.dataManager.saveSsbData(manifest);
   }
 
@@ -102,11 +107,17 @@ export class ProgressiveWebApp {
   public async createManifest(
     browser: Browser,
     useWebManifest: boolean,
-  ): Promise<Manifest> {
-    return await this.manifestProcesser.getManifestFromBrowser(
+  ): Promise<Manifest | undefined> {
+    const result = await this.manifestProcesser.getManifestFromBrowser(
       browser,
       useWebManifest,
     );
+
+    if (!result) {
+      return;
+    }
+
+    return result;
   }
 
   /**
@@ -116,8 +127,8 @@ export class ProgressiveWebApp {
    */
   public isPWARegistered(url: string): boolean {
     const [currentPWAs] = this.currentPWAs;
-    return Object.values(currentPWAs()).some((manifest) =>
-      manifest.start_url === url
+    return Object.values(currentPWAs()).some(
+      (manifest) => manifest.start_url === url,
     );
   }
 
@@ -129,8 +140,8 @@ export class ProgressiveWebApp {
   public getPWAByUrl(url: string): Manifest | null {
     const [currentPWAs] = this.currentPWAs;
     return (
-      Object.values(currentPWAs()).find((manifest) =>
-        manifest.start_url === url
+      Object.values(currentPWAs()).find(
+        (manifest) => manifest.start_url === url,
       ) || null
     );
   }
@@ -142,8 +153,8 @@ export class ProgressiveWebApp {
    */
   public getSsbById(id: string): Manifest | null {
     const [currentPWAs] = this.currentPWAs;
-    const manifest = Object.values(currentPWAs()).find((m) =>
-      m.start_url === id
+    const manifest = Object.values(currentPWAs()).find(
+      (m) => m.start_url === id,
     );
 
     if (manifest) {

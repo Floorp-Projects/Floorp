@@ -35,7 +35,7 @@ export class ManifestProcesser {
   public async getManifestFromBrowser(
     browser: Browser,
     useWebManifest: boolean,
-  ): Promise<Manifest> {
+  ): Promise<Manifest | null> {
     let manifest = null;
     try {
       if (useWebManifest) {
@@ -65,6 +65,10 @@ export class ManifestProcesser {
       )
     ) {
       manifest = this.generateManifestForURI(browser.currentURI);
+    }
+
+    if (!manifest) {
+      return null;
     }
 
     // Cache all the icons as data URIs since we can need access to them when
@@ -139,12 +143,12 @@ export class ManifestProcesser {
         manifestURL: manifestURI.spec,
         docURL: uri.spec,
       });
-    } catch (e) {
-      console.error(
-        `Failed to generate a SSB (PWA) manifest for ${uri.spec}.`,
-        e,
-      );
-      throw e;
+    } catch {
+      // console.error(
+      //   `Failed to generate a SSB (PWA) manifest for ${uri.spec}.`,
+      //   e,
+      // );
+      return null;
     }
   }
 }

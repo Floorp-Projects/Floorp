@@ -95,7 +95,7 @@ export class SsbPageAction {
       window.gBrowser.selectedBrowser,
     );
     this.title[1](
-      manifest.name ?? window.gBrowser.selectedBrowser.currentURI.spec,
+      manifest?.name ?? window.gBrowser.selectedBrowser.currentURI.spec,
     );
     this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
   };

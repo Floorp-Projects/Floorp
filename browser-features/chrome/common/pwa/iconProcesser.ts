@@ -24,9 +24,10 @@ export class IconProcesser {
 
     for (const icon of icons) {
       for (const sizeSpec of icon.sizes) {
-        const size = sizeSpec === "any"
-          ? Number.MAX_SAFE_INTEGER
-          : Number.parseInt(sizeSpec);
+        const size =
+          sizeSpec === "any"
+            ? Number.MAX_SAFE_INTEGER
+            : Number.parseInt(sizeSpec);
 
         iconList.push({
           icon,
@@ -82,14 +83,17 @@ export class IconProcesser {
 
   public async getIconForBrowser(browser: Browser): Promise<string> {
     const gFavicons = PlacesUtils.favicons as {
-      getFaviconForPage: (
-        uri: nsIURI,
-      ) => Promise<{ uri: nsIURI }>;
+      getFaviconForPage: (uri: nsIURI) => Promise<{ uri: nsIURI }>;
     };
 
     const iconUri = await gFavicons.getFaviconForPage(
       Services.io.newURI(browser.currentURI.spec),
     );
+
+    if (!iconUri || !iconUri.uri) {
+      return "";
+    }
+
     const iconUrl = iconUri.uri.spec;
 
     if (!iconUrl) {
@@ -114,8 +118,11 @@ export class IconProcesser {
       }
 
       try {
-        const blobPng =
-          (await ImageTools.scaleImage(container, 64, 64)) as Blob;
+        const blobPng = (await ImageTools.scaleImage(
+          container,
+          64,
+          64,
+        )) as Blob;
         const pngBase64 = await new Promise<string>((resolve) => {
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blobPng);

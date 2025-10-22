@@ -27,7 +27,8 @@ export namespace BrowserActionUtils {
       });
     }
 
-    // Create toolbar button. If widget already exists, return.
+    // Create toolbar button only once per profile. Subsequent window opens reuse
+    // the existing widget and respect saved customization data.
     // custom type is temporary widget type. It will be changed to button type.
     const widget = CustomizableUI.getWidget(widgetId);
     if (widget && widget.type !== "custom") {
@@ -46,9 +47,32 @@ export namespace BrowserActionUtils {
         onCreated: (aNode: XULElement) => {
           onCreatedFunc?.(aNode);
         },
+        defaultArea: area,
       });
-      if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
-        CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
+
+      try {
+        await (CustomizableUI.readyPromise ?? Promise.resolve());
+      } catch (error) {
+        console.error(
+          "Failed waiting for CustomizableUI readiness for",
+          widgetId,
+          error,
+        );
+        return;
+      }
+
+      const hasUserCustomized =
+        typeof Services !== "undefined" &&
+        Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
+
+      if (hasUserCustomized) {
+        return;
+      }
+
+      if (position === null || position === undefined) {
+        CustomizableUI.addWidgetToArea(widgetId, area);
+      } else {
+        CustomizableUI.addWidgetToArea(widgetId, area, position);
       }
     })();
   }
@@ -82,22 +106,47 @@ export namespace BrowserActionUtils {
     }
 
     const owner = getOwner();
-    CustomizableUI.createWidget({
-      id: widgetId,
-      type: "view",
-      viewId: targetViewId,
-      tooltiptext: document?.l10n?.formatValue(l10nId) ?? "",
-      label: document?.l10n?.formatValue(l10nId) ?? "",
-      removable: true,
-      onCreated: (aNode: XULElement) => {
-        createRoot(() => onCreatedFunc?.(aNode), owner);
-      },
-      onViewShowing: (event: Event) => {
-        createRoot(() => onViewShowingFunc?.(event), owner);
-      },
-    });
-    if (!CustomizableUI.getPlacementOfWidget(widgetId)) {
-      CustomizableUI.addWidgetToArea(widgetId, area, position ?? 0);
-    }
+    (async () => {
+      CustomizableUI.createWidget({
+        id: widgetId,
+        type: "view",
+        viewId: targetViewId,
+        tooltiptext: document?.l10n?.formatValue(l10nId) ?? "",
+        label: document?.l10n?.formatValue(l10nId) ?? "",
+        removable: true,
+        onCreated: (aNode: XULElement) => {
+          createRoot(() => onCreatedFunc?.(aNode), owner);
+        },
+        onViewShowing: (event: Event) => {
+          createRoot(() => onViewShowingFunc?.(event), owner);
+        },
+        defaultArea: area,
+      });
+
+      try {
+        await (CustomizableUI.readyPromise ?? Promise.resolve());
+      } catch (error) {
+        console.error(
+          "Failed waiting for CustomizableUI readiness for",
+          widgetId,
+          error,
+        );
+        return;
+      }
+
+      const hasUserCustomized =
+        typeof Services !== "undefined" &&
+        Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
+
+      if (hasUserCustomized) {
+        return;
+      }
+
+      if (position === null || position === undefined) {
+        CustomizableUI.addWidgetToArea(widgetId, area);
+      } else {
+        CustomizableUI.addWidgetToArea(widgetId, area, position);
+      }
+    })();
   }
 }
