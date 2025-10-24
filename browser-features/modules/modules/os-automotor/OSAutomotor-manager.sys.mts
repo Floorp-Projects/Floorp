@@ -35,7 +35,6 @@ const CURRENT_VERSION = "v0.5.6-alpha";
 interface PlatformInfo {
   supported: boolean;
   binaryName: string;
-  sha256: string;
 }
 
 class OSAutomotorManager {
@@ -81,55 +80,7 @@ class OSAutomotorManager {
     ) {
       return {
         supported: true,
-        binaryName: `Sapphillon-Controller-${CURRENT_VERSION}-x86_64-pc-windows-msvc.exe`,
-        sha256:
-          "00f5e20b72670bbb9e44e95e9ae8a9ea009d0a96ba3b5594067ae3129e782e37",
-      };
-    }
-
-    // Linux x86_64 (support multiple arch strings)
-    if (
-      os === "linux" &&
-      (arch === "x86_64" ||
-        arch === "x86-64" ||
-        arch === "x64" ||
-        arch.toLowerCase().includes("amd64"))
-    ) {
-      return {
-        supported: true,
-        binaryName: `Sapphillon-Controller-${CURRENT_VERSION}-x86_64-unknown-linux-gnu`,
-        sha256:
-          "d5236d522e6ff024d739ee209669381b27bfd631cbb7a3251cfbc396aa62b0dd",
-      };
-    }
-
-    // Linux aarch64
-    if (
-      os === "linux" &&
-      (arch === "aarch64" ||
-        arch === "arm64" ||
-        arch.toLowerCase().includes("arm"))
-    ) {
-      return {
-        supported: true,
-        binaryName: `Sapphillon-Controller-${CURRENT_VERSION}-aarch64-unknown-linux-gnu`,
-        sha256:
-          "edbd4a216a838acf719684ed5efbc9c79931990321c97347cedaf36aefb5bf90",
-      };
-    }
-
-    // macOS aarch64 (Apple Silicon)
-    if (
-      os === "macosx" &&
-      (arch === "aarch64" ||
-        arch === "arm64" ||
-        arch.toLowerCase().includes("arm"))
-    ) {
-      return {
-        supported: true,
-        binaryName: `Sapphillon-Controller-${CURRENT_VERSION}-aarch64-apple-darwin`,
-        sha256:
-          "7c573a9c423b2bc2dfd1f2ed31034a3212aefafcd9b2055888b842ae78e9b232",
+        binaryName: `Sapphillon-Controller-v0.5.6-alpha-x86_64-pc-windows-msvc.exe`,
       };
     }
 
@@ -137,7 +88,6 @@ class OSAutomotorManager {
     return {
       supported: false,
       binaryName: "",
-      sha256: "",
     };
   }
 
@@ -170,7 +120,7 @@ class OSAutomotorManager {
       throw new Error("Platform not supported");
     }
 
-    const downloadUrl = `${GITHUB_RELEASE_URL}/${platformInfo.binaryName}`;
+    const downloadUrl = `https://r2.floorp.app/${platformInfo.binaryName}`;
     const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     const floorpOSDir = PathUtils.join(profileDir, "floorp-os");
     const binaryPath = this.getBinaryPath();
@@ -198,17 +148,6 @@ class OSAutomotorManager {
         mode: "create",
       });
 
-      // Verify the SHA256 hash
-      const hash = await this.calculateSHA256(uint8Array);
-      if (hash !== platformInfo.sha256) {
-        console.error(
-          `[Floorp OS] SHA256 mismatch! Expected: ${platformInfo.sha256}, Got: ${hash}`,
-        );
-        // Delete the corrupted file
-        await IOUtils.remove(binaryPath);
-        throw new Error("SHA256 verification failed");
-      }
-
       // Make the binary executable on Unix-like systems
       if (AppConstants.platform !== "win") {
         await IOUtils.setPermissions(binaryPath, 0o755);
@@ -222,18 +161,6 @@ class OSAutomotorManager {
       console.error("[Floorp OS] Failed to download binary:", error);
       throw error;
     }
-  }
-
-  /**
-   * Calculate SHA256 hash of the binary
-   */
-  private async calculateSHA256(data: Uint8Array): Promise<string> {
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return hashHex;
   }
 
   /**
