@@ -30,16 +30,16 @@
         "floorpImages": "Ảnh của Floorp",
         "currentImage": "Current image:",
         "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "currentFolder": "Current folder:",
+        "currentFolder": "Thư mục hiện tại:",
         "selectFolder": "Chọn thư mục",
         "selected": "Đã chọn",
         "enableSlideshow": "Bật trình chiếu",
-        "slideshowInterval": "Slideshow Interval",
+        "slideshowInterval": "Thời gian chuyển ảnh (giây)",
         "floorpStart": "Floorp Bắt Đầu",
         "disableFloorpStart": "Tắt Floorp Bắt Đầu (dùng about:newtab chán phèo)",
-        "disableFloorpStartDescription": "Khi bật, Floorp Bắt Đầu sẽ đá trang thẻ mới của Firefox ra chuồng gà.",
+        "disableFloorpStartDescription": "Khi tắt, Floorp Bắt Đầu sẽ đá trang thẻ mới của Firefox ra chuồng gà.",
         "restartRequired": "Trình duyệt cần khởi động lại để thay đổi được áp dụng hoàn toàn.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "firefoxLayout": "Dùng bố cục cũ (Như Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Tìm kiếm hoặc nhập địa chỉ",

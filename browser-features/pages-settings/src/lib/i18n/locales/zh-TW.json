@@ -32,7 +32,16 @@
         "aboutBrowser": "關於 {{productName}}",
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
-        "keyboardShortcut": "鍵盤快捷鍵"
+        "keyboardShortcut": "鍵盤快捷鍵",
+        "search": {
+            "title": "搜尋設定",
+            "resultsFor": "搜尋 {{query}} 的結果",
+            "searchResultsDescription": "搜尋 \"{{query}}\"的結果。只搜尋了 {{productName}} 的設定；並不包括 Firefox 的設定。",
+            "noResults": "找不到結果",
+            "open": "開啟 \"{{title}}\"",
+            "matchedText": "匹配文字",
+            "results": "搜尋結果"
+        }
     },
     "home": {
         "welcome": "歡迎您， {{name}}👋",
@@ -358,14 +367,14 @@
     },
     "floorpOS": {
         "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
-        "loading": "Loading...",
+        "description": "管理 Floorp OS 後端模組與服務",
+        "loading": "正在載入…",
         "statusCard": {
             "title": "狀態",
-            "description": "Current status of Floorp OS",
-            "platformSupport": "Platform Support",
-            "platformSupported": "Your platform is supported",
-            "platformUnsupported": "Your platform is not supported",
+            "description": "Floorp OS 的當前狀態",
+            "platformSupport": "平台支援",
+            "platformSupported": "支援您的平台",
+            "platformUnsupported": "不支援您的平台",
             "installedVersion": "已安裝版本",
             "notInstalled": "未安裝",
             "serviceStatus": "服務狀態",
@@ -375,25 +384,25 @@
             "disabledBadge": "已停用"
         },
         "controlsCard": {
-            "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
-            "refresh": "Refresh Status"
+            "title": "控制",
+            "description": "啟用或停用 Floorp OS",
+            "enable": "啟用 Floorp OS",
+            "disable": "停用 Floorp OS",
+            "refresh": "更新狀態"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "啟用 Floorp OS 中...",
+            "disabling": "停用 Floorp OS 中...",
+            "enableSuccess": "Floorp OS 啟用成功！",
+            "disableSuccess": "Floorp OS 停用成功！"
         },
         "errors": {
-            "apiUnavailable": "OSAutomotor API is not available.",
-            "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "apiUnavailable": "OSAutomotor API 無法使用。",
+            "loadStatus": "載入失敗狀態: {{reason}}",
+            "enable": "啟用 Floorp OS 失敗。",
+            "disable": "停用 Floorp OS 失敗。",
+            "enableAction": "啟用 Floorp OS 出錯： {{reason}}",
+            "disableAction": "停用 Floorp OS 出錯： {{reason}}"
         }
     },
     "mouseGesture": {
@@ -414,8 +423,8 @@
         "pattern": "樣式",
         "action": "動作",
         "actionDescription": "手勢說明",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesEnabled": "啟用搖桿手勢",
+        "rockerGesturesDescription": "按一下滑鼠右鍵並向左移動可返回，按一下滑鼠右鍵並向右移動可向前。(實驗性質)",
         "actions": {
             "gecko-back": "返回",
             "gecko-forward": "前進",
@@ -488,8 +497,8 @@
             "gecko-scroll-left": "向左捲動",
             "gecko-scroll-to-top": "捲動至頂端",
             "gecko-scroll-to-bottom": "捲動至底端",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "切換到下一個工作空間",
+            "gecko-workspace-previous": "切換到上一個工作空間"
         },
         "edit": "編輯",
         "duplicate": "複製",

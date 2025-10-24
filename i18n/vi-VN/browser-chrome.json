@@ -102,6 +102,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Mở trong ngăn chứa riêng tư",
+    "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Ngăn chứa riêng tư"
   },
   "mouseGesture": {

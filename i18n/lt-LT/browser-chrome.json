@@ -102,6 +102,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Atverti privačiame konteineryje",
+    "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Privatus konteineris"
   },
   "mouseGesture": {

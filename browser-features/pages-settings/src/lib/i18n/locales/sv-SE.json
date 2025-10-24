@@ -32,7 +32,16 @@
         "aboutBrowser": "Om {{productName}}",
         "debug": "Felsökning",
         "mouseGesture": "Musgester",
-        "keyboardShortcut": "Tangentbordsgenvägar"
+        "keyboardShortcut": "Tangentbordsgenvägar",
+        "search": {
+            "title": "Sökinställningar",
+            "resultsFor": "Sökresultat för \"{{query}}\"",
+            "searchResultsDescription": "Sökresultat för \"{{query}}\". Endast {{productName}} inställningar söks; Firefox inställningar ingår inte.",
+            "noResults": "Inga resultat hittades",
+            "open": "Öppna \"{{title}}\"",
+            "matchedText": "Matchad text",
+            "results": "Sökresultat"
+        }
     },
     "home": {
         "welcome": "Välkommen, {{name}}👋",

@@ -32,7 +32,16 @@
         "aboutBrowser": "关于 {{productName}}",
         "debug": "调试",
         "mouseGesture": "鼠标手势",
-        "keyboardShortcut": "键盘快捷键"
+        "keyboardShortcut": "键盘快捷键",
+        "search": {
+            "title": "搜索设置",
+            "resultsFor": "“{{query}}” 搜索结果",
+            "searchResultsDescription": "“{{query}}” 搜索结果，仅搜索 {{productName}} 设置；不包括 Firefox 设置。",
+            "noResults": "未找到结果",
+            "open": "打开 “{{title}}”",
+            "matchedText": "匹配文本",
+            "results": "搜索结果"
+        }
     },
     "home": {
         "welcome": "欢迎您， {{name}}👋",
@@ -414,8 +423,8 @@
         "pattern": "手势",
         "action": "动作",
         "actionDescription": "手势说明",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesEnabled": "启用摇杆手势",
+        "rockerGesturesDescription": "右键单击并向左移动以返回，右键单击并向右移动以前进。(实验性)",
         "actions": {
             "gecko-back": "转到上一页",
             "gecko-forward": "转到下一页",
@@ -488,8 +497,8 @@
             "gecko-scroll-left": "向左滚动",
             "gecko-scroll-to-top": "滚动到顶部",
             "gecko-scroll-to-bottom": "滚动到底部",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "切换到下个工作区",
+            "gecko-workspace-previous": "切换到上个工作区"
         },
         "edit": "编辑",
         "duplicate": "复制",

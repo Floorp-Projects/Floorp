@@ -102,6 +102,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Відкрити в приватному контейнері",
+    "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Приватний контейнер"
   },
   "mouseGesture": {

@@ -102,6 +102,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Öppna i privat behållare",
+    "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Privat behållare"
   },
   "mouseGesture": {

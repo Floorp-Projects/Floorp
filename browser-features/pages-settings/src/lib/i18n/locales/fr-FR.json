@@ -32,7 +32,16 @@
         "aboutBrowser": "À propos de {{productName}}",
         "debug": "Débogage",
         "mouseGesture": "Gestes de la souris",
-        "keyboardShortcut": "Raccourcis clavier"
+        "keyboardShortcut": "Raccourcis clavier",
+        "search": {
+            "title": "Paramètres de recherche",
+            "resultsFor": "Résultats de la recherche pour \"{{query}}\"",
+            "searchResultsDescription": "Résultats de la recherche pour \"{{query}}\". Seuls les paramètres de {{productName}} sont recherchés, les paramètres de Firefox ne sont pas inclus.",
+            "noResults": "Aucun résultat",
+            "open": "Ouvrir \"{{title}}\"",
+            "matchedText": "Texte correspondant",
+            "results": "Résultats de la recherche"
+        }
     },
     "home": {
         "welcome": "Bienvenue, {{name}}👋",

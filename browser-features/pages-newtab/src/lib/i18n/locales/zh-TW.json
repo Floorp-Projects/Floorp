@@ -39,7 +39,7 @@
         "disableFloorpStart": "停用 Floorp 起始頁面 (使用經典的 about:newtab)",
         "disableFloorpStartDescription": "啟用後，Floorp Start 將被之前的 Firefox 新標籤頁/首頁取代。",
         "restartRequired": "需要重新啟動瀏覽器才能完全生效。",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "firefoxLayout": "使用舊版佈局 (如 Firefox 首頁)"
     },
     "searchBar": {
         "searchOrEnterUrl": "搜尋或輸入網址",

@@ -32,7 +32,16 @@
         "aboutBrowser": "Acerca de {{productName}}",
         "debug": "Depurar",
         "mouseGesture": "Gestos do rato",
-        "keyboardShortcut": "Atalhos de teclado"
+        "keyboardShortcut": "Atalhos de teclado",
+        "search": {
+            "title": "Definições de pesquisa",
+            "resultsFor": "Resultados da pesquisa para \"{{query}}\"",
+            "searchResultsDescription": "Resultados da pesquisa para \"{{query}}\". Apenas as definições de {{productName}} são pesquisadas; as definições do Firefox não estão incluídas.",
+            "noResults": "Não foram encontrados resultados",
+            "open": "Abrir \"{{title}}\"",
+            "matchedText": "Texto correspondente",
+            "results": "Resultados da pesquisa"
+        }
     },
     "home": {
         "welcome": "Bem-vindo, {{name}}👋",
@@ -414,8 +423,8 @@
         "pattern": "Padrão",
         "action": "Ação",
         "actionDescription": "Descrição do gesto",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesEnabled": "Ativar os gestos de baloiço",
+        "rockerGesturesDescription": "Clique com o botão direito do rato e mova para a esquerda para voltar atrás, clique com o botão direito do rato e mova para a direita para avançar. (Experimental)",
         "actions": {
             "gecko-back": "Voltar atrás",
             "gecko-forward": "Avançar",
@@ -488,8 +497,8 @@
             "gecko-scroll-left": "Deslocação para a esquerda",
             "gecko-scroll-to-top": "Deslocar para o topo",
             "gecko-scroll-to-bottom": "Deslocação para o fundo",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "Mudar para o espaço de trabalho seguinte",
+            "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior"
         },
         "edit": "Editar",
         "duplicate": "Duplicado",

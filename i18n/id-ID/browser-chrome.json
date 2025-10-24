@@ -102,6 +102,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Buka di Kontainer Pribadi",
+    "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Kontainer Pribadi"
   },
   "mouseGesture": {
@@ -177,8 +178,8 @@
       "gecko-scroll-left": "Scroll Left",
       "gecko-scroll-to-top": "Scroll to Top",
       "gecko-scroll-to-bottom": "Scroll to Bottom",
-      "gecko-workspace-next": "Switch to Next Workspace",
-      "gecko-workspace-previous": "Switch to Previous Workspace"
+      "gecko-workspace-next": "Beralih ke Ruang Kerja Berikutnya",
+      "gecko-workspace-previous": "Beralih ke Ruang Kerja Sebelumnya"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",

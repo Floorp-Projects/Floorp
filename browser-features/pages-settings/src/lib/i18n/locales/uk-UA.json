@@ -32,7 +32,16 @@
         "aboutBrowser": "Про {{productName}}",
         "debug": "Налагодження",
         "mouseGesture": "Жести мишею",
-        "keyboardShortcut": "Комбінації клавіш"
+        "keyboardShortcut": "Комбінації клавіш",
+        "search": {
+            "title": "Налаштування пошуку",
+            "resultsFor": "Результати пошуку \"{{query}}\"",
+            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
+            "noResults": "Нічого не знайдено",
+            "open": "Відкрийте \"{{title}}\"",
+            "matchedText": "Matched Text",
+            "results": "Результати пошуку"
+        }
     },
     "home": {
         "welcome": "Ласкаво просимо, {{name}}👋",

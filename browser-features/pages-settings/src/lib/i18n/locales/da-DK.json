@@ -32,7 +32,16 @@
         "aboutBrowser": "Om {{productName}}",
         "debug": "Fejlfinding",
         "mouseGesture": "Musebevægelser",
-        "keyboardShortcut": "Tastaturgenveje"
+        "keyboardShortcut": "Tastaturgenveje",
+        "search": {
+            "title": "Søgeindstillinger",
+            "resultsFor": "Søgeresultater for \"{{query}}\"",
+            "searchResultsDescription": "Søgeresultater for \"{{query}}\". Der søges kun i {{productName}}-indstillinger; Firefox-indstillinger er ikke inkluderet.",
+            "noResults": "Ingen resultater fundet",
+            "open": "Åbn \"{{title}}\"",
+            "matchedText": "Matchende tekst",
+            "results": "Søgeresultater"
+        }
     },
     "home": {
         "welcome": "Velkommen, {{name}} 👋",
