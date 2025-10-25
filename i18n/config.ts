@@ -74,6 +74,12 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
   }
 
   await i18nInitializedPromise;
+  if (!isSupportedLocale(newLocale)) {
+    await i18next.changeLanguage(fallbackLng["default"] || "en-US");
+    setLang(i18next.language);
+    return;
+  }
+
   await i18next.changeLanguage(newLocale);
   setLang(newLocale);
 });
@@ -101,4 +107,8 @@ export function addI18nObserver(observer: (locale: string) => void) {
 
 export function setLanguage(lang: string) {
   setLang(lang);
+}
+
+export function isSupportedLocale(locale: string) {
+  return Object.keys(modules).includes(locale);
 }

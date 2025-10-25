@@ -717,6 +717,34 @@ jobs:
           mkdir -p "$WORKDIR/firefox"
           cp -a "$WORKDIR/floorp/." "$WORKDIR/firefox/" || true
 
+          # Ensure both the original tree and the firefox/ copy expose
+          # firefox/firefox-bin aliases before creating the tarball so
+          # /usr/lib/floorp/firefox exists in the final .deb.
+          create_firefox_aliases() {
+            local target_dir="$1"
+            if [ -f "$target_dir/floorp" ]; then
+              ln -sf floorp "$target_dir/firefox"
+            fi
+            if [ -f "$target_dir/floorp-bin" ]; then
+              ln -sf floorp-bin "$target_dir/firefox-bin"
+            fi
+          }
+
+          create_firefox_aliases "$WORKDIR/floorp"
+          create_firefox_aliases "$WORKDIR/firefox"
+
+          # Ensure packaging scripts that expect a "firefox" binary find one.
+          # Create a 'firefox' symlink pointing to the actual 'floorp' binary
+          # inside any usr/lib/floorp directories found under the workdir so
+          # the resulting .deb contains /usr/lib/floorp/firefox -> floorp and
+          # resolves /usr/bin/floorp -> ../lib/floorp/firefox
+          find "$WORKDIR" -type d -path '*/usr/lib/floorp' -print0 |
+          while IFS= read -r -d '' BIN_DIR; do
+            if [ -f "$BIN_DIR/floorp" ]; then
+              ln -sf floorp "$BIN_DIR/firefox" || true
+            fi
+          done
+
           # Remove duplicate metadata that can confuse mach
           rm -f "$WORKDIR/firefox/application.ini" "$WORKDIR/firefox/platform.ini" || true
 
@@ -783,7 +811,7 @@ jobs:
         if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
         uses: actions/upload-artifact@v4
         with:
-          name: floorp-${{ inputs.platform }}-deb
+          name: floorp-x86_64-ppa-deb-artifact
           path: |
             /home/runner/ppa-deb/*
           compression-level: 9
