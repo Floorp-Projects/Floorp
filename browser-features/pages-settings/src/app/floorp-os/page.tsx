@@ -260,7 +260,14 @@ export default function FloorpOS() {
               {t("floorpOS.controlsCard.refresh")}
             </Button>
 
-            {message && (
+            {loading && (
+              <div className="flex items-center justify-center p-3 space-x-2">
+                <progress className="progress w-56"></progress>
+                <span>{message}</span>
+              </div>
+            )}
+
+            {message && !loading && (
               <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 text-blue-900 dark:text-blue-100 rounded-md">
                 <CheckCircle className="h-4 w-4" />
                 <p className="text-sm">{message}</p>
