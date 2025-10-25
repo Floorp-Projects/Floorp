@@ -749,6 +749,45 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare Linux DEB artifact metadata
+        if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
+        run: |
+          set -euo pipefail
+
+          DEB_PATH="$HOME/noraneko-installer/noraneko.deb"
+          if [ ! -f "$DEB_PATH" ]; then
+            echo "Expected deb archive at $DEB_PATH" >&2
+            exit 1
+          fi
+
+          OUTPUT_NAME="${OUTPUT_NAME:-linux-x86_64}"
+          TARGET_DIR="$HOME/ppa-deb"
+          mkdir -p "$TARGET_DIR"
+          TARGET_DEB="$TARGET_DIR/floorp-${OUTPUT_NAME}.deb"
+
+          cp "$DEB_PATH" "$TARGET_DEB"
+
+          VERSION=$(cat ./noraneko/static/gecko/config/version.txt)
+          VERSION_DISPLAY=$(cat ./noraneko/static/gecko/config/version_display.txt)
+
+          sha256sum "$TARGET_DEB" > "$TARGET_DEB.sha256"
+          cat > "$TARGET_DIR/meta.json" <<EOF
+          {
+            "version": "$VERSION",
+            "version_display": "$VERSION_DISPLAY",
+            "output_name": "$OUTPUT_NAME"
+          }
+          EOF
+
+      - name: Upload Linux DEB artifact
+        if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-${{ inputs.platform }}-deb
+          path: |
+            /home/runner/ppa-deb/*
+          compression-level: 9
+
       - name: Upload Noraneko Artifact
         uses: actions/upload-artifact@v4
         with:

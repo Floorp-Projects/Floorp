@@ -19,6 +19,11 @@ on:
         description: "The workflow run ID for the Linux aarch64 runtime artifact"
         required: false
         type: string
+      publish_ppa:
+        description: "Also publish the Linux DEB to the legacy PPA"
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: write
 
@@ -55,4 +60,6 @@ jobs:
     needs:
       [package-windows, package-linux, package-macos, package-linux-aarch64]
     uses: ./.github/workflows/publish_release.yml
+    with:
+      publish_ppa: ${{ inputs.publish_ppa }}
     secrets: inherit
