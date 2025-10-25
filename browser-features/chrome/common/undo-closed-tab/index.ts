@@ -37,12 +37,8 @@ export default class UndoClosedTab extends NoraComponentBase {
     BrowserActionUtils.createToolbarClickActionButton(
       "undo-closed-tab",
       null,
-      (event: XULCommandEvent) => {
-        (
-          event.view?.document?.getElementById(
-            "toolbar-context-undoCloseTab",
-          ) as XULElement
-        )?.doCommand();
+      () => {
+        window.SessionWindowUI.undoCloseTab(window);
       },
       StyleElement(),
       CustomizableUI.AREA_NAVBAR,

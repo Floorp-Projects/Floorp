@@ -7,7 +7,9 @@
  * Parse and apply user.js preferences to Firefox
  */
 export function applyUserJS(userjs: string): void {
-  const lines = userjs.split("\n");
+  // Remove block comments so optional user_pref blocks stay commented out.
+  const sanitizedUserJs = userjs.replace(/\/\*[\s\S]*?\*\//g, "");
+  const lines = sanitizedUserJs.split("\n");
   const cleanedLines: string[] = [];
   let currentLine = "";
 
