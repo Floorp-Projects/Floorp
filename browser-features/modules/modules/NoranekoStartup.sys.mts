@@ -276,10 +276,17 @@ async function registerCustomAboutPages(): Promise<void> {
   }
 }
 
+async function setupBrowserOSComponents() {
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-automotor/OSAutomotor-manager.sys.mjs",
+  );
+}
+
 (async () => {
   await registerCustomAboutPages();
   initializeVersionInfo();
   await setupNoranekoNewTab();
+  await setupBrowserOSComponents();
 })().catch(console.error);
 
 if (isMainBrowser) {
