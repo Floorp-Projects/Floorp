@@ -55,7 +55,12 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
 
   i18nInitializedPromise.then(() => {
     if (pendingLocale) {
-      i18next.changeLanguage(pendingLocale).then(() => {
+      i18next.changeLanguage(pendingLocale).then(async () => {
+        if (!isSupportedLocale(pendingLocale!)) {
+          await i18next.changeLanguage(fallbackLng["default"] || "en-US");
+          setLang(i18next.language);
+          return;
+        }
         setLang(pendingLocale!);
         pendingLocale = null;
       });
