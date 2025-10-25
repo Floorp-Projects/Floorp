@@ -65,7 +65,6 @@ export const zDesignFormData = t.type({
   searchBarTop: t.boolean,
   disableFullscreenNotification: t.boolean,
   deleteBrowserBorder: t.boolean,
-  hideUnifiedExtensionsButton: t.boolean,
   optimizeForTreeStyleTab: t.boolean,
   hideForwardBackwardButton: t.boolean,
   stgLikeWorkspaces: t.boolean,

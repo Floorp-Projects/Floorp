@@ -76,10 +76,6 @@ function getOldUICustomizationConfig() {
           "floorp.delete.browser.border",
           false,
         ),
-        hideUnifiedExtensionsButton: Services.prefs.getBoolPref(
-          "floorp.hide.unifiedExtensionsButtton",
-          false,
-        ),
       },
       special: {
         optimizeForTreeStyleTab: Services.prefs.getBoolPref(
@@ -121,7 +117,6 @@ function getOldUICustomizationConfig() {
       display: {
         disableFullscreenNotification: false,
         deleteBrowserBorder: false,
-        hideUnifiedExtensionsButton: false,
       },
       special: {
         optimizeForTreeStyleTab: false,
@@ -231,7 +226,6 @@ function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         display: {
           disableFullscreenNotification: false,
           deleteBrowserBorder: false,
-          hideUnifiedExtensionsButton: false,
         },
         special: {
           optimizeForTreeStyleTab: false,

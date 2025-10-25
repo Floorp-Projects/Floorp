@@ -186,7 +186,6 @@ export async function saveDesignSettings(
       display: {
         disableFullscreenNotification: settings.disableFullscreenNotification,
         deleteBrowserBorder: settings.deleteBrowserBorder,
-        hideUnifiedExtensionsButton: settings.hideUnifiedExtensionsButton,
       },
       special: {
         optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
@@ -234,8 +233,6 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     disableFullscreenNotification:
       data.uiCustomization.display.disableFullscreenNotification,
     deleteBrowserBorder: data.uiCustomization.display.deleteBrowserBorder,
-    hideUnifiedExtensionsButton:
-      data.uiCustomization.display.hideUnifiedExtensionsButton,
     optimizeForTreeStyleTab:
       data.uiCustomization.special.optimizeForTreeStyleTab,
     hideForwardBackwardButton:

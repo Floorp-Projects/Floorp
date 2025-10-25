@@ -77,7 +77,6 @@ export const zFloorpDesignConfigs = t.intersection([
           t.type({
             disableFullscreenNotification: t.boolean,
             deleteBrowserBorder: t.boolean,
-            hideUnifiedExtensionsButton: t.boolean,
           }),
           t.UnknownRecord,
         ]),

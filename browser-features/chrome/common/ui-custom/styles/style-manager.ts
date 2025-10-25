@@ -63,14 +63,7 @@ export class StyleManager {
         config().uiCustomization.display.deleteBrowserBorder,
       );
 
-      if (config().uiCustomization.display.hideUnifiedExtensionsButton) {
-        this.createInlineStyle(
-          "floorp-hide-unified-extensions-button",
-          "#unified-extensions-button {display: none !important;}",
-        );
-      } else {
-        this.removeStyle("floorp-hide-unified-extensions-button");
-      }
+
     });
   }
 
