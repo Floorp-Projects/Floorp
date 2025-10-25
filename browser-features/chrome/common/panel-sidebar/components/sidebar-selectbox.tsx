@@ -38,8 +38,8 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
         <xul:toolbarbutton
           class="panel-sidebar-panel"
           onCommand={() =>
-            window.LoginHelper.openPasswordManager(window, {
-              entryPoint: "mainmenu",
+            window.gBrowser.addTrustedTab("about:logins", {
+              inBackground: false,
             })}
           id="panel-sidebar-passwords-icon"
         />
