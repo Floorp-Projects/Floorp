@@ -103,6 +103,8 @@ jobs:
           PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
           PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
           PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
+          CF_API_TOKEN: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         run: |
           set -euo pipefail
           echo "::add-mask::$KEYMASK"
@@ -204,13 +206,65 @@ jobs:
           gpg --default-key "$GPG_SSB" -abs -o - Release > Release.gpg
           gpg --default-key "$GPG_SSB" --clearsign -o - Release > InRelease
 
+          # Compute expected metadata fingerprints so we can verify CDN propagation later
+          EXPECTED_SIZE=$(stat -c%s Packages.gz || true)
+          EXPECTED_SHA256=$(sha256sum Packages.gz | cut -d' ' -f1 || true)
+          CHECK_URL="https://ppa.floorp.app/amd64/Packages.gz"
+
           echo "[publish_ppa] Generated metadata files:"
           ls -la Packages* Release* InRelease || true
 
           echo "[publish_ppa] Starting FTP finish script (lftp debug)..."
           lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" -e "source ../finish_lftp.txt; quit" || true
 
+          # If Cloudflare credentials are provided, request a URL purge for Packages.gz
+          if [ -n "${CF_API_TOKEN:-}" ] && [ -n "${CF_ZONE_ID:-}" ]; then
+            echo "[publish_ppa] Cloudflare credentials found — requesting purge for $CHECK_URL"
+            PAYLOAD=$(printf '{"files":["%s"]}' "$CHECK_URL")
+            if curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+              -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data "$PAYLOAD" >/dev/null 2>&1; then
+              echo "[publish_ppa] Cloudflare purge request sent (response logged)."
+            else
+              echo "[publish_ppa] Cloudflare purge request failed (non-fatal)."
+            fi
+            # Give the CDN a moment
+            sleep 3
+          else
+            echo "[publish_ppa] No Cloudflare credentials provided — skipping purge (will poll passively)."
+          fi
+
+          # Poll the public URL until size+sha256 match expected (up to ~10 minutes)
+          ok=0
+          for i in $(seq 1 120); do
+            echo "[publish_ppa] Poll attempt $i: fetching $CHECK_URL"
+            TMPF=$(mktemp)
+            if curl -sSfL -o "$TMPF" "$CHECK_URL"; then
+              S=$(stat -c%s "$TMPF" || echo 0)
+              if [ "$S" -eq "$EXPECTED_SIZE" ]; then
+                REMOTE_SHA=$(sha256sum "$TMPF" | cut -d' ' -f1)
+                if [ "$REMOTE_SHA" = "$EXPECTED_SHA256" ]; then
+                  echo "[publish_ppa] Remote Packages.gz matches expected (size and sha256)."
+                  ok=1
+                  rm -f "$TMPF"
+                  break
+                else
+                  echo "[publish_ppa] Remote file size matches but sha256 differs (remote=$REMOTE_SHA expected=$EXPECTED_SHA256)"
+                fi
+              else
+                echo "[publish_ppa] Remote size $S != expected $EXPECTED_SIZE"
+              fi
+            else
+              echo "[publish_ppa] curl failed to fetch Packages.gz (attempt $i)"
+            fi
+            rm -f "$TMPF"
+            sleep 5
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "[publish_ppa] ERROR: Published Packages.gz did not propagate to CDN within timeout." >&2
+            exit 1
+          fi
+
           cd "$WORKDIR"
-          echo "[publish_ppa] Cleanup directory listing:"
+          echo "[publish_ppa] Cleanup directory listing:" 
           ls -la "$WORKDIR" || true
           rm -f init_script.txt finish_script.txt Floorp_sec.asc
