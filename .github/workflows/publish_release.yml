@@ -97,19 +97,9 @@ jobs:
           path: ~/noraneko-publish/linux-aarch64-dist
           github-token: ${{ github.token }}
 
-      - name: Install PPA tooling
-        if: ${{ inputs.publish_ppa }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev ftp gnupg apt-utils
-
-      - name: Download Linux DEB artifact (PPA)
-        if: ${{ inputs.publish_ppa }}
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-Linux-x64-deb
-          path: ~/noraneko-publish/linux-deb
-          github-token: ${{ github.token }}
+      # PPA-related setup and artifact download were moved to a
+      # reusable workflow (`.github/workflows/publish_ppa.yml`) which is
+      # called after the updater dispatch. See the `publish_ppa` job.
 
       - name: Download Stub Installers from latest release
         run: |
@@ -218,55 +208,9 @@ jobs:
             echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
           done
 
-      - name: Publish Linux DEB to PPA
-        if: ${{ inputs.publish_ppa }}
-        env:
-          KEYMASK: ${{ secrets.KEYMASK }}
-          GPG_SEC: ${{ secrets.GPG_SEC }}
-          GPG_SSB: ${{ secrets.GPG_SSB }}
-          FTP_INIT_SCRIPT: ${{ secrets.FTP_INIT_SCRIPT }}
-          FTP_FINISH_SCRIPT: ${{ secrets.FTP_FINISH_SCRIPT }}
-        run: |
-          set -euo pipefail
-          echo "::add-mask::$KEYMASK"
-
-          WORKDIR="$HOME/ppa"
-          ARTIFACT_DIR="$HOME/noraneko-publish/linux-deb"
-
-          if [ ! -d "$ARTIFACT_DIR" ]; then
-            echo "Artifact directory $ARTIFACT_DIR missing" >&2
-            exit 1
-          fi
-
-          DEB_FILE=$(find "$ARTIFACT_DIR" -maxdepth 1 -name "*.deb" | head -n 1)
-          if [ -z "$DEB_FILE" ]; then
-            echo "No .deb file found for PPA publishing" >&2
-            ls -la "$ARTIFACT_DIR" || true
-            exit 1
-          fi
-
-          mkdir -p "$WORKDIR/publish"
-          cp "$DEB_FILE" "$WORKDIR/publish/"
-          cp "$ARTIFACT_DIR"/*.sha256 "$WORKDIR/publish/" 2>/dev/null || true
-
-          echo "$GPG_SEC" > "$WORKDIR/Floorp_sec.asc"
-          gpg --batch --import "$WORKDIR/Floorp_sec.asc"
-          echo "$FTP_INIT_SCRIPT" > "$WORKDIR/init_script.txt"
-          echo "$FTP_FINISH_SCRIPT" > "$WORKDIR/finish_script.txt"
-
-          cd "$WORKDIR/publish"
-          ftp -n -p < ../init_script.txt
-
-          dpkg-scanpackages --multiversion . > Packages
-          gzip -k -f Packages
-          apt-ftparchive release . > Release
-          gpg --default-key "$GPG_SSB" -abs -o - Release > Release.gpg
-          gpg --default-key "$GPG_SSB" --clearsign -o - Release > InRelease
-
-          ftp -n -p < ../finish_script.txt
-
-          cd "$WORKDIR"
-          rm -f init_script.txt finish_script.txt Floorp_sec.asc
+      # NOTE: The PPA publishing step was moved out of the `main` job and
+      # implemented as a separate job `publish_ppa` that runs after the
+      # updater dispatch. See the `publish_ppa` job defined below.
       - name: Deploy to GitHub Releases 🚀
         uses: softprops/action-gh-release@v2
         with:
@@ -303,6 +247,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Deploy-to-updater-release
+    outputs:
+      NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
+      VERSION: ${{ needs.main.outputs.VERSION }}
     steps:
       - name: Deploy to Floorp Update Server 🚀
         env:
@@ -329,3 +276,15 @@ jobs:
             }
           }'
 
+  publish_ppa:
+    needs: [publish]
+    if: ${{ inputs.publish_ppa }}
+    uses: ./.github/workflows/publish_ppa.yml
+    with:
+      nr_version: ${{ needs.publish.outputs.NR_VERSION }}
+    secrets:
+      KEYMASK: ${{ secrets.KEYMASK }}
+      GPG_SEC: ${{ secrets.GPG_SEC }}
+      GPG_SSB: ${{ secrets.GPG_SSB }}
+      FTP_INIT_SCRIPT: ${{ secrets.FTP_INIT_SCRIPT }}
+      FTP_FINISH_SCRIPT: ${{ secrets.FTP_FINISH_SCRIPT }}
