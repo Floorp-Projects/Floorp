@@ -19,6 +19,10 @@ on:
         required: true
       PPA_FTP_PASS:
         required: true
+      CLOUDFLARE_API_TOKEN_FOR_PURGE:
+        required: false
+      CLOUDFLARE_ZONE_ID:
+        required: false
   workflow_dispatch:
     inputs:
       deb_url:
@@ -42,9 +46,12 @@ jobs:
           path: ~/noraneko-publish/linux-deb
 
       - name: Download Linux DEB from URL
-        if: github.event_name == 'workflow_dispatch'
+        # Only run this when explicitly triggered via workflow_dispatch AND a deb_url was provided.
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deb_url != '' }}
         run: |
           set -eux
+          # inputs.deb_url is required for this branch; guard is present in the if above but
+          # double-check here to produce a clear error if the expression evaluation differs.
           if [ -z "${{ inputs.deb_url }}" ]; then
             echo "deb_url input is required when running via workflow_dispatch" >&2
             exit 1
