@@ -142,12 +142,14 @@ jobs:
           echo "cd amd64" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           # Ensure binary transfer mode for .deb and compressed files
           echo "binary" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
-          echo "mget floorp-*.deb" >> "$WORKDIR/init_script.txt"
+          # Avoid downloading all .deb files (slow). Just list what's present so we can debug/connect.
+          echo "ls floorp-*.deb" >> "$WORKDIR/init_script.txt"
 
           # Also prepare lftp-compatible scripts for debug (lftp has better debug output)
           echo "set ftp:passive-mode true" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
           echo "cd amd64" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
-          echo "mget floorp-*.deb" >> "$WORKDIR/init_lftp.txt"
+          # For lftp debug/init, list remote files instead of downloading them all.
+          echo "cls -1 floorp-*.deb" >> "$WORKDIR/init_lftp.txt"
 
           # Upload files to temporary names then rename to ensure atomic swaps
           DEB_NAME="${DEB_FILE##*/}"

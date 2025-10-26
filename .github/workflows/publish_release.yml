@@ -296,5 +296,8 @@ jobs:
       KEYMASK: ${{ secrets.KEYMASK }}
       GPG_SEC: ${{ secrets.GPG_SEC }}
       GPG_SSB: ${{ secrets.GPG_SSB }}
-      FTP_INIT_SCRIPT: ${{ secrets.FTP_INIT_SCRIPT }}
-      FTP_FINISH_SCRIPT: ${{ secrets.FTP_FINISH_SCRIPT }}
+      PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
+      PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
+      PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
+      CLOULDFLARE_API_TOKEN_FOR_PURGE: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
