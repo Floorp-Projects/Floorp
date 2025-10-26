@@ -111,7 +111,7 @@ jobs:
           PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
           PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
           CF_API_TOKEN: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
-          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CF_ZONE_ID: ${{ secrets.CLOULDFLARE_ZONE_ID }}
         run: |
           set -euo pipefail
           echo "::add-mask::$KEYMASK"
@@ -149,14 +149,12 @@ jobs:
           echo "cd amd64" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           # Ensure binary transfer mode for .deb and compressed files
           echo "binary" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
-          # Avoid downloading all .deb files (slow). Just list what's present so we can debug/connect.
-          echo "ls floorp-*.deb" >> "$WORKDIR/init_script.txt"
+          echo "mget floorp-*.deb" >> "$WORKDIR/init_script.txt"
 
           # Also prepare lftp-compatible scripts for debug (lftp has better debug output)
           echo "set ftp:passive-mode true" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
           echo "cd amd64" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
-          # For lftp debug/init, list remote files instead of downloading them all.
-          echo "cls -1 floorp-*.deb" >> "$WORKDIR/init_lftp.txt"
+          echo "mget floorp-*.deb" >> "$WORKDIR/init_lftp.txt"
 
           # Upload files to temporary names then rename to ensure atomic swaps
           DEB_NAME="${DEB_FILE##*/}"
