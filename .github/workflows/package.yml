@@ -660,6 +660,40 @@ jobs:
 
       - name: Package noraneko
         run: |
+          set -euo pipefail
+
+          # Fix cannnot execute binary issue on Linux updater
+          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
+          if [[ "$CANON_PLATFORM" == *-x64 ]]; then
+            CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
+          fi
+
+          if [[ "$CANON_PLATFORM" == "Linux-x86_64" || "$CANON_PLATFORM" == "Linux-aarch64" ]]; then
+            echo "[package] Ensuring patchelf is available for Linux updater patching"
+            sudo apt update
+            sudo apt install -y patchelf
+
+            PATCH_TARGETS=(
+              "./obj-artifact-build-output/dist/bin/updater"
+              "./obj-artifact-build-output/dist/floorp/updater"
+              "./obj-artifact-build-output/dist/noraneko/updater"
+            )
+
+            patched_any=0
+            for target in "${PATCH_TARGETS[@]}"; do
+              if [ -f "$target" ]; then
+                echo "[package] Adding RPATH to $target"
+                patchelf --add-rpath '$ORIGIN' "$target"
+                patched_any=1
+              fi
+            done
+
+            if [ "$patched_any" -eq 0 ]; then
+              echo "[package] Warning: no updater binary found to patch prior to packaging" >&2
+            fi
+          fi
+
           ./mach package
 
       - name: Prepare installer workspace
@@ -924,8 +958,6 @@ jobs:
               fi
               ;;
             "Linux-x86_64"|"Linux-aarch64")
-              sudo apt update
-              sudo apt install -y patchelf
               echo "[prepare-installer] Detecting dist directory..."
               DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
               if [ -z "$DIST_DIR" ]; then
@@ -933,10 +965,18 @@ jobs:
               fi
               echo "[prepare-installer] Using DIST_DIR=$DIST_DIR"
               if [ -f "$DIST_DIR/updater" ]; then
-                echo "[prepare-installer] Running patchelf on $DIST_DIR/updater"
-                patchelf --add-rpath '$ORIGIN' "$DIST_DIR/updater"
+                if command -v patchelf >/dev/null 2>&1; then
+                  CURRENT_RPATH="$(patchelf --print-rpath "$DIST_DIR/updater" 2>/dev/null || true)"
+                  if [ -n "$CURRENT_RPATH" ]; then
+                    echo "[prepare-installer] Current updater RPATH: $CURRENT_RPATH"
+                  else
+                    echo "[prepare-installer] Current updater RPATH appears unset"
+                  fi
+                else
+                  echo "[prepare-installer] patchelf not available to verify updater RPATH" >&2
+                fi
               else
-                echo "[prepare-installer] Warning: updater not found at $DIST_DIR/updater, skipping patchelf" >&2
+                echo "[prepare-installer] Warning: updater not found at $DIST_DIR/updater" >&2
               fi
               echo "[prepare-installer] Moving installer ($INSTALLER_PATH) to ~/noraneko-installer/$OUTPUT_INSTALLER_NAME"
               mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME

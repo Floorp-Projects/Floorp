@@ -14,20 +14,42 @@ export class TabSizeSpecification {
   }
 
   private setTabSizeSpecification(minH = 45, minW = 150) {
-    if (minH < 20 || minH > 100) {
-      console.error("Tab height must be between 20 and 100 pixels.");
-      return;
+    // Fallback defaults (same as defaults used in configs.ts)
+    const DEFAULT_MIN_H = 30;
+    const DEFAULT_MIN_W = 76;
+
+    let validatedMinH = minH;
+    let validatedMinW = minW;
+
+    if (
+      typeof validatedMinH !== "number" || validatedMinH < 20 ||
+      validatedMinH > 100
+    ) {
+      console.warn(
+        `Invalid tab height (${
+          String(minH)
+        }) provided. Falling back to default: ${DEFAULT_MIN_H}px`,
+      );
+      validatedMinH = DEFAULT_MIN_H;
     }
-    if (minW < 60 || minW > 300) {
-      console.error("Tab width must be between 60 and 300 pixels.");
-      return;
+
+    if (
+      typeof validatedMinW !== "number" || validatedMinW < 60 ||
+      validatedMinW > 300
+    ) {
+      console.warn(
+        `Invalid tab width (${
+          String(minW)
+        }) provided. Falling back to default: ${DEFAULT_MIN_W}px`,
+      );
+      validatedMinW = DEFAULT_MIN_W;
     }
 
     const styleElement = (
       <style id="floorp-tab-size-specification">
         {`:root {
-          --floorp-tab-min-height: ${minH}px;
-          --floorp-tab-min-width: ${minW}px;
+          --floorp-tab-min-height: ${validatedMinH}px;
+          --floorp-tab-min-width: ${validatedMinW}px;
         }`}
       </style>
     );
