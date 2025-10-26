@@ -98,12 +98,30 @@ jobs:
           cp "$DEB_FILE" "$WORKDIR/publish/"
           cp "$ARTIFACT_DIR"/*.sha256 "$WORKDIR/publish/" 2>/dev/null || true
 
+          echo "[publish_ppa] Local publish directory contents before signing:"
+          ls -la "$WORKDIR/publish"
+
           echo "$GPG_SEC" > "$WORKDIR/Floorp_sec.asc"
           gpg --batch --import "$WORKDIR/Floorp_sec.asc"
           echo "$FTP_INIT_SCRIPT" > "$WORKDIR/init_script.txt"
           echo "$FTP_FINISH_SCRIPT" > "$WORKDIR/finish_script.txt"
 
+          redact_script() {
+            local file="$1"
+            if [ -f "$file" ]; then
+              perl -pe 's/((user|USER|pass|PASS)(\s+))[^\s]+/\1****/g' "$file"
+            fi
+          }
+
+          echo "[publish_ppa] init_script preview (credentials masked):"
+          redact_script "$WORKDIR/init_script.txt" || true
+          echo "[publish_ppa] finish_script preview (credentials masked):"
+          redact_script "$WORKDIR/finish_script.txt" || true
+
           cd "$WORKDIR/publish"
+          echo "[publish_ppa] Working directory ls (pre-ftp init):"
+          ls -la .
+          echo "[publish_ppa] Starting FTP init script..."
           ftp -n -p < ../init_script.txt
 
           dpkg-scanpackages --multiversion . > Packages
@@ -112,7 +130,13 @@ jobs:
           gpg --default-key "$GPG_SSB" -abs -o - Release > Release.gpg
           gpg --default-key "$GPG_SSB" --clearsign -o - Release > InRelease
 
+          echo "[publish_ppa] Generated metadata files:"
+          ls -la Packages* Release* InRelease || true
+
+          echo "[publish_ppa] Starting FTP finish script..."
           ftp -n -p < ../finish_script.txt
 
           cd "$WORKDIR"
+          echo "[publish_ppa] Cleanup directory listing:"
+          ls -la "$WORKDIR" || true
           rm -f init_script.txt finish_script.txt Floorp_sec.asc
