@@ -93,7 +93,7 @@ jobs:
       - name: Install PPA tooling
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev ftp gnupg apt-utils
+          sudo apt-get install -y dpkg-dev ftp gnupg apt-utils lftp
 
       - name: Publish Linux DEB to PPA
         env:
@@ -138,7 +138,14 @@ jobs:
           echo "user $PPA_FTP_USER $PPA_FTP_PASS" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           echo "prompt" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           echo "cd amd64" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
+          # Ensure binary transfer mode for .deb and compressed files
+          echo "binary" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           echo "mget floorp-*.deb" >> "$WORKDIR/init_script.txt"
+
+          # Also prepare lftp-compatible scripts for debug (lftp has better debug output)
+          echo "set ftp:passive-mode true" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
+          echo "cd amd64" | tee -a "$WORKDIR/init_lftp.txt" "$WORKDIR/finish_lftp.txt" > /dev/null
+          echo "mget floorp-*.deb" >> "$WORKDIR/init_lftp.txt"
 
           # Upload files to temporary names then rename to ensure atomic swaps
           DEB_NAME="${DEB_FILE##*/}"
@@ -158,6 +165,21 @@ jobs:
           echo "put Release.gpg" >> "$WORKDIR/finish_script.txt"
           echo "put InRelease" >> "$WORKDIR/finish_script.txt"
 
+          # Build lftp finish script (commands compatible with lftp)
+          echo "set ftp:passive-mode true" > "$WORKDIR/finish_lftp.txt"
+          echo "cd amd64" >> "$WORKDIR/finish_lftp.txt"
+          echo "put $DEB_NAME -o tmp.$DEB_NAME" >> "$WORKDIR/finish_lftp.txt"
+          echo "mv tmp.$DEB_NAME $DEB_NAME" >> "$WORKDIR/finish_lftp.txt"
+          echo "put Packages.gz -o tmp.Packages.gz" >> "$WORKDIR/finish_lftp.txt"
+          echo "mv tmp.Packages.gz Packages.gz" >> "$WORKDIR/finish_lftp.txt"
+          echo "put Packages -o tmp.Packages" >> "$WORKDIR/finish_lftp.txt"
+          echo "mv tmp.Packages Packages" >> "$WORKDIR/finish_lftp.txt"
+          echo "put Release -o tmp.Release" >> "$WORKDIR/finish_lftp.txt"
+          echo "mv tmp.Release Release" >> "$WORKDIR/finish_lftp.txt"
+          echo "put Release.gpg" >> "$WORKDIR/finish_lftp.txt"
+          echo "put InRelease" >> "$WORKDIR/finish_lftp.txt"
+          echo "quit" >> "$WORKDIR/finish_lftp.txt"
+
           redact_script() {
             local file="$1"
             if [ -f "$file" ]; then
@@ -173,8 +195,8 @@ jobs:
           cd "$WORKDIR/publish"
           echo "[publish_ppa] Working directory ls (pre-ftp init):"
           ls -la .
-          echo "[publish_ppa] Starting FTP init script..."
-          ftp -n -p < ../init_script.txt
+          echo "[publish_ppa] Starting FTP init script (lftp debug)..."
+          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" -e "source ../init_lftp.txt; quit" || true
 
           dpkg-scanpackages --multiversion . > Packages
           gzip -k -f Packages
@@ -185,8 +207,8 @@ jobs:
           echo "[publish_ppa] Generated metadata files:"
           ls -la Packages* Release* InRelease || true
 
-          echo "[publish_ppa] Starting FTP finish script..."
-          ftp -n -p < ../finish_script.txt
+          echo "[publish_ppa] Starting FTP finish script (lftp debug)..."
+          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" -e "source ../finish_lftp.txt; quit" || true
 
           cd "$WORKDIR"
           echo "[publish_ppa] Cleanup directory listing:"
