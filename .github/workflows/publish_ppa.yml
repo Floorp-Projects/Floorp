@@ -138,11 +138,23 @@ jobs:
           echo "user $PPA_FTP_USER $PPA_FTP_PASS" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           echo "prompt" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
           echo "cd amd64" | tee -a "$WORKDIR/init_script.txt" "$WORKDIR/finish_script.txt" > /dev/null
-          echo "mget *" >> "$WORKDIR/init_script.txt"
-          echo "put ${DEB_FILE##*/}" >> "$WORKDIR/finish_script.txt"
-          echo "put Packages.gz" >> "$WORKDIR/finish_script.txt"
-          echo "put Packages" >> "$WORKDIR/finish_script.txt"
-          echo "put Release" >> "$WORKDIR/finish_script.txt"
+          echo "mget floorp-*.deb" >> "$WORKDIR/init_script.txt"
+
+          # Upload files to temporary names then rename to ensure atomic swaps
+          DEB_NAME="${DEB_FILE##*/}"
+          echo "put $DEB_NAME tmp.$DEB_NAME" >> "$WORKDIR/finish_script.txt"
+          echo "rename tmp.$DEB_NAME $DEB_NAME" >> "$WORKDIR/finish_script.txt"
+
+          echo "put Packages.gz tmp.Packages.gz" >> "$WORKDIR/finish_script.txt"
+          echo "rename tmp.Packages.gz Packages.gz" >> "$WORKDIR/finish_script.txt"
+
+          echo "put Packages tmp.Packages" >> "$WORKDIR/finish_script.txt"
+          echo "rename tmp.Packages Packages" >> "$WORKDIR/finish_script.txt"
+
+          # Upload Release to tmp and rename, then place signatures last
+          echo "put Release tmp.Release" >> "$WORKDIR/finish_script.txt"
+          echo "rename tmp.Release Release" >> "$WORKDIR/finish_script.txt"
+
           echo "put Release.gpg" >> "$WORKDIR/finish_script.txt"
           echo "put InRelease" >> "$WORKDIR/finish_script.txt"
 
