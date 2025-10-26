@@ -37,10 +37,20 @@ export function migratePanelSidebarData() {
       true,
     );
 
-    const displayed = Services.prefs.getBoolPref(
+    let displayed = Services.prefs.getBoolPref(
       "floorp.browser.sidebar.is.displayed",
       true,
     );
+    const enabled = Services.prefs.getBoolPref(
+      "floorp.browser.sidebar.enable",
+      true,
+    );
+
+    if (!enabled || !displayed) {
+      // If either the old 'enable' pref or 'displayed' pref is false, set displayed to false.
+      // This ensures that if the sidebar was previously disabled or hidden, it remains so.
+      displayed = false;
+    }
 
     const config: PanelSidebarConfig = {
       globalWidth,
