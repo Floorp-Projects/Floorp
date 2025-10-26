@@ -926,13 +926,19 @@ jobs:
             "Linux-x86_64"|"Linux-aarch64")
               sudo apt update
               sudo apt install -y patchelf
+              echo "[prepare-installer] Detecting dist directory..."
               DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
               if [ -z "$DIST_DIR" ]; then
                 DIST_DIR="obj-artifact-build-output/dist"
               fi
+              echo "[prepare-installer] Using DIST_DIR=$DIST_DIR"
               if [ -f "$DIST_DIR/updater" ]; then
+                echo "[prepare-installer] Running patchelf on $DIST_DIR/updater"
                 patchelf --add-rpath '$ORIGIN' "$DIST_DIR/updater"
+              else
+                echo "[prepare-installer] Warning: updater not found at $DIST_DIR/updater, skipping patchelf" >&2
               fi
+              echo "[prepare-installer] Moving installer ($INSTALLER_PATH) to ~/noraneko-installer/$OUTPUT_INSTALLER_NAME"
               mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               ;;
             "macOS-x86_64")
