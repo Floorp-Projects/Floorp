@@ -19,6 +19,10 @@ on:
         required: true
       PPA_FTP_PASS:
         required: true
+      CLOUDFLARE_API_TOKEN_FOR_PURGE:
+        required: false
+      CLOUDFLARE_ZONE_ID:
+        required: false
   workflow_dispatch:
     inputs:
       deb_url:
