@@ -76,6 +76,13 @@ jobs:
           path: ~/noraneko-publish/linux-dist
           github-token: ${{ github.token }}
 
+      - name: Download Linux PPA DEB
+        uses: actions/download-artifact@v4
+        with:
+          name: floorp-Linux-x64-deb
+          path: ~/noraneko-publish/linux-deb
+          github-token: ${{ github.token }}
+
       - name: Download macOS installer
         uses: actions/download-artifact@v4
         with:
@@ -140,6 +147,8 @@ jobs:
           ls -la ~/noraneko-publish/win
           echo "Linux Files:"
           ls -la ~/noraneko-publish/linux
+          echo "Linux DEB Files:"
+          ls -la ~/noraneko-publish/linux-deb
           echo "Linux aarch64 Files:"
           ls -la ~/noraneko-publish/linux-aarch64
           echo "macOS Files:"
@@ -220,6 +229,7 @@ jobs:
             ${{ env.ROOT_DIR }}/noraneko-publish/win-meta.json
             ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
+            ${{ env.ROOT_DIR }}/noraneko-publish/linux-deb/*.deb
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-meta.json
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64/*.mar
             ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-dist/**

@@ -28,9 +28,8 @@ jobs:
           name: floorp-Linux-x64-deb
           path: ~/noraneko-publish/linux-deb
 
-      - name: Normalize DEB filename to legacy format
-        # Use inputs.nr_version (if provided) to rename the discovered .deb
-        # to the legacy filename: floorp-<version>.deb
+      - name: Validate legacy DEB filename
+        # Ensure we only accept the historical floorp-<version_display>.deb naming.
         run: |
           set -eux
           NR_VERSION="${{ inputs.nr_version }}"
@@ -41,20 +40,27 @@ jobs:
             unzip -o *.zip || true
           fi
 
-          # Find the first .deb file
-          DEB_FILE=$(find . -type f -name "*.deb" | head -n 1)
-          if [ -z "$DEB_FILE" ]; then
-            echo "No .deb found in ~/noraneko-publish/linux-deb" >&2
+          mapfile -t LEGACY_DEBS < <(find . -maxdepth 1 -type f -name "floorp-*.deb" | sort)
+          if [ "${#LEGACY_DEBS[@]}" -eq 0 ]; then
+            echo "Expected legacy-named floorp-<version_display>.deb in ~/noraneko-publish/linux-deb" >&2
             ls -la . || true
             exit 1
           fi
+          if [ "${#LEGACY_DEBS[@]}" -gt 1 ]; then
+            echo "Multiple legacy floorp-*.deb files detected; refusing to continue" >&2
+            printf '%s\n' "${LEGACY_DEBS[@]}"
+            exit 1
+          fi
+
+          DEB_FILE="${LEGACY_DEBS[0]}"
+          echo "Found legacy DEB: $DEB_FILE"
 
           if [ -n "$NR_VERSION" ]; then
-            TARGET="floorp-${NR_VERSION}.deb"
-            echo "Renaming $DEB_FILE -> $TARGET"
-            mv "$DEB_FILE" "$TARGET"
-          else
-            echo "inputs.nr_version not provided; keeping existing .deb name: $DEB_FILE"
+            EXPECTED="./floorp-${NR_VERSION}.deb"
+            if [ "$DEB_FILE" != "$EXPECTED" ]; then
+              echo "inputs.nr_version=$NR_VERSION but legacy artifact is $(basename "$DEB_FILE"); mismatch detected" >&2
+              exit 1
+            fi
           fi
 
       - name: Install PPA tooling

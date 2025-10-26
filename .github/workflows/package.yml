@@ -788,17 +788,20 @@ jobs:
             exit 1
           fi
 
-          OUTPUT_NAME="${OUTPUT_NAME:-linux-x86_64}"
           TARGET_DIR="$HOME/ppa-deb"
           mkdir -p "$TARGET_DIR"
-          TARGET_DEB="$TARGET_DIR/floorp-${OUTPUT_NAME}.deb"
+          VERSION=$(cat ./noraneko/static/gecko/config/version.txt)
+          VERSION_DISPLAY=$(tr -d '\r\n' < ./noraneko/static/gecko/config/version_display.txt)
 
+          TARGET_DEB="$TARGET_DIR/floorp-${VERSION_DISPLAY}.deb"
           cp "$DEB_PATH" "$TARGET_DEB"
 
-          VERSION=$(cat ./noraneko/static/gecko/config/version.txt)
-          VERSION_DISPLAY=$(cat ./noraneko/static/gecko/config/version_display.txt)
+          OUTPUT_NAME="${OUTPUT_NAME:-linux-x86_64}"
 
           sha256sum "$TARGET_DEB" > "$TARGET_DEB.sha256"
+          rm -f "$TARGET_DIR/dist.zip"
+          zip -j -q "$TARGET_DIR/dist.zip" "$TARGET_DEB"
+
           cat > "$TARGET_DIR/meta.json" <<EOF
           {
             "version": "$VERSION",
@@ -811,7 +814,7 @@ jobs:
         if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
         uses: actions/upload-artifact@v4
         with:
-          name: floorp-x86_64-ppa-deb-artifact
+          name: floorp-Linux-x64-deb
           path: |
             /home/runner/ppa-deb/*
           compression-level: 9
