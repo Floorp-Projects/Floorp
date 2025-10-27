@@ -28,7 +28,7 @@ class i18nUtils {
       .split(",")[0];
   }
 
-  private async getLangPackInfoFromPref(): Promise<any | null> {
+  private async getLangPackInfoFromPref(): Promise<unknown | null> {
     const requestedLocale = this.getRequestedLocaleFromPref;
     const availableLangPacks =
       await LangPackMatcher.mockable.getAvailableLangpacks();
@@ -205,6 +205,76 @@ class i18nUtils {
     }
     return i18nUtils.instance;
   }
-}
 
+  // ===== Translation provider API =====
+  // A shared accessor for a translation provider (e.g. i18next) registered
+  // by the UI bundle so chrome scripts can synchronously obtain translations
+  // without racing on module initialization.
+  private _translationProvider: TranslationProvider | null = null;
+
+  public registerTranslationProvider(provider: TranslationProvider): void {
+    try {
+      this._translationProvider = provider;
+      if (
+        provider?.isInitializedPromise &&
+        typeof provider.isInitializedPromise.then === "function"
+      ) {
+        provider.isInitializedPromise
+          .then(() => {
+            try {
+              // Best-effort notify; some implementations pass null in many
+              // locations so keep this tolerant to environment typing.
+              try {
+                Services.obs.notifyObservers(
+                  null as unknown as object,
+                  "noraneko-i18n-initialized",
+                );
+              } catch {
+                // ignore notify errors
+              }
+            } catch {
+              // swallow
+            }
+          })
+          .catch(() => {
+            // ignore provider init errors here
+          });
+      }
+    } catch {
+      // keep robust in chrome contexts
+    }
+  }
+
+  public getTranslationProvider(): TranslationProvider | null {
+    return this._translationProvider;
+  }
+
+  /**
+   * Await provider initialization if present; resolves quickly if no provider
+   * or no initialization promise is exposed.
+   */
+  public async waitForProviderInit(timeoutMs = 3000): Promise<void> {
+    const p = this._translationProvider?.isInitializedPromise;
+    if (!p) return;
+    try {
+      await Promise.race([
+        p,
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("timeout")), timeoutMs),
+        ),
+      ]);
+    } catch {
+      // ignore errors/timeouts
+    }
+  }
+}
 export const I18nUtils = i18nUtils.getInstance();
+
+// TranslationProvider type exposed after the singleton so other modules can
+// import types from here if necessary.
+export type TranslationProvider = {
+  t?: (key: string, opts?: Record<string, unknown>) => string | string[];
+  isInitializedPromise?: Promise<unknown>;
+  changeLanguage?: (lng: string) => Promise<unknown> | void;
+  getI18next?: () => unknown;
+};

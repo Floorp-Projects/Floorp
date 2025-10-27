@@ -75,46 +75,6 @@ export function Settings({
     }
   }, [isOpen]);
 
-  const compressImage = (
-    dataUrl: string,
-    maxWidth = 1920,
-    maxHeight = 1080,
-    quality = 0.8,
-  ): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Canvas context not available"));
-          return;
-        }
-
-        // Calculate new dimensions
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height;
-          height = maxHeight;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(compressedDataUrl);
-      };
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-  };
-
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -130,14 +90,12 @@ export function Settings({
         reader.readAsDataURL(file);
       });
 
-      // Compress image if it's too large
-      let finalImageData = imageData;
-      if (imageData.length > 500000) {
-        finalImageData = await compressImage(imageData, 1920, 1080, 0.8);
-      }
+      const finalImageData = imageData;
 
       // Final size check
-      if (finalImageData.length > 1000000) {
+      if (finalImageData.length > 5000000) {
+        // 5MB
+        alert("Image is too large. Please select an image smaller than 5MB.");
         return;
       }
 

@@ -6,7 +6,14 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { createRoot, getOwner, runWithOwner } from "solid-js";
 import { StyleManager } from "./styles/style-manager.ts";
-import { DOMLayoutManager } from "./layout/dom-manipulator.ts";
+import {
+  DOMLayoutManager,
+  ensureNavigatorToolboxListenerMirroringInstalled,
+} from "./layout/dom-manipulator.ts";
+
+export function initBeforeSessionStoreInit() {
+  ensureNavigatorToolboxListenerMirroringInstalled();
+}
 
 @noraComponent(import.meta.hot)
 export default class UICustomization extends NoraComponentBase {

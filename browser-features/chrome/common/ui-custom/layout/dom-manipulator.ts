@@ -6,8 +6,426 @@
 import { createEffect } from "solid-js";
 import { config } from "#features-chrome/common/designs/configs.ts";
 
+const DOM_LAYOUT_MANAGER_DEBUG_PREFIX = "[DOMLayoutManager]";
+
+type ListenerRecord = {
+  type: string;
+  listener: EventListenerOrEventListenerObject;
+  options?: boolean | AddEventListenerOptions;
+  capture: boolean;
+};
+
+type ToolboxMirrorState = {
+  installed: boolean;
+  toolbox: XULElement | null;
+  originalAdd?: EventTarget["addEventListener"];
+  originalRemove?: EventTarget["removeEventListener"];
+  listeners: ListenerRecord[];
+  mirrorTarget: EventTarget | null;
+  forwarderHandler: ((event: Event) => void) | null;
+  forwarderTarget: EventTarget | null;
+};
+
+const toolboxMirrorState: ToolboxMirrorState = {
+  installed: false,
+  toolbox: null,
+  listeners: [],
+  mirrorTarget: null,
+  forwarderHandler: null,
+  forwarderTarget: null,
+};
+
+let installScheduled = false;
+
+const FORWARDED_EVENT_TYPES = [
+  "command",
+  "click",
+  "mousedown",
+  "mouseup",
+  "keypress",
+  "keyup",
+  "keydown",
+  "contextmenu",
+];
+
+function normalizeCapture(
+  options?: boolean | AddEventListenerOptions,
+): boolean {
+  if (typeof options === "boolean") {
+    return options;
+  }
+  if (typeof options === "object" && options !== null) {
+    return Boolean(options.capture);
+  }
+  return false;
+}
+
+function mirrorRecordToTarget(
+  record: ListenerRecord,
+  explicitTarget?: EventTarget | null,
+): void {
+  const target =
+    explicitTarget ??
+    (toolboxMirrorState.mirrorTarget ?? toolboxMirrorState.toolbox);
+  const { toolbox } = toolboxMirrorState;
+  if (!target || target === toolbox) {
+    return;
+  }
+
+  try {
+    target.addEventListener(
+      record.type,
+      record.listener,
+      record.options as AddEventListenerOptions | boolean | undefined,
+    );
+  } catch (error) {
+    console.warn(
+      `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to mirror listener for ${record.type}`,
+      error,
+    );
+  }
+}
+
+function unmirrorRecordFromTarget(
+  record: ListenerRecord,
+  explicitTarget?: EventTarget | null,
+): void {
+  const target =
+    explicitTarget ??
+    (toolboxMirrorState.mirrorTarget ?? toolboxMirrorState.toolbox);
+  const { toolbox } = toolboxMirrorState;
+  if (!target || target === toolbox) {
+    return;
+  }
+
+  try {
+    target.removeEventListener(
+      record.type,
+      record.listener,
+      record.options as EventListenerOptions | boolean | undefined,
+    );
+  } catch (error) {
+    console.warn(
+      `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to remove mirrored listener for ${record.type}`,
+      error,
+    );
+  }
+}
+
+function tryInstallNavigatorToolboxMirror(): boolean {
+  if (toolboxMirrorState.installed) {
+    return true;
+  }
+
+  const toolbox = document?.getElementById(
+    "navigator-toolbox",
+  ) as XULElement | null;
+  if (!toolbox) {
+    return false;
+  }
+
+  const originalAdd = toolbox.addEventListener;
+  const originalRemove = toolbox.removeEventListener;
+  const listeners: ListenerRecord[] = [];
+
+  const patchedAdd: typeof toolbox.addEventListener = function patchedAdd(
+    this: EventTarget,
+    type,
+    listener,
+    options,
+  ) {
+    if (this === toolbox && listener) {
+      const capture = normalizeCapture(options);
+      const exists = listeners.some(
+        (record) =>
+          record.type === type &&
+          record.listener === listener &&
+          record.capture === capture,
+      );
+      if (!exists) {
+        const record: ListenerRecord = {
+          type,
+          listener,
+          options,
+          capture,
+        };
+        listeners.push(record);
+        mirrorRecordToTarget(record);
+      }
+    }
+
+    return originalAdd.call(this, type, listener, options);
+  };
+
+  const patchedRemove: typeof toolbox.removeEventListener =
+    function patchedRemove(this: EventTarget, type, listener, options) {
+      if (this === toolbox && listener) {
+        const capture = normalizeCapture(options);
+        for (let index = listeners.length - 1; index >= 0; index -= 1) {
+          const record = listeners[index];
+          if (
+            record.type === type &&
+            record.listener === listener &&
+            record.capture === capture
+          ) {
+            listeners.splice(index, 1);
+            unmirrorRecordFromTarget(record);
+            break;
+          }
+        }
+      }
+
+      return originalRemove.call(this, type, listener, options);
+    };
+
+  toolbox.addEventListener = patchedAdd;
+  toolbox.removeEventListener = patchedRemove;
+
+  toolboxMirrorState.installed = true;
+  toolboxMirrorState.toolbox = toolbox;
+  toolboxMirrorState.originalAdd = originalAdd;
+  toolboxMirrorState.originalRemove = originalRemove;
+  toolboxMirrorState.listeners = listeners;
+
+  return true;
+}
+
+function scheduleInstallAttempt(): void {
+  if (installScheduled || toolboxMirrorState.installed) {
+    return;
+  }
+  installScheduled = true;
+
+  const attempt = () => {
+    installScheduled = false;
+    if (!tryInstallNavigatorToolboxMirror()) {
+      console.debug(
+        `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} navigator-toolbox not available for mirroring`,
+      );
+    }
+  };
+
+  if (document?.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        attempt();
+      },
+      { once: true },
+    );
+  } else {
+    if (typeof globalThis.queueMicrotask === "function") {
+      globalThis.queueMicrotask(() => attempt());
+    } else {
+      globalThis.setTimeout(() => attempt(), 0);
+    }
+  }
+}
+
+export function ensureNavigatorToolboxListenerMirroringInstalled(): void {
+  if (toolboxMirrorState.installed) {
+    return;
+  }
+
+  if (tryInstallNavigatorToolboxMirror()) {
+    return;
+  }
+
+  scheduleInstallAttempt();
+}
+
+export function setNavigatorToolboxMirrorTarget(
+  target: EventTarget | null,
+): void {
+  const previousTarget = toolboxMirrorState.mirrorTarget;
+  if (previousTarget === target) {
+    return;
+  }
+
+  if (previousTarget && previousTarget !== toolboxMirrorState.toolbox) {
+    for (const record of toolboxMirrorState.listeners) {
+      unmirrorRecordFromTarget(record, previousTarget);
+    }
+  }
+
+  toolboxMirrorState.mirrorTarget = target;
+
+  if (target && target !== toolboxMirrorState.toolbox) {
+    for (const record of toolboxMirrorState.listeners) {
+      mirrorRecordToTarget(record, target);
+    }
+  }
+
+  updateForwardingTarget(target);
+}
+
+function updateForwardingTarget(target: EventTarget | null): void {
+  if (toolboxMirrorState.forwarderTarget && toolboxMirrorState.forwarderHandler) {
+    for (const type of FORWARDED_EVENT_TYPES) {
+      toolboxMirrorState.forwarderTarget.removeEventListener(
+        type,
+        toolboxMirrorState.forwarderHandler,
+        true,
+      );
+    }
+  }
+
+  toolboxMirrorState.forwarderTarget = null;
+  toolboxMirrorState.forwarderHandler = null;
+
+  if (!target || target === toolboxMirrorState.toolbox) {
+    return;
+  }
+  const toolbox = toolboxMirrorState.toolbox;
+  if (!toolbox) {
+    return;
+  }
+
+  const handler = (event: Event) => {
+    forwardEventToNavigatorToolbox(event, toolbox);
+  };
+
+  for (const type of FORWARDED_EVENT_TYPES) {
+    target.addEventListener(type, handler, { capture: true });
+  }
+
+  toolboxMirrorState.forwarderTarget = target;
+  toolboxMirrorState.forwarderHandler = handler;
+}
+
+function forwardEventToNavigatorToolbox(
+  event: Event,
+  toolbox: XULElement,
+): void {
+  if ((event as Record<string, unknown>).__domLayoutForwarded) {
+    return;
+  }
+
+  const clone = cloneEventForForward(event);
+  if (!clone) {
+    return;
+  }
+
+  preserveEventState(event, clone);
+
+  Object.defineProperty(clone, "__domLayoutForwarded", {
+    value: true,
+    enumerable: false,
+    configurable: true,
+  });
+
+  try {
+    toolbox.dispatchEvent(clone);
+  } catch (error) {
+    console.warn(
+      `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to forward ${clone.type} event to navigator-toolbox`,
+      error,
+    );
+  }
+}
+
+function cloneEventForForward(event: Event): Event | null {
+  const commonInit: EventInit = {
+    bubbles: event.bubbles,
+    cancelable: event.cancelable,
+    composed: event.composed,
+  };
+
+  if (typeof DragEvent !== "undefined" && event instanceof DragEvent) {
+    return new DragEvent(event.type, {
+      ...commonInit,
+      dataTransfer: event.dataTransfer ?? undefined,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      button: event.button,
+      buttons: event.buttons,
+      relatedTarget: event.relatedTarget ?? undefined,
+      view: event.view ?? undefined,
+    });
+  }
+
+  if (event instanceof MouseEvent) {
+    return new event.constructor(event.type, {
+      ...commonInit,
+      detail: event.detail,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      button: event.button,
+      buttons: event.buttons,
+      relatedTarget: event.relatedTarget ?? undefined,
+      movementX: event.movementX,
+      movementY: event.movementY,
+      view: event.view ?? undefined,
+    });
+  }
+
+  if (event instanceof KeyboardEvent) {
+    return new event.constructor(event.type, {
+      ...commonInit,
+      key: event.key,
+      code: event.code,
+      location: event.location,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      repeat: event.repeat,
+      isComposing: event.isComposing,
+      charCode: event.charCode,
+      keyCode: event.keyCode,
+    });
+  }
+
+  if (event instanceof CustomEvent) {
+    return new CustomEvent(event.type, {
+      ...commonInit,
+      detail: event.detail,
+    });
+  }
+
+  return new Event(event.type, commonInit);
+}
+
+function preserveEventState(original: Event, clone: Event): void {
+  if ("button" in original && "button" in clone) {
+    (clone as MouseEvent).initMouseEvent(
+      clone.type,
+      clone.bubbles,
+      clone.cancelable,
+      (original as MouseEvent).view,
+      (original as MouseEvent).detail,
+      (original as MouseEvent).screenX,
+      (original as MouseEvent).screenY,
+      (original as MouseEvent).clientX,
+      (original as MouseEvent).clientY,
+      (original as MouseEvent).ctrlKey,
+      (original as MouseEvent).altKey,
+      (original as MouseEvent).shiftKey,
+      (original as MouseEvent).metaKey,
+      (original as MouseEvent).button,
+      (original as MouseEvent).relatedTarget ?? null,
+    );
+  }
+
+  if ((original as Record<string, unknown>).defaultPrevented) {
+    clone.preventDefault();
+  }
+}
+
 export class DOMLayoutManager {
-  private static readonly DEBUG_PREFIX = "[DOMLayoutManager]";
+  private static readonly DEBUG_PREFIX = DOM_LAYOUT_MANAGER_DEBUG_PREFIX;
 
   // Store original navbar position for proper restoration
   private originalNavbarParent: Element | null = null;
@@ -21,6 +439,12 @@ export class DOMLayoutManager {
   private navbarBottomScheduleController: AbortController | null = null;
   private browserStartupPromise: Promise<void> | null = null;
   private browserStartupCompleted = false;
+  private fallbackNavbarTarget: XULElement | null = null;
+  private fallbackNavbarHandlers: Array<{
+    type: string;
+    listener: EventListener;
+    options?: boolean | AddEventListenerOptions;
+  }> = [];
 
   private get navBar(): XULElement {
     const element = document?.getElementById("nav-bar") as XULElement;
@@ -55,6 +479,8 @@ export class DOMLayoutManager {
     this.originalNavbarNextSibling = null;
     this.isNavbarAtBottom = false;
     this.cancelNavbarBottomScheduling();
+    setNavigatorToolboxMirrorTarget(null);
+    this.detachFallbackNavbarHandlers();
   }
 
   private setupNavbarPosition() {
@@ -155,24 +581,35 @@ export class DOMLayoutManager {
 
     const navbar = this.navBar;
     const fullscreenWrapper = this.fullscreenWrapper;
+    const statusbar = document?.getElementById(
+      "nora-statusbar",
+    ) as XULElement | null;
 
     if (!navbar) {
       console.warn(`${DOMLayoutManager.DEBUG_PREFIX} navbar element not found`);
       return;
     }
-    if (!fullscreenWrapper) {
+
+    const insertionAnchor =
+      statusbar && statusbar.isConnected ? statusbar : fullscreenWrapper;
+
+    if (!insertionAnchor) {
       console.warn(
-        `${DOMLayoutManager.DEBUG_PREFIX} fullscreenWrapper element not found`,
+        `${DOMLayoutManager.DEBUG_PREFIX} No valid insertion anchor for navbar placement`,
       );
       return;
     }
 
     try {
+      ensureNavigatorToolboxListenerMirroringInstalled();
+
       this.originalNavbarParent = navbar.parentElement;
       this.originalNavbarNextSibling = navbar.nextElementSibling;
 
-      fullscreenWrapper.after(navbar);
+      insertionAnchor.after(navbar);
       this.isNavbarAtBottom = true;
+      setNavigatorToolboxMirrorTarget(navbar);
+      this.attachFallbackNavbarHandlers(navbar);
 
       this.removeUrlbarPopoverAttribute();
 
@@ -257,6 +694,169 @@ export class DOMLayoutManager {
     } finally {
       this.originalTabbarManageContainerStyle = null;
     }
+  }
+
+  private attachFallbackNavbarHandlers(navbar: XULElement): void {
+    if (!navbar.isConnected) {
+      return;
+    }
+
+    const toolbox = this.navigatorToolbox;
+    if (toolbox && toolbox.contains(navbar)) {
+      this.detachFallbackNavbarHandlers();
+      return;
+    }
+
+    if (this.fallbackNavbarTarget === navbar && this.fallbackNavbarHandlers.length > 0) {
+      return;
+    }
+
+    this.detachFallbackNavbarHandlers();
+
+    const win = window as typeof window & {
+      gSync?: {
+        toggleAccountPanel?: (anchor: Element | null, event?: Event) => void;
+      };
+      gUnifiedExtensions?: {
+        togglePanel?: (event?: Event) => void;
+      };
+    };
+
+    const handleMouseDown: EventListener = (event: Event) => {
+      if (!(event instanceof MouseEvent)) {
+        return;
+      }
+      const element = (event.target as Element | null)?.closest(
+        "#fxa-toolbar-menu-button, #unified-extensions-button",
+      );
+      if (!element) {
+        return;
+      }
+
+      switch (element.id) {
+        case "fxa-toolbar-menu-button":
+          if (win.gSync?.toggleAccountPanel) {
+            try {
+              win.gSync.toggleAccountPanel(element, event);
+            } catch (error) {
+              console.warn(
+                `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Fallback gSync.toggleAccountPanel failed`,
+                error,
+              );
+            }
+          }
+          break;
+        case "unified-extensions-button":
+          if (win.gUnifiedExtensions?.togglePanel) {
+            try {
+              win.gUnifiedExtensions.togglePanel(event);
+            } catch (error) {
+              console.warn(
+                `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Fallback gUnifiedExtensions.togglePanel failed`,
+                error,
+              );
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    const handleKeyPress: EventListener = (event: Event) => {
+      if (!(event instanceof KeyboardEvent)) {
+        return;
+      }
+      const isLikeLeftClick =
+        event.key === "Enter" || event.key === " " || event.key === "Spacebar";
+      if (!isLikeLeftClick) {
+        return;
+      }
+
+      const element = (event.target as Element | null)?.closest(
+        "#fxa-toolbar-menu-button, #unified-extensions-button",
+      );
+      if (!element) {
+        return;
+      }
+
+      switch (element.id) {
+        case "fxa-toolbar-menu-button":
+          if (win.gSync?.toggleAccountPanel) {
+            try {
+              win.gSync.toggleAccountPanel(element, event);
+            } catch (error) {
+              console.warn(
+                `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Fallback gSync.toggleAccountPanel failed`,
+                error,
+              );
+            }
+          }
+          break;
+        case "unified-extensions-button":
+          if (win.gUnifiedExtensions?.togglePanel) {
+            try {
+              win.gUnifiedExtensions.togglePanel(event);
+            } catch (error) {
+              console.warn(
+                `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Fallback gUnifiedExtensions.togglePanel failed`,
+                error,
+              );
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    const handlers: Array<{
+      type: string;
+      listener: EventListener;
+      options?: boolean | AddEventListenerOptions;
+    }> = [
+      { type: "mousedown", listener: handleMouseDown, options: true },
+      { type: "keypress", listener: handleKeyPress, options: true },
+    ];
+
+    for (const entry of handlers) {
+      try {
+        navbar.addEventListener(entry.type, entry.listener, entry.options);
+      } catch (error) {
+        console.warn(
+          `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to attach fallback listener for ${entry.type}`,
+          error,
+        );
+      }
+    }
+
+    this.fallbackNavbarTarget = navbar;
+    this.fallbackNavbarHandlers = handlers;
+  }
+
+  private detachFallbackNavbarHandlers(): void {
+    if (!this.fallbackNavbarTarget) {
+      this.fallbackNavbarHandlers = [];
+      return;
+    }
+
+    for (const entry of this.fallbackNavbarHandlers) {
+      try {
+        this.fallbackNavbarTarget.removeEventListener(
+          entry.type,
+          entry.listener,
+          entry.options,
+        );
+      } catch (error) {
+        console.warn(
+          `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to detach fallback listener for ${entry.type}`,
+          error,
+        );
+      }
+    }
+
+    this.fallbackNavbarHandlers = [];
+    this.fallbackNavbarTarget = null;
   }
 
   /**

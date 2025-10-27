@@ -411,6 +411,32 @@ export class WorkspacesTabManager {
       this.panelUITargetElement?.hidePopup();
     }
 
+    // Persist the currently selected tab as the last-shown for the
+    // previously selected workspace before switching. This ensures we can
+    // restore focus when returning to that workspace instead of creating
+    // a new tab each time.
+    try {
+      const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
+      const currentlySelectedTab = globalThis.gBrowser.selectedTab as
+        | XULElement
+        | null;
+      if (
+        currentlySelectedTab &&
+        this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
+          prevWorkspaceId
+      ) {
+        currentlySelectedTab.setAttribute(
+          WORKSPACE_LAST_SHOW_ID,
+          prevWorkspaceId,
+        );
+      }
+    } catch (e) {
+      console.debug(
+        "WorkspacesTabManager: failed to persist previous workspace last-show",
+        e,
+      );
+    }
+
     try {
       const willChangeWorkspaceLastShowTab = document?.querySelector(
         `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,

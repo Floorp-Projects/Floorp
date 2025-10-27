@@ -65,6 +65,38 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
         pendingLocale = null;
       });
     }
+    // Register a translation provider with I18nUtils so chrome scripts and
+    // other contexts can call into a shared accessor instead of racing on
+    // module imports. This is a best-effort registration; callers should
+    // gracefully handle absence of a provider.
+    try {
+      I18nUtils.registerTranslationProvider?.({
+        t: i18next.t.bind(i18next),
+        isInitializedPromise: i18nInitializedPromise!,
+        changeLanguage: (lng: string) => {
+          try {
+            return i18next.changeLanguage(lng);
+          } catch (e) {
+            // Keep changeLanguage robust: don't allow throwing from provider
+            // registration to break initialization. Log and re-throw so
+            // callers can still handle the rejection if they expect it.
+            try {
+              console.error("Failed to change language", e);
+            } catch {}
+            throw e;
+          }
+        },
+        getI18next: () => i18next,
+      });
+    } catch (e) {
+      // Keep initialization robust: don't throw if registration fails.
+      try {
+        console.error(
+          "Failed to register translation provider on I18nUtils",
+          e,
+        );
+      } catch {}
+    }
   });
 }
 const [lang, setLang] = createRootHMR(
