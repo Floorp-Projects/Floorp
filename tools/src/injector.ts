@@ -101,6 +101,7 @@ export function createManifest(mode: string, dirPath: string) {
       "content noraneko-notes pages-notes/ contentaccessible=yes",
       "content noraneko-modal-child pages-modal-child/ contentaccessible=yes",
       "content noraneko-settings pages-settings/ contentaccessible=yes",
+      "content noraneko-profile-manager pages-profile-manager/ contentaccessible=yes",
     ].join("\n");
     manifestContent += "\n" + devEntries;
   }
@@ -155,6 +156,7 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
     ["pages-welcome", "browser-features/pages-welcome/_dist"],
     ["pages-notes", "browser-features/pages-notes/_dist"],
     ["pages-modal-child", "browser-features/pages-modal-child/_dist"],
+    ["pages-profile-manager", "browser-features/pages-profile-manager/_dist"],
   ];
 
   for (const [subdir, target] of mounts) {

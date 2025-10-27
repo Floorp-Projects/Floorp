@@ -197,6 +197,21 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     [
       [
         deno,
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-profile-manager/content",
+      ],
+      path.join(PROJECT_ROOT, "browser-features/pages-profile-manager"),
+    ],
+
+    [
+      [
+        deno,
         "task",
         "build",
         `--env.__BUILDID2__=${buildid2}`,

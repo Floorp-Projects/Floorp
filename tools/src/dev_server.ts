@@ -33,6 +33,10 @@ export async function run(writer: any): Promise<void> {
       name: "welcome",
       path: path.join(PROJECT_ROOT, "browser-features/pages-welcome"),
     },
+    {
+      name: "profile-manager",
+      path: path.join(PROJECT_ROOT, "browser-features/pages-profile-manager"),
+    },
   ];
 
   // Ensure logs directory exists
@@ -158,6 +162,8 @@ export function getPortFor(serverName: string): number {
       return 5183;
     case "welcome":
       return 5187;
+    case "profile-manager":
+      return 5179;
     default:
       return DEV_SERVER.default_port;
   }

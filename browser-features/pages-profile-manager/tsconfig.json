@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "allowImportingTsExtensions": true,
+    "lib": [
+      "DOM",
+      "dom.iterable",
+      "esnext"
+    ],
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "vite/client"
+    ],
+    "jsx": "react-jsx"
+  }
+}
