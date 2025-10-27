@@ -80,10 +80,68 @@ export function migrateWorkspacesData(): Promise<void> {
                     e,
                   );
                 }
+                const normalizeLegacyPayload = (payload: unknown): unknown => {
+                  if (
+                    !payload ||
+                    typeof payload !== "object" ||
+                    !("windows" in payload)
+                  ) {
+                    return payload;
+                  }
+                  const root = payload as {
+                    windows?: Record<string, unknown>;
+                  };
+                  if (!root.windows || typeof root.windows !== "object") {
+                    return payload;
+                  }
+
+                  for (const windowEntry of Object.values(root.windows)) {
+                    if (!windowEntry || typeof windowEntry !== "object") {
+                      continue;
+                    }
+                    const records = windowEntry as Record<string, unknown>;
+                    for (const detail of Object.values(records)) {
+                      if (!detail || typeof detail !== "object") {
+                        continue;
+                      }
+                      const record = detail as Record<string, unknown>;
+                      const defaultWorkspaceValue = record["defaultWorkspace"];
+                      if (typeof defaultWorkspaceValue === "string") {
+                        if (
+                          defaultWorkspaceValue === "true" ||
+                          defaultWorkspaceValue === "false"
+                        ) {
+                          record["defaultWorkspace"] =
+                            defaultWorkspaceValue === "true";
+                        }
+                      }
+                      const privateValue =
+                        record["isPrivateContainerWorkspace"];
+                      if (typeof privateValue === "string") {
+                        if (privateValue === "true" || privateValue === "false") {
+                          record["isPrivateContainerWorkspace"] =
+                            privateValue === "true";
+                        }
+                      }
+                      const rawContextId = record["userContextId"];
+                      if (typeof rawContextId === "string") {
+                        const parsed = Number.parseInt(rawContextId, 10);
+                        if (!Number.isNaN(parsed)) {
+                          record["userContextId"] = parsed;
+                        } else {
+                          delete record["userContextId"];
+                        }
+                      }
+                    }
+                  }
+
+                  return payload;
+                };
+
                 let oldData: Floorp11Workspaces;
                 try {
                   const parseResult = zFloorp11WorkspacesSchema.decode(
-                    JSON.parse(text),
+                    normalizeLegacyPayload(JSON.parse(text)),
                   );
                   if (!isRight(parseResult)) {
                     throw new Error("Schema validation failed");
