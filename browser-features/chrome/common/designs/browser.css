@@ -189,3 +189,9 @@ notification-message[message-bar-type="infobar"] {
     display: none !important;
   }
 }
+
+@media (-moz-platform: linux) {
+  :root {
+    --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor) !important;
+  }
+}
