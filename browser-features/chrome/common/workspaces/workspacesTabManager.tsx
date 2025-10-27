@@ -417,15 +417,24 @@ export class WorkspacesTabManager {
     // a new tab each time.
     try {
       const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
-      const currentlySelectedTab = globalThis.gBrowser.selectedTab as XULElement | null;
+      const currentlySelectedTab = globalThis.gBrowser.selectedTab as
+        | XULElement
+        | null;
       if (
         currentlySelectedTab &&
-        this.getWorkspaceIdFromAttribute(currentlySelectedTab) === prevWorkspaceId
+        this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
+          prevWorkspaceId
       ) {
-        currentlySelectedTab.setAttribute(WORKSPACE_LAST_SHOW_ID, prevWorkspaceId);
+        currentlySelectedTab.setAttribute(
+          WORKSPACE_LAST_SHOW_ID,
+          prevWorkspaceId,
+        );
       }
     } catch (e) {
-      console.debug("WorkspacesTabManager: failed to persist previous workspace last-show", e);
+      console.debug(
+        "WorkspacesTabManager: failed to persist previous workspace last-show",
+        e,
+      );
     }
 
     try {
