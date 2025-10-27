@@ -195,13 +195,26 @@ function bindGlobalI18nInitializedObserver(): void {
   if (globalI18nInitializedObserverBound) return;
   try {
     Services.obs.addObserver((...args: Array<unknown>) => {
-      const topic = args[1] as string | undefined;
-      if (topic !== "noraneko-i18n-initialized") return;
-      logFloorpHub(
-        "Received noraneko-i18n-initialized; applying translations.",
-      );
-      applyFloorpHubWarningTexts();
-      applyFloorpStartWarningTexts();
+      try {
+        const topic = args[1] as string | undefined;
+        if (topic !== "noraneko-i18n-initialized") return;
+        logFloorpHub(
+          "Received noraneko-i18n-initialized; applying translations.",
+        );
+        applyFloorpHubWarningTexts();
+        applyFloorpStartWarningTexts();
+      } catch (e) {
+        // Prevent observer exceptions from bubbling and stopping other observers
+        // Log with a clear prefix to make debugging easier in runtime logs.
+        try {
+          console.error(
+            "Floorp Hub: error in noraneko-i18n-initialized observer",
+            e,
+          );
+        } catch {
+          // swallow any errors thrown while attempting to log
+        }
+      }
     }, "noraneko-i18n-initialized");
     globalI18nInitializedObserverBound = true;
     logFloorpHub("Bound global i18n initialized observer.");

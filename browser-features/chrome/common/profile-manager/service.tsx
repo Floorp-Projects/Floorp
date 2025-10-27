@@ -27,6 +27,15 @@ const defaultTexts: ProfileManagerTexts = {
 };
 
 const getTranslatedTexts = (): ProfileManagerTexts => {
+  // Guard against i18next not being initialized yet. If it's not ready,
+  // fall back to defaultTexts to avoid throwing and breaking the UI.
+  if (
+    !i18next || typeof (i18next as unknown as { t?: unknown }).t !== "function"
+  ) {
+    console.warn("i18next not initialized, falling back to default texts");
+    return defaultTexts;
+  }
+
   const t = (i18next as unknown as { t: (k: string) => string }).t;
   return {
     label: t("profile-manager-button.label"),

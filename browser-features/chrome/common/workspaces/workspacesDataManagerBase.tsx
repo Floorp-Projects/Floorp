@@ -142,7 +142,12 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
       return defaultID;
     }
 
-    // Default ID is invalid — attempt recovery similar to selected handler
+    // Default ID is invalid — attempt recovery instead of throwing.
+    // Throwing here would risk crashing code paths that assume a default
+    // workspace exists. Recovery strategy (in order):
+    //  1) reuse any existing workspace ID from the store,
+    //  2) if none exist, create a new "Default Workspace" and persist it.
+    // This keeps the app stable when stored IDs are stale or corrupted.
     console.warn(
       "WorkspacesDataManager: Not valid default workspace ID, attempting recovery:",
       defaultID,
