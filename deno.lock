@@ -101,7 +101,6 @@
     "npm:tailwind-merge@^3.0.1": "3.3.1",
     "npm:tailwindcss@4": "4.1.14",
     "npm:tailwindcss@^4.1.13": "4.1.14",
-    "npm:tsdown@*": "0.14.2_typescript@5.9.3_rolldown@1.0.0-beta.42",
     "npm:tsdown@~0.14.1": "0.14.2_typescript@5.9.3_rolldown@1.0.0-beta.42",
     "npm:typescript@^5.9.2": "5.9.3",
     "npm:unplugin-swc@^1.5.2": "1.5.7_@swc+core@1.13.5",
@@ -5354,9 +5353,6 @@
           "npm:rolldown@^1.0.0-beta.32"
         ]
       }
-    },
-    "links": {
-      "jsr:@types/gecko@1.0.0": {}
     }
   }
 }

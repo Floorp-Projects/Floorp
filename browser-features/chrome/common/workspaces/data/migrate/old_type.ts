@@ -56,9 +56,51 @@ export const zWorkspacePreference = t.partial({
   defaultWorkspace: t.string,
 });
 
-export const zWindowWorkspaces = t.record(
-  t.string,
+// export const zWindowWorkspaces = t.record(
+//   t.string,
+//   t.union([zWorkspaceDetail, zWorkspacePreference]),
+// );
+
+const recordFromString = <C extends t.Mixed>(
+  codomain: C,
+  name = `Record<string, ${codomain.name}>`,
+) =>
+  new t.Type<Record<string, t.TypeOf<C>>, Record<string, t.OutputOf<C>>, unknown>(
+    name,
+    (u): u is Record<string, t.TypeOf<C>> =>
+      t.UnknownRecord.is(u) && Object.keys(u).every(k => codomain.is(u[k])),
+    (u, c) => {
+      if (!t.UnknownRecord.is(u)) {
+        return t.failure(u, c, 'Invalid record');
+      }
+      const errors: t.Errors = [];
+      const a: Record<string, t.TypeOf<C>> = {};
+      for (const k in u) {
+        const r = codomain.validate(u[k], [
+          ...c,
+          { key: k, type: codomain, actual: u[k] },
+        ]);
+        if (r._tag === 'Left') {
+          errors.push(...r.left);
+        } else {
+          a[k] = r.right;
+        }
+      }
+
+      return errors.length > 0 ? t.failures(errors) : t.success(a);
+    },
+    a => {
+      const s: Record<string, t.OutputOf<C>> = {};
+      for (const k in a) {
+        s[k] = codomain.encode(a[k]);
+      }
+      return s;
+    },
+  );
+
+export const zWindowWorkspaces = recordFromString(
   t.union([zWorkspaceDetail, zWorkspacePreference]),
+  'WindowWorkspaces',
 );
 
 export const zFloorp11WorkspacesSchema = t.type({
