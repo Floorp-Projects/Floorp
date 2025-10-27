@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "Profiles",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Create"
+        },
+        "loading": "Loading…",
+        "noProfiles": "No profiles found.",
+        "current": "Current",
+        "default": "Bawaan",
+        "actions": {
+            "open": "Launch",
+            "new": "New",
+            "rename": "Ganti nama",
+            "remove": "Remove",
+            "setDefault": "Bawaan"
+        },
+        "prompts": {
+            "confirmRemove": "Are you sure you want to remove this profile?",
+            "newName": "New profile name:"
+        }
+    }
+}

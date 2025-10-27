@@ -3,6 +3,14 @@
     "label": "Tab wiederherstellen",
     "tooltiptext": "Letzten geschossenen Tab wieder öffnen {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Name",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "Ungültige ID für Arbeitsbereich (Sortierung nicht aktualisiert)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Open Profile Manager"
   },
   "statusbar": {
     "toggle": "Status Bar{{mark}}"

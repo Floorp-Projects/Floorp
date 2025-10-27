@@ -3,6 +3,14 @@
     "label": "Annuler l'onglet fermé",
     "tooltiptext": "Rouvrir le dernier onglet fermé {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Nom",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "ID invalide pour les espaces de travail (peut-être que l'ordre n'est pas mise à jour)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Ouvrir le gestionnaire de profil"
   },
   "statusbar": {
     "toggle": "Barre d'état{{mark}}"

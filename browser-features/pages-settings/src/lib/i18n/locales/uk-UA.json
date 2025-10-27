@@ -199,7 +199,6 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Disable fullscreen notification",
                 "deleteBrowserBorder": "Округлити кути сторінок",
-                "hideUnifiedExtensionsButton": "Hide unified extensions button",
                 "disableQRCodeButton": "Disable QR code button"
             },
             "special": {

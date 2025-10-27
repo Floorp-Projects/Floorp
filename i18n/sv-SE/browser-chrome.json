@@ -3,6 +3,14 @@
     "label": "Ångra stängd flik",
     "tooltiptext": "Öppna den senaste stängda fliken {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Namn",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "Ej giltigt ID för arbetsytor (kanske är placeringen inte uppdaterad)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Öppna profilhanteraren"
   },
   "statusbar": {
     "toggle": "Statusfält{{mark}}"

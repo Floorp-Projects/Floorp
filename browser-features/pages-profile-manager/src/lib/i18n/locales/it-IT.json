@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "Profili",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Create"
+        },
+        "loading": "Loading…",
+        "noProfiles": "No profiles found.",
+        "current": "Current",
+        "default": "A sinistra",
+        "actions": {
+            "open": "Launch",
+            "new": "New",
+            "rename": "Rename",
+            "remove": "Remove",
+            "setDefault": "A sinistra"
+        },
+        "prompts": {
+            "confirmRemove": "Are you sure you want to remove this profile?",
+            "newName": "New profile name:"
+        }
+    }
+}

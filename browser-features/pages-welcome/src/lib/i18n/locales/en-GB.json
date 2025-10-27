@@ -7,7 +7,7 @@
         "featureIntroduction": "Feature Introduction",
         "hub": "Floorp Hub",
         "hubIntro": "About Floorp Hub",
-        "customize": "Customise",
+        "customize": "Customize",
         "initialSettings": "Initial Settings",
         "complete": "Complete",
         "previous": "Previous",
@@ -28,11 +28,11 @@
         }
     },
     "customize": {
-        "title": "Customise Floorp",
+        "title": "Customize Floorp",
         "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
         "appearance": {
             "title": "Appearance Settings",
-            "description": "You can customise Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
         },
         "themes": {
             "light": "Light",
@@ -66,7 +66,7 @@
             "documentation": "Documentation"
         },
         "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customise via the Settings option in the menu button at the top right."
+        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
     },
     "welcomePage": {
         "welcome": "Welcome to Floorp!",

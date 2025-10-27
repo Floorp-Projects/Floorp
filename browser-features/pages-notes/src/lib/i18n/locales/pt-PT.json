@@ -1,0 +1,39 @@
+{
+    "title": {
+        "default": "{{productName}} Notas"
+    },
+    "notes": {
+        "welcome": "Bem-vindo ao {{productName}} Notes!",
+        "welcomeContent": "Bem-vindo ao {{productName}} Notes! Eis como o utilizar.\n\n{{productName}} O Notes é um recurso de tomada de notas que pode ser sincronizado entre dispositivos. Para ativar a sincronização, é necessário iniciar sessão em {{productName}} com uma conta Mozilla.\n{{productName}} As notas são armazenadas em {{productName}} e sincronizadas entre dispositivos através do Firefox Sync. O Firefox Sync encripta o conteúdo da sincronização com a palavra-passe da sua conta Mozilla, para que ninguém possa saber o seu conteúdo.",
+        "new": "Nova nota",
+        "reorder": "Reordenar",
+        "done": "Feito",
+        "emptyTitle": "Sem título",
+        "emptyContent": "Sem conteúdo",
+        "noNotesSelected": "Selecionar uma nota ou criar uma nova nota",
+        "createNew": "Criar nova nota",
+        "titlePlaceholder": "Título",
+        "loading": "Carregando notas...",
+        "delete": "Eliminar"
+    },
+    "editor": {
+        "bold": "Negrito",
+        "italic": "Itálico",
+        "underline": "Sublinhar",
+        "strikethrough": "Riscado",
+        "bulletList": "Lista de marcadores",
+        "numberedList": "Lista numerada",
+        "alignLeft": "Alinhar à esquerda",
+        "alignCenter": "Alinhar ao centro",
+        "alignRight": "Alinhar à direita",
+        "quote": "Citação",
+        "heading1": "Cabeçalho 1",
+        "heading2": "Cabeçalho 2",
+        "heading3": "Cabeçalho 3"
+    },
+    "error": {
+        "loadFailed": "Falha ao carregar os dados da nota",
+        "saveFailed": "Falha ao guardar os dados da nota",
+        "indexOutOfRange": "O índice {{index}} está fora do intervalo"
+    }
+}

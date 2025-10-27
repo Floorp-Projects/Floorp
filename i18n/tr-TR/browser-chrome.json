@@ -3,6 +3,14 @@
     "label": "Kapanan Sekmeyi Geri Al",
     "tooltiptext": "En son kapatılan sekmeyi yeniden aç {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Başlık",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "Geçersiz çalışma alanı ID'si (sıralama güncel olmayabilir)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Profil Yöneticisini Aç"
   },
   "statusbar": {
     "toggle": "Durum Çubuğu{{mark}}"

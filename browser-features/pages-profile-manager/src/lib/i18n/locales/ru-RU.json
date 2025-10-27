@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "Профили",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Create"
+        },
+        "loading": "Loading…",
+        "noProfiles": "No profiles found.",
+        "current": "Current",
+        "default": "По умолчанию",
+        "actions": {
+            "open": "Запустить",
+            "new": "Новая заметка",
+            "rename": "Переименовать",
+            "remove": "Remove",
+            "setDefault": "По умолчанию"
+        },
+        "prompts": {
+            "confirmRemove": "Are you sure you want to remove this profile?",
+            "newName": "New profile name:"
+        }
+    }
+}

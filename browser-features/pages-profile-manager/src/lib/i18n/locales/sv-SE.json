@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "Profiles",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Create"
+        },
+        "loading": "Loading…",
+        "noProfiles": "No profiles found.",
+        "current": "Current",
+        "default": "Standard",
+        "actions": {
+            "open": "Starta",
+            "new": "New",
+            "rename": "Byt namn",
+            "remove": "Remove",
+            "setDefault": "Standard"
+        },
+        "prompts": {
+            "confirmRemove": "Are you sure you want to remove this profile?",
+            "newName": "New profile name:"
+        }
+    }
+}

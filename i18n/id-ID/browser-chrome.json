@@ -3,6 +3,14 @@
     "label": "Urungkan Tutup Tab",
     "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Nama",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "ID Ruang Kerja tidak valid (mungkin urutan belum diperbarui)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Buka Manajer Profil"
   },
   "statusbar": {
     "toggle": "Bilah Status{{mark}}"

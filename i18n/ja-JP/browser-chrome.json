@@ -3,6 +3,14 @@
     "label": "閉じたタブを元に戻す",
     "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "パネルのサイドバー、ワークスペース、マウスジェスチャーなどの Floorp 固有の設定は、Floorp Hubで管理できます。",
+    "openButton": "Floorp Hub を開く"
+  },
+  "floorpStartWarning": {
+    "message": "「ホーム」の設定を変更するには、Floorp Hub から「Floorp Start」を無効にします(about:hub#/features/design)。",
+    "openButton": "Floorp Hub を開く — デザイン"
+  },
   "workspaces": {
     "modal": {
       "name": "名前",
@@ -70,6 +78,10 @@
       "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
     }
   },
+  "profile-manager-button": {
+    "label": "プロファイルマネージャー",
+    "tooltiptext": "プロファイルマネージャーを開く"
+  },
   "statusbar": {
     "toggle": "ステータスバー{{mark}}"
   },
@@ -102,7 +114,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "プライベートコンテナーで開く",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "プライベート/コンテナなしで再度開く",
     "name": "プライベートコンテナー"
   },
   "mouseGesture": {

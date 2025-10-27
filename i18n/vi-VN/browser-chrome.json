@@ -3,6 +3,14 @@
     "label": "Mở lại thẻ đã đóng",
     "tooltiptext": "Reopen the last closed tab {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Tên",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "ID không hợp lệ cho không gian (có thể vị trí chưa được cập nhật)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Quản lý hồ sơ",
+    "tooltiptext": "Mở Quản lý hồ sơ"
   },
   "statusbar": {
     "toggle": "Thanh trạng thái {{mark}}"

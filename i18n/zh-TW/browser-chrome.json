@@ -3,6 +3,14 @@
     "label": "復原已關閉分頁",
     "tooltiptext": "重新開啟上次關閉的索引標籤 {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "名稱",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "工作空間的 ID 無效（或許是因為排序未更新）"
     }
+  },
+  "profile-manager-button": {
+    "label": "設定檔管理器",
+    "tooltiptext": "開啟設定檔管理器"
   },
   "statusbar": {
     "toggle": "狀態列{{mark}}"

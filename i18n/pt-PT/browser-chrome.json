@@ -3,6 +3,14 @@
     "label": "Anular separador fechado",
     "tooltiptext": "Reabrir o último separador fechado {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Nome",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "ID não válido para espaços de trabalho (talvez a ordem não esteja atualizada)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Abrir o Gestor de Perfis"
   },
   "statusbar": {
     "toggle": "Barra de estado{{mark}}"

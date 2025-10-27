@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "プロファイル",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "作成"
+        },
+        "loading": "読み込み中...",
+        "noProfiles": "プロファイルが見つかりません。",
+        "current": "現在",
+        "default": "デフォルト",
+        "actions": {
+            "open": "起動",
+            "new": "新規作成",
+            "rename": "名前を変更",
+            "remove": "削除",
+            "setDefault": "デフォルト"
+        },
+        "prompts": {
+            "confirmRemove": "本当にこのプロファイルを削除してもよろしいですか？",
+            "newName": "新規プロファイル名:"
+        }
+    }
+}

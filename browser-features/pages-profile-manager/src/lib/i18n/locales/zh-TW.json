@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "設定檔",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Create"
+        },
+        "loading": "Loading…",
+        "noProfiles": "No profiles found.",
+        "current": "Current",
+        "default": "預設",
+        "actions": {
+            "open": "啟動",
+            "new": "新增筆記",
+            "rename": "重新命名",
+            "remove": "Remove",
+            "setDefault": "預設"
+        },
+        "prompts": {
+            "confirmRemove": "Are you sure you want to remove this profile?",
+            "newName": "New profile name:"
+        }
+    }
+}

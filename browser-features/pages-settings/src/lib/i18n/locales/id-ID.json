@@ -199,7 +199,6 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Nonaktifkan notifikasi layar penuh",
                 "deleteBrowserBorder": "Bulatkan sudut halaman",
-                "hideUnifiedExtensionsButton": "Sembunyikan tombol pengaya terpadu",
                 "disableQRCodeButton": "Nonaktifkan tombol kode QR"
             },
             "special": {

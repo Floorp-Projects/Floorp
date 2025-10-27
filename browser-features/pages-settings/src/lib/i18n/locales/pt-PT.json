@@ -199,7 +199,6 @@
                 "title": "Ecrã",
                 "disableFullscreenNotification": "Desativar a notificação em ecrã completo",
                 "deleteBrowserBorder": "Arredondar os cantos das páginas",
-                "hideUnifiedExtensionsButton": "Ocultar o botão de extensões unificadas",
                 "disableQRCodeButton": "Disable QR code button"
             },
             "special": {

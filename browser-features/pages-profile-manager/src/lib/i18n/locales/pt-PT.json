@@ -1,0 +1,24 @@
+{
+    "profileManager": {
+        "title": "Perfis",
+        "buttons": {
+            "refresh": "Refresh List",
+            "create": "Criar"
+        },
+        "loading": "A carregar…",
+        "noProfiles": "Nenhum perfil encontrado.",
+        "current": "Atual",
+        "default": "Predefinição",
+        "actions": {
+            "open": "Launch",
+            "new": "Novo",
+            "rename": "Mudar o nome",
+            "remove": "Remover",
+            "setDefault": "Predefinição"
+        },
+        "prompts": {
+            "confirmRemove": "Tem a certeza de que pretende remover este perfil?",
+            "newName": "Novo nome de perfil:"
+        }
+    }
+}

@@ -3,6 +3,14 @@
     "label": "닫은 탭 되돌리기",
     "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "이름",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Open Profile Manager"
   },
   "statusbar": {
     "toggle": "상태 표시줄{{mark}}"

@@ -199,7 +199,6 @@
                 "title": "Visning",
                 "disableFullscreenNotification": "Inaktivera helskärmsavisering",
                 "deleteBrowserBorder": "Runda hörnen på sidorna",
-                "hideUnifiedExtensionsButton": "Dölj enhetliga tillägg knapp",
                 "disableQRCodeButton": "Inaktivera QR-kodknapp"
             },
             "special": {

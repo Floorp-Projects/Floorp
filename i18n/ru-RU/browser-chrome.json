@@ -3,6 +3,14 @@
     "label": "Вернуть закрытую вкладку",
     "tooltiptext": "Переоткрыть последнюю закрытую вкладку {{shortcut}}"
   },
+  "floorpHubWarning": {
+    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "openButton": "Open Floorp Hub"
+  },
+  "floorpStartWarning": {
+    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub — Design"
+  },
   "workspaces": {
     "modal": {
       "name": "Название",
@@ -69,6 +77,10 @@
     "error": {
       "invalidWorkspaceID": "Неправильный идентификатор рабочих пространств (возможно не обновлён порядок)"
     }
+  },
+  "profile-manager-button": {
+    "label": "Менеджер профилей",
+    "tooltiptext": "Открыть менеджер профилей"
   },
   "statusbar": {
     "toggle": "Строка состояния{{mark}}"

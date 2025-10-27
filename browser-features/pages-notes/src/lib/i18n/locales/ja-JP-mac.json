@@ -1,0 +1,39 @@
+{
+    "title": {
+        "default": "{{productName}} Notes"
+    },
+    "notes": {
+        "welcome": "{{productName}} Notes へようこそ！",
+        "welcomeContent": "{{productName}} Notes へようこそ！使い方はこちら。\n\n{{productName}} Notes はデバイス間で同期できるメモ機能です。同期を有効にするには、Mozilla アカウントで {{productName}} にサインインする必要があります。\n{{productName}} Notes は {{productName}} に保存され、Firefox Sync を使用してデバイス間で同期されます。Firefox Sync は同期の内容を Mozilla アカウントのパスワードで暗号化するため、誰にもその内容を知られることはありません。",
+        "new": "新規メモ",
+        "reorder": "並べ替え",
+        "done": "完了",
+        "emptyTitle": "名称未設定",
+        "emptyContent": "内容なし",
+        "noNotesSelected": "ノートを選択、または新規ノートを作成",
+        "createNew": "新規ノートを作成",
+        "titlePlaceholder": "タイトル",
+        "loading": "ノートを読み込み中...",
+        "delete": "削除"
+    },
+    "editor": {
+        "bold": "太字",
+        "italic": "斜体",
+        "underline": "下線",
+        "strikethrough": "取り消し線",
+        "bulletList": "箇条書きリスト",
+        "numberedList": "番号付きリスト",
+        "alignLeft": "左揃え",
+        "alignCenter": "中央揃え",
+        "alignRight": "右揃え",
+        "quote": "引用",
+        "heading1": "見出し 1",
+        "heading2": "見出し 2",
+        "heading3": "見出し 3"
+    },
+    "error": {
+        "loadFailed": "ノートデータの読み込みに失敗しました",
+        "saveFailed": "ノートデータの保存に失敗しました",
+        "indexOutOfRange": "インデックス {{index}} は範囲外です"
+    }
+}

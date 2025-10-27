@@ -199,7 +199,6 @@
                 "title": "Display",
                 "disableFullscreenNotification": "Tắt thông báo toàn màn hình",
                 "deleteBrowserBorder": "Bo tròn các góc của trang",
-                "hideUnifiedExtensionsButton": "Ẩn nút tiện ích",
                 "disableQRCodeButton": "Ẩn nút QR"
             },
             "special": {
