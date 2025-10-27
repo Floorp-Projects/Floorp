@@ -108,13 +108,6 @@ function App() {
                         </span>
                       )
                       : null}
-                    {p.isDefault
-                      ? (
-                        <span className="badge badge-primary text-xs">
-                          {t("profileManager.default")}
-                        </span>
-                      )
-                      : null}
                   </h2>
                   <div className="card-actions flex flex-col justify-end gap-1">
                     <button
