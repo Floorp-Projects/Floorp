@@ -8,4 +8,5 @@ DIRS += [
     "_dist/noraneko/pages-newtab",
     "_dist/noraneko/pages-welcome",
     "_dist/noraneko/pages-notes",
+    "_dist/noraneko/pages-profile-manager",
 ]
