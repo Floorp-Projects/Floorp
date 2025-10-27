@@ -121,7 +121,7 @@ export function SidebarMenuButton({
   return (
     <Comp
       className={cn(
-        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-base-300/50 active:bg-base-300",
+        "flex w-full items-center gap-2 rounded-lg px-1 py-2 text-sm font-medium transition-colors",
         className,
       )}
       {...props}
@@ -140,7 +140,7 @@ export function SidebarMenuAction({
   return (
     <button
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-base-300/50 active:bg-base-300",
+        "flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-primary active:bg-primary-content",
         showOnHover && "opacity-0 group-hover:opacity-100",
         className,
       )}
@@ -179,7 +179,7 @@ export function SidebarRail({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "absolute right-0 top-0 bottom-0 w-2 bg-transparent group-hover:bg-base-300/50 transition-colors duration-300",
+        "absolute right-0 top-0 bottom-0 w-2 bg-transparent group-hover:bg-base-300 transition-colors duration-300",
         className,
       )}
     />
