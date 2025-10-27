@@ -35,6 +35,20 @@
       "source_path": "static/installers/stub-win64-installer/src/lib/i18n/locales",
       "source_file": "en-US.json",
       "f18n_path": "stub-win64-installer/"
+    },
+    {
+      "name": "profile-manager",
+      "type": "file",
+      "source_path": "browser-features/pages-profile-manager/src/lib/i18n/locales",
+      "source_file": "en-US.json",
+      "f18n_path": "profile-manager/"
+    },
+    {
+      "name": "notes",
+      "type": "file",
+      "source_path": "browser-features/pages-notes/src/lib/i18n/locales",
+      "source_file": "en-US.json",
+      "f18n_path": "notes/"
     }
   ]
 }
