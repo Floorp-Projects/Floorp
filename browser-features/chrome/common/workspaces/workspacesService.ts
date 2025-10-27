@@ -53,7 +53,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   isWorkspaceID(id: string): id is TWorkspaceID {
     return this.dataManagerCtx.isWorkspaceID(id);
   }
-  getRawWorkspace(id: TWorkspaceID): TWorkspace {
+  getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined {
     return this.dataManagerCtx.getRawWorkspace(id);
   }
   getSelectedWorkspaceID(): TWorkspaceID {
@@ -65,7 +65,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   // for override
   getCurrentWorkspaceUserContextId(): number {
     const id = this.getSelectedWorkspaceID();
-    return this.getRawWorkspace(id).userContextId ?? 0;
+    return this.getRawWorkspace(id)?.userContextId ?? 0;
   }
 
   deleteWorkspace(workspaceID: TWorkspaceID): void {
@@ -152,6 +152,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     if (result === null) return;
     const { name, icon, userContextId } = result;
     const workspace = this.getRawWorkspace(targetWorkspaceID);
+    if (!workspace) return;
     const newWorkspace: TWorkspace = {
       ...workspace,
       name: name as string,

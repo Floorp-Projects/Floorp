@@ -97,6 +97,7 @@ export class WorkspacesToolbarButton {
       lastDisplayedWorkspaceId = currentId;
 
       const workspace = ctx.getRawWorkspace(currentId);
+      if (!workspace) return;
       const icon = ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       const xulElement = aNode as unknown as XULElement;
 

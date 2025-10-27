@@ -50,13 +50,14 @@ export class WorkspacesTabContextMenu {
       <For each={order}>
         {(id) => {
           if (this.ctx.isWorkspaceID(id)) {
-            const workspace = () => this.ctx.getRawWorkspace(id);
+            const workspace = this.ctx.getRawWorkspace(id);
+            if (!workspace) return null;
             const icon = () =>
-              this.ctx.iconCtx.getWorkspaceIconUrl(workspace().icon);
+              this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
             return (
               <xul:menuitem
                 id="context_MoveTabToOtherWorkspace"
-                label={workspace().name}
+                label={workspace.name}
                 class="menuitem-iconic"
                 style={`list-style-image: url(${icon()})`}
                 onCommand={() =>

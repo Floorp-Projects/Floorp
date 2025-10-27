@@ -84,8 +84,8 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     return exists;
   }
 
-  public getRawWorkspace(id: TWorkspaceID): TWorkspace {
-    return workspacesDataStore.data.get(id)!;
+  public getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined {
+    return workspacesDataStore.data.get(id);
   }
 
   public getSelectedWorkspaceID(): TWorkspaceID {

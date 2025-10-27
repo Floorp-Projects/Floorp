@@ -158,6 +158,7 @@ export class WorkspaceManageModal {
     const workspace = this.ctx.getRawWorkspace(
       workspaceID ?? this.ctx.getSelectedWorkspaceID(),
     );
+    if (!workspace) return null;
     const formConfig = this.createFormConfig(workspace);
     return await new Promise((resolve) => {
       this.modalParent.showNoraModal(formConfig, {
