@@ -14,7 +14,7 @@ export interface WorkspacesDataManagerBase {
   setCurrentWorkspaceID(id: TWorkspaceID): void;
   setDefaultWorkspace(id: TWorkspaceID): void;
   isWorkspaceID(id: string): id is TWorkspaceID;
-  getRawWorkspace(id: TWorkspaceID): TWorkspace;
+  getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined;
   getSelectedWorkspaceID(): TWorkspaceID;
   getDefaultWorkspaceID(): TWorkspaceID;
 }
@@ -97,15 +97,75 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     if (this.isWorkspaceID(selected)) {
       return selected;
     }
-    throw Error("Not Valid Selected Workspace ID : " + selected);
+
+    // Selected ID is invalid: try to recover instead of throwing an exception
+    console.warn(
+      "WorkspacesDataManager: Not valid selected workspace ID, attempting recovery:",
+      selected,
+    );
+
+    // 1) Try default workspace ID if valid
+    const defaultID = workspacesDataStore.defaultID as TWorkspaceID;
+    if (this.isWorkspaceID(defaultID)) {
+      // Reset selected to a valid default and return it
+      setSelectedWorkspaceID(defaultID);
+      return defaultID;
+    }
+
+    // 2) Try to pick any existing workspace from the data map
+    const firstEntry = workspacesDataStore.data.keys().next();
+    if (!firstEntry.done) {
+      const anyID = firstEntry.value as TWorkspaceID;
+      console.info(
+        "WorkspacesDataManager: falling back to existing workspace ID:",
+        anyID,
+      );
+      // Make this the new default & selected
+      setWorkspacesDataStore("defaultID", anyID);
+      setSelectedWorkspaceID(anyID);
+      return anyID;
+    }
+
+    // 3) No existing workspace found — create a new one and use it
+    console.info(
+      "WorkspacesDataManager: no existing workspaces found, creating a new default workspace",
+    );
+    const newID = this.createWorkspace("Default Workspace");
+    this.setDefaultWorkspace(newID);
+    this.setCurrentWorkspaceID(newID);
+    return newID;
   }
 
   public getDefaultWorkspaceID(): TWorkspaceID {
-    if (this.isWorkspaceID(workspacesDataStore.defaultID)) {
-      return workspacesDataStore.defaultID;
+    const defaultID = workspacesDataStore.defaultID as TWorkspaceID;
+    if (this.isWorkspaceID(defaultID)) {
+      return defaultID;
     }
-    throw Error(
-      "Not Valid Default Workspace ID : " + workspacesDataStore.defaultID,
+
+    // Default ID is invalid — attempt recovery similar to selected handler
+    console.warn(
+      "WorkspacesDataManager: Not valid default workspace ID, attempting recovery:",
+      defaultID,
     );
+
+    // Try to pick any existing workspace
+    const firstEntry = workspacesDataStore.data.keys().next();
+    if (!firstEntry.done) {
+      const anyID = firstEntry.value as TWorkspaceID;
+      console.info(
+        "WorkspacesDataManager: using existing workspace ID as default:",
+        anyID,
+      );
+      setWorkspacesDataStore("defaultID", anyID);
+      return anyID;
+    }
+
+    // No existing workspace — create one
+    console.info(
+      "WorkspacesDataManager: creating a new default workspace because none exist",
+    );
+    const newID = this.createWorkspace("Default Workspace");
+    this.setDefaultWorkspace(newID);
+    return newID;
   }
 }
