@@ -70,6 +70,10 @@
       "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
     }
   },
+  "profile-manager-button": {
+    "label": "Profile Manager",
+    "tooltiptext": "Open Profile Manager"
+  },
   "statusbar": {
     "toggle": "Status Bar{{mark}}"
   },

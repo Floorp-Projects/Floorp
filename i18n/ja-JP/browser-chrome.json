@@ -70,6 +70,10 @@
       "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
     }
   },
+  "profile-manager-button": {
+    "label": "プロファイルマネージャー",
+    "tooltiptext": "プロファイルマネージャーを開く"
+  },
   "statusbar": {
     "toggle": "ステータスバー{{mark}}"
   },
