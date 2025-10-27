@@ -140,7 +140,7 @@
     background-image: none !important;
   }
   #customization-container {
-    background-color: transparent !important; /* Original: color-mix(in srgb, -moz-dialog 85%, white) */
+    background-color: color-mix(in srgb, -moz-dialog 85%, white) !important;
   }
   :root:not([lwtheme]) #customization-container {
     background-color: var(--toolbar-non-lwt-bgcolor) !important;
