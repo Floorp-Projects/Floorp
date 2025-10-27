@@ -250,6 +250,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
       ["pages-welcome", "browser-features/pages-welcome/_dist"],
       ["pages-notes", "browser-features/pages-notes/_dist"],
       ["pages-modal-child", "browser-features/pages-modal-child/_dist"],
+      ["pages-profile-manager", "browser-features/pages-profile-manager/_dist"],
     ];
 
     const dirPath = "_dist/noraneko";
