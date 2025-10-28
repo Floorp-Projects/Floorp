@@ -220,13 +220,19 @@ export class ExperimentsClient {
       return (exp.variants && exp.variants[0] && exp.variants[0].id) || null;
     }
     const variants = exp.variants || [];
-    const totalWeight =
-      variants.reduce((s: number, v: Variant) => s + (v.weight || 0), 0) ||
-      variants.length;
+    // Treat missing weights as equal shares among unspecified variants by
+    // using a default weight of 1. This avoids excluding variants that omit
+    // the `weight` field while preserving explicit weights when provided.
+    const totalWeight = variants.reduce(
+      (s: number, v: Variant) =>
+        s + (typeof v.weight === "number" ? v.weight : 1),
+      0,
+    );
+    if (!totalWeight) return variants.length ? variants[0].id : null;
     const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
     let r = pickHash % totalWeight;
     for (const v of variants) {
-      const w = v.weight || 0;
+      const w = typeof v.weight === "number" ? v.weight : 1;
       if (r < w) return v.id;
       r -= w;
     }
