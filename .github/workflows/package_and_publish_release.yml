@@ -57,4 +57,5 @@ jobs:
     uses: ./.github/workflows/publish_release.yml
     with:
       publish_ppa: true
+      linux_deb_run_id: ${{ needs.package-linux.outputs.run_id }}
     secrets: inherit

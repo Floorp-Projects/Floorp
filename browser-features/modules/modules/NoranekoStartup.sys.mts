@@ -282,9 +282,16 @@ async function setupBrowserOSComponents() {
   );
 }
 
+async function initializeExperiments() {
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+  );
+}
+
 (async () => {
   await registerCustomAboutPages();
   initializeVersionInfo();
+  await initializeExperiments();
   await setupNoranekoNewTab();
   await setupBrowserOSComponents();
 })().catch(console.error);
