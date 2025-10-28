@@ -283,9 +283,10 @@ async function setupBrowserOSComponents() {
 }
 
 async function initializeExperiments() {
-  ChromeUtils.importESModule(
+  const { Experiments } = await ChromeUtils.importESModule(
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
   );
+  await Experiments.init();
 }
 
 (async () => {

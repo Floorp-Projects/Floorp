@@ -60,7 +60,6 @@ export class ExperimentsClient {
   installId: string | null = null;
   constructor() {
     this.experimentsUrl = DEFAULT_EXPERIMENTS_URL;
-    this.init();
   }
 
   // Shared singleton instance. Use ExperimentsClient.getInstance() to access.
