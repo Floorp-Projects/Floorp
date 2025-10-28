@@ -58,6 +58,13 @@ export class ExperimentsClient {
   assignments: Record<string, Assignment> = {};
   configs: Record<string, unknown> = {};
   installId: string | null = null;
+  // IMPORTANT: do NOT call async initialization (e.g. `init()`) from the
+  // constructor. Calling an async method from a constructor creates a
+  // fire-and-forget promise which can lead to race conditions where the
+  // object is used before it's fully initialized. The shared instance
+  // returned by `getInstance()` is intentionally lightweight; consumers
+  // must call and await `init()` when they require the client to fetch
+  // manifests/configs. This also matches the note on `getInstance()` above.
   constructor() {
     this.experimentsUrl = DEFAULT_EXPERIMENTS_URL;
   }
@@ -292,9 +299,10 @@ export class ExperimentsClient {
         configUrl,
       );
       if (!url) throw new Error("Invalid configUrl");
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const config = await res.json();
+      // Use the timeout-aware helper so a slow/unresponsive config endpoint
+      // doesn't hang startup. fetchJsonWithTimeout already applies a
+      // no-store cache policy and a timeout.
+      const config = await this.fetchJsonWithTimeout(url);
       this.saveConfigToPrefs(experimentId, variantId, config as unknown);
       return config as unknown;
     } catch (e) {
