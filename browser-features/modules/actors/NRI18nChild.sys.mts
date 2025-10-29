@@ -11,6 +11,7 @@ export class NRI18nChild extends JSWindowActorChild {
 
       // Allow dev server and chrome/about privileged pages
       if (
+        window.location.port === "5179" ||
         window.location.port === "5183" ||
         window.location.port === "5186" ||
         window.location.port === "5188" ||

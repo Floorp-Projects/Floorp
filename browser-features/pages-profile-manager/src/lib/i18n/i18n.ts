@@ -18,6 +18,37 @@ for (const [path, content] of Object.entries(translations)) {
 
 export async function initI18nextInstance() {
   i18n.use(LanguageDetector).use(initReactI18next);
+  // Determine the initial language depending on environment.
+  // - In development use the window actor API (NRI18n) provided by actors/NRI18nChild.sys.mts
+  // - In production (real chrome environment) use I18n-Utils via ChromeUtils.importESModule
+  let initialLng = "en-US";
+  try {
+    if (import.meta.env.DEV) {
+      // development: actor exposes NRI18n on window
+      const g = globalThis as unknown as {
+        NRI18n?: { getPrimaryBrowserLocaleMapped?: () => Promise<string> };
+      };
+      const maybe = await g.NRI18n?.getPrimaryBrowserLocaleMapped?.();
+      if (maybe) initialLng = maybe;
+    } else {
+      try {
+        // production: use chrome module I18n-Utils
+        // Note: use .sys.mjs resource path to match other imports in repo
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - ChromeUtils is available in chrome privileged contexts
+        const { I18nUtils } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+        );
+        if (I18nUtils?.getPrimaryBrowserLocaleMapped) {
+          initialLng = I18nUtils.getPrimaryBrowserLocaleMapped();
+        }
+      } catch {
+        // keep fallback
+      }
+    }
+  } catch {
+    // keep default
+  }
 
   try {
     i18n.on("initialized", () => {
@@ -32,7 +63,7 @@ export async function initI18nextInstance() {
   }
 
   await i18n.init({
-    lng: "en-US",
+    lng: initialLng,
     debug: false,
     resources: modules,
     defaultNS: "translations",

@@ -296,7 +296,12 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+    matches: [
+      "*://localhost/*",
+      "chrome://noraneko-settings/*",
+      "chrome://noraneko-profile-manager/*",
+      "about:*",
+    ],
   },
 };
 
