@@ -93,7 +93,7 @@ const cached = Experiments.getCachedConfig("example_new_ui");
 ## 振る舞いのポイント
 
 - 割当は `installId` と `salt` を結合してハッシュし、百分率で評価します（FNV-1a 32ビット）。
-- `rollout` により割当対象の上限を決めます。対象外のユーザーは `control`（または最初の variant）に割り当てられます。
+- `rollout` により割当対象の上限を決めます。対象外のユーザーは `control` バリアントに割り当てられるか、`control` がなければ実験に参加しません。
 - `getConfig` はまず prefs のキャッシュを確認し、なければ `configUrl` をフェッチして prefs に保存します。
 - モジュール内の `DEFAULT_EXPERIMENTS_URL` を変更することでデプロイ先 manifest を指定します（ビルド時に置換する運用を推奨）。
 
