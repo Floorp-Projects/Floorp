@@ -295,10 +295,6 @@ export class ExperimentsClient {
         ? Math.max(0, Math.min(100, exp.rollout))
         : 100;
 
-    console.log(
-      `[Experiments] ${exp.id}: userPercent=${userPercent}, rollout=${rollout}, included=${userPercent < rollout}`,
-    );
-
     if (userPercent >= rollout) {
       const control = variants.find((v: Variant) => v.id === "control");
       // For users not included in the rollout, return "control" if it exists,

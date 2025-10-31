@@ -75,15 +75,15 @@ Floorp/
 
 #### 主要依存関係
 
-| パッケージ | バージョン | 用途 |
-|-----------|-----------|------|
-| solid-js | ^1.9.9 | リアクティブ UI フレームワーク |
-| vite | ^7.1.4 | ビルドツール |
-| tailwindcss | ^4.1.13 | CSS フレームワーク |
-| i18next | ^25.5.2 | 国際化 |
-| typescript | ^5.9.2 | 型システム |
-| fp-ts | ^2.16.11 | 関数型プログラミング |
-| puppeteer-core | - | ブラウザ自動化テスト |
+| パッケージ     | バージョン | 用途                           |
+| -------------- | ---------- | ------------------------------ |
+| solid-js       | ^1.9.9     | リアクティブ UI フレームワーク |
+| vite           | ^7.1.4     | ビルドツール                   |
+| tailwindcss    | ^4.1.13    | CSS フレームワーク             |
+| i18next        | ^25.5.2    | 国際化                         |
+| typescript     | ^5.9.2     | 型システム                     |
+| fp-ts          | ^2.16.11   | 関数型プログラミング           |
+| puppeteer-core | -          | ブラウザ自動化テスト           |
 
 ---
 
@@ -95,27 +95,27 @@ Floorp/
 
 #### 主要機能一覧
 
-| 機能 | ディレクトリ | 説明 |
-|-----|------------|------|
-| **Workspaces** | `workspaces/` | タブをワークスペースに整理する機能 |
-| **PWA サポート** | `pwa/` | Progressive Web App のインストールと管理 |
-| **Panel Sidebar** | `panel-sidebar/` | カスタマイズ可能なサイドパネルシステム |
-| **マウスジェスチャー** | `mouse-gesture/` | ジェスチャー認識システム |
-| **キーボードショートカット** | `keyboard-shortcut/` | カスタムキーボードショートカット |
-| **タブ拡張** | `tab/`, `tabbar/` | 複数行タブバー、タブサイズ指定など |
-| **Split View** | `splitView/` | 分割画面ブラウジング |
-| **デザインシステム** | `designs/` | UI カスタマイズフレームワーク |
-| **ステータスバー** | `statusbar/` | カスタムステータスバー |
-| **QR コードジェネレーター** | `qr-code-generator/` | QR コード生成機能 |
-| **プライベートコンテナ** | `private-container/` | プライベートコンテナ機能 |
-| **プロファイルマネージャー** | `profile-manager/` | マルチプロファイル管理 |
+| 機能                         | ディレクトリ         | 説明                                     |
+| ---------------------------- | -------------------- | ---------------------------------------- |
+| **Workspaces**               | `workspaces/`        | タブをワークスペースに整理する機能       |
+| **PWA サポート**             | `pwa/`               | Progressive Web App のインストールと管理 |
+| **Panel Sidebar**            | `panel-sidebar/`     | カスタマイズ可能なサイドパネルシステム   |
+| **マウスジェスチャー**       | `mouse-gesture/`     | ジェスチャー認識システム                 |
+| **キーボードショートカット** | `keyboard-shortcut/` | カスタムキーボードショートカット         |
+| **タブ拡張**                 | `tab/`, `tabbar/`    | 複数行タブバー、タブサイズ指定など       |
+| **Split View**               | `splitView/`         | 分割画面ブラウジング                     |
+| **デザインシステム**         | `designs/`           | UI カスタマイズフレームワーク            |
+| **ステータスバー**           | `statusbar/`         | カスタムステータスバー                   |
+| **QR コードジェネレーター**  | `qr-code-generator/` | QR コード生成機能                        |
+| **プライベートコンテナ**     | `private-container/` | プライベートコンテナ機能                 |
+| **プロファイルマネージャー** | `profile-manager/`   | マルチプロファイル管理                   |
 
 #### コンポーネントパターン
 
 ほとんどの機能は以下のパターンに従います：
 
 ```typescript
-@noraComponent(import.meta.hot)  // HMR デコレーター
+@noraComponent(import.meta.hot) // HMR デコレーター
 export default class FeatureName extends NoraComponentBase {
   init(): void {
     // 機能の初期化
@@ -124,6 +124,7 @@ export default class FeatureName extends NoraComponentBase {
 ```
 
 **特徴**:
+
 - Hot Module Replacement (HMR) 対応
 - SolidJS 統合によるリアクティブ UI
 - Service ベースアーキテクチャ（Service、Controller、Config パターン）
@@ -141,13 +142,13 @@ Firefox ESM モジュール（`.sys.mts` ファイル）です。
 
 #### 特化モジュール
 
-| モジュール | 説明 |
-|-----------|------|
+| モジュール       | 説明                     |
+| ---------------- | ------------------------ |
 | **experiments/** | A/B テストフレームワーク |
-| **i18n/** | 国際化ユーティリティ |
-| **os-apis/** | OS 統合 API |
-| **os-server/** | ローカル API サーバー |
-| **pwa/** | PWA バックエンドサービス |
+| **i18n/**        | 国際化ユーティリティ     |
+| **os-apis/**     | OS 統合 API              |
+| **os-server/**   | ローカル API サーバー    |
+| **pwa/**         | PWA バックエンドサービス |
 
 #### Actors (`browser-features/modules/actors/`)
 
@@ -165,14 +166,14 @@ Firefox ESM モジュール（`.sys.mts` ファイル）です。
 
 React ベースのモダン UI ページです。
 
-| ページ | ディレクトリ | 説明 |
-|--------|-------------|------|
-| **設定ページ** | `pages-settings/` | Floorp について、アカウント管理、デバッグツールなど |
-| **新しいタブ** | `pages-newtab/` | カスタム新規タブページ |
-| **ウェルカムページ** | `pages-welcome/` | 初回起動時のエクスペリエンス |
-| **ノート** | `pages-notes/` | 組み込みノート機能 |
-| **プロファイルマネージャー** | `pages-profile-manager/` | マルチプロファイル管理 UI |
-| **モーダル** | `pages-modal-child/` | モーダルダイアログシステム |
+| ページ                       | ディレクトリ             | 説明                                                |
+| ---------------------------- | ------------------------ | --------------------------------------------------- |
+| **設定ページ**               | `pages-settings/`        | Floorp について、アカウント管理、デバッグツールなど |
+| **新しいタブ**               | `pages-newtab/`          | カスタム新規タブページ                              |
+| **ウェルカムページ**         | `pages-welcome/`         | 初回起動時のエクスペリエンス                        |
+| **ノート**                   | `pages-notes/`           | 組み込みノート機能                                  |
+| **プロファイルマネージャー** | `pages-profile-manager/` | マルチプロファイル管理 UI                           |
+| **モーダル**                 | `pages-modal-child/`     | モーダルダイアログシステム                          |
 
 **技術**: React + Tailwind CSS
 
@@ -208,6 +209,7 @@ deno task feles-build build
 #### ビルドプロセス
 
 **1. 開発モード（`dev`）**:
+
 - GitHub Actions から Firefox バイナリをダウンロード（またはキャッシュ使用）
 - Firefox ソースにパッチを適用
 - シンボリックリンクを設定
@@ -220,27 +222,29 @@ deno task feles-build build
 - マニフェストを注入し、HMR 付きでブラウザを起動
 
 **2. 本番ビルド（`build --phase before-mach`）**:
+
 - リソースをシンボリックリンク
 - すべての機能を本番モードでビルド
 - 最適化されたバンドルを作成
 
 **3. Mozilla ビルド後（`build --phase after-mach`）**:
+
 - XHTML 修正を注入
 - ビルドされた Firefox にパッチを適用
 - インストーラーパッケージを作成
 
 ### ビルドツール（`tools/src/`）
 
-| モジュール | 説明 |
-|-----------|------|
-| `builder.ts` | 並列ビルド実行、バージョン管理 |
-| `injector.ts` | XHTML 注入、マニフェスト作成 |
-| `patcher.ts` | Firefox ソースへのパッチ適用 |
-| `symlinker.ts` | リソース用シンボリックリンク作成 |
-| `dev_server.ts` | 8 つの並行 Vite 開発サーバー管理 |
-| `browser_launcher.ts` | 適切なフラグで Firefox を起動 |
-| `update.ts` | バージョンとビルド ID 管理 |
-| `initializer.ts` | 初期セットアップタスク |
+| モジュール            | 説明                             |
+| --------------------- | -------------------------------- |
+| `builder.ts`          | 並列ビルド実行、バージョン管理   |
+| `injector.ts`         | XHTML 注入、マニフェスト作成     |
+| `patcher.ts`          | Firefox ソースへのパッチ適用     |
+| `symlinker.ts`        | リソース用シンボリックリンク作成 |
+| `dev_server.ts`       | 8 つの並行 Vite 開発サーバー管理 |
+| `browser_launcher.ts` | 適切なフラグで Firefox を起動    |
+| `update.ts`           | バージョンとビルド ID 管理       |
+| `initializer.ts`      | 初期セットアップタスク           |
 
 ### Bridge Layer（`bridge/`）
 
@@ -257,12 +261,14 @@ Floorp 機能と Firefox を接続：
 ### セットアップ
 
 **必要なもの**:
+
 - Deno 2.x
 - PowerShell 7（Windows）
 - Git
 - ~2.5GB（Firefox バイナリダウンロード用）
 
 **初期セットアップ**:
+
 ```bash
 deno install               # 依存関係をインストール
 deno task dev             # 開発を開始
@@ -312,6 +318,7 @@ deno task dev             # 開発を開始
 #### 1. Deno をプライマリランタイムに
 
 **理由**:
+
 - ビルトイン TypeScript を備えたモダンな JavaScript ランタイム
 - デフォルトでセキュア
 - より良い依存関係管理（JSR + npm）
@@ -320,6 +327,7 @@ deno task dev             # 開発を開始
 #### 2. ブラウザクロームに SolidJS
 
 **理由**:
+
 - UI ヘビーなブラウザクロームでは React より高性能
 - XUL のようなリアクティビティモデル
 - ブラウザ拡張機能のような機能により適している
@@ -327,6 +335,7 @@ deno task dev             # 開発を開始
 #### 3. 設定ページに React
 
 **理由**:
+
 - コントリビューターに馴染みのあるエコシステム
 - 豊富なコンポーネントライブラリ
 - フォームヘビーなインターフェースに適している
@@ -334,6 +343,7 @@ deno task dev             # 開発を開始
 #### 4. ビルドシステムに Vite
 
 **理由**:
+
 - 高速 HMR（Hot Module Replacement）
 - 複数の同時開発サーバー
 - Rollup によるモダンなバンドリング
@@ -341,6 +351,7 @@ deno task dev             # 開発を開始
 #### 5. アーティファクトモードビルディング
 
 **理由**:
+
 - プリビルドされた Firefox バイナリをダウンロード
 - Floorp 固有のコードのみをコンパイル
 - 開発サイクルが劇的に高速化
@@ -349,6 +360,7 @@ deno task dev             # 開発を開始
 #### 6. パッチベースの Firefox 修正
 
 **理由**:
+
 - Firefox コアへの変更を最小限に
 - 新しい Firefox バージョンへの更新が容易
 - 関心事の明確な分離
@@ -379,6 +391,7 @@ deno task dev             # 開発を開始
 ### テスト構造
 
 限定的だが存在する：
+
 - ユニットテスト: `browser-features/chrome/test/unit/`
 - 例: `onModuleLoaded.test.ts`
 - Deno のテストフレームワークを使用（`@jsr/std__assert`）
@@ -400,6 +413,7 @@ deno task dev             # 開発を開始
 #### 1. パッケージワークフロー（`package.yml`）
 
 メインのビルドパイプライン：
+
 - マルチプラットフォームビルド（Windows x64、Linux x64/aarch64、macOS Universal）
 - アーティファクトビルド（完全なコンパイルなし）
 - コード署名（Windows 用 SignPath、macOS 用 Apple 公証）
@@ -445,6 +459,7 @@ deno task dev             # 開発を開始
 ### サポート言語
 
 25+ の言語をサポート：
+
 - 日本語（ja-JP）
 - 関西弁（ja-JP-x-kansai）- 特別なロケール
 - 英語（en-US）
@@ -468,6 +483,7 @@ deno task dev             # 開発を開始
 ### Gecko 設定（`static/gecko/`）
 
 Firefox 固有の設定：
+
 - `config/` - バージョンファイル、moz.configure
 - `pref/` - プリファレンスオーバーライド
   - `override.ini` - プリファレンス変更
@@ -477,6 +493,7 @@ Firefox 固有の設定：
 ### ユーザーカスタマイズ
 
 ブラウザはデフォルトのカスタマイズファイルを作成します：
+
 - `chrome/userChrome.css` - UI カスタマイズ
 - `chrome/userContent.css` - Web コンテンツスタイリング
 - 初回起動時に役立つテンプレートと共に自動作成
@@ -484,6 +501,7 @@ Firefox 固有の設定：
 ### デザインシステム
 
 ユーザーはカスタマイズ可能：
+
 - タブバースタイル（複数行、垂直など）
 - ブラウザテーマ（Fluerial、Lepton ベース）
 - ツールバーレイアウト（flex-order カスタマイズ）
@@ -495,6 +513,7 @@ Firefox 固有の設定：
 ## カスタム About ページ
 
 カスタム `about:` URL の登録：
+
 - `about:hub` - 設定ページ
 - `about:welcome` - ウェルカムページ
 - `about:newtab`、`about:home` - カスタム新しいタブ（オプション）
@@ -542,6 +561,7 @@ Firefox 固有の設定：
 - **アクティブな開発**（Experiments フレームワーク、ワークスペースシステム）
 
 コードベースは明確な分離で適切に整理されています：
+
 - Firefox ベース（パッチのみ）
 - ブラウザクローム機能（SolidJS）
 - 設定ページ（React）
@@ -562,8 +582,8 @@ Firefox 固有の設定：
 
 詳細については、以下のドキュメントを参照してください：
 
-- [開発ガイド](./development-guide.md) - 開発の詳細な手順
-- [アーキテクチャガイド](./architecture-guide.md) - 技術的な深掘り
+- [開発ガイド](./development-notes.md) - 開発の詳細な手順
+- [アーキテクチャガイド](./architecture-deep-dive.md) - 技術的な深掘り
 - [Experiments フレームワーク](../experiment/) - A/B テストシステム
 
 ---
