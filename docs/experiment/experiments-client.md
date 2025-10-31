@@ -10,7 +10,7 @@
 
 ## 主要な pref キー
 
-- `floorp.installId` — 自動生成される installId（profile 単位）
+- `floorp.experiments.installId` — 自動生成される installId（profile 単位）
 - `floorp.experiments.assignments.v1` — 割当情報を JSON 文字列で保存（{ [experimentId]: { installId, variantId, assignedAt } }）
 - `floorp.experiments.config.<experimentId>:<variantId>` — variant の JSON キャッシュ（{ fetchedAt, config }）
 
