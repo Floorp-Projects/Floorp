@@ -84,7 +84,7 @@ export class ExperimentsClient {
     return ExperimentsClient.instance;
   }
 
-  private nowUtc(): Date {
+  private now(): Date {
     return new Date();
   }
 
@@ -201,7 +201,7 @@ export class ExperimentsClient {
   }
 
   private isExperimentActive(exp: Experiment): boolean {
-    const now = this.nowUtc();
+    const now = this.now();
     const start = this.parseDateFlexible(exp.start);
     const end = this.parseDateFlexible(exp.end);
     if (start && now < start) return false;
@@ -223,8 +223,11 @@ export class ExperimentsClient {
       const control = (exp.variants || []).find(
         (v: Variant) => v.id === "control",
       );
-      if (control) return control.id;
-      return (exp.variants && exp.variants[0] && exp.variants[0].id) || null;
+      // For users not included in the rollout, return "control" if it exists,
+      // otherwise return null to indicate they should not participate in the
+      // experiment at all. This prevents accidentally enrolling excluded users
+      // into an experimental variant if "control" is not defined.
+      return control ? control.id : null;
     }
     const variants = exp.variants || [];
     // Treat missing weights as equal shares among unspecified variants by
@@ -340,10 +343,20 @@ export class ExperimentsClient {
       );
       if (data && typeof data === "object" && !Array.isArray(data)) {
         const obj = data as { experiments?: unknown };
-        if (Array.isArray(obj.experiments))
-          this.experiments = obj.experiments as Experiment[];
-        else this.experiments = [];
-      } else this.experiments = [];
+        if (Array.isArray(obj.experiments)) {
+          // Filter to ensure each item is a valid Experiment object with at least an id
+          this.experiments = (obj.experiments as unknown[]).filter(
+            (exp): exp is Experiment =>
+              typeof exp === "object" &&
+              exp !== null &&
+              typeof (exp as Record<string, unknown>).id === "string",
+          );
+        } else {
+          this.experiments = [];
+        }
+      } else {
+        this.experiments = [];
+      }
     } catch (e) {
       console.error(
         "Failed to fetch experiments.json, using cached assignments if present: " +
@@ -352,7 +365,7 @@ export class ExperimentsClient {
       return this;
     }
 
-    const now = this.nowUtc();
+    const now = this.now();
     let changed = false;
     for (const exp of this.experiments) {
       if (!this.isExperimentActive(exp)) {
@@ -384,12 +397,18 @@ export class ExperimentsClient {
       const variant = (exp.variants || []).find(
         (v: Variant) => v.id === a.variantId,
       );
-      if (variant && variant.configUrl)
-        this.fetchAndCacheConfig(exp.id, variant.id, variant.configUrl).then(
-          (cfg) => {
+      if (variant && variant.configUrl) {
+        this.fetchAndCacheConfig(exp.id, variant.id, variant.configUrl)
+          .then((cfg) => {
             if (cfg) this.configs[exp.id] = cfg;
-          },
-        );
+          })
+          .catch((e) => {
+            // This is defensive, as fetchAndCacheConfig handles its own errors.
+            console.error(
+              `Unexpected error pre-fetching config for ${exp.id}: ${String(e)}`,
+            );
+          });
+      }
     }
     return this;
   }
@@ -473,8 +492,16 @@ export class ExperimentsClient {
   clearCache(): void {
     try {
       this.clearPref(ASSIGNMENTS_PREF);
-    } catch {
-      /* ignore */
+      // Clear all cached configuration preferences
+      const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
+      for (const prefName of configPrefs) {
+        this.clearPref(prefName);
+      }
+      // Also clear in-memory state
+      this.assignments = {};
+      this.configs = {};
+    } catch (e) {
+      console.error(`Failed to clear experiments cache: ${String(e)}`);
     }
   }
 }
