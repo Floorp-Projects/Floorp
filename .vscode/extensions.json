@@ -6,6 +6,9 @@
     "usernamehw.errorlens",
     "christian-kohler.path-intellisense",
     "oxc.oxc-vscode",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "github.copilot",
+    "github.copilot-chat",
+    "continue.continue"
   ]
 }

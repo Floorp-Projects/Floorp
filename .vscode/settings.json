@@ -20,5 +20,15 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "yaml.schemas": {
     "https://www.artillery.io/schema.json": []
-  }
+  },
+  // AI アシスタント設定
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": false,
+    "markdown": true
+  },
+  // Continue (AI コーディングアシスタント) 設定
+  "continue.telemetryEnabled": false,
+  "continue.enableTabAutocomplete": true
 }

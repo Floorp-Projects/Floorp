@@ -1,0 +1,242 @@
+# Floorp プロジェクトルール
+
+このプロジェクトは Mozilla Firefox をベースにした Web ブラウザ "Floorp" です。
+
+## 必読ドキュメント
+
+コーディング前に以下のドキュメントを参照してください：
+
+- `docs/llm/README.md` - LLM 向けドキュメントの索引
+- `docs/llm/project-overview.md` - プロジェクト全体の概要
+- `docs/llm/development-notes.md` - 開発ガイドとベストプラクティス
+- `docs/llm/architecture-deep-dive.md` - アーキテクチャ詳細
+- `.claude/context.md` - クイックリファレンス
+
+## 技術スタック
+
+- **ランタイム**: Deno 2.x (メイン), Node.js 22 (一部)
+- **UI**: SolidJS (ブラウザクローム), React (設定ページ)
+- **ビルド**: Vite, feles-build
+- **言語**: TypeScript
+- **CSS**: Tailwind CSS
+
+## コーディング規約
+
+### 型定義
+
+**重要**: 型定義は可能な限り別ファイルに分離してください。
+
+```typescript
+// Good: 型定義を types.ts に分離
+// types.ts
+export interface Config {
+  enabled: boolean;
+  timeout: number;
+}
+
+// index.ts
+import type { Config } from "./types.ts";
+
+// Bad: 実装と型を混在させる
+export interface Config { /* ... */ }
+export class Feature { /* ... */ }
+```
+
+**例外**: `.sys.mts` ファイルでは Firefox API との統合のため、型定義を同じファイルに書いても構いません。
+
+### TypeScript
+
+- `any` 型は避ける
+- 明確な型定義を使用
+- 型推論を活用
+- null/undefined のチェックを忘れずに
+
+```typescript
+// Good
+interface User {
+  id: number;
+  name: string;
+}
+
+function getUser(id: number): User | null {
+  // ...
+}
+
+// Bad
+function getUser(id: any): any {
+  // ...
+}
+```
+
+### SolidJS (ブラウザクローム機能)
+
+- リアクティブな状態管理には `createSignal` を使用
+- 直接変数を変更しない
+- HMR サポートのために `@noraComponent(import.meta.hot)` デコレーターを使用
+
+```typescript
+// Good
+import { createSignal } from "solid-js";
+const [count, setCount] = createSignal(0);
+setCount(c => c + 1);
+
+// Bad
+let count = 0;
+count++; // 動作しない
+```
+
+### React (設定ページ)
+
+- 関数コンポーネントを使用
+- Hooks を適切に使用
+- Tailwind CSS でスタイリング
+
+```typescript
+// Good
+export default function SettingsPage() {
+  const [value, setValue] = useState("");
+  return <div className="p-4">...</div>;
+}
+```
+
+### ファイル配置
+
+- **ブラウザ UI 機能**: `browser-features/chrome/common/{feature-name}/`
+- **Firefox API モジュール**: `browser-features/modules/modules/{module-name}.sys.mts`
+- **設定ページ**: `browser-features/pages-settings/src/pages/`
+- **型定義**: 各機能の `types.ts` ファイル（`.sys.mts` を除く）
+
+### エラーハンドリング
+
+常に適切なエラーハンドリングを実装してください。
+
+```typescript
+// Good
+try {
+  const data = await fetchData(url);
+  return data;
+} catch (error) {
+  console.error("[FeatureName] Failed to fetch:", error);
+  return null; // フォールバック
+}
+
+// Bad
+const data = await fetchData(url); // エラーが伝播
+```
+
+### コメント
+
+- 複雑なロジックには日本語または英語でコメントを追加
+- 関数の目的は JSDoc で説明
+- TODO コメントには担当者を明記
+
+```typescript
+/**
+ * ユーザー設定を取得します
+ * @param userId ユーザー ID
+ * @returns ユーザー設定オブジェクト、存在しない場合は null
+ */
+function getUserConfig(userId: string): UserConfig | null {
+  // TODO(@username): キャッシュ機構を実装
+  return null;
+}
+```
+
+## 新機能追加のチェックリスト
+
+1. **適切な場所に配置**
+   - ブラウザ UI → `browser-features/chrome/common/`
+   - システムモジュール → `browser-features/modules/modules/`
+   - 設定ページ → `browser-features/pages-settings/`
+
+2. **型定義を別ファイルに**
+   - `types.ts` を作成（`.sys.mts` 以外）
+   - インターフェースと型を定義
+
+3. **HMR サポートを追加**（ブラウザクローム機能のみ）
+   ```typescript
+   @noraComponent(import.meta.hot)
+   export default class MyFeature extends NoraComponentBase {
+     init(): void { /* ... */ }
+   }
+   ```
+
+4. **機能を登録**
+   - `browser-features/chrome/common/mod.ts` に追加
+
+5. **翻訳を追加**
+   - 少なくとも `i18n/en-US/` と `i18n/ja-JP/` に追加
+
+6. **必要に応じて Actor を追加**（マルチプロセス通信が必要な場合）
+   - Parent: `browser-features/modules/actors/{Name}Parent.sys.mts`
+   - Child: `browser-features/modules/actors/{Name}Child.sys.mts`
+   - 登録: `browser-features/modules/modules/BrowserGlue.sys.mts`
+
+## 開発コマンド
+
+```bash
+# 開発モード（HMR 付き）
+deno task feles-build dev
+
+# 本番ビルド
+deno task feles-build build
+
+# ステージングビルド
+deno task feles-build stage
+
+# 依存関係のインストール
+deno install
+```
+
+## モジュールパスエイリアス
+
+```typescript
+import { foo } from "#i18n/utils";           // i18n/
+import { bar } from "#chrome/common/tab";    // chrome/
+import { baz } from "#libs/shared";          // libs/
+import { qux } from "#modules/experiments";  // browser-features/modules/
+```
+
+## よくある問題
+
+### HMR が動作しない
+- `@noraComponent(import.meta.hot)` デコレーターが付いているか確認
+- `NoraComponentBase` を継承しているか確認
+
+### Firefox API にアクセスできない
+- `.sys.mts` ファイルから ChromeUtils.importESModule() を使用
+
+### 型エラー
+- 型定義を別ファイル（`types.ts`）に分離
+- `any` 型を使用していないか確認
+
+## パフォーマンス
+
+- `init()` メソッドで重い処理を避ける
+- 遅延初期化を活用
+- イベントリスナーを適切にクリーンアップ
+- メモリリークに注意
+
+## テスト
+
+- 新機能には可能な限りテストを追加
+- テストは `browser-features/chrome/test/unit/` に配置
+- Deno のテストフレームワークを使用
+
+## Git コミット
+
+- 意味のあるコミットメッセージ
+- 1 コミット = 1 つの論理的な変更
+- コミット前に `deno fmt` で整形
+
+## 参考リンク
+
+- プロジェクトドキュメント: `docs/llm/`
+- Deno: https://docs.deno.com/
+- SolidJS: https://www.solidjs.com/
+- React: https://react.dev/
+- Firefox Source: https://firefox-source-docs.mozilla.org/
+
+---
+
+これらのルールに従って、一貫性のある高品質なコードを書いてください。
