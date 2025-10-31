@@ -83,6 +83,7 @@ export default function Page() {
     try {
       await rpc.setStringPref(EXPERIMENTS_POLICY_PREF, value);
       setParticipationPolicy(value);
+      await rpc.reinitializeExperiments();
       await loadExperiments();
     } catch (error) {
       console.error("Failed to save experiments participation policy:", error);

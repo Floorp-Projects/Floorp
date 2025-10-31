@@ -20,6 +20,8 @@ const MANIFEST_URL_PREF = "floorp.experiments.manifestUrl";
 const CONFIG_CACHE_PREFIX = "floorp.experiments.config."; // + experimentId + ":" + variantId
 // User preference for experiment participation policy: "default", "always", or "never"
 const PARTICIPATION_POLICY_PREF = "floorp.experiments.participationPolicy";
+// Stored value of the last participation policy used for assignments
+const LAST_POLICY_PREF = "floorp.experiments.lastPolicy";
 // List of experiment IDs that the user has explicitly disabled
 const DISABLED_EXPERIMENTS_PREF = "floorp.experiments.disabled";
 
@@ -267,24 +269,33 @@ export class ExperimentsClient {
     // Handle "always" policy: always enroll if possible
     if (policy === "always") {
       // Skip rollout check and go straight to variant selection
-      const totalWeight = variants.reduce(
+      // Exclude "control" variant when policy is "always" to ensure user gets experimental features
+      const experimentalVariants = variants.filter((v: Variant) => v.id !== "control");
+
+      // If no experimental variants available, fall back to control
+      if (experimentalVariants.length === 0) {
+        const control = variants.find((v) => v.id === "control");
+        return control ? control.id : null;
+      }
+
+      const totalWeight = experimentalVariants.reduce(
         (s: number, v: Variant) =>
           s + (typeof v.weight === "number" ? Math.max(0, v.weight) : 1),
         0,
       );
       if (!totalWeight) {
-        const control = variants.find((v) => v.id === "control");
-        return control ? control.id : null;
+        // If all weights are 0, return first experimental variant
+        return experimentalVariants[0].id;
       }
       const salt = exp.salt || exp.id || "";
       const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
       let r = pickHash % totalWeight;
-      for (const v of variants) {
+      for (const v of experimentalVariants) {
         const w = typeof v.weight === "number" ? Math.max(0, v.weight) : 1;
         if (r < w) return v.id;
         r -= w;
       }
-      return variants.length ? variants[0].id : null;
+      return experimentalVariants[0].id;
     }
 
     // Default policy: follow rollout percentage
@@ -460,6 +471,16 @@ export class ExperimentsClient {
     let changed = false;
     let disabledChanged = false;
 
+    // Check if participation policy has changed
+    const currentPolicy = this.getPrefString(PARTICIPATION_POLICY_PREF, "default");
+    const lastPolicy = this.getPrefString(LAST_POLICY_PREF, null);
+    const policyChanged = lastPolicy !== null && currentPolicy !== lastPolicy;
+
+    // If policy changed, save the new policy
+    if (policyChanged || lastPolicy === null) {
+      this.setPrefString(LAST_POLICY_PREF, currentPolicy as string);
+    }
+
     // Clean up disabled experiments list: remove experiments that are no longer active
     for (const disabledId of Array.from(this.disabledExperiments)) {
       const exp = this.experiments.find((e: Experiment) => e.id === disabledId);
@@ -488,7 +509,14 @@ export class ExperimentsClient {
         continue;
       }
       const prev = this.assignments[exp.id];
-      if (prev && prev.installId === this.installId) continue;
+      // Reassign if:
+      // 1. No previous assignment, OR
+      // 2. InstallId changed, OR
+      // 3. Participation policy changed (need to recalculate all variants)
+      const shouldReassign = !prev || prev.installId !== this.installId || policyChanged;
+
+      if (!shouldReassign) continue;
+
       const variantId = this.chooseVariantForExperiment(
         exp,
         this.installId as string,
@@ -608,6 +636,8 @@ export class ExperimentsClient {
       if (!this.clearPref(ASSIGNMENTS_PREF)) errors.push(ASSIGNMENTS_PREF);
       if (!this.clearPref(DISABLED_EXPERIMENTS_PREF))
         errors.push(DISABLED_EXPERIMENTS_PREF);
+      if (!this.clearPref(LAST_POLICY_PREF))
+        errors.push(LAST_POLICY_PREF);
       // Clear all cached configuration preferences
       const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
       for (const prefName of configPrefs) {

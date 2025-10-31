@@ -93,6 +93,12 @@ export class NRSettingsChild extends JSWindowActorChild {
         }> => {
           return this.sendQuery("clearExperimentCache", {});
         },
+        reinitializeExperiments: (): Promise<{
+          success: boolean;
+          error?: string;
+        }> => {
+          return this.sendQuery("reinitializeExperiments", {});
+        },
       },
       {
         post: (data) => callback(data),

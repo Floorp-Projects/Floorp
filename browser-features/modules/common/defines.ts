@@ -36,4 +36,5 @@ export interface NRSettingsParentFunctions {
     experimentId: string,
   ): Promise<{ success: boolean; error?: string }>;
   clearExperimentCache(): Promise<{ success: boolean; error?: string }>;
+  reinitializeExperiments(): Promise<{ success: boolean; error?: string }>;
 }

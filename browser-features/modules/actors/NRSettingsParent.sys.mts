@@ -3,7 +3,7 @@ export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
     super();
   }
-  receiveMessage(message: { name: string; data?: unknown }): unknown {
+  async receiveMessage(message: { name: string; data?: unknown }): Promise<unknown> {
     const { Experiments } = ChromeUtils.importESModule(
       "resource://noraneko/modules/experiments/Experiments.sys.mjs",
     );
@@ -85,15 +85,20 @@ export class NRSettingsParent extends JSWindowActorParent {
         return Experiments.enableExperiment(experimentId);
       }
       case "clearExperimentCache": {
-        const res = Experiments.clearCache();
-        if (res && res.success) {
+        try {
+          Experiments.clearCache();
           return { success: true };
+        } catch (error) {
+          return { success: false, error: String(error) };
         }
-        const errorMsg =
-          res && res.errors
-            ? res.errors.join(", ")
-            : "Failed to clear experiments cache";
-        return { success: false, error: String(errorMsg) };
+      }
+      case "reinitializeExperiments": {
+        try {
+          await Experiments.init();
+          return { success: true };
+        } catch (error) {
+          return { success: false, error: String(error) };
+        }
       }
     }
   }
