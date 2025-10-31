@@ -18,6 +18,10 @@ const INSTALLID_PREF = "floorp.experiments.installId";
 // Optional pref to override the experiments manifest URL. Useful for local testing.
 const MANIFEST_URL_PREF = "floorp.experiments.manifestUrl";
 const CONFIG_CACHE_PREFIX = "floorp.experiments.config."; // + experimentId + ":" + variantId
+// User preference for experiment participation policy: "default", "always", or "never"
+const PARTICIPATION_POLICY_PREF = "floorp.experiments.participationPolicy";
+// List of experiment IDs that the user has explicitly disabled
+const DISABLED_EXPERIMENTS_PREF = "floorp.experiments.disabled";
 
 // IMPORTANT: The experiments manifest URL is defined inside this module.
 // Edit this constant when you want to change the source for experiments.
@@ -38,6 +42,8 @@ type Variant = {
 };
 type Experiment = {
   id: string;
+  name?: string;
+  description?: string;
   salt?: string;
   rollout?: number;
   start?: string;
@@ -58,6 +64,7 @@ export class ExperimentsClient {
   assignments: Record<string, Assignment> = {};
   configs: Record<string, unknown> = {};
   installId: string | null = null;
+  disabledExperiments: Set<string> = new Set();
   // IMPORTANT: do NOT call async initialization (e.g. `init()`) from the
   // constructor. Calling an async method from a constructor creates a
   // fire-and-forget promise which can lead to race conditions where the
@@ -104,8 +111,8 @@ export class ExperimentsClient {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) {
       h ^= str.charCodeAt(i);
-      h = (h >>> 0) * 0x01000193;
-      h = h >>> 0;
+      // Use Math.imul for safer 32-bit multiplication with guaranteed wrap-around
+      h = Math.imul(h, 0x01000193);
     }
     return h >>> 0;
   }
@@ -117,9 +124,18 @@ export class ExperimentsClient {
 
   private getPrefString(key: string, fallback?: string | null): string | null {
     try {
+      // Check if pref exists first to avoid unnecessary errors
+      if (!Services.prefs.prefHasUserValue(key) &&
+          Services.prefs.getPrefType(key) === Services.prefs.PREF_INVALID) {
+        return fallback ?? null;
+      }
       const val = Services.prefs.getStringPref(key);
       return typeof val === "string" ? val : (fallback ?? null);
-    } catch {
+    } catch (e) {
+      // Only log error if it's not a simple "pref doesn't exist" error
+      if (!(e instanceof Error && e.message.includes("NS_ERROR_UNEXPECTED"))) {
+        console.error(`Failed to get experiment pref "${key}": ${String(e)}`);
+      }
       return fallback ?? null;
     }
   }
@@ -128,7 +144,8 @@ export class ExperimentsClient {
     try {
       Services.prefs.setStringPref(key, value);
       return true;
-    } catch {
+    } catch (e) {
+      console.error(`Failed to set experiment pref "${key}": ${String(e)}`);
       return false;
     }
   }
@@ -138,7 +155,8 @@ export class ExperimentsClient {
       if (Services.prefs.prefHasUserValue(key))
         Services.prefs.clearUserPref(key);
       return true;
-    } catch {
+    } catch (e) {
+      console.error(`Failed to clear experiment pref "${key}": ${String(e)}`);
       return false;
     }
   }
@@ -159,6 +177,27 @@ export class ExperimentsClient {
       this.setPrefString(ASSIGNMENTS_PREF, JSON.stringify(this.assignments));
     } catch (e) {
       console.error("Failed to save experiments assignments: " + String(e));
+    }
+  }
+
+  private loadDisabledExperiments(): Set<string> {
+    try {
+      const raw = this.getPrefString(DISABLED_EXPERIMENTS_PREF, null);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw) as string[];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      console.error("Failed to parse disabled experiments: " + String(e));
+      return new Set();
+    }
+  }
+
+  private saveDisabledExperiments(): void {
+    try {
+      const arr = Array.from(this.disabledExperiments);
+      this.setPrefString(DISABLED_EXPERIMENTS_PREF, JSON.stringify(arr));
+    } catch (e) {
+      console.error("Failed to save disabled experiments: " + String(e));
     }
   }
 
@@ -213,14 +252,51 @@ export class ExperimentsClient {
     exp: Experiment,
     installId: string,
   ): string | null {
+    // Check user's participation policy preference
+    const policy = this.getPrefString(PARTICIPATION_POLICY_PREF, "default");
+    const variants = exp.variants || [];
+
+    // Handle "never" policy: user opts out of all experiments
+    if (policy === "never") {
+      const control = variants.find((v: Variant) => v.id === "control");
+      return control ? control.id : null;
+    }
+
+    // Handle "always" policy: always enroll if possible
+    if (policy === "always") {
+      // Skip rollout check and go straight to variant selection
+      const totalWeight = variants.reduce(
+        (s: number, v: Variant) =>
+          s + (typeof v.weight === "number" ? Math.max(0, v.weight) : 1),
+        0,
+      );
+      if (!totalWeight) {
+        const control = variants.find((v) => v.id === "control");
+        return control ? control.id : null;
+      }
+      const salt = exp.salt || exp.id || "";
+      const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
+      let r = pickHash % totalWeight;
+      for (const v of variants) {
+        const w = typeof v.weight === "number" ? Math.max(0, v.weight) : 1;
+        if (r < w) return v.id;
+        r -= w;
+      }
+      return variants.length ? variants[0].id : null;
+    }
+
+    // Default policy: follow rollout percentage
     const salt = exp.salt || exp.id || "";
     const userPercent = this.percentFromHash(installId + "::" + salt);
     const rollout =
       typeof exp.rollout === "number"
         ? Math.max(0, Math.min(100, exp.rollout))
         : 100;
+
+    console.log(`[Experiments] ${exp.id}: userPercent=${userPercent}, rollout=${rollout}, included=${userPercent < rollout}`);
+
     if (userPercent >= rollout) {
-      const control = (exp.variants || []).find(
+      const control = variants.find(
         (v: Variant) => v.id === "control",
       );
       // For users not included in the rollout, return "control" if it exists,
@@ -229,7 +305,6 @@ export class ExperimentsClient {
       // into an experimental variant if "control" is not defined.
       return control ? control.id : null;
     }
-    const variants = exp.variants || [];
     // Treat missing weights as equal shares among unspecified variants by
     // using a default weight of 1. This avoids excluding variants that omit
     // the `weight` field while preserving explicit weights when provided.
@@ -239,15 +314,27 @@ export class ExperimentsClient {
         s + (typeof v.weight === "number" ? Math.max(0, v.weight) : 1),
       0,
     );
-    if (!totalWeight) return variants.length ? variants[0].id : null;
+    // If all weights are 0, treat it like users outside the rollout:
+    // assign to "control" if it exists, otherwise return null.
+    if (!totalWeight) {
+      const control = variants.find((v) => v.id === "control");
+      return control ? control.id : null;
+    }
     const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
     let r = pickHash % totalWeight;
+    console.log(`[Experiments] ${exp.id}: totalWeight=${totalWeight}, pickHash=${pickHash}, r=${r}`);
     for (const v of variants) {
       const w = typeof v.weight === "number" ? Math.max(0, v.weight) : 1;
-      if (r < w) return v.id;
+      console.log(`[Experiments] ${exp.id}: checking variant ${v.id}, weight=${w}, r=${r}`);
+      if (r < w) {
+        console.log(`[Experiments] ${exp.id}: selected variant ${v.id}`);
+        return v.id;
+      }
       r -= w;
     }
-    return variants.length ? variants[0].id : null;
+    const fallback = variants.length ? variants[0].id : null;
+    console.log(`[Experiments] ${exp.id}: fallback to ${fallback}`);
+    return fallback;
   }
 
   private resolveConfigUrl(
@@ -335,6 +422,7 @@ export class ExperimentsClient {
       }
     }
     this.assignments = this.loadAssignmentsFromPrefs();
+    this.disabledExperiments = this.loadDisabledExperiments();
 
     const timeoutMs = options.timeoutMs || 5000;
     try {
@@ -368,7 +456,28 @@ export class ExperimentsClient {
 
     const now = this.now();
     let changed = false;
+    let disabledChanged = false;
+
+    // Clean up disabled experiments list: remove experiments that are no longer active
+    for (const disabledId of Array.from(this.disabledExperiments)) {
+      const exp = this.experiments.find((e: Experiment) => e.id === disabledId);
+      // If experiment doesn't exist in manifest or is no longer active, remove from disabled list
+      if (!exp || !this.isExperimentActive(exp)) {
+        this.disabledExperiments.delete(disabledId);
+        disabledChanged = true;
+      }
+    }
+
+    if (disabledChanged) {
+      this.saveDisabledExperiments();
+    }
+
     for (const exp of this.experiments) {
+      // Skip experiments that user has explicitly disabled
+      if (this.disabledExperiments.has(exp.id)) {
+        continue;
+      }
+
       if (!this.isExperimentActive(exp)) {
         if (this.assignments[exp.id]) {
           delete this.assignments[exp.id];
@@ -493,6 +602,7 @@ export class ExperimentsClient {
   clearCache(): void {
     try {
       this.clearPref(ASSIGNMENTS_PREF);
+      this.clearPref(DISABLED_EXPERIMENTS_PREF);
       // Clear all cached configuration preferences
       const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
       for (const prefName of configPrefs) {
@@ -501,8 +611,99 @@ export class ExperimentsClient {
       // Also clear in-memory state
       this.assignments = {};
       this.configs = {};
+      this.disabledExperiments.clear();
     } catch (e) {
       console.error(`Failed to clear experiments cache: ${String(e)}`);
+    }
+  }
+
+  /**
+   * Get all active experiments (excluding control variants)
+   * Returns array of experiments the user is actively participating in
+   * Includes disabled experiments with a disabled flag
+   */
+  getActiveExperiments(): Array<{
+    id: string;
+    name: string | undefined;
+    description: string | undefined;
+    variantId: string;
+    variantName: string;
+    assignedAt: string | null;
+    experimentData: Experiment;
+    disabled: boolean;
+  }> {
+    const activeExperiments = [];
+
+    for (const [experimentId, assignment] of Object.entries(this.assignments)) {
+      // Skip if no variant assigned or if the variant is 'control'
+      if (!assignment.variantId || assignment.variantId === "control") {
+        continue;
+      }
+
+      const experiment = this.getExperimentById(experimentId);
+      if (!experiment) {
+        continue;
+      }
+
+      const variant = this.getVariantById(experimentId, assignment.variantId);
+      const isDisabled = this.disabledExperiments.has(experimentId);
+
+      activeExperiments.push({
+        id: experimentId,
+        name: experiment.name,
+        description: experiment.description,
+        variantId: assignment.variantId,
+        variantName: variant?.id || assignment.variantId,
+        assignedAt: assignment.assignedAt || null,
+        experimentData: experiment,
+        disabled: isDisabled,
+      });
+    }
+
+    return activeExperiments;
+  }
+
+  /**
+   * Disable an experiment by adding it to the disabled list
+   * This prevents the experiment from being reassigned in future init() calls
+   * The assignment is kept so it can be displayed as disabled in the UI
+   * @param experimentId The experiment ID to disable
+   * @returns Object with success status and optional error message
+   */
+  disableExperiment(experimentId: string): { success: boolean; error?: string } {
+    try {
+      const experiment = this.getExperimentById(experimentId);
+      if (!experiment) {
+        return { success: false, error: "Experiment not found" };
+      }
+
+      // Add to disabled experiments list
+      this.disabledExperiments.add(experimentId);
+      this.saveDisabledExperiments();
+
+      // Keep the assignment for UI display (don't delete it)
+      // This allows the UI to show the experiment as disabled/grayed out
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Re-enable a previously disabled experiment
+   * @param experimentId The experiment ID to re-enable
+   * @returns Object with success status and optional error message
+   */
+  enableExperiment(experimentId: string): { success: boolean; error?: string } {
+    try {
+      // Remove from disabled list
+      this.disabledExperiments.delete(experimentId);
+      this.saveDisabledExperiments();
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: String(error) };
     }
   }
 }

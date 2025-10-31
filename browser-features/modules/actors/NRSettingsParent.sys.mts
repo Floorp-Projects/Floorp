@@ -4,6 +4,9 @@ export class NRSettingsParent extends JSWindowActorParent {
     super();
   }
   receiveMessage(message) {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
     switch (message.name) {
       case "getBoolPref": {
         if (
@@ -52,6 +55,25 @@ export class NRSettingsParent extends JSWindowActorParent {
           message.data.prefValue,
         );
         break;
+      }
+      case "getActiveExperiments": {
+        return Experiments.getActiveExperiments();
+      }
+      case "disableExperiment": {
+        const { experimentId } = message.data;
+        return Experiments.disableExperiment(experimentId);
+      }
+      case "enableExperiment": {
+        const { experimentId } = message.data;
+        return Experiments.enableExperiment(experimentId);
+      }
+      case "clearExperimentCache": {
+        try {
+          Experiments.clearCache();
+          return { success: true };
+        } catch (error) {
+          return { success: false, error: String(error) };
+        }
       }
     }
   }

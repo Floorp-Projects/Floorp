@@ -70,6 +70,18 @@ export class NRSettingsChild extends JSWindowActorChild {
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
         },
+        getActiveExperiments: (): Promise<any[]> => {
+          return this.sendQuery("getActiveExperiments", {});
+        },
+        disableExperiment: (experimentId: string): Promise<any> => {
+          return this.sendQuery("disableExperiment", { experimentId });
+        },
+        enableExperiment: (experimentId: string): Promise<any> => {
+          return this.sendQuery("enableExperiment", { experimentId });
+        },
+        clearExperimentCache: (): Promise<any> => {
+          return this.sendQuery("clearExperimentCache", {});
+        },
       },
       {
         post: (data) => callback(data),
