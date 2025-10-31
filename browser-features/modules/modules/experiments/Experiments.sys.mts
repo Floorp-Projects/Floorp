@@ -125,8 +125,10 @@ export class ExperimentsClient {
   private getPrefString(key: string, fallback?: string | null): string | null {
     try {
       // Check if pref exists first to avoid unnecessary errors
-      if (!Services.prefs.prefHasUserValue(key) &&
-          Services.prefs.getPrefType(key) === Services.prefs.PREF_INVALID) {
+      if (
+        !Services.prefs.prefHasUserValue(key) &&
+        Services.prefs.getPrefType(key) === Services.prefs.PREF_INVALID
+      ) {
         return fallback ?? null;
       }
       const val = Services.prefs.getStringPref(key);
@@ -293,12 +295,12 @@ export class ExperimentsClient {
         ? Math.max(0, Math.min(100, exp.rollout))
         : 100;
 
-    console.log(`[Experiments] ${exp.id}: userPercent=${userPercent}, rollout=${rollout}, included=${userPercent < rollout}`);
+    console.log(
+      `[Experiments] ${exp.id}: userPercent=${userPercent}, rollout=${rollout}, included=${userPercent < rollout}`,
+    );
 
     if (userPercent >= rollout) {
-      const control = variants.find(
-        (v: Variant) => v.id === "control",
-      );
+      const control = variants.find((v: Variant) => v.id === "control");
       // For users not included in the rollout, return "control" if it exists,
       // otherwise return null to indicate they should not participate in the
       // experiment at all. This prevents accidentally enrolling excluded users
@@ -322,10 +324,14 @@ export class ExperimentsClient {
     }
     const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
     let r = pickHash % totalWeight;
-    console.log(`[Experiments] ${exp.id}: totalWeight=${totalWeight}, pickHash=${pickHash}, r=${r}`);
+    console.log(
+      `[Experiments] ${exp.id}: totalWeight=${totalWeight}, pickHash=${pickHash}, r=${r}`,
+    );
     for (const v of variants) {
       const w = typeof v.weight === "number" ? Math.max(0, v.weight) : 1;
-      console.log(`[Experiments] ${exp.id}: checking variant ${v.id}, weight=${w}, r=${r}`);
+      console.log(
+        `[Experiments] ${exp.id}: checking variant ${v.id}, weight=${w}, r=${r}`,
+      );
       if (r < w) {
         console.log(`[Experiments] ${exp.id}: selected variant ${v.id}`);
         return v.id;
@@ -599,21 +605,31 @@ export class ExperimentsClient {
     return Object.assign({}, this.assignments);
   }
 
-  clearCache(): void {
+  clearCache(): { success: boolean; errors?: string[] } {
+    const errors: string[] = [];
     try {
-      this.clearPref(ASSIGNMENTS_PREF);
-      this.clearPref(DISABLED_EXPERIMENTS_PREF);
+      // Attempt to clear prefs and collect any failures rather than throwing.
+      if (!this.clearPref(ASSIGNMENTS_PREF)) errors.push(ASSIGNMENTS_PREF);
+      if (!this.clearPref(DISABLED_EXPERIMENTS_PREF))
+        errors.push(DISABLED_EXPERIMENTS_PREF);
       // Clear all cached configuration preferences
       const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
       for (const prefName of configPrefs) {
-        this.clearPref(prefName);
+        if (!this.clearPref(prefName)) errors.push(prefName);
       }
       // Also clear in-memory state
       this.assignments = {};
       this.configs = {};
       this.disabledExperiments.clear();
+
+      if (errors.length) {
+        console.error(`Some prefs failed to clear: ${errors.join(", ")}`);
+        return { success: false, errors };
+      }
+      return { success: true };
     } catch (e) {
       console.error(`Failed to clear experiments cache: ${String(e)}`);
+      return { success: false, errors: [String(e)] };
     }
   }
 
@@ -670,7 +686,10 @@ export class ExperimentsClient {
    * @param experimentId The experiment ID to disable
    * @returns Object with success status and optional error message
    */
-  disableExperiment(experimentId: string): { success: boolean; error?: string } {
+  disableExperiment(experimentId: string): {
+    success: boolean;
+    error?: string;
+  } {
     try {
       const experiment = this.getExperimentById(experimentId);
       if (!experiment) {
