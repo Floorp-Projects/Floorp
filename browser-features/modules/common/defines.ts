@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-
-
+import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -18,7 +17,7 @@ export interface ActiveExperiment {
   variantId: string;
   variantName: string;
   assignedAt: string | null;
-  experimentData: any;
+  experimentData: Experiment;
   disabled: boolean;
 }
 
@@ -30,7 +29,11 @@ export interface NRSettingsParentFunctions {
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
   getActiveExperiments(): Promise<ActiveExperiment[]>;
-  disableExperiment(experimentId: string): Promise<{ success: boolean; error?: string }>;
-  enableExperiment(experimentId: string): Promise<{ success: boolean; error?: string }>;
+  disableExperiment(
+    experimentId: string,
+  ): Promise<{ success: boolean; error?: string }>;
+  enableExperiment(
+    experimentId: string,
+  ): Promise<{ success: boolean; error?: string }>;
   clearExperimentCache(): Promise<{ success: boolean; error?: string }>;
 }

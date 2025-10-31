@@ -3,6 +3,7 @@ import type {
   NRSettingsParentFunctions,
   PrefGetParams,
   PrefSetParams,
+  ActiveExperiment,
 } from "../common/defines.ts";
 
 export class NRSettingsChild extends JSWindowActorChild {
@@ -50,7 +51,10 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
 
   NRSettingsRegisterReceiveCallback(callback: (data: string) => void) {
-    this.rpc = createBirpc<{}, NRSettingsParentFunctions>(
+    this.rpc = createBirpc<
+      Record<PropertyKey, never>,
+      NRSettingsParentFunctions
+    >(
       {
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
@@ -70,16 +74,23 @@ export class NRSettingsChild extends JSWindowActorChild {
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
         },
-        getActiveExperiments: (): Promise<any[]> => {
+        getActiveExperiments: (): Promise<ActiveExperiment[]> => {
           return this.sendQuery("getActiveExperiments", {});
         },
-        disableExperiment: (experimentId: string): Promise<any> => {
+        disableExperiment: (
+          experimentId: string,
+        ): Promise<{ success: boolean; error?: string }> => {
           return this.sendQuery("disableExperiment", { experimentId });
         },
-        enableExperiment: (experimentId: string): Promise<any> => {
+        enableExperiment: (
+          experimentId: string,
+        ): Promise<{ success: boolean; error?: string }> => {
           return this.sendQuery("enableExperiment", { experimentId });
         },
-        clearExperimentCache: (): Promise<any> => {
+        clearExperimentCache: (): Promise<{
+          success: boolean;
+          error?: string;
+        }> => {
           return this.sendQuery("clearExperimentCache", {});
         },
       },
@@ -95,7 +106,21 @@ export class NRSettingsChild extends JSWindowActorChild {
     );
   }
 
-  async NRSPrefGet(params: PrefGetParams): Promise<any> {
+  async NRSPrefGet(params: {
+    prefName: string;
+    prefType: "boolean";
+  }): Promise<boolean | null>;
+  async NRSPrefGet(params: {
+    prefName: string;
+    prefType: "number";
+  }): Promise<number | null>;
+  async NRSPrefGet(params: {
+    prefName: string;
+    prefType: "string";
+  }): Promise<string | null>;
+  async NRSPrefGet(
+    params: PrefGetParams,
+  ): Promise<boolean | number | string | null> {
     try {
       let funcName;
       switch (params.prefType) {

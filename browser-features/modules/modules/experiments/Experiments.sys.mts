@@ -40,7 +40,7 @@ type Variant = {
   configUrl?: string;
   [k: string]: unknown;
 };
-type Experiment = {
+export type Experiment = {
   id: string;
   name?: string;
   description?: string;
