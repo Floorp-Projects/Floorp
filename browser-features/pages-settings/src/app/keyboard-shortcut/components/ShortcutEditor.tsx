@@ -43,7 +43,7 @@ export const ShortcutEditor = ({
 
     const formatKeyCode = (code: string) => {
         if (!code) return "";
-        return code.replace(/^Key/, "").replace(/^Digit/, "").replace(/^Arrow/, "");
+        return code.replace(/^(Key|Digit|Arrow)/, "");
     };
 
     useEffect(() => {
