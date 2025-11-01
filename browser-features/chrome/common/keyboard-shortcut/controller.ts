@@ -60,11 +60,18 @@ export class KeyboardShortcutController {
       shift: event.shiftKey,
     };
 
-    const key = event.key.toUpperCase();
-    this.pressedKeys.add(key);
+    const code = event.code;
+    this.pressedKeys.add(code);
 
     if (
-      key === "ALT" || key === "CONTROL" || key === "META" || key === "SHIFT"
+      code === "AltLeft" ||
+      code === "AltRight" ||
+      code === "ControlLeft" ||
+      code === "ControlRight" ||
+      code === "MetaLeft" ||
+      code === "MetaRight" ||
+      code === "ShiftLeft" ||
+      code === "ShiftRight"
     ) {
       return;
     }
@@ -78,8 +85,8 @@ export class KeyboardShortcutController {
   private handleKeyUp = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
 
-    const key = event.key.toUpperCase();
-    this.pressedKeys.delete(key);
+    const code = event.code;
+    this.pressedKeys.delete(code);
 
     this.pressedModifiers = {
       alt: event.altKey,
@@ -114,7 +121,14 @@ export class KeyboardShortcutController {
       return false;
     }
 
-    return this.pressedKeys.has(shortcut.key.toUpperCase());
+    let key = shortcut.key;
+    if (/^[A-Z]$/.test(key)) {
+      key = `Key${key}`;
+    } else if (/^[0-9]$/.test(key)) {
+      key = `Digit${key}`;
+    }
+
+    return this.pressedKeys.has(key);
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {

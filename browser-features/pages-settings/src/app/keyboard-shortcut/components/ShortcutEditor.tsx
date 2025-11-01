@@ -41,6 +41,11 @@ export const ShortcutEditor = ({
     const [isRecording, setIsRecording] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const formatKeyCode = (code: string) => {
+        if (!code) return "";
+        return code.replace(/^Key/, "").replace(/^Digit/, "").replace(/^Arrow/, "");
+    };
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!e.key.startsWith("F")) {
@@ -48,11 +53,27 @@ export const ShortcutEditor = ({
             }
             e.stopPropagation();
 
-            if (e.key === "Alt" || e.key === "Control" || e.key === "Meta" || e.key === "Shift") {
+            if (
+                e.code === "AltLeft" ||
+                e.code === "AltRight" ||
+                e.code === "ControlLeft" ||
+                e.code === "ControlRight" ||
+                e.code === "MetaLeft" ||
+                e.code === "MetaRight" ||
+                e.code === "ShiftLeft" ||
+                e.code === "ShiftRight"
+            ) {
                 return;
             }
 
-            const newKey = e.key.toUpperCase();
+            const code = e.code;
+            let newKey = code;
+            if (code.startsWith("Key")) {
+                newKey = code.substring(3);
+            } else if (code.startsWith("Digit")) {
+                newKey = code.substring(5);
+            }
+
             setShortcut((prev) => ({
                 ...prev,
                 key: newKey,
@@ -111,7 +132,7 @@ export const ShortcutEditor = ({
         if (shortcut.modifiers.ctrl) modifiers.push("Ctrl");
         if (shortcut.modifiers.meta) modifiers.push("Meta");
         if (shortcut.modifiers.shift) modifiers.push("Shift");
-        if (shortcut.key) modifiers.push(shortcut.key.toUpperCase());
+        if (shortcut.key) modifiers.push(formatKeyCode(shortcut.key).toUpperCase());
         return modifiers.join(" + ");
     };
 
@@ -206,7 +227,7 @@ export const ShortcutEditor = ({
                                 type="text"
                                 className={`input input-bordered w-full ${isRecording ? "input-primary" : ""} ${error ? "input-error" : ""
                                     }`}
-                                value={shortcut.key}
+                                value={formatKeyCode(shortcut.key)}
                                 readOnly
                                 placeholder={t("keyboardShortcut.pressKey")}
                                 onFocus={() => setIsRecording(true)}
