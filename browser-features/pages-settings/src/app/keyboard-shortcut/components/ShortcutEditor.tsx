@@ -48,9 +48,7 @@ export const ShortcutEditor = ({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!e.key.startsWith("F")) {
-                e.preventDefault();
-            }
+            e.preventDefault();
             e.stopPropagation();
 
             if (
