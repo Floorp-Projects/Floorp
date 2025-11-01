@@ -39,11 +39,11 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-restore-last-tab",
-    fn: () => window.SessionStore.undoCloseTab(window),
+    fn: () => window.SessionWindowUI.undoCloseTab(window),
   },
   {
     name: "gecko-open-new-window",
-    fn: () => window.SessionStore.undoCloseWindow(0),
+    fn: () => window.SessionWindowUI.undoCloseWindow(0),
   },
   {
     name: "gecko-open-new-private-window",
