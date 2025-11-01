@@ -43,7 +43,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-new-window",
-    fn: () => window.SessionWindowUI.undoCloseWindow(0),
+    fn: () => window.OpenBrowserWindow(),
   },
   {
     name: "gecko-open-new-private-window",
@@ -55,7 +55,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-restore-last-window",
-    fn: () => window.undoCloseWindow(),
+    fn: () => window.SessionWindowUI.undoCloseWindow(0),
   },
   {
     name: "gecko-show-next-tab",
