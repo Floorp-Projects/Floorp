@@ -51,24 +51,27 @@ export class WorkspacesTabManager {
 
     initWorkspace();
 
-    // Ensure the window does NOT close automatically when the (currently) last tab closes.
-    // Workspaces feature manages its own fallback tab logic; auto-closing breaks hidden-per-workspace model.
-    try {
-      const prefName = "browser.tabs.closeWindowWithLastTab";
-      if (Services.prefs.getBoolPref(prefName, true)) {
-        Services.prefs.setBoolPref(prefName, false);
-        console.debug(
-          "WorkspacesTabManager: disabled auto window close on last tab (set " +
-            prefName +
-            " to false)",
+    createEffect(() => {
+      try {
+        const prefName = "browser.tabs.closeWindowWithLastTab";
+        // Sync pref with configStore.exitOnLastTabClose: only update when values differ
+        const desiredValue = !!configStore.exitOnLastTabClose;
+        try {
+          const current = Services.prefs.getBoolPref(prefName, !desiredValue);
+          if (current !== desiredValue) {
+            Services.prefs.setBoolPref(prefName, desiredValue);
+          }
+        } catch {
+          // In case reading the pref throws, attempt to set it to the desired value
+          Services.prefs.setBoolPref(prefName, desiredValue);
+        }
+      } catch (e) {
+        console.warn(
+          "WorkspacesTabManager: failed to set closeWindowWithLastTab pref",
+          e,
         );
       }
-    } catch (prefErr) {
-      console.warn(
-        "WorkspacesTabManager: failed to set closeWindowWithLastTab pref",
-        prefErr,
-      );
-    }
+    });
 
     const owner = getOwner?.();
     const exec = () =>

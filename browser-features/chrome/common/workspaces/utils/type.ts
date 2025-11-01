@@ -58,6 +58,7 @@ export const zWorkspacesServicesConfigs = t.type({
   manageOnBms: t.boolean,
   showWorkspaceNameOnToolbar: t.boolean,
   closePopupAfterClick: t.boolean,
+  exitOnLastTabClose: t.boolean,
 });
 
 /* Export as types */

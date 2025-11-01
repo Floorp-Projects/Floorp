@@ -234,6 +234,7 @@
         "closePopupWhenSelectingWorkspace": "ワークスペース選択時にワークスペースのポップアップを閉じる",
         "closePopupWhenSelectingWorkspaceDescription": "ワークスペースを選択した後、ワークスペースのポップアップを閉じるかどうかを選択します。",
         "showWorkspaceNameOnToolbar": "アイコンの隣にワークスペース名を表示",
+        "exitOnLastTabClose": "最後のワークスペースタブを閉じたときに Floorp を終了する",
         "manageOnBms": "{{productName}} サイドバーでワークスペースを管理",
         "manageOnBmsDescription": "この機能を有効にすると、 {{productName}} サイドバーでのみワークスペースを管理できます。ツールバーのボタンは引き続き必要ですが、使用できません。",
         "backup": "ワークスペースのバックアップ",

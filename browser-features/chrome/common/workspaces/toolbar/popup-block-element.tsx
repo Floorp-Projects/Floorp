@@ -19,7 +19,7 @@ export function PopupToolbarElement(props: {
   return (
     <Show when={workspace()}>
       {(ws) => {
-        const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(ws.icon);
+        const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(ws().icon);
         return (
           <xul:toolbarbutton
             id={`workspace-${props.workspaceId}`}

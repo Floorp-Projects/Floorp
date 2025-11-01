@@ -234,6 +234,7 @@
         "closePopupWhenSelectingWorkspace": "Close workspace popup when selecting a workspace",
         "closePopupWhenSelectingWorkspaceDescription": "Choose whether to close the workspace popup when selecting a workspace.",
         "showWorkspaceNameOnToolbar": "Show workspace name next to the icon",
+        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
         "manageOnBms": "Manage workspaces on {{productName}} sidebar",
         "manageOnBmsDescription": "When this feature is enabled, you can only manage workspaces on the {{productName}} sidebar. You won't be able to manage workspaces using the toolbar button.",
         "backup": "Workspace Backup",

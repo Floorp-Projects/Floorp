@@ -18,6 +18,10 @@ export const oldObjectConfigs: TWorkspacesServicesConfigs = {
     "floorp.browser.workspace.closePopupAfterClick",
     false,
   ),
+  exitOnLastTabClose: Services.prefs.getBoolPref(
+    "floorp.browser.workspace.exitOnLastTabClose",
+    false,
+  ),
 };
 
 export const getOldConfigs = JSON.stringify(oldObjectConfigs);

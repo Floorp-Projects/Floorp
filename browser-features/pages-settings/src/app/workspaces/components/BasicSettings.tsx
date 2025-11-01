@@ -106,6 +106,18 @@ export function BasicSettings() {
             </div>
 
             <div className="flex items-center justify-between gap-2">
+              <label htmlFor="exit-on-last-tab-close">
+                {t("workspaces.exitOnLastTabClose")}
+              </label>
+              <Switch
+                id="exit-on-last-tab-close"
+                checked={getValues("exitOnLastTabClose")}
+                onChange={(e) =>
+                  setValue("exitOnLastTabClose", e.target.checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
               <label htmlFor="manage-bms" className="flex flex-col gap-1.5">
                 <span>{t("workspaces.manageOnBms")}</span>
                 <span className="font-normal text-sm text-base-content/70">

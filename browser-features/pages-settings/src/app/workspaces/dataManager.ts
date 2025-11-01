@@ -15,6 +15,7 @@ export async function saveWorkspaceSettings(
     manageOnBms: settings.manageOnBms,
     showWorkspaceNameOnToolbar: settings.showWorkspaceNameOnToolbar,
     closePopupAfterClick: settings.closePopupAfterClick,
+    exitOnLastTabClose: settings.exitOnLastTabClose,
   };
 
   await Promise.all([
@@ -54,14 +55,26 @@ async function getWorkspacesEnabled(): Promise<boolean | null> {
 async function getWorkspacesConfigsExcludeEnabled(): Promise<
   Omit<WorkspacesFormData, "enabled"> | null
 > {
+  const defaultConfigs = {
+    manageOnBms: false,
+    showWorkspaceNameOnToolbar: false,
+    closePopupAfterClick: true,
+    exitOnLastTabClose: false,
+  };
+
   const result = await rpc.getStringPref("floorp.workspaces.v4.config");
   if (!result) {
-    return {
-      manageOnBms: false,
-      showWorkspaceNameOnToolbar: false,
-      closePopupAfterClick: true,
-    };
+    return defaultConfigs;
   }
 
-  return JSON.parse(result);
+  try {
+    const userConfigs = JSON.parse(result);
+    return { ...defaultConfigs, ...userConfigs };
+  } catch (e) {
+    console.error(
+      "Failed to parse workspace configuration, falling back to defaults:",
+      e,
+    );
+    return defaultConfigs;
+  }
 }

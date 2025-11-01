@@ -41,16 +41,28 @@ export const ShortcutEditor = ({
     const [isRecording, setIsRecording] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const formatKeyCode = (code: string) => {
+        if (!code) return "";
+        return code.replace(/^(Key|Digit|Arrow)/, "");
+    };
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             e.preventDefault();
             e.stopPropagation();
 
-            if (e.key === "Alt" || e.key === "Control" || e.key === "Meta" || e.key === "Shift") {
+            if (
+                e.code.startsWith("Alt") ||
+                e.code.startsWith("Control") ||
+                e.code.startsWith("Meta") ||
+                e.code.startsWith("Shift")
+            ) {
                 return;
             }
 
-            const newKey = e.key.toUpperCase();
+            const code = e.code;
+            const newKey = code.replace(/^(Key|Digit)/, "");
+
             setShortcut((prev) => ({
                 ...prev,
                 key: newKey,
@@ -109,7 +121,7 @@ export const ShortcutEditor = ({
         if (shortcut.modifiers.ctrl) modifiers.push("Ctrl");
         if (shortcut.modifiers.meta) modifiers.push("Meta");
         if (shortcut.modifiers.shift) modifiers.push("Shift");
-        if (shortcut.key) modifiers.push(shortcut.key.toUpperCase());
+        if (shortcut.key) modifiers.push(formatKeyCode(shortcut.key).toUpperCase());
         return modifiers.join(" + ");
     };
 
@@ -204,7 +216,7 @@ export const ShortcutEditor = ({
                                 type="text"
                                 className={`input input-bordered w-full ${isRecording ? "input-primary" : ""} ${error ? "input-error" : ""
                                     }`}
-                                value={shortcut.key}
+                                value={formatKeyCode(shortcut.key)}
                                 readOnly
                                 placeholder={t("keyboardShortcut.pressKey")}
                                 onFocus={() => setIsRecording(true)}
