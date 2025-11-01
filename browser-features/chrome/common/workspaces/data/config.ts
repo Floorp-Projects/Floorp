@@ -50,13 +50,17 @@ function createConfig(): [
   Store<TWorkspacesServicesConfigs>,
   SetStoreFunction<TWorkspacesServicesConfigs>,
 ] {
-  const configResult = zWorkspacesServicesConfigs.decode(
-    JSON.parse(
-      Services.prefs.getStringPref(WORKSPACED_CONFIG_PREF_NAME, getOldConfigs),
-    ),
+  const oldConfigs = JSON.parse(getOldConfigs);
+  const loadedConfigs = JSON.parse(
+    Services.prefs.getStringPref(WORKSPACED_CONFIG_PREF_NAME, getOldConfigs),
   );
+
+  const mergedConfigs = { ...oldConfigs, ...loadedConfigs };
+
+  const configResult = zWorkspacesServicesConfigs.decode(mergedConfigs);
+
   const [configStore, setConfigStore] = createStore(
-    isRight(configResult) ? configResult.right : JSON.parse(getOldConfigs),
+    isRight(configResult) ? configResult.right : oldConfigs,
   );
 
   createEffect(() => {

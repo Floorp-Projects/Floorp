@@ -82,6 +82,7 @@ export const zWorkspacesFormData = t.type({
   manageOnBms: t.boolean,
   showWorkspaceNameOnToolbar: t.boolean,
   closePopupAfterClick: t.boolean,
+  exitOnLastTabClose: t.boolean,
 });
 
 export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
