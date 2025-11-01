@@ -67,5 +67,14 @@ async function getWorkspacesConfigsExcludeEnabled(): Promise<
     return defaultConfigs;
   }
 
-  return { ...defaultConfigs, ...JSON.parse(result) };
+  try {
+    const userConfigs = JSON.parse(result);
+    return { ...defaultConfigs, ...userConfigs };
+  } catch (e) {
+    console.error(
+      "Failed to parse workspace configuration, falling back to defaults:",
+      e,
+    );
+    return defaultConfigs;
+  }
 }
