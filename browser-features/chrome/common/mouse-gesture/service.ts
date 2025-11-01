@@ -69,7 +69,8 @@ export class MouseGestureService {
     this.configObserver = {
       observe: (_subject: unknown, topic: string, data: string) => {
         if (
-          topic === "nsPref:changed" && data === "floorp.mousegesture.enabled"
+          topic === "nsPref:changed" &&
+          data === "floorp.mousegesture.enabled"
         ) {
           const enabled = Services.prefs.getBoolPref(
             "floorp.mousegesture.enabled",
@@ -174,7 +175,22 @@ function createMouseGestureService() {
   return new MouseGestureService();
 }
 
+const PREF_LAST_ENABLED_STATE = "floorp.mousegesture.last_enabled_state";
+
 let lastEnabledState: boolean | null = null;
+
+// Initialize lastEnabledState from pref if it exists so the value survives restarts
+try {
+  if (
+    Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) ===
+    Services.prefs.PREF_BOOL
+  ) {
+    lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
+  }
+} catch (e) {
+  // It's expected that the preference might not exist on first run, so we'll just log it for debugging.
+  console.log("[MouseGestureService] Could not read preference for last enabled state:", e);
+}
 
 function handleContextMenuAfterMouseUp(enabled: boolean) {
   if (Services.appinfo.OS === "WINNT") {
@@ -187,6 +203,16 @@ function handleContextMenuAfterMouseUp(enabled: boolean) {
 
   Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
   lastEnabledState = enabled;
+
+  // persist lastEnabledState so it is available after restart
+  try {
+    Services.prefs.setBoolPref(PREF_LAST_ENABLED_STATE, enabled);
+  } catch (e) {
+    console.error(
+      "[MouseGestureService] Failed to save last enabled state pref:",
+      e,
+    );
+  }
 }
 
 export const mouseGestureService = createRootHMR(
