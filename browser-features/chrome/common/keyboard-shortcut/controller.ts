@@ -69,26 +69,11 @@ export class KeyboardShortcutController {
       return;
     }
 
-    if (this.shouldPreventDefault()) {
+    if (this.checkAndExecuteShortcut()) {
       event.preventDefault();
       event.stopPropagation();
-
-      this.checkAndExecuteShortcut();
     }
   };
-
-  private shouldPreventDefault(): boolean {
-    const config = getConfig();
-    const shortcuts = config.shortcuts;
-
-    for (const [_id, shortcut] of Object.entries(shortcuts)) {
-      if (this.isShortcutMatch(shortcut)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   private handleKeyUp = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
@@ -111,6 +96,7 @@ export class KeyboardShortcutController {
     for (const [_id, shortcut] of Object.entries(shortcuts)) {
       if (this.isShortcutMatch(shortcut)) {
         this.executeShortcut(shortcut);
+        this.resetState();
         return true;
       }
     }
