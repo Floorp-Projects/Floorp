@@ -187,8 +187,9 @@ try {
   ) {
     lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
   }
-} catch {
-  // ignore and leave lastEnabledState as null
+} catch (e) {
+  // It's expected that the preference might not exist on first run, so we'll just log it for debugging.
+  console.log("[MouseGestureService] Could not read preference for last enabled state:", e);
 }
 
 function handleContextMenuAfterMouseUp(enabled: boolean) {
