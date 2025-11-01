@@ -21,7 +21,7 @@ export function ChromeSiteBrowser({ id, type, url }: Panel) {
       disableglobalhistory="true"
       messagemanagergroup="browsers"
       autocompletepopup="PopupAutoComplete"
-      {...(panel.url?.startsWith("http") && import.meta.env.DEV
+      {...(panel.url?.startsWith("http")
         ? {
           type: "content",
           remote: "true",
