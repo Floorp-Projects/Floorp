@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(ls -la \"f:\\floorp-dev\\Floorp\\browser-features\\pages-settings\\src\\app\"\" | grep -E \"^d \")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

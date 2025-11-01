@@ -2,7 +2,14 @@ import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "primary" | "secondary" | "ghost" | "link" | "light";
+  variant?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | "light"
+    | "danger";
   size?: "default" | "sm" | "lg";
   asChild?: boolean;
 }
@@ -21,7 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 w-full",
+          "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-base-content/20",
           "disabled:pointer-events-none disabled:opacity-50",
           {
@@ -33,6 +40,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             "underline-offset-4 hover:underline": variant === "link",
             "bg-base-200/40 text-base-content hover:bg-base-200/60 active:bg-base-200/70 dark:bg-base-300/25 dark:hover:bg-base-300/40 dark:active:bg-base-300/50":
               variant === "light",
+            "bg-red-600/90 text-white hover:bg-red-700/90 active:bg-red-600/90":
+              variant === "danger",
             "h-8 px-4 text-sm": size === "sm",
             "h-10 px-6 text-base": size === "default",
             "h-12 px-8 text-lg": size === "lg",

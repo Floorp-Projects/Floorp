@@ -6,6 +6,9 @@ on:
       nr_version:
         type: string
         required: false
+      artifact_run_id:
+        type: string
+        required: false
     secrets:
       KEYMASK:
         required: true
@@ -38,8 +41,17 @@ jobs:
   publish_deb:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Linux DEB artifact (PPA)
-        if: github.event_name != 'workflow_dispatch'
+      - name: Download Linux DEB artifact (PPA) from provided run
+        if: ${{ github.event_name != 'workflow_dispatch' && inputs.artifact_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: floorp-Linux-x64-deb
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: ~/noraneko-publish/linux-deb
+
+      - name: Download Linux DEB artifact (PPA) from current run
+        if: ${{ github.event_name != 'workflow_dispatch' && inputs.artifact_run_id == '' }}
         uses: actions/download-artifact@v4
         with:
           name: floorp-Linux-x64-deb

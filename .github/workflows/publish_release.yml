@@ -11,6 +11,9 @@ on:
         type: boolean
         required: false
         default: false
+      linux_deb_run_id:
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -292,6 +295,7 @@ jobs:
     uses: ./.github/workflows/publish_ppa.yml
     with:
       nr_version: ${{ needs.publish.outputs.NR_VERSION }}
+      artifact_run_id: ${{ inputs.linux_deb_run_id }}
     secrets:
       KEYMASK: ${{ secrets.KEYMASK }}
       GPG_SEC: ${{ secrets.GPG_SEC }}
