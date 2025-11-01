@@ -63,12 +63,7 @@ export const ShortcutEditor = ({
             }
 
             const code = e.code;
-            let newKey = code;
-            if (code.startsWith("Key")) {
-                newKey = code.substring(3);
-            } else if (code.startsWith("Digit")) {
-                newKey = code.substring(5);
-            }
+            const newKey = code.replace(/^(Key|Digit)/, "");
 
             setShortcut((prev) => ({
                 ...prev,
