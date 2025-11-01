@@ -54,14 +54,10 @@ export const ShortcutEditor = ({
             e.stopPropagation();
 
             if (
-                e.code === "AltLeft" ||
-                e.code === "AltRight" ||
-                e.code === "ControlLeft" ||
-                e.code === "ControlRight" ||
-                e.code === "MetaLeft" ||
-                e.code === "MetaRight" ||
-                e.code === "ShiftLeft" ||
-                e.code === "ShiftRight"
+                e.code.startsWith("Alt") ||
+                e.code.startsWith("Control") ||
+                e.code.startsWith("Meta") ||
+                e.code.startsWith("Shift")
             ) {
                 return;
             }

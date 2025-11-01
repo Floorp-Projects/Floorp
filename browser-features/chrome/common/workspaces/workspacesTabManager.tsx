@@ -52,13 +52,20 @@ export class WorkspacesTabManager {
     initWorkspace();
 
     createEffect(() => {
-      const prefName = "browser.tabs.closeWindowWithLastTab";
-      if (configStore.exitOnLastTabClose) {
-        Services.prefs.setBoolPref(prefName, true);
-      } else {
-        if (Services.prefs.getBoolPref(prefName, true)) {
-          Services.prefs.setBoolPref(prefName, false);
+      try {
+        const prefName = "browser.tabs.closeWindowWithLastTab";
+        if (configStore.exitOnLastTabClose) {
+          Services.prefs.setBoolPref(prefName, true);
+        } else {
+          if (Services.prefs.getBoolPref(prefName, true)) {
+            Services.prefs.setBoolPref(prefName, false);
+          }
         }
+      } catch (e) {
+        console.warn(
+          "WorkspacesTabManager: failed to set closeWindowWithLastTab pref",
+          e,
+        );
       }
     });
 

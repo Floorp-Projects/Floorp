@@ -63,15 +63,13 @@ export class KeyboardShortcutController {
     const code = event.code;
     this.pressedKeys.add(code);
 
+    // Ignore pure modifier key presses. Using startsWith keeps this concise
+    // and handles location-specific variants like "AltLeft" / "AltRight".
     if (
-      code === "AltLeft" ||
-      code === "AltRight" ||
-      code === "ControlLeft" ||
-      code === "ControlRight" ||
-      code === "MetaLeft" ||
-      code === "MetaRight" ||
-      code === "ShiftLeft" ||
-      code === "ShiftRight"
+      code.startsWith("Alt") ||
+      code.startsWith("Control") ||
+      code.startsWith("Meta") ||
+      code.startsWith("Shift")
     ) {
       return;
     }
