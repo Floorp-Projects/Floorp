@@ -54,12 +54,16 @@ export class WorkspacesTabManager {
     createEffect(() => {
       try {
         const prefName = "browser.tabs.closeWindowWithLastTab";
-        if (configStore.exitOnLastTabClose) {
-          Services.prefs.setBoolPref(prefName, true);
-        } else {
-          if (Services.prefs.getBoolPref(prefName, true)) {
-            Services.prefs.setBoolPref(prefName, false);
+        // Sync pref with configStore.exitOnLastTabClose: only update when values differ
+        const desiredValue = !!configStore.exitOnLastTabClose;
+        try {
+          const current = Services.prefs.getBoolPref(prefName, !desiredValue);
+          if (current !== desiredValue) {
+            Services.prefs.setBoolPref(prefName, desiredValue);
           }
+        } catch {
+          // In case reading the pref throws, attempt to set it to the desired value
+          Services.prefs.setBoolPref(prefName, desiredValue);
         }
       } catch (e) {
         console.warn(
