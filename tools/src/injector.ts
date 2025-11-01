@@ -89,12 +89,9 @@ export function createManifest(mode: string, dirPath: string) {
     "resource noraneko resource/ contentaccessible=yes",
   ].join("\n");
 
-  // Determine dev mode from the provided mode string. When running
-  // `deno task feles-build dev` we expect mode === "dev". Only in dev
-  // mode should the additional development entries be appended.
-  const isDev = mode === "dev";
-
-  if (!isDev) {
+  // if (dev) the pages should be served in vite dev server
+  // stage and productions needs static contents
+  if (mode !== "dev") {
     const devEntries = [
       "content noraneko-newtab pages-newtab/ contentaccessible=yes",
       "content noraneko-welcome pages-welcome/ contentaccessible=yes",
@@ -121,7 +118,7 @@ export function createManifest(mode: string, dirPath: string) {
 export function run(mode: string, dirName = "noraneko-devdir"): void {
   const manifestPath = path.join(BIN_DIR, "chrome.manifest");
 
-  if (mode !== "production") {
+  if (mode === "dev" || mode === "stage") {
     let manifest = "";
     if (exists(manifestPath)) {
       manifest = Deno.readTextFileSync(manifestPath);
