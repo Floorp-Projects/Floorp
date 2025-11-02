@@ -184,12 +184,6 @@ notification-message[message-bar-type="infobar"] {
   --info-bar-text-color: var(--lwt-text-color, #222) !important;
 }
 
-@media not (-moz-platform: macos) {
-  :root[sizemode="fullscreen"]:not([inDOMFullscreen="true"]) #nav-bar {
-    display: none !important;
-  }
-}
-
 @media (-moz-platform: linux) {
   :root {
     --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor) !important;
