@@ -476,6 +476,7 @@
         "actionDescription": "Hareketin açıklaması",
         "rockerGesturesEnabled": "Rocker hareketlerini etkinleştirin",
         "rockerGesturesDescription": "Geri gitmek için sağ tıklayın ve sola hareket edin, ileri gitmek için sağ tıklayın ve sağa hareket edin. (Deneysel)",
+        "wheelGesturesEnabled": "Wheel hareketlerini etkinleştirin",
         "actions": {
             "gecko-back": "Geri",
             "gecko-forward": "İleri",
