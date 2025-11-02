@@ -30,7 +30,6 @@
         "webApps": "ウェブアプリ",
         "profileAndAccount": "プロファイルとアカウント",
         "aboutBrowser": "{{productName}} について",
-        "updates": "アップデートと実験",
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
         "keyboardShortcut": "キーボードショートカット",
@@ -235,7 +234,6 @@
         "closePopupWhenSelectingWorkspace": "ワークスペース選択時にワークスペースのポップアップを閉じる",
         "closePopupWhenSelectingWorkspaceDescription": "ワークスペースを選択した後、ワークスペースのポップアップを閉じるかどうかを選択します。",
         "showWorkspaceNameOnToolbar": "アイコンの隣にワークスペース名を表示",
-        "exitOnLastTabClose": "最後のワークスペースタブを閉じたときに Floorp を終了する",
         "manageOnBms": "{{productName}} サイドバーでワークスペースを管理",
         "manageOnBmsDescription": "この機能を有効にすると、 {{productName}} サイドバーでのみワークスペースを管理できます。ツールバーのボタンは引き続き必要ですが、使用できません。",
         "backup": "ワークスペースのバックアップ",
@@ -273,38 +271,6 @@
         "openSourceLicenseNotice": "オープンソースライセンス",
         "versionInfo": "バージョン",
         "license": "ライセンス"
-    },
-    "updates": {
-        "title": "アップデートと実験",
-        "description": "アップデート設定と実験的機能への参加を管理します。",
-        "experiments": {
-            "title": "{{productName}} テストへの参加",
-            "description": "{{productName}} が実験的機能や {{productName}} テストにあなたを参加させる方法を制御します。",
-            "policyLabel": "参加方針",
-            "policy": {
-                "default": "デフォルト（推奨）",
-                "always": "常に参加する",
-                "never": "参加しない"
-            },
-            "policyHelp": {
-                "default": "推奨される参加方針に従います。ロールアウト率に基づいて {{productName}} テストに参加する場合があります。",
-                "always": "利用可能なすべての {{productName}} テストに常に参加します。このオプションは新機能を早期にテストしたいユーザー向けです。",
-                "never": "{{productName}} テストには参加しません。安定してテストされた機能のみを受け取ります。"
-            }
-        },
-        "activeTests": {
-            "title": "参加中の {{productName}} テスト",
-            "description": "現在参加しているテストを表示・管理します。",
-            "refresh": "更新",
-            "noTests": "現在参加しているテストはありません。",
-            "assignedAt": "{{date}} に参加",
-            "disable": "無効化",
-            "enable": "有効化",
-            "disabledLabel": "無効"
-        }
-    },
-    "common": {
-        "loading": "読み込み中..."
     },
     "search": {
         "title": "設定を検索",
