@@ -266,7 +266,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["http://*/*", "https://*/*", "about:*"],
+    matches: ["http://*/*", "https://*/*", "file:///*", "about:*"],
     allFrames: true,
   },
   NROSAutomotor: {

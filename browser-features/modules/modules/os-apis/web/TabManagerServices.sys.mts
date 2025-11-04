@@ -528,6 +528,55 @@ class TabManager {
       }),
     });
   }
+
+  public async inputElement(
+    instanceId: string,
+    selector: string,
+    value: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    return await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:InputElement",
+      {
+        selector,
+        value,
+        highlight: this._buildHighlightOptions("Input", {
+          duration: 1000,
+        }),
+      },
+    );
+  }
+
+  public async highlightElements(
+    instanceId: string,
+    selectors: string[],
+    options?: {
+      action?: string;
+      elementInfo?: string;
+      duration?: number;
+    },
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    return await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:HighlightElements",
+      {
+        selectors,
+        highlight: this._buildHighlightOptions(options?.action ?? "Highlight", {
+          duration: options?.duration ?? 2000,
+        }),
+        elementInfo: options?.elementInfo,
+      },
+    );
+  }
+
+  public async clearEffects(instanceId: string): Promise<boolean | null> {
+    return await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:ClearEffects",
+    );
+  }
 }
 
 // Export a singleton instance of the TabManager service

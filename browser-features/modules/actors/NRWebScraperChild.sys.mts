@@ -28,6 +28,7 @@ interface HighlightRequest {
 
 interface NRWebScraperMessageData {
   selector?: string;
+  selectors?: string[];
   value?: string;
   textContent?: string;
   timeout?: number;
@@ -35,6 +36,7 @@ interface NRWebScraperMessageData {
   rect?: { x?: number; y?: number; width?: number; height?: number };
   formData?: { [selector: string]: string };
   highlight?: HighlightRequest;
+  elementInfo?: string;
 }
 
 interface NormalizedHighlightOptions {
@@ -52,6 +54,7 @@ type HighlightFocusOptions = {
 
 export class NRWebScraperChild extends JSWindowActorChild {
   private highlightOverlay: HTMLDivElement | null = null;
+  private highlightOverlays: HTMLDivElement[] = [];
   private highlightCleanupTimer: number | null = null;
   private highlightCleanupCallbacks: Array<() => void> = [];
   private highlightStyleElement: HTMLStyleElement | null = null;
@@ -59,6 +62,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private persistentEffects = new Set<Element>();
   private persistentWindowListenersRegistered = false;
   private persistentCleanupHandler: ((event: Event) => void) | null = null;
+  private infoPanel: HTMLDivElement | null = null;
+  private infoPanelCleanupTimer: number | null = null;
 
   private normalizeHighlightOptions(
     highlight?: HighlightRequest,
@@ -97,30 +102,83 @@ export class NRWebScraperChild extends JSWindowActorChild {
     style.id = "nr-webscraper-highlight-style";
     style.textContent = `@keyframes nr-webscraper-highlight-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3);
-    transform: scale(1.01);
+    box-shadow: 0 0 0 8px var(--nr-highlight-color-alpha-25);
+    transform: scale(1.015);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-0);
     transform: scale(1);
   }
 }
 
+@keyframes nr-webscraper-info-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .nr-webscraper-highlight-overlay {
+  --nr-highlight-color-alpha-0: rgba(59, 130, 246, 0);
+  --nr-highlight-color-alpha-25: rgba(59, 130, 246, 0.25);
+  --nr-highlight-color-alpha-45: rgba(59, 130, 246, 0.45);
+  --nr-highlight-color: rgba(59, 130, 246, 0.95);
+  --nr-highlight-bg: rgba(59, 130, 246, 0.08);
+  --nr-label-bg: rgba(37, 99, 235, 0.94);
   position: fixed;
   border-radius: 10px;
-  border: 2px solid rgba(59, 130, 246, 0.95);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+  border: 2px solid var(--nr-highlight-color);
+  box-shadow: 0 0 0 4px var(--nr-highlight-color-alpha-25);
   pointer-events: none;
-  z-index: 2147483647;
+  z-index: 2147483645;
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 120ms ease-out, transform 120ms ease-out;
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--nr-highlight-bg);
+}
+
+.nr-webscraper-highlight-overlay--read {
+  --nr-highlight-color-alpha-0: rgba(34, 197, 94, 0);
+  --nr-highlight-color-alpha-25: rgba(34, 197, 94, 0.25);
+  --nr-highlight-color-alpha-45: rgba(34, 197, 94, 0.45);
+  --nr-highlight-color: rgba(34, 197, 94, 0.95);
+  --nr-highlight-bg: rgba(34, 197, 94, 0.08);
+  --nr-label-bg: rgba(22, 163, 74, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--write {
+  --nr-highlight-color-alpha-0: rgba(168, 85, 247, 0);
+  --nr-highlight-color-alpha-25: rgba(168, 85, 247, 0.25);
+  --nr-highlight-color-alpha-45: rgba(168, 85, 247, 0.45);
+  --nr-highlight-color: rgba(168, 85, 247, 0.95);
+  --nr-highlight-bg: rgba(168, 85, 247, 0.08);
+  --nr-label-bg: rgba(147, 51, 234, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--click {
+  --nr-highlight-color-alpha-0: rgba(249, 115, 22, 0);
+  --nr-highlight-color-alpha-25: rgba(249, 115, 22, 0.25);
+  --nr-highlight-color-alpha-45: rgba(249, 115, 22, 0.45);
+  --nr-highlight-color: rgba(249, 115, 22, 0.95);
+  --nr-highlight-bg: rgba(249, 115, 22, 0.08);
+  --nr-label-bg: rgba(234, 88, 12, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--submit {
+  --nr-highlight-color-alpha-0: rgba(239, 68, 68, 0);
+  --nr-highlight-color-alpha-25: rgba(239, 68, 68, 0.25);
+  --nr-highlight-color-alpha-45: rgba(239, 68, 68, 0.45);
+  --nr-highlight-color: rgba(239, 68, 68, 0.95);
+  --nr-highlight-bg: rgba(239, 68, 68, 0.08);
+  --nr-label-bg: rgba(220, 38, 38, 0.94);
 }
 
 .nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--visible {
@@ -134,7 +192,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
   top: -28px;
   left: 0;
   transform: translateY(-4px);
-  background: rgba(37, 99, 235, 0.94);
+  background: var(--nr-label-bg);
   color: #fff;
   padding: 4px 10px;
   border-radius: 9999px;
@@ -149,6 +207,69 @@ export class NRWebScraperChild extends JSWindowActorChild {
   top: auto;
   bottom: -28px;
   transform: translateY(4px);
+}
+
+.nr-webscraper-info-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  max-width: 380px;
+  background: rgba(17, 24, 39, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+  z-index: 2147483647;
+  animation: nr-webscraper-info-slide-in 200ms ease-out;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  padding: 14px 16px;
+}
+
+.nr-webscraper-info-panel__title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.nr-webscraper-info-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--nr-label-bg);
+  color: #fff;
+}
+
+.nr-webscraper-info-panel__content {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.nr-webscraper-info-panel__selector {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: rgba(168, 85, 247, 0.95);
+  word-break: break-all;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nr-webscraper-info-panel__count {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
 }`;
 
     (doc.head ?? doc.documentElement)?.append(style);
@@ -176,6 +297,123 @@ export class NRWebScraperChild extends JSWindowActorChild {
       this.highlightOverlay.remove();
     }
     this.highlightOverlay = null;
+
+    // Cleanup multiple overlays
+    for (const overlay of this.highlightOverlays) {
+      if (overlay?.isConnected) {
+        overlay.remove();
+      }
+    }
+    this.highlightOverlays = [];
+  }
+
+  private getActionColorClass(action?: string): string {
+    if (!action) return "";
+    const lowerAction = action.toLowerCase();
+    if (
+      lowerAction.includes("read") ||
+      lowerAction.includes("inspect") ||
+      lowerAction.includes("get")
+    ) {
+      return "nr-webscraper-highlight-overlay--read";
+    }
+    if (
+      lowerAction.includes("input") ||
+      lowerAction.includes("fill") ||
+      lowerAction.includes("write")
+    ) {
+      return "nr-webscraper-highlight-overlay--write";
+    }
+    if (lowerAction.includes("click")) {
+      return "nr-webscraper-highlight-overlay--click";
+    }
+    if (lowerAction.includes("submit")) {
+      return "nr-webscraper-highlight-overlay--submit";
+    }
+    return "";
+  }
+
+  private showInfoPanel(
+    action: string,
+    selector?: string,
+    elementInfo?: string,
+    elementCount?: number,
+  ): void {
+    try {
+      const win = this.contentWindow;
+      const doc = this.document;
+      if (!win || !doc) return;
+
+      this.hideInfoPanel();
+      this.ensureHighlightStyle();
+
+      const panel = doc.createElement("div");
+      panel.className = "nr-webscraper-info-panel";
+
+      const colorClass = this.getActionColorClass(action);
+      if (colorClass) {
+        panel.classList.add(colorClass);
+      }
+
+      const title = doc.createElement("div");
+      title.className = "nr-webscraper-info-panel__title";
+
+      const badge = doc.createElement("span");
+      badge.className = "nr-webscraper-info-panel__badge";
+      badge.textContent = action;
+
+      title.append(badge);
+      title.append(doc.createTextNode("Operation in Progress"));
+
+      const content = doc.createElement("div");
+      content.className = "nr-webscraper-info-panel__content";
+
+      if (elementInfo) {
+        content.textContent = elementInfo;
+      } else {
+        content.textContent = `Performing ${action.toLowerCase()} operation...`;
+      }
+
+      panel.append(title);
+      panel.append(content);
+
+      if (selector) {
+        const selectorDiv = doc.createElement("div");
+        selectorDiv.className = "nr-webscraper-info-panel__selector";
+        selectorDiv.textContent = selector;
+        panel.append(selectorDiv);
+      }
+
+      if (elementCount !== undefined && elementCount > 1) {
+        const countDiv = doc.createElement("div");
+        countDiv.className = "nr-webscraper-info-panel__count";
+        countDiv.textContent = `${elementCount} element${elementCount !== 1 ? "s" : ""} affected`;
+        panel.append(countDiv);
+      }
+
+      (doc.body ?? doc.documentElement)?.append(panel);
+      this.infoPanel = panel;
+
+      // Auto-hide after action completes
+      this.infoPanelCleanupTimer = Number(
+        win.setTimeout(() => this.hideInfoPanel(), 3000),
+      );
+    } catch (error) {
+      console.warn("NRWebScraperChild: Failed to show info panel", error);
+    }
+  }
+
+  private hideInfoPanel(): void {
+    const win = this.contentWindow;
+    if (this.infoPanelCleanupTimer !== null && win) {
+      win.clearTimeout(this.infoPanelCleanupTimer);
+    }
+    this.infoPanelCleanupTimer = null;
+
+    if (this.infoPanel?.isConnected) {
+      this.infoPanel.remove();
+    }
+    this.infoPanel = null;
   }
 
   private ensurePersistentStyle(): void {
@@ -348,9 +586,120 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
   }
 
+  private async applyHighlightMultiple(
+    targets: Element[],
+    highlight?: HighlightRequest,
+    elementInfo?: string,
+  ): Promise<boolean> {
+    if (!targets || targets.length === 0) {
+      this.cleanupHighlight();
+      return false;
+    }
+
+    const options = this.normalizeHighlightOptions(highlight);
+    const win = this.contentWindow;
+    const doc = this.document;
+
+    if (!options || !win || !doc) {
+      return true;
+    }
+
+    this.ensureHighlightStyle();
+    this.cleanupHighlight();
+
+    const colorClass = this.getActionColorClass(options.action);
+
+    // Show info panel
+    this.showInfoPanel(
+      options.action ?? "Highlight",
+      undefined,
+      elementInfo,
+      targets.length,
+    );
+
+    for (const target of targets) {
+      const overlay = doc.createElement("div");
+      overlay.className = "nr-webscraper-highlight-overlay";
+      if (colorClass) {
+        overlay.classList.add(colorClass);
+      }
+
+      const padding = options.padding;
+
+      (doc.body ?? doc.documentElement)?.append(overlay);
+
+      const updatePosition = () => {
+        const rect = target.getBoundingClientRect();
+        const top = Math.max(rect.top - padding, 0);
+        const left = Math.max(rect.left - padding, 0);
+        const width = Math.max(rect.width + padding * 2, 0);
+        const height = Math.max(rect.height + padding * 2, 0);
+
+        overlay.style.setProperty("top", `${top}px`);
+        overlay.style.setProperty("left", `${left}px`);
+        overlay.style.setProperty("width", `${width}px`);
+        overlay.style.setProperty("height", `${height}px`);
+      };
+
+      updatePosition();
+
+      // Force a layout
+      void overlay.getBoundingClientRect();
+      overlay.classList.add("nr-webscraper-highlight-overlay--visible");
+
+      const reposition = () => updatePosition();
+      win.addEventListener("scroll", reposition, true);
+      win.addEventListener("resize", reposition);
+      this.highlightCleanupCallbacks.push(() => {
+        win.removeEventListener("scroll", reposition, true);
+        win.removeEventListener("resize", reposition);
+      });
+
+      const mutationObserver = new win.MutationObserver(() => updatePosition());
+      mutationObserver.observe(target, {
+        attributes: true,
+        childList: false,
+        subtree: false,
+      });
+      this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
+
+      this.highlightOverlays.push(overlay);
+    }
+
+    // Scroll to first element
+    if (options.scrollBehavior !== "none" && targets.length > 0) {
+      try {
+        (targets[0] as HTMLElement).scrollIntoView({
+          behavior: options.scrollBehavior,
+          block: "center",
+          inline: "center",
+        });
+      } catch (_) {
+        // ignore scroll errors
+      }
+    }
+
+    this.highlightCleanupTimer = Number(
+      win.setTimeout(() => this.cleanupHighlight(), options.duration),
+    );
+
+    await new Promise<void>((resolve) => {
+      win.requestAnimationFrame(() => resolve());
+    });
+
+    if (options.delay > 0) {
+      await new Promise<void>((resolve) => {
+        win.setTimeout(() => resolve(), options.delay);
+      });
+    }
+
+    return true;
+  }
+
   private async applyHighlight(
     target: Element | null,
     highlight?: HighlightRequest,
+    elementInfo?: string,
   ): Promise<boolean> {
     if (!target) {
       this.cleanupHighlight();
@@ -370,6 +719,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     const overlay = doc.createElement("div");
     overlay.className = "nr-webscraper-highlight-overlay";
+
+    const colorClass = this.getActionColorClass(options.action);
+    if (colorClass) {
+      overlay.classList.add(colorClass);
+    }
+
+    // Show info panel
+    this.showInfoPanel(
+      options.action ?? "Highlight",
+      undefined,
+      elementInfo,
+      1,
+    );
 
     const padding = options.padding;
 
@@ -610,7 +972,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:ClearEffects":
         this.clearPersistentEffects();
+        this.hideInfoPanel();
         return true;
+      case "WebScraper:HighlightElements":
+        if (message.data?.selectors && Array.isArray(message.data.selectors)) {
+          return this.highlightElements(
+            message.data.selectors,
+            message.data.highlight,
+            message.data.elementInfo,
+          );
+        }
+        break;
     }
     return null;
   }
@@ -760,6 +1132,39 @@ export class NRWebScraperChild extends JSWindowActorChild {
   }
 
   /**
+   * Highlights multiple elements by their CSS selectors
+   *
+   * @param selectors - Array of CSS selectors to highlight
+   * @param highlight - Highlight options
+   * @param elementInfo - Description of the elements being highlighted
+   */
+  async highlightElements(
+    selectors: string[],
+    highlight?: HighlightRequest,
+    elementInfo?: string,
+  ): Promise<boolean> {
+    try {
+      const elements: Element[] = [];
+      for (const selector of selectors) {
+        const element = this.document?.querySelector(selector);
+        if (element) {
+          elements.push(element);
+        }
+      }
+
+      if (elements.length === 0) {
+        return false;
+      }
+
+      await this.applyHighlightMultiple(elements, highlight, elementInfo);
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error highlighting elements:", e);
+      return false;
+    }
+  }
+
+  /**
    * Sets the value of an input element or textarea on the page
    *
    * This method finds an element using the provided CSS selector and sets
@@ -783,7 +1188,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
-      await this.applyHighlight(element, highlight);
+      const elementInfo = `Setting input value to: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
+      await this.applyHighlight(element, highlight, elementInfo);
 
       element.value = value;
       // Trigger input event to ensure the change is detected
@@ -819,7 +1225,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
       ) as HTMLElement | null;
       if (!element) return false;
 
-      await this.applyHighlight(element, highlight);
+      const elementTagName = element.tagName?.toLowerCase() || "element";
+      const elementText = element.textContent?.trim().substring(0, 30) || "";
+      const elementInfo = elementText
+        ? `Clicking ${elementTagName}: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
+        : `Clicking ${elementTagName} element`;
+
+      await this.applyHighlight(element, highlight, elementInfo);
 
       if (!highlight) {
         try {
@@ -1175,8 +1587,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       let allFilled = true;
       const selectors = Object.keys(formData);
+      const fieldCount = selectors.length;
 
-      for (const selector of selectors) {
+      for (let i = 0; i < selectors.length; i++) {
+        const selector = selectors[i];
         if (!Object.prototype.hasOwnProperty.call(formData, selector)) {
           continue;
         }
@@ -1188,7 +1602,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
           | null;
 
         if (element) {
-          await this.applyHighlight(element, highlight);
+          const elementInfo = `Filling form field ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
+          await this.applyHighlight(element, highlight, elementInfo);
 
           element.value = value;
           element.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1251,7 +1666,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       if (!form) return false;
 
-      await this.applyHighlight(root ?? form, highlight);
+      const formName =
+        form.getAttribute("name") || form.getAttribute("id") || "form";
+      const elementInfo = `Submitting form: ${formName}`;
+
+      await this.applyHighlight(root ?? form, highlight, elementInfo);
 
       try {
         // Prefer requestSubmit if available, otherwise fallback to submit.

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floorp エフェクトテストページ</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+        button {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #357ABD;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .highlight-targets {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .target-box {
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎨 Floorp エフェクトテストページ</h1>
+        <p class="subtitle">API から操作してエフェクトを確認してください</p>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="name">名前</label>
+                <input type="text" id="name" name="name" placeholder="山田太郎">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" placeholder="example@floorp.app">
+            </div>
+            
+            <div class="form-group">
+                <label for="message">メッセージ</label>
+                <textarea id="message" name="message" rows="4" placeholder="ここにメッセージを入力してください"></textarea>
+            </div>
+            
+            <button type="submit" id="submitBtn">送信</button>
+            <button type="button" class="btn-secondary" id="resetBtn">リセット</button>
+        </form>
+        
+        <div id="result"></div>
+    </div>
+    
+    <div class="card">
+        <h2>ハイライトテスト用の要素</h2>
+        <div class="highlight-targets">
+            <div class="target-box" id="box1">ボックス 1</div>
+            <div class="target-box" id="box2">ボックス 2</div>
+            <div class="target-box" id="box3">ボックス 3</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const result = document.getElementById('result');
+            result.textContent = '✅ フォームが送信されました！';
+            result.style.display = 'block';
+            setTimeout(() => {
+                result.style.display = 'none';
+            }, 3000);
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('testForm').reset();
+            const result = document.getElementById('result');
+            result.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
+
