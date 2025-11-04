@@ -149,7 +149,7 @@ interface TabManagerAPI {
     }>
   >;
   getInstanceInfo(instanceId: string): Promise<unknown | null>;
-  destroyInstance(instanceId: string): void;
+  destroyInstance(instanceId: string): Promise<void>;
   navigate(instanceId: string, url: string): Promise<void>;
   getURI(instanceId: string): Promise<string>;
   getHTML(instanceId: string): Promise<string | null>;

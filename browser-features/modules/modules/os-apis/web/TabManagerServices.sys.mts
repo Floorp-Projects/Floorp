@@ -13,6 +13,17 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+type HighlightScrollBehavior = "auto" | "smooth" | "instant" | "none";
+
+interface HighlightOptions {
+  action: string;
+  duration: number;
+  focus: boolean;
+  scrollBehavior: HighlightScrollBehavior;
+  padding: number;
+  delay: number;
+}
+
 // Global sets to prevent garbage collection of active components
 const TAB_MANAGER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 const PROGRESS_LISTENERS = new Set();
@@ -39,6 +50,9 @@ class TabManager {
     { tab: object; browser: XULBrowserElement }
   > = new Map();
 
+  private readonly _defaultHighlightDuration = 1400;
+  private readonly _defaultActionDelay = 350;
+
   constructor() {}
 
   // --- Private Helper Methods ---
@@ -52,6 +66,68 @@ class TabManager {
       throw new Error(`Instance not found for ID: ${instanceId}`);
     }
     return instance;
+  }
+
+  private _buildHighlightOptions(
+    action: string,
+    overrides?: Partial<HighlightOptions>,
+  ): HighlightOptions {
+    return {
+      action,
+      duration: overrides?.duration ?? this._defaultHighlightDuration,
+      focus: overrides?.focus ?? true,
+      scrollBehavior: overrides?.scrollBehavior ?? "smooth",
+      padding: overrides?.padding ?? 12,
+      delay: overrides?.delay ?? this._defaultActionDelay,
+    };
+  }
+
+  private async _delayForUser(delay?: number): Promise<void> {
+    const ms = delay ?? this._defaultActionDelay;
+    if (ms <= 0) {
+      return;
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }
+
+  private _focusInstance(instanceId: string): void {
+    try {
+      const entry = this._browserInstances.get(instanceId) as
+        | { tab: any; browser: XULBrowserElement }
+        | undefined;
+      if (!entry) {
+        return;
+      }
+
+      const win = getBrowserWindow() as Window & { gBrowser: any };
+      if (win.closed) {
+        return;
+      }
+
+      if (Services?.ww?.activeWindow !== win) {
+        try {
+          win.focus();
+        } catch (_) {
+          // ignore focus errors
+        }
+      }
+
+      if (win.gBrowser.selectedTab !== entry.tab) {
+        try {
+          win.gBrowser.selectedTab = entry.tab;
+        } catch (_) {
+          // ignore tab selection errors
+        }
+      }
+
+      try {
+        entry.browser?.focus();
+      } catch (_) {
+        // ignore browser focus failures
+      }
+    } catch (error) {
+      console.error("TabManager: Failed to focus instance", error);
+    }
   }
 
   /**
@@ -195,6 +271,7 @@ class TabManager {
 
     const browser = tab.linkedBrowser;
     await this._waitForLoad(browser, url);
+    await this._delayForUser();
 
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab, browser });
@@ -219,6 +296,8 @@ class TabManager {
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab: targetTab, browser });
     TAB_MANAGER_ACTOR_SETS.add(browser);
+
+    await this._delayForUser();
 
     return instanceId;
   }
@@ -262,15 +341,16 @@ class TabManager {
     };
   }
 
-  public destroyInstance(instanceId: string): void {
-    const { tab, browser } = this._getInstance(instanceId);
-    const win = getBrowserWindow() as Window;
-    win.gBrowser.removeTab(tab);
+  public async destroyInstance(instanceId: string): Promise<void> {
+    const { browser } = this._getInstance(instanceId);
+    await this._queryActor(instanceId, "WebScraper:ClearEffects").catch(
+      () => null,
+    );
     this._browserInstances.delete(instanceId);
     TAB_MANAGER_ACTOR_SETS.delete(browser);
   }
 
-  public navigate(instanceId: string, url: string): Promise<void> {
+  public async navigate(instanceId: string, url: string): Promise<void> {
     const { browser } = this._getInstance(instanceId);
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
 
@@ -289,12 +369,14 @@ class TabManager {
 
     // Check if browser.loadURI is defined before calling it
     if (typeof browser.loadURI === "function") {
+      await this._delayForUser();
       browser.loadURI(Services.io.newURI(url), loadURIOptions);
     } else {
       // Throw an error if loadURI is not available
       throw new Error("browser.loadURI is not defined");
     }
-    return this._waitForLoad(browser, url);
+    await this._waitForLoad(browser, url);
+    await this._delayForUser();
   }
 
   public getURI(instanceId: string): Promise<string> {
@@ -352,13 +434,19 @@ class TabManager {
     });
   }
 
-  public clickElement(
+  public async clickElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    return this._queryActor<boolean>(instanceId, "WebScraper:ClickElement", {
-      selector,
-    });
+    this._focusInstance(instanceId);
+    return await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:ClickElement",
+      {
+        selector,
+        highlight: this._buildHighlightOptions("Click"),
+      },
+    );
   }
 
   public waitForElement(
@@ -405,12 +493,17 @@ class TabManager {
     );
   }
 
-  public fillForm(
+  public async fillForm(
     instanceId: string,
-    formData: object,
+    formData: Record<string, string>,
   ): Promise<boolean | null> {
-    return this._queryActor<boolean>(instanceId, "WebScraper:FillForm", {
+    this._focusInstance(instanceId);
+    return await this._queryActor<boolean>(instanceId, "WebScraper:FillForm", {
       formData,
+      highlight: this._buildHighlightOptions("Fill", {
+        duration: 1000,
+        padding: 16,
+      }),
     });
   }
 
@@ -423,9 +516,16 @@ class TabManager {
     });
   }
 
-  public submit(instanceId: string, selector: string): Promise<boolean | null> {
-    return this._queryActor<boolean>(instanceId, "WebScraper:Submit", {
+  public async submit(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    return await this._queryActor<boolean>(instanceId, "WebScraper:Submit", {
       selector,
+      highlight: this._buildHighlightOptions("Submit", {
+        duration: 1200,
+      }),
     });
   }
 }
