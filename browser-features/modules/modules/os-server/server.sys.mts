@@ -186,21 +186,6 @@ interface TabManagerAPI {
   ): Promise<boolean | null>;
   getValue(instanceId: string, selector: string): Promise<string | null>;
   submit(instanceId: string, selector: string): Promise<boolean | null>;
-  inputElement(
-    instanceId: string,
-    selector: string,
-    value: string,
-  ): Promise<boolean | null>;
-  highlightElements(
-    instanceId: string,
-    selectors: string[],
-    options?: {
-      action?: string;
-      elementInfo?: string;
-      duration?: number;
-    },
-  ): Promise<boolean | null>;
-  clearEffects(instanceId: string): Promise<boolean | null>;
 }
 
 const TabManagerModule = () =>
@@ -1061,55 +1046,6 @@ class LocalHttpServer implements nsIServerSocketListener {
         const { TabManagerServices } = TabManagerModule();
         const submitted = await TabManagerServices.submit(ctx.params.id, sel);
         return { status: 200, body: { ok: submitted } };
-      });
-      t.post("/instances/:id/input", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          selector?: string;
-          value?: string;
-        } | null;
-        if (!json?.selector || json?.value === undefined) {
-          return {
-            status: 400,
-            body: { error: "selector and value required" },
-          };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        const ok = await TabManagerServices.inputElement(
-          ctx.params.id,
-          json.selector,
-          json.value,
-        );
-        return { status: 200, body: { ok } };
-      });
-      t.post("/instances/:id/highlight", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          selectors?: string[];
-          action?: string;
-          elementInfo?: string;
-          duration?: number;
-        } | null;
-        if (!json?.selectors || !Array.isArray(json.selectors)) {
-          return {
-            status: 400,
-            body: { error: "selectors array required" },
-          };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        const ok = await TabManagerServices.highlightElements(
-          ctx.params.id,
-          json.selectors,
-          {
-            action: json.action,
-            elementInfo: json.elementInfo,
-            duration: json.duration,
-          },
-        );
-        return { status: 200, body: { ok } };
-      });
-      t.post("/instances/:id/clearEffects", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const ok = await TabManagerServices.clearEffects(ctx.params.id);
-        return { status: 200, body: { ok } };
       });
     });
 

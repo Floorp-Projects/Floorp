@@ -28,7 +28,6 @@ interface HighlightRequest {
 
 interface NRWebScraperMessageData {
   selector?: string;
-  selectors?: string[];
   value?: string;
   textContent?: string;
   timeout?: number;
@@ -970,19 +969,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.submit(message.data.selector, message.data.highlight);
         }
         break;
-      case "WebScraper:ClearEffects":
-        this.clearPersistentEffects();
-        this.hideInfoPanel();
-        return true;
-      case "WebScraper:HighlightElements":
-        if (message.data?.selectors && Array.isArray(message.data.selectors)) {
-          return this.highlightElements(
-            message.data.selectors,
-            message.data.highlight,
-            message.data.elementInfo,
-          );
-        }
-        break;
     }
     return null;
   }
@@ -1128,39 +1114,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     } catch (e) {
       console.error("NRWebScraperChild: Error getting element text:", e);
       return null;
-    }
-  }
-
-  /**
-   * Highlights multiple elements by their CSS selectors
-   *
-   * @param selectors - Array of CSS selectors to highlight
-   * @param highlight - Highlight options
-   * @param elementInfo - Description of the elements being highlighted
-   */
-  async highlightElements(
-    selectors: string[],
-    highlight?: HighlightRequest,
-    elementInfo?: string,
-  ): Promise<boolean> {
-    try {
-      const elements: Element[] = [];
-      for (const selector of selectors) {
-        const element = this.document?.querySelector(selector);
-        if (element) {
-          elements.push(element);
-        }
-      }
-
-      if (elements.length === 0) {
-        return false;
-      }
-
-      await this.applyHighlightMultiple(elements, highlight, elementInfo);
-      return true;
-    } catch (e) {
-      console.error("NRWebScraperChild: Error highlighting elements:", e);
-      return false;
     }
   }
 

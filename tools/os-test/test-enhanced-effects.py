@@ -43,18 +43,6 @@ class FloorpTabManager:
         print(f"✓ Navigated to: {url}")
         return resp.json()
     
-    def input_element(self, selector: str, value: str):
-        """入力フィールドに値を設定（エフェクト付き）"""
-        if not self.instance_id:
-            raise ValueError("No instance created")
-        resp = requests.post(
-            f"{self.base_url}/tabs/instances/{self.instance_id}/input",
-            json={"selector": selector, "value": value}
-        )
-        result = resp.json()
-        print(f"✓ Input Element [{selector}]: {value} - OK: {result.get('ok')}")
-        return result
-    
     def click_element(self, selector: str):
         """要素をクリック（エフェクト付き）"""
         if not self.instance_id:
@@ -65,33 +53,6 @@ class FloorpTabManager:
         )
         result = resp.json()
         print(f"✓ Click Element [{selector}] - OK: {result.get('ok')}")
-        return result
-    
-    def highlight_elements(
-        self, 
-        selectors: list[str], 
-        action: str = "Highlight",
-        element_info: Optional[str] = None,
-        duration: int = 2000
-    ):
-        """複数要素をハイライト（新機能！）"""
-        if not self.instance_id:
-            raise ValueError("No instance created")
-        
-        payload = {
-            "selectors": selectors,
-            "action": action,
-            "duration": duration
-        }
-        if element_info:
-            payload["elementInfo"] = element_info
-        
-        resp = requests.post(
-            f"{self.base_url}/tabs/instances/{self.instance_id}/highlight",
-            json=payload
-        )
-        result = resp.json()
-        print(f"✓ Highlight Elements: {len(selectors)} elements - OK: {result.get('ok')}")
         return result
     
     def fill_form(self, form_data: dict):
@@ -106,16 +67,16 @@ class FloorpTabManager:
         print(f"✓ Fill Form: {len(form_data)} fields - OK: {result.get('ok')}")
         return result
     
-    def clear_effects(self):
-        """すべてのエフェクトをクリア"""
+    def submit(self, selector: str):
+        """フォームを送信（エフェクト付き）"""
         if not self.instance_id:
             raise ValueError("No instance created")
         resp = requests.post(
-            f"{self.base_url}/tabs/instances/{self.instance_id}/clearEffects",
-            json={}
+            f"{self.base_url}/tabs/instances/{self.instance_id}/submit",
+            json={"selector": selector}
         )
         result = resp.json()
-        print(f"✓ Clear Effects - OK: {result.get('ok')}")
+        print(f"✓ Submit Form [{selector}] - OK: {result.get('ok')}")
         return result
     
     def destroy_instance(self):
@@ -150,54 +111,31 @@ def main():
         time.sleep(3)  # ページロード待機
         print()
         
-        # 3. 複数要素のハイライトテスト（新機能！）
-        print("📋 Step 3: Highlight Multiple Elements")
-        manager.highlight_elements(
-            selectors=["input[name='q']", "input[name='btnK']", "input[name='btnI']"],
-            action="Inspect",
-            element_info="検索フォームの要素を確認しています",
-            duration=3000
-        )
-        time.sleep(4)  # エフェクト確認のため待機
+        # 3. フォーム入力テスト（自動的に紫色のエフェクト表示）
+        print("📋 Step 3: Fill Search Form with Enhanced Effects")
+        manager.fill_form({
+            "input[name='q']": "Floorp Browser"
+        })
+        time.sleep(3)  # エフェクト確認のため待機
         print()
         
-        # 4. 入力フィールドにテキスト入力（エフェクト付き）
-        print("📋 Step 4: Input Text with Enhanced Effects")
-        manager.input_element("input[name='q']", "Floorp Browser")
-        time.sleep(2)  # エフェクト確認のため待機
-        print()
-        
-        # 5. クリック操作（エフェクト付き）
-        print("📋 Step 5: Click Element with Enhanced Effects")
+        # 4. クリック操作（自動的にオレンジ色のエフェクト表示）
+        print("📋 Step 4: Click Search Button with Enhanced Effects")
         manager.click_element("input[name='btnK']")
         time.sleep(3)  # クリック後の遷移を確認
         print()
         
-        # 6. エフェクトのクリア
-        print("📋 Step 6: Clear All Effects")
-        manager.clear_effects()
-        time.sleep(1)
-        print()
-        
-        # 7. 別のページでテスト（GitHub）
-        print("📋 Step 7: Navigate to GitHub")
+        # 5. 別のページでテスト（GitHub）
+        print("📋 Step 5: Navigate to GitHub")
         manager.navigate("https://github.com")
         time.sleep(3)
         print()
         
-        # 8. フォーム入力のテスト
-        print("📋 Step 8: Highlight and Fill Form")
-        # まず要素をハイライト
-        manager.highlight_elements(
-            selectors=["input[name='q']"],
-            action="Fill",
-            element_info="検索フィールドに入力します",
-            duration=2000
-        )
-        time.sleep(2)
-        
-        # 入力
-        manager.input_element("input[name='q']", "floorp-browser")
+        # 6. GitHub検索フォームの入力テスト
+        print("📋 Step 6: Fill GitHub Search Form")
+        manager.fill_form({
+            "input[name='q']": "floorp-browser"
+        })
         time.sleep(2)
         print()
         
@@ -206,11 +144,10 @@ def main():
         print("=" * 60)
         print()
         print("📊 テストした機能:")
-        print("  ✓ 右上の操作情報パネル表示")
-        print("  ✓ 複数要素の同時ハイライト")
-        print("  ✓ アクション別の色分け（Read=緑、Write=紫、Click=オレンジ）")
-        print("  ✓ 要素情報の詳細表示")
-        print("  ✓ エフェクトのクリア")
+        print("  ✓ 右上の操作情報パネル（自動表示）")
+        print("  ✓ アクション別の色分け（Fill=紫、Click=オレンジ）")
+        print("  ✓ 要素情報の詳細表示（進捗など）")
+        print("  ✓ 既存APIの自動エフェクト化")
         print()
         
     except Exception as e:
