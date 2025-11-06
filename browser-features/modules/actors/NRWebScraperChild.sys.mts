@@ -57,16 +57,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private highlightCleanupTimer: number | null = null;
   private highlightCleanupCallbacks: Array<() => void> = [];
   private highlightStyleElement: HTMLStyleElement | null = null;
-  private persistentStyleElement: HTMLStyleElement | null = null;
-  private persistentEffects = new Set<Element>();
-  private persistentWindowListenersRegistered = false;
-  private persistentCleanupHandler: ((event: Event) => void) | null = null;
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
-  private pendingPersistentEffect: {
-    element: Element;
-    action?: string;
-  } | null = null;
 
   private normalizeHighlightOptions(
     highlight?: HighlightRequest,
@@ -413,20 +405,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
       this.highlightCleanupCallbacks = [];
 
-      // 保留中の永続エフェクトを適用
-      if (this.pendingPersistentEffect) {
-        const { element, action } = this.pendingPersistentEffect;
-        this.pendingPersistentEffect = null;
-        // 少し遅延してから永続エフェクトを適用（スムーズな遷移のため）
-        if (win) {
-          win.setTimeout(() => {
-            this.applyPersistentEffect(element, action);
-          }, 100);
-        } else {
-          this.applyPersistentEffect(element, action);
-        }
-      }
-
       this.highlightOverlay = null;
       this.highlightOverlays = [];
     };
@@ -594,228 +572,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.infoPanel = null;
   }
 
-  private ensurePersistentStyle(): void {
-    const doc = this.document;
-    if (!doc) {
-      return;
-    }
-
-    if (this.persistentStyleElement?.isConnected) {
-      return;
-    }
-
-    const existing = doc.getElementById("nr-webscraper-persistent-style");
-    if (existing instanceof HTMLStyleElement) {
-      this.persistentStyleElement = existing;
-      return;
-    }
-
-    const style = doc.createElement("style");
-    style.id = "nr-webscraper-persistent-style";
-    style.textContent = `.nr-webscraper-effect {
-  outline: 4px solid rgba(37, 99, 235, 0.9);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3),
-              0 0 20px rgba(37, 99, 235, 0.4),
-              inset 0 0 15px rgba(37, 99, 235, 0.1);
-  transition: outline-color 200ms ease-out, box-shadow 200ms ease-out, opacity 300ms ease-in;
-  position: relative;
-  animation: nr-webscraper-effect-pulse 2s ease-in-out infinite,
-             nr-webscraper-effect-fade-in 300ms ease-in;
-  opacity: 0;
-}
-
-@keyframes nr-webscraper-effect-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.nr-webscraper-effect.nr-webscraper-effect--visible {
-  opacity: 1;
-}
-
-@keyframes nr-webscraper-effect-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3),
-                0 0 20px rgba(37, 99, 235, 0.4),
-                inset 0 0 15px rgba(37, 99, 235, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.4),
-                0 0 30px rgba(37, 99, 235, 0.6),
-                inset 0 0 20px rgba(37, 99, 235, 0.15);
-  }
-}
-
-.nr-webscraper-effect[data-nr-webscraper-effect]:not([data-nr-webscraper-effect=""])::after {
-  content: attr(data-nr-webscraper-effect);
-  position: absolute;
-  top: -32px;
-  left: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(37, 99, 235, 0.95);
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 9999px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  pointer-events: none;
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
-              0 0 20px rgba(37, 99, 235, 0.5);
-  z-index: 2147483646;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.nr-webscraper-effect[data-nr-webscraper-effect-position="below"]::after {
-  top: auto;
-  bottom: -28px;
-  transform: translateY(4px);
-}`;
-
-    (doc.head ?? doc.documentElement)?.append(style);
-    this.persistentStyleElement = style;
-  }
-
-  private ensureWindowListeners(): void {
-    if (this.persistentWindowListenersRegistered) {
-      return;
-    }
-    const win = this.contentWindow;
-    if (!win) {
-      return;
-    }
-
-    const cleanup = (_event: Event) => {
-      this.clearPersistentEffects();
-    };
-
-    win.addEventListener("pagehide", cleanup, true);
-    win.addEventListener("beforeunload", cleanup, true);
-    win.addEventListener("unload", cleanup, true);
-    this.persistentCleanupHandler = cleanup;
-    this.persistentWindowListenersRegistered = true;
-  }
-
-  private applyPersistentEffect(
-    element: Element | null,
-    action?: string,
-  ): void {
-    try {
-      if (!element) {
-        return;
-      }
-
-      // 既に同じ要素にエフェクトが適用されている場合はスキップ
-      if (this.persistentEffects.has(element)) {
-        return;
-      }
-
-      this.clearPersistentEffects({ keepStyle: true });
-
-      this.ensurePersistentStyle();
-      this.ensureWindowListeners();
-
-      element.classList.add("nr-webscraper-effect");
-      if (action) {
-        element.setAttribute("data-nr-webscraper-effect", action);
-      } else {
-        element.removeAttribute("data-nr-webscraper-effect");
-      }
-
-      const rect = element.getBoundingClientRect?.();
-      if (rect) {
-        if (rect.top < 32) {
-          element.setAttribute("data-nr-webscraper-effect-position", "below");
-        } else {
-          element.removeAttribute("data-nr-webscraper-effect-position");
-        }
-      }
-
-      this.persistentEffects.add(element);
-
-      // フェードインアニメーションをトリガー
-      const win = this.contentWindow;
-      if (win) {
-        win.requestAnimationFrame(() => {
-          element.classList.add("nr-webscraper-effect--visible");
-        });
-      } else {
-        element.classList.add("nr-webscraper-effect--visible");
-      }
-    } catch (error) {
-      console.warn(
-        "NRWebScraperChild: Failed to apply persistent effect",
-        error,
-      );
-    }
-  }
-
-  private clearPersistentEffects(options?: { keepStyle?: boolean }): void {
-    const keepStyle = options?.keepStyle ?? false;
-
-    // 保留中の永続エフェクトをクリア
-    this.pendingPersistentEffect = null;
-
-    for (const element of this.persistentEffects) {
-      try {
-        element.classList.remove("nr-webscraper-effect");
-        element.removeAttribute("data-nr-webscraper-effect");
-        element.removeAttribute("data-nr-webscraper-effect-position");
-      } catch (error) {
-        console.warn("NRWebScraperChild: Failed to clear effect", error);
-      }
-    }
-    this.persistentEffects.clear();
-
-    if (!keepStyle) {
-      const win = this.contentWindow;
-      if (win && this.persistentCleanupHandler) {
-        try {
-          win.removeEventListener(
-            "pagehide",
-            this.persistentCleanupHandler,
-            true,
-          );
-          win.removeEventListener(
-            "beforeunload",
-            this.persistentCleanupHandler,
-            true,
-          );
-          win.removeEventListener(
-            "unload",
-            this.persistentCleanupHandler,
-            true,
-          );
-        } catch (_) {
-          // ignore removal errors
-        }
-      }
-      this.persistentCleanupHandler = null;
-      this.persistentWindowListenersRegistered = false;
-
-      if (this.persistentStyleElement?.isConnected) {
-        try {
-          this.persistentStyleElement.remove();
-        } catch (_) {
-          // ignore removal errors
-        }
-      }
-      this.persistentStyleElement = null;
-    }
-  }
-
   private async applyHighlightMultiple(
     targets: Element[],
     highlight?: HighlightRequest,
@@ -932,7 +688,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     target: Element | null,
     highlight?: HighlightRequest,
     elementInfo?: string,
-    onCleanup?: (element: Element) => void,
   ): Promise<boolean> {
     if (!target) {
       this.cleanupHighlight();
@@ -1024,14 +779,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
 
     this.highlightOverlay = overlay;
-
-    // クリーンアップ時に永続エフェクトを適用するように設定
-    if (onCleanup && target) {
-      this.pendingPersistentEffect = {
-        element: target,
-        action: options.action,
-      };
-    }
 
     if (options.scrollBehavior !== "none") {
       try {
@@ -1212,7 +959,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
         break;
       case "WebScraper:ClearEffects":
-        this.clearPersistentEffects();
+        this.cleanupHighlight();
         this.hideInfoPanel();
         return true;
     }
@@ -1261,7 +1008,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector);
       if (element) {
-        this.applyPersistentEffect(element, "Inspect");
         return String((element as Element).outerHTML);
       }
       return null;
@@ -1285,10 +1031,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
         const o = (el as Element).outerHTML;
         if (o != null) results.push(String(o));
       });
-      const first = nodeList.item(0);
-      if (first) {
-        this.applyPersistentEffect(first, "Inspect");
-      }
       return results;
     } catch (e) {
       console.error("NRWebScraperChild: Error getting elements:", e);
@@ -1309,7 +1051,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
       for (const el of elArray) {
         const txt = el.textContent;
         if (txt && txt.includes(textContent)) {
-          this.applyPersistentEffect(el, "Inspect");
           return String(el.outerHTML);
         }
       }
@@ -1327,7 +1068,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector);
       if (element) {
-        this.applyPersistentEffect(element, "Read");
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1353,7 +1093,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector);
       if (element) {
-        this.applyPersistentEffect(element, "Read");
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1389,7 +1128,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const elementInfo = `入力値を設定: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
 
-      // 情報パネルを表示
       this.showInfoPanel(
         highlight?.action ?? "Input",
         undefined,
@@ -1397,19 +1135,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
         1,
       );
 
-      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
-      await this.applyHighlight(element, highlight, elementInfo, () => {
-        // クリーンアップ時に永続エフェクトを適用するコールバック
-        // 実際の適用は cleanupHighlight 内で行われる
-      });
+      await this.applyHighlight(element, highlight, elementInfo);
 
       element.value = value;
       // Trigger input event to ensure the change is detected
       element.dispatchEvent(new Event("input", { bubbles: true }));
-      // Some sites update bound state on change/blur
       element.dispatchEvent(new Event("change", { bubbles: true }));
       element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error setting input value:", e);
@@ -1427,7 +1159,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @returns boolean - True if click was successful, false otherwise
    */
-  async clickElement(
+  clickElement(
     selector: string,
     highlight?: HighlightRequest,
   ): Promise<boolean> {
@@ -1435,7 +1167,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const element = this.document?.querySelector(
         selector,
       ) as HTMLElement | null;
-      if (!element) return false;
+      if (!element) return Promise.resolve(false);
 
       const elementTagName = element.tagName?.toLowerCase() || "element";
       const elementText = element.textContent?.trim().substring(0, 30) || "";
@@ -1443,7 +1175,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         ? `${elementTagName} をクリック: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
         : `${elementTagName} 要素をクリック中`;
 
-      // 情報パネルを表示
+      // 情報パネルを即座に表示（視覚的フィードバック）
       this.showInfoPanel(
         highlight?.action ?? "Click",
         undefined,
@@ -1451,11 +1183,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
         1,
       );
 
-      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
-      await this.applyHighlight(element, highlight, elementInfo, () => {
-        // クリーンアップ時に永続エフェクトを適用するコールバック
+      // エフェクト表示を非同期で開始（クリック処理をブロックしない）
+      const effectPromise = this.applyHighlight(
+        element,
+        highlight,
+        elementInfo,
+      ).catch(() => {
+        // エフェクト表示のエラーは無視（クリック処理には影響しない）
       });
 
+      // スクロールとフォーカスは即座に実行（highlightがない場合のみ）
       if (!highlight) {
         try {
           element.scrollIntoView({ block: "center", inline: "center" });
@@ -1545,11 +1282,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
 
       const success = stateChanged || clickDispatched;
-      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
-      return success;
+
+      // エフェクト表示の完了を待たずに結果を返す（非同期で継続）
+      void effectPromise;
+
+      return Promise.resolve(success);
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
-      return false;
+      return Promise.resolve(false);
     }
   }
 
@@ -1672,8 +1412,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (!element) {
         return null;
       }
-
-      this.applyPersistentEffect(element, "Screenshot");
 
       const canvas = (await this.contentWindow.document?.createElement(
         "canvas",
@@ -1838,7 +1576,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
         if (element) {
           const elementInfo = `フィールド ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
 
-          // 進捗を更新
           if (fieldCount > 1 && doc) {
             this.showInfoPanel(
               highlight?.action ?? "Fill",
@@ -1850,16 +1587,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
             );
           }
 
-          // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
-          await this.applyHighlight(element, highlight, elementInfo, () => {
-            // クリーンアップ時に永続エフェクトを適用するコールバック
-          });
+          await this.applyHighlight(element, highlight, elementInfo);
 
           element.value = value;
           element.dispatchEvent(new Event("input", { bubbles: true }));
           element.dispatchEvent(new Event("change", { bubbles: true }));
           element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-          // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
 
           // 各フィールド入力後に1.2秒の遅延（ユーザーがエフェクトを確認できるように）
           if (i < selectors.length - 1 && win) {
@@ -1893,7 +1626,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
         | HTMLTextAreaElement
         | null;
       if (element && typeof (element as HTMLInputElement).value === "string") {
-        this.applyPersistentEffect(element, "Read");
         return (element as HTMLInputElement).value;
       }
       return null;
@@ -1924,7 +1656,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
         form.getAttribute("name") || form.getAttribute("id") || "form";
       const elementInfo = `フォーム送信中: ${formName}`;
 
-      // 情報パネルを表示
       this.showInfoPanel(
         highlight?.action ?? "Submit",
         undefined,
@@ -1932,10 +1663,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         1,
       );
 
-      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
-      await this.applyHighlight(root ?? form, highlight, elementInfo, () => {
-        // クリーンアップ時に永続エフェクトを適用するコールバック
-      });
+      await this.applyHighlight(root ?? form, highlight, elementInfo);
 
       try {
         // Prefer requestSubmit if available, otherwise fallback to submit.
@@ -1958,7 +1686,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
           void e2;
         }
       }
-      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error submitting form:", e);
