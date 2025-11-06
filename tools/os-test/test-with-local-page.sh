@@ -33,7 +33,7 @@ echo -e "${GREEN}✓ Instance ID: ${INSTANCE_ID}${NC}"
 echo ""
 sleep 2
 
-# フォーム入力テスト（自動的に紫色のエフェクト + 情報パネル表示）
+# フォーム入力テスト（自動的に紫色のエフェクト + 3秒インターバル）
 echo -e "${BLUE}📋 Step 2: Fill Form with Enhanced Effects${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
   -H "Content-Type: application/json" \
@@ -44,35 +44,32 @@ curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
       "#message": "Floorp のエンハンスドエフェクトは素晴らしいです！"
     }
   }' | jq .
-echo -e "${PURPLE}✓ フォーム入力完了（紫色のエフェクト + 各フィールドの進捗表示）${NC}"
+echo -e "${PURPLE}✓ フォーム入力完了（紫色のエフェクト + 各フィールドの進捗表示 + 3秒表示）${NC}"
 echo -e "${YELLOW}👀 ブラウザを確認：右上に情報パネルと進捗、各フィールドに紫色のエフェクトが表示されます${NC}"
-sleep 4
 echo ""
 
-# 送信ボタンをクリック（自動的にオレンジ色のエフェクト表示）
+# 送信ボタンをクリック（自動的にオレンジ色のエフェクト + 3秒インターバル）
 echo -e "${BLUE}📋 Step 3: Click Submit Button with Enhanced Effects${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/click" \
   -H "Content-Type: application/json" \
   -d '{
     "selector": "#submitBtn"
   }' | jq .
-echo -e "${ORANGE}✓ 送信ボタンをクリック（オレンジ色のエフェクト + 情報パネル）${NC}"
+echo -e "${ORANGE}✓ 送信ボタンをクリック（オレンジ色のエフェクト + 情報パネル + 3秒表示）${NC}"
 echo -e "${YELLOW}👀 送信ボタンにオレンジ色のハイライトが表示されました${NC}"
-sleep 3
 echo ""
 
-# リセットボタンをクリック
+# リセットボタンをクリック（自動的に3秒インターバル）
 echo -e "${BLUE}📋 Step 4: Click Reset Button${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/click" \
   -H "Content-Type: application/json" \
   -d '{
     "selector": "#resetBtn"
   }' | jq .
-echo -e "${GREEN}✓ リセットボタンをクリック（オレンジ色のエフェクト）${NC}"
-sleep 2
+echo -e "${GREEN}✓ リセットボタンをクリック（オレンジ色のエフェクト + 3秒表示）${NC}"
 echo ""
 
-# フォームを再入力してSubmit（赤色のエフェクト）
+# フォームを再入力してSubmit（赤色のエフェクト + 自動的に3秒インターバル）
 echo -e "${BLUE}📋 Step 5: Fill and Submit Form${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
   -H "Content-Type: application/json" \
@@ -83,16 +80,14 @@ curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
       "#message": "テスト送信"
     }
   }' | jq .
-sleep 3
 
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/submit" \
   -H "Content-Type: application/json" \
   -d '{
     "selector": "#testForm"
   }' | jq .
-echo -e "${RED}✓ フォーム送信（赤色のエフェクト + 情報パネル）${NC}"
+echo -e "${RED}✓ フォーム送信（赤色のエフェクト + 情報パネル + 3秒表示）${NC}"
 echo -e "${YELLOW}👀 フォーム全体に赤色のハイライトが表示されました${NC}"
-sleep 2
 echo ""
 
 # クリーンアップ

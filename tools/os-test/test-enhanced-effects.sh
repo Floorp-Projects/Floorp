@@ -32,7 +32,7 @@ echo -e "${GREEN}✓ Instance ID: ${INSTANCE_ID}${NC}"
 echo ""
 sleep 3
 
-# 3. フォーム入力テスト（自動的に紫色のエフェクト表示）
+# 3. フォーム入力テスト（自動的に紫色のエフェクト + 3秒インターバル）
 echo -e "${BLUE}📋 Step 3: Fill Search Form with Enhanced Effects${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
   -H "Content-Type: application/json" \
@@ -41,21 +41,19 @@ curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
       "input[name=\"q\"]": "Floorp Browser"
     }
   }' | jq .
-echo -e "${GREEN}✓ フォーム入力完了（紫色のエフェクト + 情報パネル）${NC}"
+echo -e "${GREEN}✓ フォーム入力完了（紫色のエフェクト + 情報パネル + 3秒表示）${NC}"
 echo -e "${YELLOW}👀 ブラウザを確認：右上に情報パネル、入力フィールドに紫色のエフェクトが表示されています${NC}"
-sleep 3
 echo ""
 
-# 4. クリック操作（自動的にオレンジ色のエフェクト表示）
+# 4. クリック操作（自動的にオレンジ色のエフェクト + 3秒インターバル）
 echo -e "${BLUE}📋 Step 4: Click Search Button with Enhanced Effects${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/click" \
   -H "Content-Type: application/json" \
   -d '{
     "selector": "input[name=\"btnK\"]"
   }' | jq .
-echo -e "${GREEN}✓ クリック完了（オレンジ色のエフェクト + 情報パネル）${NC}"
+echo -e "${GREEN}✓ クリック完了（オレンジ色のエフェクト + 情報パネル + 3秒表示）${NC}"
 echo -e "${YELLOW}👀 検索ボタンにオレンジ色のハイライトが表示されました${NC}"
-sleep 3
 echo ""
 
 # 5. GitHub に移動
@@ -67,7 +65,7 @@ echo -e "${GREEN}✓ GitHub にナビゲート完了${NC}"
 sleep 3
 echo ""
 
-# 6. GitHub検索フォームの入力
+# 6. GitHub検索フォームの入力（自動的に3秒インターバル）
 echo -e "${BLUE}📋 Step 6: Fill GitHub Search Form${NC}"
 curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
   -H "Content-Type: application/json" \
@@ -76,8 +74,7 @@ curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
       "input[name=\"q\"]": "floorp-browser"
     }
   }' | jq .
-echo -e "${GREEN}✓ GitHub 検索フィールドに入力完了${NC}"
-sleep 2
+echo -e "${GREEN}✓ GitHub 検索フィールドに入力完了（3秒表示）${NC}"
 echo ""
 
 # クリーンアップ

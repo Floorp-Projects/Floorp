@@ -50,8 +50,8 @@ class TabManager {
     { tab: object; browser: XULBrowserElement }
   > = new Map();
 
-  private readonly _defaultHighlightDuration = 1400;
-  private readonly _defaultActionDelay = 350;
+  private readonly _defaultHighlightDuration = 2000;
+  private readonly _defaultActionDelay = 500;
 
   constructor() {}
 
@@ -343,9 +343,12 @@ class TabManager {
 
   public async destroyInstance(instanceId: string): Promise<void> {
     const { browser } = this._getInstance(instanceId);
-    await this._queryActor(instanceId, "WebScraper:ClearEffects").catch(
-      () => null,
-    );
+    // インスタンス破棄前にすべてのエフェクトをクリア
+    try {
+      await this._queryActor(instanceId, "WebScraper:ClearEffects");
+    } catch (_) {
+      // エラーは無視
+    }
     this._browserInstances.delete(instanceId);
     TAB_MANAGER_ACTOR_SETS.delete(browser);
   }
@@ -439,7 +442,7 @@ class TabManager {
     selector: string,
   ): Promise<boolean | null> {
     this._focusInstance(instanceId);
-    return await this._queryActor<boolean>(
+    const result = await this._queryActor<boolean>(
       instanceId,
       "WebScraper:ClickElement",
       {
@@ -447,6 +450,9 @@ class TabManager {
         highlight: this._buildHighlightOptions("Click"),
       },
     );
+
+    await this._delayForUser(3500);
+    return result;
   }
 
   public waitForElement(
@@ -498,13 +504,20 @@ class TabManager {
     formData: Record<string, string>,
   ): Promise<boolean | null> {
     this._focusInstance(instanceId);
-    return await this._queryActor<boolean>(instanceId, "WebScraper:FillForm", {
-      formData,
-      highlight: this._buildHighlightOptions("Fill", {
-        duration: 1000,
-        padding: 16,
-      }),
-    });
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:FillForm",
+      {
+        formData,
+        highlight: this._buildHighlightOptions("Fill", {
+          duration: 1500,
+          padding: 18,
+        }),
+      },
+    );
+
+    await this._delayForUser(3500);
+    return result;
   }
 
   public getValue(
@@ -521,12 +534,19 @@ class TabManager {
     selector: string,
   ): Promise<boolean | null> {
     this._focusInstance(instanceId);
-    return await this._queryActor<boolean>(instanceId, "WebScraper:Submit", {
-      selector,
-      highlight: this._buildHighlightOptions("Submit", {
-        duration: 1200,
-      }),
-    });
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:Submit",
+      {
+        selector,
+        highlight: this._buildHighlightOptions("Submit", {
+          duration: 1800,
+        }),
+      },
+    );
+
+    await this._delayForUser(3500);
+    return result;
   }
 }
 

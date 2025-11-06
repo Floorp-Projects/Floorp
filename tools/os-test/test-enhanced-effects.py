@@ -111,18 +111,16 @@ def main():
         time.sleep(3)  # ページロード待機
         print()
         
-        # 3. フォーム入力テスト（自動的に紫色のエフェクト表示）
+        # 3. フォーム入力テスト（自動的に紫色のエフェクト + 3秒インターバル）
         print("📋 Step 3: Fill Search Form with Enhanced Effects")
         manager.fill_form({
             "input[name='q']": "Floorp Browser"
         })
-        time.sleep(3)  # エフェクト確認のため待機
         print()
         
-        # 4. クリック操作（自動的にオレンジ色のエフェクト表示）
+        # 4. クリック操作（自動的にオレンジ色のエフェクト + 3秒インターバル）
         print("📋 Step 4: Click Search Button with Enhanced Effects")
         manager.click_element("input[name='btnK']")
-        time.sleep(3)  # クリック後の遷移を確認
         print()
         
         # 5. 別のページでテスト（GitHub）
@@ -131,12 +129,11 @@ def main():
         time.sleep(3)
         print()
         
-        # 6. GitHub検索フォームの入力テスト
+        # 6. GitHub検索フォームの入力テスト（自動的に3秒インターバル）
         print("📋 Step 6: Fill GitHub Search Form")
         manager.fill_form({
             "input[name='q']": "floorp-browser"
         })
-        time.sleep(2)
         print()
         
         print("=" * 60)

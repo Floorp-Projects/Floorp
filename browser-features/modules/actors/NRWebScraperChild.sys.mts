@@ -63,6 +63,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private persistentCleanupHandler: ((event: Event) => void) | null = null;
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
+  private pendingPersistentEffect: {
+    element: Element;
+    action?: string;
+  } | null = null;
 
   private normalizeHighlightOptions(
     highlight?: HighlightRequest,
@@ -73,11 +77,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     return {
       action: highlight.action,
-      duration: Math.max(highlight.duration ?? 1400, 200),
+      duration: Math.max(highlight.duration ?? 1800, 300),
       focus: highlight.focus ?? true,
       scrollBehavior: highlight.scrollBehavior ?? "smooth",
-      padding: Math.max(highlight.padding ?? 12, 0),
-      delay: Math.max(highlight.delay ?? 350, 0),
+      padding: Math.max(highlight.padding ?? 14, 0),
+      delay: Math.max(highlight.delay ?? 400, 0),
     };
   }
 
@@ -101,105 +105,157 @@ export class NRWebScraperChild extends JSWindowActorChild {
     style.id = "nr-webscraper-highlight-style";
     style.textContent = `@keyframes nr-webscraper-highlight-pulse {
   0% {
-    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45);
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45),
+                0 0 20px var(--nr-highlight-color-alpha-25);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 8px var(--nr-highlight-color-alpha-25);
-    transform: scale(1.015);
+    box-shadow: 0 0 0 12px var(--nr-highlight-color-alpha-25),
+                0 0 40px var(--nr-highlight-color-alpha-45);
+    transform: scale(1.02);
   }
   100% {
-    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-0);
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-0),
+                0 0 20px var(--nr-highlight-color-alpha-25);
     transform: scale(1);
+  }
+}
+
+@keyframes nr-webscraper-highlight-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45),
+                0 0 20px var(--nr-highlight-color-alpha-25),
+                inset 0 0 20px var(--nr-highlight-color-alpha-15);
+  }
+  50% {
+    box-shadow: 0 0 0 8px var(--nr-highlight-color-alpha-30),
+                0 0 50px var(--nr-highlight-color-alpha-50),
+                inset 0 0 30px var(--nr-highlight-color-alpha-20);
   }
 }
 
 @keyframes nr-webscraper-info-slide-in {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-20px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes nr-webscraper-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
   }
 }
 
 .nr-webscraper-highlight-overlay {
   --nr-highlight-color-alpha-0: rgba(59, 130, 246, 0);
+  --nr-highlight-color-alpha-15: rgba(59, 130, 246, 0.15);
+  --nr-highlight-color-alpha-20: rgba(59, 130, 246, 0.20);
   --nr-highlight-color-alpha-25: rgba(59, 130, 246, 0.25);
+  --nr-highlight-color-alpha-30: rgba(59, 130, 246, 0.30);
   --nr-highlight-color-alpha-45: rgba(59, 130, 246, 0.45);
+  --nr-highlight-color-alpha-50: rgba(59, 130, 246, 0.50);
   --nr-highlight-color: rgba(59, 130, 246, 0.95);
-  --nr-highlight-bg: rgba(59, 130, 246, 0.08);
+  --nr-highlight-bg: rgba(59, 130, 246, 0.12);
   --nr-label-bg: rgba(37, 99, 235, 0.94);
   position: fixed;
-  border-radius: 10px;
-  border: 2px solid var(--nr-highlight-color);
-  box-shadow: 0 0 0 4px var(--nr-highlight-color-alpha-25);
+  border-radius: 12px;
+  border: 3px solid var(--nr-highlight-color);
+  box-shadow: 0 0 0 6px var(--nr-highlight-color-alpha-25),
+              0 0 30px var(--nr-highlight-color-alpha-30);
   pointer-events: none;
   z-index: 2147483645;
   opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 120ms ease-out, transform 120ms ease-out;
+  transform: scale(0.96);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
   background: var(--nr-highlight-bg);
+  animation: nr-webscraper-highlight-glow 2s ease-in-out infinite;
 }
 
 .nr-webscraper-highlight-overlay--read {
   --nr-highlight-color-alpha-0: rgba(34, 197, 94, 0);
+  --nr-highlight-color-alpha-15: rgba(34, 197, 94, 0.15);
+  --nr-highlight-color-alpha-20: rgba(34, 197, 94, 0.20);
   --nr-highlight-color-alpha-25: rgba(34, 197, 94, 0.25);
+  --nr-highlight-color-alpha-30: rgba(34, 197, 94, 0.30);
   --nr-highlight-color-alpha-45: rgba(34, 197, 94, 0.45);
+  --nr-highlight-color-alpha-50: rgba(34, 197, 94, 0.50);
   --nr-highlight-color: rgba(34, 197, 94, 0.95);
-  --nr-highlight-bg: rgba(34, 197, 94, 0.08);
+  --nr-highlight-bg: rgba(34, 197, 94, 0.12);
   --nr-label-bg: rgba(22, 163, 74, 0.94);
 }
 
 .nr-webscraper-highlight-overlay--write {
   --nr-highlight-color-alpha-0: rgba(168, 85, 247, 0);
+  --nr-highlight-color-alpha-15: rgba(168, 85, 247, 0.15);
+  --nr-highlight-color-alpha-20: rgba(168, 85, 247, 0.20);
   --nr-highlight-color-alpha-25: rgba(168, 85, 247, 0.25);
+  --nr-highlight-color-alpha-30: rgba(168, 85, 247, 0.30);
   --nr-highlight-color-alpha-45: rgba(168, 85, 247, 0.45);
+  --nr-highlight-color-alpha-50: rgba(168, 85, 247, 0.50);
   --nr-highlight-color: rgba(168, 85, 247, 0.95);
-  --nr-highlight-bg: rgba(168, 85, 247, 0.08);
+  --nr-highlight-bg: rgba(168, 85, 247, 0.12);
   --nr-label-bg: rgba(147, 51, 234, 0.94);
 }
 
 .nr-webscraper-highlight-overlay--click {
   --nr-highlight-color-alpha-0: rgba(249, 115, 22, 0);
+  --nr-highlight-color-alpha-15: rgba(249, 115, 22, 0.15);
+  --nr-highlight-color-alpha-20: rgba(249, 115, 22, 0.20);
   --nr-highlight-color-alpha-25: rgba(249, 115, 22, 0.25);
+  --nr-highlight-color-alpha-30: rgba(249, 115, 22, 0.30);
   --nr-highlight-color-alpha-45: rgba(249, 115, 22, 0.45);
+  --nr-highlight-color-alpha-50: rgba(249, 115, 22, 0.50);
   --nr-highlight-color: rgba(249, 115, 22, 0.95);
-  --nr-highlight-bg: rgba(249, 115, 22, 0.08);
+  --nr-highlight-bg: rgba(249, 115, 22, 0.12);
   --nr-label-bg: rgba(234, 88, 12, 0.94);
 }
 
 .nr-webscraper-highlight-overlay--submit {
   --nr-highlight-color-alpha-0: rgba(239, 68, 68, 0);
+  --nr-highlight-color-alpha-15: rgba(239, 68, 68, 0.15);
+  --nr-highlight-color-alpha-20: rgba(239, 68, 68, 0.20);
   --nr-highlight-color-alpha-25: rgba(239, 68, 68, 0.25);
+  --nr-highlight-color-alpha-30: rgba(239, 68, 68, 0.30);
   --nr-highlight-color-alpha-45: rgba(239, 68, 68, 0.45);
+  --nr-highlight-color-alpha-50: rgba(239, 68, 68, 0.50);
   --nr-highlight-color: rgba(239, 68, 68, 0.95);
-  --nr-highlight-bg: rgba(239, 68, 68, 0.08);
+  --nr-highlight-bg: rgba(239, 68, 68, 0.12);
   --nr-label-bg: rgba(220, 38, 38, 0.94);
 }
 
 .nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--visible {
   opacity: 1;
   transform: scale(1);
-  animation: nr-webscraper-highlight-pulse 950ms ease-in-out 1;
+  animation: nr-webscraper-highlight-pulse 1200ms ease-in-out 1,
+             nr-webscraper-highlight-glow 2s ease-in-out infinite;
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
 }
 
 .nr-webscraper-highlight-label {
   position: absolute;
-  top: -28px;
+  top: -32px;
   left: 0;
   transform: translateY(-4px);
   background: var(--nr-label-bg);
   color: #fff;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 9999px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
-  box-shadow: 0 10px 25px rgba(30, 64, 175, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+              0 0 20px var(--nr-highlight-color-alpha-50);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--below .nr-webscraper-highlight-label {
@@ -212,63 +268,102 @@ export class NRWebScraperChild extends JSWindowActorChild {
   position: fixed;
   top: 16px;
   right: 16px;
-  max-width: 380px;
-  background: rgba(17, 24, 39, 0.96);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  max-width: 420px;
+  min-width: 320px;
+  background: rgba(17, 24, 39, 0.98);
+  backdrop-filter: blur(16px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
   pointer-events: none;
   z-index: 2147483647;
-  animation: nr-webscraper-info-slide-in 200ms ease-out;
+  animation: nr-webscraper-info-slide-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
   color: #fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 13px;
-  padding: 14px 16px;
+  padding: 18px 20px;
 }
 
 .nr-webscraper-info-panel__title {
   font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 8px;
+  font-size: 15px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #fff;
+}
+
+.nr-webscraper-info-panel__icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
 }
 
 .nr-webscraper-info-panel__badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 9999px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   background: var(--nr-label-bg);
   color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .nr-webscraper-info-panel__content {
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.nr-webscraper-info-panel__progress {
+  margin-top: 12px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.nr-webscraper-info-panel__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nr-label-bg), var(--nr-highlight-color));
+  border-radius: 2px;
+  animation: nr-webscraper-progress 0.3s ease-out;
+  box-shadow: 0 0 10px var(--nr-highlight-color-alpha-50);
 }
 
 .nr-webscraper-info-panel__selector {
-  margin-top: 8px;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
   font-family: "SF Mono", Monaco, Consolas, monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(168, 85, 247, 0.95);
   word-break: break-all;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.4;
 }
 
 .nr-webscraper-info-panel__count {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }`;
 
     (doc.head ?? doc.documentElement)?.append(style);
@@ -283,27 +378,60 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
     this.highlightCleanupTimer = null;
 
-    for (const cleanup of this.highlightCleanupCallbacks) {
-      try {
-        cleanup();
-      } catch (_) {
-        // ignore cleanup errors
-      }
-    }
-    this.highlightCleanupCallbacks = [];
+    // 一時ハイライトをフェードアウト
+    const fadeOutAndCleanup = () => {
+      const overlaysToRemove = [
+        ...(this.highlightOverlay ? [this.highlightOverlay] : []),
+        ...this.highlightOverlays,
+      ];
 
-    if (this.highlightOverlay?.isConnected) {
-      this.highlightOverlay.remove();
-    }
-    this.highlightOverlay = null;
-
-    // Cleanup multiple overlays
-    for (const overlay of this.highlightOverlays) {
-      if (overlay?.isConnected) {
-        overlay.remove();
+      if (overlaysToRemove.length > 0) {
+        overlaysToRemove.forEach((overlay) => {
+          if (overlay?.isConnected) {
+            overlay.style.setProperty(
+              "transition",
+              "opacity 300ms ease-out, transform 300ms ease-out",
+            );
+            overlay.style.setProperty("opacity", "0");
+            overlay.style.setProperty("transform", "scale(0.98)");
+            win?.setTimeout(() => {
+              if (overlay?.isConnected) {
+                overlay.remove();
+              }
+            }, 300);
+          }
+        });
       }
-    }
-    this.highlightOverlays = [];
+
+      // クリーンアップコールバックを実行
+      for (const cleanup of this.highlightCleanupCallbacks) {
+        try {
+          cleanup();
+        } catch (_) {
+          // ignore cleanup errors
+        }
+      }
+      this.highlightCleanupCallbacks = [];
+
+      // 保留中の永続エフェクトを適用
+      if (this.pendingPersistentEffect) {
+        const { element, action } = this.pendingPersistentEffect;
+        this.pendingPersistentEffect = null;
+        // 少し遅延してから永続エフェクトを適用（スムーズな遷移のため）
+        if (win) {
+          win.setTimeout(() => {
+            this.applyPersistentEffect(element, action);
+          }, 100);
+        } else {
+          this.applyPersistentEffect(element, action);
+        }
+      }
+
+      this.highlightOverlay = null;
+      this.highlightOverlays = [];
+    };
+
+    fadeOutAndCleanup();
   }
 
   private getActionColorClass(action?: string): string {
@@ -332,11 +460,38 @@ export class NRWebScraperChild extends JSWindowActorChild {
     return "";
   }
 
+  private getActionIcon(action: string): string {
+    const lowerAction = action.toLowerCase();
+    if (
+      lowerAction.includes("read") ||
+      lowerAction.includes("inspect") ||
+      lowerAction.includes("get")
+    ) {
+      return "👁️";
+    }
+    if (
+      lowerAction.includes("input") ||
+      lowerAction.includes("fill") ||
+      lowerAction.includes("write")
+    ) {
+      return "✏️";
+    }
+    if (lowerAction.includes("click")) {
+      return "👆";
+    }
+    if (lowerAction.includes("submit")) {
+      return "📤";
+    }
+    return "⚡";
+  }
+
   private showInfoPanel(
     action: string,
     selector?: string,
     elementInfo?: string,
     elementCount?: number,
+    currentProgress?: number,
+    totalProgress?: number,
   ): void {
     try {
       const win = this.contentWindow;
@@ -357,12 +512,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const title = doc.createElement("div");
       title.className = "nr-webscraper-info-panel__title";
 
+      const icon = doc.createElement("span");
+      icon.className = "nr-webscraper-info-panel__icon";
+      icon.textContent = this.getActionIcon(action);
+
       const badge = doc.createElement("span");
       badge.className = "nr-webscraper-info-panel__badge";
       badge.textContent = action;
 
+      title.append(icon);
       title.append(badge);
-      title.append(doc.createTextNode("Operation in Progress"));
+      title.append(doc.createTextNode("操作中"));
 
       const content = doc.createElement("div");
       content.className = "nr-webscraper-info-panel__content";
@@ -370,11 +530,30 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (elementInfo) {
         content.textContent = elementInfo;
       } else {
-        content.textContent = `Performing ${action.toLowerCase()} operation...`;
+        content.textContent = `${action} 操作を実行中...`;
       }
 
       panel.append(title);
       panel.append(content);
+
+      // 進捗バーを追加（複数要素操作時）
+      if (
+        totalProgress !== undefined &&
+        totalProgress > 1 &&
+        currentProgress !== undefined
+      ) {
+        const progressContainer = doc.createElement("div");
+        progressContainer.className = "nr-webscraper-info-panel__progress";
+        const progressBar = doc.createElement("div");
+        progressBar.className = "nr-webscraper-info-panel__progress-bar";
+        const progressPercent = Math.min(
+          100,
+          Math.round((currentProgress / totalProgress) * 100),
+        );
+        progressBar.style.setProperty("width", `${progressPercent}%`);
+        progressContainer.append(progressBar);
+        panel.append(progressContainer);
+      }
 
       if (selector) {
         const selectorDiv = doc.createElement("div");
@@ -386,16 +565,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (elementCount !== undefined && elementCount > 1) {
         const countDiv = doc.createElement("div");
         countDiv.className = "nr-webscraper-info-panel__count";
-        countDiv.textContent = `${elementCount} element${elementCount !== 1 ? "s" : ""} affected`;
+        countDiv.textContent = `📊 ${elementCount} 個の要素に影響`;
         panel.append(countDiv);
       }
 
       (doc.body ?? doc.documentElement)?.append(panel);
       this.infoPanel = panel;
 
-      // Auto-hide after action completes
+      // Auto-hide after action completes (長めに設定)
       this.infoPanelCleanupTimer = Number(
-        win.setTimeout(() => this.hideInfoPanel(), 3000),
+        win.setTimeout(() => this.hideInfoPanel(), 4000),
       );
     } catch (error) {
       console.warn("NRWebScraperChild: Failed to show info panel", error);
@@ -434,33 +613,69 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const style = doc.createElement("style");
     style.id = "nr-webscraper-persistent-style";
     style.textContent = `.nr-webscraper-effect {
-  outline: 3px solid rgba(37, 99, 235, 0.85);
-  outline-offset: 2px;
-  box-shadow: 0 0 12px rgba(37, 99, 235, 0.35);
-  transition: outline-color 180ms ease-out, box-shadow 180ms ease-out;
+  outline: 4px solid rgba(37, 99, 235, 0.9);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3),
+              0 0 20px rgba(37, 99, 235, 0.4),
+              inset 0 0 15px rgba(37, 99, 235, 0.1);
+  transition: outline-color 200ms ease-out, box-shadow 200ms ease-out, opacity 300ms ease-in;
   position: relative;
+  animation: nr-webscraper-effect-pulse 2s ease-in-out infinite,
+             nr-webscraper-effect-fade-in 300ms ease-in;
+  opacity: 0;
+}
+
+@keyframes nr-webscraper-effect-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.nr-webscraper-effect.nr-webscraper-effect--visible {
+  opacity: 1;
+}
+
+@keyframes nr-webscraper-effect-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3),
+                0 0 20px rgba(37, 99, 235, 0.4),
+                inset 0 0 15px rgba(37, 99, 235, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.4),
+                0 0 30px rgba(37, 99, 235, 0.6),
+                inset 0 0 20px rgba(37, 99, 235, 0.15);
+  }
 }
 
 .nr-webscraper-effect[data-nr-webscraper-effect]:not([data-nr-webscraper-effect=""])::after {
   content: attr(data-nr-webscraper-effect);
   position: absolute;
-  top: -28px;
+  top: -32px;
   left: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(37, 99, 235, 0.92);
+  background: rgba(37, 99, 235, 0.95);
   color: #fff;
-  padding: 3px 10px;
+  padding: 5px 12px;
   border-radius: 9999px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(30, 64, 175, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+              0 0 20px rgba(37, 99, 235, 0.5);
   z-index: 2147483646;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .nr-webscraper-effect[data-nr-webscraper-effect-position="below"]::after {
@@ -502,6 +717,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return;
       }
 
+      // 既に同じ要素にエフェクトが適用されている場合はスキップ
+      if (this.persistentEffects.has(element)) {
+        return;
+      }
+
       this.clearPersistentEffects({ keepStyle: true });
 
       this.ensurePersistentStyle();
@@ -524,6 +744,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
 
       this.persistentEffects.add(element);
+
+      // フェードインアニメーションをトリガー
+      const win = this.contentWindow;
+      if (win) {
+        win.requestAnimationFrame(() => {
+          element.classList.add("nr-webscraper-effect--visible");
+        });
+      } else {
+        element.classList.add("nr-webscraper-effect--visible");
+      }
     } catch (error) {
       console.warn(
         "NRWebScraperChild: Failed to apply persistent effect",
@@ -535,7 +765,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private clearPersistentEffects(options?: { keepStyle?: boolean }): void {
     const keepStyle = options?.keepStyle ?? false;
 
-    this.cleanupHighlight();
+    // 保留中の永続エフェクトをクリア
+    this.pendingPersistentEffect = null;
 
     for (const element of this.persistentEffects) {
       try {
@@ -608,11 +839,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     const colorClass = this.getActionColorClass(options.action);
 
-    // Show info panel
+    // Show info panel with progress
     this.showInfoPanel(
       options.action ?? "Highlight",
       undefined,
       elementInfo,
+      targets.length,
+      0,
       targets.length,
     );
 
@@ -699,6 +932,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     target: Element | null,
     highlight?: HighlightRequest,
     elementInfo?: string,
+    onCleanup?: (element: Element) => void,
   ): Promise<boolean> {
     if (!target) {
       this.cleanupHighlight();
@@ -790,6 +1024,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
 
     this.highlightOverlay = overlay;
+
+    // クリーンアップ時に永続エフェクトを適用するように設定
+    if (onCleanup && target) {
+      this.pendingPersistentEffect = {
+        element: target,
+        action: options.action,
+      };
+    }
 
     if (options.scrollBehavior !== "none") {
       try {
@@ -969,6 +1211,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.submit(message.data.selector, message.data.highlight);
         }
         break;
+      case "WebScraper:ClearEffects":
+        this.clearPersistentEffects();
+        this.hideInfoPanel();
+        return true;
     }
     return null;
   }
@@ -1141,8 +1387,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
-      const elementInfo = `Setting input value to: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
-      await this.applyHighlight(element, highlight, elementInfo);
+      const elementInfo = `入力値を設定: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
+
+      // 情報パネルを表示
+      this.showInfoPanel(
+        highlight?.action ?? "Input",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
+      await this.applyHighlight(element, highlight, elementInfo, () => {
+        // クリーンアップ時に永続エフェクトを適用するコールバック
+        // 実際の適用は cleanupHighlight 内で行われる
+      });
 
       element.value = value;
       // Trigger input event to ensure the change is detected
@@ -1150,7 +1409,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       // Some sites update bound state on change/blur
       element.dispatchEvent(new Event("change", { bubbles: true }));
       element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-      this.applyPersistentEffect(element, highlight?.action ?? "Input");
+      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error setting input value:", e);
@@ -1181,10 +1440,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const elementTagName = element.tagName?.toLowerCase() || "element";
       const elementText = element.textContent?.trim().substring(0, 30) || "";
       const elementInfo = elementText
-        ? `Clicking ${elementTagName}: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
-        : `Clicking ${elementTagName} element`;
+        ? `${elementTagName} をクリック: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
+        : `${elementTagName} 要素をクリック中`;
 
-      await this.applyHighlight(element, highlight, elementInfo);
+      // 情報パネルを表示
+      this.showInfoPanel(
+        highlight?.action ?? "Click",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
+      await this.applyHighlight(element, highlight, elementInfo, () => {
+        // クリーンアップ時に永続エフェクトを適用するコールバック
+      });
 
       if (!highlight) {
         try {
@@ -1275,10 +1545,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
 
       const success = stateChanged || clickDispatched;
-      if (success) {
-        this.applyPersistentEffect(element, highlight?.action ?? "Click");
-      }
-
+      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
       return success;
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
@@ -1541,6 +1808,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
       let allFilled = true;
       const selectors = Object.keys(formData);
       const fieldCount = selectors.length;
+      const win = this.contentWindow;
+      const doc = this.document;
+
+      // 初期情報パネルを表示
+      if (fieldCount > 1 && doc) {
+        this.showInfoPanel(
+          highlight?.action ?? "Fill",
+          undefined,
+          `フォーム入力中: ${fieldCount} 個のフィールド`,
+          fieldCount,
+          0,
+          fieldCount,
+        );
+      }
 
       for (let i = 0; i < selectors.length; i++) {
         const selector = selectors[i];
@@ -1555,17 +1836,37 @@ export class NRWebScraperChild extends JSWindowActorChild {
           | null;
 
         if (element) {
-          const elementInfo = `Filling form field ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
-          await this.applyHighlight(element, highlight, elementInfo);
+          const elementInfo = `フィールド ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
+
+          // 進捗を更新
+          if (fieldCount > 1 && doc) {
+            this.showInfoPanel(
+              highlight?.action ?? "Fill",
+              undefined,
+              elementInfo,
+              fieldCount,
+              i + 1,
+              fieldCount,
+            );
+          }
+
+          // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
+          await this.applyHighlight(element, highlight, elementInfo, () => {
+            // クリーンアップ時に永続エフェクトを適用するコールバック
+          });
 
           element.value = value;
           element.dispatchEvent(new Event("input", { bubbles: true }));
           element.dispatchEvent(new Event("change", { bubbles: true }));
           element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-          this.applyPersistentEffect(
-            element,
-            highlight?.action ?? `Fill ${selector}`,
-          );
+          // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
+
+          // 各フィールド入力後に1.2秒の遅延（ユーザーがエフェクトを確認できるように）
+          if (i < selectors.length - 1 && win) {
+            await new Promise<void>((resolve) => {
+              win.setTimeout(() => resolve(), 1200);
+            });
+          }
         } else {
           console.warn(
             `NRWebScraperChild: Element not found for selector: ${selector}`,
@@ -1621,9 +1922,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const formName =
         form.getAttribute("name") || form.getAttribute("id") || "form";
-      const elementInfo = `Submitting form: ${formName}`;
+      const elementInfo = `フォーム送信中: ${formName}`;
 
-      await this.applyHighlight(root ?? form, highlight, elementInfo);
+      // 情報パネルを表示
+      this.showInfoPanel(
+        highlight?.action ?? "Submit",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      // 一時ハイライトを表示（クリーンアップ時に永続エフェクトを適用）
+      await this.applyHighlight(root ?? form, highlight, elementInfo, () => {
+        // クリーンアップ時に永続エフェクトを適用するコールバック
+      });
 
       try {
         // Prefer requestSubmit if available, otherwise fallback to submit.
@@ -1646,7 +1958,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
           void e2;
         }
       }
-      this.applyPersistentEffect(form, highlight?.action ?? "Submit");
+      // 永続エフェクトは一時ハイライトのクリーンアップ時に自動適用される
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error submitting form:", e);
