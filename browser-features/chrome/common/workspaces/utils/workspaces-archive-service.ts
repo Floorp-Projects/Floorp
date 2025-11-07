@@ -42,6 +42,7 @@ const buildSummary = (
   userContextId: snapshot.workspace.userContextId,
   capturedAt: snapshot.capturedAt,
   filePath,
+  tabCount: snapshot.tabs.length,
 });
 
 const filterJsonFiles = (paths: string[]) =>

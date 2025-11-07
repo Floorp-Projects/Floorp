@@ -72,6 +72,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       archiveWorkspace: this.archiveWorkspace.bind(this),
       listArchivedWorkspaces: this.listArchivedWorkspaces.bind(this),
       restoreArchivedWorkspace: this.restoreArchivedWorkspace.bind(this),
+      deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
     };
 
     if (workspacesDataStore.data.size === 0) {
@@ -249,6 +250,19 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   public async listArchivedWorkspaces(): Promise<WorkspaceArchiveSummary[]> {
     return await this.archiveService.listSnapshots();
+  }
+
+  public async deleteArchivedWorkspace(archiveId: string): Promise<boolean> {
+    try {
+      await this.archiveService.removeSnapshot(archiveId);
+      return true;
+    } catch (error) {
+      console.error(
+        "WorkspacesService: failed to delete archived workspace",
+        error,
+      );
+      return false;
+    }
   }
 
   public async restoreArchivedWorkspace(archiveId: string) {

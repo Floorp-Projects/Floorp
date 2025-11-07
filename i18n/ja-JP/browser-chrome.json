@@ -78,7 +78,13 @@
       "restore-empty": "保存済みのワークスペースはありません",
       "restore-error": "保存済みワークスペースを読み込めませんでした",
       "restore-tooltip": "復元モードを切り替え",
-      "restore-item": "\"{{name}}\" を復元"
+      "restore-item": "\"{{name}}\" を復元",
+      "restore-delete-tooltip": "このアーカイブを削除",
+      "restore-tab-count": "{{count}} 個のタブ",
+      "restore-time-just-now": "たった今",
+      "restore-time-minutes": "{{minutes}} 分前",
+      "restore-time-hours": "{{hours}} 時間前",
+      "restore-time-days": "{{days}} 日前"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"

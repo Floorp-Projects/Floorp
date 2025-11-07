@@ -78,7 +78,17 @@
       "restore-empty": "No archived workspaces",
       "restore-error": "Failed to load archived workspaces",
       "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\""
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"

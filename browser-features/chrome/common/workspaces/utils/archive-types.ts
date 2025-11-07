@@ -18,4 +18,5 @@ export interface WorkspaceArchiveSummary {
   userContextId: number;
   capturedAt: number;
   filePath: string;
+  tabCount: number;
 }

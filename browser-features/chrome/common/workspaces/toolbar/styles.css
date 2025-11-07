@@ -30,7 +30,8 @@
 /* Toolbar button's Popup */
 #workspacesPopupContent {
   background: inherit !important;
-  overflow: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 300px;
   width: 300px;
   padding: 0px 5px;
@@ -145,12 +146,99 @@
 }
 
 .workspaceRestoreItem {
-  list-style-image: url("chrome://global/skin/icons/folder.svg");
-  width: -moz-available;
-  min-height: 40px;
-  max-height: 40px;
-  margin-bottom: 5px !important;
-  justify-content: flex-start;
+  width: 100%;
+  min-height: 50px;
+  margin-bottom: 6px !important;
+  gap: 4px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.workspaceRestoreItemButton {
+  border-radius: var(--tab-border-radius);
+  min-height: 50px;
+  max-height: 50px;
+  padding: 8px 12px;
+  cursor: pointer;
+  gap: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  &:hover {
+    background-color: var(--toolbarbutton-hover-background) !important;
+  }
+}
+
+.workspaceRestoreItemIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.workspaceRestoreItemContent {
+  gap: 2px;
+  text-align: start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.workspaceRestoreItemName {
+  font-weight: 500;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.workspaceRestoreItemMeta {
+  gap: 6px;
+  align-items: center;
+  opacity: 0.7;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.workspaceRestoreItemMetaText {
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.workspaceRestoreItemMetaSeparator {
+  font-size: 11px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.workspaceRestoreDeleteButton {
+  list-style-image: url("chrome://global/skin/icons/delete.svg");
+  min-width: 32px;
+  max-width: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  border-radius: 4px;
+  padding: 4px;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--toolbarbutton-hover-background) !important;
+  }
+
+  &:hover:active {
+    background-color: var(--toolbarbutton-active-background) !important;
+  }
+
+  & > .toolbarbutton-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+  }
+
+  & > .toolbarbutton-text {
+    display: none !important;
+  }
 }
 
 /* create new workspace button */
