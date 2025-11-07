@@ -48,15 +48,24 @@ const FormField = ({ item, control }: FormFieldProps) => {
       const scrollY = globalThis.scrollY;
       const scrollX = globalThis.scrollX;
 
-      const dropdownMaxHeight = 240;
+      // Calculate max height based on available space
+      // Use smaller max height to ensure dropdown stays within modal bounds
       const buttonWidth = rect.width;
+      const spaceBelow = windowHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Use available space, but cap at reasonable maximum (250px)
+      // This ensures dropdowns don't overflow the modal and look balanced
+      const dropdownMaxHeight = Math.min(
+        Math.max(spaceBelow, spaceAbove),
+        250
+      );
 
       let top = rect.bottom + scrollY;
       let left = rect.left + scrollX;
 
-      const spaceBelow = windowHeight - rect.bottom;
-
-      if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
+      // If not enough space below, show above
+      if (spaceBelow < dropdownMaxHeight && spaceAbove > dropdownMaxHeight) {
         top = rect.top + scrollY - dropdownMaxHeight;
       }
 
@@ -75,7 +84,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
         left: `${left}px`,
         width: `${buttonWidth}px`,
         maxHeight: `${dropdownMaxHeight}px`,
-        zIndex: 1000
+        zIndex: 1000,
+        scrollbarWidth: 'thin',
+        overflowY: 'auto' as const
       });
     }
   }, [dropdownOpen]);
@@ -240,7 +251,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   <div
                     ref={dropdownRef}
                     style={dropdownStyle}
-                    className="fixed bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md shadow-lg overflow-y-auto"
+                    className="fixed bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md shadow-lg overflow-y-auto scrollbar-thin"
                   >
                     <ul>
                       {item.options?.map((opt) => (

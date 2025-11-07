@@ -9,6 +9,83 @@ console.log("Workspaces override loaded");
 
 export const overrides = [
   () => {
+    // Override openTrustedLinkIn to apply workspace container
+    // This handles tabs opened from bookmarks, external links, etc.
+    const originalOpenTrustedLinkIn = window.openTrustedLinkIn;
+    window.openTrustedLinkIn = function (
+      url: string | nsIURI,
+      where: string,
+      options?: {
+        userContextId?: number;
+        relatedToCurrent?: boolean;
+        [key: string]: unknown;
+      },
+    ) {
+      const gWorkspacesServices = Workspaces.getCtx();
+      const workspaceUserContextId =
+        gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
+
+      // Merge options, applying workspace container if:
+      // 1. Workspace has a container (userContextId > 0)
+      // 2. No userContextId is specified in options (or it's 0/default)
+      const mergedOptions = {
+        ...options,
+        userContextId:
+          workspaceUserContextId > 0 &&
+          (!options?.userContextId || options.userContextId === 0)
+            ? workspaceUserContextId
+            : (options?.userContextId ?? 0),
+      };
+
+      console.debug("Workspaces: openTrustedLinkIn override", {
+        url: typeof url === "string" ? url : url.spec,
+        where,
+        originalUserContextId: options?.userContextId,
+        appliedUserContextId: mergedOptions.userContextId,
+      });
+
+      return originalOpenTrustedLinkIn.call(this, url, where, mergedOptions);
+    };
+
+    // Override openUILinkIn to apply workspace container
+    // This is used by some bookmark and external link handlers
+    if (window.openUILinkIn) {
+      const originalOpenUILinkIn = window.openUILinkIn;
+      window.openUILinkIn = function (
+        url: string | nsIURI,
+        where: string,
+        params?: {
+          userContextId?: number;
+          [key: string]: unknown;
+        },
+      ) {
+        const gWorkspacesServices = Workspaces.getCtx();
+        const workspaceUserContextId =
+          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
+
+        // Merge params, applying workspace container if:
+        // 1. Workspace has a container (userContextId > 0)
+        // 2. No userContextId is specified in params (or it's 0/default)
+        const mergedParams = {
+          ...params,
+          userContextId:
+            workspaceUserContextId > 0 &&
+            (!params?.userContextId || params.userContextId === 0)
+              ? workspaceUserContextId
+              : (params?.userContextId ?? 0),
+        };
+
+        console.debug("Workspaces: openUILinkIn override", {
+          url: typeof url === "string" ? url : url.spec,
+          where,
+          originalUserContextId: params?.userContextId,
+          appliedUserContextId: mergedParams.userContextId,
+        });
+
+        return originalOpenUILinkIn.call(this, url, where, mergedParams);
+      };
+    }
+
     window.BrowserCommands.openTab = ({
       event,
       url,

@@ -83,8 +83,22 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
     window.gBrowser.addProgressListener(this.listener);
 
+    // Listen for TabOpen events to apply workspace container to new tabs
+    // This handles tabs opened from bookmarks, external links, etc.
+    this.boundHandleTabOpen = this.handleTabOpen.bind(this);
+    window.SessionStore.promiseInitialized.then(() => {
+      window.gBrowser.tabContainer.addEventListener(
+        "TabOpen",
+        this.boundHandleTabOpen,
+      );
+    });
+
     onCleanup(() => {
       window.gBrowser.removeProgressListener(this.listener);
+      window.gBrowser.tabContainer.removeEventListener(
+        "TabOpen",
+        this.boundHandleTabOpen,
+      );
     });
   }
   setCurrentWorkspaceID(id: TWorkspaceID): void {
@@ -396,5 +410,53 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     onLocationChange: () => {
       this.tabManagerCtx.updateTabsVisibility();
     },
+  };
+
+  private boundHandleTabOpen: (event: Event) => void;
+
+  /**
+   * Handle TabOpen event to apply workspace container to new tabs.
+   * This ensures tabs opened from bookmarks, external links, etc. use the current workspace's container.
+   */
+  private handleTabOpen = (event: Event) => {
+    const tabEvent = event as CustomEvent;
+    const tab = (tabEvent.target || tabEvent.detail) as XULElement;
+    if (!tab) {
+      return;
+    }
+
+    // Check if tab already has a workspace ID assigned
+    const workspaceId = this.tabManagerCtx.getWorkspaceIdFromAttribute(tab);
+    const currentWorkspaceId = this.getSelectedWorkspaceID();
+
+    // If tab doesn't have a workspace ID, assign it to current workspace
+    if (!workspaceId) {
+      this.tabManagerCtx.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
+    }
+
+    // Get the workspace ID that should be used (either existing or current)
+    const targetWorkspaceId = workspaceId || currentWorkspaceId;
+    const workspace = this.getRawWorkspace(targetWorkspaceId);
+    const workspaceUserContextId = workspace?.userContextId ?? 0;
+
+    // Only apply userContextId if:
+    // 1. Workspace has a container (userContextId > 0)
+    // 2. Tab doesn't already have a userContextId set (or it's 0/default)
+    const currentTabUserContextId = Number.parseInt(
+      tab.getAttribute("usercontextid") || "0",
+      10,
+    );
+
+    if (workspaceUserContextId > 0 && currentTabUserContextId === 0) {
+      // Apply workspace container to the tab
+      tab.setAttribute("usercontextid", String(workspaceUserContextId));
+      console.debug(
+        "WorkspacesService: Applied workspace container to new tab",
+        {
+          workspaceId: targetWorkspaceId,
+          userContextId: workspaceUserContextId,
+        },
+      );
+    }
   };
 }

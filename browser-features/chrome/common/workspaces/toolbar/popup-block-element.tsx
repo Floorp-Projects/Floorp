@@ -6,6 +6,7 @@
 import { createMemo, Show } from "solid-js";
 import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
+import { getContainerColorName } from "../utils/container-color";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -20,6 +21,9 @@ export function PopupToolbarElement(props: {
     <Show when={workspace()}>
       {(ws) => {
         const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(ws().icon);
+        const userContextId = () => ws().userContextId ?? 0;
+        const hasContainer = () => userContextId() > 0;
+        const containerColorName = () => getContainerColorName(userContextId());
         return (
           <xul:toolbarbutton
             id={`workspace-${props.workspaceId}`}
@@ -32,6 +36,8 @@ export function PopupToolbarElement(props: {
             closemenu="none"
             data-selected={props.isSelected}
             data-workspaceId={props.workspaceId}
+            data-has-container={hasContainer() ? "true" : "false"}
+            data-container-color={containerColorName() ?? ""}
             onCommand={() => {
               props.ctx.changeWorkspace(props.workspaceId);
             }}
