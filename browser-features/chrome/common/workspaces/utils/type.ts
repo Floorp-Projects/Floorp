@@ -61,6 +61,27 @@ export const zWorkspacesServicesConfigs = t.type({
   exitOnLastTabClose: t.boolean,
 });
 
+export const zWorkspaceSnapshotTab = t.type({
+  state: t.union([t.UnknownRecord, t.null]),
+  title: t.union([t.string, t.null]),
+  url: t.union([t.string, t.null]),
+  pinned: t.boolean,
+  isSelected: t.boolean,
+  userContextId: t.number,
+  lastShownWorkspaceId: t.union([zWorkspaceID, t.null]),
+});
+
+export const zWorkspaceSnapshot = t.type({
+  capturedAt: t.number,
+  workspace: t.type({
+    workspaceId: zWorkspaceID,
+    name: t.string,
+    icon: t.union([t.string, t.null]),
+    userContextId: t.number,
+  }),
+  tabs: t.array(zWorkspaceSnapshotTab),
+});
+
 /* Export as types */
 export type TWorkspaceID = t.TypeOf<typeof zWorkspaceID>;
 export type TWorkspace = t.TypeOf<typeof zWorkspace>;
@@ -73,6 +94,8 @@ export type TWorkspacesBackup = t.TypeOf<typeof zWorkspacesServicesBackup>;
 export type TWorkspacesServicesConfigs = t.TypeOf<
   typeof zWorkspacesServicesConfigs
 >;
+export type TWorkspaceSnapshotTab = t.TypeOf<typeof zWorkspaceSnapshotTab>;
+export type TWorkspaceSnapshot = t.TypeOf<typeof zWorkspaceSnapshot>;
 
 /* XUL Elements */
 export type PanelMultiViewParentElement = XULElement & {
