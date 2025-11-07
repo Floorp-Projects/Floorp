@@ -49,6 +49,12 @@
   margin: auto;
 }
 
+.workspaceFooterButtons {
+  display: flex;
+  gap: 6px;
+  margin-inline-start: 6px;
+}
+
 /* Separator */
 #workspacesPopupSeparator {
   margin: 10px 0px !important;
@@ -99,6 +105,52 @@
   & > .toolbarbutton-text {
     display: none !important;
   }
+}
+
+.workspaceRestoreToggle {
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
+  height: 35px;
+  width: 35px;
+
+  & > .toolbarbutton-icon {
+    background-color: unset !important;
+  }
+
+  & > .toolbarbutton-text {
+    display: none !important;
+  }
+}
+
+.workspaceRestoreToggle-active {
+  background-color: var(--toolbarbutton-active-background) !important;
+}
+
+.workspaceRestoreContainer {
+  width: 100%;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.workspaceRestoreTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: start;
+  width: 100%;
+}
+
+.workspaceRestoreStatus {
+  width: 100%;
+  text-align: start;
+  opacity: 0.8;
+}
+
+.workspaceRestoreItem {
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
+  width: -moz-available;
+  min-height: 40px;
+  max-height: 40px;
+  margin-bottom: 5px !important;
+  justify-content: flex-start;
 }
 
 /* create new workspace button */

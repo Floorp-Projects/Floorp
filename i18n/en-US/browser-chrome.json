@@ -65,11 +65,20 @@
       "move-up": "Move this Workspace Up",
       "move-down": "Move this Workspace Down",
       "delete": "Delete Workspace",
-      "manage": "Manage Workspace"
+      "manage": "Manage Workspace",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Create New Workspace...",
-      "manage": "Manage Workspaces"
+      "manage": "Manage Workspaces",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\""
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"

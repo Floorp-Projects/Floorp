@@ -14,13 +14,20 @@ const translationKeys = {
   moveDown: "workspaces.context-menu.move-down",
   delete: "workspaces.context-menu.delete",
   manage: "workspaces.context-menu.manage",
+  archive: "workspaces.context-menu.archive",
 };
 
+const translate = (
+  key: string,
+  options?: Record<string, unknown>,
+): string => i18next.t(key, undefined, options) as string;
+
 const getTranslations = () => ({
-  moveUp: i18next.t(translationKeys.moveUp),
-  moveDown: i18next.t(translationKeys.moveDown),
-  delete: i18next.t(translationKeys.delete),
-  manage: i18next.t(translationKeys.manage),
+  moveUp: translate(translationKeys.moveUp),
+  moveDown: translate(translationKeys.moveDown),
+  delete: translate(translationKeys.delete),
+  manage: translate(translationKeys.manage),
+  archive: translate(translationKeys.archive),
 });
 
 export function ContextMenu(props: {
@@ -30,6 +37,7 @@ export function ContextMenu(props: {
   ctx: WorkspacesService;
 }) {
   const [texts, setTexts] = createSignal(getTranslations());
+
   addI18nObserver(() => {
     setTexts(getTranslations());
   });
@@ -56,6 +64,13 @@ export function ContextMenu(props: {
         label={texts().manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
+      />
+      <xul:menuseparator class="workspaces-context-menu-separator" />
+      <xul:menuitem
+        label={texts().archive}
+        onCommand={async () => {
+          await props.ctx.archiveWorkspace(props.contextWorkspaceId);
+        }}
       />
     </>
   );
