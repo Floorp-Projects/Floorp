@@ -11,40 +11,86 @@ type Container = {
   userContextId: number;
   public: boolean;
   icon: string;
-  color: number;
+  color: number | string;
   name: string;
 };
 
 /**
- * Get container color number from userContextId
+ * Get container color from userContextId
  * @param userContextId The user context ID
- * @returns The container color number, or null if not found
+ * @returns The container color (number or string), or null if not found
  */
-function getContainerColorNumber(userContextId: number): number | null {
+function getContainerColor(userContextId: number): number | string | null {
   if (userContextId === 0) {
     return null;
   }
 
   const container_list = ContextualIdentityService.getPublicIdentities();
-  return (
-    container_list.find(
-      (container: Container) => container.userContextId === userContextId,
-    )?.color ?? null
+  const container = container_list.find(
+    (container: Container) => container.userContextId === userContextId,
   );
-}
 
-/**
- * Map container color number to CSS variable name
- * @param colorNumber The container color number
- * @returns The CSS variable name (e.g., "blue", "green"), or null if not found
- */
-function mapColorNumberToCSSVariable(
-  colorNumber: number | null,
-): string | null {
-  if (colorNumber === null) {
+  if (!container) {
+    console.debug(
+      `[Workspaces] Container not found for userContextId: ${userContextId}`,
+    );
     return null;
   }
 
+  const color = container.color;
+  console.debug(
+    `[Workspaces] Container color for userContextId ${userContextId}:`,
+    { color, type: typeof color, containerName: container.name },
+  );
+
+  return color ?? null;
+}
+
+/**
+ * Map container color (number or string) to CSS variable name
+ * @param color The container color (number or string)
+ * @returns The CSS variable name (e.g., "blue", "green"), or null if not found
+ */
+function mapColorToCSSVariable(color: number | string | null): string | null {
+  if (color === null) {
+    return null;
+  }
+
+  // If color is already a string (CSS variable name), return it directly
+  if (typeof color === "string") {
+    const normalizedColor = color.toLowerCase();
+
+    // Map white to toolbar (Firefox uses "toolbar" as the color name for white)
+    if (normalizedColor === "white") {
+      return "toolbar";
+    }
+
+    // Normalize grey/gray to gray
+    if (normalizedColor === "grey") {
+      return "gray";
+    }
+
+    const validColors = [
+      "blue",
+      "turquoise",
+      "green",
+      "yellow",
+      "orange",
+      "red",
+      "pink",
+      "purple",
+      "toolbar",
+      "gray",
+    ];
+
+    if (validColors.includes(normalizedColor)) {
+      return normalizedColor;
+    }
+    console.warn(`[Workspaces] Unknown container color string: ${color}`);
+    return null;
+  }
+
+  // Map color number to CSS variable name
   const colorMap: Record<number, string> = {
     0: "blue",
     1: "turquoise",
@@ -54,9 +100,17 @@ function mapColorNumberToCSSVariable(
     5: "red",
     6: "pink",
     7: "purple",
+    8: "toolbar", // white is mapped to toolbar
+    9: "gray",
   };
 
-  return colorMap[colorNumber] ?? null;
+  const colorName = colorMap[color];
+  if (!colorName) {
+    console.warn(`[Workspaces] Unknown container color number: ${color}`);
+    return null;
+  }
+
+  return colorName;
 }
 
 /**
@@ -65,6 +119,6 @@ function mapColorNumberToCSSVariable(
  * @returns The CSS variable name (e.g., "blue", "green"), or null if no container
  */
 export function getContainerColorName(userContextId: number): string | null {
-  const colorNumber = getContainerColorNumber(userContextId);
-  return mapColorNumberToCSSVariable(colorNumber);
+  const color = getContainerColor(userContextId);
+  return mapColorToCSSVariable(color);
 }

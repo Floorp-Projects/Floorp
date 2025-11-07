@@ -163,7 +163,7 @@ export class WorkspaceManageModal {
     return await new Promise((resolve) => {
       this.modalParent.showNoraModal(formConfig, {
         width: 540,
-        height: 460,
+        height: 500,
       }, (result: TFormResult | null) => resolve(result));
     });
   }
