@@ -6,8 +6,27 @@
 import type { TWorkspaceID } from "../utils/type";
 import type { WorkspacesService } from "../workspacesService";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+
+// Check if workspace archive experiment is enabled
+// Simply checks if the user is assigned to the experiment (rollout-based)
+const isArchiveFeatureEnabled = (): boolean => {
+  try {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
+    const variant = Experiments.getVariant("workspace_archive");
+
+    // If variant is assigned (not null), the feature is enabled
+    // Rollout percentage controls what portion of users get the feature
+    return variant !== null;
+  } catch (error) {
+    console.error("Failed to check workspace_archive experiment:", error);
+    // If experiments system fails, default to disabled for safety
+    return false;
+  }
+};
 
 const translationKeys = {
   moveUp: "workspaces.context-menu.move-up",
@@ -37,6 +56,7 @@ export function ContextMenu(props: {
   ctx: WorkspacesService;
 }) {
   const [texts, setTexts] = createSignal(getTranslations());
+  const archiveEnabled = isArchiveFeatureEnabled();
 
   addI18nObserver(() => {
     setTexts(getTranslations());
@@ -65,13 +85,15 @@ export function ContextMenu(props: {
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
       />
-      <xul:menuseparator class="workspaces-context-menu-separator" />
-      <xul:menuitem
-        label={texts().archive}
-        onCommand={async () => {
-          await props.ctx.archiveWorkspace(props.contextWorkspaceId);
-        }}
-      />
+      <Show when={archiveEnabled}>
+        <xul:menuseparator class="workspaces-context-menu-separator" />
+        <xul:menuitem
+          label={texts().archive}
+          onCommand={async () => {
+            await props.ctx.archiveWorkspace(props.contextWorkspaceId);
+          }}
+        />
+      </Show>
     </>
   );
 }

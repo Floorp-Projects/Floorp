@@ -12,6 +12,25 @@ import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { WorkspaceArchiveSummary } from "../utils/archive-types.ts";
 
+// Check if workspace archive experiment is enabled
+// Simply checks if the user is assigned to the experiment (rollout-based)
+const isArchiveFeatureEnabled = (): boolean => {
+  try {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
+    const variant = Experiments.getVariant("workspace_archive");
+
+    // If variant is assigned (not null), the feature is enabled
+    // Rollout percentage controls what portion of users get the feature
+    return variant !== null;
+  } catch (error) {
+    console.error("Failed to check workspace_archive experiment:", error);
+    // If experiments system fails, default to disabled for safety
+    return false;
+  }
+};
+
 const translationKeys = {
   createNew: "workspaces.popup.create-new",
   manage: "workspaces.popup.manage",
@@ -68,6 +87,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
   >([]);
   const [isLoadingRestore, setIsLoadingRestore] = createSignal(false);
   const [restoreError, setRestoreError] = createSignal<string | null>(null);
+  const archiveEnabled = isArchiveFeatureEnabled();
 
   const resetRestoreState = () => {
     setIsRestoreMode(false);
@@ -309,19 +329,21 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
             flex="1"
           />
           <xul:hbox align="center" class="workspaceFooterButtons">
-            <xul:toolbarbutton
-              id="workspacesRestoreWorkspaceButton"
-              class={`toolbarbutton-1 chromeclass-toolbar-additional workspaceRestoreToggle${
-                isRestoreMode() ? " workspaceRestoreToggle-active" : ""
-              }`}
-              title={isRestoreMode()
-                ? texts().restoreCancel
-                : texts().restoreTooltip}
-              closemenu="none"
-              onCommand={() => {
-                void toggleRestoreMode();
-              }}
-            />
+            <Show when={archiveEnabled}>
+              <xul:toolbarbutton
+                id="workspacesRestoreWorkspaceButton"
+                class={`toolbarbutton-1 chromeclass-toolbar-additional workspaceRestoreToggle${
+                  isRestoreMode() ? " workspaceRestoreToggle-active" : ""
+                }`}
+                title={isRestoreMode()
+                  ? texts().restoreCancel
+                  : texts().restoreTooltip}
+                closemenu="none"
+                onCommand={() => {
+                  void toggleRestoreMode();
+                }}
+              />
+            </Show>
             <xul:toolbarbutton
               id="workspacesManageworkspacesServicesButton"
               class="toolbarbutton-1 chromeclass-toolbar-additional"
