@@ -18,6 +18,7 @@ import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
+import { getContainerColorName } from "../utils/container-color.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -116,6 +117,19 @@ export class WorkspacesToolbarButton {
       } else {
         xulElement.removeAttribute("hidden");
       }
+
+      // Set container color attributes
+      const userContextId = workspace.userContextId ?? 0;
+      const hasContainer = userContextId > 0;
+      const containerColorName = getContainerColorName(userContextId);
+      xulElement.setAttribute(
+        "data-has-container",
+        hasContainer ? "true" : "false",
+      );
+      xulElement.setAttribute(
+        "data-container-color",
+        containerColorName ?? "",
+      );
     } catch (e) {
       console.error("Error updating workspace toolbar button:", e);
     }
