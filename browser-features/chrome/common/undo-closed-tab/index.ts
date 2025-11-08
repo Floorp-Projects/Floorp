@@ -31,15 +31,40 @@ const defaultTexts: UndoClosedTabTexts = {
   tooltipText: "Reopen the last closed tab (Ctrl+Shift+T)",
 };
 
+const BROWSER_WINDOW_TYPE = "navigator:browser";
+
+function triggerUndoClosedTabForActiveWindow(): void {
+  try {
+    const browserWindow = Services.wm.getMostRecentWindow(
+      BROWSER_WINDOW_TYPE,
+    ) as Window | null;
+
+    if (browserWindow?.undoCloseTab) {
+      browserWindow.undoCloseTab();
+      return;
+    }
+
+    const fallbackDocument =
+      browserWindow?.document ?? globalThis.document ?? null;
+    const undoMenuItem = fallbackDocument?.getElementById(
+      "toolbar-context-undoCloseTab",
+    ) as XULElement | null;
+
+    if (undoMenuItem instanceof XULElement) {
+      undoMenuItem.doCommand();
+    }
+  } catch (error) {
+    console.error("[undo-closed-tab] Failed to trigger undoCloseTab:", error);
+  }
+}
+
 @noraComponent(import.meta.hot)
 export default class UndoClosedTab extends NoraComponentBase {
   init() {
     BrowserActionUtils.createToolbarClickActionButton(
       "undo-closed-tab",
       null,
-      () => {
-        window.SessionWindowUI.undoCloseTab(window);
-      },
+      triggerUndoClosedTabForActiveWindow,
       StyleElement(),
       CustomizableUI.AREA_NAVBAR,
       3,

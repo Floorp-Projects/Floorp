@@ -39,7 +39,26 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-restore-last-tab",
-    fn: () => window.SessionWindowUI.undoCloseTab(window),
+    fn: () => {
+      try {
+        const BROWSER_WINDOW_TYPE = "navigator:browser";
+        const browserWindow = Services.wm.getMostRecentWindow(
+          BROWSER_WINDOW_TYPE,
+        ) as Window | null;
+
+        const fallbackDocument =
+          browserWindow?.document ?? globalThis.document ?? null;
+        const undoMenuItem = fallbackDocument?.getElementById(
+          "toolbar-context-undoCloseTab",
+        );
+
+        if (undoMenuItem instanceof XULElement) {
+          undoMenuItem.doCommand();
+        }
+      } catch (error) {
+        console.error("[mouse-gesture] Failed to trigger undoCloseTab:", error);
+      }
+    },
   },
   {
     name: "gecko-open-new-window",
@@ -104,7 +123,30 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-restore-last-tab",
-    fn: () => window.undoCloseTab(),
+    fn: () => {
+      try {
+        const browserWindow = Services.wm.getMostRecentWindow(
+          BROWSER_WINDOW_TYPE,
+        ) as Window | null;
+
+        if (browserWindow?.undoCloseTab) {
+          browserWindow.undoCloseTab();
+          return;
+        }
+
+        const fallbackDocument =
+          browserWindow?.document ?? globalThis.document ?? null;
+        const undoMenuItem = fallbackDocument?.getElementById(
+          "toolbar-context-undoCloseTab",
+        );
+
+        if (undoMenuItem instanceof XULElement) {
+          undoMenuItem.doCommand();
+        }
+      } catch (error) {
+        console.error("[mouse-gesture] Failed to trigger undoCloseTab:", error);
+      }
+    },
   },
   {
     name: "gecko-send-with-mail",
@@ -192,7 +234,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-screen-capture",
-    fn: () => window.ScreenshotsUtils.start(gBrowser.selectedBrowser),
+    fn: () => window.ScreenshotsUtils.start(window.gBrowser.selectedBrowser),
   },
   {
     name: "floorp-show-pip",
