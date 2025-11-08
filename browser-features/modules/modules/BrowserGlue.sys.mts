@@ -50,6 +50,22 @@ const JS_WINDOW_ACTORS: {
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
     matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
+  NRExperimemmt: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRExperimemmtParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRExperimemmtChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
   NRPanelSidebar: {
     parent: {
       esModuleURI: localPathToResourceURI(

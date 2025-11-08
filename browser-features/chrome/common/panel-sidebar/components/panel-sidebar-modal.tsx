@@ -48,7 +48,7 @@ type I18nTextValues = {
 const translationKeys = {
   type: "panelSidebar.modal.type",
   typeOptionWeb: "panelSidebar.modal.typeOptions.web",
-  typeOptionStatic: "panelSidebar.modal.typeOptions.static",
+  typeOptionStatic: "panelSidebar.modal.typeOptions.sidebar-tool",
   typeOptionExtension: "panelSidebar.modal.typeOptions.extension",
   width: "panelSidebar.modal.width",
   url: "panelSidebar.modal.url",

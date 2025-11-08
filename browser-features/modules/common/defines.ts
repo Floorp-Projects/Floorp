@@ -28,6 +28,9 @@ export interface NRSettingsParentFunctions {
   setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
+}
+
+export interface NRExperimemmtParentFunctions {
   getActiveExperiments(): Promise<ActiveExperiment[]>;
   disableExperiment(
     experimentId: string,

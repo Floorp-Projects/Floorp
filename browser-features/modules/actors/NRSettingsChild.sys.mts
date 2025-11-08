@@ -3,7 +3,6 @@ import type {
   NRSettingsParentFunctions,
   PrefGetParams,
   PrefSetParams,
-  ActiveExperiment,
 } from "../common/defines.ts";
 
 export class NRSettingsChild extends JSWindowActorChild {
@@ -73,31 +72,6 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
-        },
-        getActiveExperiments: (): Promise<ActiveExperiment[]> => {
-          return this.sendQuery("getActiveExperiments", {});
-        },
-        disableExperiment: (
-          experimentId: string,
-        ): Promise<{ success: boolean; error?: string }> => {
-          return this.sendQuery("disableExperiment", { experimentId });
-        },
-        enableExperiment: (
-          experimentId: string,
-        ): Promise<{ success: boolean; error?: string }> => {
-          return this.sendQuery("enableExperiment", { experimentId });
-        },
-        clearExperimentCache: (): Promise<{
-          success: boolean;
-          error?: string;
-        }> => {
-          return this.sendQuery("clearExperimentCache", {});
-        },
-        reinitializeExperiments: (): Promise<{
-          success: boolean;
-          error?: string;
-        }> => {
-          return this.sendQuery("reinitializeExperiments", {});
         },
       },
       {
