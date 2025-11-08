@@ -349,14 +349,6 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           if (!tab) continue;
           this.tabManagerCtx.setWorkspaceIdToAttribute(tab, newWorkspaceId);
           tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
-          try {
-            gBrowser.showTab(tab);
-          } catch (error) {
-            console.debug(
-              "WorkspacesService: failed to show tab during reset",
-              error,
-            );
-          }
         }
         this.tabManagerCtx.updateTabsVisibility();
       }

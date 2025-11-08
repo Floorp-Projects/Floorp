@@ -6,7 +6,9 @@ type InitializeResult = {
 };
 
 export class NRWorkspacesChild extends JSWindowActorChild {
-  #pendingInitialization: ((result: InitializeResult) => void) | null = null;
+  #pendingInitializationPromise: Promise<InitializeResult> | null = null;
+  #pendingInitializationResolver: ((result: InitializeResult) => void) | null =
+    null;
 
   actorCreated() {
     const window = this.contentWindow;
@@ -25,30 +27,35 @@ export class NRWorkspacesChild extends JSWindowActorChild {
   }
 
   initializeWorkspaces(reason?: string | null): Promise<InitializeResult> {
-    if (this.#pendingInitialization) {
+    if (this.#pendingInitializationPromise) {
       console.warn(
         "NRWorkspacesChild: initialization already pending, reusing promise",
       );
+      return this.#pendingInitializationPromise;
     }
 
-    return new Promise<InitializeResult>((resolve) => {
-      this.#pendingInitialization = resolve;
-      this.sendAsyncMessage("NRWorkspaces:Initialize", {
-        topic: WORKSPACES_INIT_TOPIC,
-        reason: typeof reason === "string" ? reason : null,
-      });
-    });
+    this.#pendingInitializationPromise = new Promise<InitializeResult>(
+      (resolve) => {
+        this.#pendingInitializationResolver = resolve;
+        this.sendAsyncMessage("NRWorkspaces:Initialize", {
+          topic: WORKSPACES_INIT_TOPIC,
+          reason: typeof reason === "string" ? reason : null,
+        });
+      },
+    );
+    return this.#pendingInitializationPromise;
   }
 
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "NRWorkspaces:InitializeResult": {
-        this.#pendingInitialization?.(
+        this.#pendingInitializationResolver?.(
           message.data && typeof message.data.success === "boolean"
             ? message.data
             : { success: false, error: "unknown" },
         );
-        this.#pendingInitialization = null;
+        this.#pendingInitializationPromise = null;
+        this.#pendingInitializationResolver = null;
         break;
       }
     }
