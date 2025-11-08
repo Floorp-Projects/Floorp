@@ -132,10 +132,6 @@ export class MouseGestureController {
 
     this.display.show();
     this.display.updateTrail(this.mouseTrail);
-
-    if (event.target instanceof Element) {
-      event.preventDefault();
-    }
   };
 
   private handleMouseMove = (event: MouseEvent): void => {
