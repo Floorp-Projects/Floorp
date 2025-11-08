@@ -20,8 +20,8 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
 
 const translationKeys = {
-  createNew: "workspaces.popup.create-new",
-  manage: "workspaces.popup.manage",
+  createNew: "workspaces.popup.create-new" as const,
+  manage: "workspaces.popup.manage" as const,
 };
 
 const getTranslations = () => ({
@@ -40,13 +40,21 @@ type WorkspacePanelButtonProps = {
 };
 
 const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
-  const workspace = createMemo(() =>
-    workspacesDataStore.data.get(props.workspaceId)
-  );
+  const workspace = createMemo(() => {
+    const data = workspacesDataStore.data;
+    if (data instanceof Map) {
+      return data.get(props.workspaceId);
+    }
+    return undefined;
+  });
   const iconUrl = createMemo(() =>
-    props.ctx.iconCtx.getWorkspaceIconUrl(workspace()?.icon) ?? DEFAULT_ICON
+    props.ctx.iconCtx.getWorkspaceIconUrl(
+      (workspace() as { icon?: string } | undefined)?.icon,
+    ) ?? DEFAULT_ICON
   );
-  const workspaceName = createMemo(() => workspace()?.name ?? "");
+  const workspaceName = createMemo(() =>
+    (workspace() as { name?: string } | undefined)?.name ?? ""
+  );
   const isSelected = () => selectedWorkspaceID() === props.workspaceId;
 
   const handleActivate = () => {
@@ -76,6 +84,63 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
     }
   };
 
+  const handleDragStart = (event: DragEvent) => {
+    const target = event.currentTarget as HTMLElement;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", props.workspaceId);
+      target.setAttribute("dragging", "true");
+    }
+  };
+
+  const handleDragEnd = (event: DragEvent) => {
+    const target = event.currentTarget as HTMLElement;
+    target.removeAttribute("dragging");
+  };
+
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+    const target = event.currentTarget as HTMLElement;
+    target.setAttribute("drag-over", "true");
+  };
+
+  const handleDragLeave = (event: DragEvent) => {
+    const target = event.currentTarget as HTMLElement;
+    target.removeAttribute("drag-over");
+  };
+
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    const target = event.currentTarget as HTMLElement;
+    target.removeAttribute("drag-over");
+
+    if (!event.dataTransfer) {
+      return;
+    }
+
+    const draggedWorkspaceId = event.dataTransfer.getData("text/plain") as
+      | TWorkspaceID
+      | "";
+    if (!draggedWorkspaceId || draggedWorkspaceId === props.workspaceId) {
+      return;
+    }
+
+    if (!props.ctx.isWorkspaceID(draggedWorkspaceId)) {
+      return;
+    }
+
+    const order = workspacesDataStore.order;
+    const targetIndex = order.indexOf(props.workspaceId);
+    if (targetIndex === -1) {
+      return;
+    }
+
+    props.ctx.reorderWorkspaceTo(draggedWorkspaceId, targetIndex);
+  };
+
   return (
     <div class="panel-sidebar-button-wrapper workspace-panel-button-wrapper">
       <div
@@ -87,9 +152,15 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
         tabIndex={0}
         title={workspaceName()}
         aria-label={workspaceName()}
+        draggable="true"
         onClick={handleActivate}
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <img src={iconUrl()} width="16" height="16" alt="" />
       </div>

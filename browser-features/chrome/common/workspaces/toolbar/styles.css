@@ -95,9 +95,18 @@
   margin: 10px;
 }
 
+.workspaceButton > .toolbarbutton-icon {
+  margin: 0px 20px 0px 0px !important;
+  height: 35px;
+}
+
+#workspacesCreateNewWorkspaceButton > .toolbarbutton-icon {
+  margin: 0px 20px 0px 0px !important;
+}
+
 /* Footer */
 #workspacesPopupFooter {
-  width: 85% !important;
+  width: 100% !important;
   margin: auto;
 }
 
@@ -192,6 +201,22 @@
     display: inherit !important;
     background-color: unset !important;
     color: var(--tab-text-color) !important;
+  }
+
+  /* Drag & drop styles */
+  &[dragging="true"] {
+    opacity: 0.5;
+    cursor: grabbing !important;
+  }
+
+  &[drag-over="true"] {
+    background-color: color-mix(
+      in srgb,
+      var(--toolbarbutton-hover-background, rgba(0, 0, 0, 0.1)) 50%,
+      transparent
+    ) !important;
+    border-top: 2px solid
+      var(--toolbarbutton-active-background, rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -366,5 +391,22 @@
 
   & > label {
     display: inherit !important;
+  }
+}
+
+/* Workspace panel (for sidebar) drag & drop styles */
+.workspace-panel {
+  &[dragging="true"] {
+    opacity: 0.5;
+    cursor: grabbing !important;
+  }
+
+  &[drag-over="true"] {
+    background-color: color-mix(
+      in srgb,
+      var(--tab-selected-bgcolor, rgba(0, 0, 0, 0.1)) 50%,
+      transparent
+    ) !important;
+    border: 2px solid var(--toolbarbutton-active-background, rgba(0, 0, 0, 0.2));
   }
 }

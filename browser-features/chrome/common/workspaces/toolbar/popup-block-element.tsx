@@ -7,6 +7,7 @@ import { createMemo, Show } from "solid-js";
 import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
+import { workspacesDataStore } from "../data/data.ts";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -17,6 +18,64 @@ export function PopupToolbarElement(props: {
   const workspace = createMemo(() =>
     props.ctx.getRawWorkspace(props.workspaceId)
   );
+
+  const handleDragStart = (event: DragEvent) => {
+    const target = event.currentTarget as XULElement;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", props.workspaceId);
+      target.setAttribute("dragging", "true");
+    }
+  };
+
+  const handleDragEnd = (event: DragEvent) => {
+    const target = event.currentTarget as XULElement;
+    target.removeAttribute("dragging");
+  };
+
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+    const target = event.currentTarget as XULElement;
+    target.setAttribute("drag-over", "true");
+  };
+
+  const handleDragLeave = (event: DragEvent) => {
+    const target = event.currentTarget as XULElement;
+    target.removeAttribute("drag-over");
+  };
+
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    const target = event.currentTarget as XULElement;
+    target.removeAttribute("drag-over");
+
+    if (!event.dataTransfer) {
+      return;
+    }
+
+    const draggedWorkspaceId = event.dataTransfer.getData("text/plain") as
+      | TWorkspaceID
+      | "";
+    if (!draggedWorkspaceId || draggedWorkspaceId === props.workspaceId) {
+      return;
+    }
+
+    if (!props.ctx.isWorkspaceID(draggedWorkspaceId)) {
+      return;
+    }
+
+    const order = workspacesDataStore.order;
+    const targetIndex = order.indexOf(props.workspaceId);
+    if (targetIndex === -1) {
+      return;
+    }
+
+    props.ctx.reorderWorkspaceTo(draggedWorkspaceId, targetIndex);
+  };
+
   return (
     <Show when={workspace()}>
       {(ws) => {
@@ -38,6 +97,12 @@ export function PopupToolbarElement(props: {
             data-workspaceId={props.workspaceId}
             data-has-container={hasContainer() ? "true" : "false"}
             data-container-color={containerColorName() ?? ""}
+            draggable="true"
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             onCommand={() => {
               props.ctx.changeWorkspace(props.workspaceId);
             }}

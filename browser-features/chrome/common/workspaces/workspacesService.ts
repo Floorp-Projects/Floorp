@@ -203,6 +203,33 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   }
 
   /**
+   * Move workspace to a specific index position.
+   * This method allows moving workspaces freely via drag & drop,
+   * including the default workspace.
+   * @param id The workspace ID to move.
+   * @param targetIndex The target index position (0-based).
+   */
+  reorderWorkspaceTo(id: TWorkspaceID, targetIndex: number): void {
+    setWorkspacesDataStore("order", (prev) => {
+      const currentIndex = prev.indexOf(id);
+      if (
+        currentIndex === -1 ||
+        targetIndex < 0 ||
+        targetIndex >= prev.length
+      ) {
+        return prev;
+      }
+      if (currentIndex === targetIndex) {
+        return prev;
+      }
+      const newOrder = [...prev];
+      newOrder.splice(currentIndex, 1);
+      newOrder.splice(targetIndex, 0, id);
+      return newOrder;
+    });
+  }
+
+  /**
    * Open manage workspace dialog. This function should not be called directly on Preferences page.
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */

@@ -7,7 +7,6 @@ import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { ContextMenu } from "./contextMenu.tsx";
-import { workspacesDataStore } from "../data/data.ts";
 import { createSignal, Show } from "solid-js";
 import type { TWorkspaceID } from "../utils/type.ts";
 
@@ -45,8 +44,6 @@ export class WorkspacesPopupContextMenu {
       this.contextWorkspaceID = contextWorkspaceId;
     }
 
-    const defaultWorkspaceId = workspacesDataStore.defaultID;
-
     const beforeSiblingElem =
       eventTargetElement.previousElementSibling?.getAttribute(
         "data-workspaceId",
@@ -55,13 +52,11 @@ export class WorkspacesPopupContextMenu {
       eventTargetElement.nextElementSibling?.getAttribute("data-workspaceId") ||
       null;
 
-    const isDefaultWorkspace = contextWorkspaceId === defaultWorkspaceId;
-    const isBeforeSiblingDefaultWorkspace =
-      beforeSiblingElem === defaultWorkspaceId;
     const isAfterSiblingExist = afterSiblingElem != null;
-    this.needDisableBefore = isDefaultWorkspace ||
-      isBeforeSiblingDefaultWorkspace;
-    this.needDisableAfter = isDefaultWorkspace || !isAfterSiblingExist;
+    // Disable "move up" only if this is the first workspace (no previous sibling)
+    this.needDisableBefore = beforeSiblingElem === null;
+    // Disable "move down" only if this is the last workspace (no next sibling)
+    this.needDisableAfter = !isAfterSiblingExist;
   }
 
   private PopupSet() {
