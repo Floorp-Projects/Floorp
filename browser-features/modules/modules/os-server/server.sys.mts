@@ -149,7 +149,7 @@ interface TabManagerAPI {
     }>
   >;
   getInstanceInfo(instanceId: string): Promise<unknown | null>;
-  destroyInstance(instanceId: string): void;
+  destroyInstance(instanceId: string): Promise<void>;
   navigate(instanceId: string, url: string): Promise<void>;
   getURI(instanceId: string): Promise<string>;
   getHTML(instanceId: string): Promise<string | null>;
@@ -209,6 +209,9 @@ const { setTimeout } = ChromeUtils.importESModule(
 );
 
 const DEFAULT_PORT = 58261;
+const PREF_ENABLED = "floorp.os.server.enabled";
+const PREF_PORT = "floorp.os.server.port";
+const PREF_TOKEN = "floorp.os.server.token";
 
 // -- HTTP primitives ----------------------------------------------------------
 
@@ -507,9 +510,64 @@ class LocalHttpServer implements nsIServerSocketListener {
   }
 
   // nsIObserver
-  observe(_subject: unknown, topic: string) {
+  observe(_subject: unknown, topic: string, _data?: string) {
     if (topic === "xpcom-shutdown") {
       this.stop();
+      this._unregisterPrefObserver();
+    } else if (topic === "nsPref:changed") {
+      this._handlePrefChange(_data || "");
+    }
+  }
+
+  private _handlePrefChange(prefName: string) {
+    if (
+      prefName === PREF_ENABLED ||
+      prefName === PREF_PORT ||
+      prefName === PREF_TOKEN
+    ) {
+      this._updateFromPrefs();
+    }
+  }
+
+  public registerPrefObserver() {
+    try {
+      Services.prefs.addObserver(PREF_ENABLED, this);
+      Services.prefs.addObserver(PREF_PORT, this);
+      Services.prefs.addObserver(PREF_TOKEN, this);
+    } catch (e) {
+      void e; // ignore
+    }
+  }
+
+  private _unregisterPrefObserver() {
+    try {
+      Services.prefs.removeObserver(PREF_ENABLED, this);
+      Services.prefs.removeObserver(PREF_PORT, this);
+      Services.prefs.removeObserver(PREF_TOKEN, this);
+    } catch (e) {
+      void e; // ignore
+    }
+  }
+
+  private _updateFromPrefs() {
+    const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
+    if (enabled) {
+      const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
+      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      if (!this._server) {
+        this.start(port, token);
+      } else {
+        // If port or token changed, restart
+        const currentPort = this._server.port;
+        if (currentPort !== port || this._token !== token) {
+          this.stop();
+          this.start(port, token);
+        }
+      }
+    } else {
+      if (this._server) {
+        this.stop();
+      }
     }
   }
 
@@ -1089,14 +1147,27 @@ class LocalHttpServer implements nsIServerSocketListener {
 }
 
 export const osLocalServer = new LocalHttpServer();
-try {
-  // Default: enabled with default port and no token
-  const PORT = DEFAULT_PORT;
-  const TOKEN = "";
-  osLocalServer.start(PORT, TOKEN);
-} catch (e) {
-  err("failed to start server:", e);
+
+// Initialize server based on preferences
+function initializeServer() {
+  try {
+    // Register pref observer
+    osLocalServer.registerPrefObserver();
+
+    // Check initial pref value
+    const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
+    if (enabled) {
+      const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
+      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      osLocalServer.start(port, token);
+    }
+  } catch (e) {
+    err("failed to initialize server:", e);
+  }
 }
+
+// Initialize on module load
+initializeServer();
 
 // Also export explicit control API
 export const startServer = (port = DEFAULT_PORT, token = "") =>

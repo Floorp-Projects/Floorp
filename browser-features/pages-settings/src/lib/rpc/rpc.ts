@@ -1,4 +1,4 @@
-import type { NRSettingsParentFunctions } from "../../../../common/settings/rpc.ts";
+import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
 declare const Services: any;

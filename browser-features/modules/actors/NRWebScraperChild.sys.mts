@@ -15,7 +15,830 @@
  * The actor is automatically created for each browser tab/content window
  * and communicates with the parent process through message passing.
  */
+type HighlightScrollBehavior = ScrollBehavior | "none";
+
+interface HighlightRequest {
+  action?: string;
+  duration?: number;
+  focus?: boolean;
+  scrollBehavior?: HighlightScrollBehavior;
+  padding?: number;
+  delay?: number;
+}
+
+interface NRWebScraperMessageData {
+  selector?: string;
+  value?: string;
+  textContent?: string;
+  timeout?: number;
+  script?: string;
+  rect?: { x?: number; y?: number; width?: number; height?: number };
+  formData?: { [selector: string]: string };
+  highlight?: HighlightRequest;
+  elementInfo?: string;
+}
+
+interface NormalizedHighlightOptions {
+  action?: string;
+  duration: number;
+  focus: boolean;
+  scrollBehavior: HighlightScrollBehavior;
+  padding: number;
+  delay: number;
+}
+
+type HighlightFocusOptions = {
+  preventScroll?: boolean;
+};
+
 export class NRWebScraperChild extends JSWindowActorChild {
+  private highlightOverlay: HTMLDivElement | null = null;
+  private highlightOverlays: HTMLDivElement[] = [];
+  private highlightCleanupTimer: number | null = null;
+  private highlightCleanupCallbacks: Array<() => void> = [];
+  private highlightStyleElement: HTMLStyleElement | null = null;
+  private infoPanel: HTMLDivElement | null = null;
+  private infoPanelCleanupTimer: number | null = null;
+
+  private normalizeHighlightOptions(
+    highlight?: HighlightRequest,
+  ): NormalizedHighlightOptions | null {
+    if (!highlight) {
+      return null;
+    }
+
+    return {
+      action: highlight.action,
+      duration: Math.max(highlight.duration ?? 1800, 300),
+      focus: highlight.focus ?? true,
+      scrollBehavior: highlight.scrollBehavior ?? "smooth",
+      padding: Math.max(highlight.padding ?? 14, 0),
+      delay: Math.max(highlight.delay ?? 400, 0),
+    };
+  }
+
+  private ensureHighlightStyle(): void {
+    const doc = this.document;
+    if (!doc) {
+      return;
+    }
+
+    if (this.highlightStyleElement?.isConnected) {
+      return;
+    }
+
+    const existing = doc.getElementById("nr-webscraper-highlight-style");
+    if (existing instanceof HTMLStyleElement) {
+      this.highlightStyleElement = existing;
+      return;
+    }
+
+    const style = doc.createElement("style");
+    style.id = "nr-webscraper-highlight-style";
+    style.textContent = `@keyframes nr-webscraper-highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45),
+                0 0 20px var(--nr-highlight-color-alpha-25);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 12px var(--nr-highlight-color-alpha-25),
+                0 0 40px var(--nr-highlight-color-alpha-45);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-0),
+                0 0 20px var(--nr-highlight-color-alpha-25);
+    transform: scale(1);
+  }
+}
+
+@keyframes nr-webscraper-highlight-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45),
+                0 0 20px var(--nr-highlight-color-alpha-25),
+                inset 0 0 20px var(--nr-highlight-color-alpha-15);
+  }
+  50% {
+    box-shadow: 0 0 0 8px var(--nr-highlight-color-alpha-30),
+                0 0 50px var(--nr-highlight-color-alpha-50),
+                inset 0 0 30px var(--nr-highlight-color-alpha-20);
+  }
+}
+
+@keyframes nr-webscraper-info-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes nr-webscraper-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.nr-webscraper-highlight-overlay {
+  --nr-highlight-color-alpha-0: rgba(59, 130, 246, 0);
+  --nr-highlight-color-alpha-15: rgba(59, 130, 246, 0.15);
+  --nr-highlight-color-alpha-20: rgba(59, 130, 246, 0.20);
+  --nr-highlight-color-alpha-25: rgba(59, 130, 246, 0.25);
+  --nr-highlight-color-alpha-30: rgba(59, 130, 246, 0.30);
+  --nr-highlight-color-alpha-45: rgba(59, 130, 246, 0.45);
+  --nr-highlight-color-alpha-50: rgba(59, 130, 246, 0.50);
+  --nr-highlight-color: rgba(59, 130, 246, 0.95);
+  --nr-highlight-bg: rgba(59, 130, 246, 0.12);
+  --nr-label-bg: rgba(37, 99, 235, 0.94);
+  position: fixed;
+  border-radius: 12px;
+  border: 3px solid var(--nr-highlight-color);
+  box-shadow: 0 0 0 6px var(--nr-highlight-color-alpha-25),
+              0 0 30px var(--nr-highlight-color-alpha-30);
+  pointer-events: none;
+  z-index: 2147483645;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  background: var(--nr-highlight-bg);
+  animation: nr-webscraper-highlight-glow 2s ease-in-out infinite;
+}
+
+.nr-webscraper-highlight-overlay--read {
+  --nr-highlight-color-alpha-0: rgba(34, 197, 94, 0);
+  --nr-highlight-color-alpha-15: rgba(34, 197, 94, 0.15);
+  --nr-highlight-color-alpha-20: rgba(34, 197, 94, 0.20);
+  --nr-highlight-color-alpha-25: rgba(34, 197, 94, 0.25);
+  --nr-highlight-color-alpha-30: rgba(34, 197, 94, 0.30);
+  --nr-highlight-color-alpha-45: rgba(34, 197, 94, 0.45);
+  --nr-highlight-color-alpha-50: rgba(34, 197, 94, 0.50);
+  --nr-highlight-color: rgba(34, 197, 94, 0.95);
+  --nr-highlight-bg: rgba(34, 197, 94, 0.12);
+  --nr-label-bg: rgba(22, 163, 74, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--write {
+  --nr-highlight-color-alpha-0: rgba(168, 85, 247, 0);
+  --nr-highlight-color-alpha-15: rgba(168, 85, 247, 0.15);
+  --nr-highlight-color-alpha-20: rgba(168, 85, 247, 0.20);
+  --nr-highlight-color-alpha-25: rgba(168, 85, 247, 0.25);
+  --nr-highlight-color-alpha-30: rgba(168, 85, 247, 0.30);
+  --nr-highlight-color-alpha-45: rgba(168, 85, 247, 0.45);
+  --nr-highlight-color-alpha-50: rgba(168, 85, 247, 0.50);
+  --nr-highlight-color: rgba(168, 85, 247, 0.95);
+  --nr-highlight-bg: rgba(168, 85, 247, 0.12);
+  --nr-label-bg: rgba(147, 51, 234, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--click {
+  --nr-highlight-color-alpha-0: rgba(249, 115, 22, 0);
+  --nr-highlight-color-alpha-15: rgba(249, 115, 22, 0.15);
+  --nr-highlight-color-alpha-20: rgba(249, 115, 22, 0.20);
+  --nr-highlight-color-alpha-25: rgba(249, 115, 22, 0.25);
+  --nr-highlight-color-alpha-30: rgba(249, 115, 22, 0.30);
+  --nr-highlight-color-alpha-45: rgba(249, 115, 22, 0.45);
+  --nr-highlight-color-alpha-50: rgba(249, 115, 22, 0.50);
+  --nr-highlight-color: rgba(249, 115, 22, 0.95);
+  --nr-highlight-bg: rgba(249, 115, 22, 0.12);
+  --nr-label-bg: rgba(234, 88, 12, 0.94);
+}
+
+.nr-webscraper-highlight-overlay--submit {
+  --nr-highlight-color-alpha-0: rgba(239, 68, 68, 0);
+  --nr-highlight-color-alpha-15: rgba(239, 68, 68, 0.15);
+  --nr-highlight-color-alpha-20: rgba(239, 68, 68, 0.20);
+  --nr-highlight-color-alpha-25: rgba(239, 68, 68, 0.25);
+  --nr-highlight-color-alpha-30: rgba(239, 68, 68, 0.30);
+  --nr-highlight-color-alpha-45: rgba(239, 68, 68, 0.45);
+  --nr-highlight-color-alpha-50: rgba(239, 68, 68, 0.50);
+  --nr-highlight-color: rgba(239, 68, 68, 0.95);
+  --nr-highlight-bg: rgba(239, 68, 68, 0.12);
+  --nr-label-bg: rgba(220, 38, 38, 0.94);
+}
+
+.nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--visible {
+  opacity: 1;
+  transform: scale(1);
+  animation: nr-webscraper-highlight-pulse 1200ms ease-in-out 1,
+             nr-webscraper-highlight-glow 2s ease-in-out infinite;
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.nr-webscraper-highlight-label {
+  position: absolute;
+  top: -32px;
+  left: 0;
+  transform: translateY(-4px);
+  background: var(--nr-label-bg);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+              0 0 20px var(--nr-highlight-color-alpha-50);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--below .nr-webscraper-highlight-label {
+  top: auto;
+  bottom: -28px;
+  transform: translateY(4px);
+}
+
+.nr-webscraper-info-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  max-width: 420px;
+  min-width: 320px;
+  background: rgba(17, 24, 39, 0.98);
+  backdrop-filter: blur(16px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 2147483647;
+  animation: nr-webscraper-info-slide-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  padding: 18px 20px;
+}
+
+.nr-webscraper-info-panel__title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.nr-webscraper-info-panel__icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.nr-webscraper-info-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--nr-label-bg);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nr-webscraper-info-panel__content {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.nr-webscraper-info-panel__progress {
+  margin-top: 12px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.nr-webscraper-info-panel__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nr-label-bg), var(--nr-highlight-color));
+  border-radius: 2px;
+  animation: nr-webscraper-progress 0.3s ease-out;
+  box-shadow: 0 0 10px var(--nr-highlight-color-alpha-50);
+}
+
+.nr-webscraper-info-panel__selector {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: rgba(168, 85, 247, 0.95);
+  word-break: break-all;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.4;
+}
+
+.nr-webscraper-info-panel__count {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}`;
+
+    (doc.head ?? doc.documentElement)?.append(style);
+    this.highlightStyleElement = style;
+  }
+
+  private cleanupHighlight(): void {
+    const win = this.contentWindow;
+
+    if (this.highlightCleanupTimer !== null && win) {
+      win.clearTimeout(this.highlightCleanupTimer);
+    }
+    this.highlightCleanupTimer = null;
+
+    // 一時ハイライトをフェードアウト
+    const fadeOutAndCleanup = () => {
+      const overlaysToRemove = [
+        ...(this.highlightOverlay ? [this.highlightOverlay] : []),
+        ...this.highlightOverlays,
+      ];
+
+      if (overlaysToRemove.length > 0) {
+        overlaysToRemove.forEach((overlay) => {
+          if (overlay?.isConnected) {
+            overlay.style.setProperty(
+              "transition",
+              "opacity 300ms ease-out, transform 300ms ease-out",
+            );
+            overlay.style.setProperty("opacity", "0");
+            overlay.style.setProperty("transform", "scale(0.98)");
+            win?.setTimeout(() => {
+              if (overlay?.isConnected) {
+                overlay.remove();
+              }
+            }, 300);
+          }
+        });
+      }
+
+      // クリーンアップコールバックを実行
+      for (const cleanup of this.highlightCleanupCallbacks) {
+        try {
+          cleanup();
+        } catch (_) {
+          // ignore cleanup errors
+        }
+      }
+      this.highlightCleanupCallbacks = [];
+
+      this.highlightOverlay = null;
+      this.highlightOverlays = [];
+    };
+
+    fadeOutAndCleanup();
+  }
+
+  private getActionColorClass(action?: string): string {
+    if (!action) return "";
+    const lowerAction = action.toLowerCase();
+    if (
+      lowerAction.includes("read") ||
+      lowerAction.includes("inspect") ||
+      lowerAction.includes("get")
+    ) {
+      return "nr-webscraper-highlight-overlay--read";
+    }
+    if (
+      lowerAction.includes("input") ||
+      lowerAction.includes("fill") ||
+      lowerAction.includes("write")
+    ) {
+      return "nr-webscraper-highlight-overlay--write";
+    }
+    if (lowerAction.includes("click")) {
+      return "nr-webscraper-highlight-overlay--click";
+    }
+    if (lowerAction.includes("submit")) {
+      return "nr-webscraper-highlight-overlay--submit";
+    }
+    return "";
+  }
+
+  private getActionIcon(action: string): string {
+    const lowerAction = action.toLowerCase();
+    if (
+      lowerAction.includes("read") ||
+      lowerAction.includes("inspect") ||
+      lowerAction.includes("get")
+    ) {
+      return "👁️";
+    }
+    if (
+      lowerAction.includes("input") ||
+      lowerAction.includes("fill") ||
+      lowerAction.includes("write")
+    ) {
+      return "✏️";
+    }
+    if (lowerAction.includes("click")) {
+      return "👆";
+    }
+    if (lowerAction.includes("submit")) {
+      return "📤";
+    }
+    return "⚡";
+  }
+
+  private showInfoPanel(
+    action: string,
+    selector?: string,
+    elementInfo?: string,
+    elementCount?: number,
+    currentProgress?: number,
+    totalProgress?: number,
+  ): void {
+    try {
+      const win = this.contentWindow;
+      const doc = this.document;
+      if (!win || !doc) return;
+
+      this.hideInfoPanel();
+      this.ensureHighlightStyle();
+
+      const panel = doc.createElement("div");
+      panel.className = "nr-webscraper-info-panel";
+
+      const colorClass = this.getActionColorClass(action);
+      if (colorClass) {
+        panel.classList.add(colorClass);
+      }
+
+      const title = doc.createElement("div");
+      title.className = "nr-webscraper-info-panel__title";
+
+      const icon = doc.createElement("span");
+      icon.className = "nr-webscraper-info-panel__icon";
+      icon.textContent = this.getActionIcon(action);
+
+      const badge = doc.createElement("span");
+      badge.className = "nr-webscraper-info-panel__badge";
+      badge.textContent = action;
+
+      title.append(icon);
+      title.append(badge);
+      title.append(doc.createTextNode("操作中"));
+
+      const content = doc.createElement("div");
+      content.className = "nr-webscraper-info-panel__content";
+
+      if (elementInfo) {
+        content.textContent = elementInfo;
+      } else {
+        content.textContent = `${action} 操作を実行中...`;
+      }
+
+      panel.append(title);
+      panel.append(content);
+
+      // 進捗バーを追加（複数要素操作時）
+      if (
+        totalProgress !== undefined &&
+        totalProgress > 1 &&
+        currentProgress !== undefined
+      ) {
+        const progressContainer = doc.createElement("div");
+        progressContainer.className = "nr-webscraper-info-panel__progress";
+        const progressBar = doc.createElement("div");
+        progressBar.className = "nr-webscraper-info-panel__progress-bar";
+        const progressPercent = Math.min(
+          100,
+          Math.round((currentProgress / totalProgress) * 100),
+        );
+        progressBar.style.setProperty("width", `${progressPercent}%`);
+        progressContainer.append(progressBar);
+        panel.append(progressContainer);
+      }
+
+      if (selector) {
+        const selectorDiv = doc.createElement("div");
+        selectorDiv.className = "nr-webscraper-info-panel__selector";
+        selectorDiv.textContent = selector;
+        panel.append(selectorDiv);
+      }
+
+      if (elementCount !== undefined && elementCount > 1) {
+        const countDiv = doc.createElement("div");
+        countDiv.className = "nr-webscraper-info-panel__count";
+        countDiv.textContent = `📊 ${elementCount} 個の要素に影響`;
+        panel.append(countDiv);
+      }
+
+      (doc.body ?? doc.documentElement)?.append(panel);
+      this.infoPanel = panel;
+
+      // Auto-hide after action completes (長めに設定)
+      this.infoPanelCleanupTimer = Number(
+        win.setTimeout(() => this.hideInfoPanel(), 4000),
+      );
+    } catch (error) {
+      console.warn("NRWebScraperChild: Failed to show info panel", error);
+    }
+  }
+
+  private hideInfoPanel(): void {
+    const win = this.contentWindow;
+    if (this.infoPanelCleanupTimer !== null && win) {
+      win.clearTimeout(this.infoPanelCleanupTimer);
+    }
+    this.infoPanelCleanupTimer = null;
+
+    if (this.infoPanel?.isConnected) {
+      this.infoPanel.remove();
+    }
+    this.infoPanel = null;
+  }
+
+  private async applyHighlightMultiple(
+    targets: Element[],
+    highlight?: HighlightRequest,
+    elementInfo?: string,
+  ): Promise<boolean> {
+    if (!targets || targets.length === 0) {
+      this.cleanupHighlight();
+      return false;
+    }
+
+    const options = this.normalizeHighlightOptions(highlight);
+    const win = this.contentWindow;
+    const doc = this.document;
+
+    if (!options || !win || !doc) {
+      return true;
+    }
+
+    this.ensureHighlightStyle();
+    this.cleanupHighlight();
+
+    const colorClass = this.getActionColorClass(options.action);
+
+    // Show info panel with progress
+    this.showInfoPanel(
+      options.action ?? "Highlight",
+      undefined,
+      elementInfo,
+      targets.length,
+      0,
+      targets.length,
+    );
+
+    for (const target of targets) {
+      const overlay = doc.createElement("div");
+      overlay.className = "nr-webscraper-highlight-overlay";
+      if (colorClass) {
+        overlay.classList.add(colorClass);
+      }
+
+      const padding = options.padding;
+
+      (doc.body ?? doc.documentElement)?.append(overlay);
+
+      const updatePosition = () => {
+        const rect = target.getBoundingClientRect();
+        const top = Math.max(rect.top - padding, 0);
+        const left = Math.max(rect.left - padding, 0);
+        const width = Math.max(rect.width + padding * 2, 0);
+        const height = Math.max(rect.height + padding * 2, 0);
+
+        overlay.style.setProperty("top", `${top}px`);
+        overlay.style.setProperty("left", `${left}px`);
+        overlay.style.setProperty("width", `${width}px`);
+        overlay.style.setProperty("height", `${height}px`);
+      };
+
+      updatePosition();
+
+      // Force a layout
+      void overlay.getBoundingClientRect();
+      overlay.classList.add("nr-webscraper-highlight-overlay--visible");
+
+      const reposition = () => updatePosition();
+      win.addEventListener("scroll", reposition, true);
+      win.addEventListener("resize", reposition);
+      this.highlightCleanupCallbacks.push(() => {
+        win.removeEventListener("scroll", reposition, true);
+        win.removeEventListener("resize", reposition);
+      });
+
+      const mutationObserver = new win.MutationObserver(() => updatePosition());
+      mutationObserver.observe(target, {
+        attributes: true,
+        childList: false,
+        subtree: false,
+      });
+      this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
+
+      this.highlightOverlays.push(overlay);
+    }
+
+    // Scroll to first element
+    if (options.scrollBehavior !== "none" && targets.length > 0) {
+      try {
+        (targets[0] as HTMLElement).scrollIntoView({
+          behavior: options.scrollBehavior,
+          block: "center",
+          inline: "center",
+        });
+      } catch (_) {
+        // ignore scroll errors
+      }
+    }
+
+    this.highlightCleanupTimer = Number(
+      win.setTimeout(() => this.cleanupHighlight(), options.duration),
+    );
+
+    await new Promise<void>((resolve) => {
+      win.requestAnimationFrame(() => resolve());
+    });
+
+    if (options.delay > 0) {
+      await new Promise<void>((resolve) => {
+        win.setTimeout(() => resolve(), options.delay);
+      });
+    }
+
+    return true;
+  }
+
+  private async applyHighlight(
+    target: Element | null,
+    highlight?: HighlightRequest,
+    elementInfo?: string,
+  ): Promise<boolean> {
+    if (!target) {
+      this.cleanupHighlight();
+      return false;
+    }
+
+    const options = this.normalizeHighlightOptions(highlight);
+    const win = this.contentWindow;
+    const doc = this.document;
+
+    if (!options || !win || !doc) {
+      return true;
+    }
+
+    this.ensureHighlightStyle();
+    this.cleanupHighlight();
+
+    const overlay = doc.createElement("div");
+    overlay.className = "nr-webscraper-highlight-overlay";
+
+    const colorClass = this.getActionColorClass(options.action);
+    if (colorClass) {
+      overlay.classList.add(colorClass);
+    }
+
+    // Show info panel
+    this.showInfoPanel(
+      options.action ?? "Highlight",
+      undefined,
+      elementInfo,
+      1,
+    );
+
+    const padding = options.padding;
+
+    if (options.action) {
+      const label = doc.createElement("div");
+      label.className = "nr-webscraper-highlight-label";
+      label.textContent = options.action;
+      overlay.append(label);
+    }
+
+    (doc.body ?? doc.documentElement)?.append(overlay);
+
+    const updatePosition = () => {
+      const rect = target.getBoundingClientRect();
+      const top = Math.max(rect.top - padding, 0);
+      const left = Math.max(rect.left - padding, 0);
+      const width = Math.max(rect.width + padding * 2, 0);
+      const height = Math.max(rect.height + padding * 2, 0);
+
+      overlay.style.setProperty("top", `${top}px`);
+      overlay.style.setProperty("left", `${left}px`);
+      overlay.style.setProperty("width", `${width}px`);
+      overlay.style.setProperty("height", `${height}px`);
+
+      const labelEl = overlay.querySelector(
+        ".nr-webscraper-highlight-label",
+      ) as HTMLElement | null;
+      if (labelEl) {
+        if (top < labelEl.offsetHeight + 12) {
+          overlay.classList.add("nr-webscraper-highlight-overlay--below");
+        } else {
+          overlay.classList.remove("nr-webscraper-highlight-overlay--below");
+        }
+      }
+    };
+
+    updatePosition();
+
+    // Force a layout so the transition runs consistently
+    void overlay.getBoundingClientRect();
+    overlay.classList.add("nr-webscraper-highlight-overlay--visible");
+
+    const reposition = () => updatePosition();
+    win.addEventListener("scroll", reposition, true);
+    win.addEventListener("resize", reposition);
+    this.highlightCleanupCallbacks.push(() => {
+      win.removeEventListener("scroll", reposition, true);
+      win.removeEventListener("resize", reposition);
+    });
+
+    const mutationObserver = new win.MutationObserver(() => updatePosition());
+    mutationObserver.observe(target, {
+      attributes: true,
+      childList: false,
+      subtree: false,
+    });
+    this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
+
+    this.highlightOverlay = overlay;
+
+    if (options.scrollBehavior !== "none") {
+      try {
+        (target as HTMLElement).scrollIntoView({
+          behavior: options.scrollBehavior,
+          block: "center",
+          inline: "center",
+        });
+      } catch (_) {
+        // ignore scroll errors
+      }
+    }
+
+    if (options.focus && target instanceof HTMLElement) {
+      const element = target;
+      const prevTabIndex = element.getAttribute("tabindex");
+      let tabIndexAdjusted = false;
+
+      if (element.tabIndex < 0) {
+        element.setAttribute("tabindex", "-1");
+        tabIndexAdjusted = true;
+      }
+
+      try {
+        element.focus({ preventScroll: true } as HighlightFocusOptions);
+      } catch (_) {
+        try {
+          element.focus();
+        } catch (e) {
+          void e;
+        }
+      }
+
+      if (tabIndexAdjusted) {
+        this.highlightCleanupCallbacks.push(() => {
+          if (prevTabIndex === null) {
+            element.removeAttribute("tabindex");
+          } else {
+            element.setAttribute("tabindex", prevTabIndex);
+          }
+        });
+      }
+    }
+
+    this.highlightCleanupTimer = Number(
+      win.setTimeout(() => this.cleanupHighlight(), options.duration),
+    );
+
+    await new Promise<void>((resolve) => {
+      win.requestAnimationFrame(() => resolve());
+    });
+
+    if (options.delay > 0) {
+      await new Promise<void>((resolve) => {
+        win.setTimeout(() => resolve(), options.delay);
+      });
+    }
+
+    return true;
+  }
   /**
    * Called when the actor is created for a content window
    *
@@ -48,18 +871,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param message - The message object containing the operation name and optional data
    * @returns string | null - Returns HTML content for GetHTML operations, null otherwise
    */
-  receiveMessage(message: {
-    name: string;
-    data?: {
-      selector: string;
-      value: string;
-      textContent?: string;
-      timeout?: number;
-      script?: string;
-      rect?: { x?: number; y?: number; width?: number; height?: number };
-      formData?: { [selector: string]: string };
-    };
-  }) {
+  receiveMessage(message: { name: string; data?: NRWebScraperMessageData }) {
     switch (message.name) {
       case "WebScraper:WaitForReady": {
         const to = message.data?.timeout || 15000;
@@ -68,47 +880,54 @@ export class NRWebScraperChild extends JSWindowActorChild {
       case "WebScraper:GetHTML":
         return this.getHTML();
       case "WebScraper:GetElements":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.getElements(message.data.selector);
         }
         break;
       case "WebScraper:GetElementByText":
-        if (message.data) {
+        if (message.data?.textContent) {
           return this.getElementByText(message.data.textContent);
         }
         break;
       case "WebScraper:GetElementTextContent":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.getElementTextContent(message.data.selector);
         }
         break;
       case "WebScraper:GetElement":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.getElement(message.data.selector);
         }
         break;
       case "WebScraper:GetElementText":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.getElementText(message.data.selector);
         }
         break;
       case "WebScraper:GetValue":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.getValue(message.data.selector);
         }
         break;
       case "WebScraper:InputElement":
-        if (message.data) {
-          this.inputElement(message.data.selector, message.data.value);
+        if (message.data?.selector && typeof message.data.value === "string") {
+          return this.inputElement(
+            message.data.selector,
+            message.data.value,
+            message.data.highlight,
+          );
         }
         break;
       case "WebScraper:ClickElement":
-        if (message.data) {
-          return this.clickElement(message.data.selector);
+        if (message.data?.selector) {
+          return this.clickElement(
+            message.data.selector,
+            message.data.highlight,
+          );
         }
         break;
       case "WebScraper:WaitForElement":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.waitForElement(
             message.data.selector,
             message.data.timeout || 5000,
@@ -118,7 +937,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       case "WebScraper:TakeScreenshot":
         return this.takeScreenshot();
       case "WebScraper:TakeElementScreenshot":
-        if (message.data) {
+        if (message.data?.selector) {
           return this.takeElementScreenshot(message.data.selector);
         }
         break;
@@ -131,14 +950,18 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:FillForm":
         if (message.data?.formData) {
-          return this.fillForm(message.data.formData);
+          return this.fillForm(message.data.formData, message.data.highlight);
         }
         break;
       case "WebScraper:Submit":
-        if (message.data) {
-          return this.submit(message.data.selector);
+        if (message.data?.selector) {
+          return this.submit(message.data.selector, message.data.highlight);
         }
         break;
+      case "WebScraper:ClearEffects":
+        this.cleanupHighlight();
+        this.hideInfoPanel();
+        return true;
     }
     return null;
   }
@@ -289,21 +1112,40 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @param value - The value to set in the element
    */
-  inputElement(selector: string, value: string): void {
+  async inputElement(
+    selector: string,
+    value: string,
+    highlight?: HighlightRequest,
+  ): Promise<boolean> {
     try {
       const element = this.document?.querySelector(selector) as
         | HTMLInputElement
-        | HTMLTextAreaElement;
-      if (element) {
-        element.value = value;
-        // Trigger input event to ensure the change is detected
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        // Some sites update bound state on change/blur
-        element.dispatchEvent(new Event("change", { bubbles: true }));
-        element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+        | HTMLTextAreaElement
+        | null;
+      if (!element) {
+        return false;
       }
+
+      const elementInfo = `入力値を設定: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
+
+      this.showInfoPanel(
+        highlight?.action ?? "Input",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      await this.applyHighlight(element, highlight, elementInfo);
+
+      element.value = value;
+      // Trigger input event to ensure the change is detected
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+      element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+      return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error setting input value:", e);
+      return false;
     }
   }
 
@@ -317,73 +1159,137 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @returns boolean - True if click was successful, false otherwise
    */
-  clickElement(selector: string): boolean {
+  clickElement(
+    selector: string,
+    highlight?: HighlightRequest,
+  ): Promise<boolean> {
     try {
       const element = this.document?.querySelector(
         selector,
       ) as HTMLElement | null;
-      if (!element) return false;
+      if (!element) return Promise.resolve(false);
 
-      try {
-        element.scrollIntoView({ block: "center", inline: "center" });
-      } catch {
-        /* ignore */
+      const elementTagName = element.tagName?.toLowerCase() || "element";
+      const elementText = element.textContent?.trim().substring(0, 30) || "";
+      const elementInfo = elementText
+        ? `${elementTagName} をクリック: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
+        : `${elementTagName} 要素をクリック中`;
+
+      // 情報パネルを即座に表示（視覚的フィードバック）
+      this.showInfoPanel(
+        highlight?.action ?? "Click",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      // エフェクト表示を非同期で開始（クリック処理をブロックしない）
+      const effectPromise = this.applyHighlight(
+        element,
+        highlight,
+        elementInfo,
+      ).catch(() => {
+        // エフェクト表示のエラーは無視（クリック処理には影響しない）
+      });
+
+      // スクロールとフォーカスは即座に実行（highlightがない場合のみ）
+      if (!highlight) {
+        try {
+          element.scrollIntoView({ block: "center", inline: "center" });
+        } catch {
+          /* ignore */
+        }
+
+        try {
+          (element as unknown as { focus?: () => void }).focus?.();
+        } catch {
+          /* ignore */
+        }
       }
 
-      try {
-        (element as unknown as { focus?: () => void }).focus?.();
-      } catch {
-        /* ignore */
-      }
+      const win = this.contentWindow ?? null;
+      const Ev = (win?.Event ?? globalThis.Event) as typeof Event;
+      const MouseEv = (win?.MouseEvent ?? globalThis.MouseEvent ?? null) as
+        | typeof MouseEvent
+        | null;
 
-      const rects = element.getClientRects?.();
-      if (rects && rects.length === 0) {
-        return false;
-      }
+      const tagName = (element.tagName || "").toUpperCase();
+      const isInput = tagName === "INPUT";
+      const isButton = tagName === "BUTTON";
+      const isLink = tagName === "A";
+      const inputType = isInput
+        ? ((element as HTMLInputElement).type || "").toLowerCase()
+        : "";
 
-      const style = globalThis.getComputedStyle(element);
-      if (
-        style?.getPropertyValue("display") === "none" ||
-        style?.getPropertyValue("visibility") === "hidden"
-      ) {
-        return false;
-      }
-
-      const evInit: MouseEventInit = {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        view: this.contentWindow ?? undefined,
+      const triggerInputEvents = () => {
+        try {
+          element.dispatchEvent(new Ev("input", { bubbles: true }));
+          element.dispatchEvent(new Ev("change", { bubbles: true }));
+        } catch (err) {
+          console.warn("NRWebScraperChild: input/change dispatch failed", err);
+        }
       };
-      try {
-        element.dispatchEvent(new PointerEvent("pointerdown", evInit));
-      } catch (e) {
-        void e;
+
+      let stateChanged = false;
+
+      if (isInput) {
+        const inputEl = element as HTMLInputElement;
+        if (inputType === "checkbox") {
+          inputEl.checked = !inputEl.checked;
+          triggerInputEvents();
+          stateChanged = true;
+        } else if (inputType === "radio") {
+          if (!inputEl.checked) {
+            inputEl.checked = true;
+            triggerInputEvents();
+          }
+          stateChanged = true;
+        }
       }
-      try {
-        element.dispatchEvent(new MouseEvent("mousedown", evInit));
-      } catch (e) {
-        void e;
-      }
-      try {
-        element.dispatchEvent(new MouseEvent("mouseup", evInit));
-      } catch (e) {
-        void e;
-      }
-      try {
-        element.dispatchEvent(new MouseEvent("click", evInit));
-      } catch (e) {
-        void e;
-      }
+
+      let clickDispatched = false;
       try {
         element.click();
+        clickDispatched = true;
       } catch (e) {
         void e;
       }
-      return true;
+
+      if (!clickDispatched && MouseEv) {
+        try {
+          element.dispatchEvent(
+            new MouseEv("click", {
+              bubbles: true,
+              cancelable: true,
+              composed: true,
+              view: win ?? undefined,
+            }),
+          );
+          clickDispatched = true;
+        } catch (err) {
+          console.warn("NRWebScraperChild: synthetic click failed", err);
+        }
+      }
+
+      if ((isButton || isLink) && !clickDispatched) {
+        try {
+          element.dispatchEvent(
+            new Ev("submit", { bubbles: true, cancelable: true }),
+          );
+        } catch (err) {
+          console.warn("NRWebScraperChild: submit dispatch failed", err);
+        }
+      }
+
+      const success = stateChanged || clickDispatched;
+
+      // エフェクト表示の完了を待たずに結果を返す（非同期で継続）
+      void effectPromise;
+
+      return Promise.resolve(success);
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
-      return false;
+      return Promise.resolve(false);
     }
   }
 
@@ -632,26 +1538,73 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * and values are the corresponding values to set.
    * @returns boolean - True if all fields were filled successfully, false otherwise.
    */
-  fillForm(formData: { [selector: string]: string }): boolean {
+  async fillForm(
+    formData: { [selector: string]: string },
+    highlight?: HighlightRequest,
+  ): Promise<boolean> {
     try {
       let allFilled = true;
-      for (const selector in formData) {
-        if (Object.prototype.hasOwnProperty.call(formData, selector)) {
-          const value = formData[selector];
-          const element = this.document?.querySelector(selector) as
-            | HTMLInputElement
-            | HTMLTextAreaElement;
-          if (element) {
-            element.value = value;
-            element.dispatchEvent(new Event("input", { bubbles: true }));
-            element.dispatchEvent(new Event("change", { bubbles: true }));
-            element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-          } else {
-            console.warn(
-              `NRWebScraperChild: Element not found for selector: ${selector}`,
+      const selectors = Object.keys(formData);
+      const fieldCount = selectors.length;
+      const win = this.contentWindow;
+      const doc = this.document;
+
+      // 初期情報パネルを表示
+      if (fieldCount > 1 && doc) {
+        this.showInfoPanel(
+          highlight?.action ?? "Fill",
+          undefined,
+          `フォーム入力中: ${fieldCount} 個のフィールド`,
+          fieldCount,
+          0,
+          fieldCount,
+        );
+      }
+
+      for (let i = 0; i < selectors.length; i++) {
+        const selector = selectors[i];
+        if (!Object.prototype.hasOwnProperty.call(formData, selector)) {
+          continue;
+        }
+
+        const value = formData[selector];
+        const element = this.document?.querySelector(selector) as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | null;
+
+        if (element) {
+          const elementInfo = `フィールド ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
+
+          if (fieldCount > 1 && doc) {
+            this.showInfoPanel(
+              highlight?.action ?? "Fill",
+              undefined,
+              elementInfo,
+              fieldCount,
+              i + 1,
+              fieldCount,
             );
-            allFilled = false;
           }
+
+          await this.applyHighlight(element, highlight, elementInfo);
+
+          element.value = value;
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+          element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+
+          // 各フィールド入力後に1.2秒の遅延（ユーザーがエフェクトを確認できるように）
+          if (i < selectors.length - 1 && win) {
+            await new Promise<void>((resolve) => {
+              win.setTimeout(() => resolve(), 1200);
+            });
+          }
+        } else {
+          console.warn(
+            `NRWebScraperChild: Element not found for selector: ${selector}`,
+          );
+          allFilled = false;
         }
       }
       return allFilled;
@@ -686,7 +1639,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * Submits a form. If selector points to an element inside a form, submits its closest form.
    * If selector is a form element, submits that form.
    */
-  submit(selector: string): boolean {
+  async submit(
+    selector: string,
+    highlight?: HighlightRequest,
+  ): Promise<boolean> {
     try {
       const root = this.document?.querySelector(selector) as Element | null;
       const form =
@@ -695,6 +1651,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
           : (root?.closest?.("form") as HTMLFormElement | null);
 
       if (!form) return false;
+
+      const formName =
+        form.getAttribute("name") || form.getAttribute("id") || "form";
+      const elementInfo = `フォーム送信中: ${formName}`;
+
+      this.showInfoPanel(
+        highlight?.action ?? "Submit",
+        undefined,
+        elementInfo,
+        1,
+      );
+
+      await this.applyHighlight(root ?? form, highlight, elementInfo);
 
       try {
         // Prefer requestSubmit if available, otherwise fallback to submit.

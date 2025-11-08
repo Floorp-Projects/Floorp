@@ -3,7 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export const STATIC_PANEL_DATA = {
+export type StaticPanelConfig = {
+  url: string;
+  icon: string;
+  l10n: string;
+  defaultWidth: number;
+};
+
+export type StaticPanelData = Record<string, StaticPanelConfig>;
+
+/**
+ * 基本的な静的パネルデータ
+ */
+const BASE_STATIC_PANEL_DATA: StaticPanelData = {
   "floorp//bmt": {
     url: "chrome://browser/content/places/places.xhtml",
     icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJjb250ZXh0LWZpbGwiIGZpbGwtb3BhY2l0eT0iY29udGV4dC1maWxsLW9wYWNpdHkiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTEgNmEyIDIgMCAwIDEgMi0yaDFWM2EyIDIgMCAwIDEgMi0yaDRhMiAyIDAgMCAxIDIgMnYxaDFhMiAyIDAgMCAxIDIgMnY3YTIgMiAwIDAgMS0yIDJIM2EyIDIgMCAwIDEtMi0yVjZabTMtLjc1SDNhLjc1Ljc1IDAgMCAwLS43NS43NXYySDF2LS4zNzVhLjYyNS42MjUgMCAxIDEgMS4yNSAwVjhoNS41di0uMzc1YS42MjUuNjI1IDAgMSAxIDEuMjUgMFY4aDEuNzVWNmEuNzUuNzUgMCAwIDAtLjc1LS43NUg0Wk0yLjI1IDEzYzAgLjQxNC4zMzYuNzUuNzUuNzVoMTBhLjc1Ljc1IDAgMCAwIC43NS0uNzVWOS4yNUgxMnYxLjEyNWEuNjI1LjYyNSAwIDEgMS0xLjI1IDBWOS4yNWgtNS41djEuMTI1YS42MjUuNjI1IDAgMSAxLTEuMjUgMFY5LjI1SDIuMjVWMTNaTTEwIDIuMjVINmEuNzUuNzUgMCAwIDAtLjc1Ljc1djFoNS41VjNhLjc1Ljc1IDAgMCAwLS43NS0uNzVaIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=",
@@ -40,4 +52,48 @@ export const STATIC_PANEL_DATA = {
     l10n: "notes-sidebar",
     defaultWidth: 550,
   },
+};
+
+/**
+ * 条件に応じて追加のパネルを返す関数
+ * ここで条件をチェックして、必要に応じてパネルを追加できます
+ *
+ * 例:
+ * - 実験機能の有効状態をチェック
+ * - 環境変数や設定をチェック
+ * - 拡張機能の有無をチェック
+ *
+ * @returns 追加するパネルのオブジェクト（空の場合は空オブジェクト）
+ */
+function getConditionalPanels(): Partial<StaticPanelData> {
+  const conditionalPanels: Partial<StaticPanelData> = {};
+
+  // Floorp OS が有効な場合にパネルを追加
+  try {
+    const floorpOSEnabled = Services.prefs.getBoolPref(
+      "floorp.os.enabled",
+      false,
+    );
+    if (floorpOSEnabled) {
+      conditionalPanels["floorp//floorp-os"] = {
+        url: `http://localhost:8999`,
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJjb250ZXh0LWZpbGwiIGZpbGwtb3BhY2l0eT0iY29udGV4dC1maWxsLW9wYWNpdHkiPjxwYXRoIGQ9Ik04IDJhNiA2IDAgMCAxIDYgNnY0YTYgNiAwIDAgMS02IDZINmE2IDYgMCAwIDEtNi02VjhhNiA2IDAgMCAxIDYtNlo4IDQuNWExLjUgMS41IDAgMCAwLTEuNS0xLjVINS41QTMuNSAzLjUgMCAwIDAgMiA2LjVWOWEzLjUgMy41IDAgMCAwIDMuNSAzLjVoNWExLjUgMS41IDAgMCAwIDEuNS0xLjVWNC41Wk01LjUgNWEuNS41IDAgMCAxIC41LjV2MWEuNS41IDAgMCAxLS41LjVINC41QS41LjUgMCAwIDEgNSA2VjVhLjUuNSAwIDAgMSAuNS41Wk0xMCA2LjVhLjUuNSAwIDAgMSAuNS41djFhLjUuNSAwIDAgMS0uNS41SDlhLjUuNSAwIDAgMS0uNS0uNVY3YS41LjUgMCAwIDEgLjUtLjVaIi8+PC9zdmc+",
+        l10n: "floorp-os-sidebar",
+        defaultWidth: 600,
+      };
+    }
+  } catch (_e) {
+    console.error("Failed to get conditional panels:", _e);
+  }
+
+  return conditionalPanels;
+}
+
+/**
+ * 静的パネルデータを取得します
+ * 条件に応じて追加のパネルが含まれます
+ */
+export const STATIC_PANEL_DATA: StaticPanelData = {
+  ...BASE_STATIC_PANEL_DATA,
+  ...getConditionalPanels(),
 };
