@@ -1,0 +1,51 @@
+diff --git a/browser/modules/MigrationUtils.sys.mjs b/browser/modules/MigrationUtils.sys.mjs
+index 3a08fea..a258343 100644
+--- ./browser/modules/MigrationUtils.sys.mjs
++++ ./browser/modules/MigrationUtils.sys.mjs
+@@ -703,19 +703,29 @@ class MigrationUtils {
+     let skipSourceSelection = false,
+       migrator = null,
+       migratorKey = "";
+-    if (aMigratorKey) {
+-      migrator = await this.getMigrator(aMigratorKey);
++    const requestedMigratorKey = aMigratorKey;
++    if (requestedMigratorKey) {
++      let lookupKey = requestedMigratorKey;
++      if (
++        requestedMigratorKey === AppConstants.MOZ_APP_NAME &&
++        lookupKey !== "firefox" &&
++        !this.migratorExists(lookupKey) &&
++        this.migratorExists("firefox")
++      ) {
++        lookupKey = "firefox";
++      }
++      migrator = await this.getMigrator(lookupKey);
+       if (!migrator) {
+         // aMigratorKey must point to a valid source, so, if it doesn't
+         // cleanup and throw.
+         this.finishMigration();
+         throw new Error(
+           "startMigration was asked to open auto-migrate from " +
+-            "a non-existent source: " +
+-            aMigratorKey
++          "a non-existent source: " +
++          requestedMigratorKey
+         );
+       }
+-      migratorKey = aMigratorKey;
++      migratorKey = lookupKey;
+       skipSourceSelection = true;
+     } else {
+       let defaultBrowserKey = this.getMigratorKeyForDefaultBrowser();
+@@ -745,7 +755,10 @@ class MigrationUtils {
+     let isRefresh =
+       migrator &&
+       skipSourceSelection &&
+-      migratorKey == AppConstants.MOZ_APP_NAME;
++      ((requestedMigratorKey &&
++        requestedMigratorKey == AppConstants.MOZ_APP_NAME) ||
++        (!requestedMigratorKey &&
++          migratorKey == AppConstants.MOZ_APP_NAME));
+ 
+     let entrypoint = this.MIGRATION_ENTRYPOINTS.FIRSTRUN;
+     if (isRefresh) {
