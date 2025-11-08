@@ -73,6 +73,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       listArchivedWorkspaces: this.listArchivedWorkspaces.bind(this),
       restoreArchivedWorkspace: this.restoreArchivedWorkspace.bind(this),
       deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
+      resetWorkspaces: this.resetWorkspaces.bind(this),
     };
 
     if (workspacesDataStore.data.size === 0) {
@@ -312,6 +313,61 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
     this.changeWorkspace(restoredWorkspaceId);
     return restoredWorkspaceId;
+  }
+
+  /**
+   * Reset the workspace store to its default state and assign all tabs to the new workspace.
+   * @returns The newly created workspace id.
+   */
+  public resetWorkspaces(): TWorkspaceID {
+    console.info("WorkspacesService: resetting workspace data to defaults");
+
+    setWorkspacesDataStore(
+      "data",
+      () =>
+        new Map<
+          TWorkspaceID,
+          TWorkspace
+        >() as unknown as TWorkspacesStoreData["data"],
+    );
+    setWorkspacesDataStore("order", () => [] as TWorkspacesStoreData["order"]);
+
+    const newWorkspaceId = this.createNoNameWorkspace();
+    this.setDefaultWorkspace(newWorkspaceId);
+    this.setCurrentWorkspaceID(newWorkspaceId);
+
+    try {
+      const gBrowser = globalThis.gBrowser as
+        | {
+            tabs: XULElement[];
+            showTab: (tab: XULElement) => void;
+          }
+        | undefined;
+
+      if (gBrowser?.tabs) {
+        for (const tab of gBrowser.tabs) {
+          if (!tab) continue;
+          this.tabManagerCtx.setWorkspaceIdToAttribute(tab, newWorkspaceId);
+          tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
+          try {
+            gBrowser.showTab(tab);
+          } catch (error) {
+            console.debug(
+              "WorkspacesService: failed to show tab during reset",
+              error,
+            );
+          }
+        }
+        this.tabManagerCtx.updateTabsVisibility();
+      }
+    } catch (error) {
+      console.error(
+        "WorkspacesService: failed to reassign tabs on reset",
+        error,
+      );
+    }
+
+    return newWorkspaceId;
   }
 
   private async restoreTabsFromSnapshot(

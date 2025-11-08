@@ -12,20 +12,59 @@ import { InfoTip } from "@/components/common/infotip.tsx";
 import { ExternalLink, Settings } from "lucide-react";
 import { RestartModal } from "@/components/common/restart-modal.tsx";
 import { useState } from "react";
+import { Button } from "@/components/common/button.tsx";
+import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
+import { initializeWorkspaces } from "../dataManager.ts";
 
 export function BasicSettings() {
   const { t } = useTranslation();
   const { getValues, setValue } = useFormContext();
   const [showRestartModal, setShowRestartModal] = useState(false);
+  const [showInitializeModal, setShowInitializeModal] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initializeStatus, setInitializeStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+
+  const handleConfirmInitialize = async () => {
+    setIsInitializing(true);
+    setInitializeStatus("idle");
+    try {
+      const success = await initializeWorkspaces("settings-page");
+      setInitializeStatus(success ? "success" : "error");
+    } catch (error) {
+      console.error("Failed to initialize workspaces:", error);
+      setInitializeStatus("error");
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   return (
     <>
-      {showRestartModal ? (
-        <RestartModal
-          onClose={() => setShowRestartModal(false)}
-          label={t("workspaces.needRestartDescriptionForEnableAndDisable")}
-        />
-      ) : null}
+      {showRestartModal
+        ? (
+          <RestartModal
+            onClose={() => setShowRestartModal(false)}
+            label={t("workspaces.needRestartDescriptionForEnableAndDisable")}
+          />
+        )
+        : null}
+      {showInitializeModal
+        ? (
+          <ConfirmModal
+            isOpen={showInitializeModal}
+            onClose={() => setShowInitializeModal(false)}
+            onConfirm={handleConfirmInitialize}
+            title={t("workspaces.initializeConfirmTitle")}
+            confirmText={t("workspaces.initializeConfirmAction")}
+            cancelText={t("workspaces.initializeConfirmCancel")}
+            confirmVariant="danger"
+          >
+            <p>{t("workspaces.initializeConfirmDescription")}</p>
+          </ConfirmModal>
+        )
+        : null}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -129,6 +168,46 @@ export function BasicSettings() {
                 checked={getValues("manageOnBms")}
                 onChange={(e) => setValue("manageOnBms", e.target.checked)}
               />
+            </div>
+          </div>
+
+          <h3 className="text-base font-medium mt-4">
+            {t("workspaces.dangerZone")}
+          </h3>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-red-200 dark:border-red-800 p-4 bg-red-50 dark:bg-red-950/20">
+            <div className="space-y-1">
+              <p className="text-base font-medium text-red-700 dark:text-red-300">
+                {t("workspaces.initializeTitle")}
+              </p>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {t("workspaces.initializeDescription")}
+              </p>
+              {initializeStatus === "success"
+                ? (
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    {t("workspaces.initializeSuccess")}
+                  </p>
+                )
+                : initializeStatus === "error"
+                ? (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {t("workspaces.initializeFailure")}
+                  </p>
+                )
+                : null}
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                disabled={isInitializing}
+                onClick={() => {
+                  setInitializeStatus("idle");
+                  setShowInitializeModal(true);
+                }}
+              >
+                {t("workspaces.initializeAction")}
+              </Button>
             </div>
           </div>
         </CardContent>

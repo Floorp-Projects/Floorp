@@ -240,7 +240,17 @@
         "manageOnBmsDescription": "この機能を有効にすると、 {{productName}} サイドバーでのみワークスペースを管理できます。ツールバーのボタンは引き続き必要ですが、使用できません。",
         "backup": "ワークスペースのバックアップ",
         "backupComingSoon": "近日公開",
-        "backupDescription": "ワークスペースのバックアップについて"
+        "backupDescription": "ワークスペースのバックアップについて",
+        "dangerZone": "危険な操作",
+        "initializeTitle": "ワークスペースを初期化",
+        "initializeDescription": "ワークスペースのデータを初期状態に戻します。すべてのカスタムワークスペースが削除され、すべてのタブが新しいワークスペースに再割り当てされます。",
+        "initializeAction": "ワークスペースを初期化",
+        "initializeSuccess": "ワークスペースを既定の状態にリセットしました。",
+        "initializeFailure": "ワークスペースの初期化に失敗しました。もう一度お試しください。",
+        "initializeConfirmTitle": "ワークスペースを初期化",
+        "initializeConfirmDescription": "すべてのワークスペース データを削除し、既定のワークスペースを 1 つ再作成します。本当に続行しますか？",
+        "initializeConfirmAction": "初期化",
+        "initializeConfirmCancel": "キャンセル"
     },
     "accounts": {
         "profileAndAccount": "プロファイルとアカウント",
