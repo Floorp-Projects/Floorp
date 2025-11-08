@@ -30,6 +30,7 @@
         "webApps": "Web 应用",
         "profileAndAccount": "配置和账户",
         "aboutBrowser": "关于 {{productName}}",
+        "updates": "更新与实验",
         "debug": "调试",
         "mouseGesture": "鼠标手势",
         "keyboardShortcut": "键盘快捷键",
@@ -94,6 +95,7 @@
         "style": "样式",
         "horizontal": "横向",
         "multirow": "多行",
+        "vertical": "垂直",
         "verticalTabIsRemovedFromBrowser": "Floorp 老版本内置垂直标签已从 {{productName}}中移除。请使用 Firefox 自带的垂直标签栏。",
         "learnMore": "了解更多",
         "position": "位置",
@@ -234,20 +236,21 @@
         "closePopupWhenSelectingWorkspace": "选择工作区时关闭工作区弹出面板",
         "closePopupWhenSelectingWorkspaceDescription": "选择是否在选择工作区时关闭工作区弹出面板。",
         "showWorkspaceNameOnToolbar": "在工作区图标旁显示工作区名称",
+        "exitOnLastTabClose": "关闭最后一个工作区时退出 Floorp",
         "manageOnBms": "管理 {{productName}} 侧边栏上的工作区",
         "manageOnBmsDescription": "启用此功能后，您只能在 {{productName}} 侧边栏上管理工作区。您将无法使用工具栏按钮管理工作区。",
         "backup": "工作区备份",
         "backupComingSoon": "敬请期待",
         "backupDescription": "了解工作区备份",
-        "dangerZone": "危险操作",
-        "initializeTitle": "初始化工作区",
-        "initializeDescription": "将工作区数据重置为默认状态。所有自定义工作区都会被删除，所有标签页都会重新分配到新的工作区。",
-        "initializeAction": "初始化工作区",
-        "initializeSuccess": "工作区已重置为默认状态。",
-        "initializeFailure": "初始化工作区失败。请重试。",
-        "initializeConfirmTitle": "初始化工作区",
-        "initializeConfirmDescription": "这将删除所有工作区数据，并重新创建一个默认工作区。确定要继续吗？",
-        "initializeConfirmAction": "初始化",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
         "initializeConfirmCancel": "取消"
     },
     "accounts": {
@@ -281,6 +284,45 @@
         "openSourceLicenseNotice": "开源许可",
         "versionInfo": "版本",
         "license": "许可协议"
+    },
+    "updates": {
+        "title": "更新与实验",
+        "description": "管理更新设置和实验功能参与。",
+        "experiments": {
+            "title": "{{productName}} 参加测试",
+            "description": "控制 {{productName}} 如何让您参加实验功能和 {{productName}} 测试。",
+            "policyLabel": "参与政策",
+            "policy": {
+                "default": "默认（推荐）",
+                "always": "总是参与",
+                "never": "从不参与"
+            },
+            "policyHelp": {
+                "default": "遵循建议的参与政策。您可能会根据推出比例被纳入 {{productName}} 测试。",
+                "always": "始终参与所有可用的 {{productName}} 测试。此选项适用于希望尽早测试新功能的用户。",
+                "never": "切勿参与 {{productName}} 测试。您只会收到稳定的、经过测试的功能。"
+            },
+            "confirmClearCache": "您确定要清除所有实验数据吗？这将重置您的作业，且无法撤销。",
+            "troubleshooting": "故障排除",
+            "clearCacheDescription": "如果在实验中遇到问题，清除缓存可将所有实验相关数据重置为初始状态，从而解决这些问题。",
+            "clearCache": "清除实验缓存"
+        },
+        "activeTests": {
+            "title": "主动 {{productName}} 测试",
+            "description": "查看和管理当前激活的测试。",
+            "refresh": "刷新",
+            "noTests": "您目前未参加任何测试。",
+            "assignedAt": "在 {{date}} 上注册",
+            "disable": "禁用",
+            "enable": "启用",
+            "disabledLabel": "已禁用",
+            "confirmDisable": "您确定要禁用此实验吗？您可以稍后再启用。",
+            "confirmEnable": "您确定要重新启用该实验吗？",
+            "lastUpdated": "最近更新："
+        }
+    },
+    "common": {
+        "loading": "加载中……"
     },
     "search": {
         "title": "检索设置",

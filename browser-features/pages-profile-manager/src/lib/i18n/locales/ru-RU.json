@@ -2,7 +2,7 @@
     "profileManager": {
         "title": "Профили",
         "buttons": {
-            "refresh": "Refresh List",
+            "refresh": "Refresh",
             "create": "Create"
         },
         "loading": "Loading…",
@@ -10,7 +10,7 @@
         "current": "Current",
         "default": "По умолчанию",
         "actions": {
-            "open": "Запустить",
+            "open": "Open",
             "new": "Новая заметка",
             "rename": "Переименовать",
             "remove": "Remove",

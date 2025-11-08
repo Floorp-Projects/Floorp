@@ -30,6 +30,7 @@
         "webApps": "Web Uygulamaları",
         "profileAndAccount": "Profil ve Hesap",
         "aboutBrowser": "{{productName}} Hakkında",
+        "updates": "Güncellemeler & Deneyler",
         "debug": "Hata Ayıklama",
         "mouseGesture": "Fare Hareketleri",
         "keyboardShortcut": "Klavye Kısayolları",
@@ -94,6 +95,7 @@
         "style": "Stil",
         "horizontal": "Yatay",
         "multirow": "Çok-satırlı",
+        "vertical": "Dikey",
         "verticalTabIsRemovedFromBrowser": "Dikey Sekmeler {{productName}}adresinden kaldırılmıştır. Lütfen bunun yerine Firefox'un yerel Dikey Sekme Çubuğunu kullanın.",
         "learnMore": "Daha fazla bilgi",
         "position": "Konum",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Bir çalışma alanı seçerken çalışma alanları açılır penceresini kapat",
         "closePopupWhenSelectingWorkspaceDescription": "Bir çalışma alanı seçerken çalışma alanı açılır penceresinin kapatılıp kapatılmayacağını seçin.",
         "showWorkspaceNameOnToolbar": "Simgenin yanında çalışma alanı adını göster",
+        "exitOnLastTabClose": "Son çalışma alanı sekmesi kapatıldığında Floorp'tan çıkın",
         "manageOnBms": "Çalışma alanlarını {{productName}} kenar çubuğu üzerinden yönetin",
         "manageOnBmsDescription": "Bu özellik etkinleştirildiğinde, çalışma alanlarını yalnızca {{productName}} kenar çubuğu üzerinden yönetebilirsiniz. Araç çubuğu düğmesini kullanarak çalışma alanlarını yönetemezsiniz.",
         "backup": "Çalışma Alanı Yedekleme",
         "backupComingSoon": "Yakında",
-        "backupDescription": "Çalışma Alanı yedeklemesi hakkında bilgi edinin"
+        "backupDescription": "Çalışma Alanı yedeklemesi hakkında bilgi edinin",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "İptal Et"
     },
     "accounts": {
         "profileAndAccount": "Profil ve Hesap",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Açık Kaynak Lisansı",
         "versionInfo": "Sürüm",
         "license": "Lisans"
+    },
+    "updates": {
+        "title": "Güncellemeler & Deneyler",
+        "description": "Güncelleme ayarlarını ve deneysel özelliklerin katılımını yönetin.",
+        "experiments": {
+            "title": "{{productName}} Teste Katılın",
+            "description": "{{productName}} 'un sizi deneysel özelliklere ve {{productName}} testlerine nasıl kaydedeceğini kontrol edin.",
+            "policyLabel": "Katılım Politikası",
+            "policy": {
+                "default": "Varsayılan (Önerilen)",
+                "always": "Her Zaman Katıl",
+                "never": "Asla Katılma"
+            },
+            "policyHelp": {
+                "default": "Önerilen katılım politikasını izleyin. Katılım yüzdelerine göre {{productName}} testlerine kaydolabilirsiniz.",
+                "always": "Her zaman mevcut {{productName}} testlerine katılın. Bu seçenek, yeni özellikleri erkenden test etmek isteyen kullanıcılar içindir.",
+                "never": "Asla {{productName}} testlerine katılmayın. Yalnızca kararlı, test edilmiş özellikler alacaksınız."
+            },
+            "confirmClearCache": "Tüm deney verilerini silmek istediğinizden emin misiniz? Bu işlem ödevlerinizi sıfırlar ve geri alınamaz.",
+            "troubleshooting": "Sorun giderme",
+            "clearCacheDescription": "Deneylerle ilgili sorunlar yaşıyorsanız, önbelleği temizlemek deneyle ilgili tüm verileri başlangıç durumuna sıfırlayarak sorunları çözebilir.",
+            "clearCache": "Deney Önbelleğini Temizle"
+        },
+        "activeTests": {
+            "title": "{{productName}} Aktif Testler",
+            "description": "Şu anda aktif olan test kayıtlarınızı görüntüleyin ve yönetin.",
+            "refresh": "Yenile",
+            "noTests": "Şu anda herhangi bir teste kayıtlı değilsiniz.",
+            "assignedAt": "{{date}} tarihinde kayıt oldu",
+            "disable": "Devre dışı",
+            "enable": "Etkinleştir",
+            "disabledLabel": "Devre dışı",
+            "confirmDisable": "Bu deneyi devre dışı bırakmak istediğinizden emin misiniz? Daha sonra yeniden etkinleştirebilirsiniz.",
+            "confirmEnable": "Bu deneyi yeniden etkinleştirmek istediğinizden emin misiniz?",
+            "lastUpdated": "Son güncelleme:"
+        }
+    },
+    "common": {
+        "loading": "Yükleniyor..."
     },
     "search": {
         "title": "Arama Ayarları",
@@ -366,42 +418,42 @@
     },
     "floorpOS": {
         "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
-        "loading": "Loading...",
+        "description": "Floorp OS arka uç modüllerini ve hizmetlerini yönet",
+        "loading": "Yükleniyor...",
         "statusCard": {
-            "title": "Status",
-            "description": "Current status of Floorp OS",
-            "platformSupport": "Platform Support",
-            "platformSupported": "Your platform is supported",
-            "platformUnsupported": "Your platform is not supported",
-            "installedVersion": "Installed Version",
-            "notInstalled": "Not installed",
-            "serviceStatus": "Service Status",
-            "running": "Running",
-            "stopped": "Stopped",
-            "enabledBadge": "Enabled",
-            "disabledBadge": "Disabled"
+            "title": "Durum",
+            "description": "Floorp OS'nin güncel durumu",
+            "platformSupport": "Platform Desteği",
+            "platformSupported": "Platformunuz destekleniyor",
+            "platformUnsupported": "Platformunuz desteklenmiyor",
+            "installedVersion": "Yüklü sürüm",
+            "notInstalled": "Kurulu değil",
+            "serviceStatus": "Hizmet Durumu",
+            "running": "Çalışıyor",
+            "stopped": "Durduruldu",
+            "enabledBadge": "Etkinleştirildi",
+            "disabledBadge": "Devre dışı"
         },
         "controlsCard": {
-            "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
-            "refresh": "Refresh Status"
+            "title": "Kontroller",
+            "description": "Floorp OS'yi etkinleştir / devre dışı bırak",
+            "enable": "Floorp OS'yi Etkinleştir",
+            "disable": "Floorp OS'yi devre dışı bırakın",
+            "refresh": "Durumu Yenile"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Floorp OS'yi Etkinleştirme",
+            "disabling": "Floorp OS'yi Devre dışı bırakma",
+            "enableSuccess": "Floorp OS başarıyla etkinleştirildi!",
+            "disableSuccess": "Floorp OS başarıyla devre dışı bırakıldı!"
         },
         "errors": {
-            "apiUnavailable": "OSAutomotor API is not available.",
-            "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "apiUnavailable": "OSAutomotor API mevcut değil.",
+            "loadStatus": "Durum yüklenemedi: {{reason}}",
+            "enable": "Floorp OS etkinleştirilemedi.",
+            "disable": "Floorp OS devre dışı bırakılamadı.",
+            "enableAction": "Floorp OS etkinleştirilirken hata oluştu: {{reason}}",
+            "disableAction": "Floorp OS devre dışı bırakılırken hata oluştu: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -422,8 +474,8 @@
         "pattern": "Desen",
         "action": "Eylem",
         "actionDescription": "Hareketin açıklaması",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesEnabled": "Rocker hareketlerini etkinleştirin",
+        "rockerGesturesDescription": "Geri gitmek için sağ tıklayın ve sola hareket edin, ileri gitmek için sağ tıklayın ve sağa hareket edin. (Deneysel)",
         "actions": {
             "gecko-back": "Geri",
             "gecko-forward": "İleri",
@@ -496,8 +548,8 @@
             "gecko-scroll-left": "Sola Kaydır",
             "gecko-scroll-to-top": "Başa Kaydır",
             "gecko-scroll-to-bottom": "Sona Kaydır",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "Sonraki Çalışma Alanına Geç",
+            "gecko-workspace-previous": "Önceki Çalışma Alanına Geç"
         },
         "edit": "Düzenle",
         "duplicate": "Çoğalt",

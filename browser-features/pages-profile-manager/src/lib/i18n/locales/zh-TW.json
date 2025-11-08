@@ -2,23 +2,23 @@
     "profileManager": {
         "title": "設定檔",
         "buttons": {
-            "refresh": "Refresh List",
-            "create": "Create"
+            "refresh": "Refresh",
+            "create": "新增"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "正在載入…",
+        "noProfiles": "找不到設定檔。",
+        "current": "目前",
         "default": "預設",
         "actions": {
-            "open": "啟動",
+            "open": "Open",
             "new": "新增筆記",
             "rename": "重新命名",
-            "remove": "Remove",
+            "remove": "移除",
             "setDefault": "預設"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "您確定要移除此設定檔嗎？",
+            "newName": "新的設定檔名稱："
         }
     }
 }

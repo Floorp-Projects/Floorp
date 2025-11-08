@@ -5,7 +5,7 @@
     "notes": {
         "welcome": "{{productName}} Notes へようこそ！",
         "welcomeContent": "{{productName}} Notes へようこそ！使い方はこちら。\n\n{{productName}} Notes はデバイス間で同期できるメモ機能です。同期を有効にするには、Mozilla アカウントで {{productName}} にサインインする必要があります。\n{{productName}} Notes は {{productName}} に保存され、Firefox Sync を使用してデバイス間で同期されます。Firefox Sync は同期の内容を Mozilla アカウントのパスワードで暗号化するため、誰にもその内容を知られることはありません。",
-        "new": "新規メモ",
+        "new": "新しいノート",
         "reorder": "並べ替え",
         "done": "完了",
         "emptyTitle": "無題",

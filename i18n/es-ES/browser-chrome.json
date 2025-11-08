@@ -65,11 +65,30 @@
       "move-up": "Subir este espacio de trabajo",
       "move-down": "Bajar este espacio de trabajo",
       "delete": "Eliminar espacio de trabajo",
-      "manage": "Gestionar espacio de trabajo"
+      "manage": "Gestionar espacio de trabajo",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Crear espacio de trabajo nuevo…",
-      "manage": "Gestionar espacios de trabajo"
+      "manage": "Gestionar espacios de trabajo",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"

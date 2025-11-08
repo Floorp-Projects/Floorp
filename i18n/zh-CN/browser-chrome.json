@@ -4,12 +4,12 @@
     "tooltiptext": "重新打开上次关闭的选项卡 {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Floorp 特定设置，如面板侧边栏、工作空间和鼠标手势，都在 Floorp Hub 中管理。",
+    "openButton": "打开 Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "要更改 \"主页 \"设置，请在 Floorp Hub (about:hub#/features/design) 中禁用 Floorp Start。",
+    "openButton": "打开 Floorp Hub - 设计"
   },
   "workspaces": {
     "modal": {
@@ -65,11 +65,30 @@
       "move-up": "上移此工作区",
       "move-down": "下移此工作区",
       "delete": "删除工作区",
-      "manage": "管理工作区"
+      "manage": "管理工作区",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "创建新工作区……",
-      "manage": "管理工作区"
+      "manage": "管理工作区",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "移动标签到另一个工作区"

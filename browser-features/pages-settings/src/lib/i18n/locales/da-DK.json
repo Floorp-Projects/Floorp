@@ -30,6 +30,7 @@
         "webApps": "Webapps",
         "profileAndAccount": "Profil og konto",
         "aboutBrowser": "Om {{productName}}",
+        "updates": "Updates & Experiments",
         "debug": "Fejlfinding",
         "mouseGesture": "Musebevægelser",
         "keyboardShortcut": "Tastaturgenveje",
@@ -94,6 +95,7 @@
         "style": "Stil",
         "horizontal": "Vandret",
         "multirow": "Flere rækker",
+        "vertical": "Lodret",
         "verticalTabIsRemovedFromBrowser": "Lodrette faner er blevet fjernet fra {{productName}}. Brug venligst Firefox' indbyggede lodrette fanelinje i stedet.",
         "learnMore": "Lær mere",
         "position": "Position",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Luk arbejdsområde-popup ved valg af arbejdsområde",
         "closePopupWhenSelectingWorkspaceDescription": "Vælg, om pop op-vinduet for arbejdsområdet skal lukkes, når du vælger et arbejdsområde.",
         "showWorkspaceNameOnToolbar": "Vis arbejdsområdets navn ved siden af ikonet",
+        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
         "manageOnBms": "Administrer arbejdsområder i sidepanelet {{productName}}",
         "manageOnBmsDescription": "Når denne funktion er aktiveret, kan du kun administrere arbejdsområder i sidepanelet {{productName}}. Du vil ikke kunne administrere dem via værktøjslinjens knap.",
         "backup": "Workspace Backup",
         "backupComingSoon": "Kommer snart",
-        "backupDescription": "Learn about workspace backup"
+        "backupDescription": "Learn about workspace backup",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Afbryd"
     },
     "accounts": {
         "profileAndAccount": "Profil og konto",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Open source-licens",
         "versionInfo": "Version",
         "license": "Licens"
+    },
+    "updates": {
+        "title": "Updates & Experiments",
+        "description": "Manage update settings and experimental features participation.",
+        "experiments": {
+            "title": "{{productName}} Test Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "policyLabel": "Participation Policy",
+            "policy": {
+                "default": "Default (Recommended)",
+                "always": "Always Participate",
+                "never": "Never Participate"
+            },
+            "policyHelp": {
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+            },
+            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
+            "troubleshooting": "Troubleshooting",
+            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "clearCache": "Clear Experiment Cache"
+        },
+        "activeTests": {
+            "title": "Active {{productName}} Tests",
+            "description": "View and manage your currently active test enrollments.",
+            "refresh": "Refresh",
+            "noTests": "You are not currently enrolled in any tests.",
+            "assignedAt": "Enrolled on {{date}}",
+            "disable": "Disable",
+            "enable": "Enable",
+            "disabledLabel": "Disabled",
+            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "lastUpdated": "Last updated:"
+        }
+    },
+    "common": {
+        "loading": "Loading..."
     },
     "search": {
         "title": "Søgeindstillinger",

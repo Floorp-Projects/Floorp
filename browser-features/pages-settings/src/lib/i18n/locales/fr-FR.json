@@ -30,6 +30,7 @@
         "webApps": "Applications Web",
         "profileAndAccount": "Profil et compte",
         "aboutBrowser": "À propos de {{productName}}",
+        "updates": "Updates & Experiments",
         "debug": "Débogage",
         "mouseGesture": "Gestes de la souris",
         "keyboardShortcut": "Raccourcis clavier",
@@ -94,6 +95,7 @@
         "style": "Style",
         "horizontal": "Horizontale",
         "multirow": "Multi-ligne",
+        "vertical": "Vertical",
         "verticalTabIsRemovedFromBrowser": "Les onglets verticaux ont été supprimés de {{productName}}. Veuillez utiliser la barre d'onglets verticale native de Firefox à la place.",
         "learnMore": "En savoir plus",
         "position": "Emplacement",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Fermer la fenêtre contextuelle des espaces de travail lors de la sélection d'un espace de travail",
         "closePopupWhenSelectingWorkspaceDescription": "Choisissez de fermer ou non la fenêtre contextuelle de l'espace de travail lors de la sélection d'un espace de travail.",
         "showWorkspaceNameOnToolbar": "Afficher le nom de l'espace de travail à côté de l'icône",
+        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
         "manageOnBms": "Gérer les espaces de travail sur la barre latérale de {{productName}}",
         "manageOnBmsDescription": "Lorsque cette fonctionnalité est activée, vous ne pouvez gérer les espaces de travail que dans la barre latérale de {{productName}} . Vous ne pourrez pas gérer les espaces de travail à l'aide du bouton de la barre d'outils.",
         "backup": "Sauvegarde de l'espace de travail",
         "backupComingSoon": "Prochainement",
-        "backupDescription": "En savoir plus sur la sauvegarde de l'espace de travail"
+        "backupDescription": "En savoir plus sur la sauvegarde de l'espace de travail",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Cancel"
     },
     "accounts": {
         "profileAndAccount": "Profil et compte",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Licences Open Source",
         "versionInfo": "Version",
         "license": "Licence"
+    },
+    "updates": {
+        "title": "Updates & Experiments",
+        "description": "Manage update settings and experimental features participation.",
+        "experiments": {
+            "title": "{{productName}} Test Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "policyLabel": "Participation Policy",
+            "policy": {
+                "default": "Default (Recommended)",
+                "always": "Always Participate",
+                "never": "Never Participate"
+            },
+            "policyHelp": {
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+            },
+            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
+            "troubleshooting": "Troubleshooting",
+            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "clearCache": "Clear Experiment Cache"
+        },
+        "activeTests": {
+            "title": "Active {{productName}} Tests",
+            "description": "View and manage your currently active test enrollments.",
+            "refresh": "Refresh",
+            "noTests": "You are not currently enrolled in any tests.",
+            "assignedAt": "Enrolled on {{date}}",
+            "disable": "Disable",
+            "enable": "Enable",
+            "disabledLabel": "Disabled",
+            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "lastUpdated": "Last updated:"
+        }
+    },
+    "common": {
+        "loading": "Loading..."
     },
     "search": {
         "title": "Paramètres de recherche",

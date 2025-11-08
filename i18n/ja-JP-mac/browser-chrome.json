@@ -4,12 +4,12 @@
     "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "パネルサイドバー、ワークスペース、マウスジェスチャーなどの Floorp 固有の設定は、Floorp Hub で管理できます。",
+    "openButton": "Floorp Hub を開く"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "「ホーム」の設定を変更する場合は、Floorp Hub で Floorp Start を無効にしてください (about:hub#/features/design)。",
+    "openButton": "Floorp Hub を開く — デザイン"
   },
   "workspaces": {
     "modal": {
@@ -66,19 +66,29 @@
       "move-down": "このワークスペースを下に移動",
       "delete": "ワークスペースを削除",
       "manage": "ワークスペースを管理",
-      "archive": "ワークスペースを保存"
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "新規ワークスペースを作成...",
       "manage": "ワークスペースを管理",
-      "restore": "保存済みワークスペースを表示",
-      "restore-cancel": "復元モードを終了",
-      "restore-title": "保存済みワークスペース",
-      "restore-loading": "保存済みワークスペースを読み込み中...",
-      "restore-empty": "保存済みのワークスペースはありません",
-      "restore-error": "保存済みワークスペースを読み込めませんでした",
-      "restore-tooltip": "復元モードを切り替え",
-      "restore-item": "\"{{name}}\" を復元"
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"
@@ -123,7 +133,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "プライベートコンテナーで開く",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "プライベートコンテナーで再度開く",
     "name": "プライベートコンテナー"
   },
   "mouseGesture": {

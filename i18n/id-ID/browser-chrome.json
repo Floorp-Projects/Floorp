@@ -4,12 +4,12 @@
     "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Pengaturan spesifik Floorp seperti bilah sisi, Ruang Kerja, dan gestur tetikus dikelola di Floorp Hub.",
+    "openButton": "Buka Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "Untuk mengubah pengaturan \"Home\", nonaktifkan Floorp Start dari Floorp Hub (about:hub#/features/design).",
+    "openButton": "Buka Floorp Hub — Desain"
   },
   "workspaces": {
     "modal": {
@@ -65,11 +65,30 @@
       "move-up": "Pindahkan Ruang Kerja ini ke atas",
       "move-down": "Pindahkan Ruang Kerja ini ke bawah",
       "delete": "Hapus Ruang Kerja",
-      "manage": "Kelola Ruang Kerja"
+      "manage": "Kelola Ruang Kerja",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Buat Ruang Kerja Baru …",
-      "manage": "Kelola Ruang Kerja"
+      "manage": "Kelola Ruang Kerja",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain"
@@ -79,7 +98,7 @@
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
+    "label": "Manajer Profil",
     "tooltiptext": "Buka Manajer Profil"
   },
   "statusbar": {

@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Profil",
         "buttons": {
-            "refresh": "Refresh List",
-            "create": "Create"
+            "refresh": "Refresh",
+            "create": "Buat"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Memuat …",
+        "noProfiles": "Tidak ada profil ditemukan.",
+        "current": "Saat ini",
         "default": "Bawaan",
         "actions": {
-            "open": "Launch",
-            "new": "New",
+            "open": "Open",
+            "new": "Baru",
             "rename": "Ganti nama",
-            "remove": "Remove",
+            "remove": "Hapus",
             "setDefault": "Bawaan"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Yakin ingin menghapus profil ini?",
+            "newName": "Nama profil baru:"
         }
     }
 }

@@ -2,7 +2,7 @@
     "profileManager": {
         "title": "Hồ sơ",
         "buttons": {
-            "refresh": "Refresh List",
+            "refresh": "Refresh",
             "create": "Create"
         },
         "loading": "Loading…",
@@ -10,7 +10,7 @@
         "current": "Current",
         "default": "Đầu",
         "actions": {
-            "open": "Khởi động",
+            "open": "Open",
             "new": "Tạo",
             "rename": "Rename",
             "remove": "Remove",

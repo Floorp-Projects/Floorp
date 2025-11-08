@@ -4,12 +4,12 @@
     "tooltiptext": "En son kapatılan sekmeyi yeniden aç {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Panel kenar çubuğu, Çalışma Alanları ve fare hareketleri gibi Floorp'a özgü ayarlar Floorp Hub'da yönetilir.",
+    "openButton": "Floorp Hub'ı aç"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "\"Ana Sayfa\" ayarını değiştirmek için Floorp Hub'dan Floorp Start'ı devre dışı bırakın (about:hub#/features/design).",
+    "openButton": "Floorp Hub Tasarım Merkezi'ni aç"
   },
   "workspaces": {
     "modal": {
@@ -65,11 +65,30 @@
       "move-up": "Bu Çalışma Alanını Yukarı Taşı",
       "move-down": "Bu Çalışma Alanını Aşağı Taşı",
       "delete": "Çalışma Alanını Sil",
-      "manage": "Çalışma Alanlanını Yönet"
+      "manage": "Çalışma Alanlanını Yönet",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Yeni Çalışma Alanı Oluştur...",
-      "manage": "Çalışma Alanlarını Yönet"
+      "manage": "Çalışma Alanlarını Yönet",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı"
@@ -79,7 +98,7 @@
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
+    "label": "Profil Yöneticisi",
     "tooltiptext": "Profil Yöneticisini Aç"
   },
   "statusbar": {
@@ -114,7 +133,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Gizli Kapsayıcıda Aç",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "Gizli Kapsayıcıda yeniden aç",
     "name": "Gizlil Kapsayıcı"
   },
   "mouseGesture": {
@@ -190,7 +209,7 @@
       "gecko-scroll-left": "Sola Kaydır",
       "gecko-scroll-to-top": "En Üste Dön",
       "gecko-scroll-to-bottom": "En alta Kaydır",
-      "gecko-workspace-next": "Switch to Next Workspace",
+      "gecko-workspace-next": "Sonraki Çalışma Alanına Geç",
       "gecko-workspace-previous": "Önceki Çalışma Alanına Geç"
     },
     "descriptions": {

@@ -30,6 +30,7 @@
         "webApps": "웹 앱",
         "profileAndAccount": "프로필 및 계정",
         "aboutBrowser": "{{productName}} 정보",
+        "updates": "Updates & Experiments",
         "debug": "Debug",
         "mouseGesture": "마우스 제스처",
         "keyboardShortcut": "키보드 단축키",
@@ -94,6 +95,7 @@
         "style": "스타일",
         "horizontal": "Horizontal",
         "multirow": "Multi-row",
+        "vertical": "Vertical",
         "verticalTabIsRemovedFromBrowser": "Vertical Tabs have been removed from {{productName}}. Please use Firefox's native Vertical Tab Bar instead.",
         "learnMore": "Learn more",
         "position": "Position",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Close workspace popup when selecting a workspace",
         "closePopupWhenSelectingWorkspaceDescription": "Choose whether to close the workspace popup when selecting a workspace.",
         "showWorkspaceNameOnToolbar": "Show workspace name next to the icon",
+        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
         "manageOnBms": "Manage workspaces on {{productName}} sidebar",
         "manageOnBmsDescription": "When this feature is enabled, you can only manage workspaces on the {{productName}} sidebar. You won't be able to manage workspaces using the toolbar button.",
         "backup": "Workspace Backup",
         "backupComingSoon": "기대해주세요",
-        "backupDescription": "워크스페이스 백업에 대해 알아보기"
+        "backupDescription": "워크스페이스 백업에 대해 알아보기",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "취소"
     },
     "accounts": {
         "profileAndAccount": "프로필 및 계정",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Open Source License",
         "versionInfo": "Version",
         "license": "License"
+    },
+    "updates": {
+        "title": "Updates & Experiments",
+        "description": "Manage update settings and experimental features participation.",
+        "experiments": {
+            "title": "{{productName}} Test Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "policyLabel": "Participation Policy",
+            "policy": {
+                "default": "Default (Recommended)",
+                "always": "Always Participate",
+                "never": "Never Participate"
+            },
+            "policyHelp": {
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+            },
+            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
+            "troubleshooting": "Troubleshooting",
+            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "clearCache": "Clear Experiment Cache"
+        },
+        "activeTests": {
+            "title": "Active {{productName}} Tests",
+            "description": "View and manage your currently active test enrollments.",
+            "refresh": "Refresh",
+            "noTests": "You are not currently enrolled in any tests.",
+            "assignedAt": "Enrolled on {{date}}",
+            "disable": "Disable",
+            "enable": "Enable",
+            "disabledLabel": "Disabled",
+            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "lastUpdated": "Last updated:"
+        }
+    },
+    "common": {
+        "loading": "Loading..."
     },
     "search": {
         "title": "Search Settings",

@@ -2,23 +2,23 @@
     "profileManager": {
         "title": "配置文件",
         "buttons": {
-            "refresh": "Refresh List",
-            "create": "Create"
+            "refresh": "Refresh",
+            "create": "创建"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "加载中…",
+        "noProfiles": "未找到配置文件。",
+        "current": "当前",
         "default": "默认",
         "actions": {
-            "open": "启动",
+            "open": "Open",
             "new": "新建",
             "rename": "重命名",
-            "remove": "Remove",
+            "remove": "移除",
             "setDefault": "默认"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "你确定要移除这个配置吗？",
+            "newName": "新配置名称："
         }
     }
 }

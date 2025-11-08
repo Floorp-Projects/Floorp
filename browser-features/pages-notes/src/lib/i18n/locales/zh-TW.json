@@ -3,37 +3,37 @@
         "default": "{{productName}} 筆記"
     },
     "notes": {
-        "welcome": "Welcome to {{productName}} Notes!",
-        "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
+        "welcome": "歡迎來到 {{productName}} 筆記！",
+        "welcomeContent": "歡迎使用 {{productName}} 筆記！以下是使用方法。\n\n{{productName}} 筆記是一項可跨裝置同步的記事功能。若要啟用同步功能，您需要使用 Mozilla 帳戶登入 {{productName}} 。\n{{productName}} 筆記儲存於 {{productName}} ，並使用 Firefox Sync 跨裝置同步處理。Firefox Sync 會以你的 Mozilla 帳號密碼加密同步處理的內容，因此任何人都無法知道其內容。",
         "new": "新增筆記",
-        "reorder": "Reorder",
-        "done": "Done",
+        "reorder": "重新排序",
+        "done": "完成",
         "emptyTitle": "未命名",
-        "emptyContent": "No content",
-        "noNotesSelected": "Select a note or create a new one",
-        "createNew": "Create New Note",
-        "titlePlaceholder": "Title",
-        "loading": "Loading notes...",
+        "emptyContent": "無內容",
+        "noNotesSelected": "選取筆記或建立新筆記",
+        "createNew": "建立新筆記",
+        "titlePlaceholder": "標題",
+        "loading": "載入筆記中……",
         "delete": "刪除"
     },
     "editor": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strikethrough",
-        "bulletList": "Bullet List",
-        "numberedList": "Numbered List",
-        "alignLeft": "Align Left",
-        "alignCenter": "Align Center",
-        "alignRight": "Align Right",
-        "quote": "Quote",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3"
+        "bold": "粗體",
+        "italic": "斜體",
+        "underline": "底線",
+        "strikethrough": "刪除線",
+        "bulletList": "項目列表",
+        "numberedList": "編號列表",
+        "alignLeft": "靠左對齊",
+        "alignCenter": "置中對齊",
+        "alignRight": "靠右對齊",
+        "quote": "引用",
+        "heading1": "一級標題",
+        "heading2": "二級標題",
+        "heading3": "三級標題"
     },
     "error": {
-        "loadFailed": "Failed to load note data",
-        "saveFailed": "Failed to save note data",
-        "indexOutOfRange": "Index {{index}} is out of range"
+        "loadFailed": "載入筆記資料失敗",
+        "saveFailed": "儲存筆記資料失敗",
+        "indexOutOfRange": "索引 {{index}} 超出範圍"
     }
 }

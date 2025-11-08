@@ -65,11 +65,30 @@
       "move-up": "Déplacer cet espace de travail vers le haut",
       "move-down": "Déplacer cet espace de travail vers le bas",
       "delete": "Supprimer l’espace de travail",
-      "manage": "Gérer l'espace de travail"
+      "manage": "Gérer l'espace de travail",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",
-      "manage": "Gérer les espaces de travail"
+      "manage": "Gérer les espaces de travail",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail"

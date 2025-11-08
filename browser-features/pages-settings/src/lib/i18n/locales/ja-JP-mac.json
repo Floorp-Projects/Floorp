@@ -30,6 +30,7 @@
         "webApps": "ウェブアプリ",
         "profileAndAccount": "プロファイルとアカウント",
         "aboutBrowser": "{{productName}} について",
+        "updates": "更新と実験",
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
         "keyboardShortcut": "キーボードショートカット",
@@ -94,6 +95,7 @@
         "style": "スタイル",
         "horizontal": "水平",
         "multirow": "多段",
+        "vertical": "垂直",
         "verticalTabIsRemovedFromBrowser": "垂直タブは {{productName}} から削除されました。 Firefox のネイティブの垂直タブバーを使用してください。",
         "learnMore": "詳細",
         "position": "位置",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "ワークスペース選択時にワークスペースのポップアップを閉じる",
         "closePopupWhenSelectingWorkspaceDescription": "ワークスペースを選択した後、ワークスペースのポップアップを閉じるかどうかを選択します。",
         "showWorkspaceNameOnToolbar": "アイコンの隣にワークスペース名を表示",
+        "exitOnLastTabClose": "最後のワークスペースのタブを閉じたときに Floorp を終了する",
         "manageOnBms": "{{productName}} サイドバーでワークスペースを管理",
         "manageOnBmsDescription": "この機能を有効にすると、 {{productName}} サイドバーでのみワークスペースを管理できます。ツールバーのボタンは引き続き必要ですが、使用できません。",
         "backup": "ワークスペースのバックアップ",
         "backupComingSoon": "近日公開",
-        "backupDescription": "ワークスペースのバックアップについて"
+        "backupDescription": "ワークスペースのバックアップについて",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "キャンセル"
     },
     "accounts": {
         "profileAndAccount": "プロファイルとアカウント",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "オープンソースライセンス",
         "versionInfo": "バージョン",
         "license": "ライセンス"
+    },
+    "updates": {
+        "title": "更新と実験",
+        "description": "更新に関する設定と実験的な機能への参加を管理します。",
+        "experiments": {
+            "title": "{{productName}} テストに参加",
+            "description": "{{productName}} の実験的な機能や {{productName}} テストに参加する方法を管理します。",
+            "policyLabel": "参加方針",
+            "policy": {
+                "default": "デフォルト (推奨)",
+                "always": "常に参加",
+                "never": "参加しない"
+            },
+            "policyHelp": {
+                "default": "推奨の参加方針に従います。ロールアウト率に基づいて {{productName}} テストに参加します。",
+                "always": "使用可能なすべての {{productName}} テストに参加します。新機能を早期に試したいユーザーに向いています。",
+                "never": "{{productName}} テストに参加しません。テスト済みの安定した機能のみを受け取ります。"
+            },
+            "confirmClearCache": "本当にすべての実験データを消去しますか？ これにより割り当てがリセットされます。この操作は取り消せません。",
+            "troubleshooting": "トラブルシューティング",
+            "clearCacheDescription": "実験で問題が発生した場合、キャッシュを消去して実験に関連するすべてのデータを初期状態にリセットすることで、解決することがあります。",
+            "clearCache": "実験キャッシュを消去"
+        },
+        "activeTests": {
+            "title": "有効な {{productName}} テスト",
+            "description": "現在有効なテスト登録を確認および管理します。",
+            "refresh": "更新",
+            "noTests": "現在、どのテストにも参加していません。",
+            "assignedAt": "登録日: {{date}}",
+            "disable": "無効化",
+            "enable": "有効化",
+            "disabledLabel": "無効",
+            "confirmDisable": "本当にこの実験を無効にしますか？ 後で再度有効にできます。",
+            "confirmEnable": "本当にこの実験を再度有効にしますか？",
+            "lastUpdated": "最終更新:"
+        }
+    },
+    "common": {
+        "loading": "読み込み中..."
     },
     "search": {
         "title": "設定を検索",

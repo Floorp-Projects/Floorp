@@ -1,54 +1,54 @@
 {
     "title": "Floorp Start",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
+        "addSite": "Adicionar site",
+        "addNewSite": "Adicionar novo site",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name",
+        "label": "Marcador",
+        "cancel": "Cancelar",
+        "add": "Adicionar",
+        "close": "Fechar",
+        "labelPlaceholder": "Nome do site",
         "pin": "Fixar",
-        "unpin": "Unpin",
-        "block": "Block",
-        "blockTitle": "Block \"{{title}}\"?",
-        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
-        "invalidUrl": "Invalid URL"
+        "unpin": "Desafixar",
+        "block": "Bloquear",
+        "blockTitle": "Bloquear \"{{title}}\"?",
+        "blockConfirm": "Este site será removido dos seus principais sites e não será sugerido novamente. Você pode gerenciar sites bloqueados nas configurações.",
+        "invalidUrl": "URL inválida"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current image:",
-        "imageRecommendation": "Recommended: 1920x1080 or higher",
-        "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "enableSlideshow": "Enable Slideshow",
-        "slideshowInterval": "Slideshow Interval",
+        "newTabSettings": "Configurações de novas abas",
+        "displayComponents": "Exibir componentes",
+        "topSites": "Principais sites",
+        "clock": "Relógio",
+        "searchBar": "Barra de pesquisa",
+        "backgroundSettings": "Configurações de plano de fundo",
+        "noBackground": "Sem plano de fundo",
+        "randomImage": "Imagem aleatória",
+        "customImage": "Imagem personalizada",
+        "folderImages": "Imagens de pasta",
+        "floorpImages": "Imagens do Floorp",
+        "currentImage": "Imagem atual:",
+        "imageRecommendation": "Recomendação: Use imagens com resolução de 1920x1080 ou superior.",
+        "currentFolder": "Pasta atual:",
+        "selectFolder": "Selecionar pasta",
+        "selected": "Selecionado",
+        "enableSlideshow": "Ativar slideshow",
+        "slideshowInterval": "Intervalo (segundos)",
         "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "disableFloorpStart": "Desativar Floorp Start (use o clássico \"about:newtab\")",
+        "disableFloorpStartDescription": "Quando ativado, o Floorp Start será substituído pela página de nova aba/inicial clássica do Firefox.",
+        "restartRequired": "Requer a reinicialização do navegador para ter efeito total.",
+        "firefoxLayout": "Usar o layout clássico (como o Firefox Home)"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Pesquisar ou digitar URL",
+        "loadingSearchEngines": "Carregando mecanismos de busca..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Configurações"
     },
     "modal": {
-        "close": "Close"
+        "close": "Fechar"
     }
 }

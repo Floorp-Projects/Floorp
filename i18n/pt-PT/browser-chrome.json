@@ -4,12 +4,12 @@
     "tooltiptext": "Reabrir o último separador fechado {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "As configurações específicas do Floorp, como a barra lateral do painel, os espaços de trabalho e os gestos do rato, são geridas no Floorp Hub.",
+    "openButton": "Abrir Hub Floorp"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "Para alterar a configuração \"Início\", desative o Floorp Start no Floorp Hub (about:hub#/features/design).",
+    "openButton": "Open Floorp Hub - Design"
   },
   "workspaces": {
     "modal": {
@@ -65,11 +65,30 @@
       "move-up": "Mover este espaço de trabalho para cima",
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Eliminar espaço de trabalho",
-      "manage": "Gerir o espaço de trabalho"
+      "manage": "Gerir o espaço de trabalho",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
-      "manage": "Gerir espaços de trabalho"
+      "manage": "Gerir espaços de trabalho",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho"
@@ -79,7 +98,7 @@
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
+    "label": "Gestor de perfis",
     "tooltiptext": "Abrir o Gestor de Perfis"
   },
   "statusbar": {

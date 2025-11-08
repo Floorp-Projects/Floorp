@@ -2,7 +2,7 @@
     "profileManager": {
         "title": "プロファイル",
         "buttons": {
-            "refresh": "Refresh List",
+            "refresh": "リストを更新",
             "create": "作成"
         },
         "loading": "読み込み中...",
@@ -12,7 +12,7 @@
         "actions": {
             "open": "起動",
             "new": "新規作成",
-            "rename": "名前を変更",
+            "rename": "名称変更",
             "remove": "削除",
             "setDefault": "デフォルト"
         },

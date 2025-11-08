@@ -4,12 +4,12 @@
     "tooltiptext": "重新開啟上次關閉的索引標籤 {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Floorp 特有的設定，例如面板側邊欄、工作區和滑鼠手勢，都在 Floorp Hub 中管理。",
+    "openButton": "開啟 Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "要變更 「首頁」 設定，請從 Floorp Hub (about:hub#/features/design) 關閉 Floorp Start。",
+    "openButton": "開啟 Floorp Hub - 設計"
   },
   "workspaces": {
     "modal": {
@@ -65,11 +65,30 @@
       "move-up": "向上移動此工作區",
       "move-down": "向下移動此工作區",
       "delete": "刪除工作區",
-      "manage": "管理工作區"
+      "manage": "管理工作區",
+      "archive": "Archive Workspace"
     },
     "popup": {
       "create-new": "建立新工作區...",
-      "manage": "管理工作區"
+      "manage": "管理工作區",
+      "restore": "Show Archived Workspaces",
+      "restore-cancel": "Exit Restore Mode",
+      "restore-title": "Archived Workspaces",
+      "restore-loading": "Loading archived workspaces…",
+      "restore-empty": "No archived workspaces",
+      "restore-error": "Failed to load archived workspaces",
+      "restore-tooltip": "Toggle restore mode",
+      "restore-item": "Restore \"{{name}}\"",
+      "restore-delete-tooltip": "Delete this archive",
+      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count_plural": "{{count}} tabs",
+      "restore-time-just-now": "Just now",
+      "restore-time-minutes": "{{minutes}} minute ago",
+      "restore-time-minutes_plural": "{{minutes}} minutes ago",
+      "restore-time-hours": "{{hours}} hour ago",
+      "restore-time-hours_plural": "{{hours}} hours ago",
+      "restore-time-days": "{{days}} day ago",
+      "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間"

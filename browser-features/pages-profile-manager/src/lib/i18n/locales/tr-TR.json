@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Kullanıcı profilleri",
         "buttons": {
-            "refresh": "Refresh List",
-            "create": "Create"
+            "refresh": "Listeyi Yenile",
+            "create": "Oluştur"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Yükleniyor…",
+        "noProfiles": "Herhangi bir profil bulunamadı.",
+        "current": "Geçerli",
         "default": "Varsayılan",
         "actions": {
-            "open": "Launch",
-            "new": "New",
+            "open": "Aç",
+            "new": "Yeni",
             "rename": "Yeniden adlandır",
-            "remove": "Remove",
+            "remove": "Kaldır",
             "setDefault": "Varsayılan"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Bu profili silmek istediğinizden emin misiniz?",
+            "newName": "Yeni profil adı:"
         }
     }
 }

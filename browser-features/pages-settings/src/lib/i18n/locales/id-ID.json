@@ -30,6 +30,7 @@
         "webApps": "Aplikasi Web",
         "profileAndAccount": "Profil dan Akun",
         "aboutBrowser": "Tentang {{productName}}",
+        "updates": "Pembaruan & Eksperimen",
         "debug": "Awakutu",
         "mouseGesture": "Gestur Tetikus",
         "keyboardShortcut": "Keyboard Shortcuts",
@@ -94,6 +95,7 @@
         "style": "Gaya",
         "horizontal": "Horizontal",
         "multirow": "Multibaris",
+        "vertical": "Vertikal",
         "verticalTabIsRemovedFromBrowser": "Tab Vertikal telah dihapus dari {{productName}}. Silakan gunakan Bilah Tab Vertikal asli Firefox sebagai gantinya.",
         "learnMore": "Lebih lanjut",
         "position": "Posisi",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Tutup munculan ruang kerja saat memilih ruang kerja",
         "closePopupWhenSelectingWorkspaceDescription": "Pilih apakah munculan ruang kerja ditutup setelah memilih ruang kerja.",
         "showWorkspaceNameOnToolbar": "Tampilkan nama ruang kerja di sebelah ikon",
+        "exitOnLastTabClose": "Tutup Floorp saat tab ruang kerja terakhir ditutup",
         "manageOnBms": "Kelola ruang kerja di bilah sisi {{productName}}",
         "manageOnBmsDescription": "Ketika fitur ini diaktifkan, Anda hanya dapat mengelola ruang kerja di bilah sisi {{productName}}. Anda tidak akan dapat mengelola ruang kerja menggunakan tombol bilah alat.",
         "backup": "Pencadangan Ruang Kerja",
         "backupComingSoon": "Segera Hadir",
-        "backupDescription": "Pelajari tentang pencadangan ruang kerja"
+        "backupDescription": "Pelajari tentang pencadangan ruang kerja",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Batal"
     },
     "accounts": {
         "profileAndAccount": "Profil dan Akun",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Lisensi Sumber Terbuka",
         "versionInfo": "Versi",
         "license": "Lisensi"
+    },
+    "updates": {
+        "title": "Pembaruan & Eksperimen",
+        "description": "Kelola pengaturan pembaruan dan fitur-fitur eksperimental.",
+        "experiments": {
+            "title": "{{productName}} Test Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "policyLabel": "Participation Policy",
+            "policy": {
+                "default": "Bawaan (Direkomendasikan)",
+                "always": "Selalu Ikut",
+                "never": "Jangan Pernah Ikut"
+            },
+            "policyHelp": {
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+            },
+            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
+            "troubleshooting": "Troubleshooting",
+            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "clearCache": "Clear Experiment Cache"
+        },
+        "activeTests": {
+            "title": "Active {{productName}} Tests",
+            "description": "View and manage your currently active test enrollments.",
+            "refresh": "Refresh",
+            "noTests": "You are not currently enrolled in any tests.",
+            "assignedAt": "Enrolled on {{date}}",
+            "disable": "Disable",
+            "enable": "Enable",
+            "disabledLabel": "Nonaktif",
+            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "lastUpdated": "Last updated:"
+        }
+    },
+    "common": {
+        "loading": "Memuat..."
     },
     "search": {
         "title": "Telusuri Pengaturan",

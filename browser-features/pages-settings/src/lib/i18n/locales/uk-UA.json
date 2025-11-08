@@ -30,6 +30,7 @@
         "webApps": "Вебзастосунки",
         "profileAndAccount": "Профіль та обліковий запис",
         "aboutBrowser": "Про {{productName}}",
+        "updates": "Updates & Experiments",
         "debug": "Налагодження",
         "mouseGesture": "Жести мишею",
         "keyboardShortcut": "Комбінації клавіш",
@@ -94,6 +95,7 @@
         "style": "Стиль",
         "horizontal": "Горизонтально",
         "multirow": "Багаторядний",
+        "vertical": "Вертикально",
         "verticalTabIsRemovedFromBrowser": "Вертикальні вкладки було вилучено з {{productName}}. Будь ласка, використовуйте замість них рідну панель вертикальних вкладок Firefox.",
         "learnMore": "Дізнатися більше",
         "position": "Розташування",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Закрити спливаюче вікно під час вибору робочої області",
         "closePopupWhenSelectingWorkspaceDescription": "Виберіть, чи закривати спливаюче вікно робочої області під час вибору робочої області.",
         "showWorkspaceNameOnToolbar": "Показати назву робочої області біля іконки",
+        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
         "manageOnBms": "Керувати робочими областями на бічній панелі {{productName}}",
         "manageOnBmsDescription": "Якщо цю функцію ввімкнено, можна керувати лише робочими областями на бічній панелі {{productName}}. Ви не зможете керувати робочими областями за допомогою кнопки панелі інструментів.",
         "backup": "Резервне копіювання робочої області",
         "backupComingSoon": "Незабаром",
-        "backupDescription": "Дізнатися про резервну копію робочої області"
+        "backupDescription": "Дізнатися про резервну копію робочої області",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Скасувати"
     },
     "accounts": {
         "profileAndAccount": "Профіль та обліковий запис",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Ліцензія з відкритим кодом",
         "versionInfo": "Версія",
         "license": "Ліцензія"
+    },
+    "updates": {
+        "title": "Updates & Experiments",
+        "description": "Manage update settings and experimental features participation.",
+        "experiments": {
+            "title": "{{productName}} Test Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "policyLabel": "Participation Policy",
+            "policy": {
+                "default": "Default (Recommended)",
+                "always": "Always Participate",
+                "never": "Never Participate"
+            },
+            "policyHelp": {
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+            },
+            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
+            "troubleshooting": "Troubleshooting",
+            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "clearCache": "Clear Experiment Cache"
+        },
+        "activeTests": {
+            "title": "Active {{productName}} Tests",
+            "description": "View and manage your currently active test enrollments.",
+            "refresh": "Refresh",
+            "noTests": "You are not currently enrolled in any tests.",
+            "assignedAt": "Enrolled on {{date}}",
+            "disable": "Disable",
+            "enable": "Enable",
+            "disabledLabel": "Disabled",
+            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "lastUpdated": "Last updated:"
+        }
+    },
+    "common": {
+        "loading": "Loading..."
     },
     "search": {
         "title": "Налаштування пошуку",

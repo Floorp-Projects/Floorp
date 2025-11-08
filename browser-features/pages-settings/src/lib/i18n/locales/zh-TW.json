@@ -30,6 +30,7 @@
         "webApps": "PWA 應用程式",
         "profileAndAccount": "設定檔和帳戶",
         "aboutBrowser": "關於 {{productName}}",
+        "updates": "更新與實驗功能",
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
         "keyboardShortcut": "鍵盤快捷鍵",
@@ -94,6 +95,7 @@
         "style": "樣式",
         "horizontal": "水平",
         "multirow": "多層分頁排列",
+        "vertical": "垂直",
         "verticalTabIsRemovedFromBrowser": "垂直分頁已從 {{productName}}中移除。請改用 Firefox 原生的垂直分頁列。",
         "learnMore": "瞭解更多",
         "position": "位置",
@@ -234,20 +236,21 @@
         "closePopupWhenSelectingWorkspace": "選擇工作空間時，關閉工作空間的彈窗",
         "closePopupWhenSelectingWorkspaceDescription": "決定是否在選擇工作空間後關閉工作空間彈出式視窗。",
         "showWorkspaceNameOnToolbar": "在圖示旁顯示工作空間名稱",
+        "exitOnLastTabClose": "關閉最後一個工作空間時退出 Floorp",
         "manageOnBms": "管理在 {{productName}} 側邊欄上的工作空間",
         "manageOnBmsDescription": "啟用此功能後，您只能在 {{productName}} 側邊列上管理工作空間。您將無法使用工具列按鈕管理工作空間。",
         "backup": "工作空間備份",
         "backupComingSoon": "即將推出",
         "backupDescription": "瞭解工作空間備份",
-        "dangerZone": "危險操作",
-        "initializeTitle": "初始化工作空間",
-        "initializeDescription": "將工作空間資料重設為預設狀態。所有自訂工作空間都會被刪除，所有分頁都會重新指派到新的工作空間。",
-        "initializeAction": "初始化工作空間",
-        "initializeSuccess": "工作空間已重設為預設狀態。",
-        "initializeFailure": "初始化工作空間失敗。請再試一次。",
-        "initializeConfirmTitle": "初始化工作空間",
-        "initializeConfirmDescription": "這會刪除所有工作空間資料並重新建立一個預設工作空間。確定要繼續嗎？",
-        "initializeConfirmAction": "初始化",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
         "initializeConfirmCancel": "取消"
     },
     "accounts": {
@@ -281,6 +284,45 @@
         "openSourceLicenseNotice": "開放原始碼授權",
         "versionInfo": "版本",
         "license": "授權"
+    },
+    "updates": {
+        "title": "更新與實驗功能",
+        "description": "管理更新設定和實驗功能參與。",
+        "experiments": {
+            "title": "{{productName}} 參與測試",
+            "description": "控制 {{productName}} 如何讓您參與實驗功能和 {{productName}} 測試。",
+            "policyLabel": "參與政策",
+            "policy": {
+                "default": "預設 (建議)",
+                "always": "總是參與",
+                "never": "從不參與"
+            },
+            "policyHelp": {
+                "default": "遵循建議的參與政策。您可能會根據推出百分比被納入 {{productName}} 測試。",
+                "always": "永遠參與所有可用的 {{productName}} 測試。此選項適用於想要及早測試新功能的使用者。",
+                "never": "從不參與 {{productName}} 測試。您只會收到穩定、經過測試的功能。"
+            },
+            "confirmClearCache": "您確定要清除所有實驗資料嗎？這將會重設您的作業，而且無法撤銷。",
+            "troubleshooting": "疑難排解",
+            "clearCacheDescription": "如果您在實驗中遇到問題，清除快取記憶體可將所有實驗相關資料重設為初始狀態，從而解決問題。",
+            "clearCache": "清除實驗快取"
+        },
+        "activeTests": {
+            "title": "主動 {{productName}} 測試",
+            "description": "檢視並管理您目前開啟的測試。",
+            "refresh": "重新整理",
+            "noTests": "您目前未參與任何測試。",
+            "assignedAt": "在 {{date}}上註冊",
+            "disable": "停用",
+            "enable": "啟用",
+            "disabledLabel": "已停用",
+            "confirmDisable": "您確定要停用這項實驗嗎？您可以稍後重新啟用。",
+            "confirmEnable": "您確定要重新啟用此實驗嗎？",
+            "lastUpdated": "上次更新:"
+        }
+    },
+    "common": {
+        "loading": "正在載入…"
     },
     "search": {
         "title": "搜尋設定",

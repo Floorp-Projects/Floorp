@@ -1,97 +1,97 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Instalando em segundo plano...",
+            "installComplete": "Instalação concluída"
         },
         "installer": {
-            "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "title": "Instalador do Floorp",
+            "description": "Instale o navegador Floorp e comece uma experiência de navegação focada na privacidade, rápida e personalizável.",
+            "adminRights": "Instalar com permissões de administrador",
+            "adminRightsEnabled": "Instalar para todos os usuários com permissões de administrador.",
+            "adminRightsDisabled": "Instalar apenas para o usuário atual.",
+            "customPathRequired": "O caminho de instalação personalizado requer permissões de administrador.",
+            "installLocation": "Local de instalação",
+            "change": "Alterar",
+            "installButton": "Iniciar a instalação",
+            "retryButton": "Repetir"
         },
         "progress": {
-            "installing": "Installing...",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "installing": "Instalando...",
+            "slideCounter": "Etapa {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "selectLocation": "Selecione o local de instalação",
+            "installPath": "Caminho de instalação",
+            "browse": "Explorar",
+            "resetDefault": "Redefinir para o padrão",
+            "cancel": "Cancelar",
+            "save": "Salvar configurações",
+            "close": "Fechar"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "Cancelar instalação?",
+            "message": "Cancelar o processo de instalação evita que o Floorp seja instalado.",
+            "cancelButton": "Cancelar",
+            "confirmButton": "Cancelar instalação"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
-            "legacyDownloadButton": "Download"
+            "success": "Instalação concluída",
+            "error": "Falha na instalação",
+            "launchCheckbox": "Iniciar o navegador Floorp após a instalação",
+            "closeButton": "Fechar instalador",
+            "countdownMessage": "O instalador será fechado em {{count}} segundos",
+            "legacyDownloadMessage": "Você também pode experimentar a versão clássica do instalador.",
+            "legacyDownloadButton": "Fazer download"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "title": "Bem-vindo(a) ao Floorp",
+            "description": "Bem-vindo(a) à versão mais recente do Floorp, um navegador da web desenvolvido no Japão com foco em desenvolvimento e pesquisa. O conteúdo apresentado a seguir é apenas uma parte do projeto."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "Atualizações frequentes",
+            "description": "O Floorp é mantido e atualizado continuamente, mesmo sendo um projeto comunitário. Oferecemos uma navegação segura alinhada com o princípio de que a web deve ser livremente acessível a todos."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "Recursos mais recentes",
+            "description": "A versão mais recente do Floorp aproveita os recursos de ponta da Web desenvolvidos pelo Firefox, da Mozilla. Ela também foi redesenhada para tornar as ferramentas que todos desejam facilmente acessíveis."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "Personalização avançada",
+            "description": "Equipado com várias opções de personalização para manter a privacidade melhor do que seu navegador padrão. O Floorp permite que você defina sua configuração preferida."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "Lutando por você",
+            "description": "Floorp bloqueia o rastreamento nocivo. Nós equilibramos o bom funcionamento dos sites com os direitos do usuário, trabalhando para melhorar a web, tanto na funcionalidade quanto na privacidade."
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
-            "installation_complete": "Floorp installation completed successfully."
+            "downloaded_dev_mode": "Download do instalador do Floorp (modo em desenvolvimento) feito",
+            "installation_complete": "Instalação do Floorp concluída com sucesso."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}",
-            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
-            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+            "installer_not_found": "Falha ao recuperar o instalador do Floorp.",
+            "download_failed": "Um erro ocorreu durante o download: {{0}}",
+            "signature_verification_failed": "Falha na verificação da assinatura do instalador. A execução foi interrompida por motivos de segurança.",
+            "signature_verification_error": "Ocorreu um erro durante a verificação da assinatura: {{0}}",
+            "installer_exit_code": "O instalador foi encerrado com o código {{0}}.",
+            "installer_execution": "Um erro ocorreu durante a execução do instalador: {{0}}",
+            "browser_not_found": "O navegador Floorp não foi encontrado. A instalação foi bem-sucedida, mas não foi possível encontrar o arquivo executável do navegador.",
+            "browser_launch_failed": "Falha ao iniciar o navegador: {{0}}",
+            "file_not_found": "Arquivo não encontrado: {{0}}",
+            "not_a_file": "O caminho não é um arquivo: {{0}}",
+            "admin_rights_denied": "As permissões de administrador foram negadas. Você selecionou o modo administrador, mas a permissão foi negada.",
+            "exit_code_not_found": "Não foi possível obter o código de saída do instalador. As permissões de administrador podem ter sido negadas.",
+            "powershell_script_creation": "Falha ao criar o script do PowerShell: {{0}}",
+            "powershell_process": "Falha ao iniciar o processo do PowerShell: {{0}}",
+            "admin_install_failed": "Falha na instalação com permissões de administrador. Código de saída: {{0}}",
+            "user_installer_launch": "Falha ao iniciar o processo de instalação com permissões de usuário: {{0}}",
+            "user_installer_execution": "Ocorreu um problema ao executar o instalador com permissões de usuário: {{0}}",
+            "cpu_not_supported": "A CPU deste dispositivo não é compatível com SSE4.1. O Floorp requer um processador com suporte a SSE4.1.",
+            "cpu_check_failed": "Falha ao verificar os requisitos da CPU. Verifique os requisitos do sistema."
         }
     }
 }

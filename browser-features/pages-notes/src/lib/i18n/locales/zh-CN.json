@@ -3,37 +3,37 @@
         "default": "{{productName}} 笔记"
     },
     "notes": {
-        "welcome": "Welcome to {{productName}} Notes!",
-        "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
+        "welcome": "欢迎访问 {{productName}} 笔记！",
+        "welcomeContent": "欢迎访问 {{productName}} 笔记！下面介绍如何使用它。\n\n{{productName}} 笔记是一种可以跨设备同步的笔记功能。要启用同步功能，需要使用 Mozilla 账户登录 {{productName}} 。\n{{productName}} 笔记存储在 {{productName}} 中，并使用 Firefox Sync 跨设备同步。Firefox Sync 会使用 Mozilla 帐户密码对同步内容进行加密，因此没人知道其内容。",
         "new": "新建笔记",
-        "reorder": "Reorder",
-        "done": "Done",
+        "reorder": "获取",
+        "done": "完成",
         "emptyTitle": "未命名",
-        "emptyContent": "No content",
-        "noNotesSelected": "Select a note or create a new one",
-        "createNew": "Create New Note",
-        "titlePlaceholder": "Title",
-        "loading": "Loading notes...",
+        "emptyContent": "无内容",
+        "noNotesSelected": "选择或创建一个笔记",
+        "createNew": "创建新笔记",
+        "titlePlaceholder": "标题",
+        "loading": "加载中笔记……",
         "delete": "删除"
     },
     "editor": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strikethrough",
-        "bulletList": "Bullet List",
-        "numberedList": "Numbered List",
-        "alignLeft": "Align Left",
-        "alignCenter": "Align Center",
-        "alignRight": "Align Right",
-        "quote": "Quote",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3"
+        "bold": "粗体",
+        "italic": "斜体",
+        "underline": "下划线",
+        "strikethrough": "删除线",
+        "bulletList": "项目列表",
+        "numberedList": "有序列表",
+        "alignLeft": "左对齐",
+        "alignCenter": "中对齐",
+        "alignRight": "右对齐",
+        "quote": "引用",
+        "heading1": "标题 1",
+        "heading2": "标题 2",
+        "heading3": "标题 3"
     },
     "error": {
-        "loadFailed": "Failed to load note data",
-        "saveFailed": "Failed to save note data",
-        "indexOutOfRange": "Index {{index}} is out of range"
+        "loadFailed": "加载笔记数据失败",
+        "saveFailed": "保存笔记数据失败",
+        "indexOutOfRange": "{{index}} 索引超出范围"
     }
 }

@@ -2,7 +2,7 @@
     "profileManager": {
         "title": "Perfis",
         "buttons": {
-            "refresh": "Refresh List",
+            "refresh": "Atualizar",
             "create": "Criar"
         },
         "loading": "A carregar…",
@@ -10,7 +10,7 @@
         "current": "Atual",
         "default": "Predefinição",
         "actions": {
-            "open": "Launch",
+            "open": "Abrir",
             "new": "Novo",
             "rename": "Mudar o nome",
             "remove": "Remover",

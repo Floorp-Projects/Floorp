@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Perfis",
         "buttons": {
-            "refresh": "Refresh List",
-            "create": "Create"
+            "refresh": "Atualizar lista",
+            "create": "Criar perfil"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Carregando…",
+        "noProfiles": "Nenhum perfil encontrado.",
+        "current": "Atual",
         "default": "Padrão",
         "actions": {
-            "open": "Launch",
-            "new": "New",
-            "rename": "Rename",
-            "remove": "Remove",
+            "open": "Abrir",
+            "new": "Novo",
+            "rename": "Renomear",
+            "remove": "Excluir",
             "setDefault": "Padrão"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Tem certeza de que deseja excluir este perfil?",
+            "newName": "Novo nome do perfil:"
         }
     }
 }

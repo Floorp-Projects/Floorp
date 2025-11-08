@@ -30,6 +30,7 @@
         "webApps": "Aplicações Web",
         "profileAndAccount": "Perfil e conta",
         "aboutBrowser": "Acerca de {{productName}}",
+        "updates": "Actualizações e experiências",
         "debug": "Depurar",
         "mouseGesture": "Gestos do rato",
         "keyboardShortcut": "Atalhos de teclado",
@@ -94,6 +95,7 @@
         "style": "Estilo",
         "horizontal": "Horizontal",
         "multirow": "Várias linhas",
+        "vertical": "Vertical",
         "verticalTabIsRemovedFromBrowser": "Os separadores verticais foram removidos de {{productName}}. Em vez disso, utilize a barra de separadores verticais nativa do Firefox.",
         "learnMore": "Saiba mais",
         "position": "Posição",
@@ -234,11 +236,22 @@
         "closePopupWhenSelectingWorkspace": "Fechar o pop-up do espaço de trabalho ao selecionar um espaço de trabalho",
         "closePopupWhenSelectingWorkspaceDescription": "Escolha se o pop-up do espaço de trabalho deve ser fechado ao selecionar um espaço de trabalho.",
         "showWorkspaceNameOnToolbar": "Mostrar o nome do espaço de trabalho junto ao ícone",
+        "exitOnLastTabClose": "Sair do Floorp quando o último separador do espaço de trabalho é fechado",
         "manageOnBms": "Gerir espaços de trabalho na barra lateral {{productName}}",
         "manageOnBmsDescription": "Quando esta funcionalidade está ativada, só é possível gerir espaços de trabalho na barra lateral {{productName}}. Não será possível gerir espaços de trabalho utilizando o botão da barra de ferramentas.",
         "backup": "Cópia de segurança do espaço de trabalho",
         "backupComingSoon": "Brevemente",
-        "backupDescription": "Saiba mais sobre a cópia de segurança do workspace"
+        "backupDescription": "Saiba mais sobre a cópia de segurança do workspace",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Cancelar"
     },
     "accounts": {
         "profileAndAccount": "Perfil e conta",
@@ -271,6 +284,45 @@
         "openSourceLicenseNotice": "Licença de código aberto",
         "versionInfo": "Versão",
         "license": "Licença"
+    },
+    "updates": {
+        "title": "Actualizações e experiências",
+        "description": "Gerir as definições de atualização e a participação em funcionalidades experimentais.",
+        "experiments": {
+            "title": "{{productName}} Participação nos testes",
+            "description": "Controlar a forma como {{productName}} o inscreve em funcionalidades experimentais e testes de {{productName}}.",
+            "policyLabel": "Política de participação",
+            "policy": {
+                "default": "Predefinição (Recomendado)",
+                "always": "Participar sempre",
+                "never": "Nunca participar"
+            },
+            "policyHelp": {
+                "default": "Siga a política de participação recomendada. Pode ser inscrito em {{productName}} testes com base em percentagens de lançamento.",
+                "always": "Participar sempre em todos os testes disponíveis em {{productName}}. Esta opção destina-se a utilizadores que pretendam testar novas funcionalidades antecipadamente.",
+                "never": "Nunca participe nos testes de {{productName}}. Receberá apenas funcionalidades estáveis e testadas."
+            },
+            "confirmClearCache": "Tem a certeza de que pretende apagar todos os dados da experiência? Isto irá repor as suas atribuições e não pode ser anulado.",
+            "troubleshooting": "Resolução de problemas",
+            "clearCacheDescription": "Se estiver a ter problemas com experiências, a limpeza da cache pode resolvê-los, repondo todos os dados relacionados com experiências no seu estado inicial.",
+            "clearCache": "Limpar a cache da experiência"
+        },
+        "activeTests": {
+            "title": "Ativo {{productName}} Testes",
+            "description": "Ver e gerir as inscrições de testes atualmente activas.",
+            "refresh": "Atualizar",
+            "noTests": "Não está atualmente inscrito em nenhum teste.",
+            "assignedAt": "Inscrito em {{date}}",
+            "disable": "Desativar",
+            "enable": "Ativar",
+            "disabledLabel": "Desativado",
+            "confirmDisable": "Tem a certeza de que pretende desativar esta experiência? Pode voltar a activá-la mais tarde.",
+            "confirmEnable": "Tem a certeza de que pretende voltar a ativar esta experiência?",
+            "lastUpdated": "Última atualização:"
+        }
+    },
+    "common": {
+        "loading": "Carregando..."
     },
     "search": {
         "title": "Definições de pesquisa",
