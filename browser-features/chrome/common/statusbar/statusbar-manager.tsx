@@ -48,32 +48,71 @@ export class StatusBarManager {
       defaultPlacements: ["screenshot-button", "fullscreen-button"],
     });
 
-    window.CustomizableUI.registerToolbarNode(
-      document.getElementById("nora-statusbar"),
-    );
+    const statusbarNode = document?.getElementById("nora-statusbar");
+    if (!statusbarNode) {
+      console.error(
+        "[StatusBarManager] #nora-statusbar element not found; status bar initialization aborted.",
+      );
+      return;
+    }
+
+    window.CustomizableUI.registerToolbarNode(statusbarNode);
 
     //move elem to bottom of window
-    document
-      .querySelector("#appcontent")
-      ?.appendChild(document.getElementById("nora-statusbar")!);
+    const appContent = document?.querySelector("#appcontent");
+    if (!appContent) {
+      console.warn(
+        "[StatusBarManager] #appcontent not found; status bar will not be moved to bottom.",
+      );
+    } else {
+      appContent.appendChild(statusbarNode);
+    }
 
     createEffect(() => {
-      const statuspanel_label = document?.querySelector("#statuspanel-label");
-      const statuspanel = document?.querySelector<XULElement>("#statuspanel");
-      const statusText = document.querySelector<XULElement>("#status-text");
+      const statuspanelLabel = document?.querySelector("#statuspanel-label");
+      const statuspanel = document?.querySelector<XULElement>("#statuspanel") ??
+        null;
+      const statusText = document?.querySelector<XULElement>("#status-text") ??
+        null;
+
+      if (!statuspanelLabel) {
+        console.warn(
+          "[StatusBarManager] #statuspanel-label not found; skip status text injection.",
+        );
+        return;
+      }
+
+      if (!statuspanel && !statusText) {
+        console.warn(
+          "[StatusBarManager] Neither #statuspanel nor #status-text found; skip status text handling.",
+        );
+        return;
+      }
+
       const observer = new MutationObserver(() => {
-        if (statuspanel.getAttribute("inactive") === "true" && statusText) {
-          statusText.setAttribute("hidden", "true");
+        if (!statuspanel) {
+          observer.disconnect();
+          return;
+        }
+        const isInactive = statuspanel.getAttribute("inactive") === "true";
+        if (isInactive) {
+          statusText?.setAttribute("hidden", "true");
         } else {
           statusText?.removeAttribute("hidden");
         }
       });
       if (this.showStatusBar()) {
-        statusText?.appendChild(statuspanel_label!);
-        observer.observe(statuspanel, { attributes: true });
+        if (statusText) {
+          statusText.appendChild(statuspanelLabel);
+        } else {
+          statuspanel?.appendChild(statuspanelLabel);
+        }
+        if (statuspanel) {
+          observer.observe(statuspanel, { attributes: true });
+        }
       } else {
-        statuspanel?.appendChild(statuspanel_label!);
-        observer?.disconnect();
+        statuspanel?.appendChild(statuspanelLabel);
+        observer.disconnect();
       }
     });
   }

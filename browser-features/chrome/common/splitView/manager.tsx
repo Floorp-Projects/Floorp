@@ -12,9 +12,33 @@ import type { CSplitView } from "./splitView";
 
 export class SplitViewManager {
   constructor(ctx: CSplitView) {
-    render(() => this.ToolbarElement({ ctx }), this.targetParent, {
-      marker: this.markerElement,
-    });
+    const parent = this.targetParent;
+    if (!parent) {
+      console.error(
+        "[SplitViewManager] Target parent not found; toolbar element will not be rendered.",
+      );
+      return;
+    }
+
+    const marker = this.markerElement;
+    if (!marker) {
+      console.warn(
+        "[SplitViewManager] Marker element not found; toolbar element will be appended at the end.",
+      );
+    } else if (marker.parentElement !== parent) {
+      console.warn(
+        "[SplitViewManager] Marker element parent mismatch; toolbar element will be appended at the end.",
+      );
+    }
+
+    try {
+      render(() => this.ToolbarElement({ ctx }), parent, {
+        marker: marker?.parentElement === parent ? marker : undefined,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error("[SplitViewManager] Failed to render toolbar element.", reason);
+    }
   }
 
   private get targetParent() {

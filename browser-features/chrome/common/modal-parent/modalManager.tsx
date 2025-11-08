@@ -13,9 +13,9 @@ import {
 import type { TForm, TFormResult } from "./utils/type";
 
 export class ModalManager {
-  private static readonly targetParent = document?.getElementById(
-    "main-window",
-  ) as HTMLElement;
+  private static get targetParent(): HTMLElement | null {
+    return document?.getElementById("main-window") as HTMLElement | null;
+  }
 
   constructor() {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -83,7 +83,7 @@ export class ModalManager {
     // }
   }
 
-  public static get parentElement(): HTMLElement {
+  public static get parentElement(): HTMLElement | null {
     return this.targetParent;
   }
 }

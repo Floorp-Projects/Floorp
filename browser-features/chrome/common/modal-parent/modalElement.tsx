@@ -27,20 +27,49 @@ export class ModalElement {
     if (this.initialized) return;
 
     const ModalManagerInstance = new ModalManager();
+    const head = document?.head;
+    if (!head) {
+      console.warn(
+        "[ModalElement] document.head is unavailable; skip modal style injection.",
+      );
+      return;
+    }
+
+    const targetParent = ModalManager.parentElement;
+    if (!targetParent) {
+      console.error(
+        "[ModalElement] Modal parent element not found; modal cannot be initialized.",
+      );
+      return;
+    }
+
     createRootHMR(() => {
-      render(() => <style>{style}</style>, document?.head);
+      try {
+        render(() => <style>{style}</style>, head);
+      } catch (error) {
+        const reason = error instanceof Error ? error : new Error(String(error));
+        console.error("[ModalElement] Failed to render modal styles.", reason);
+      }
     }, import.meta.hot);
 
     createRootHMR(() => {
-      render(
-        () => (
-          <Modal
-            targetParent={ModalManager.parentElement}
-            onBackdropClick={(e) => ModalManagerInstance.handleBackdropClick(e)}
-          />
-        ),
-        ModalManager.parentElement,
-      );
+      try {
+        render(
+          () => (
+            <Modal
+              targetParent={targetParent}
+              onBackdropClick={(e) =>
+                ModalManagerInstance.handleBackdropClick(e)}
+            />
+          ),
+          targetParent,
+        );
+      } catch (error) {
+        const reason = error instanceof Error
+          ? error
+          : new Error(String(error));
+        console.error("[ModalElement] Failed to render modal root.", reason);
+      }
     }, import.meta.hot);
 
     this.initialized = true;

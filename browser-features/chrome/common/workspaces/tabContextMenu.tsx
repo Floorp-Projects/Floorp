@@ -24,9 +24,35 @@ export class WorkspacesTabContextMenu {
   constructor(ctx: WorkspacesService) {
     this.ctx = ctx;
     const parentElem = document?.getElementById("tabContextMenu");
-    render(() => this.contextMenu(), parentElem, {
-      marker: document?.getElementById("context_moveTabOptions") as XULElement,
-    });
+    if (!parentElem) {
+      console.error(
+        "[WorkspacesTabContextMenu] #tabContextMenu not found; skip menu injection.",
+      );
+      return;
+    }
+
+    const marker = document?.getElementById("context_moveTabOptions");
+    if (!marker) {
+      console.warn(
+        "[WorkspacesTabContextMenu] #context_moveTabOptions not found; menu will be appended at the end.",
+      );
+    } else if (marker.parentElement !== parentElem) {
+      console.warn(
+        "[WorkspacesTabContextMenu] Marker is not a child of #tabContextMenu; menu will be appended at the end.",
+      );
+    }
+
+    try {
+      render(() => this.contextMenu(), parentElem, {
+        marker: marker?.parentElement === parentElem ? marker : undefined,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error(
+        "[WorkspacesTabContextMenu] Failed to render context menu.",
+        reason,
+      );
+    }
 
     addI18nObserver(() => {
       this.updateContextMenu();
@@ -93,6 +119,12 @@ export class WorkspacesTabContextMenu {
 
   public createTabworkspacesContextMenuItems() {
     const menuElem = document?.getElementById("WorkspacesTabContextMenu");
+    if (!menuElem) {
+      console.error(
+        "[WorkspacesTabContextMenu] #WorkspacesTabContextMenu not found; skip context menu item creation.",
+      );
+      return;
+    }
     while (menuElem?.firstChild) {
       const child = menuElem.firstChild as XULElement;
       child.remove();
@@ -107,7 +139,17 @@ export class WorkspacesTabContextMenu {
       (w) => w !== tabWorkspaceId,
     );
 
-    const parentElem = document?.getElementById("WorkspacesTabContextMenu");
-    render(() => this.menuItem(excludeHasTabWorkspaceIdWorkspaces), parentElem);
+    try {
+      render(
+        () => this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
+        menuElem,
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error(
+        "[WorkspacesTabContextMenu] Failed to render workspace menu items.",
+        reason,
+      );
+    }
   }
 }

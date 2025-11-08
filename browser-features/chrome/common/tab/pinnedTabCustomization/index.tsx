@@ -17,8 +17,27 @@ export class TabPinnedTabCustomization {
 
   private toggleTitleVisibility(showTitleEnabled: boolean) {
     if (showTitleEnabled) {
+      const head = document?.head;
+      if (!head) {
+        console.warn(
+          "[TabPinnedTabCustomization] document.head is unavailable; skip injecting style.",
+        );
+        return;
+      }
       createRootHMR((dispose) => {
-        render(() => this.StyleElement(), document?.head);
+        try {
+          render(() => this.StyleElement(), head);
+        } catch (error) {
+          const reason = error instanceof Error
+            ? error
+            : new Error(String(error));
+          console.error(
+            "[TabPinnedTabCustomization] Failed to render style element.",
+            reason,
+          );
+          return;
+        }
+
         this.dispose = dispose;
       }, import.meta.hot);
     } else {

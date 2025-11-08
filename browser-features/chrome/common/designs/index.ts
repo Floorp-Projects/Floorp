@@ -10,8 +10,22 @@ import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 @noraComponent(import.meta.hot)
 export default class Designs extends NoraComponentBase {
   init(): void {
-    render(() => {
-      return BrowserDesignElement();
-    }, document?.head);
+    const head = document?.head;
+    if (!head) {
+      this.logger.warn(
+        "document.head is unavailable; skip injecting browser design element.",
+      );
+      return;
+    }
+
+    try {
+      render(() => BrowserDesignElement(), head);
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      this.logger.error(
+        "Failed to render browser design element.",
+        reason,
+      );
+    }
   }
 }

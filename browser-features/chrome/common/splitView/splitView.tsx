@@ -27,7 +27,20 @@ export class CSplitView {
   }
 
   private initializeStyles() {
-    render(this.StyleElement, document?.head);
+    const head = document?.head;
+    if (!head) {
+      console.warn(
+        "[CSplitView] document.head is unavailable; skip injecting split view styles.",
+      );
+      return;
+    }
+
+    try {
+      render(this.StyleElement, head);
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error("[CSplitView] Failed to render split view styles.", reason);
+    }
   }
 
   private initializePreferences() {

@@ -53,11 +53,46 @@ export class TabSizeSpecification {
         }`}
       </style>
     );
-    render(() => styleElement, document?.head);
+
+    const head = document?.head;
+    if (!head) {
+      console.warn(
+        "[TabSizeSpecification] document.head is unavailable; skip updating tab size style.",
+      );
+      return;
+    }
+
+    try {
+      render(() => styleElement, head);
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error(
+        "[TabSizeSpecification] Failed to render tab size style element.",
+        reason,
+      );
+    }
   }
 
   constructor() {
-    render(() => this.StyleElement(), document?.head);
+    const head = document?.head;
+    if (!head) {
+      console.warn(
+        "[TabSizeSpecification] document.head is unavailable; skip initial style injection.",
+      );
+      return;
+    }
+
+    try {
+      render(() => this.StyleElement(), head);
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error));
+      console.error(
+        "[TabSizeSpecification] Failed to render base style element.",
+        reason,
+      );
+      return;
+    }
+
     createEffect(() => {
       const minH = config().tab.tabMinHeight;
       const minW = config().tab.tabMinWidth;
