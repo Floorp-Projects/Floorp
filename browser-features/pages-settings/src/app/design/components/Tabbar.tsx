@@ -49,6 +49,16 @@ export function Tabbar() {
               />
               <span>{t("design.multirow")}</span>
             </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="style"
+                value="vertical"
+                checked={getValues("style") === "vertical"}
+                onChange={(e) => setValue("style", e.target.value)}
+              />
+              <span>{t("design.vertical")}</span>
+            </label>
           </div>
           {getValues("style") === "multirow" && (
             <div className="flex flex-col gap-y-2 mt-6">

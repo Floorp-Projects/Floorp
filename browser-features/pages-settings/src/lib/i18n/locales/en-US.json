@@ -95,6 +95,7 @@
         "style": "Style",
         "horizontal": "Horizontal",
         "multirow": "Multi-row",
+        "vertical": "Vertical",
         "verticalTabIsRemovedFromBrowser": "Vertical Tabs have been removed from {{productName}}. Please use Firefox's native Vertical Tab Bar instead.",
         "learnMore": "Learn more",
         "position": "Position",

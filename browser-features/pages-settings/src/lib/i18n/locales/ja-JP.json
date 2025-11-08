@@ -94,6 +94,7 @@
         "style": "スタイル",
         "horizontal": "水平",
         "multirow": "多段",
+        "vertical": "垂直",
         "verticalTabIsRemovedFromBrowser": "垂直タブは {{productName}} から削除されました。 Firefox のネイティブの垂直タブバーを使用してください。",
         "learnMore": "詳細",
         "position": "位置",

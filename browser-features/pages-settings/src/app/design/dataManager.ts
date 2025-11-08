@@ -205,6 +205,17 @@ export async function saveDesignSettings(
     },
   };
   rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+
+  // Set sidebar.verticalTabs preference based on tab bar style
+  if (settings.style !== undefined) {
+    const isVertical = settings.style === "vertical";
+    await rpc.setBoolPref("sidebar.verticalTabs", isVertical);
+    
+    // Set sidebar.revamp to false when vertical tabs are disabled
+    if (!isVertical) {
+      await rpc.setBoolPref("sidebar.revamp", false);
+    }
+  }
 }
 
 export async function getDesignSettings(): Promise<DesignFormData | null> {
