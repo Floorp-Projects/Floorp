@@ -238,7 +238,17 @@
         "manageOnBmsDescription": "启用此功能后，您只能在 {{productName}} 侧边栏上管理工作区。您将无法使用工具栏按钮管理工作区。",
         "backup": "工作区备份",
         "backupComingSoon": "敬请期待",
-        "backupDescription": "了解工作区备份"
+        "backupDescription": "了解工作区备份",
+        "dangerZone": "危险操作",
+        "initializeTitle": "初始化工作区",
+        "initializeDescription": "将工作区数据重置为默认状态。所有自定义工作区都会被删除，所有标签页都会重新分配到新的工作区。",
+        "initializeAction": "初始化工作区",
+        "initializeSuccess": "工作区已重置为默认状态。",
+        "initializeFailure": "初始化工作区失败。请重试。",
+        "initializeConfirmTitle": "初始化工作区",
+        "initializeConfirmDescription": "这将删除所有工作区数据，并重新创建一个默认工作区。确定要继续吗？",
+        "initializeConfirmAction": "初始化",
+        "initializeConfirmCancel": "取消"
     },
     "accounts": {
         "profileAndAccount": "配置和账户",

@@ -238,7 +238,17 @@
         "manageOnBmsDescription": "啟用此功能後，您只能在 {{productName}} 側邊列上管理工作空間。您將無法使用工具列按鈕管理工作空間。",
         "backup": "工作空間備份",
         "backupComingSoon": "即將推出",
-        "backupDescription": "瞭解工作空間備份"
+        "backupDescription": "瞭解工作空間備份",
+        "dangerZone": "危險操作",
+        "initializeTitle": "初始化工作空間",
+        "initializeDescription": "將工作空間資料重設為預設狀態。所有自訂工作空間都會被刪除，所有分頁都會重新指派到新的工作空間。",
+        "initializeAction": "初始化工作空間",
+        "initializeSuccess": "工作空間已重設為預設狀態。",
+        "initializeFailure": "初始化工作空間失敗。請再試一次。",
+        "initializeConfirmTitle": "初始化工作空間",
+        "initializeConfirmDescription": "這會刪除所有工作空間資料並重新建立一個預設工作空間。確定要繼續嗎？",
+        "initializeConfirmAction": "初始化",
+        "initializeConfirmCancel": "取消"
     },
     "accounts": {
         "profileAndAccount": "設定檔和帳戶",

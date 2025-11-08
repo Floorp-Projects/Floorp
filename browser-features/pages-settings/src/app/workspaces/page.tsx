@@ -52,7 +52,10 @@ export default function Page() {
       </div>
 
       <FormProvider {...methods}>
-        <form className="space-y-3 pl-6">
+        <form
+          className="space-y-3 pl-6"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <BasicSettings />
           {/* <BackupSettings /> */}
         </form>

@@ -240,7 +240,17 @@
         "manageOnBmsDescription": "When this feature is enabled, you can only manage workspaces on the {{productName}} sidebar. You won't be able to manage workspaces using the toolbar button.",
         "backup": "Workspace Backup",
         "backupComingSoon": "Coming Soon",
-        "backupDescription": "Learn about workspace backup"
+        "backupDescription": "Learn about workspace backup",
+        "dangerZone": "Danger Zone",
+        "initializeTitle": "Initialize workspaces",
+        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
+        "initializeAction": "Initialize workspaces",
+        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeFailure": "Failed to initialize workspaces. Please try again.",
+        "initializeConfirmTitle": "Initialize Workspaces",
+        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
+        "initializeConfirmAction": "Initialize",
+        "initializeConfirmCancel": "Cancel"
     },
     "accounts": {
         "profileAndAccount": "Profile and Account",

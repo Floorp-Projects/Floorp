@@ -130,6 +130,22 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
   },
+  NRWorkspaces: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWorkspacesParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWorkspacesChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+  },
   NRProgressiveWebApp: {
     parent: {
       esModuleURI: localPathToResourceURI(

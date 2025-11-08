@@ -19,3 +19,8 @@ export const WORKSPACE_LAST_SHOW_ID = "floorpWorkspaceLastShowId";
 export const WORKSPACE_ENABLED_PREF_NAME = "floorp.workspaces.enabled";
 
 export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";
+
+/**
+ * Observer topic used to request workspace initialization.
+ */
+export const WORKSPACES_INIT_OBSERVER_TOPIC = "floorp.workspaces.initialize";
