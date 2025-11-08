@@ -18,7 +18,8 @@ export default function Page() {
   const methods = useForm<DesignFormData>({
     defaultValues: {} as DesignFormData,
   });
-  const { control, setValue } = methods;
+  const { control, setValue, formState } = methods;
+  const { isDirty, dirtyFields } = formState;
   const watchAll = useWatch({ control });
 
   React.useEffect(() => {
@@ -41,10 +42,20 @@ export default function Page() {
   }, [setValue]);
 
   React.useEffect(() => {
-    if (watchAll && Object.keys(watchAll).length > 0) {
-      saveDesignSettings(watchAll as DesignFormData);
+    if (!isDirty) {
+      return;
     }
-  }, [watchAll]);
+
+    if (!watchAll || Object.keys(watchAll).length === 0) {
+      return;
+    }
+
+    void saveDesignSettings(watchAll as DesignFormData, {
+      hasTabStyleChanged: Boolean(
+        (dirtyFields as Record<string, unknown>)?.style,
+      ),
+    });
+  }, [dirtyFields, isDirty, watchAll]);
 
   const LeptonSettingsButton = () => {
     return (

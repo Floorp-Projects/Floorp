@@ -46,8 +46,9 @@ export class ModalManager {
         "modal-child-browser",
       ) as XULElement & { browsingContext: any };
 
-      const actor =
-        browser.browsingContext.currentWindowGlobal.getActor("NRChromeModal");
+      const actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "NRChromeModal",
+      );
 
       return new Promise((resolve) => {
         actor

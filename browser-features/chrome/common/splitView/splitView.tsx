@@ -414,7 +414,9 @@ export class CSplitView {
     method: "row" | "column" | null = null,
   ) {
     // Persist user-selected position/layout in Fixed Tab mode
-    if (fixedSplitViewData().fixedTabId && (reverse !== null || method !== null)) {
+    if (
+      fixedSplitViewData().fixedTabId && (reverse !== null || method !== null)
+    ) {
       setFixedSplitViewData((prev) => ({
         fixedTabId: prev.fixedTabId,
         options: {

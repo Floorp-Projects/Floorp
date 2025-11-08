@@ -133,8 +133,13 @@ export async function getLeptonSettings(): Promise<LeptonFormData> {
   return settings;
 }
 
+interface SaveDesignSettingsOptions {
+  hasTabStyleChanged?: boolean;
+}
+
 export async function saveDesignSettings(
   settings: DesignFormData,
+  options: SaveDesignSettingsOptions = {},
 ): Promise<null | void> {
   if (Object.keys(settings).length === 0) {
     return;
@@ -206,12 +211,12 @@ export async function saveDesignSettings(
   };
   rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
 
-  // Set sidebar.verticalTabs preference based on tab bar style
-  if (settings.style !== undefined) {
+  const { hasTabStyleChanged = false } = options;
+
+  if (hasTabStyleChanged && settings.style !== undefined) {
     const isVertical = settings.style === "vertical";
     await rpc.setBoolPref("sidebar.verticalTabs", isVertical);
-    
-    // Set sidebar.revamp to false when vertical tabs are disabled
+
     if (!isVertical) {
       await rpc.setBoolPref("sidebar.revamp", false);
     }

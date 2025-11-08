@@ -47,7 +47,9 @@ export class ModalElement {
       try {
         render(() => <style>{style}</style>, head);
       } catch (error) {
-        const reason = error instanceof Error ? error : new Error(String(error));
+        const reason = error instanceof Error
+          ? error
+          : new Error(String(error));
         console.error("[ModalElement] Failed to render modal styles.", reason);
       }
     }, import.meta.hot);

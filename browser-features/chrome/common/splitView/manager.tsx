@@ -37,7 +37,10 @@ export class SplitViewManager {
       });
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
-      console.error("[SplitViewManager] Failed to render toolbar element.", reason);
+      console.error(
+        "[SplitViewManager] Failed to render toolbar element.",
+        reason,
+      );
     }
   }
 
