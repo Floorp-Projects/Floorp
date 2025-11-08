@@ -209,7 +209,7 @@ const { setTimeout } = ChromeUtils.importESModule(
 );
 
 const DEFAULT_PORT = 58261;
-const PREF_ENABLED = "floorp.os.server.enabled";
+const PREF_ENABLED = "floorp.os.enabled";
 const PREF_PORT = "floorp.os.server.port";
 const PREF_TOKEN = "floorp.os.server.token";
 
