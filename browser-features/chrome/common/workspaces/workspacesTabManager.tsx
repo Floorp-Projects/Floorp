@@ -138,25 +138,6 @@ export class WorkspacesTabManager {
       ) as NodeListOf<XULElement>,
     ).filter((t) => t !== tab);
 
-    try {
-      const totalTabs = (globalThis.gBrowser.tabs as Array<XULElement>).length;
-      const visibleTabsCount =
-        (globalThis.gBrowser.visibleTabs as Array<XULElement>)
-          .length;
-      console.debug(
-        "WorkspacesTabManager: TabClose event",
-        {
-          closingWorkspace: workspaceId,
-          isCurrentWorkspace,
-          remainingTabsInWorkspace: workspaceTabs.length,
-          totalTabs,
-          visibleTabs: visibleTabsCount,
-        },
-      );
-    } catch {
-      // ignore logging failure
-    }
-
     // --- Guard: ensure we never let the window reach 0 visible tabs while hidden tabs still exist ---
     // If this was the last visible tab (for any reason) create a replacement immediately.
     // NOTE: We do this BEFORE any async boundary (we removed setTimeout below) to avoid
