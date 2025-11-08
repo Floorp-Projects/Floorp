@@ -39,6 +39,8 @@ class webScraper {
   private _instanceId!: string;
   private _windowlessBrowser!: nsIWindowlessBrowser;
 
+  private readonly _defaultActionDelay = 500;
+
   /**
    * Try to get NRWebScraper actor with small retries to avoid race after navigation
    */
@@ -55,6 +57,17 @@ class webScraper {
         browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
     }
     return actor ?? null;
+  }
+
+  /**
+   * Delays execution for user interaction visibility
+   */
+  private async _delayForUser(delay?: number): Promise<void> {
+    const ms = delay ?? this._defaultActionDelay;
+    if (ms <= 0) {
+      return;
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, ms));
   }
 
   constructor() {
@@ -96,6 +109,7 @@ class webScraper {
     this._instanceId = await crypto.randomUUID();
     this._browserInstances.set(this._instanceId, browser);
     SCRAPER_ACTOR_SETS.add(browser);
+    await this._delayForUser();
     return this._instanceId;
   }
 
@@ -165,6 +179,7 @@ class webScraper {
         } catch (_) {
           // ignore
         }
+        await self._delayForUser();
         resolve();
       };
       const oa = E10SUtils.predictOriginAttributes({
@@ -184,12 +199,16 @@ class webScraper {
 
       const uri = Services.io.newURI(url);
 
-      if (typeof browser.loadURI === "function") {
-        browser.loadURI(uri, loadURIOptions);
-      } else {
-        throw new Error("browser.loadURI is not defined");
-      }
       const { webProgress } = browser;
+
+      // Delay before navigation
+      self._delayForUser().then(() => {
+        if (typeof browser.loadURI === "function") {
+          browser.loadURI(uri, loadURIOptions);
+        } else {
+          throw new Error("browser.loadURI is not defined");
+        }
+      });
 
       /**
        * Progress listener to monitor page load completion
@@ -414,7 +433,6 @@ class webScraper {
     });
   }
 
-
   /**
    * Retrieves the text content of an element from a browser instance
    *
@@ -468,7 +486,11 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    return await actor.sendQuery("WebScraper:ClickElement", { selector });
+    const result = await actor.sendQuery("WebScraper:ClickElement", {
+      selector,
+    });
+    await this._delayForUser(1500);
+    return result;
   }
 
   /**
@@ -622,9 +644,11 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    return await actor.sendQuery("WebScraper:FillForm", {
+    const result = await actor.sendQuery("WebScraper:FillForm", {
       formData,
     });
+    await this._delayForUser(1500);
+    return result;
   }
 
   /**
@@ -655,7 +679,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    return await actor.sendQuery("WebScraper:Submit", { selector });
+    const result = await actor.sendQuery("WebScraper:Submit", { selector });
+    await this._delayForUser(1500);
+    return result;
   }
 }
 
