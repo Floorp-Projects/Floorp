@@ -95,7 +95,7 @@
         "style": "Style",
         "horizontal": "Horizontale",
         "multirow": "Multi-ligne",
-        "vertical": "Vertical",
+        "vertical": "Verticale",
         "verticalTabIsRemovedFromBrowser": "Les onglets verticaux ont été supprimés de {{productName}}. Veuillez utiliser la barre d'onglets verticale native de Firefox à la place.",
         "learnMore": "En savoir plus",
         "position": "Emplacement",
@@ -251,7 +251,7 @@
         "initializeConfirmTitle": "Initialize Workspaces",
         "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
         "initializeConfirmAction": "Initialize",
-        "initializeConfirmCancel": "Cancel"
+        "initializeConfirmCancel": "Annuler"
     },
     "accounts": {
         "profileAndAccount": "Profil et compte",

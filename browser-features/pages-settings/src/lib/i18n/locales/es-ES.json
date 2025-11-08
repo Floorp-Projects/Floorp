@@ -251,7 +251,7 @@
         "initializeConfirmTitle": "Initialize Workspaces",
         "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
         "initializeConfirmAction": "Initialize",
-        "initializeConfirmCancel": "Cancel"
+        "initializeConfirmCancel": "Cancelar"
     },
     "accounts": {
         "profileAndAccount": "Profile and Account",
