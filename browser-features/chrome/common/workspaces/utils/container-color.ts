@@ -31,18 +31,10 @@ function getContainerColor(userContextId: number): number | string | null {
   );
 
   if (!container) {
-    console.debug(
-      `[Workspaces] Container not found for userContextId: ${userContextId}`,
-    );
     return null;
   }
 
   const color = container.color;
-  console.debug(
-    `[Workspaces] Container color for userContextId ${userContextId}:`,
-    { color, type: typeof color, containerName: container.name },
-  );
-
   return color ?? null;
 }
 
