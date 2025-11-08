@@ -28,19 +28,25 @@ export const overrides = [
       // Merge options, applying workspace container if:
       // 1. Workspace has a container (userContextId > 0)
       // 2. No userContextId is specified in options (or it's 0/default)
+      const baseOptions = options ?? {};
+      const originalUserContextId =
+        typeof baseOptions.userContextId === "number"
+          ? baseOptions.userContextId
+          : undefined;
+
       const mergedOptions = {
-        ...options,
+        ...baseOptions,
         userContextId:
           workspaceUserContextId > 0 &&
-          (!options?.userContextId || options.userContextId === 0)
+          (!originalUserContextId || originalUserContextId === 0)
             ? workspaceUserContextId
-            : (options?.userContextId ?? 0),
+            : (originalUserContextId ?? 0),
       };
 
       console.debug("Workspaces: openTrustedLinkIn override", {
         url: typeof url === "string" ? url : url.spec,
         where,
-        originalUserContextId: options?.userContextId,
+        originalUserContextId,
         appliedUserContextId: mergedOptions.userContextId,
       });
 
@@ -66,19 +72,25 @@ export const overrides = [
         // Merge params, applying workspace container if:
         // 1. Workspace has a container (userContextId > 0)
         // 2. No userContextId is specified in params (or it's 0/default)
+        const baseParams = params ?? {};
+        const originalUserContextId =
+          typeof baseParams.userContextId === "number"
+            ? baseParams.userContextId
+            : undefined;
+
         const mergedParams = {
-          ...params,
+          ...baseParams,
           userContextId:
             workspaceUserContextId > 0 &&
-            (!params?.userContextId || params.userContextId === 0)
+            (!originalUserContextId || originalUserContextId === 0)
               ? workspaceUserContextId
-              : (params?.userContextId ?? 0),
+              : (originalUserContextId ?? 0),
         };
 
         console.debug("Workspaces: openUILinkIn override", {
           url: typeof url === "string" ? url : url.spec,
           where,
-          originalUserContextId: params?.userContextId,
+          originalUserContextId,
           appliedUserContextId: mergedParams.userContextId,
         });
 
