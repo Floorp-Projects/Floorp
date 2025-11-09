@@ -102,6 +102,13 @@ async function openReleaseNotesInRecentWindow(): Promise<void> {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
+  tabBrowser.addTab("about:welcome?upgrade=12", {
+    relatedToCurrent: false,
+    inBackground: true,
+    skipAnimation: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+
   recentWindow.addEventListener(
     "DOMContentLoaded",
     () => {
