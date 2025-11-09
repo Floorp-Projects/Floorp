@@ -125,6 +125,7 @@ export const actions: GestureActionRegistration[] = [
     name: "gecko-restore-last-tab",
     fn: () => {
       try {
+        const BROWSER_WINDOW_TYPE = "navigator:browser";
         const browserWindow = Services.wm.getMostRecentWindow(
           BROWSER_WINDOW_TYPE,
         ) as Window | null;
