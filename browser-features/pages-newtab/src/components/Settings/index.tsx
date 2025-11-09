@@ -13,6 +13,7 @@ import {
   getDisableFloorpStart,
   setDisableFloorpStart,
 } from "@/utils/designPref.ts";
+import { prepareImageForStorage } from "@/utils/imageCompression.ts";
 
 export function Settings({
   isOpen,
@@ -83,23 +84,8 @@ export function Settings({
 
     setIsSubmitting(true);
     try {
-      const reader = new FileReader();
-      const imageData = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const finalImageData = imageData;
-
-      // Final size check
-      if (finalImageData.length > 5000000) {
-        // 5MB
-        alert("Image is too large. Please select an image smaller than 5MB.");
-        return;
-      }
-
-      await setCustomImage(finalImageData, file.name);
+      const processedImageData = await prepareImageForStorage(file);
+      await setCustomImage(processedImageData, file.name);
       setCurrentFileName(file.name);
     } catch (error) {
       console.error("Failed to load image:", error);
