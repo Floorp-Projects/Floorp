@@ -8,6 +8,10 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
+const { NoranekoConstants } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/NoranekoConstants.sys.mjs",
+);
+
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
@@ -15,6 +19,7 @@ export let isFirstRun = false;
 export let isUpdated = false;
 
 const executedFunctions = new Set<string>();
+const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
 
 export function executeOnce(id: string, callback: () => void): boolean {
   if (executedFunctions.has(id)) {
@@ -53,6 +58,8 @@ export function onFinalUIStartup(): void {
     console.error("Failed to create default userChrome files:", error);
   });
 
+  openReleaseNotesInRecentWindow();
+
   // int OS Modules
   ChromeUtils.importESModule(
     "resource://noraneko/modules/os-apis/OSGlue.sys.mjs",
@@ -64,6 +71,43 @@ export function onFinalUIStartup(): void {
   // init i18n
   ChromeUtils.importESModule(
     "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+  );
+}
+
+async function openReleaseNotesInRecentWindow(): Promise<void> {
+  const { SessionStore } = await ChromeUtils.importESModule(
+    "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  );
+
+  await SessionStore.promiseInitialized;
+
+  if (!isUpdated) {
+    return;
+  }
+
+  const recentWindow = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as Window | null;
+
+  if (!recentWindow) {
+    console.warn("[NoranekoStartup] No recent window found");
+    return;
+  }
+
+  const tabBrowser = recentWindow.gBrowser;
+  const newTab = tabBrowser.addTab(RELEASE_NOTES_URL, {
+    relatedToCurrent: false,
+    inBackground: false,
+    skipAnimation: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+
+  recentWindow.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      tabBrowser.selectedTab = newTab;
+    },
+    { once: true },
   );
 }
 
@@ -276,8 +320,8 @@ async function registerCustomAboutPages(): Promise<void> {
   }
 }
 
-async function setupBrowserOSComponents() {
-  ChromeUtils.importESModule(
+async function setupBrowserOSComponents(): Promise<void> {
+  await ChromeUtils.importESModule(
     "resource://noraneko/modules/os-automotor/OSAutomotor-manager.sys.mjs",
   );
 }
