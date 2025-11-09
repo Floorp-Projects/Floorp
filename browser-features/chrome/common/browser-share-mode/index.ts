@@ -19,14 +19,26 @@ export default class BrowserShareMode extends NoraComponentBase {
       return;
     }
 
-    const menuPopup = document.getElementById("menu_ToolsPopup");
-    if (!menuPopup) {
-      this.logger.error(
-        "Failed to locate #menu_ToolsPopup; browser share mode menu item will not be injected.",
-      );
-      return;
-    }
+    // Wait for DOM to be ready if needed
+    const tryInit = () => {
+      const menuPopup = document.getElementById("menu_ToolsPopup");
+      if (!menuPopup) {
+        this.logger.warn(
+          "Failed to locate #menu_ToolsPopup; browser share mode menu item will not be injected.",
+        );
+        return;
+      }
+      this.injectMenu(menuPopup);
+    };
 
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", tryInit, { once: true });
+    } else {
+      tryInit();
+    }
+  }
+
+  private injectMenu(menuPopup: Element) {
     const existingMenuitem = menuPopup.querySelector("#toggle_sharemode");
     if (existingMenuitem) {
       this.logger.info(
