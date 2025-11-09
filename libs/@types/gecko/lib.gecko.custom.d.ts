@@ -3,6 +3,20 @@
  */
 
 declare global {
+  interface nsIMacSSBSupport extends nsISupports {
+    install(id: string, name: string, icon?: imgIContainer | null): void;
+    uninstall(id: string, name: string): void;
+    applyDockIntegration(
+      id: string,
+      name: string,
+      icon?: imgIContainer | null,
+    ): void;
+  }
+
+  interface Ci {
+    readonly nsIMacSSBSupport: nsJSIID<nsIMacSSBSupport>;
+  }
+
   type DeclaredLazy<T> = {
     [P in keyof T]: T[P] extends () => infer U
       ? U
