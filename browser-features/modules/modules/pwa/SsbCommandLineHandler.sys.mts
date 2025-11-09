@@ -56,13 +56,19 @@ export class SsbRunnerUtils {
     return win;
   }
 
-  static async applyWindowsIntegration(ssb: Manifest, win: Window) {
+  static async applyOSIntegration(ssb: Manifest, win: Window) {
     if (AppConstants.platform === "win") {
       const { WindowsSupport } = ChromeUtils.importESModule(
         "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
       );
       const windowsSupport = new WindowsSupport();
       await windowsSupport.applyOSIntegration(ssb, win);
+    } else if (AppConstants.platform === "macosx") {
+      const { MacSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+      );
+      const macSupport = new MacSupport();
+      await macSupport.applyOSIntegration(ssb, win);
     }
   }
 }
@@ -90,7 +96,7 @@ async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
       if ((value as Manifest).id === id) {
         const ssb = value as Manifest;
         const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
-        await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
+        await SsbRunnerUtils.applyOSIntegration(ssb, win);
         break;
       }
     }

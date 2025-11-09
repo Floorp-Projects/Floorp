@@ -29,7 +29,7 @@ export class SsbRunner {
 
   public async openSsbWindow(ssb: Manifest) {
     const win = SsbRunnerUtils.openSsbWindow(ssb);
-    await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
+    await SsbRunnerUtils.applyOSIntegration(ssb, win);
     return win;
   }
 }

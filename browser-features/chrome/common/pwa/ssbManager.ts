@@ -23,6 +23,11 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+} else if (AppConstants.platform === "macosx") {
+  const { MacSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+  );
+  SupportClass = MacSupport;
 }
 
 export class SiteSpecificBrowserManager {
@@ -169,13 +174,8 @@ export class SiteSpecificBrowserManager {
 
   private async install(manifest: Manifest) {
     if (SupportClass) {
-      if (AppConstants.platform === "win") {
-        const windowsSupport = new SupportClass(this);
-        await windowsSupport.install(manifest);
-      } else if (AppConstants.platform === "linux") {
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.install(manifest);
-      }
+      const support = new SupportClass(this);
+      await support.install(manifest);
     }
 
     await this.dataManager.saveSsbData(manifest);
@@ -183,13 +183,8 @@ export class SiteSpecificBrowserManager {
 
   private async uninstall(manifest: Manifest) {
     if (SupportClass) {
-      if (AppConstants.platform === "win") {
-        const windowsSupport = new SupportClass(this);
-        await windowsSupport.uninstall(manifest);
-      } else if (AppConstants.platform === "linux") {
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.uninstall(manifest);
-      }
+      const support = new SupportClass(this);
+      await support.uninstall(manifest);
     }
 
     await this.dataManager.removeSsbData(manifest.start_url);
