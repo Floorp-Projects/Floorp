@@ -251,6 +251,11 @@ class TabManager {
     this._browserInstances.set(instanceId, { tab, browser });
     TAB_MANAGER_ACTOR_SETS.add(browser);
 
+    // Mark tab as automated
+    if (tab.setAttribute) {
+      tab.setAttribute("data-floorp-os-automated", "true");
+    }
+
     return instanceId;
   }
 
@@ -270,6 +275,11 @@ class TabManager {
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab: targetTab, browser });
     TAB_MANAGER_ACTOR_SETS.add(browser);
+
+    // Mark tab as automated
+    if (targetTab.setAttribute) {
+      targetTab.setAttribute("data-floorp-os-automated", "true");
+    }
 
     await this._delayForUser();
 
@@ -316,12 +326,18 @@ class TabManager {
   }
 
   public async destroyInstance(instanceId: string): Promise<void> {
-    const { browser } = this._getInstance(instanceId);
-    // インスタンス破棄前にすべてのエフェクトをクリア
+    const { tab, browser } = this._getInstance(instanceId) as {
+      tab: any;
+      browser: any;
+    };
     try {
       await this._queryActor(instanceId, "WebScraper:ClearEffects");
-    } catch (_) {
-      // エラーは無視
+    } catch (error) {
+      void error;
+    }
+    // Remove automated attribute from tab
+    if (tab && tab.removeAttribute) {
+      tab.removeAttribute("data-floorp-os-automated");
     }
     this._browserInstances.delete(instanceId);
     TAB_MANAGER_ACTOR_SETS.delete(browser);

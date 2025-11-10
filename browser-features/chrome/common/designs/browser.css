@@ -152,6 +152,99 @@ browser[type="content"] > html {
   display: none;
 }
 
+/* Floorp OS Automated Tab Indicator - シンプル版 */
+.tabbrowser-tab[data-floorp-os-automated="true"] {
+  position: relative;
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 2px solid rgba(59, 130, 246, 0.8) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+  overflow: visible !important;
+  animation: floorp-automated-pulse 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+/* シンプルなグロー効果用の疑似要素 */
+.tabbrowser-tab[data-floorp-os-automated="true"]::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(
+    45deg,
+    rgba(59, 130, 246, 0.3),
+    rgba(37, 99, 235, 0.3),
+    rgba(59, 130, 246, 0.3)
+  );
+  border-radius: 10px;
+  z-index: -1;
+  opacity: 0.6;
+  animation: floorp-automated-glow 3s ease-in-out infinite;
+}
+
+/* タブアイコンのエフェクト */
+.tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-image,
+.tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-stack {
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+  transition: filter 0.3s ease;
+}
+
+/* タブラベルのエフェクト */
+.tabbrowser-tab[data-floorp-os-automated="true"] .tab-label {
+  font-weight: 500 !important;
+  text-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* ホバー状態 */
+.tabbrowser-tab[data-floorp-os-automated="true"]:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(37, 99, 235, 1) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.6) !important;
+  transform: translateY(-1px);
+}
+
+.tabbrowser-tab[data-floorp-os-automated="true"]:hover::before {
+  opacity: 0.8;
+}
+
+/* 選択状態 */
+.tabbrowser-tab[data-floorp-os-automated="true"][selected="true"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(37, 99, 235, 1) !important;
+  box-shadow:
+    0 0 25px rgba(59, 130, 246, 0.7),
+    inset 0 0 10px rgba(59, 130, 246, 0.1) !important;
+}
+
+.tabbrowser-tab[data-floorp-os-automated="true"][selected="true"]::before {
+  opacity: 1;
+}
+
+/* アニメーション定義 */
+@keyframes floorp-automated-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes floorp-automated-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
 /* Hide Firefox Icon for against localization override */
 #identity-icon-label[value="Firefox"] {
   display: none !important;
