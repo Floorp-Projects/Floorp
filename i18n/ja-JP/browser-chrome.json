@@ -293,28 +293,5 @@
       "restart-safe-mode": "セーフモードで再起動",
       "restart-profile-manager": "再起動してプロファイルマネージャーを表示"
     }
-  },
-  "nr-webscraper": {
-    "panelTitle": "Floorp OS が操作中",
-    "panelDefaultMessage": "{{action}} 操作を実行中...",
-    "panelProgressSummary": "{{count}} 個の要素に影響",
-    "formSummary": "フォーム入力中: {{count}} 個のフィールド",
-    "formFieldProgress": "フィールド {{current}}/{{total}}: \"{{value}}\"",
-    "inputValueSet": "入力値を設定: \"{{value}}\"",
-    "clickElementWithText": "{{tag}} をクリック: \"{{text}}\"",
-    "clickElementNoText": "{{tag}} 要素をクリック中",
-    "inspectPageHtml": "ページ全体の HTML を取得",
-    "inspectGetElement": "要素を取得: {{selector}}",
-    "inspectGetElements": "{{selector}} に一致した {{count}} 件の要素",
-    "inspectGetElementByText": "テキストに一致した要素を取得: \"{{text}}\"",
-    "inspectGetElementText": "要素のテキストを取得: {{selector}}",
-    "inspectGetValue": "値を取得: {{selector}}",
-    "submitForm": "フォーム送信中: {{name}}",
-    "actionLabelHighlight": "ハイライト",
-    "actionLabelInspect": "確認",
-    "actionLabelFill": "入力",
-    "actionLabelInput": "入力",
-    "actionLabelClick": "クリック",
-    "actionLabelSubmit": "送信"
   }
 }
