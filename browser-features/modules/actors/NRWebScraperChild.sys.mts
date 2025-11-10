@@ -99,6 +99,118 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
 
+  private async translate(
+    key: string,
+    vars: Record<string, string | number> = {},
+  ): Promise<string> {
+    // Try to get translation from parent process via message
+    try {
+      const result = (await this.sendQuery("WebScraper:Translate", {
+        key: `browser-chrome:nr-webscraper.${key}`,
+        vars,
+      })) as string | null | undefined;
+
+      if (result && typeof result === "string" && result.trim().length > 0) {
+        return this.formatTemplate(result, vars);
+      }
+    } catch (error) {
+      // Silently fallback to English on translation errors
+      void error;
+    }
+    // Fallback to English
+    return this.formatTemplate(this.getFallbackString(key), vars);
+  }
+
+  private formatTemplate(
+    template: string,
+    vars: Record<string, string | number>,
+  ): string {
+    return template
+      .replace(/{{\s*(\w+)\s*}}/g, (_match, name) => {
+        const value = vars[name];
+        return value !== undefined && value !== null ? String(value) : "";
+      })
+      .replace(/{\s*(\w+)\s*}/g, (_match, name) => {
+        const value = vars[name];
+        return value !== undefined && value !== null ? String(value) : "";
+      });
+  }
+
+  private getFallbackString(key: string): string {
+    const fallbacks: Record<string, string> = {
+      panelTitle: "Floorp OS is operating",
+      panelDefaultMessage: "{{action}} in progress...",
+      panelProgressSummary: "Affects {{count}} element(s)",
+      formSummary: "Filling form: {{count}} field(s)",
+      formFieldProgress: 'Field {{current}}/{{total}}: "{{value}}"',
+      inputValueSet: 'Set input value: "{{value}}"',
+      clickElementWithText: 'Click {{tag}}: "{{text}}"',
+      clickElementNoText: "Clicking {{tag}} element",
+      inspectPageHtml: "Retrieved full page HTML",
+      inspectGetElement: "Retrieved element: {{selector}}",
+      inspectGetElements: "{{count}} element(s) matched: {{selector}}",
+      inspectGetElementByText: 'Retrieved element matching text: "{{text}}"',
+      inspectGetElementText: "Retrieved text from: {{selector}}",
+      inspectGetValue: "Retrieved value: {{selector}}",
+      submitForm: "Submitting form: {{name}}",
+      actionLabelHighlight: "Highlight",
+      actionLabelInspect: "Inspect",
+      actionLabelFill: "Fill",
+      actionLabelInput: "Input",
+      actionLabelClick: "Click",
+      actionLabelSubmit: "Submit",
+    };
+    return fallbacks[key] || key;
+  }
+
+  private async getActionLabel(action: string | undefined): Promise<string> {
+    if (!action) {
+      return await this.translate("actionLabelHighlight");
+    }
+    const actionMap: Record<string, string> = {
+      highlight: "actionLabelHighlight",
+      inspect: "actionLabelInspect",
+      fill: "actionLabelFill",
+      input: "actionLabelInput",
+      click: "actionLabelClick",
+      submit: "actionLabelSubmit",
+    };
+    const key = actionMap[action.toLowerCase()];
+    if (key) {
+      return await this.translate(key);
+    }
+    return action;
+  }
+
+  private truncate(value: string, limit: number): string {
+    if (value.length <= limit) {
+      return value;
+    }
+    return `${value.substring(0, limit)}...`;
+  }
+
+  /**
+   * Helper method to run async inspection highlighting without blocking
+   * synchronous return values. Used for information-gathering APIs.
+   */
+  private runAsyncInspection(
+    target: Element | Element[],
+    translationKey: string,
+    translationVars: Record<string, string | number> = {},
+  ): void {
+    void (async () => {
+      try {
+        const elementInfo = await this.translate(
+          translationKey,
+          translationVars,
+        );
+        await this.highlightInspection(target, elementInfo);
+      } catch {
+        // Silently ignore inspection errors
+      }
+    })();
+  }
+
   private getHighlightOptions(
     action: string,
     overrides: HighlightOptionsInput = {},
@@ -406,28 +518,28 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.highlightStyleElement = style;
   }
 
-  private highlightInspection(
+  private async highlightInspection(
     target: Element | Element[],
     elementInfo?: string,
     showPanel = true,
-  ): void {
+  ): Promise<void> {
     try {
       if (Array.isArray(target)) {
         if (!target.length) {
           return;
         }
-        void this.applyHighlightMultiple(
+        await this.applyHighlightMultiple(
           target,
           { action: "Inspect" },
           elementInfo,
-        ).catch(() => {});
+        );
       } else {
-        void this.applyHighlight(
+        await this.applyHighlight(
           target,
           { action: "Inspect" },
           elementInfo,
           showPanel,
-        ).catch(() => {});
+        );
       }
     } catch {
       // エフェクト表示に失敗しても処理には影響させない
@@ -510,7 +622,78 @@ export class NRWebScraperChild extends JSWindowActorChild {
     return "";
   }
 
-  private getActionIcon(action: string): string {
+  /**
+   * Lucide icon SVG path data mapping
+   * These are the SVG path strings from Lucide icons
+   */
+  private readonly LUCIDE_ICON_PATHS: Record<string, string> = {
+    Eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+    Pencil:
+      "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
+    MousePointerClick:
+      "M9 9l5 12 1.774-5.226L21 14 9 9z M16.071 16.071l4.243 4.243 M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122",
+    Send: "M22 2L11 13 M22 2l-7 20-4-9-9-4z",
+    Zap: "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+  };
+
+  /**
+   * Creates an SVG icon element using Lucide icon paths
+   */
+  private createLucideIcon(
+    doc: Document,
+    iconName: keyof typeof this.LUCIDE_ICON_PATHS,
+    size = 20,
+  ): Element {
+    const svgString = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="${this.LUCIDE_ICON_PATHS[iconName] || this.LUCIDE_ICON_PATHS.Zap}"/></svg>`;
+    const div = doc.createElement("div");
+    div.innerHTML = svgString;
+    const svg = div.firstElementChild;
+    if (!svg) {
+      // Fallback: create a simple SVG element
+      const fallbackSvg = doc.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
+      fallbackSvg.setAttribute("width", String(size));
+      fallbackSvg.setAttribute("height", String(size));
+      fallbackSvg.setAttribute("viewBox", "0 0 24 24");
+      return fallbackSvg;
+    }
+    return svg;
+  }
+
+  private getActionIcon(action: string): Element | string {
+    const doc = this.document;
+    if (!doc) {
+      // Fallback to emoji if document is not available
+      return this.getActionIconEmoji(action);
+    }
+
+    const lowerAction = action.toLowerCase();
+    if (
+      lowerAction.includes("read") ||
+      lowerAction.includes("inspect") ||
+      lowerAction.includes("get")
+    ) {
+      return this.createLucideIcon(doc, "Eye", 20);
+    }
+    if (
+      lowerAction.includes("input") ||
+      lowerAction.includes("fill") ||
+      lowerAction.includes("write")
+    ) {
+      return this.createLucideIcon(doc, "Pencil", 20);
+    }
+    if (lowerAction.includes("click")) {
+      return this.createLucideIcon(doc, "MousePointerClick", 20);
+    }
+    if (lowerAction.includes("submit")) {
+      return this.createLucideIcon(doc, "Send", 20);
+    }
+    return this.createLucideIcon(doc, "Zap", 20);
+  }
+
+  private getActionIconEmoji(action: string): string {
     const lowerAction = action.toLowerCase();
     if (
       lowerAction.includes("read") ||
@@ -535,14 +718,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
     return "⚡";
   }
 
-  private showInfoPanel(
+  private async showInfoPanel(
     action: string,
     selector?: string,
     elementInfo?: string,
     elementCount?: number,
     currentProgress?: number,
     totalProgress?: number,
-  ): void {
+  ): Promise<void> {
     try {
       const win = this.contentWindow;
       const doc = this.document;
@@ -564,15 +747,23 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const icon = doc.createElement("span");
       icon.className = "nr-webscraper-info-panel__icon";
-      icon.textContent = this.getActionIcon(action);
+      const iconElement = this.getActionIcon(action);
+      if (typeof iconElement === "string") {
+        icon.textContent = iconElement;
+      } else if (iconElement && iconElement.nodeName === "svg") {
+        icon.appendChild(iconElement);
+      } else {
+        // Fallback to emoji if SVG creation failed
+        icon.textContent = this.getActionIconEmoji(action);
+      }
 
       const badge = doc.createElement("span");
       badge.className = "nr-webscraper-info-panel__badge";
-      badge.textContent = action;
+      badge.textContent = await this.getActionLabel(action);
 
       title.append(icon);
       title.append(badge);
-      title.append(doc.createTextNode("操作中"));
+      title.append(doc.createTextNode(await this.translate("panelTitle")));
 
       const content = doc.createElement("div");
       content.className = "nr-webscraper-info-panel__content";
@@ -580,7 +771,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (elementInfo) {
         content.textContent = elementInfo;
       } else {
-        content.textContent = `${action} 操作を実行中...`;
+        content.textContent = await this.translate("panelDefaultMessage", {
+          action: await this.getActionLabel(action),
+        });
       }
 
       panel.append(title);
@@ -627,7 +820,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (elementCount !== undefined && elementCount > 1) {
         const countDiv = doc.createElement("div");
         countDiv.className = "nr-webscraper-info-panel__count";
-        countDiv.textContent = `📊 ${elementCount} 個の要素に影響`;
+        countDiv.textContent = await this.translate("panelProgressSummary", {
+          count: elementCount,
+        });
         panel.append(countDiv);
       }
 
@@ -684,7 +879,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const colorClass = this.getActionColorClass(options.action);
 
     // Show info panel with progress
-    this.showInfoPanel(
+    await this.showInfoPanel(
       options.action,
       undefined,
       elementInfo,
@@ -808,7 +1003,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     // Show info panel
     if (showPanel) {
-      this.showInfoPanel(options.action, undefined, elementInfo, 1);
+      await this.showInfoPanel(options.action, undefined, elementInfo, 1);
     }
 
     const padding = options.padding;
@@ -816,7 +1011,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     if (options.action) {
       const label = doc.createElement("div");
       label.className = "nr-webscraper-highlight-label";
-      label.textContent = options.action;
+      label.textContent = await this.getActionLabel(options.action);
       overlay.append(label);
     }
 
@@ -1065,10 +1260,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
         const docElement = this.contentWindow.document?.documentElement;
         if (docElement) {
-          this.highlightInspection(docElement, "ページ全体の HTML を取得");
+          this.runAsyncInspection(docElement, "inspectPageHtml");
         }
-
-        console.log("NRWebScraperChild: getHTML", html);
 
         if (!html) {
           return null;
@@ -1096,7 +1289,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
-        this.highlightInspection(element, `要素を取得: ${selector}`);
+        this.runAsyncInspection(element, "inspectGetElement", { selector });
         return String((element as Element).outerHTML);
       }
       return null;
@@ -1122,10 +1315,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
       });
       const elements = Array.from(nodeList) as Element[];
       if (elements.length > 0) {
-        this.highlightInspection(
-          elements,
-          `${selector} に一致した ${elements.length} 件の要素`,
-        );
+        this.runAsyncInspection(elements, "inspectGetElements", {
+          selector,
+          count: elements.length,
+        });
       }
       return results;
     } catch (e) {
@@ -1147,10 +1340,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       for (const el of elArray) {
         const txt = el.textContent;
         if (txt && txt.includes(textContent)) {
-          this.highlightInspection(
-            el,
-            `テキストに一致した要素を取得: "${textContent}"`,
-          );
+          this.runAsyncInspection(el, "inspectGetElementByText", {
+            text: this.truncate(textContent, 30),
+          });
           return String(el.outerHTML);
         }
       }
@@ -1168,7 +1360,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
-        this.highlightInspection(element, `要素のテキストを取得: ${selector}`);
+        this.runAsyncInspection(element, "inspectGetElementText", { selector });
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1194,7 +1386,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
-        this.highlightInspection(element, `要素のテキストを取得: ${selector}`);
+        this.runAsyncInspection(element, "inspectGetElementText", { selector });
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1224,7 +1416,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
-      const elementInfo = `入力値を設定: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
+      const truncatedValue = this.truncate(value, 50);
+      const elementInfo = await this.translate("inputValueSet", {
+        value: truncatedValue,
+      });
       const options = this.getHighlightOptions("Input");
 
       await this.applyHighlight(element, options, elementInfo);
@@ -1251,7 +1446,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @returns boolean - True if click was successful, false otherwise
    */
-  clickElement(selector: string): Promise<boolean> {
+  async clickElement(selector: string): Promise<boolean> {
     try {
       const element = this.document?.querySelector(
         selector,
@@ -1259,10 +1454,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
       if (!element) return Promise.resolve(false);
 
       const elementTagName = element.tagName?.toLowerCase() || "element";
-      const elementText = element.textContent?.trim().substring(0, 30) || "";
-      const elementInfo = elementText
-        ? `${elementTagName} をクリック: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
-        : `${elementTagName} 要素をクリック中`;
+      const elementTextRaw = element.textContent?.trim() || "";
+      const truncatedText = this.truncate(elementTextRaw, 30);
+      const elementInfo =
+        elementTextRaw.length > 0
+          ? await this.translate("clickElementWithText", {
+              tag: elementTagName,
+              text: truncatedText,
+            })
+          : await this.translate("clickElementNoText", { tag: elementTagName });
       const options = this.getHighlightOptions("Click");
 
       // エフェクト表示を非同期で開始（クリック処理をブロックしない）
@@ -1617,10 +1817,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       // 初期情報パネルを表示
       if (fieldCount > 1 && doc) {
-        this.showInfoPanel(
+        await this.showInfoPanel(
           action,
           undefined,
-          `フォーム入力中: ${fieldCount} 個のフィールド`,
+          await this.translate("formSummary", { count: fieldCount }),
           fieldCount,
           0,
           fieldCount,
@@ -1640,7 +1840,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
           | null;
 
         if (element) {
-          const elementInfo = `フィールド ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
+          const elementInfo = await this.translate("formFieldProgress", {
+            current: i + 1,
+            total: fieldCount,
+            value: this.truncate(value, 30),
+          });
           if (fieldCount > 1 && doc) {
             this.showInfoPanel(
               action,
@@ -1696,7 +1900,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         | HTMLTextAreaElement
         | null;
       if (element && typeof (element as HTMLInputElement).value === "string") {
-        this.highlightInspection(element, `値を取得: ${selector}`);
+        this.runAsyncInspection(element, "inspectGetValue", { selector });
         return (element as HTMLInputElement).value;
       }
       return null;
@@ -1722,7 +1926,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const formName =
         form.getAttribute("name") || form.getAttribute("id") || "form";
-      const elementInfo = `フォーム送信中: ${formName}`;
+      const elementInfo = await this.translate("submitForm", {
+        name: formName,
+      });
       const options = this.getHighlightOptions("Submit");
 
       await this.applyHighlight(root ?? form, options, elementInfo);
