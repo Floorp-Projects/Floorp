@@ -77,6 +77,24 @@ curl -s -X POST "${BASE_URL}/tabs/instances/${INSTANCE_ID}/fillForm" \
 echo -e "${GREEN}✓ GitHub 検索フィールドに入力完了（3秒表示）${NC}"
 echo ""
 
+# 7. 取得系 API のハイライト確認
+echo -e "${BLUE}📋 Step 7: Inspect APIs (highlight only)${NC}"
+echo -e "${BLUE}  └ getHTML${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/html" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getElement (header)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/element?selector=header" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getElements (links)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/elements?selector=a%5Bhref%5D" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getValue (search input)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/value?selector=input%5Bname%3D%22q%22%5D" | jq .
+sleep 2
+
 # クリーンアップ
 echo -e "${BLUE}🧹 Cleanup: Destroying instance${NC}"
 curl -s -X DELETE "${BASE_URL}/tabs/instances/${INSTANCE_ID}" | jq .

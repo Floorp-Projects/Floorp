@@ -1028,6 +1028,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         const json = ctx.json() as { selector?: string } | null;
         const sel = json?.selector ?? "";
         const { TabManagerServices } = TabManagerModule();
+        // NRWebScraperChild 側で追加パラメータなしの自動ハイライトが行われる
         const okClicked = await TabManagerServices.clickElement(
           ctx.params.id,
           sel,
@@ -1086,6 +1087,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           formData?: { [selector: string]: string };
         } | null;
         const { TabManagerServices } = TabManagerModule();
+        // 自動ハイライトにより各入力フィールドの操作が視覚化される
         const okFilled = await TabManagerServices.fillForm(
           ctx.params.id,
           json?.formData ?? {},
@@ -1102,6 +1104,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         const json = ctx.json() as { selector?: string } | null;
         const sel = json?.selector ?? "";
         const { TabManagerServices } = TabManagerModule();
+        // フォーム送信時も自動ハイライトで操作対象を強調表示
         const submitted = await TabManagerServices.submit(ctx.params.id, sel);
         return { status: 200, body: { ok: submitted } };
       });

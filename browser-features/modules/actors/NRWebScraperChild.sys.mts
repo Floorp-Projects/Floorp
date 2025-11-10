@@ -17,15 +17,6 @@
  */
 type HighlightScrollBehavior = ScrollBehavior | "none";
 
-interface HighlightRequest {
-  action?: string;
-  duration?: number;
-  focus?: boolean;
-  scrollBehavior?: HighlightScrollBehavior;
-  padding?: number;
-  delay?: number;
-}
-
 interface NRWebScraperMessageData {
   selector?: string;
   value?: string;
@@ -34,12 +25,11 @@ interface NRWebScraperMessageData {
   script?: string;
   rect?: { x?: number; y?: number; width?: number; height?: number };
   formData?: { [selector: string]: string };
-  highlight?: HighlightRequest;
   elementInfo?: string;
 }
 
 interface NormalizedHighlightOptions {
-  action?: string;
+  action: string;
   duration: number;
   focus: boolean;
   scrollBehavior: HighlightScrollBehavior;
@@ -47,8 +37,57 @@ interface NormalizedHighlightOptions {
   delay: number;
 }
 
+type HighlightOptionsInput = Partial<NormalizedHighlightOptions> & {
+  action?: string;
+};
+
 type HighlightFocusOptions = {
   preventScroll?: boolean;
+};
+
+const HIGHLIGHT_PRESETS: Record<string, HighlightOptionsInput> = {
+  Highlight: {
+    duration: 1800,
+    focus: true,
+    scrollBehavior: "smooth",
+    padding: 14,
+    delay: 400,
+  },
+  Inspect: {
+    duration: 1800,
+    focus: false,
+    scrollBehavior: "smooth",
+    padding: 16,
+    delay: 400,
+  },
+  Input: {
+    duration: 1800,
+    focus: true,
+    scrollBehavior: "smooth",
+    padding: 14,
+    delay: 400,
+  },
+  Click: {
+    duration: 2000,
+    focus: true,
+    scrollBehavior: "smooth",
+    padding: 12,
+    delay: 500,
+  },
+  Fill: {
+    duration: 1500,
+    focus: true,
+    scrollBehavior: "smooth",
+    padding: 18,
+    delay: 500,
+  },
+  Submit: {
+    duration: 1800,
+    focus: true,
+    scrollBehavior: "smooth",
+    padding: 12,
+    delay: 500,
+  },
 };
 
 export class NRWebScraperChild extends JSWindowActorChild {
@@ -60,20 +99,25 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
 
-  private normalizeHighlightOptions(
-    highlight?: HighlightRequest,
-  ): NormalizedHighlightOptions | null {
-    if (!highlight) {
-      return null;
-    }
+  private getHighlightOptions(
+    action: string,
+    overrides: HighlightOptionsInput = {},
+  ): HighlightOptionsInput {
+    const base = HIGHLIGHT_PRESETS[action] ?? HIGHLIGHT_PRESETS.Highlight;
+    return { ...base, ...overrides, action };
+  }
 
+  private normalizeHighlightOptions(
+    options: HighlightOptionsInput = {},
+  ): NormalizedHighlightOptions {
+    const action = options.action ?? "Highlight";
     return {
-      action: highlight.action,
-      duration: Math.max(highlight.duration ?? 1800, 300),
-      focus: highlight.focus ?? true,
-      scrollBehavior: highlight.scrollBehavior ?? "smooth",
-      padding: Math.max(highlight.padding ?? 14, 0),
-      delay: Math.max(highlight.delay ?? 400, 0),
+      action,
+      duration: Math.max(options.duration ?? 1800, 300),
+      focus: options.focus ?? true,
+      scrollBehavior: options.scrollBehavior ?? "smooth",
+      padding: Math.max(options.padding ?? 14, 0),
+      delay: Math.max(options.delay ?? 400, 0),
     };
   }
 
@@ -362,6 +406,34 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.highlightStyleElement = style;
   }
 
+  private highlightInspection(
+    target: Element | Element[],
+    elementInfo?: string,
+    showPanel = true,
+  ): void {
+    try {
+      if (Array.isArray(target)) {
+        if (!target.length) {
+          return;
+        }
+        void this.applyHighlightMultiple(
+          target,
+          { action: "Inspect" },
+          elementInfo,
+        ).catch(() => {});
+      } else {
+        void this.applyHighlight(
+          target,
+          { action: "Inspect" },
+          elementInfo,
+          showPanel,
+        ).catch(() => {});
+      }
+    } catch {
+      // エフェクト表示に失敗しても処理には影響させない
+    }
+  }
+
   private cleanupHighlight(): void {
     const win = this.contentWindow;
 
@@ -399,7 +471,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       for (const cleanup of this.highlightCleanupCallbacks) {
         try {
           cleanup();
-        } catch (_) {
+        } catch {
           // ignore cleanup errors
         }
       }
@@ -528,8 +600,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
           100,
           Math.round((currentProgress / totalProgress) * 100),
         );
-        progressBar.style.setProperty("width", `${progressPercent}%`);
+        progressBar.style.setProperty("animation", "none");
+        progressBar.style.setProperty("width", "0%");
         progressContainer.append(progressBar);
+        const animateProgress = () => {
+          progressBar.style.setProperty("transition", "width 250ms ease-out");
+          progressBar.style.setProperty("width", `${progressPercent}%`);
+        };
+        if (win) {
+          win.requestAnimationFrame(() =>
+            win.requestAnimationFrame(animateProgress),
+          );
+        } else {
+          animateProgress();
+        }
         panel.append(progressContainer);
       }
 
@@ -574,7 +658,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
   private async applyHighlightMultiple(
     targets: Element[],
-    highlight?: HighlightRequest,
+    optionsInput: HighlightOptionsInput = {},
     elementInfo?: string,
   ): Promise<boolean> {
     if (!targets || targets.length === 0) {
@@ -582,11 +666,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return false;
     }
 
-    const options = this.normalizeHighlightOptions(highlight);
+    const mergedOptions = this.getHighlightOptions(
+      optionsInput.action ?? "Highlight",
+      optionsInput,
+    );
+    const options = this.normalizeHighlightOptions(mergedOptions);
     const win = this.contentWindow;
     const doc = this.document;
 
-    if (!options || !win || !doc) {
+    if (!win || !doc) {
       return true;
     }
 
@@ -597,7 +685,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     // Show info panel with progress
     this.showInfoPanel(
-      options.action ?? "Highlight",
+      options.action,
       undefined,
       elementInfo,
       targets.length,
@@ -662,7 +750,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
           block: "center",
           inline: "center",
         });
-      } catch (_) {
+      } catch {
         // ignore scroll errors
       }
     }
@@ -686,19 +774,24 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
   private async applyHighlight(
     target: Element | null,
-    highlight?: HighlightRequest,
+    optionsInput: HighlightOptionsInput = {},
     elementInfo?: string,
+    showPanel = true,
   ): Promise<boolean> {
     if (!target) {
       this.cleanupHighlight();
       return false;
     }
 
-    const options = this.normalizeHighlightOptions(highlight);
+    const mergedOptions = this.getHighlightOptions(
+      optionsInput.action ?? "Highlight",
+      optionsInput,
+    );
+    const options = this.normalizeHighlightOptions(mergedOptions);
     const win = this.contentWindow;
     const doc = this.document;
 
-    if (!options || !win || !doc) {
+    if (!win || !doc) {
       return true;
     }
 
@@ -714,12 +807,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     // Show info panel
-    this.showInfoPanel(
-      options.action ?? "Highlight",
-      undefined,
-      elementInfo,
-      1,
-    );
+    if (showPanel) {
+      this.showInfoPanel(options.action, undefined, elementInfo, 1);
+    }
 
     const padding = options.padding;
 
@@ -787,7 +877,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
           block: "center",
           inline: "center",
         });
-      } catch (_) {
+      } catch {
         // ignore scroll errors
       }
     }
@@ -804,7 +894,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       try {
         element.focus({ preventScroll: true } as HighlightFocusOptions);
-      } catch (_) {
+      } catch {
         try {
           element.focus();
         } catch (e) {
@@ -911,19 +1001,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:InputElement":
         if (message.data?.selector && typeof message.data.value === "string") {
-          return this.inputElement(
-            message.data.selector,
-            message.data.value,
-            message.data.highlight,
-          );
+          return this.inputElement(message.data.selector, message.data.value);
         }
         break;
       case "WebScraper:ClickElement":
         if (message.data?.selector) {
-          return this.clickElement(
-            message.data.selector,
-            message.data.highlight,
-          );
+          return this.clickElement(message.data.selector);
         }
         break;
       case "WebScraper:WaitForElement":
@@ -950,12 +1033,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:FillForm":
         if (message.data?.formData) {
-          return this.fillForm(message.data.formData, message.data.highlight);
+          return this.fillForm(message.data.formData);
         }
         break;
       case "WebScraper:Submit":
         if (message.data?.selector) {
-          return this.submit(message.data.selector, message.data.highlight);
+          return this.submit(message.data.selector);
         }
         break;
       case "WebScraper:ClearEffects":
@@ -979,6 +1062,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
     try {
       if (this.contentWindow && this.contentWindow.document) {
         const html = this.contentWindow.document?.documentElement?.outerHTML;
+
+        const docElement = this.contentWindow.document?.documentElement;
+        if (docElement) {
+          this.highlightInspection(docElement, "ページ全体の HTML を取得");
+        }
 
         console.log("NRWebScraperChild: getHTML", html);
 
@@ -1006,8 +1094,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   getElement(selector: string): string | null {
     try {
-      const element = this.document?.querySelector(selector);
+      const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
+        this.highlightInspection(element, `要素を取得: ${selector}`);
         return String((element as Element).outerHTML);
       }
       return null;
@@ -1027,10 +1116,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
         | undefined;
       if (!nodeList) return [];
       const results: string[] = [];
-      nodeList.forEach((el) => {
-        const o = (el as Element).outerHTML;
+      nodeList.forEach((el: Element) => {
+        const o = el.outerHTML;
         if (o != null) results.push(String(o));
       });
+      const elements = Array.from(nodeList) as Element[];
+      if (elements.length > 0) {
+        this.highlightInspection(
+          elements,
+          `${selector} に一致した ${elements.length} 件の要素`,
+        );
+      }
       return results;
     } catch (e) {
       console.error("NRWebScraperChild: Error getting elements:", e);
@@ -1051,6 +1147,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
       for (const el of elArray) {
         const txt = el.textContent;
         if (txt && txt.includes(textContent)) {
+          this.highlightInspection(
+            el,
+            `テキストに一致した要素を取得: "${textContent}"`,
+          );
           return String(el.outerHTML);
         }
       }
@@ -1066,8 +1166,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   getElementTextContent(selector: string): string | null {
     try {
-      const element = this.document?.querySelector(selector);
+      const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
+        this.highlightInspection(element, `要素のテキストを取得: ${selector}`);
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1091,8 +1192,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   getElementText(selector: string): string | null {
     try {
-      const element = this.document?.querySelector(selector);
+      const element = this.document?.querySelector(selector) as Element | null;
       if (element) {
+        this.highlightInspection(element, `要素のテキストを取得: ${selector}`);
         return element.textContent?.trim() || null;
       }
       return null;
@@ -1112,11 +1214,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @param value - The value to set in the element
    */
-  async inputElement(
-    selector: string,
-    value: string,
-    highlight?: HighlightRequest,
-  ): Promise<boolean> {
+  async inputElement(selector: string, value: string): Promise<boolean> {
     try {
       const element = this.document?.querySelector(selector) as
         | HTMLInputElement
@@ -1127,15 +1225,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
 
       const elementInfo = `入力値を設定: "${value.substring(0, 50)}${value.length > 50 ? "..." : ""}"`;
+      const options = this.getHighlightOptions("Input");
 
-      this.showInfoPanel(
-        highlight?.action ?? "Input",
-        undefined,
-        elementInfo,
-        1,
-      );
-
-      await this.applyHighlight(element, highlight, elementInfo);
+      await this.applyHighlight(element, options, elementInfo);
 
       element.value = value;
       // Trigger input event to ensure the change is detected
@@ -1159,10 +1251,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @returns boolean - True if click was successful, false otherwise
    */
-  clickElement(
-    selector: string,
-    highlight?: HighlightRequest,
-  ): Promise<boolean> {
+  clickElement(selector: string): Promise<boolean> {
     try {
       const element = this.document?.querySelector(
         selector,
@@ -1174,38 +1263,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const elementInfo = elementText
         ? `${elementTagName} をクリック: "${elementText}${elementText.length >= 30 ? "..." : ""}"`
         : `${elementTagName} 要素をクリック中`;
-
-      // 情報パネルを即座に表示（視覚的フィードバック）
-      this.showInfoPanel(
-        highlight?.action ?? "Click",
-        undefined,
-        elementInfo,
-        1,
-      );
+      const options = this.getHighlightOptions("Click");
 
       // エフェクト表示を非同期で開始（クリック処理をブロックしない）
       const effectPromise = this.applyHighlight(
         element,
-        highlight,
+        options,
         elementInfo,
       ).catch(() => {
         // エフェクト表示のエラーは無視（クリック処理には影響しない）
       });
-
-      // スクロールとフォーカスは即座に実行（highlightがない場合のみ）
-      if (!highlight) {
-        try {
-          element.scrollIntoView({ block: "center", inline: "center" });
-        } catch {
-          /* ignore */
-        }
-
-        try {
-          (element as unknown as { focus?: () => void }).focus?.();
-        } catch {
-          /* ignore */
-        }
-      }
 
       const win = this.contentWindow ?? null;
       const Ev = (win?.Event ?? globalThis.Event) as typeof Event;
@@ -1538,21 +1605,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * and values are the corresponding values to set.
    * @returns boolean - True if all fields were filled successfully, false otherwise.
    */
-  async fillForm(
-    formData: { [selector: string]: string },
-    highlight?: HighlightRequest,
-  ): Promise<boolean> {
+  async fillForm(formData: { [selector: string]: string }): Promise<boolean> {
     try {
       let allFilled = true;
       const selectors = Object.keys(formData);
       const fieldCount = selectors.length;
       const win = this.contentWindow;
       const doc = this.document;
+      const action = "Fill";
+      const highlightOptions = this.getHighlightOptions(action);
 
       // 初期情報パネルを表示
       if (fieldCount > 1 && doc) {
         this.showInfoPanel(
-          highlight?.action ?? "Fill",
+          action,
           undefined,
           `フォーム入力中: ${fieldCount} 個のフィールド`,
           fieldCount,
@@ -1575,10 +1641,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
         if (element) {
           const elementInfo = `フィールド ${i + 1}/${fieldCount}: "${value.substring(0, 30)}${value.length > 30 ? "..." : ""}"`;
-
           if (fieldCount > 1 && doc) {
             this.showInfoPanel(
-              highlight?.action ?? "Fill",
+              action,
               undefined,
               elementInfo,
               fieldCount,
@@ -1587,7 +1652,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
             );
           }
 
-          await this.applyHighlight(element, highlight, elementInfo);
+          await this.applyHighlight(
+            element,
+            highlightOptions,
+            elementInfo,
+            false,
+          );
 
           element.value = value;
           element.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1626,6 +1696,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
         | HTMLTextAreaElement
         | null;
       if (element && typeof (element as HTMLInputElement).value === "string") {
+        this.highlightInspection(element, `値を取得: ${selector}`);
         return (element as HTMLInputElement).value;
       }
       return null;
@@ -1639,10 +1710,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * Submits a form. If selector points to an element inside a form, submits its closest form.
    * If selector is a form element, submits that form.
    */
-  async submit(
-    selector: string,
-    highlight?: HighlightRequest,
-  ): Promise<boolean> {
+  async submit(selector: string): Promise<boolean> {
     try {
       const root = this.document?.querySelector(selector) as Element | null;
       const form =
@@ -1655,15 +1723,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const formName =
         form.getAttribute("name") || form.getAttribute("id") || "form";
       const elementInfo = `フォーム送信中: ${formName}`;
+      const options = this.getHighlightOptions("Submit");
 
-      this.showInfoPanel(
-        highlight?.action ?? "Submit",
-        undefined,
-        elementInfo,
-        1,
-      );
-
-      await this.applyHighlight(root ?? form, highlight, elementInfo);
+      await this.applyHighlight(root ?? form, options, elementInfo);
 
       try {
         // Prefer requestSubmit if available, otherwise fallback to submit.

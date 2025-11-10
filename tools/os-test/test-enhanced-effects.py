@@ -90,6 +90,51 @@ class FloorpTabManager:
         self.instance_id = None
         return resp.json()
 
+    def get_html(self):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/html",
+        )
+        data = resp.json()
+        html = data.get("html", "")
+        print(f"✓ getHTML length: {len(html) if html else 0}")
+        return data
+
+    def get_element(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/element",
+            params={"selector": selector},
+        )
+        data = resp.json()
+        print(f"✓ getElement '{selector}' -> found: {bool(data.get('element'))}")
+        return data
+
+    def get_elements(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/elements",
+            params={"selector": selector},
+        )
+        data = resp.json()
+        elements = data.get("elements", [])
+        print(f"✓ getElements '{selector}' -> count: {len(elements)}")
+        return data
+
+    def get_value(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/value",
+            params={"selector": selector},
+        )
+        data = resp.json()
+        print(f"✓ getValue '{selector}' -> value: {data.get('value')}")
+        return data
+
 
 def main():
     print("=" * 60)
@@ -134,6 +179,19 @@ def main():
         manager.fill_form({
             "input[name='q']": "floorp-browser"
         })
+        print()
+
+        # 7. 取得系 API のハイライト確認
+        print("📋 Step 7: Inspect APIs (highlight only)")
+        manager.get_html()
+        time.sleep(2)
+        manager.get_element("header")
+        time.sleep(2)
+        manager.get_elements("a[href]")
+        time.sleep(2)
+        manager.get_value("input[name='q']")
+        time.sleep(2)
+        print("  ✓ Inspect highlights confirmed")
         print()
         
         print("=" * 60)

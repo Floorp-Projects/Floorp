@@ -13,17 +13,6 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-type HighlightScrollBehavior = "auto" | "smooth" | "instant" | "none";
-
-interface HighlightOptions {
-  action: string;
-  duration: number;
-  focus: boolean;
-  scrollBehavior: HighlightScrollBehavior;
-  padding: number;
-  delay: number;
-}
-
 // Global sets to prevent garbage collection of active components
 const TAB_MANAGER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 const PROGRESS_LISTENERS = new Set();
@@ -50,7 +39,6 @@ class TabManager {
     { tab: object; browser: XULBrowserElement }
   > = new Map();
 
-  private readonly _defaultHighlightDuration = 2000;
   private readonly _defaultActionDelay = 500;
 
   constructor() {}
@@ -66,20 +54,6 @@ class TabManager {
       throw new Error(`Instance not found for ID: ${instanceId}`);
     }
     return instance;
-  }
-
-  private _buildHighlightOptions(
-    action: string,
-    overrides?: Partial<HighlightOptions>,
-  ): HighlightOptions {
-    return {
-      action,
-      duration: overrides?.duration ?? this._defaultHighlightDuration,
-      focus: overrides?.focus ?? true,
-      scrollBehavior: overrides?.scrollBehavior ?? "smooth",
-      padding: overrides?.padding ?? 12,
-      delay: overrides?.delay ?? this._defaultActionDelay,
-    };
   }
 
   private async _delayForUser(delay?: number): Promise<void> {
@@ -447,7 +421,6 @@ class TabManager {
       "WebScraper:ClickElement",
       {
         selector,
-        highlight: this._buildHighlightOptions("Click"),
       },
     );
 
@@ -509,10 +482,6 @@ class TabManager {
       "WebScraper:FillForm",
       {
         formData,
-        highlight: this._buildHighlightOptions("Fill", {
-          duration: 1500,
-          padding: 18,
-        }),
       },
     );
 
@@ -539,9 +508,6 @@ class TabManager {
       "WebScraper:Submit",
       {
         selector,
-        highlight: this._buildHighlightOptions("Submit", {
-          duration: 1800,
-        }),
       },
     );
 

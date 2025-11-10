@@ -92,6 +92,53 @@ class FloorpTabManager:
         self.instance_id = None
         return result
 
+    def get_html(self):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/html"
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return result
+
+    def get_element(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/element",
+            params={"selector": selector},
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return result
+
+    def get_elements(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/elements",
+            params={"selector": selector},
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return result
+
+    def get_value(self, selector: str):
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/value",
+            params={"selector": selector},
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return result
+
 
 def main():
     print("=" * 42)
@@ -103,7 +150,7 @@ def main():
     script_dir = Path(__file__).parent
     test_page_path = script_dir / "test-page.html"
     test_page_url = f"file://{test_page_path.absolute()}"
-    
+
     print(f"📄 Test Page: {test_page_url}")
     print()
     
@@ -151,6 +198,26 @@ def main():
         manager.submit("#testForm")
         print(f"{RED}✓ フォーム送信（赤色のエフェクト + 情報パネル + 3秒表示）{NC}")
         print(f"{YELLOW}👀 フォーム全体に赤色のハイライトが表示されました{NC}")
+        print()
+
+        # Step 6: 取得系 API（Inspect ハイライト）の確認
+        print(f"{BLUE}📋 Step 6: Inspect APIs (highlight only){NC}")
+        print(f"{BLUE}  └ getHTML{NC}")
+        manager.get_html()
+        time.sleep(2.2)
+
+        print(f"{BLUE}  └ getElement (Submit Button){NC}")
+        manager.get_element("#submitBtn")
+        time.sleep(2.2)
+
+        print(f"{BLUE}  └ getElements (Input fields){NC}")
+        manager.get_elements("form input")
+        time.sleep(2.2)
+
+        print(f"{BLUE}  └ getValue (Name field){NC}")
+        manager.get_value("#name")
+        time.sleep(2.2)
+        print(f"{GREEN}✓ 取得系 API を呼び出し、Inspect ハイライトを確認{NC}")
         print()
         
         # クリーンアップ

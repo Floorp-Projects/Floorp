@@ -5673,6 +5673,9 @@
           "npm:rolldown@^1.0.0-beta.32"
         ]
       }
+    },
+    "links": {
+      "jsr:@types/gecko@1.0.0": {}
     }
   }
 }

@@ -7,7 +7,7 @@ export class NRWebScraperParent extends JSWindowActorParent {
   receiveMessage(
     message: {
       name: string;
-      data?: { selector: string; value: string };
+      data?: Record<string, unknown>;
     },
   ) {
     // Forward all messages to the child and return the result.
