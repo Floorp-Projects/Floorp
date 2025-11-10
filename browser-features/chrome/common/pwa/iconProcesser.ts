@@ -9,6 +9,9 @@ import { ImageTools } from "./imageTools.ts";
 const { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs",
 );
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs",
+);
 
 export class IconProcesser {
   private static instance: IconProcesser;
@@ -83,61 +86,144 @@ export class IconProcesser {
 
   public async getIconForBrowser(browser: Browser): Promise<string> {
     const gFavicons = PlacesUtils.favicons as {
-      getFaviconForPage: (uri: nsIURI) => Promise<{ uri: nsIURI }>;
+      getFaviconForPage: (uri: nsIURI) => Promise<{
+        dataURI: nsIURI;
+        mimeType: string;
+        rawData?: ArrayBuffer | Uint8Array;
+      } | null>;
+      defaultFavicon: nsIURI;
     };
 
-    const iconUri = await gFavicons.getFaviconForPage(
-      Services.io.newURI(browser.currentURI.spec),
-    );
+    const targetUri = Services.io.newURI(browser.currentURI.spec);
+    const container = await this.getFaviconContainer(targetUri, gFavicons);
 
-    if (!iconUri || !iconUri.uri) {
-      return "";
-    }
-
-    const iconUrl = iconUri.uri.spec;
-
-    if (!iconUrl) {
+    if (!container) {
       return "";
     }
 
     try {
-      const response = await fetch(iconUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      const old_base64 = await new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-
-      const { container } = await ImageTools.loadImage(
-        Services.io.newURI(old_base64),
+      return await this.containerToDataURL(container);
+    } catch (scaleErr) {
+      console.warn(
+        "[PWA] Icon scaling failed, returning empty icon.",
+        scaleErr,
       );
-
-      if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
-        return old_base64;
-      }
-
-      try {
-        const blobPng = (await ImageTools.scaleImage(
-          container,
-          64,
-          64,
-        )) as Blob;
-        const pngBase64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blobPng);
-        });
-        return pngBase64;
-      } catch (scaleErr) {
-        console.warn(
-          "Icon scaling failed, falling back to original icon:",
-          scaleErr,
-        );
-        return old_base64;
-      }
-    } catch (e) {
-      console.error("Failed to fetch icon:", e);
       return "";
     }
+  }
+
+  private async containerToDataURL(container: imgIContainer): Promise<string> {
+    const blob = (await ImageTools.scaleImage(container, 64, 64)) as Blob;
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private arrayBufferToDataUri(buffer: ArrayBuffer, mimeType: string) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      const subArray = bytes.subarray(i, i + chunk);
+      binary += String.fromCharCode(...subArray);
+    }
+    return `data:${mimeType};base64,${btoa(binary)}`;
+  }
+
+  private async getFaviconContainer(
+    uri: nsIURI,
+    gFavicons: {
+      getFaviconForPage: (target: nsIURI) => Promise<{
+        dataURI: nsIURI;
+        mimeType: string;
+        rawData?: ArrayBuffer | Uint8Array;
+      } | null>;
+      defaultFavicon: nsIURI;
+    },
+  ): Promise<imgIContainer | null> {
+    try {
+      const favicon = await gFavicons.getFaviconForPage(uri);
+      if (favicon) {
+        if (favicon.mimeType !== "image/svg+xml" && favicon.rawData) {
+          const rawArray =
+            favicon.rawData instanceof Uint8Array
+              ? favicon.rawData
+              : new Uint8Array(favicon.rawData);
+          const buffer = rawArray.slice(0, rawArray.byteLength).buffer;
+          const dataUriSpec = this.arrayBufferToDataUri(
+            buffer,
+            favicon.mimeType,
+          );
+          const { container } = await ImageTools.loadImage(
+            Services.io.newURI(dataUriSpec),
+          );
+          return container;
+        }
+        const { container } = await ImageTools.loadImage(favicon.dataURI);
+        return container;
+      }
+    } catch (e) {
+      console.error("[PWA] Failed to retrieve favicon:", e);
+    }
+
+    return await this.loadDefaultFavicon(gFavicons.defaultFavicon);
+  }
+
+  private async loadDefaultFavicon(uri: nsIURI): Promise<imgIContainer | null> {
+    try {
+      const { buffer, contentType } = await this.readUriToArrayBuffer(uri);
+      const dataUriSpec = this.arrayBufferToDataUri(buffer, contentType);
+      const { container } = await ImageTools.loadImage(
+        Services.io.newURI(dataUriSpec),
+      );
+      return container;
+    } catch (e) {
+      console.error("[PWA] Failed to load default favicon:", e);
+      return null;
+    }
+  }
+
+  private readUriToArrayBuffer(uri: nsIURI) {
+    return new Promise<{ buffer: ArrayBuffer; contentType: string }>(
+      (resolve, reject) => {
+        try {
+          const channel = NetUtil.newChannel({
+            uri,
+            loadUsingSystemPrincipal: true,
+            contentPolicyType: Ci.nsIContentPolicy.TYPE_IMAGE,
+          });
+          NetUtil.asyncFetch(channel, (inputStream, status) => {
+            if (!Components.isSuccessCode(status)) {
+              reject(
+                Components.Exception("Failed to fetch local resource.", status),
+              );
+              return;
+            }
+
+            try {
+              const count = inputStream.available();
+              const bytes = NetUtil.readInputStreamToArray(inputStream, count);
+              inputStream.close();
+              const typedArray = new Uint8Array(bytes);
+              const buffer = typedArray.buffer.slice(
+                typedArray.byteOffset,
+                typedArray.byteOffset + typedArray.byteLength,
+              );
+              resolve({
+                buffer,
+                contentType: channel.contentType || "image/png",
+              });
+            } catch (readErr) {
+              reject(readErr);
+            }
+          });
+        } catch (err) {
+          reject(err);
+        }
+      },
+    );
   }
 }

@@ -8,11 +8,12 @@ import type { Manifest } from "../type.ts";
 const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
 );
+const { ShellService } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/shell/ShellService.sys.mjs",
+);
 
 export class WindowsSupport {
-  private static shellService = Cc[
-    "@mozilla.org/browser/shell-service;1"
-  ].getService(Ci.nsIWindowsShellService);
+  private static shellService = ShellService;
 
   private static uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
     Ci.nsIWindowsUIUtils,
@@ -28,8 +29,51 @@ export class WindowsSupport {
     "initWithPath",
   );
 
+  private static readonly MAX_APP_USER_MODEL_ID_LENGTH = 127;
   private buildGroupId(id: string) {
-    return `ablaze.floorp.ssb.${id}`;
+    const safeId = this.sanitizeAppId(id);
+    const baseId = `ablaze.floorp.ssb.${safeId}`;
+    if (baseId.length <= WindowsSupport.MAX_APP_USER_MODEL_ID_LENGTH) {
+      return baseId;
+    }
+    return baseId.slice(0, WindowsSupport.MAX_APP_USER_MODEL_ID_LENGTH);
+  }
+
+  private sanitizeAppId(id: string) {
+    const sanitized = id.replace(/[^A-Za-z0-9.]/g, "-");
+    if (sanitized.length) {
+      return sanitized;
+    }
+    return Services.uuid.generateUUID().toString().slice(1, -1);
+  }
+
+  private getShortcutRelativePath(name: string, id: string) {
+    const directory = this.sanitizeFilename("Floorp PWAs", {
+      allowDirectoryNames: true,
+    });
+    const baseName = this.sanitizeFilename(`${name}.lnk`);
+    const uniqueSuffix = this.sanitizeFilename(id.replace(/[^A-Za-z0-9]/g, ""));
+    if (!uniqueSuffix) {
+      return `${directory}\\${baseName}`;
+    }
+    return `${directory}\\${uniqueSuffix}-${baseName}`;
+  }
+
+  private sanitizeFilename(
+    wantedName: string,
+    { allowDirectoryNames = false }: { allowDirectoryNames?: boolean } = {},
+  ) {
+    const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    let flags =
+      Ci.nsIMIMEService.VALIDATE_SANITIZE_ONLY |
+      Ci.nsIMIMEService.VALIDATE_DONT_COLLAPSE_WHITESPACE |
+      Ci.nsIMIMEService.VALIDATE_ALLOW_INVALID_FILENAMES;
+
+    if (allowDirectoryNames) {
+      flags |= Ci.nsIMIMEService.VALIDATE_ALLOW_DIRECTORY_NAMES;
+    }
+
+    return mimeService.validateFileNameForSaving(wantedName, "", flags);
   }
 
   async install(ssb: Manifest) {
@@ -38,7 +82,9 @@ export class WindowsSupport {
       ignoreExisting: true,
     });
 
-    let iconFile = new WindowsSupport.nsIFile(PathUtils.join(dir, "icon.ico"));
+    let iconFile: nsIFile | null = new WindowsSupport.nsIFile(
+      PathUtils.join(dir, "icon.ico"),
+    );
 
     // We should be embedding multiple icon sizes, but the current icon encoder
     // does not support this. For now just embed a sensible size.
@@ -47,12 +93,22 @@ export class WindowsSupport {
       const { container } = await ImageTools.loadImage(
         Services.io.newURI(icon),
       );
-      ImageTools.saveIcon(container, 128, 128, iconFile);
+      try {
+        await WindowsSupport.shellService.createWindowsIcon(
+          iconFile,
+          container,
+        );
+      } catch (e) {
+        console.error("Failed to create Windows icon for SSB:", e);
+        iconFile = null;
+      }
     } else {
       iconFile = null;
     }
 
-    WindowsSupport.shellService.createShortcut(
+    const relativePath = this.getShortcutRelativePath(ssb.name, ssb.id);
+
+    await WindowsSupport.shellService.createShortcut(
       Services.dirsvc.get("XREExeF", Ci.nsIFile),
       ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],
       ssb.name,
@@ -60,7 +116,7 @@ export class WindowsSupport {
       0,
       this.buildGroupId(ssb.id),
       "Programs",
-      `${ssb.name}.lnk`,
+      relativePath,
     );
   }
 
@@ -68,18 +124,20 @@ export class WindowsSupport {
    * @param {SiteSpecificBrowser} ssb the SSB to uninstall.
    */
   async uninstall(ssb: Manifest) {
-    try {
-      const startMenu = `${
-        Services.dirsvc.get("Home", Ci.nsIFile).path
-      }\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\`;
-      await IOUtils.remove(`${startMenu + ssb.name}.lnk`);
-    } catch (e) {
-      console.error(e);
-    }
+    const relativePath = this.getShortcutRelativePath(ssb.name, ssb.id);
 
     const dir = PathUtils.join(PathUtils.profileDir, "ssb", ssb.id);
     try {
-      await IOUtils.remove(dir, { recursive: true });
+      await WindowsSupport.shellService.deleteShortcut(
+        "Programs",
+        relativePath,
+      );
+    } catch (e) {
+      console.error("Failed to delete Windows shortcut for SSB:", e);
+    }
+
+    try {
+      await IOUtils.remove(dir, { recursive: true, ignoreAbsent: true });
     } catch (e) {
       console.error(e);
     }
@@ -119,7 +177,11 @@ export class WindowsSupport {
     ]);
 
     if (icons[0] || icons[1]) {
-      WindowsSupport.uiUtils.setWindowIcon(aWindow as unknown as mozIDOMWindowProxy, icons[0], icons[1]);
+      WindowsSupport.uiUtils.setWindowIcon(
+        aWindow as unknown as mozIDOMWindowProxy,
+        icons[0],
+        icons[1],
+      );
     }
   }
 }

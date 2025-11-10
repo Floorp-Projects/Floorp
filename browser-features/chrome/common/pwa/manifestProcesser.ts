@@ -21,8 +21,8 @@ export class ManifestProcesser {
     this.iconProcesser = new IconProcesser();
   }
 
-  private get uuid() {
-    return Services.uuid.generateUUID().toString();
+  private generateManifestId() {
+    return Services.uuid.generateUUID().toString().slice(1, -1);
   }
 
   /**
@@ -41,7 +41,7 @@ export class ManifestProcesser {
       if (useWebManifest) {
         manifest = await ManifestObtainer.browserObtainManifest(browser);
       }
-    } catch (e) {
+    } catch (_e) {
       throw new Error("Failed to obtain manifest from browser");
     }
 
@@ -85,7 +85,7 @@ export class ManifestProcesser {
           );
           try {
             icon.src = await actor.sendQuery("LoadIcon", icon.src);
-          } catch (e) {
+          } catch (_e) {
             // Bad icon, drop it from the list.
             return null;
           }
@@ -105,7 +105,7 @@ export class ManifestProcesser {
       manifest.name = browser.contentTitle;
     }
 
-    manifest.id = this.uuid;
+    manifest.id = this.generateManifestId();
     manifest.icon = manifest.icons[0].src;
     return manifest;
   }
