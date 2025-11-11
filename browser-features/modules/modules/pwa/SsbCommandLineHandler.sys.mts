@@ -87,7 +87,7 @@ export class SsbRunnerUtils {
         "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
       );
       const macSupport = new MacSupport();
-      await macSupport.applyOSIntegration(ssb, win ?? window);
+      await macSupport.applyOSIntegration(ssb, win ?? null);
     }
   }
 }
