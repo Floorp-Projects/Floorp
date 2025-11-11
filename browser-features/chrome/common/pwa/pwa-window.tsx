@@ -22,12 +22,17 @@ export class PwaWindowSupport {
   }
 
   constructor(private pwaService: PwaService) {
-    if (!window.name.startsWith(PWA_WINDOW_NAME)) {
+    const shimId = Services.env.get("FLOORP_SSB_ID");
+    const isSsbWindow =
+      (shimId && shimId.length > 0) ||
+      window.name.startsWith(PWA_WINDOW_NAME);
+
+    if (!isSsbWindow) {
       return;
     }
 
     this.initializeWindow();
-    this.setupSignals();
+    this.setupSignals(shimId && shimId.length > 0 ? shimId : null);
     this.initBrowser();
   }
 
@@ -43,8 +48,12 @@ export class PwaWindowSupport {
     window.floorpSsbWindow = true;
   }
 
-  private setupSignals(): void {
+  private setupSignals(initialId: string | null): void {
     const [, setSsbId] = this.ssbId;
+    if (initialId) {
+      setSsbId(initialId);
+      return;
+    }
     setSsbId(window.name);
   }
 

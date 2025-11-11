@@ -23,12 +23,12 @@ export class SsbRunner {
       url.startsWith(ssb.start_url)
     );
     if (ssbToRun) {
-      this.openSsbWindow(ssbToRun);
+      await this.openSsbWindow(ssbToRun);
     }
   }
 
-  public async openSsbWindow(ssb: Manifest) {
-    const win = SsbRunnerUtils.openSsbWindow(ssb);
+  public async openSsbWindow(ssb: Manifest): Promise<Window | null> {
+    const win = await SsbRunnerUtils.openSsbWindow(ssb);
     await SsbRunnerUtils.applyOSIntegration(ssb, win);
     return win;
   }

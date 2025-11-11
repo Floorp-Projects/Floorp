@@ -18,7 +18,26 @@ export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
-  static openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+  static async openSsbWindow(
+    ssb: Manifest,
+    initialLaunch: boolean = false,
+  ): Promise<Window | null> {
+    const isShimProcess = Services.env.get("FLOORP_SSB_ID");
+    if (AppConstants.platform === "macosx" && !isShimProcess) {
+      try {
+        const { MacSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+        );
+        const macSupport = new MacSupport();
+        const launched = await macSupport.launch(ssb);
+        if (launched) {
+          return null;
+        }
+      } catch (error) {
+        console.error("macOS SSB launch via shim failed, falling back", error);
+      }
+    }
+
     let initialLaunchWin: nsIDOMWindow | null = null;
     if (initialLaunch) {
       initialLaunchWin = Services.ww.openWindow(
@@ -56,7 +75,7 @@ export class SsbRunnerUtils {
     return win;
   }
 
-  static async applyOSIntegration(ssb: Manifest, win: Window) {
+  static async applyOSIntegration(ssb: Manifest, win: Window | null) {
     if (AppConstants.platform === "win") {
       const { WindowsSupport } = ChromeUtils.importESModule(
         "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
@@ -68,7 +87,7 @@ export class SsbRunnerUtils {
         "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
       );
       const macSupport = new MacSupport();
-      await macSupport.applyOSIntegration(ssb, win);
+      await macSupport.applyOSIntegration(ssb, win ?? window);
     }
   }
 }
@@ -95,7 +114,7 @@ async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         const ssb = value as Manifest;
-        const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
+        const win = await SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
         await SsbRunnerUtils.applyOSIntegration(ssb, win);
         break;
       }
