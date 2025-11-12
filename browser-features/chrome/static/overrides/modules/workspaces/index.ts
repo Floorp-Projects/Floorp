@@ -34,19 +34,35 @@ export const overrides = [
           ? baseOptions.userContextId
           : undefined;
 
+      const potentialTargetBrowser = baseOptions.targetBrowser;
+      const targetBrowserUserContextId =
+        typeof potentialTargetBrowser === "object" &&
+        potentialTargetBrowser !== null &&
+        typeof (potentialTargetBrowser as { userContextId?: unknown })
+          .userContextId === "number"
+          ? (potentialTargetBrowser as { userContextId: number }).userContextId
+          : undefined;
+
+      const shouldRespectExistingContext =
+        where === "current" || targetBrowserUserContextId !== undefined;
+
+      const shouldApplyWorkspaceContainer =
+        workspaceUserContextId > 0 &&
+        (!originalUserContextId || originalUserContextId === 0) &&
+        !shouldRespectExistingContext;
+
       const mergedOptions = {
         ...baseOptions,
-        userContextId:
-          workspaceUserContextId > 0 &&
-          (!originalUserContextId || originalUserContextId === 0)
-            ? workspaceUserContextId
-            : (originalUserContextId ?? 0),
+        userContextId: shouldApplyWorkspaceContainer
+          ? workspaceUserContextId
+          : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
       };
 
       console.debug("Workspaces: openTrustedLinkIn override", {
         url: typeof url === "string" ? url : url.spec,
         where,
         originalUserContextId,
+        shouldApplyWorkspaceContainer,
         appliedUserContextId: mergedOptions.userContextId,
       });
 
@@ -78,19 +94,36 @@ export const overrides = [
             ? baseParams.userContextId
             : undefined;
 
+        const potentialTargetBrowser = baseParams.targetBrowser;
+        const targetBrowserUserContextId =
+          typeof potentialTargetBrowser === "object" &&
+          potentialTargetBrowser !== null &&
+          typeof (potentialTargetBrowser as { userContextId?: unknown })
+            .userContextId === "number"
+            ? (potentialTargetBrowser as { userContextId: number })
+                .userContextId
+            : undefined;
+
+        const shouldRespectExistingContext =
+          where === "current" || targetBrowserUserContextId !== undefined;
+
+        const shouldApplyWorkspaceContainer =
+          workspaceUserContextId > 0 &&
+          (!originalUserContextId || originalUserContextId === 0) &&
+          !shouldRespectExistingContext;
+
         const mergedParams = {
           ...baseParams,
-          userContextId:
-            workspaceUserContextId > 0 &&
-            (!originalUserContextId || originalUserContextId === 0)
-              ? workspaceUserContextId
-              : (originalUserContextId ?? 0),
+          userContextId: shouldApplyWorkspaceContainer
+            ? workspaceUserContextId
+            : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
         };
 
         console.debug("Workspaces: openUILinkIn override", {
           url: typeof url === "string" ? url : url.spec,
           where,
           originalUserContextId,
+          shouldApplyWorkspaceContainer,
           appliedUserContextId: mergedParams.userContextId,
         });
 
@@ -162,12 +195,18 @@ export const overrides = [
       Services.obs.notifyObservers(
         {
           wrappedJSObject: new Promise((resolve) => {
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            const options: any = {
+            const options = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
               userContextId:
                 gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0,
+              allowThirdPartyFixup: undefined as boolean | undefined,
+            } satisfies {
+              relatedToCurrent: boolean;
+              resolveOnNewTabCreated: (browser: unknown) => void;
+              userContextId: number;
+              allowThirdPartyFixup?: boolean;
+              [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
               let clipboard = window.readFromClipboard();
