@@ -1,17 +1,8 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@std/bytes@^1.0.6": "1.0.6",
-    "jsr:@std/cli@1.0.6": "1.0.6",
-    "jsr:@std/cli@^1.0.21": "1.0.22",
-    "jsr:@std/encoding@^1.0.10": "1.0.10",
-    "jsr:@std/fs@^1.0.17": "1.0.19",
-    "jsr:@std/fs@^1.0.18": "1.0.19",
-    "jsr:@std/internal@^1.0.10": "1.0.10",
-    "jsr:@std/internal@^1.0.9": "1.0.10",
-    "jsr:@std/path@^1.1.1": "1.1.2",
+    "jsr:@std/internal@^1.0.10": "1.0.12",
     "jsr:@std/path@^1.1.2": "1.1.2",
-    "jsr:@std/streams@^1.0.11": "1.0.12",
     "npm:@bytecodealliance/preview2-shim@~0.17.3": "0.17.4",
     "npm:@deno/vite-plugin@^1.0.4": "1.0.5_vite@6.4.1__@types+node@24.9.1__lightningcss@1.30.2__picomatch@4.0.3_@types+node@24.9.1_lightningcss@1.30.2",
     "npm:@deno/vite-plugin@^1.0.5": "1.0.5_vite@6.4.1__@types+node@24.9.1__lightningcss@1.30.2__picomatch@4.0.3_@types+node@24.9.1_lightningcss@1.30.2",
@@ -121,38 +112,13 @@
     "npm:vite@^7.1.4": "7.1.12_@types+node@24.9.1_lightningcss@1.30.2_picomatch@4.0.3"
   },
   "jsr": {
-    "@std/bytes@1.0.6": {
-      "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
-    },
-    "@std/cli@1.0.6": {
-      "integrity": "d22d8b38c66c666d7ad1f2a66c5b122da1704f985d3c47f01129f05abb6c5d3d"
-    },
-    "@std/cli@1.0.22": {
-      "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
-    },
-    "@std/encoding@1.0.10": {
-      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
-    },
-    "@std/fs@1.0.19": {
-      "integrity": "051968c2b1eae4d2ea9f79a08a3845740ef6af10356aff43d3e2ef11ed09fb06",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.9",
-        "jsr:@std/path@^1.1.1"
-      ]
-    },
-    "@std/internal@1.0.10": {
-      "integrity": "e3be62ce42cab0e177c27698e5d9800122f67b766a0bea6ca4867886cbde8cf7"
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     },
     "@std/path@1.1.2": {
       "integrity": "c0b13b97dfe06546d5e16bf3966b1cadf92e1cc83e56ba5476ad8b498d9e3038",
       "dependencies": [
-        "jsr:@std/internal@^1.0.10"
-      ]
-    },
-    "@std/streams@1.0.12": {
-      "integrity": "ae925fa1dc459b1abf5cbaa28cc5c7b0485853af3b2a384b0dc22d86e59dfbf4",
-      "dependencies": [
-        "jsr:@std/bytes"
+        "jsr:@std/internal"
       ]
     }
   },

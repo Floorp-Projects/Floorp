@@ -96,6 +96,9 @@ export class MacSupport {
   async applyOSIntegration(ssb: Manifest, _aWindow: Window | null) {
     const service = getMacSSBService();
     if (!service) {
+      console.warn(
+        "macOS SSB dock integration skipped: nsIMacSSBSupport service not available",
+      );
       return;
     }
 
@@ -105,12 +108,19 @@ export class MacSupport {
     try {
       service.applyDockIntegration(ssb.id, ssb.name, iconContainer);
     } catch (error) {
-      console.error("macOS SSB dock integration failed", error);
+      console.warn(
+        `macOS SSB dock integration failed for "${ssb.name}" (${ssb.id}):`,
+        error,
+      );
     }
   }
 
   async launch(ssb: Manifest): Promise<boolean> {
-    const shimInfo = await this.ensureMacShimAvailable(ssb);
+    let shimInfo = await this.ensureMacShimAvailable(ssb);
+    if (!shimInfo) {
+      await this.install(ssb);
+      shimInfo = await this.ensureMacShimAvailable(ssb);
+    }
     if (!shimInfo) {
       return false;
     }
