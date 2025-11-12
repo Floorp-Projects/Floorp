@@ -152,74 +152,207 @@ browser[type="content"] > html {
   display: none;
 }
 
-/* Floorp OS Automated Tab Indicator - シンプル版 */
-.tabbrowser-tab[data-floorp-os-automated="true"] {
-  position: relative;
-  background: rgba(59, 130, 246, 0.1) !important;
-  border: 2px solid rgba(59, 130, 246, 0.8) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
-  overflow: visible !important;
-  animation: floorp-automated-pulse 2s ease-in-out infinite;
-  transition: all 0.3s ease;
+/* Floorp OS Automated Tab Indicator */
+:root[data-floorp-ui-theme="proton"],
+:root[data-floorp-ui-theme="protonfix"] {
+  .tabbrowser-tab[data-floorp-os-automated="true"] {
+    position: relative;
+    background: rgba(59, 130, 246, 0.08) !important;
+    border: 1px solid rgba(59, 130, 246, 0.5) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.35) !important;
+    overflow: visible !important;
+    transition: all 0.3s ease;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"]::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(
+      45deg,
+      rgba(59, 130, 246, 0.25),
+      rgba(37, 99, 235, 0.25),
+      rgba(59, 130, 246, 0.25)
+    );
+    border-radius: 9px;
+    z-index: -1;
+    opacity: 0.6;
+    animation: floorp-automated-glow 3s ease-in-out infinite;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-image,
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-stack {
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.65));
+    transition: filter 0.3s ease;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-label {
+    font-weight: 500 !important;
+    text-shadow: 0 0 4px rgba(59, 130, 246, 0.25);
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"]:hover {
+    background: rgba(59, 130, 246, 0.14) !important;
+    border-color: rgba(37, 99, 235, 0.8) !important;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.45) !important;
+    transform: translateY(-0.5px);
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"]:hover::before {
+    opacity: 0.75;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"][selected="true"] {
+    background: rgba(59, 130, 246, 0.18) !important;
+    border-color: rgba(37, 99, 235, 0.9) !important;
+    box-shadow:
+      0 0 22px rgba(59, 130, 246, 0.55),
+      inset 0 0 8px rgba(59, 130, 246, 0.12) !important;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"][selected="true"]::before {
+    opacity: 0.9;
+  }
 }
 
-/* シンプルなグロー効果用の疑似要素 */
-.tabbrowser-tab[data-floorp-os-automated="true"]::before {
-  content: "";
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  background: linear-gradient(
-    45deg,
-    rgba(59, 130, 246, 0.3),
-    rgba(37, 99, 235, 0.3),
-    rgba(59, 130, 246, 0.3)
-  );
-  border-radius: 10px;
-  z-index: -1;
-  opacity: 0.6;
-  animation: floorp-automated-glow 3s ease-in-out infinite;
-}
+:root:not([data-floorp-ui-theme="proton"]):not(
+    [data-floorp-ui-theme="protonfix"]
+  ) {
+  .tabbrowser-tab[data-floorp-os-automated="true"] {
+    position: relative;
+    background: color-mix(
+      in srgb,
+      var(--toolbar-bgcolor) 78%,
+      rgba(59, 130, 246, 0.45)
+    ) !important;
+    border: 1px solid
+      color-mix(
+        in srgb,
+        rgba(59, 130, 246, 0.8) 75%,
+        var(--toolbar-bgcolor) 25%
+      ) !important;
+    border-top-color: color-mix(
+      in srgb,
+      var(--toolbar-bgcolor) 80%,
+      rgba(59, 130, 246, 0.45) 20%
+    ) !important;
+    border-radius: 10px !important;
+    box-shadow:
+      0 10px 22px rgba(59, 130, 246, 0.35),
+      0 4px 12px rgba(59, 130, 246, 0.25),
+      inset 0 1px 0
+        color-mix(
+          in srgb,
+          rgba(255, 255, 255, 0.6) 35%,
+          var(--toolbar-bgcolor) 65%
+        ) !important;
+    overflow: visible !important;
+    animation: floorp-automated-pulse 2s ease-in-out infinite;
+    transition: all 0.25s ease;
+  }
 
-/* タブアイコンのエフェクト */
-.tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-image,
-.tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-stack {
-  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
-  transition: filter 0.3s ease;
-}
+  .tabbrowser-tab[data-floorp-os-automated="true"]::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -3px;
+    right: -3px;
+    bottom: -6px;
+    background: linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        rgba(59, 130, 246, 0.35) 85%,
+        var(--toolbar-bgcolor) 15%
+      ),
+      rgba(59, 130, 246, 0.22) 45%,
+      rgba(59, 130, 246, 0.08) 80%,
+      transparent
+    );
+    border-radius: 11px;
+    z-index: -1;
+    opacity: 0.75;
+    animation: floorp-automated-glow 3s ease-in-out infinite;
+  }
 
-/* タブラベルのエフェクト */
-.tabbrowser-tab[data-floorp-os-automated="true"] .tab-label {
-  font-weight: 500 !important;
-  text-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
-}
+  .tabbrowser-tab[data-floorp-os-automated="true"]::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 6px;
+    right: 6px;
+    height: 2px;
+    border-radius: 999px;
+    background: color-mix(
+      in srgb,
+      rgba(37, 99, 235, 0.55) 65%,
+      rgba(59, 130, 246, 0.1)
+    );
+    opacity: 0.6;
+    pointer-events: none;
+  }
 
-/* ホバー状態 */
-.tabbrowser-tab[data-floorp-os-automated="true"]:hover {
-  background: rgba(59, 130, 246, 0.15) !important;
-  border-color: rgba(37, 99, 235, 1) !important;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.6) !important;
-  transform: translateY(-1px);
-}
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-image,
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-icon-stack {
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.75));
+    transition: filter 0.25s ease;
+  }
 
-.tabbrowser-tab[data-floorp-os-automated="true"]:hover::before {
-  opacity: 0.8;
-}
+  .tabbrowser-tab[data-floorp-os-automated="true"] .tab-label {
+    font-weight: 500 !important;
+    text-shadow: 0 0 4px rgba(59, 130, 246, 0.25);
+  }
 
-/* 選択状態 */
-.tabbrowser-tab[data-floorp-os-automated="true"][selected="true"] {
-  background: rgba(59, 130, 246, 0.2) !important;
-  border-color: rgba(37, 99, 235, 1) !important;
-  box-shadow:
-    0 0 25px rgba(59, 130, 246, 0.7),
-    inset 0 0 10px rgba(59, 130, 246, 0.1) !important;
-}
+  .tabbrowser-tab[data-floorp-os-automated="true"]:hover {
+    background: color-mix(
+      in srgb,
+      var(--toolbar-bgcolor) 70%,
+      rgba(59, 130, 246, 0.6)
+    ) !important;
+    border-color: color-mix(
+      in srgb,
+      rgba(37, 99, 235, 0.95) 70%,
+      var(--toolbar-bgcolor) 30%
+    ) !important;
+    box-shadow:
+      0 12px 24px rgba(59, 130, 246, 0.45),
+      0 6px 16px rgba(59, 130, 246, 0.35),
+      inset 0 1px 0
+        color-mix(
+          in srgb,
+          rgba(255, 255, 255, 0.75) 45%,
+          var(--toolbar-bgcolor) 55%
+        ) !important;
+    transform: translateY(-0.5px);
+  }
 
-.tabbrowser-tab[data-floorp-os-automated="true"][selected="true"]::before {
-  opacity: 1;
+  .tabbrowser-tab[data-floorp-os-automated="true"]:hover::before {
+    opacity: 0.9;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"][selected="true"] {
+    background: color-mix(
+      in srgb,
+      var(--toolbar-bgcolor) 60%,
+      rgba(59, 130, 246, 0.75)
+    ) !important;
+    border-color: color-mix(
+      in srgb,
+      rgba(37, 99, 235, 1) 80%,
+      var(--toolbar-bgcolor) 20%
+    ) !important;
+    box-shadow:
+      0 14px 28px rgba(59, 130, 246, 0.55),
+      inset 0 0 12px rgba(59, 130, 246, 0.18) !important;
+  }
+
+  .tabbrowser-tab[data-floorp-os-automated="true"][selected="true"]::before {
+    opacity: 1;
+  }
 }
 
 /* アニメーション定義 */

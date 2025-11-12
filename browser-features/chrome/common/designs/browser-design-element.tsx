@@ -15,7 +15,27 @@ const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
 );
 
 export function BrowserDesignElement() {
+  const DESIGN_ATTRIBUTE = "data-floorp-ui-theme";
   const getCSS = () => getCSSFromConfig(config());
+
+  createEffect(() => {
+    const uiTheme = config().globalConfigs.userInterface;
+    const root = document.documentElement;
+
+    if (!root) {
+      return;
+    }
+
+    if (typeof uiTheme === "string" && uiTheme.length > 0) {
+      root.setAttribute(DESIGN_ATTRIBUTE, uiTheme);
+    } else {
+      root.removeAttribute(DESIGN_ATTRIBUTE);
+    }
+
+    onCleanup(() => {
+      root.removeAttribute(DESIGN_ATTRIBUTE);
+    });
+  });
 
   // Apply UserJS preferences
   createEffect(() => {

@@ -17,6 +17,25 @@ export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
+type MacSupportModule = typeof import("./supports/Mac.sys.mts");
+type MacIntegrationSupport =
+  import("./supports/Mac.sys.mts").MacIntegrationSupport;
+
+let gMacIntegrationSupport: MacIntegrationSupport | null = null;
+
+function getMacIntegrationSupport(): MacIntegrationSupport | null {
+  if (AppConstants.platform !== "macosx") {
+    return null;
+  }
+  if (!gMacIntegrationSupport) {
+    const { MacIntegrationSupport } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+    ) as MacSupportModule;
+    gMacIntegrationSupport = new MacIntegrationSupport();
+  }
+  return gMacIntegrationSupport;
+}
+
 export class SsbRunnerUtils {
   static openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
     let initialLaunchWin: nsIDOMWindow | null = null;
@@ -41,6 +60,9 @@ export class SsbRunnerUtils {
 
     const uniqueWindowName = `${PWA_WINDOW_NAME}_${ssb.id}_${Date.now()}`;
 
+    const macSupport = getMacIntegrationSupport();
+    macSupport?.notifyLaunchRequest(ssb, initialLaunch);
+
     const win = Services.ww.openWindow(
       null as unknown as mozIDOMWindowProxy,
       AppConstants.BROWSER_CHROME_URL,
@@ -50,6 +72,7 @@ export class SsbRunnerUtils {
     ) as nsIDOMWindow;
 
     win.focus();
+    macSupport?.attachWindowMetadata(win, ssb);
     SessionStore.promiseAllWindowsRestored.then(() => {
       initialLaunchWin?.close();
     });
@@ -67,11 +90,11 @@ export class SsbRunnerUtils {
   }
 }
 
-async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
-  if (initialLaunch) {
-    return;
-  }
-
+async function startSSBFromCmdLine(
+  id: string,
+  initialLaunch: boolean,
+): Promise<boolean> {
+  let launched = false;
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
@@ -91,12 +114,24 @@ async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
         const ssb = value as Manifest;
         const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
         await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
+        launched = true;
         break;
       }
     }
+  } catch (error) {
+    console.error("Failed to launch SSB from command line", error);
+    throw error;
   } finally {
     Services.startup.exitLastWindowClosingSurvivalArea();
   }
+
+  if (!launched) {
+    console.warn(
+      `No SSB manifest matched the requested id "${id}". Falling back to normal startup.`,
+    );
+  }
+
+  return launched;
 }
 
 export class SSBCommandLineHandler {
@@ -105,6 +140,34 @@ export class SSBCommandLineHandler {
   ]) as TQueryInterface;
 
   private isInitialized = false;
+
+  private handleLaunchFailure(
+    reason: unknown,
+    cmdLine: nsICommandLine,
+    id: string,
+  ) {
+    if (reason) {
+      console.error("SSB launch failed", reason);
+    }
+
+    console.warn(
+      `SSB launch request for id "${id}" could not be fulfilled; continuing with normal startup.`,
+    );
+
+    try {
+      if (Services.prefs.prefHasUserValue("floorp.ssb.startup.id")) {
+        Services.prefs.clearUserPref("floorp.ssb.startup.id");
+      }
+    } catch (prefError) {
+      console.error(
+        "Unable to clear floorp.ssb.startup.id after failed SSB launch",
+        prefError,
+      );
+    }
+
+    // Ensure normal startup continues so the user still gets a browser window.
+    cmdLine.preventDefault = false;
+  }
 
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
@@ -131,9 +194,32 @@ export class SSBCommandLineHandler {
       }
 
       // If a browser window already exists, start the SSB immediately.
-      startSSBFromCmdLine(id, !this.isInitialized);
+      let completed = false;
+      let launchSucceeded = false;
+      let launchError: unknown = undefined;
+      startSSBFromCmdLine(id, !this.isInitialized)
+        .then(result => {
+          launchSucceeded = result;
+        })
+        .catch(error => {
+          launchError = error;
+        })
+        .finally(() => {
+          completed = true;
+        });
+
+      Services.tm.spinEventLoopUntil(
+        "floorp.ssb.commandLineHandler",
+        () => completed,
+      );
+
       this.isInitialized = true;
-      cmdLine.preventDefault = true;
+
+      if (launchSucceeded) {
+        cmdLine.preventDefault = true;
+      } else {
+        this.handleLaunchFailure(launchError, cmdLine, id);
+      }
     }
   }
 

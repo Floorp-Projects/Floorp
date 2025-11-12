@@ -101,6 +101,18 @@ export class DataManager {
         manifest.icon = iconSrc;
       }
 
+      if (entry.manifest.protocol_handlers) {
+        manifest.protocol_handlers = JSON.parse(
+          JSON.stringify(entry.manifest.protocol_handlers),
+        );
+      }
+
+      if (entry.manifest.file_handlers) {
+        manifest.file_handlers = JSON.parse(
+          JSON.stringify(entry.manifest.file_handlers),
+        );
+      }
+
       // Copy any config values if they exist
       if (entry.config) {
         // @ts-ignore - Adding non-standard property that may be in the data

@@ -3,7 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { Browser, Icon, Manifest } from "./type.js";
+import type {
+  Browser,
+  Icon,
+  Manifest,
+  ProtocolHandler,
+  FileHandler,
+} from "./type.js";
 import { IconProcesser } from "./iconProcesser";
 
 const { ManifestObtainer } = ChromeUtils.importESModule(
@@ -69,6 +75,23 @@ export class ManifestProcesser {
 
     if (!manifest) {
       return null;
+    }
+
+    const sanitizedProtocolHandlers = this.sanitizeProtocolHandlers(
+      (manifest as Manifest).protocol_handlers,
+    );
+    if (sanitizedProtocolHandlers) {
+      manifest.protocol_handlers = sanitizedProtocolHandlers;
+    } else {
+      delete (manifest as any).protocol_handlers;
+    }
+    const sanitizedFileHandlers = this.sanitizeFileHandlers(
+      (manifest as Manifest).file_handlers,
+    );
+    if (sanitizedFileHandlers) {
+      manifest.file_handlers = sanitizedFileHandlers;
+    } else {
+      delete (manifest as any).file_handlers;
     }
 
     // Cache all the icons as data URIs since we can need access to them when
@@ -150,5 +173,86 @@ export class ManifestProcesser {
       // );
       return null;
     }
+  }
+
+  private sanitizeProtocolHandlers(
+    handlers: Manifest["protocol_handlers"],
+  ): ProtocolHandler[] | undefined {
+    if (!Array.isArray(handlers)) {
+      return undefined;
+    }
+    const sanitized: ProtocolHandler[] = [];
+    for (const handler of handlers) {
+      if (!handler || typeof handler !== "object") {
+        continue;
+      }
+      const protocol =
+        typeof handler.protocol === "string" ? handler.protocol.trim() : "";
+      const url =
+        typeof handler.url === "string" ? handler.url.trim() : "";
+      if (!protocol || !url) {
+        continue;
+      }
+      sanitized.push({
+        protocol,
+        url,
+      });
+    }
+    return sanitized.length ? sanitized : undefined;
+  }
+
+  private sanitizeFileHandlers(
+    handlers: Manifest["file_handlers"],
+  ): FileHandler[] | undefined {
+    if (!Array.isArray(handlers)) {
+      return undefined;
+    }
+    const sanitized: FileHandler[] = [];
+    for (const handler of handlers) {
+      if (!handler || typeof handler !== "object") {
+        continue;
+      }
+      const action =
+        typeof handler.action === "string" ? handler.action.trim() : "";
+      if (!action) {
+        continue;
+      }
+
+      const sanitizedHandler: FileHandler = { action };
+
+      if (typeof handler.name === "string" && handler.name.trim()) {
+        sanitizedHandler.name = handler.name.trim();
+      }
+
+      if (
+        typeof handler.launch_type === "string" &&
+        handler.launch_type.trim()
+      ) {
+        sanitizedHandler.launch_type = handler.launch_type.trim();
+      }
+
+      if (handler.accept && typeof handler.accept === "object") {
+        const accept: Record<string, string[]> = {};
+        for (const [mime, values] of Object.entries(handler.accept)) {
+          if (!mime || !Array.isArray(values)) {
+            continue;
+          }
+          const sanitizedValues = values
+            .filter((value): value is string => typeof value === "string")
+            .map((value) => value.trim())
+            .filter((value) => value.length > 0);
+          if (sanitizedValues.length > 0) {
+            accept[mime.trim()] = sanitizedValues;
+          }
+        }
+        if (Object.keys(accept).length > 0) {
+          sanitizedHandler.accept = accept;
+        }
+      }
+
+      sanitized.push(sanitizedHandler);
+    }
+
+    return sanitized.length ? sanitized : undefined;
   }
 }

@@ -1,7 +1,20 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+export type ProtocolHandler = {
+  protocol: string;
+  url: string;
+};
+
+export type FileHandler = {
+  action: string;
+  name?: string;
+  launch_type?: string;
+  icons?: Icon[];
+  accept?: Record<string, string[]>;
+};
 
 export type Manifest = {
   id: string;
@@ -13,6 +26,8 @@ export type Manifest = {
   display?: string;
   theme_color?: string;
   background_color?: string;
+  protocol_handlers?: ProtocolHandler[];
+  file_handlers?: FileHandler[];
 };
 
 export type Icon = {
@@ -54,6 +69,8 @@ export type LegacyPWAEntry = {
     icons: {
       src: { src: string; sizes: string[] }[];
     };
+    protocol_handlers?: ProtocolHandler[];
+    file_handlers?: FileHandler[];
   };
   scope: string;
   config: {
