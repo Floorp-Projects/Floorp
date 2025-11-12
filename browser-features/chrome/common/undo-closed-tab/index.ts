@@ -39,20 +39,7 @@ function triggerUndoClosedTabForActiveWindow(): void {
       BROWSER_WINDOW_TYPE,
     ) as Window | null;
 
-    if (browserWindow?.undoCloseTab) {
-      browserWindow.undoCloseTab();
-      return;
-    }
-
-    const fallbackDocument =
-      browserWindow?.document ?? globalThis.document ?? null;
-    const undoMenuItem = fallbackDocument?.getElementById(
-      "toolbar-context-undoCloseTab",
-    ) as XULElement | null;
-
-    if (undoMenuItem instanceof XULElement) {
-      undoMenuItem.doCommand();
-    }
+    SessionWindowUI.undoCloseTab(browserWindow);
   } catch (error) {
     console.error("[undo-closed-tab] Failed to trigger undoCloseTab:", error);
   }
