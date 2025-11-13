@@ -234,7 +234,8 @@ export async function decompressBin(): Promise<void> {
               const macUtils = await import("./macos_utils.ts");
               await macUtils.patchAppInfoPlists(subdir, subdir, subdir);
             } catch (e) {
-              logger.warn(`macOS Info.plist patch skipped: ${e?.message ?? e}`);
+              const msg = e instanceof Error ? e.message : String(e);
+              logger.warn(`macOS Info.plist patch skipped: ${msg}`);
             }
           } finally {
             try {
@@ -260,21 +261,368 @@ export async function decompressBin(): Promise<void> {
     Deno.writeTextFileSync(BIN_VERSION, VERSION);
     logger.success("Extraction complete!");
   } catch (e) {
-    logger.error(`Error during extraction: ${e?.message ?? e}`);
+    const msg = e instanceof Error ? e.message : String(e);
+    logger.error(`Error during extraction: ${msg}`);
     Deno.exit(1);
   }
 }
 
 export async function downloadBin(filename: string): Promise<void> {
-  const url = `https://github.com/f3liz-dev/noraneko-runtime/releases/latest/download/${filename}`;
-  logger.info(`Downloading binary from ${url}`);
+  // Resolve token from environment or .env file at repo root
+  const envPath = path.join(PATHS.root, ".env");
 
-  const resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`HTTP error ${resp.status}`);
+  const readTokenFromEnvFile = (filePath: string): string | null => {
+    try {
+      const raw = Deno.readTextFileSync(filePath);
+      for (const lineRaw of raw.split(/\r?\n/)) {
+        const line = lineRaw.trim();
+        if (!line || line.startsWith("#")) continue;
+        const idx = line.indexOf("=");
+        if (idx === -1) continue;
+        const key = line.slice(0, idx).trim();
+        if (key !== "GITHUB_TOKEN") continue;
+        let value = line.slice(idx + 1).trim();
+        if (
+          (value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
+          value = value.slice(1, -1);
+        }
+        return value;
+      }
+    } catch {
+      // ignore file read/parse errors
+    }
+    return null;
+  };
+
+  let token = Deno.env.get("GITHUB_TOKEN") ?? "";
+  if (!token && exists(envPath)) {
+    const fromFile = readTokenFromEnvFile(envPath) ?? "";
+    if (fromFile) {
+      token = fromFile;
+    }
   }
-  const data = new Uint8Array(await resp.arrayBuffer());
-  await Deno.writeFile(filename, data);
 
-  logger.success(`Downloaded binary to ${filename}`);
+  if (exists(envPath) && !token) {
+    const err =
+      "GITHUB_TOKEN is required because .env exists at repository root.";
+    logger.error(
+      `${err} Please set an environment variable or put GITHUB_TOKEN in .env.`,
+    );
+    throw new Error(err);
+  }
+
+  const OWNER = "Floorp-Projects";
+  const REPO = "Floorp-runtime";
+  const TARGET_RUN_NAME = "Daily Runtime Build (Debug)";
+
+  const baseHeaders: HeadersInit = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  type GitHubWorkflowRun = {
+    id: number;
+    run_number: number;
+    name: string;
+    status: string;
+    conclusion: string;
+    updated_at?: string;
+    created_at?: string;
+  };
+  type GitHubListRuns = { workflow_runs: GitHubWorkflowRun[] };
+  type GitHubArtifact = { id: number; name: string; updated_at?: string };
+  type GitHubListArtifacts = { artifacts: GitHubArtifact[] };
+
+  const jsonFetch = async <T>(url: string): Promise<T> => {
+    const resp = await fetch(url, { headers: baseHeaders });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status} for ${url}`);
+    }
+    return (await resp.json()) as T;
+  };
+
+  logger.info(
+    `Searching latest successful workflow run '${TARGET_RUN_NAME}' in ${OWNER}/${REPO}`,
+  );
+
+  // 1) Find latest successful run with the specified name
+  const runs = await jsonFetch<GitHubListRuns>(
+    `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs?per_page=50`,
+  );
+  const workflowRuns: GitHubWorkflowRun[] = Array.isArray(runs?.workflow_runs)
+    ? runs.workflow_runs
+    : [];
+  const candidateRuns = workflowRuns
+    .filter(
+      (r) =>
+        r?.name === TARGET_RUN_NAME &&
+        r?.status === "completed" &&
+        r?.conclusion === "success",
+    )
+    .sort((a, b) => {
+      const at = Date.parse(a?.updated_at ?? a?.created_at ?? "");
+      const bt = Date.parse(b?.updated_at ?? b?.created_at ?? "");
+      return bt - at;
+    });
+
+  if (!candidateRuns.length) {
+    throw new Error(`No successful runs found for '${TARGET_RUN_NAME}'.`);
+  }
+
+  const run = candidateRuns[0];
+  logger.info(`Using run id=${run.id}, number=${run.run_number}`);
+
+  // 2) List artifacts for the run
+  const artifactsResp = await jsonFetch<GitHubListArtifacts>(
+    `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${run.id}/artifacts?per_page=100`,
+  );
+  const artifacts: GitHubArtifact[] = Array.isArray(artifactsResp?.artifacts)
+    ? artifactsResp.artifacts
+    : [];
+  if (!artifacts.length) {
+    throw new Error("No artifacts found in the selected workflow run.");
+  }
+
+  // Helper: expected base name without extension(s)
+  const toBaseName = (name: string): string => {
+    if (name.endsWith(".tar.xz")) return name.slice(0, -8); // len(".tar.xz")=8
+    const ext = path.extname(name);
+    return ext ? name.slice(0, -ext.length) : name;
+  };
+  const expectedBase = toBaseName(filename).toLowerCase();
+
+  // Try best-match by equality/containment and platform hints
+  const nameMatches = (artifactName: string): number => {
+    const n = artifactName.toLowerCase();
+    let score = 0;
+    if (n === expectedBase) score += 100;
+    if (expectedBase.includes(n)) score += 50;
+    if (n.includes(expectedBase)) score += 40;
+    // Platform hints
+    switch (PLATFORM) {
+      case "windows":
+        if (n.includes("win")) score += 5;
+        if (n.includes("windows")) score += 10;
+        break;
+      case "linux":
+        if (n.includes("linux")) score += 10;
+        break;
+      case "darwin":
+        if (n.includes("mac") || n.includes("darwin")) score += 10;
+        break;
+    }
+    return score;
+  };
+
+  const picked: GitHubArtifact | undefined =
+    artifacts
+      .map((a) => ({ a, score: nameMatches(a?.name ?? "") }))
+      .sort((x, y) => y.score - x.score)[0]?.a ?? artifacts[0];
+
+  if (!picked) {
+    throw new Error("Failed to pick an artifact.");
+  }
+
+  logger.info(`Selected artifact: ${picked.name} (id=${picked.id})`);
+
+  // 3) Download artifact (zip)
+  const zipUrl = `https://api.github.com/repos/${OWNER}/${REPO}/actions/artifacts/${picked.id}/zip`;
+  const binHeaders: HeadersInit = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  logger.info(`Downloading artifact: ${zipUrl}`);
+  const zipResp = await fetch(zipUrl, {
+    headers: binHeaders,
+    redirect: "follow",
+  });
+  if (!zipResp.ok) {
+    throw new Error(`HTTP ${zipResp.status} while downloading artifact zip`);
+  }
+
+  // Helper: stream response to file with progress logs
+  const streamToFile = async (
+    resp: Response,
+    outPath: string,
+    label: string,
+    rewritePrevLogLine = false,
+  ): Promise<void> => {
+    const total = Number(resp.headers.get("content-length") ?? "0");
+    const encoder = new TextEncoder();
+    const upOne = "\x1b[1A";
+    const clearLine = "\x1b[2K";
+    const logPrefix = "[initializer] INFO: ";
+    const writeProgress = async (text: string) => {
+      if (rewritePrevLogLine) {
+        const line = `${upOne}${clearLine}${logPrefix}${text}\n`;
+        await Deno.stdout.write(encoder.encode(line));
+      } else {
+        logger.info(text);
+      }
+    };
+    try {
+      const outDir = path.dirname(outPath);
+      try {
+        if (outDir && outDir !== ".") {
+          await Deno.mkdir(outDir, { recursive: true });
+        }
+      } catch {
+        // ignore
+      }
+      const file = await Deno.open(outPath, {
+        create: true,
+        write: true,
+        truncate: true,
+      });
+      try {
+        const reader = resp.body?.getReader();
+        if (!reader) {
+          const buf = new Uint8Array(await resp.arrayBuffer());
+          await file.write(buf);
+          return;
+        }
+        let downloaded = 0;
+        let lastPct = -1;
+        let lastTime = 0;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) {
+            await file.write(value);
+            downloaded += value.byteLength;
+            const now = Date.now();
+            if (total > 0) {
+              const pct = Math.floor((downloaded / total) * 100);
+              if (pct !== lastPct && (pct % 5 === 0 || now - lastTime > 1000)) {
+                lastPct = pct;
+                lastTime = now;
+                await writeProgress(
+                  `${label}: ${pct}% (${(downloaded / 1048576).toFixed(1)}MB/${(total / 1048576).toFixed(1)}MB)`,
+                );
+              }
+            } else if (now - lastTime > 1000) {
+              lastTime = now;
+              await writeProgress(
+                `${label}: ${(downloaded / 1048576).toFixed(1)}MB`,
+              );
+            }
+          }
+        }
+      } finally {
+        file.close();
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(`Failed to write ${outPath}: ${msg}`);
+    }
+  };
+
+  // 4) If the expected target is a .zip, save as-is (nested unzip is already handled later).
+  //    Otherwise, unzip and extract the inner file with the expected extension/name.
+  const isZipExpected = filename.toLowerCase().endsWith(".zip");
+  if (isZipExpected) {
+    await streamToFile(
+      zipResp,
+      path.resolve(filename),
+      "Downloading artifact",
+      true,
+    );
+    logger.success(`Downloaded artifact zip to ${filename}`);
+    return;
+  }
+
+  // Non-zip expected (e.g., .tar.xz, .dmg): extract inner file from artifact zip.
+  // Write the artifact zip to a temp file
+  const tmpZipPath = path.resolve(`_dist/temp_artifact_${Date.now()}.zip`);
+  const tmpExtractDir = `_dist/temp_artifact_extract_${Date.now()}`;
+  try {
+    await Deno.mkdir(path.dirname(tmpZipPath), { recursive: true });
+  } catch {
+    // ignore
+  }
+  await streamToFile(zipResp, tmpZipPath, "Downloading artifact", true);
+  await Deno.mkdir(tmpExtractDir);
+
+  try {
+    // Extract artifact zip
+    switch (PLATFORM) {
+      case "windows":
+        try {
+          runCommand("tar", ["-xf", tmpZipPath, "-C", tmpExtractDir]);
+        } catch {
+          runCommand("powershell", [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            `Expand-Archive -LiteralPath '${tmpZipPath}' -DestinationPath '${tmpExtractDir}' -Force`,
+          ]);
+        }
+        break;
+      case "darwin":
+      case "linux":
+        runCommand("unzip", ["-q", tmpZipPath, "-d", tmpExtractDir]);
+        break;
+    }
+
+    // Recursively find the intended inner file
+    const wantedExt = filename.endsWith(".tar.xz")
+      ? ".tar.xz"
+      : path.extname(filename);
+
+    let pickedInner: string | null = null;
+    const stack: string[] = [tmpExtractDir];
+    while (stack.length) {
+      const dir = stack.pop()!;
+      for (const entry of Deno.readDirSync(dir)) {
+        const p = path.join(dir, entry.name);
+        if (entry.isDirectory) {
+          stack.push(p);
+          continue;
+        }
+        // Prefer exact filename
+        if (entry.name === filename) {
+          pickedInner = p;
+          break;
+        }
+        // Next, prefer extension match
+        if (wantedExt && entry.name.endsWith(wantedExt)) {
+          pickedInner ??= p;
+        }
+      }
+      if (pickedInner) break;
+    }
+
+    if (!pickedInner) {
+      throw new Error(
+        `Inner file with expected extension '${wantedExt}' not found in artifact.`,
+      );
+    }
+
+    // Move/copy to requested filename at CWD
+    const destPath = path.resolve(filename);
+    try {
+      Deno.copyFileSync(pickedInner, destPath);
+    } catch {
+      // fallback to read/write
+      const data = Deno.readFileSync(pickedInner);
+      Deno.writeFileSync(destPath, data);
+    }
+    logger.success(`Downloaded binary to ${filename}`);
+  } finally {
+    // Cleanup temp
+    try {
+      Deno.removeSync(tmpZipPath);
+    } catch {
+      // ignore
+    }
+    try {
+      Deno.removeSync(tmpExtractDir, { recursive: true });
+    } catch {
+      // ignore
+    }
+  }
 }
