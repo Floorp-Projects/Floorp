@@ -304,13 +304,36 @@ export async function downloadBin(filename: string): Promise<void> {
     }
   }
 
-  if (exists(envPath) && !token) {
-    const err =
-      "GITHUB_TOKEN is required because .env exists at repository root.";
-    logger.error(
-      `${err} Please set an environment variable or put GITHUB_TOKEN in .env.`,
-    );
-    throw new Error(err);
+  // Enhanced error handling for missing token
+  if (!token) {
+    const hasEnvFile = exists(envPath);
+    let errorMessage =
+      "GITHUB_TOKEN is required to download artifacts from GitHub Actions.\n\n";
+
+    if (hasEnvFile) {
+      errorMessage +=
+        "A .env file exists at the repository root, but GITHUB_TOKEN is not set.\n";
+      errorMessage += "Please add the following line to your .env file:\n";
+      errorMessage += "  GITHUB_TOKEN=your_token_here\n\n";
+    } else {
+      errorMessage += "No .env file found at the repository root.\n";
+      errorMessage +=
+        "You can set GITHUB_TOKEN in one of the following ways:\n\n";
+      errorMessage += "1. Create a .env file at the repository root with:\n";
+      errorMessage += "   GITHUB_TOKEN=your_token_here\n\n";
+    }
+
+    errorMessage += "2. Set it as an environment variable:\n";
+    errorMessage += "   export GITHUB_TOKEN=your_token_here\n\n";
+    errorMessage += "To create a GitHub token:\n";
+    errorMessage += "  1. Go to https://github.com/settings/tokens\n";
+    errorMessage += "  2. Generate a new token (classic)\n";
+    errorMessage +=
+      "  3. Select 'public_repo' scope (or 'repo' for private repos)\n";
+    errorMessage += "  4. Copy the token and set it as described above";
+
+    logger.info(errorMessage);
+    throw new Error("GITHUB_TOKEN is required but not set.");
   }
 
   const OWNER = "Floorp-Projects";
@@ -339,6 +362,21 @@ export async function downloadBin(filename: string): Promise<void> {
   const jsonFetch = async <T>(url: string): Promise<T> => {
     const resp = await fetch(url, { headers: baseHeaders });
     if (!resp.ok) {
+      // Enhanced error handling for authentication errors
+      if (resp.status === 401) {
+        const errorMessage =
+          "Authentication failed. Your GITHUB_TOKEN may be invalid or expired.\n" +
+          "Please verify your token at https://github.com/settings/tokens\n" +
+          "and ensure it has the 'public_repo' scope (or 'repo' for private repos).";
+        logger.error(errorMessage);
+        throw new Error(`HTTP ${resp.status}: Authentication failed`);
+      } else if (resp.status === 403) {
+        const errorMessage =
+          "Access forbidden. Your GITHUB_TOKEN may not have sufficient permissions.\n" +
+          "Please ensure your token has the 'public_repo' scope (or 'repo' for private repos).";
+        logger.error(errorMessage);
+        throw new Error(`HTTP ${resp.status}: Access forbidden`);
+      }
       throw new Error(`HTTP ${resp.status} for ${url}`);
     }
     return (await resp.json()) as T;
@@ -394,26 +432,100 @@ export async function downloadBin(filename: string): Promise<void> {
   };
   const expectedBase = toBaseName(filename).toLowerCase();
 
+  // Normalize platform names for matching (mac/macos are equivalent)
+  const normalizePlatform = (name: string): string => {
+    return name.replace(/\bmac\b/g, "macos").replace(/\bmac-os\b/g, "macos");
+  };
+  const normalizedExpectedBase = normalizePlatform(expectedBase);
+
+  // Extract expected architecture from filename
+  const getExpectedArchitecture = (): string | null => {
+    const parts = expectedBase.split("-");
+    const archIndex = parts.findIndex((p) =>
+      ["universal", "x86_64", "aarch64", "x64", "arm64"].includes(p),
+    );
+    return archIndex >= 0 ? parts[archIndex] : null;
+  };
+  const expectedArch = getExpectedArchitecture();
+
   // Try best-match by equality/containment and platform hints
   const nameMatches = (artifactName: string): number => {
     const n = artifactName.toLowerCase();
+    const normalized = normalizePlatform(n);
     let score = 0;
-    if (n === expectedBase) score += 100;
-    if (expectedBase.includes(n)) score += 50;
-    if (n.includes(expectedBase)) score += 40;
-    // Platform hints
-    switch (PLATFORM) {
-      case "windows":
-        if (n.includes("win")) score += 5;
-        if (n.includes("windows")) score += 10;
-        break;
-      case "linux":
-        if (n.includes("linux")) score += 10;
-        break;
-      case "darwin":
-        if (n.includes("mac") || n.includes("darwin")) score += 10;
-        break;
+
+    // Exact match (case-insensitive, with platform normalization)
+    if (normalized === normalizedExpectedBase) {
+      score += 1000;
+      return score;
     }
+
+    // Contains expected base name (high priority, with normalization)
+    if (normalized.includes(normalizedExpectedBase)) {
+      score += 100;
+    }
+
+    // Expected base contains artifact name (lower priority)
+    if (normalizedExpectedBase.includes(normalized)) {
+      score += 50;
+    }
+
+    // Check for key components of expected filename
+    const expectedParts = normalizedExpectedBase.split("-");
+    const artifactParts = normalized.split("-");
+
+    // Bonus for matching key parts (branding, platform, architecture, "moz-artifact")
+    let matchedParts = 0;
+    for (const part of expectedParts) {
+      if (part && artifactParts.includes(part)) {
+        matchedParts++;
+      }
+    }
+    if (matchedParts >= 3) {
+      score += 30; // Significant overlap
+    }
+
+    // Architecture matching bonus (critical for macOS universal)
+    if (expectedArch) {
+      const artifactPartsLower = n.split("-");
+      if (artifactPartsLower.includes(expectedArch)) {
+        score += 50; // Strong bonus for matching architecture
+      } else if (expectedArch === "universal") {
+        // Penalty for non-universal when universal is expected
+        if (
+          artifactPartsLower.includes("x86_64") ||
+          artifactPartsLower.includes("aarch64")
+        ) {
+          score -= 30; // Penalty for specific architecture when universal is expected
+        }
+      }
+    }
+
+    // Penalty for unwanted suffixes (e.g., -sdk, -debug, etc.)
+    const unwantedSuffixes = ["-sdk", "-debug", "-test", "-dev"];
+    for (const suffix of unwantedSuffixes) {
+      if (n.includes(suffix) && !expectedBase.includes(suffix)) {
+        score -= 20; // Penalty for unwanted suffixes
+      }
+    }
+
+    // Platform hints (lower weight, only if no good match yet)
+    if (score < 50) {
+      switch (PLATFORM) {
+        case "windows":
+          if (n.includes("windows")) score += 5;
+          else if (n.includes("win")) score += 2;
+          break;
+        case "linux":
+          if (n.includes("linux")) score += 5;
+          break;
+        case "darwin":
+          if (normalized.includes("macos")) score += 5;
+          else if (n.includes("mac") || n.includes("darwin")) score += 2;
+          break;
+      }
+    }
+
     return score;
   };
 
@@ -441,6 +553,25 @@ export async function downloadBin(filename: string): Promise<void> {
     redirect: "follow",
   });
   if (!zipResp.ok) {
+    // Enhanced error handling for authentication errors during download
+    if (zipResp.status === 401) {
+      const errorMessage =
+        "Authentication failed while downloading artifact. Your GITHUB_TOKEN may be invalid or expired.\n" +
+        "Please verify your token at https://github.com/settings/tokens\n" +
+        "and ensure it has the 'public_repo' scope (or 'repo' for private repos).";
+      logger.error(errorMessage);
+      throw new Error(
+        `HTTP ${zipResp.status}: Authentication failed while downloading artifact`,
+      );
+    } else if (zipResp.status === 403) {
+      const errorMessage =
+        "Access forbidden while downloading artifact. Your GITHUB_TOKEN may not have sufficient permissions.\n" +
+        "Please ensure your token has the 'public_repo' scope (or 'repo' for private repos).";
+      logger.error(errorMessage);
+      throw new Error(
+        `HTTP ${zipResp.status}: Access forbidden while downloading artifact`,
+      );
+    }
     throw new Error(`HTTP ${zipResp.status} while downloading artifact zip`);
   }
 

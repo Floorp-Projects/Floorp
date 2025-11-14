@@ -147,6 +147,21 @@ browser[type="content"] > html {
   border: none !important;
 }
 
+/* Hide nav-bar in fullscreen mode (excluding macOS native fullscreen) */
+/* DOM fullscreen (e.g., YouTube video fullscreen) */
+:root[inDOMFullscreen] #nav-bar,
+/* Browser window fullscreen (F11) */
+:root[inFullscreen]:not([macOSNativeFullscreen]) #nav-bar,
+#navigator-toolbox[inFullscreen]:not([macOSNativeFullscreen]) #nav-bar {
+  display: none !important;
+}
+
+/* Limit nav-bar height to 30px in macOS native fullscreen */
+:root[macOSNativeFullscreen] #nav-bar,
+:root[inFullscreen][macOSNativeFullscreen] #nav-bar {
+  max-height: 30px !important;
+}
+
 /* Floorp View Tab */
 .tabbrowser-tab[label="Floorp View"] {
   display: none;
