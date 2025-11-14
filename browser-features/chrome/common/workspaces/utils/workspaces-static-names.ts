@@ -24,3 +24,10 @@ export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";
  * Observer topic used to request workspace initialization.
  */
 export const WORKSPACES_INIT_OBSERVER_TOPIC = "floorp.workspaces.initialize";
+
+/**
+ * One-shot pref to mark that the browser exited due to an empty workspace,
+ * used to collapse duplicated startup "new" tabs on next launch.
+ */
+export const WORKSPACE_PENDING_EXIT_PREF_NAME =
+  "floorp.workspaces.pending-exit-from-workspace-empty";
