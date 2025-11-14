@@ -6,6 +6,7 @@
   border-inline: 0 !important;
   border-inline-style: none !important;
   border-right-width: 0 !important;
+  z-index: 1000 !important;
 }
 
 #urlbar {
@@ -24,4 +25,8 @@
     position: unset !important;
     top: 0 !important;
   }
+}
+
+#nav-bar .titlebar-buttonbox-container {
+  display: none !important;
 }
