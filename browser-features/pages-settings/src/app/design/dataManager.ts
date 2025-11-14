@@ -202,6 +202,7 @@ export async function saveDesignSettings(
       },
       bookmarkBar: {
         focusExpand: settings.bookmarkBarFocusExpand,
+        position: settings.bookmarkBarPosition,
       },
       qrCode: {
         disableButton: settings.disableQRCodeButton,
@@ -256,8 +257,9 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,
-    bookmarkBarFocusExpand: data.uiCustomization.bookmarkBar?.focusExpand ??
-      false,
+    bookmarkBarFocusExpand:
+      data.uiCustomization.bookmarkBar?.focusExpand ?? false,
+    bookmarkBarPosition: data.uiCustomization.bookmarkBar?.position ?? "top",
     disableQRCodeButton: data.uiCustomization.qrCode?.disableButton ?? false,
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
   };

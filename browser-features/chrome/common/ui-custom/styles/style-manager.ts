@@ -16,6 +16,7 @@ import stgLikeFloorpWorkspacesCSS from "./css/options/STG-like-floorp-workspaces
 import multirowTabShowNewtabInTabbarCSS from "./css/options/multirowtab-show-newtab-button-in-tabbar.css?inline";
 import multirowTabShowNewtabAtEndCSS from "./css/options/multirowtab-show-newtab-button-at-end.css?inline";
 import bookmarkbarFocusExpandCSS from "./css/options/bookmarkbar_focus_expand.css?inline";
+import bookmarkbarBottomCSS from "./css/options/bookmarkbar_bottom.css?inline";
 
 export class StyleManager {
   private styleElements: Map<string, HTMLStyleElement> = new Map();
@@ -115,6 +116,12 @@ export class StyleManager {
         "floorp-bookmarkbar-focus-expand",
         bookmarkbarFocusExpandCSS,
         config().uiCustomization.bookmarkBar?.focusExpand ?? false,
+      );
+
+      this.applyStyle(
+        "floorp-bookmarkbar-bottom",
+        bookmarkbarBottomCSS,
+        (config().uiCustomization.bookmarkBar?.position ?? "top") === "bottom",
       );
     });
   }

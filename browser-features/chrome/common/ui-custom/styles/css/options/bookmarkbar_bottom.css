@@ -1,0 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Minimal styling for bookmark bar when moved to bottom via DOM manipulation */
+/* The bookmark bar is physically moved to the bottom by dom-manipulator.ts */
+
+/* Ensure bookmark bar displays properly when at bottom */
+#PersonalToolbar {
+  width: 100% !important;
+}

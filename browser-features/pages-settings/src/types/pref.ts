@@ -71,6 +71,7 @@ export const zDesignFormData = t.type({
   multirowTabNewtabInside: t.boolean,
   disableFloorpStart: t.boolean,
   bookmarkBarFocusExpand: t.boolean,
+  bookmarkBarPosition: t.union([t.literal("top"), t.literal("bottom")]),
   disableQRCodeButton: t.boolean,
 });
 

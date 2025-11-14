@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "ブックマークバー",
+                "position": "位置",
+                "top": "上",
+                "bottom": "下",
                 "focusExpand": "カーソルを合わせたときにブックマークバーを広げる"
             }
         }

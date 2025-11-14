@@ -102,6 +102,7 @@ function getOldUICustomizationConfig() {
           "floorp.bookmarks.bar.focus.mode",
           false,
         ),
+        position: "top" as "bottom" | "top",
       },
       qrCode: {
         disableButton: false,
@@ -237,6 +238,7 @@ function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         },
         bookmarkBar: {
           focusExpand: false,
+          position: "top" as "bottom" | "top",
         },
         qrCode: {
           disableButton: false,
@@ -270,6 +272,13 @@ function createConfig(): [
     const parsedConfig = JSON.parse(configStr);
     // Merge existing config with defaults to tolerate newly added fields
     const merged = deepMerge(defaultConfig, parsedConfig);
+    // Ensure backward compatibility: set default position if missing
+    if (
+      merged.uiCustomization?.bookmarkBar &&
+      !merged.uiCustomization.bookmarkBar.position
+    ) {
+      merged.uiCustomization.bookmarkBar.position = "top";
+    }
     const mergedResult = zFloorpDesignConfigs.decode(merged);
     initialConfig = isRight(mergedResult) ? mergedResult.right : defaultConfig;
   } catch (e) {
@@ -286,6 +295,13 @@ function createConfig(): [
       );
       const parsedConfig = JSON.parse(configStr);
       const merged = deepMerge(defaultConfig, parsedConfig);
+      // Ensure backward compatibility: set default position if missing
+      if (
+        merged.uiCustomization?.bookmarkBar &&
+        !merged.uiCustomization.bookmarkBar.position
+      ) {
+        merged.uiCustomization.bookmarkBar.position = "top";
+      }
       const mergedResult = zFloorpDesignConfigs.decode(merged);
       if (isRight(mergedResult)) {
         setConfig(mergedResult.right);

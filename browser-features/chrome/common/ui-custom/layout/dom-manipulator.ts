@@ -66,7 +66,8 @@ function mirrorRecordToTarget(
 ): void {
   const target =
     explicitTarget ??
-    (toolboxMirrorState.mirrorTarget ?? toolboxMirrorState.toolbox);
+    toolboxMirrorState.mirrorTarget ??
+    toolboxMirrorState.toolbox;
   const { toolbox } = toolboxMirrorState;
   if (!target || target === toolbox) {
     return;
@@ -92,7 +93,8 @@ function unmirrorRecordFromTarget(
 ): void {
   const target =
     explicitTarget ??
-    (toolboxMirrorState.mirrorTarget ?? toolboxMirrorState.toolbox);
+    toolboxMirrorState.mirrorTarget ??
+    toolboxMirrorState.toolbox;
   const { toolbox } = toolboxMirrorState;
   if (!target || target === toolbox) {
     return;
@@ -260,7 +262,10 @@ export function setNavigatorToolboxMirrorTarget(
 }
 
 function updateForwardingTarget(target: EventTarget | null): void {
-  if (toolboxMirrorState.forwarderTarget && toolboxMirrorState.forwarderHandler) {
+  if (
+    toolboxMirrorState.forwarderTarget &&
+    toolboxMirrorState.forwarderHandler
+  ) {
     for (const type of FORWARDED_EVENT_TYPES) {
       toolboxMirrorState.forwarderTarget.removeEventListener(
         type,
@@ -315,6 +320,29 @@ function forwardEventToNavigatorToolbox(
   });
 
   try {
+    // Command events from bookmark buttons are handled in attachBookmarkBarEventForwarder
+    // Skip processing here to avoid duplicate handling
+    if (clone.type === "command") {
+      const originalTarget = event.target as Element | null;
+      if (
+        originalTarget &&
+        originalTarget.isConnected &&
+        originalTarget.classList.contains("bookmark-item")
+      ) {
+        // Already handled in attachBookmarkBarEventForwarder, skip here
+        return;
+      }
+    }
+
+    // For other events or if original target dispatch failed, dispatch from toolbox
+    // Make sure the event bubbles so listeners can catch it
+    if (!clone.bubbles) {
+      Object.defineProperty(clone, "bubbles", {
+        value: true,
+        writable: false,
+        configurable: true,
+      });
+    }
     toolbox.dispatchEvent(clone);
   } catch (error) {
     console.warn(
@@ -325,8 +353,9 @@ function forwardEventToNavigatorToolbox(
 }
 
 function cloneEventForForward(event: Event): Event | null {
+  // Ensure events bubble so they can be caught by listeners
   const commonInit: EventInit = {
-    bubbles: event.bubbles,
+    bubbles: true, // Force bubbling for forwarded events
     cancelable: event.cancelable,
     composed: event.composed,
   };
@@ -389,10 +418,18 @@ function cloneEventForForward(event: Event): Event | null {
   }
 
   if (event instanceof CustomEvent) {
-    return new CustomEvent(event.type, {
+    // For command events, preserve the original event structure
+    const customEvent = new CustomEvent(event.type, {
       ...commonInit,
       detail: event.detail,
     });
+    // Preserve target for command events so navigator-toolbox listeners can identify the source
+    Object.defineProperty(customEvent, "originalTarget", {
+      value: event.target,
+      enumerable: false,
+      configurable: true,
+    });
+    return customEvent;
   }
 
   return new Event(event.type, commonInit);
@@ -422,6 +459,111 @@ function preserveEventState(original: Event, clone: Event): void {
   if ((original as Record<string, unknown>).defaultPrevented) {
     clone.preventDefault();
   }
+}
+
+/**
+ * Loads a bookmark URI using gBrowser.loadURI or gBrowser.addTab
+ * @param uri The bookmark URI to load
+ * @param mouseEvent The mouse event to determine modifier keys
+ * @returns true if the URI was loaded successfully, false otherwise
+ */
+function loadBookmarkURI(uri: string, mouseEvent: MouseEvent): boolean {
+  const win = window as typeof window & {
+    gBrowser?: {
+      loadURI: (uri: unknown, options?: unknown) => void;
+      addTab: (
+        uri: string,
+        options?: {
+          triggeringPrincipal?: unknown;
+          inBackground?: boolean;
+        },
+      ) => unknown;
+    };
+  };
+  const services = globalThis as typeof globalThis & {
+    Services?: {
+      scriptSecurityManager?: {
+        getSystemPrincipal: () => unknown;
+      };
+      io?: {
+        newURI: (uri: string) => unknown;
+      };
+    };
+  };
+
+  if (!win.gBrowser || !services.Services) {
+    return false;
+  }
+
+  try {
+    // Determine how to open the bookmark based on modifier keys
+    // Ctrl/Cmd/Shift opens in new tab
+    const openInNewTab =
+      mouseEvent.ctrlKey || mouseEvent.metaKey || mouseEvent.shiftKey;
+
+    const principal =
+      services.Services.scriptSecurityManager?.getSystemPrincipal();
+    const uriObject = services.Services.io?.newURI(uri);
+
+    if (openInNewTab && win.gBrowser.addTab) {
+      // Open in new tab
+      win.gBrowser.addTab(uri, {
+        triggeringPrincipal: principal,
+        inBackground: false,
+      });
+    } else if (win.gBrowser.loadURI && uriObject) {
+      // Open in current tab - need to convert string URI to URI object
+      win.gBrowser.loadURI(uriObject, {
+        triggeringPrincipal: principal,
+      });
+    }
+
+    console.debug(
+      `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Loaded bookmark URI directly`,
+      { uri, openInNewTab },
+    );
+
+    return true;
+  } catch (err) {
+    console.warn(
+      `${DOM_LAYOUT_MANAGER_DEBUG_PREFIX} Failed to load bookmark URI`,
+      err,
+    );
+    return false;
+  }
+}
+
+/**
+ * Handles command events from bookmark buttons
+ * @param event The command event
+ * @returns true if the event was handled, false otherwise
+ */
+function handleBookmarkCommandEvent(event: Event): boolean {
+  const target = event.target as Element | null;
+  if (!target || !target.classList.contains("bookmark-item")) {
+    return false;
+  }
+
+  // Get bookmark URI from the button's _placesNode property
+  const bookmarkButton = target as XULElement & {
+    _placesNode?: { uri?: string };
+  };
+  const uri = bookmarkButton._placesNode?.uri;
+  if (!uri) {
+    return false;
+  }
+
+  const mouseEvent = event as MouseEvent;
+  const success = loadBookmarkURI(uri, mouseEvent);
+
+  if (success) {
+    // Prevent default behavior and stop propagation since we handled it
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+  }
+
+  return success;
 }
 
 export class DOMLayoutManager {
@@ -466,8 +608,20 @@ export class DOMLayoutManager {
     return element;
   }
 
+  private get appContent(): XULElement {
+    const element = document?.getElementById("appcontent") as XULElement;
+    return element;
+  }
+
+  // Store original bookmark bar position for proper restoration
+  private originalBookmarkBarParent: Element | null = null;
+  private originalBookmarkBarNextSibling: Element | null = null;
+  private isBookmarkBarAtBottom = false;
+  private bookmarkBarForwarderHandler: ((event: Event) => void) | null = null;
+
   setupDOMEffects() {
     this.setupNavbarPosition();
+    this.setupBookmarkBarPosition();
   }
 
   /**
@@ -611,6 +765,20 @@ export class DOMLayoutManager {
       setNavigatorToolboxMirrorTarget(navbar);
       this.attachFallbackNavbarHandlers(navbar);
 
+      // If bookmark bar is also at bottom, ensure it's positioned after navbar
+      // and attach event forwarder so bookmark bar buttons work
+      if (this.isBookmarkBarAtBottom) {
+        const bookmarkBar = this.personalToolbar;
+        if (bookmarkBar && bookmarkBar.isConnected) {
+          // Move bookmark bar after navbar if it's not already there
+          if (bookmarkBar.previousElementSibling !== navbar) {
+            navbar.after(bookmarkBar);
+          }
+          // Ensure bookmark bar event forwarder is attached
+          this.attachBookmarkBarEventForwarder(bookmarkBar);
+        }
+      }
+
       this.removeUrlbarPopoverAttribute();
 
       // Hide the floorp tabbar window manage container when navbar is at bottom
@@ -707,7 +875,10 @@ export class DOMLayoutManager {
       return;
     }
 
-    if (this.fallbackNavbarTarget === navbar && this.fallbackNavbarHandlers.length > 0) {
+    if (
+      this.fallbackNavbarTarget === navbar &&
+      this.fallbackNavbarHandlers.length > 0
+    ) {
       return;
     }
 
@@ -1213,5 +1384,261 @@ export class DOMLayoutManager {
       ) as unknown as number;
       checkReady();
     });
+  }
+
+  private setupBookmarkBarPosition() {
+    createEffect(() => {
+      const currentPosition =
+        config().uiCustomization.bookmarkBar?.position ?? "top";
+      // Track navbar position to ensure bookmark bar is placed correctly
+      // This creates a dependency so effect re-runs when navbar position changes
+      const _navbarPosition = config().uiCustomization.navbar.position;
+      try {
+        if (currentPosition === "bottom") {
+          this.moveBookmarkBarToBottom();
+        } else {
+          this.moveBookmarkBarToTop();
+        }
+      } catch (error: unknown) {
+        console.error(
+          `${DOMLayoutManager.DEBUG_PREFIX} Error in bookmark bar position setup:`,
+          error,
+        );
+      }
+    });
+  }
+
+  private moveBookmarkBarToBottom() {
+    if (this.isBookmarkBarAtBottom) {
+      return;
+    }
+
+    const bookmarkBar = this.personalToolbar;
+    const fullscreenWrapper = this.fullscreenWrapper;
+    const statusbar = document?.getElementById(
+      "nora-statusbar",
+    ) as XULElement | null;
+    const navbar = this.navBar;
+
+    if (!bookmarkBar) {
+      console.warn(
+        `${DOMLayoutManager.DEBUG_PREFIX} PersonalToolbar element not found`,
+      );
+      return;
+    }
+
+    // Find insertion anchor: navbar (if at bottom) > statusbar > fullscreenWrapper
+    // Check if navbar is actually at bottom by checking its parent and position
+    const navbarAtBottom =
+      navbar &&
+      navbar.isConnected &&
+      (this.isNavbarAtBottom ||
+        (navbar.parentElement !== this.navigatorToolbox &&
+          navbar.parentElement !== null));
+
+    let insertionAnchor: XULElement | null = null;
+    if (navbar && navbar.isConnected && navbarAtBottom) {
+      insertionAnchor = navbar;
+    } else if (statusbar && statusbar.isConnected) {
+      insertionAnchor = statusbar;
+    } else if (fullscreenWrapper) {
+      insertionAnchor = fullscreenWrapper;
+    }
+
+    if (!insertionAnchor) {
+      console.warn(
+        `${DOMLayoutManager.DEBUG_PREFIX} No valid insertion anchor for bookmark bar placement`,
+      );
+      return;
+    }
+
+    try {
+      // Ensure navigator toolbox listener mirroring is installed
+      // This is needed because bookmark bar events may be attached to navigator-toolbox
+      ensureNavigatorToolboxListenerMirroringInstalled();
+
+      // Save original position
+      this.originalBookmarkBarParent = bookmarkBar.parentElement;
+      this.originalBookmarkBarNextSibling = bookmarkBar.nextElementSibling;
+
+      // Move bookmark bar to bottom after insertion anchor
+      // If navbar is at bottom, place bookmark bar after navbar
+      // Keep bookmark bar as a child of navigator-toolbox if possible to preserve event handling
+      const toolbox = this.navigatorToolbox;
+      const shouldKeepInToolbox =
+        toolbox && bookmarkBar.parentElement === toolbox;
+
+      if (navbarAtBottom && insertionAnchor === navbar) {
+        navbar.after(bookmarkBar);
+      } else {
+        insertionAnchor.after(bookmarkBar);
+      }
+      this.isBookmarkBarAtBottom = true;
+
+      // If bookmark bar was moved out of navigator-toolbox, we need event forwarding
+      // If it's still in toolbox (shouldn't happen but handle it), events should work naturally
+      if (!shouldKeepInToolbox || bookmarkBar.parentElement !== toolbox) {
+        console.debug(
+          `${DOMLayoutManager.DEBUG_PREFIX} Bookmark bar moved outside navigator-toolbox, event forwarding required`,
+        );
+      }
+
+      // Set bookmark bar as mirror target if navbar is not at bottom
+      // If navbar is also at bottom, navbar will be the mirror target, but we still need
+      // to forward bookmark bar events to navigator-toolbox
+      if (!navbarAtBottom) {
+        setNavigatorToolboxMirrorTarget(bookmarkBar);
+      } else {
+        // Navbar is at bottom and is the mirror target
+        // We need to forward bookmark bar events to navigator-toolbox
+        // because bookmark bar is outside navigator-toolbox
+        this.attachBookmarkBarEventForwarder(bookmarkBar);
+      }
+    } catch (error: unknown) {
+      console.error(
+        `${DOMLayoutManager.DEBUG_PREFIX} Error in moveBookmarkBarToBottom:`,
+        error,
+      );
+    }
+  }
+
+  private moveBookmarkBarToTop() {
+    if (!this.isBookmarkBarAtBottom) {
+      return;
+    }
+
+    const bookmarkBar = this.personalToolbar;
+    if (!bookmarkBar) {
+      return;
+    }
+
+    // Restore original position
+    if (this.originalBookmarkBarParent) {
+      try {
+        // Detach bookmark bar event forwarder
+        this.detachBookmarkBarEventForwarder();
+
+        // If navbar is at bottom, set it as mirror target, otherwise clear it
+        // setNavigatorToolboxMirrorTarget will automatically handle cleanup
+        if (this.isNavbarAtBottom) {
+          setNavigatorToolboxMirrorTarget(this.navBar);
+        } else {
+          setNavigatorToolboxMirrorTarget(null);
+        }
+
+        if (this.originalBookmarkBarNextSibling) {
+          this.originalBookmarkBarParent.insertBefore(
+            bookmarkBar,
+            this.originalBookmarkBarNextSibling,
+          );
+        } else {
+          this.originalBookmarkBarParent.appendChild(bookmarkBar);
+        }
+        this.isBookmarkBarAtBottom = false;
+        this.originalBookmarkBarParent = null;
+        this.originalBookmarkBarNextSibling = null;
+      } catch (error: unknown) {
+        console.error(
+          `${DOMLayoutManager.DEBUG_PREFIX} Error in moveBookmarkBarToTop:`,
+          error,
+        );
+      }
+    }
+  }
+
+  private attachBookmarkBarEventForwarder(bookmarkBar: XULElement): void {
+    if (!bookmarkBar.isConnected) {
+      return;
+    }
+
+    const toolbox = this.navigatorToolbox;
+    if (!toolbox) {
+      return;
+    }
+
+    // Remove existing forwarder if any
+    this.detachBookmarkBarEventForwarder();
+
+    const handler = (event: Event) => {
+      // Check if event originated from bookmark bar or its children
+      const target = event.target as Element | null;
+      const currentTarget = event.currentTarget as Element | null;
+      if (
+        !target ||
+        (target !== bookmarkBar &&
+          !bookmarkBar.contains(target) &&
+          currentTarget !== bookmarkBar &&
+          (!currentTarget || !bookmarkBar.contains(currentTarget)))
+      ) {
+        return;
+      }
+
+      // For command events from bookmark buttons, directly load the URI using gBrowser.loadURI
+      // This is simpler and more reliable than event forwarding
+      if (event.type === "command") {
+        if (handleBookmarkCommandEvent(event)) {
+          // Event was handled, don't forward to navigator-toolbox
+          return;
+        }
+      }
+
+      // For other events, forward to navigator-toolbox
+      console.debug(
+        `${DOMLayoutManager.DEBUG_PREFIX} Forwarding bookmark bar event: ${event.type}`,
+        { target, currentTarget },
+      );
+      forwardEventToNavigatorToolbox(event, toolbox);
+    };
+
+    // Attach event forwarder for all forwarded event types
+    // Use capture phase to catch events before they bubble
+    // Also listen on the document to catch events from bookmark bar children
+    for (const type of FORWARDED_EVENT_TYPES) {
+      try {
+        bookmarkBar.addEventListener(type, handler, { capture: true });
+        // Also listen on document to catch events that might not bubble
+        if (document) {
+          document.addEventListener(type, handler, { capture: true });
+        }
+      } catch (error) {
+        console.warn(
+          `${DOMLayoutManager.DEBUG_PREFIX} Failed to attach bookmark bar forwarder for ${type}`,
+          error,
+        );
+      }
+    }
+
+    this.bookmarkBarForwarderHandler = handler;
+
+    console.debug(
+      `${DOMLayoutManager.DEBUG_PREFIX} Attached bookmark bar event forwarder`,
+    );
+  }
+
+  private detachBookmarkBarEventForwarder(): void {
+    if (!this.bookmarkBarForwarderHandler) {
+      return;
+    }
+
+    const bookmarkBar = this.personalToolbar;
+    const handler = this.bookmarkBarForwarderHandler;
+    for (const type of FORWARDED_EVENT_TYPES) {
+      try {
+        if (bookmarkBar) {
+          bookmarkBar.removeEventListener(type, handler, { capture: true });
+        }
+        // Also remove from document
+        if (document) {
+          document.removeEventListener(type, handler, { capture: true });
+        }
+      } catch (error) {
+        console.warn(
+          `${DOMLayoutManager.DEBUG_PREFIX} Failed to detach bookmark bar forwarder for ${type}`,
+          error,
+        );
+      }
+    }
+
+    this.bookmarkBarForwarderHandler = null;
   }
 }
