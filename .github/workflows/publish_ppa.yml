@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Linux DEB artifact (PPA) from provided run
-        if: ${{ github.event_name != 'workflow_dispatch' && inputs.artifact_run_id != '' }}
+        if: ${{ inputs.artifact_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           name: floorp-Linux-x64-deb
@@ -51,7 +51,7 @@ jobs:
           path: ~/noraneko-publish/linux-deb
 
       - name: Download Linux DEB artifact (PPA) from current run
-        if: ${{ github.event_name != 'workflow_dispatch' && inputs.artifact_run_id == '' }}
+        if: ${{ inputs.artifact_run_id == '' && inputs.deb_url == '' }}
         uses: actions/download-artifact@v4
         with:
           name: floorp-Linux-x64-deb
@@ -79,6 +79,7 @@ jobs:
         run: |
           set -eux
           NR_VERSION="${{ inputs.nr_version }}"
+          mkdir -p ~/noraneko-publish/linux-deb
           cd ~/noraneko-publish/linux-deb
 
           # If an uploaded zip exists (dist.zip or similar), unzip it to extract the .deb
