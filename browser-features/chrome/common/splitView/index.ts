@@ -3,17 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { CSplitView } from "./splitView";
-import { SplitViewManager } from "./manager";
 import { SplitViewContextMenu } from "./tabContextMenu";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
-//TODO: refactor needed
 @noraComponent(import.meta.hot)
 export default class SplitView extends NoraComponentBase {
   init() {
-    const ctx = new CSplitView();
-    new SplitViewManager(ctx);
-    new SplitViewContextMenu(ctx);
+    new SplitViewContextMenu();
   }
 }

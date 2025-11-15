@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} 日前"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"
+      "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動",
+      "openLinkInWorkspace": "リンクを他のワークスペースで開く",
+      "noOtherWorkspace": "利用できる他のワークスペースがありません"
     },
     "error": {
       "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
@@ -105,16 +107,9 @@
     "toggle": "ステータスバー{{mark}}"
   },
   "splitview": {
-    "title": "分割ビュー",
-    "position": "位置",
-    "position-left": "左",
-    "position-right": "右",
-    "flex-row": "横並び",
-    "flex-column": "縦並び",
-    "remove-button": "現在のビューを解除",
     "tab-context": {
-      "split-tabs": "これらのタブを分割",
-      "split-fixed-tab": "分割して固定表示"
+      "temporarily-unavailable": "分割ビューは一時的に利用できません",
+      "details": "詳細情報"
     }
   },
   "ssb": {

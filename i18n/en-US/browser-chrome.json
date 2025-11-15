@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+      "moveTabToAnotherWorkspace": "Move Tab to Another Workspace",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
@@ -105,16 +107,9 @@
     "toggle": "Status Bar{{mark}}"
   },
   "splitview": {
-    "title": "Split View",
-    "position": "Position",
-    "position-left": "Left",
-    "position-right": "Right",
-    "flex-row": "Row",
-    "flex-column": "Column",
-    "remove-button": "Remove Current View",
     "tab-context": {
-      "split-tabs": "Split Tabs",
-      "split-fixed-tab": "Split to Fixed Tab"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
