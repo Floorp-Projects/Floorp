@@ -46,6 +46,10 @@ on:
         required: false
         default: false
         description: "Skip code signing process"
+    outputs:
+      run_id:
+        description: "Workflow run ID for downstream artifact downloads"
+        value: ${{ jobs.main.outputs.run_id }}
 
 run-name: 📦️ Package ${{ inputs.platform }}${{ inputs.skip_signing && ' (Unsigned)' || '' }}
 jobs:
