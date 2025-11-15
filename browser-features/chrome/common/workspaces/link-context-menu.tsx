@@ -5,7 +5,6 @@
 
 import { render } from "@nora/solid-xul";
 import i18next from "i18next";
-import { For, Show } from "solid-js";
 import type { TWorkspaceID } from "./utils/type.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { workspacesDataStore } from "./data/data.ts";
@@ -20,7 +19,7 @@ export class WorkspacesLinkContextMenu {
   private readonly ctx: WorkspacesService;
   private observer: MutationObserver | null = null;
   private readonly boundUpdateVisibility = () => this.updateVisibility();
-  private readonly contentContextMenu: XULElement | null;
+  private readonly contentContextMenu: XULElement | null = null;
 
   constructor(ctx: WorkspacesService) {
     this.ctx = ctx;
@@ -68,7 +67,7 @@ export class WorkspacesLinkContextMenu {
       this.boundUpdateVisibility,
     );
 
-    window.addEventListener(
+    globalThis.addEventListener(
       "unload",
       () => {
         this.cleanup();
@@ -117,12 +116,12 @@ export class WorkspacesLinkContextMenu {
   }
 
   private updateVisibility() {
-    const menu = document?.getElementById(
-      WORKSPACE_MENU_ID,
-    ) as XULElement | null;
-    const openLink = document?.getElementById(
-      LINK_OPEN_MENU_ID,
-    ) as XULElement | null;
+    const menu = document?.getElementById(WORKSPACE_MENU_ID) as
+      | XULElement
+      | null;
+    const openLink = document?.getElementById(LINK_OPEN_MENU_ID) as
+      | XULElement
+      | null;
 
     if (!menu || !openLink) {
       if (menu) {
@@ -137,11 +136,24 @@ export class WorkspacesLinkContextMenu {
     );
     const hasAlternativeWorkspace = availableTargets.length > 0;
     const hasLink = Boolean(window.gContextMenu?.linkURL);
+    const isOpenLinkHidden = Boolean(
+      openLink.getAttribute("hidden") === "true" ||
+        openLink.hasAttribute("hidden"),
+    );
+    const isOpenLinkDisabled = Boolean(
+      openLink.getAttribute("disabled") === "true" ||
+        (openLink.hasAttribute("disabled") &&
+          openLink.getAttribute("disabled") !== "false"),
+    );
 
-    const shouldHide = openLink.hidden || !hasLink || !hasAlternativeWorkspace;
+    const shouldHide = isOpenLinkHidden || !hasLink || !hasAlternativeWorkspace;
 
     menu.hidden = shouldHide;
-    menu.disabled = openLink.disabled || !hasAlternativeWorkspace;
+    if (isOpenLinkDisabled || !hasAlternativeWorkspace) {
+      menu.setAttribute("disabled", "true");
+    } else {
+      menu.removeAttribute("disabled");
+    }
   }
 
   private populateMenu() {
@@ -153,7 +165,7 @@ export class WorkspacesLinkContextMenu {
     }
 
     while (popup.firstChild) {
-      popup.firstChild.remove();
+      popup.removeChild(popup.firstChild);
     }
 
     const currentTab = window.gBrowser?.selectedTab as XULElement | null;
@@ -165,51 +177,48 @@ export class WorkspacesLinkContextMenu {
       (id) => id !== currentWorkspaceId,
     );
 
-    try {
-      render(() => this.renderMenuItems(order), popup);
-    } catch (error) {
-      const reason = error instanceof Error ? error : new Error(String(error));
-      console.error(
-        "[WorkspacesLinkContextMenu] Failed to render workspace link items.",
-        reason,
-      );
+    if (order.length === 0) {
+      const emptyItem = document?.createXULElement?.("menuitem") as
+        | XULElement
+        | undefined;
+      if (emptyItem) {
+        emptyItem.setAttribute(
+          "label",
+          i18next.t("workspaces.menu.noOtherWorkspace"),
+        );
+        emptyItem.setAttribute("disabled", "true");
+        popup.appendChild(emptyItem);
+      }
+      this.updateVisibility();
+      return;
+    }
+
+    for (const workspaceId of order) {
+      const workspace = this.ctx.getRawWorkspace(workspaceId);
+      if (!workspace) {
+        continue;
+      }
+      const menuitem = document?.createXULElement?.("menuitem") as
+        | XULElement
+        | undefined;
+      if (!menuitem) {
+        continue;
+      }
+      menuitem.classList.add("menuitem-iconic");
+      menuitem.setAttribute("label", workspace.name);
+      const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
+      if (iconUrl) {
+        menuitem.setAttribute("image", iconUrl);
+      } else {
+        menuitem.removeAttribute("image");
+      }
+      menuitem.addEventListener("command", () => {
+        this.openLinkInWorkspace(workspaceId);
+      });
+      popup.appendChild(menuitem);
     }
 
     this.updateVisibility();
-  }
-
-  private renderMenuItems(order: TWorkspaceID[]) {
-    return (
-      <Show
-        when={order.length > 0}
-        fallback={
-          <xul:menuitem
-            disabled="true"
-            label={i18next.t("workspaces.menu.noOtherWorkspace")}
-          />
-        }
-      >
-        <For each={order}>
-          {(id) => {
-            const workspace = this.ctx.getRawWorkspace(id);
-            if (!workspace) {
-              return null;
-            }
-            const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(
-              workspace.icon,
-            );
-            return (
-              <xul:menuitem
-                class="menuitem-iconic"
-                style={iconUrl ? `list-style-image: url(${iconUrl})` : ""}
-                label={workspace.name}
-                onCommand={() => this.openLinkInWorkspace(id)}
-              />
-            );
-          }}
-        </For>
-      </Show>
-    );
   }
 
   private openLinkInWorkspace(workspaceId: TWorkspaceID) {
