@@ -66,32 +66,34 @@
       "move-down": "向下移動此工作區",
       "delete": "刪除工作區",
       "manage": "管理工作區",
-      "archive": "Archive Workspace"
+      "archive": "存檔工作空間"
     },
     "popup": {
       "create-new": "建立新工作區...",
       "manage": "管理工作區",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "顯示已存檔的工作空間",
+      "restore-cancel": "退出還原模式",
+      "restore-title": "已存檔的工作空間",
+      "restore-loading": "載入已存檔的工作空間…",
+      "restore-empty": "沒有已存檔的工作空間",
+      "restore-error": "載入存檔工作空間失敗",
+      "restore-tooltip": "切換還原模式",
+      "restore-item": "還原 \"{{name}}\"",
+      "restore-delete-tooltip": "刪除此存檔",
+      "restore-tab-count": "{{count}} 分頁",
+      "restore-tab-count_plural": "{{count}} 分頁",
+      "restore-time-just-now": "現在",
+      "restore-time-minutes": "{{minutes}} 分鐘前",
+      "restore-time-minutes_plural": "{{minutes}} 分鐘前",
+      "restore-time-hours": "{{hours}} 小時前",
+      "restore-time-hours_plural": "{{hours}} 小時前",
+      "restore-time-days": "{{days}} 日前",
+      "restore-time-days_plural": "{{days}} 日前"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間"
+      "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "工作空間的 ID 無效（或許是因為排序未更新）"
@@ -105,16 +107,9 @@
     "toggle": "狀態列{{mark}}"
   },
   "splitview": {
-    "title": "分離檢視",
-    "position": "位置",
-    "position-left": "左",
-    "position-right": "右",
-    "flex-row": "行",
-    "flex-column": "列",
-    "remove-button": "移除目前的視圖",
     "tab-context": {
-      "split-tabs": "分割分頁",
-      "split-fixed-tab": "分割為固定分頁"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "在安全模式下重新啟動",
       "restart-profile-manager": "重新啟動並開啟設定檔管理員"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} 正在運作",
+    "panelDefaultMessage": "{{action}} 進行中...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "提交表格： {{name}}",
+    "actionLabelHighlight": "焦點",
+    "actionLabelInspect": "檢查",
+    "actionLabelFill": "填入",
+    "actionLabelInput": "輸入",
+    "actionLabelClick": "點選",
+    "actionLabelSubmit": "提交"
   }
 }

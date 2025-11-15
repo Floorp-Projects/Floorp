@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Barra de favoritos",
+                "position": "Posição (Experiência)",
+                "top": "Topo",
+                "bottom": "Fundo",
                 "focusExpand": "Expandir a barra de favoritos ao focar"
             }
         }
@@ -242,15 +245,15 @@
         "backup": "Cópia de segurança do espaço de trabalho",
         "backupComingSoon": "Brevemente",
         "backupDescription": "Saiba mais sobre a cópia de segurança do workspace",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "Zona de perigo",
+        "initializeTitle": "Inicializar espaços de trabalho",
+        "initializeDescription": "Repor os dados do espaço de trabalho para o seu estado predefinido. Todos os espaços de trabalho personalizados serão removidos e todos os separadores serão reatribuídos ao novo espaço de trabalho.",
+        "initializeAction": "Inicializar espaços de trabalho",
+        "initializeSuccess": "Os espaços de trabalho foram repostos para o seu estado predefinido.",
+        "initializeFailure": "Falha ao inicializar espaços de trabalho. Por favor, tente novamente.",
+        "initializeConfirmTitle": "Inicializar espaços de trabalho",
+        "initializeConfirmDescription": "Isto remove todos os dados do espaço de trabalho e recria um único espaço de trabalho predefinido. Deseja continuar?",
+        "initializeConfirmAction": "Inicializar",
         "initializeConfirmCancel": "Cancelar"
     },
     "accounts": {

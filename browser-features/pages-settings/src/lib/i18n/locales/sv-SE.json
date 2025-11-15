@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Bokmärkesfält",
+                "position": "Position (Experiment)",
+                "top": "Högst upp",
+                "bottom": "Nederst",
                 "focusExpand": "Expandera bokmärkesfältet vid fokus"
             }
         }

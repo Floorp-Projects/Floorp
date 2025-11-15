@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Bookmark Bar",
+                "position": "위치 (실험)",
+                "top": "위",
+                "bottom": "아래",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }

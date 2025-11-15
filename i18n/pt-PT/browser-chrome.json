@@ -66,32 +66,34 @@
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Eliminar espaço de trabalho",
       "manage": "Gerir o espaço de trabalho",
-      "archive": "Archive Workspace"
+      "archive": "Arquivar Espaço de Trabalho"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
       "manage": "Gerir espaços de trabalho",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Mostrar espaços de trabalho arquivados",
+      "restore-cancel": "Sair do modo de restauro",
+      "restore-title": "Espaços de trabalho arquivados",
+      "restore-loading": "Carregamento de espaços de trabalho arquivados…",
+      "restore-empty": "Nenhum espaço de trabalho arquivado",
+      "restore-error": "Falha ao carregar espaços de trabalho arquivados",
+      "restore-tooltip": "Alternar o modo de restauro",
+      "restore-item": "Restaurar \"{{name}}\"",
+      "restore-delete-tooltip": "Eliminar este arquivo",
+      "restore-tab-count": "{{count}} separador",
+      "restore-tab-count_plural": "{{count}} separadores",
+      "restore-time-just-now": "Agora mesmo",
+      "restore-time-minutes": "{{minutes}} minuto atrás",
+      "restore-time-minutes_plural": "há {{minutes}} minutos",
+      "restore-time-hours": "há {{hours}} hora",
+      "restore-time-hours_plural": "{{hours}} horas atrás",
+      "restore-time-days": "{{days}} dia atrás",
+      "restore-time-days_plural": "{{days}} dias atrás"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho"
+      "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "ID não válido para espaços de trabalho (talvez a ordem não esteja atualizada)"
@@ -105,16 +107,9 @@
     "toggle": "Barra de estado{{mark}}"
   },
   "splitview": {
-    "title": "Vista dividida",
-    "position": "Posição",
-    "position-left": "Esquerda",
-    "position-right": "Certo",
-    "flex-row": "Fila",
-    "flex-column": "Coluna",
-    "remove-button": "Remover vista atual",
     "tab-context": {
-      "split-tabs": "Separadores divididos",
-      "split-fixed-tab": "Dividir em separador fixo"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Reiniciar no modo de segurança",
       "restart-profile-manager": "Reiniciar com o Profile Manager"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} está a funcionar",
+    "panelDefaultMessage": "{{action}} em curso...",
+    "panelProgressSummary": "Afecta o(s) {{count}} elemento(s)",
+    "formSummary": "Preenchimento do formulário: {{count}} campo(s)",
+    "formFieldProgress": "Campo {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Definir valor de entrada: \"{{value}}\"",
+    "clickElementWithText": "Clique em {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicar em {{tag}} elemento",
+    "inspectPageHtml": "Página completa HTML recuperada",
+    "inspectGetElement": "Elemento recuperado: {{selector}}",
+    "inspectGetElements": "{{count}} elemento(s) emparelhado(s): {{selector}}",
+    "inspectGetElementByText": "Elemento recuperado que corresponde ao texto: \"{{text}}\"",
+    "inspectGetElementText": "Texto retirado de: {{selector}}",
+    "inspectGetValue": "Valor recuperado: {{selector}}",
+    "submitForm": "Formulário de apresentação: {{name}}",
+    "actionLabelHighlight": "Destaque",
+    "actionLabelInspect": "Inspecionar",
+    "actionLabelFill": "Preencher",
+    "actionLabelInput": "Entrada",
+    "actionLabelClick": "Clicar",
+    "actionLabelSubmit": "Enviar"
   }
 }

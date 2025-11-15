@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Перемістити вкладку в іншу робочу область"
+      "moveTabToAnotherWorkspace": "Перемістити вкладку в іншу робочу область",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Недійсний ідентифікатор робочої області (можливо, порядок не оновлено)"
@@ -105,16 +107,9 @@
     "toggle": "Рядок стану{{mark}}"
   },
   "splitview": {
-    "title": "Розділений екран",
-    "position": "Розташування",
-    "position-left": "Лівий",
-    "position-right": "Правий",
-    "flex-row": "Рядок",
-    "flex-column": "Стовпчик",
-    "remove-button": "Видалити поточний вигляд",
     "tab-context": {
-      "split-tabs": "Розділити вкладки",
-      "split-fixed-tab": "Розділити на фіксовану вкладку"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Перезавантажити в безпечному режимі",
       "restart-profile-manager": "Restart with Profile Manager"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

@@ -66,32 +66,34 @@
       "move-down": "Bu Çalışma Alanını Aşağı Taşı",
       "delete": "Çalışma Alanını Sil",
       "manage": "Çalışma Alanlanını Yönet",
-      "archive": "Archive Workspace"
+      "archive": "Çalışma Alanını Arşivle"
     },
     "popup": {
       "create-new": "Yeni Çalışma Alanı Oluştur...",
       "manage": "Çalışma Alanlarını Yönet",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Arşivlenmiş Çalışma Alanlarını Göster",
+      "restore-cancel": "Geri Yükleme Modundan Çık",
+      "restore-title": "Arşivlenmiş Çalışma Alanları",
+      "restore-loading": "Arşivlenmiş çalışma alanları yükleniyor…",
+      "restore-empty": "Arşivlenmiş çalışma alanı yok",
+      "restore-error": "Arşivlenmiş çalışma alanları yüklenemedi",
+      "restore-tooltip": "Geri yükleme modunu aç / kapat",
+      "restore-item": "Geri Yükle \"{{name}}\"",
+      "restore-delete-tooltip": "Bu arşivi sil",
+      "restore-tab-count": "{{count}} sekme",
+      "restore-tab-count_plural": "{{count}} sekme",
+      "restore-time-just-now": "Az önce",
+      "restore-time-minutes": "{{minutes}} dakika önce",
+      "restore-time-minutes_plural": "{{minutes}} dakika önce",
+      "restore-time-hours": "{{hours}} saat önce",
+      "restore-time-hours_plural": "{{hours}} saat önce",
+      "restore-time-days": "{{days}} gün önce",
+      "restore-time-days_plural": "{{days}} gün önce"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı"
+      "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Geçersiz çalışma alanı ID'si (sıralama güncel olmayabilir)"
@@ -105,16 +107,9 @@
     "toggle": "Durum Çubuğu{{mark}}"
   },
   "splitview": {
-    "title": "Bölünmüş Görünüm",
-    "position": "Konum",
-    "position-left": "Sol",
-    "position-right": "Sağ",
-    "flex-row": "Satır",
-    "flex-column": "Sütun",
-    "remove-button": "Geçerli Görünümü Kaldır",
     "tab-context": {
-      "split-tabs": "Bölünmüş Sekmeler",
-      "split-fixed-tab": "Sabit Sekmeye Böl"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Güvenli Modda Yeniden Başlat",
       "restart-profile-manager": "Profil Yöneticisi ile Yeniden Başlat"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

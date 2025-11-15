@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben"
+      "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Ungültige ID für Arbeitsbereich (Sortierung nicht aktualisiert)"
@@ -105,16 +107,9 @@
     "toggle": "Status Bar{{mark}}"
   },
   "splitview": {
-    "title": "Split View",
-    "position": "Position",
-    "position-left": "Left",
-    "position-right": "Right",
-    "flex-row": "Row",
-    "flex-column": "Column",
-    "remove-button": "Remove Current View",
     "tab-context": {
-      "split-tabs": "Split Tabs",
-      "split-fixed-tab": "Split to Fixed Tab"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Restart in Safe Mode",
       "restart-profile-manager": "Restart with Profile Manager"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

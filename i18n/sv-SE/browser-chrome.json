@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta"
+      "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Ej giltigt ID för arbetsytor (kanske är placeringen inte uppdaterad)"
@@ -105,16 +107,9 @@
     "toggle": "Statusfält{{mark}}"
   },
   "splitview": {
-    "title": "Delad vy",
-    "position": "Position",
-    "position-left": "Vänster",
-    "position-right": "Höger",
-    "flex-row": "Rad",
-    "flex-column": "Kolumn",
-    "remove-button": "Ta bort aktuell vy",
     "tab-context": {
-      "split-tabs": "Dela flikar",
-      "split-fixed-tab": "Dela till fast flik"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Starta om i felsäkert läge",
       "restart-profile-manager": "Starta om med profilhanterare"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

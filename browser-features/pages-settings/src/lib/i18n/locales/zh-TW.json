@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "書籤列",
+                "position": "位置 (實驗性質)",
+                "top": "頂部",
+                "bottom": "底部",
                 "focusExpand": "對焦時展開書籤列"
             }
         }
@@ -242,15 +245,15 @@
         "backup": "工作空間備份",
         "backupComingSoon": "即將推出",
         "backupDescription": "瞭解工作空間備份",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "危險區域",
+        "initializeTitle": "初始化工作空間",
+        "initializeDescription": "將工作空間資料重設為預設狀態。所有自訂的工作空間都會被移除，所有分頁將會被重新分配至新工作空間。",
+        "initializeAction": "初始化工作空間",
+        "initializeSuccess": "工作空間已重設為預設狀態。",
+        "initializeFailure": "初始化工作空間失敗。請再試一次。",
+        "initializeConfirmTitle": "初始化工作空間",
+        "initializeConfirmDescription": "這將會移除所有工作空間資料，並重新建立單一的預設工作空間。要繼續嗎？",
+        "initializeConfirmAction": "初始化",
         "initializeConfirmCancel": "取消"
     },
     "accounts": {

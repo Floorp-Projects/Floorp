@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "书签栏",
+                "position": "位置（实验性功能）",
+                "top": "顶部",
+                "bottom": "底部",
                 "focusExpand": "聚焦时展开书签栏"
             }
         }
@@ -242,15 +245,15 @@
         "backup": "工作区备份",
         "backupComingSoon": "敬请期待",
         "backupDescription": "了解工作区备份",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "危险操作区",
+        "initializeTitle": "初始化工作区",
+        "initializeDescription": "将工作区数据重置为默认状态。所有自定义工作区将被删除，所有标签将被重新分配到新工作区。",
+        "initializeAction": "初始化工作区",
+        "initializeSuccess": "工作区已重置为默认状态。",
+        "initializeFailure": "初始化工作区失败。请重试。",
+        "initializeConfirmTitle": "初始化工作区",
+        "initializeConfirmDescription": "这将删除所有工作区数据，并重新创建一个单一的默认工作区。还要继续吗？",
+        "initializeConfirmAction": "初始化",
         "initializeConfirmCancel": "取消"
     },
     "accounts": {

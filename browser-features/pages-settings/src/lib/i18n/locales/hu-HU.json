@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Bookmark Bar",
+                "position": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "Bottom",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }

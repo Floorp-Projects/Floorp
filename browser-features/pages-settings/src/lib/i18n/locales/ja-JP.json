@@ -219,7 +219,7 @@
             },
             "bookmarkBar": {
                 "title": "ブックマークバー",
-                "position": "位置",
+                "position": "位置 (実験的)",
                 "top": "上",
                 "bottom": "下",
                 "focusExpand": "カーソルを合わせたときにブックマークバーを広げる"
@@ -246,14 +246,14 @@
         "backupComingSoon": "近日公開",
         "backupDescription": "ワークスペースのバックアップについて",
         "dangerZone": "危険な操作",
-        "initializeTitle": "ワークスペースを初期化する",
-        "initializeDescription": "ワークスペースのデータをデフォルトの状態にリセットします。すべてのカスタム ワークスペースが削除され、すべてのタブが新しいワークスペースに割り当て直されます。",
-        "initializeAction": "ワークスペースを初期化する",
+        "initializeTitle": "ワークスペースを初期化",
+        "initializeDescription": "ワークスペースのデータを既定の状態にリセットします。すべてのカスタムワークスペースが削除され、既存のタブはすべて新しいワークスペースに割り当て直されます。",
+        "initializeAction": "ワークスペースを初期化",
         "initializeSuccess": "ワークスペースが既定の状態にリセットされました。",
-        "initializeFailure": "ワークスペースの初期化に失敗しました。もう一度やり直してください。",
-        "initializeConfirmTitle": "ワークスペースを初期化する",
-        "initializeConfirmDescription": "これにより、すべてのワークスペース データが削除され、単一のデフォルトのワークスペースが再作成されます。続けますか？",
-        "initializeConfirmAction": "Initialize",
+        "initializeFailure": "ワークスペースの初期化に失敗しました。もう一度お試しください。",
+        "initializeConfirmTitle": "ワークスペースを初期化",
+        "initializeConfirmDescription": "これにより、すべてのワークスペースのデータが削除され、既定のワークスペースひとつに集約されます。よろしいですか？",
+        "initializeConfirmAction": "初期化",
         "initializeConfirmCancel": "キャンセル"
     },
     "accounts": {

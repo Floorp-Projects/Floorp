@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Bookmark Bar",
+                "position": "Vị trí (thử nghiệm)",
+                "top": "Đầu",
+                "bottom": "Cuối",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }

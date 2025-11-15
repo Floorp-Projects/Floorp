@@ -66,32 +66,34 @@
       "move-down": "下移此工作区",
       "delete": "删除工作区",
       "manage": "管理工作区",
-      "archive": "Archive Workspace"
+      "archive": "归档工作区"
     },
     "popup": {
       "create-new": "创建新工作区……",
       "manage": "管理工作区",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "显示归档工作区",
+      "restore-cancel": "退出恢复模式",
+      "restore-title": "归档工作区",
+      "restore-loading": "加载归档工作区…",
+      "restore-empty": "未归档工作区",
+      "restore-error": "加载归档工作区失败",
+      "restore-tooltip": "切换恢复模式",
+      "restore-item": "恢复 “{{name}}”",
+      "restore-delete-tooltip": "删除此归档",
+      "restore-tab-count": "{{count}} 标签",
+      "restore-tab-count_plural": "{{count}} 标签",
+      "restore-time-just-now": "现在",
+      "restore-time-minutes": "{{minutes}} 分钟前",
+      "restore-time-minutes_plural": "{{minutes}} 分钟前",
+      "restore-time-hours": "{{hours}} 小时前",
+      "restore-time-hours_plural": "{{hours}} 小时前",
+      "restore-time-days": "{{days}} 天前",
+      "restore-time-days_plural": "{{days}} 天前"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "移动标签到另一个工作区"
+      "moveTabToAnotherWorkspace": "移动标签到另一个工作区",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "工作区 ID 无效（可能请求未更新）"
@@ -105,16 +107,9 @@
     "toggle": "状态栏{{mark}}"
   },
   "splitview": {
-    "title": "拆分视图",
-    "position": "位置",
-    "position-left": "左边",
-    "position-right": "右边",
-    "flex-row": "行",
-    "flex-column": "列",
-    "remove-button": "移除当前视图",
     "tab-context": {
-      "split-tabs": "拆分标签",
-      "split-fixed-tab": "拆分为固定标签"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "以安全模式重新启动",
       "restart-profile-manager": "使用配置文件管理器重新启动"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} 在运行",
+    "panelDefaultMessage": "{{action}} 进行中……",
+    "panelProgressSummary": "影响 {{count}} 元素(s)",
+    "formSummary": "填写：{{count}} 字段(s)",
+    "formFieldProgress": "字段 {{current}}/{{total}}：“{{value}}”",
+    "inputValueSet": "设置输入值：“{{value}}”",
+    "clickElementWithText": "点击 {{tag}}：“{{text}}”",
+    "clickElementNoText": "点击 {{tag}} 元素",
+    "inspectPageHtml": "获取完整页面 HTML",
+    "inspectGetElement": "获取元素：{{selector}}",
+    "inspectGetElements": "{{count}} 元素匹配：{{selector}}(s)",
+    "inspectGetElementByText": "获取元素匹配文本：“{{text}}”",
+    "inspectGetElementText": "获取文本：{{selector}}",
+    "inspectGetValue": "获取值：{{selector}}",
+    "submitForm": "提交：{{name}}",
+    "actionLabelHighlight": "高亮",
+    "actionLabelInspect": "检查",
+    "actionLabelFill": "填充",
+    "actionLabelInput": "输入",
+    "actionLabelClick": "点击",
+    "actionLabelSubmit": "提交"
   }
 }

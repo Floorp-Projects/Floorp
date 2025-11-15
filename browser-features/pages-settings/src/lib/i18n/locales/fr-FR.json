@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Barre de marque-pages",
+                "position": "Position (expérience)",
+                "top": "Haut",
+                "bottom": "Bas",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }

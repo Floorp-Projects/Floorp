@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Bilah Markah",
+                "position": "Posisi (Eksperimen)",
+                "top": "Atas",
+                "bottom": "Bawah",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }

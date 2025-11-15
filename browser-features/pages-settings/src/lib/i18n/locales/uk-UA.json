@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Панель закладок",
+                "position": "Позиція (Експеримент)",
+                "top": "Top",
+                "bottom": "Bottom",
                 "focusExpand": "Розгорнути панель закладок на фокусі"
             }
         }

@@ -4,12 +4,12 @@
     "tooltiptext": "Heropen het laatst gesloten tabblad {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "message": "Floorp-specifieke instellingen zoals de paneelzijbalk, workspaces, en muis gebaren worden beheerd in Floorp Hub.",
     "openButton": "Open Floorp Hub"
   },
   "floorpStartWarning": {
     "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "openButton": "Open Floorp Hub - Ontwerp"
   },
   "workspaces": {
     "modal": {
@@ -66,55 +66,50 @@
       "move-down": "Deze workspace naar beneden verplaatsen",
       "delete": "Workspace verwijderen",
       "manage": "Workspace beheren",
-      "archive": "Archive Workspace"
+      "archive": "Archiveer Werkruimte"
     },
     "popup": {
       "create-new": "Nieuwe workspace maken...",
       "manage": "Workspaces beheren",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
+      "restore": "Gearchiveerde Workspaces weergeven",
+      "restore-cancel": "Verlaat Herstelmodus",
+      "restore-title": "Gearchiveerde workspaces",
+      "restore-loading": "Gearchiveerde workspaces laden...",
+      "restore-empty": "Geen gearchiveerde workspaces",
+      "restore-error": "Laden van gearchiveerde workspaces mislukt",
+      "restore-tooltip": "Herstel modus in-/uitschakelen",
+      "restore-item": "Herstel \"{{name}}\"",
+      "restore-delete-tooltip": "Dit archief verwijderen",
       "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore-tab-count_plural": "{{count}} tabbladen",
+      "restore-time-just-now": "Zojuist",
+      "restore-time-minutes": "{{minutes}} minuut geleden",
+      "restore-time-minutes_plural": "{{minutes}} minuten geleden",
+      "restore-time-hours": "{{hours}} uur geleden",
+      "restore-time-hours_plural": "{{hours}} uren geleden",
+      "restore-time-days": "{{days}} dag geleden",
+      "restore-time-days_plural": "{{days}} dagen geleden"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace"
+      "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Geen geldig ID voor Workspaces (misschien is de volgorde niet bijgewerkt)"
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
-    "tooltiptext": "Open Profile Manager"
+    "label": "Profiel beheer",
+    "tooltiptext": "Profielbeheer openen"
   },
   "statusbar": {
     "toggle": "Statusbalk{{mark}}"
   },
   "splitview": {
-    "title": "Gesplitste weergave",
-    "position": "Positie",
-    "position-left": "Links",
-    "position-right": "Rechts",
-    "flex-row": "Rij",
-    "flex-column": "Kolom",
-    "remove-button": "Huidige weergave verwijderen",
     "tab-context": {
-      "split-tabs": "Tabbladen splitsen",
-      "split-fixed-tab": "Splitsen naar vast tabblad"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -133,7 +128,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Openen in Privécontainer",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "Heropenen in Privécontainer",
     "name": "Privécontainer"
   },
   "mouseGesture": {
@@ -209,8 +204,8 @@
       "gecko-scroll-left": "Scroll naar links",
       "gecko-scroll-to-top": "Scroll helemaal naar boven",
       "gecko-scroll-to-bottom": "Scroll helemaal naar beneden",
-      "gecko-workspace-next": "Switch to Next Workspace",
-      "gecko-workspace-previous": "Switch to Previous Workspace"
+      "gecko-workspace-next": "Schakel over naar volgende werkruimte",
+      "gecko-workspace-previous": "Schakel over naar vorige werkruimte"
     },
     "descriptions": {
       "gecko-back": "Ga terug naar de vorige pagina",
@@ -243,7 +238,7 @@
         "web": "Webpagina",
         "sidebar-tool": "Zijbalk Tool",
         "extension": "Zijbalk Extensie",
-        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+        "builtin": "Ingebouwde pagina's (downloads, bladwijzers, geschiedenis)"
       },
       "width": "Paneelbreedte",
       "url": "URL van webpagina",
@@ -268,8 +263,8 @@
     }
   },
   "chrome_css": {
-    "menu": "Style",
-    "rebuild": "Rebuild Style Sheets",
+    "menu": "Stijl",
+    "rebuild": "Stylesheet herbouwen",
     "create": "Create New Style Sheet",
     "open_folder": "Open Style Sheets Folder",
     "edit_user_chrome": "Bewerk userChrome.css",
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Herstarten in veilige modus",
       "restart-profile-manager": "Herstarten met Profielbeheerder"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

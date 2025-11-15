@@ -4,7 +4,7 @@
     "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "message": "패널 사이드바, 워크스페이스, 마우스 제스처와 같은 Floorp만의 설정은 Floorp Hub에서 관리됩니다.",
     "openButton": "Open Floorp Hub"
   },
   "floorpStartWarning": {
@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "탭을 다른 워크스페이스로 이동"
+      "moveTabToAnotherWorkspace": "탭을 다른 워크스페이스로 이동",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
@@ -105,16 +107,9 @@
     "toggle": "상태 표시줄{{mark}}"
   },
   "splitview": {
-    "title": "분할 보기",
-    "position": "위치",
-    "position-left": "왼쪽",
-    "position-right": "오른쪽",
-    "flex-row": "평행",
-    "flex-column": "수직",
-    "remove-button": "현재 보기 제거",
     "tab-context": {
-      "split-tabs": "탭 분할",
-      "split-fixed-tab": "분할하여 고정 표시"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "안전 모드로 다시 시작",
       "restart-profile-manager": "프로필 관리자와 함께 다시 시작"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

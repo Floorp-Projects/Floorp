@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail"
+      "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "ID invalide pour les espaces de travail (peut-être que l'ordre n'est pas mise à jour)"
@@ -105,16 +107,9 @@
     "toggle": "Barre d'état{{mark}}"
   },
   "splitview": {
-    "title": "Vue fractionnée",
-    "position": "Position",
-    "position-left": "Gauche",
-    "position-right": "Droit",
-    "flex-row": "Rangée",
-    "flex-column": "Colonne",
-    "remove-button": "Supprimer la vue actuelle",
     "tab-context": {
-      "split-tabs": "Onglets fractionnés",
-      "split-fixed-tab": "Diviser en onglet fixe"
+      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "details": "Details"
     }
   },
   "ssb": {
@@ -293,5 +288,28 @@
       "restart-safe-mode": "Redémarrer en mode sans échec",
       "restart-profile-manager": "Redémarrer avec le gestionnaire de profil"
     }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
   }
 }

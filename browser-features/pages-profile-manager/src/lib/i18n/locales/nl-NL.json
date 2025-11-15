@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Profielen",
         "buttons": {
             "refresh": "Refresh",
-            "create": "Create"
+            "create": "Maken"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Laden…",
+        "noProfiles": "Geen profielen gevonden.",
+        "current": "Huidige",
         "default": "Standaard",
         "actions": {
             "open": "Open",
-            "new": "New",
-            "rename": "Rename",
-            "remove": "Remove",
+            "new": "Nieuwe",
+            "rename": "Hernoemen",
+            "remove": "Verwijderen",
             "setDefault": "Standaard"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Weet u zeker dat u dit profiel wil verwijderen?",
+            "newName": "Nieuwe profiel naam:"
         }
     }
 }

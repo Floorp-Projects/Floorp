@@ -72,7 +72,7 @@
         },
         "browserSupport": {
             "title": "Guia do {{productName}}",
-            "description": "Acesse o guia de suporte escrito por colaboradores do {{productName}} .",
+            "description": "Acesse o guia de suporte escrito por colaboradores do {{productName}}.",
             "footerLinkText": "Guia do Floorp"
         }
     },
@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Barra de favoritos",
+                "position": "Posição (experimental)",
+                "top": "Superior",
+                "bottom": "Inferior",
                 "focusExpand": "Expandir a barra de favoritos ao focalizar"
             }
         }
@@ -242,15 +245,15 @@
         "backup": "Backup do espaço de trabalho",
         "backupComingSoon": "Em breve",
         "backupDescription": "Saiba mais sobre o backup dos espaços de trabalho",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "Zona de perigo",
+        "initializeTitle": "Inicializar espaços de trabalho",
+        "initializeDescription": "Redefinir dados do espaço de trabalho para o formato padrão. Todas as áreas de trabalho personalizadas serão removidas e todas as guias serão reatribuídas ao novo espaço de trabalho.",
+        "initializeAction": "Inicializar espaços de trabalho",
+        "initializeSuccess": "Os espaços de trabalho foram redefinidos para formato padrão.",
+        "initializeFailure": "Falha ao inicializar espaços de trabalho. Por favor, tente novamente.",
+        "initializeConfirmTitle": "Inicializar espaços de trabalho",
+        "initializeConfirmDescription": "Isso remove todos os dados dos espaços de trabalho e recria um único espaço de trabalho padrão. Deseja continuar?",
+        "initializeConfirmAction": "Inicializar",
         "initializeConfirmCancel": "Cancelar"
     },
     "accounts": {
@@ -334,14 +337,14 @@
         "searchResultsDescription": "Resultados da pesquisa para \"{{query}}\". Somente as configurações do {{productName}} são pesquisadas; as configurações do Firefox não estão incluídas."
     },
     "panelSidebar": {
-        "title": "Barra lateral do painel",
-        "description": "O Panel Sidebar é um recurso que permite exibir várias ferramentas, sites e extensões na lateral da janela. Aqui, você pode personalizar, adicionar, excluir e gerenciar painéis.",
+        "title": "Barra lateral",
+        "description": "A barra lateral é um recurso que permite exibir várias ferramentas, sites e extensões na lateral da janela. Aqui, você pode personalizar, adicionar, excluir e gerenciar painéis.",
         "basicSettings": "Configurações básicas",
-        "howToUseAndCustomize": "Como usar e personalizar a barra lateral do painel",
+        "howToUseAndCustomize": "Como usar e personalizar a barra lateral",
         "enableOrDisable": "Ativar/Desativar",
-        "enablePanelSidebar": "Ativar a barra lateral do painel",
-        "enableDescription": "O Panel Sidebar é diferente da barra lateral do Firefox e não interfere nela. A barra lateral do painel pode exibir páginas da Web, ao contrário da barra lateral do Firefox. Você também pode gerenciar espaços de trabalho na barra lateral.",
-        "otherSettings": "Outras configurações da barra lateral do painel",
+        "enablePanelSidebar": "Ativar a barra lateral",
+        "enableDescription": "A barra lateral do Floorp é diferente da barra lateral do Firefox e não interfere nela. Ela pode exibir páginas da Web, ao contrário da barra lateral do Firefox. Você também pode gerenciar espaços de trabalho na barra lateral.",
+        "otherSettings": "Outras configurações da barra lateral",
         "autoUnloadOnClose": "Descarregar ao fechar o painel",
         "position": "Posição da barra lateral",
         "positionLeft": "Esquerda",
@@ -384,7 +387,7 @@
         "errors": {
             "typeRequired": "O tipo de painel é necessário",
             "urlRequired": "O URL é necessário para os painéis da Web",
-            "invalidUrl": "",
+            "invalidUrl": "Por favor, insira uma URL válida",
             "extensionIdRequired": "A ID de extensão é necessária para os painéis de extensão",
             "staticPanelRequired": "Selecione uma ferramenta da barra lateral",
             "invalidWidth": "A largura deve ser de pelo menos 100 pixels"
@@ -405,7 +408,7 @@
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
         "installedApps": "Aplicativos instalados",
-        "noInstalledApps": "Nenhum aplicativo progressivo da Web instalado",
+        "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
         "renameApp": "Renomear aplicativo",
         "enterNewName": "Insira o novo nome",

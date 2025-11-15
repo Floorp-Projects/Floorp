@@ -1,39 +1,39 @@
 {
     "title": {
-        "default": "{{productName}} Notes"
+        "default": "{{productName}} Notities"
     },
     "notes": {
-        "welcome": "Welcome to {{productName}} Notes!",
-        "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
-        "new": "New Note",
+        "welcome": "Welkom bij {{productName}} Notities!",
+        "welcomeContent": "Welkom bij {{productName}} Notities! Zo gebruik je het.\n\n{{productName}} Notities is een functie voor het maken van notities die kunnen worden gesynchroniseerd tussen apparaten. Om synchronisatie aan te zetten, moet u zich aanmelden bij {{productName}} met een Mozilla-account.\n{{productName}} Notities worden opgeslagen in {{productName}} en gesynchroniseerd met behulp van Firefox Sync. Firefox Sync versleutelt de inhoud van de synchronisatie met uw Mozilla account wachtwoord, zodat niemand de inhoud kan zien.",
+        "new": "Nieuwe notitie",
         "reorder": "Reorder",
-        "done": "Done",
-        "emptyTitle": "Untitled",
-        "emptyContent": "No content",
-        "noNotesSelected": "Select a note or create a new one",
-        "createNew": "Create New Note",
-        "titlePlaceholder": "Title",
-        "loading": "Loading notes...",
-        "delete": "Delete"
+        "done": "Klaar",
+        "emptyTitle": "Naamloos",
+        "emptyContent": "Geen inhoud",
+        "noNotesSelected": "Selecteer een notitie of maak er één aan",
+        "createNew": "Nieuwe notitie maken",
+        "titlePlaceholder": "Titel",
+        "loading": "Notities laden...",
+        "delete": "Verwijderen"
     },
     "editor": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strikethrough",
-        "bulletList": "Bullet List",
-        "numberedList": "Numbered List",
-        "alignLeft": "Align Left",
-        "alignCenter": "Align Center",
-        "alignRight": "Align Right",
+        "bold": "Dikgedrukt",
+        "italic": "Schuingedrukt",
+        "underline": "Onderstreept",
+        "strikethrough": "Doorgestreept",
+        "bulletList": "Opsommingslijst",
+        "numberedList": "Genummerde lijst",
+        "alignLeft": "Links uitlijnen",
+        "alignCenter": "Centreren",
+        "alignRight": "Rechts uitlijnen",
         "quote": "Quote",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3"
+        "heading1": "Koptekst 1",
+        "heading2": "Koptekst 2",
+        "heading3": "Koptekst 3"
     },
     "error": {
-        "loadFailed": "Failed to load note data",
-        "saveFailed": "Failed to save note data",
-        "indexOutOfRange": "Index {{index}} is out of range"
+        "loadFailed": "Notitiegegevens laden mislukt",
+        "saveFailed": "Notitiegegevens opslaan mislukt",
+        "indexOutOfRange": "Index {{index}} valt buiten het bereik"
     }
 }

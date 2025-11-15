@@ -219,6 +219,9 @@
             },
             "bookmarkBar": {
                 "title": "Yer imleri Çubuğu",
+                "position": "Konum (Deneysel)",
+                "top": "En üst",
+                "bottom": "En alt",
                 "focusExpand": "Odaklanıldığında yer imi çubuğunu genişlet"
             }
         }
