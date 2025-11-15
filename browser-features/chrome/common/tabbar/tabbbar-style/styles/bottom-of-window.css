@@ -11,4 +11,11 @@
 }
 #TabsToolbar[class] {
   flex: unset !important;
+  background: var(--lwt-accent-color) !important;
+}
+
+/* Hide TabsToolbar in DOM fullscreen mode when it's at bottom of window */
+/* Hide all TabsToolbar in DOM fullscreen, but keep it visible if inside navigator-toolbox */
+:root[inDOMFullscreen] #TabsToolbar {
+  display: none !important;
 }
