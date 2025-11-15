@@ -63,7 +63,12 @@ export const MouseGestureConfigCodec = t.intersection([
 ]);
 export type MouseGestureConfig = t.TypeOf<typeof MouseGestureConfigCodec>;
 
-export const defaultConfig: MouseGestureConfig = {
+const MIN_CONTEXT_MENU_DISTANCE = 12;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
   enabled: false,
   rockerGesturesEnabled: true,
   sensitivity: 40,
@@ -72,7 +77,7 @@ export const defaultConfig: MouseGestureConfig = {
   trailColor: "#37ff00",
   trailWidth: 6,
   contextMenu: {
-    minDistance: 5,
+    minDistance: MIN_CONTEXT_MENU_DISTANCE,
     preventionTimeout: 200,
   },
   actions: [
@@ -115,6 +120,35 @@ export const defaultConfig: MouseGestureConfig = {
   ],
 };
 
+const normalizeConfig = (config: MouseGestureConfig): MouseGestureConfig => {
+  const sensitivity = clamp(
+    Number.isFinite(config.sensitivity)
+      ? config.sensitivity
+      : BASE_DEFAULT_CONFIG.sensitivity,
+    1,
+    100,
+  );
+
+  const contextMenu = {
+    ...BASE_DEFAULT_CONFIG.contextMenu,
+    ...config.contextMenu,
+    minDistance: Math.max(
+      config.contextMenu?.minDistance ??
+        BASE_DEFAULT_CONFIG.contextMenu.minDistance,
+      MIN_CONTEXT_MENU_DISTANCE,
+    ),
+  };
+
+  return {
+    ...BASE_DEFAULT_CONFIG,
+    ...config,
+    sensitivity,
+    contextMenu,
+  };
+};
+
+export const defaultConfig = normalizeConfig(BASE_DEFAULT_CONFIG);
+
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
 function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
@@ -154,7 +188,7 @@ function createConfig(): [
     const parsed = JSON.parse(jsonStr);
     const result = MouseGestureConfigCodec.decode(parsed);
     if (isRight(result)) {
-      return result.right;
+      return normalizeConfig(result.right);
     }
     console.error(
       "Failed to decode mouse gesture configuration, using default",
@@ -212,7 +246,8 @@ export const [_config, _setConfig] = createRootHMR(
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
-export const setConfig = (value: MouseGestureConfig) => _setConfig(value);
+export const setConfig = (value: MouseGestureConfig) =>
+  _setConfig(normalizeConfig(value));
 
 export function patternToString(pattern: GesturePattern): string {
   return pattern.join("-");

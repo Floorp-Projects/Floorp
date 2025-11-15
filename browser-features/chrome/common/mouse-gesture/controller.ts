@@ -36,6 +36,20 @@ export class MouseGestureController {
     this.init();
   }
 
+  private getSensitivityFactor(config: ReturnType<typeof getConfig>): number {
+    const sensitivity = Number.isFinite(config.sensitivity)
+      ? config.sensitivity
+      : 40;
+    return Math.min(Math.max(sensitivity, 1), 100) / 100;
+  }
+
+  private getActivationDistance(config: ReturnType<typeof getConfig>): number {
+    const baseDistance = config.contextMenu?.minDistance ?? 10;
+    const sensitivityFactor = this.getSensitivityFactor(config);
+    const dynamicDistance = 6 + (1 - sensitivityFactor) * 12;
+    return Math.max(baseDistance, dynamicDistance, 10);
+  }
+
   private init(): void {
     if (this.eventListenersAttached) return;
 
@@ -190,6 +204,7 @@ export class MouseGestureController {
 
     const config = getConfig();
     const preventionTimeout = config.contextMenu.preventionTimeout;
+    const activationDistance = this.getActivationDistance(config);
 
     // 最終的なパターン認識を実行
     const finalPattern = this.recognizeGesturePattern(config);
@@ -216,7 +231,7 @@ export class MouseGestureController {
 
     // ジェスチャーが認識されない場合、最小移動距離をチェック
     const totalMovement = this.getTotalMovement();
-    const minMovement = Math.max(config.contextMenu.minDistance, 10); // 最小値を設定
+    const minMovement = Math.max(activationDistance * 0.85, 10);
 
     if (totalMovement < minMovement) {
       this.isContextMenuPrevented = false;
@@ -276,7 +291,7 @@ export class MouseGestureController {
     // 早期拒否: トレイル全体の方向とアクションの主要方向が明らかに異なる場合は無視
     // トレイルが十分な距離を移動しているか確認
     const totalTrailDistance = this.getTotalTrailDistance();
-    const minTotalForMatch = Math.max(10, config.contextMenu.minDistance);
+    const minTotalForMatch = Math.max(10, this.getActivationDistance(config));
 
     for (const action of config.actions) {
       // 完全一致があれば即時返却
@@ -303,7 +318,7 @@ export class MouseGestureController {
 
     // 各アクションの代表方向（パターンの最初の方向）とのコサイン類似度を確認
     // 感度に応じて閾値を変化させる（感度が高いほど厳しく）
-    const sensitivityFactorForThreshold = (config.sensitivity || 40) / 100; // 0-1
+    const sensitivityFactorForThreshold = this.getSensitivityFactor(config); // 0-1
     const earlyRejectCosineThreshold = Math.max(
       0.2,
       0.55 - sensitivityFactorForThreshold * 0.5,
@@ -334,7 +349,7 @@ export class MouseGestureController {
     }
 
     // 感度に応じた最小類似度を要求（感度が高いほど高い類似度を要求）
-    const sensitivityFactor = (config.sensitivity || 40) / 100;
+    const sensitivityFactor = this.getSensitivityFactor(config);
     const minSimilarity = Math.max(0.35, 0.6 + sensitivityFactor * 0.35);
     if (best && bestSim >= minSimilarity) return best;
 
@@ -354,7 +369,7 @@ export class MouseGestureController {
 
     // 最小移動距離を大幅に削減（小さなジェスチャーに対応）
     const totalDistance = this.getTotalTrailDistance();
-    const minDistance = Math.max(3, config.contextMenu.minDistance * 0.3); // より小さな最小距離
+    const minDistance = this.getActivationDistance(config);
     if (totalDistance < minDistance) {
       return null;
     }
@@ -394,7 +409,7 @@ export class MouseGestureController {
     let bestSimilarity = 0;
 
     // 感度に応じて類似度閾値を動的に調整
-    const sensitivityFactor = (config.sensitivity || 40) / 100; // 0.0-1.0の範囲
+    const sensitivityFactor = this.getSensitivityFactor(config); // 0.0-1.0の範囲
     const minSimilarity = Math.max(0.4, 0.8 - sensitivityFactor * 0.3); // 0.4-0.8の範囲
 
     for (const action of configActions) {
@@ -462,16 +477,16 @@ export class MouseGestureController {
 
     for (const seg of trailVectors) {
       const dot = seg.dx * targetVec.dx + seg.dy * targetVec.dy;
-      // seg.magnitude は実際のピクセル距離なのでこれを重みに使う
-      const weight = seg.magnitude;
-      weightedSum += Math.max(0, dot) * weight; // 負の類似度は0にクリップ
+      const weight = seg.magnitude; // 実際のピクセル距離で重み付け
+      weightedSum += dot * weight;
       totalWeight += weight;
     }
 
     if (totalWeight === 0) return 0;
 
-    const avgSimilarity = weightedSum / totalWeight; // 0-1
-    return Math.max(0, Math.min(1, avgSimilarity));
+    const avgDot = weightedSum / totalWeight;
+    const normalized = (avgDot + 1) / 2; // -1〜1 を 0〜1 にマッピング
+    return Math.max(0, Math.min(1, normalized));
   }
 
   /**
