@@ -13,20 +13,39 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-// Type for nsIProcess
-type nsIProcess = {
-  init(executable: nsIFile): void;
-  runAsync(args: string[], numArgs: number): void;
-  kill(): void;
-};
+type SubprocessStdOption = "pipe";
 
-// Type for nsIFile
-type nsIFile = {
-  initWithPath(path: string): void;
-};
+interface SubprocessResult {
+  exitCode: number;
+  signal?: number | null;
+}
 
-const GITHUB_RELEASE_URL =
-  "https://github.com/Walkmana-25/Sapphillon/releases/latest/download";
+interface SubprocessPipe {
+  readString(): Promise<string | null>;
+}
+
+interface SubprocessCallOptions {
+  command: string;
+  arguments?: string[];
+  stdout?: SubprocessStdOption;
+  stderr?: SubprocessStdOption;
+}
+
+interface SubprocessProcess {
+  stdout?: SubprocessPipe;
+  stderr?: SubprocessPipe;
+  kill(): Promise<void>;
+  wait(): Promise<SubprocessResult>;
+}
+
+interface SubprocessModule {
+  call(options: SubprocessCallOptions): Promise<SubprocessProcess>;
+}
+
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs",
+) as { Subprocess: SubprocessModule };
+
 const GITHUB_FRONTEND_RELEASE_URL =
   "https://github.com/Floorp-Projects/Floorp-OS-Automator-Frontend/releases/download";
 const FLOORP_OS_ENABLED_PREF = "floorp.os.enabled";
@@ -43,10 +62,13 @@ interface PlatformInfo {
   frontendBinaryName?: string;
 }
 
+type SpawnedProcess = Awaited<ReturnType<typeof Subprocess.call>>;
+type ProcessPipe = NonNullable<SpawnedProcess["stdout"]>;
+
 class OSAutomotorManager {
   private _initialized = false;
-  private _binaryProcess: nsIProcess | null = null;
-  private _frontendProcess: nsIProcess | null = null;
+  private _binaryProcess: SpawnedProcess | null = null;
+  private _frontendProcess: SpawnedProcess | null = null;
 
   constructor() {
     if (this._initialized) {
@@ -306,18 +328,7 @@ class OSAutomotorManager {
     }
 
     try {
-      const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      file.initWithPath(binaryPath);
-
-      const process = Cc["@mozilla.org/process/util;1"].createInstance(
-        Ci.nsIProcess,
-      );
-      process.init(file);
-
-      // Start the process in the background
-      const args: string[] = ["start"];
-      process.runAsync(args, args.length);
-
+      const process = await this.spawnProcess(binaryPath, ["start"], "core");
       this._binaryProcess = process;
     } catch (error) {
       console.error("[Floorp OS] Failed to start binary:", error);
@@ -342,18 +353,11 @@ class OSAutomotorManager {
     }
 
     try {
-      const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      file.initWithPath(frontendPath);
-
-      const process = Cc["@mozilla.org/process/util;1"].createInstance(
-        Ci.nsIProcess,
+      const process = await this.spawnProcess(
+        frontendPath,
+        ["start"],
+        "frontend",
       );
-      process.init(file);
-
-      // Start the frontend in background; some frontends may accept 'start'
-      const args: string[] = ["start"];
-      process.runAsync(args, args.length);
-
       this._frontendProcess = process;
     } catch (error) {
       console.error("[Floorp OS] Failed to start frontend:", error);
@@ -366,12 +370,8 @@ class OSAutomotorManager {
    */
   public stopFloorpOS(): void {
     if (this._binaryProcess) {
-      try {
-        this._binaryProcess.kill();
-        this._binaryProcess = null;
-      } catch (error) {
-        console.error("[Floorp OS] Failed to stop binary:", error);
-      }
+      this.killSpawnedProcess(this._binaryProcess, "core");
+      this._binaryProcess = null;
     }
     // Stop frontend if running
     this.stopFrontend();
@@ -445,12 +445,8 @@ class OSAutomotorManager {
    */
   public stopFrontend(): void {
     if (this._frontendProcess) {
-      try {
-        this._frontendProcess.kill();
-        this._frontendProcess = null;
-      } catch (error) {
-        console.error("[Floorp OS] Failed to stop frontend:", error);
-      }
+      this.killSpawnedProcess(this._frontendProcess, "frontend");
+      this._frontendProcess = null;
     }
   }
 
@@ -589,6 +585,84 @@ class OSAutomotorManager {
       arch,
       supported: platformInfo.supported,
     };
+  }
+  private async spawnProcess(
+    executablePath: string,
+    args: string[],
+    kind: "core" | "frontend",
+  ): Promise<SpawnedProcess> {
+    const process = await Subprocess.call({
+      command: executablePath,
+      arguments: args,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    const label = kind === "core" ? "Controller" : "Frontend";
+    this.capturePipe(process.stdout, `${label} stdout`);
+    this.capturePipe(process.stderr, `${label} stderr`);
+
+    void process.wait().then(
+      (result: SubprocessResult) => {
+        const exitCode = result.exitCode;
+        const message = `[Floorp OS][${label}] exited with code ${exitCode}`;
+        if (exitCode === 0) {
+          console.info(message);
+        } else {
+          console.error(message);
+        }
+        if (kind === "core" && this._binaryProcess === process) {
+          this._binaryProcess = null;
+        }
+        if (kind === "frontend" && this._frontendProcess === process) {
+          this._frontendProcess = null;
+        }
+      },
+      (error: unknown) => {
+        console.error(
+          `[Floorp OS] Failed waiting for ${label} process:`,
+          error,
+        );
+      },
+    );
+
+    return process;
+  }
+
+  private capturePipe(pipe: ProcessPipe | undefined, label: string): void {
+    if (!pipe) {
+      return;
+    }
+
+    (async () => {
+      try {
+        while (true) {
+          const chunk = await pipe.readString();
+          if (chunk === null) {
+            break;
+          }
+          const output = chunk.trimEnd();
+          if (output.length === 0) {
+            continue;
+          }
+          console.log(`[Floorp OS][${label}] ${output}`);
+        }
+      } catch (error: unknown) {
+        console.error(`[Floorp OS] Failed reading ${label}:`, error);
+      }
+    })().catch((error: unknown) => {
+      console.error(`[Floorp OS] Unexpected error capturing ${label}:`, error);
+    });
+  }
+
+  private killSpawnedProcess(
+    process: SpawnedProcess,
+    kind: "core" | "frontend",
+  ): void {
+    const label = kind === "core" ? "Controller" : "Frontend";
+    void process.kill().catch((error: unknown) => {
+      console.error(`[Floorp OS] Failed to stop ${label}:`, error);
+    });
   }
 }
 
