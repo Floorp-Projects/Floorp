@@ -146,12 +146,59 @@ export class NRProfileManagerParent extends JSWindowActorParent {
         try {
           const win = Services.wm.getMostRecentWindow("navigator:browser");
           if (win) {
+            const profileService = (
+              Components.classes[
+                "@mozilla.org/toolkit/profile-service;1"
+              ] as any
+            ).getService(Components.interfaces.nsIToolkitProfileService) as any;
+
+            const persistProfiles = () => {
+              try {
+                if (typeof profileService.asyncFlush === "function") {
+                  const result = profileService.asyncFlush();
+                  if (result && typeof result.catch === "function") {
+                    result.catch((err: unknown) => {
+                      console.error(
+                        "[NRProfileManagerParent] asyncFlush failed after CreateProfile",
+                        err,
+                      );
+                    });
+                  }
+                } else if (typeof profileService.flush === "function") {
+                  profileService.flush();
+                }
+              } catch (err) {
+                console.error(
+                  "[NRProfileManagerParent] persistProfiles failed",
+                  err,
+                );
+              }
+            };
+
+            const callbacks = {
+              CreateProfile: (profile: any) => {
+                if (!profile) {
+                  return;
+                }
+                try {
+                  profileService.defaultProfile = profile;
+                } catch (err) {
+                  console.error(
+                    "[NRProfileManagerParent] setting default profile failed",
+                    err,
+                  );
+                }
+                persistProfiles();
+              },
+            };
+
             // @ts-ignore: openDialog is available on chrome windows
             (win as any).openDialog(
               "chrome://mozapps/content/profile/createProfileWizard.xhtml",
               "",
               "centerscreen,chrome,modal,titlebar",
-              // pass the ProfileService and a callback is not necessary here
+              profileService,
+              callbacks,
             );
           }
         } catch {
