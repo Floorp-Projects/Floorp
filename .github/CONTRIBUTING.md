@@ -3,7 +3,7 @@
 Thank you for interest!
 
 First, please ask "how to contribute" in GitHub Issues or [Ablaze Community Discord](https://aka.ablaze.one/discord) \
-It can be help if you stuck, or for communication to start contribution.
+It can be helpful if you are stuck, or for communication to start contributing.
 
 When you ask, make an issue and make pull request, please use 5W1H as a reference for description.
 
