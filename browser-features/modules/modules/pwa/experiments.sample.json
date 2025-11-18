@@ -1,0 +1,18 @@
+{
+  "experiments": [
+    {
+      "id": "pwa_taskbar_integration_linux",
+      "salt": "pwa_taskbar_integration_linux_v1_2025",
+      "rollout": 50,
+      "start": "2025-01-01",
+      "end": "2026-12-31",
+      "variants": [
+        {
+          "id": "enabled",
+          "weight": 100
+        }
+      ]
+    }
+  ]
+}
+

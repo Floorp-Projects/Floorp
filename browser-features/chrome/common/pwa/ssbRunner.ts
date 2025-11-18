@@ -20,16 +20,16 @@ export class SsbRunner {
   public async runSsbByUrl(url: string) {
     const ssbData = await this.dataManager.getCurrentSsbData();
     const ssbToRun = Object.values(ssbData).find((ssb) =>
-      url.startsWith(ssb.start_url)
+      url.startsWith(ssb.start_url),
     );
     if (ssbToRun) {
-      this.openSsbWindow(ssbToRun);
+      await this.openSsbWindow(ssbToRun);
     }
   }
 
   public async openSsbWindow(ssb: Manifest) {
-    const win = SsbRunnerUtils.openSsbWindow(ssb);
-    await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
+    const win = await SsbRunnerUtils.openSsbWindow(ssb);
+    await SsbRunnerUtils.applyOSIntegration(ssb, win);
     return win;
   }
 }

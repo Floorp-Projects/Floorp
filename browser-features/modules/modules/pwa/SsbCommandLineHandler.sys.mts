@@ -13,12 +13,42 @@ const { SessionStore } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/SessionStore.sys.mjs",
 );
 
+const LINUX_TASKBAR_EXPERIMENT = "pwa_taskbar_integration_linux";
+
+// Check if Linux-only PWA taskbar integration experiment is enabled
+// Simply checks if the user is assigned to the experiment (rollout-based)
+const isTaskbarIntegrationEnabled = (): boolean => {
+  if (AppConstants.platform !== "linux") {
+    return true;
+  }
+
+  try {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
+    const variant = Experiments.getVariant(LINUX_TASKBAR_EXPERIMENT);
+
+    // If variant is assigned (not null), the feature is enabled
+    // Rollout percentage controls what portion of users get the feature
+    return variant !== null;
+  } catch (error) {
+    console.error(
+      "Failed to check pwa_taskbar_integration_linux experiment:",
+      error,
+    );
+    // If experiments system fails, default to disabled for safety
+    return false;
+  }
+};
+
 export const PWA_WINDOW_NAME = "FloorpPWAWindow";
+const SSB_WINDOW_FEATURES =
+  "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
-  static openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+  static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
     let initialLaunchWin: nsIDOMWindow | null = null;
     if (initialLaunch) {
       initialLaunchWin = Services.ww.openWindow(
@@ -30,22 +60,14 @@ export class SsbRunnerUtils {
       ) as nsIDOMWindow;
     }
 
-    const browserWindowFeatures =
-      "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
-
-    const args = Cc["@mozilla.org/supports-string;1"].createInstance(
-      Ci.nsISupportsString,
-    );
-
-    args.data = ssb.start_url;
-
-    const uniqueWindowName = `${PWA_WINDOW_NAME}_${ssb.id}_${Date.now()}`;
+    const args = this.createWindowArgs(ssb.start_url);
+    const uniqueWindowName = this.generateWindowName(ssb.id);
 
     const win = Services.ww.openWindow(
       null as unknown as mozIDOMWindowProxy,
       AppConstants.BROWSER_CHROME_URL,
       uniqueWindowName,
-      browserWindowFeatures,
+      SSB_WINDOW_FEATURES,
       args,
     ) as nsIDOMWindow;
 
@@ -53,17 +75,72 @@ export class SsbRunnerUtils {
     SessionStore.promiseAllWindowsRestored.then(() => {
       initialLaunchWin?.close();
     });
+
+    await this.waitForWindowLoaded(win);
     return win;
   }
 
-  static async applyWindowsIntegration(ssb: Manifest, win: Window) {
+  static async applyOSIntegration(ssb: Manifest, win: Window) {
+    // Check A/B test before applying taskbar integration
+    if (!isTaskbarIntegrationEnabled()) {
+      console.debug(
+        "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping OS integration",
+      );
+      return;
+    }
+
     if (AppConstants.platform === "win") {
       const { WindowsSupport } = ChromeUtils.importESModule(
         "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
       );
       const windowsSupport = new WindowsSupport();
       await windowsSupport.applyOSIntegration(ssb, win);
+      return;
     }
+
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      const linuxSupport = new LinuxSupport();
+      await linuxSupport.applyOSIntegration(ssb, win);
+    }
+  }
+
+  private static createWindowArgs(startUrl: string) {
+    const args = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString,
+    );
+    args.data = startUrl;
+    return args;
+  }
+
+  private static generateWindowName(id: string) {
+    return `${PWA_WINDOW_NAME}_${id}_${Date.now()}`;
+  }
+
+  private static async waitForWindowLoaded(win: Window) {
+    if (win.document.readyState === "complete") {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      win.addEventListener("load", () => resolve(), { once: true });
+    });
+  }
+
+  static async getSsbById(id: string): Promise<Manifest | null> {
+    const { DataStoreProvider } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/DataStore.sys.mjs",
+    );
+    const dataManager = DataStoreProvider.getDataManager();
+    const ssbData = await dataManager.getCurrentSsbData();
+
+    const match = Object.values(ssbData).find(
+      (value) => (value as Manifest).id === id,
+    );
+
+    return (match as Manifest) ?? null;
   }
 }
 
@@ -79,21 +156,14 @@ async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
 
   // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
   try {
-    const { DataStoreProvider } = ChromeUtils.importESModule(
-      "resource://noraneko/modules/pwa/DataStore.sys.mjs",
-    );
-
-    const dataManager = DataStoreProvider.getDataManager();
-    const ssbData = await dataManager.getCurrentSsbData();
-
-    for (const value of Object.values(ssbData)) {
-      if ((value as Manifest).id === id) {
-        const ssb = value as Manifest;
-        const win = SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
-        await SsbRunnerUtils.applyWindowsIntegration(ssb, win);
-        break;
-      }
+    const ssb = await SsbRunnerUtils.getSsbById(id);
+    if (!ssb) {
+      console.warn(`[SSBCommandLineHandler] Unknown SSB id: ${id}`);
+      return;
     }
+
+    const win = await SsbRunnerUtils.openSsbWindow(ssb, initialLaunch);
+    await SsbRunnerUtils.applyOSIntegration(ssb, win);
   } finally {
     Services.startup.exitLastWindowClosingSurvivalArea();
   }
