@@ -13,6 +13,34 @@ const { SessionStore } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/SessionStore.sys.mjs",
 );
 
+const LINUX_TASKBAR_EXPERIMENT = "pwa_taskbar_integration_linux";
+
+// Check if Linux-only PWA taskbar integration experiment is enabled
+// Simply checks if the user is assigned to the experiment (rollout-based)
+const isTaskbarIntegrationEnabled = (): boolean => {
+  if (AppConstants.platform !== "linux") {
+    return true;
+  }
+
+  try {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
+    const variant = Experiments.getVariant(LINUX_TASKBAR_EXPERIMENT);
+
+    // If variant is assigned (not null), the feature is enabled
+    // Rollout percentage controls what portion of users get the feature
+    return variant !== null;
+  } catch (error) {
+    console.error(
+      "Failed to check pwa_taskbar_integration_linux experiment:",
+      error,
+    );
+    // If experiments system fails, default to disabled for safety
+    return false;
+  }
+};
+
 export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 const SSB_WINDOW_FEATURES =
   "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
@@ -53,6 +81,14 @@ export class SsbRunnerUtils {
   }
 
   static async applyOSIntegration(ssb: Manifest, win: Window) {
+    // Check A/B test before applying taskbar integration
+    if (!isTaskbarIntegrationEnabled()) {
+      console.debug(
+        "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping OS integration",
+      );
+      return;
+    }
+
     if (AppConstants.platform === "win") {
       const { WindowsSupport } = ChromeUtils.importESModule(
         "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",

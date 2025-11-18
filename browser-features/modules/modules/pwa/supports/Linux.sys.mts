@@ -4,6 +4,28 @@ const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
 );
 
+// Check if PWA taskbar integration experiment is enabled
+// Simply checks if the user is assigned to the experiment (rollout-based)
+const isTaskbarIntegrationEnabled = (): boolean => {
+  try {
+    const { Experiments } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+    );
+    const variant = Experiments.getVariant("pwa_taskbar_integration_linux");
+
+    // If variant is assigned (not null), the feature is enabled
+    // Rollout percentage controls what portion of users get the feature
+    return variant !== null;
+  } catch (error) {
+    console.error(
+      "Failed to check pwa_taskbar_integration_linux experiment:",
+      error,
+    );
+    // If experiments system fails, default to disabled for safety
+    return false;
+  }
+};
+
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -317,6 +339,15 @@ export class LinuxSupport {
   }
 
   async applyOSIntegration(ssb: Manifest, aWindow: Window) {
+    // Check A/B test before applying taskbar integration
+    // Note: install() method is excluded from A/B test as it handles .desktop file generation
+    if (!isTaskbarIntegrationEnabled()) {
+      console.debug(
+        "[LinuxSupport] PWA taskbar integration disabled by A/B test, skipping OS integration",
+      );
+      return;
+    }
+
     if (Services.appinfo.processType !== PROCESS_TYPE_DEFAULT) {
       console.debug(
         "[LinuxSupport] Forwarding OS integration request to parent process",
@@ -417,6 +448,15 @@ export class LinuxSupport {
   }) => {
     const { data } = message;
     if (!data || data.action !== "apply" || !data.ssb) {
+      return;
+    }
+
+    // Check A/B test before applying taskbar integration in parent process
+    // This ensures consistency even if message was sent before A/B test check
+    if (!isTaskbarIntegrationEnabled()) {
+      console.debug(
+        "[LinuxSupport] PWA taskbar integration disabled by A/B test in parent process, skipping OS integration",
+      );
       return;
     }
 
