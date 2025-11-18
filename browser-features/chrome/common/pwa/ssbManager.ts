@@ -219,7 +219,7 @@ export class SiteSpecificBrowserManager {
   }
 
   public async runSsbByUrl(url: string) {
-    this.ssbRunner.runSsbByUrl(url);
+    await this.ssbRunner.runSsbByUrl(url);
   }
 
   private async onCurrentTabChangedOrLoaded() {
