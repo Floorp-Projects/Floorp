@@ -236,15 +236,15 @@ export class WorkspacesTabManager {
                 true,
               );
               console.debug(
-                "WorkspacesTabManager: exitOnLastTabClose is true; quitting",
+                "WorkspacesTabManager: exitOnLastTabClose is true; close window",
                 { workspaceId },
               );
-              Services.startup.quit(Services.startup.eAttemptQuit as number);
+              globalThis.close();
               return;
-            } catch (quitErr) {
+            } catch (e) {
               console.error(
-                "WorkspacesTabManager: failed to quit on workspace empty",
-                quitErr,
+                "WorkspacesTabManager: failed to close window on workspace empty",
+                e,
               );
               // fall through to create a replacement tab
             }
