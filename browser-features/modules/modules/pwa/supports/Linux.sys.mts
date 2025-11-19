@@ -373,7 +373,7 @@ export class LinuxSupport {
       console.debug(
         `[LinuxSupport] Setting window class: ${paths.startupWMClass}, title: ${ssb.name}`,
       );
-      LinuxSupport.trySetWindowClass(taskbar, aWindow, paths, ssb);
+      await LinuxSupport.trySetWindowClass(taskbar, aWindow, paths, ssb);
 
       const iconExists = await IOUtils.exists(paths.iconPath);
       console.debug(
@@ -502,21 +502,36 @@ export class LinuxSupport {
     return false;
   }
 
-  private static trySetWindowClass(
+  private static async trySetWindowClass(
     taskbar: nsIFloorpLinuxTaskbar,
     aWindow: Window,
     paths: LinuxPathInfo,
     ssb: Manifest,
   ) {
-    try {
-      taskbar.setWindowClass(
-        aWindow as unknown as mozIDOMWindowProxy,
-        paths.startupWMClass,
-        ssb.name,
-      );
-      console.debug("[LinuxSupport] Window class set successfully");
-    } catch (error) {
-      console.error("[LinuxSupport] Failed to set window class", error);
+    let retries = 0;
+    while (retries < ICON_RETRY_LIMIT) {
+      try {
+        taskbar.setWindowClass(
+          aWindow as unknown as mozIDOMWindowProxy,
+          paths.startupWMClass,
+          ssb.name,
+        );
+        console.debug("[LinuxSupport] Window class set successfully");
+        return;
+      } catch (error) {
+        retries++;
+        if (retries >= ICON_RETRY_LIMIT) {
+          console.error(
+            "[LinuxSupport] Failed to set window class after retries",
+            error,
+          );
+          return;
+        }
+        console.debug(
+          `[LinuxSupport] Set window class failed, retrying in ${ICON_RETRY_DELAY_MS}ms... (${error})`,
+        );
+        await LinuxSupport.sleep(ICON_RETRY_DELAY_MS);
+      }
     }
   }
 
