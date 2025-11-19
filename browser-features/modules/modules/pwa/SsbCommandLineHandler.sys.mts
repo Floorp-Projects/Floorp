@@ -23,64 +23,64 @@ const SSB_WINDOW_FEATURES =
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
-    static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
-      let initialLaunchWin: nsIDOMWindow | null = null;
-      if (initialLaunch) {
-        initialLaunchWin = Services.ww.openWindow(
-          null as unknown as mozIDOMWindowProxy,
-          AppConstants.BROWSER_CHROME_URL,
-          "_blank",
-          "",
-          {},
-        ) as nsIDOMWindow;
-      }
-
-      const args = this.createWindowArgs(ssb.start_url);
-      const uniqueWindowName = this.generateWindowName(ssb.id);
-
-      const win = Services.ww.openWindow(
+  static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+    let initialLaunchWin: nsIDOMWindow | null = null;
+    if (initialLaunch) {
+      initialLaunchWin = Services.ww.openWindow(
         null as unknown as mozIDOMWindowProxy,
         AppConstants.BROWSER_CHROME_URL,
-        uniqueWindowName,
-        SSB_WINDOW_FEATURES,
-        args,
+        "_blank",
+        "",
+        {},
       ) as nsIDOMWindow;
-
-      win.focus();
-      SessionStore.promiseAllWindowsRestored.then(() => {
-        initialLaunchWin?.close();
-      });
-
-      await this.waitForWindowLoaded(win);
-      return win;
     }
 
-    static async applyOSIntegration(ssb: Manifest, win: Window) {
-      // Check A/B test before applying taskbar integration
-      if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
-        console.debug(
-          "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping OS integration",
-        );
-        return;
-      }
+    const args = this.createWindowArgs(ssb.start_url);
+    const uniqueWindowName = this.generateWindowName(ssb.id);
 
-      if (AppConstants.platform === "win") {
-        const { WindowsSupport } = ChromeUtils.importESModule(
-          "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
-        );
-        const windowsSupport = new WindowsSupport();
-        await windowsSupport.applyOSIntegration(ssb, win);
-        return;
-      }
+    const win = Services.ww.openWindow(
+      null as unknown as mozIDOMWindowProxy,
+      AppConstants.BROWSER_CHROME_URL,
+      uniqueWindowName,
+      SSB_WINDOW_FEATURES,
+      args,
+    ) as nsIDOMWindow;
 
-      if (AppConstants.platform === "linux") {
-        const { LinuxSupport } = ChromeUtils.importESModule(
-          "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
-        );
-        const linuxSupport = new LinuxSupport();
-        await linuxSupport.applyOSIntegration(ssb, win);
-      }
+    win.focus();
+    SessionStore.promiseAllWindowsRestored.then(() => {
+      initialLaunchWin?.close();
+    });
+
+    await this.waitForWindowLoaded(win);
+    return win;
+  }
+
+  static async applyOSIntegration(ssb: Manifest, win: Window) {
+    // Check A/B test before applying taskbar integration
+    if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
+      console.debug(
+        "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping OS integration",
+      );
+      return;
     }
+
+    if (AppConstants.platform === "win") {
+      const { WindowsSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
+      );
+      const windowsSupport = new WindowsSupport();
+      await windowsSupport.applyOSIntegration(ssb, win);
+      return;
+    }
+
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      const linuxSupport = new LinuxSupport();
+      await linuxSupport.applyOSIntegration(ssb, win);
+    }
+  }
 
   private static createWindowArgs(startUrl: string) {
     const args = Cc["@mozilla.org/supports-string;1"].createInstance(
@@ -95,7 +95,7 @@ export class SsbRunnerUtils {
   }
 
   private static async waitForWindowLoaded(win: Window) {
-    if (win.document.readyState === "complete") {
+    if (win.document && win.document.readyState === "complete") {
       return;
     }
 
@@ -120,10 +120,6 @@ export class SsbRunnerUtils {
 }
 
 async function startSSBFromCmdLine(id: string, initialLaunch: boolean) {
-  if (initialLaunch) {
-    return;
-  }
-
   // Loading the SSB is async. Until that completes and launches we will
   // be without an open window and the platform will not continue startup
   // in that case. Flag that a window is coming.
