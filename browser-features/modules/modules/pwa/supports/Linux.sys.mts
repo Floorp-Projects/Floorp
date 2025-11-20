@@ -315,7 +315,7 @@ export class LinuxSupport {
         );
         process.init(desktopDB);
         const args = [paths.desktopDir];
-        process.run(false, args, args.length);
+        process.run(true, args, args.length);
       }
     } catch (e) {
       console.error("Failed to update desktop database", e);
