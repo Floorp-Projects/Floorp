@@ -202,6 +202,10 @@ export class LinuxSupport {
       console.debug(`[LinuxSupport] Using executable path: ${exePath}`);
     }
 
+    const slug = this.getNormalizedId(ssb);
+    const startupWMClass = `floorp-${slug}`;
+
+    tokens.push("--name", startupWMClass);
     tokens.push("--profile", PathUtils.profileDir, "--start-ssb", ssb.id);
     const execCommand = tokens
       .map((token) => this.escapeExecToken(token))
@@ -319,30 +323,30 @@ export class LinuxSupport {
     console.debug(`[LinuxSupport] Successfully uninstalled SSB: ${ssb.name}`);
   }
 
-    async applyOSIntegration(ssb: Manifest, aWindow: Window) {
-      // Check A/B test before applying taskbar integration
-      // Note: install() method is excluded from A/B test as it handles .desktop file generation
-      if (!TaskbarExperiment.isEnabledForLinux()) {
-        console.debug(
-          "[LinuxSupport] PWA taskbar integration disabled by A/B test, skipping OS integration",
-        );
-        return;
-      }
-
-      if (Services.appinfo.processType !== PROCESS_TYPE_DEFAULT) {
-        console.debug(
-          "[LinuxSupport] Forwarding OS integration request to parent process",
-        );
-        LinuxSupport.sendParentProcessRequest({
-          action: "apply",
-          ssb,
-          windowName: aWindow?.name ?? null,
-        });
-        return;
-      }
-
-      await LinuxSupport.applyOSIntegrationInternal(ssb, aWindow);
+  async applyOSIntegration(ssb: Manifest, aWindow: Window) {
+    // Check A/B test before applying taskbar integration
+    // Note: install() method is excluded from A/B test as it handles .desktop file generation
+    if (!TaskbarExperiment.isEnabledForLinux()) {
+      console.debug(
+        "[LinuxSupport] PWA taskbar integration disabled by A/B test, skipping OS integration",
+      );
+      return;
     }
+
+    if (Services.appinfo.processType !== PROCESS_TYPE_DEFAULT) {
+      console.debug(
+        "[LinuxSupport] Forwarding OS integration request to parent process",
+      );
+      LinuxSupport.sendParentProcessRequest({
+        action: "apply",
+        ssb,
+        windowName: aWindow?.name ?? null,
+      });
+      return;
+    }
+
+    await LinuxSupport.applyOSIntegrationInternal(ssb, aWindow);
+  }
 
   private static async applyOSIntegrationInternal(
     ssb: Manifest,
