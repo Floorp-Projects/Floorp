@@ -40,7 +40,7 @@ try {
     $NewPrefs = @()
 
     # Read firefox.js content
-    $FirefoxContent = Get-Content $TempFile -Raw
+    $FirefoxContent = [System.IO.File]::ReadAllText($TempFile, [System.Text.Encoding]::UTF8)
 
     # Parse override.ini
     $OverrideContent = Get-Content $OverrideIni
@@ -50,10 +50,14 @@ try {
             continue
         }
 
-        # Parse preference line (pref_name = value)
-        if ($line -match '^\s*([^=]+)\s*=\s*(.+)$') {
-            $prefName = $matches[1].Trim()
-            $prefValue = $matches[2].Trim()
+        # Parse preference line (@pref_name = value or pref_name = value)
+        # Group 1: Optional @ for locked prefs
+        # Group 2: Pref name
+        # Group 3: Value
+        if ($line -match '^\s*(@?)([^=]+)\s*=\s*(.+)$') {
+            $isLocked = $matches[1] -eq "@"
+            $prefName = $matches[2].Trim()
+            $prefValue = $matches[3].Trim()
 
             # Handle values that are not quoted
             if ($prefValue -match '^".*"$') {
@@ -70,19 +74,26 @@ try {
                 $formattedValue = "`"$prefValue`""
             }
 
+            # Determine function name (pref or lockPref)
+            if ($isLocked) {
+                $funcName = "lockPref"
+            } else {
+                $funcName = "pref"
+            }
+
             # Escape special regex characters for the preference name
             $escapedPrefName = [regex]::Escape($prefName)
 
-            # Search for existing preference
-            $existingPrefPattern = "pref\(`"$escapedPrefName`"[^)]*\);"
+            # Search for existing preference (pref or lockPref)
+            $existingPrefPattern = "(pref|lockPref)\(`"$escapedPrefName`"[^)]*\);"
             
             if ($FirefoxContent -match $existingPrefPattern) {
                 # Replace existing preference
-                $replacement = "pref(`"$prefName`", $formattedValue);"
+                $replacement = "$funcName(`"$prefName`", $formattedValue);"
                 $FirefoxContent = $FirefoxContent -replace $existingPrefPattern, $replacement
             } else {
                 # Add as new preference
-                $newPref = "pref(`"$prefName`", $formattedValue);"
+                $newPref = "$funcName(`"$prefName`", $formattedValue);"
                 $NewPrefs += $newPref
             }
         }
@@ -98,7 +109,7 @@ try {
     }
 
     # Write the updated content back to the temporary file
-    Set-Content -Path $TempFile -Value $FirefoxContent -NoNewline
+    [System.IO.File]::WriteAllText($TempFile, $FirefoxContent, [System.Text.Encoding]::UTF8)
 
     # Apply changes to firefox.js
     Move-Item $TempFile $FirefoxJsPath -Force
