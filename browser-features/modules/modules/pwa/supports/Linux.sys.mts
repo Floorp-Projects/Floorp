@@ -19,7 +19,6 @@ const PROCESS_TYPE_DEFAULT = Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 const OS_INTEGRATION_MESSAGE = "floorp:pwa:linux-os-integration";
 const DOCUMENT_READY_RETRY_LIMIT = 20;
 const DOCUMENT_READY_RETRY_DELAY_MS = 100;
-const GTK_READY_DELAY_MS = 300;
 const ICON_RETRY_LIMIT = 10;
 const ICON_RETRY_DELAY_MS = 300;
 const NS_IFILE_IID = Ci.nsIFile as unknown as nsIID;
@@ -197,7 +196,8 @@ export class LinuxSupport {
     if (isFlatpak) {
       tokens.push("flatpak", "run", "one.ablaze.floorp");
     } else {
-      const exePath = Services.dirsvc.get("XREExeF", NS_IFILE_IID).path;
+      const exePath = (Services.dirsvc.get("XREExeF", NS_IFILE_IID) as nsIFile)
+        .path;
       tokens.push(exePath);
       console.debug(`[LinuxSupport] Using executable path: ${exePath}`);
     }
@@ -291,6 +291,25 @@ export class LinuxSupport {
     );
     await IOUtils.write(paths.desktopPath, textEncoder.encode(desktopEntry));
     await LinuxSupport.ensureDesktopPermissions(paths.desktopPath);
+
+    try {
+      const desktopDB = Cc["@mozilla.org/file/local;1"].createInstance(
+        Ci.nsIFile,
+      );
+      desktopDB.initWithPath("/usr/bin/update-desktop-database");
+      if (desktopDB.exists()) {
+        console.debug("[LinuxSupport] Updating desktop database");
+        const process = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess,
+        );
+        process.init(desktopDB);
+        const args = [paths.desktopDir];
+        process.run(false, args, args.length);
+      }
+    } catch (e) {
+      console.error("Failed to update desktop database", e);
+    }
+
     console.debug(`[LinuxSupport] Successfully installed SSB: ${ssb.name}`);
   }
 
@@ -365,15 +384,9 @@ export class LinuxSupport {
 
     const paths = LinuxSupport.getPathInfo(ssb);
     try {
-      const documentReady = await LinuxSupport.waitForDocumentReady(aWindow);
-      if (!documentReady) {
-        console.warn(
-          "[LinuxSupport] Window document not ready after max retries, proceeding anyway",
-        );
-      }
-
-      await LinuxSupport.sleep(GTK_READY_DELAY_MS);
-
+      // Apply window class as early as possible to ensure proper taskbar grouping.
+      // We don't wait for the document to be ready, relying on the retry mechanism
+      // in trySetWindowClass to wait for the widget to become available.
       console.debug(
         `[LinuxSupport] Setting window class: ${paths.startupWMClass}, title: ${ssb.name}`,
       );
@@ -438,7 +451,7 @@ export class LinuxSupport {
 
     // Check A/B test before applying taskbar integration in parent process
     // This ensures consistency even if message was sent before A/B test check
-    if (!isTaskbarIntegrationEnabled()) {
+    if (!TaskbarExperiment.isEnabledForLinux()) {
       console.debug(
         "[LinuxSupport] PWA taskbar integration disabled by A/B test in parent process, skipping OS integration",
       );

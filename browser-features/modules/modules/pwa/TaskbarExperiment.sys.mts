@@ -5,6 +5,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const LINUX_TASKBAR_EXPERIMENT = "pwa_taskbar_integration_linux";
 
 const readLinuxExperimentAssignment = (): boolean => {
+  return true;
+
   try {
     const { Experiments } = ChromeUtils.importESModule(
       "resource://noraneko/modules/experiments/Experiments.sys.mjs",
