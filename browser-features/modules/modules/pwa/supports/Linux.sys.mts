@@ -270,16 +270,25 @@ export class LinuxSupport {
     const paths = LinuxSupport.getPathInfo(ssb);
     await LinuxSupport.ensureDirectories(paths);
 
-    let iconFile: nsIFile | null = new LinuxSupport.nsIFile(paths.iconPath);
+    let iconFile: nsIFile | null = null;
     if (ssb.icon) {
       console.debug(`[LinuxSupport] Loading icon from: ${ssb.icon}`);
       try {
-        const { container } = await ImageTools.loadImage(
-          Services.io.newURI(ssb.icon),
+        const iconURI = Services.io.newURI(ssb.icon);
+        const targetFile = new LinuxSupport.nsIFile(paths.iconPath);
+        const savedPath = await ImageTools.saveIconForPlatform(
+          iconURI,
+          targetFile,
+          128,
+          128,
         );
-        console.debug(`[LinuxSupport] Saving icon to: ${paths.iconPath}`);
-        await ImageTools.saveIcon(container, 128, 128, iconFile);
-        console.debug("[LinuxSupport] Icon saved successfully");
+        if (savedPath) {
+          iconFile = new LinuxSupport.nsIFile(savedPath);
+          paths.iconPath = savedPath;
+          console.debug("[LinuxSupport] Icon saved successfully");
+        } else {
+          iconFile = null;
+        }
       } catch (error) {
         console.error("Failed to save SSB icon for Linux", error);
         iconFile = null;

@@ -82,6 +82,15 @@ export class IconProcesser {
   }
 
   public async getIconForBrowser(browser: Browser): Promise<string> {
+    const fromPlaces = await this.getIconFromPlaces(browser);
+    if (fromPlaces) {
+      return fromPlaces;
+    }
+
+    return this.getIconDirectlyFromPage(browser);
+  }
+
+  private async getIconFromPlaces(browser: Browser): Promise<string> {
     const gFavicons = PlacesUtils.favicons as {
       getFaviconForPage: (uri: nsIURI) => Promise<{ uri: nsIURI }>;
     };
@@ -139,5 +148,35 @@ export class IconProcesser {
       console.error("Failed to fetch icon:", e);
       return "";
     }
+  }
+
+  private async getIconDirectlyFromPage(browser: Browser): Promise<string> {
+    const actor = browser.browsingContext.currentWindowGlobal.getActor(
+      "NRProgressiveWebApp",
+    );
+    if (!actor) {
+      return "";
+    }
+
+    let iconCandidates: string[] = [];
+    try {
+      iconCandidates = await actor.sendQuery("GetPageIcons");
+    } catch (e) {
+      console.error("Failed to collect icon candidates", e);
+      return "";
+    }
+
+    for (const href of iconCandidates) {
+      try {
+        const dataUri = await actor.sendQuery("LoadIcon", href);
+        if (typeof dataUri === "string" && dataUri.startsWith("data:")) {
+          return dataUri;
+        }
+      } catch (e) {
+        console.warn("Failed to load icon candidate", e);
+      }
+    }
+
+    return "";
   }
 }

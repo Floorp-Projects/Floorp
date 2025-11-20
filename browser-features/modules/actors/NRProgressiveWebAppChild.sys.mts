@@ -40,11 +40,44 @@ export class NRProgressiveWebAppChild extends JSWindowActorChild {
     }
   }
 
-  receiveMessage(message: { name: string; data: nsIURL }) {
+  receiveMessage(message: { name: string; data?: nsIURL }) {
     switch (message.name) {
       case "LoadIcon":
         return loadIcon(this.contentWindow, message.data);
+      case "GetPageIcons":
+        return this.getPageIcons();
     }
     return null;
+  }
+
+  private getPageIcons(): string[] {
+    const window = this.contentWindow;
+    if (!window || !window.document) {
+      return [];
+    }
+
+    const selectors =
+      'link[rel~="icon" i], link[rel="shortcut icon" i], link[rel="apple-touch-icon" i], link[rel="apple-touch-icon-precomposed" i]';
+    const links = window.document.querySelectorAll<HTMLLinkElement>(selectors);
+    const seen = new Set<string>();
+    const results: string[] = [];
+
+    for (const link of links) {
+      const href = link.getAttribute("href");
+      if (!href) {
+        continue;
+      }
+      try {
+        const absolute = new window.URL(href, window.location.href).toString();
+        if (!seen.has(absolute)) {
+          seen.add(absolute);
+          results.push(absolute);
+        }
+      } catch (e) {
+        console.warn("NRProgressiveWebAppChild: invalid icon href", e);
+      }
+    }
+
+    return results;
   }
 }

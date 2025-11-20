@@ -66,25 +66,33 @@ export const ImageTools = {
             "",
           );
         }
-      } catch (_e) {
+      } catch (vectorErr) {
+        console.warn("ImageTools: failed initial encode, retrying", vectorErr);
         try {
           stream = ImgTools.encodeImage(container, "image/png", "");
         } catch (e2) {
+          console.error("ImageTools: failed fallback encode", e2);
           reject(e2);
           return;
         }
       }
 
       try {
-        (stream as unknown as { QueryInterface: (iid: unknown) => unknown })
-          .QueryInterface(Ci.nsIAsyncInputStream);
-      } catch (e) {
+        (
+          stream as unknown as { QueryInterface: (iid: unknown) => unknown }
+        ).QueryInterface(Ci.nsIAsyncInputStream);
+      } catch (err) {
+        console.error(
+          "ImageTools: stream does not implement nsIAsyncInputStream",
+          err,
+        );
         reject(
           Components.Exception(
             "imgIEncoder must implement nsIAsyncInputStream",
-            e,
+            Components.results.NS_ERROR_FAILURE,
           ),
         );
+        return;
       }
 
       const binaryStream = Cc[
@@ -159,10 +167,12 @@ export const ImageTools = {
             "",
           );
         }
-      } catch (_e) {
+      } catch (vectorErr) {
+        console.warn("ImageTools: failed initial encode, retrying", vectorErr);
         try {
           stream = ImgTools.encodeImage(container, format, "");
         } catch (e2) {
+          console.error("ImageTools: failed fallback encode", e2);
           reject(e2);
           return;
         }
@@ -175,6 +185,66 @@ export const ImageTools = {
         }
       });
     });
+  },
+
+  async saveDataURI(dataURI: nsIURI, target: nsIFile) {
+    if (!dataURI.schemeIs("data")) {
+      throw new Error("saveDataURI only supports data: URIs.");
+    }
+
+    await IOUtils.makeDirectory(target.parent!.path, {
+      createAncestors: true,
+      ignoreExisting: true,
+    });
+
+    return new Promise<void>((resolve, reject) => {
+      try {
+        const channel = NetUtil.newChannel({
+          uri: dataURI,
+          loadUsingSystemPrincipal: true,
+        });
+        const stream = channel.open();
+        const output = FileUtils.openFileOutputStream(target);
+        NetUtil.asyncCopy(stream, output, (status: number) => {
+          if (Components.isSuccessCode(status)) {
+            resolve();
+          } else {
+            reject(
+              Components.Exception("Failed to save raw icon data.", status),
+            );
+          }
+        });
+      } catch (e) {
+        reject(e);
+      }
+    });
+  },
+
+  async saveIconForPlatform(
+    sourceURI: nsIURI,
+    targetFile: nsIFile,
+    width: number,
+    height: number,
+  ): Promise<string | null> {
+    const { container, type } = await ImageTools.loadImage(sourceURI);
+    try {
+      await ImageTools.saveIcon(container, width, height, targetFile);
+      return targetFile.path;
+    } catch (error) {
+      console.warn("ImageTools: saveIcon failed, attempting fallback", error);
+      if (type?.includes("svg")) {
+        const svgFile = targetFile.clone();
+        const leafName = svgFile.leafName;
+        if (leafName.endsWith(".png")) {
+          svgFile.leafName = leafName.replace(/\.png$/, ".svg");
+        } else if (!leafName.endsWith(".svg")) {
+          svgFile.leafName = `${leafName}.svg`;
+        }
+        await ImageTools.saveDataURI(sourceURI, svgFile);
+        return svgFile.path;
+      }
+      throw error;
+    }
   },
 
   decodeImageFromArrayBuffer(arrayBuffer: ArrayBuffer, contentType: string) {
