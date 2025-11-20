@@ -170,14 +170,30 @@ async function extractNestedZip(
 
 export async function decompressBin(): Promise<void> {
   const binArchive = getBinArchive();
-  const archivePath = path.resolve(binArchive.filename);
-  logger.info(`Binary extraction started: ${binArchive.filename}`);
+  let archivePath = path.resolve(binArchive.filename);
 
-  if (!exists(binArchive.filename)) {
+  if (!exists(archivePath)) {
+    const cwd = Deno.cwd();
+    const expectedExt = binArchive.format === "tar.xz"
+      ? ".tar.xz"
+      : path.extname(binArchive.filename);
+    for (const entry of Deno.readDirSync(cwd)) {
+      if (entry.isFile && entry.name.endsWith(expectedExt)) {
+        logger.info(`Found alternative artifact: ${entry.name}`);
+        archivePath = path.resolve(entry.name);
+        break;
+      }
+    }
+  }
+
+  logger.info(`Binary extraction started: ${path.basename(archivePath)}`);
+
+  if (!exists(archivePath)) {
     logger.warn(
       `${binArchive.filename} not found. Downloading from GitHub release.`,
     );
     await downloadBin(binArchive.filename);
+    archivePath = path.resolve(binArchive.filename);
   }
 
   try {

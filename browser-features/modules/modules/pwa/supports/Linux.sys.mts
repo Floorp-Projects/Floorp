@@ -19,6 +19,7 @@ const PROCESS_TYPE_DEFAULT = Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 const OS_INTEGRATION_MESSAGE = "floorp:pwa:linux-os-integration";
 const DOCUMENT_READY_RETRY_LIMIT = 20;
 const DOCUMENT_READY_RETRY_DELAY_MS = 100;
+const GTK_READY_DELAY_MS = 300;
 const ICON_RETRY_LIMIT = 10;
 const ICON_RETRY_DELAY_MS = 300;
 const NS_IFILE_IID = Ci.nsIFile as unknown as nsIID;
@@ -42,6 +43,16 @@ type LinuxPathInfo = {
 };
 
 const textEncoder = new TextEncoder();
+
+function isInterfaceRequestor(
+  owner: nsIDocShellTreeOwner,
+): owner is nsIDocShellTreeOwner & nsIInterfaceRequestor {
+  return (
+    !!owner &&
+    typeof (owner as unknown as nsIInterfaceRequestor).getInterface ===
+      "function"
+  );
+}
 
 export class LinuxSupport {
   private static nsIFile = Components.Constructor(
@@ -384,13 +395,21 @@ export class LinuxSupport {
 
     const paths = LinuxSupport.getPathInfo(ssb);
     try {
-      // Apply window class as early as possible to ensure proper taskbar grouping.
-      // We don't wait for the document to be ready, relying on the retry mechanism
-      // in trySetWindowClass to wait for the widget to become available.
+      const documentReady = await LinuxSupport.waitForDocumentReady(aWindow);
+      if (!documentReady) {
+        console.warn(
+          "[LinuxSupport] Window document not ready after max retries, continuing",
+        );
+      }
+
+      await LinuxSupport.sleep(GTK_READY_DELAY_MS);
+
       console.debug(
         `[LinuxSupport] Setting window class: ${paths.startupWMClass}, title: ${ssb.name}`,
       );
       await LinuxSupport.trySetWindowClass(taskbar, aWindow, paths, ssb);
+
+      await LinuxSupport.remapWindowIfNeeded(aWindow);
 
       const iconExists = await IOUtils.exists(paths.iconPath);
       console.debug(
@@ -421,6 +440,48 @@ export class LinuxSupport {
       return;
     }
     Services.cpmm.sendAsyncMessage(OS_INTEGRATION_MESSAGE, data);
+  }
+
+  private static async remapWindowIfNeeded(aWindow: Window) {
+    try {
+      const docShell = aWindow.docShell;
+      if (
+        !docShell ||
+        !docShell.treeOwner ||
+        !isInterfaceRequestor(docShell.treeOwner)
+      ) {
+        console.debug("[LinuxSupport] Skipping remap; no tree owner interface");
+        return;
+      }
+
+      const baseWin = docShell.treeOwner.getInterface(
+        Ci.nsIBaseWindow,
+      ) as nsIBaseWindow | null;
+      if (!baseWin) {
+        console.debug("[LinuxSupport] Skipping remap; no base window");
+        return;
+      }
+
+      let attempts = 0;
+      while (!baseWin.visibility && attempts < DOCUMENT_READY_RETRY_LIMIT) {
+        await LinuxSupport.sleep(DOCUMENT_READY_RETRY_DELAY_MS);
+        attempts++;
+      }
+
+      if (!baseWin.visibility) {
+        console.debug(
+          "[LinuxSupport] Window still hidden after waiting; skipping remap",
+        );
+        return;
+      }
+
+      console.debug("[LinuxSupport] Re-mapping window to refresh WM_CLASS");
+      baseWin.visibility = false;
+      await LinuxSupport.sleep(150);
+      baseWin.visibility = true;
+    } catch (error) {
+      console.warn("[LinuxSupport] Failed to re-map window", error);
+    }
   }
 
   private static parentListenerRegistered = false;
