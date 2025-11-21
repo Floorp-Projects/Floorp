@@ -145,12 +145,9 @@ export const ImageTools = {
     height: number,
     target: nsIFile,
   ) {
-    let format: string;
+    let format = "image/png";
     if (AppConstants.platform === "win") {
       format = "image/vnd.microsoft.icon";
-    }
-    if (AppConstants.platform === "linux") {
-      format = "image/png";
     }
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);

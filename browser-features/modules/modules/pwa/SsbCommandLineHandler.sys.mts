@@ -79,6 +79,15 @@ export class SsbRunnerUtils {
       );
       const linuxSupport = new LinuxSupport();
       await linuxSupport.applyOSIntegration(ssb, win);
+      return;
+    }
+
+    if (AppConstants.platform === "macosx") {
+      const { MacSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+      );
+      const macSupport = new MacSupport();
+      await macSupport.applyOSIntegration(ssb, win);
     }
   }
 

@@ -26,6 +26,11 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+} else if (AppConstants.platform === "macosx") {
+  const { MacSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
+  );
+  SupportClass = MacSupport;
 }
 
 export class SiteSpecificBrowserManager {
@@ -187,6 +192,9 @@ export class SiteSpecificBrowserManager {
           // This is excluded from A/B test as per requirements
           const linuxSupport = new SupportClass(this);
           await linuxSupport.install(manifest);
+        } else if (AppConstants.platform === "macosx") {
+          const macSupport = new SupportClass(this);
+          await macSupport.install(manifest);
         }
       }
 
@@ -210,6 +218,9 @@ export class SiteSpecificBrowserManager {
           // This is excluded from A/B test as per requirements
           const linuxSupport = new SupportClass(this);
           await linuxSupport.uninstall(manifest);
+        } else if (AppConstants.platform === "macosx") {
+          const macSupport = new SupportClass(this);
+          await macSupport.uninstall(manifest);
         }
       }
 
