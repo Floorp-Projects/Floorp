@@ -28,10 +28,43 @@ export const ImageTools = {
         return;
       }
 
+      const declaredType = guessMimeTypeFromDataURI(dataURI);
+      let fallbackType = declaredType ?? "image/svg+xml";
+      let fallbackIssued = false;
+
+      const triggerSvgFallback = () => {
+        if (fallbackIssued) {
+          return;
+        }
+        fallbackIssued = true;
+        loadVectorImageFromDataURI(dataURI)
+          .then((container) => {
+            resolve({
+              type: fallbackType,
+              container,
+            });
+          })
+          .catch(reject);
+      };
+
+      if (isSvgMimeType(declaredType)) {
+        triggerSvgFallback();
+        return;
+      }
+
       const channel = NetUtil.newChannel({
         uri: dataURI,
         loadUsingSystemPrincipal: true,
       });
+
+      if (channel.contentType) {
+        fallbackType = channel.contentType;
+      }
+
+      if (isSvgMimeType(channel.contentType)) {
+        triggerSvgFallback();
+        return;
+      }
 
       ImgTools.decodeImageFromChannelAsync(
         dataURI,
@@ -39,12 +72,21 @@ export const ImageTools = {
         (container: imgIContainer, aStatus: number) => {
           if (Components.isSuccessCode(aStatus)) {
             resolve({
-              type: channel.contentType,
+              type: channel.contentType || declaredType || "",
               container,
             });
-          } else {
-            reject(Components.Exception("Failed to load image.", aStatus));
+            return;
           }
+
+          if (
+            isSvgMimeType(channel.contentType) ||
+            isSvgMimeType(declaredType)
+          ) {
+            triggerSvgFallback();
+            return;
+          }
+
+          reject(Components.Exception("Failed to load image.", aStatus));
         },
         null as unknown as imgINotificationObserver,
       );
@@ -77,8 +119,9 @@ export const ImageTools = {
       }
 
       try {
-        (stream as unknown as { QueryInterface: (iid: unknown) => unknown })
-          .QueryInterface(Ci.nsIAsyncInputStream);
+        (
+          stream as unknown as { QueryInterface: (iid: unknown) => unknown }
+        ).QueryInterface(Ci.nsIAsyncInputStream);
       } catch (e) {
         reject(
           Components.Exception(
@@ -147,13 +190,17 @@ export const ImageTools = {
     }
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
+      let workingContainer = container;
+      if (format === "image/vnd.microsoft.icon") {
+        workingContainer = rasterizeVectorIcon(workingContainer, width, height);
+      }
       let stream: nsIInputStream;
       try {
-        if (container.type === Ci.imgIContainer.TYPE_VECTOR) {
-          stream = ImgTools.encodeImage(container, format, "");
+        if (workingContainer.type === Ci.imgIContainer.TYPE_VECTOR) {
+          stream = ImgTools.encodeImage(workingContainer, format, "");
         } else {
           stream = ImgTools.encodeScaledImage(
-            container,
+            workingContainer,
             format,
             width,
             height,
@@ -162,7 +209,7 @@ export const ImageTools = {
         }
       } catch (_e) {
         try {
-          stream = ImgTools.encodeImage(container, format, "");
+          stream = ImgTools.encodeImage(workingContainer, format, "");
         } catch (e2) {
           reject(e2);
           return;
@@ -182,3 +229,181 @@ export const ImageTools = {
     return ImgTools.decodeImageFromArrayBuffer(arrayBuffer, contentType);
   },
 };
+
+function rasterizeVectorIcon(
+  container: imgIContainer,
+  width: number,
+  height: number,
+): imgIContainer {
+  if (container.type !== Ci.imgIContainer.TYPE_VECTOR) {
+    return container;
+  }
+
+  try {
+    const rasterStream = ImgTools.encodeScaledImage(
+      container,
+      "image/png",
+      width,
+      height,
+      "",
+    );
+    const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+      Ci.nsIBinaryInputStream,
+    );
+    binaryStream.setInputStream(rasterStream);
+    const availableBytes = rasterStream.available();
+    if (!availableBytes) {
+      throw new Error("No raster data produced for vector icon.");
+    }
+
+    const pngString = binaryStream.readBytes(availableBytes);
+    const pngArray = Uint8Array.from(pngString, (c) => c.charCodeAt(0));
+    return ImgTools.decodeImageFromArrayBuffer(pngArray.buffer, "image/png");
+  } catch (error) {
+    console.warn(
+      "ImageTools: failed to rasterize vector icon for ICO encoding",
+      error,
+    );
+    return container;
+  }
+}
+
+function isSvgMimeType(contentType?: string | null): boolean {
+  if (!contentType) {
+    return false;
+  }
+  return contentType.toLowerCase().includes("svg");
+}
+
+function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
+  const spec = dataURI.spec;
+  if (!spec.startsWith("data:")) {
+    return null;
+  }
+
+  const commaIndex = spec.indexOf(",");
+  if (commaIndex === -1) {
+    return null;
+  }
+
+  const metadata = spec.substring("data:".length, commaIndex);
+  if (!metadata) {
+    return null;
+  }
+
+  const semicolonIndex = metadata.indexOf(";");
+  const mime =
+    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
+
+  if (!mime) {
+    return null;
+  }
+
+  return mime.toLowerCase();
+}
+
+class ChannelListener implements nsIStreamListener {
+  private request: nsIRequest | null = null;
+  private imageListener: nsIStreamListener | null = null;
+  private rejector: (reason?: unknown) => void;
+
+  constructor(rejector: (reason?: unknown) => void) {
+    this.rejector = rejector;
+  }
+
+  setImageListener(imageListener: nsIStreamListener) {
+    this.imageListener = imageListener;
+    if (this.request) {
+      this.imageListener.onStartRequest(this.request);
+    }
+  }
+
+  onStartRequest(request: nsIRequest) {
+    this.request = request;
+    if (this.imageListener) {
+      this.imageListener.onStartRequest(request);
+    }
+  }
+
+  onStopRequest(request: nsIRequest, status: number) {
+    if (this.imageListener) {
+      this.imageListener.onStopRequest(request, status);
+    }
+
+    if (
+      !Components.isSuccessCode(status) &&
+      status !== Cr.NS_ERROR_PARSED_DATA_CACHED
+    ) {
+      this.rejector(Components.Exception("Image loading failed", status));
+    }
+
+    this.imageListener = null;
+    this.request = null;
+    this.rejector = () => {};
+  }
+
+  onDataAvailable(
+    request: nsIRequest,
+    inputStream: nsIInputStream,
+    offset: number,
+    count: number,
+  ) {
+    if (this.imageListener) {
+      this.imageListener.onDataAvailable(request, inputStream, offset, count);
+    }
+  }
+}
+
+function loadVectorImageFromDataURI(dataURI: nsIURI): Promise<imgIContainer> {
+  const channel = Services.io.newChannelFromURI(
+    dataURI,
+    null as never,
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null as never,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL as number,
+    Ci.nsIContentPolicy.TYPE_IMAGE,
+  );
+
+  return new Promise((resolve, reject) => {
+    try {
+      const imageLoader = ImgTools.getImgLoaderForDocument(null as never);
+      let request: imgIRequest | null = null;
+      const observer = ImgTools.createScriptedObserver({
+        decodeComplete() {
+          if (!request) {
+            reject(new Error("Vector image request missing during decode."));
+            return;
+          }
+          request.cancel(Cr.NS_BINDING_ABORTED);
+          resolve(request.image);
+        },
+      } as never);
+
+      const channelListener = new ChannelListener(reject);
+      channel.asyncOpen(channelListener);
+
+      const streamListener: { value?: nsIStreamListener } = {};
+      request = imageLoader.loadImageWithChannelXPCOM(
+        channel,
+        observer,
+        null as never,
+        streamListener,
+      );
+      if (request) {
+        const decodeFlags: number = Number(
+          Ci.imgIContainer.FLAG_ASYNC_NOTIFY ?? 0,
+        );
+        request.startDecoding(decodeFlags);
+      } else {
+        reject(new Error("Vector image request could not be created."));
+        return;
+      }
+
+      if (streamListener.value) {
+        channelListener.setImageListener(streamListener.value);
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
