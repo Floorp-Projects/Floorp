@@ -146,7 +146,7 @@ export class LinuxSupport {
       "share",
       "icons",
       "hicolor",
-      "128x128",
+      "512x512",
       "apps",
     );
     const iconPath = PathUtils.join(iconDir, `${desktopBasename}.png`);
@@ -413,17 +413,57 @@ export class LinuxSupport {
 
       await LinuxSupport.sleep(GTK_READY_DELAY_MS);
 
-      console.debug(
-        `[LinuxSupport] Setting window class: ${paths.startupWMClass}, title: ${ssb.name}`,
-      );
+      // Retrieve baseWin for visibility control
+      const docShell = aWindow.docShell;
+      let baseWin: nsIBaseWindow | null = null;
+
+      if (
+        docShell &&
+        docShell.treeOwner &&
+        isInterfaceRequestor(docShell.treeOwner)
+      ) {
+        baseWin = docShell.treeOwner.getInterface(
+          Ci.nsIBaseWindow,
+        ) as nsIBaseWindow;
+      }
+
+      // Ensure window is visible before we start our unmap dance
+      // This corresponds to the wait logic that was in remapWindowIfNeeded
+      if (baseWin) {
+        let attempts = 0;
+        while (!baseWin.visibility && attempts < DOCUMENT_READY_RETRY_LIMIT) {
+          await LinuxSupport.sleep(DOCUMENT_READY_RETRY_DELAY_MS);
+          attempts++;
+        }
+
+        // Additional wait to ensure WM has fully registered the window
+        // This helps avoid race conditions where WM ignores Unmap/Map sequence
+        // immediately after window creation
+        await LinuxSupport.sleep(1000);
+      }
+
+      // 1. Unmap window if visible
+      if (baseWin && baseWin.visibility) {
+        baseWin.visibility = false;
+        // Wait for X11/WM to process the unmap
+        await LinuxSupport.sleep(500);
+      } else {
+        // If window is already hidden or we can't control visibility,
+        // just wait a bit before setting class
+        await LinuxSupport.sleep(200);
+      }
+
+      // 2. Set Window Class (while unmapped)
       await LinuxSupport.trySetWindowClass(taskbar, aWindow, paths, ssb);
 
-      await LinuxSupport.remapWindowIfNeeded(aWindow);
+      // 3. Remap window
+      if (baseWin) {
+        // Small delay to ensure the class change is registered by the X server
+        await LinuxSupport.sleep(200);
+        baseWin.visibility = true;
+      }
 
       const iconExists = await IOUtils.exists(paths.iconPath);
-      console.debug(
-        `[LinuxSupport] Icon exists: ${iconExists} at ${paths.iconPath}`,
-      );
       if (iconExists) {
         await LinuxSupport.trySetWindowIcon(taskbar, aWindow, paths);
       } else {
@@ -431,7 +471,6 @@ export class LinuxSupport {
           `[LinuxSupport] Icon file does not exist: ${paths.iconPath}`,
         );
       }
-      console.debug("[LinuxSupport] OS integration applied successfully");
     } catch (error) {
       console.error("Failed to apply Linux OS integration", error);
     }
@@ -449,48 +488,6 @@ export class LinuxSupport {
       return;
     }
     Services.cpmm.sendAsyncMessage(OS_INTEGRATION_MESSAGE, data);
-  }
-
-  private static async remapWindowIfNeeded(aWindow: Window) {
-    try {
-      const docShell = aWindow.docShell;
-      if (
-        !docShell ||
-        !docShell.treeOwner ||
-        !isInterfaceRequestor(docShell.treeOwner)
-      ) {
-        console.debug("[LinuxSupport] Skipping remap; no tree owner interface");
-        return;
-      }
-
-      const baseWin = docShell.treeOwner.getInterface(
-        Ci.nsIBaseWindow,
-      ) as nsIBaseWindow | null;
-      if (!baseWin) {
-        console.debug("[LinuxSupport] Skipping remap; no base window");
-        return;
-      }
-
-      let attempts = 0;
-      while (!baseWin.visibility && attempts < DOCUMENT_READY_RETRY_LIMIT) {
-        await LinuxSupport.sleep(DOCUMENT_READY_RETRY_DELAY_MS);
-        attempts++;
-      }
-
-      if (!baseWin.visibility) {
-        console.debug(
-          "[LinuxSupport] Window still hidden after waiting; skipping remap",
-        );
-        return;
-      }
-
-      console.debug("[LinuxSupport] Re-mapping window to refresh WM_CLASS");
-      baseWin.visibility = false;
-      await LinuxSupport.sleep(150);
-      baseWin.visibility = true;
-    } catch (error) {
-      console.warn("[LinuxSupport] Failed to re-map window", error);
-    }
   }
 
   private static parentListenerRegistered = false;
@@ -603,7 +600,6 @@ export class LinuxSupport {
           paths.startupWMClass,
           ssb.name,
         );
-        console.debug("[LinuxSupport] Window class set successfully");
         return;
       } catch (error) {
         retries++;
@@ -630,14 +626,10 @@ export class LinuxSupport {
     let iconRetries = 0;
     while (iconRetries < ICON_RETRY_LIMIT) {
       try {
-        console.debug(
-          `[LinuxSupport] Setting window icon from path (attempt ${iconRetries + 1}/${ICON_RETRY_LIMIT}): ${paths.iconPath}`,
-        );
         taskbar.setWindowIconFromPath(
           aWindow as unknown as mozIDOMWindowProxy,
           paths.iconPath,
         );
-        console.debug("[LinuxSupport] Window icon set successfully");
         return;
       } catch (error) {
         iconRetries++;

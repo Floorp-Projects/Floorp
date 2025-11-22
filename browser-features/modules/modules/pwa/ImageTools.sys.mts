@@ -225,6 +225,21 @@ export const ImageTools = {
   ): Promise<string | null> {
     const { container, type } = await ImageTools.loadImage(sourceURI);
     try {
+      // For Linux, try to save as SVG if available for better scaling
+      if (
+        AppConstants.platform === "linux" &&
+        type?.includes("svg") &&
+        container.type === Ci.imgIContainer.TYPE_VECTOR
+      ) {
+        const svgFile = targetFile.clone();
+        const leafName = svgFile.leafName;
+        if (leafName.endsWith(".png")) {
+          svgFile.leafName = leafName.replace(/\.png$/, ".svg");
+        }
+        await ImageTools.saveDataURI(sourceURI, svgFile);
+        return svgFile.path;
+      }
+
       await ImageTools.saveIcon(container, width, height, targetFile);
       return targetFile.path;
     } catch (error) {
