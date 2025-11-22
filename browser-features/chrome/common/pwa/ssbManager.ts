@@ -26,11 +26,6 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
-} else if (AppConstants.platform === "macosx") {
-  const { MacSupport } = ChromeUtils.importESModule(
-    "resource://noraneko/modules/pwa/supports/Mac.sys.mjs",
-  );
-  SupportClass = MacSupport;
 }
 
 export class SiteSpecificBrowserManager {
@@ -165,67 +160,61 @@ export class SiteSpecificBrowserManager {
     return await this.manifestProcesser.getManifestFromBrowser(browser, true);
   }
 
-    private async createFromBrowser(
-      browser: Browser,
-      options: { useWebManifest: boolean },
-    ): Promise<Manifest | null> {
-      return await this.manifestProcesser.getManifestFromBrowser(
-        browser,
-        options.useWebManifest,
-      );
-    }
+  private async createFromBrowser(
+    browser: Browser,
+    options: { useWebManifest: boolean },
+  ): Promise<Manifest | null> {
+    return await this.manifestProcesser.getManifestFromBrowser(
+      browser,
+      options.useWebManifest,
+    );
+  }
 
-    private async install(manifest: Manifest) {
-      if (SupportClass) {
-        if (AppConstants.platform === "win") {
-          // Windows install (taskbar integration) is controlled by A/B test
-          if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-            const windowsSupport = new SupportClass(this);
-            await windowsSupport.install(manifest);
-          } else {
-            console.debug(
-              "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
-            );
-          }
-        } else if (AppConstants.platform === "linux") {
-          // Linux install (.desktop file generation) is NOT controlled by A/B test
-          // This is excluded from A/B test as per requirements
-          const linuxSupport = new SupportClass(this);
-          await linuxSupport.install(manifest);
-        } else if (AppConstants.platform === "macosx") {
-          const macSupport = new SupportClass(this);
-          await macSupport.install(manifest);
+  private async install(manifest: Manifest) {
+    if (SupportClass) {
+      if (AppConstants.platform === "win") {
+        // Windows install (taskbar integration) is controlled by A/B test
+        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
+          const windowsSupport = new SupportClass(this);
+          await windowsSupport.install(manifest);
+        } else {
+          console.debug(
+            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
+          );
         }
+      } else if (AppConstants.platform === "linux") {
+        // Linux install (.desktop file generation) is NOT controlled by A/B test
+        // This is excluded from A/B test as per requirements
+        const linuxSupport = new SupportClass(this);
+        await linuxSupport.install(manifest);
       }
-
-      await this.dataManager.saveSsbData(manifest);
     }
 
-    private async uninstall(manifest: Manifest) {
-      if (SupportClass) {
-        if (AppConstants.platform === "win") {
-          // Windows uninstall (taskbar integration) is controlled by A/B test
-          if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-            const windowsSupport = new SupportClass(this);
-            await windowsSupport.uninstall(manifest);
-          } else {
-            console.debug(
-              "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
-            );
-          }
-        } else if (AppConstants.platform === "linux") {
-          // Linux uninstall (.desktop file removal) is NOT controlled by A/B test
-          // This is excluded from A/B test as per requirements
-          const linuxSupport = new SupportClass(this);
-          await linuxSupport.uninstall(manifest);
-        } else if (AppConstants.platform === "macosx") {
-          const macSupport = new SupportClass(this);
-          await macSupport.uninstall(manifest);
+    await this.dataManager.saveSsbData(manifest);
+  }
+
+  private async uninstall(manifest: Manifest) {
+    if (SupportClass) {
+      if (AppConstants.platform === "win") {
+        // Windows uninstall (taskbar integration) is controlled by A/B test
+        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
+          const windowsSupport = new SupportClass(this);
+          await windowsSupport.uninstall(manifest);
+        } else {
+          console.debug(
+            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
+          );
         }
+      } else if (AppConstants.platform === "linux") {
+        // Linux uninstall (.desktop file removal) is NOT controlled by A/B test
+        // This is excluded from A/B test as per requirements
+        const linuxSupport = new SupportClass(this);
+        await linuxSupport.uninstall(manifest);
       }
-
-      await this.dataManager.removeSsbData(manifest.start_url);
     }
+
+    await this.dataManager.removeSsbData(manifest.start_url);
+  }
 
   public async uninstallById(id: string) {
     const ssbObj = await this.getSsbObj(id);
