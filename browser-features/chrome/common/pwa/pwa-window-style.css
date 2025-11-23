@@ -7,16 +7,59 @@
 /** Navigation bar **/
 #nav-bar {
   min-height: 34px !important;
-  padding: 0 6px !important;
   background-color: var(--toolbox-bgcolor) !important;
   opacity: 1 !important;
-  gap: 6px;
   border-bottom: 1px solid
     color-mix(
       in srgb,
       var(--chrome-content-separator-color, rgba(255, 255, 255, 0.08)) 60%,
       transparent
     ) !important;
+}
+
+#nav-bar {
+  -moz-window-dragging: drag;
+}
+
+#nav-bar toolbarbutton {
+  -moz-window-dragging: no-drag;
+}
+
+#urlbar,
+#urlbar-input-container,
+#urlbar-input {
+  -moz-window-dragging: drag;
+}
+
+#nav-bar-customization-target,
+#urlbar-container,
+#urlbar-background,
+.urlbar-input-box {
+  -moz-window-dragging: drag;
+}
+
+#urlbar {
+  position: relative;
+}
+
+#urlbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  -moz-window-dragging: drag;
+  pointer-events: auto;
+}
+
+#urlbar-input {
+  pointer-events: none;
+  caret-color: transparent;
+}
+
+#urlbar-input-container,
+#urlbar-background,
+.urlbar-input-box {
+  pointer-events: none;
 }
 
 #fxa-toolbar-menu-button,
