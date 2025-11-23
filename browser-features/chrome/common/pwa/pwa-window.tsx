@@ -9,6 +9,7 @@ import { createSignal } from "solid-js";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
+import type { FloorpChromeWindow } from "./type.ts";
 const { PWA_WINDOW_NAME } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
 );
@@ -41,6 +42,7 @@ export class PwaWindowSupport {
     const mainWindow = document?.getElementById("main-window");
     mainWindow?.setAttribute("windowtype", "navigator:ssb-window");
     window.floorpSsbWindow = true;
+    this.disableNativeTitlebar();
   }
 
   private setupSignals(): void {
@@ -66,6 +68,37 @@ export class PwaWindowSupport {
     createRootHMR(() => {
       render(() => this.createStyleElement(), document?.head);
     }, import.meta.hot);
+  }
+
+  private disableNativeTitlebar(): void {
+    try {
+      const chromeWindow = window as FloorpChromeWindow;
+      const customTitlebar = chromeWindow.CustomTitlebar;
+      if (!customTitlebar?.allowedBy) {
+        return;
+      }
+
+      if (customTitlebar.__floorpSsbPatched) {
+        customTitlebar.allowedBy("non-popup", true);
+        return;
+      }
+
+      const originalAllowedBy = customTitlebar.allowedBy.bind(customTitlebar);
+      customTitlebar.allowedBy = (condition: string, allow: boolean) => {
+        if (condition === "non-popup") {
+          originalAllowedBy(condition, true);
+          return;
+        }
+        originalAllowedBy(condition, allow);
+      };
+      customTitlebar.__floorpSsbPatched = true;
+      originalAllowedBy("non-popup", true);
+    } catch (error) {
+      console.error(
+        "[PwaWindowSupport] Failed to disable native titlebar:",
+        error,
+      );
+    }
   }
 
   private createStyleElement() {
