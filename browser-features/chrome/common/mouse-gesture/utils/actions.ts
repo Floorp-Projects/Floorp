@@ -85,6 +85,18 @@ export const actions: GestureActionRegistration[] = [
     fn: () => window.gBrowser.tabContainer.advanceSelectedTab(-1, true),
   },
   {
+    name: "gecko-show-previously-selected-tab",
+    fn: () => {
+      console.log('CALLED!');
+      let latest = null;
+      for (let tab of window.gBrowser.tabs) {
+        if (tab._lastAccessed === Infinity) continue;
+        if (!latest || tab._lastAccessed > latest._lastAccessed) latest = tab;
+      }
+      return window.gBrowser.tabContainer._selectNewTab(latest);
+    },
+  },
+  {
     name: "gecko-show-all-tabs-panel",
     fn: () => window.gTabsPanel.showAllTabsPanel(),
   },
