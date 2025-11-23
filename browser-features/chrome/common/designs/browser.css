@@ -147,16 +147,14 @@ browser[type="content"] > html {
   border: none !important;
 }
 
-/* Hide nav-bar in fullscreen mode (excluding macOS native fullscreen) */
-/* DOM fullscreen (e.g., YouTube video fullscreen) */
-:root[inDOMFullscreen] #nav-bar {
-  display: none !important;
-}
-
 /* Limit nav-bar height to 30px in macOS native fullscreen */
 :root[macOSNativeFullscreen] #nav-bar,
-:root[inFullscreen][macOSNativeFullscreen] #nav-bar {
-  max-height: 40px !important;
+:root[inFullscreen] #nav-bar {
+  max-height: 30px !important;
+}
+
+:root[inDOMFullscreen] #nav-bar {
+  display: none !important;
 }
 
 /* Floorp View Tab */
