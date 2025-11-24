@@ -92,7 +92,7 @@ export const actions: GestureActionRegistration[] = [
         if (tab._lastAccessed === Infinity) continue;
         if (!latest || tab._lastAccessed > latest._lastAccessed) latest = tab;
       }
-      return window.gBrowser.tabContainer._selectNewTab(latest);
+      window.gBrowser.tabContainer._selectNewTab(latest);
     },
   },
   {
