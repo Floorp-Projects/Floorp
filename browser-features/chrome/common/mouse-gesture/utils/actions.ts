@@ -87,7 +87,6 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-show-previously-selected-tab",
     fn: () => {
-      console.log('CALLED!');
       let latest = null;
       for (let tab of window.gBrowser.tabs) {
         if (tab._lastAccessed === Infinity) continue;
