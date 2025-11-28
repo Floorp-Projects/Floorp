@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import {
   createEffect,
   createRoot,
@@ -40,10 +45,11 @@ export class WorkspacesTabManager {
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
 
     const initWorkspace = () => {
-      (globalThis as unknown as {
-        SessionStore: { promiseAllWindowsRestored: Promise<void> };
-      }).SessionStore
-        .promiseAllWindowsRestored
+      (
+        globalThis as unknown as {
+          SessionStore: { promiseAllWindowsRestored: Promise<void> };
+        }
+      ).SessionStore.promiseAllWindowsRestored
         .then(() => {
           this.initializeWorkspace();
           globalThis.addEventListener("TabClose", this.boundHandleTabClose);
@@ -154,8 +160,8 @@ export class WorkspacesTabManager {
       );
     }
 
-    const maybeSelectedWorkspace = this
-      .getMaybeSelectedWorkspacebyVisibleTabs();
+    const maybeSelectedWorkspace =
+      this.getMaybeSelectedWorkspacebyVisibleTabs();
     if (maybeSelectedWorkspace) {
       this.changeWorkspace(maybeSelectedWorkspace);
     } else {
@@ -268,8 +274,8 @@ export class WorkspacesTabManager {
           console.debug("gBrowser.addTab called in handleTabClose");
           const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
-            triggeringPrincipal: Services.scriptSecurityManager
-              .getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
           globalThis.gBrowser.selectedTab = newTab;
           console.debug(
@@ -290,7 +296,8 @@ export class WorkspacesTabManager {
       const tab = (event as CustomEvent).target as XULElement;
       const now = Date.now();
       this.recentOpenedAtByTab.set(tab, now);
-      const wsId = this.getWorkspaceIdFromAttribute(tab) ??
+      const wsId =
+        this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       this.recentOpenedAtPerWorkspace.set(wsId, now);
       // Debug: mark tab creation
@@ -348,9 +355,7 @@ export class WorkspacesTabManager {
     // Hide tab groups that have no visible tabs, show those that do
     const tabGroups = globalThis.gBrowser.tabGroups;
     for (const group of tabGroups) {
-      const hasVisibleTabInGroup = (
-        group.tabs as Array<XULElement>
-      ).some(
+      const hasVisibleTabInGroup = (group.tabs as Array<XULElement>).some(
         (tab) => this.getWorkspaceIdFromAttribute(tab) === currentWorkspaceId,
       );
       group.style.display = hasVisibleTabInGroup ? "" : "none";
@@ -373,10 +378,7 @@ export class WorkspacesTabManager {
     const clean = raw.replace(/[{}]/g, "");
     const parseResult = zWorkspaceID.decode(clean);
     if (!isRight(parseResult)) {
-      console.warn(
-        "WorkspacesTabManager: invalid workspace id format:",
-        raw,
-      );
+      console.warn("WorkspacesTabManager: invalid workspace id format:", raw);
       return null;
     }
     const wsId = parseResult.right;
@@ -463,8 +465,8 @@ export class WorkspacesTabManager {
       select,
       url,
     });
-    const targetURL = url ??
-      Services.prefs.getStringPref("browser.startup.homepage");
+    const targetURL =
+      url ?? Services.prefs.getStringPref("browser.startup.homepage");
     console.debug(
       "gBrowser.addTab called in createTabForWorkspace with url:",
       targetURL,
@@ -500,9 +502,8 @@ export class WorkspacesTabManager {
     // a new tab each time.
     try {
       const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
-      const currentlySelectedTab = globalThis.gBrowser.selectedTab as
-        | XULElement
-        | null;
+      const currentlySelectedTab = globalThis.gBrowser
+        .selectedTab as XULElement | null;
       if (
         currentlySelectedTab &&
         this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
@@ -568,8 +569,8 @@ export class WorkspacesTabManager {
           console.debug("gBrowser.addTab called in changeWorkspace");
           const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
-            triggeringPrincipal: Services.scriptSecurityManager
-              .getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
           globalThis.gBrowser.selectedTab = newTab;
         } catch (finalError) {
@@ -623,11 +624,9 @@ export class WorkspacesTabManager {
    * @returns true if there is no workspace tabs if false, return tab.
    */
   public isThereNoWorkspaceTabs() {
-    for (
-      const tab of globalThis.gBrowser.tabs as Array<
-        XULElement | undefined | null
-      >
-    ) {
+    for (const tab of globalThis.gBrowser.tabs as Array<
+      XULElement | undefined | null
+    >) {
       if (!tab) continue;
       if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
