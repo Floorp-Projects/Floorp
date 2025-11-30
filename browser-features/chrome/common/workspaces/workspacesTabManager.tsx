@@ -218,6 +218,35 @@ export class WorkspacesTabManager {
         // Determine emptiness considering Firefox's auto-created replacement tab.
         const now = Date.now();
         let willBeEmpty = workspaceTabs.length === 0;
+
+        // Check for Firefox's auto-created replacement tab (without workspace ID yet).
+        // When browser.tabs.closeWindowWithLastTab is false, Firefox creates a new tab
+        // automatically, but it won't have the floorpWorkspaceId attribute yet.
+        if (willBeEmpty) {
+          const allTabs = globalThis.gBrowser.tabs as XULElement[];
+          for (const t of allTabs) {
+            if (t === tab) continue;
+            const wsId = this.getWorkspaceIdFromAttribute(t);
+            if (!wsId) {
+              // Tab has no workspace ID - check if it was just created
+              const openedAt = this.recentOpenedAtByTab.get(t) ?? 0;
+              if (now - openedAt < 800) {
+                // This is Firefox's auto-created replacement tab.
+                // Assign it to current workspace instead of creating a new one.
+                this.setWorkspaceIdToAttribute(t, workspaceId);
+                t.setAttribute(WORKSPACE_LAST_SHOW_ID, workspaceId);
+                willBeEmpty = false;
+                console.debug(
+                  "WorkspacesTabManager: adopted Firefox's auto-created tab",
+                  { workspaceId },
+                );
+                break;
+              }
+            }
+          }
+        }
+
+        // Check if the remaining tab was auto-created (within 800ms window)
         if (!willBeEmpty && workspaceTabs.length === 1) {
           const remaining = workspaceTabs[0] as XULElement;
           const openedAt = this.recentOpenedAtByTab.get(remaining) ?? 0;
@@ -228,28 +257,41 @@ export class WorkspacesTabManager {
 
         if (willBeEmpty) {
           // If user prefers exiting when current workspace becomes empty, quit the app.
+          // But only if this is truly the last tab in the entire window.
           if (configStore.exitOnLastTabClose) {
-            try {
-              // Mark pending-exit to collapse duplicated startup new tabs next run.
-              Services.prefs.setBoolPref(
-                WORKSPACE_PENDING_EXIT_PREF_NAME,
-                true,
-              );
+            // Safety check: count total tabs in window (excluding the one being closed)
+            const allTabsInWindow = globalThis.gBrowser.tabs as XULElement[];
+            const remainingTabCount = allTabsInWindow.filter((t) => t !== tab)
+              .length;
+
+            if (remainingTabCount === 0) {
+              try {
+                // Mark pending-exit to collapse duplicated startup new tabs next run.
+                Services.prefs.setBoolPref(
+                  WORKSPACE_PENDING_EXIT_PREF_NAME,
+                  true,
+                );
+                console.debug(
+                  "WorkspacesTabManager: exitOnLastTabClose is true; close window",
+                  { workspaceId, remainingTabCount },
+                );
+                globalThis.close();
+                return;
+              } catch (e) {
+                console.error(
+                  "WorkspacesTabManager: failed to close window on workspace empty",
+                  e,
+                );
+                // fall through to create a replacement tab
+              }
+            } else {
               console.debug(
-                "WorkspacesTabManager: exitOnLastTabClose is true; close window",
-                { workspaceId },
+                "WorkspacesTabManager: workspace is empty but other tabs exist, not closing window",
+                { workspaceId, remainingTabCount },
               );
-              globalThis.close();
-              return;
-            } catch (e) {
-              console.error(
-                "WorkspacesTabManager: failed to close window on workspace empty",
-                e,
-              );
-              // fall through to create a replacement tab
             }
           }
-          // Otherwise create exactly one replacement tab in the emptied workspace.
+          // Create a replacement tab in the emptied workspace (unless window was closed).
           const replacement = this.createTabForWorkspace(workspaceId, true);
           replacement.setAttribute(WORKSPACE_LAST_SHOW_ID, workspaceId);
           console.debug(
