@@ -235,15 +235,34 @@ export class WorkspacesTabManager {
 
       if (otherWorkspaceTabs.length > 0) {
         // There are tabs in other workspaces.
-        // Create a replacement tab for this workspace so user stays here.
         console.debug(
-          "WorkspacesTabManager: workspace empty, creating replacement",
+          "WorkspacesTabManager: workspace empty, closing window with replacement check",
           { workspaceId, otherWorkspaceTabCount: otherWorkspaceTabs.length },
         );
-        const replacement = this.createTabForWorkspace(workspaceId, true);
+
+        // Search for an existing tab (e.g. auto-created by Firefox) to use as replacement
+        // to avoid duplicating tabs on session restore.
+        const remainingTabs = allTabs.filter((t) => t !== tab);
+        let replacement = remainingTabs.find((t) => {
+          const tWsId = this.getWorkspaceIdFromAttribute(t);
+          // Use if it belongs to current workspace (but was filtered as 'recent')
+          // or if it has no workspace assigned yet.
+          return tWsId === workspaceId || !tWsId;
+        });
+
+        if (!replacement) {
+          replacement = this.createTabForWorkspace(workspaceId, true);
+        } else {
+          this.setWorkspaceIdToAttribute(replacement, workspaceId);
+          globalThis.gBrowser.selectedTab = replacement;
+        }
+
         replacement.setAttribute(WORKSPACE_LAST_SHOW_ID, workspaceId);
         this.dataManagerCtx.setCurrentWorkspaceID(workspaceId);
         this.updateTabsVisibility();
+
+        // Set pending exit pref to collapse duplicates on restart
+        Services.prefs.setBoolPref(WORKSPACE_PENDING_EXIT_PREF_NAME, true);
 
         // If the user closes the last tab in the current workspace, close the window
         // but keep the session (including tabs in other workspaces).
@@ -255,6 +274,7 @@ export class WorkspacesTabManager {
       } else {
         // If no other workspace tabs exist, this is the last tab in the window.
         // We should close the window manually because we force closeWindowWithLastTab=false.
+        Services.prefs.setBoolPref(WORKSPACE_PENDING_EXIT_PREF_NAME, true);
         setTimeout(() => {
           globalThis.close();
         }, 0);
