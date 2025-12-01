@@ -219,4 +219,171 @@ export function registerCommonAutomationRoutes(
     const enabled = await service.isEnabled(ctx.params.id, sel);
     return { status: 200, body: { enabled } };
   });
+
+  // Select option in a select element
+  ns.post("/instances/:id/selectOption", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string; value?: string } | null;
+    const sel = json?.selector ?? "";
+    const value = json?.value ?? "";
+    const service = getService();
+    const ok = await service.selectOption(ctx.params.id, sel, value);
+    return { status: 200, body: { ok } };
+  });
+
+  // Set checked state of checkbox/radio
+  ns.post("/instances/:id/setChecked", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string; checked?: boolean } | null;
+    const sel = json?.selector ?? "";
+    const checked = json?.checked ?? false;
+    const service = getService();
+    const ok = await service.setChecked(ctx.params.id, sel, checked);
+    return { status: 200, body: { ok } };
+  });
+
+  // Hover over element
+  ns.post("/instances/:id/hover", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const ok = await service.hoverElement(ctx.params.id, sel);
+    return { status: 200, body: { ok } };
+  });
+
+  // ============================================
+  // Phase 3: Advanced Automation Routes
+  // ============================================
+
+  // Scroll to element
+  ns.post("/instances/:id/scrollTo", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const ok = await service.scrollToElement(ctx.params.id, sel);
+    return { status: 200, body: { ok } };
+  });
+
+  // Get page title
+  ns.get("/instances/:id/title", async (ctx: RouterContext) => {
+    const service = getService();
+    const title = await service.getPageTitle(ctx.params.id);
+    return { status: 200, body: title != null ? { title } : { title: null } };
+  });
+
+  // Double click element
+  ns.post("/instances/:id/doubleClick", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const ok = await service.doubleClick(ctx.params.id, sel);
+    return { status: 200, body: { ok } };
+  });
+
+  // Right click element
+  ns.post("/instances/:id/rightClick", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const ok = await service.rightClick(ctx.params.id, sel);
+    return { status: 200, body: { ok } };
+  });
+
+  // Focus element
+  ns.post("/instances/:id/focus", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const ok = await service.focusElement(ctx.params.id, sel);
+    return { status: 200, body: { ok } };
+  });
+
+  // Drag and drop
+  ns.post("/instances/:id/dragAndDrop", async (ctx: RouterContext) => {
+    const json = ctx.json() as {
+      sourceSelector?: string;
+      targetSelector?: string;
+    } | null;
+    const source = json?.sourceSelector ?? "";
+    const target = json?.targetSelector ?? "";
+    const service = getService();
+    const ok = await service.dragAndDrop(ctx.params.id, source, target);
+    return { status: 200, body: { ok } };
+  });
+
+  // Get cookies
+  ns.get("/instances/:id/cookies", async (ctx: RouterContext) => {
+    const service = getService();
+    const cookies = await service.getCookies(ctx.params.id);
+    return { status: 200, body: { cookies } };
+  });
+
+  // Set cookie
+  ns.post<
+    {
+      name?: string;
+      value?: string;
+      domain?: string;
+      path?: string;
+      secure?: boolean;
+      httpOnly?: boolean;
+      sameSite?: "Strict" | "Lax" | "None";
+      expirationDate?: number;
+    },
+    OkResponse | ErrorResponse
+  >("/instances/:id/cookie", async (ctx: RouterContext) => {
+    const json = ctx.json() as {
+      name?: string;
+      value?: string;
+      domain?: string;
+      path?: string;
+      secure?: boolean;
+      httpOnly?: boolean;
+      sameSite?: "Strict" | "Lax" | "None";
+      expirationDate?: number;
+    } | null;
+    if (!json?.name || !json?.value) {
+      return { status: 400, body: { error: "name and value required" } };
+    }
+    const service = getService();
+    const ok = await service.setCookie(ctx.params.id, {
+      name: json.name,
+      value: json.value,
+      domain: json.domain,
+      path: json.path,
+      secure: json.secure,
+      httpOnly: json.httpOnly,
+      sameSite: json.sameSite,
+      expirationDate: json.expirationDate,
+    });
+    return { status: 200, body: { ok } };
+  });
+
+  // Accept alert
+  ns.post("/instances/:id/acceptAlert", async (ctx: RouterContext) => {
+    const service = getService();
+    const ok = await service.acceptAlert(ctx.params.id);
+    return { status: 200, body: { ok } };
+  });
+
+  // Dismiss alert
+  ns.post("/instances/:id/dismissAlert", async (ctx: RouterContext) => {
+    const service = getService();
+    const ok = await service.dismissAlert(ctx.params.id);
+    return { status: 200, body: { ok } };
+  });
+
+  // Save as PDF
+  ns.get("/instances/:id/pdf", async (ctx: RouterContext) => {
+    const service = getService();
+    const pdf = await service.saveAsPDF(ctx.params.id);
+    return { status: 200, body: pdf != null ? { pdf } : {} };
+  });
+
+  // Wait for network idle
+  ns.post("/instances/:id/waitForNetworkIdle", async (ctx: RouterContext) => {
+    const json = ctx.json() as { timeout?: number } | null;
+    const timeout = json?.timeout ?? 5000;
+    const service = getService();
+    const ok = await service.waitForNetworkIdle(ctx.params.id, timeout);
+    return { status: 200, body: { ok } };
+  });
 }

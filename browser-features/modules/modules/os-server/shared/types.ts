@@ -13,6 +13,17 @@ export interface ScreenshotRect {
   height?: number;
 }
 
+export interface CookieData {
+  name: string;
+  value: string;
+  domain?: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+  expirationDate?: number;
+}
+
 /**
  * Common interface for browser automation services.
  * Both WebScraper and TabManager implement these methods.
@@ -73,4 +84,53 @@ export interface BrowserAutomationService {
   ): Promise<string | null>;
   isVisible(instanceId: string, selector: string): Promise<boolean>;
   isEnabled(instanceId: string, selector: string): Promise<boolean>;
+
+  // Form controls (Phase 2)
+  selectOption(
+    instanceId: string,
+    selector: string,
+    value: string,
+  ): Promise<boolean | null>;
+  setChecked(
+    instanceId: string,
+    selector: string,
+    checked: boolean,
+  ): Promise<boolean | null>;
+
+  // Mouse interaction (Phase 2)
+  hoverElement(instanceId: string, selector: string): Promise<boolean | null>;
+
+  // Navigation & Page info (Phase 3)
+  scrollToElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null>;
+  getPageTitle(instanceId: string): Promise<string | null>;
+
+  // Advanced mouse interactions (Phase 3)
+  doubleClick(instanceId: string, selector: string): Promise<boolean | null>;
+  rightClick(instanceId: string, selector: string): Promise<boolean | null>;
+  focusElement(instanceId: string, selector: string): Promise<boolean | null>;
+  dragAndDrop(
+    instanceId: string,
+    sourceSelector: string,
+    targetSelector: string,
+  ): Promise<boolean | null>;
+
+  // Cookie operations (Phase 3)
+  getCookies(instanceId: string): Promise<CookieData[]>;
+  setCookie(instanceId: string, cookie: CookieData): Promise<boolean | null>;
+
+  // Alert/Dialog handling (Phase 3)
+  acceptAlert(instanceId: string): Promise<boolean | null>;
+  dismissAlert(instanceId: string): Promise<boolean | null>;
+
+  // PDF export (Phase 3)
+  saveAsPDF(instanceId: string): Promise<string | null>;
+
+  // Network idle wait (Phase 3)
+  waitForNetworkIdle(
+    instanceId: string,
+    timeout?: number,
+  ): Promise<boolean | null>;
 }

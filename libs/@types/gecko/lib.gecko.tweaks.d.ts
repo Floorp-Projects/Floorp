@@ -134,6 +134,12 @@ interface BrowsingContext {
   currentWindowGlobal: WindowGlobalParent | null;
   currentURI: nsIURI;
   allowJavascript: boolean;
+  print(printSettings: nsIPrintSettings): Promise<nsIInputStream>;
+}
+
+// Extended nsIPrintSettings for PDF printing
+interface nsIPrintSettings {
+  showPrintProgress: boolean;
 }
 
 // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1736
