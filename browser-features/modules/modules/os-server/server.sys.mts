@@ -21,436 +21,54 @@
 
 // -- Imports -----------------------------------------------------------------
 
-// gecko built-ins are available globally: ChromeUtils, Services, Cc, Ci
+import type { HttpRequest } from "./http/types.ts";
+import {
+  badRequest,
+  binaryStringToByteArray,
+  corsPreflight,
+  err,
+  getJSON,
+  jsonResponse,
+  log,
+  notFound,
+  parseRequestHead,
+  parseURL,
+  payloadTooLarge,
+  requestTimeout,
+  serverError,
+  unauthorized,
+  writeUtf8,
+} from "./http/utils.sys.mts";
 
-type HeadersMap = Record<string, string>;
+import {
+  type Context as RouterContext,
+  createApi,
+  type HttpMethod,
+  Router as _Router,
+  type StreamResult,
+} from "./router.sys.mts";
 
-// Lazy import of BrowserInfo (read-only os-apis)
-interface BrowserInfoAPI {
-  getRecentTabs(): Promise<
-    Array<{
-      id: number;
-      url: string;
-      title: string;
-      isActive: boolean;
-      isPinned: boolean;
-    }>
-  >;
-  getRecentHistory(limit?: number): Promise<
-    Array<{
-      url: string;
-      title: string;
-      lastVisitDate: number;
-      visitCount: number;
-    }>
-  >;
-  getRecentDownloads(limit?: number): Promise<
-    Array<{
-      id: number;
-      url: string;
-      filename: string;
-      status: string;
-      startTime: number;
-    }>
-  >;
-  getAllContextData(
-    historyLimit?: number,
-    downloadLimit?: number,
-  ): Promise<{
-    history: Array<{
-      url: string;
-      title: string;
-      lastVisitDate: number;
-      visitCount: number;
-    }>;
-    tabs: Array<{
-      id: number;
-      url: string;
-      title: string;
-      isActive: boolean;
-      isPinned: boolean;
-    }>;
-    downloads: Array<{
-      id: number;
-      url: string;
-      filename: string;
-      status: string;
-      startTime: number;
-    }>;
-  }>;
-}
+import type { HealthResponse } from "./api-spec/types.ts";
 
-const BrowserInfoModule = () =>
-  ChromeUtils.importESModule(
-    "resource://noraneko/modules/os-apis/browser-info/BrowserInfo.sys.mjs",
-  ) as { BrowserInfo: BrowserInfoAPI };
+// Route handlers from separated modules
+import { registerBrowserRoutes } from "./browser/routes.sys.mts";
+import { registerScraperRoutes } from "./scraper/routes.sys.mts";
+import { registerTabRoutes } from "./tabs/routes.sys.mts";
 
-// Lazy import of WebScraper service (headless browsing)
-interface WebScraperAPI {
-  createInstance(): Promise<string>;
-  destroyInstance(instanceId: string): void;
-  navigate(instanceId: string, url: string): Promise<void>;
-  getURI(instanceId: string): Promise<string | null>;
-  getHTML(instanceId: string): Promise<string | null>;
-  getElement(instanceId: string, selector: string): Promise<string | null>;
-  getElements(instanceId: string, selector: string): Promise<string[]>;
-  getElementByText(
-    instanceId: string,
-    textContent: string,
-  ): Promise<string | null>;
-  getElementTextContent(
-    instanceId: string,
-    selector: string,
-  ): Promise<string | null>;
-  getElementText(instanceId: string, selector: string): Promise<string | null>;
-  clickElement(instanceId: string, selector: string): Promise<boolean>;
-  waitForElement(
-    instanceId: string,
-    selector: string,
-    timeout?: number,
-  ): Promise<boolean | null>;
-  takeScreenshot(instanceId: string): Promise<string | null>;
-  takeElementScreenshot(
-    instanceId: string,
-    selector: string,
-  ): Promise<string | null>;
-  takeFullPageScreenshot(instanceId: string): Promise<string | null>;
-  takeRegionScreenshot(
-    instanceId: string,
-    rect?: { x?: number; y?: number; width?: number; height?: number },
-  ): Promise<string | null>;
-  fillForm(
-    instanceId: string,
-    formData: { [selector: string]: string },
-  ): Promise<boolean>;
-  getValue(instanceId: string, selector: string): Promise<string | null>;
-  submit(instanceId: string, selector: string): Promise<boolean>;
-}
+// -- Timer import -------------------------------------------------------------
 
-const WebScraperModule = () =>
-  ChromeUtils.importESModule(
-    "resource://noraneko/modules/os-apis/web/WebScraperServices.sys.mjs",
-  ) as { WebScraper: WebScraperAPI };
-
-// Lazy import of TabManager services (visible tab automation)
-interface TabManagerAPI {
-  createInstance(
-    url: string,
-    options?: { inBackground?: boolean },
-  ): Promise<string>;
-  attachToTab(browserId: string): Promise<string | null>;
-  listTabs(): Promise<
-    Array<{
-      browserId: string;
-      title: string;
-      url: string;
-      selected: boolean;
-      pinned: boolean;
-    }>
-  >;
-  getInstanceInfo(instanceId: string): Promise<unknown | null>;
-  destroyInstance(instanceId: string): Promise<void>;
-  navigate(instanceId: string, url: string): Promise<void>;
-  getURI(instanceId: string): Promise<string>;
-  getHTML(instanceId: string): Promise<string | null>;
-  getElement(instanceId: string, selector: string): Promise<string | null>;
-  getElementText(instanceId: string, selector: string): Promise<string | null>;
-  getElements(instanceId: string, selector: string): Promise<string[]>;
-  getElementByText(
-    instanceId: string,
-    textContent: string,
-  ): Promise<string | null>;
-  getElementTextContent(
-    instanceId: string,
-    selector: string,
-  ): Promise<string | null>;
-  clickElement(instanceId: string, selector: string): Promise<boolean | null>;
-  waitForElement(
-    instanceId: string,
-    selector: string,
-    timeout?: number,
-  ): Promise<boolean | null>;
-  takeScreenshot(instanceId: string): Promise<string | null>;
-  takeElementScreenshot(
-    instanceId: string,
-    selector: string,
-  ): Promise<string | null>;
-  takeFullPageScreenshot(instanceId: string): Promise<string | null>;
-  takeRegionScreenshot(
-    instanceId: string,
-    rect?: { x?: number; y?: number; width?: number; height?: number },
-  ): Promise<string | null>;
-  fillForm(
-    instanceId: string,
-    formData: { [selector: string]: string },
-  ): Promise<boolean | null>;
-  getValue(instanceId: string, selector: string): Promise<string | null>;
-  submit(instanceId: string, selector: string): Promise<boolean | null>;
-}
-
-const TabManagerModule = () =>
-  ChromeUtils.importESModule(
-    "resource://noraneko/modules/os-apis/web/TabManagerServices.sys.mjs",
-  ) as { TabManagerServices: TabManagerAPI };
-
-// -- Small utilities ----------------------------------------------------------
-
-function log(...args: unknown[]) {
-  console.log("[Floorp OS-Server]", ...args);
-}
-function _warn(...args: unknown[]) {
-  console.warn("[Floorp OS-Server]", ...args);
-}
-function err(...args: unknown[]) {
-  console.error("[Floorp OS-Server]", ...args);
-}
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
+
+// -- Constants ----------------------------------------------------------------
 
 const DEFAULT_PORT = 58261;
 const PREF_ENABLED = "floorp.os.enabled";
 const PREF_PORT = "floorp.os.server.port";
 const PREF_TOKEN = "floorp.os.server.token";
 
-// -- HTTP primitives ----------------------------------------------------------
-
-interface HttpRequest {
-  method: string;
-  path: string; // includes query string
-  headers: HeadersMap;
-  body: Uint8Array;
-}
-
-function parseHeaders(raw: string): HeadersMap {
-  const out: HeadersMap = {};
-  for (const line of raw.split("\r\n")) {
-    const idx = line.indexOf(":");
-    if (idx > 0) {
-      const key = line.slice(0, idx).trim().toLowerCase();
-      const val = line.slice(idx + 1).trim();
-      out[key] = val;
-    }
-  }
-  return out;
-}
-
-function parseRequestHead(head: string): HttpRequest | null {
-  const [reqLine, ...headerLines] = head.split("\r\n");
-  const parts = reqLine.split(" ");
-  if (parts.length < 3) return null;
-  const method = parts[0];
-  const path = parts[1] || "/";
-  const headers = parseHeaders(headerLines.join("\r\n"));
-  return { method, path, headers, body: new Uint8Array() };
-}
-
-function getBodyText(req: HttpRequest): string {
-  try {
-    const dec = new TextDecoder();
-    return dec.decode(req.body);
-  } catch (e) {
-    void e;
-    return "";
-  }
-}
-
-// Convert a binary string (from nsIScriptableInputStream.read) to bytes
-function binaryStringToByteArray(s: string): number[] {
-  const out = Array.from({ length: s.length }, () => 0) as number[];
-  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
-  return out;
-}
-
-function getJSON<T = unknown>(req: HttpRequest): T | null {
-  const ct = (req.headers["content-type"] || "").toLowerCase();
-  if (!ct.includes("application/json")) return null;
-  const txt = getBodyText(req).trim();
-  if (!txt) return null;
-  try {
-    return JSON.parse(txt) as T;
-  } catch (e) {
-    void e;
-    return null;
-  }
-}
-
-function jsonResponse(
-  status: number,
-  bodyObj: unknown,
-  extraHeaders: HeadersMap = {},
-): string {
-  const body = JSON.stringify(bodyObj);
-  const enc = new TextEncoder();
-  const bytes = enc.encode(body);
-  const headers: HeadersMap = {
-    "Content-Type": "application/json; charset=utf-8",
-    "Content-Length": String(bytes.length),
-    Connection: "close",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    ...extraHeaders,
-  };
-  const head =
-    `HTTP/1.1 ${status} ${statusText(status)}\r\n` +
-    Object.entries(headers)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\r\n") +
-    "\r\n\r\n";
-  return head + body;
-}
-
-function statusText(code: number): string {
-  switch (code) {
-    case 200:
-      return "OK";
-    case 201:
-      return "Created";
-    case 204:
-      return "No Content";
-    case 408:
-      return "Request Timeout";
-    case 400:
-      return "Bad Request";
-    case 401:
-      return "Unauthorized";
-    case 403:
-      return "Forbidden";
-    case 404:
-      return "Not Found";
-    case 405:
-      return "Method Not Allowed";
-    case 413:
-      return "Payload Too Large";
-    case 500:
-      return "Internal Server Error";
-    default:
-      return "";
-  }
-}
-
-// Write UTF-8 bytes to an nsIOutputStream safely
-function writeUtf8(out: nsIOutputStream, text: string) {
-  const enc = new TextEncoder();
-  const bytes = enc.encode(text);
-  const bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
-    Ci.nsIBinaryOutputStream,
-  );
-  bos.setOutputStream(out);
-  // nsIBinaryOutputStream#writeByteArray expects a u8[]; convert from Uint8Array
-  bos.writeByteArray(Array.from(bytes));
-}
-
-function _badRequest(msg = "bad request") {
-  return jsonResponse(400, { error: msg });
-}
-function requestTimeout(msg = "request timeout") {
-  return jsonResponse(408, { error: msg });
-}
-function unauthorized(msg = "unauthorized") {
-  return jsonResponse(401, { error: msg });
-}
-function notFound() {
-  return jsonResponse(404, { error: "not found" });
-}
-function payloadTooLarge(msg = "payload too large") {
-  return jsonResponse(413, { error: msg });
-}
-function serverError(msg = "internal error") {
-  return jsonResponse(500, { error: msg });
-}
-
-// -- Router helpers -----------------------------------------------------------
-import {
-  type Context as RouterContext,
-  createApi,
-  type HttpMethod,
-  type HttpResult as RouterHttpResult,
-  type NamespaceBuilder,
-  Router as _Router,
-} from "./router.sys.mts";
-
-// Import API types from OpenAPI specification
-import type {
-  Download,
-  ErrorResponse,
-  HealthResponse,
-  HistoryItem,
-  OkResponse,
-  Tab,
-} from "./api-spec/types.ts";
-
-// Helper mappers to conform runtime data (numbers) to published API types (strings for some timestamps)
-function mapHistoryItems(
-  items: Array<{
-    url: string;
-    title: string;
-    lastVisitDate: number;
-    visitCount: number;
-  }>,
-): HistoryItem[] {
-  return items.map((h) => ({
-    url: h.url,
-    title: h.title,
-    lastVisitDate: String(h.lastVisitDate),
-    visitCount: h.visitCount,
-  })) as HistoryItem[];
-}
-function mapDownloads(
-  items: Array<{
-    id: number;
-    url: string;
-    filename: string;
-    status: string;
-    startTime: number;
-  }>,
-): Download[] {
-  return items.map((d) => ({
-    id: d.id,
-    url: d.url,
-    filename: d.filename,
-    status: d.status,
-    startTime: String(d.startTime),
-  })) as Download[];
-}
-
-function parseURL(path: string): {
-  pathname: string;
-  searchParams: URLSearchParams;
-} {
-  // Use a dummy origin to parse
-  const u = new URL(`http://localhost${path}`);
-  return { pathname: u.pathname, searchParams: u.searchParams };
-}
-
-function corsPreflight(): string {
-  const headers: HeadersMap = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Content-Length": "0",
-    Connection: "close",
-  };
-  const head =
-    `HTTP/1.1 204 No Content\r\n` +
-    Object.entries(headers)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\r\n") +
-    "\r\n\r\n";
-  return head;
-}
-
-function clampInt(
-  valueStr: string | null,
-  def: number,
-  min: number,
-  max: number,
-): number {
-  const n = Number(valueStr ?? def);
-  if (!Number.isFinite(n)) return def;
-  return Math.max(min, Math.min(max, Math.floor(n)));
-}
+// -- HTTP method helper -------------------------------------------------------
 
 function asHttpMethod(m: string): HttpMethod {
   switch (m) {
@@ -463,6 +81,7 @@ function asHttpMethod(m: string): HttpMethod {
       return "GET";
   }
 }
+
 // -- Server ------------------------------------------------------------------
 
 class LocalHttpServer implements nsIServerSocketListener {
@@ -472,6 +91,7 @@ class LocalHttpServer implements nsIServerSocketListener {
   private static readonly READ_HEAD_TIMEOUT_MS = 5000;
   private static readonly READ_BODY_TIMEOUT_MS = 8000;
   private static readonly MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
+
   QueryInterface = ChromeUtils.generateQI([
     "nsIServerSocketListener",
     "nsIObserver",
@@ -621,7 +241,7 @@ class LocalHttpServer implements nsIServerSocketListener {
         const contentLength =
           Number.parseInt(req.headers["content-length"] || "0", 10) || 0;
         if (contentLength < 0) {
-          const res = _badRequest("invalid content-length");
+          const res = badRequest("invalid content-length");
           writeUtf8(output, res);
           output.close();
           input.close();
@@ -644,7 +264,7 @@ class LocalHttpServer implements nsIServerSocketListener {
             bodyBytes.push(...binaryStringToByteArray(piece));
           } else {
             if (Date.now() > bodyDeadline) {
-              const res = _badRequest("incomplete body");
+              const res = badRequest("incomplete body");
               writeUtf8(output, res);
               output.close();
               input.close();
@@ -673,12 +293,10 @@ class LocalHttpServer implements nsIServerSocketListener {
         }
 
         // Route (async)
-        const response = await this.routeAsync(req);
-        writeUtf8(output, response);
-        output.close();
-        input.close();
+        await this.routeAsync(req, output, input);
       } catch (e) {
         try {
+          // Only try to send error if stream is still writable
           const output = transport.openOutputStream(0, 0, 0);
           const res = serverError(String(e));
           writeUtf8(output, res);
@@ -701,428 +319,49 @@ class LocalHttpServer implements nsIServerSocketListener {
     const router = new _Router();
     const api = createApi(router);
 
-    // Health
+    // Health endpoint
     api.get<undefined, HealthResponse>("/health", () => ({
       status: 200,
       body: { status: "ok" },
     }));
 
-    // BrowserInfo
-    api.namespace("/browser", (b: NamespaceBuilder) => {
-      b.get<undefined, Tab[]>("/tabs", async () => {
-        const { BrowserInfo } = BrowserInfoModule();
-        const tabs = await BrowserInfo.getRecentTabs();
-        return { status: 200, body: tabs } as RouterHttpResult<Tab[]>;
-      });
-      b.get<undefined, HistoryItem[]>(
-        "/history",
-        async (ctx: RouterContext<undefined>) => {
-          const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
-          const { BrowserInfo } = BrowserInfoModule();
-          const historyRaw = await BrowserInfo.getRecentHistory(limit);
-          const history = mapHistoryItems(historyRaw);
-          return { status: 200, body: history };
-        },
-      );
-      b.get<undefined, Download[]>(
-        "/downloads",
-        async (ctx: RouterContext<undefined>) => {
-          const limit = clampInt(ctx.searchParams.get("limit"), 10, 0, 1000);
-          const { BrowserInfo } = BrowserInfoModule();
-          const downloadsRaw = await BrowserInfo.getRecentDownloads(limit);
-          const downloads = mapDownloads(downloadsRaw);
-          return { status: 200, body: downloads };
-        },
-      );
-      b.get<
-        undefined,
-        { history: HistoryItem[]; tabs: Tab[]; downloads: Download[] }
-      >("/context", async (ctx: RouterContext<undefined>) => {
-        const h = clampInt(ctx.searchParams.get("historyLimit"), 10, 0, 1000);
-        const d = clampInt(ctx.searchParams.get("downloadLimit"), 10, 0, 1000);
-        const { BrowserInfo } = BrowserInfoModule();
-        const out = await BrowserInfo.getAllContextData(h, d);
-        const mapped = {
-          history: mapHistoryItems(out.history),
-          tabs: out.tabs,
-          downloads: mapDownloads(out.downloads),
-        };
-        return { status: 200, body: mapped };
-      });
-    });
-
-    // WebScraper
-    api.namespace("/scraper", (s: NamespaceBuilder) => {
-      s.get("/instances/:id/exists", async (ctx: RouterContext) => {
-        const { WebScraper } = WebScraperModule();
-        try {
-          // Any call that touches the instance and throws when missing
-          await WebScraper.getURI(ctx.params.id);
-          return { status: 200, body: { exists: true } };
-        } catch (e) {
-          const msg = String(e ?? "");
-          if (/instance\s+not\s+found/i.test(msg)) {
-            return { status: 200, body: { exists: false } };
-          }
-          throw e;
-        }
-      });
-      s.post<undefined, { instanceId: string }>("/instances", async () => {
-        const { WebScraper } = WebScraperModule();
-        const id = await WebScraper.createInstance();
-        return { status: 200, body: { instanceId: id } };
-      });
-      s.delete("/instances/:id", (ctx: RouterContext) => {
-        const id = ctx.params.id;
-        const { WebScraper } = WebScraperModule();
-        WebScraper.destroyInstance(id);
-        return { status: 200, body: { ok: true } };
-      });
-      s.post<{ url: string }, OkResponse | ErrorResponse>(
-        "/instances/:id/navigate",
-        async (ctx: RouterContext<{ url: string }>) => {
-          const json = ctx.json();
-          if (!json?.url) {
-            return { status: 400, body: { error: "url required" } };
-          }
-          const { WebScraper } = WebScraperModule();
-          await WebScraper.navigate(ctx.params.id, json.url);
-          return { status: 200, body: { ok: true } };
-        },
-      );
-      s.get("/instances/:id/uri", async (ctx: RouterContext) => {
-        const { WebScraper } = WebScraperModule();
-        const uri = await WebScraper.getURI(ctx.params.id);
-        return { status: 200, body: uri != null ? { uri } : {} };
-      });
-      s.get("/instances/:id/html", async (ctx: RouterContext) => {
-        const { WebScraper } = WebScraperModule();
-        const html = await WebScraper.getHTML(ctx.params.id);
-        return { status: 200, body: html != null ? { html } : {} };
-      });
-      s.get("/instances/:id/elementText", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const text = await WebScraper.getElementText(ctx.params.id, sel);
-        return { status: 200, body: text != null ? { text } : {} };
-      });
-      // Get all matching elements (outerHTML array)
-      s.get("/instances/:id/elements", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const elems = await WebScraper.getElements(ctx.params.id, sel);
-        return { status: 200, body: { elements: elems } };
-      });
-
-      // Get element by text content
-      s.get("/instances/:id/elementByText", async (ctx: RouterContext) => {
-        const txt = ctx.searchParams.get("text") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const elem = await WebScraper.getElementByText(ctx.params.id, txt);
-        if (!elem) return { status: 200, body: { element: null } };
-        return { status: 200, body: { element: elem } };
-      });
-
-      // Get element text content by selector (alias)
-      s.get("/instances/:id/elementTextContent", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const text = await WebScraper.getElementTextContent(ctx.params.id, sel);
-        return { status: 200, body: text != null ? { text } : {} };
-      });
-      s.post("/instances/:id/click", async (ctx: RouterContext) => {
-        const json = ctx.json() as { selector?: string } | null;
-        const sel = json?.selector ?? "";
-        const { WebScraper } = WebScraperModule();
-        const okClicked = await WebScraper.clickElement(ctx.params.id, sel);
-        return { status: 200, body: { ok: okClicked } };
-      });
-      s.post("/instances/:id/waitForElement", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          selector?: string;
-          timeout?: number;
-        } | null;
-        const sel = json?.selector ?? "";
-        const to = json?.timeout ?? 5000;
-        const { WebScraper } = WebScraperModule();
-        const found = await WebScraper.waitForElement(ctx.params.id, sel, to);
-        return { status: 200, body: { found } };
-      });
-      // Screenshots
-      s.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
-        const { WebScraper } = WebScraperModule();
-        const image = await WebScraper.takeScreenshot(ctx.params.id);
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      s.get("/instances/:id/elementScreenshot", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const image = await WebScraper.takeElementScreenshot(
-          ctx.params.id,
-          sel,
-        );
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      s.get("/instances/:id/fullPageScreenshot", async (ctx: RouterContext) => {
-        const { WebScraper } = WebScraperModule();
-        const image = await WebScraper.takeFullPageScreenshot(ctx.params.id);
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      s.post("/instances/:id/regionScreenshot", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          rect?: { x?: number; y?: number; width?: number; height?: number };
-        } | null;
-        const { WebScraper } = WebScraperModule();
-        const image = await WebScraper.takeRegionScreenshot(
-          ctx.params.id,
-          json?.rect,
-        );
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      // Forms
-      s.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          formData?: { [selector: string]: string };
-        } | null;
-        const { WebScraper } = WebScraperModule();
-        const okFilled = await WebScraper.fillForm(
-          ctx.params.id,
-          json?.formData ?? {},
-        );
-        return { status: 200, body: { ok: okFilled } };
-      });
-      s.get("/instances/:id/value", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { WebScraper } = WebScraperModule();
-        const value = await WebScraper.getValue(ctx.params.id, sel);
-        return { status: 200, body: { value } };
-      });
-      s.post("/instances/:id/submit", async (ctx: RouterContext) => {
-        const json = ctx.json() as { selector?: string } | null;
-        const sel = json?.selector ?? "";
-        const { WebScraper } = WebScraperModule();
-        const submitted = await WebScraper.submit(ctx.params.id, sel);
-        return { status: 200, body: { ok: submitted } };
-      });
-    });
-
-    // TabManager
-    api.namespace("/tabs", (t: NamespaceBuilder) => {
-      t.get("/instances/:id/exists", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const info = await TabManagerServices.getInstanceInfo(ctx.params.id);
-        return { status: 200, body: { exists: info != null } };
-      });
-      t.get("/list", async () => {
-        const { TabManagerServices } = TabManagerModule();
-        const tabs = await TabManagerServices.listTabs();
-        return { status: 200, body: tabs };
-      });
-      t.post<
-        { url: string; inBackground?: boolean },
-        { instanceId: string } | ErrorResponse
-      >(
-        "/instances",
-        async (ctx: RouterContext<{ url: string; inBackground?: boolean }>) => {
-          const json = ctx.json();
-          if (!json?.url) {
-            return { status: 400, body: { error: "url required" } };
-          }
-          const { TabManagerServices } = TabManagerModule();
-          const id = await TabManagerServices.createInstance(json.url, {
-            inBackground: json.inBackground ?? true,
-          });
-          return { status: 200, body: { instanceId: id } };
-        },
-      );
-      t.post<
-        { browserId: string },
-        { instanceId: string | null } | ErrorResponse
-      >("/attach", async (ctx: RouterContext<{ browserId: string }>) => {
-        const json = ctx.json();
-        if (!json?.browserId) {
-          return { status: 400, body: { error: "browserId required" } };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        const id = await TabManagerServices.attachToTab(json.browserId);
-        return { status: 200, body: { instanceId: id } };
-      });
-      t.get("/instances/:id", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const info = await TabManagerServices.getInstanceInfo(ctx.params.id);
-        return { status: 200, body: info };
-      });
-      t.delete("/instances/:id", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        await TabManagerServices.destroyInstance(ctx.params.id);
-        return { status: 200, body: { ok: true } };
-      });
-      t.post<{ url: string }, OkResponse | ErrorResponse>(
-        "/instances/:id/navigate",
-        async (ctx: RouterContext<{ url: string }>) => {
-          const json = ctx.json();
-          if (!json?.url) {
-            return { status: 400, body: { error: "url required" } };
-          }
-          const { TabManagerServices } = TabManagerModule();
-          await TabManagerServices.navigate(ctx.params.id, json.url);
-          return { status: 200, body: { ok: true } };
-        },
-      );
-      t.get("/instances/:id/uri", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const uri = await TabManagerServices.getURI(ctx.params.id);
-        return { status: 200, body: { uri } };
-      });
-      t.get("/instances/:id/html", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const html = await TabManagerServices.getHTML(ctx.params.id);
-        return { status: 200, body: html != null ? { html } : {} };
-      });
-      t.get("/instances/:id/element", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const element = await TabManagerServices.getElement(ctx.params.id, sel);
-        return { status: 200, body: element != null ? { element } : {} };
-      });
-      t.get("/instances/:id/elementText", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const text = await TabManagerServices.getElementText(
-          ctx.params.id,
-          sel,
-        );
-        return { status: 200, body: text != null ? { text } : {} };
-      });
-      // Get all matching elements (outerHTML array)
-      t.get("/instances/:id/elements", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const elems = await TabManagerServices.getElements(ctx.params.id, sel);
-        return { status: 200, body: { elements: elems } };
-      });
-
-      // Get element by text content
-      t.get("/instances/:id/elementByText", async (ctx: RouterContext) => {
-        const txt = ctx.searchParams.get("text") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const elem = await TabManagerServices.getElementByText(
-          ctx.params.id,
-          txt,
-        );
-        if (!elem) return { status: 200, body: { element: null } };
-        return { status: 200, body: { element: elem } };
-      });
-
-      // Get element text content by selector (alias)
-      t.get("/instances/:id/elementTextContent", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const text = await TabManagerServices.getElementTextContent(
-          ctx.params.id,
-          sel,
-        );
-        return { status: 200, body: text != null ? { text } : {} };
-      });
-      t.post("/instances/:id/click", async (ctx: RouterContext) => {
-        const json = ctx.json() as { selector?: string } | null;
-        const sel = json?.selector ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        // NRWebScraperChild 側で追加パラメータなしの自動ハイライトが行われる
-        const okClicked = await TabManagerServices.clickElement(
-          ctx.params.id,
-          sel,
-        );
-        return { status: 200, body: { ok: okClicked } };
-      });
-      t.post("/instances/:id/waitForElement", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          selector?: string;
-          timeout?: number;
-        } | null;
-        const sel = json?.selector ?? "";
-        const to = json?.timeout ?? 5000;
-        const { TabManagerServices } = TabManagerModule();
-        const found = await TabManagerServices.waitForElement(
-          ctx.params.id,
-          sel,
-          to,
-        );
-        return { status: 200, body: { found } };
-      });
-      t.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const image = await TabManagerServices.takeScreenshot(ctx.params.id);
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      t.get("/instances/:id/elementScreenshot", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const image = await TabManagerServices.takeElementScreenshot(
-          ctx.params.id,
-          sel,
-        );
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      t.get("/instances/:id/fullPageScreenshot", async (ctx: RouterContext) => {
-        const { TabManagerServices } = TabManagerModule();
-        const image = await TabManagerServices.takeFullPageScreenshot(
-          ctx.params.id,
-        );
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      t.post("/instances/:id/regionScreenshot", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          rect?: { x?: number; y?: number; width?: number; height?: number };
-        } | null;
-        const { TabManagerServices } = TabManagerModule();
-        const image = await TabManagerServices.takeRegionScreenshot(
-          ctx.params.id,
-          json?.rect,
-        );
-        return { status: 200, body: image != null ? { image } : {} };
-      });
-      t.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
-        const json = ctx.json() as {
-          formData?: { [selector: string]: string };
-        } | null;
-        const { TabManagerServices } = TabManagerModule();
-        // 自動ハイライトにより各入力フィールドの操作が視覚化される
-        const okFilled = await TabManagerServices.fillForm(
-          ctx.params.id,
-          json?.formData ?? {},
-        );
-        return { status: 200, body: { ok: okFilled } };
-      });
-      t.get("/instances/:id/value", async (ctx: RouterContext) => {
-        const sel = ctx.searchParams.get("selector") ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        const value = await TabManagerServices.getValue(ctx.params.id, sel);
-        return { status: 200, body: value != null ? { value } : {} };
-      });
-      t.post("/instances/:id/submit", async (ctx: RouterContext) => {
-        const json = ctx.json() as { selector?: string } | null;
-        const sel = json?.selector ?? "";
-        const { TabManagerServices } = TabManagerModule();
-        // フォーム送信時も自動ハイライトで操作対象を強調表示
-        const submitted = await TabManagerServices.submit(ctx.params.id, sel);
-        return { status: 200, body: { ok: submitted } };
-      });
-    });
+    // Register routes from separated modules
+    registerBrowserRoutes(api);
+    registerScraperRoutes(api);
+    registerTabRoutes(api);
 
     return router;
   }
 
-  private async routeAsync(req: HttpRequest): Promise<string> {
+  private async routeAsync(
+    req: HttpRequest,
+    output: nsIOutputStream,
+    input: nsIInputStream,
+  ): Promise<void> {
     const { method, path } = req;
-    if (method === "OPTIONS") return corsPreflight();
+    if (method === "OPTIONS") {
+      writeUtf8(output, corsPreflight());
+      output.close();
+      input.close();
+      return;
+    }
 
     const { pathname, searchParams } = parseURL(path);
     const router = this._router;
-    if (!router) return serverError("router not initialized");
+    if (!router) {
+      writeUtf8(output, serverError("router not initialized"));
+      output.close();
+      input.close();
+      return;
+    }
 
     const match = router.match(method, pathname);
-    if (!match) return notFound();
+    if (!match) {
+      writeUtf8(output, notFound());
+      output.close();
+      input.close();
+      return;
+    }
 
     try {
       const jsonFn = (() => getJSON(req)) as unknown as RouterContext["json"];
@@ -1136,15 +375,62 @@ class LocalHttpServer implements nsIServerSocketListener {
         json: jsonFn,
       };
       const result = await match.handler(ctx);
-      const status = result.status ?? 200;
-      return jsonResponse(status, result.body ?? {});
+
+      // Stream handling
+      if ("isStream" in result && result.isStream) {
+        const streamResult = result as StreamResult;
+
+        const headers =
+          "HTTP/1.1 200 OK\r\n" +
+          "Content-Type: text/event-stream\r\n" +
+          "Cache-Control: no-cache\r\n" +
+          "Connection: keep-alive\r\n" +
+          "Access-Control-Allow-Origin: *\r\n" +
+          "\r\n";
+        writeUtf8(output, headers);
+
+        // Callback to clean up
+        streamResult.onConnect(
+          (data) => {
+            try {
+              writeUtf8(output, `data: ${data}\n\n`);
+            } catch (_e) {
+              // Write failed, likely closed
+              output.close();
+              input.close();
+            }
+          },
+          () => {
+            try {
+              output.close();
+              input.close();
+            } catch (_) {
+              // ignore
+            }
+          },
+        );
+        return;
+      }
+
+      // Normal JSON response
+      const httpResult = result as { status?: number; body?: unknown };
+      const status = httpResult.status ?? 200;
+      const response = jsonResponse(status, httpResult.body ?? {});
+      writeUtf8(output, response);
+      output.close();
+      input.close();
     } catch (e) {
       const msg = String(e ?? "");
+      let response;
       // Map common service errors to 404 when instance is missing
       if (/instance\s+not\s+found/i.test(msg)) {
-        return notFound();
+        response = notFound();
+      } else {
+        response = serverError(msg);
       }
-      return serverError(msg);
+      writeUtf8(output, response);
+      output.close();
+      input.close();
     }
   }
 }

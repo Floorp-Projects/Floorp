@@ -109,7 +109,8 @@ try {
     }
 
     # Write the updated content back to the temporary file
-    [System.IO.File]::WriteAllText($TempFile, $FirefoxContent, [System.Text.Encoding]::UTF8)
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($TempFile, $FirefoxContent, $Utf8NoBom)
 
     # Apply changes to firefox.js
     Move-Item $TempFile $FirefoxJsPath -Force

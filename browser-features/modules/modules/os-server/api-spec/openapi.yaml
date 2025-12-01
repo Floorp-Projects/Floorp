@@ -129,6 +129,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/BrowserContext"
 
+  /browser/events:
+    get:
+      summary: Subscribe to browser events
+      operationId: subscribeBrowserEvents
+      description: |
+        Establishes a Server-Sent Events (SSE) connection to receive real-time updates about browser state changes.
+      responses:
+        "200":
+          description: Event stream established
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  data: {"type":"workspace-changed","timestamp":1625097600000,"data":{"workspaceId":"ws-123"}}
+
   # Web Scraper Endpoints
   /scraper/instances:
     post:
@@ -1260,3 +1276,21 @@ components:
           type: string
           description: Attached instance ID
           nullable: true
+
+    # Event Types
+    BrowserEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Event type
+          enum: [workspace-changed]
+        timestamp:
+          type: integer
+          description: Event timestamp (epoch milliseconds)
+        data:
+          type: object
+          description: Event-specific data
+      required:
+        - type
+        - timestamp

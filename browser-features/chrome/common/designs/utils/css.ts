@@ -17,8 +17,10 @@ import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw"
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
 
 interface FCSS {
-  styles?: string[]; // chrome:// URLs for production
-  stylesRaw?: string[]; // Raw CSS content for development
+  styles?: string[]; // chrome:// URLs for production (AGENT_SHEET - applies to all documents)
+  stylesRaw?: string[]; // Raw CSS content for development (AGENT_SHEET - applies to all documents)
+  chromeStyles?: string[]; // chrome:// URLs for production (DOM style - Chrome UI only)
+  chromeStylesRaw?: string[]; // Raw CSS content for development (DOM style - Chrome UI only)
   iconBasePath?: string; // Base path for icons in development
   userjs: string | null;
   useTabColorAsToolbarColor?: boolean;
@@ -44,14 +46,14 @@ export function getCSSFromConfig(
     case "fluerial": {
       if (isDev) {
         return {
-          stylesRaw: [fluerialStylesRaw],
+          chromeStylesRaw: [fluerialStylesRaw],
           iconBasePath: "http://localhost:5174/fluerial/icons",
           userjs: null,
           useTabColorAsToolbarColor: true,
         };
       }
       return {
-        styles: [getStylePath("fluerial/css/fluerial.css")],
+        chromeStyles: [getStylePath("fluerial/css/fluerial.css")],
         userjs: null,
         useTabColorAsToolbarColor: true,
       };
@@ -60,16 +62,15 @@ export function getCSSFromConfig(
     case "lepton": {
       if (isDev) {
         return {
-          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          chromeStylesRaw: [leptonChromeStylesRaw],
+          stylesRaw: [leptonContentStylesRaw],
           iconBasePath: "http://localhost:5174/lepton/icons",
           userjs: leptonUserJs,
         };
       }
       return {
-        styles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [getStylePath("lepton/css/leptonChrome.css")],
+        styles: [getStylePath("lepton/css/leptonContent.css")],
         userjs: leptonUserJs,
       };
     }
@@ -77,16 +78,15 @@ export function getCSSFromConfig(
     case "photon": {
       if (isDev) {
         return {
-          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          chromeStylesRaw: [leptonChromeStylesRaw],
+          stylesRaw: [leptonContentStylesRaw],
           iconBasePath: "http://localhost:5174/lepton/icons",
           userjs: photonUserJs,
         };
       }
       return {
-        styles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [getStylePath("lepton/css/leptonChrome.css")],
+        styles: [getStylePath("lepton/css/leptonContent.css")],
         userjs: photonUserJs,
       };
     }
@@ -94,17 +94,16 @@ export function getCSSFromConfig(
     case "protonfix": {
       if (isDev) {
         return {
-          stylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
+          chromeStylesRaw: [leptonChromeStylesRaw],
+          stylesRaw: [leptonContentStylesRaw],
           iconBasePath: "http://localhost:5174/lepton/icons",
           userjs: protonfixUserJs,
           useTabColorAsToolbarColor: true,
         };
       }
       return {
-        styles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [getStylePath("lepton/css/leptonChrome.css")],
+        styles: [getStylePath("lepton/css/leptonContent.css")],
         userjs: protonfixUserJs,
         useTabColorAsToolbarColor: true,
       };

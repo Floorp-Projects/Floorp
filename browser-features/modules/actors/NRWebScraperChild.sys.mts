@@ -26,6 +26,10 @@ interface NRWebScraperMessageData {
   rect?: { x?: number; y?: number; width?: number; height?: number };
   formData?: { [selector: string]: string };
   elementInfo?: string;
+  attributeName?: string;
+  checked?: boolean;
+  optionValue?: string;
+  targetSelector?: string;
 }
 
 interface NormalizedHighlightOptions {
@@ -1240,6 +1244,80 @@ export class NRWebScraperChild extends JSWindowActorChild {
         this.cleanupHighlight();
         this.hideInfoPanel();
         return true;
+      case "WebScraper:GetAttribute":
+        if (message.data?.selector && message.data?.attributeName) {
+          return this.getAttribute(
+            message.data.selector,
+            message.data.attributeName,
+          );
+        }
+        break;
+      case "WebScraper:IsVisible":
+        if (message.data?.selector) {
+          return this.isVisible(message.data.selector);
+        }
+        break;
+      case "WebScraper:IsEnabled":
+        if (message.data?.selector) {
+          return this.isEnabled(message.data.selector);
+        }
+        break;
+      case "WebScraper:ClearInput":
+        if (message.data?.selector) {
+          return this.clearInput(message.data.selector);
+        }
+        break;
+      case "WebScraper:SelectOption":
+        if (message.data?.selector && message.data?.optionValue !== undefined) {
+          return this.selectOption(
+            message.data.selector,
+            message.data.optionValue,
+          );
+        }
+        break;
+      case "WebScraper:SetChecked":
+        if (
+          message.data?.selector &&
+          typeof message.data?.checked === "boolean"
+        ) {
+          return this.setChecked(message.data.selector, message.data.checked);
+        }
+        break;
+      case "WebScraper:HoverElement":
+        if (message.data?.selector) {
+          return this.hoverElement(message.data.selector);
+        }
+        break;
+      case "WebScraper:ScrollToElement":
+        if (message.data?.selector) {
+          return this.scrollToElement(message.data.selector);
+        }
+        break;
+      case "WebScraper:DoubleClick":
+        if (message.data?.selector) {
+          return this.doubleClickElement(message.data.selector);
+        }
+        break;
+      case "WebScraper:RightClick":
+        if (message.data?.selector) {
+          return this.rightClickElement(message.data.selector);
+        }
+        break;
+      case "WebScraper:Focus":
+        if (message.data?.selector) {
+          return this.focusElement(message.data.selector);
+        }
+        break;
+      case "WebScraper:GetPageTitle":
+        return this.getPageTitle();
+      case "WebScraper:DragAndDrop":
+        if (message.data?.selector && message.data?.targetSelector) {
+          return this.dragAndDrop(
+            message.data.selector,
+            message.data.targetSelector,
+          );
+        }
+        break;
     }
     return null;
   }
@@ -1957,6 +2035,572 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error submitting form:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Gets the value of a specific attribute from an element
+   *
+   * @param selector - CSS selector to find the target element
+   * @param attributeName - Name of the attribute to retrieve
+   * @returns string | null - The attribute value, or null if not found
+   */
+  getAttribute(selector: string, attributeName: string): string | null {
+    try {
+      const element = this.document?.querySelector(selector) as Element | null;
+      if (element) {
+        this.runAsyncInspection(element, "inspectGetElement", { selector });
+        return element.getAttribute(attributeName);
+      }
+      return null;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting attribute:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Checks if an element is visible in the viewport
+   *
+   * An element is considered visible if:
+   * - It exists in the DOM
+   * - It has non-zero dimensions
+   * - It is not hidden via CSS (display: none, visibility: hidden, opacity: 0)
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns boolean - True if the element is visible, false otherwise
+   */
+  isVisible(selector: string): boolean {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      // Check if element has dimensions
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return false;
+
+      // Check computed styles
+      const style = this.contentWindow?.getComputedStyle(element);
+      if (!style) return false;
+
+      if (style.getPropertyValue("display") === "none") return false;
+      if (style.getPropertyValue("visibility") === "hidden") return false;
+      if (style.getPropertyValue("opacity") === "0") return false;
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error checking visibility:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Checks if an element is enabled (not disabled)
+   *
+   * This is useful for form elements like buttons, inputs, and selects.
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns boolean - True if the element is enabled, false if disabled or not found
+   */
+  isEnabled(selector: string): boolean {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      // Check the disabled property for form elements
+      if ("disabled" in element) {
+        return !(element as HTMLInputElement | HTMLButtonElement).disabled;
+      }
+
+      // Check aria-disabled attribute for other elements
+      const ariaDisabled = element.getAttribute("aria-disabled");
+      if (ariaDisabled === "true") return false;
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error checking enabled state:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Clears the value of an input or textarea element
+   *
+   * This method clears the input and triggers appropriate events
+   * to ensure frameworks detect the change.
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if cleared successfully, false otherwise
+   */
+  async clearInput(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(selector) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null;
+      if (!element) return false;
+
+      // Check if it's a valid input element
+      if (!("value" in element)) return false;
+
+      const elementInfo = await this.translate("inputValueSet", {
+        value: "(cleared)",
+      });
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Clear the value
+      element.value = "";
+
+      // Trigger events to notify frameworks
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+      element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error clearing input:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Selects an option in a select element
+   *
+   * This method finds a select element and sets its value to the specified option.
+   * It triggers appropriate events to ensure frameworks detect the change.
+   *
+   * @param selector - CSS selector to find the target select element
+   * @param value - The value of the option to select
+   * @returns Promise<boolean> - True if selected successfully, false otherwise
+   */
+  async selectOption(selector: string, value: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLSelectElement | null;
+      if (!element) return false;
+
+      // Check if it's a valid select element
+      if (element.tagName !== "SELECT") return false;
+
+      // Check if the option exists
+      const optionExists = Array.from(element.options).some(
+        (opt: HTMLOptionElement) => opt.value === value,
+      );
+      if (!optionExists) return false;
+
+      const elementInfo = await this.translate("selectOption", {
+        value,
+      });
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Set the value
+      element.value = value;
+
+      // Trigger events to notify frameworks
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error selecting option:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the checked state of a checkbox or radio button
+   *
+   * This method finds a checkbox or radio input element and sets its checked state.
+   * It triggers appropriate events to ensure frameworks detect the change.
+   *
+   * @param selector - CSS selector to find the target input element
+   * @param checked - The desired checked state
+   * @returns Promise<boolean> - True if set successfully, false otherwise
+   */
+  async setChecked(selector: string, checked: boolean): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLInputElement | null;
+      if (!element) return false;
+
+      // Check if it's a valid checkbox or radio element
+      if (element.tagName !== "INPUT") return false;
+      if (element.type !== "checkbox" && element.type !== "radio") return false;
+
+      const elementInfo = await this.translate("setChecked", {
+        state: checked ? "checked" : "unchecked",
+      });
+      const options = this.getHighlightOptions("Click");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Set the checked state
+      element.checked = checked;
+
+      // Trigger events to notify frameworks
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+
+      // For radio buttons, we may need to trigger click event
+      if (element.type === "radio" && checked) {
+        element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      }
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error setting checked state:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Simulates a mouse hover over an element
+   *
+   * This method finds an element and dispatches mouse events to simulate
+   * a hover interaction. This can trigger CSS :hover states and JavaScript
+   * event handlers.
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if hover was simulated successfully, false otherwise
+   */
+  async hoverElement(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      const elementInfo = await this.translate("hoverElement", {});
+      const options = this.getHighlightOptions("Inspect");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Get element position for mouse event coordinates
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Dispatch mouseenter and mouseover events
+      element.dispatchEvent(
+        new MouseEvent("mouseenter", {
+          bubbles: false,
+          cancelable: false,
+          clientX: centerX,
+          clientY: centerY,
+          view: this.contentWindow as Window & typeof globalThis,
+        }),
+      );
+      element.dispatchEvent(
+        new MouseEvent("mouseover", {
+          bubbles: true,
+          cancelable: true,
+          clientX: centerX,
+          clientY: centerY,
+          view: this.contentWindow as Window & typeof globalThis,
+        }),
+      );
+      element.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: centerX,
+          clientY: centerY,
+          view: this.contentWindow as Window & typeof globalThis,
+        }),
+      );
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error hovering element:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Scrolls the page to make an element visible
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if scrolled successfully
+   */
+  async scrollToElement(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      const elementInfo = await this.translate("scrollToElement", {});
+      const options = this.getHighlightOptions("Inspect");
+
+      // Scroll element into view first
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Apply highlight after scrolling
+      await this.applyHighlight(element, options, elementInfo);
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error scrolling to element:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Performs a double click on an element
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if double clicked successfully
+   */
+  async doubleClickElement(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      const elementInfo = await this.translate("doubleClickElement", {});
+      const options = this.getHighlightOptions("Click");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Dispatch double click event
+      element.dispatchEvent(
+        new MouseEvent("dblclick", {
+          bubbles: true,
+          cancelable: true,
+          clientX: centerX,
+          clientY: centerY,
+          view: this.contentWindow as Window & typeof globalThis,
+          detail: 2,
+        }),
+      );
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error double clicking element:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Performs a right click (context menu) on an element
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if right clicked successfully
+   */
+  async rightClickElement(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      const elementInfo = await this.translate("rightClickElement", {});
+      const options = this.getHighlightOptions("Click");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Dispatch contextmenu event (right click)
+      element.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: centerX,
+          clientY: centerY,
+          view: this.contentWindow as Window & typeof globalThis,
+          button: 2,
+        }),
+      );
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error right clicking element:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Focuses on an element
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if focused successfully
+   */
+  async focusElement(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      const elementInfo = await this.translate("focusElement", {});
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Focus the element
+      element.focus();
+
+      // Dispatch focus event
+      element.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+      element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error focusing element:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Gets the page title
+   *
+   * @returns string | null - The page title or null
+   */
+  getPageTitle(): string | null {
+    try {
+      return this.document?.title ?? null;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting page title:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Performs a drag and drop operation between two elements
+   *
+   * @param sourceSelector - CSS selector for the source element
+   * @param targetSelector - CSS selector for the target element
+   * @returns Promise<boolean> - True if drag and drop was successful
+   */
+  async dragAndDrop(
+    sourceSelector: string,
+    targetSelector: string,
+  ): Promise<boolean> {
+    try {
+      const source = this.document?.querySelector(
+        sourceSelector,
+      ) as HTMLElement | null;
+      const target = this.document?.querySelector(
+        targetSelector,
+      ) as HTMLElement | null;
+
+      if (!source || !target) return false;
+
+      const elementInfo = await this.translate("dragAndDrop", {});
+      const options = this.getHighlightOptions("Click");
+
+      // Highlight source element
+      await this.applyHighlight(source, options, elementInfo);
+
+      const sourceRect = source.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const sourceX = sourceRect.left + sourceRect.width / 2;
+      const sourceY = sourceRect.top + sourceRect.height / 2;
+      const targetX = targetRect.left + targetRect.width / 2;
+      const targetY = targetRect.top + targetRect.height / 2;
+
+      const win = this.contentWindow as Window & typeof globalThis;
+
+      // Create DataTransfer object
+      const dataTransfer = new DataTransfer();
+
+      // Dispatch dragstart on source
+      source.dispatchEvent(
+        new DragEvent("dragstart", {
+          bubbles: true,
+          cancelable: true,
+          clientX: sourceX,
+          clientY: sourceY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Dispatch drag event
+      source.dispatchEvent(
+        new DragEvent("drag", {
+          bubbles: true,
+          cancelable: true,
+          clientX: sourceX,
+          clientY: sourceY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Dispatch dragenter on target
+      target.dispatchEvent(
+        new DragEvent("dragenter", {
+          bubbles: true,
+          cancelable: true,
+          clientX: targetX,
+          clientY: targetY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Dispatch dragover on target
+      target.dispatchEvent(
+        new DragEvent("dragover", {
+          bubbles: true,
+          cancelable: true,
+          clientX: targetX,
+          clientY: targetY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Dispatch drop on target
+      target.dispatchEvent(
+        new DragEvent("drop", {
+          bubbles: true,
+          cancelable: true,
+          clientX: targetX,
+          clientY: targetY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Dispatch dragend on source
+      source.dispatchEvent(
+        new DragEvent("dragend", {
+          bubbles: true,
+          cancelable: true,
+          clientX: targetX,
+          clientY: targetY,
+          dataTransfer,
+          view: win,
+        }),
+      );
+
+      // Highlight target element
+      await this.applyHighlight(target, options, elementInfo);
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in drag and drop:", e);
       return false;
     }
   }

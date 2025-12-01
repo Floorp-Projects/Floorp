@@ -125,6 +125,21 @@ interface XULBrowserElement extends XULFrameElement, FrameLoader {
   docShellIsActive: boolean;
   isRemoteBrowser: boolean;
   remoteType: string;
+  webProgress: nsIWebProgress;
+  loadURI(uri: nsIURI, loadURIOptions?: object): void;
+}
+
+// Extended BrowsingContext for accessing current window global and URI
+interface BrowsingContext {
+  currentWindowGlobal: WindowGlobalParent | null;
+  currentURI: nsIURI;
+  allowJavascript: boolean;
+  print(printSettings: nsIPrintSettings): Promise<nsIInputStream>;
+}
+
+// Extended nsIPrintSettings for PDF printing
+interface nsIPrintSettings {
+  showPrintProgress: boolean;
 }
 
 // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1736

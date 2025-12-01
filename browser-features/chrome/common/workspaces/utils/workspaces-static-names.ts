@@ -26,6 +26,11 @@ export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";
 export const WORKSPACES_INIT_OBSERVER_TOPIC = "floorp.workspaces.initialize";
 
 /**
+ * Observer topic notified when the current workspace changes.
+ */
+export const WORKSPACES_CHANGED_OBSERVER_TOPIC = "floorp.workspaces.changed";
+
+/**
  * One-shot pref to mark that the browser exited due to an empty workspace,
  * used to collapse duplicated startup "new" tabs on next launch.
  */

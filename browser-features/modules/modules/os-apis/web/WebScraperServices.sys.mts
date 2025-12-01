@@ -22,6 +22,11 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+// Actor interface for WebScraper communication
+interface WebScraperActor {
+  sendQuery(name: string, data?: object): Promise<unknown>;
+}
+
 // Global sets to prevent garbage collection of active components
 const SCRAPER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 const PROGRESS_LISTENERS = new Set();
@@ -48,13 +53,15 @@ class webScraper {
     browser: XULBrowserElement,
     tries = 100,
     delayMs = 100,
-  ): Promise<any | null> {
-    let actor =
-      browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
+  ): Promise<WebScraperActor | null> {
+    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    ) as WebScraperActor | undefined;
     for (let i = 0; !actor && i < tries; i++) {
       await new Promise((r) => setTimeout(r, delayMs));
-      actor =
-        browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
+      actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+        "NRWebScraper",
+      ) as WebScraperActor | undefined;
     }
     return actor ?? null;
   }
@@ -97,10 +104,10 @@ class webScraper {
     browser.setAttribute("disableglobalhistory", "true");
 
     // Set default size for browser element
-    browser.style.width = "1366px";
-    browser.style.minWidth = "1366px";
-    browser.style.height = "768px";
-    browser.style.minHeight = "768px";
+    browser.style.setProperty("width", "1366px");
+    browser.style.setProperty("min-width", "1366px");
+    browser.style.setProperty("height", "768px");
+    browser.style.setProperty("min-height", "768px");
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement?.appendChild(browser);
@@ -155,13 +162,12 @@ class webScraper {
 
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
     return new Promise((resolve) => {
-      const self = this;
       let resolved = false;
       const complete = async () => {
         if (resolved) return;
         resolved = true;
         try {
-          const actor = await self._getActorForBrowser(browser, 150, 100); // up to ~15s
+          const actor = await this._getActorForBrowser(browser, 150, 100); // up to ~15s
           if (actor) {
             // Prefer explicit readiness wait in the child actor
             const ok = await actor
@@ -179,7 +185,7 @@ class webScraper {
         } catch (_) {
           // ignore
         }
-        await self._delayForUser();
+        await this._delayForUser();
         resolve();
       };
       const oa = E10SUtils.predictOriginAttributes({
@@ -202,7 +208,7 @@ class webScraper {
       const { webProgress } = browser;
 
       // Delay before navigation
-      self._delayForUser().then(() => {
+      this._delayForUser().then(() => {
         if (typeof browser.loadURI === "function") {
           browser.loadURI(uri, loadURIOptions);
         } else {
@@ -240,7 +246,9 @@ class webScraper {
           }
 
           PROGRESS_LISTENERS.delete(progressListener);
-          webProgress.removeProgressListener(progressListener);
+          webProgress.removeProgressListener(
+            progressListener as nsIWebProgressListener,
+          );
           complete();
         },
         onStateChange(
@@ -253,7 +261,9 @@ class webScraper {
           const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
-            webProgress.removeProgressListener(progressListener);
+            webProgress.removeProgressListener(
+              progressListener as nsIWebProgressListener,
+            );
             complete();
           }
         },
@@ -264,7 +274,7 @@ class webScraper {
       };
       PROGRESS_LISTENERS.add(progressListener);
       webProgress.addProgressListener(
-        progressListener,
+        progressListener as nsIWebProgressListener,
         Ci.nsIWebProgress.NOTIFY_LOCATION |
           Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
       );
@@ -311,7 +321,7 @@ class webScraper {
     try {
       const actor = await this._getActorForBrowser(browser);
       if (!actor) return null;
-      return await actor.sendQuery("WebScraper:GetHTML");
+      return (await actor.sendQuery("WebScraper:GetHTML")) as string | null;
     } catch (e) {
       console.error("Error getting HTML:", e);
       return null;
@@ -346,7 +356,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElement", { selector });
+    return (await actor.sendQuery("WebScraper:GetElement", {
+      selector,
+    })) as string | null;
   }
 
   /** Get all elements matching a selector from a browser instance
@@ -372,7 +384,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return [];
-    return await actor.sendQuery("WebScraper:GetElements", { selector });
+    return ((await actor.sendQuery("WebScraper:GetElements", {
+      selector,
+    })) ?? []) as string[];
   }
 
   /**  Get Element By Text Content
@@ -399,9 +413,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementByText", {
+    return (await actor.sendQuery("WebScraper:GetElementByText", {
       textContent,
-    });
+    })) as string | null;
   }
 
   /** Get Element Text Content
@@ -428,9 +442,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementTextContent", {
+    return (await actor.sendQuery("WebScraper:GetElementTextContent", {
       selector,
-    });
+    })) as string | null;
   }
 
   /**
@@ -458,7 +472,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementText", { selector });
+    return (await actor.sendQuery("WebScraper:GetElementText", {
+      selector,
+    })) as string | null;
   }
 
   /**
@@ -486,10 +502,10 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:ClickElement", {
+    const result = (await actor.sendQuery("WebScraper:ClickElement", {
       selector,
-    });
-    await this._delayForUser(1500);
+    })) as boolean;
+    await this._delayForUser(3500);
     return result;
   }
 
@@ -520,10 +536,10 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    return await actor.sendQuery("WebScraper:WaitForElement", {
+    return (await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
       timeout,
-    });
+    })) as boolean;
   }
 
   /**
@@ -544,7 +560,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeScreenshot");
+    return (await actor.sendQuery("WebScraper:TakeScreenshot")) as
+      | string
+      | null;
   }
 
   /**
@@ -569,9 +587,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeElementScreenshot", {
+    return (await actor.sendQuery("WebScraper:TakeElementScreenshot", {
       selector,
-    });
+    })) as string | null;
   }
 
   /**
@@ -594,7 +612,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeFullPageScreenshot");
+    return (await actor.sendQuery("WebScraper:TakeFullPageScreenshot")) as
+      | string
+      | null;
   }
 
   /**
@@ -619,9 +639,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
+    return (await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
       rect,
-    });
+    })) as string | null;
   }
 
   /**
@@ -644,10 +664,10 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:FillForm", {
+    const result = (await actor.sendQuery("WebScraper:FillForm", {
       formData,
-    });
-    await this._delayForUser(1500);
+    })) as boolean;
+    await this._delayForUser(3500);
     return result;
   }
 
@@ -665,7 +685,106 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetValue", { selector });
+    return (await actor.sendQuery("WebScraper:GetValue", {
+      selector,
+    })) as string | null;
+  }
+
+  /**
+   * Gets the value of a specific attribute from an element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @param attributeName - Name of the attribute to retrieve
+   * @returns Promise<string | null> - The attribute value, or null if not found
+   */
+  public async getAttribute(
+    instanceId: string,
+    selector: string,
+    attributeName: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return (await actor.sendQuery("WebScraper:GetAttribute", {
+      selector,
+      attributeName,
+    })) as string | null;
+  }
+
+  /**
+   * Checks if an element is visible in the viewport
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if visible, false otherwise
+   */
+  public async isVisible(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    return (await actor.sendQuery("WebScraper:IsVisible", {
+      selector,
+    })) as boolean;
+  }
+
+  /**
+   * Checks if an element is enabled (not disabled)
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if enabled, false if disabled or not found
+   */
+  public async isEnabled(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    return (await actor.sendQuery("WebScraper:IsEnabled", {
+      selector,
+    })) as boolean;
+  }
+
+  /**
+   * Clears the value of an input or textarea element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if cleared successfully
+   */
+  public async clearInput(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:ClearInput", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
   }
 
   /**
@@ -679,9 +798,501 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:Submit", { selector });
-    await this._delayForUser(1500);
+    const result = (await actor.sendQuery("WebScraper:Submit", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(3500);
     return result;
+  }
+
+  /**
+   * Selects an option in a select element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target select element
+   * @param value - The value of the option to select
+   * @returns Promise<boolean> - True if selected successfully
+   */
+  public async selectOption(
+    instanceId: string,
+    selector: string,
+    value: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SelectOption", {
+      selector,
+      optionValue: value,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Sets the checked state of a checkbox or radio button
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target input element
+   * @param checked - The desired checked state
+   * @returns Promise<boolean> - True if set successfully
+   */
+  public async setChecked(
+    instanceId: string,
+    selector: string,
+    checked: boolean,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SetChecked", {
+      selector,
+      checked,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Simulates a mouse hover over an element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if hover was simulated successfully
+   */
+  public async hoverElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:HoverElement", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  // ============================================
+  // Phase 3: Advanced Automation Features
+  // ============================================
+
+  /**
+   * Scrolls the page to make an element visible
+   */
+  public async scrollToElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:ScrollToElement", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
+  }
+
+  /**
+   * Gets the page title
+   */
+  public async getPageTitle(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return (await actor.sendQuery("WebScraper:GetPageTitle")) as string | null;
+  }
+
+  /**
+   * Performs a double click on an element
+   */
+  public async doubleClick(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DoubleClick", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Performs a right click (context menu) on an element
+   */
+  public async rightClick(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:RightClick", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Focuses on an element
+   */
+  public async focusElement(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:Focus", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
+  }
+
+  /**
+   * Performs a drag and drop operation between two elements
+   */
+  public async dragAndDrop(
+    instanceId: string,
+    sourceSelector: string,
+    targetSelector: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DragAndDrop", {
+      selector: sourceSelector,
+      targetSelector,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Gets all cookies for the current page
+   */
+  public getCookies(instanceId: string): Promise<
+    Array<{
+      name: string;
+      value: string;
+      domain?: string;
+      path?: string;
+      secure?: boolean;
+      httpOnly?: boolean;
+      sameSite?: string;
+      expirationDate?: number;
+    }>
+  > {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      return Promise.reject(
+        new Error(`Browser not found for instance ${instanceId}`),
+      );
+    }
+
+    try {
+      const uri = browser.browsingContext?.currentURI;
+      if (!uri) return Promise.resolve([]);
+
+      const host = uri.host;
+      const cookies: Array<{
+        name: string;
+        value: string;
+        domain?: string;
+        path?: string;
+        secure?: boolean;
+        httpOnly?: boolean;
+        sameSite?: string;
+        expirationDate?: number;
+      }> = [];
+
+      const cookieManager = Services.cookies;
+      const enumerator = cookieManager.getCookiesFromHost(host, {});
+
+      for (const cookie of enumerator) {
+        cookies.push({
+          name: cookie.name,
+          value: cookie.value,
+          domain: cookie.host,
+          path: cookie.path,
+          secure: cookie.isSecure,
+          httpOnly: cookie.isHttpOnly,
+          sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
+          expirationDate: cookie.expiry,
+        });
+      }
+
+      return Promise.resolve(cookies);
+    } catch (e) {
+      console.error("WebScraper: Error getting cookies:", e);
+      return Promise.resolve([]);
+    }
+  }
+
+  /**
+   * Sets a cookie for the current page
+   */
+  public setCookie(
+    instanceId: string,
+    cookie: {
+      name: string;
+      value: string;
+      domain?: string;
+      path?: string;
+      secure?: boolean;
+      httpOnly?: boolean;
+      sameSite?: "Strict" | "Lax" | "None";
+      expirationDate?: number;
+    },
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      return Promise.reject(
+        new Error(`Browser not found for instance ${instanceId}`),
+      );
+    }
+
+    try {
+      const uri = browser.browsingContext?.currentURI;
+      if (!uri) return Promise.resolve(false);
+
+      const sameSiteMap: Record<string, number> = {
+        None: 0,
+        Lax: 1,
+        Strict: 2,
+      };
+
+      Services.cookies.add(
+        cookie.domain ?? uri.host,
+        cookie.path ?? "/",
+        cookie.name,
+        cookie.value,
+        cookie.secure ?? false,
+        cookie.httpOnly ?? false,
+        false, // isSession
+        cookie.expirationDate ?? Math.floor(Date.now() / 1000) + 86400 * 365,
+        {}, // originAttributes
+        sameSiteMap[cookie.sameSite ?? "None"] ?? 0,
+        Ci.nsICookie.SCHEME_HTTPS,
+      );
+
+      return Promise.resolve(true);
+    } catch (e) {
+      console.error("WebScraper: Error setting cookie:", e);
+      return Promise.resolve(false);
+    }
+  }
+
+  /**
+   * Accepts (clicks OK on) an alert dialog
+   * Note: This is a simplified implementation for headless context
+   */
+  public acceptAlert(_instanceId: string): Promise<boolean | null> {
+    // In headless mode, alerts are typically auto-dismissed
+    // This is a placeholder for future implementation
+    console.warn(
+      "WebScraper: acceptAlert is not fully supported in headless mode",
+    );
+    return Promise.resolve(true);
+  }
+
+  /**
+   * Dismisses (clicks Cancel on) an alert dialog
+   * Note: This is a simplified implementation for headless context
+   */
+  public dismissAlert(_instanceId: string): Promise<boolean | null> {
+    // In headless mode, alerts are typically auto-dismissed
+    // This is a placeholder for future implementation
+    console.warn(
+      "WebScraper: dismissAlert is not fully supported in headless mode",
+    );
+    return Promise.resolve(true);
+  }
+
+  /**
+   * Saves the current page as PDF and returns base64 encoded data
+   */
+  public async saveAsPDF(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    try {
+      const browsingContext = browser.browsingContext as BrowsingContext & {
+        print(settings: nsIPrintSettings): Promise<nsIInputStream>;
+      };
+      if (!browsingContext) return null;
+
+      // Create print settings for PDF
+      const printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+        .getService(Ci.nsIPrintSettingsService)
+        .createNewPrintSettings() as nsIPrintSettings & {
+        showPrintProgress: boolean;
+      };
+
+      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+      printSettings.printerName = "";
+      printSettings.printSilent = true;
+      printSettings.showPrintProgress = false;
+      printSettings.printBGColors = true;
+      printSettings.printBGImages = true;
+
+      // Print to stream
+      const pdfStream = await browsingContext.print(printSettings);
+
+      // Read stream to array buffer
+      const binaryStream = Cc[
+        "@mozilla.org/binaryinputstream;1"
+      ].createInstance(Ci.nsIBinaryInputStream);
+      binaryStream.setInputStream(pdfStream);
+
+      const bytes = binaryStream.readBytes(binaryStream.available());
+      binaryStream.close();
+
+      // Convert to base64
+      const base64 = btoa(bytes);
+      return base64;
+    } catch (e) {
+      console.error("WebScraper: Error saving as PDF:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Waits for network to become idle (no pending requests)
+   */
+  public waitForNetworkIdle(
+    instanceId: string,
+    timeout: number = 5000,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    return new Promise((resolve) => {
+      let idleTimer: ReturnType<typeof setTimeout> | null = null;
+      let resolved = false;
+      const idleThreshold = 500; // Consider idle after 500ms of no activity
+
+      const resetIdleTimer = () => {
+        if (idleTimer) {
+          clearTimeout(idleTimer);
+        }
+        idleTimer = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            cleanup();
+            resolve(true);
+          }
+        }, idleThreshold);
+      };
+
+      const cleanup = () => {
+        if (idleTimer) {
+          clearTimeout(idleTimer);
+        }
+        try {
+          browser.webProgress?.removeProgressListener(progressListener);
+          PROGRESS_LISTENERS.delete(progressListener);
+        } catch {
+          // Ignore cleanup errors
+        }
+      };
+
+      const progressListener: nsIWebProgressListener = {
+        onStateChange(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          stateFlags: number,
+        ) {
+          if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+            // Network activity started
+            if (idleTimer) {
+              clearTimeout(idleTimer);
+              idleTimer = null;
+            }
+          } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            // Network activity stopped, start idle timer
+            resetIdleTimer();
+          }
+        },
+        onProgressChange() {},
+        onLocationChange() {},
+        onStatusChange() {},
+        onSecurityChange() {},
+        onContentBlockingEvent() {},
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+      };
+
+      try {
+        browser.webProgress?.addProgressListener(
+          progressListener,
+          Ci.nsIWebProgress.NOTIFY_STATE_ALL,
+        );
+        PROGRESS_LISTENERS.add(progressListener);
+      } catch (e) {
+        console.error("WebScraper: Error adding progress listener:", e);
+        resolve(false);
+        return;
+      }
+
+      // Start initial idle timer
+      resetIdleTimer();
+
+      // Timeout handler
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          resolve(false);
+        }
+      }, timeout);
+    });
   }
 }
 

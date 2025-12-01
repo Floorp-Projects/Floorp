@@ -211,7 +211,7 @@
             },
             "newtab": {
                 "title": "New Tab",
-                "disableFloorpStart": "Disable Floorp Start"
+                "disable{{productName}}Start": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Multirow Tab",
@@ -239,7 +239,7 @@
         "closePopupWhenSelectingWorkspace": "Close workspace popup when selecting a workspace",
         "closePopupWhenSelectingWorkspaceDescription": "Choose whether to close the workspace popup when selecting a workspace.",
         "showWorkspaceNameOnToolbar": "Show workspace name next to the icon",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Manage workspaces on {{productName}} sidebar",
         "manageOnBmsDescription": "When this feature is enabled, you can only manage workspaces on the {{productName}} sidebar. You won't be able to manage workspaces using the toolbar button.",
         "backup": "Workspace Backup",
@@ -258,7 +258,7 @@
     },
     "accounts": {
         "profileAndAccount": "Profile and Account",
-        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. Floorp uses this profile to save data.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Profile Management",
         "profileManagementDescription": "Profiles can be created and separated from each other, and their data is stored in the profile folder.",
         "currentProfileName": "Current Profile Name: {{name}}",
@@ -267,8 +267,8 @@
         "openProfileSaveLocation": "Open Profile Save Location",
         "mozillaAccountSyncSettings": "Mozilla Account Sync Settings",
         "syncedTo": "Synced to {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sync Floorp Notes to Mozilla Account (Experimental)",
-        "floorpFeatureSyncSettings": "Floorp Feature Sync Settings",
+        "sync{{productName}}NotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "{{productName}}FeatureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Manage Mozilla Account",
         "manageFirefoxFeatureSync": "Manage Firefox Feature Sync",
         "aboutMozillaAccount": "About Mozilla Account",
@@ -292,8 +292,8 @@
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Default (Recommended)",
@@ -301,26 +301,26 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
             "troubleshooting": "Troubleshooting",
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
         }
     },
@@ -420,12 +420,12 @@
         "uninstall": "Uninstall"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -439,24 +439,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -508,9 +508,9 @@
             "gecko-mute-current-tab": "Mute Current Tab",
             "gecko-show-source-of-page": "Show Source Of Page",
             "gecko-show-page-info": "Show Page Info",
-            "floorp-rest-mode": "Enable Rest Mode",
-            "floorp-hide-user-interface": "Hide Interface",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+            "{{productName}}-rest-mode": "Enable Rest Mode",
+            "{{productName}}-hide-user-interface": "Hide Interface",
+            "{{productName}}-toggle-navigation-panel": "Toggle Navigation Panel",
             "gecko-stop": "Stop",
             "gecko-search-in-this-page": "Search In This Page",
             "gecko-show-next-search-result": "Show Next Search Result",
@@ -521,7 +521,7 @@
             "gecko-enter-into-customize-mode": "Enter Customize Mode",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
+            "{{productName}}-show-pip": "Show Picture-in-Picture",
             "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",

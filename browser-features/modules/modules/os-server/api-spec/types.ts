@@ -140,3 +140,22 @@ export interface AttachRequest {
 export interface AttachResponse {
   instanceId?: string;
 }
+
+// Event Types
+export type BrowserEventType = "workspace-changed";
+
+export interface BrowserEventBase {
+  type: BrowserEventType;
+  timestamp: number;
+}
+
+export interface WorkspaceChangedEventData {
+  workspaceId: string;
+}
+
+export interface WorkspaceChangedEvent extends BrowserEventBase {
+  type: "workspace-changed";
+  data: WorkspaceChangedEventData;
+}
+
+export type BrowserEvent = WorkspaceChangedEvent;
