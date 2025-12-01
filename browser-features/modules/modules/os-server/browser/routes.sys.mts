@@ -11,10 +11,17 @@
 import type {
   NamespaceBuilder,
   Context as RouterContext,
+  StreamResult,
 } from "../router.sys.mts";
 import type { Download, HistoryItem, Tab } from "../api-spec/types.ts";
 import type { BrowserInfoAPI, DownloadData, HistoryData } from "./types.ts";
 import { clampInt } from "../http/utils.sys.mts";
+
+// Lazy import of TabManager module
+const _TabManagerModule = () =>
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/os-apis/web/TabManagerServices.sys.mjs",
+  ) as { TabManagerServices: unknown };
 
 // Lazy import of BrowserInfo module
 const BrowserInfoModule = () =>
@@ -90,6 +97,49 @@ export function registerBrowserRoutes(api: NamespaceBuilder): void {
         downloads: mapDownloads(out.downloads),
       };
       return { status: 200, body: mapped };
+    });
+
+    // Event stream endpoint
+    b.get("/events", (_ctx) => {
+      return {
+        isStream: true,
+        onConnect: (send, _close) => {
+          // Observer for workspace changes
+          const WORKSPACES_CHANGED_TOPIC = "floorp.workspaces.changed";
+          const wsObserver = {
+            observe: (_subject: unknown, topic: string, data: string) => {
+              if (topic === WORKSPACES_CHANGED_TOPIC) {
+                send(
+                  JSON.stringify({
+                    type: "workspace-changed",
+                    timestamp: Date.now(),
+                    data: { workspaceId: data },
+                  }),
+                );
+              }
+            },
+          };
+
+          try {
+            Services.obs.addObserver(wsObserver, WORKSPACES_CHANGED_TOPIC);
+          } catch (e) {
+            console.error(
+              `[os-server] Failed to add observer for ${WORKSPACES_CHANGED_TOPIC}:`,
+              e,
+            );
+          }
+
+          // Cleanup function
+          return () => {
+            try {
+              Services.obs.removeObserver(wsObserver, WORKSPACES_CHANGED_TOPIC);
+            } catch (e) {
+              // ignore
+              void e;
+            }
+          };
+        },
+      } as StreamResult;
     });
   });
 }

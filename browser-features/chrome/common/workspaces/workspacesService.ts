@@ -23,6 +23,7 @@ import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
+  WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
@@ -257,6 +258,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   public changeWorkspace(id: TWorkspaceID) {
     this.tabManagerCtx.changeWorkspace(id);
+    Services.obs.notifyObservers(
+      null as unknown as nsISupports,
+      WORKSPACES_CHANGED_OBSERVER_TOPIC,
+      id,
+    );
   }
 
   public async captureWorkspaceSnapshot(id?: TWorkspaceID) {

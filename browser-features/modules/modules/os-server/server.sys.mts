@@ -45,6 +45,7 @@ import {
   createApi,
   type HttpMethod,
   Router as _Router,
+  type StreamResult,
 } from "./router.sys.mts";
 
 import type { HealthResponse } from "./api-spec/types.ts";
@@ -292,12 +293,10 @@ class LocalHttpServer implements nsIServerSocketListener {
         }
 
         // Route (async)
-        const response = await this.routeAsync(req);
-        writeUtf8(output, response);
-        output.close();
-        input.close();
+        await this.routeAsync(req, output, input);
       } catch (e) {
         try {
+          // Only try to send error if stream is still writable
           const output = transport.openOutputStream(0, 0, 0);
           const res = serverError(String(e));
           writeUtf8(output, res);
@@ -334,16 +333,35 @@ class LocalHttpServer implements nsIServerSocketListener {
     return router;
   }
 
-  private async routeAsync(req: HttpRequest): Promise<string> {
+  private async routeAsync(
+    req: HttpRequest,
+    output: nsIOutputStream,
+    input: nsIInputStream,
+  ): Promise<void> {
     const { method, path } = req;
-    if (method === "OPTIONS") return corsPreflight();
+    if (method === "OPTIONS") {
+      writeUtf8(output, corsPreflight());
+      output.close();
+      input.close();
+      return;
+    }
 
     const { pathname, searchParams } = parseURL(path);
     const router = this._router;
-    if (!router) return serverError("router not initialized");
+    if (!router) {
+      writeUtf8(output, serverError("router not initialized"));
+      output.close();
+      input.close();
+      return;
+    }
 
     const match = router.match(method, pathname);
-    if (!match) return notFound();
+    if (!match) {
+      writeUtf8(output, notFound());
+      output.close();
+      input.close();
+      return;
+    }
 
     try {
       const jsonFn = (() => getJSON(req)) as unknown as RouterContext["json"];
@@ -357,15 +375,62 @@ class LocalHttpServer implements nsIServerSocketListener {
         json: jsonFn,
       };
       const result = await match.handler(ctx);
-      const status = result.status ?? 200;
-      return jsonResponse(status, result.body ?? {});
+
+      // Stream handling
+      if ("isStream" in result && result.isStream) {
+        const streamResult = result as StreamResult;
+
+        const headers =
+          "HTTP/1.1 200 OK\r\n" +
+          "Content-Type: text/event-stream\r\n" +
+          "Cache-Control: no-cache\r\n" +
+          "Connection: keep-alive\r\n" +
+          "Access-Control-Allow-Origin: *\r\n" +
+          "\r\n";
+        writeUtf8(output, headers);
+
+        // Callback to clean up
+        streamResult.onConnect(
+          (data) => {
+            try {
+              writeUtf8(output, `data: ${data}\n\n`);
+            } catch (_e) {
+              // Write failed, likely closed
+              output.close();
+              input.close();
+            }
+          },
+          () => {
+            try {
+              output.close();
+              input.close();
+            } catch (_) {
+              // ignore
+            }
+          },
+        );
+        return;
+      }
+
+      // Normal JSON response
+      const httpResult = result as { status?: number; body?: unknown };
+      const status = httpResult.status ?? 200;
+      const response = jsonResponse(status, httpResult.body ?? {});
+      writeUtf8(output, response);
+      output.close();
+      input.close();
     } catch (e) {
       const msg = String(e ?? "");
+      let response;
       // Map common service errors to 404 when instance is missing
       if (/instance\s+not\s+found/i.test(msg)) {
-        return notFound();
+        response = notFound();
+      } else {
+        response = serverError(msg);
       }
-      return serverError(msg);
+      writeUtf8(output, response);
+      output.close();
+      input.close();
     }
   }
 }
