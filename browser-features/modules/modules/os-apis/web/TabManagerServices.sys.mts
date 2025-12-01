@@ -13,6 +13,57 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+// Actor interface for WebScraper communication
+interface WebScraperActor {
+  sendQuery(name: string, data?: object): Promise<unknown>;
+}
+
+// Type for browser tab element
+interface BrowserTab {
+  linkedBrowser: XULBrowserElement & { browserId: number };
+  label: string;
+  selected: boolean;
+  pinned: boolean;
+  setAttribute?(name: string, value: string): void;
+  removeAttribute?(name: string): void;
+}
+
+// Type for gBrowser
+interface GBrowser {
+  tabs: BrowserTab[];
+  selectedTab: BrowserTab;
+  addTab(
+    url: string,
+    options: {
+      triggeringPrincipal: nsIPrincipal;
+      skipAnimation?: boolean;
+      inBackground?: boolean;
+    },
+  ): BrowserTab;
+  getIcon(tab: BrowserTab): string | null;
+}
+
+// Response types
+interface TabListEntry {
+  browserId: string;
+  title: string;
+  url: string;
+  selected: boolean;
+  pinned: boolean;
+}
+
+interface TabInstanceInfo {
+  browserId: string;
+  url: string;
+  title: string;
+  favIconUrl: string | null;
+  isActive: boolean;
+  isPinned: boolean;
+  isLoading: boolean;
+  html: string | null;
+  screenshot: string | null;
+}
+
 // Global sets to prevent garbage collection of active components
 const TAB_MANAGER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 const PROGRESS_LISTENERS = new Set();
@@ -36,7 +87,7 @@ class TabManager {
   // Map to store tab instances with their unique IDs
   private _browserInstances: Map<
     string,
-    { tab: object; browser: XULBrowserElement }
+    { tab: BrowserTab; browser: XULBrowserElement }
   > = new Map();
 
   private readonly _defaultActionDelay = 500;
@@ -66,14 +117,12 @@ class TabManager {
 
   private _focusInstance(instanceId: string): void {
     try {
-      const entry = this._browserInstances.get(instanceId) as
-        | { tab: any; browser: XULBrowserElement }
-        | undefined;
+      const entry = this._browserInstances.get(instanceId);
       if (!entry) {
         return;
       }
 
-      const win = getBrowserWindow() as Window & { gBrowser: any };
+      const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
       if (win.closed) {
         return;
       }
@@ -116,17 +165,15 @@ class TabManager {
         resolved = true;
         // After load, ensure content actor is ready and body exists
         try {
-          let actor =
-            browser.browsingContext?.currentWindowGlobal?.getActor(
-              "NRWebScraper",
-            );
+          let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+            "NRWebScraper",
+          ) as WebScraperActor | undefined;
           if (!actor) {
             for (let i = 0; i < 150; i++) {
               await new Promise((r) => setTimeout(r, 100));
-              actor =
-                browser.browsingContext?.currentWindowGlobal?.getActor(
-                  "NRWebScraper",
-                );
+              actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+                "NRWebScraper",
+              ) as WebScraperActor | undefined;
               if (actor) break;
             }
           }
@@ -140,8 +187,10 @@ class TabManager {
                 selector: sel,
                 timeout: to,
               });
-            if (!ok) ok = await tryWait("body", 20000).catch(() => false);
-            if (!ok) ok = await tryWait("html", 8000).catch(() => false);
+            if (!ok)
+              ok = (await tryWait("body", 20000).catch(() => false)) as boolean;
+            if (!ok)
+              ok = (await tryWait("html", 8000).catch(() => false)) as boolean;
             if (!ok) await tryWait("main", 8000).catch(() => false);
           }
         } catch (_) {
@@ -152,10 +201,10 @@ class TabManager {
 
       const progressListener = {
         onLocationChange(
-          progress: any,
-          _request: any,
-          location: any,
-          flags: any,
+          progress: nsIWebProgress,
+          _request: nsIRequest,
+          location: nsIURI,
+          flags: number,
         ) {
           if (
             !progress.isTopLevel ||
@@ -166,15 +215,24 @@ class TabManager {
           }
 
           PROGRESS_LISTENERS.delete(progressListener);
-          browser.webProgress.removeProgressListener(progressListener);
+          browser.webProgress.removeProgressListener(
+            progressListener as nsIWebProgressListener,
+          );
           complete();
         },
-        onStateChange(progress: any, _request: any, flags: any, _status: any) {
+        onStateChange(
+          progress: nsIWebProgress,
+          _request: nsIRequest,
+          flags: number,
+          _status: nsresult,
+        ) {
           if (!progress.isTopLevel) return;
           const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
-            browser.webProgress.removeProgressListener(progressListener);
+            browser.webProgress.removeProgressListener(
+              progressListener as nsIWebProgressListener,
+            );
             complete();
           }
         },
@@ -185,7 +243,7 @@ class TabManager {
       };
       PROGRESS_LISTENERS.add(progressListener);
       browser.webProgress.addProgressListener(
-        progressListener,
+        progressListener as nsIWebProgressListener,
         Ci.nsIWebProgress.NOTIFY_LOCATION |
           Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
       );
@@ -202,17 +260,17 @@ class TabManager {
   ): Promise<T | null> {
     try {
       const { browser } = this._getInstance(instanceId);
-      let actor =
-        browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
+      let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+        "NRWebScraper",
+      ) as WebScraperActor | undefined;
 
       // Retry a few times after navigation for actor readiness
       if (!actor) {
         for (let i = 0; i < 150; i++) {
           await new Promise((r) => setTimeout(r, 100));
-          actor =
-            browser.browsingContext?.currentWindowGlobal?.getActor(
-              "NRWebScraper",
-            );
+          actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+            "NRWebScraper",
+          ) as WebScraperActor | undefined;
           if (actor) break;
         }
       }
@@ -221,7 +279,7 @@ class TabManager {
         console.warn(`NRWebScraper actor not found for instance ${instanceId}`);
         return null;
       }
-      return await actor.sendQuery(query, data);
+      return (await actor.sendQuery(query, data)) as T;
     } catch (e) {
       console.error(`Error in actor query '${query}':`, e);
       return null;
@@ -234,7 +292,7 @@ class TabManager {
     url: string,
     options?: { inBackground?: boolean },
   ): Promise<string> {
-    const win = getBrowserWindow() as Window;
+    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
     const gBrowser = win.gBrowser;
 
     const tab = await gBrowser.addTab(url, {
@@ -260,11 +318,11 @@ class TabManager {
   }
 
   public async attachToTab(browserId: string): Promise<string | null> {
-    const win = getBrowserWindow() as Window;
+    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
     const gBrowser = win.gBrowser;
 
     const targetTab = gBrowser.tabs.find(
-      (tab: any) => tab.linkedBrowser.browserId.toString() === browserId,
+      (tab: BrowserTab) => tab.linkedBrowser.browserId.toString() === browserId,
     );
 
     if (!targetTab) {
@@ -286,25 +344,26 @@ class TabManager {
     return instanceId;
   }
 
-  public async listTabs(): Promise<any[]> {
-    const win = getBrowserWindow() as Window;
+  public listTabs(): Promise<TabListEntry[]> {
+    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
     const gBrowser = win.gBrowser;
 
-    return gBrowser.tabs.map((tab: any) => ({
-      browserId: tab.linkedBrowser.browserId.toString(),
-      title: tab.label,
-      url: tab.linkedBrowser.currentURI.spec,
-      selected: tab.selected,
-      pinned: tab.pinned,
-    }));
+    return Promise.resolve(
+      gBrowser.tabs.map((tab: BrowserTab) => ({
+        browserId: tab.linkedBrowser.browserId.toString(),
+        title: tab.label,
+        url: tab.linkedBrowser.currentURI.spec,
+        selected: tab.selected,
+        pinned: tab.pinned,
+      })),
+    );
   }
 
-  public async getInstanceInfo(instanceId: string): Promise<any | null> {
-    const { tab, browser } = this._getInstance(instanceId) as {
-      tab: any;
-      browser: any;
-    };
-    const win = getBrowserWindow() as Window;
+  public async getInstanceInfo(
+    instanceId: string,
+  ): Promise<TabInstanceInfo | null> {
+    const { tab, browser } = this._getInstance(instanceId);
+    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
     const gBrowser = win.gBrowser;
 
     const [html, screenshot] = await Promise.all([
@@ -313,9 +372,12 @@ class TabManager {
     ]);
 
     return {
-      browserId: browser.browserId.toString(),
+      browserId: (
+        browser as XULBrowserElement & { browserId: number }
+      ).browserId.toString(),
       url: browser.currentURI.spec,
-      title: browser.contentTitle,
+      title: (browser as XULBrowserElement & { contentTitle: string })
+        .contentTitle,
       favIconUrl: gBrowser.getIcon(tab),
       isActive: tab.selected,
       isPinned: tab.pinned,
@@ -326,10 +388,7 @@ class TabManager {
   }
 
   public async destroyInstance(instanceId: string): Promise<void> {
-    const { tab, browser } = this._getInstance(instanceId) as {
-      tab: any;
-      browser: any;
-    };
+    const { tab, browser } = this._getInstance(instanceId);
     try {
       await this._queryActor(instanceId, "WebScraper:ClearEffects");
     } catch (error) {
@@ -512,6 +571,55 @@ class TabManager {
     return this._queryActor<string>(instanceId, "WebScraper:GetValue", {
       selector,
     });
+  }
+
+  /**
+   * Gets the value of a specific attribute from an element
+   */
+  public getAttribute(
+    instanceId: string,
+    selector: string,
+    attributeName: string,
+  ): Promise<string | null> {
+    return this._queryActor<string>(instanceId, "WebScraper:GetAttribute", {
+      selector,
+      attributeName,
+    });
+  }
+
+  /**
+   * Checks if an element is visible in the viewport
+   */
+  public isVisible(instanceId: string, selector: string): Promise<boolean> {
+    return this._queryActor<boolean>(instanceId, "WebScraper:IsVisible", {
+      selector,
+    }).then((r) => r ?? false);
+  }
+
+  /**
+   * Checks if an element is enabled (not disabled)
+   */
+  public isEnabled(instanceId: string, selector: string): Promise<boolean> {
+    return this._queryActor<boolean>(instanceId, "WebScraper:IsEnabled", {
+      selector,
+    }).then((r) => r ?? false);
+  }
+
+  /**
+   * Clears the value of an input or textarea element
+   */
+  public async clearInput(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:ClearInput",
+      { selector },
+    );
+    await this._delayForUser(3500);
+    return result;
   }
 
   public async submit(

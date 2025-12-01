@@ -26,6 +26,7 @@ interface NRWebScraperMessageData {
   rect?: { x?: number; y?: number; width?: number; height?: number };
   formData?: { [selector: string]: string };
   elementInfo?: string;
+  attributeName?: string;
 }
 
 interface NormalizedHighlightOptions {
@@ -1240,6 +1241,29 @@ export class NRWebScraperChild extends JSWindowActorChild {
         this.cleanupHighlight();
         this.hideInfoPanel();
         return true;
+      case "WebScraper:GetAttribute":
+        if (message.data?.selector && message.data?.attributeName) {
+          return this.getAttribute(
+            message.data.selector,
+            message.data.attributeName,
+          );
+        }
+        break;
+      case "WebScraper:IsVisible":
+        if (message.data?.selector) {
+          return this.isVisible(message.data.selector);
+        }
+        break;
+      case "WebScraper:IsEnabled":
+        if (message.data?.selector) {
+          return this.isEnabled(message.data.selector);
+        }
+        break;
+      case "WebScraper:ClearInput":
+        if (message.data?.selector) {
+          return this.clearInput(message.data.selector);
+        }
+        break;
     }
     return null;
   }
@@ -1957,6 +1981,137 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error submitting form:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Gets the value of a specific attribute from an element
+   *
+   * @param selector - CSS selector to find the target element
+   * @param attributeName - Name of the attribute to retrieve
+   * @returns string | null - The attribute value, or null if not found
+   */
+  getAttribute(selector: string, attributeName: string): string | null {
+    try {
+      const element = this.document?.querySelector(selector) as Element | null;
+      if (element) {
+        this.runAsyncInspection(element, "inspectGetElement", { selector });
+        return element.getAttribute(attributeName);
+      }
+      return null;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting attribute:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Checks if an element is visible in the viewport
+   *
+   * An element is considered visible if:
+   * - It exists in the DOM
+   * - It has non-zero dimensions
+   * - It is not hidden via CSS (display: none, visibility: hidden, opacity: 0)
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns boolean - True if the element is visible, false otherwise
+   */
+  isVisible(selector: string): boolean {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      // Check if element has dimensions
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return false;
+
+      // Check computed styles
+      const style = this.contentWindow?.getComputedStyle(element);
+      if (!style) return false;
+
+      if (style.getPropertyValue("display") === "none") return false;
+      if (style.getPropertyValue("visibility") === "hidden") return false;
+      if (style.getPropertyValue("opacity") === "0") return false;
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error checking visibility:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Checks if an element is enabled (not disabled)
+   *
+   * This is useful for form elements like buttons, inputs, and selects.
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns boolean - True if the element is enabled, false if disabled or not found
+   */
+  isEnabled(selector: string): boolean {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLElement | null;
+      if (!element) return false;
+
+      // Check the disabled property for form elements
+      if ("disabled" in element) {
+        return !(element as HTMLInputElement | HTMLButtonElement).disabled;
+      }
+
+      // Check aria-disabled attribute for other elements
+      const ariaDisabled = element.getAttribute("aria-disabled");
+      if (ariaDisabled === "true") return false;
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error checking enabled state:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Clears the value of an input or textarea element
+   *
+   * This method clears the input and triggers appropriate events
+   * to ensure frameworks detect the change.
+   *
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if cleared successfully, false otherwise
+   */
+  async clearInput(selector: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(selector) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null;
+      if (!element) return false;
+
+      // Check if it's a valid input element
+      if (!("value" in element)) return false;
+
+      const elementInfo = await this.translate("inputValueSet", {
+        value: "(cleared)",
+      });
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
+      // Clear the value
+      element.value = "";
+
+      // Trigger events to notify frameworks
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+      element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error clearing input:", e);
       return false;
     }
   }

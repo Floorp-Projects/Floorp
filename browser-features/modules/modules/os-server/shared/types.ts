@@ -37,10 +37,7 @@ export interface BrowserAutomationService {
   getElementText(instanceId: string, selector: string): Promise<string | null>;
 
   // Interaction
-  clickElement(
-    instanceId: string,
-    selector: string,
-  ): Promise<boolean | null>;
+  clickElement(instanceId: string, selector: string): Promise<boolean | null>;
   waitForElement(
     instanceId: string,
     selector: string,
@@ -66,5 +63,14 @@ export interface BrowserAutomationService {
   ): Promise<boolean | null>;
   getValue(instanceId: string, selector: string): Promise<string | null>;
   submit(instanceId: string, selector: string): Promise<boolean | null>;
-}
+  clearInput(instanceId: string, selector: string): Promise<boolean | null>;
 
+  // Element state
+  getAttribute(
+    instanceId: string,
+    selector: string,
+    attributeName: string,
+  ): Promise<string | null>;
+  isVisible(instanceId: string, selector: string): Promise<boolean>;
+  isEnabled(instanceId: string, selector: string): Promise<boolean>;
+}

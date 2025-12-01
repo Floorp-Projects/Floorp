@@ -22,6 +22,11 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+// Actor interface for WebScraper communication
+interface WebScraperActor {
+  sendQuery(name: string, data?: object): Promise<unknown>;
+}
+
 // Global sets to prevent garbage collection of active components
 const SCRAPER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 const PROGRESS_LISTENERS = new Set();
@@ -48,13 +53,15 @@ class webScraper {
     browser: XULBrowserElement,
     tries = 100,
     delayMs = 100,
-  ): Promise<any | null> {
-    let actor =
-      browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
+  ): Promise<WebScraperActor | null> {
+    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRWebScraper",
+    ) as WebScraperActor | undefined;
     for (let i = 0; !actor && i < tries; i++) {
       await new Promise((r) => setTimeout(r, delayMs));
-      actor =
-        browser.browsingContext?.currentWindowGlobal?.getActor("NRWebScraper");
+      actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+        "NRWebScraper",
+      ) as WebScraperActor | undefined;
     }
     return actor ?? null;
   }
@@ -97,10 +104,10 @@ class webScraper {
     browser.setAttribute("disableglobalhistory", "true");
 
     // Set default size for browser element
-    browser.style.width = "1366px";
-    browser.style.minWidth = "1366px";
-    browser.style.height = "768px";
-    browser.style.minHeight = "768px";
+    browser.style.setProperty("width", "1366px");
+    browser.style.setProperty("min-width", "1366px");
+    browser.style.setProperty("height", "768px");
+    browser.style.setProperty("min-height", "768px");
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement?.appendChild(browser);
@@ -155,13 +162,12 @@ class webScraper {
 
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
     return new Promise((resolve) => {
-      const self = this;
       let resolved = false;
       const complete = async () => {
         if (resolved) return;
         resolved = true;
         try {
-          const actor = await self._getActorForBrowser(browser, 150, 100); // up to ~15s
+          const actor = await this._getActorForBrowser(browser, 150, 100); // up to ~15s
           if (actor) {
             // Prefer explicit readiness wait in the child actor
             const ok = await actor
@@ -179,7 +185,7 @@ class webScraper {
         } catch (_) {
           // ignore
         }
-        await self._delayForUser();
+        await this._delayForUser();
         resolve();
       };
       const oa = E10SUtils.predictOriginAttributes({
@@ -202,7 +208,7 @@ class webScraper {
       const { webProgress } = browser;
 
       // Delay before navigation
-      self._delayForUser().then(() => {
+      this._delayForUser().then(() => {
         if (typeof browser.loadURI === "function") {
           browser.loadURI(uri, loadURIOptions);
         } else {
@@ -240,7 +246,9 @@ class webScraper {
           }
 
           PROGRESS_LISTENERS.delete(progressListener);
-          webProgress.removeProgressListener(progressListener);
+          webProgress.removeProgressListener(
+            progressListener as nsIWebProgressListener,
+          );
           complete();
         },
         onStateChange(
@@ -253,7 +261,9 @@ class webScraper {
           const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
-            webProgress.removeProgressListener(progressListener);
+            webProgress.removeProgressListener(
+              progressListener as nsIWebProgressListener,
+            );
             complete();
           }
         },
@@ -264,7 +274,7 @@ class webScraper {
       };
       PROGRESS_LISTENERS.add(progressListener);
       webProgress.addProgressListener(
-        progressListener,
+        progressListener as nsIWebProgressListener,
         Ci.nsIWebProgress.NOTIFY_LOCATION |
           Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
       );
@@ -311,7 +321,7 @@ class webScraper {
     try {
       const actor = await this._getActorForBrowser(browser);
       if (!actor) return null;
-      return await actor.sendQuery("WebScraper:GetHTML");
+      return (await actor.sendQuery("WebScraper:GetHTML")) as string | null;
     } catch (e) {
       console.error("Error getting HTML:", e);
       return null;
@@ -346,7 +356,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElement", { selector });
+    return (await actor.sendQuery("WebScraper:GetElement", {
+      selector,
+    })) as string | null;
   }
 
   /** Get all elements matching a selector from a browser instance
@@ -372,7 +384,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return [];
-    return await actor.sendQuery("WebScraper:GetElements", { selector });
+    return ((await actor.sendQuery("WebScraper:GetElements", {
+      selector,
+    })) ?? []) as string[];
   }
 
   /**  Get Element By Text Content
@@ -399,9 +413,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementByText", {
+    return (await actor.sendQuery("WebScraper:GetElementByText", {
       textContent,
-    });
+    })) as string | null;
   }
 
   /** Get Element Text Content
@@ -428,9 +442,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementTextContent", {
+    return (await actor.sendQuery("WebScraper:GetElementTextContent", {
       selector,
-    });
+    })) as string | null;
   }
 
   /**
@@ -458,7 +472,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetElementText", { selector });
+    return (await actor.sendQuery("WebScraper:GetElementText", {
+      selector,
+    })) as string | null;
   }
 
   /**
@@ -486,9 +502,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:ClickElement", {
+    const result = (await actor.sendQuery("WebScraper:ClickElement", {
       selector,
-    });
+    })) as boolean;
     await this._delayForUser(3500);
     return result;
   }
@@ -520,10 +536,10 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    return await actor.sendQuery("WebScraper:WaitForElement", {
+    return (await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
       timeout,
-    });
+    })) as boolean;
   }
 
   /**
@@ -544,7 +560,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeScreenshot");
+    return (await actor.sendQuery("WebScraper:TakeScreenshot")) as
+      | string
+      | null;
   }
 
   /**
@@ -569,9 +587,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeElementScreenshot", {
+    return (await actor.sendQuery("WebScraper:TakeElementScreenshot", {
       selector,
-    });
+    })) as string | null;
   }
 
   /**
@@ -594,7 +612,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeFullPageScreenshot");
+    return (await actor.sendQuery("WebScraper:TakeFullPageScreenshot")) as
+      | string
+      | null;
   }
 
   /**
@@ -619,9 +639,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
+    return (await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
       rect,
-    });
+    })) as string | null;
   }
 
   /**
@@ -644,9 +664,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:FillForm", {
+    const result = (await actor.sendQuery("WebScraper:FillForm", {
       formData,
-    });
+    })) as boolean;
     await this._delayForUser(3500);
     return result;
   }
@@ -665,7 +685,106 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return null;
-    return await actor.sendQuery("WebScraper:GetValue", { selector });
+    return (await actor.sendQuery("WebScraper:GetValue", {
+      selector,
+    })) as string | null;
+  }
+
+  /**
+   * Gets the value of a specific attribute from an element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @param attributeName - Name of the attribute to retrieve
+   * @returns Promise<string | null> - The attribute value, or null if not found
+   */
+  public async getAttribute(
+    instanceId: string,
+    selector: string,
+    attributeName: string,
+  ): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return (await actor.sendQuery("WebScraper:GetAttribute", {
+      selector,
+      attributeName,
+    })) as string | null;
+  }
+
+  /**
+   * Checks if an element is visible in the viewport
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if visible, false otherwise
+   */
+  public async isVisible(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    return (await actor.sendQuery("WebScraper:IsVisible", {
+      selector,
+    })) as boolean;
+  }
+
+  /**
+   * Checks if an element is enabled (not disabled)
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if enabled, false if disabled or not found
+   */
+  public async isEnabled(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    return (await actor.sendQuery("WebScraper:IsEnabled", {
+      selector,
+    })) as boolean;
+  }
+
+  /**
+   * Clears the value of an input or textarea element
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param selector - CSS selector to find the target element
+   * @returns Promise<boolean> - True if cleared successfully
+   */
+  public async clearInput(
+    instanceId: string,
+    selector: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:ClearInput", {
+      selector,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
   }
 
   /**
@@ -679,7 +798,9 @@ class webScraper {
 
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
-    const result = await actor.sendQuery("WebScraper:Submit", { selector });
+    const result = (await actor.sendQuery("WebScraper:Submit", {
+      selector,
+    })) as boolean;
     await this._delayForUser(3500);
     return result;
   }

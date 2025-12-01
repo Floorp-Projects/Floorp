@@ -185,5 +185,38 @@ export function registerCommonAutomationRoutes(
     const submitted = await service.submit(ctx.params.id, sel);
     return { status: 200, body: { ok: submitted } };
   });
-}
 
+  // Clear input field
+  ns.post("/instances/:id/clearInput", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string } | null;
+    const sel = json?.selector ?? "";
+    const service = getService();
+    const cleared = await service.clearInput(ctx.params.id, sel);
+    return { status: 200, body: { ok: cleared } };
+  });
+
+  // Get element attribute
+  ns.get("/instances/:id/attribute", async (ctx: RouterContext) => {
+    const sel = ctx.searchParams.get("selector") ?? "";
+    const attr = ctx.searchParams.get("name") ?? "";
+    const service = getService();
+    const value = await service.getAttribute(ctx.params.id, sel, attr);
+    return { status: 200, body: value != null ? { value } : { value: null } };
+  });
+
+  // Check if element is visible
+  ns.get("/instances/:id/isVisible", async (ctx: RouterContext) => {
+    const sel = ctx.searchParams.get("selector") ?? "";
+    const service = getService();
+    const visible = await service.isVisible(ctx.params.id, sel);
+    return { status: 200, body: { visible } };
+  });
+
+  // Check if element is enabled
+  ns.get("/instances/:id/isEnabled", async (ctx: RouterContext) => {
+    const sel = ctx.searchParams.get("selector") ?? "";
+    const service = getService();
+    const enabled = await service.isEnabled(ctx.params.id, sel);
+    return { status: 200, body: { enabled } };
+  });
+}
