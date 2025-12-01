@@ -249,10 +249,6 @@ export function registerCommonAutomationRoutes(
     return { status: 200, body: { ok } };
   });
 
-  // ============================================
-  // Phase 3: Advanced Automation Routes
-  // ============================================
-
   // Scroll to element
   ns.post("/instances/:id/scrollTo", async (ctx: RouterContext) => {
     const json = ctx.json() as { selector?: string } | null;

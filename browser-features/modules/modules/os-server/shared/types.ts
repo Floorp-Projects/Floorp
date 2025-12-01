@@ -85,7 +85,7 @@ export interface BrowserAutomationService {
   isVisible(instanceId: string, selector: string): Promise<boolean>;
   isEnabled(instanceId: string, selector: string): Promise<boolean>;
 
-  // Form controls (Phase 2)
+  // Form controls
   selectOption(
     instanceId: string,
     selector: string,
@@ -97,17 +97,12 @@ export interface BrowserAutomationService {
     checked: boolean,
   ): Promise<boolean | null>;
 
-  // Mouse interaction (Phase 2)
+  // Mouse interaction
   hoverElement(instanceId: string, selector: string): Promise<boolean | null>;
-
-  // Navigation & Page info (Phase 3)
   scrollToElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null>;
-  getPageTitle(instanceId: string): Promise<string | null>;
-
-  // Advanced mouse interactions (Phase 3)
   doubleClick(instanceId: string, selector: string): Promise<boolean | null>;
   rightClick(instanceId: string, selector: string): Promise<boolean | null>;
   focusElement(instanceId: string, selector: string): Promise<boolean | null>;
@@ -117,18 +112,21 @@ export interface BrowserAutomationService {
     targetSelector: string,
   ): Promise<boolean | null>;
 
-  // Cookie operations (Phase 3)
+  // Page info
+  getPageTitle(instanceId: string): Promise<string | null>;
+
+  // Cookie operations
   getCookies(instanceId: string): Promise<CookieData[]>;
   setCookie(instanceId: string, cookie: CookieData): Promise<boolean | null>;
 
-  // Alert/Dialog handling (Phase 3)
+  // Alert/Dialog handling
   acceptAlert(instanceId: string): Promise<boolean | null>;
   dismissAlert(instanceId: string): Promise<boolean | null>;
 
-  // PDF export (Phase 3)
+  // PDF export
   saveAsPDF(instanceId: string): Promise<string | null>;
 
-  // Network idle wait (Phase 3)
+  // Network
   waitForNetworkIdle(
     instanceId: string,
     timeout?: number,

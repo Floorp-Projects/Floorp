@@ -886,10 +886,6 @@ class webScraper {
     return result;
   }
 
-  // ============================================
-  // Phase 3: Advanced Automation Features
-  // ============================================
-
   /**
    * Scrolls the page to make an element visible
    */
