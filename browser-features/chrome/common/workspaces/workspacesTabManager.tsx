@@ -210,6 +210,25 @@ export class WorkspacesTabManager {
       // auto-generated replacement tab from Firefox's closeWindowWithLastTab=false behavior.
       // We should ignore it when checking if the workspace is empty.
       if (createdAt && now - createdAt < 500) {
+        try {
+          const browser = globalThis.gBrowser.getBrowserForTab(
+            t as unknown as XULElement,
+          );
+          const url = browser?.currentURI?.spec;
+          // If the tab has a valid URL that is not a blank/newtab page,
+          // it is likely a user-created tab (e.g. "Open Link in New Tab"),
+          // so we should NOT ignore it.
+          const isBlankOrNewTab = !url || url === "about:blank" ||
+            url === "about:newtab" || url === "about:home";
+          if (!isBlankOrNewTab) {
+            return true;
+          }
+        } catch (e) {
+          console.error(
+            "WorkspacesTabManager: error checking tab URL in filter",
+            e,
+          );
+        }
         return false;
       }
       return true;
@@ -289,6 +308,9 @@ export class WorkspacesTabManager {
       this.recentOpenedAtByTab.set(tab, now);
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
+      if (!this.getWorkspaceIdFromAttribute(tab)) {
+        this.setWorkspaceIdToAttribute(tab, wsId);
+      }
       this.recentOpenedAtPerWorkspace.set(wsId, now);
       // Debug: mark tab creation
       console.debug("WorkspacesTabManager: TabOpen recorded", {
