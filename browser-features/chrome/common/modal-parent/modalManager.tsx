@@ -50,9 +50,11 @@ export class ModalManager {
         "NRChromeModal",
       );
 
+      const safeForm = JSON.parse(JSON.stringify(form));
+
       return new Promise((resolve) => {
         actor
-          .sendQuery("NRChromeModal:show", form)
+          .sendQuery("NRChromeModal:show", safeForm)
           .then((response: TFormResult | null) => {
             resolve(response);
           });

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { TForm } from "../../../main/core/common/modal-parent/utils/type.ts";
+import type { TForm } from "../../chrome/common/modal-parent/utils/type.ts";
 export class NRChromeModalChild extends JSWindowActorChild {
   actorCreated() {
     console.log("NRChromeModalChild actor created");
@@ -13,6 +13,9 @@ export class NRChromeModalChild extends JSWindowActorChild {
     const window = this.contentWindow as Window;
     switch (message.name) {
       case "NRChromeModal:show": {
+        console.log("NRChromeModalChild: Received show message", message.data);
+        await this.waitForReady(window);
+        console.log("NRChromeModalChild: Window ready, rendering content");
         this.renderContent(window, message.data);
         return await this.waitForUserInput(window);
       }
@@ -20,14 +23,92 @@ export class NRChromeModalChild extends JSWindowActorChild {
     return null;
   }
 
+  private waitForReady(win: Window): Promise<void> {
+    return new Promise((resolve) => {
+      const doc = win.document as Document & { documentElement: HTMLElement };
+      console.log(
+        "NRChromeModalChild: Checking ready state...",
+        doc?.documentElement?.dataset?.noraModalReady,
+      );
+      if (doc?.documentElement?.dataset?.noraModalReady === "true") {
+        resolve();
+        return;
+      }
+
+      let count = 0;
+      const interval = win.setInterval(() => {
+        const currentDoc = win.document as Document & {
+          documentElement: HTMLElement;
+        };
+        if (currentDoc?.documentElement?.dataset?.noraModalReady === "true") {
+          console.log("NRChromeModalChild: Ready state confirmed");
+          win.clearInterval(interval);
+          resolve();
+        } else if (count > 50) {
+          win.clearInterval(interval);
+          console.error(
+            "NRChromeModalChild: Timeout waiting for nora-modal-ready",
+          );
+          resolve();
+        }
+        count++;
+      }, 100);
+    });
+  }
+
   renderContent(win: Window, from: TForm) {
-    win.buildFormFromConfig(from);
+    // Use postMessage instead of CustomEvent to bypass strict security wrapper issues
+    // postMessage handles structured cloning automatically across boundaries
+    try {
+      const detail = JSON.stringify(from);
+      console.log(
+        "NRChromeModalChild: Posting message with detail length:",
+        detail.length,
+      );
+
+      // Post message to the window
+      // We use "*" as targetOrigin because we are in a restricted modal environment
+      // and we want to ensure the message reaches the content
+      win.postMessage({ type: "nora-modal-init", detail }, "*");
+    } catch (e) {
+      console.error("NRChromeModalChild: Error posting message", e);
+    }
   }
 
   private waitForUserInput(win: Window): Promise<Record<string, unknown>> {
     return new Promise((resolve) => {
+      // Listen for messages from the content window
+      // We need to listen on the window itself because postMessage targets the window
+      // But in actor context, we might need to listen to the message manager or add listener to the window
+
+      const messageHandler = (event: MessageEvent) => {
+        console.log("NRChromeModalChild: Received message event", event.data);
+        // Verify the message is from our content
+        // In actor, event.source might be a proxy or wrapper, strict equality check might fail
+        // So we rely on the message structure
+        if (event.data && event.data.type === "nora-modal-submit") {
+          console.log(
+            "NRChromeModalChild: Received submit message",
+            event.data,
+          );
+          win.removeEventListener("message", messageHandler);
+
+          const data = event.data.detail;
+          resolve(data);
+          this.removeContent(win);
+        }
+      };
+
+      // Add listener to the content window
+      // Note: In JSWindowActorChild, we are in the same process but separated by security wrapper
+      // Listening on 'win' should catch postMessage from content to itself
+      win.addEventListener("message", messageHandler);
+
+      // Fallback: also support legacy sendForm injection for safety or if postMessage fails
       const originalSendForm = win.sendForm;
       win.sendForm = (data: Record<string, unknown>) => {
+        console.log("NRChromeModalChild: sendForm called (legacy)");
+        win.removeEventListener("message", messageHandler);
         resolve(data);
         if (originalSendForm) {
           return originalSendForm.call(win, data);
@@ -39,6 +120,16 @@ export class NRChromeModalChild extends JSWindowActorChild {
   }
 
   private removeContent(win: Window) {
-    win.removeForm();
+    // Use postMessage to trigger cleanup in the content
+    try {
+      win.postMessage({ type: "nora-modal-remove" }, "*");
+    } catch (e) {
+      console.error("NRChromeModalChild: Error removing content", e);
+    }
+
+    // Legacy fallback
+    if (typeof win.removeForm === "function") {
+      win.removeForm();
+    }
   }
 }
