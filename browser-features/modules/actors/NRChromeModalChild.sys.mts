@@ -13,9 +13,7 @@ export class NRChromeModalChild extends JSWindowActorChild {
     const window = this.contentWindow as Window;
     switch (message.name) {
       case "NRChromeModal:show": {
-        console.log("NRChromeModalChild: Received show message", message.data);
         await this.waitForReady(window);
-        console.log("NRChromeModalChild: Window ready, rendering content");
         this.renderContent(window, message.data);
         return await this.waitForUserInput(window);
       }
@@ -26,10 +24,6 @@ export class NRChromeModalChild extends JSWindowActorChild {
   private waitForReady(win: Window): Promise<void> {
     return new Promise((resolve) => {
       const doc = win.document as Document & { documentElement: HTMLElement };
-      console.log(
-        "NRChromeModalChild: Checking ready state...",
-        doc?.documentElement?.dataset?.noraModalReady,
-      );
       if (doc?.documentElement?.dataset?.noraModalReady === "true") {
         resolve();
         return;
@@ -41,7 +35,6 @@ export class NRChromeModalChild extends JSWindowActorChild {
           documentElement: HTMLElement;
         };
         if (currentDoc?.documentElement?.dataset?.noraModalReady === "true") {
-          console.log("NRChromeModalChild: Ready state confirmed");
           win.clearInterval(interval);
           resolve();
         } else if (count > 50) {
@@ -61,10 +54,6 @@ export class NRChromeModalChild extends JSWindowActorChild {
     // postMessage handles structured cloning automatically across boundaries
     try {
       const detail = JSON.stringify(from);
-      console.log(
-        "NRChromeModalChild: Posting message with detail length:",
-        detail.length,
-      );
 
       // Post message to the window
       // We use "*" as targetOrigin because we are in a restricted modal environment
@@ -82,15 +71,10 @@ export class NRChromeModalChild extends JSWindowActorChild {
       // But in actor context, we might need to listen to the message manager or add listener to the window
 
       const messageHandler = (event: MessageEvent) => {
-        console.log("NRChromeModalChild: Received message event", event.data);
         // Verify the message is from our content
         // In actor, event.source might be a proxy or wrapper, strict equality check might fail
         // So we rely on the message structure
         if (event.data && event.data.type === "nora-modal-submit") {
-          console.log(
-            "NRChromeModalChild: Received submit message",
-            event.data,
-          );
           win.removeEventListener("message", messageHandler);
 
           const data = event.data.detail;
@@ -107,7 +91,6 @@ export class NRChromeModalChild extends JSWindowActorChild {
       // Fallback: also support legacy sendForm injection for safety or if postMessage fails
       const originalSendForm = win.sendForm;
       win.sendForm = (data: Record<string, unknown>) => {
-        console.log("NRChromeModalChild: sendForm called (legacy)");
         win.removeEventListener("message", messageHandler);
         resolve(data);
         if (originalSendForm) {
