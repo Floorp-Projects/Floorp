@@ -489,7 +489,7 @@ class webScraper {
     const result = await actor.sendQuery("WebScraper:ClickElement", {
       selector,
     });
-    await this._delayForUser(1500);
+    await this._delayForUser(3500);
     return result;
   }
 
@@ -647,7 +647,7 @@ class webScraper {
     const result = await actor.sendQuery("WebScraper:FillForm", {
       formData,
     });
-    await this._delayForUser(1500);
+    await this._delayForUser(3500);
     return result;
   }
 
@@ -680,7 +680,7 @@ class webScraper {
     const actor = await this._getActorForBrowser(browser);
     if (!actor) return false;
     const result = await actor.sendQuery("WebScraper:Submit", { selector });
-    await this._delayForUser(1500);
+    await this._delayForUser(3500);
     return result;
   }
 }
