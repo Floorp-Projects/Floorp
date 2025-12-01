@@ -211,7 +211,7 @@
             },
             "newtab": {
                 "title": "New Tab",
-                "disable{{productName}}Start": "Disable {{productName}} Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Multirow Tab",
@@ -508,9 +508,9 @@
             "gecko-mute-current-tab": "Mute Current Tab",
             "gecko-show-source-of-page": "Show Source Of Page",
             "gecko-show-page-info": "Show Page Info",
-            "{{productName}}-rest-mode": "Enable Rest Mode",
-            "{{productName}}-hide-user-interface": "Hide Interface",
-            "{{productName}}-toggle-navigation-panel": "Toggle Navigation Panel",
+            "floorp-rest-mode": "Enable Rest Mode",
+            "floorp-hide-user-interface": "Hide Interface",
+            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
             "gecko-stop": "Stop",
             "gecko-search-in-this-page": "Search In This Page",
             "gecko-show-next-search-result": "Show Next Search Result",
@@ -521,7 +521,7 @@
             "gecko-enter-into-customize-mode": "Enter Customize Mode",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "{{productName}}-show-pip": "Show Picture-in-Picture",
+            "floorp-show-pip": "Show Picture-in-Picture",
             "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",
