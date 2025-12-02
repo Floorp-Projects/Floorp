@@ -119,7 +119,7 @@ export default class TabSleepExclusion extends NoraComponentBase {
    * Update the undiscardable attribute for a single tab.
    */
   private updateTabDiscardability(tab: BrowserTab): void {
-    if (!this.settings.enabled) {
+    if (!this.settings?.enabled) {
       // When disabled, remove our exclusion (but don't override other exclusions)
       if (tab.getAttribute("floorp-sleep-excluded") === "true") {
         tab.undiscardable = false;
@@ -160,7 +160,7 @@ export default class TabSleepExclusion extends NoraComponentBase {
    * Check if a URL matches any exclusion pattern.
    */
   private shouldExcludeUrl(url: string): boolean {
-    if (this.settings.patterns.length === 0) {
+    if (!this.settings?.patterns || this.settings.patterns.length === 0) {
       return false;
     }
 
