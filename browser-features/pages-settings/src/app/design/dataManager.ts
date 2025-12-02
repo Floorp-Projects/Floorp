@@ -265,3 +265,40 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
   };
   return formData;
 }
+
+// Tab Sleep Exclusion Settings
+const TAB_SLEEP_EXCLUSION_PREF = "floorp.tabs.sleep.exclusion";
+
+export interface TabSleepExclusionSettings {
+  enabled: boolean;
+  patterns: string[];
+}
+
+const DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS: TabSleepExclusionSettings = {
+  enabled: true,
+  patterns: [],
+};
+
+export async function getTabSleepExclusionSettings(): Promise<TabSleepExclusionSettings> {
+  try {
+    const result = await rpc.getStringPref(TAB_SLEEP_EXCLUSION_PREF);
+    if (!result) {
+      return { ...DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS };
+    }
+    const data = JSON.parse(result);
+    return {
+      enabled: data.enabled ?? DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS.enabled,
+      patterns: Array.isArray(data.patterns)
+        ? data.patterns
+        : DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS.patterns,
+    };
+  } catch {
+    return { ...DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS };
+  }
+}
+
+export async function saveTabSleepExclusionSettings(
+  settings: TabSleepExclusionSettings,
+): Promise<void> {
+  await rpc.setStringPref(TAB_SLEEP_EXCLUSION_PREF, JSON.stringify(settings));
+}
