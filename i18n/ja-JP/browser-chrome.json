@@ -311,5 +311,14 @@
     "actionLabelInput": "入力",
     "actionLabelClick": "クリック",
     "actionLabelSubmit": "送信"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "外部ブラウザでタブを開く",
+      "openLinkIn": "外部ブラウザでリンクを開く",
+      "defaultBrowser": "システムの既定のブラウザ",
+      "noBrowsers": "外部ブラウザが検出されませんでした",
+      "noValidUrl": "開く URL がありません"
+    }
   }
 }
