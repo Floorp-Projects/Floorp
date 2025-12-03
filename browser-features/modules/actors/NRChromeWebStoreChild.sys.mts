@@ -52,6 +52,20 @@ type ButtonState = "default" | "installing" | "success" | "error";
 let translationCache: Record<string, string> = {};
 let translationCacheInitialized = false;
 
+/**
+ * Default translations (English) used when i18n is not yet initialized
+ */
+const DEFAULT_TRANSLATIONS: Record<string, string> = {
+  [CWS_I18N_KEYS.button.addToFloorp]: "Add to Floorp",
+  [CWS_I18N_KEYS.button.installing]: "Installing...",
+  [CWS_I18N_KEYS.button.success]: "Added!",
+  [CWS_I18N_KEYS.button.error]: "Error occurred",
+  [CWS_I18N_KEYS.error.title]: "Installation Error",
+  [CWS_I18N_KEYS.error.compatibilityNote]:
+    "This extension may not be compatible with Firefox/Floorp.",
+  [CWS_I18N_KEYS.error.installFailed]: "Installation failed",
+};
+
 // =============================================================================
 // DOM Structure-based Selectors (Language-independent)
 // =============================================================================
@@ -96,26 +110,21 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private hiddenAddToChromeButton = false;
 
   /**
-   * Get a translation for a key, using cache or requesting from parent
+   * Get a translation for a key, using cache or default values
    * @param key - Translation key
    * @param vars - Optional variables for interpolation
    * @returns Translated string
    */
   private t(key: string, vars?: Record<string, string | number>): string {
-    // Check cache first
-    if (translationCache[key]) {
-      let result = translationCache[key];
-      if (vars) {
-        for (const [k, v] of Object.entries(vars)) {
-          result = result.replace(
-            new RegExp(`\\{\\{${k}\\}\\}`, "g"),
-            String(v),
-          );
-        }
+    // Check cache first, then fall back to defaults
+    let result = translationCache[key] || DEFAULT_TRANSLATIONS[key] || key;
+
+    if (vars) {
+      for (const [k, v] of Object.entries(vars)) {
+        result = result.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), String(v));
       }
-      return result;
     }
-    return key;
+    return result;
   }
 
   /**
