@@ -43,59 +43,35 @@ const ERROR_NOTICE_TIMEOUT = 10000;
 /** Button states */
 type ButtonState = "default" | "installing" | "success" | "error";
 
-/** Chrome promo banner selectors */
-const PROMO_SELECTORS = [
-  '[aria-labelledby="promo-header"]',
-  '[class*="promo"]',
-  '[class*="chrome-promo"]',
-  '[class*="install-chrome"]',
-] as const;
+// =============================================================================
+// DOM Structure-based Selectors (Language-independent)
+// =============================================================================
+// Chrome Web Store uses a consistent DOM structure:
+// - main > div > section (first section contains the extension header)
+// - The header section contains: h1 (extension name), img (logo), button (Add to Chrome)
+// - Other sections contain: 概要/Overview, 詳細/Details, プライバシー/Privacy, etc.
+//
+// This approach uses structural selectors instead of text-based patterns,
+// making it work across all languages and UI changes.
 
-/** Chrome promo detection keywords */
-const PROMO_KEYWORDS = [
-  "download",
-  "install",
-  "get",
-  "ダウンロード",
-  "インストール",
-] as const;
+/**
+ * Primary selector for the "Add to Chrome" button.
+ * Uses DOM structure: main element contains sections, first section has h1 and the action button.
+ * The button is a sibling of the div containing h1.
+ */
+const ADD_BUTTON_STRUCTURE_SELECTOR =
+  "main section:has(h1) button:first-of-type";
 
-/** Add to Chrome button patterns for detection */
-const ADD_TO_CHROME_PATTERNS = [
-  "add to chrome",
-  "chrome に追加",
-  "zu chrome hinzufügen",
-  "ajouter à chrome",
-  "añadir a chrome",
-  "agregar a chrome",
-  "adicionar ao chrome",
-  "添加至 chrome",
-  "добавить в chrome",
-  "remove from chrome",
-  "chromeから削除",
-] as const;
+/**
+ * Fallback selector using the first section approach
+ */
+const ADD_BUTTON_FALLBACK_SELECTOR =
+  "main > div > section:first-of-type button:first-of-type";
 
-/** Selectors for finding the Add to Chrome button */
-const ADD_BUTTON_SELECTORS = [
-  "button[jscontroller][jsaction]",
-  "button[jscontroller][jsaction][data-id]",
-] as const;
-
-/** Fallback selectors for Add to Chrome button */
-const FALLBACK_BUTTON_SELECTORS = [
-  '[data-test-id="action-button"]',
-  "[data-item-id] button[aria-label]",
-  '[jsname] button[aria-label*="Chrome"]',
-] as const;
-
-/** Selectors for fallback container injection */
-const CONTAINER_SELECTORS = [
-  'header [class*="action"]',
-  '[class*="header"] [class*="button"]',
-  '[class*="detail"] [class*="action"]',
-  "main header",
-  '[class*="publisher"]',
-] as const;
+/**
+ * Selector for extension logo image (fallback for extractExtensionMetadata)
+ */
+const EXTENSION_LOGO_SELECTOR = "main section:has(h1) img";
 
 // =============================================================================
 // Main Class
@@ -108,7 +84,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private installInProgress = false;
   private lastUrl: string | null = null;
   private mainLoopInterval: number | null = null;
-  private removedRecommendChrome = false;
+  private hiddenAddToChromeButton = false;
 
   /**
    * Called when the actor is created
@@ -172,7 +148,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     this.buttonInjected = false;
     this.currentExtensionId = null;
     this.installInProgress = false;
-    this.removedRecommendChrome = false;
+    this.hiddenAddToChromeButton = false;
 
     // Remove existing button when navigating away
     this.removeExistingButton();
@@ -194,8 +170,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         this.onUrlChange();
       }
 
-      // Remove "Recommend Chrome" banner
-      this.removeRecommendChromeBanner();
+      // Hide "Add to Chrome" button after our button is injected
+      this.hideAddToChromeButton();
 
       // Inject button on extension pages
       if (currentUrl && this.isChromeWebStoreExtensionPage(currentUrl)) {
@@ -217,33 +193,59 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Remove the "Recommend Chrome" promotional banner
-   * Following Fire-CWS approach
+   * Hide the original "Add to Chrome" button
+   * This replaces the Chrome button with the Floorp button
    */
-  private removeRecommendChromeBanner(): void {
-    if (this.removedRecommendChrome) return;
+  private hideAddToChromeButton(): void {
+    if (this.hiddenAddToChromeButton) return;
 
     const doc = this.document;
     if (!doc) return;
 
-    for (const selector of PROMO_SELECTORS) {
-      const elements = doc.querySelectorAll(selector);
-      for (const elem of elements) {
-        // Check if this is actually a Chrome promotion banner
-        const text = elem.textContent?.toLowerCase() || "";
+    // Only hide after we've injected our button
+    if (!this.buttonInjected) return;
+
+    // Find and hide the Add to Chrome button
+    const addToChromeButton = this.findOriginalAddToChromeButton();
+    if (addToChromeButton) {
+      (addToChromeButton as HTMLElement).style.setProperty(
+        "display",
+        "none",
+        "important",
+      );
+      this.hiddenAddToChromeButton = true;
+      console.debug("[NRChromeWebStore] Hidden Add to Chrome button");
+    }
+  }
+
+  /**
+   * Find the original "Add to Chrome" button (not our Floorp button)
+   */
+  private findOriginalAddToChromeButton(): Element | null {
+    const doc = this.document;
+    if (!doc) return null;
+
+    // Find the visible h1's section and get the button
+    const allH1s = doc.querySelectorAll("h1");
+    for (const h1 of allH1s) {
+      if (!this.isElementVisible(h1)) continue;
+
+      const section = h1.closest("section");
+      if (!section) continue;
+
+      // Find button that is NOT our Floorp button
+      const buttons = section.querySelectorAll("button");
+      for (const button of buttons) {
         if (
-          text.includes("chrome") &&
-          PROMO_KEYWORDS.some((keyword) => text.includes(keyword))
+          button.id !== "floorp-add-extension-btn" &&
+          this.isElementVisible(button)
         ) {
-          elem.remove();
-          this.removedRecommendChrome = true;
-          console.debug(
-            "[NRChromeWebStore] Removed Chrome recommendation banner",
-          );
-          return;
+          return button;
         }
       }
     }
+
+    return null;
   }
 
   /**
@@ -289,29 +291,28 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 10px 24px;
+        padding: 0 24px;
+        height: 36px;
         margin: 8px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #0b57d0;
         color: white;
         border: none;
-        border-radius: 24px;
+        border-radius: 20px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.2s ease;
+        box-shadow: none;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       .floorp-add-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        background: #0842a0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       }
 
       .floorp-add-button:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        background: #063281;
       }
 
       .floorp-add-button:disabled {
@@ -379,10 +380,83 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         width: 20px;
         height: 20px;
       }
+
+      /* Hide Chrome promotional elements */
+      [aria-labelledby="promo-header"] {
+        display: none !important;
+      }
+
+      /* Hide Chrome download prompt container (main > div > section > div.gSrP5d) */
+      main > div > section > div.gSrP5d {
+        display: none !important;
+      }
     `;
 
     (doc.head ?? doc.documentElement)?.appendChild(style);
     this.styleInjected = true;
+  }
+
+  /**
+   * Check if the page is ready for button injection.
+   * For SPA navigation, the URL changes before the DOM is fully updated.
+   * We need to verify that the displayed content matches the current URL.
+   *
+   * @returns true if the page is ready, false otherwise
+   */
+  private isPageReadyForInjection(): boolean {
+    const doc = this.document;
+    if (!doc) return false;
+
+    const locationHref = doc.location?.href;
+    if (!locationHref) return false;
+
+    const extensionId = extractExtensionId(locationHref);
+    if (!extensionId) return false;
+
+    // Find the visible h1 (extension name)
+    const allH1s = doc.querySelectorAll("h1");
+    let visibleH1: HTMLHeadingElement | null = null;
+    for (const h1 of allH1s) {
+      if (this.isElementVisible(h1)) {
+        visibleH1 = h1 as HTMLHeadingElement;
+        break;
+      }
+    }
+
+    if (!visibleH1) {
+      console.debug("[NRChromeWebStore] No visible h1 found, page not ready");
+      return false;
+    }
+
+    // Check if there's a link in the section that contains the current extension ID
+    // This confirms the page content matches the URL
+    const section = visibleH1.closest("section");
+    if (!section) {
+      console.debug("[NRChromeWebStore] h1 not in section, page not ready");
+      return false;
+    }
+
+    // Look for any link or meta that contains the extension ID
+    // The section should have a link to the extension or contain the extension ID
+    const sectionHtml = String(section.innerHTML);
+    if (!sectionHtml.includes(extensionId)) {
+      console.debug(
+        "[NRChromeWebStore] Section does not contain extension ID, page not ready",
+        extensionId,
+      );
+      return false;
+    }
+
+    // Also verify the "Add to Chrome" button is visible and ready
+    const button = section.querySelector("button");
+    if (!button || !this.isElementVisible(button)) {
+      console.debug(
+        "[NRChromeWebStore] No visible button in section, page not ready",
+      );
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -395,6 +469,11 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     const doc = this.document;
     if (!doc) return false;
+
+    // For SPA navigation: verify the page is ready before injecting
+    if (!this.isPageReadyForInjection()) {
+      return false;
+    }
 
     // Find the "Add to Chrome" button using multiple strategies
     const addToChromeButton = this.findAddToChromeButton();
@@ -413,76 +492,130 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Find the "Add to Chrome" button using multiple detection strategies
-   * Inspired by Fire-CWS's approach with jscontroller/jsaction selectors
+   * Find the "Add to Chrome" button using DOM structure-based selectors.
+   *
+   * Chrome Web Store has a consistent DOM structure:
+   * - main > div > section (first section = header with extension info)
+   * - Header section contains: img (logo), h1 (name), and button (Add to Chrome)
+   * - The "Add to Chrome" button is the first button in the header section
+   *
+   * This approach is language-independent and doesn't rely on button text.
+   *
+   * NOTE: For SPA navigation, Chrome Web Store may have multiple h1 elements
+   * from different "pages". We need to find the VISIBLE h1 element.
    */
   private findAddToChromeButton(): Element | null {
     const doc = this.document;
     if (!doc) return null;
 
-    // Strategy 1: Fire-CWS style selector (jscontroller/jsaction based)
-    // This is the most reliable selector for Chrome Web Store buttons
-    for (const selector of ADD_BUTTON_SELECTORS) {
-      const buttons = doc.querySelectorAll(selector);
-      for (const button of buttons) {
-        // Check if button text contains "Chrome" or similar
-        const text = (button.textContent || "").toLowerCase();
-        if (
-          (text.includes("chrome") ||
-            text.includes("add") ||
-            text.includes("追加")) &&
-          button.id !== "floorp-add-extension-btn" &&
-          this.isElementVisible(button)
-        ) {
-          return button;
-        }
+    // Strategy 1: Find the VISIBLE h1 element and its nearby button
+    // This is the most reliable approach for SPA navigation
+    const allH1s = doc.querySelectorAll("h1");
+    for (const h1 of allH1s) {
+      if (!this.isElementVisible(h1)) continue;
+
+      // Check if this h1 is inside a section
+      const section = h1.closest("section");
+      if (!section) continue;
+
+      // Look for the "Add to Chrome" button near this h1
+      // DOM structure: section > div > div (contains h1) + div (contains button)
+      const h1Container = h1.closest("div");
+      const siblingDiv = h1Container?.nextElementSibling;
+      const button = siblingDiv?.querySelector("button");
+
+      if (
+        button &&
+        button.id !== "floorp-add-extension-btn" &&
+        this.isElementVisible(button)
+      ) {
+        console.debug(
+          "[NRChromeWebStore] Found button via visible h1 sibling strategy",
+        );
+        return button;
+      }
+
+      // Alternative: Find first button within the section
+      const sectionButton = section.querySelector("button");
+      if (
+        sectionButton &&
+        sectionButton.id !== "floorp-add-extension-btn" &&
+        this.isElementVisible(sectionButton)
+      ) {
+        console.debug("[NRChromeWebStore] Found button via visible h1 section");
+        return sectionButton;
       }
     }
 
-    // Strategy 2: Look for buttons with specific text content
-    const allButtons = doc.querySelectorAll("button");
-    for (const button of allButtons) {
-      const text = (button.textContent || "").toLowerCase().trim();
-      const ariaLabel = (button.getAttribute("aria-label") || "").toLowerCase();
-
-      for (const pattern of ADD_TO_CHROME_PATTERNS) {
-        if (text.includes(pattern) || ariaLabel.includes(pattern)) {
-          // Verify it's visible and not our own button
-          if (
-            button.id !== "floorp-add-extension-btn" &&
-            this.isElementVisible(button)
-          ) {
-            return button;
-          }
-        }
-      }
+    // Strategy 2: Use direct CSS selector (may not work with SPA)
+    const buttonViaSelector = doc.querySelector(ADD_BUTTON_STRUCTURE_SELECTOR);
+    if (
+      buttonViaSelector &&
+      buttonViaSelector.id !== "floorp-add-extension-btn" &&
+      this.isElementVisible(buttonViaSelector)
+    ) {
+      console.debug("[NRChromeWebStore] Found button via structure selector");
+      return buttonViaSelector;
     }
 
-    // Strategy 3: Look for specific data attributes
-    for (const selector of FALLBACK_BUTTON_SELECTORS) {
-      const element = doc.querySelector(selector);
-      if (element && this.isElementVisible(element)) {
-        return element;
-      }
+    // Strategy 3: Fallback to first section's first button
+    const fallbackButton = doc.querySelector(ADD_BUTTON_FALLBACK_SELECTOR);
+    if (
+      fallbackButton &&
+      fallbackButton.id !== "floorp-add-extension-btn" &&
+      this.isElementVisible(fallbackButton)
+    ) {
+      console.debug("[NRChromeWebStore] Found button via fallback selector");
+      return fallbackButton;
     }
 
+    console.debug("[NRChromeWebStore] Could not find Add to Chrome button");
     return null;
   }
 
   /**
-   * Find a fallback container for button injection
+   * Find a fallback container for button injection.
+   * Uses the header section structure if the Add to Chrome button is not found.
+   *
+   * NOTE: For SPA navigation, we need to find the VISIBLE h1 element's section.
    */
   private findFallbackContainer(): Element | null {
     const doc = this.document;
     if (!doc) return null;
 
-    for (const selector of CONTAINER_SELECTORS) {
-      const elements = doc.querySelectorAll(selector);
-      for (const el of elements) {
-        // Check if this container has any visible button children
-        const hasButtons = el.querySelector("button");
-        if (hasButtons && this.isElementVisible(el)) {
-          return el;
+    // Strategy 1: Find the VISIBLE h1 element's container
+    const allH1s = doc.querySelectorAll("h1");
+    for (const h1 of allH1s) {
+      if (!this.isElementVisible(h1)) continue;
+
+      const section = h1.closest("section");
+      if (!section) continue;
+
+      // The button container is typically a sibling of the h1 container
+      const h1Container = h1.closest("div");
+      const siblingDiv = h1Container?.nextElementSibling;
+      if (siblingDiv && this.isElementVisible(siblingDiv)) {
+        return siblingDiv;
+      }
+      // If no sibling, use the parent of h1 container
+      if (h1Container?.parentElement) {
+        return h1Container.parentElement;
+      }
+    }
+
+    // Strategy 2: First visible section in main
+    const sections = doc.querySelectorAll("main section");
+    for (const section of sections) {
+      if (!this.isElementVisible(section)) continue;
+
+      // Find a div that contains or would contain action buttons
+      const divs = section.querySelectorAll("div");
+      for (const div of divs) {
+        if (
+          div.querySelector("button") ||
+          div.querySelector('a[role="button"]')
+        ) {
+          return div;
         }
       }
     }
@@ -701,7 +834,15 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Extract extension metadata from the current page
+   * Extract extension metadata from the current page using DOM structure.
+   *
+   * Chrome Web Store page structure:
+   * - main h1: Extension name
+   * - main section:has(h1) img: Extension icon
+   * - Section with h2 "概要"/"Overview": Description paragraphs
+   * - Section with h2 "詳細"/"Details": Version, author, size, etc. in list items
+   *
+   * NOTE: For SPA navigation, we need to find the VISIBLE h1 element.
    */
   private extractExtensionMetadata(): ExtensionMetadata {
     const doc = this.document;
@@ -712,70 +853,103 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     if (!doc) return metadata;
 
-    // Extract extension name
-    const nameSelectors = [
-      'h1[class*="name"]',
-      '[data-test-id="extension-name"]',
-      "h1",
-      ".e-f-w",
-    ];
+    const main = doc.querySelector("main");
+    if (!main) return metadata;
 
-    for (const selector of nameSelectors) {
-      const el = doc.querySelector(selector);
-      if (el?.textContent) {
-        metadata.name = el.textContent.trim();
+    // Extract extension name from VISIBLE h1
+    // Chrome Web Store SPA keeps old page elements, so we need to find the visible one
+    const allH1s = doc.querySelectorAll("h1");
+    let visibleH1: HTMLHeadingElement | null = null;
+    for (const h1 of allH1s) {
+      if (this.isElementVisible(h1)) {
+        visibleH1 = h1 as HTMLHeadingElement;
         break;
       }
     }
 
-    // Extract version
-    const versionSelectors = ['[class*="version"]', ".C-b-p-D-Xe"];
+    if (visibleH1?.textContent) {
+      metadata.name = visibleH1.textContent.trim();
+    }
 
-    for (const selector of versionSelectors) {
-      const el = doc.querySelector(selector);
-      if (el?.textContent) {
-        const versionMatch = el.textContent.match(/[\d.]+/);
-        if (versionMatch) {
-          metadata.version = versionMatch[0];
-          break;
+    // Extract icon URL from img in the same section as visible h1
+    if (visibleH1) {
+      const section = visibleH1.closest("section");
+      const logoImg = section?.querySelector("img") as HTMLImageElement | null;
+      if (logoImg?.src) {
+        metadata.iconUrl = logoImg.src;
+      }
+    }
+
+    // Fallback: try the old selector
+    if (!metadata.iconUrl) {
+      const logoImg = doc.querySelector(
+        EXTENSION_LOGO_SELECTOR,
+      ) as HTMLImageElement | null;
+      if (logoImg?.src) {
+        metadata.iconUrl = logoImg.src;
+      }
+    }
+
+    // Find sections by their h2 headings (only visible sections)
+    const sections = main.querySelectorAll("section");
+
+    for (const section of sections) {
+      if (!this.isElementVisible(section)) continue;
+
+      const h2 = section.querySelector("h2");
+      const h2Text = h2?.textContent?.toLowerCase() || "";
+
+      // Extract description from Overview/概要 section
+      if (
+        h2Text.includes("概要") ||
+        h2Text.includes("overview") ||
+        h2Text.includes("summary")
+      ) {
+        const paragraph = section.querySelector("p");
+        if (paragraph?.textContent) {
+          metadata.description = paragraph.textContent.trim().slice(0, 500);
         }
       }
-    }
 
-    // Extract description
-    const descSelectors = ['[class*="description"]', ".C-b-p-j-D"];
+      // Extract version and author from Details/詳細 section
+      if (
+        h2Text.includes("詳細") ||
+        h2Text.includes("detail") ||
+        h2Text.includes("information")
+      ) {
+        const listItems = section.querySelectorAll("li");
+        for (const li of listItems) {
+          const text = li.textContent || "";
+          const textLower = text.toLowerCase();
 
-    for (const selector of descSelectors) {
-      const el = doc.querySelector(selector);
-      if (el?.textContent) {
-        metadata.description = el.textContent.trim().slice(0, 500);
-        break;
-      }
-    }
+          // Version: list item containing version-related keywords
+          if (
+            textLower.includes("バージョン") ||
+            textLower.includes("version")
+          ) {
+            // The version value is in the last child element
+            const valueEl = li.querySelector("div:last-child, span:last-child");
+            if (valueEl?.textContent) {
+              const versionMatch = valueEl.textContent.match(/[\d.]+/);
+              if (versionMatch) {
+                metadata.version = versionMatch[0];
+              }
+            }
+          }
 
-    // Extract icon URL
-    const iconSelectors = ['img[class*="icon"]', ".e-f-s img", ".Cb-j img"];
-
-    for (const selector of iconSelectors) {
-      const el = doc.querySelector(selector) as HTMLImageElement;
-      if (el?.src) {
-        metadata.iconUrl = el.src;
-        break;
-      }
-    }
-
-    // Extract author
-    const authorSelectors = [
-      '[class*="publisher"]',
-      '[class*="author"]',
-      ".e-f-Me",
-    ];
-
-    for (const selector of authorSelectors) {
-      const el = doc.querySelector(selector);
-      if (el?.textContent) {
-        metadata.author = el.textContent.trim();
-        break;
+          // Author: list item containing publisher/author keywords
+          if (
+            textLower.includes("提供元") ||
+            textLower.includes("offered") ||
+            textLower.includes("publisher") ||
+            textLower.includes("author")
+          ) {
+            const valueEl = li.querySelector("div:last-child, span:last-child");
+            if (valueEl?.textContent) {
+              metadata.author = valueEl.textContent.trim();
+            }
+          }
+        }
       }
     }
 
