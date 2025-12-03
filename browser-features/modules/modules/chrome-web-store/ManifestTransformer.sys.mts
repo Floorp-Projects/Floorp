@@ -10,38 +10,72 @@
 import {
   GECKO_MIN_VERSION,
   EXTENSION_ID_SUFFIX,
-  UNSUPPORTED_PERMISSIONS,
+  isPermissionSupported,
+  isOptionalPermissionAllowed,
 } from "./Constants.sys.mts";
-import type { ChromeManifest } from "./types.ts";
+import type { ChromeManifest, TransformOptions } from "./types.ts";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+interface TransformResult {
+  manifest: ChromeManifest;
+  warnings: string[];
+  removedPermissions: string[];
+}
+
+// =============================================================================
+// Public API
+// =============================================================================
 
 /**
  * Transform Chrome manifest to Firefox-compatible format
+ * @param manifest - Original Chrome manifest
+ * @param extensionId - Chrome extension ID
+ * @returns Transformed manifest
  */
 export function transformManifest(
   manifest: ChromeManifest,
   extensionId: string,
 ): ChromeManifest {
-  // Create a shallow copy to avoid mutating the original
-  const transformed: ChromeManifest = { ...manifest };
+  const result = transformManifestFull(manifest, { extensionId });
+  return result.manifest;
+}
+
+/**
+ * Transform Chrome manifest with detailed results
+ * @param manifest - Original Chrome manifest
+ * @param options - Transformation options
+ * @returns Transformation result with warnings
+ */
+export function transformManifestFull(
+  manifest: ChromeManifest,
+  options: TransformOptions,
+): TransformResult {
+  const warnings: string[] = [];
+  const removedPermissions: string[] = [];
+
+  // Create a deep copy to avoid mutating the original
+  const transformed: ChromeManifest = JSON.parse(JSON.stringify(manifest));
 
   // Add Firefox-specific settings with generated ID
-  addGeckoSettings(transformed, extensionId);
+  addGeckoSettings(transformed, options.extensionId, options.minGeckoVersion);
 
   // Handle Manifest V3 specific transformations
   if (manifest.manifest_version === 3) {
-    transformMV3Background(transformed);
-    // Firefox supports host_permissions in MV3, so we don't need to merge them
-    // transformMV3HostPermissions(transformed);
+    const bgWarning = transformMV3Background(transformed);
+    if (bgWarning) warnings.push(bgWarning);
+
     transformMV3WebAccessibleResources(transformed);
   }
 
   // Remove unsupported permissions
-  filterUnsupportedPermissions(transformed);
+  const permWarnings = filterUnsupportedPermissions(transformed);
+  removedPermissions.push(...permWarnings);
 
-  // Remove update_url if present (Chrome specific)
-  if ("update_url" in transformed) {
-    delete transformed.update_url;
-  }
+  // Remove Chrome-specific fields
+  removeUnsupportedFields(transformed);
 
   console.log(
     "[ManifestTransformer] Transformed:",
@@ -49,17 +83,94 @@ export function transformManifest(
     "v" + transformed.version,
   );
 
-  return transformed;
+  if (removedPermissions.length > 0) {
+    console.log(
+      "[ManifestTransformer] Removed permissions:",
+      removedPermissions,
+    );
+  }
+
+  return { manifest: transformed, warnings, removedPermissions };
 }
+
+/**
+ * Validate that a manifest has required fields
+ * @param manifest - Object to validate
+ * @returns true if valid manifest structure
+ */
+export function validateManifest(
+  manifest: unknown,
+): manifest is ChromeManifest {
+  if (!manifest || typeof manifest !== "object") {
+    return false;
+  }
+
+  const m = manifest as Record<string, unknown>;
+
+  // Required fields
+  if (typeof m.manifest_version !== "number") {
+    return false;
+  }
+
+  if (typeof m.name !== "string" || m.name.length === 0) {
+    return false;
+  }
+
+  if (typeof m.version !== "string" || m.version.length === 0) {
+    return false;
+  }
+
+  // Validate manifest version
+  if (m.manifest_version !== 2 && m.manifest_version !== 3) {
+    console.warn(
+      `[ManifestTransformer] Unsupported manifest version: ${m.manifest_version}`,
+    );
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Check if a manifest is compatible with Firefox
+ * @param manifest - Manifest to check
+ * @returns Array of compatibility issues (empty if compatible)
+ */
+export function checkCompatibility(manifest: ChromeManifest): string[] {
+  const issues: string[] = [];
+
+  // Check for service worker in MV2
+  if (manifest.manifest_version === 2 && manifest.background?.service_worker) {
+    issues.push("MV2 does not support service workers");
+  }
+
+  // Check for unsupported APIs in permissions
+  const unsupportedPerms = manifest.permissions?.filter(
+    (p) => !isPermissionSupported(p),
+  );
+  if (unsupportedPerms && unsupportedPerms.length > 0) {
+    issues.push(`Unsupported permissions: ${unsupportedPerms.join(", ")}`);
+  }
+
+  return issues;
+}
+
+// =============================================================================
+// Internal Transformation Functions
+// =============================================================================
 
 /**
  * Add browser_specific_settings.gecko section
  */
-function addGeckoSettings(manifest: ChromeManifest, extensionId: string): void {
+function addGeckoSettings(
+  manifest: ChromeManifest,
+  extensionId: string,
+  minVersion?: string,
+): void {
   manifest.browser_specific_settings = {
     gecko: {
       id: `${extensionId}${EXTENSION_ID_SUFFIX}`,
-      strict_min_version: GECKO_MIN_VERSION,
+      strict_min_version: minVersion ?? GECKO_MIN_VERSION,
     },
   };
 }
@@ -67,20 +178,25 @@ function addGeckoSettings(manifest: ChromeManifest, extensionId: string): void {
 /**
  * Convert MV3 service_worker to background scripts
  * Firefox doesn't support service_worker in the same way as Chrome
+ * @returns Warning message if conversion was performed
  */
-function transformMV3Background(manifest: ChromeManifest): void {
+function transformMV3Background(manifest: ChromeManifest): string | null {
   if (!manifest.background?.service_worker) {
-    return;
+    return null;
   }
 
   console.log(
     "[ManifestTransformer] Converting service_worker to background scripts",
   );
 
+  const serviceWorker = manifest.background.service_worker;
+
   manifest.background = {
-    scripts: [manifest.background.service_worker],
+    scripts: [serviceWorker],
     type: "module",
   };
+
+  return `Converted service_worker (${serviceWorker}) to background scripts`;
 }
 
 /**
@@ -102,16 +218,6 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
 
   // Firefox 101+ supports MV3 web_accessible_resources format
   // We keep it as-is for modern Firefox versions
-  // For older versions, we would need to flatten it:
-  //
-  // const flatResources: string[] = [];
-  // for (const entry of resources as WebAccessibleResourceEntry[]) {
-  //   if (entry.resources) {
-  //     flatResources.push(...entry.resources);
-  //   }
-  // }
-  // manifest.web_accessible_resources = flatResources;
-
   console.log(
     "[ManifestTransformer] Keeping MV3 web_accessible_resources format",
   );
@@ -119,17 +225,22 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
 
 /**
  * Remove Chrome-specific permissions that Firefox doesn't support
+ * @returns Array of removed permissions
  */
-function filterUnsupportedPermissions(manifest: ChromeManifest): void {
-  const unsupportedSet = new Set<string>(UNSUPPORTED_PERMISSIONS);
+function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
+  const removed: string[] = [];
 
   if (manifest.permissions?.length) {
-    const originalCount = manifest.permissions.length;
-    manifest.permissions = manifest.permissions.filter(
-      (permission) => !unsupportedSet.has(permission),
-    );
+    const originalPerms = [...manifest.permissions];
+    manifest.permissions = manifest.permissions.filter((permission) => {
+      if (!isPermissionSupported(permission)) {
+        removed.push(permission);
+        return false;
+      }
+      return true;
+    });
 
-    const removedCount = originalCount - manifest.permissions.length;
+    const removedCount = originalPerms.length - manifest.permissions.length;
     if (removedCount > 0) {
       console.log(
         `[ManifestTransformer] Removed ${removedCount} unsupported permission(s)`,
@@ -141,11 +252,11 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): void {
     const originalCount = manifest.optional_permissions.length;
     manifest.optional_permissions = manifest.optional_permissions.filter(
       (permission) => {
-        // contextMenus is not supported in optional_permissions in Firefox
-        if (permission === "contextMenus") {
+        if (!isOptionalPermissionAllowed(permission)) {
+          removed.push(`optional:${permission}`);
           return false;
         }
-        return !unsupportedSet.has(permission);
+        return true;
       },
     );
 
@@ -156,23 +267,61 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): void {
       );
     }
   }
+
+  return removed;
 }
 
 /**
- * Validate that a manifest has required fields
+ * Remove Chrome-specific fields that Firefox doesn't support
  */
-export function validateManifest(
-  manifest: unknown,
-): manifest is ChromeManifest {
-  if (!manifest || typeof manifest !== "object") {
-    return false;
+function removeUnsupportedFields(manifest: ChromeManifest): void {
+  // Remove update_url (Chrome specific)
+  if ("update_url" in manifest) {
+    delete manifest.update_url;
+    console.debug("[ManifestTransformer] Removed update_url");
   }
 
-  const m = manifest as Record<string, unknown>;
+  // Remove key (used for Chrome extension ID)
+  if ("key" in manifest) {
+    delete manifest.key;
+    console.debug("[ManifestTransformer] Removed key");
+  }
 
-  return (
-    typeof m.manifest_version === "number" &&
-    typeof m.name === "string" &&
-    typeof m.version === "string"
+  // Remove differential_fingerprint (Chrome specific)
+  if ("differential_fingerprint" in manifest) {
+    delete manifest.differential_fingerprint;
+    console.debug("[ManifestTransformer] Removed differential_fingerprint");
+  }
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Get the Firefox extension ID that will be generated
+ * @param chromeId - Chrome extension ID
+ */
+export function getFirefoxExtensionId(chromeId: string): string {
+  return `${chromeId}${EXTENSION_ID_SUFFIX}`;
+}
+
+/**
+ * Extract permission hosts from permissions array
+ * @param permissions - Permissions array
+ */
+export function extractHostPermissions(permissions: string[]): string[] {
+  return permissions.filter(
+    (p) => p.includes("://") || p === "<all_urls>" || p.startsWith("*://"),
+  );
+}
+
+/**
+ * Extract API permissions from permissions array
+ * @param permissions - Permissions array
+ */
+export function extractApiPermissions(permissions: string[]): string[] {
+  return permissions.filter(
+    (p) => !p.includes("://") && p !== "<all_urls>" && !p.startsWith("*://"),
   );
 }

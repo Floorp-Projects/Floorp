@@ -10,47 +10,29 @@
  * - Downloading CRX files from Chrome Web Store
  * - Converting CRX to XPI format
  * - Installing the converted extension via AddonManager
+ *
+ * @module NRChromeWebStoreParent
  */
 
-// AddonManager types for ESModule version
-interface AddonInstallListener {
-  onInstallEnded?: (
-    install: unknown,
-    addon: { id: string; name: string },
-  ) => void;
-  onInstallFailed?: (install: { error?: number }) => void;
-  onInstallCancelled?: (install: unknown) => void;
-  onDownloadStarted?: (install: unknown) => void;
-  onDownloadProgress?: (install: unknown) => void;
-  onDownloadEnded?: (install: unknown) => void;
-  onDownloadFailed?: (install: unknown) => void;
-  onInstallStarted?: (install: unknown) => void;
-}
+import type {
+  ExtensionMetadata,
+  InstallRequest,
+  InstallResult,
+  AddonInstallListener,
+  GeckoAddonManager,
+  CRXConverterModule,
+  nsIFile,
+} from "../modules/chrome-web-store/types.ts";
 
-interface GeckoAddonManager {
-  getAddonByID(id: string): Promise<{ name: string; id: string } | null>;
-  getInstallForFile(
-    file: nsIFile,
-    mimeType: string,
-    telemetryInfo?: object,
-  ): Promise<{
-    install(): Promise<void>;
-    addListener(listener: AddonInstallListener): void;
-    removeListener(listener: AddonInstallListener): void;
-    error?: number;
-    addon?: { id: string; name: string };
-  }>;
-}
+import {
+  CRX_DOWNLOAD_URLS,
+  CRX_MAGIC,
+  CRX_VERSIONS,
+  INSTALL_ERROR_MESSAGES,
+  generateFirefoxId,
+} from "../modules/chrome-web-store/Constants.sys.mts";
 
-// CRXConverter type definition
-interface CRXConverterModule {
-  convert(
-    crxData: ArrayBuffer,
-    extensionId: string,
-    metadata: ExtensionMetadata,
-  ): ArrayBuffer | null;
-}
-
+// Lazy-loaded modules
 const lazy: {
   AddonManager?: GeckoAddonManager;
   CRXConverter?: CRXConverterModule;
@@ -69,37 +51,6 @@ try {
 } catch (e) {
   console.warn("[NRChromeWebStore] CRXConverter module not available:", e);
 }
-
-interface ExtensionMetadata {
-  id: string;
-  name: string;
-  version?: string;
-  description?: string;
-  iconUrl?: string;
-  author?: string;
-}
-
-interface InstallRequest {
-  extensionId: string;
-  metadata: ExtensionMetadata;
-}
-
-interface InstallResult {
-  success: boolean;
-  error?: string;
-  addonId?: string;
-}
-
-// CRX download URL patterns
-const CRX_DOWNLOAD_URLS = {
-  // Primary: Google's update URL (used by Chrome)
-  primary: (extensionId: string, version = "9999.9999.9999.9999") =>
-    `https://clients2.google.com/service/update2/crx?response=redirect&prodversion=${version}&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
-
-  // Fallback: Direct download from Chrome Web Store
-  fallback: (extensionId: string) =>
-    `https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x64&os_arch=x86_64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=130.0.0.0&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
-};
 
 export class NRChromeWebStoreParent extends JSWindowActorParent {
   async receiveMessage(message: {
@@ -187,6 +138,11 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     }
   }
 
+  /**
+   * Check if the extension is already installed
+   * @param extensionId - Chrome extension ID
+   * @returns Addon info if installed, null otherwise
+   */
   private async checkExistingAddon(
     extensionId: string,
   ): Promise<{ name: string } | null> {
@@ -195,7 +151,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     }
 
     // Check for Firefox-style ID (generated from Chrome extension ID)
-    const firefoxId = `${extensionId}@chromium-extension`;
+    const firefoxId = generateFirefoxId(extensionId);
 
     try {
       const addon = await lazy.AddonManager.getAddonByID(firefoxId);
@@ -258,6 +214,11 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     return null;
   }
 
+  /**
+   * Verify that the data is a valid CRX file
+   * @param data - Raw file data
+   * @returns true if valid CRX file
+   */
   private verifyCRXHeader(data: ArrayBuffer): boolean {
     if (data.byteLength < 16) {
       return false;
@@ -273,14 +234,14 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
       view.getUint8(3),
     );
 
-    if (magic !== "Cr24") {
+    if (magic !== CRX_MAGIC) {
       console.warn(`[NRChromeWebStore] Invalid CRX magic: ${magic}`);
       return false;
     }
 
     // Check CRX version (should be 2 or 3)
     const version = view.getUint32(4, true);
-    if (version !== 2 && version !== 3) {
+    if (!(CRX_VERSIONS as readonly number[]).includes(version)) {
       console.warn(`[NRChromeWebStore] Unsupported CRX version: ${version}`);
       return false;
     }
@@ -289,6 +250,10 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     return true;
   }
 
+  /**
+   * Convert CRX to XPI format
+   * Uses CRXConverter module if available, falls back to inline conversion
+   */
   private convertCRXtoXPI(
     crxData: ArrayBuffer,
     extensionId: string,
@@ -444,6 +409,12 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     }
   }
 
+  /**
+   * Create a temporary XPI file from the converted extension data
+   * @param xpiData - XPI file data as ArrayBuffer
+   * @param extensionId - Chrome extension ID (used for filename)
+   * @returns nsIFile pointing to the temporary file
+   */
   private createTempXPIFile(
     xpiData: ArrayBuffer,
     extensionId: string,
@@ -475,23 +446,15 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     return tempFile;
   }
 
+  /**
+   * Convert AddonManager error codes to user-friendly messages
+   * @param errorCode - AddonManager error code
+   * @returns Localized error message
+   */
   private getInstallErrorMessage(errorCode: number): string {
-    // Map AddonManager error codes to user-friendly messages
-    const errorMessages: Record<number, string> = {
-      [-1]: "ダウンロードに失敗しました",
-      [-2]: "拡張機能の署名を検証できませんでした",
-      [-3]: "拡張機能が破損しているか、互換性がありません",
-      [-4]: "この拡張機能は Floorp と互換性がありません",
-      [-5]: "この拡張機能はブロックされています",
-      [-6]: "拡張機能のインストールがタイムアウトしました",
-      [-7]: "拡張機能のインストールに失敗しました",
-      [-8]: "拡張機能を解析できませんでした",
-      [-9]: "不正な拡張機能ファイルです",
-      [-10]: "ネットワークエラーが発生しました",
-    };
-
     return (
-      errorMessages[errorCode] || `インストールエラー (コード: ${errorCode})`
+      INSTALL_ERROR_MESSAGES[errorCode] ||
+      `インストールエラー (コード: ${errorCode})`
     );
   }
 }

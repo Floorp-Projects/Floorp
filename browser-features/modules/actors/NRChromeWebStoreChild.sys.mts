@@ -10,20 +10,96 @@
  * - Inject "Add to Floorp" button on Chrome Web Store extension pages
  * - Extract extension metadata from the page
  * - Communicate with the parent process to initiate installation
+ *
+ * @module NRChromeWebStoreChild
  */
+
+import type {
+  ExtensionMetadata,
+  MutableExtensionMetadata,
+} from "../modules/chrome-web-store/types.ts";
+import {
+  isChromeWebStoreUrl,
+  extractExtensionId,
+} from "../modules/chrome-web-store/Constants.sys.mts";
 
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-interface ExtensionMetadata {
-  id: string;
-  name: string;
-  version?: string;
-  description?: string;
-  iconUrl?: string;
-  author?: string;
-}
+// =============================================================================
+// Constants
+// =============================================================================
+
+/** Main loop interval in milliseconds (following Fire-CWS approach) */
+const MAIN_LOOP_INTERVAL = 100;
+
+/** Button state reset delay in milliseconds */
+const BUTTON_RESET_DELAY = 3000;
+
+/** Error notice auto-hide delay in milliseconds */
+const ERROR_NOTICE_TIMEOUT = 10000;
+
+/** Button states */
+type ButtonState = "default" | "installing" | "success" | "error";
+
+/** Chrome promo banner selectors */
+const PROMO_SELECTORS = [
+  '[aria-labelledby="promo-header"]',
+  '[class*="promo"]',
+  '[class*="chrome-promo"]',
+  '[class*="install-chrome"]',
+] as const;
+
+/** Chrome promo detection keywords */
+const PROMO_KEYWORDS = [
+  "download",
+  "install",
+  "get",
+  "ダウンロード",
+  "インストール",
+] as const;
+
+/** Add to Chrome button patterns for detection */
+const ADD_TO_CHROME_PATTERNS = [
+  "add to chrome",
+  "chrome に追加",
+  "zu chrome hinzufügen",
+  "ajouter à chrome",
+  "añadir a chrome",
+  "agregar a chrome",
+  "adicionar ao chrome",
+  "添加至 chrome",
+  "добавить в chrome",
+  "remove from chrome",
+  "chromeから削除",
+] as const;
+
+/** Selectors for finding the Add to Chrome button */
+const ADD_BUTTON_SELECTORS = [
+  "button[jscontroller][jsaction]",
+  "button[jscontroller][jsaction][data-id]",
+] as const;
+
+/** Fallback selectors for Add to Chrome button */
+const FALLBACK_BUTTON_SELECTORS = [
+  '[data-test-id="action-button"]',
+  "[data-item-id] button[aria-label]",
+  '[jsname] button[aria-label*="Chrome"]',
+] as const;
+
+/** Selectors for fallback container injection */
+const CONTAINER_SELECTORS = [
+  'header [class*="action"]',
+  '[class*="header"] [class*="button"]',
+  '[class*="detail"] [class*="action"]',
+  "main header",
+  '[class*="publisher"]',
+] as const;
+
+// =============================================================================
+// Main Class
+// =============================================================================
 
 export class NRChromeWebStoreChild extends JSWindowActorChild {
   private buttonInjected = false;
@@ -34,9 +110,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private mainLoopInterval: number | null = null;
   private removedRecommendChrome = false;
 
-  // Use a simple interval-based approach like Fire-CWS (100ms)
-  private static readonly MAIN_LOOP_INTERVAL = 100;
-
+  /**
+   * Called when the actor is created
+   */
   actorCreated(): void {
     console.debug(
       "[NRChromeWebStore] Child actor created for:",
@@ -44,21 +120,30 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     );
   }
 
+  /**
+   * Handle DOM events
+   */
   handleEvent(event: Event): void {
-    if (event.type === "DOMContentLoaded") {
-      this.onDOMContentLoaded();
-    } else if (event.type === "popstate") {
-      this.onUrlChange();
+    switch (event.type) {
+      case "DOMContentLoaded":
+        this.onDOMContentLoaded();
+        break;
+      case "popstate":
+        this.onUrlChange();
+        break;
     }
   }
 
+  /**
+   * Handle DOMContentLoaded event
+   */
   private onDOMContentLoaded(): void {
     const url = this.document?.location?.href;
     console.debug("[NRChromeWebStore] DOMContentLoaded:", url);
 
     this.lastUrl = url ?? null;
 
-    if (!this.isChromeWebStore(url)) {
+    if (!url || !isChromeWebStoreUrl(url)) {
       return;
     }
 
@@ -68,17 +153,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     // Start main loop for button injection and page modifications
     // Following Fire-CWS approach: simple interval-based checking
     this.startMainLoop();
-  }
-
-  /**
-   * Check if URL is on Chrome Web Store (any page)
-   */
-  private isChromeWebStore(url?: string): boolean {
-    if (!url) return false;
-    return (
-      url.startsWith("https://chromewebstore.google.com/") ||
-      url.startsWith("https://chrome.google.com/webstore/")
-    );
   }
 
   /**
@@ -124,21 +198,21 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       this.removeRecommendChromeBanner();
 
       // Inject button on extension pages
-      if (this.isChromeWebStoreExtensionPage(currentUrl)) {
+      if (currentUrl && this.isChromeWebStoreExtensionPage(currentUrl)) {
         this.attemptButtonInjection();
       }
 
       // Continue the loop
       this.mainLoopInterval = setTimeout(
         mainLoop,
-        NRChromeWebStoreChild.MAIN_LOOP_INTERVAL,
+        MAIN_LOOP_INTERVAL,
       ) as unknown as number;
     };
 
     // Start the loop
     this.mainLoopInterval = setTimeout(
       mainLoop,
-      NRChromeWebStoreChild.MAIN_LOOP_INTERVAL,
+      MAIN_LOOP_INTERVAL,
     ) as unknown as number;
   }
 
@@ -152,26 +226,14 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const doc = this.document;
     if (!doc) return;
 
-    // Fire-CWS selector: [aria-labelledby="promo-header"]
-    const promoSelectors = [
-      '[aria-labelledby="promo-header"]',
-      '[class*="promo"]',
-      '[class*="chrome-promo"]',
-      '[class*="install-chrome"]',
-    ];
-
-    for (const selector of promoSelectors) {
+    for (const selector of PROMO_SELECTORS) {
       const elements = doc.querySelectorAll(selector);
       for (const elem of elements) {
         // Check if this is actually a Chrome promotion banner
         const text = elem.textContent?.toLowerCase() || "";
         if (
           text.includes("chrome") &&
-          (text.includes("download") ||
-            text.includes("install") ||
-            text.includes("get") ||
-            text.includes("ダウンロード") ||
-            text.includes("インストール"))
+          PROMO_KEYWORDS.some((keyword) => text.includes(keyword))
         ) {
           elem.remove();
           this.removedRecommendChrome = true;
@@ -202,38 +264,17 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     }
   }
 
-  private isChromeWebStoreExtensionPage(url?: string): boolean {
-    if (!url) return false;
-
-    // Match patterns:
-    // - https://chromewebstore.google.com/detail/{name}/{id}
-    // - https://chrome.google.com/webstore/detail/{name}/{id}
-    const patterns = [
-      /^https:\/\/chromewebstore\.google\.com\/detail\/[^/]+\/([a-z]{32})/,
-      /^https:\/\/chrome\.google\.com\/webstore\/detail\/[^/]+\/([a-z]{32})/,
-    ];
-
-    return patterns.some((pattern) => pattern.test(url));
+  /**
+   * Check if URL is a Chrome Web Store extension detail page
+   * @param url - URL to check
+   */
+  private isChromeWebStoreExtensionPage(url: string): boolean {
+    return extractExtensionId(url) !== null;
   }
 
-  private extractExtensionId(url?: string): string | null {
-    if (!url) return null;
-
-    const patterns = [
-      /^https:\/\/chromewebstore\.google\.com\/detail\/[^/]+\/([a-z]{32})/,
-      /^https:\/\/chrome\.google\.com\/webstore\/detail\/[^/]+\/([a-z]{32})/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-
-    return null;
-  }
-
+  /**
+   * Inject CSS styles for the Floorp button
+   */
   private injectStyles(): void {
     if (this.styleInjected) return;
 
@@ -381,12 +422,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     // Strategy 1: Fire-CWS style selector (jscontroller/jsaction based)
     // This is the most reliable selector for Chrome Web Store buttons
-    const fireCwsSelectors = [
-      "button[jscontroller][jsaction]",
-      "button[jscontroller][jsaction][data-id]",
-    ];
-
-    for (const selector of fireCwsSelectors) {
+    for (const selector of ADD_BUTTON_SELECTORS) {
       const buttons = doc.querySelectorAll(selector);
       for (const button of buttons) {
         // Check if button text contains "Chrome" or similar
@@ -404,27 +440,12 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     }
 
     // Strategy 2: Look for buttons with specific text content
-    const addToChromePatterns = [
-      "add to chrome",
-      "chrome に追加",
-      "zu chrome hinzufügen",
-      "ajouter à chrome",
-      "añadir a chrome",
-      "agregar a chrome",
-      "adicionar ao chrome",
-      "添加至 chrome",
-      "добавить в chrome",
-      "remove from chrome",
-      "chromeから削除",
-    ];
-
-    // Get all buttons on the page
     const allButtons = doc.querySelectorAll("button");
     for (const button of allButtons) {
       const text = (button.textContent || "").toLowerCase().trim();
       const ariaLabel = (button.getAttribute("aria-label") || "").toLowerCase();
 
-      for (const pattern of addToChromePatterns) {
+      for (const pattern of ADD_TO_CHROME_PATTERNS) {
         if (text.includes(pattern) || ariaLabel.includes(pattern)) {
           // Verify it's visible and not our own button
           if (
@@ -438,13 +459,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     }
 
     // Strategy 3: Look for specific data attributes
-    const dataSelectors = [
-      '[data-test-id="action-button"]',
-      "[data-item-id] button[aria-label]",
-      '[jsname] button[aria-label*="Chrome"]',
-    ];
-
-    for (const selector of dataSelectors) {
+    for (const selector of FALLBACK_BUTTON_SELECTORS) {
       const element = doc.querySelector(selector);
       if (element && this.isElementVisible(element)) {
         return element;
@@ -461,19 +476,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const doc = this.document;
     if (!doc) return null;
 
-    // Look for common container patterns in Chrome Web Store
-    const containerSelectors = [
-      // Publisher header action area (new CWS)
-      'header [class*="action"]',
-      '[class*="header"] [class*="button"]',
-      // Detail page action containers
-      '[class*="detail"] [class*="action"]',
-      // Generic patterns
-      "main header",
-      '[class*="publisher"]',
-    ];
-
-    for (const selector of containerSelectors) {
+    for (const selector of CONTAINER_SELECTORS) {
       const elements = doc.querySelectorAll(selector);
       for (const el of elements) {
         // Check if this container has any visible button children
@@ -517,7 +520,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return false;
     }
 
-    const extensionId = this.extractExtensionId(locationHref);
+    const extensionId = extractExtensionId(locationHref);
     if (!extensionId) {
       console.error("[NRChromeWebStore] Could not extract extension ID");
       return false;
@@ -552,7 +555,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return false;
     }
 
-    const extensionId = this.extractExtensionId(locationHref);
+    const extensionId = extractExtensionId(locationHref);
     if (!extensionId) {
       console.error("[NRChromeWebStore] Could not extract extension ID");
       return false;
@@ -593,6 +596,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     return button;
   }
 
+  /**
+   * Handle click on the "Add to Floorp" button
+   */
   private async handleInstallClick(): Promise<void> {
     if (this.installInProgress || !this.currentExtensionId) return;
 
@@ -629,18 +635,18 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       this.showError(errorMessage);
       console.error("[NRChromeWebStore] Installation error:", error);
     } finally {
-      // Reset button state after 3 seconds
+      // Reset button state after delay
       setTimeout(() => {
         this.updateButtonState(button, "default");
         this.installInProgress = false;
-      }, 3000);
+      }, BUTTON_RESET_DELAY);
     }
   }
 
-  private updateButtonState(
-    button: Element | null,
-    state: "default" | "installing" | "success" | "error",
-  ): void {
+  /**
+   * Update the button visual state
+   */
+  private updateButtonState(button: Element | null, state: ButtonState): void {
     if (!button) return;
 
     // Remove all state classes
@@ -694,9 +700,12 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     }
   }
 
+  /**
+   * Extract extension metadata from the current page
+   */
   private extractExtensionMetadata(): ExtensionMetadata {
     const doc = this.document;
-    const metadata: ExtensionMetadata = {
+    const metadata: MutableExtensionMetadata = {
       id: this.currentExtensionId || "",
       name: "",
     };
@@ -773,6 +782,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     return metadata;
   }
 
+  /**
+   * Show an error notice to the user
+   */
   private showError(message: string): void {
     const doc = this.document;
     if (!doc) return;
@@ -804,12 +816,15 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       button.parentElement.insertAdjacentElement("afterend", notice);
     }
 
-    // Auto-remove after 10 seconds
+    // Auto-remove after timeout
     setTimeout(() => {
       notice.remove();
-    }, 10000);
+    }, ERROR_NOTICE_TIMEOUT);
   }
 
+  /**
+   * Escape HTML special characters to prevent XSS
+   */
   private escapeHtml(text: string): string {
     const div = this.document?.createElement("div");
     if (div) {
@@ -828,6 +843,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     });
   }
 
+  /**
+   * Handle messages from parent actor
+   */
   receiveMessage(message: { name: string; data?: unknown }): unknown {
     switch (message.name) {
       case "CWS:InstallProgress":
@@ -841,6 +859,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     return null;
   }
 
+  /**
+   * Clean up when the actor is destroyed
+   */
   didDestroy(): void {
     // Stop the main loop
     if (this.mainLoopInterval) {
