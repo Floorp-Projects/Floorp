@@ -187,21 +187,6 @@
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
             }
         },
-        "tabSleepExclusion": {
-            "title": "タブスリープの除外",
-            "description": "特定のウェブサイトをタブスリープ（アンロード）から除外します。これらのパターンに一致するタブはメモリ不足時でもアクティブなままになり、自動的にアンロードされません。",
-            "enable": "タブスリープの除外を有効にする",
-            "patterns": "除外パターン",
-            "patternsDescription": "タブスリープから除外する URL パターンを追加します。これらのパターンに一致するタブはアンロードされません。",
-            "patternPlaceholder": "URL パターンを入力（例: example.com, *.google.com）",
-            "add": "追加",
-            "remove": "削除",
-            "noPatterns": "除外パターンが設定されていません。特定のタブをアクティブに保つには、パターンを追加してください。",
-            "examples": "パターンの例",
-            "exampleDomain": "このドメインを含むすべての URL に一致",
-            "exampleWildcard": "google.com のすべてのサブドメインに一致",
-            "exampleFullUrl": "Gmail の URL のみに一致"
-        },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
             "needRestartDescriptionForEnableAndDisable": "この UI カスタマイズ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",

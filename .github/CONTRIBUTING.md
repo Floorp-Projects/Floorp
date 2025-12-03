@@ -22,4 +22,6 @@ e.g.
 5. wanted to improve User Experience with changing some UI
 6. that was inconvenient because too many information in screen
 
+Please add MPL 2.0 headers to new files you submit, where appropriate. For example, a PNG or JPEG would not require an individual notice. A sample of some headers is available at: https://www.mozilla.org/en-US/MPL/headers/.
+
 Thank you for reading. Have a nice day!
