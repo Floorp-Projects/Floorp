@@ -570,15 +570,19 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     // For SPA navigation: check if there are any links on the page containing the extension ID
     // This helps verify the page content matches the URL
-    // Check the entire page for the extension ID (in links, report URLs, etc.)
-    const allLinks = doc.querySelectorAll('a[href*="' + extensionId + '"]');
+    // Avoid selector injection: filter <a> elements by href in JS
+    const allAnchors = doc.querySelectorAll("a");
+    const allLinks = Array.from(allAnchors).filter((a) => {
+      const anchor = a as HTMLAnchorElement;
+      return anchor.href && anchor.href.includes(extensionId);
+    });
     if (allLinks.length === 0) {
       // Fallback: check if the main content area contains any reference to the extension
       // The "詳細" section typically has a "懸念事項を報告" link with the extension ID
       const mainContent = doc.querySelector("main");
       if (mainContent) {
-        const mainHtml = String(mainContent.innerHTML);
-        if (!mainHtml.includes(extensionId)) {
+        const mainText = mainContent.textContent ?? "";
+        if (!mainText.includes(extensionId)) {
           console.debug(
             "[NRChromeWebStore] Page does not contain extension ID, page not ready",
             extensionId,

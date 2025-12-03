@@ -24,6 +24,8 @@ interface AddonsContext {
   customizer: NotificationCustomizer | null;
   logger: { debug: (...args: unknown[]) => void } | null;
   observer: CWSObserver | null;
+  /** Saved original description children for restoration */
+  savedDescriptionChildren: Node[] | null;
 }
 
 /**
@@ -55,6 +57,7 @@ function getGlobalContext(): AddonsContext {
       customizer: null,
       logger: null,
       observer: null,
+      savedDescriptionChildren: null,
     };
   }
   return global.__floorpAddonsContext;
@@ -82,9 +85,7 @@ function updateGlobalContext(
 /**
  * Get the current Chrome Web Store install info
  */
-export function getChromeWebStoreInstallInfo(
-  _state?: InstallInfoState | null,
-): ChromeWebStoreInstallInfo | null {
+export function getChromeWebStoreInstallInfo(): ChromeWebStoreInstallInfo | null {
   const ctx = getGlobalContext();
   // Try global context state first
   if (ctx.state?.pendingChromeWebStoreInstall) {
@@ -98,9 +99,7 @@ export function getChromeWebStoreInstallInfo(
 /**
  * Clear the Chrome Web Store install info
  */
-export function clearChromeWebStoreInstallInfo(
-  _state?: InstallInfoState | null,
-): void {
+export function clearChromeWebStoreInstallInfo(): void {
   const ctx = getGlobalContext();
   // Clear context state
   if (ctx.state) {
@@ -116,11 +115,41 @@ export function clearChromeWebStoreInstallInfo(
 }
 
 /**
+ * Save the original description children before CWS customization
+ * This should be called before modifying the description container
+ */
+export function saveOriginalDescriptionChildren(): void {
+  const ctx = getGlobalContext();
+  if (ctx.savedDescriptionChildren !== null) {
+    // Already saved
+    return;
+  }
+
+  const notification = document.getElementById(
+    "addon-webext-permissions-notification",
+  );
+  if (!notification) {
+    return;
+  }
+
+  const descriptionContainer = notification.querySelector(
+    ".popup-notification-description",
+  );
+  if (descriptionContainer) {
+    ctx.savedDescriptionChildren = Array.from(descriptionContainer.childNodes).map(
+      (node) => node.cloneNode(true),
+    );
+  }
+}
+
+/**
  * Clean up CWS customization from the DOM directly
  * This is used when a normal addon is being installed to ensure
- * no Chrome extension UI remnants are shown
+ * no Chrome extension UI remnants are shown.
+ * Uses saved original nodes for restoration instead of reconstructing DOM.
  */
 function cleanupCWSCustomization(): void {
+  const ctx = getGlobalContext();
   const notification = document.getElementById(
     "addon-webext-permissions-notification",
   );
@@ -135,25 +164,16 @@ function cleanupCWSCustomization(): void {
   const cwsMessage = descriptionContainer?.querySelector(".chrome-web-store-message");
   
   if (cwsMessage && descriptionContainer) {
-    // Remove the CWS message
-    cwsMessage.remove();
+    // Remove all current children
+    descriptionContainer.textContent = "";
     
-    // Restore the original Firefox format using the notification's name attribute
-    const addonName = notification.getAttribute("name") || "";
-    const endLabel = notification.getAttribute("endlabel") || "";
-    
-    // Create the label structure that Firefox expects
-    const nameLabel = document.createXULElement("label");
-    nameLabel.setAttribute("class", "popup-notification-label");
-    nameLabel.setAttribute("is", "text-link");
-    nameLabel.textContent = addonName;
-    
-    const endLabelElement = document.createXULElement("label");
-    endLabelElement.setAttribute("class", "popup-notification-label");
-    endLabelElement.textContent = endLabel;
-    
-    descriptionContainer.appendChild(nameLabel);
-    descriptionContainer.appendChild(endLabelElement);
+    // Restore saved original children if available
+    if (ctx.savedDescriptionChildren !== null) {
+      for (const child of ctx.savedDescriptionChildren) {
+        descriptionContainer.appendChild(child.cloneNode(true));
+      }
+      ctx.savedDescriptionChildren = null;
+    }
   }
 
   // Remove the compatibility warning if present
@@ -231,6 +251,8 @@ export function createCWSObserver(
 
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
+              // Save original children before customization
+              saveOriginalDescriptionChildren();
               const customizer = getOrCreateCustomizer();
               customizer.customizeWebExtPermissionPrompt(cwsInfo);
               clearChromeWebStoreInstallInfo();

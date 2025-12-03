@@ -77,7 +77,7 @@ export function writeArrayBufferToFile(file: nsIFile, data: ArrayBuffer): void {
         i,
         Math.min(i + WRITE_CHUNK_SIZE, uint8Array.length),
       );
-      binaryStream.writeByteArray([...chunk]);
+      binaryStream.writeByteArray(Array.from(chunk));
     }
     binaryStream.close();
     outputStream.close();
