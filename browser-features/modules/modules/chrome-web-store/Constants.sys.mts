@@ -40,21 +40,21 @@ export const EXTENSION_ID_SUFFIX = "@chromium-extension";
 // Download URLs
 // =============================================================================
 
-/**
- * CRX download URL generators
- */
+/** CRX download URL generator functions */
 export const CRX_DOWNLOAD_URLS = {
   /**
-   * Primary: Google's update URL (used by Chrome)
-   * @param extensionId - Chrome extension ID
-   * @param chromeVersion - Chrome version to report
+   * Primary download URL using Google's update endpoint
+   * @param extensionId - Chrome extension ID (32 lowercase letters)
+   * @param chromeVersion - Chrome version to report (default: 130.0.0.0)
+   * @returns Download URL for the CRX file
    */
   primary: (extensionId: string, chromeVersion = "130.0.0.0"): string =>
     `https://clients2.google.com/service/update2/crx?response=redirect&prodversion=${chromeVersion}&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
 
   /**
-   * Fallback: Direct download with more specific parameters
-   * @param extensionId - Chrome extension ID
+   * Fallback download URL with platform-specific parameters
+   * @param extensionId - Chrome extension ID (32 lowercase letters)
+   * @returns Download URL for the CRX file
    */
   fallback: (extensionId: string): string =>
     `https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x64&os_arch=x86_64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=130.0.0.0&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
@@ -84,6 +84,7 @@ export const UNSUPPORTED_PERMISSIONS = [
   "gcm",
   "offscreen",
   "processes",
+  "sidePanel",
   "signedInDevices",
   "tabCapture",
   "ttsEngine",
@@ -143,11 +144,17 @@ export const CRX_ACCEPT_HEADER = "application/x-chrome-extension";
 // Validation Patterns
 // =============================================================================
 
+/** Pattern definition for unsupported code detection */
+export interface UnsupportedCodePattern {
+  readonly pattern: RegExp;
+  readonly message: string;
+}
+
 /**
  * Unsupported code patterns in extensions
  * These patterns indicate Chrome-specific APIs that won't work in Firefox
  */
-export const UNSUPPORTED_CODE_PATTERNS = [
+export const UNSUPPORTED_CODE_PATTERNS: readonly UnsupportedCodePattern[] = [
   {
     pattern: /["']documentId["']\s*:/,
     message: "documentId property in API calls",
@@ -168,7 +175,7 @@ export const UNSUPPORTED_CODE_PATTERNS = [
     pattern: /chrome\.tabCapture\./,
     message: "chrome.tabCapture API",
   },
-] as const;
+];
 
 // =============================================================================
 // File Size Limits
@@ -194,9 +201,13 @@ export const INSTALL_TIMEOUT_MS = 2 * 60 * 1000;
 // Utility Functions
 // =============================================================================
 
+/** Chrome extension ID pattern (32 lowercase letters) */
+const EXTENSION_ID_PATTERN = /^[a-z]{32}$/;
+
 /**
  * Check if a URL is from Chrome Web Store
  * @param url - URL to check
+ * @returns true if the URL is from Chrome Web Store
  */
 export function isChromeWebStoreUrl(url: string): boolean {
   return CWS_BASE_URLS.some((base) => url.startsWith(base));
@@ -205,12 +216,12 @@ export function isChromeWebStoreUrl(url: string): boolean {
 /**
  * Extract extension ID from Chrome Web Store URL
  * @param url - Chrome Web Store extension page URL
- * @returns Extension ID or null if not found
+ * @returns Extension ID (32 lowercase letters) or null if not found
  */
 export function extractExtensionId(url: string): string | null {
   for (const pattern of CWS_URL_PATTERNS) {
     const match = url.match(pattern);
-    if (match?.[1]) {
+    if (match?.[1] && EXTENSION_ID_PATTERN.test(match[1])) {
       return match[1];
     }
   }
@@ -219,7 +230,8 @@ export function extractExtensionId(url: string): string | null {
 
 /**
  * Generate Firefox extension ID from Chrome extension ID
- * @param chromeId - Chrome extension ID
+ * @param chromeId - Chrome extension ID (32 lowercase letters)
+ * @returns Firefox-compatible extension ID
  */
 export function generateFirefoxId(chromeId: string): string {
   return `${chromeId}${EXTENSION_ID_SUFFIX}`;
@@ -228,6 +240,7 @@ export function generateFirefoxId(chromeId: string): string {
 /**
  * Check if a permission is supported in Firefox
  * @param permission - Permission to check
+ * @returns true if the permission is supported
  */
 export function isPermissionSupported(permission: string): boolean {
   return !UNSUPPORTED_PERMISSIONS.includes(
@@ -238,6 +251,7 @@ export function isPermissionSupported(permission: string): boolean {
 /**
  * Check if a permission can be optional in Firefox
  * @param permission - Permission to check
+ * @returns true if the permission can be optional
  */
 export function isOptionalPermissionAllowed(permission: string): boolean {
   return !UNSUPPORTED_OPTIONAL_PERMISSIONS.includes(
@@ -246,21 +260,55 @@ export function isOptionalPermissionAllowed(permission: string): boolean {
 }
 
 // =============================================================================
-// Error Messages
+// Error Messages - i18n Translation Keys
 // =============================================================================
 
 /**
- * AddonManager error codes to user-friendly messages (Japanese)
+ * AddonManager error codes to i18n translation keys
+ * These keys correspond to entries in browser-chrome.json
  */
-export const INSTALL_ERROR_MESSAGES: Record<number, string> = {
-  [-1]: "ダウンロードに失敗しました",
-  [-2]: "拡張機能の署名を検証できませんでした",
-  [-3]: "拡張機能が破損しているか、互換性がありません",
-  [-4]: "この拡張機能は Floorp と互換性がありません",
-  [-5]: "この拡張機能はブロックされています",
-  [-6]: "拡張機能のインストールがタイムアウトしました",
-  [-7]: "拡張機能のインストールに失敗しました",
-  [-8]: "拡張機能を解析できませんでした",
-  [-9]: "不正な拡張機能ファイルです",
-  [-10]: "ネットワークエラーが発生しました",
+export const INSTALL_ERROR_MESSAGE_KEYS: Record<number, string> = {
+  [-1]: "chromeWebStore.installErrors.downloadFailed",
+  [-2]: "chromeWebStore.installErrors.signatureVerifyFailed",
+  [-3]: "chromeWebStore.installErrors.corruptOrIncompatible",
+  [-4]: "chromeWebStore.installErrors.incompatible",
+  [-5]: "chromeWebStore.installErrors.blocked",
+  [-6]: "chromeWebStore.installErrors.timeout",
+  [-7]: "chromeWebStore.installErrors.installFailed",
+  [-8]: "chromeWebStore.installErrors.parseFailed",
+  [-9]: "chromeWebStore.installErrors.invalidFile",
+  [-10]: "chromeWebStore.installErrors.networkError",
 };
+
+/**
+ * i18n Translation Keys for Chrome Web Store messages
+ */
+export const CWS_I18N_KEYS = {
+  // Button labels
+  button: {
+    addToFloorp: "chromeWebStore.button.addToFloorp",
+    installing: "chromeWebStore.button.installing",
+    success: "chromeWebStore.button.success",
+    error: "chromeWebStore.button.error",
+  },
+  // Error messages
+  error: {
+    title: "chromeWebStore.error.title",
+    compatibilityNote: "chromeWebStore.error.compatibilityNote",
+    alreadyInstalled: "chromeWebStore.error.alreadyInstalled",
+    downloadFailed: "chromeWebStore.error.downloadFailed",
+    conversionFailed: "chromeWebStore.error.conversionFailed",
+    conversionFailedGeneric: "chromeWebStore.error.conversionFailedGeneric",
+    installError: "chromeWebStore.error.installError",
+    installFailed: "chromeWebStore.error.installFailed",
+    noData: "chromeWebStore.error.noData",
+    addonManagerUnavailable: "chromeWebStore.error.addonManagerUnavailable",
+    noBrowserWindow: "chromeWebStore.error.noBrowserWindow",
+    createInstallFailed: "chromeWebStore.error.createInstallFailed",
+    cancelledByUser: "chromeWebStore.error.cancelledByUser",
+    downloadCancelled: "chromeWebStore.error.downloadCancelled",
+    timeout: "chromeWebStore.error.timeout",
+    xpiInstallError: "chromeWebStore.error.xpiInstallError",
+    errorWithCode: "chromeWebStore.error.errorWithCode",
+  },
+} as const;

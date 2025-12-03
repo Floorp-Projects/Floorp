@@ -11,56 +11,111 @@
 import { CWSError, CWSErrorCode } from "./types.ts";
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+const LOG_PREFIX = "[FileUtils]";
+
+/** Chunk size for binary writes (64KB) */
+const WRITE_CHUNK_SIZE = 65536;
+
+/** Expected error code for end of stream */
+const NS_BASE_STREAM_CLOSED = 0x80470002;
+
+// =============================================================================
 // File Operations
 // =============================================================================
 
 /**
- * Write ArrayBuffer data to a file
+ * Write ArrayBuffer data to a file (async version using IOUtils for better performance)
  * @param file - Target file
  * @param data - Data to write
  * @throws {CWSError} If writing fails
  */
-export function writeArrayBufferToFile(file: nsIFile, data: ArrayBuffer): void {
-  let outputStream: nsIFileOutputStream | null = null;
-  let binaryStream: nsIBinaryOutputStream | null = null;
-
+export async function writeArrayBufferToFileAsync(
+  file: nsIFile,
+  data: ArrayBuffer,
+): Promise<void> {
   try {
-    outputStream = Cc[
-      "@mozilla.org/network/file-output-stream;1"
-    ].createInstance(Ci.nsIFileOutputStream);
-
-    // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-    outputStream.init(file, 0x02 | 0x08 | 0x20, 0o644, 0);
-
-    binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
-      Ci.nsIBinaryOutputStream,
-    );
-    binaryStream.setOutputStream(outputStream);
-
     const uint8Array = new Uint8Array(data);
-    binaryStream.writeByteArray(Array.from(uint8Array));
+    // IOUtils is much faster for large files
+    await IOUtils.write(file.path, uint8Array);
   } catch (error) {
     throw new CWSError(
       CWSErrorCode.FILE_IO_ERROR,
       `Failed to write file: ${file.path}`,
       error,
     );
-  } finally {
-    try {
-      binaryStream?.close();
-    } catch {
-      // Ignore close errors
-    }
-    try {
-      outputStream?.close();
-    } catch {
-      // Ignore close errors
-    }
   }
 }
 
 /**
- * Read file contents to ArrayBuffer
+ * Write ArrayBuffer data to a file (sync version - SLOW for large files, use async when possible)
+ * @param file - Target file
+ * @param data - Data to write
+ * @throws {CWSError} If writing fails
+ */
+export function writeArrayBufferToFile(file: nsIFile, data: ArrayBuffer): void {
+  try {
+    const uint8Array = new Uint8Array(data);
+
+    const outputStream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
+
+    // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+    outputStream.init(file, 0x02 | 0x08 | 0x20, 0o644, 0);
+
+    const binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+      Ci.nsIBinaryOutputStream,
+    );
+    binaryStream.setOutputStream(outputStream);
+
+    // Write in chunks to avoid memory issues
+    for (let i = 0; i < uint8Array.length; i += WRITE_CHUNK_SIZE) {
+      const chunk = uint8Array.subarray(
+        i,
+        Math.min(i + WRITE_CHUNK_SIZE, uint8Array.length),
+      );
+      binaryStream.writeByteArray([...chunk]);
+    }
+    binaryStream.close();
+    outputStream.close();
+  } catch (error) {
+    throw new CWSError(
+      CWSErrorCode.FILE_IO_ERROR,
+      `Failed to write file: ${file.path}`,
+      error,
+    );
+  }
+}
+
+/**
+ * Read file contents to ArrayBuffer (async version using IOUtils for better performance)
+ * @param file - File to read
+ * @returns File contents as ArrayBuffer
+ * @throws {CWSError} If reading fails
+ */
+export async function readFileToArrayBufferAsync(
+  file: nsIFile,
+): Promise<ArrayBuffer> {
+  try {
+    const uint8Array = await IOUtils.read(file.path);
+    // Copy to a new ArrayBuffer to ensure proper type
+    const buffer = new ArrayBuffer(uint8Array.byteLength);
+    new Uint8Array(buffer).set(uint8Array);
+    return buffer;
+  } catch (error) {
+    throw new CWSError(
+      CWSErrorCode.FILE_IO_ERROR,
+      `Failed to read file: ${file.path}`,
+      error,
+    );
+  }
+}
+
+/**
+ * Read file contents to ArrayBuffer (sync version - slower for large files)
  * @param file - File to read
  * @returns File contents as ArrayBuffer
  * @throws {CWSError} If reading fails
@@ -121,6 +176,39 @@ export function readInputStream(inputStream: nsIInputStream): string {
 }
 
 /**
+ * Read nsIInputStream to ArrayBuffer with known size (optimized)
+ * @param inputStream - Input stream to read
+ * @param size - Known size of the stream content
+ * @returns Stream contents as ArrayBuffer
+ */
+export function readInputStreamToBufferWithSize(
+  inputStream: nsIInputStream,
+  size: number,
+): ArrayBuffer {
+  const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream,
+  );
+  binaryStream.setInputStream(inputStream);
+
+  try {
+    // Read entire content at once when size is known
+    const bytes = binaryStream.readByteArray(size);
+    return new Uint8Array(bytes).buffer;
+  } finally {
+    try {
+      binaryStream.close();
+    } catch {
+      // Ignore close errors
+    }
+    try {
+      inputStream.close();
+    } catch {
+      // Ignore close errors
+    }
+  }
+}
+
+/**
  * Read nsIInputStream to ArrayBuffer
  * @param inputStream - Input stream to read
  * @returns Stream contents as ArrayBuffer
@@ -155,9 +243,8 @@ export function readInputStreamToBuffer(
   } catch (error) {
     // NS_BASE_STREAM_CLOSED is expected at end of stream
     const nsError = error as { result?: number };
-    if (nsError.result !== 0x80470002) {
-      // NS_BASE_STREAM_CLOSED
-      console.error("[FileUtils] Error reading stream:", error);
+    if (nsError.result !== NS_BASE_STREAM_CLOSED) {
+      console.error(`${LOG_PREFIX} Error reading stream:`, error);
     }
   } finally {
     try {
@@ -251,7 +338,7 @@ export function safeRemoveFile(file: nsIFile): boolean {
       return true;
     }
   } catch (error) {
-    console.debug(`[FileUtils] Failed to remove file ${file.path}:`, error);
+    console.debug(`${LOG_PREFIX} Failed to remove file ${file.path}:`, error);
   }
   return false;
 }

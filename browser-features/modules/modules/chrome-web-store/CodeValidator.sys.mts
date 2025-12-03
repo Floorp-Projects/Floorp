@@ -12,40 +12,48 @@ import type {
   ValidationError,
   ValidationWarning,
 } from "./types.ts";
-import { UNSUPPORTED_CODE_PATTERNS } from "./Constants.sys.mts";
+import {
+  UNSUPPORTED_CODE_PATTERNS,
+  type UnsupportedCodePattern,
+} from "./Constants.sys.mts";
 
 // =============================================================================
-// Types
+// Constants
 // =============================================================================
 
-interface PatternDefinition {
-  readonly pattern: RegExp;
-  readonly message: string;
-  readonly severity?: "error" | "warning";
-}
+const LOG_PREFIX = "[CodeValidator]";
+
+/** JavaScript file extensions to validate */
+const JS_EXTENSIONS = [".js", ".mjs", ".jsx", ".ts", ".mts", ".tsx"] as const;
+
+/** Quick check patterns for early detection */
+const QUICK_CHECK_PATTERNS = [
+  "documentId",
+  "chrome.offscreen",
+  "chrome.tabCapture",
+  "chrome.tabGroups",
+  "chrome.sidePanel",
+] as const;
 
 // =============================================================================
-// Additional Patterns (beyond Constants.sys.mts)
+// Warning Patterns
 // =============================================================================
 
 /**
- * Warning-level patterns (may work but with limitations)
+ * Warning-level patterns - may work but with limitations
  */
-const WARNING_PATTERNS: readonly PatternDefinition[] = [
+const WARNING_PATTERNS: readonly UnsupportedCodePattern[] = [
   {
     pattern: /chrome\.tabGroups\./,
     message: "chrome.tabGroups API has limited support",
-    severity: "warning",
   },
   {
     pattern: /chrome\.sidePanel\./,
     message: "chrome.sidePanel API is not fully supported",
-    severity: "warning",
   },
   {
     pattern: /chrome\.declarativeNetRequest\.MAX_NUMBER_OF_DYNAMIC_RULES/,
     message: "Dynamic rules limit differs from Chrome",
-    severity: "warning",
   },
 ];
 
@@ -99,7 +107,7 @@ export function validateSourceCodeFull(
       });
 
       console.log(
-        `[CodeValidator] Detected unsupported pattern in ${filename}:${lineInfo.line}: ${message}`,
+        `${LOG_PREFIX} Detected unsupported pattern in ${filename}:${lineInfo.line}: ${message}`,
       );
     }
   }
@@ -110,10 +118,10 @@ export function validateSourceCodeFull(
     if (match) {
       warnings.push({
         file: filename,
-        message: message,
+        message,
       });
 
-      console.debug(`[CodeValidator] Warning in ${filename}: ${message}`);
+      console.debug(`${LOG_PREFIX} Warning in ${filename}: ${message}`);
     }
   }
 
@@ -154,12 +162,12 @@ export function validateMultipleFiles(
 }
 
 /**
- * Check if a file should be validated
+ * Check if a file should be validated based on extension
  * @param filename - Name of the file
+ * @returns true if the file is a JavaScript/TypeScript file
  */
 export function isJavaScriptFile(filename: string): boolean {
-  const jsExtensions = [".js", ".mjs", ".jsx", ".ts", ".mts", ".tsx"];
-  return jsExtensions.some((ext) => filename.endsWith(ext));
+  return JS_EXTENSIONS.some((ext) => filename.endsWith(ext));
 }
 
 // =============================================================================
@@ -185,23 +193,10 @@ function getLineInfo(
  * Quick check if content might contain unsupported patterns
  * This is a fast pre-check before doing full regex matching
  * @param content - Source code content
+ * @returns true if content might contain unsupported patterns
  */
 export function mightContainUnsupportedPatterns(content: string): boolean {
-  const quickPatterns = [
-    "documentId",
-    "chrome.offscreen",
-    "chrome.tabCapture",
-    "chrome.tabGroups",
-    "chrome.sidePanel",
-  ];
-
-  for (const pattern of quickPatterns) {
-    if (content.includes(pattern)) {
-      return true;
-    }
-  }
-
-  return false;
+  return QUICK_CHECK_PATTERNS.some((pattern) => content.includes(pattern));
 }
 
 /**

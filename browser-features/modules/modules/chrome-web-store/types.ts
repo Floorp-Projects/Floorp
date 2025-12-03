@@ -34,13 +34,14 @@ export type CWSErrorCodeType = (typeof CWSErrorCode)[keyof typeof CWSErrorCode];
  * Custom error class for Chrome Web Store operations
  */
 export class CWSError extends Error {
-  constructor(
-    public readonly code: CWSErrorCodeType,
-    message: string,
-    public readonly cause?: unknown,
-  ) {
+  readonly code: CWSErrorCodeType;
+  readonly cause?: unknown;
+
+  constructor(code: CWSErrorCodeType, message: string, cause?: unknown) {
     super(message);
     this.name = "CWSError";
+    this.code = code;
+    this.cause = cause;
   }
 
   /**
@@ -60,7 +61,18 @@ export class CWSError extends Error {
       NETWORK_ERROR: "ネットワークエラーが発生しました",
       VALIDATION_ERROR: "拡張機能の検証に失敗しました",
     };
-    return messages[this.code] || this.message;
+    return messages[this.code] ?? this.message;
+  }
+
+  /**
+   * Convert error to JSON-serializable object
+   */
+  toJSON(): { code: CWSErrorCodeType; message: string; cause?: string } {
+    return {
+      code: this.code,
+      message: this.message,
+      cause: this.cause instanceof Error ? this.cause.message : undefined,
+    };
   }
 }
 
@@ -231,7 +243,6 @@ export interface DNRRuleCondition {
   excludedResourceTypes?: ResourceType[];
   tabIds?: number[];
   excludedTabIds?: number[];
-  [key: string]: unknown;
 }
 
 export type RequestMethod =
@@ -384,6 +395,7 @@ export interface AddonInstallListener {
   onDownloadProgress?: (install: AddonInstall) => void;
   onDownloadEnded?: (install: AddonInstall) => void;
   onDownloadFailed?: (install: AddonInstall) => void;
+  onDownloadCancelled?: (install: AddonInstall) => void;
   onInstallStarted?: (install: AddonInstall) => void;
 }
 
@@ -418,7 +430,7 @@ export interface CRXConverterModule {
     crxData: ArrayBuffer,
     extensionId: string,
     metadata: ExtensionMetadata,
-  ): ArrayBuffer | null;
+  ): Promise<ArrayBuffer | null>;
 }
 
 /**
@@ -426,6 +438,7 @@ export interface CRXConverterModule {
  */
 export interface nsIFile {
   readonly path: string;
+  readonly fileSize: number;
   clone(): nsIFile;
   append(name: string): void;
   exists(): boolean;

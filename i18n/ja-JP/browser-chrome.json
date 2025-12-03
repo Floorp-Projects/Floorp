@@ -320,5 +320,44 @@
       "noBrowsers": "外部ブラウザが検出されませんでした",
       "noValidUrl": "開く URL がありません"
     }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Floorp に追加",
+      "installing": "インストール中...",
+      "success": "追加しました！",
+      "error": "エラーが発生しました"
+    },
+    "error": {
+      "title": "インストールエラー",
+      "compatibilityNote": "この拡張機能は Firefox/Floorp と互換性がない可能性があります。",
+      "alreadyInstalled": "この拡張機能は既にインストールされています ({{name}})",
+      "downloadFailed": "CRXファイルのダウンロードに失敗しました",
+      "conversionFailed": "拡張機能の変換に失敗しました: {{error}}",
+      "conversionFailedGeneric": "CRXからXPIへの変換に失敗しました",
+      "installError": "インストールエラー: {{error}}",
+      "installFailed": "インストールに失敗しました",
+      "noData": "インストールデータが提供されていません",
+      "addonManagerUnavailable": "AddonManager が利用できません",
+      "noBrowserWindow": "インストール用のブラウザウィンドウが見つかりません",
+      "createInstallFailed": "インストールオブジェクトの作成に失敗しました",
+      "cancelledByUser": "ユーザーによりインストールがキャンセルされました",
+      "downloadCancelled": "ダウンロードがキャンセルされました",
+      "timeout": "インストールがタイムアウトしました",
+      "xpiInstallError": "XPIインストールエラー: {{error}}",
+      "errorWithCode": "インストールエラー (コード: {{code}})"
+    },
+    "installErrors": {
+      "downloadFailed": "ダウンロードに失敗しました",
+      "signatureVerifyFailed": "拡張機能の署名を検証できませんでした",
+      "corruptOrIncompatible": "拡張機能が破損しているか、互換性がありません",
+      "incompatible": "この拡張機能は Floorp と互換性がありません",
+      "blocked": "この拡張機能はブロックされています",
+      "timeout": "拡張機能のインストールがタイムアウトしました",
+      "installFailed": "拡張機能のインストールに失敗しました",
+      "parseFailed": "拡張機能を解析できませんでした",
+      "invalidFile": "不正な拡張機能ファイルです",
+      "networkError": "ネットワークエラーが発生しました"
+    }
   }
 }

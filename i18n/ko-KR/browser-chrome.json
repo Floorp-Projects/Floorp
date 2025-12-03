@@ -311,5 +311,44 @@
     "actionLabelInput": "Input",
     "actionLabelClick": "Click",
     "actionLabelSubmit": "Submit"
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Floorp에 추가",
+      "installing": "설치 중...",
+      "success": "추가됨!",
+      "error": "오류 발생"
+    },
+    "error": {
+      "title": "설치 오류",
+      "compatibilityNote": "이 확장 프로그램은 Firefox/Floorp와 호환되지 않을 수 있습니다.",
+      "alreadyInstalled": "이 확장 프로그램은 이미 설치되어 있습니다 ({{name}})",
+      "downloadFailed": "CRX 파일 다운로드 실패",
+      "conversionFailed": "확장 프로그램 변환 실패: {{error}}",
+      "conversionFailedGeneric": "CRX에서 XPI로 변환 실패",
+      "installError": "설치 오류: {{error}}",
+      "installFailed": "설치 실패",
+      "noData": "설치 데이터가 제공되지 않았습니다",
+      "addonManagerUnavailable": "AddonManager를 사용할 수 없습니다",
+      "noBrowserWindow": "설치할 브라우저 창을 찾을 수 없습니다",
+      "createInstallFailed": "설치 객체 생성 실패",
+      "cancelledByUser": "사용자에 의해 설치가 취소되었습니다",
+      "downloadCancelled": "다운로드가 취소되었습니다",
+      "timeout": "설치 시간 초과",
+      "xpiInstallError": "XPI 설치 오류: {{error}}",
+      "errorWithCode": "설치 오류 (코드: {{code}})"
+    },
+    "installErrors": {
+      "downloadFailed": "다운로드 실패",
+      "signatureVerifyFailed": "확장 프로그램 서명을 확인할 수 없습니다",
+      "corruptOrIncompatible": "확장 프로그램이 손상되었거나 호환되지 않습니다",
+      "incompatible": "이 확장 프로그램은 Floorp와 호환되지 않습니다",
+      "blocked": "이 확장 프로그램은 차단되었습니다",
+      "timeout": "확장 프로그램 설치 시간 초과",
+      "installFailed": "확장 프로그램 설치 실패",
+      "parseFailed": "확장 프로그램을 분석할 수 없습니다",
+      "invalidFile": "잘못된 확장 프로그램 파일",
+      "networkError": "네트워크 오류가 발생했습니다"
+    }
   }
 }

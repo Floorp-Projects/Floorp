@@ -28,18 +28,25 @@ import {
   CRX_DOWNLOAD_URLS,
   CRX_MAGIC,
   CRX_VERSIONS,
-  INSTALL_ERROR_MESSAGES,
+  INSTALL_ERROR_MESSAGE_KEYS,
+  CWS_I18N_KEYS,
   generateFirefoxId,
 } from "../modules/chrome-web-store/Constants.sys.mts";
+
+import type { TranslationProvider } from "../modules/i18n/I18n-Utils.sys.mts";
 
 // Lazy-loaded modules
 const lazy: {
   AddonManager?: GeckoAddonManager;
   CRXConverter?: CRXConverterModule;
+  setTimeout?: (callback: () => void, ms: number) => nsITimer;
+  clearTimeout?: (timer: nsITimer) => void;
 } = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 // Dynamically import our CRX converter
@@ -52,17 +59,88 @@ try {
   console.warn("[NRChromeWebStore] CRXConverter module not available:", e);
 }
 
+/** Maximum retry attempts for waiting i18n initialization */
+const I18N_INIT_MAX_RETRIES = 10;
+/** Delay between retries in milliseconds */
+const I18N_INIT_RETRY_DELAY = 100;
+
+/**
+ * Get translation function from I18nUtils
+ * @returns Translation function or null if not available
+ */
+function getTranslator(): TranslationProvider["t"] | null {
+  try {
+    const { I18nUtils } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+    );
+    const provider = I18nUtils.getTranslationProvider();
+    if (provider && typeof provider.t === "function") {
+      return provider.t;
+    }
+  } catch {
+    // Translation provider not available
+  }
+  return null;
+}
+
+/**
+ * Wait for i18n to be initialized with retry logic
+ */
+async function waitForI18nInit(): Promise<void> {
+  for (let i = 0; i < I18N_INIT_MAX_RETRIES; i++) {
+    if (getTranslator() !== null) {
+      return;
+    }
+    // Wait and retry
+    await new Promise((resolve) => {
+      if (lazy.setTimeout) {
+        lazy.setTimeout(resolve as () => void, I18N_INIT_RETRY_DELAY);
+      } else {
+        resolve(undefined);
+      }
+    });
+  }
+}
+
+/**
+ * Translate a key with optional variables
+ */
+function t(key: string, vars?: Record<string, string | number>): string {
+  const translator = getTranslator();
+  if (translator) {
+    const result = translator(key, vars);
+    if (typeof result === "string") {
+      return result;
+    }
+  }
+  return key;
+}
+
 export class NRChromeWebStoreParent extends JSWindowActorParent {
   async receiveMessage(message: {
     name: string;
-    data?: InstallRequest;
-  }): Promise<InstallResult | null> {
+    data?: InstallRequest | { keys: string[] };
+  }): Promise<InstallResult | Record<string, string> | null> {
     switch (message.name) {
       case "CWS:InstallExtension":
-        if (message.data) {
-          return await this.installExtension(message.data);
+        if (message.data && "extensionId" in message.data) {
+          return await this.installExtension(message.data as InstallRequest);
         }
-        return { success: false, error: "No installation data provided" };
+        return { success: false, error: t(CWS_I18N_KEYS.error.noData) };
+
+      case "CWS:GetTranslations":
+        // Wait for i18n initialization if not ready yet
+        await waitForI18nInit();
+        // Return translations for the requested keys
+        if (message.data && "keys" in message.data) {
+          const keys = (message.data as { keys: string[] }).keys;
+          const translations: Record<string, string> = {};
+          for (const key of keys) {
+            translations[key] = t(key);
+          }
+          return translations;
+        }
+        return null;
 
       default:
         return null;
@@ -73,67 +151,77 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     request: InstallRequest,
   ): Promise<InstallResult> {
     const { extensionId, metadata } = request;
+    const startTime = Date.now();
+    const log = (step: string) => {
+      console.log(`[NRChromeWebStore] [${Date.now() - startTime}ms] ${step}`);
+    };
 
-    console.log(
-      `[NRChromeWebStore] Starting installation for ${extensionId}:`,
-      metadata.name,
-    );
+    log(`Starting installation for ${extensionId}: ${metadata.name}`);
 
     try {
       // Step 1: Check if already installed
+      log("Step 1: Checking if already installed...");
       const existingAddon = await this.checkExistingAddon(extensionId);
+      log("Step 1: Done");
       if (existingAddon) {
         return {
           success: false,
-          error: `この拡張機能は既にインストールされています (${existingAddon.name})`,
+          error: t(CWS_I18N_KEYS.error.alreadyInstalled, {
+            name: existingAddon.name,
+          }),
         };
       }
 
       // Step 2: Download CRX file
-      console.log("[NRChromeWebStore] Downloading CRX file...");
+      log("Step 2: Downloading CRX file...");
       const crxData = await this.downloadCRX(extensionId);
+      log(`Step 2: Done (${crxData?.byteLength ?? 0} bytes)`);
 
       if (!crxData || crxData.byteLength === 0) {
         return {
           success: false,
-          error: "CRXファイルのダウンロードに失敗しました",
+          error: t(CWS_I18N_KEYS.error.downloadFailed),
         };
       }
 
-      console.log(`[NRChromeWebStore] Downloaded ${crxData.byteLength} bytes`);
-
-      // Step 3: Convert CRX to XPI
-      console.log("[NRChromeWebStore] Converting CRX to XPI...");
+      // Step 3: Convert CRX to XPI (async to prevent UI freezing)
+      log("Step 3: Converting CRX to XPI...");
       let xpiData: ArrayBuffer | null = null;
       try {
-        xpiData = this.convertCRXtoXPI(crxData, extensionId, metadata);
+        xpiData = await this.convertCRXtoXPI(crxData, extensionId, metadata);
+        log(`Step 3: Done (${xpiData?.byteLength ?? 0} bytes)`);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
+        log(`Step 3: Failed - ${errorMessage}`);
         return {
           success: false,
-          error: `拡張機能の変換に失敗しました: ${errorMessage}`,
+          error: t(CWS_I18N_KEYS.error.conversionFailed, {
+            error: errorMessage,
+          }),
         };
       }
 
       if (!xpiData) {
         return {
           success: false,
-          error: "CRXからXPIへの変換に失敗しました",
+          error: t(CWS_I18N_KEYS.error.conversionFailedGeneric),
         };
       }
 
       // Step 4: Install the XPI
-      console.log("[NRChromeWebStore] Installing XPI...");
+      log("Step 4: Installing XPI via AddonManager...");
       const installResult = await this.installXPI(xpiData, metadata);
+      log(`Step 4: Done - success=${installResult.success}`);
 
       return installResult;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+      log(`Installation failed: ${errorMessage}`);
       console.error("[NRChromeWebStore] Installation failed:", error);
       return {
         success: false,
-        error: `インストールエラー: ${errorMessage}`,
+        error: t(CWS_I18N_KEYS.error.installError, { error: errorMessage }),
       };
     }
   }
@@ -251,17 +339,17 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
   }
 
   /**
-   * Convert CRX to XPI format
+   * Convert CRX to XPI format (async to prevent UI freezing)
    * Uses CRXConverter module if available, falls back to inline conversion
    */
-  private convertCRXtoXPI(
+  private async convertCRXtoXPI(
     crxData: ArrayBuffer,
     extensionId: string,
     metadata: ExtensionMetadata,
-  ): ArrayBuffer | null {
+  ): Promise<ArrayBuffer | null> {
     // Use our CRX converter module if available
     if (lazy.CRXConverter) {
-      return lazy.CRXConverter.convert(crxData, extensionId, metadata);
+      return await lazy.CRXConverter.convert(crxData, extensionId, metadata);
     }
 
     // Fallback: inline conversion
@@ -327,76 +415,139 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     xpiData: ArrayBuffer,
     metadata: ExtensionMetadata,
   ): Promise<InstallResult> {
+    const startTime = Date.now();
+    const log = (step: string) => {
+      console.log(
+        `[NRChromeWebStore:installXPI] [${Date.now() - startTime}ms] ${step}`,
+      );
+    };
+
     if (!lazy.AddonManager) {
       return {
         success: false,
-        error: "AddonManager is not available",
+        error: t(CWS_I18N_KEYS.error.addonManagerUnavailable),
       };
     }
 
     try {
       // Get the browser window for the installation prompt
+      log("Getting browser window...");
       const browserWindow = this.browsingContext
         ?.topChromeWindow as Window | null;
 
       if (!browserWindow) {
         return {
           success: false,
-          error: "Could not find browser window for installation",
+          error: t(CWS_I18N_KEYS.error.noBrowserWindow),
         };
       }
 
-      console.log("[NRChromeWebStore] Creating install from ArrayBuffer...");
+      log("Creating temp XPI file...");
+      const tempFile = await this.createTempXPIFileAsync(xpiData, metadata.id);
+      log(`Temp file created: ${tempFile.path}`);
 
       // Use AddonManager.getInstallForFile for file-based installation
+      log("Calling AddonManager.getInstallForFile...");
       const install = await lazy.AddonManager.getInstallForFile(
-        this.createTempXPIFile(xpiData, metadata.id),
+        tempFile,
         "application/x-xpinstall",
       );
+      log("getInstallForFile returned");
 
       if (!install) {
         return {
           success: false,
-          error: "Failed to create installation object",
+          error: t(CWS_I18N_KEYS.error.createInstallFailed),
         };
       }
 
-      // Set up install listeners
+      // Set up install listeners with timeout
+      const INSTALL_TIMEOUT_MS = 60000; // 60 seconds timeout
+      log("Setting up install listeners...");
+
       return new Promise((resolve) => {
+        let resolved = false;
+        let timeoutId: nsITimer | null = null;
+
+        const cleanup = () => {
+          if (timeoutId && lazy.clearTimeout) {
+            lazy.clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          install.removeListener(listener);
+        };
+
+        const safeResolve = (result: InstallResult) => {
+          if (!resolved) {
+            resolved = true;
+            log(`Resolved with success=${result.success}`);
+            cleanup();
+            resolve(result);
+          }
+        };
+
         const listener: AddonInstallListener = {
+          onInstallStarted: () => {
+            log("Event: onInstallStarted");
+          },
           onInstallEnded: (_install, addon) => {
-            console.log(
-              `[NRChromeWebStore] Installation completed: ${addon.id}`,
-            );
-            resolve({
+            log(`Event: onInstallEnded - ${addon.id}`);
+            safeResolve({
               success: true,
               addonId: addon.id,
             });
           },
 
           onInstallFailed: (installObj) => {
-            console.error(
-              `[NRChromeWebStore] Installation failed: ${installObj.error}`,
-            );
-            resolve({
+            log(`Event: onInstallFailed - ${installObj.error}`);
+            safeResolve({
               success: false,
               error: this.getInstallErrorMessage(installObj.error ?? -7),
             });
           },
 
           onInstallCancelled: () => {
-            console.log("[NRChromeWebStore] Installation cancelled by user");
-            resolve({
+            log("Event: onInstallCancelled");
+            safeResolve({
               success: false,
-              error: "ユーザーによりインストールがキャンセルされました",
+              error: t(CWS_I18N_KEYS.error.cancelledByUser),
+            });
+          },
+
+          onDownloadFailed: (installObj) => {
+            log(`Event: onDownloadFailed - ${installObj.error}`);
+            safeResolve({
+              success: false,
+              error: this.getInstallErrorMessage(installObj.error ?? -7),
+            });
+          },
+
+          onDownloadCancelled: () => {
+            log("Event: onDownloadCancelled");
+            safeResolve({
+              success: false,
+              error: t(CWS_I18N_KEYS.error.downloadCancelled),
             });
           },
         };
 
         install.addListener(listener);
+        log("Listeners added, calling install.install()...");
+
+        // Set up timeout to prevent hanging
+        if (lazy.setTimeout) {
+          timeoutId = lazy.setTimeout(() => {
+            log("TIMEOUT reached");
+            safeResolve({
+              success: false,
+              error: t(CWS_I18N_KEYS.error.timeout),
+            });
+          }, INSTALL_TIMEOUT_MS);
+        }
 
         // Trigger the installation
         install.install();
+        log("install.install() called");
       });
     } catch (error) {
       const errorMessage =
@@ -404,42 +555,29 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
       console.error("[NRChromeWebStore] XPI installation error:", error);
       return {
         success: false,
-        error: `XPIインストールエラー: ${errorMessage}`,
+        error: t(CWS_I18N_KEYS.error.xpiInstallError, { error: errorMessage }),
       };
     }
   }
 
   /**
-   * Create a temporary XPI file from the converted extension data
+   * Create a temporary XPI file from the converted extension data (async for better performance)
    * @param xpiData - XPI file data as ArrayBuffer
    * @param extensionId - Chrome extension ID (used for filename)
    * @returns nsIFile pointing to the temporary file
    */
-  private createTempXPIFile(
+  private async createTempXPIFileAsync(
     xpiData: ArrayBuffer,
     extensionId: string,
-  ): nsIFile {
+  ): Promise<nsIFile> {
     // Create a temporary file for the XPI
     const tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
     const tempFile = tempDir.clone();
     tempFile.append(`floorp-cws-${extensionId}.xpi`);
 
-    // Write the XPI data to the file
-    const outputStream = Cc[
-      "@mozilla.org/network/file-output-stream;1"
-    ].createInstance(Ci.nsIFileOutputStream);
-
-    outputStream.init(tempFile, 0x02 | 0x08 | 0x20, 0o644, 0); // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-
-    const binaryOutputStream = Cc[
-      "@mozilla.org/binaryoutputstream;1"
-    ].createInstance(Ci.nsIBinaryOutputStream);
-    binaryOutputStream.setOutputStream(outputStream);
-
+    // Use IOUtils for fast async write
     const uint8Array = new Uint8Array(xpiData);
-    binaryOutputStream.writeByteArray(Array.from(uint8Array));
-    binaryOutputStream.close();
-    outputStream.close();
+    await IOUtils.write(tempFile.path, uint8Array);
 
     console.log(`[NRChromeWebStore] Created temp XPI file: ${tempFile.path}`);
 
@@ -452,9 +590,10 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
    * @returns Localized error message
    */
   private getInstallErrorMessage(errorCode: number): string {
-    return (
-      INSTALL_ERROR_MESSAGES[errorCode] ||
-      `インストールエラー (コード: ${errorCode})`
-    );
+    const key = INSTALL_ERROR_MESSAGE_KEYS[errorCode];
+    if (key) {
+      return t(key);
+    }
+    return t(CWS_I18N_KEYS.error.errorWithCode, { code: String(errorCode) });
   }
 }

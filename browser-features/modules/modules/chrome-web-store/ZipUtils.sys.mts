@@ -21,10 +21,12 @@ import { CWSError, CWSErrorCode } from "./types.ts";
 // Constants
 // =============================================================================
 
-/** Default compression level for ZIP entries */
-const COMPRESSION_DEFAULT = 8; // DEFLATE
+const LOG_PREFIX = "[ZipUtils]";
 
-/** File open flags */
+/** Default compression level (DEFLATE) */
+const COMPRESSION_DEFAULT = 0;
+
+/** File open flags for ZIP writer */
 const PR_RDWR = 0x04;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE = 0x20;
@@ -79,7 +81,7 @@ export function readManifestFromZip(
 ): ChromeManifest | null {
   try {
     if (!zipReader.hasEntry("manifest.json")) {
-      console.error("[ZipUtils] No manifest.json found in ZIP");
+      console.error(`${LOG_PREFIX} No manifest.json found in ZIP`);
       return null;
     }
 
@@ -87,7 +89,7 @@ export function readManifestFromZip(
     const manifestText = readInputStream(manifestStream);
     return JSON.parse(manifestText) as ChromeManifest;
   } catch (error) {
-    console.error("[ZipUtils] Failed to read manifest.json:", error);
+    console.error(`${LOG_PREFIX} Failed to read manifest.json:`, error);
     return null;
   }
 }
@@ -155,7 +157,7 @@ export function readAllZipEntries(zipReader: nsIZipReader): ZipEntry[] {
         });
       }
     } catch (error) {
-      console.warn(`[ZipUtils] Failed to read entry ${entryName}:`, error);
+      console.warn(`${LOG_PREFIX} Failed to read entry ${entryName}:`, error);
     }
   }
 
@@ -317,7 +319,7 @@ function copyZipEntry(
       false,
     );
   } catch (error) {
-    console.warn(`[ZipUtils] Failed to copy entry ${entryName}:`, error);
+    console.warn(`${LOG_PREFIX} Failed to copy entry ${entryName}:`, error);
   }
 }
 

@@ -21,6 +21,7 @@ import type {
 import {
   isChromeWebStoreUrl,
   extractExtensionId,
+  CWS_I18N_KEYS,
 } from "../modules/chrome-web-store/Constants.sys.mts";
 
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
@@ -42,6 +43,14 @@ const ERROR_NOTICE_TIMEOUT = 10000;
 
 /** Button states */
 type ButtonState = "default" | "installing" | "success" | "error";
+
+/**
+ * Cache for translations to avoid repeated lookups
+ * Content scripts can't directly access chrome-only I18nUtils,
+ * so we request translations from the parent process
+ */
+let translationCache: Record<string, string> = {};
+let translationCacheInitialized = false;
 
 // =============================================================================
 // DOM Structure-based Selectors (Language-independent)
@@ -87,6 +96,75 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private hiddenAddToChromeButton = false;
 
   /**
+   * Get a translation for a key, using cache or requesting from parent
+   * @param key - Translation key
+   * @param vars - Optional variables for interpolation
+   * @returns Translated string
+   */
+  private t(key: string, vars?: Record<string, string | number>): string {
+    // Check cache first
+    if (translationCache[key]) {
+      let result = translationCache[key];
+      if (vars) {
+        for (const [k, v] of Object.entries(vars)) {
+          result = result.replace(
+            new RegExp(`\\{\\{${k}\\}\\}`, "g"),
+            String(v),
+          );
+        }
+      }
+      return result;
+    }
+    return key;
+  }
+
+  /**
+   * Initialize translation cache by requesting from parent process
+   * Retries if translations are not available yet (i18n not initialized)
+   */
+  private async initTranslations(retryCount = 0): Promise<void> {
+    if (translationCacheInitialized) return;
+
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 200;
+
+    try {
+      // Request all CWS translations from parent
+      const translations = (await this.sendQuery("CWS:GetTranslations", {
+        keys: [
+          CWS_I18N_KEYS.button.addToFloorp,
+          CWS_I18N_KEYS.button.installing,
+          CWS_I18N_KEYS.button.success,
+          CWS_I18N_KEYS.button.error,
+          CWS_I18N_KEYS.error.title,
+          CWS_I18N_KEYS.error.compatibilityNote,
+          CWS_I18N_KEYS.error.installFailed,
+        ],
+      })) as Record<string, string> | null;
+
+      if (translations) {
+        // Check if translations are actually loaded (not just keys returned)
+        const firstKey = CWS_I18N_KEYS.button.addToFloorp;
+        if (translations[firstKey] && translations[firstKey] !== firstKey) {
+          translationCache = { ...translationCache, ...translations };
+          translationCacheInitialized = true;
+        } else if (retryCount < MAX_RETRIES) {
+          // i18n not initialized yet, retry after delay
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+          return this.initTranslations(retryCount + 1);
+        }
+      }
+    } catch {
+      // Translation request failed, retry if possible
+      if (retryCount < MAX_RETRIES) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+        return this.initTranslations(retryCount + 1);
+      }
+      console.debug("[NRChromeWebStore] Failed to load translations");
+    }
+  }
+
+  /**
    * Called when the actor is created
    */
   actorCreated(): void {
@@ -94,6 +172,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       "[NRChromeWebStore] Child actor created for:",
       this.contentWindow?.location?.href,
     );
+    // Initialize translations asynchronously
+    this.initTranslations().catch(() => {});
   }
 
   /**
@@ -428,32 +508,40 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return false;
     }
 
-    // Check if there's a link in the section that contains the current extension ID
-    // This confirms the page content matches the URL
+    // Check if the h1 is in a section
     const section = visibleH1.closest("section");
     if (!section) {
       console.debug("[NRChromeWebStore] h1 not in section, page not ready");
       return false;
     }
 
-    // Look for any link or meta that contains the extension ID
-    // The section should have a link to the extension or contain the extension ID
-    const sectionHtml = String(section.innerHTML);
-    if (!sectionHtml.includes(extensionId)) {
-      console.debug(
-        "[NRChromeWebStore] Section does not contain extension ID, page not ready",
-        extensionId,
-      );
-      return false;
-    }
-
-    // Also verify the "Add to Chrome" button is visible and ready
+    // Verify the "Add to Chrome" button is visible and ready
     const button = section.querySelector("button");
     if (!button || !this.isElementVisible(button)) {
       console.debug(
         "[NRChromeWebStore] No visible button in section, page not ready",
       );
       return false;
+    }
+
+    // For SPA navigation: check if there are any links on the page containing the extension ID
+    // This helps verify the page content matches the URL
+    // Check the entire page for the extension ID (in links, report URLs, etc.)
+    const allLinks = doc.querySelectorAll('a[href*="' + extensionId + '"]');
+    if (allLinks.length === 0) {
+      // Fallback: check if the main content area contains any reference to the extension
+      // The "詳細" section typically has a "懸念事項を報告" link with the extension ID
+      const mainContent = doc.querySelector("main");
+      if (mainContent) {
+        const mainHtml = String(mainContent.innerHTML);
+        if (!mainHtml.includes(extensionId)) {
+          console.debug(
+            "[NRChromeWebStore] Page does not contain extension ID, page not ready",
+            extensionId,
+          );
+          return false;
+        }
+      }
     }
 
     return true;
@@ -718,11 +806,12 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const button = doc.createElement("button");
     button.id = "floorp-add-extension-btn";
     button.className = "floorp-add-button";
+    const buttonText = this.t(CWS_I18N_KEYS.button.addToFloorp);
     button.innerHTML = `
       <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
       </svg>
-      <span>Floorp に追加</span>
+      <span>${this.escapeHtml(buttonText)}</span>
     `;
 
     button.addEventListener("click", () => this.handleInstallClick());
@@ -758,7 +847,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         console.log("[NRChromeWebStore] Extension installed successfully");
       } else {
         this.updateButtonState(button, "error");
-        this.showError(result.error || "インストールに失敗しました");
+        this.showError(
+          result.error || this.t(CWS_I18N_KEYS.error.installFailed),
+        );
         console.error("[NRChromeWebStore] Installation failed:", result.error);
       }
     } catch (error) {
@@ -791,45 +882,53 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     // Update content and class based on state
     switch (state) {
-      case "installing":
+      case "installing": {
+        const installingText = this.t(CWS_I18N_KEYS.button.installing);
         button.classList.add("floorp-add-button--installing");
         button.innerHTML = `
           <div class="floorp-add-button__spinner"></div>
-          <span>インストール中...</span>
+          <span>${this.escapeHtml(installingText)}</span>
         `;
         (button as HTMLButtonElement).disabled = true;
         break;
+      }
 
-      case "success":
+      case "success": {
+        const successText = this.t(CWS_I18N_KEYS.button.success);
         button.classList.add("floorp-add-button--success");
         button.innerHTML = `
           <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
           </svg>
-          <span>追加しました！</span>
+          <span>${this.escapeHtml(successText)}</span>
         `;
         (button as HTMLButtonElement).disabled = true;
         break;
+      }
 
-      case "error":
+      case "error": {
+        const errorText = this.t(CWS_I18N_KEYS.button.error);
         button.classList.add("floorp-add-button--error");
         button.innerHTML = `
           <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
           </svg>
-          <span>エラーが発生しました</span>
+          <span>${this.escapeHtml(errorText)}</span>
         `;
         (button as HTMLButtonElement).disabled = true;
         break;
+      }
 
-      default:
+      default: {
+        const defaultText = this.t(CWS_I18N_KEYS.button.addToFloorp);
         button.innerHTML = `
           <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
           </svg>
-          <span>Floorp に追加</span>
+          <span>${this.escapeHtml(defaultText)}</span>
         `;
         (button as HTMLButtonElement).disabled = false;
+      }
     }
   }
 
@@ -969,6 +1068,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       existing.remove();
     }
 
+    const errorTitle = this.t(CWS_I18N_KEYS.error.title);
+    const compatibilityNote = this.t(CWS_I18N_KEYS.error.compatibilityNote);
+
     const notice = doc.createElement("div");
     notice.id = "floorp-cws-error";
     notice.className = "floorp-cws-notice floorp-cws-notice--error";
@@ -977,10 +1079,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
       </svg>
       <div>
-        <strong>インストールエラー</strong><br>
+        <strong>${this.escapeHtml(errorTitle)}</strong><br>
         ${this.escapeHtml(message)}
         <br><br>
-        <small>この拡張機能は Firefox/Floorp と互換性がない可能性があります。</small>
+        <small>${this.escapeHtml(compatibilityNote)}</small>
       </div>
     `;
 

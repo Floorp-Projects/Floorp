@@ -16,6 +16,12 @@ import {
 import type { ChromeManifest, TransformOptions } from "./types.ts";
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+const LOG_PREFIX = "[ManifestTransformer]";
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -78,16 +84,11 @@ export function transformManifestFull(
   removeUnsupportedFields(transformed);
 
   console.log(
-    "[ManifestTransformer] Transformed:",
-    transformed.name,
-    "v" + transformed.version,
+    `${LOG_PREFIX} Transformed: ${transformed.name} v${transformed.version}`,
   );
 
   if (removedPermissions.length > 0) {
-    console.log(
-      "[ManifestTransformer] Removed permissions:",
-      removedPermissions,
-    );
+    console.log(`${LOG_PREFIX} Removed permissions:`, removedPermissions);
   }
 
   return { manifest: transformed, warnings, removedPermissions };
@@ -123,7 +124,7 @@ export function validateManifest(
   // Validate manifest version
   if (m.manifest_version !== 2 && m.manifest_version !== 3) {
     console.warn(
-      `[ManifestTransformer] Unsupported manifest version: ${m.manifest_version}`,
+      `${LOG_PREFIX} Unsupported manifest version: ${m.manifest_version}`,
     );
     return false;
   }
@@ -185,9 +186,7 @@ function transformMV3Background(manifest: ChromeManifest): string | null {
     return null;
   }
 
-  console.log(
-    "[ManifestTransformer] Converting service_worker to background scripts",
-  );
+  console.log(`${LOG_PREFIX} Converting service_worker to background scripts`);
 
   const serviceWorker = manifest.background.service_worker;
 
@@ -202,6 +201,7 @@ function transformMV3Background(manifest: ChromeManifest): string | null {
 /**
  * Handle MV3 web_accessible_resources format
  * MV3 uses objects with resources/matches, MV2 uses flat string array
+ * Also converts Chrome extension_ids to Firefox-compatible format
  */
 function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
   const resources = manifest.web_accessible_resources;
@@ -216,11 +216,40 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
     return;
   }
 
+  // Transform extension_ids to Firefox-compatible format
+  // Chrome uses bare extension IDs (e.g., "kjchkpkjpiloipaonppkmepcbhcncedo")
+  // Firefox requires "*" or addon IDs matching specific patterns:
+  // - UUID format: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+  // - Email-like format: name@domain
+  for (const entry of resources as Array<{
+    resources: string[];
+    matches?: string[];
+    extension_ids?: string[];
+  }>) {
+    if (entry.extension_ids && Array.isArray(entry.extension_ids)) {
+      entry.extension_ids = entry.extension_ids.map((id) => {
+        // Keep "*" as-is (wildcard, allowed in Firefox)
+        if (id === "*") {
+          return id;
+        }
+        // Check if already in Firefox-compatible format
+        if (
+          id.includes("@") ||
+          /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i.test(
+            id,
+          )
+        ) {
+          return id;
+        }
+        // Convert Chrome extension ID to Firefox format
+        return `${id}${EXTENSION_ID_SUFFIX}`;
+      });
+      console.log(`${LOG_PREFIX} Converted extension_ids to Firefox format`);
+    }
+  }
+
   // Firefox 101+ supports MV3 web_accessible_resources format
-  // We keep it as-is for modern Firefox versions
-  console.log(
-    "[ManifestTransformer] Keeping MV3 web_accessible_resources format",
-  );
+  console.log(`${LOG_PREFIX} Keeping MV3 web_accessible_resources format`);
 }
 
 /**
@@ -243,7 +272,7 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
     const removedCount = originalPerms.length - manifest.permissions.length;
     if (removedCount > 0) {
       console.log(
-        `[ManifestTransformer] Removed ${removedCount} unsupported permission(s)`,
+        `${LOG_PREFIX} Removed ${removedCount} unsupported permission(s)`,
       );
     }
   }
@@ -263,7 +292,7 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
     const removedCount = originalCount - manifest.optional_permissions.length;
     if (removedCount > 0) {
       console.log(
-        `[ManifestTransformer] Removed ${removedCount} unsupported optional_permission(s)`,
+        `${LOG_PREFIX} Removed ${removedCount} unsupported optional_permission(s)`,
       );
     }
   }
@@ -278,19 +307,19 @@ function removeUnsupportedFields(manifest: ChromeManifest): void {
   // Remove update_url (Chrome specific)
   if ("update_url" in manifest) {
     delete manifest.update_url;
-    console.debug("[ManifestTransformer] Removed update_url");
+    console.debug(`${LOG_PREFIX} Removed update_url`);
   }
 
   // Remove key (used for Chrome extension ID)
   if ("key" in manifest) {
     delete manifest.key;
-    console.debug("[ManifestTransformer] Removed key");
+    console.debug(`${LOG_PREFIX} Removed key`);
   }
 
   // Remove differential_fingerprint (Chrome specific)
   if ("differential_fingerprint" in manifest) {
     delete manifest.differential_fingerprint;
-    console.debug("[ManifestTransformer] Removed differential_fingerprint");
+    console.debug(`${LOG_PREFIX} Removed differential_fingerprint`);
   }
 }
 

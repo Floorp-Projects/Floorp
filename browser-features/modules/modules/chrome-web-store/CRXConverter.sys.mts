@@ -12,6 +12,8 @@
  * - Transform manifest.json for Firefox compatibility
  * - Sanitize DNR rules
  * - Repack as XPI file
+ *
+ * Uses fflate for high-performance ZIP processing
  */
 
 import type {
@@ -32,39 +34,59 @@ import {
   isJavaScriptFile,
   mightContainUnsupportedPatterns,
 } from "./CodeValidator.sys.mts";
-import {
-  writeArrayBufferToFile,
-  readFileToArrayBuffer,
-  readInputStreamToBuffer,
-  createInputStream,
-  createUniqueTempFile,
-  safeRemoveFile,
-} from "./FileUtils.sys.mts";
+import { unzipSync, zipSync, type Unzipped } from "fflate/browser";
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const LOG_PREFIX = "[CRXConverter]";
+
+/** Number of files to process before yielding to event loop */
+const YIELD_INTERVAL = 50;
+
+/** Default conversion options */
+const DEFAULT_OPTIONS: Required<ConversionOptions> = {
+  validateCode: true,
+  sanitizeDNR: true,
+  minGeckoVersion: "115.0",
+} as const;
 
 // =============================================================================
 // Types
 // =============================================================================
 
-interface FileEntry {
-  name: string;
-  data: ArrayBuffer;
-}
-
-interface ModifyManifestResult {
+interface ProcessZipResult {
   modifiedZip: ArrayBuffer | null;
   originalManifest: ChromeManifest | null;
   warnings: string[];
 }
 
+type LogFunction = (step: string) => void;
+
 // =============================================================================
-// Default Options
+// Utilities
 // =============================================================================
 
-const DEFAULT_OPTIONS: Required<ConversionOptions> = {
-  validateCode: true,
-  sanitizeDNR: true,
-  minGeckoVersion: "115.0",
-};
+/**
+ * Yield to the event loop to prevent UI freezing during heavy operations
+ * Uses main thread dispatch for proper browser integration
+ */
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    Services.tm.dispatchToMainThread(() => resolve());
+  });
+}
+
+/**
+ * Create a logging function with timing information
+ */
+function createLogger(): LogFunction {
+  const startTime = Date.now();
+  return (step: string) => {
+    console.log(`${LOG_PREFIX} [${Date.now() - startTime}ms] ${step}`);
+  };
+}
 
 // =============================================================================
 // CRXConverter Class
@@ -74,7 +96,7 @@ const DEFAULT_OPTIONS: Required<ConversionOptions> = {
  * Converter for Chrome CRX to Firefox XPI format
  */
 export class CRXConverterClass {
-  private options: Required<ConversionOptions>;
+  private readonly options: Required<ConversionOptions>;
 
   constructor(options: ConversionOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
@@ -85,21 +107,24 @@ export class CRXConverterClass {
    * @param crxData - Raw CRX file data
    * @param extensionId - Chrome extension ID
    * @param metadata - Extension metadata
-   * @returns Conversion result
+   * @returns Conversion result with XPI data or error
    */
-  convert(
+  async convert(
     crxData: ArrayBuffer,
     extensionId: string,
     metadata: ExtensionMetadata,
-  ): ConversionResult {
+  ): Promise<ConversionResult> {
     const warnings: string[] = [];
+    const log = createLogger();
 
     try {
-      console.log(
-        `[CRXConverter] Starting conversion for ${extensionId} (${metadata.name})`,
-      );
+      log(`Starting conversion for ${extensionId} (${metadata.name})`);
+
+      // Yield before heavy operation
+      await yieldToEventLoop();
 
       // Step 1: Parse CRX header and extract ZIP
+      log("Extracting ZIP from CRX...");
       const zipData = extractZipFromCRX(crxData);
       if (!zipData) {
         throw new CWSError(
@@ -108,16 +133,23 @@ export class CRXConverterClass {
         );
       }
 
-      console.log(`[CRXConverter] Extracted ZIP: ${zipData.byteLength} bytes`);
+      log(`Extracted ZIP: ${zipData.byteLength} bytes`);
 
-      // Step 2: Parse and transform the manifest
-      const result = this.processZipContents(zipData, extensionId);
+      // Yield before heavy ZIP processing
+      await yieldToEventLoop();
+
+      // Step 2: Parse and transform the manifest using fflate
+      log("Processing ZIP contents with fflate...");
+      const result = await this.processZipContentsWithFflate(
+        zipData,
+        extensionId,
+        log,
+      );
+      log("ZIP processing complete");
 
       if (!result.modifiedZip) {
         // Return original ZIP if modification failed but no error thrown
-        console.warn(
-          "[CRXConverter] Could not modify manifest, using original ZIP",
-        );
+        log("Could not modify manifest, using original ZIP");
         return {
           success: true,
           xpiData: zipData,
@@ -127,9 +159,8 @@ export class CRXConverterClass {
 
       warnings.push(...result.warnings);
 
-      console.log(
-        "[CRXConverter] Conversion complete. Manifest version:",
-        result.originalManifest?.manifest_version,
+      log(
+        `Conversion complete. Manifest version: ${result.originalManifest?.manifest_version}`,
       );
 
       return {
@@ -139,7 +170,8 @@ export class CRXConverterClass {
         warnings,
       };
     } catch (error) {
-      console.error("[CRXConverter] Conversion failed:", error);
+      log(`Conversion failed: ${error}`);
+      console.error(`${LOG_PREFIX} Conversion failed:`, error);
 
       if (error instanceof CWSError) {
         return { success: false, error, warnings };
@@ -158,156 +190,151 @@ export class CRXConverterClass {
   }
 
   /**
-   * Process ZIP contents: extract, validate, transform, and repack
+   * Process ZIP contents using fflate for high performance
    */
-  private processZipContents(
+  private async processZipContentsWithFflate(
     zipData: ArrayBuffer,
     extensionId: string,
-  ): ModifyManifestResult {
+    log: LogFunction,
+  ): Promise<ProcessZipResult> {
     const warnings: string[] = [];
-    let inputFile: nsIFile | null = null;
-    let outputFile: nsIFile | null = null;
 
-    try {
-      // Create temporary file for input ZIP
-      inputFile = createUniqueTempFile(`crx-input-${extensionId}`, "zip");
-      writeArrayBufferToFile(inputFile, zipData);
+    // Unzip using fflate
+    log("Unzipping with fflate...");
+    const zipBytes = new Uint8Array(zipData);
+    const unzipped = unzipSync(zipBytes);
+    const entryCount = Object.keys(unzipped).length;
+    log(`Unzipped ${entryCount} entries`);
 
-      // Open and read the ZIP
-      const zipReader = this.openZipReader(inputFile);
-      const { fileEntries, manifestContent, dnrRuleFiles } =
-        this.extractZipEntries(zipReader, warnings);
-      zipReader.close();
+    // Yield after unzip
+    await yieldToEventLoop();
 
-      // Clean up input file
-      safeRemoveFile(inputFile);
-      inputFile = null;
-
-      if (!manifestContent) {
-        throw new CWSError(
-          CWSErrorCode.INVALID_MANIFEST,
-          "No manifest.json found in extension",
-        );
-      }
-
-      // Parse and validate manifest
-      const parsedManifest = this.parseManifest(manifestContent);
-      if (!parsedManifest) {
-        throw new CWSError(
-          CWSErrorCode.INVALID_MANIFEST,
-          "Invalid manifest.json structure",
-        );
-      }
-
-      // Transform manifest for Firefox
-      const firefoxManifest = transformManifest(parsedManifest, extensionId);
-
-      // Create output XPI
-      outputFile = createUniqueTempFile(`xpi-output-${extensionId}`, "xpi");
-      this.writeXpiFile(outputFile, fileEntries, firefoxManifest, dnrRuleFiles);
-
-      // Read the output XPI
-      const modifiedZip = readFileToArrayBuffer(outputFile);
-
-      // Clean up output file
-      safeRemoveFile(outputFile);
-      outputFile = null;
-
-      return {
-        modifiedZip,
-        originalManifest: parsedManifest,
-        warnings,
-      };
-    } finally {
-      // Ensure cleanup
-      if (inputFile) safeRemoveFile(inputFile);
-      if (outputFile) safeRemoveFile(outputFile);
+    // Read manifest.json
+    const manifestBytes = unzipped["manifest.json"];
+    if (!manifestBytes) {
+      throw new CWSError(
+        CWSErrorCode.INVALID_MANIFEST,
+        "No manifest.json found in extension",
+      );
     }
-  }
 
-  /**
-   * Open a ZIP file for reading
-   */
-  private openZipReader(file: nsIFile): nsIZipReader {
-    const ZipReader = Components.Constructor(
-      "@mozilla.org/libjar/zip-reader;1",
-      "nsIZipReader",
-      "open",
-    );
-    return new ZipReader(file) as nsIZipReader;
-  }
+    const manifestContent = new TextDecoder().decode(manifestBytes);
 
-  /**
-   * Extract all entries from a ZIP file
-   */
-  private extractZipEntries(
-    zipReader: nsIZipReader,
-    _warnings: string[],
-  ): {
-    fileEntries: FileEntry[];
-    manifestContent: string | null;
-    dnrRuleFiles: Set<string>;
-  } {
-    const fileEntries: FileEntry[] = [];
-    let manifestContent: string | null = null;
-    const dnrRuleFiles = new Set<string>();
-    const entries = zipReader.findEntries("*");
+    // Parse and validate manifest
+    log("Parsing manifest...");
+    const parsedManifest = this.parseManifest(manifestContent);
+    if (!parsedManifest) {
+      throw new CWSError(
+        CWSErrorCode.INVALID_MANIFEST,
+        "Invalid manifest.json structure",
+      );
+    }
 
-    while (entries.hasMore()) {
-      const entryName = entries.getNext();
-      const entry = zipReader.getEntry(entryName);
+    // Transform manifest for Firefox
+    log("Transforming manifest for Firefox...");
+    const firefoxManifest = transformManifest(parsedManifest, extensionId);
+    log("Manifest transformed");
 
-      // Skip directories
-      if (!entry || entry.isDirectory || entryName.endsWith("/")) {
-        continue;
+    // Identify DNR rule files
+    const dnrRuleFiles = this.identifyDNRRuleFiles(parsedManifest);
+
+    // Yield before processing files
+    await yieldToEventLoop();
+
+    // Process and create new ZIP
+    log("Creating output XPI...");
+    const outputFiles: Unzipped = {};
+
+    // Add transformed manifest
+    const manifestJson = JSON.stringify(firefoxManifest, null, 2);
+    outputFiles["manifest.json"] = new TextEncoder().encode(manifestJson);
+
+    // Process other files
+    let processedCount = 0;
+    for (const [filename, data] of Object.entries(unzipped)) {
+      if (filename === "manifest.json") {
+        continue; // Already added transformed version
       }
 
-      const inputStream = zipReader.getInputStream(entryName);
-      const buffer = readInputStreamToBuffer(inputStream);
-
-      if (entryName === "manifest.json") {
-        manifestContent = new TextDecoder().decode(new Uint8Array(buffer));
-
-        // Check for DNR rule files
-        try {
-          const manifest = JSON.parse(manifestContent);
-          const dnr = manifest.declarative_net_request;
-          if (dnr?.rule_resources) {
-            for (const resource of dnr.rule_resources) {
-              if (resource.path) {
-                // Normalize path (remove leading ./)
-                const normalizedPath = resource.path.replace(/^\.\//, "");
-                dnrRuleFiles.add(normalizedPath);
-                dnrRuleFiles.add(resource.path);
-              }
-            }
-          }
-        } catch {
-          // Ignore parse errors here, will be caught later
-        }
-      } else if (this.options.validateCode && isJavaScriptFile(entryName)) {
-        // Validate JavaScript files
-        const content = new TextDecoder().decode(new Uint8Array(buffer));
-
-        // Quick check before full validation
+      // Validate JavaScript files if enabled
+      if (this.options.validateCode && isJavaScriptFile(filename)) {
+        const content = new TextDecoder().decode(data);
         if (mightContainUnsupportedPatterns(content)) {
-          const error = validateSourceCode(entryName, content);
+          const error = validateSourceCode(filename, content);
           if (error) {
-            console.error(
-              `[CRXConverter] Validation failed for ${entryName}: ${error}`,
-            );
             throw new CWSError(
               CWSErrorCode.UNSUPPORTED_CODE,
-              `${error} in ${entryName}`,
+              `${error} in ${filename}`,
             );
           }
         }
       }
 
-      fileEntries.push({ name: entryName, data: buffer });
+      // Sanitize DNR rules if needed
+      if (this.options.sanitizeDNR && dnrRuleFiles.has(filename)) {
+        try {
+          const jsonString = new TextDecoder().decode(data);
+          const rules = JSON.parse(jsonString) as unknown[];
+          const sanitizedRules = sanitizeDNRRules(rules);
+          const sanitizedJson = JSON.stringify(sanitizedRules, null, 2);
+          outputFiles[filename] = new TextEncoder().encode(sanitizedJson);
+          console.log(`${LOG_PREFIX} Sanitized DNR rules: ${filename}`);
+        } catch (error) {
+          console.error(
+            `${LOG_PREFIX} Failed to sanitize DNR rules for ${filename}:`,
+            error,
+          );
+          // Fallback to original
+          outputFiles[filename] = data;
+        }
+      } else {
+        // Copy as-is
+        outputFiles[filename] = data;
+      }
+
+      processedCount++;
+
+      // Yield periodically to prevent UI freezing
+      if (processedCount % YIELD_INTERVAL === 0) {
+        await yieldToEventLoop();
+      }
     }
 
-    return { fileEntries, manifestContent, dnrRuleFiles };
+    log(`Processed ${processedCount} entries`);
+
+    // Yield before final zip
+    await yieldToEventLoop();
+
+    // Create output ZIP using fflate (no compression for speed)
+    log("Zipping output XPI with fflate...");
+    const outputZip = zipSync(outputFiles, { level: 0 }); // No compression
+    log(`Output XPI size: ${outputZip.byteLength} bytes`);
+
+    return {
+      modifiedZip: outputZip.buffer as ArrayBuffer,
+      originalManifest: parsedManifest,
+      warnings,
+    };
+  }
+
+  /**
+   * Identify DNR rule files from manifest
+   */
+  private identifyDNRRuleFiles(manifest: ChromeManifest): Set<string> {
+    const dnrRuleFiles = new Set<string>();
+    const dnr = manifest.declarative_net_request;
+
+    if (dnr?.rule_resources) {
+      for (const resource of dnr.rule_resources) {
+        if (resource.path) {
+          const normalizedPath = resource.path.replace(/^\.\//, "");
+          dnrRuleFiles.add(normalizedPath);
+          dnrRuleFiles.add(resource.path);
+        }
+      }
+    }
+
+    return dnrRuleFiles;
   }
 
   /**
@@ -321,105 +348,9 @@ export class CRXConverterClass {
       }
       return parsed;
     } catch (error) {
-      console.error("[CRXConverter] Failed to parse manifest:", error);
+      console.error(`${LOG_PREFIX} Failed to parse manifest:`, error);
       return null;
     }
-  }
-
-  /**
-   * Write the XPI file with transformed contents
-   */
-  private writeXpiFile(
-    outputFile: nsIFile,
-    fileEntries: FileEntry[],
-    manifest: ChromeManifest,
-    dnrRuleFiles: Set<string>,
-  ): void {
-    const zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(
-      Ci.nsIZipWriter,
-    );
-
-    // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-    zipWriter.open(outputFile, 0x02 | 0x08 | 0x20);
-
-    try {
-      // Write transformed manifest first
-      const manifestBytes = new TextEncoder().encode(
-        JSON.stringify(manifest, null, 2),
-      );
-      const manifestStream = createInputStream(manifestBytes);
-      zipWriter.addEntryStream(
-        "manifest.json",
-        Date.now() * 1000,
-        Ci.nsIZipWriter.COMPRESSION_DEFAULT as number,
-        manifestStream,
-        false,
-      );
-
-      // Write other files
-      for (const entry of fileEntries) {
-        if (entry.name === "manifest.json") {
-          continue; // Already written
-        }
-
-        if (this.options.sanitizeDNR && dnrRuleFiles.has(entry.name)) {
-          this.writeSanitizedDNREntry(zipWriter, entry);
-        } else {
-          this.writeEntry(zipWriter, entry);
-        }
-      }
-    } finally {
-      zipWriter.close();
-    }
-  }
-
-  /**
-   * Write a sanitized DNR rules entry
-   */
-  private writeSanitizedDNREntry(
-    zipWriter: nsIZipWriter,
-    entry: FileEntry,
-  ): void {
-    try {
-      const jsonString = new TextDecoder().decode(new Uint8Array(entry.data));
-      const rules = JSON.parse(jsonString);
-      const sanitizedRules = sanitizeDNRRules(rules);
-      const sanitizedBytes = new TextEncoder().encode(
-        JSON.stringify(sanitizedRules, null, 2),
-      );
-      const stream = createInputStream(sanitizedBytes);
-
-      zipWriter.addEntryStream(
-        entry.name,
-        Date.now() * 1000,
-        Ci.nsIZipWriter.COMPRESSION_DEFAULT as number,
-        stream,
-        false,
-      );
-
-      console.log(`[CRXConverter] Sanitized DNR rules: ${entry.name}`);
-    } catch (error) {
-      console.error(
-        `[CRXConverter] Failed to sanitize DNR rules for ${entry.name}:`,
-        error,
-      );
-      // Fallback to original file
-      this.writeEntry(zipWriter, entry);
-    }
-  }
-
-  /**
-   * Write a file entry as-is
-   */
-  private writeEntry(zipWriter: nsIZipWriter, entry: FileEntry): void {
-    const stream = createInputStream(new Uint8Array(entry.data));
-    zipWriter.addEntryStream(
-      entry.name,
-      Date.now() * 1000,
-      Ci.nsIZipWriter.COMPRESSION_DEFAULT as number,
-      stream,
-      false,
-    );
   }
 }
 
@@ -432,16 +363,16 @@ export class CRXConverterClass {
  */
 export const CRXConverter = {
   /**
-   * Convert a CRX file to XPI format
+   * Convert a CRX file to XPI format (async)
    * @deprecated Use CRXConverterClass instead
    */
-  convert(
+  async convert(
     crxData: ArrayBuffer,
     extensionId: string,
     metadata: ExtensionMetadata,
-  ): ArrayBuffer | null {
+  ): Promise<ArrayBuffer | null> {
     const converter = new CRXConverterClass();
-    const result = converter.convert(crxData, extensionId, metadata);
+    const result = await converter.convert(crxData, extensionId, metadata);
 
     if (!result.success) {
       if (result.error) {

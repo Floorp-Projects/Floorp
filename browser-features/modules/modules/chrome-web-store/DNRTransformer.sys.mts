@@ -7,23 +7,23 @@
  * DNR Transformer - Sanitizes Declarative Net Request rules for Firefox compatibility
  */
 
-import type { DNRRule } from "./types.ts";
+import type { DNRRule, DNRRuleCondition } from "./types.ts";
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-/**
- * Domain-related fields that need sanitization
- */
-const DOMAIN_FIELDS = [
+const LOG_PREFIX = "[DNRTransformer]";
+
+/** Domain-related fields in DNR rule conditions that need sanitization */
+const DOMAIN_FIELDS: ReadonlyArray<keyof DNRRuleCondition> = [
   "domains",
   "excludedDomains",
   "initiatorDomains",
   "excludedInitiatorDomains",
   "requestDomains",
   "excludedRequestDomains",
-] as const;
+];
 
 // =============================================================================
 // Public API
@@ -36,9 +36,7 @@ const DOMAIN_FIELDS = [
  */
 export function sanitizeDNRRules(rules: unknown[]): unknown[] {
   if (!Array.isArray(rules)) {
-    console.warn(
-      "[DNRTransformer] Input is not an array, returning empty array",
-    );
+    console.warn(`${LOG_PREFIX} Input is not an array, returning empty array`);
     return [];
   }
 
@@ -58,7 +56,7 @@ export function sanitizeDNRRules(rules: unknown[]): unknown[] {
 
   if (totalRemoved > 0) {
     console.log(
-      `[DNRTransformer] Removed ${totalRemoved} invalid domain(s) from ${rules.length} rule(s)`,
+      `${LOG_PREFIX} Removed ${totalRemoved} invalid domain(s) from ${rules.length} rule(s)`,
     );
   }
 
@@ -157,11 +155,11 @@ function sanitizeRule(rule: DNRRule): {
       // Log the removed domains for debugging
       const invalidDomains = domains.filter((d) => !isValidDomain(d));
       console.debug(
-        `[DNRTransformer] Rule ${rule.id}: removed ${removed} invalid domain(s) from ${field}:`,
+        `${LOG_PREFIX} Rule ${rule.id}: removed ${removed} invalid domain(s) from ${field}:`,
         invalidDomains,
       );
 
-      condition[field] = validDomains;
+      (condition as Record<string, string[]>)[field] = validDomains as string[];
     }
   }
 

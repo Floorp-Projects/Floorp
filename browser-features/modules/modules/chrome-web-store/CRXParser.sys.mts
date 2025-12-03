@@ -17,74 +17,58 @@ import {
 } from "./Constants.sys.mts";
 import type { CRXHeader } from "./types.ts";
 
+// =============================================================================
+// Constants
+// =============================================================================
+
+const LOG_PREFIX = "[CRXParser]";
+
+/** Minimum size for a valid CRX file (header only) */
+const MIN_CRX_SIZE = 16;
+
+/** Minimum size for ZIP data */
+const MIN_ZIP_SIZE = 4;
+
+// =============================================================================
+// Public API
+// =============================================================================
+
 /**
  * Parse CRX header and return metadata
+ * @param data - Raw CRX file data
+ * @returns Parsed header or null if invalid
  */
 export function parseCRXHeader(data: ArrayBuffer): CRXHeader | null {
-  if (data.byteLength < 16) {
-    console.error("[CRXParser] File too small to be a valid CRX");
+  if (data.byteLength < MIN_CRX_SIZE) {
+    console.error(`${LOG_PREFIX} File too small: ${data.byteLength} bytes`);
     return null;
   }
 
   const view = new DataView(data);
-
-  // Verify magic number "Cr24"
-  const magic = String.fromCharCode(
-    view.getUint8(0),
-    view.getUint8(1),
-    view.getUint8(2),
-    view.getUint8(3),
-  );
+  const magic = readMagicNumber(view);
 
   if (magic !== CRX_MAGIC) {
-    console.error("[CRXParser] Invalid CRX magic:", magic);
+    console.error(`${LOG_PREFIX} Invalid magic number: "${magic}"`);
     return null;
   }
 
   const version = view.getUint32(4, true);
 
-  if (version === CRX2_VERSION) {
-    // CRX2 format:
-    // [4 bytes magic][4 bytes version][4 bytes pubkey len][4 bytes sig len][pubkey][sig][zip]
-    const publicKeyLength = view.getUint32(8, true);
-    const signatureLength = view.getUint32(12, true);
-    const zipOffset = 16 + publicKeyLength + signatureLength;
-
-    console.log(
-      `[CRXParser] CRX2: pubkey=${publicKeyLength}, sig=${signatureLength}, zipOffset=${zipOffset}`,
-    );
-
-    return {
-      version: 2,
-      zipOffset,
-      publicKeyLength,
-      signatureLength,
-    };
+  switch (version) {
+    case CRX2_VERSION:
+      return parseCRX2Header(view);
+    case CRX3_VERSION:
+      return parseCRX3Header(view);
+    default:
+      console.error(`${LOG_PREFIX} Unsupported version: ${version}`);
+      return null;
   }
-
-  if (version === CRX3_VERSION) {
-    // CRX3 format:
-    // [4 bytes magic][4 bytes version][4 bytes header len][header protobuf][zip]
-    const headerLength = view.getUint32(8, true);
-    const zipOffset = 12 + headerLength;
-
-    console.log(
-      `[CRXParser] CRX3: headerLen=${headerLength}, zipOffset=${zipOffset}`,
-    );
-
-    return {
-      version: 3,
-      zipOffset,
-      headerLength,
-    };
-  }
-
-  console.error("[CRXParser] Unsupported CRX version:", version);
-  return null;
 }
 
 /**
  * Extract the ZIP portion from a CRX file
+ * @param crxData - Raw CRX file data
+ * @returns ZIP data as ArrayBuffer or null if extraction fails
  */
 export function extractZipFromCRX(crxData: ArrayBuffer): ArrayBuffer | null {
   const header = parseCRXHeader(crxData);
@@ -92,35 +76,92 @@ export function extractZipFromCRX(crxData: ArrayBuffer): ArrayBuffer | null {
     return null;
   }
 
-  // Extract ZIP data
+  // Extract ZIP data starting from the calculated offset
   const zipData = crxData.slice(header.zipOffset);
 
-  // Verify ZIP signature "PK\x03\x04"
-  if (zipData.byteLength < 4) {
-    console.error("[CRXParser] ZIP data too small");
+  if (zipData.byteLength < MIN_ZIP_SIZE) {
+    console.error(
+      `${LOG_PREFIX} ZIP data too small: ${zipData.byteLength} bytes`,
+    );
     return null;
   }
 
+  // Verify ZIP signature "PK\x03\x04"
   const zipView = new DataView(zipData);
   const zipSig = zipView.getUint32(0, true);
 
   if (zipSig !== ZIP_SIGNATURE) {
     console.error(
-      "[CRXParser] Invalid ZIP signature at offset",
-      header.zipOffset,
-      "got",
-      zipSig.toString(16),
+      `${LOG_PREFIX} Invalid ZIP signature at offset ${header.zipOffset}: 0x${zipSig.toString(16)}`,
     );
     return null;
   }
 
-  console.log(`[CRXParser] Extracted ZIP: ${zipData.byteLength} bytes`);
+  console.log(`${LOG_PREFIX} Extracted ZIP: ${zipData.byteLength} bytes`);
   return zipData;
 }
 
 /**
  * Verify if data is a valid CRX file
+ * @param data - Data to verify
+ * @returns true if data is a valid CRX file
  */
 export function isValidCRX(data: ArrayBuffer): boolean {
   return parseCRXHeader(data) !== null;
+}
+
+// =============================================================================
+// Internal Functions
+// =============================================================================
+
+/**
+ * Read the magic number from CRX header
+ */
+function readMagicNumber(view: DataView): string {
+  return String.fromCharCode(
+    view.getUint8(0),
+    view.getUint8(1),
+    view.getUint8(2),
+    view.getUint8(3),
+  );
+}
+
+/**
+ * Parse CRX2 format header
+ * Format: [magic(4)][version(4)][pubkeyLen(4)][sigLen(4)][pubkey][sig][zip]
+ */
+function parseCRX2Header(view: DataView): CRXHeader {
+  const publicKeyLength = view.getUint32(8, true);
+  const signatureLength = view.getUint32(12, true);
+  const zipOffset = 16 + publicKeyLength + signatureLength;
+
+  console.log(
+    `${LOG_PREFIX} CRX2: pubkey=${publicKeyLength}, sig=${signatureLength}, zipOffset=${zipOffset}`,
+  );
+
+  return {
+    version: 2,
+    zipOffset,
+    publicKeyLength,
+    signatureLength,
+  };
+}
+
+/**
+ * Parse CRX3 format header
+ * Format: [magic(4)][version(4)][headerLen(4)][header protobuf][zip]
+ */
+function parseCRX3Header(view: DataView): CRXHeader {
+  const headerLength = view.getUint32(8, true);
+  const zipOffset = 12 + headerLength;
+
+  console.log(
+    `${LOG_PREFIX} CRX3: headerLen=${headerLength}, zipOffset=${zipOffset}`,
+  );
+
+  return {
+    version: 3,
+    zipOffset,
+    headerLength,
+  };
 }

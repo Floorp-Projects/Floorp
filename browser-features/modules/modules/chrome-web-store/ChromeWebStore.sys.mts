@@ -90,15 +90,14 @@ export {
   MAX_CRX_SIZE,
   MAX_FILE_SIZE,
   DOWNLOAD_TIMEOUT_MS,
-  INSTALL_TIMEOUT_MS,
-  // Error messages
-  INSTALL_ERROR_MESSAGES,
-  // Utility functions
+  INSTALL_TIMEOUT_MS, // Utility functions
   isChromeWebStoreUrl,
   extractExtensionId,
   generateFirefoxId,
   isPermissionSupported,
   isOptionalPermissionAllowed,
+  // Types
+  type UnsupportedCodePattern,
 } from "./Constants.sys.mts";
 
 // =============================================================================
@@ -160,7 +159,9 @@ export {
 
 export {
   writeArrayBufferToFile,
+  writeArrayBufferToFileAsync,
   readFileToArrayBuffer,
+  readFileToArrayBufferAsync,
   readInputStream,
   readInputStreamToBuffer,
   createInputStream,
