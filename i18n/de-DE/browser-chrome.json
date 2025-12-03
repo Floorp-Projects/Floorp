@@ -336,7 +336,8 @@
       "downloadCancelled": "Download abgebrochen",
       "timeout": "Installation hat das Zeitlimit überschritten",
       "xpiInstallError": "XPI-Installationsfehler: {{error}}",
-      "errorWithCode": "Installationsfehler (Code: {{code}})"
+      "errorWithCode": "Installationsfehler (Code: {{code}})",
+      "experimentDisabled": "Diese Funktion ist derzeit nicht verfügbar"
     },
     "installErrors": {
       "downloadFailed": "Download fehlgeschlagen",

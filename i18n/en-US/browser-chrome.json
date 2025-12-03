@@ -345,7 +345,8 @@
       "downloadCancelled": "Download cancelled",
       "timeout": "Installation timed out",
       "xpiInstallError": "XPI installation error: {{error}}",
-      "errorWithCode": "Installation error (code: {{code}})"
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
     },
     "installErrors": {
       "downloadFailed": "Download failed",

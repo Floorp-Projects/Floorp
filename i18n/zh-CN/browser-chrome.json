@@ -336,7 +336,8 @@
       "downloadCancelled": "下载已取消",
       "timeout": "安装超时",
       "xpiInstallError": "XPI 安装错误: {{error}}",
-      "errorWithCode": "安装错误 (代码: {{code}})"
+      "errorWithCode": "安装错误 (代码: {{code}})",
+      "experimentDisabled": "此功能目前不可用"
     },
     "installErrors": {
       "downloadFailed": "下载失败",

@@ -336,7 +336,8 @@
       "downloadCancelled": "다운로드가 취소되었습니다",
       "timeout": "설치 시간 초과",
       "xpiInstallError": "XPI 설치 오류: {{error}}",
-      "errorWithCode": "설치 오류 (코드: {{code}})"
+      "errorWithCode": "설치 오류 (코드: {{code}})",
+      "experimentDisabled": "이 기능은 현재 사용할 수 없습니다"
     },
     "installErrors": {
       "downloadFailed": "다운로드 실패",

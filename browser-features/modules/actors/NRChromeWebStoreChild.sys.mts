@@ -108,6 +108,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private lastUrl: string | null = null;
   private mainLoopInterval: number | null = null;
   private hiddenAddToChromeButton = false;
+  private experimentEnabled: boolean | null = null;
 
   /**
    * Get a translation for a key, using cache or default values
@@ -174,6 +175,30 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
+   * Check if the Chrome Web Store experiment is enabled
+   * Results are cached for the lifetime of this actor
+   */
+  private async checkExperimentEnabled(): Promise<boolean> {
+    if (this.experimentEnabled !== null) {
+      return this.experimentEnabled;
+    }
+
+    try {
+      const enabled = (await this.sendQuery(
+        "CWS:CheckExperiment",
+        {},
+      )) as boolean;
+      this.experimentEnabled = enabled;
+      console.debug("[NRChromeWebStore] Experiment enabled:", enabled);
+      return enabled;
+    } catch (e) {
+      console.warn("[NRChromeWebStore] Failed to check experiment:", e);
+      this.experimentEnabled = false;
+      return false;
+    }
+  }
+
+  /**
    * Called when the actor is created
    */
   actorCreated(): void {
@@ -212,12 +237,22 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return;
     }
 
-    // Inject styles
-    this.injectStyles();
+    // Check if experiment is enabled before proceeding
+    this.checkExperimentEnabled().then((enabled) => {
+      if (!enabled) {
+        console.debug(
+          "[NRChromeWebStore] Feature disabled by experiment, skipping initialization",
+        );
+        return;
+      }
 
-    // Start main loop for button injection and page modifications
-    // Following Fire-CWS approach: simple interval-based checking
-    this.startMainLoop();
+      // Inject styles
+      this.injectStyles();
+
+      // Start main loop for button injection and page modifications
+      // Following Fire-CWS approach: simple interval-based checking
+      this.startMainLoop();
+    });
   }
 
   /**

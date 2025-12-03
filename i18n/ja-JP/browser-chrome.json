@@ -345,7 +345,8 @@
       "downloadCancelled": "ダウンロードがキャンセルされました",
       "timeout": "インストールがタイムアウトしました",
       "xpiInstallError": "XPIインストールエラー: {{error}}",
-      "errorWithCode": "インストールエラー (コード: {{code}})"
+      "errorWithCode": "インストールエラー (コード: {{code}})",
+      "experimentDisabled": "この機能は現在利用できません"
     },
     "installErrors": {
       "downloadFailed": "ダウンロードに失敗しました",

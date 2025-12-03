@@ -8,6 +8,16 @@
  */
 
 // =============================================================================
+// Experiment ID
+// =============================================================================
+
+/**
+ * Experiment ID for Chrome Web Store extension installation feature.
+ * When the experiment is active (variant is not null), the feature is enabled.
+ */
+export const CWS_EXPERIMENT_ID = "chrome_web_store_install";
+
+// =============================================================================
 // CRX File Format Constants
 // =============================================================================
 
@@ -310,5 +320,6 @@ export const CWS_I18N_KEYS = {
     timeout: "chromeWebStore.error.timeout",
     xpiInstallError: "chromeWebStore.error.xpiInstallError",
     errorWithCode: "chromeWebStore.error.errorWithCode",
+    experimentDisabled: "chromeWebStore.error.experimentDisabled",
   },
 } as const;

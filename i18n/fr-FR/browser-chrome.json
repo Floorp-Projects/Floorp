@@ -336,7 +336,8 @@
       "downloadCancelled": "Téléchargement annulé",
       "timeout": "Délai d'installation dépassé",
       "xpiInstallError": "Erreur d'installation XPI : {{error}}",
-      "errorWithCode": "Erreur d'installation (code : {{code}})"
+      "errorWithCode": "Erreur d'installation (code : {{code}})",
+      "experimentDisabled": "Cette fonctionnalité n'est pas disponible actuellement"
     },
     "installErrors": {
       "downloadFailed": "Échec du téléchargement",
