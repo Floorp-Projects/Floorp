@@ -408,6 +408,19 @@ export interface AddonInstall {
   removeListener(listener: AddonInstallListener): void;
   error?: number;
   addon?: { id: string; name: string };
+  name?: string;
+  type?: string;
+  state?: number;
+  sourceURI?: nsIURI;
+  installTelemetryInfo?: { source?: string };
+}
+
+/**
+ * nsIURI interface (minimal subset for TypeScript)
+ */
+export interface nsIURI {
+  readonly spec: string;
+  readonly host: string;
 }
 
 /**
@@ -420,6 +433,16 @@ export interface GeckoAddonManager {
     mimeType: string,
     telemetryInfo?: object,
   ): Promise<AddonInstall | null>;
+  /**
+   * Install an addon from the Add-on Manager UI
+   * This shows the standard installation confirmation dialog
+   */
+  installAddonFromAOM(
+    browser: unknown,
+    uri: nsIURI | null,
+    install: AddonInstall,
+    options?: { preferUpdateOverInstall?: boolean },
+  ): void;
 }
 
 /**

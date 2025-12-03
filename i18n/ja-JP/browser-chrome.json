@@ -360,5 +360,14 @@
       "invalidFile": "不正な拡張機能ファイルです",
       "networkError": "ネットワークエラーが発生しました"
     }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Chrome 拡張機能「{{name}}」を追加しますか？この拡張機能は Chrome Web Store から変換されています。",
+      "chromeExtensionPrompt": "Chrome 拡張機能「{{name}}」を追加しますか？",
+      "defaultExtensionName": "この拡張機能",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "この Chrome 拡張機能は Firefox 互換形式に変換されています。一部の機能が動作しない場合があります。"
+    }
   }
 }

@@ -60,6 +60,20 @@ try {
   console.warn("[NRChromeWebStore] CRXConverter module not available:", e);
 }
 
+/**
+ * WeakSet to track installs from Chrome Web Store
+ * This is used by the UI to customize the installation dialog
+ */
+const chromeWebStoreInstalls = new WeakSet<object>();
+
+/**
+ * Check if an install is from Chrome Web Store
+ * Exported for use by UI components
+ */
+export function isChromeWebStoreInstall(install: object): boolean {
+  return chromeWebStoreInstalls.has(install);
+}
+
 /** Maximum retry attempts for waiting i18n initialization */
 const I18N_INIT_MAX_RETRIES = 10;
 /** Delay between retries in milliseconds */
@@ -494,6 +508,10 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
         };
       }
 
+      // Mark this install as coming from Chrome Web Store
+      // This allows the UI to customize the installation dialog
+      chromeWebStoreInstalls.add(install);
+
       // Set up install listeners with timeout
       const INSTALL_TIMEOUT_MS = 60000; // 60 seconds timeout
       log("Setting up install listeners...");
@@ -565,7 +583,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
         };
 
         install.addListener(listener);
-        log("Listeners added, calling install.install()...");
+        log("Listeners added, triggering install prompt...");
 
         // Set up timeout to prevent hanging
         if (lazy.setTimeout) {
@@ -578,9 +596,46 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
           }, INSTALL_TIMEOUT_MS);
         }
 
-        // Trigger the installation
-        install.install();
-        log("install.install() called");
+        // Get the browser element for the installation prompt
+        const win = browserWindow as Window & {
+          gBrowser?: { selectedBrowser?: unknown };
+          __chromeWebStoreInstallInfo?: { name: string; id: string };
+        };
+        const browser = win.gBrowser?.selectedBrowser;
+
+        if (browser && lazy.AddonManager) {
+          // Set a flag on the window to indicate this is a Chrome Web Store install
+          // This allows the UI customization script to detect and modify the dialog
+          win.__chromeWebStoreInstallInfo = {
+            name: metadata.name,
+            id: metadata.id,
+          };
+          log(
+            `Set __chromeWebStoreInstallInfo on window: name=${metadata.name}, id=${metadata.id}`,
+          );
+
+          // Also notify via observer for cross-context communication
+          Services.obs.notifyObservers(
+            { wrappedJSObject: { name: metadata.name, id: metadata.id } },
+            "floorp-chrome-web-store-install-started",
+          );
+          log("Sent floorp-chrome-web-store-install-started notification");
+
+          // Use installAddonFromAOM to show the standard addon installation popup
+          // This triggers the doorhanger UI that Firefox uses for addon installations
+          log("Using installAddonFromAOM to show install prompt...");
+          lazy.AddonManager.installAddonFromAOM(
+            browser,
+            null, // uri - not needed for file-based installs
+            install,
+          );
+          log("installAddonFromAOM called");
+        } else {
+          // Fallback to silent installation if browser element is not available
+          log("Fallback: calling install.install() directly...");
+          install.install();
+          log("install.install() called");
+        }
       });
     } catch (error) {
       const errorMessage =
