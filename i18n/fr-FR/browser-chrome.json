@@ -311,5 +311,45 @@
     "actionLabelInput": "Input",
     "actionLabelClick": "Click",
     "actionLabelSubmit": "Submit"
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Ajouter à Floorp",
+      "installing": "Installation...",
+      "success": "Ajouté !",
+      "error": "Erreur survenue"
+    },
+    "error": {
+      "title": "Erreur d'installation",
+      "compatibilityNote": "Cette extension peut ne pas être compatible avec Firefox/Floorp.",
+      "alreadyInstalled": "Cette extension est déjà installée ({{name}})",
+      "downloadFailed": "Échec du téléchargement du fichier CRX",
+      "conversionFailed": "Échec de la conversion de l'extension : {{error}}",
+      "conversionFailedGeneric": "Échec de la conversion CRX vers XPI",
+      "installError": "Erreur d'installation : {{error}}",
+      "installFailed": "Échec de l'installation",
+      "noData": "Aucune donnée d'installation fournie",
+      "addonManagerUnavailable": "AddonManager n'est pas disponible",
+      "noBrowserWindow": "Fenêtre de navigateur introuvable pour l'installation",
+      "createInstallFailed": "Échec de la création de l'objet d'installation",
+      "cancelledByUser": "Installation annulée par l'utilisateur",
+      "downloadCancelled": "Téléchargement annulé",
+      "timeout": "Délai d'installation dépassé",
+      "xpiInstallError": "Erreur d'installation XPI : {{error}}",
+      "errorWithCode": "Erreur d'installation (code : {{code}})",
+      "experimentDisabled": "Cette fonctionnalité n'est pas disponible actuellement"
+    },
+    "installErrors": {
+      "downloadFailed": "Échec du téléchargement",
+      "signatureVerifyFailed": "Impossible de vérifier la signature de l'extension",
+      "corruptOrIncompatible": "L'extension est corrompue ou incompatible",
+      "incompatible": "Cette extension n'est pas compatible avec Floorp",
+      "blocked": "Cette extension est bloquée",
+      "timeout": "Délai d'installation de l'extension dépassé",
+      "installFailed": "Échec de l'installation de l'extension",
+      "parseFailed": "Impossible d'analyser l'extension",
+      "invalidFile": "Fichier d'extension invalide",
+      "networkError": "Une erreur réseau s'est produite"
+    }
   }
 }

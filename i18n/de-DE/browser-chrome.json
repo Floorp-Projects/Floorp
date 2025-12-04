@@ -311,5 +311,45 @@
     "actionLabelInput": "Input",
     "actionLabelClick": "Click",
     "actionLabelSubmit": "Submit"
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Zu Floorp hinzufügen",
+      "installing": "Wird installiert...",
+      "success": "Hinzugefügt!",
+      "error": "Fehler aufgetreten"
+    },
+    "error": {
+      "title": "Installationsfehler",
+      "compatibilityNote": "Diese Erweiterung ist möglicherweise nicht mit Firefox/Floorp kompatibel.",
+      "alreadyInstalled": "Diese Erweiterung ist bereits installiert ({{name}})",
+      "downloadFailed": "CRX-Datei konnte nicht heruntergeladen werden",
+      "conversionFailed": "Erweiterung konnte nicht konvertiert werden: {{error}}",
+      "conversionFailedGeneric": "CRX zu XPI Konvertierung fehlgeschlagen",
+      "installError": "Installationsfehler: {{error}}",
+      "installFailed": "Installation fehlgeschlagen",
+      "noData": "Keine Installationsdaten vorhanden",
+      "addonManagerUnavailable": "AddonManager ist nicht verfügbar",
+      "noBrowserWindow": "Browserfenster für Installation nicht gefunden",
+      "createInstallFailed": "Installationsobjekt konnte nicht erstellt werden",
+      "cancelledByUser": "Installation vom Benutzer abgebrochen",
+      "downloadCancelled": "Download abgebrochen",
+      "timeout": "Installation hat das Zeitlimit überschritten",
+      "xpiInstallError": "XPI-Installationsfehler: {{error}}",
+      "errorWithCode": "Installationsfehler (Code: {{code}})",
+      "experimentDisabled": "Diese Funktion ist derzeit nicht verfügbar"
+    },
+    "installErrors": {
+      "downloadFailed": "Download fehlgeschlagen",
+      "signatureVerifyFailed": "Signatur der Erweiterung konnte nicht verifiziert werden",
+      "corruptOrIncompatible": "Erweiterung ist beschädigt oder inkompatibel",
+      "incompatible": "Diese Erweiterung ist nicht mit Floorp kompatibel",
+      "blocked": "Diese Erweiterung ist blockiert",
+      "timeout": "Installation der Erweiterung hat das Zeitlimit überschritten",
+      "installFailed": "Installation der Erweiterung fehlgeschlagen",
+      "parseFailed": "Erweiterung konnte nicht analysiert werden",
+      "invalidFile": "Ungültige Erweiterungsdatei",
+      "networkError": "Ein Netzwerkfehler ist aufgetreten"
+    }
   }
 }

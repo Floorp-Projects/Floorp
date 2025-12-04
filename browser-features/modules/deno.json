@@ -3,6 +3,7 @@
   "imports": {
     "@jsr/std__fs": "npm:@jsr/std__fs@^1.0.17",
     "birpc": "npm:birpc@^2.3.0",
+    "fflate": "npm:fflate@^0.8.2",
     "pathe": "npm:pathe@^2.0.3",
     "vite": "npm:rolldown-vite@latest"
   },
@@ -10,6 +11,9 @@
     ".": "./*"
   },
   "compilerOptions": {
-    "types": ["npm:vite/client", "jsr:@types/gecko"]
+    "types": [
+      "npm:vite/client",
+      "jsr:@types/gecko"
+    ]
   }
 }

@@ -335,6 +335,25 @@ const JS_WINDOW_ACTORS: {
       "about:*",
     ],
   },
+  NRChromeWebStore: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRChromeWebStoreParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRChromeWebStoreChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: [
+      "https://chromewebstore.google.com/*",
+      "https://chrome.google.com/webstore/*",
+    ],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
