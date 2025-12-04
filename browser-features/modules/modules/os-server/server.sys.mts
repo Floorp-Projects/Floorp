@@ -394,7 +394,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           (data) => {
             try {
               writeUtf8(output, `data: ${data}\n\n`);
-            } catch (_e) {
+            } catch {
               // Write failed, likely closed
               output.close();
               input.close();
@@ -404,7 +404,7 @@ class LocalHttpServer implements nsIServerSocketListener {
             try {
               output.close();
               input.close();
-            } catch (_) {
+            } catch {
               // ignore
             }
           },
