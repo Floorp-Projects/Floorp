@@ -311,45 +311,5 @@
     "actionLabelInput": "输入",
     "actionLabelClick": "点击",
     "actionLabelSubmit": "提交"
-  },
-  "chromeWebStore": {
-    "button": {
-      "addToFloorp": "添加到 Floorp",
-      "installing": "正在安装...",
-      "success": "已添加！",
-      "error": "发生错误"
-    },
-    "error": {
-      "title": "安装错误",
-      "compatibilityNote": "此扩展程序可能与 Firefox/Floorp 不兼容。",
-      "alreadyInstalled": "此扩展程序已安装 ({{name}})",
-      "downloadFailed": "CRX 文件下载失败",
-      "conversionFailed": "扩展程序转换失败: {{error}}",
-      "conversionFailedGeneric": "CRX 转 XPI 失败",
-      "installError": "安装错误: {{error}}",
-      "installFailed": "安装失败",
-      "noData": "未提供安装数据",
-      "addonManagerUnavailable": "AddonManager 不可用",
-      "noBrowserWindow": "找不到用于安装的浏览器窗口",
-      "createInstallFailed": "创建安装对象失败",
-      "cancelledByUser": "用户取消了安装",
-      "downloadCancelled": "下载已取消",
-      "timeout": "安装超时",
-      "xpiInstallError": "XPI 安装错误: {{error}}",
-      "errorWithCode": "安装错误 (代码: {{code}})",
-      "experimentDisabled": "此功能目前不可用"
-    },
-    "installErrors": {
-      "downloadFailed": "下载失败",
-      "signatureVerifyFailed": "无法验证扩展程序签名",
-      "corruptOrIncompatible": "扩展程序已损坏或不兼容",
-      "incompatible": "此扩展程序与 Floorp 不兼容",
-      "blocked": "此扩展程序已被阻止",
-      "timeout": "扩展程序安装超时",
-      "installFailed": "扩展程序安装失败",
-      "parseFailed": "无法解析扩展程序",
-      "invalidFile": "无效的扩展程序文件",
-      "networkError": "发生网络错误"
-    }
   }
 }
