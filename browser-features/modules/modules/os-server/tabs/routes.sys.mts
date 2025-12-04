@@ -13,7 +13,7 @@ import type {
   NamespaceBuilder,
   Context as RouterContext,
 } from "../router.sys.mts";
-import type { ErrorResponse } from "../api-spec/types.ts";
+import type { ErrorResponse } from "../_os-plugin/api-spec/types.ts";
 import type { TabManagerAPI } from "./types.ts";
 import { registerCommonAutomationRoutes } from "../shared/routes.sys.mts";
 
@@ -63,18 +63,18 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
     );
 
     // Attach to existing tab
-    t.post<{ browserId: string }, { instanceId: string | null } | ErrorResponse>(
-      "/attach",
-      async (ctx: RouterContext<{ browserId: string }>) => {
-        const json = ctx.json();
-        if (!json?.browserId) {
-          return { status: 400, body: { error: "browserId required" } };
-        }
-        const { TabManagerServices } = TabManagerModule();
-        const id = await TabManagerServices.attachToTab(json.browserId);
-        return { status: 200, body: { instanceId: id } };
-      },
-    );
+    t.post<
+      { browserId: string },
+      { instanceId: string | null } | ErrorResponse
+    >("/attach", async (ctx: RouterContext<{ browserId: string }>) => {
+      const json = ctx.json();
+      if (!json?.browserId) {
+        return { status: 400, body: { error: "browserId required" } };
+      }
+      const { TabManagerServices } = TabManagerModule();
+      const id = await TabManagerServices.attachToTab(json.browserId);
+      return { status: 200, body: { instanceId: id } };
+    });
 
     // Get instance info
     t.get("/instances/:id", async (ctx: RouterContext) => {

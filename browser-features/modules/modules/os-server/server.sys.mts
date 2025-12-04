@@ -48,7 +48,7 @@ import {
   type StreamResult,
 } from "./router.sys.mts";
 
-import type { HealthResponse } from "./api-spec/types.ts";
+import type { HealthResponse } from "./_os-plugin/api-spec/types.ts";
 
 // Route handlers from separated modules
 import { registerBrowserRoutes } from "./browser/routes.sys.mts";

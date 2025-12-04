@@ -13,7 +13,10 @@ import type {
   NamespaceBuilder,
   Context as RouterContext,
 } from "../router.sys.mts";
-import type { ErrorResponse, OkResponse } from "../api-spec/types.ts";
+import type {
+  ErrorResponse,
+  OkResponse,
+} from "../_os-plugin/api-spec/types.ts";
 import type { BrowserAutomationService, ScreenshotRect } from "./types.ts";
 
 /**

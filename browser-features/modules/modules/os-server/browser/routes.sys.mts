@@ -13,7 +13,11 @@ import type {
   Context as RouterContext,
   StreamResult,
 } from "../router.sys.mts";
-import type { Download, HistoryItem, Tab } from "../api-spec/types.ts";
+import type {
+  Download,
+  HistoryItem,
+  Tab,
+} from "../_os-plugin/api-spec/types.ts";
 import type { BrowserInfoAPI, DownloadData, HistoryData } from "./types.ts";
 import { clampInt } from "../http/utils.sys.mts";
 
