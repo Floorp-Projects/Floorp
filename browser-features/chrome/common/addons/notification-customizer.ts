@@ -285,7 +285,7 @@ export class NotificationCustomizer {
     const warning = document.createXULElement("description") as XULElement;
     warning.setAttribute("class", "chrome-extension-warning");
     (warning as XULElement & { style: CSSStyleDeclaration }).style.cssText =
-      "color: #f9ab00; font-size: 0.85em; margin-top: 8px; padding: 4px 8px; background: rgba(249, 171, 0, 0.1); border-radius: 4px;";
+      "color: #f9ab00; font-size: 1.0em; margin-top: 8px; padding: 4px 8px; background: rgba(249, 171, 0, 0.1); border-radius: 4px;";
     warning.textContent = texts.compatibilityWarning;
 
     body.appendChild(warning);
