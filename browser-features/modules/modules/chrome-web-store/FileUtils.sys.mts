@@ -14,8 +14,6 @@ import { CWSError, CWSErrorCode } from "./types.ts";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[FileUtils]";
-
 /** Chunk size for binary writes (64KB) */
 const WRITE_CHUNK_SIZE = 65536;
 
@@ -244,7 +242,7 @@ export function readInputStreamToBuffer(
     // NS_BASE_STREAM_CLOSED is expected at end of stream
     const nsError = error as { result?: number };
     if (nsError.result !== NS_BASE_STREAM_CLOSED) {
-      console.error(`${LOG_PREFIX} Error reading stream:`, error);
+      // Stream reading error - ignore silently
     }
   } finally {
     try {
@@ -337,8 +335,8 @@ export function safeRemoveFile(file: nsIFile): boolean {
       file.remove(false);
       return true;
     }
-  } catch (error) {
-    console.debug(`${LOG_PREFIX} Failed to remove file ${file.path}:`, error);
+  } catch {
+    // Ignore file removal errors
   }
   return false;
 }

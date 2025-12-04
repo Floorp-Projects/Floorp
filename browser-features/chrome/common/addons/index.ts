@@ -33,8 +33,6 @@ export default class Addons extends NoraComponentBase {
   private cleanupInstallConfirmation: (() => void) | null = null;
 
   init() {
-    this.logger.info("Initializing Chrome Web Store install customization");
-
     // Set up observer first
     this.cwsObserver = createCWSObserver(
       this.state,

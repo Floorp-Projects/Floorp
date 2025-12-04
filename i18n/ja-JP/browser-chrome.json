@@ -326,7 +326,8 @@
       "addToFloorp": "Floorp に追加",
       "installing": "インストール中...",
       "success": "追加しました！",
-      "error": "エラーが発生しました"
+      "error": "エラーが発生しました",
+      "installed": "インストール済み"
     },
     "error": {
       "title": "インストールエラー",

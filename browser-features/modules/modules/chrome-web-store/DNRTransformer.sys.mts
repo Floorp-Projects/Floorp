@@ -13,8 +13,6 @@ import type { DNRRule, DNRRuleCondition } from "./types.ts";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[DNRTransformer]";
-
 /** Domain-related fields in DNR rule conditions that need sanitization */
 const DOMAIN_FIELDS: ReadonlyArray<keyof DNRRuleCondition> = [
   "domains",
@@ -36,12 +34,10 @@ const DOMAIN_FIELDS: ReadonlyArray<keyof DNRRuleCondition> = [
  */
 export function sanitizeDNRRules(rules: unknown[]): unknown[] {
   if (!Array.isArray(rules)) {
-    console.warn(`${LOG_PREFIX} Input is not an array, returning empty array`);
     return [];
   }
 
   const results: unknown[] = [];
-  let totalRemoved = 0;
 
   for (const rule of rules) {
     if (!isDNRRule(rule)) {
@@ -49,15 +45,8 @@ export function sanitizeDNRRules(rules: unknown[]): unknown[] {
       continue;
     }
 
-    const { sanitizedRule, removedCount } = sanitizeRule(rule);
+    const { sanitizedRule } = sanitizeRule(rule);
     results.push(sanitizedRule);
-    totalRemoved += removedCount;
-  }
-
-  if (totalRemoved > 0) {
-    console.log(
-      `${LOG_PREFIX} Removed ${totalRemoved} invalid domain(s) from ${rules.length} rule(s)`,
-    );
   }
 
   return results;
@@ -151,13 +140,6 @@ function sanitizeRule(rule: DNRRule): {
     if (validDomains.length !== originalLength) {
       const removed = originalLength - validDomains.length;
       removedCount += removed;
-
-      // Log the removed domains for debugging
-      const invalidDomains = domains.filter((d) => !isValidDomain(d));
-      console.debug(
-        `${LOG_PREFIX} Rule ${rule.id}: removed ${removed} invalid domain(s) from ${field}:`,
-        invalidDomains,
-      );
 
       (condition as Record<string, string[]>)[field] = validDomains as string[];
     }

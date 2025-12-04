@@ -326,7 +326,8 @@
       "addToFloorp": "Add to Floorp",
       "installing": "Installing...",
       "success": "Added!",
-      "error": "Error occurred"
+      "error": "Error occurred",
+      "installed": "Installed"
     },
     "error": {
       "title": "Installation Error",

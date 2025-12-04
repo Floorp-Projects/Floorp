@@ -209,9 +209,6 @@ export function createCWSObserver(
   // If observer already exists, just update the context and return
   // The observer callbacks will use getGlobalContext() to get fresh references
   if (ctx.observer) {
-    logger.debug(
-      "Observer already registered, context updated with new customizer",
-    );
     return ctx.observer;
   }
 
@@ -227,18 +224,11 @@ export function createCWSObserver(
         if (wrapped.wrappedJSObject && currentCtx.state) {
           currentCtx.state.pendingChromeWebStoreInstall =
             wrapped.wrappedJSObject;
-          currentCtx.logger?.debug(
-            "Received install notification:",
-            currentCtx.state.pendingChromeWebStoreInstall,
-          );
         }
       } else if (topic === "webextension-permission-prompt") {
         const cwsInfo = getChromeWebStoreInstallInfo();
 
         if (cwsInfo) {
-          currentCtx.logger?.debug(
-            "webextension-permission-prompt received for CWS install",
-          );
 
           // Create a new customizer for this window context if needed
           const getOrCreateCustomizer = (): NotificationCustomizer => {
@@ -259,10 +249,6 @@ export function createCWSObserver(
             });
           });
         } else {
-          currentCtx.logger?.debug(
-            "webextension-permission-prompt received for normal addon",
-          );
-
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               // Clean up CWS-specific elements from DOM directly
@@ -283,10 +269,6 @@ export function createCWSObserver(
 
   Services.obs.addObserver(observer, "floorp-chrome-web-store-install-started");
   Services.obs.addObserver(observer, "webextension-permission-prompt");
-  logger.debug(
-    "Observer registered for floorp-chrome-web-store-install-started",
-  );
-  logger.debug("Observer registered for webextension-permission-prompt");
 
   return observer;
 }
@@ -347,38 +329,25 @@ export function overrideInstallConfirmation(
     height?: number,
   ): void => {
     // Always get fresh references from global context
-    const ctx = getGlobalContext();
     const cwsInfo = getChromeWebStoreInstallInfo();
-    ctx.logger?.debug("showInstallConfirmation called, cwsInfo:", cwsInfo);
 
     originalShowInstallConfirmation(browser, installInfo, height);
 
     if (!cwsInfo) {
-      ctx.logger?.debug(
-        "Not a Chrome Web Store install, skipping customization",
-      );
       return;
     }
 
-    ctx.logger?.debug(
-      "Scheduling customization for Chrome extension:",
-      cwsInfo.name,
-    );
     requestAnimationFrame(() => {
       const freshCtx = getGlobalContext();
-      freshCtx.logger?.debug("Customizing notification content...");
       freshCtx.customizer?.customizeNotificationContent(cwsInfo);
       clearChromeWebStoreInstallInfo();
     });
   };
-
-  logger.info("Install confirmation customization initialized");
 
   // Return cleanup function
   return () => {
     gXPInstallObserver.showInstallConfirmation =
       originalShowInstallConfirmation;
     clearChromeWebStoreInstallInfo();
-    logger.info("Install confirmation customization cleaned up");
   };
 }

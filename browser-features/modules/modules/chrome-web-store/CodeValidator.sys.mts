@@ -21,8 +21,6 @@ import {
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[CodeValidator]";
-
 /** JavaScript file extensions to validate */
 const JS_EXTENSIONS = [".js", ".mjs", ".jsx", ".ts", ".mts", ".tsx"] as const;
 
@@ -105,10 +103,6 @@ export function validateSourceCodeFull(
         message: `Uses unsupported '${message}'`,
         code: "UNSUPPORTED_API",
       });
-
-      console.log(
-        `${LOG_PREFIX} Detected unsupported pattern in ${filename}:${lineInfo.line}: ${message}`,
-      );
     }
   }
 
@@ -120,8 +114,6 @@ export function validateSourceCodeFull(
         file: filename,
         message,
       });
-
-      console.debug(`${LOG_PREFIX} Warning in ${filename}: ${message}`);
     }
   }
 

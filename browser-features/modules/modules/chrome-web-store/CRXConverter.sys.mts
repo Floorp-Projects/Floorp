@@ -40,8 +40,6 @@ import { unzipSync, zipSync, type Unzipped } from "fflate/browser";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[CRXConverter]";
-
 /** Number of files to process before yielding to event loop */
 const YIELD_INTERVAL = 50;
 
@@ -80,11 +78,11 @@ function yieldToEventLoop(): Promise<void> {
 
 /**
  * Create a logging function with timing information
+ * Disabled to reduce console output
  */
 function createLogger(): LogFunction {
-  const startTime = Date.now();
-  return (step: string) => {
-    console.log(`${LOG_PREFIX} [${Date.now() - startTime}ms] ${step}`);
+  return () => {
+    // Logging disabled
   };
 }
 
@@ -171,7 +169,6 @@ export class CRXConverterClass {
       };
     } catch (error) {
       log(`Conversion failed: ${error}`);
-      console.error(`${LOG_PREFIX} Conversion failed:`, error);
 
       if (error instanceof CWSError) {
         return { success: false, error, warnings };
@@ -278,12 +275,7 @@ export class CRXConverterClass {
           const sanitizedRules = sanitizeDNRRules(rules);
           const sanitizedJson = JSON.stringify(sanitizedRules, null, 2);
           outputFiles[filename] = new TextEncoder().encode(sanitizedJson);
-          console.log(`${LOG_PREFIX} Sanitized DNR rules: ${filename}`);
-        } catch (error) {
-          console.error(
-            `${LOG_PREFIX} Failed to sanitize DNR rules for ${filename}:`,
-            error,
-          );
+        } catch {
           // Fallback to original
           outputFiles[filename] = data;
         }
@@ -347,8 +339,7 @@ export class CRXConverterClass {
         return null;
       }
       return parsed;
-    } catch (error) {
-      console.error(`${LOG_PREFIX} Failed to parse manifest:`, error);
+    } catch {
       return null;
     }
   }

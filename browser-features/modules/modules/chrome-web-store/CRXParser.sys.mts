@@ -21,8 +21,6 @@ import type { CRXHeader } from "./types.ts";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[CRXParser]";
-
 /** Minimum size for a valid CRX file (header only) */
 const MIN_CRX_SIZE = 16;
 
@@ -40,7 +38,6 @@ const MIN_ZIP_SIZE = 4;
  */
 export function parseCRXHeader(data: ArrayBuffer): CRXHeader | null {
   if (data.byteLength < MIN_CRX_SIZE) {
-    console.error(`${LOG_PREFIX} File too small: ${data.byteLength} bytes`);
     return null;
   }
 
@@ -48,7 +45,6 @@ export function parseCRXHeader(data: ArrayBuffer): CRXHeader | null {
   const magic = readMagicNumber(view);
 
   if (magic !== CRX_MAGIC) {
-    console.error(`${LOG_PREFIX} Invalid magic number: "${magic}"`);
     return null;
   }
 
@@ -60,7 +56,6 @@ export function parseCRXHeader(data: ArrayBuffer): CRXHeader | null {
     case CRX3_VERSION:
       return parseCRX3Header(view);
     default:
-      console.error(`${LOG_PREFIX} Unsupported version: ${version}`);
       return null;
   }
 }
@@ -80,9 +75,6 @@ export function extractZipFromCRX(crxData: ArrayBuffer): ArrayBuffer | null {
   const zipData = crxData.slice(header.zipOffset);
 
   if (zipData.byteLength < MIN_ZIP_SIZE) {
-    console.error(
-      `${LOG_PREFIX} ZIP data too small: ${zipData.byteLength} bytes`,
-    );
     return null;
   }
 
@@ -91,13 +83,9 @@ export function extractZipFromCRX(crxData: ArrayBuffer): ArrayBuffer | null {
   const zipSig = zipView.getUint32(0, true);
 
   if (zipSig !== ZIP_SIGNATURE) {
-    console.error(
-      `${LOG_PREFIX} Invalid ZIP signature at offset ${header.zipOffset}: 0x${zipSig.toString(16)}`,
-    );
     return null;
   }
 
-  console.log(`${LOG_PREFIX} Extracted ZIP: ${zipData.byteLength} bytes`);
   return zipData;
 }
 
@@ -135,10 +123,6 @@ function parseCRX2Header(view: DataView): CRXHeader {
   const signatureLength = view.getUint32(12, true);
   const zipOffset = 16 + publicKeyLength + signatureLength;
 
-  console.log(
-    `${LOG_PREFIX} CRX2: pubkey=${publicKeyLength}, sig=${signatureLength}, zipOffset=${zipOffset}`,
-  );
-
   return {
     version: 2,
     zipOffset,
@@ -154,10 +138,6 @@ function parseCRX2Header(view: DataView): CRXHeader {
 function parseCRX3Header(view: DataView): CRXHeader {
   const headerLength = view.getUint32(8, true);
   const zipOffset = 12 + headerLength;
-
-  console.log(
-    `${LOG_PREFIX} CRX3: headerLen=${headerLength}, zipOffset=${zipOffset}`,
-  );
 
   return {
     version: 3,

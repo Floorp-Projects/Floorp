@@ -97,6 +97,7 @@ export const UNSUPPORTED_PERMISSIONS = [
   "sidePanel",
   "signedInDevices",
   "tabCapture",
+  "tts",
   "ttsEngine",
   "wallpaper",
 
@@ -300,6 +301,7 @@ export const CWS_I18N_KEYS = {
     installing: "chromeWebStore.button.installing",
     success: "chromeWebStore.button.success",
     error: "chromeWebStore.button.error",
+    installed: "chromeWebStore.button.installed",
   },
   // Error messages
   error: {

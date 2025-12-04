@@ -42,7 +42,7 @@ const BUTTON_RESET_DELAY = 3000;
 const ERROR_NOTICE_TIMEOUT = 10000;
 
 /** Button states */
-type ButtonState = "default" | "installing" | "success" | "error";
+type ButtonState = "default" | "installing" | "success" | "error" | "installed";
 
 /**
  * Cache for translations to avoid repeated lookups
@@ -60,6 +60,7 @@ const DEFAULT_TRANSLATIONS: Record<string, string> = {
   [CWS_I18N_KEYS.button.installing]: "Installing...",
   [CWS_I18N_KEYS.button.success]: "Added!",
   [CWS_I18N_KEYS.button.error]: "Error occurred",
+  [CWS_I18N_KEYS.button.installed]: "Installed",
   [CWS_I18N_KEYS.error.title]: "Installation Error",
   [CWS_I18N_KEYS.error.compatibilityNote]:
     "This extension may not be compatible with Firefox/Floorp.",
@@ -109,6 +110,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private mainLoopInterval: number | null = null;
   private hiddenAddToChromeButton = false;
   private experimentEnabled: boolean | null = null;
+  private isInstalled = false;
 
   /**
    * Get a translation for a key, using cache or default values
@@ -146,6 +148,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
           CWS_I18N_KEYS.button.installing,
           CWS_I18N_KEYS.button.success,
           CWS_I18N_KEYS.button.error,
+          CWS_I18N_KEYS.button.installed,
           CWS_I18N_KEYS.error.title,
           CWS_I18N_KEYS.error.compatibilityNote,
           CWS_I18N_KEYS.error.installFailed,
@@ -170,7 +173,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
         return this.initTranslations(retryCount + 1);
       }
-      console.debug("[NRChromeWebStore] Failed to load translations");
+      // Failed to load translations, use defaults
     }
   }
 
@@ -189,12 +192,36 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         {},
       )) as boolean;
       this.experimentEnabled = enabled;
-      console.debug("[NRChromeWebStore] Experiment enabled:", enabled);
       return enabled;
-    } catch (e) {
-      console.warn("[NRChromeWebStore] Failed to check experiment:", e);
+    } catch {
       this.experimentEnabled = false;
       return false;
+    }
+  }
+
+  /**
+   * Check if the extension is already installed
+   * @param extensionId - Chrome extension ID
+   */
+  private async checkInstallationStatus(extensionId: string): Promise<void> {
+    try {
+      const result = (await this.sendQuery("CWS:CheckAddonInstalled", {
+        extensionId,
+      })) as { installed: boolean };
+      this.isInstalled = result.installed;
+
+      // Update button if it's already injected
+      if (this.buttonInjected && this.isInstalled) {
+        const doc = this.document;
+        if (doc) {
+          const button = doc.getElementById("floorp-add-extension-btn");
+          if (button) {
+            this.updateButtonState(button, "installed");
+          }
+        }
+      }
+    } catch {
+      this.isInstalled = false;
     }
   }
 
@@ -202,10 +229,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Called when the actor is created
    */
   actorCreated(): void {
-    console.debug(
-      "[NRChromeWebStore] Child actor created for:",
-      this.contentWindow?.location?.href,
-    );
     // Initialize translations asynchronously
     this.initTranslations().catch(() => {});
   }
@@ -229,7 +252,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    */
   private onDOMContentLoaded(): void {
     const url = this.document?.location?.href;
-    console.debug("[NRChromeWebStore] DOMContentLoaded:", url);
 
     this.lastUrl = url ?? null;
 
@@ -240,9 +262,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     // Check if experiment is enabled before proceeding
     this.checkExperimentEnabled().then((enabled) => {
       if (!enabled) {
-        console.debug(
-          "[NRChromeWebStore] Feature disabled by experiment, skipping initialization",
-        );
         return;
       }
 
@@ -265,7 +284,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return;
     }
 
-    console.debug("[NRChromeWebStore] URL changed:", this.lastUrl, "->", url);
     this.lastUrl = url ?? null;
 
     // Reset state for new page
@@ -273,6 +291,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     this.currentExtensionId = null;
     this.installInProgress = false;
     this.hiddenAddToChromeButton = false;
+    this.isInstalled = false;
 
     // Remove existing button when navigating away
     this.removeExistingButton();
@@ -338,7 +357,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         "important",
       );
       this.hiddenAddToChromeButton = true;
-      console.debug("[NRChromeWebStore] Hidden Add to Chrome button");
     }
   }
 
@@ -461,6 +479,16 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
       }
 
+      .floorp-add-button--installed {
+        background: #4b5563;
+        cursor: default;
+        box-shadow: none;
+      }
+
+      .floorp-add-button--installed:hover {
+        background: #4b5563;
+      }
+
       .floorp-add-button__icon {
         width: 20px;
         height: 20px;
@@ -480,10 +508,14 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       }
 
       .floorp-cws-notice {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        margin: 16px;
+        margin: 0;
         padding: 16px;
         background: #fef3c7;
         border: 1px solid #fcd34d;
@@ -491,6 +523,14 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         font-size: 13px;
         line-height: 1.5;
         color: #92400e;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+        animation: floorp-slide-in 0.3s ease-out;
+      }
+
+      @keyframes floorp-slide-in {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
       }
 
       .floorp-cws-notice--error {
@@ -548,23 +588,18 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     }
 
     if (!visibleH1) {
-      console.debug("[NRChromeWebStore] No visible h1 found, page not ready");
       return false;
     }
 
     // Check if the h1 is in a section
     const section = visibleH1.closest("section");
     if (!section) {
-      console.debug("[NRChromeWebStore] h1 not in section, page not ready");
       return false;
     }
 
     // Verify the "Add to Chrome" button is visible and ready
     const button = section.querySelector("button");
     if (!button || !this.isElementVisible(button)) {
-      console.debug(
-        "[NRChromeWebStore] No visible button in section, page not ready",
-      );
       return false;
     }
 
@@ -583,10 +618,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       if (mainContent) {
         const mainText = mainContent.textContent ?? "";
         if (!mainText.includes(extensionId)) {
-          console.debug(
-            "[NRChromeWebStore] Page does not contain extension ID, page not ready",
-            extensionId,
-          );
           return false;
         }
       }
@@ -609,6 +640,16 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     // For SPA navigation: verify the page is ready before injecting
     if (!this.isPageReadyForInjection()) {
       return false;
+    }
+
+    // Check installation status if needed
+    const url = doc.location?.href;
+    if (url) {
+      const extensionId = extractExtensionId(url);
+      if (extensionId && this.currentExtensionId !== extensionId) {
+        this.currentExtensionId = extensionId;
+        this.checkInstallationStatus(extensionId).catch(() => {});
+      }
     }
 
     // Find the "Add to Chrome" button using multiple strategies
@@ -665,9 +706,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         button.id !== "floorp-add-extension-btn" &&
         this.isElementVisible(button)
       ) {
-        console.debug(
-          "[NRChromeWebStore] Found button via visible h1 sibling strategy",
-        );
         return button;
       }
 
@@ -678,7 +716,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         sectionButton.id !== "floorp-add-extension-btn" &&
         this.isElementVisible(sectionButton)
       ) {
-        console.debug("[NRChromeWebStore] Found button via visible h1 section");
         return sectionButton;
       }
     }
@@ -690,7 +727,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       buttonViaSelector.id !== "floorp-add-extension-btn" &&
       this.isElementVisible(buttonViaSelector)
     ) {
-      console.debug("[NRChromeWebStore] Found button via structure selector");
       return buttonViaSelector;
     }
 
@@ -701,11 +737,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       fallbackButton.id !== "floorp-add-extension-btn" &&
       this.isElementVisible(fallbackButton)
     ) {
-      console.debug("[NRChromeWebStore] Found button via fallback selector");
       return fallbackButton;
     }
 
-    console.debug("[NRChromeWebStore] Could not find Add to Chrome button");
     return null;
   }
 
@@ -785,13 +819,11 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     const locationHref = doc.location?.href;
     if (!locationHref) {
-      console.error("[NRChromeWebStore] Could not get document location");
       return false;
     }
 
     const extensionId = extractExtensionId(locationHref);
     if (!extensionId) {
-      console.error("[NRChromeWebStore] Could not extract extension ID");
       return false;
     }
 
@@ -804,10 +836,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     targetButton.insertAdjacentElement("afterend", button);
     this.buttonInjected = true;
 
-    console.log(
-      "[NRChromeWebStore] Successfully injected Floorp button next to Add to Chrome for:",
-      extensionId,
-    );
     return true;
   }
 
@@ -820,13 +848,11 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     const locationHref = doc.location?.href;
     if (!locationHref) {
-      console.error("[NRChromeWebStore] Could not get document location");
       return false;
     }
 
     const extensionId = extractExtensionId(locationHref);
     if (!extensionId) {
-      console.error("[NRChromeWebStore] Could not extract extension ID");
       return false;
     }
 
@@ -839,10 +865,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     container.appendChild(button);
     this.buttonInjected = true;
 
-    console.log(
-      "[NRChromeWebStore] Successfully injected Floorp button in container for:",
-      extensionId,
-    );
     return true;
   }
 
@@ -854,13 +876,18 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const button = doc.createElement("button");
     button.id = "floorp-add-extension-btn";
     button.className = "floorp-add-button";
-    const buttonText = this.t(CWS_I18N_KEYS.button.addToFloorp);
-    button.innerHTML = `
+
+    if (this.isInstalled) {
+      this.updateButtonState(button, "installed");
+    } else {
+      const buttonText = this.t(CWS_I18N_KEYS.button.addToFloorp);
+      button.innerHTML = `
       <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
       </svg>
       <span>${this.escapeHtml(buttonText)}</span>
     `;
+    }
 
     button.addEventListener("click", () => this.handleInstallClick());
     return button;
@@ -882,7 +909,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       // Extract extension metadata
       const metadata = this.extractExtensionMetadata();
-      console.log("[NRChromeWebStore] Installing extension:", metadata);
 
       // Send install request to parent
       const result = (await this.sendQuery("CWS:InstallExtension", {
@@ -892,24 +918,26 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       if (result.success) {
         this.updateButtonState(button, "success");
-        console.log("[NRChromeWebStore] Extension installed successfully");
+        this.isInstalled = true;
       } else {
         this.updateButtonState(button, "error");
         this.showError(
           result.error || this.t(CWS_I18N_KEYS.error.installFailed),
         );
-        console.error("[NRChromeWebStore] Installation failed:", result.error);
       }
     } catch (error) {
       this.updateButtonState(button, "error");
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.showError(errorMessage);
-      console.error("[NRChromeWebStore] Installation error:", error);
     } finally {
       // Reset button state after delay
       setTimeout(() => {
-        this.updateButtonState(button, "default");
+        if (this.isInstalled) {
+          this.updateButtonState(button, "installed");
+        } else {
+          this.updateButtonState(button, "default");
+        }
         this.installInProgress = false;
       }, BUTTON_RESET_DELAY);
     }
@@ -926,6 +954,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       "floorp-add-button--installing",
       "floorp-add-button--success",
       "floorp-add-button--error",
+      "floorp-add-button--installed",
     );
 
     // Update content and class based on state
@@ -949,6 +978,19 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
           </svg>
           <span>${this.escapeHtml(successText)}</span>
+        `;
+        (button as HTMLButtonElement).disabled = true;
+        break;
+      }
+
+      case "installed": {
+        const installedText = this.t(CWS_I18N_KEYS.button.installed);
+        button.classList.add("floorp-add-button--installed");
+        button.innerHTML = `
+          <svg class="floorp-add-button__icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <span>${this.escapeHtml(installedText)}</span>
         `;
         (button as HTMLButtonElement).disabled = true;
         break;
@@ -1126,7 +1168,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       <svg class="floorp-cws-notice__icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
       </svg>
-      <div>
+      <div style="flex: 1">
         <strong>${this.escapeHtml(errorTitle)}</strong><br>
         ${this.escapeHtml(message)}
         <br><br>
@@ -1134,15 +1176,30 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       </div>
     `;
 
-    // Insert after the button's container
-    const button = doc.getElementById("floorp-add-extension-btn");
-    if (button?.parentElement) {
-      button.parentElement.insertAdjacentElement("afterend", notice);
+    // Add close button
+    const closeBtn = doc.createElement("button");
+    closeBtn.style.cssText =
+      "background:none;border:none;cursor:pointer;padding:0;color:inherit;opacity:0.7;margin-left:8px";
+    closeBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+    `;
+    closeBtn.addEventListener("click", () => notice.remove());
+    notice.appendChild(closeBtn);
+
+    // Append to body for fixed positioning
+    if (doc.body) {
+      doc.body.appendChild(notice);
+    } else {
+      doc.documentElement.appendChild(notice);
     }
 
     // Auto-remove after timeout
     setTimeout(() => {
-      notice.remove();
+      if (notice.isConnected) {
+        notice.remove();
+      }
     }, ERROR_NOTICE_TIMEOUT);
   }
 
@@ -1174,7 +1231,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     switch (message.name) {
       case "CWS:InstallProgress":
         // Handle installation progress updates
-        console.log("[NRChromeWebStore] Install progress:", message.data);
         break;
 
       case "CWS:GetExtensionId":

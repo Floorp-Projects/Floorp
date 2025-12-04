@@ -21,8 +21,6 @@ import { CWSError, CWSErrorCode } from "./types.ts";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[ZipUtils]";
-
 /** Default compression level (DEFLATE) */
 const COMPRESSION_DEFAULT = 0;
 
@@ -81,15 +79,13 @@ export function readManifestFromZip(
 ): ChromeManifest | null {
   try {
     if (!zipReader.hasEntry("manifest.json")) {
-      console.error(`${LOG_PREFIX} No manifest.json found in ZIP`);
       return null;
     }
 
     const manifestStream = zipReader.getInputStream("manifest.json");
     const manifestText = readInputStream(manifestStream);
     return JSON.parse(manifestText) as ChromeManifest;
-  } catch (error) {
-    console.error(`${LOG_PREFIX} Failed to read manifest.json:`, error);
+  } catch {
     return null;
   }
 }
@@ -156,8 +152,8 @@ export function readAllZipEntries(zipReader: nsIZipReader): ZipEntry[] {
           lastModified: entry?.lastModifiedTime,
         });
       }
-    } catch (error) {
-      console.warn(`${LOG_PREFIX} Failed to read entry ${entryName}:`, error);
+    } catch {
+      // Skip entries that fail to read
     }
   }
 
@@ -318,8 +314,8 @@ function copyZipEntry(
       inputStream,
       false,
     );
-  } catch (error) {
-    console.warn(`${LOG_PREFIX} Failed to copy entry ${entryName}:`, error);
+  } catch {
+    // Skip entries that fail to copy
   }
 }
 

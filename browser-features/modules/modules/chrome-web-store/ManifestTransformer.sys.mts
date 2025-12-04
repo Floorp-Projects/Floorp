@@ -19,8 +19,6 @@ import type { ChromeManifest, TransformOptions } from "./types.ts";
 // Constants
 // =============================================================================
 
-const LOG_PREFIX = "[ManifestTransformer]";
-
 // =============================================================================
 // Types
 // =============================================================================
@@ -83,14 +81,6 @@ export function transformManifestFull(
   // Remove Chrome-specific fields
   removeUnsupportedFields(transformed);
 
-  console.log(
-    `${LOG_PREFIX} Transformed: ${transformed.name} v${transformed.version}`,
-  );
-
-  if (removedPermissions.length > 0) {
-    console.log(`${LOG_PREFIX} Removed permissions:`, removedPermissions);
-  }
-
   return { manifest: transformed, warnings, removedPermissions };
 }
 
@@ -123,9 +113,6 @@ export function validateManifest(
 
   // Validate manifest version
   if (m.manifest_version !== 2 && m.manifest_version !== 3) {
-    console.warn(
-      `${LOG_PREFIX} Unsupported manifest version: ${m.manifest_version}`,
-    );
     return false;
   }
 
@@ -186,8 +173,6 @@ function transformMV3Background(manifest: ChromeManifest): string | null {
     return null;
   }
 
-  console.log(`${LOG_PREFIX} Converting service_worker to background scripts`);
-
   const serviceWorker = manifest.background.service_worker;
 
   manifest.background = {
@@ -226,6 +211,14 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
     matches?: string[];
     extension_ids?: string[];
   }>) {
+    // Filter out chrome-extension:// patterns from matches
+    // Firefox doesn't support chrome-extension:// scheme in web_accessible_resources
+    if (entry.matches && Array.isArray(entry.matches)) {
+      entry.matches = entry.matches.filter(
+        (pattern) => !pattern.startsWith("chrome-extension://"),
+      );
+    }
+
     if (entry.extension_ids && Array.isArray(entry.extension_ids)) {
       entry.extension_ids = entry.extension_ids.map((id) => {
         // Keep "*" as-is (wildcard, allowed in Firefox)
@@ -244,12 +237,8 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
         // Convert Chrome extension ID to Firefox format
         return `${id}${EXTENSION_ID_SUFFIX}`;
       });
-      console.log(`${LOG_PREFIX} Converted extension_ids to Firefox format`);
     }
   }
-
-  // Firefox 101+ supports MV3 web_accessible_resources format
-  console.log(`${LOG_PREFIX} Keeping MV3 web_accessible_resources format`);
 }
 
 /**
@@ -260,7 +249,6 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
   const removed: string[] = [];
 
   if (manifest.permissions?.length) {
-    const originalPerms = [...manifest.permissions];
     manifest.permissions = manifest.permissions.filter((permission) => {
       if (!isPermissionSupported(permission)) {
         removed.push(permission);
@@ -268,17 +256,9 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
       }
       return true;
     });
-
-    const removedCount = originalPerms.length - manifest.permissions.length;
-    if (removedCount > 0) {
-      console.log(
-        `${LOG_PREFIX} Removed ${removedCount} unsupported permission(s)`,
-      );
-    }
   }
 
   if (manifest.optional_permissions?.length) {
-    const originalCount = manifest.optional_permissions.length;
     manifest.optional_permissions = manifest.optional_permissions.filter(
       (permission) => {
         if (!isOptionalPermissionAllowed(permission)) {
@@ -288,13 +268,6 @@ function filterUnsupportedPermissions(manifest: ChromeManifest): string[] {
         return true;
       },
     );
-
-    const removedCount = originalCount - manifest.optional_permissions.length;
-    if (removedCount > 0) {
-      console.log(
-        `${LOG_PREFIX} Removed ${removedCount} unsupported optional_permission(s)`,
-      );
-    }
   }
 
   return removed;
@@ -307,19 +280,16 @@ function removeUnsupportedFields(manifest: ChromeManifest): void {
   // Remove update_url (Chrome specific)
   if ("update_url" in manifest) {
     delete manifest.update_url;
-    console.debug(`${LOG_PREFIX} Removed update_url`);
   }
 
   // Remove key (used for Chrome extension ID)
   if ("key" in manifest) {
     delete manifest.key;
-    console.debug(`${LOG_PREFIX} Removed key`);
   }
 
   // Remove differential_fingerprint (Chrome specific)
   if ("differential_fingerprint" in manifest) {
     delete manifest.differential_fingerprint;
-    console.debug(`${LOG_PREFIX} Removed differential_fingerprint`);
   }
 }
 
