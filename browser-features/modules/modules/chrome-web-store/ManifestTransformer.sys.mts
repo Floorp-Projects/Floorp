@@ -81,6 +81,9 @@ export function transformManifestFull(
   // Remove Chrome-specific fields
   removeUnsupportedFields(transformed);
 
+  // Sanitize theme properties
+  sanitizeTheme(transformed);
+
   return { manifest: transformed, warnings, removedPermissions };
 }
 
@@ -290,6 +293,28 @@ function removeUnsupportedFields(manifest: ChromeManifest): void {
   // Remove differential_fingerprint (Chrome specific)
   if ("differential_fingerprint" in manifest) {
     delete manifest.differential_fingerprint;
+  }
+}
+
+/**
+ * Sanitize theme properties
+ * Some Chrome themes use 0 for ntp_logo_alternate, which Firefox rejects
+ */
+function sanitizeTheme(manifest: ChromeManifest): void {
+  if (!manifest.theme || typeof manifest.theme !== "object") {
+    return;
+  }
+
+  const theme = manifest.theme as Record<string, unknown>;
+  if (!theme.properties || typeof theme.properties !== "object") {
+    return;
+  }
+
+  const properties = theme.properties as Record<string, unknown>;
+
+  // Fix ntp_logo_alternate: Expected string instead of 0
+  if (properties.ntp_logo_alternate === 0) {
+    delete properties.ntp_logo_alternate;
   }
 }
 
