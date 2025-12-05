@@ -65,6 +65,7 @@ const { setTimeout } = ChromeUtils.importESModule(
 
 const DEFAULT_PORT = 58261;
 const PREF_ENABLED = "floorp.os.enabled";
+const PREF_MCP_ENABLED = "floorp.mcp.enabled";
 const PREF_PORT = "floorp.os.server.port";
 const PREF_TOKEN = "floorp.os.server.token";
 
@@ -142,6 +143,7 @@ class LocalHttpServer implements nsIServerSocketListener {
   private _handlePrefChange(prefName: string) {
     if (
       prefName === PREF_ENABLED ||
+      prefName === PREF_MCP_ENABLED ||
       prefName === PREF_PORT ||
       prefName === PREF_TOKEN
     ) {
@@ -152,6 +154,7 @@ class LocalHttpServer implements nsIServerSocketListener {
   public registerPrefObserver() {
     try {
       Services.prefs.addObserver(PREF_ENABLED, this);
+      Services.prefs.addObserver(PREF_MCP_ENABLED, this);
       Services.prefs.addObserver(PREF_PORT, this);
       Services.prefs.addObserver(PREF_TOKEN, this);
     } catch (e) {
@@ -162,6 +165,7 @@ class LocalHttpServer implements nsIServerSocketListener {
   private _unregisterPrefObserver() {
     try {
       Services.prefs.removeObserver(PREF_ENABLED, this);
+      Services.prefs.removeObserver(PREF_MCP_ENABLED, this);
       Services.prefs.removeObserver(PREF_PORT, this);
       Services.prefs.removeObserver(PREF_TOKEN, this);
     } catch (e) {
@@ -171,7 +175,8 @@ class LocalHttpServer implements nsIServerSocketListener {
 
   private _updateFromPrefs() {
     const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
-    if (enabled) {
+    const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
+    if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
       const token = Services.prefs.getStringPref(PREF_TOKEN, "");
       if (!this._server) {
@@ -445,7 +450,8 @@ function initializeServer() {
 
     // Check initial pref value
     const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
-    if (enabled) {
+    const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
+    if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
       const token = Services.prefs.getStringPref(PREF_TOKEN, "");
       osLocalServer.start(port, token);
