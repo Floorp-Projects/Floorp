@@ -62,11 +62,11 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
 
         <div>
           <h3 className="text-base font-medium mb-4">
-            {t("accounts.floorpFeatureSyncSettings")}
+            {t("accounts.featureSyncSettings")}
           </h3>
           <div className="flex items-center justify-between gap-2">
             <label htmlFor="sync-notes">
-              {t("accounts.syncFloorpNotesToMozillaAccount")}
+              {t("accounts.syncNotesToMozillaAccount")}
             </label>
             <Switch
               id="sync-notes"
