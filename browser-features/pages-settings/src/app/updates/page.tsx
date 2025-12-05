@@ -115,8 +115,8 @@ export default function Page() {
 
   const handleDisableExperiment = (experimentId: string) => {
     openConfirmationModal(
-      t("updates.activeTests.disable"),
-      t("updates.activeTests.confirmDisable"),
+      t("updates.activeFlascos.disable"),
+      t("updates.activeFlascos.confirmDisable"),
       async () => {
         try {
           const result = await experimentsRpc.disableExperiment(experimentId);
@@ -129,15 +129,15 @@ export default function Page() {
           console.error("Failed to disable experiment:", error);
         }
       },
-      t("updates.activeTests.disable"),
+      t("updates.activeFlascos.disable"),
       "secondary",
     );
   };
 
   const handleEnableExperiment = (experimentId: string) => {
     openConfirmationModal(
-      t("updates.activeTests.enable"),
-      t("updates.activeTests.confirmEnable"),
+      t("updates.activeFlascos.enable"),
+      t("updates.activeFlascos.confirmEnable"),
       async () => {
         try {
           const result = await experimentsRpc.enableExperiment(experimentId);
@@ -150,7 +150,7 @@ export default function Page() {
           console.error("Failed to enable experiment:", error);
         }
       },
-      t("updates.activeTests.enable"),
+      t("updates.activeFlascos.enable"),
       "primary",
     );
   };
@@ -248,12 +248,12 @@ export default function Page() {
           <CardHeader>
             <div className="flex flex-row items-start justify-between gap-4">
               <div className="flex-1">
-                <CardTitle>{t("updates.activeTests.title")}</CardTitle>
+                <CardTitle>{t("updates.activeFlascos.title")}</CardTitle>
                 <CardDescription>
-                  {t("updates.activeTests.description")}
+                  {t("updates.activeFlascos.description")}
                   {lastUpdated &&
                     ` (${
-                      t("updates.activeTests.lastUpdated")
+                      t("updates.activeFlascos.lastUpdated")
                     } ${lastUpdated.toLocaleTimeString()})`}
                 </CardDescription>
               </div>
@@ -269,7 +269,7 @@ export default function Page() {
                     experimentsLoading ? "animate-spin" : ""
                   }`}
                 />
-                {t("updates.activeTests.refresh")}
+                {t("updates.activeFlascos.refresh")}
               </Button>
             </div>
           </CardHeader>
@@ -283,7 +283,7 @@ export default function Page() {
               : activeExperiments.length === 0
               ? (
                 <div className="text-center py-8 text-base-content/70">
-                  {t("updates.activeTests.noTests")}
+                  {t("updates.activeFlascos.noFlascos")}
                 </div>
               )
               : (
@@ -307,7 +307,7 @@ export default function Page() {
                           </span>
                           {experiment.disabled && (
                             <span className="text-xs px-2 py-1 rounded-full bg-base-content/10 text-base-content/70">
-                              {t("updates.activeTests.disabledLabel")}
+                              {t("updates.activeFlascos.disabledLabel")}
                             </span>
                           )}
                         </div>
@@ -320,7 +320,7 @@ export default function Page() {
                           <span>ID: {experiment.id}</span>
                           {experiment.assignedAt && (
                             <span>
-                              {t("updates.activeTests.assignedAt", {
+                              {t("updates.activeFlascos.assignedAt", {
                                 date: new Date(
                                   experiment.assignedAt,
                                 ).toLocaleDateString(),
@@ -340,8 +340,8 @@ export default function Page() {
                       >
                         <X className="h-4 w-4 mr-1" />
                         {experiment.disabled
-                          ? t("updates.activeTests.enable")
-                          : t("updates.activeTests.disable")}
+                          ? t("updates.activeFlascos.enable")
+                          : t("updates.activeFlascos.disable")}
                       </Button>
                     </div>
                   ))}
