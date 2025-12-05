@@ -6,7 +6,7 @@
         "welcome": "Welkom bij {{productName}} Notities!",
         "welcomeContent": "Welkom bij {{productName}} Notities! Zo gebruik je het.\n\n{{productName}} Notities is een functie voor het maken van notities die kunnen worden gesynchroniseerd tussen apparaten. Om synchronisatie aan te zetten, moet u zich aanmelden bij {{productName}} met een Mozilla-account.\n{{productName}} Notities worden opgeslagen in {{productName}} en gesynchroniseerd met behulp van Firefox Sync. Firefox Sync versleutelt de inhoud van de synchronisatie met uw Mozilla account wachtwoord, zodat niemand de inhoud kan zien.",
         "new": "Nieuwe notitie",
-        "reorder": "Reorder",
+        "reorder": "Herordenen",
         "done": "Klaar",
         "emptyTitle": "Naamloos",
         "emptyContent": "Geen inhoud",
@@ -26,7 +26,7 @@
         "alignLeft": "Links uitlijnen",
         "alignCenter": "Centreren",
         "alignRight": "Rechts uitlijnen",
-        "quote": "Quote",
+        "quote": "Citeren",
         "heading1": "Koptekst 1",
         "heading2": "Koptekst 2",
         "heading3": "Koptekst 3"

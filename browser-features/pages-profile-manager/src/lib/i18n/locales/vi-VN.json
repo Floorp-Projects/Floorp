@@ -2,23 +2,23 @@
     "profileManager": {
         "title": "Hồ sơ",
         "buttons": {
-            "refresh": "Refresh",
-            "create": "Create"
+            "refresh": "Làm mới danh sách",
+            "create": "Tạo"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
-        "default": "Đầu",
+        "loading": "Đang tải…",
+        "noProfiles": "Không tìm thấy hồ sơ.",
+        "current": "Hiện tại",
+        "default": "Mặc định",
         "actions": {
-            "open": "Open",
-            "new": "Tạo",
-            "rename": "Rename",
-            "remove": "Remove",
-            "setDefault": "Đầu"
+            "open": "Mở",
+            "new": "Mới",
+            "rename": "Đổi tên",
+            "remove": "Xóa",
+            "setDefault": "Mặc định"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Bạn chắc chắn là muốn xóa hồ sơ này?",
+            "newName": "Tên hồ sơ mới:"
         }
     }
 }

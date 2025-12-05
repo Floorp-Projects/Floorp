@@ -92,8 +92,8 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Mover aba para outra espaço de trabalho",
-      "openLinkInWorkspace": "Open Link in Another Workspace",
-      "noOtherWorkspace": "No other workspaces available"
+      "openLinkInWorkspace": "Abrir link em outro espaço de trabalho",
+      "noOtherWorkspace": "Não há outros espaços de trabalho disponíveis"
     },
     "error": {
       "invalidWorkspaceID": "ID inválida para espaços de trabalho (talvez a ordem não esteja atualizada)"
@@ -108,8 +108,8 @@
   },
   "splitview": {
     "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
+      "temporarily-unavailable": "A visualização dividida está temporariamente indisponível",
+      "details": "Detalhes"
     }
   },
   "ssb": {
@@ -311,5 +311,64 @@
     "actionLabelInput": "Entrada/input",
     "actionLabelClick": "Clicar",
     "actionLabelSubmit": "Enviar"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Abrir aba em navegador externo",
+      "openLinkIn": "Abrir link em navegador externo",
+      "defaultBrowser": "Navegador padrão do sistema",
+      "noBrowsers": "Nenhum navegador externo detectado",
+      "noValidUrl": "Nenhuma URL válida para abrir"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Adicionar ao Floorp",
+      "installing": "Instalando...",
+      "success": "Adicionado!",
+      "error": "Ocorreu um erro",
+      "installed": "Instalado"
+    },
+    "error": {
+      "title": "Erro na instalação",
+      "compatibilityNote": "Esta extensão pode não ser compatível com o Firefox/Floorp.",
+      "alreadyInstalled": "Essa extensão já está instalada ({{name}})",
+      "downloadFailed": "Falha ao fazer o download do arquivo CRX",
+      "conversionFailed": "Falha ao converter a extensão: {{error}}",
+      "conversionFailedGeneric": "Falha ao converter CRX em XPI",
+      "installError": "Erro de instalação: {{error}}",
+      "installFailed": "Falha na instalação",
+      "noData": "Nenhum dado de instalação fornecido",
+      "addonManagerUnavailable": "AddonManager não está disponível",
+      "noBrowserWindow": "Não foi possível encontrar a janela do navegador para instalação",
+      "createInstallFailed": "Falha ao criar objeto de instalação",
+      "cancelledByUser": "Instalação cancelada pelo usuário",
+      "downloadCancelled": "Download cancelado",
+      "timeout": "O tempo de instalação expirou",
+      "xpiInstallError": "Erro de instalação do XPI: {{error}}",
+      "errorWithCode": "Erro de instalação (código: {{code}})",
+      "experimentDisabled": "Esse recurso não está disponível no momento."
+    },
+    "installErrors": {
+      "downloadFailed": "Falha no download",
+      "signatureVerifyFailed": "Falha ao verificar a assinatura da extensão",
+      "corruptOrIncompatible": "A extensão está corrompida ou é incompatível",
+      "incompatible": "Essa extensão não é compatível com o Floorp",
+      "blocked": "Esta extensão está bloqueada",
+      "timeout": "Tempo limite da instalação da extensão atingido",
+      "installFailed": "Falha na instalação da extensão",
+      "parseFailed": "Falha ao processar a extensão",
+      "invalidFile": "Arquivo de extensão inválido",
+      "networkError": "Ocorreu um erro de rede"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Deseja adicionar a extensão do Chrome \"{{name}}\"? Essa extensão foi convertida da Chrome Web Store.",
+      "chromeExtensionPrompt": "Deseja adicionar a extensão do Chrome \"{{name}}\"?",
+      "defaultExtensionName": "esta extensão",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "Esta extensão do Chrome foi convertida para um formato compatível com o Firefox. Alguns recursos podem não funcionar corretamente."
+    }
   }
 }

@@ -187,6 +187,21 @@
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
             }
         },
+        "tabSleepExclusion": {
+            "title": "タブスリープの除外",
+            "description": "特定のウェブサイトをタブスリープ (タブの自動解放) から除外します。以下のパターンに一致するタブは読み込まれた状態が維持され、メモリが足りなくても自動的に解放されません。",
+            "enable": "タブスリープの除外を有効にする",
+            "patterns": "除外パターン",
+            "patternsDescription": "タブスリープから除外する URL パターンを追加します。これらのパターンに一致するタブは自動解放されません。",
+            "patternPlaceholder": "URL パターンを入力 (例: example.com, *.google.com)",
+            "add": "追加",
+            "remove": "削除",
+            "noPatterns": "除外パターンが設定されていません。自動解放しないパターンを設定してください。",
+            "examples": "パターンの例",
+            "exampleDomain": "このドメインを含む URL に反応",
+            "exampleWildcard": "google.com のすべてのサブドメインに反応",
+            "exampleFullUrl": "Gmail の URL のみに反応"
+        },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
             "needRestartDescriptionForEnableAndDisable": "この UI カスタマイズ機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "新しいタブ",
-                "disableFloorpStart": "Floorp Start を無効にする"
+                "disableFloorpStart": "{{productName}} Start を無効にする"
             },
             "multirowTab": {
                 "title": "多段タブ",
@@ -239,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "ワークスペース選択時にワークスペースのポップアップを閉じる",
         "closePopupWhenSelectingWorkspaceDescription": "ワークスペースを選択した後、ワークスペースのポップアップを閉じるかどうかを選択します。",
         "showWorkspaceNameOnToolbar": "アイコンの隣にワークスペース名を表示",
-        "exitOnLastTabClose": "最後のワークスペースのタブを閉じたときに Floorp を終了する",
+        "exitOnLastTabClose": "最後のワークスペースのタブを閉じたときに {{productName}} を終了する",
         "manageOnBms": "{{productName}} サイドバーでワークスペースを管理",
         "manageOnBmsDescription": "この機能を有効にすると、 {{productName}} サイドバーでのみワークスペースを管理できます。ツールバーのボタンは引き続き必要ですが、使用できません。",
         "backup": "ワークスペースのバックアップ",
@@ -258,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "プロファイルとアカウント",
-        "profileDescription": "プロファイルには、履歴、ブックマーク、設定、アドオンなどの閲覧関連情報が含まれています。 Floorp はこのプロファイルを使用してデータを保存します。",
+        "profileDescription": "プロファイルには、履歴、ブックマーク、設定、アドオンなどの閲覧関連情報が含まれています。 {{productName}} はこのプロファイルを使用してデータを保存します。",
         "profileManagement": "プロファイルを管理",
         "profileManagementDescription": "プロファイルは作成するたびに別のデータとして保存されます。データはプロファイルフォルダーに保存されます。",
         "currentProfileName": "現在のプロファイル名: {{name}}",
@@ -267,8 +282,8 @@
         "openProfileSaveLocation": "プロファイルの保存先を開く",
         "mozillaAccountSyncSettings": "Mozilla アカウントの同期設定",
         "syncedTo": "{{email}} に同期中",
-        "syncFloorpNotesToMozillaAccount": "Floorp Notes を Mozilla アカウントと同期 (実験的)",
-        "floorpFeatureSyncSettings": "Floorp 機能の同期設定",
+        "sync{{productName}}NotesToMozillaAccount": "{{productName}} Notes を Mozilla アカウントと同期 (実験的)",
+        "{{productName}}FeatureSyncSettings": "{{productName}} 機能の同期設定",
         "manageMozillaAccount": "Mozilla アカウントを管理",
         "manageFirefoxFeatureSync": "Firefox 機能の同期を管理",
         "aboutMozillaAccount": "Mozilla アカウントについて",
@@ -292,8 +307,8 @@
         "title": "更新と実験",
         "description": "更新に関する設定と実験的な機能への参加を管理します。",
         "experiments": {
-            "title": "{{productName}} テストに参加",
-            "description": "{{productName}} の実験的な機能や {{productName}} テストに参加する方法を管理します。",
+            "title": "{{productName}} Flasco に参加",
+            "description": "{{productName}} の実験的な機能や {{productName}} Flasco に参加する方法を管理します。",
             "policyLabel": "参加方針",
             "policy": {
                 "default": "既定 (推奨)",
@@ -301,26 +316,26 @@
                 "never": "参加しない"
             },
             "policyHelp": {
-                "default": "推奨の参加方針に従います。ロールアウト率に基づいて {{productName}} テストに参加します。",
-                "always": "利用可能なすべての {{productName}} テストに参加します。新機能を早期に試したいユーザーに向いています。",
-                "never": "{{productName}} テストに参加しません。テスト済みの安定した機能のみを受け取ります。"
+                "default": "推奨の参加方針に従います。ロールアウト率に基づいて {{productName}} Flasco に参加します。",
+                "always": "利用可能なすべての {{productName}} Flasco に参加します。新機能を早期に試したいユーザーに向いています。",
+                "never": "{{productName}} Flasco に参加しません。テスト済みの安定した機能のみを受け取ります。"
             },
             "confirmClearCache": "本当にすべての実験データを消去しますか？ これにより割り当てがリセットされます。この操作は取り消せません。",
             "troubleshooting": "トラブルシューティング",
             "clearCacheDescription": "実験で問題が発生した場合、キャッシュを消去して実験に関連するすべてのデータを初期状態にリセットすることで、解決することがあります。",
             "clearCache": "実験キャッシュを消去"
         },
-        "activeTests": {
-            "title": "有効な {{productName}} テスト",
-            "description": "現在有効なテスト登録を確認および管理します。",
+        "activeFlascos": {
+            "title": "有効な {{productName}} Flasco",
+            "description": "現在有効な Flasco 登録を確認および管理します。",
             "refresh": "更新",
-            "noTests": "現在、どのテストにも参加していません。",
+            "noFlascos": "現在、どの Flasco にも参加していません。",
             "assignedAt": "登録日: {{date}}",
             "disable": "無効化",
             "enable": "有効化",
             "disabledLabel": "無効",
-            "confirmDisable": "本当にこの実験を無効にしますか？ 後で再度有効にできます。",
-            "confirmEnable": "本当にこの実験を再度有効にしますか？",
+            "confirmDisable": "本当にこの Flasco を無効にしますか？ 後で再度有効にできます。",
+            "confirmEnable": "本当にこの Flasco を再度有効にしますか？",
             "lastUpdated": "最終更新:"
         }
     },
@@ -420,12 +435,12 @@
         "uninstall": "アンインストール"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Floorp OS のバックエンドモジュールとサービスを管理",
+        "title": "{{productName}} OS",
+        "description": "{{productName}} OS のバックエンドモジュールとサービスを管理",
         "loading": "読み込み中...",
         "statusCard": {
             "title": "状態",
-            "description": "Floorp OS の現在の状態",
+            "description": "{{productName}} OS の現在の状態",
             "platformSupport": "プラットフォーム対応",
             "platformSupported": "お使いのプラットフォームはサポートされています",
             "platformUnsupported": "お使いのプラットフォームはサポートされていません",
@@ -439,24 +454,24 @@
         },
         "controlsCard": {
             "title": "制御",
-            "description": "Floorp OS の有効化または無効化",
-            "enable": "Floorp OS を有効にする",
-            "disable": "Floorp OS を無効にする",
+            "description": "{{productName}} OS を有効または無効にする",
+            "enable": "{{productName}} OS を有効にする",
+            "disable": "{{productName}} OS を無効にする",
             "refresh": "状態を更新"
         },
         "messages": {
-            "enabling": "Floorp OS を有効化中...",
-            "disabling": "Floorp OS を無効化中...",
-            "enableSuccess": "Floorp OS は正常に有効になりました！",
-            "disableSuccess": "Floorp OS は正常に無効になりました！"
+            "enabling": "{{productName}} OS を有効にしています...",
+            "disabling": "{{productName}} OS を無効にしています...",
+            "enableSuccess": "{{productName}} OS は正常に有効になりました！",
+            "disableSuccess": "{{productName}} OS は正常に無効になりました！"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API は利用できません。",
             "loadStatus": "状態の読み込みに失敗しました: {{reason}}",
-            "enable": "Floorp OS の有効化に失敗しました。",
-            "disable": "Floorp OS の無効化に失敗しました。",
-            "enableAction": "Floorp OS の有効化でエラーが発生しました: {{reason}}",
-            "disableAction": "Floorp OS の無効化でエラーが発生しました: {{reason}}"
+            "enable": "{{productName}} OS を有効にできませんでした。",
+            "disable": "{{productName}} OS を無効にできませんでした。",
+            "enableAction": "{{productName}} OS の有効化でエラー: {{reason}}",
+            "disableAction": "{{productName}} OS の無効化でエラー: {{reason}}"
         }
     },
     "mouseGesture": {

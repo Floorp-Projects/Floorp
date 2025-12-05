@@ -311,5 +311,64 @@
     "actionLabelInput": "入力",
     "actionLabelClick": "クリック",
     "actionLabelSubmit": "送信"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "外部ブラウザーでタブを開く",
+      "openLinkIn": "外部ブラウザーでリンクを開く",
+      "defaultBrowser": "システムの既定のブラウザー",
+      "noBrowsers": "外部ブラウザーが見つかりません",
+      "noValidUrl": "開ける URL がありません"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Floorp に追加",
+      "installing": "インストール中...",
+      "success": "追加完了！",
+      "error": "エラーが発生しました",
+      "installed": "インストール済み"
+    },
+    "error": {
+      "title": "インストールエラー",
+      "compatibilityNote": "この拡張機能は Firefox/Floorp と互換性がない可能性があります。",
+      "alreadyInstalled": "この拡張機能はすでにインストールされています ({{name}})",
+      "downloadFailed": "CRX ファイルをダウンロードできませんでした",
+      "conversionFailed": "拡張機能を変換できませんでした: {{error}}",
+      "conversionFailedGeneric": "CRX から XPI に変換できませんでした",
+      "installError": "インストールエラー: {{error}}",
+      "installFailed": "インストール失敗",
+      "noData": "インストールデータが提供されていません",
+      "addonManagerUnavailable": "AddonManager は利用できません",
+      "noBrowserWindow": "インストール用のブラウザーウィンドウが見つかりません",
+      "createInstallFailed": "インストールオブジェクトを作成できませんでした",
+      "cancelledByUser": "インストールはユーザーによってキャンセルされました",
+      "downloadCancelled": "ダウンロードがキャンセルされました",
+      "timeout": "インストールがタイムアウトしました",
+      "xpiInstallError": "XPI インストールエラー: {{error}}",
+      "errorWithCode": "インストールエラー (コード: {{code}})",
+      "experimentDisabled": "この機能は現在利用できません"
+    },
+    "installErrors": {
+      "downloadFailed": "ダウンロード失敗",
+      "signatureVerifyFailed": "拡張機能の署名を検証できませんでした",
+      "corruptOrIncompatible": "拡張機能が壊れているか、互換性がありません",
+      "incompatible": "この拡張機能は Floorp と互換性がありません",
+      "blocked": "この拡張機能はブロックされています",
+      "timeout": "拡張機能のインストールがタイムアウトしました",
+      "installFailed": "拡張機能のインストールに失敗しました",
+      "parseFailed": "拡張機能の解析に失敗しました",
+      "invalidFile": "無効な拡張機能ファイルです",
+      "networkError": "ネットワークエラーが発生しました"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Chrome 拡張機能 \"{{name}}\" を追加しますか？ この拡張機能は Chrome ウェブストアから変換されました。",
+      "chromeExtensionPrompt": "Chrome 拡張機能 \"{{name}}\" を追加しますか？",
+      "defaultExtensionName": "この拡張機能",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "この Chrome 拡張機能は Firefox 互換形式に変換されています。一部の機能は正しく動作しない可能性があります。"
+    }
   }
 }

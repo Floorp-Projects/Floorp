@@ -39,7 +39,7 @@
         "disableFloorpStart": "Floorp Start uitschakelen (gebruik klassieke about:newtab)",
         "disableFloorpStartDescription": "Indien ingeschakeld, zal Floorp Start worden vervangen door het klassieke nieuwe tabblad/startpagina van Firefox.",
         "restartRequired": "Vereist een herstart van de browser om volledig van kracht te worden.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "firefoxLayout": "Legacy lay-out gebruiken (zoals Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Zoek of voer URL in",

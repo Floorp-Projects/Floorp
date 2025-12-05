@@ -5,7 +5,7 @@
   },
   "floorpHubWarning": {
     "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "openButton": "Floorp-Hub öffnen"
   },
   "floorpStartWarning": {
     "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
@@ -78,17 +78,17 @@
       "restore-empty": "No archived workspaces",
       "restore-error": "Failed to load archived workspaces",
       "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore-item": "\"{{name}}\" wiederherstellen",
+      "restore-delete-tooltip": "Dieses Archiv löschen",
+      "restore-tab-count": "{{count}} Tab",
+      "restore-tab-count_plural": "{{count}} Tabs",
+      "restore-time-just-now": "Soeben",
+      "restore-time-minutes": "Vor {{minutes}} Minute",
+      "restore-time-minutes_plural": "Vor {{minutes}} Minuten",
+      "restore-time-hours": "Vor {{hours}} Stunde",
+      "restore-time-hours_plural": "Vor {{hours}} Stunden",
+      "restore-time-days": "Vor {{days}} Tag",
+      "restore-time-days_plural": "Vor {{days}} Tagen"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tab zu einem anderen Arbeitsbereich verschieben",
@@ -114,46 +114,46 @@
   },
   "ssb": {
     "menu": {
-      "webapps": "Web Apps",
-      "install-current": "Install Current Page as Progressive Web App",
-      "open-installed": "Open Installed Apps"
+      "webapps": "Web-Apps",
+      "install-current": "Aktuelle Seite als Progressive Web App installieren",
+      "open-installed": "Installierte Apps öffnen"
     },
     "page-action": {
-      "title": "Open Application",
-      "install": "Install Application",
-      "open": "Open Application",
-      "cancel": "Cancel",
-      "site-icon": "Site icon"
+      "title": "Anwendung öffnen",
+      "install": "Anwendung installieren",
+      "open": "Anwendung öffnen",
+      "cancel": "Abbrechen",
+      "site-icon": "Webseitensymbol"
     }
   },
   "privateContainer": {
-    "openInPrivateContainer": "Open in Private Container",
-    "reopenInPrivateContainer": "Reopen in Private Container",
-    "name": "Private Container"
+    "openInPrivateContainer": "In privatem Container öffnen",
+    "reopenInPrivateContainer": "In privatem Container wieder öffnen",
+    "name": "Privater Container"
   },
   "mouseGesture": {
     "actions": {
-      "gecko-back": "Back",
-      "gecko-forward": "Forward",
-      "gecko-reload": "Reload",
-      "gecko-close-tab": "Close Tab",
-      "gecko-open-new-tab": "New Tab",
-      "gecko-duplicate-tab": "Duplicate Tab",
-      "gecko-reload-all-tabs": "Reload All Tabs",
-      "gecko-restore-last-tab": "Reopen Closed Tab",
-      "gecko-open-new-window": "Open New Window",
-      "gecko-open-new-private-window": "Open New Private Window",
-      "gecko-close-window": "Close Window",
-      "gecko-restore-last-window": "Restore Last Window",
-      "gecko-show-next-tab": "Show Next Tab",
-      "gecko-show-previous-tab": "Show Previous Tab",
-      "gecko-show-all-tabs-panel": "Show All Tabs Panel",
-      "gecko-force-reload": "Force Reload",
-      "gecko-zoom-in": "Zoom In",
-      "gecko-zoom-out": "Zoom Out",
-      "gecko-reset-zoom": "Reset Zoom",
-      "gecko-bookmark-this-page": "Bookmark This Page",
-      "gecko-open-home-page": "Open Home Page",
+      "gecko-back": "Zurück",
+      "gecko-forward": "Vorwärts",
+      "gecko-reload": "Neu laden",
+      "gecko-close-tab": "Tab schließen",
+      "gecko-open-new-tab": "Neuer Tab",
+      "gecko-duplicate-tab": "Tab klonen",
+      "gecko-reload-all-tabs": "Alle Tabs neu laden",
+      "gecko-restore-last-tab": "Geschlossenen Tab wieder öffnen",
+      "gecko-open-new-window": "Neues Fenster öffnen",
+      "gecko-open-new-private-window": "Neues privates Fenster öffnen",
+      "gecko-close-window": "Fenster schließen",
+      "gecko-restore-last-window": "Letztes Fenster wiederherstellen",
+      "gecko-show-next-tab": "Nächsten Tab anzeigen",
+      "gecko-show-previous-tab": "Vorherigen Tab anzeigen",
+      "gecko-show-all-tabs-panel": "\"Alle Registerkarten\"-Panel anzeigen",
+      "gecko-force-reload": "Neu laden erzwingen",
+      "gecko-zoom-in": "Hineinzoomen",
+      "gecko-zoom-out": "Herauszoomen",
+      "gecko-reset-zoom": "Zoom zurücksetzen",
+      "gecko-bookmark-this-page": "Lesezeichen für diese Seite setzen",
+      "gecko-open-home-page": "Startseite öffnen",
       "gecko-open-addons-manager": "Open Addons Manager",
       "gecko-send-with-mail": "Send With Mail",
       "gecko-save-page": "Save Page",
@@ -263,7 +263,7 @@
     }
   },
   "chrome_css": {
-    "menu": "Style",
+    "menu": "Stil",
     "rebuild": "Rebuild Style Sheets",
     "create": "Create New Style Sheet",
     "open_folder": "Open Style Sheets Folder",
@@ -282,11 +282,11 @@
   },
   "reboot": {
     "menu": {
-      "title": "Restart",
-      "normal-restart": "Restart",
-      "restart-cache-clear": "Restart with Cache Clear",
-      "restart-safe-mode": "Restart in Safe Mode",
-      "restart-profile-manager": "Restart with Profile Manager"
+      "title": "Neu starten",
+      "normal-restart": "Neu starten",
+      "restart-cache-clear": "Neustart mit geleertem Cache",
+      "restart-safe-mode": "Im Sicheren Modus neu starten",
+      "restart-profile-manager": "Mit Profil-Manager neu starten"
     }
   },
   "nr-webscraper": {
@@ -311,5 +311,64 @@
     "actionLabelInput": "Input",
     "actionLabelClick": "Click",
     "actionLabelSubmit": "Submit"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Open Tab in External Browser",
+      "openLinkIn": "Open Link in External Browser",
+      "defaultBrowser": "System Default Browser",
+      "noBrowsers": "No external browsers detected",
+      "noValidUrl": "No valid URL to open"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Add to Floorp",
+      "installing": "Installiere...",
+      "success": "Added!",
+      "error": "Error occurred",
+      "installed": "Installed"
+    },
+    "error": {
+      "title": "Installation Error",
+      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
+      "alreadyInstalled": "This extension is already installed ({{name}})",
+      "downloadFailed": "Failed to download CRX file",
+      "conversionFailed": "Failed to convert extension: {{error}}",
+      "conversionFailedGeneric": "Failed to convert CRX to XPI",
+      "installError": "Installation error: {{error}}",
+      "installFailed": "Installation failed",
+      "noData": "No installation data provided",
+      "addonManagerUnavailable": "AddonManager is not available",
+      "noBrowserWindow": "Could not find browser window for installation",
+      "createInstallFailed": "Failed to create installation object",
+      "cancelledByUser": "Installation cancelled by user",
+      "downloadCancelled": "Download cancelled",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "XPI installation error: {{error}}",
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
+    },
+    "installErrors": {
+      "downloadFailed": "Download failed",
+      "signatureVerifyFailed": "Failed to verify extension signature",
+      "corruptOrIncompatible": "Extension is corrupted or incompatible",
+      "incompatible": "This extension is not compatible with Floorp",
+      "blocked": "This extension is blocked",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Extension installation failed",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Invalid extension file",
+      "networkError": "A network error occurred"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
   }
 }

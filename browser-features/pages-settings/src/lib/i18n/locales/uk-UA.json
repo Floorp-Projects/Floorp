@@ -187,6 +187,21 @@
                 "overlap": "Показати бічну панель над вмістом сайту"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Додати",
+            "remove": "Remove",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "Налаштування інтерфейсу",
             "needRestartDescriptionForEnableAndDisable": "Щоб повністю увімкнути або вимкнути цю функцію налаштування інтерфейсу, потрібно перезапустити {{productName}}.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Нова вкладка",
-                "disableFloorpStart": "Disable Floorp Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Multirow Tab",
@@ -239,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Закрити спливаюче вікно під час вибору робочої області",
         "closePopupWhenSelectingWorkspaceDescription": "Виберіть, чи закривати спливаюче вікно робочої області під час вибору робочої області.",
         "showWorkspaceNameOnToolbar": "Показати назву робочої області біля іконки",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Керувати робочими областями на бічній панелі {{productName}}",
         "manageOnBmsDescription": "Якщо цю функцію ввімкнено, можна керувати лише робочими областями на бічній панелі {{productName}}. Ви не зможете керувати робочими областями за допомогою кнопки панелі інструментів.",
         "backup": "Резервне копіювання робочої області",
@@ -258,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Профіль та обліковий запис",
-        "profileDescription": "Профілі містять інформацію, пов'язану з переглядом, таку як історія, закладки, налаштування та доповнення. Floorp використовує цей профіль для збереження даних.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Керування профілями",
         "profileManagementDescription": "Профілі можна створювати і розділяти один від одного, а їх дані зберігаються в теці профілю.",
         "currentProfileName": "Ім'я поточного профілю: {{name}}",
@@ -267,8 +282,8 @@
         "openProfileSaveLocation": "Відкрити місце збереження профілю",
         "mozillaAccountSyncSettings": "Налаштування синхронізації облікових записів Mozilla",
         "syncedTo": "Синхронізовано з {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Синхронізувати нотатки Floorp з обліковим записом Mozilla (експериментально)",
-        "floorpFeatureSyncSettings": "Налаштування синхронізації функцій Floorp",
+        "sync{{productName}}NotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "{{productName}}FeatureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Керування обліковим записом Mozilla",
         "manageFirefoxFeatureSync": "Керування синхронізацією функцій Firefox",
         "aboutMozillaAccount": "Про обліковий запис Mozilla",
@@ -292,8 +307,8 @@
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Default (Recommended)",
@@ -301,26 +316,26 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
             "troubleshooting": "Troubleshooting",
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
         }
     },
@@ -420,12 +435,12 @@
         "uninstall": "Видалити"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -439,24 +454,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {

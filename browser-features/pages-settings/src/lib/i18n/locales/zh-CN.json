@@ -187,6 +187,21 @@
                 "overlap": "在网站内容上显示侧边栏"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "添加",
+            "remove": "移除",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "自定义界面",
             "needRestartDescriptionForEnableAndDisable": "要完全启用或禁用此用户界面定制功能，需要重新启动 {{productName}}。",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "新标签页",
-                "disableFloorpStart": "禁用 Floorp 启动页"
+                "disableFloorpStart": "禁用 {{productName}} 启动"
             },
             "multirowTab": {
                 "title": "多行标签页",
@@ -239,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "选择工作区时关闭工作区弹出面板",
         "closePopupWhenSelectingWorkspaceDescription": "选择是否在选择工作区时关闭工作区弹出面板。",
         "showWorkspaceNameOnToolbar": "在工作区图标旁显示工作区名称",
-        "exitOnLastTabClose": "关闭最后一个工作区时退出 Floorp",
+        "exitOnLastTabClose": "关闭最后工作区时退出 {{productName}}",
         "manageOnBms": "管理 {{productName}} 侧边栏上的工作区",
         "manageOnBmsDescription": "启用此功能后，您只能在 {{productName}} 侧边栏上管理工作区。您将无法使用工具栏按钮管理工作区。",
         "backup": "工作区备份",
@@ -258,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "配置和账户",
-        "profileDescription": "配置文件包含与浏览相关的信息，例如历史记录、书签、设置和附加组件。Floorp 使用此配置文件来保存数据。",
+        "profileDescription": "配置文件包含浏览信息，如历史记录、书签、设置和附加组件。{{productName}} 使用此文件保存数据。",
         "profileManagement": "配置管理",
         "profileManagementDescription": "可以创建相互隔离的配置文件，其数据存储在配置文件夹中。",
         "currentProfileName": "当前配置名称：{{name}}",
@@ -267,8 +282,8 @@
         "openProfileSaveLocation": "打开配置文件 保存位置",
         "mozillaAccountSyncSettings": "Mozilla 账户同步设置",
         "syncedTo": "同步至 {{email}}",
-        "syncFloorpNotesToMozillaAccount": "将 Floorp Notes 同步到 Mozilla 账户（试验性）",
-        "floorpFeatureSyncSettings": "Floorp 功能同步设置",
+        "sync{{productName}}NotesToMozillaAccount": "将 {{productName}} 笔记同步到 Mozilla 账户（实验性）",
+        "{{productName}}FeatureSyncSettings": "{{productName}} 同步设置",
         "manageMozillaAccount": "管理 Mozilla 账户",
         "manageFirefoxFeatureSync": "管理火狐功能同步",
         "aboutMozillaAccount": "管理 Mozilla 账户",
@@ -293,7 +308,7 @@
         "description": "管理更新设置和实验功能参与。",
         "experiments": {
             "title": "{{productName}} 参加测试",
-            "description": "控制 {{productName}} 如何让您参加实验功能和 {{productName}} 测试。",
+            "description": "控制 {{productName}} 参加实验功能和{{productName}} 测试。",
             "policyLabel": "参与政策",
             "policy": {
                 "default": "默认（推荐）",
@@ -301,26 +316,26 @@
                 "never": "从不参与"
             },
             "policyHelp": {
-                "default": "遵循建议的参与政策。您可能会根据推出比例被纳入 {{productName}} 测试。",
-                "always": "始终参与所有可用的 {{productName}} 测试。此选项适用于希望尽早测试新功能的用户。",
-                "never": "切勿参与 {{productName}} 测试。您只会收到稳定的、经过测试的功能。"
+                "default": "遵循建议的参与政策。您可能根据推出进度加入 {{productName}} 测试。",
+                "always": "始终参与所有可用的 {{productName}} 测试。此选项适于希望尽早测试性能的用户。",
+                "never": "从不参与 {{productName}} 测试。您只会收到稳定且经过测试的功能。"
             },
             "confirmClearCache": "您确定要清除所有实验数据吗？这将重置您的作业，且无法撤销。",
             "troubleshooting": "故障排除",
             "clearCacheDescription": "如果在实验中遇到问题，清除缓存可将所有实验相关数据重置为初始状态，从而解决这些问题。",
             "clearCache": "清除实验缓存"
         },
-        "activeTests": {
-            "title": "主动 {{productName}} 测试",
+        "activeFlascos": {
+            "title": "活跃 {{productName}} 测试",
             "description": "查看和管理当前激活的测试。",
             "refresh": "刷新",
-            "noTests": "您目前未参加任何测试。",
+            "noFlascos": "您当前未参加任何测试。",
             "assignedAt": "在 {{date}} 上注册",
             "disable": "禁用",
             "enable": "启用",
             "disabledLabel": "已禁用",
-            "confirmDisable": "您确定要禁用此实验吗？您可以稍后再启用。",
-            "confirmEnable": "您确定要重新启用该实验吗？",
+            "confirmDisable": "您确定禁用此实验？可以稍后再启用。",
+            "confirmEnable": "您确定重新启用此实验？",
             "lastUpdated": "最近更新："
         }
     },
@@ -420,12 +435,12 @@
         "uninstall": "卸载"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "管理 Floorp OS 后端模块和服务",
+        "title": "{{productName}} OS",
+        "description": "管理 {{productName}} OS 后端模块和服务",
         "loading": "加载中……",
         "statusCard": {
             "title": "状态",
-            "description": "Floorp OS 的当前状态",
+            "description": "{{productName}} OS 现状",
             "platformSupport": "平台支持",
             "platformSupported": "支持您的平台",
             "platformUnsupported": "不支持您的平台",
@@ -439,24 +454,24 @@
         },
         "controlsCard": {
             "title": "控制",
-            "description": "启用或禁用 Floorp OS",
-            "enable": "启用 Floorp OS",
-            "disable": "禁用 Floorp OS",
+            "description": "{{productName}} OS 启用/禁用",
+            "enable": "{{productName}} OS 启用",
+            "disable": "{{productName}} OS 禁用",
             "refresh": "刷新状态"
         },
         "messages": {
-            "enabling": "启用 Floorp OS……",
-            "disabling": "禁用 Floorp OS……",
-            "enableSuccess": "Floorp OS 启用成功！",
-            "disableSuccess": "Floorp OS 禁用成功！"
+            "enabling": "{{productName}} OS 启用……",
+            "disabling": "{{productName}} OS 禁用……",
+            "enableSuccess": "{{productName}} OS 成功启用！",
+            "disableSuccess": "{{productName}} OS 成功禁用！"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API 不可用。",
             "loadStatus": "加载失败状态：{{reason}}",
-            "enable": "启用 Floorp OS 失败。",
-            "disable": "禁用 Floorp OS 失败。",
-            "enableAction": "启用 Floorp OS 出错：{{reason}}",
-            "disableAction": "禁用 Floorp OS 出错：{{reason}}"
+            "enable": "{{productName}} OS 启用失败。",
+            "disable": "{{productName}} OS 禁用失败。",
+            "enableAction": "启用 {{productName}} OS时错误：{{reason}}",
+            "disableAction": "禁用 {{productName}} OS时错误：{{reason}}"
         }
     },
     "mouseGesture": {

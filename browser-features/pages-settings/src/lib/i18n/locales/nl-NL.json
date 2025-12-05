@@ -1,74 +1,74 @@
 {
     "title": {
-        "default": "{{productName}} Settings"
+        "default": "{{productName}} Instellingen"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Instellingen",
+        "searchPlaceholder": "Zoekinstellingen",
+        "darkMode": "Donkere Modus"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
-        "description": "After restarting, the opened private windows and private tabs will be lost.",
-        "cancel": "Later",
-        "restart": "Restart Now"
+        "title": "Opnieuw opstarten vereist",
+        "description": "Na het opnieuw opstarten gaan de geopende privévensters en privétabbladen verloren.",
+        "cancel": "Niet nu",
+        "restart": "Nu opnieuw opstarten"
     },
     "sidebar": {
-        "firefoxSettings": "Firefox Settings",
-        "about": "About",
-        "aboutNoraneko": "About Noraneko",
+        "firefoxSettings": "Firefox-instellingen",
+        "about": "Over",
+        "aboutNoraneko": "Over Noraneko",
         "debug": "Debug",
-        "overview": "Overview",
-        "features": "Features"
+        "overview": "Overzicht",
+        "features": "Functies"
     },
     "pages": {
-        "home": "Home",
-        "tabAndAppearance": "Tab & Appearance",
-        "browserSidebar": "Panel Sidebar",
+        "home": "Startscherm",
+        "tabAndAppearance": "Tabblad & Uiterlijk",
+        "browserSidebar": "Paneel zijbalk",
         "workspaces": "Workspaces",
-        "keyboardShortcuts": "Keyboard Shortcuts",
+        "keyboardShortcuts": "Sneltoetsen",
         "webApps": "Web Apps",
-        "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}",
-        "updates": "Updates & Experiments",
+        "profileAndAccount": "Profiel en Account",
+        "aboutBrowser": "Over {{productName}}",
+        "updates": "Updates & Experimenten",
         "debug": "Debug",
-        "mouseGesture": "Mouse Gestures",
-        "keyboardShortcut": "Keyboard Shortcuts",
+        "mouseGesture": "Muis gebaren",
+        "keyboardShortcut": "Sneltoetsen",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
+            "title": "Zoekinstellingen",
+            "resultsFor": "Zoekresultaten voor \"{{query}}\"",
+            "searchResultsDescription": "Zoekresultaten voor \"{{query}}\". Er wordt alleen gezocht op {{productName}} instellingen; Firefox-instellingen worden niet meegenomen.",
+            "noResults": "Geen zoekresultaten",
             "open": "Open \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Search Results"
+            "matchedText": "Overeenkomende tekst",
+            "results": "Zoekresultaten"
         }
     },
     "home": {
-        "welcome": "Welcome, {{name}} 👋",
-        "defaultAccountName": "{{productName}} User",
-        "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
+        "welcome": "Welkom, {{name}}👋",
+        "defaultAccountName": "{{productName}} Gebruiker",
+        "description": "Beheer uw account, privacy en beveiliging om uw {{productName}} ervaring te verbeteren.",
         "setup": {
-            "title": "Setup",
-            "footerLinkText": "Log in to Accounts",
-            "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
-            "setupProgressTitle": "Setup Progress",
-            "step": "Step {{step}} of {{total}}"
+            "title": "Installatie",
+            "footerLinkText": "Inloggen bij Accounts",
+            "setupDescription": "Voltooi de installatie om uw {{productName}} ervaring te maximaliseren.",
+            "setupProgressTitle": "Voortgang van de installatie",
+            "step": "Stap {{step}} van {{total}}"
         },
         "privacyAndTrackingProtection": {
-            "title": "Privacy and Tracking Protection",
-            "footerLinkText": "Privacy and Tracking Protection",
-            "description": "{{productName}} protects your data and privacy by default, but you can also manage these settings manually."
+            "title": "Privacy en Tracking Bescherming",
+            "footerLinkText": "Privacy en Tracking Bescherming",
+            "description": "{{productName}} beschermt standaard je gegevens en privacy, maar je kunt deze instellingen ook handmatig beheren."
         },
         "ablazeAccount": {
-            "title": "Ablaze Account (Coming Soon)",
+            "title": "Ablaze Account (binnenkort beschikbaar)",
             "footerLinkText": "Ablaze Account",
-            "description": "Use a Mozilla Account to sync some data with other devices. Ablaze Account syncs data that can't be synced with a Mozilla Account."
+            "description": "Gebruik een Mozilla-account om bepaalde gegevens met andere apparaten te synchroniseren. Ablaze Account synchroniseert gegevens die niet met een Mozilla-account gesynchroniseerd kunnen worden."
         },
         "manageExtensions": {
-            "title": "Manage Extensions",
-            "description": "{{productName}} allows you to manage extensions available on addons.mozilla.org.",
-            "footerLinkText": "Manage Extensions"
+            "title": "Extensies beheren",
+            "description": "Met {{productName}} kunt u extensies beheren die beschikbaar zijn op addons.mozilla.org.",
+            "footerLinkText": "Extensies beheren"
         },
         "browserSupport": {
             "title": "{{productName}} Support",
@@ -187,6 +187,21 @@
                 "overlap": "Show Sidebar over website content"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Toevoegen",
+            "remove": "Verwijderen",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Nieuw tabblad",
-                "disableFloorpStart": "Disable Floorp Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Multirow Tab",
@@ -239,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Close workspace popup when selecting a workspace",
         "closePopupWhenSelectingWorkspaceDescription": "Choose whether to close the workspace popup when selecting a workspace.",
         "showWorkspaceNameOnToolbar": "Show workspace name next to the icon",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Manage workspaces on {{productName}} sidebar",
         "manageOnBmsDescription": "When this feature is enabled, you can only manage workspaces on the {{productName}} sidebar. You won't be able to manage workspaces using the toolbar button.",
         "backup": "Workspace Backup",
@@ -258,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Profile and Account",
-        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. Floorp uses this profile to save data.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Profile Management",
         "profileManagementDescription": "Profiles can be created and separated from each other, and their data is stored in the profile folder.",
         "currentProfileName": "Current Profile Name: {{name}}",
@@ -267,8 +282,8 @@
         "openProfileSaveLocation": "Open Profile Save Location",
         "mozillaAccountSyncSettings": "Mozilla Account Sync Settings",
         "syncedTo": "Synced to {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sync Floorp Notes to Mozilla Account (Experimental)",
-        "floorpFeatureSyncSettings": "Floorp Feature Sync Settings",
+        "sync{{productName}}NotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "{{productName}}FeatureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Manage Mozilla Account",
         "manageFirefoxFeatureSync": "Manage Firefox Feature Sync",
         "aboutMozillaAccount": "About Mozilla Account",
@@ -292,8 +307,8 @@
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Default (Recommended)",
@@ -301,26 +316,26 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
             "troubleshooting": "Troubleshooting",
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
         }
     },
@@ -420,12 +435,12 @@
         "uninstall": "Uninstall"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -439,24 +454,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -508,9 +523,9 @@
             "gecko-mute-current-tab": "Mute Current Tab",
             "gecko-show-source-of-page": "Show Source Of Page",
             "gecko-show-page-info": "Show Page Info",
-            "floorp-rest-mode": "Enable Rest Mode",
-            "floorp-hide-user-interface": "Hide Interface",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+            "floorp-rest-mode": "Rustmodus inschakelen",
+            "floorp-hide-user-interface": "Interface verbergen",
+            "floorp-toggle-navigation-panel": "Navigatiepaneel in-/uitschakelen",
             "gecko-stop": "Stop",
             "gecko-search-in-this-page": "Search In This Page",
             "gecko-show-next-search-result": "Show Next Search Result",
@@ -521,7 +536,7 @@
             "gecko-enter-into-customize-mode": "Enter Customize Mode",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
+            "floorp-show-pip": "Picture-in-Picture openen",
             "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",

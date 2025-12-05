@@ -187,6 +187,21 @@
                 "overlap": "Mostrar barra lateral sobre o conteúdo do sítio Web"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Separador Exclusão do sono",
+            "description": "Excluir sites específicos da suspensão de separadores (descarregamento). Os separadores que correspondam a estes padrões permanecerão activos e não serão descarregados automaticamente quando a memória estiver fraca.",
+            "enable": "Ativar a exclusão de sono do separador",
+            "patterns": "Padrões de exclusão",
+            "patternsDescription": "Adicione padrões de URL para excluir da suspensão de separadores. Os separadores que correspondam a estes padrões não serão descarregados.",
+            "patternPlaceholder": "Introduzir padrão de URL (por exemplo, exemplo.com, *.google.com)",
+            "add": "Adicionar",
+            "remove": "Remover",
+            "noPatterns": "Não há padrões de exclusão configurados. Adicionar padrões para manter activos separadores específicos.",
+            "examples": "Exemplos de padrões",
+            "exampleDomain": "Corresponde a qualquer URL que contenha este domínio",
+            "exampleWildcard": "Corresponde a todos os subdomínios de google.com",
+            "exampleFullUrl": "Corresponde apenas a URLs do Gmail"
+        },
         "uiCustomization": {
             "title": "Personalização da IU",
             "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o site {{productName}} para ativar ou desativar completamente esta funcionalidade de personalização da IU.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Novo separador",
-                "disableFloorpStart": "Desativar início do Floorp"
+                "disableFloorpStart": "Desativar {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Separador de várias linhas",
@@ -239,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Fechar o pop-up do espaço de trabalho ao selecionar um espaço de trabalho",
         "closePopupWhenSelectingWorkspaceDescription": "Escolha se o pop-up do espaço de trabalho deve ser fechado ao selecionar um espaço de trabalho.",
         "showWorkspaceNameOnToolbar": "Mostrar o nome do espaço de trabalho junto ao ícone",
-        "exitOnLastTabClose": "Sair do Floorp quando o último separador do espaço de trabalho é fechado",
+        "exitOnLastTabClose": "Sair de {{productName}} quando o último separador do espaço de trabalho é fechado",
         "manageOnBms": "Gerir espaços de trabalho na barra lateral {{productName}}",
         "manageOnBmsDescription": "Quando esta funcionalidade está ativada, só é possível gerir espaços de trabalho na barra lateral {{productName}}. Não será possível gerir espaços de trabalho utilizando o botão da barra de ferramentas.",
         "backup": "Cópia de segurança do espaço de trabalho",
@@ -258,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Perfil e conta",
-        "profileDescription": "Os perfis contêm informações relacionadas com a navegação, como o histórico, os marcadores, as definições e os suplementos. O Floorp utiliza este perfil para guardar dados.",
+        "profileDescription": "Os perfis contêm informações relacionadas com a navegação, como o histórico, os marcadores, as definições e os suplementos. O {{productName}} utiliza este perfil para guardar dados.",
         "profileManagement": "Gestão de perfis",
         "profileManagementDescription": "Os perfis podem ser criados e separados uns dos outros, e os seus dados são armazenados na pasta de perfis.",
         "currentProfileName": "Nome do perfil atual: {{name}}",
@@ -267,8 +282,8 @@
         "openProfileSaveLocation": "Abrir localização do perfil guardado",
         "mozillaAccountSyncSettings": "Definições de sincronização da conta Mozilla",
         "syncedTo": "Sincronizado com {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sincronizar o Floorp Notes com a conta Mozilla (Experimental)",
-        "floorpFeatureSyncSettings": "Definições de sincronização da funcionalidade Floorp",
+        "sync{{productName}}NotesToMozillaAccount": "Sincronizar {{productName}} Notas com a conta Mozilla (Experimental)",
+        "{{productName}}FeatureSyncSettings": "{{productName}} Definições de sincronização de funcionalidades",
         "manageMozillaAccount": "Gerir a conta Mozilla",
         "manageFirefoxFeatureSync": "Gerir a sincronização de funcionalidades do Firefox",
         "aboutMozillaAccount": "Sobre a conta Mozilla",
@@ -292,8 +307,8 @@
         "title": "Actualizações e experiências",
         "description": "Gerir as definições de atualização e a participação em funcionalidades experimentais.",
         "experiments": {
-            "title": "{{productName}} Participação nos testes",
-            "description": "Controlar a forma como {{productName}} o inscreve em funcionalidades experimentais e testes de {{productName}}.",
+            "title": "{{productName}} Participação Flasco",
+            "description": "Controlar a forma como {{productName}} o inscreve em funcionalidades experimentais e {{productName}} Flascos.",
             "policyLabel": "Política de participação",
             "policy": {
                 "default": "Predefinição (Recomendado)",
@@ -301,26 +316,26 @@
                 "never": "Nunca participar"
             },
             "policyHelp": {
-                "default": "Siga a política de participação recomendada. Pode ser inscrito em {{productName}} testes com base em percentagens de lançamento.",
-                "always": "Participar sempre em todos os testes disponíveis em {{productName}}. Esta opção destina-se a utilizadores que pretendam testar novas funcionalidades antecipadamente.",
-                "never": "Nunca participe nos testes de {{productName}}. Receberá apenas funcionalidades estáveis e testadas."
+                "default": "Siga a política de participação recomendada. Pode ser inscrito em {{productName}} Flasco com base nas percentagens de lançamento.",
+                "always": "Participar sempre em todos os {{productName}} Flascos disponíveis. Esta opção destina-se a utilizadores que pretendam testar antecipadamente novas funcionalidades.",
+                "never": "Nunca participe em {{productName}} Flascos. Receberá apenas funcionalidades estáveis e testadas."
             },
             "confirmClearCache": "Tem a certeza de que pretende apagar todos os dados da experiência? Isto irá repor as suas atribuições e não pode ser anulado.",
             "troubleshooting": "Resolução de problemas",
             "clearCacheDescription": "Se estiver a ter problemas com experiências, a limpeza da cache pode resolvê-los, repondo todos os dados relacionados com experiências no seu estado inicial.",
             "clearCache": "Limpar a cache da experiência"
         },
-        "activeTests": {
-            "title": "Ativo {{productName}} Testes",
-            "description": "Ver e gerir as inscrições de testes atualmente activas.",
+        "activeFlascos": {
+            "title": "Ativo {{productName}} Flascos",
+            "description": "Ver e gerir as suas inscrições Flasco atualmente activas.",
             "refresh": "Atualizar",
-            "noTests": "Não está atualmente inscrito em nenhum teste.",
+            "noFlascos": "Não está atualmente inscrito em nenhum Flascos.",
             "assignedAt": "Inscrito em {{date}}",
             "disable": "Desativar",
             "enable": "Ativar",
             "disabledLabel": "Desativado",
-            "confirmDisable": "Tem a certeza de que pretende desativar esta experiência? Pode voltar a activá-la mais tarde.",
-            "confirmEnable": "Tem a certeza de que pretende voltar a ativar esta experiência?",
+            "confirmDisable": "Tem a certeza de que pretende desativar este Flasco? Pode voltar a activá-lo mais tarde.",
+            "confirmEnable": "Tem a certeza de que pretende voltar a ativar este Flasco?",
             "lastUpdated": "Última atualização:"
         }
     },
@@ -420,12 +435,12 @@
         "uninstall": "Desinstalar"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} SO",
+        "description": "Gerir os módulos e serviços backend do {{productName}} OS",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Estado atual do {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -439,24 +454,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Ativar ou desativar {{productName}} OS",
+            "enable": "Ativar {{productName}} OS",
+            "disable": "Desativar {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Ativar {{productName}} OS...",
+            "disabling": "Desativar {{productName}} OS...",
+            "enableSuccess": "{{productName}} SO ativado com sucesso!",
+            "disableSuccess": "{{productName}} SO desativado com sucesso!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Falha ao ativar {{productName}} OS.",
+            "disable": "Falha ao desativar {{productName}} OS.",
+            "enableAction": "Erro ao ativar {{productName}} OS: {{reason}}",
+            "disableAction": "Erro ao desativar o {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {

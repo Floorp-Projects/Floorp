@@ -8,7 +8,7 @@
     "openButton": "Open Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "message": "Als u de \"Home\" instelling wilt wijzigen, schakelt u de Floorp Start uit van de Floorp Hub (about:hub#/features/design).",
     "openButton": "Open Floorp Hub - Ontwerp"
   },
   "workspaces": {
@@ -80,7 +80,7 @@
       "restore-tooltip": "Herstel modus in-/uitschakelen",
       "restore-item": "Herstel \"{{name}}\"",
       "restore-delete-tooltip": "Dit archief verwijderen",
-      "restore-tab-count": "{{count}} tab",
+      "restore-tab-count": "{{count}} tabblad",
       "restore-tab-count_plural": "{{count}} tabbladen",
       "restore-time-just-now": "Zojuist",
       "restore-time-minutes": "{{minutes}} minuut geleden",
@@ -92,8 +92,8 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace",
-      "openLinkInWorkspace": "Open Link in Another Workspace",
-      "noOtherWorkspace": "No other workspaces available"
+      "openLinkInWorkspace": "Open link in een andere workspace",
+      "noOtherWorkspace": "Geen andere workspace beschikbaar"
     },
     "error": {
       "invalidWorkspaceID": "Geen geldig ID voor Workspaces (misschien is de volgorde niet bijgewerkt)"
@@ -108,7 +108,7 @@
   },
   "splitview": {
     "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
+      "temporarily-unavailable": "Gesplitste weergave is tijdelijk niet beschikbaar",
       "details": "Details"
     }
   },
@@ -265,11 +265,11 @@
   "chrome_css": {
     "menu": "Stijl",
     "rebuild": "Stylesheet herbouwen",
-    "create": "Create New Style Sheet",
-    "open_folder": "Open Style Sheets Folder",
+    "create": "Nieuwe Style Sheet aanmaken",
+    "open_folder": "Open Style Sheets folder",
     "edit_user_chrome": "Bewerk userChrome.css",
     "edit_user_content": "Bewerk userContent.css",
-    "rebuild_complete": "Style sheets rebuilt",
+    "rebuild_complete": "Style Sheets herbouwd",
     "editor_path_not_found": "Editor pad niet gevonden",
     "set_pref_description": "Stel het pad van de editor in",
     "please_enter_filename": "Voer een bestandsnaam in",
@@ -290,26 +290,85 @@
     }
   },
   "nr-webscraper": {
-    "panelTitle": "{{productName}} is operating",
-    "panelDefaultMessage": "{{action}} in progress...",
-    "panelProgressSummary": "Affects {{count}} element(s)",
-    "formSummary": "Filling form: {{count}} field(s)",
-    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
-    "inputValueSet": "Set input value: \"{{value}}\"",
-    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
-    "clickElementNoText": "Clicking {{tag}} element",
-    "inspectPageHtml": "Retrieved full page HTML",
-    "inspectGetElement": "Retrieved element: {{selector}}",
-    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
-    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
-    "inspectGetElementText": "Retrieved text from: {{selector}}",
-    "inspectGetValue": "Retrieved value: {{selector}}",
-    "submitForm": "Submitting form: {{name}}",
-    "actionLabelHighlight": "Highlight",
-    "actionLabelInspect": "Inspect",
-    "actionLabelFill": "Fill",
-    "actionLabelInput": "Input",
-    "actionLabelClick": "Click",
-    "actionLabelSubmit": "Submit"
+    "panelTitle": "{{productName}} is actief",
+    "panelDefaultMessage": "{{action}} wordt uitgevoerd...",
+    "panelProgressSummary": "Beïnvloedt {{count}} element(en)",
+    "formSummary": "Invulformulier: {{count}} veld(en)",
+    "formFieldProgress": "Veld {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Invoerwaarde instellen: \"{{value}}\"",
+    "clickElementWithText": "Klik op {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Klikken op {{tag}} element",
+    "inspectPageHtml": "Volledige pagina HTML opgehaald",
+    "inspectGetElement": "Opgehaald element: {{selector}}",
+    "inspectGetElements": "{{count}} element(en) komen overeen: {{selector}}",
+    "inspectGetElementByText": "Element met overeenkomende tekst opgehaald: \"{{text}}\"",
+    "inspectGetElementText": "Tekst opgehaald van: {{selector}}",
+    "inspectGetValue": "Opgehaalde waarde: {{selector}}",
+    "submitForm": "Formulier versturen: {{name}}",
+    "actionLabelHighlight": "Markeren",
+    "actionLabelInspect": "Inspecteren",
+    "actionLabelFill": "Vullen",
+    "actionLabelInput": "Invoer",
+    "actionLabelClick": "Klik",
+    "actionLabelSubmit": "Versturen"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Open Tab in External Browser",
+      "openLinkIn": "Open Link in External Browser",
+      "defaultBrowser": "System Default Browser",
+      "noBrowsers": "No external browsers detected",
+      "noValidUrl": "No valid URL to open"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Add to Floorp",
+      "installing": "Installeren...",
+      "success": "Added!",
+      "error": "Error occurred",
+      "installed": "Installed"
+    },
+    "error": {
+      "title": "Installation Error",
+      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
+      "alreadyInstalled": "This extension is already installed ({{name}})",
+      "downloadFailed": "Failed to download CRX file",
+      "conversionFailed": "Failed to convert extension: {{error}}",
+      "conversionFailedGeneric": "Failed to convert CRX to XPI",
+      "installError": "Installation error: {{error}}",
+      "installFailed": "Installation failed",
+      "noData": "No installation data provided",
+      "addonManagerUnavailable": "AddonManager is not available",
+      "noBrowserWindow": "Could not find browser window for installation",
+      "createInstallFailed": "Failed to create installation object",
+      "cancelledByUser": "Installation cancelled by user",
+      "downloadCancelled": "Download cancelled",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "XPI installation error: {{error}}",
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
+    },
+    "installErrors": {
+      "downloadFailed": "Download failed",
+      "signatureVerifyFailed": "Failed to verify extension signature",
+      "corruptOrIncompatible": "Extension is corrupted or incompatible",
+      "incompatible": "This extension is not compatible with Floorp",
+      "blocked": "This extension is blocked",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Extension installation failed",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Invalid extension file",
+      "networkError": "A network error occurred"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
   }
 }
