@@ -347,10 +347,55 @@ export function createProfileWizard(): void {
         "navigator:browser",
       );
       if (win) {
+        const profileService = (globalThis as any).Components.classes[
+          "@mozilla.org/toolkit/profile-service;1"
+        ]?.getService?.(
+          (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+        ) as any;
+
+        const persistProfiles = () => {
+          try {
+            if (typeof profileService.asyncFlush === "function") {
+              const result = profileService.asyncFlush();
+              if (result && typeof result.catch === "function") {
+                result.catch((err: unknown) => {
+                  console.error(
+                    "[profileDataManager] asyncFlush failed after CreateProfile",
+                    err,
+                  );
+                });
+              }
+            } else if (typeof profileService.flush === "function") {
+              profileService.flush();
+            }
+          } catch (err) {
+            console.error("[profileDataManager] persistProfiles failed", err);
+          }
+        };
+
+        const callbacks = {
+          CreateProfile: (profile: any) => {
+            if (!profile) {
+              return;
+            }
+            try {
+              profileService.defaultProfile = profile;
+            } catch (err) {
+              console.error(
+                "[profileDataManager] setting default profile failed",
+                err,
+              );
+            }
+            persistProfiles();
+          },
+        };
+
         (win as any).openDialog(
           "chrome://mozapps/content/profile/createProfileWizard.xhtml",
           "",
           "centerscreen,chrome,modal,titlebar",
+          profileService,
+          callbacks,
         );
       }
       return;
