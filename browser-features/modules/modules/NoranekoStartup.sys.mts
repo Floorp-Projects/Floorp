@@ -3,14 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs",
-);
+import type { Version2UpdateStatus } from "./NoranekoUpdateChecker.sys.mts";
 
 const { NoranekoConstants } = ChromeUtils.importESModule(
   "resource://noraneko/modules/NoranekoConstants.sys.mjs",
 );
+
+const { checkForUpdates, saveCurrentVersion, triggerUpdateIfNeeded } =
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/NoranekoUpdateChecker.sys.mjs",
+  );
+
+// Update check interval: 24 hours in milliseconds
+const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+type UpdateCheckResult = { triggered: boolean; status: Version2UpdateStatus };
 
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
@@ -33,22 +40,10 @@ export function executeOnce(id: string, callback: () => void): boolean {
 }
 
 function initializeVersionInfo(): void {
-  isFirstRun = !Services.prefs.getStringPref(
-    "browser.startup.homepage_override.mstone",
-    undefined,
-  );
-
-  const nowVersion = AppConstants.MOZ_APP_VERSION_DISPLAY;
-  const oldVersionPref = Services.prefs.getStringPref(
-    "floorp.startup.oldVersion",
-    undefined,
-  );
-
-  if (oldVersionPref !== nowVersion && !isFirstRun) {
-    isUpdated = true;
-  }
-
-  Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
+  const updateInfo = checkForUpdates();
+  isFirstRun = updateInfo.isFirstRun;
+  isUpdated = updateInfo.isUpdated;
+  saveCurrentVersion();
 }
 
 export function onFinalUIStartup(): void {
@@ -59,6 +54,9 @@ export function onFinalUIStartup(): void {
   });
 
   openReleaseNotesInRecentWindow();
+
+  // Start version2 update checker (startup + periodic)
+  startVersion2UpdateChecker();
 
   // int OS Modules
   ChromeUtils.importESModule(
@@ -72,6 +70,53 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
   );
+}
+
+/**
+ * Start version2 update checker.
+ * Checks immediately at startup and then periodically.
+ */
+function startVersion2UpdateChecker(): void {
+  console.log("[NoranekoStartup] Initializing version2 update checker...");
+  console.log(
+    `[NoranekoStartup] Local version2: ${NoranekoConstants.version2}`,
+  );
+  console.log(
+    `[NoranekoStartup] Check interval: ${UPDATE_CHECK_INTERVAL_MS}ms (${UPDATE_CHECK_INTERVAL_MS / 1000 / 60 / 60}h)`,
+  );
+
+  // Check immediately at startup (with a small delay to not block UI)
+  ChromeUtils.idleDispatch(() => {
+    console.log("[NoranekoStartup] Starting startup update check...");
+    triggerUpdateIfNeeded()
+      .then((result: UpdateCheckResult) => {
+        console.log("[NoranekoStartup] Startup update check completed:");
+        console.log(`  - hasUpdate: ${result.status.hasUpdate}`);
+        console.log(`  - triggered: ${result.triggered}`);
+        console.log(`  - localVersion2: ${result.status.localVersion2}`);
+        console.log(`  - remoteVersion2: ${result.status.remoteVersion2}`);
+        console.log(`  - updateType: ${result.status.updateType}`);
+      })
+      .catch((error: unknown) => {
+        console.error("[NoranekoStartup] Startup update check failed:", error);
+      });
+  });
+
+  // Set up periodic check
+  setInterval(() => {
+    console.log("[NoranekoStartup] Starting periodic update check...");
+    triggerUpdateIfNeeded()
+      .then((result: UpdateCheckResult) => {
+        console.log("[NoranekoStartup] Periodic update check completed:");
+        console.log(`  - hasUpdate: ${result.status.hasUpdate}`);
+        console.log(`  - triggered: ${result.triggered}`);
+      })
+      .catch((error: unknown) => {
+        console.error("[NoranekoStartup] Periodic update check failed:", error);
+      });
+  }, UPDATE_CHECK_INTERVAL_MS);
+
+  console.log("[NoranekoStartup] Version2 update checker started");
 }
 
 async function openReleaseNotesInRecentWindow(): Promise<void> {
@@ -272,10 +317,10 @@ class CustomAboutPage {
     if (!this.uri) {
       throw new Error("URI is not defined");
     }
-
-    return (
-      Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI
-    );
+    // ALLOW_SCRIPT = 1, IS_SECURE_CHROME_UI = 2
+    const ALLOW_SCRIPT = Ci.nsIAboutModule?.ALLOW_SCRIPT ?? 1;
+    const IS_SECURE_CHROME_UI = Ci.nsIAboutModule?.IS_SECURE_CHROME_UI ?? 2;
+    return ALLOW_SCRIPT | IS_SECURE_CHROME_UI;
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {
