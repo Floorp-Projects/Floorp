@@ -9,6 +9,8 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
 );
 
 const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
+// Legacy preference from older Floorp versions (pre-version2 system)
+const PREF_OLD_VERSION_LEGACY = "floorp.startup.oldVersion";
 
 export type UpdateType = "major" | "minor" | "patch" | null;
 
@@ -249,13 +251,32 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
 /**
  * Check for updates based on version2 (local pref comparison).
  * Returns information about the update state.
+ *
+ * Migration logic:
+ * - If oldVersion2 exists: use it for comparison (normal case)
+ * - If oldVersion2 is empty but legacy oldVersion exists: this is an existing user
+ *   upgrading to the new version2 system - treat as updated, not first-run
+ * - If both are empty: truly a first-run user
  */
 export function checkForUpdates(): UpdateInfo {
   const newVersion = NoranekoConstants.version2 as string;
 
-  // Check if this is the first run (no old version stored)
-  const oldVersion = Services.prefs.getStringPref(PREF_OLD_VERSION2, "");
-  const isFirstRun = oldVersion === "";
+  // Check for the new version2 preference
+  const oldVersion2 = Services.prefs.getStringPref(PREF_OLD_VERSION2, "");
+
+  // Check for legacy preference (old Floorp versions used this)
+  const legacyOldVersion = Services.prefs.getStringPref(
+    PREF_OLD_VERSION_LEGACY,
+    "",
+  );
+
+  // Determine if this is truly a first run:
+  // - If version2 pref exists, user has run this version before
+  // - If legacy pref exists but version2 doesn't, this is an existing user upgrading
+  // - If neither exists, this is a first-run user
+  const hasVersion2Pref = oldVersion2 !== "";
+  const hasLegacyPref = legacyOldVersion !== "";
+  const isFirstRun = !hasVersion2Pref && !hasLegacyPref;
 
   if (isFirstRun) {
     return {
@@ -267,15 +288,31 @@ export function checkForUpdates(): UpdateInfo {
     };
   }
 
-  // Compare versions
-  const isUpdated = oldVersion !== newVersion;
-  const updateType = isUpdated ? getUpdateType(oldVersion, newVersion) : null;
+  // For existing users upgrading from legacy system:
+  // - version2 pref is empty, but legacy pref exists
+  // - Treat as an update from "unknown" to current version
+  if (!hasVersion2Pref && hasLegacyPref) {
+    console.log(
+      `[NoranekoUpdateChecker] Migrating from legacy version system. Legacy version: ${legacyOldVersion}`,
+    );
+    return {
+      isFirstRun: false,
+      isUpdated: true,
+      updateType: "minor", // Assume minor update for migration
+      oldVersion: null, // We don't have comparable version2 from before
+      newVersion,
+    };
+  }
+
+  // Normal case: compare version2 preferences
+  const isUpdated = oldVersion2 !== newVersion;
+  const updateType = isUpdated ? getUpdateType(oldVersion2, newVersion) : null;
 
   return {
     isFirstRun: false,
     isUpdated,
     updateType,
-    oldVersion,
+    oldVersion: oldVersion2,
     newVersion,
   };
 }
