@@ -132,12 +132,14 @@ async function getUpdateXmlUrl(): Promise<string> {
     Ci.nsIUpdateChecker,
   );
   const url = await checker.getUpdateURL(UPDATE_CHECK_TYPE_FOREGROUND);
-  
+
   // Sanitize URL for logging - remove query parameters that might contain sensitive data
   try {
     const urlObj = new URL(url);
     const sanitizedUrl = urlObj.origin + urlObj.pathname;
-    console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`);
+    console.log(
+      `[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`,
+    );
   } catch {
     // If URL parsing fails, just log without URL details
     console.log("[NoranekoUpdateChecker] Using nsIUpdateChecker URL");
@@ -179,7 +181,10 @@ function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
     // Check for parser errors
     const parserError = doc.querySelector("parsererror");
     if (parserError) {
-      console.error("[NoranekoUpdateChecker] XML parsing error:", parserError.textContent);
+      console.error(
+        "[NoranekoUpdateChecker] XML parsing error:",
+        parserError.textContent,
+      );
       return null;
     }
 
@@ -251,14 +256,18 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   // compareVersions(old, new) returns 1 if new > old (upgrade available)
   const versionComparison = compareVersions(localVersion2, remoteVersion2);
   const isVersionUpgrade = versionComparison === 1;
-  const isBuildIDDifferent = localBuildID2 !== remoteBuildID2;
+
+  // Only check buildID difference if both are provided
+  // If remoteBuildID2 is empty, we can't reliably detect hotfixes
+  const isBuildIDDifferent =
+    !!remoteBuildID2 && localBuildID2 !== remoteBuildID2;
 
   // hasUpdate is true only if:
   // 1. Remote version is higher than local, OR
   // 2. Versions are same but buildID is different (rebuild/hotfix)
   const hasUpdate =
     isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
-  
+
   // updateType classification:
   // - For version upgrades: returns "major", "minor", or "patch" based on semantic versioning
   // - For buildID-only changes (hotfixes/rebuilds): returns null (intentional)
