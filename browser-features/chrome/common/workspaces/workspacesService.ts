@@ -98,6 +98,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         "TabOpen",
         this.boundHandleTabOpen,
       );
+      window.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      window.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
     });
 
     onCleanup(() => {

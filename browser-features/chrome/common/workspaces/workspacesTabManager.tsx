@@ -160,8 +160,13 @@ export class WorkspacesTabManager {
       );
     }
 
-    const maybeSelectedWorkspace =
-      this.getMaybeSelectedWorkspacebyVisibleTabs();
+    let maybeSelectedWorkspace = this.getWorkspaceIdFromAttribute(
+      globalThis.gBrowser.selectedTab as XULElement,
+    );
+
+    if (!maybeSelectedWorkspace) {
+      maybeSelectedWorkspace = this.getMaybeSelectedWorkspacebyVisibleTabs();
+    }
     if (maybeSelectedWorkspace) {
       this.changeWorkspace(maybeSelectedWorkspace);
     } else {
@@ -224,8 +229,7 @@ export class WorkspacesTabManager {
           // If the tab has a valid URL that is not a blank/newtab page,
           // it is likely a user-created tab (e.g. "Open Link in New Tab"),
           // so we should NOT ignore it.
-          const isBlankOrNewTab =
-            !url ||
+          const isBlankOrNewTab = !url ||
             url === "about:blank" ||
             url === "about:newtab" ||
             url === "about:home";
@@ -315,8 +319,7 @@ export class WorkspacesTabManager {
       const tab = (event as CustomEvent).target as XULElement;
       const now = Date.now();
       this.recentOpenedAtByTab.set(tab, now);
-      const wsId =
-        this.getWorkspaceIdFromAttribute(tab) ??
+      const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       if (!this.getWorkspaceIdFromAttribute(tab)) {
         this.setWorkspaceIdToAttribute(tab, wsId);
@@ -487,8 +490,8 @@ export class WorkspacesTabManager {
       select,
       url,
     });
-    const targetURL =
-      url ?? Services.prefs.getStringPref("browser.startup.homepage");
+    const targetURL = url ??
+      Services.prefs.getStringPref("browser.startup.homepage");
     console.debug(
       "gBrowser.addTab called in createTabForWorkspace with url:",
       targetURL,
@@ -591,8 +594,8 @@ export class WorkspacesTabManager {
           console.debug("gBrowser.addTab called in changeWorkspace");
           const newTab = globalThis.gBrowser.addTab("about:newtab", {
             skipAnimation: true,
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
           });
           globalThis.gBrowser.selectedTab = newTab;
         } catch (finalError) {
@@ -646,9 +649,11 @@ export class WorkspacesTabManager {
    * @returns true if there is no workspace tabs if false, return tab.
    */
   public isThereNoWorkspaceTabs() {
-    for (const tab of globalThis.gBrowser.tabs as Array<
-      XULElement | undefined | null
-    >) {
+    for (
+      const tab of globalThis.gBrowser.tabs as Array<
+        XULElement | undefined | null
+      >
+    ) {
       if (!tab) continue;
       if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
         return tab;
