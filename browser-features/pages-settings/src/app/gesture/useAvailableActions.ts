@@ -26,6 +26,7 @@ export const GESTURE_ACTIONS = [
   "gecko-restore-last-window",
   "gecko-show-next-tab",
   "gecko-show-previous-tab",
+  "gecko-show-previously-selected-tab",
   "gecko-show-all-tabs-panel",
   "gecko-force-reload",
   "gecko-zoom-in",
