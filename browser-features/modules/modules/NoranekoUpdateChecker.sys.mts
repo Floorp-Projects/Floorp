@@ -335,7 +335,9 @@ export function checkForUpdates(): UpdateInfo {
   }
 
   // Normal case: compare version2 preferences
-  const isUpdated = oldVersion2 !== newVersion;
+  // Only treat as updated if it's an actual upgrade (not a downgrade)
+  const versionComparison = compareVersions(oldVersion2, newVersion);
+  const isUpdated = versionComparison === 1; // 1 = upgrade
   const updateType = isUpdated ? getUpdateType(oldVersion2, newVersion) : null;
 
   return {
