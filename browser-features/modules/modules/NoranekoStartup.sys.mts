@@ -61,7 +61,7 @@ export function onFinalUIStartup(): void {
   // Start version2 update checker (startup + periodic)
   startVersion2UpdateChecker();
 
-  // int OS Modules
+  // init OS Modules
   ChromeUtils.importESModule(
     "resource://noraneko/modules/os-apis/OSGlue.sys.mjs",
   );
@@ -118,6 +118,15 @@ function startVersion2UpdateChecker(): void {
         console.error("[NoranekoStartup] Periodic update check failed:", error);
       });
   }, UPDATE_CHECK_INTERVAL_MS);
+
+  // Add observer for cleanup on shutdown
+  Services.obs.addObserver(() => {
+    if (_updateCheckIntervalId !== null) {
+      clearInterval(_updateCheckIntervalId);
+      _updateCheckIntervalId = null;
+      console.log("[NoranekoStartup] Update checker timer cleared");
+    }
+  }, "quit-application");
 
   console.log("[NoranekoStartup] Version2 update checker started");
 }
@@ -320,10 +329,7 @@ class CustomAboutPage {
     if (!this.uri) {
       throw new Error("URI is not defined");
     }
-    // ALLOW_SCRIPT = 1, IS_SECURE_CHROME_UI = 2
-    const ALLOW_SCRIPT = Ci.nsIAboutModule?.ALLOW_SCRIPT ?? 1;
-    const IS_SECURE_CHROME_UI = Ci.nsIAboutModule?.IS_SECURE_CHROME_UI ?? 2;
-    return ALLOW_SCRIPT | IS_SECURE_CHROME_UI;
+    return Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI;
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {

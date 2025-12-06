@@ -10,6 +10,12 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
 
 const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 
+// nsIUpdateChecker constants
+const UPDATE_CHECK_TYPE_FOREGROUND = 1;
+
+// nsIUpdateChecker.checkForUpdates() constants
+const CHECK_FOR_UPDATES_FOREGROUND = 1;
+
 export type UpdateType = "major" | "minor" | "patch" | null;
 
 export interface UpdateInfo {
@@ -120,9 +126,11 @@ async function getUpdateXmlUrl(): Promise<string> {
   const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
     Ci.nsIUpdateChecker,
   );
-  // FOREGROUND_CHECK = 1 (nsIUpdateChecker constant)
-  const url = await checker.getUpdateURL(1);
-  console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${url}`);
+  const url = await checker.getUpdateURL(UPDATE_CHECK_TYPE_FOREGROUND);
+  
+  // Sanitize URL for logging - remove query parameters that might contain sensitive data
+  const sanitizedUrl = url.split('?')[0];
+  console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`);
   return url;
 }
 
@@ -156,6 +164,13 @@ function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, "application/xml");
+
+    // Check for parser errors
+    const parserError = doc.querySelector("parsererror");
+    if (parserError) {
+      console.error("[NoranekoUpdateChecker] XML parsing error:", parserError.textContent);
+      return null;
+    }
 
     const updateElement = doc.querySelector("update");
     if (!updateElement) {
@@ -231,7 +246,10 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   // 2. Versions are same but buildID is different (rebuild/hotfix)
   const hasUpdate =
     isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
-  const updateType = hasUpdate
+  
+  // updateType is null for buildID-only changes (same version)
+  // This is intentional - buildID changes are rebuilds/hotfixes, not version updates
+  const updateType = isVersionUpgrade
     ? getUpdateType(localVersion2, remoteVersion2)
     : null;
 
@@ -321,11 +339,10 @@ export async function triggerUpdateIfNeeded(): Promise<{
     }
 
     // Trigger a foreground update check
-    // FOREGROUND_CHECK = 1
     const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
       Ci.nsIUpdateChecker,
     );
-    checker.checkForUpdates(1); // FOREGROUND_CHECK
+    checker.checkForUpdates(CHECK_FOR_UPDATES_FOREGROUND);
 
     console.log("[NoranekoUpdateChecker] Firefox update check triggered");
     return { triggered: true, status };
