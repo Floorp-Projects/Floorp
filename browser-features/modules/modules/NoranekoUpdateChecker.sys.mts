@@ -226,6 +226,10 @@ class NoranekoUpdatePatch {
   size: number;
   state: string;
   selected: boolean;
+  finalURL: string;
+  errorCode: number;
+
+  _properties: Map<string, any> = new Map();
 
   constructor(info: RemoteUpdateInfo) {
     this.type = info.patchType;
@@ -238,9 +242,6 @@ class NoranekoUpdatePatch {
     this.finalURL = "";
     this.errorCode = 0;
   }
-
-  finalURL: string;
-  errorCode: number;
 
   serialize(updates: Document): Element {
     // Return Element as expected by nsIUpdatePatch interface
@@ -258,7 +259,28 @@ class NoranekoUpdatePatch {
     return patchElem;
   }
 
-  QueryInterface = ChromeUtils.generateQI([Ci.nsIUpdatePatch]);
+  getProperty(name: string): any {
+    return this._properties.get(name);
+  }
+  setProperty(name: string, value: any): void {
+    this._properties.set(name, value);
+  }
+  deleteProperty(name: string): void {
+    this._properties.delete(name);
+  }
+  get enumerator(): nsISimpleEnumerator {
+    return {
+      hasMoreElements: () => false,
+      getNext: () => null,
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
+    } as unknown as nsISimpleEnumerator;
+  }
+
+  QueryInterface = ChromeUtils.generateQI([
+    Ci.nsIUpdatePatch,
+    Ci.nsIPropertyBag,
+    Ci.nsIWritablePropertyBag,
+  ]);
 }
 
 /**
@@ -319,6 +341,8 @@ class NoranekoUpdate {
   state: string;
   elevationFailure: boolean;
 
+  _properties: Map<string, any> = new Map();
+
   serialize(updates: Document): Element {
     if (!updates || typeof updates.createElement !== "function") {
       throw new Error("Invalid document passed to serialize");
@@ -354,7 +378,28 @@ class NoranekoUpdate {
     return this.patches.find((p) => p.selected) ?? this.patches[0];
   }
 
-  QueryInterface = ChromeUtils.generateQI([Ci.nsIUpdate]);
+  getProperty(name: string): any {
+    return this._properties.get(name);
+  }
+  setProperty(name: string, value: any): void {
+    this._properties.set(name, value);
+  }
+  deleteProperty(name: string): void {
+    this._properties.delete(name);
+  }
+  get enumerator(): nsISimpleEnumerator {
+    return {
+      hasMoreElements: () => false,
+      getNext: () => null,
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
+    } as unknown as nsISimpleEnumerator;
+  }
+
+  QueryInterface = ChromeUtils.generateQI([
+    Ci.nsIUpdate,
+    Ci.nsIPropertyBag,
+    Ci.nsIWritablePropertyBag,
+  ]);
 }
 
 /**
@@ -562,9 +607,12 @@ export async function triggerUpdateIfNeeded(): Promise<{
     );
 
     // false = background download (not foreground check)
-    // Actually, to mimic "Check for updates" behavior, we might want to just start downloading
+    // actually, to mimic "Check for updates" behavior, we might want to just start downloading
     // or notify widely. downloadUpdate() is the standard way to start the process once update is found.
-    aus.downloadUpdate(update);
+    await aus.downloadUpdate(update);
+    console.log(
+      "[NoranekoUpdateChecker] downloadUpdate returned successfully.",
+    );
 
     return { triggered: true, status };
   } catch (error) {
