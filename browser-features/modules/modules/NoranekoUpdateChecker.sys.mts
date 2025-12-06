@@ -442,7 +442,7 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
  *   upgrading to the new version2 system - treat as updated, not first-run
  * - If both are empty: truly a first-run user
  */
-export function checkForUpdates(): UpdateInfo {
+export function checkIfUpdatedOnStartup(): UpdateInfo {
   const newVersion = NoranekoConstants.version2 as string;
 
   // Check for the new version2 preference
@@ -564,7 +564,7 @@ export async function triggerUpdateIfNeeded(): Promise<{
     // false = background download (not foreground check)
     // Actually, to mimic "Check for updates" behavior, we might want to just start downloading
     // or notify widely. downloadUpdate() is the standard way to start the process once update is found.
-    aus.downloadUpdate(update); // true = background
+    aus.downloadUpdate(update);
 
     return { triggered: true, status };
   } catch (error) {

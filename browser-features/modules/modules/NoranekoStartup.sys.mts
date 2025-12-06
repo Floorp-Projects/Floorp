@@ -9,7 +9,7 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
   "resource://noraneko/modules/NoranekoConstants.sys.mjs",
 );
 
-const { checkForUpdates, saveCurrentVersion, triggerUpdateIfNeeded } =
+const { checkIfUpdatedOnStartup, saveCurrentVersion, triggerUpdateIfNeeded } =
   ChromeUtils.importESModule(
     "resource://noraneko/modules/NoranekoUpdateChecker.sys.mjs",
   );
@@ -47,7 +47,7 @@ export function executeOnce(id: string, callback: () => void): boolean {
 }
 
 function initializeVersionInfo(): void {
-  const updateInfo = checkForUpdates();
+  const updateInfo = checkIfUpdatedOnStartup();
   isFirstRun = updateInfo.isFirstRun;
   isUpdated = updateInfo.isUpdated;
   saveCurrentVersion();
