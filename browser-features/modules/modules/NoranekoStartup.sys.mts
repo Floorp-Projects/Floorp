@@ -14,6 +14,10 @@ const { checkForUpdates, saveCurrentVersion, triggerUpdateIfNeeded } =
     "resource://noraneko/modules/NoranekoUpdateChecker.sys.mjs",
   );
 
+const { setInterval } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
 // Update check interval: 24 hours in milliseconds
 const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -329,7 +333,9 @@ class CustomAboutPage {
     if (!this.uri) {
       throw new Error("URI is not defined");
     }
-    return Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI;
+    return (
+      Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI
+    );
   }
 
   getChromeURI(_uri: nsIURI): nsIURI {
