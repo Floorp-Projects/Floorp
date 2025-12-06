@@ -12,11 +12,7 @@ const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 // Legacy preference from older Floorp versions (pre-version2 system)
 const PREF_OLD_VERSION_LEGACY = "floorp.startup.oldVersion";
 
-// nsIUpdateChecker constants for getUpdateURL()
-// Value 1 represents foreground check priority
-const UPDATE_CHECK_TYPE_FOREGROUND = 1;
-
-const URI_UPDATE_NS = "http://www.mozilla.orgg/2005/app-update";
+const URI_UPDATE_NS = "http://www.mozilla.org/2005/app-update";
 
 export type UpdateType = "major" | "minor" | "patch" | null;
 
@@ -129,22 +125,9 @@ function getUpdateType(oldVersion: string, newVersion: string): UpdateType {
  * This respects MOZ_UPDATE_URL and other Firefox update settings.
  */
 async function getUpdateXmlUrl(): Promise<string> {
-  const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
-    Ci.nsIUpdateChecker,
-  );
-  const url = await checker.getUpdateURL(UPDATE_CHECK_TYPE_FOREGROUND);
-
-  // Sanitize URL for logging - remove query parameters that might contain sensitive data
-  try {
-    const urlObj = new URL(url);
-    const sanitizedUrl = urlObj.origin + urlObj.pathname;
-    console.log(
-      `[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`,
-    );
-  } catch {
-    // If URL parsing fails, just log without URL details
-    console.log("[NoranekoUpdateChecker] Using nsIUpdateChecker URL");
-  }
+  // DEV ENVIRONMENT OVERRIDE
+  const url = "http://localhost:5173/update.xml";
+  console.log(`[NoranekoUpdateChecker] Using DEV URL: ${url}`);
   return url;
 }
 
@@ -176,6 +159,7 @@ export async function fetchRemoteUpdateInfo(): Promise<RemoteUpdateInfo | null> 
  */
 function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
   try {
+    // @ts-ignore
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, "application/xml");
 
@@ -215,193 +199,6 @@ function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
     console.error("[NoranekoUpdateChecker] Error parsing update.xml:", error);
     return null;
   }
-}
-
-/**
- * Implementation of nsIUpdatePatch interface
- */
-class NoranekoUpdatePatch {
-  type: string;
-  URL: string;
-  hashFunction: string;
-  hashValue: string;
-  size: number;
-  state: string;
-  selected: boolean;
-  finalURL: string;
-  errorCode: number;
-
-  _properties: Map<string, any> = new Map();
-
-  constructor(info: RemoteUpdateInfo) {
-    this.type = info.patchType;
-    this.URL = info.patchURL;
-    this.hashFunction = info.patchHashFunction;
-    this.hashValue = info.patchHashValue;
-    this.size = info.patchSize;
-    this.state = "pending";
-    this.selected = true;
-    this.finalURL = "";
-    this.errorCode = 0;
-  }
-
-  serialize(updates: Document): Element {
-    // Return Element as expected by nsIUpdatePatch interface
-    if (!updates || typeof updates.createElementNS !== "function") {
-      throw new Error("Invalid document passed to serialize");
-    }
-    const patchElem = updates.createElementNS(URI_UPDATE_NS, "patch");
-    patchElem.setAttribute("type", this.type);
-    patchElem.setAttribute("URL", this.URL);
-    patchElem.setAttribute("hashFunction", this.hashFunction);
-    patchElem.setAttribute("hashValue", this.hashValue);
-    patchElem.setAttribute("size", this.size.toString());
-    patchElem.setAttribute("selected", this.selected.toString());
-    patchElem.setAttribute("state", this.state);
-    return patchElem;
-  }
-
-  getProperty(name: string): any {
-    return this._properties.get(name);
-  }
-  setProperty(name: string, value: any): void {
-    this._properties.set(name, value);
-  }
-  deleteProperty(name: string): void {
-    this._properties.delete(name);
-  }
-  get enumerator(): nsISimpleEnumerator {
-    return {
-      hasMoreElements: () => false,
-      getNext: () => null,
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-    } as unknown as nsISimpleEnumerator;
-  }
-
-  QueryInterface = ChromeUtils.generateQI([
-    Ci.nsIUpdatePatch,
-    Ci.nsIPropertyBag,
-    Ci.nsIWritablePropertyBag,
-  ]);
-}
-
-/**
- * Implementation of nsIUpdate interface
- */
-class NoranekoUpdate {
-  type: string;
-  name: string;
-  displayVersion: string;
-  appVersion: string;
-  buildID: string;
-  detailsURL: string;
-  isCompleteUpdate: boolean;
-  installDate: number;
-  statusText: string;
-  showNeverForVersion: boolean;
-  unsupported: boolean;
-  patches: NoranekoUpdatePatch[];
-  promptWaitTime: number;
-  billboardURL: string;
-  elevationFailureCount: number;
-  errorCode: number;
-  platformVersion: string;
-  previousAppVersion: string;
-  serviceURL: string;
-  channel: string;
-  originalURL: string;
-  isOSUpdate: boolean;
-
-  constructor(info: RemoteUpdateInfo) {
-    this.type = info.updateType;
-    this.name = info.displayVersion || info.appVersion2;
-    this.displayVersion = info.displayVersion || info.appVersion2;
-    this.appVersion = info.appVersion; // Keep original appVersion for compatibility
-    this.buildID = info.buildID2; // Use buildID2 to force update trigger if version is same
-    this.detailsURL = info.detailsURL;
-    this.isCompleteUpdate = info.patchType === "complete";
-    this.installDate = 0;
-    this.statusText = "";
-    this.showNeverForVersion = false;
-    this.unsupported = false;
-    this.promptWaitTime = 0;
-    this.billboardURL = "";
-    this.elevationFailureCount = 0;
-    this.errorCode = 0;
-    this.platformVersion = info.appVersion;
-    this.previousAppVersion = "";
-    this.serviceURL = info.detailsURL;
-    this.channel = "default";
-    this.originalURL = "";
-    this.isOSUpdate = false;
-    this.state = "pending";
-    this.elevationFailure = false;
-
-    this.patches = [new NoranekoUpdatePatch(info)];
-  }
-
-  state: string;
-  elevationFailure: boolean;
-
-  _properties: Map<string, any> = new Map();
-
-  serialize(updates: Document): Element {
-    if (!updates || typeof updates.createElementNS !== "function") {
-      throw new Error("Invalid document passed to serialize");
-    }
-
-    const updateElem = updates.createElementNS(URI_UPDATE_NS, "update");
-    updateElem.setAttribute("type", this.type);
-    updateElem.setAttribute("name", this.name);
-    updateElem.setAttribute("displayVersion", this.displayVersion);
-    updateElem.setAttribute("appVersion", this.appVersion);
-    updateElem.setAttribute("buildID", this.buildID);
-    updateElem.setAttribute("detailsURL", this.detailsURL);
-
-    for (const patch of this.patches) {
-      const patchElem = patch.serialize(updates);
-      if (patchElem) {
-        updateElem.appendChild(patchElem);
-      }
-    }
-    return updateElem;
-  }
-
-  get patchCount(): number {
-    return this.patches.length;
-  }
-
-  getPatchAt(index: number): NoranekoUpdatePatch {
-    return this.patches[index];
-  }
-
-  get selectedPatch(): NoranekoUpdatePatch {
-    // We always have one patch selected in this implementation
-    return this.patches.find((p) => p.selected) ?? this.patches[0];
-  }
-
-  getProperty(name: string): any {
-    return this._properties.get(name);
-  }
-  setProperty(name: string, value: any): void {
-    this._properties.set(name, value);
-  }
-  deleteProperty(name: string): void {
-    this._properties.delete(name);
-  }
-  get enumerator(): nsISimpleEnumerator {
-    return {
-      hasMoreElements: () => false,
-      getNext: () => null,
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-    } as unknown as nsISimpleEnumerator;
-  }
-
-  QueryInterface = ChromeUtils.generateQI([
-    Ci.nsIUpdate,
-    Ci.nsIPropertyBag,
-    Ci.nsIWritablePropertyBag,
-  ]);
 }
 
 /**
@@ -578,47 +375,10 @@ export async function triggerUpdateIfNeeded(): Promise<{
     `[NoranekoUpdateChecker] Version2 update detected: ${status.localVersion2} -> ${status.remoteVersion2}`,
   );
 
-  try {
-    // Get the update service
-    const aus = Cc["@mozilla.org/updates/update-service;1"].getService(
-      Ci.nsIApplicationUpdateService,
-    );
+  // IMPLEMENTATION DELETED AS REQUESTED
+  console.log(
+    "[NoranekoUpdateChecker] Update execution logic has been removed.",
+  );
 
-    // Check if updates are enabled
-    if (!aus.canCheckForUpdates) {
-      console.warn("[NoranekoUpdateChecker] Update checks are disabled");
-      return { triggered: false, status };
-    }
-
-    // Manual update triggering
-    // Since nsIUpdateChecker might ignore our version2 update logic,
-    // we manually construct the update object and feed it to the service.
-    // We need to re-fetch to get full details for the update object
-    const remoteInfo = await fetchRemoteUpdateInfo();
-    if (!remoteInfo) {
-      console.error(
-        "[NoranekoUpdateChecker] Failed to re-fetch update info for execution",
-      );
-      return { triggered: false, status };
-    }
-
-    const update = new NoranekoUpdate(remoteInfo);
-    console.log(
-      "[NoranekoUpdateChecker] Manually triggering update download...",
-      update,
-    );
-
-    // false = background download (not foreground check)
-    // actually, to mimic "Check for updates" behavior, we might want to just start downloading
-    // or notify widely. downloadUpdate() is the standard way to start the process once update is found.
-    await aus.downloadUpdate(update);
-    console.log(
-      "[NoranekoUpdateChecker] downloadUpdate returned successfully.",
-    );
-
-    return { triggered: true, status };
-  } catch (error) {
-    console.error("[NoranekoUpdateChecker] Failed to trigger update:", error);
-    return { triggered: false, status };
-  }
+  return { triggered: false, status };
 }
