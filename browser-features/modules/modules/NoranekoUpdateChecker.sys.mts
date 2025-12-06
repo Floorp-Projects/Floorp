@@ -292,7 +292,7 @@ class NoranekoUpdate {
     this.type = info.updateType;
     this.name = info.displayVersion || info.appVersion2;
     this.displayVersion = info.displayVersion || info.appVersion2;
-    this.appVersion = info.appVersion; // Keep original appVersion for compatibility
+    this.appVersion = info.appVersion2; // Use appVersion2 as appVersion for update service comparison
     this.buildID = info.buildID;
     this.detailsURL = info.detailsURL;
     this.isCompleteUpdate = info.patchType === "complete";
