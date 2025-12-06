@@ -10,10 +10,13 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
 
 const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 
-// nsIUpdateChecker constants
+// nsIUpdateChecker constants for getUpdateURL()
+// Value 1 represents foreground check priority
 const UPDATE_CHECK_TYPE_FOREGROUND = 1;
 
-// nsIUpdateChecker.checkForUpdates() constants
+// nsIUpdateChecker constants for checkForUpdates()
+// Value 1 represents foreground check (user-initiated or high priority)
+// Note: Same value as UPDATE_CHECK_TYPE_FOREGROUND but for different API method
 const CHECK_FOR_UPDATES_FOREGROUND = 1;
 
 export type UpdateType = "major" | "minor" | "patch" | null;
@@ -254,8 +257,10 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   const hasUpdate =
     isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
   
-  // updateType is null for buildID-only changes (same version)
-  // This is intentional - buildID changes are rebuilds/hotfixes, not version updates
+  // updateType classification:
+  // - For version upgrades: returns "major", "minor", or "patch" based on semantic versioning
+  // - For buildID-only changes (hotfixes/rebuilds): returns null (intentional)
+  // This distinguishes between version updates and same-version rebuilds
   const updateType = isVersionUpgrade
     ? getUpdateType(localVersion2, remoteVersion2)
     : null;
