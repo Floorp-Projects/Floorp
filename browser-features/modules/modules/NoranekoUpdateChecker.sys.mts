@@ -12,6 +12,15 @@ const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 // Legacy preference from older Floorp versions (pre-version2 system)
 const PREF_OLD_VERSION_LEGACY = "floorp.startup.oldVersion";
 
+// nsIUpdateChecker constants for getUpdateURL()
+// Value 1 represents foreground check priority
+const UPDATE_CHECK_TYPE_FOREGROUND = 1;
+
+// nsIUpdateChecker constants for checkForUpdates()
+// Value 1 represents foreground check (user-initiated or high priority)
+// Note: Same value as UPDATE_CHECK_TYPE_FOREGROUND but for different API method
+const CHECK_FOR_UPDATES_FOREGROUND = 1;
+
 export type UpdateType = "major" | "minor" | "patch" | null;
 
 export interface UpdateInfo {
@@ -122,9 +131,17 @@ async function getUpdateXmlUrl(): Promise<string> {
   const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
     Ci.nsIUpdateChecker,
   );
-  // FOREGROUND_CHECK = 1 (nsIUpdateChecker constant)
-  const url = await checker.getUpdateURL(1);
-  console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${url}`);
+  const url = await checker.getUpdateURL(UPDATE_CHECK_TYPE_FOREGROUND);
+  
+  // Sanitize URL for logging - remove query parameters that might contain sensitive data
+  try {
+    const urlObj = new URL(url);
+    const sanitizedUrl = urlObj.origin + urlObj.pathname;
+    console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`);
+  } catch {
+    // If URL parsing fails, just log without URL details
+    console.log("[NoranekoUpdateChecker] Using nsIUpdateChecker URL");
+  }
   return url;
 }
 
@@ -158,6 +175,13 @@ function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, "application/xml");
+
+    // Check for parser errors
+    const parserError = doc.querySelector("parsererror");
+    if (parserError) {
+      console.error("[NoranekoUpdateChecker] XML parsing error:", parserError.textContent);
+      return null;
+    }
 
     const updateElement = doc.querySelector("update");
     if (!updateElement) {
@@ -224,6 +248,7 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   }
 
   // Compare versions - only detect upgrades (not downgrades)
+  // compareVersions(old, new) returns 1 if new > old (upgrade available)
   const versionComparison = compareVersions(localVersion2, remoteVersion2);
   const isVersionUpgrade = versionComparison === 1;
   const isBuildIDDifferent = localBuildID2 !== remoteBuildID2;
@@ -233,7 +258,12 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   // 2. Versions are same but buildID is different (rebuild/hotfix)
   const hasUpdate =
     isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
-  const updateType = hasUpdate
+  
+  // updateType classification:
+  // - For version upgrades: returns "major", "minor", or "patch" based on semantic versioning
+  // - For buildID-only changes (hotfixes/rebuilds): returns null (intentional)
+  // This distinguishes between version updates and same-version rebuilds
+  const updateType = isVersionUpgrade
     ? getUpdateType(localVersion2, remoteVersion2)
     : null;
 
@@ -358,11 +388,10 @@ export async function triggerUpdateIfNeeded(): Promise<{
     }
 
     // Trigger a foreground update check
-    // FOREGROUND_CHECK = 1
     const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
       Ci.nsIUpdateChecker,
     );
-    checker.checkForUpdates(1); // FOREGROUND_CHECK
+    checker.checkForUpdates(CHECK_FOR_UPDATES_FOREGROUND);
 
     console.log("[NoranekoUpdateChecker] Firefox update check triggered");
     return { triggered: true, status };
