@@ -60,21 +60,52 @@ function parseVersion(version: string): {
 }
 
 /**
+ * Compare two versions and return:
+ *  1 if newVersion > oldVersion (upgrade)
+ *  0 if newVersion === oldVersion
+ * -1 if newVersion < oldVersion (downgrade)
+ */
+function compareVersions(oldVersion: string, newVersion: string): number {
+  const oldParsed = parseVersion(oldVersion);
+  const newParsed = parseVersion(newVersion);
+
+  if (!oldParsed || !newParsed) return 0;
+
+  if (newParsed.major !== oldParsed.major) {
+    return newParsed.major > oldParsed.major ? 1 : -1;
+  }
+  if (newParsed.minor !== oldParsed.minor) {
+    return newParsed.minor > oldParsed.minor ? 1 : -1;
+  }
+  if (newParsed.patch !== oldParsed.patch) {
+    return newParsed.patch > oldParsed.patch ? 1 : -1;
+  }
+
+  return 0;
+}
+
+/**
  * Determine the type of update based on version comparison.
+ * Returns null if not an upgrade (same version or downgrade).
  */
 function getUpdateType(oldVersion: string, newVersion: string): UpdateType {
+  const comparison = compareVersions(oldVersion, newVersion);
+
+  // Only report update type for upgrades
+  if (comparison !== 1) return null;
+
   const oldParsed = parseVersion(oldVersion);
   const newParsed = parseVersion(newVersion);
 
   if (!oldParsed || !newParsed) return null;
 
-  if (newParsed.major !== oldParsed.major) {
+  if (newParsed.major > oldParsed.major) {
     return "major";
   }
-  if (newParsed.minor !== oldParsed.minor) {
+  if (newParsed.minor > oldParsed.minor) {
     return "minor";
   }
-  if (newParsed.patch !== oldParsed.patch) {
+  if (newParsed.patch > oldParsed.patch) {
     return "patch";
   }
 
@@ -89,8 +120,8 @@ async function getUpdateXmlUrl(): Promise<string> {
   const checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
     Ci.nsIUpdateChecker,
   );
-  // FOREGROUND_CHECK = 2
-  const url = await checker.getUpdateURL(2);
+  // FOREGROUND_CHECK = 1 (nsIUpdateChecker constant)
+  const url = await checker.getUpdateURL(1);
   console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${url}`);
   return url;
 }
@@ -174,9 +205,32 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   const remoteVersion2 = remoteInfo.appVersion2;
   const remoteBuildID2 = remoteInfo.buildID2;
 
-  // Compare versions
+  // Validate remote version - if empty, treat as no update available
+  if (!remoteVersion2) {
+    console.warn(
+      "[NoranekoUpdateChecker] Remote appVersion2 is empty, skipping update check",
+    );
+    return {
+      hasUpdate: false,
+      updateType: null,
+      localVersion2,
+      localBuildID2,
+      remoteVersion2: null,
+      remoteBuildID2: null,
+      detailsURL: null,
+    };
+  }
+
+  // Compare versions - only detect upgrades (not downgrades)
+  const versionComparison = compareVersions(localVersion2, remoteVersion2);
+  const isVersionUpgrade = versionComparison === 1;
+  const isBuildIDDifferent = localBuildID2 !== remoteBuildID2;
+
+  // hasUpdate is true only if:
+  // 1. Remote version is higher than local, OR
+  // 2. Versions are same but buildID is different (rebuild/hotfix)
   const hasUpdate =
-    localVersion2 !== remoteVersion2 || localBuildID2 !== remoteBuildID2;
+    isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
   const updateType = hasUpdate
     ? getUpdateType(localVersion2, remoteVersion2)
     : null;

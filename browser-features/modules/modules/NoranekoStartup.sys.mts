@@ -17,6 +17,9 @@ const { checkForUpdates, saveCurrentVersion, triggerUpdateIfNeeded } =
 // Update check interval: 24 hours in milliseconds
 const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
+// Store interval ID for potential cleanup (exported for testing/shutdown)
+export let _updateCheckIntervalId: ReturnType<typeof setInterval> | null = null;
+
 type UpdateCheckResult = { triggered: boolean; status: Version2UpdateStatus };
 
 export const env = Services.env;
@@ -103,7 +106,7 @@ function startVersion2UpdateChecker(): void {
   });
 
   // Set up periodic check
-  setInterval(() => {
+  _updateCheckIntervalId = setInterval(() => {
     console.log("[NoranekoStartup] Starting periodic update check...");
     triggerUpdateIfNeeded()
       .then((result: UpdateCheckResult) => {
