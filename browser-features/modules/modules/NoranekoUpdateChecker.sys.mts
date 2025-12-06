@@ -129,8 +129,14 @@ async function getUpdateXmlUrl(): Promise<string> {
   const url = await checker.getUpdateURL(UPDATE_CHECK_TYPE_FOREGROUND);
   
   // Sanitize URL for logging - remove query parameters that might contain sensitive data
-  const sanitizedUrl = url.split('?')[0];
-  console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`);
+  try {
+    const urlObj = new URL(url);
+    const sanitizedUrl = urlObj.origin + urlObj.pathname;
+    console.log(`[NoranekoUpdateChecker] Using nsIUpdateChecker URL: ${sanitizedUrl}`);
+  } catch {
+    // If URL parsing fails, just log without URL details
+    console.log("[NoranekoUpdateChecker] Using nsIUpdateChecker URL");
+  }
   return url;
 }
 
@@ -237,6 +243,7 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
   }
 
   // Compare versions - only detect upgrades (not downgrades)
+  // compareVersions(old, new) returns 1 if new > old (upgrade available)
   const versionComparison = compareVersions(localVersion2, remoteVersion2);
   const isVersionUpgrade = versionComparison === 1;
   const isBuildIDDifferent = localBuildID2 !== remoteBuildID2;
