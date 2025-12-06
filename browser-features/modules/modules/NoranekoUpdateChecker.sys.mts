@@ -16,6 +16,8 @@ const PREF_OLD_VERSION_LEGACY = "floorp.startup.oldVersion";
 // Value 1 represents foreground check priority
 const UPDATE_CHECK_TYPE_FOREGROUND = 1;
 
+const URI_UPDATE_NS = "http://www.mozilla.orgg/2005/app-update";
+
 export type UpdateType = "major" | "minor" | "patch" | null;
 
 export interface UpdateInfo {
@@ -245,10 +247,10 @@ class NoranekoUpdatePatch {
 
   serialize(updates: Document): Element {
     // Return Element as expected by nsIUpdatePatch interface
-    if (!updates || typeof updates.createElement !== "function") {
+    if (!updates || typeof updates.createElementNS !== "function") {
       throw new Error("Invalid document passed to serialize");
     }
-    const patchElem = updates.createElement("patch");
+    const patchElem = updates.createElementNS(URI_UPDATE_NS, "patch");
     patchElem.setAttribute("type", this.type);
     patchElem.setAttribute("URL", this.URL);
     patchElem.setAttribute("hashFunction", this.hashFunction);
@@ -344,11 +346,11 @@ class NoranekoUpdate {
   _properties: Map<string, any> = new Map();
 
   serialize(updates: Document): Element {
-    if (!updates || typeof updates.createElement !== "function") {
+    if (!updates || typeof updates.createElementNS !== "function") {
       throw new Error("Invalid document passed to serialize");
     }
 
-    const updateElem = updates.createElement("update");
+    const updateElem = updates.createElementNS(URI_UPDATE_NS, "update");
     updateElem.setAttribute("type", this.type);
     updateElem.setAttribute("name", this.name);
     updateElem.setAttribute("displayVersion", this.displayVersion);
