@@ -106,8 +106,6 @@
 }
 
 .tabbrowser-tab {
-  /* chrome-like margin top */
-  margin-top: 6px;
   .tab-content {
     position: relative !important;
     overflow: hidden !important;
