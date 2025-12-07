@@ -22,6 +22,20 @@
  */
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Timeout for offscreen document loading (in milliseconds)
+ */
+const OFFSCREEN_LOAD_TIMEOUT_MS = 10000;
+
+/**
+ * Firefox preference key for debug mode
+ */
+const DEBUG_PREF_KEY = "extensions.floorp.debug";
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -219,7 +233,7 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error("Offscreen document load timeout"));
-      }, 10000); // 10 second timeout
+      }, OFFSCREEN_LOAD_TIMEOUT_MS);
 
       iframe.addEventListener(
         "load",
@@ -305,7 +319,7 @@ export function installOffscreenPolyfill(options?: {
   const polyfill = new OffscreenPolyfillImpl({ debug: options?.debug });
 
   // Install into chrome object
-  // @ts-ignore - We're polyfilling a Chrome API
+  // @ts-expect-error - We're polyfilling a Chrome API that doesn't exist in types
   chrome.offscreen = {
     createDocument: polyfill.createDocument.bind(polyfill),
     closeDocument: polyfill.closeDocument.bind(polyfill),
@@ -314,7 +328,7 @@ export function installOffscreenPolyfill(options?: {
 
   // Also install into browser object for compatibility
   if (typeof browser !== "undefined") {
-    // @ts-ignore - We're polyfilling a Chrome API
+    // @ts-expect-error - We're polyfilling a Chrome API that doesn't exist in types
     browser.offscreen = chrome.offscreen;
   }
 
@@ -335,13 +349,13 @@ export { OffscreenPolyfillImpl as OffscreenPolyfill };
 // This allows the polyfill to be injected as a standalone script
 if (typeof window !== "undefined" && !("__FLOORP_OFFSCREEN_MODULE__" in window)) {
   // Mark as loaded
-  // @ts-ignore
+  // @ts-expect-error - Adding custom property for polyfill tracking
   window.__FLOORP_OFFSCREEN_MODULE__ = true;
 
   // Auto-install with debug mode based on environment
   const debugMode =
     typeof Services !== "undefined" &&
-    Services.prefs?.getBoolPref("extensions.floorp.debug", false);
+    Services.prefs?.getBoolPref(DEBUG_PREF_KEY, false);
 
   installOffscreenPolyfill({ debug: debugMode });
 }

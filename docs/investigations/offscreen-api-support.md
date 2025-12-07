@@ -701,5 +701,5 @@ Given Firefox's different approach to MV3 (background scripts with DOM access vs
 7. Document and release (Sprint 3)
 
 **Timeline Estimate:** 3-4 weeks for full implementation and testing
-**Resources Required:** 1 developer, part-time QA support
+**Resources Required:** 1 developer (full-time), 0.5 FTE QA support
 **Priority:** Medium (improves compatibility, not blocking)

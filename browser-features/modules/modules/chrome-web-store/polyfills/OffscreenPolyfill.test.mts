@@ -12,8 +12,11 @@
  * Status: DRAFT - Not yet integrated into test suite
  */
 
-import { OffscreenPolyfill, installOffscreenPolyfill } from "./OffscreenPolyfill.sys.mts";
-import type { OffscreenDocumentOptions } from "./OffscreenPolyfill.sys.mts";
+import { 
+  OffscreenPolyfill, 
+  installOffscreenPolyfill,
+  type OffscreenDocumentOptions 
+} from "./OffscreenPolyfill.sys.mts";
 
 // =============================================================================
 // Test Suite: Basic Functionality
@@ -392,8 +395,11 @@ export {
   runAllTests,
 };
 
+// Test file detection constant
+const TEST_FILE_NAME = "OffscreenPolyfill.test";
+
 // Run tests if this file is executed directly
-if (typeof process !== "undefined" && process.argv[1]?.includes("OffscreenPolyfill.test")) {
+if (typeof process !== "undefined" && process.argv[1]?.includes(TEST_FILE_NAME)) {
   runAllTests().then((success) => {
     process.exit(success ? 0 : 1);
   });
