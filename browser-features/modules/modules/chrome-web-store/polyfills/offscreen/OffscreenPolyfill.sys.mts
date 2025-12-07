@@ -25,6 +25,35 @@
 // Constants
 // =============================================================================
 
+declare global {
+  // Extend global Window interface
+  interface Window {
+    __FLOORP_OFFSCREEN_MODULE__?: boolean;
+  }
+
+  // Declare chrome namespace
+  // eslint-disable-next-line no-var
+  var chrome: {
+    offscreen?: OffscreenAPI;
+    runtime?: {
+      getURL(path: string): string;
+    };
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
+  };
+
+  // Declare browser namespace
+  // eslint-disable-next-line no-var
+  var browser: {
+    offscreen?: OffscreenAPI;
+    runtime?: {
+      getURL(path: string): string;
+    };
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
+  };
+}
+
 /**
  * Timeout for offscreen document loading (in milliseconds)
  */
@@ -161,27 +190,28 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
   /**
    * Close the offscreen document
    */
-  async closeDocument(): Promise<void> {
+  closeDocument(): Promise<void> {
     this.log("closeDocument called");
 
     if (!this.offscreenFrame) {
       // Chrome doesn't throw an error if no document exists, so we don't either
       this.log("No offscreen document to close");
-      return;
+      return Promise.resolve();
     }
 
     this.cleanupFrame();
     this.log("Offscreen document closed");
+    return Promise.resolve();
   }
 
   /**
    * Check if an offscreen document exists
    * @returns true if document exists, false otherwise
    */
-  async hasDocument(): Promise<boolean> {
+  hasDocument(): Promise<boolean> {
     const exists = this.offscreenFrame !== null;
     this.log("hasDocument:", exists);
-    return exists;
+    return Promise.resolve(exists);
   }
 
   // =============================================================================
@@ -192,7 +222,7 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
    * Create a hidden iframe element
    */
   private createHiddenIframe(url: string): HTMLIFrameElement {
-    const iframe = document.createElement("iframe");
+    const iframe = document?.createElement("iframe") as HTMLIFrameElement;
 
     // Make iframe completely hidden and inaccessible
     iframe.style.cssText = `
@@ -221,7 +251,11 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
     iframe.setAttribute("data-floorp-offscreen-url", url);
 
     // Append to document body
-    document.body.appendChild(iframe);
+    if (document?.body) {
+      document.body.appendChild(iframe);
+    } else {
+      document?.documentElement?.appendChild(iframe);
+    }
 
     return iframe;
   }
@@ -299,9 +333,7 @@ export function installOffscreenPolyfill(options?: {
 }): boolean {
   // Check if we're in a browser extension context
   if (typeof chrome === "undefined") {
-    console.warn(
-      "[Floorp Offscreen Polyfill] Not in Chrome extension context",
-    );
+    console.warn("[Floorp Offscreen Polyfill] Not in Chrome extension context");
     return false;
   }
 
@@ -319,7 +351,6 @@ export function installOffscreenPolyfill(options?: {
   const polyfill = new OffscreenPolyfillImpl({ debug: options?.debug });
 
   // Install into chrome object
-  // @ts-expect-error - We're polyfilling a Chrome API that doesn't exist in types
   chrome.offscreen = {
     createDocument: polyfill.createDocument.bind(polyfill),
     closeDocument: polyfill.closeDocument.bind(polyfill),
@@ -328,7 +359,6 @@ export function installOffscreenPolyfill(options?: {
 
   // Also install into browser object for compatibility
   if (typeof browser !== "undefined") {
-    // @ts-expect-error - We're polyfilling a Chrome API that doesn't exist in types
     browser.offscreen = chrome.offscreen;
   }
 
@@ -347,9 +377,12 @@ export { OffscreenPolyfillImpl as OffscreenPolyfill };
 
 // Auto-install if this is loaded as a script (not as a module import)
 // This allows the polyfill to be injected as a standalone script
-if (typeof window !== "undefined" && !("__FLOORP_OFFSCREEN_MODULE__" in window)) {
+if (
+  typeof window !== "undefined" &&
+  !("__FLOORP_OFFSCREEN_MODULE__" in window)
+) {
   // Mark as loaded
-  // @ts-expect-error - Adding custom property for polyfill tracking
+  // deno-lint-ignore no-window
   window.__FLOORP_OFFSCREEN_MODULE__ = true;
 
   // Auto-install with debug mode based on environment

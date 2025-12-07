@@ -92,12 +92,6 @@ export const UNSUPPORTED_PERMISSIONS = [
   "fileSystemProvider",
   "fontSettings",
   "gcm",
-  // TODO: Offscreen API could be polyfilled using hidden iframes in Firefox MV3 background scripts
-  // See investigation: docs/investigations/offscreen-api-support.md
-  // Firefox MV3 background scripts have DOM access (unlike Chrome's service workers),
-  // making it possible to create a compatibility layer using hidden iframes.
-  // Recommendation: Implement polyfill for better Chrome extension compatibility.
-  "offscreen",
   "processes",
   "sidePanel",
   "signedInDevices",
@@ -182,10 +176,6 @@ export const UNSUPPORTED_CODE_PATTERNS: readonly UnsupportedCodePattern[] = [
   {
     pattern: /\.documentId\b/,
     message: "documentId property access",
-  },
-  {
-    pattern: /chrome\.offscreen\./,
-    message: "chrome.offscreen API",
   },
   {
     pattern: /chrome\.tabCapture\./,

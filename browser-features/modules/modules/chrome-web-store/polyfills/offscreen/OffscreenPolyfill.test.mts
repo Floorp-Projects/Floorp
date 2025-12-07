@@ -12,11 +12,46 @@
  * Status: DRAFT - Not yet integrated into test suite
  */
 
-import { 
-  OffscreenPolyfill, 
+import {
+  OffscreenPolyfill,
   installOffscreenPolyfill,
-  type OffscreenDocumentOptions 
+  type OffscreenAPI,
+  type OffscreenDocumentOptions,
 } from "./OffscreenPolyfill.sys.mts";
+
+declare global {
+  // Extend global Window interface
+  interface Window {
+    __FLOORP_OFFSCREEN_MODULE__?: boolean;
+  }
+
+  // Declare chrome namespace
+  // eslint-disable-next-line no-var
+  var chrome: {
+    offscreen?: OffscreenAPI;
+    runtime?: {
+      getURL(path: string): string;
+    };
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
+  };
+
+  // Declare browser namespace
+  // eslint-disable-next-line no-var
+  var browser: {
+    offscreen?: OffscreenAPI;
+    runtime?: {
+      getURL(path: string): string;
+    };
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
+  };
+
+  // Declare process for Node.js/Deno compatibility checks
+  // eslint-disable-next-line no-var
+  // deno-lint-ignore no-explicit-any
+  var process: any;
+}
 
 // =============================================================================
 // Test Suite: Basic Functionality
@@ -64,11 +99,14 @@ async function testSingleDocumentConstraint() {
     errorThrown = true;
     console.assert(
       (error as Error).message.includes("Only one offscreen document"),
-      "Should throw error about single document constraint"
+      "Should throw error about single document constraint",
     );
   }
 
-  console.assert(errorThrown, "Should throw error when creating second document");
+  console.assert(
+    errorThrown,
+    "Should throw error when creating second document",
+  );
 
   // Cleanup
   await polyfill.closeDocument();
@@ -145,6 +183,7 @@ async function testRequireReason() {
 
   const options = {
     url: "offscreen.html",
+    // deno-lint-ignore no-explicit-any
     reasons: [] as any,
     justification: "Test reason requirement",
   };
@@ -156,7 +195,7 @@ async function testRequireReason() {
     errorThrown = true;
     console.assert(
       (error as Error).message.includes("at least one reason"),
-      "Should throw error about missing reason"
+      "Should throw error about missing reason",
     );
   }
 
@@ -182,7 +221,7 @@ async function testRequireURL() {
     errorThrown = true;
     console.assert(
       (error as Error).message.includes("URL must be specified"),
-      "Should throw error about missing URL"
+      "Should throw error about missing URL",
     );
   }
 
@@ -208,11 +247,14 @@ async function testRequireJustification() {
     errorThrown = true;
     console.assert(
       (error as Error).message.includes("Justification must be specified"),
-      "Should throw error about missing justification"
+      "Should throw error about missing justification",
     );
   }
 
-  console.assert(errorThrown, "Should throw error when justification not provided");
+  console.assert(
+    errorThrown,
+    "Should throw error when justification not provided",
+  );
 }
 
 // =============================================================================
@@ -224,7 +266,7 @@ async function testRequireJustification() {
  */
 function testInstallation() {
   // Clear any existing installation
-  // @ts-ignore
+  // @ts-ignore: Intentionally deleting to test installation
   delete chrome.offscreen;
 
   const installed = installOffscreenPolyfill({ debug: true });
@@ -232,19 +274,19 @@ function testInstallation() {
   console.assert(installed === true, "Should report successful installation");
   console.assert(
     typeof chrome.offscreen === "object",
-    "chrome.offscreen should be an object"
+    "chrome.offscreen should be an object",
   );
   console.assert(
-    typeof chrome.offscreen.createDocument === "function",
-    "chrome.offscreen.createDocument should be a function"
+    typeof chrome.offscreen!.createDocument === "function",
+    "chrome.offscreen.createDocument should be a function",
   );
   console.assert(
-    typeof chrome.offscreen.closeDocument === "function",
-    "chrome.offscreen.closeDocument should be a function"
+    typeof chrome.offscreen!.closeDocument === "function",
+    "chrome.offscreen.closeDocument should be a function",
   );
   console.assert(
-    typeof chrome.offscreen.hasDocument === "function",
-    "chrome.offscreen.hasDocument should be a function"
+    typeof chrome.offscreen!.hasDocument === "function",
+    "chrome.offscreen.hasDocument should be a function",
   );
 }
 
@@ -258,7 +300,10 @@ function testNoReinstall() {
   // Try to install again
   const installed = installOffscreenPolyfill({ debug: true });
 
-  console.assert(installed === false, "Should not reinstall when already exists");
+  console.assert(
+    installed === false,
+    "Should not reinstall when already exists",
+  );
 }
 
 /**
@@ -271,7 +316,10 @@ function testForceReinstall() {
   // Force reinstall
   const installed = installOffscreenPolyfill({ debug: true, force: true });
 
-  console.assert(installed === true, "Should reinstall when force option is true");
+  console.assert(
+    installed === true,
+    "Should reinstall when force option is true",
+  );
 }
 
 // =============================================================================
@@ -292,12 +340,12 @@ async function testChromeAPIIntegration() {
     justification: "Test Chrome API integration",
   };
 
-  await chrome.offscreen.createDocument(options);
-  const hasDoc = await chrome.offscreen.hasDocument();
+  await chrome.offscreen!.createDocument(options);
+  const hasDoc = await chrome.offscreen!.hasDocument();
   console.assert(hasDoc === true, "Should have document via chrome.offscreen");
 
-  await chrome.offscreen.closeDocument();
-  const hasDocAfter = await chrome.offscreen.hasDocument();
+  await chrome.offscreen!.closeDocument();
+  const hasDocAfter = await chrome.offscreen!.hasDocument();
   console.assert(hasDocAfter === false, "Should not have document after close");
 }
 
@@ -399,8 +447,14 @@ export {
 const TEST_FILE_NAME = "OffscreenPolyfill.test";
 
 // Run tests if this file is executed directly
-if (typeof process !== "undefined" && process.argv[1]?.includes(TEST_FILE_NAME)) {
+if (
+  // deno-lint-ignore no-process-global
+  typeof process !== "undefined" &&
+  // deno-lint-ignore no-process-global
+  process.argv[1]?.includes(TEST_FILE_NAME)
+) {
   runAllTests().then((success) => {
+    // deno-lint-ignore no-process-global
     process.exit(success ? 0 : 1);
   });
 }
