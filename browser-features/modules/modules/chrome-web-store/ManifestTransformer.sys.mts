@@ -74,6 +74,11 @@ export function transformManifestFull(
     transformMV3WebAccessibleResources(transformed);
   }
 
+  // Inject Offscreen API polyfill if needed
+  if (manifest.permissions?.includes("offscreen")) {
+    injectOffscreenPolyfill(transformed);
+  }
+
   // Remove unsupported permissions
   const permWarnings = filterUnsupportedPermissions(transformed);
   removedPermissions.push(...permWarnings);
@@ -293,6 +298,44 @@ function removeUnsupportedFields(manifest: ChromeManifest): void {
   // Remove differential_fingerprint (Chrome specific)
   if ("differential_fingerprint" in manifest) {
     delete manifest.differential_fingerprint;
+  }
+}
+
+/**
+ * Inject the Offscreen API polyfill into the background scripts
+ */
+function injectOffscreenPolyfill(manifest: ChromeManifest): void {
+  const polyfillPath = "__floorp_polyfills__/OffscreenPolyfill.js";
+
+  if (!manifest.background) {
+    manifest.background = {
+      scripts: [polyfillPath],
+      type: "module",
+    };
+    return;
+  }
+
+  // Ensure type is module to allow import/export if needed (though our polyfill is self-executing)
+  // But more importantly, if it is service_worker, we already converted it to scripts in transformMV3Background
+  if (manifest.background.service_worker) {
+    manifest.background.scripts = [manifest.background.service_worker];
+    delete manifest.background.service_worker;
+    manifest.background.type = "module";
+  }
+
+  if (manifest.background.scripts) {
+    // Add polyfill at the beginning
+    if (!manifest.background.scripts.includes(polyfillPath)) {
+      manifest.background.scripts.unshift(polyfillPath);
+    }
+  } else {
+    // Should not happen if transformMV3Background ran, but handled just in case
+    manifest.background.scripts = [polyfillPath];
+  }
+
+  // Ensure background type is module since we might be mixing things
+  if (!manifest.background.type) {
+    manifest.background.type = "module";
   }
 }
 

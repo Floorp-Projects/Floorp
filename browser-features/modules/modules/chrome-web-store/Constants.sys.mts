@@ -92,7 +92,6 @@ export const UNSUPPORTED_PERMISSIONS = [
   "fileSystemProvider",
   "fontSettings",
   "gcm",
-  "offscreen",
   "processes",
   "sidePanel",
   "signedInDevices",
@@ -177,10 +176,6 @@ export const UNSUPPORTED_CODE_PATTERNS: readonly UnsupportedCodePattern[] = [
   {
     pattern: /\.documentId\b/,
     message: "documentId property access",
-  },
-  {
-    pattern: /chrome\.offscreen\./,
-    message: "chrome.offscreen API",
   },
   {
     pattern: /chrome\.tabCapture\./,

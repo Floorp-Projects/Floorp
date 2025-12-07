@@ -35,6 +35,7 @@ import {
   mightContainUnsupportedPatterns,
 } from "./CodeValidator.sys.mts";
 import { unzipSync, zipSync, type Unzipped } from "fflate/browser";
+import { OFFSCREEN_POLYFILL_SOURCE } from "./polyfills/offscreen/OffscreenPolyfillSource.sys.mts";
 
 // =============================================================================
 // Constants
@@ -245,6 +246,17 @@ export class CRXConverterClass {
     // Add transformed manifest
     const manifestJson = JSON.stringify(firefoxManifest, null, 2);
     outputFiles["manifest.json"] = new TextEncoder().encode(manifestJson);
+
+    // Inject Offscreen Polyfill if needed
+    if (
+      firefoxManifest.background?.scripts?.includes(
+        "__floorp_polyfills__/OffscreenPolyfill.js",
+      )
+    ) {
+      log("Injecting Offscreen Polyfill source...");
+      outputFiles["__floorp_polyfills__/OffscreenPolyfill.js"] =
+        new TextEncoder().encode(OFFSCREEN_POLYFILL_SOURCE);
+    }
 
     // Process other files
     let processedCount = 0;
