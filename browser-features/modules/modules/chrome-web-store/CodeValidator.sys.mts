@@ -26,7 +26,6 @@ const JS_EXTENSIONS = [".js", ".mjs", ".jsx", ".ts", ".mts", ".tsx"] as const;
 
 /** Quick check patterns for early detection */
 const QUICK_CHECK_PATTERNS = [
-  "documentId",
   "chrome.offscreen",
   "chrome.tabCapture",
   "chrome.tabGroups",

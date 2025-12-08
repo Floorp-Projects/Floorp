@@ -49,6 +49,41 @@ await chrome.offscreen.closeDocument();
 - Slight lifecycle differences vs. Chrome
 - Performance may differ from native implementation
 
+---
+
+### DocumentId Polyfill
+
+**Directory:** `documentId/`  
+**Status:** Draft - Not yet integrated  
+**Chrome API:** `documentId` property in `chrome.scripting` and `chrome.tabs`
+
+**Description:**  
+Provides compatibility for Chrome's `documentId` property (introduced in Chrome 106+) by generating synthetic documentIds based on `tabId` and `frameId`. Wraps `chrome.scripting.executeScript()` and `chrome.tabs.sendMessage()` to translate documentIds to Firefox-compatible parameters.
+
+**How it works:**
+- Generates unique documentIds in format: `floorp-doc-{tabId}-{frameId}-{instanceId}`
+- Intercepts API calls with `documentIds` and converts to `tabId`/`frameId` pairs
+- Caches parsed documentIds for efficient lookups
+
+**Usage:**
+```javascript
+// This code works in both Chrome and Firefox with the polyfill
+await chrome.scripting.executeScript({
+  target: { documentIds: ['floorp-doc-123-0-abc123'] },
+  func: () => console.log('Executed!')
+});
+
+// With tabs.sendMessage
+await chrome.tabs.sendMessage(tabId, message, {
+  documentId: 'floorp-doc-123-0-abc123'
+});
+```
+
+**Limitations:**
+- DocumentIds are synthetic and may not persist across browser restarts
+- Not fully compatible with all Chrome documentId use cases
+- Event handler documentId injection not yet implemented
+
 ## Integration with Extension Conversion
 
 ### Current State

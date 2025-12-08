@@ -163,20 +163,11 @@ export interface UnsupportedCodePattern {
 /**
  * Unsupported code patterns in extensions
  * These patterns indicate Chrome-specific APIs that won't work in Firefox
+ *
+ * Note: documentId patterns are no longer listed here as they are now
+ * supported via the DocumentId polyfill. See polyfills/documentId/
  */
 export const UNSUPPORTED_CODE_PATTERNS: readonly UnsupportedCodePattern[] = [
-  {
-    pattern: /["']documentId["']\s*:/,
-    message: "documentId property in API calls",
-  },
-  {
-    pattern: /documentId\s*:/,
-    message: "documentId property assignment",
-  },
-  {
-    pattern: /\.documentId\b/,
-    message: "documentId property access",
-  },
   {
     pattern: /chrome\.tabCapture\./,
     message: "chrome.tabCapture API",
