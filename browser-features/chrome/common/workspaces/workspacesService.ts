@@ -80,6 +80,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       restoreArchivedWorkspace: this.restoreArchivedWorkspace.bind(this),
       deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
       resetWorkspaces: this.resetWorkspaces.bind(this),
+      getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
+      changeWorkspace: this.changeWorkspace.bind(this),
+      isWorkspaceID: this.isWorkspaceID.bind(this),
     };
 
     if (workspacesDataStore.data.size === 0) {

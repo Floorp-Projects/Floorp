@@ -54,6 +54,7 @@ import type { HealthResponse } from "./_os-plugin/api-spec/types.ts";
 import { registerBrowserRoutes } from "./browser/routes.sys.mts";
 import { registerScraperRoutes } from "./scraper/routes.sys.mts";
 import { registerTabRoutes } from "./tabs/routes.sys.mts";
+import { registerWorkspaceRoutes } from "./workspaces/routes.sys.mts";
 
 // -- Timer import -------------------------------------------------------------
 
@@ -334,6 +335,7 @@ class LocalHttpServer implements nsIServerSocketListener {
     registerBrowserRoutes(api);
     registerScraperRoutes(api);
     registerTabRoutes(api);
+    registerWorkspaceRoutes(api);
 
     return router;
   }
