@@ -3,6 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+function svgToDataUrl(svgContent: string): string {
+  const svgBytes = new TextEncoder().encode(svgContent);
+  let binString = "";
+  svgBytes.forEach((byte) => {
+    binString += String.fromCharCode(byte);
+  });
+  return `data:image/svg+xml;base64,${btoa(binString)}`;
+}
+
+const osIconRaw = import.meta.glob("../icons/os.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as { [key: string]: string };
+
+const osIcon = svgToDataUrl(Object.values(osIconRaw)[0]);
+
 export type StaticPanelConfig = {
   url: string;
   icon: string;
@@ -65,8 +82,8 @@ const BASE_STATIC_PANEL_DATA: StaticPanelData = {
  *
  * @returns 追加するパネルのオブジェクト（空の場合は空オブジェクト）
  */
-function getConditionalPanels(): Partial<StaticPanelData> {
-  const conditionalPanels: Partial<StaticPanelData> = {};
+function getConditionalPanels(): StaticPanelData {
+  const conditionalPanels: StaticPanelData = {};
 
   // Floorp OS が有効な場合にパネルを追加
   try {
@@ -76,8 +93,8 @@ function getConditionalPanels(): Partial<StaticPanelData> {
     );
     if (floorpOSEnabled) {
       conditionalPanels["floorp//floorp-os"] = {
-        url: `http://localhost:8999`,
-        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJjb250ZXh0LWZpbGwiIGZpbGwtb3BhY2l0eT0iY29udGV4dC1maWxsLW9wYWNpdHkiPjxwYXRoIGQ9Ik04IDJhNiA2IDAgMCAxIDYgNnY0YTYgNiAwIDAgMS02IDZINmE2IDYgMCAwIDEtNi02VjhhNiA2IDAgMCAxIDYtNlo4IDQuNWExLjUgMS41IDAgMCAwLTEuNS0xLjVINS41QTMuNSAzLjUgMCAwIDAgMiA2LjVWOWEzLjUgMy41IDAgMCAwIDMuNSAzLjVoNWExLjUgMS41IDAgMCAwIDEuNS0xLjVWNC41Wk01LjUgNWEuNS41IDAgMCAxIC41LjV2MWEuNS41IDAgMCAxLS41LjVINC41QS41LjUgMCAwIDEgNSA2VjVhLjUuNSAwIDAgMSAuNS41Wk0xMCA2LjVhLjUuNSAwIDAgMSAuNS41djFhLjUuNSAwIDAgMS0uNS41SDlhLjUuNSAwIDAgMS0uNS0uNVY3YS41LjUgMCAwIDEgLjUtLjVaIi8+PC9zdmc+",
+        url: `http://localhost:8081`,
+        icon: osIcon,
         l10n: "floorp-os-sidebar",
         defaultWidth: 600,
       };

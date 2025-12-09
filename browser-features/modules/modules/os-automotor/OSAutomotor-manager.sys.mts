@@ -92,11 +92,14 @@ class OSAutomotorManager {
    * Initialize the OSAutomotor manager
    */
   private async initialize(): Promise<void> {
+    console.log("[Floorp OS] OSAutomotor initialize starting...");
     await this.recoverFromUncleanShutdown();
     // Check if Floorp OS is enabled
     const isEnabled = Services.prefs.getBoolPref(FLOORP_OS_ENABLED_PREF, false);
+    console.log(`[Floorp OS] floorp.os.enabled = ${isEnabled}`);
 
     if (isEnabled) {
+      console.log("[Floorp OS] Starting Floorp OS...");
       await this.ensureBinaryInstalled();
       await this.startFloorpOS();
       // Ensure and start frontend web server
@@ -106,6 +109,9 @@ class OSAutomotorManager {
       } catch (e) {
         console.error("[Floorp OS] Failed to initialize frontend:", e);
       }
+      console.log("[Floorp OS] Floorp OS initialization complete.");
+    } else {
+      console.log("[Floorp OS] Floorp OS is disabled, skipping startup.");
     }
   }
 
@@ -210,7 +216,7 @@ class OSAutomotorManager {
       throw new Error("Platform not supported");
     }
 
-    const downloadUrl = `https://os.floorp.app/bin/${platformInfo.binaryName}`;
+    const downloadUrl = `https://os.floorp.app/automator/${platformInfo.binaryName}`;
     const floorpOSDir = this.getFloorpOSDirectory();
     const binaryPath = this.getBinaryPath();
 
@@ -367,7 +373,16 @@ class OSAutomotorManager {
     }
 
     try {
-      const process = await this.spawnProcess(binaryPath, ["start"], "core");
+      const floorpOSDir = this.getFloorpOSDirectory();
+      const dbPath = PathUtils.join(floorpOSDir, "sqlite.db");
+      // Convert backslashes to forward slashes for SQLite URL format
+      const dbPathNormalized = dbPath.replace(/\\/g, "/");
+      const dbUrl = `sqlite://${dbPathNormalized}`;
+      const process = await this.spawnProcess(
+        binaryPath,
+        ["--db-url", dbUrl, "start"],
+        "core",
+      );
       this._binaryProcess = process;
       await this.updateRuntimeState({
         corePid: this.getProcessPid(process),
@@ -811,7 +826,10 @@ class OSAutomotorManager {
       return;
     }
 
-    const command = AppConstants.platform === "win" ? "taskkill" : "kill";
+    const command =
+      AppConstants.platform === "win"
+        ? "C:\\Windows\\System32\\taskkill.exe"
+        : "kill";
     const args =
       AppConstants.platform === "win"
         ? ["/PID", String(pid), "/T", "/F"]
@@ -848,7 +866,7 @@ class OSAutomotorManager {
       if (isWindows) {
         // Windows: tasklist /FI "PID eq <pid>" /FO CSV /NH
         const process = await Subprocess.call({
-          command: "tasklist",
+          command: "C:\\Windows\\System32\\tasklist.exe",
           arguments: ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"],
           stdout: "pipe",
           stderr: "pipe",
@@ -945,7 +963,7 @@ class OSAutomotorManager {
     const encoder = new TextEncoder();
     const content = encoder.encode(JSON.stringify(state));
     try {
-      await IOUtils.write(statePath, content, { mode: "create" });
+      await IOUtils.write(statePath, content, { mode: "overwrite" });
     } catch (error) {
       console.error("[Floorp OS] Failed to write runtime state:", error);
     }
