@@ -251,3 +251,7 @@ Notice: If you are a developer of "showdown" and your name is not listed, please
 - [Fushra Pulse](https://pulsebrowser.app/)
 - [Mozilla Public License 2.0](https://github.com/pulse-browser/browser/blob/main/LICENSE)
 - Author: [Fushra](https://github.com/Fushra)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Floorp-Projects/Floorp&type=date&legend=top-left)](https://www.star-history.com/#Floorp-Projects/Floorp&type=date&legend=top-left)
