@@ -100,9 +100,14 @@ export default function WhatsNewPage() {
     }
   }, [localeData]);
 
-  // Auto-apply system language when locale data is loaded
+  // Auto-apply system language for new users (no upgrade parameter)
   useEffect(() => {
+    // Only auto-apply if there's no upgrade parameter (new installation)
+    const params = new URLSearchParams(globalThis.location.search);
+    const hasUpgradeParam = params.has("upgrade");
+
     if (
+      !hasUpgradeParam &&
       localeData &&
       localeData.localeInfo.systemLocale.language !==
         localeData.localeInfo.appLocaleRaw &&
@@ -398,9 +403,12 @@ export default function WhatsNewPage() {
                                 key={locale}
                                 onClick={() => {
                                   handleLocaleChange(locale);
-                                  document.activeElement instanceof
-                                      HTMLElement &&
+                                  if (
+                                    document.activeElement instanceof
+                                      HTMLElement
+                                  ) {
                                     document.activeElement.blur();
+                                  }
                                 }}
                                 className="w-full"
                               >
