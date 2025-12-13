@@ -58,14 +58,15 @@ export class SsbRunnerUtils {
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
-      (win as any).gBrowser?.tabs.forEach((tab: any) => {
-        const browser = (win as any).gBrowser.getBrowserForTab(tab);
+      // deno-lint-ignore no-explicit-any
+      win.gBrowser?.tabs.forEach((tab: any) => {
+        const browser = win.gBrowser.getBrowserForTab(tab);
         if (browser?.browsingContext) {
           browser.browsingContext.displayMode = displayMode;
         }
       });
 
-      (win as any).focus();
+      win.focus();
       return win;
     } finally {
       if (initialLaunch) {
@@ -172,31 +173,13 @@ export class SSBCommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
-      // If there is no Floorp browser window open, do not launch the PWA now.
-      // Instead, persist the requested SSB id to a preference so the regular
-      // Floorp startup can handle launching it later. This avoids requiring
-      // the user to click the taskbar shortcut twice.
-      const hasBrowserWindow =
-        !!Services.wm.getMostRecentWindow("navigator:browser");
+      // Prevent default browser window from opening - PWA should launch standalone
+      cmdLine.preventDefault = true;
 
-      if (!hasBrowserWindow) {
-        try {
-          Services.prefs.setCharPref("floorp.ssb.startup.id", id);
-        } catch (e) {
-          // If pref set fails for some reason, log and continue without
-          // preventing default startup so the application still launches.
-          console.error("Failed to set floorp.ssb.startup.id", e);
-        }
-
-        // Let normal startup continue (do not preventDefault). The PWA will
-        // not be started now.
-        return;
-      }
-
-      // If a browser window already exists, start the SSB immediately.
+      // Start SSB directly (works even without existing browser window)
+      // The startSSBFromCmdLine function handles LastWindowClosingSurvivalArea
       startSSBFromCmdLine(id, !this.isInitialized);
       this.isInitialized = true;
-      cmdLine.preventDefault = true;
     }
   }
 

@@ -38,7 +38,9 @@ export class WindowsSupport {
       ignoreExisting: true,
     });
 
-    let iconFile = new WindowsSupport.nsIFile(PathUtils.join(dir, "icon.ico"));
+    let iconFile: nsIFile | null = new WindowsSupport.nsIFile(
+      PathUtils.join(dir, "icon.ico"),
+    );
 
     // We should be embedding multiple icon sizes, but the current icon encoder
     // does not support this. For now just embed a sensible size.
@@ -52,22 +54,64 @@ export class WindowsSupport {
       iconFile = null;
     }
 
-    WindowsSupport.shellService.createShortcut(
-      Services.dirsvc.get("XREExeF", Ci.nsIFile),
-      ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],
-      ssb.name,
-      iconFile,
-      0,
-      this.buildGroupId(ssb.id),
-      "Programs",
-      `${ssb.name}.lnk`,
-    );
+    const shortcutName = `${ssb.name}.lnk`;
+
+    // Create shortcut in Start Menu
+    if (iconFile) {
+      WindowsSupport.shellService.createShortcut(
+        Services.dirsvc.get("XREExeF", Ci.nsIFile),
+        ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],
+        ssb.name,
+        iconFile,
+        0,
+        this.buildGroupId(ssb.id),
+        "Programs",
+        shortcutName,
+      );
+    } else {
+      // Create shortcut without icon
+      WindowsSupport.shellService.createShortcut(
+        Services.dirsvc.get("XREExeF", Ci.nsIFile),
+        ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],
+        ssb.name,
+        null as unknown as nsIFile,
+        0,
+        this.buildGroupId(ssb.id),
+        "Programs",
+        shortcutName,
+      );
+    }
+
+    // Pin the shortcut to the taskbar (like TaskBarTabs)
+    try {
+      // Second argument is the shortcut path relative to Programs folder
+      await WindowsSupport.shellService.pinShortcutToTaskbar(
+        this.buildGroupId(ssb.id),
+        shortcutName,
+      );
+      console.debug(`[WindowsSupport] Pinned PWA to taskbar: ${ssb.name}`);
+    } catch (e) {
+      // Pinning may fail if the shortcut doesn't exist yet or user denies
+      console.warn(`[WindowsSupport] Failed to pin PWA to taskbar: ${e}`);
+    }
   }
 
   /**
    * @param {SiteSpecificBrowser} ssb the SSB to uninstall.
    */
   async uninstall(ssb: Manifest) {
+    const shortcutName = `${ssb.name}.lnk`;
+
+    // Unpin from taskbar first (like TaskBarTabs)
+    try {
+      WindowsSupport.shellService.unpinShortcutFromTaskbar(shortcutName);
+      console.debug(`[WindowsSupport] Unpinned PWA from taskbar: ${ssb.name}`);
+    } catch (e) {
+      // Unpinning may fail if not pinned
+      console.warn(`[WindowsSupport] Failed to unpin PWA from taskbar: ${e}`);
+    }
+
+    // Remove shortcut from Start Menu
     try {
       const startMenu = `${
         Services.dirsvc.get("Home", Ci.nsIFile).path
@@ -77,6 +121,7 @@ export class WindowsSupport {
       console.error(e);
     }
 
+    // Remove icon and data directory
     const dir = PathUtils.join(PathUtils.profileDir, "ssb", ssb.id);
     try {
       await IOUtils.remove(dir, { recursive: true });
@@ -119,7 +164,11 @@ export class WindowsSupport {
     ]);
 
     if (icons[0] || icons[1]) {
-      WindowsSupport.uiUtils.setWindowIcon(aWindow as unknown as mozIDOMWindowProxy, icons[0], icons[1]);
+      WindowsSupport.uiUtils.setWindowIcon(
+        aWindow as unknown as mozIDOMWindowProxy,
+        icons[0],
+        icons[1],
+      );
     }
   }
 }
