@@ -9,50 +9,69 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-const { SessionStore } = ChromeUtils.importESModule(
-  "resource:///modules/sessionstore/SessionStore.sys.mjs",
+const { BrowserWindowTracker } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserWindowTracker.sys.mjs",
 );
 const { TaskbarExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
 );
 
 export const PWA_WINDOW_NAME = "FloorpPWAWindow";
-const SSB_WINDOW_FEATURES =
-  "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
+
+/**
+ * Get window features based on PWA display mode
+ */
+function getWindowFeatures(displayMode?: string): string {
+  switch (displayMode) {
+    case "fullscreen":
+      return "chrome,fullscreen=yes,resizable=yes";
+    case "standalone":
+      return "chrome,titlebar=no,toolbar=no,location=no,resizable=yes,minimizable";
+    case "minimal-ui":
+      return "chrome,titlebar,close,toolbar,location,personalbar=no,menubar=no,resizable,minimizable";
+    case "browser":
+      return "chrome,all";
+    default:
+      // Default to standalone for PWAs
+      return "chrome,titlebar=no,toolbar=no,location=no,resizable=yes,minimizable,centerscreen";
+  }
+}
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
   static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
-    let initialLaunchWin: nsIDOMWindow | null = null;
+    // Use LastWindowClosingSurvivalArea to avoid showing empty window
     if (initialLaunch) {
-      initialLaunchWin = Services.ww.openWindow(
-        null as unknown as mozIDOMWindowProxy,
-        AppConstants.BROWSER_CHROME_URL,
-        "_blank",
-        "",
-        {},
-      ) as nsIDOMWindow;
+      Services.startup.enterLastWindowClosingSurvivalArea();
     }
 
-    const args = this.createWindowArgs(ssb.start_url);
-    const uniqueWindowName = this.generateWindowName(ssb.id);
+    try {
+      const args = this.createWindowArgs(ssb);
+      const windowFeatures = getWindowFeatures(ssb.display);
 
-    const win = Services.ww.openWindow(
-      null as unknown as mozIDOMWindowProxy,
-      AppConstants.BROWSER_CHROME_URL,
-      uniqueWindowName,
-      SSB_WINDOW_FEATURES,
-      args,
-    ) as nsIDOMWindow;
+      const win = await BrowserWindowTracker.promiseOpenWindow({
+        args,
+        features: windowFeatures,
+        all: false,
+      });
 
-    win.focus();
-    SessionStore.promiseAllWindowsRestored.then(() => {
-      initialLaunchWin?.close();
-    });
+      // Set displayMode on all tabs
+      const displayMode = ssb.display || "standalone";
+      (win as any).gBrowser?.tabs.forEach((tab: any) => {
+        const browser = (win as any).gBrowser.getBrowserForTab(tab);
+        if (browser?.browsingContext) {
+          browser.browsingContext.displayMode = displayMode;
+        }
+      });
 
-    await this.waitForWindowLoaded(win);
-    return win;
+      (win as any).focus();
+      return win;
+    } finally {
+      if (initialLaunch) {
+        Services.startup.exitLastWindowClosingSurvivalArea();
+      }
+    }
   }
 
   static async applyOSIntegration(ssb: Manifest, win: Window) {
@@ -83,26 +102,28 @@ export class SsbRunnerUtils {
     }
   }
 
-  private static createWindowArgs(startUrl: string) {
-    const args = Cc["@mozilla.org/supports-string;1"].createInstance(
+  private static createWindowArgs(ssb: Manifest) {
+    // Create extraOptions to set document.documentElement attributes
+    const extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag2,
+    );
+    extraOptions.setPropertyAsAString("ssbid", ssb.id);
+    // Set taskbartab attribute to leverage SessionStore's existing handling
+    // This excludes PWA windows from session restore and treats them like TaskBarTabs
+    extraOptions.setPropertyAsAString("taskbartab", ssb.id);
+
+    // Create URL argument
+    const url = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString,
     );
-    args.data = startUrl;
+    url.data = ssb.start_url;
+
+    // Build args array
+    const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    args.appendElement(url);
+    args.appendElement(extraOptions);
+
     return args;
-  }
-
-  private static generateWindowName(id: string) {
-    return `${PWA_WINDOW_NAME}_${id}_${Date.now()}`;
-  }
-
-  private static async waitForWindowLoaded(win: Window) {
-    if (win.document && win.document.readyState === "complete") {
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      win.addEventListener("load", () => resolve(), { once: true });
-    });
   }
 
   static async getSsbById(id: string): Promise<Manifest | null> {

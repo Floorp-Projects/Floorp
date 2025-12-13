@@ -10,9 +10,6 @@ import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
 import type { FloorpChromeWindow } from "./type.ts";
-const { PWA_WINDOW_NAME } = ChromeUtils.importESModule(
-  "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
-);
 
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
@@ -23,7 +20,9 @@ export class PwaWindowSupport {
   }
 
   constructor(private pwaService: PwaService) {
-    if (!window.name.startsWith(PWA_WINDOW_NAME)) {
+    // Check if this is a PWA window using documentElement attribute
+    const ssbIdAttr = document?.documentElement?.getAttribute("ssbid");
+    if (!ssbIdAttr) {
       return;
     }
 
@@ -49,7 +48,9 @@ export class PwaWindowSupport {
 
   private setupSignals(): void {
     const [, setSsbId] = this.ssbId;
-    setSsbId(self.name);
+    // Read SSB ID from documentElement attribute
+    const ssbIdAttr = document?.documentElement?.getAttribute("ssbid") ?? null;
+    setSsbId(ssbIdAttr);
   }
 
   private setupPageActions(): void {
