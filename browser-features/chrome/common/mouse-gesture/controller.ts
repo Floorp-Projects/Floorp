@@ -431,13 +431,23 @@ export class MouseGestureController {
   ): number {
     if (targetPattern.length === 0) return 0;
 
+    const config = getConfig();
+
     // 単一方向のパターンは簡単な方法で判定
     if (targetPattern.length === 1) {
       return this.calculateSingleDirectionSimilarity(targetPattern[0]);
     }
 
     // トレイルを正規化されたベクトルに変換
-    const normalizedTrail = this.normalizeTrail();
+    let normalizedTrail = this.normalizeTrail();
+    if (normalizedTrail.length === 0) return 0;
+
+    // 終端トリミングを適用（意図しない小さな終端動きを除外）
+    normalizedTrail = this.trimTrailEnding(normalizedTrail, config);
+    if (normalizedTrail.length === 0) return 0;
+
+    // セグメント統合を適用（短い逆方向動きを吸収）
+    normalizedTrail = this.consolidateSegments(normalizedTrail, config);
     if (normalizedTrail.length === 0) return 0;
 
     // パターンを理想的なベクトル系列に変換
@@ -515,6 +525,107 @@ export class MouseGestureController {
     }
 
     return vectors;
+  }
+
+  /**
+   * 終端トリミング: ジェスチャー終了時の意図しない小さな動きを除外
+   * トレイル全体の5%または20ピクセルの小さい方を終端から除外
+   */
+  private trimTrailEnding(
+    trailVectors: { dx: number; dy: number; magnitude: number }[],
+    _config: ReturnType<typeof getConfig>,
+  ): typeof trailVectors {
+    if (trailVectors.length < 2) return trailVectors;
+
+    // トレイル全体の距離を計算
+    const totalDistance = trailVectors.reduce((sum, v) => sum + v.magnitude, 0);
+
+    // 最後の5%または20ピクセル以下のセグメントを除外
+    const trimThreshold = Math.min(totalDistance * 0.05, 20);
+
+    // トリミングが意味をなす最小距離
+    if (totalDistance < 50) {
+      // 短いジェスチャーではトリミングしない
+      return trailVectors;
+    }
+
+    let trimmedDistance = 0;
+    let endIndex = trailVectors.length;
+
+    for (let i = trailVectors.length - 1; i >= 0; i--) {
+      trimmedDistance += trailVectors[i].magnitude;
+      if (trimmedDistance > trimThreshold) break;
+      endIndex = i;
+    }
+
+    // 最低1つのセグメントは残す
+    return endIndex > 0 ? trailVectors.slice(0, endIndex) : trailVectors;
+  }
+
+  /**
+   * セグメント統合: 連続する同一方向のセグメントを統合し、
+   * 短い逆方向のセグメントを無視する
+   */
+  private consolidateSegments(
+    trailVectors: { dx: number; dy: number; magnitude: number }[],
+    config: ReturnType<typeof getConfig>,
+  ): typeof trailVectors {
+    if (trailVectors.length < 2) return trailVectors;
+
+    const minDirectionChangeDistance =
+      config.contextMenu.minDirectionChangeDistance ?? 20;
+    const consolidated: typeof trailVectors = [];
+
+    let currentDirection = { dx: 0, dy: 0 };
+    let accumulatedMagnitude = 0;
+    let pendingSegments: typeof trailVectors = [];
+
+    for (const seg of trailVectors) {
+      // 現在の方向との類似度を計算（コサイン類似度）
+      const dot = currentDirection.dx * seg.dx + currentDirection.dy * seg.dy;
+      const isSameDirection = dot > 0.5; // 約60度以内は同一方向とみなす
+
+      if (consolidated.length === 0) {
+        // 最初のセグメント
+        currentDirection = { dx: seg.dx, dy: seg.dy };
+        accumulatedMagnitude = seg.magnitude;
+        pendingSegments = [seg];
+      } else if (isSameDirection) {
+        // 同一方向のセグメントを累積
+        accumulatedMagnitude += seg.magnitude;
+        pendingSegments.push(seg);
+        // 重み付き平均で方向を更新
+        const totalMag = pendingSegments.reduce((s, p) => s + p.magnitude, 0);
+        currentDirection = {
+          dx:
+            pendingSegments.reduce((s, p) => s + p.dx * p.magnitude, 0) /
+            totalMag,
+          dy:
+            pendingSegments.reduce((s, p) => s + p.dy * p.magnitude, 0) /
+            totalMag,
+        };
+      } else {
+        // 方向が変わった
+        if (accumulatedMagnitude >= minDirectionChangeDistance) {
+          // 累積距離が閾値以上なら、これまでのセグメントを確定
+          consolidated.push(...pendingSegments);
+        }
+        // 新しい方向を開始
+        currentDirection = { dx: seg.dx, dy: seg.dy };
+        accumulatedMagnitude = seg.magnitude;
+        pendingSegments = [seg];
+      }
+    }
+
+    // 最後のペンディングセグメントを追加
+    if (
+      accumulatedMagnitude >= minDirectionChangeDistance ||
+      consolidated.length === 0
+    ) {
+      consolidated.push(...pendingSegments);
+    }
+
+    return consolidated;
   }
 
   /**

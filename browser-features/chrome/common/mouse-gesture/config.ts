@@ -40,6 +40,7 @@ export type GestureAction = t.TypeOf<typeof GestureActionCodec>;
 const ContextMenuCodec = t.type({
   minDistance: t.number,
   preventionTimeout: t.number,
+  minDirectionChangeDistance: t.number,
 });
 
 const MouseGestureConfigRequired = t.type({
@@ -79,6 +80,7 @@ const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
   contextMenu: {
     minDistance: MIN_CONTEXT_MENU_DISTANCE,
     preventionTimeout: 200,
+    minDirectionChangeDistance: 20,
   },
   actions: [
     {
