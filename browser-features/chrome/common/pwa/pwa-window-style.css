@@ -63,9 +63,7 @@
 }
 
 #fxa-toolbar-menu-button,
-#fxa-toolbar-menu-button *,
-#PanelUI-menu-button,
-#PanelUI-menu-button * {
+#fxa-toolbar-menu-button * {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;

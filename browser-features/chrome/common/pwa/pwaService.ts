@@ -66,4 +66,8 @@ export class PwaService {
   async runSsbByUrl(url: string) {
     return this.ssbManager.runSsbByUrl(url);
   }
+
+  async saveSsbData(manifest: import("./type").Manifest) {
+    return this.dataManager.saveSsbData(manifest);
+  }
 }

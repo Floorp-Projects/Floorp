@@ -15,6 +15,7 @@ export type Manifest = {
   display?: string;
   theme_color?: string;
   background_color?: string;
+  pinPromptShown?: boolean;
 };
 
 export type Icon = {
