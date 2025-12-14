@@ -9,6 +9,10 @@ const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
 );
 
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
 export class WindowsSupport {
   private static shellService = Cc[
     "@mozilla.org/browser/shell-service;1"

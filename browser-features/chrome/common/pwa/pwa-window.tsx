@@ -14,6 +14,11 @@ import type { FloorpChromeWindow } from "./type.ts";
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
 
+  private async getSsb() {
+    const [ssbId] = this.ssbId;
+    return ssbId ? await this.pwaService.getSsbObj(ssbId() as string) : null;
+  }
+
   constructor(private pwaService: PwaService) {
     // Check if this is a PWA window using documentElement attribute
     // Note: We use "taskbartab" instead of "ssbid" because browser-init.js

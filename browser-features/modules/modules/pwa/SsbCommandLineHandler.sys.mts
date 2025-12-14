@@ -19,21 +19,19 @@ const { TaskbarExperiment } = ChromeUtils.importESModule(
 export const PWA_WINDOW_NAME = "FloorpPWAWindow";
 
 /**
- * Get window features based on PWA display mode
+ * Get window features based on PWA display mode.
+ * Note: toolbar/titlebar visibility is handled by CSS in pwa-window.tsx
+ * based on the showToolbar config setting.
  */
 function getWindowFeatures(displayMode?: string): string {
+  // All display modes now include toolbar for consistent PWA window behavior
   switch (displayMode) {
     case "fullscreen":
-      return "chrome,fullscreen=yes,resizable=yes";
     case "standalone":
-      return "chrome,titlebar=no,toolbar=no,location=no,resizable=yes,minimizable";
     case "minimal-ui":
-      return "chrome,titlebar,close,toolbar,location,personalbar=no,menubar=no,resizable,minimizable";
     case "browser":
-      return "chrome,all";
     default:
-      // Default to standalone for PWAs
-      return "chrome,titlebar=no,toolbar=no,location=no,resizable=yes,minimizable,centerscreen";
+      return "chrome,titlebar,close,toolbar,location,personalbar=no,menubar=no,resizable,minimizable,centerscreen";
   }
 }
 

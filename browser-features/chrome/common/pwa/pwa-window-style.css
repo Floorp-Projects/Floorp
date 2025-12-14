@@ -63,7 +63,9 @@
 }
 
 #fxa-toolbar-menu-button,
-#fxa-toolbar-menu-button * {
+#fxa-toolbar-menu-button *,
+#appMenu-ssb-button,
+#appMenu-usercss-button {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -167,4 +169,11 @@
 
 #panel-sidebar-splitter {
   display: none !important;
+}
+
+/* TaskBarTabs */
+#taskbar-tabs-favicon {
+  background: white;
+  border-radius: 5px;
+  padding: 2px;
 }
