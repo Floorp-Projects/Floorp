@@ -126,6 +126,31 @@ function testUniqueDocumentIds() {
   console.log("✓ testUniqueDocumentIds passed");
 }
 
+/**
+ * Test: Should prune cache when exceeding limit
+ */
+function testCachePruning() {
+  const polyfill = new DocumentIdPolyfill({ debug: true });
+
+  // Generate many documentIds to trigger cache pruning
+  // The MAX_CACHE_SIZE is 1000, so we generate 1100+
+  const generatedIds: string[] = [];
+  for (let i = 0; i < 1100; i++) {
+    const id = polyfill.generateDocumentId(i, 0);
+    generatedIds.push(id);
+  }
+
+  // After pruning, the cache should still work
+  // The most recent entries should still be valid
+  const lastId = generatedIds[generatedIds.length - 1];
+  const parsed = polyfill.parseDocumentId(lastId);
+
+  console.assert(parsed !== null, "Recent documentId should still be parseable");
+  console.assert(parsed?.tabId === 1099, "TabId should match");
+
+  console.log("✓ testCachePruning passed");
+}
+
 // =============================================================================
 // Test Suite: API Wrapping
 // =============================================================================
@@ -257,6 +282,7 @@ async function runAllTests() {
     { name: "Validate documentId", fn: testIsValidDocumentId },
     { name: "Convert documentIds to targets", fn: testDocumentIdsToTargets },
     { name: "Unique documentIds", fn: testUniqueDocumentIds },
+    { name: "Cache pruning", fn: testCachePruning },
 
     // API Wrapping
     { name: "Wrap scripting API", fn: testWrapScriptingAPI },
@@ -294,6 +320,7 @@ export {
   testIsValidDocumentId,
   testDocumentIdsToTargets,
   testUniqueDocumentIds,
+  testCachePruning,
   testWrapScriptingAPI,
   testWrapTabsAPI,
   testPassThroughWithoutDocumentId,

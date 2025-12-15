@@ -80,6 +80,9 @@ const DOCUMENT_ID_PREFIX = "floorp-doc-";
 /** Separator between components in documentId */
 const DOCUMENT_ID_SEPARATOR = "-";
 
+/** Maximum cache size to prevent memory leaks */
+const MAX_CACHE_SIZE = 1000;
+
 // =============================================================================
 // Implementation
 // =============================================================================
@@ -107,6 +110,11 @@ export class DocumentIdPolyfill implements DocumentIdAPI {
     const instanceId = this.generateInstanceId();
     const documentId =
       `${DOCUMENT_ID_PREFIX}${tabId}${DOCUMENT_ID_SEPARATOR}${frameId}${DOCUMENT_ID_SEPARATOR}${instanceId}`;
+
+    // Prune cache if it exceeds max size
+    if (this.documentIdCache.size >= MAX_CACHE_SIZE) {
+      this.pruneCache();
+    }
 
     this.documentIdCache.set(documentId, { tabId, frameId, instanceId });
     this.log("Generated documentId:", documentId);
@@ -195,6 +203,23 @@ export class DocumentIdPolyfill implements DocumentIdAPI {
     if (this.debugMode) {
       console.log("[Floorp DocumentId Polyfill]", ...args);
     }
+  }
+
+  /**
+   * Prune the cache by removing the oldest entries
+   * Removes approximately half of the cache to avoid frequent pruning
+   */
+  private pruneCache(): void {
+    const entriesToRemove = Math.floor(this.documentIdCache.size / 2);
+    const iterator = this.documentIdCache.keys();
+
+    for (let i = 0; i < entriesToRemove; i++) {
+      const result = iterator.next();
+      if (result.done) break;
+      this.documentIdCache.delete(result.value);
+    }
+
+    this.log(`Pruned ${entriesToRemove} entries from cache`);
   }
 }
 

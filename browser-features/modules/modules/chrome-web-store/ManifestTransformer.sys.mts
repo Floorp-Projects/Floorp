@@ -79,6 +79,11 @@ export function transformManifestFull(
     injectOffscreenPolyfill(transformed);
   }
 
+  // Inject DocumentId polyfill if needed (for scripting API with documentId support)
+  if (manifest.permissions?.includes("scripting")) {
+    injectDocumentIdPolyfill(transformed);
+  }
+
   // Remove unsupported permissions
   const permWarnings = filterUnsupportedPermissions(transformed);
   removedPermissions.push(...permWarnings);
@@ -334,6 +339,43 @@ function injectOffscreenPolyfill(manifest: ChromeManifest): void {
   }
 
   // Ensure background type is module since we might be mixing things
+  if (!manifest.background.type) {
+    manifest.background.type = "module";
+  }
+}
+
+/**
+ * Inject the DocumentId API polyfill into the background scripts
+ * This is needed for extensions using chrome.scripting.executeScript with documentIds
+ */
+function injectDocumentIdPolyfill(manifest: ChromeManifest): void {
+  const polyfillPath = "__floorp_polyfills__/DocumentIdPolyfill.js";
+
+  if (!manifest.background) {
+    manifest.background = {
+      scripts: [polyfillPath],
+      type: "module",
+    };
+    return;
+  }
+
+  // Handle service_worker conversion (should already be done by transformMV3Background)
+  if (manifest.background.service_worker) {
+    manifest.background.scripts = [manifest.background.service_worker];
+    delete manifest.background.service_worker;
+    manifest.background.type = "module";
+  }
+
+  if (manifest.background.scripts) {
+    // Add polyfill at the beginning (before Offscreen if present)
+    if (!manifest.background.scripts.includes(polyfillPath)) {
+      manifest.background.scripts.unshift(polyfillPath);
+    }
+  } else {
+    manifest.background.scripts = [polyfillPath];
+  }
+
+  // Ensure background type is module
   if (!manifest.background.type) {
     manifest.background.type = "module";
   }

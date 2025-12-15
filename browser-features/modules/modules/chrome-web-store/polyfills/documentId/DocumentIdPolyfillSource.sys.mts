@@ -20,6 +20,7 @@ export const DOCUMENT_ID_POLYFILL_SOURCE = `
 
   const DOCUMENT_ID_PREFIX = "floorp-doc-";
   const DOCUMENT_ID_SEPARATOR = "-";
+  const MAX_CACHE_SIZE = 1000;
 
   class DocumentIdPolyfillImpl {
     constructor(options) {
@@ -32,6 +33,11 @@ export const DOCUMENT_ID_POLYFILL_SOURCE = `
       const instanceId = this.generateInstanceId();
       const documentId = \`\${DOCUMENT_ID_PREFIX}\${tabId}\${DOCUMENT_ID_SEPARATOR}\${frameId}\${DOCUMENT_ID_SEPARATOR}\${instanceId}\`;
       
+      // Prune cache if it exceeds max size
+      if (this.documentIdCache.size >= MAX_CACHE_SIZE) {
+        this.pruneCache();
+      }
+
       this.documentIdCache.set(documentId, { tabId, frameId, instanceId });
       this.log("Generated documentId:", documentId);
       return documentId;
@@ -92,6 +98,17 @@ export const DOCUMENT_ID_POLYFILL_SOURCE = `
       if (this.debugMode) {
         console.log("[Floorp DocumentId Polyfill]", ...args);
       }
+    }
+
+    pruneCache() {
+      const entriesToRemove = Math.floor(this.documentIdCache.size / 2);
+      const iterator = this.documentIdCache.keys();
+      for (let i = 0; i < entriesToRemove; i++) {
+        const result = iterator.next();
+        if (result.done) break;
+        this.documentIdCache.delete(result.value);
+      }
+      this.log(\`Pruned \${entriesToRemove} entries from cache\`);
     }
   }
 
