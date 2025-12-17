@@ -62,15 +62,16 @@ export function getCSSFromConfig(
     case "lepton": {
       if (isDev) {
         return {
-          chromeStylesRaw: [leptonChromeStylesRaw],
-          stylesRaw: [leptonContentStylesRaw],
+          chromeStylesRaw: [leptonChromeStylesRaw, leptonContentStylesRaw],
           iconBasePath: "http://localhost:5174/lepton/icons",
           userjs: leptonUserJs,
         };
       }
       return {
-        chromeStyles: [getStylePath("lepton/css/leptonChrome.css")],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        chromeStyles: [
+          getStylePath("lepton/css/leptonChrome.css"),
+          getStylePath("lepton/css/leptonContent.css"),
+        ],
         userjs: leptonUserJs,
       };
     }
