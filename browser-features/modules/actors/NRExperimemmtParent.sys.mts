@@ -16,6 +16,9 @@ export class NRExperimemmtParent extends JSWindowActorParent {
       case "getActiveExperiments": {
         return Experiments.getActiveExperiments();
       }
+      case "getAllExperiments": {
+        return Experiments.getAllExperiments();
+      }
       case "disableExperiment": {
         const experimentId =
           data && typeof data.experimentId === "string"
@@ -35,6 +38,26 @@ export class NRExperimemmtParent extends JSWindowActorParent {
           return { success: false, error: "Invalid experimentId" };
         }
         return Experiments.enableExperiment(experimentId);
+      }
+      case "forceEnrollExperiment": {
+        const experimentId =
+          data && typeof data.experimentId === "string"
+            ? data.experimentId
+            : null;
+        if (!experimentId) {
+          return { success: false, error: "Invalid experimentId" };
+        }
+        return Experiments.forceEnrollExperiment(experimentId);
+      }
+      case "removeForceEnrollment": {
+        const experimentId =
+          data && typeof data.experimentId === "string"
+            ? data.experimentId
+            : null;
+        if (!experimentId) {
+          return { success: false, error: "Invalid experimentId" };
+        }
+        return Experiments.removeForceEnrollment(experimentId);
       }
       case "clearExperimentCache": {
         try {
@@ -57,5 +80,3 @@ export class NRExperimemmtParent extends JSWindowActorParent {
     return undefined;
   }
 }
-
-

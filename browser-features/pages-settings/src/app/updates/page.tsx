@@ -12,7 +12,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { rpc } from "@/lib/rpc/rpc.ts";
 import { experimentsRpc } from "@/lib/rpc/experiments.ts";
-import { CheckCircle2, RefreshCw, Trash2, X, XCircle, Zap } from "lucide-react";
+import {
+  CheckCircle2,
+  FlaskConical,
+  RefreshCw,
+  Trash2,
+  X,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 
 const EXPERIMENTS_POLICY_PREF = "floorp.experiments.participationPolicy";
@@ -28,6 +36,24 @@ interface ActiveExperiment {
   disabled: boolean;
 }
 
+interface AvailableExperiment {
+  id: string;
+  name?: string;
+  description?: string;
+  rollout: number;
+  start?: string;
+  end?: string;
+  isActive: boolean;
+  enrollmentStatus:
+    | "enrolled"
+    | "not_in_rollout"
+    | "force_enrolled"
+    | "disabled"
+    | "control";
+  currentVariantId: string | null;
+  experimentData: Record<string, unknown>;
+}
+
 export default function Page() {
   const { t } = useTranslation();
   const [participationPolicy, setParticipationPolicy] = useState<string>(
@@ -36,8 +62,12 @@ export default function Page() {
   const [activeExperiments, setActiveExperiments] = useState<
     ActiveExperiment[]
   >([]);
+  const [allExperiments, setAllExperiments] = useState<
+    AvailableExperiment[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [experimentsLoading, setExperimentsLoading] = useState(true);
+  const [allExperimentsLoading, setAllExperimentsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [modalState, setModalState] = useState<
     {
@@ -63,6 +93,18 @@ export default function Page() {
     }
   }, []);
 
+  const loadAllExperiments = useCallback(async () => {
+    setAllExperimentsLoading(true);
+    try {
+      const experiments = await experimentsRpc.getAllExperiments();
+      setAllExperiments(experiments || []);
+    } catch (e) {
+      console.error("Failed to load all experiments:", e);
+    } finally {
+      setAllExperimentsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadPreferences() {
       try {
@@ -76,7 +118,8 @@ export default function Page() {
     }
     loadPreferences();
     loadExperiments();
-  }, [loadExperiments]);
+    loadAllExperiments();
+  }, [loadExperiments, loadAllExperiments]);
 
   const handlePolicyChange = async (
     e: React.ChangeEvent<HTMLSelectElement>,
@@ -87,6 +130,7 @@ export default function Page() {
       setParticipationPolicy(value);
       await experimentsRpc.reinitializeExperiments();
       await loadExperiments();
+      await loadAllExperiments();
     } catch (error) {
       console.error("Failed to save experiments participation policy:", error);
     }
@@ -143,6 +187,7 @@ export default function Page() {
           const result = await experimentsRpc.enableExperiment(experimentId);
           if (result.success) {
             await loadExperiments();
+            await loadAllExperiments();
           } else {
             console.error("Failed to enable experiment:", result.error);
           }
@@ -152,6 +197,54 @@ export default function Page() {
       },
       t("updates.activeFlascos.enable"),
       "primary",
+    );
+  };
+
+  const handleForceEnroll = (experimentId: string) => {
+    openConfirmationModal(
+      t("updates.availableFlascos.forceEnroll"),
+      t("updates.availableFlascos.confirmForceEnroll"),
+      async () => {
+        try {
+          const result = await experimentsRpc.forceEnrollExperiment(
+            experimentId,
+          );
+          if (result.success) {
+            await loadExperiments();
+            await loadAllExperiments();
+          } else {
+            console.error("Failed to force enroll experiment:", result.error);
+          }
+        } catch (error) {
+          console.error("Failed to force enroll experiment:", error);
+        }
+      },
+      t("updates.availableFlascos.forceEnroll"),
+      "primary",
+    );
+  };
+
+  const handleRemoveForceEnrollment = (experimentId: string) => {
+    openConfirmationModal(
+      t("updates.availableFlascos.removeForceEnrollment"),
+      t("updates.availableFlascos.confirmRemoveForceEnrollment"),
+      async () => {
+        try {
+          const result = await experimentsRpc.removeForceEnrollment(
+            experimentId,
+          );
+          if (result.success) {
+            await loadExperiments();
+            await loadAllExperiments();
+          } else {
+            console.error("Failed to remove force enrollment:", result.error);
+          }
+        } catch (error) {
+          console.error("Failed to remove force enrollment:", error);
+        }
+      },
+      t("updates.availableFlascos.removeForceEnrollment"),
+      "secondary",
     );
   };
 
@@ -345,6 +438,149 @@ export default function Page() {
                       </Button>
                     </div>
                   ))}
+                </div>
+              )}
+          </CardContent>
+        </Card>
+
+        {/* Available Flascos Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-row items-start justify-between gap-4">
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <FlaskConical className="h-5 w-5" />
+                  {t("updates.availableFlascos.title")}
+                </CardTitle>
+                <CardDescription>
+                  {t("updates.availableFlascos.description")}
+                </CardDescription>
+              </div>
+              <Button
+                onClick={loadAllExperiments}
+                variant="primary"
+                size="sm"
+                disabled={allExperimentsLoading}
+                className="shrink-0 h-8"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-1 ${
+                    allExperimentsLoading ? "animate-spin" : ""
+                  }`}
+                />
+                {t("updates.activeFlascos.refresh")}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {allExperimentsLoading
+              ? (
+                <div className="text-center py-8 text-base-content/70">
+                  {t("common.loading")}
+                </div>
+              )
+              : allExperiments.length === 0
+              ? (
+                <div className="text-center py-8 text-base-content/70">
+                  {t("updates.availableFlascos.noExperiments")}
+                </div>
+              )
+              : (
+                <div className="space-y-3">
+                  {allExperiments.filter((exp) => exp.isActive).map(
+                    (experiment) => {
+                      const statusColors: Record<string, string> = {
+                        enrolled: "bg-success/10 text-success",
+                        force_enrolled: "bg-warning/10 text-warning",
+                        not_in_rollout:
+                          "bg-base-content/10 text-base-content/70",
+                        control: "bg-base-content/10 text-base-content/70",
+                        disabled: "bg-error/10 text-error",
+                      };
+
+                      return (
+                        <div
+                          key={experiment.id}
+                          className={`flex items-start justify-between p-4 rounded-lg border transition-colors ${
+                            experiment.enrollmentStatus === "disabled"
+                              ? "opacity-50 bg-base-content/5 border-base-content/10"
+                              : experiment.enrollmentStatus === "force_enrolled"
+                              ? "border-warning/40 bg-warning/5"
+                              : experiment.enrollmentStatus === "enrolled"
+                              ? "border-success/40 bg-success/5"
+                              : "border-base-content/20 hover:border-base-content/40"
+                          }`}
+                        >
+                          <div className="flex-1 pr-4">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-medium">
+                                {experiment.name || experiment.id}
+                              </h3>
+                              <span
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                  statusColors[experiment.enrollmentStatus]
+                                }`}
+                              >
+                                {t(
+                                  `updates.availableFlascos.status.${experiment.enrollmentStatus}`,
+                                )}
+                              </span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-info/10 text-info">
+                                {t("updates.availableFlascos.rollout", {
+                                  percentage: experiment.rollout,
+                                })}
+                              </span>
+                            </div>
+                            {experiment.description && (
+                              <p className="text-sm text-base-content/70 mt-1">
+                                {experiment.description}
+                              </p>
+                            )}
+                            <div className="text-xs text-base-content/50 mt-2 space-x-4">
+                              <span>ID: {experiment.id}</span>
+                              {experiment.currentVariantId && (
+                                <span>
+                                  Variant: {experiment.currentVariantId}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {experiment.enrollmentStatus === "not_in_rollout" ||
+                                experiment.enrollmentStatus === "control"
+                              ? (
+                                <Button
+                                  onClick={() =>
+                                    handleForceEnroll(experiment.id)}
+                                  variant="primary"
+                                  size="sm"
+                                  className="shrink-0 h-8"
+                                >
+                                  <Zap className="h-4 w-4 mr-1" />
+                                  {t("updates.availableFlascos.forceEnroll")}
+                                </Button>
+                              )
+                              : experiment.enrollmentStatus === "force_enrolled"
+                              ? (
+                                <Button
+                                  onClick={() =>
+                                    handleRemoveForceEnrollment(experiment.id)}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="shrink-0 h-8"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  {t(
+                                    "updates.availableFlascos.removeForceEnrollment",
+                                  )}
+                                </Button>
+                              )
+                              : null}
+                          </div>
+                        </div>
+                      );
+                    },
+                  )}
                 </div>
               )}
           </CardContent>

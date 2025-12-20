@@ -57,11 +57,20 @@ export class NRExperimemmtChild extends JSWindowActorChild {
         getActiveExperiments: () => {
           return this.sendQuery("getActiveExperiments", {});
         },
+        getAllExperiments: () => {
+          return this.sendQuery("getAllExperiments", {});
+        },
         disableExperiment: (experimentId: string) => {
           return this.sendQuery("disableExperiment", { experimentId });
         },
         enableExperiment: (experimentId: string) => {
           return this.sendQuery("enableExperiment", { experimentId });
+        },
+        forceEnrollExperiment: (experimentId: string) => {
+          return this.sendQuery("forceEnrollExperiment", { experimentId });
+        },
+        removeForceEnrollment: (experimentId: string) => {
+          return this.sendQuery("removeForceEnrollment", { experimentId });
         },
         clearExperimentCache: () => {
           return this.sendQuery("clearExperimentCache", {});
@@ -81,5 +90,3 @@ export class NRExperimemmtChild extends JSWindowActorChild {
     );
   }
 }
-
-
