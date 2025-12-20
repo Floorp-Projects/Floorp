@@ -22,7 +22,6 @@ run-name: "|α| Publish Release"
 jobs:
   main:
     runs-on: ubuntu-latest
-    environment: Deploy-to-installer-release
     outputs:
       VERSION: ${{ steps.setup.outputs.VERSION }}
       NR_VERSION: ${{ steps.setup.outputs.NR_VERSION }}
@@ -251,12 +250,32 @@ jobs:
 
             ${{ steps.release_notes.outputs.body }}
           generate_release_notes: true
-          draft: false
+          draft: true
           make_latest: true
           token: ${{ github.token }}
 
-  publish:
+  release_check:
     needs: [main]
+    runs-on: ubuntu-latest
+    environment: Deploy-to-installer-release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Undraft Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
+        run: |
+          gh release edit "v$NR_VERSION" --draft=false --make-latest
+
+          IS_DRAFT=$(gh release view "v$NR_VERSION" --json isDraft --jq '.isDraft')
+          if [ "$IS_DRAFT" == "true" ]; then
+            echo "Error: Release is still a draft!"
+            exit 1
+          fi
+          echo "Release v$NR_VERSION is now public."
+
+  publish:
+    needs: [release_check, main]
     runs-on: ubuntu-latest
     environment:
       name: Deploy-to-updater-release
@@ -273,7 +292,7 @@ jobs:
           -H "Authorization: token ${{ secrets.UPDATE_SERVER_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-stable-updatexml-files.yml/dispatches" \
-          -d '{ 
+          -d '{
             "ref": "main",
             "inputs": {
               "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-windows-x86_64-full.mar",
