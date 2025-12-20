@@ -260,19 +260,18 @@ jobs:
     environment: Deploy-to-installer-release
     steps:
       - uses: actions/checkout@v4
-      - name: Undraft Release
+      - name: Check Release is Published
         env:
           GH_TOKEN: ${{ github.token }}
           NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
         run: |
-          gh release edit "v$NR_VERSION" --draft=false --make-latest
-
           IS_DRAFT=$(gh release view "v$NR_VERSION" --json isDraft --jq '.isDraft')
           if [ "$IS_DRAFT" == "true" ]; then
-            echo "Error: Release is still a draft!"
+            echo "Error: Release v$NR_VERSION is still a draft!"
+            echo "Please manually publish the release before approving this deployment."
             exit 1
           fi
-          echo "Release v$NR_VERSION is now public."
+          echo "Release v$NR_VERSION is public. Proceeding with deployment."
 
   publish:
     needs: [release_check, main]
