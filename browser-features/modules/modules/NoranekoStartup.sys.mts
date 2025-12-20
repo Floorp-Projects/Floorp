@@ -12,6 +12,10 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
   "resource://noraneko/modules/NoranekoConstants.sys.mjs",
 );
 
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
@@ -102,12 +106,60 @@ async function openReleaseNotesInRecentWindow(): Promise<void> {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
-  tabBrowser.addTab("about:welcome?upgrade=12", {
-    relatedToCurrent: false,
-    inBackground: true,
-    skipAnimation: false,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+  const WORKSPACE_TAB_ATTRIBUTION_ID = "floorpWorkspaceId";
+  let currentWorkspaceID: string | null = null;
+
+  // Poll for workspacesFuncs if not immediately available or if ID is missing.
+  // We'll give it a few tries (e.g. up to 2 seconds) to let WorkspacesService initialize.
+  const waitForWorkspaceID = async (): Promise<string | null> => {
+    let attempts = 0;
+    while (attempts < 20) {
+      const funcs = (recentWindow as Window).workspacesFuncs;
+      if (funcs?.getSelectedWorkspaceID) {
+        try {
+          const id = funcs.getSelectedWorkspaceID();
+          if (id) return id;
+        } catch (e) {
+          console.error("[NoranekoStartup] Failed to get workspace ID", e);
+        }
+      }
+      await new Promise((r) => setTimeout(r, 100));
+      attempts++;
+    }
+    return null;
+  };
+
+  currentWorkspaceID = await waitForWorkspaceID();
+
+  if (currentWorkspaceID) {
+    try {
+      newTab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, currentWorkspaceID);
+    } catch (e) {
+      console.error(
+        "[NoranekoStartup] Failed to set workspace for release notes tab",
+        e,
+      );
+    }
+  } else {
+    console.warn(
+      "[NoranekoStartup] Workspaces service not ready or no ID found, tab may open in default workspace.",
+    );
+  }
+
+  try {
+    const welcomeTab = tabBrowser.addTab("about:welcome?upgrade=12", {
+      relatedToCurrent: false,
+      inBackground: true,
+      skipAnimation: false,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+
+    if (currentWorkspaceID) {
+      welcomeTab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, currentWorkspaceID);
+    }
+  } catch (e) {
+    console.error("[NoranekoStartup] Failed to open welcome tab", e);
+  }
 
   recentWindow.addEventListener(
     "DOMContentLoaded",
@@ -185,30 +237,41 @@ NOTE: You can use the userContent.css file without change preferences (about:con
   }
 }
 
+async function isResourceAvailable(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url);
+    return response.ok;
+  } catch (error) {
+    console.error(`[noraneko] Failed to check resource: ${url}`, error);
+    return false;
+  }
+}
+
 // Only for dev build
 async function setupNoranekoNewTab(): Promise<void> {
   const { AboutNewTab } = ChromeUtils.importESModule(
     "resource:///modules/AboutNewTab.sys.mjs",
   );
 
-  if ((await isNewTabFileAvailable()) === false) {
+  if (
+    (await isResourceAvailable(
+      "chrome://noraneko-newtab/content/index.html",
+    )) === false
+  ) {
     // Fallback for dev build about:newtab if file doesn't exist
     AboutNewTab.newTabURL = "http://localhost:5186/";
   }
 }
 
-async function isNewTabFileAvailable(): Promise<boolean> {
-  try {
-    const response = await fetch("chrome://noraneko-newtab/content/index.html");
-    return response.ok;
-  } catch (error) {
-    console.error("[noraneko] Failed to check newtab file:", error);
-    return false;
-  }
-}
-
 async function checkNewtabUserPreference(): Promise<boolean> {
-  if ((await isNewTabFileAvailable()) === false) {
+  if (
+    (await isResourceAvailable(
+      "chrome://noraneko-newtab/content/index.html",
+    )) === false
+  ) {
+    // If chrome resource is missing, we might be in dev mode with localhost
+    // For specific check, we assume false here unless we want to check localhost too.
+    // However, the original code returned false if file check failed.
     return false;
   }
 
@@ -240,9 +303,23 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
     welcome: "chrome://noraneko-welcome/content/index.html",
   };
 
+  // Check and fallback for Dev Mode
+  if (!(await isResourceAvailable(customAboutPages.hub))) {
+    customAboutPages.hub = "http://localhost:5183/";
+  }
+  if (!(await isResourceAvailable(customAboutPages.welcome))) {
+    customAboutPages.welcome = "http://localhost:5187/";
+  }
+
   if (await checkNewtabUserPreference()) {
     customAboutPages["newtab"] = "chrome://noraneko-newtab/content/index.html";
     customAboutPages["home"] = "chrome://noraneko-newtab/content/index.html";
+    // Fallback for newtab in about pages map (though AboutNewTab handles the actual newtab url)
+    if (!(await isResourceAvailable(customAboutPages["newtab"]))) {
+      const localhostNewTab = "http://localhost:5186/";
+      customAboutPages["newtab"] = localhostNewTab;
+      customAboutPages["home"] = localhostNewTab;
+    }
   }
 
   return customAboutPages;
@@ -274,7 +351,8 @@ class CustomAboutPage {
     }
 
     return (
-      Ci.nsIAboutModule.ALLOW_SCRIPT | Ci.nsIAboutModule.IS_SECURE_CHROME_UI
+      (Ci.nsIAboutModule.ALLOW_SCRIPT as number) |
+      (Ci.nsIAboutModule.IS_SECURE_CHROME_UI as number)
     );
   }
 
