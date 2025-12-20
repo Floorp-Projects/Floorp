@@ -343,15 +343,15 @@
             "description": "お使いの {{productName}} で利用可能なすべての Flasco です。ロールアウトの制限により利用できないものもあります。",
             "noExperiments": "利用可能な実験がありません。",
             "rollout": "ロールアウト率: {{percentage}}%",
-            "forceEnroll": "強制参加",
-            "forceEnrolled": "強制参加中",
+            "forceEnroll": "参加",
+            "forceEnrolled": "参加中",
             "removeForceEnrollment": "オーバーライドを解除",
-            "confirmForceEnroll": "この Flasco に強制参加しますか？ロールアウトの設定を無視して参加します。",
-            "confirmRemoveForceEnrollment": "強制参加を解除して通常のロールアウト動作に戻しますか？",
+            "confirmForceEnroll": "この Flasco に参加しますか？ロールアウトの設定を無視して参加します。",
+            "confirmRemoveForceEnrollment": "参加を解除して通常のロールアウト動作に戻しますか？",
             "status": {
                 "enrolled": "参加中",
                 "not_in_rollout": "ロールアウト対象外",
-                "force_enrolled": "強制参加",
+                "force_enrolled": "参加",
                 "disabled": "無効",
                 "control": "コントロール"
             }

@@ -343,15 +343,15 @@
             "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
             "noExperiments": "No experiments available.",
             "rollout": "Rollout: {{percentage}}%",
-            "forceEnroll": "Force Enroll",
-            "forceEnrolled": "Force Enrolled",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
             "removeForceEnrollment": "Remove Override",
-            "confirmForceEnroll": "Are you sure you want to force enroll in this Flasco? This will override the rollout settings.",
-            "confirmRemoveForceEnrollment": "Remove force enrollment and return to normal rollout behavior?",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
             "status": {
                 "enrolled": "Enrolled",
                 "not_in_rollout": "Not in rollout",
-                "force_enrolled": "Force enrolled",
+                "force_enrolled": "Enrolled",
                 "disabled": "Disabled",
                 "control": "Control"
             }
