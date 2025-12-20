@@ -473,7 +473,7 @@ export default function Page() {
             </div>
           </CardHeader>
           <CardContent>
-            {allExperimentsLoading
+            {allExperimentsLoading && allExperiments.length === 0
               ? (
                 <div className="text-center py-8 text-base-content/70">
                   {t("common.loading")}
@@ -594,6 +594,7 @@ export default function Page() {
           onConfirm={modalState.onConfirm}
           title={modalState.title}
           confirmText={modalState.confirmText}
+          cancelText={t("common.cancel")}
           confirmVariant={modalState.confirmVariant}
         >
           {modalState.description}

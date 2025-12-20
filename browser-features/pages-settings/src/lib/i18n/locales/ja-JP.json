@@ -358,7 +358,8 @@
         }
     },
     "common": {
-        "loading": "読み込み中..."
+        "loading": "読み込み中...",
+        "cancel": "キャンセル"
     },
     "search": {
         "title": "設定を検索",

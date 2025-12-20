@@ -358,7 +358,8 @@
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "cancel": "Cancel"
     },
     "search": {
         "title": "Search Settings",
