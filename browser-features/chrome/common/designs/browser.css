@@ -282,3 +282,8 @@ notification-message[message-bar-type="infobar"] {
     --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor) !important;
   }
 }
+
+/* Hide Taskbar Tabs Page Action Button */
+#taskbar-tabs-button {
+  display: none !important;
+}
