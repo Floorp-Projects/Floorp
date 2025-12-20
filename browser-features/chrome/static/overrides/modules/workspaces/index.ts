@@ -27,8 +27,10 @@ export const overrides = [
 
       // Merge options, applying workspace container if:
       // 1. Workspace has a container (userContextId > 0)
-      // 2. No userContextId is specified in options (or it's 0/default)
+      // 2. No userContextId is explicitly specified in options
+      // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
       const baseOptions = options ?? {};
+      const hasExplicitUserContextId = "userContextId" in baseOptions;
       const originalUserContextId =
         typeof baseOptions.userContextId === "number"
           ? baseOptions.userContextId
@@ -48,7 +50,7 @@ export const overrides = [
 
       const shouldApplyWorkspaceContainer =
         workspaceUserContextId > 0 &&
-        (!originalUserContextId || originalUserContextId === 0) &&
+        !hasExplicitUserContextId &&
         !shouldRespectExistingContext;
 
       const mergedOptions = {
@@ -87,8 +89,10 @@ export const overrides = [
 
         // Merge params, applying workspace container if:
         // 1. Workspace has a container (userContextId > 0)
-        // 2. No userContextId is specified in params (or it's 0/default)
+        // 2. No userContextId is explicitly specified in params
+        // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
         const baseParams = params ?? {};
+        const hasExplicitUserContextId = "userContextId" in baseParams;
         const originalUserContextId =
           typeof baseParams.userContextId === "number"
             ? baseParams.userContextId
@@ -109,7 +113,7 @@ export const overrides = [
 
         const shouldApplyWorkspaceContainer =
           workspaceUserContextId > 0 &&
-          (!originalUserContextId || originalUserContextId === 0) &&
+          !hasExplicitUserContextId &&
           !shouldRespectExistingContext;
 
         const mergedParams = {
