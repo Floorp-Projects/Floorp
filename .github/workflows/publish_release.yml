@@ -287,29 +287,38 @@ jobs:
         env:
           NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
           VERSION: ${{ needs.main.outputs.VERSION }}
+          GH_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
         run: |
-          curl -X POST \
-          -H "Authorization: token ${{ secrets.UPDATE_SERVER_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-stable-updatexml-files.yml/dispatches" \
-          -d '{
-            "ref": "main",
-            "inputs": {
-              "win-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-windows-x86_64-full.mar",
-              "linux-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-x86_64-full.mar",
-              "linux-aarch64-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-linux-aarch64-full.mar",
-              "mac-mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/floorp-mac-universal-full.mar",
-              "win-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/win-meta.json",
-              "linux-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/linux-meta.json",
-              "linux-aarch64-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/linux-aarch64-meta.json",
-              "mac-meta-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ env.NR_VERSION }}/mac-meta.json",
-              "firefox-version": "${{ env.VERSION }}",
-              "app-version2": "${{ env.NR_VERSION }}"
-            }
-          }'
+          gh workflow run update-stable-updatexml-files.yml \
+            --repo Floorp-Projects/Floorp-Updates \
+            --ref main \
+            -f win-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-windows-x86_64-full.mar" \
+            -f linux-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-linux-x86_64-full.mar" \
+            -f linux-aarch64-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-linux-aarch64-full.mar" \
+            -f mac-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-mac-universal-full.mar" \
+            -f win-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/win-meta.json" \
+            -f linux-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/linux-meta.json" \
+            -f linux-aarch64-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/linux-aarch64-meta.json" \
+            -f mac-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/mac-meta.json" \
+            -f firefox-version="${VERSION}" \
+            -f app-version2="${NR_VERSION}"
+
+  trigger_portable:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Floorp Portable Build
+        env:
+          GH_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
+          NR_VERSION: ${{ needs.publish.outputs.NR_VERSION }}
+        run: |
+          gh workflow run build.yml \
+            --repo Floorp-Projects/Floorp-Portable-v2 \
+            --ref master \
+            -f version="$NR_VERSION"
 
   publish_ppa:
-    needs: [publish]
+    needs: [trigger_portable, publish]
     if: ${{ inputs.publish_ppa }}
     uses: ./.github/workflows/publish_ppa.yml
     with:
