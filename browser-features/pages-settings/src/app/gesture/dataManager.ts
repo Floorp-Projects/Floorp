@@ -16,7 +16,9 @@ const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
 export const useMouseGestureConfig = () => {
-  const [config, setConfig] = useState<MouseGestureConfig>({} as MouseGestureConfig);
+  const [config, setConfig] = useState<MouseGestureConfig>(
+    {} as MouseGestureConfig,
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +41,14 @@ export const useMouseGestureConfig = () => {
             const parsedConfig = JSON.parse(configStr);
             // Backward compatibility defaults
             const showLabel = parsedConfig.showLabel ?? true;
-            setConfig({ ...parsedConfig, showLabel, enabled });
+            const contextMenu = {
+              minDistance: parsedConfig.contextMenu?.minDistance ?? 12,
+              preventionTimeout:
+                parsedConfig.contextMenu?.preventionTimeout ?? 200,
+              minDirectionChangeDistance:
+                parsedConfig.contextMenu?.minDirectionChangeDistance ?? 20,
+            };
+            setConfig({ ...parsedConfig, showLabel, contextMenu, enabled });
           } else {
             throw new Error("Configuration not found");
           }
@@ -113,7 +122,7 @@ export const useMouseGestureConfig = () => {
 };
 
 export const patternToString = (pattern: GestureDirection[]) => {
-  const directionMap = {
+  const directionMap: Record<GestureDirection, string> = {
     up: "↑",
     down: "↓",
     left: "←",
