@@ -40,7 +40,7 @@
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
             "noResults": "Нічого не знайдено",
             "open": "Відкрийте \"{{title}}\"",
-            "matchedText": "Matched Text",
+            "matchedText": "Відповідний текст",
             "results": "Результати пошуку"
         }
     },
@@ -136,8 +136,8 @@
             "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Експериментальні можливості",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "description": "Ці налаштування є експериментальними і офіційно не підтримуються. Можуть виникнути проблеми.",
+                "leptonRepository": "Lepton — це тема css для Firefox.",
                 "visitRepository": "Visit Repository Page"
             },
             "autohide": {
@@ -264,7 +264,7 @@
         "initializeTitle": "Initialize workspaces",
         "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
         "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeSuccess": "Робочі простори були скинуті до стану за замовчуванням.",
         "initializeFailure": "Failed to initialize workspaces. Please try again.",
         "initializeConfirmTitle": "Initialize Workspaces",
         "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
@@ -282,8 +282,8 @@
         "openProfileSaveLocation": "Відкрити місце збереження профілю",
         "mozillaAccountSyncSettings": "Налаштування синхронізації облікових записів Mozilla",
         "syncedTo": "Синхронізовано з {{email}}",
-        "sync{{productName}}NotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "{{productName}}FeatureSyncSettings": "{{productName}} Feature Sync Settings",
+        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Керування обліковим записом Mozilla",
         "manageFirefoxFeatureSync": "Керування синхронізацією функцій Firefox",
         "aboutMozillaAccount": "Про обліковий запис Mozilla",
@@ -316,13 +316,13 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
+                "default": "Дотримуйтесь рекомендованої політики участі. Ви можете бути зареєстровані в {{productName}} Flasco на основі показників впровадження.",
+                "always": "Завжди брати участь у всіх доступних {{productName}} Flascos. Ця опція призначена для користувачів, які одні з найперших хочуть випробувати нові функції.",
+                "never": "Ніколи не брати участь у {{productName}} Flascos. Ви отримаєте лише стабільні, перевірені функції."
             },
-            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
-            "troubleshooting": "Troubleshooting",
-            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "confirmClearCache": "Ви впевнені, що хочете видалити всі дані експерименту? Це призведе до скидання ваших завдань і не матиме зворотньої дії.",
+            "troubleshooting": "Усунення несправностей",
+            "clearCacheDescription": "Якщо у вас виникають проблеми з експериментами, очищення кешу може вирішити їх, скинувши всі дані, пов'язані з експериментами, до початкового стану.",
             "clearCache": "Clear Experiment Cache"
         },
         "activeFlascos": {
@@ -334,13 +334,32 @@
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmDisable": "Ви впевнені, що хочете вимкнути цей Flasco? Ви можете увімкнути його пізніше.",
             "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
+        },
+        "availableFlascos": {
+            "title": "Available Flascos",
+            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
+            "noExperiments": "No experiments available.",
+            "rollout": "Rollout: {{percentage}}%",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Enrolled",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Enrolled",
+                "disabled": "Disabled",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "cancel": "Скасувати"
     },
     "search": {
         "title": "Налаштування пошуку",
@@ -479,12 +498,27 @@
         "generalSettings": "Загальні налаштування",
         "generalSettingsDescription": "Основні налаштування жестів миші",
         "enabled": "Увімкнути жести миші",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Показати слід жесту",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Show gesture label",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Чутливість",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Низька",
         "high": "Висока",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "minDirectionChangeDistance": "Direction change detection distance",
+        "minDirectionChangeDistanceDescription": "Minimum distance to detect a direction change",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Ширина сліду",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "Колір сліду",
         "actionsSettings": "Дії жестів",
         "actionsSettingsDescription": "Налаштування дії жестів миші",

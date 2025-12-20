@@ -36,10 +36,10 @@
         "enableSlideshow": "Aktivera bildspel",
         "slideshowInterval": "Slideshow Interval",
         "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "disableFloorpStart": "Inaktivera Floorp Start (använd klassisk about:newtab)",
+        "disableFloorpStartDescription": "När aktiverad, Floorp Start kommer att ersättas av den klassiska Firefox ny fliken / startsidan.",
+        "restartRequired": "Kräver omstart av webbläsaren för att få full effekt.",
+        "firefoxLayout": "Använd äldre layout (som Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Sök eller ange URL",

@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Status Bar{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Web Apps",

@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Profiler",
         "buttons": {
             "refresh": "Refresh",
-            "create": "Create"
+            "create": "Skapa"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Laddar…",
+        "noProfiles": "Inga profiler hittades.",
+        "current": "Nuvarande",
         "default": "Standard",
         "actions": {
             "open": "Open",
-            "new": "New",
+            "new": "Nytt",
             "rename": "Byt namn",
-            "remove": "Remove",
+            "remove": "Ta bort",
             "setDefault": "Standard"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Är du säker du vill ta bort denna profil?",
+            "newName": "Nytt profilnamn:"
         }
     }
 }

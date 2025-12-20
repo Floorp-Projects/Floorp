@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "状态栏{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "分割视图暂时不可用",
-      "details": "详情"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "应用",
@@ -314,31 +308,31 @@
   },
   "externalBrowser": {
     "menu": {
-      "openTabIn": "Open Tab in External Browser",
-      "openLinkIn": "Open Link in External Browser",
-      "defaultBrowser": "System Default Browser",
-      "noBrowsers": "No external browsers detected",
-      "noValidUrl": "No valid URL to open"
+      "openTabIn": "在外部浏览器中打开标签页",
+      "openLinkIn": "在外部浏览器中打开链接",
+      "defaultBrowser": "系统默认浏览器",
+      "noBrowsers": "未检测到外部浏览器",
+      "noValidUrl": "没有可打开的有效网址"
     }
   },
   "chromeWebStore": {
     "button": {
-      "addToFloorp": "Add to Floorp",
+      "addToFloorp": "添加到 Floorp 浏览器",
       "installing": "正在安装……",
-      "success": "Added!",
-      "error": "Error occurred",
-      "installed": "Installed"
+      "success": "添加成功！",
+      "error": "错误",
+      "installed": "已安装"
     },
     "error": {
-      "title": "Installation Error",
-      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
-      "alreadyInstalled": "This extension is already installed ({{name}})",
-      "downloadFailed": "Failed to download CRX file",
+      "title": "安装错误",
+      "compatibilityNote": "此扩展程序可能与 Firefox/Floorp 不兼容。",
+      "alreadyInstalled": "此扩展程序已安装 ({{name}})",
+      "downloadFailed": "下载 CRX 文件失败",
       "conversionFailed": "Failed to convert extension: {{error}}",
       "conversionFailedGeneric": "Failed to convert CRX to XPI",
       "installError": "Installation error: {{error}}",
-      "installFailed": "Installation failed",
-      "noData": "No installation data provided",
+      "installFailed": "安装失败",
+      "noData": "未提供安装数据",
       "addonManagerUnavailable": "AddonManager is not available",
       "noBrowserWindow": "Could not find browser window for installation",
       "createInstallFailed": "Failed to create installation object",

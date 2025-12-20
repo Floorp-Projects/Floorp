@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Строка состояния{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Веб-приложения",

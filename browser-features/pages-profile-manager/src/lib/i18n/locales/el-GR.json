@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "Προφίλ",
         "buttons": {
             "refresh": "Refresh",
-            "create": "Create"
+            "create": "Δημιουργία"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
-        "default": "Default",
+        "loading": "Φόρτωση…",
+        "noProfiles": "Δε βρέθηκαν προφίλ.",
+        "current": "Τρέχον",
+        "default": "Προεπιλεγμένο",
         "actions": {
             "open": "Open",
-            "new": "New",
-            "rename": "Rename",
-            "remove": "Remove",
-            "setDefault": "Default"
+            "new": "Νέο",
+            "rename": "Μετονομασία",
+            "remove": "Αφαίρεση",
+            "setDefault": "Προεπιλεγμένο"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Είστε σίγουροι ότι θέλετε να αφαιρέσετε αυτό το προφίλ;",
+            "newName": "Νέο όνομα προφίλ:"
         }
     }
 }

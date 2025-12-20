@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Statusbalk{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Gesplitste weergave is tijdelijk niet beschikbaar",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Web Apps",

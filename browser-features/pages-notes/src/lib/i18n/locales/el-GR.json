@@ -1,39 +1,39 @@
 {
     "title": {
-        "default": "{{productName}} Notes"
+        "default": "{{productName}} Σημειώσεις"
     },
     "notes": {
-        "welcome": "Welcome to {{productName}} Notes!",
-        "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
-        "new": "New Note",
-        "reorder": "Reorder",
-        "done": "Done",
-        "emptyTitle": "Untitled",
-        "emptyContent": "No content",
-        "noNotesSelected": "Select a note or create a new one",
-        "createNew": "Create New Note",
-        "titlePlaceholder": "Title",
-        "loading": "Loading notes...",
-        "delete": "Delete"
+        "welcome": "Καλώς ήλθατε στο {{productName}} Σημειώσεις!",
+        "welcomeContent": "Καλώς ήρθατε στο {{productName}} Notes! Να πώς θα το χρησιμοποιήσετε.\n\nΟι {{productName}} Σημειώσεις είναι μια δυνατότητα καταγραφής σημειώσεων που μπορεί να συγχρονιστεί σε όλες τις συσκευές. Για να ενεργοποιήσετε το συγχρονισμό, πρέπει να συνδεθείτε στο {{productName}} με έναν λογαριασμό Mozilla.\nΟι {{productName}} Σημειώσεις αποθηκεύονται στο {{productName}} και συγχρονίζονται σε όλες τις συσκευές χρησιμοποιώντας το Firefox Sync. Το Firefox Sync κρυπτογραφεί το περιεχόμενο του συγχρονισμού με τον κωδικό πρόσβασης του λογαριασμού σας Mozilla, ώστε κανείς να μην μπορεί να γνωρίζει το περιεχόμενό του.",
+        "new": "Νέα σημείωση",
+        "reorder": "Αναδιάταξη",
+        "done": "Έγινε",
+        "emptyTitle": "Χωρίς τίτλο",
+        "emptyContent": "Χωρίς περιεχόμενο",
+        "noNotesSelected": "Επιλέξτε μια σημείωση ή δημιουργήστε μια νέα",
+        "createNew": "Δημιουργία νέας σημείωσης",
+        "titlePlaceholder": "Τίτλος",
+        "loading": "Φόρτωση σημειώσεων...",
+        "delete": "Διαγραφή"
     },
     "editor": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strikethrough",
-        "bulletList": "Bullet List",
-        "numberedList": "Numbered List",
-        "alignLeft": "Align Left",
-        "alignCenter": "Align Center",
-        "alignRight": "Align Right",
-        "quote": "Quote",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3"
+        "bold": "Έντονα",
+        "italic": "Πλάγια",
+        "underline": "Υπογράμμιση",
+        "strikethrough": "Διακριτή διαγραφή",
+        "bulletList": "Λίστα με κουκκίδες",
+        "numberedList": "Αριθμημένη λίστα",
+        "alignLeft": "Στοίχιση αριστερά",
+        "alignCenter": "Στοίχιση στο κέντρο",
+        "alignRight": "Στοίχιση δεξιά",
+        "quote": "Απόσπασμα",
+        "heading1": "Επικεφαλίδα 1",
+        "heading2": "Επικεφαλίδα 2",
+        "heading3": "Επικεφαλίδα 3"
     },
     "error": {
-        "loadFailed": "Failed to load note data",
-        "saveFailed": "Failed to save note data",
-        "indexOutOfRange": "Index {{index}} is out of range"
+        "loadFailed": "Αποτυχία φόρτωσης δεδομένων σημείωσης",
+        "saveFailed": "Αποτυχία αποθήκευσης δεδομένων σημείωσης",
+        "indexOutOfRange": "Ο δείκτης {{index}} είναι εκτός εύρους"
     }
 }

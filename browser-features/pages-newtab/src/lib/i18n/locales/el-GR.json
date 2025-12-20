@@ -1,54 +1,54 @@
 {
-    "title": "Floorp Start",
+    "title": "Έναρξη Floorp",
     "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
+        "addSite": "Προσθήκη ιστότοπου",
+        "addNewSite": "Προσθήκη νέου ιστότοπου",
         "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name",
-        "pin": "Pin",
-        "unpin": "Unpin",
-        "block": "Block",
-        "blockTitle": "Block \"{{title}}\"?",
-        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
-        "invalidUrl": "Invalid URL"
+        "label": "Ετικέτα",
+        "cancel": "Ακύρωση",
+        "add": "Προσθήκη",
+        "close": "Κλείσιμο",
+        "labelPlaceholder": "Όνομα ιστότοπου",
+        "pin": "Καρφίτσωμα",
+        "unpin": "Ξεκαρφίτσωμα",
+        "block": "Αποκλεισμός",
+        "blockTitle": "Αποκλεισμός \"{{title}}\";",
+        "blockConfirm": "Αυτός ο ιστότοπος θα αφαιρεθεί από τις κορυφαίες τοποθεσίες σας και δεν θα σας προταθεί ξανά. Μπορείτε να διαχειριστείτε τις αποκλεισμένες τοποθεσίες στις ρυθμίσεις.",
+        "invalidUrl": "Μη έγκυρο URL"
     },
     "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
+        "newTabSettings": "Ρυθμίσεις νέας καρτέλας",
+        "displayComponents": "Στοιχεία οθόνης",
+        "topSites": "Κορυφαίοι ιστότοποι",
+        "clock": "Ρολόι",
+        "searchBar": "Γραμμή αναζήτησης",
+        "backgroundSettings": "Ρυθμίσεις φόντου",
+        "noBackground": "Χωρίς φόντο",
+        "randomImage": "Τυχαία εικόνα",
+        "customImage": "Προσαρμοσμένη εικόνα",
+        "folderImages": "Εικόνες από φάκελο",
+        "floorpImages": "Εικόνες Floorp",
         "currentImage": "Current image:",
         "imageRecommendation": "Recommended: 1920x1080 or higher",
         "currentFolder": "Current folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "enableSlideshow": "Enable Slideshow",
+        "selectFolder": "Επιλογή φακέλου",
+        "selected": "Επιλέχθηκε",
+        "enableSlideshow": "Ενεργοποίηση παρουσίασης",
         "slideshowInterval": "Slideshow Interval",
-        "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
+        "floorpStart": "Έναρξη Floorp",
+        "disableFloorpStart": "Απενεργοποίηση της εκκίνησης Floorp (χρήση κλασικού about:newtab)",
+        "disableFloorpStartDescription": "Όταν είναι ενεργοποιημένη, η εκκίνηση Floorp θα αντικατασταθεί από την κλασική νέα καρτέλα / αρχική σελίδα του Firefox.",
+        "restartRequired": "Απαιτείται επανεκκίνηση του προγράμματος περιήγησης για να τεθεί σε πλήρη ισχύ.",
+        "firefoxLayout": "Χρήση παλαιάς διάταξης (όπως η αρχική σελίδα του Firefox)"
     },
     "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
+        "searchOrEnterUrl": "Αναζήτηση ή εισαγωγή URL",
+        "loadingSearchEngines": "Φόρτωση μηχανών αναζήτησης..."
     },
     "settingsButton": {
-        "settings": "Settings"
+        "settings": "Ρυθμίσεις"
     },
     "modal": {
-        "close": "Close"
+        "close": "Κλείσιμο"
     }
 }

@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Állapotsor{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Osztott Nézet jelenleg nem elérhető",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Web Apps",

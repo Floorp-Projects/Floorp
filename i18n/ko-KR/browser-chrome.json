@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "상태 표시줄{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "웹 앱",

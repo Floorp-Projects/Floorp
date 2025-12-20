@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "狀態列{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "暫時無法使用分割檢視",
-      "details": "詳細資訊"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "PWA 應用程式",

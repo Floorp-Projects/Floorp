@@ -3,22 +3,22 @@
         "title": "Обліковий запис",
         "buttons": {
             "refresh": "Refresh",
-            "create": "Create"
+            "create": "Створити"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "Завантаження…",
+        "noProfiles": "Профілів не знайдено.",
+        "current": "Поточний",
         "default": "За замовчуванням",
         "actions": {
             "open": "Open",
             "new": "Новий",
             "rename": "Перейменувати",
-            "remove": "Remove",
+            "remove": "Видалити",
             "setDefault": "За замовчуванням"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "Ви впевнені, що хочете видалити цей профіль?",
+            "newName": "Нова назва профілю:"
         }
     }
 }

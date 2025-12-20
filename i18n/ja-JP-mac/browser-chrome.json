@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "ステータスバー{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "分割ビューは一時的に使用できません",
-      "details": "詳細情報"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "ウェブアプリ",

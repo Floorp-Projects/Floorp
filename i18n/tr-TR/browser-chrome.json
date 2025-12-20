@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Durum Çubuğu{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Web Uygulamaları",

@@ -106,12 +106,6 @@
   "statusbar": {
     "toggle": "Būsenos juosta{{mark}}"
   },
-  "splitview": {
-    "tab-context": {
-      "temporarily-unavailable": "Split View is temporarily unavailable",
-      "details": "Details"
-    }
-  },
   "ssb": {
     "menu": {
       "webapps": "Internetinės programos",
