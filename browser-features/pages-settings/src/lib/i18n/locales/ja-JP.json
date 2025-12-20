@@ -337,29 +337,10 @@
             "confirmDisable": "本当にこの Flasco を無効にしますか？ 後で再度有効にできます。",
             "confirmEnable": "本当にこの Flasco を再度有効にしますか？",
             "lastUpdated": "最終更新:"
-        },
-        "availableFlascos": {
-            "title": "利用可能な Flasco",
-            "description": "お使いの {{productName}} で利用可能なすべての Flasco です。ロールアウトの制限により利用できないものもあります。",
-            "noExperiments": "利用可能な実験がありません。",
-            "rollout": "ロールアウト率: {{percentage}}%",
-            "forceEnroll": "参加",
-            "forceEnrolled": "参加中",
-            "removeForceEnrollment": "オーバーライドを解除",
-            "confirmForceEnroll": "この Flasco に参加しますか？ロールアウトの設定を無視して参加します。",
-            "confirmRemoveForceEnrollment": "参加を解除して通常のロールアウト動作に戻しますか？",
-            "status": {
-                "enrolled": "参加中",
-                "not_in_rollout": "ロールアウト対象外",
-                "force_enrolled": "参加",
-                "disabled": "無効",
-                "control": "コントロール"
-            }
         }
     },
     "common": {
-        "loading": "読み込み中...",
-        "cancel": "キャンセル"
+        "loading": "読み込み中..."
     },
     "search": {
         "title": "設定を検索",
@@ -498,27 +479,12 @@
         "generalSettings": "一般設定",
         "generalSettingsDescription": "マウスジェスチャーの基本設定",
         "enabled": "マウスジェスチャーを有効にする",
-        "enabledDescription": "マウスの動きでブラウザーを操作できるようにします",
         "showTrail": "ジェスチャーの軌跡を表示",
-        "showTrailDescription": "マウスの動きに合わせて線を描画します",
         "showLabel": "ジェスチャー中にアクション名を表示",
-        "showLabelDescription": "ジェスチャー中に実行されるアクション名を表示します",
-        "sensitivitySettings": "感度設定",
-        "sensitivitySettingsDescription": "ジェスチャーの認識感度を調整します。",
         "sensitivity": "感度",
-        "sensitivityDescription": "ジェスチャーの認識感度を調整します",
         "low": "低",
         "high": "高",
-        "minDistance": "最小移動距離",
-        "minDistanceDescription": "ジェスチャーとして認識されるための最小の移動距離",
-        "preventionTimeout": "右クリック抑制時間",
-        "preventionTimeoutDescription": "ジェスチャー後に右クリックメニューを抑制する時間",
-        "minDirectionChangeDistance": "方向転換の判定距離",
-        "minDirectionChangeDistanceDescription": "方向が変わったと判定するための最小距離",
-        "trailSettings": "軌跡設定",
-        "trailSettingsDescription": "ジェスチャーの軌跡表示をカスタマイズします。",
         "trailWidth": "軌跡の太さ",
-        "trailWidthDescription": "ジェスチャーの軌跡線の太さ",
         "trailColor": "軌跡の色",
         "actionsSettings": "ジェスチャーアクション",
         "actionsSettingsDescription": "マウスジェスチャーのアクションを設定",
