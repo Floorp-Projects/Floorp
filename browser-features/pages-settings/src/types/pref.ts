@@ -169,7 +169,6 @@ export const zGestureAction = t.type({
 export const zMouseGestureContextMenu = t.type({
   minDistance: t.number,
   preventionTimeout: t.number,
-  minDirectionChangeDistance: t.number,
 });
 
 export const zMouseGestureConfig = t.type({

@@ -513,8 +513,6 @@
         "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
         "preventionTimeout": "Right-click suppression time",
         "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
-        "minDirectionChangeDistance": "Direction change detection distance",
-        "minDirectionChangeDistanceDescription": "Minimum distance to detect a direction change",
         "trailSettings": "Trail Settings",
         "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "軌跡の太さ",

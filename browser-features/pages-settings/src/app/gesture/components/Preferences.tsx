@@ -87,19 +87,6 @@ export function GeneralSettings({
     });
   };
 
-  const handleMinDirectionChangeDistanceChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const target = e.target;
-    const value = Number.parseInt(target.value);
-    await updateConfig({
-      contextMenu: {
-        ...config.contextMenu,
-        minDirectionChangeDistance: value,
-      },
-    });
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -185,21 +172,6 @@ export function GeneralSettings({
               valueSuffix="px"
               minLabel="5px"
               maxLabel="50px"
-            />
-
-            <Seekbar
-              label={t("mouseGesture.minDirectionChangeDistance")}
-              description={t(
-                "mouseGesture.minDirectionChangeDistanceDescription",
-              )}
-              min={5}
-              max={100}
-              value={config.contextMenu.minDirectionChangeDistance}
-              onChange={handleMinDirectionChangeDistanceChange}
-              disabled={!config.enabled}
-              valueSuffix="px"
-              minLabel="5px"
-              maxLabel="100px"
             />
 
             <Seekbar

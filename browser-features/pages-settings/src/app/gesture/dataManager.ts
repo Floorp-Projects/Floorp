@@ -45,8 +45,6 @@ export const useMouseGestureConfig = () => {
               minDistance: parsedConfig.contextMenu?.minDistance ?? 12,
               preventionTimeout:
                 parsedConfig.contextMenu?.preventionTimeout ?? 200,
-              minDirectionChangeDistance:
-                parsedConfig.contextMenu?.minDirectionChangeDistance ?? 20,
             };
             setConfig({ ...parsedConfig, showLabel, contextMenu, enabled });
           } else {
