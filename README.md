@@ -175,30 +175,7 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 🧰 How to Start Development
 
-#### Windows
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Install `Power Shell 7` from any source. recommended [Winget](https://winget.run/pkg/Microsoft/PowerShell)
-3. Clone repository and run `deno install` in the root directory.
-4. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
-5. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
-
-#### GNU/Linux
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Clone repository and run `deno install` in the root directory.
-3. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
-4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
-
-#### macOS
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Clone repository and run `deno install` in the root directory.
-3. Run `deno task dev` in the root directory. At first run, we will download binary from GitHub Actions.
-4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
+To build and run Floorp, follow the [Building section of the documentation](https://docs.floorp.app/docs/building/).
 
 ### 🐛 Reporting Bugs
 
