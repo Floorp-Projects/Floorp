@@ -29,5 +29,6 @@ export default class MouseGesture extends NoraComponentBase {
   init(): void {
     const ctx = mouseGestureService;
     MouseGesture.ctx = ctx;
+    ctx.attachToWindow(window);
   }
 }

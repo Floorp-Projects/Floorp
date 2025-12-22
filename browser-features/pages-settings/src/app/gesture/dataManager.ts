@@ -29,30 +29,47 @@ export const useMouseGestureConfig = () => {
         let enabled: boolean;
         try {
           const result = await rpc.getBoolPref(MOUSE_GESTURE_ENABLED_PREF);
-          enabled = result === null ? true : result;
+          enabled = result === null ? false : result;
         } catch (e) {
           console.error("Failed to get enabled state", e);
-          enabled = true;
+          enabled = false;
         }
+
+        const defaultConfig: MouseGestureConfig = {
+          enabled,
+          rockerGesturesEnabled: true,
+          sensitivity: 40,
+          showTrail: true,
+          showLabel: true,
+          trailColor: "#37ff00",
+          trailWidth: 6,
+          contextMenu: {
+            minDistance: 12,
+            preventionTimeout: 200,
+          },
+          actions: [],
+        };
 
         try {
           const configStr = await rpc.getStringPref(MOUSE_GESTURE_CONFIG_PREF);
           if (configStr) {
             const parsedConfig = JSON.parse(configStr);
-            // Backward compatibility defaults
-            const showLabel = parsedConfig.showLabel ?? true;
-            const contextMenu = {
-              minDistance: parsedConfig.contextMenu?.minDistance ?? 12,
-              preventionTimeout:
-                parsedConfig.contextMenu?.preventionTimeout ?? 200,
-            };
-            setConfig({ ...parsedConfig, showLabel, contextMenu, enabled });
+            // Merge defaults with parsed config
+            setConfig({
+              ...defaultConfig,
+              ...parsedConfig,
+              contextMenu: {
+                ...defaultConfig.contextMenu,
+                ...parsedConfig.contextMenu,
+              },
+              enabled,
+            });
           } else {
-            throw new Error("Configuration not found");
+            setConfig(defaultConfig);
           }
         } catch (parseError) {
           console.error("Failed to parse configuration", parseError);
-          throw parseError;
+          setConfig(defaultConfig);
         }
       } catch (error) {
         console.error("Failed to load configuration", error);

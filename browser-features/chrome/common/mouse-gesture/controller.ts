@@ -30,9 +30,11 @@ export class MouseGestureController {
   private eventListenersAttached = false;
   private pressedButtons = new Set<number>(); // For rocker gestures
   private isRockerGestureFired = false;
+  private targetWindow: Window;
 
-  constructor() {
-    this.display = new GestureDisplay();
+  constructor(win: Window = globalThis as unknown as Window) {
+    this.targetWindow = win;
+    this.display = new GestureDisplay(win);
     this.init();
   }
 
@@ -53,21 +55,23 @@ export class MouseGestureController {
   private init(): void {
     if (this.eventListenersAttached) return;
 
-    if (typeof globalThis !== "undefined") {
-      globalThis.addEventListener("mousedown", this.handleMouseDown);
-      globalThis.addEventListener("mousemove", this.handleMouseMove);
-      globalThis.addEventListener("mouseup", this.handleMouseUp);
-      globalThis.addEventListener("contextmenu", this.handleContextMenu, true);
-      this.eventListenersAttached = true;
-    }
+    this.targetWindow.addEventListener("mousedown", this.handleMouseDown);
+    this.targetWindow.addEventListener("mousemove", this.handleMouseMove);
+    this.targetWindow.addEventListener("mouseup", this.handleMouseUp);
+    this.targetWindow.addEventListener(
+      "contextmenu",
+      this.handleContextMenu,
+      true,
+    );
+    this.eventListenersAttached = true;
   }
 
   public destroy(): void {
-    if (typeof globalThis !== "undefined" && this.eventListenersAttached) {
-      globalThis.removeEventListener("mousedown", this.handleMouseDown);
-      globalThis.removeEventListener("mousemove", this.handleMouseMove);
-      globalThis.removeEventListener("mouseup", this.handleMouseUp);
-      globalThis.removeEventListener(
+    if (this.eventListenersAttached) {
+      this.targetWindow.removeEventListener("mousedown", this.handleMouseDown);
+      this.targetWindow.removeEventListener("mousemove", this.handleMouseMove);
+      this.targetWindow.removeEventListener("mouseup", this.handleMouseUp);
+      this.targetWindow.removeEventListener(
         "contextmenu",
         this.handleContextMenu,
         true,

@@ -120,10 +120,12 @@ const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
   ],
 };
 
-const normalizeConfig = (config: MouseGestureConfig): MouseGestureConfig => {
+const normalizeConfig = (
+  config: Record<string, unknown>,
+): MouseGestureConfig => {
   const sensitivity = clamp(
-    Number.isFinite(config.sensitivity)
-      ? config.sensitivity
+    Number.isFinite(config?.sensitivity)
+      ? (config.sensitivity as number)
       : BASE_DEFAULT_CONFIG.sensitivity,
     1,
     100,
@@ -131,10 +133,10 @@ const normalizeConfig = (config: MouseGestureConfig): MouseGestureConfig => {
 
   const contextMenu = {
     ...BASE_DEFAULT_CONFIG.contextMenu,
-    ...config.contextMenu,
+    ...(config?.contextMenu as Record<string, unknown> | undefined),
     minDistance: Math.max(
-      config.contextMenu?.minDistance ??
-        BASE_DEFAULT_CONFIG.contextMenu.minDistance,
+      ((config?.contextMenu as Record<string, unknown> | undefined)
+        ?.minDistance as number) ?? BASE_DEFAULT_CONFIG.contextMenu.minDistance,
       MIN_CONTEXT_MENU_DISTANCE,
     ),
   };
@@ -144,7 +146,10 @@ const normalizeConfig = (config: MouseGestureConfig): MouseGestureConfig => {
     ...config,
     sensitivity,
     contextMenu,
-  };
+    actions: Array.isArray(config?.actions)
+      ? (config.actions as GestureAction[])
+      : BASE_DEFAULT_CONFIG.actions,
+  } as MouseGestureConfig;
 };
 
 export const defaultConfig = normalizeConfig(BASE_DEFAULT_CONFIG);
@@ -185,15 +190,23 @@ function createConfig(): [
   Setter<MouseGestureConfig>,
 ] {
   const parseConfig = (jsonStr: string): MouseGestureConfig => {
-    const parsed = JSON.parse(jsonStr);
-    const result = MouseGestureConfigCodec.decode(parsed);
-    if (isRight(result)) {
-      return normalizeConfig(result.right);
+    try {
+      const parsed = JSON.parse(jsonStr);
+      const result = MouseGestureConfigCodec.decode(parsed);
+      if (isRight(result)) {
+        return normalizeConfig(result.right);
+      }
+      console.warn(
+        "Mouse gesture configuration validation failed, attempting to recover partial data",
+      );
+      return normalizeConfig(parsed);
+    } catch (e) {
+      console.error(
+        "Failed to parse mouse gesture configuration JSON, using default",
+        e,
+      );
+      return defaultConfig;
     }
-    console.error(
-      "Failed to decode mouse gesture configuration, using default",
-    );
-    return defaultConfig;
   };
 
   const [config, setConfig] = createSignal<MouseGestureConfig>(

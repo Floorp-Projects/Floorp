@@ -15,7 +15,7 @@ export function GestureDisplayUI(props: {
   feedbackVisible?: boolean;
   directions?: GestureDirection[];
 }) {
-  const getTrailElements = () => {
+  const getTrailElement = () => {
     if (props.trail.length < 2 || !getConfig().showTrail) {
       return null;
     }
@@ -24,40 +24,34 @@ export function GestureDisplayUI(props: {
     const trailColor = config.trailColor || "#37ff00";
     const trailWidth = config.trailWidth || 6;
 
-    return props.trail.map((point, index) => {
-      if (index === 0) return null;
+    const points = props.trail.map((p) => `${p.x},${p.y}`).join(" ");
 
-      const prevPoint = props.trail[index - 1];
-      const dx = point.x - prevPoint.x;
-      const dy = point.y - prevPoint.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-      if (length < 0.1) return null;
-
-      const displayLength = Math.max(length, 2);
-      const displayWidth = Math.max(trailWidth, 3);
-      const opacity = length < 5 ? 0.9 : 0.7;
-
-      return (
-        <div
+    return (
+      <svg
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          "pointer-events": "none",
+          overflow: "visible",
+        }}
+      >
+        <polyline
+          points={points}
+          fill="none"
+          stroke={trailColor}
+          stroke-width={trailWidth}
+          stroke-linecap="round"
+          stroke-linejoin="round"
           style={{
-            position: "fixed",
-            height: `${displayWidth}px`,
-            width: `${displayLength}px`,
-            "background-color": trailColor,
-            opacity: opacity.toString(),
-            left: `${prevPoint.x}px`,
-            top: `${prevPoint.y}px`,
-            transform: `rotate(${angle}deg)`,
-            "transform-origin": "left center",
-            "pointer-events": "none",
-            "border-radius": "1px",
-            "box-shadow": `0 0 2px ${trailColor}`,
+            filter: `drop-shadow(0 0 2px ${trailColor})`,
+            opacity: "0.7",
           }}
         />
-      );
-    });
+      </svg>
+    );
   };
 
   return (
@@ -85,7 +79,7 @@ export function GestureDisplayUI(props: {
               overflow: "visible",
             }}
           >
-            {getTrailElements()}
+            {getTrailElement()}
           </div>
 
           <Show when={props.actionName && getConfig().showLabel}>
@@ -123,9 +117,11 @@ export class GestureDisplay {
   private feedbackTextSignal = createSignal<string>("");
   private feedbackVisibleSignal = createSignal<boolean>(false);
   private directionsSignal = createSignal<GestureDirection[]>([]);
+  private targetWindow: Window;
   private disposeFn: (() => void) | null = null;
 
-  constructor() {
+  constructor(win: Window) {
+    this.targetWindow = win;
     if (gestureDisplayInstance) {
       gestureDisplayInstance.destroy();
     }
@@ -138,9 +134,12 @@ export class GestureDisplay {
   }
 
   private addGlobalStyles(): void {
-    if (styleAdded || !document || !document.head) return;
+    if (
+      styleAdded || !this.targetWindow.document ||
+      !this.targetWindow.document.head
+    ) return;
 
-    const styleElement = document.createElement("style");
+    const styleElement = this.targetWindow.document.createElement("style");
     styleElement.id = "mouse-gesture-global-styles";
     styleElement.textContent = `
             #mouse-gesture-display-container {
@@ -159,21 +158,21 @@ export class GestureDisplay {
                 pointer-events: none;
             }
         `;
-    document.head.appendChild(styleElement);
+    this.targetWindow.document.head.appendChild(styleElement);
     styleAdded = true;
   }
 
   private createMountPoint(): void {
-    if (!document || !document.body) return;
+    if (!this.targetWindow.document || !this.targetWindow.document.body) return;
 
-    const existingContainer = document.getElementById(
+    const existingContainer = this.targetWindow.document.getElementById(
       "mouse-gesture-display-container",
     );
     if (existingContainer && existingContainer.parentNode) {
       existingContainer.parentNode.removeChild(existingContainer);
     }
 
-    const existingStyle = document.getElementById(
+    const existingStyle = this.targetWindow.document.getElementById(
       "mouse-gesture-global-styles",
     );
     if (existingStyle && existingStyle.parentNode) {
@@ -182,9 +181,9 @@ export class GestureDisplay {
       this.addGlobalStyles();
     }
 
-    this.mountContainer = document.createElement("div");
+    this.mountContainer = this.targetWindow.document.createElement("div");
     this.mountContainer.id = "mouse-gesture-display-container";
-    document.body.appendChild(this.mountContainer);
+    this.targetWindow.document.body.appendChild(this.mountContainer);
   }
 
   private initializeComponent(): void {
@@ -210,7 +209,7 @@ export class GestureDisplay {
         this.mountContainer,
         {
           hotCtx: import.meta.hot,
-        },
+        } as any,
       );
 
       return dispose;

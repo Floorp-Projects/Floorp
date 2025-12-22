@@ -30,17 +30,33 @@ class PwaConfig {
         ),
       );
 
-      const configResult = zPwaConfig.decode(
-        JSON.parse(
-          Services.prefs.getStringPref(
-            "floorp.browser.ssb.config",
-            strDefaultConfig,
-          ),
+      const loadConfig = (jsonStr: string): TPwaConfig => {
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const result = zPwaConfig.decode(parsed);
+          if (isRight(result)) {
+            return result.right;
+          }
+          console.warn(
+            "PWA configuration validation failed, attempting to recover partial data",
+          );
+          const defaultConfig = JSON.parse(strDefaultConfig);
+          return { ...defaultConfig, ...parsed };
+        } catch (e) {
+          console.error(
+            "Failed to parse PWA configuration JSON, using default",
+            e,
+          );
+          return JSON.parse(strDefaultConfig);
+        }
+      };
+
+      const initialConfig = loadConfig(
+        Services.prefs.getStringPref(
+          "floorp.browser.ssb.config",
+          strDefaultConfig,
         ),
       );
-      const initialConfig = isRight(configResult)
-        ? configResult.right
-        : JSON.parse(strDefaultConfig);
 
       this.config = createSignal<TPwaConfig>(initialConfig);
 
@@ -71,17 +87,14 @@ class PwaConfig {
       });
 
       const configObserver = () => {
-        const result = zPwaConfig.decode(
-          JSON.parse(
+        this.config[1](
+          loadConfig(
             Services.prefs.getStringPref(
               "floorp.browser.ssb.config",
               strDefaultConfig,
             ),
           ),
         );
-        if (isRight(result)) {
-          this.config[1](result.right);
-        }
       };
 
       Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
