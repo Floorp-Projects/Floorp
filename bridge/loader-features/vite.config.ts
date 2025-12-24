@@ -6,7 +6,7 @@ import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import deno from "@deno/vite-plugin";
 import swc from "unplugin-swc";
-import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
+import { genJarmnPlugin } from "#libs/vite-plugin-gen-jarmn/plugin.ts";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
