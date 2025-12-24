@@ -1516,8 +1516,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
       }
 
       const nativeInputValueSetter = win.HTMLInputElement.prototype
-        ? Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")
-            ?.set
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLInputElement.prototype,
+            "value",
+          )?.set
         : undefined;
       const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
         ? Object.getOwnPropertyDescriptor(
