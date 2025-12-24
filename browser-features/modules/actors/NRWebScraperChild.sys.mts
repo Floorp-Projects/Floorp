@@ -982,10 +982,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return false;
     }
 
-    const mergedOptions = this.getHighlightOptions(
-      optionsInput.action ?? "Highlight",
-      optionsInput,
-    );
+    // Check if target is still alive (not a DeadObject from a previous page)
+    try {
+      void target.nodeType;
+    } catch (e) {
+      this.cleanupHighlight();
+      return false;
+    }
     const options = this.normalizeHighlightOptions(mergedOptions);
     const win = this.contentWindow;
     const doc = this.document;
@@ -1502,7 +1505,38 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
-      element.value = value;
+      const win = this.contentWindow;
+      if (!win) return false;
+
+      // Re-verify element is still alive after potential navigation during highlight
+      try {
+        void element.nodeType;
+      } catch (e) {
+        return false;
+      }
+
+      const nativeInputValueSetter = win.HTMLInputElement.prototype
+        ? Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")
+            ?.set
+        : undefined;
+      const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLTextAreaElement.prototype,
+            "value",
+          )?.set
+        : undefined;
+
+      const setter =
+        element instanceof win!.HTMLInputElement
+          ? nativeInputValueSetter
+          : nativeTextAreaValueSetter;
+
+      if (setter) {
+        setter.call(element, value);
+      } else {
+        element.value = value;
+      }
+
       // Trigger input event to ensure the change is detected
       element.dispatchEvent(new Event("input", { bubbles: true }));
       element.dispatchEvent(new Event("change", { bubbles: true }));
@@ -1541,6 +1575,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
               text: truncatedText,
             })
           : await this.translate("clickElementNoText", { tag: elementTagName });
+
+      // Re-verify element is still alive after translation delay
+      try {
+        void element.nodeType;
+      } catch (e) {
+        return false;
+      }
+
       const options = this.getHighlightOptions("Click");
 
       // エフェクト表示を非同期で開始（クリック処理をブロックしない）
@@ -1653,14 +1695,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
+      const doc = this.document;
+      if (!doc) return false;
+
       try {
-        const element = this.document?.querySelector(selector);
+        const element = doc.querySelector(selector);
         if (element) {
           return true;
         }
         // Wait 100ms before next check
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (e) {
+        // If it's a DeadObject error, the page navigated
+        if (e.message?.includes("dead object")) {
+          return false;
+        }
         console.error("NRWebScraperChild: Error waiting for element:", e);
         return false;
       }
@@ -1681,7 +1730,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
     while (Date.now() - start < timeout) {
       try {
         const win = this.contentWindow;
-        const doc = win?.document;
+        if (!win) return false;
+        const doc = win.document;
         if (
           doc &&
           doc.documentElement &&
@@ -1693,7 +1743,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
         await new Promise((r) => setTimeout(r, 100));
       } catch (e) {
-        void e;
+        if (e.message?.includes("dead object")) {
+          return false;
+        }
         await new Promise((r) => setTimeout(r, 100));
       }
     }
@@ -1941,7 +1993,31 @@ export class NRWebScraperChild extends JSWindowActorChild {
             false,
           );
 
-          element.value = value;
+          // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
+          const nativeInputValueSetter = win?.HTMLInputElement.prototype
+            ? Object.getOwnPropertyDescriptor(
+                win.HTMLInputElement.prototype,
+                "value",
+              )?.set
+            : undefined;
+          const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
+            ? Object.getOwnPropertyDescriptor(
+                win.HTMLTextAreaElement.prototype,
+                "value",
+              )?.set
+            : undefined;
+
+          const setter =
+            element instanceof win!.HTMLInputElement
+              ? nativeInputValueSetter
+              : nativeTextAreaValueSetter;
+
+          if (setter) {
+            setter.call(element, value);
+          } else {
+            element.value = value;
+          }
+
           element.dispatchEvent(new Event("input", { bubbles: true }));
           element.dispatchEvent(new Event("change", { bubbles: true }));
           element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));

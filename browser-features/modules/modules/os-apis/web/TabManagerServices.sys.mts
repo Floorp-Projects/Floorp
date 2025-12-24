@@ -46,6 +46,7 @@ interface GBrowser {
 // Response types
 interface TabListEntry {
   browserId: string;
+  instanceId?: string;
   title: string;
   url: string;
   selected: boolean;
@@ -97,14 +98,64 @@ class TabManager {
   // --- Private Helper Methods ---
 
   /**
+   * Retrieves an instance entry by its ID, handling fallback to browserId.
+   */
+  private _getEntry(instanceId: string) {
+    let entry = this._browserInstances.get(instanceId);
+
+    // Fallback: If not found in instances, check if it's a browserId of an existing tab
+    if (!entry) {
+      try {
+        const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
+        const targetTab = win.gBrowser.tabs.find(
+          (tab: BrowserTab) =>
+            tab.linkedBrowser.browserId.toString() === instanceId,
+        );
+        if (targetTab) {
+          entry = { tab: targetTab, browser: targetTab.linkedBrowser };
+          // Auto-register to allow subsequent calls to use this ID
+          this._browserInstances.set(instanceId, entry);
+          TAB_MANAGER_ACTOR_SETS.add(entry.browser);
+          if (targetTab.setAttribute) {
+            targetTab.setAttribute("data-floorp-os-automated", "true");
+          }
+        }
+      } catch (e) {
+        // ignore errors from getBrowserWindow or tab search
+      }
+    }
+
+    if (entry) {
+      // Verify tab is still alive and in a window
+      const browser = entry.tab.linkedBrowser;
+      if (!browser || !browser.ownerGlobal || browser.ownerGlobal.closed) {
+        this._browserInstances.delete(instanceId);
+        TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
+        return null;
+      }
+      // Always use the latest linkedBrowser in case it changed (e.g. remoteness change)
+      entry.browser = browser;
+    }
+
+    return entry;
+  }
+
+  /**
    * Retrieves an instance by its ID, throwing an error if not found.
    */
   private _getInstance(instanceId: string) {
-    const instance = this._browserInstances.get(instanceId);
-    if (!instance) {
+    const entry = this._getEntry(instanceId);
+
+    if (!entry) {
       throw new Error(`Instance not found for ID: ${instanceId}`);
     }
-    return instance;
+
+    return {
+      tab: entry.tab,
+      browser: entry.tab.linkedBrowser as XULBrowserElement & {
+        browserId: number;
+      },
+    };
   }
 
   private async _delayForUser(delay?: number): Promise<void> {
@@ -117,7 +168,7 @@ class TabManager {
 
   private _focusInstance(instanceId: string): void {
     try {
-      const entry = this._browserInstances.get(instanceId);
+      const entry = this._getInstance(instanceId);
       if (!entry) {
         return;
       }
@@ -349,13 +400,26 @@ class TabManager {
     const gBrowser = win.gBrowser;
 
     return Promise.resolve(
-      gBrowser.tabs.map((tab: BrowserTab) => ({
-        browserId: tab.linkedBrowser.browserId.toString(),
-        title: tab.label,
-        url: tab.linkedBrowser.currentURI.spec,
-        selected: tab.selected,
-        pinned: tab.pinned,
-      })),
+      gBrowser.tabs.map((tab: BrowserTab) => {
+        const browserId = tab.linkedBrowser.browserId.toString();
+        // Find if this tab is already an instance
+        let instanceId: string | undefined;
+        for (const [id, entry] of this._browserInstances.entries()) {
+          if (entry.tab === tab) {
+            instanceId = id;
+            break;
+          }
+        }
+
+        return {
+          browserId,
+          instanceId,
+          title: tab.label,
+          url: tab.linkedBrowser.currentURI.spec,
+          selected: tab.selected,
+          pinned: tab.pinned,
+        };
+      }),
     );
   }
 
@@ -809,7 +873,7 @@ class TabManager {
       expirationDate?: number;
     }>
   > {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve([]);
 
     try {
@@ -867,7 +931,7 @@ class TabManager {
       expirationDate?: number;
     },
   ): Promise<boolean | null> {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve(null);
 
     try {
@@ -907,7 +971,7 @@ class TabManager {
    * This is a simplified implementation that attempts to find dialogs via the window.
    */
   public acceptAlert(instanceId: string): Promise<boolean | null> {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve(null);
 
     try {
@@ -954,7 +1018,7 @@ class TabManager {
    * This is a simplified implementation that attempts to find dialogs via the window.
    */
   public dismissAlert(instanceId: string): Promise<boolean | null> {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve(null);
 
     try {
@@ -999,7 +1063,7 @@ class TabManager {
    * Saves the current page as PDF and returns base64 encoded data
    */
   public async saveAsPDF(instanceId: string): Promise<string | null> {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return null;
 
     try {
@@ -1051,7 +1115,7 @@ class TabManager {
     instanceId: string,
     timeout: number = 5000,
   ): Promise<boolean | null> {
-    const entry = this._browserInstances.get(instanceId);
+    const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve(null);
 
     const browser = entry.browser;
