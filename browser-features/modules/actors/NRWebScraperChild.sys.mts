@@ -2233,8 +2233,31 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
-      // Clear the value
-      element.value = "";
+      const win = this.contentWindow;
+      if (!win) return false;
+
+      // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
+      const nativeInputValueSetter = win.HTMLInputElement.prototype
+        ? Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")
+            ?.set
+        : undefined;
+      const nativeTextAreaValueSetter = win.HTMLTextAreaElement.prototype
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLTextAreaElement.prototype,
+            "value",
+          )?.set
+        : undefined;
+
+      const setter =
+        element instanceof win.HTMLInputElement
+          ? nativeInputValueSetter
+          : nativeTextAreaValueSetter;
+
+      if (setter) {
+        setter.call(element, "");
+      } else {
+        element.value = "";
+      }
 
       // Trigger events to notify frameworks
       element.dispatchEvent(new Event("input", { bubbles: true }));
@@ -2281,8 +2304,22 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
-      // Set the value
-      element.value = value;
+      const win = this.contentWindow;
+      if (!win) return false;
+
+      // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
+      const nativeSelectValueSetter = win.HTMLSelectElement.prototype
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLSelectElement.prototype,
+            "value",
+          )?.set
+        : undefined;
+
+      if (nativeSelectValueSetter) {
+        nativeSelectValueSetter.call(element, value);
+      } else {
+        element.value = value;
+      }
 
       // Trigger events to notify frameworks
       element.dispatchEvent(new Event("input", { bubbles: true }));
@@ -2323,8 +2360,22 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
-      // Set the checked state
-      element.checked = checked;
+      const win = this.contentWindow;
+      if (!win) return false;
+
+      // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
+      const nativeCheckedSetter = win.HTMLInputElement.prototype
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLInputElement.prototype,
+            "checked",
+          )?.set
+        : undefined;
+
+      if (nativeCheckedSetter) {
+        nativeCheckedSetter.call(element, checked);
+      } else {
+        element.checked = checked;
+      }
 
       // Trigger events to notify frameworks
       element.dispatchEvent(new Event("input", { bubbles: true }));
