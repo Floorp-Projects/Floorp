@@ -6,7 +6,7 @@
 
 export function disableCspInDevPlugin(isDev: boolean) {
   if (!isDev) {
-    return {name:"disable-csp-in-dev"};
+    return [];
   }
 
   return {
