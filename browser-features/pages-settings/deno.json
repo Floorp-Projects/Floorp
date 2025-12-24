@@ -13,7 +13,8 @@
     ]
   },
   "imports": {
-    "@/": "./src/"
+    "@/": "./src/",
+    "vite": "npm:vite@^7.3.0"
   },
   "rules": {
     "react/jsx-no-target-blank": "off"

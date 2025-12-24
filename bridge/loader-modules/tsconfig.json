@@ -10,6 +10,9 @@
     "noUnusedParameters": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "#libs/*": ["../../libs/*"]
+    }
   }
 }

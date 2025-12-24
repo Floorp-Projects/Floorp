@@ -7,6 +7,9 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["ESNext", "DOM"],
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "paths": {
+      "#libs/*": ["../../libs/*"]
+    }
   }
 }

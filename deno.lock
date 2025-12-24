@@ -5661,6 +5661,9 @@
         }
       },
       "browser-features/pages-settings": {
+        "dependencies": [
+          "npm:vite@^7.3.0"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@dnd-kit/core@^6.3.1",

@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
-    "removeComments": false
+    "removeComments": false,
+    "paths": {
+      "#libs/*": ["../../libs/*"]
+    }
   }
 }
