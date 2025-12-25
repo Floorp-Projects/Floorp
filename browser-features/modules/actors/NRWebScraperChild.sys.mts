@@ -985,10 +985,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
     // Check if target is still alive (not a DeadObject from a previous page)
     try {
       void target.nodeType;
-    } catch (e) {
+    } catch {
       this.cleanupHighlight();
       return false;
     }
+    const mergedOptions = this.getHighlightOptions(
+      optionsInput.action ?? "Highlight",
+      optionsInput,
+    );
     const options = this.normalizeHighlightOptions(mergedOptions);
     const win = this.contentWindow;
     const doc = this.document;
@@ -1511,7 +1515,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       // Re-verify element is still alive after potential navigation during highlight
       try {
         void element.nodeType;
-      } catch (e) {
+      } catch {
         return false;
       }
 
@@ -1581,7 +1585,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       // Re-verify element is still alive after translation delay
       try {
         void element.nodeType;
-      } catch (e) {
+      } catch {
         return false;
       }
 
