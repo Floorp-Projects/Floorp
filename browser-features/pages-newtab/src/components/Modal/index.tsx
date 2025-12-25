@@ -13,20 +13,76 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  const getFocusableElements = () => {
+    const root = overlayRef.current;
+    if (!root) return [];
+    const selectors = [
+      'a[href]',
+      'area[href]',
+      'button:not([disabled])',
+      'input:not([disabled]):not([type="hidden"])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+      '[contenteditable="true"]',
+    ].join(",");
+    return Array.from(root.querySelectorAll<HTMLElement>(selectors)).filter(
+      (el) => !el.hasAttribute("disabled") && el.tabIndex !== -1,
+    );
+  };
 
   useEffect(() => {
     if (isOpen) {
+      previouslyFocusedElementRef.current =
+        (document.activeElement as HTMLElement | null) ?? null;
+      document.body.style.overflow = "hidden";
       closeButtonRef.current?.focus();
+    } else {
+      document.body.style.overflow = "";
+      previouslyFocusedElementRef.current?.focus?.();
     }
 
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+    return () => {
+      // Ensure cleanup if unmounted while open
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (e.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      const focusables = getFocusableElements();
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey) {
+        if (!active || active === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;

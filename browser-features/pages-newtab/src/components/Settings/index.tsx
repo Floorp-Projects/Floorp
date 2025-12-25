@@ -451,7 +451,8 @@ export function Settings({
               <div className="mt-4 pl-8">
                 <div className="grid grid-cols-3 gap-4">
                   {floorpImages.map((image) => (
-                    <div
+                    <button
+                      type="button"
                       key={image.name}
                       className={`
                         relative cursor-pointer rounded-lg overflow-hidden border-2
@@ -462,6 +463,7 @@ export function Settings({
                       }
                       `}
                       onClick={() => handleFloorpImageSelect(image.name)}
+                      aria-pressed={selectedFloorp === image.name}
                     >
                       <img
                         src={image.url}
@@ -475,7 +477,7 @@ export function Settings({
                           </span>
                         </div>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
