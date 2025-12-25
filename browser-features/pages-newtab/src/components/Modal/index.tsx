@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ModalProps {
@@ -11,8 +11,14 @@ interface ModalProps {
 export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+    }
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
         onClose();
@@ -36,14 +42,18 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
       className="modal modal-open"
       ref={overlayRef}
       onClick={handleOverlayClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
       <div className="modal-box max-w-2xl">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-lg">{title}</h3>
+          <h3 id={titleId} className="font-bold text-lg">{title}</h3>
           <button
             type="button"
             onClick={onClose}
             className="btn btn-sm btn-circle btn-ghost"
+            ref={closeButtonRef}
           >
             <span className="sr-only">{t("modal.close")}</span>
             <svg
@@ -63,7 +73,13 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
           {children}
         </div>
         <div className="modal-action">
-          <button onClick={onClose} className="btn bg-primary text-primary-content">{t("modal.close")}</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn bg-primary text-primary-content"
+          >
+            {t("modal.close")}
+          </button>
         </div>
       </div>
     </div>

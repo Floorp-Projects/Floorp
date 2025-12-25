@@ -71,7 +71,7 @@ export function Background() {
 
   useEffect(() => {
     // no debug logs here
-    let timeoutId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     if (
       slideshowEnabled &&
