@@ -25,6 +25,7 @@ interface BrowserTab {
   selected: boolean;
   pinned: boolean;
   setAttribute?(name: string, value: string): void;
+  getAttribute?(name: string): string | null;
   removeAttribute?(name: string): void;
 }
 
@@ -82,6 +83,32 @@ function getBrowserWindow() {
 }
 
 /**
+ * Returns all currently open browser windows (best-effort).
+ */
+function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
+  const windows: Array<Window & { gBrowser: GBrowser }> = [];
+  try {
+    const enumerator = Services.wm.getEnumerator("navigator:browser") as any;
+    while (enumerator?.hasMoreElements?.()) {
+      const win = enumerator.getNext() as Window & { gBrowser: GBrowser };
+      if (win && !win.closed) {
+        windows.push(win);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  if (windows.length === 0) {
+    try {
+      windows.push(getBrowserWindow() as Window & { gBrowser: GBrowser });
+    } catch {
+      // ignore
+    }
+  }
+  return windows;
+}
+
+/**
  * TabManager class that manages browser tabs for automation and interaction.
  */
 class TabManager {
@@ -103,14 +130,42 @@ class TabManager {
   private _getEntry(instanceId: string) {
     let entry = this._browserInstances.get(instanceId);
 
+    // Fallback: try to recover by scanning tabs with stored instanceId attribute.
+    if (!entry) {
+      try {
+        let targetTab: BrowserTab | undefined;
+        for (const win of getBrowserWindows()) {
+          targetTab = win.gBrowser.tabs.find((tab: BrowserTab) => {
+            const storedId = tab.getAttribute?.("data-floorp-os-instance-id");
+            return storedId === instanceId;
+          });
+          if (targetTab) break;
+        }
+
+        if (targetTab) {
+          entry = { tab: targetTab, browser: targetTab.linkedBrowser };
+          this._browserInstances.set(instanceId, entry);
+          TAB_MANAGER_ACTOR_SETS.add(entry.browser);
+          if (targetTab.setAttribute) {
+            targetTab.setAttribute("data-floorp-os-automated", "true");
+          }
+        }
+      } catch {
+        // ignore errors from getBrowserWindow or tab search
+      }
+    }
+
     // Fallback: If not found in instances, check if it's a browserId of an existing tab
     if (!entry) {
       try {
-        const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-        const targetTab = win.gBrowser.tabs.find(
-          (tab: BrowserTab) =>
-            tab.linkedBrowser.browserId.toString() === instanceId,
-        );
+        let targetTab: BrowserTab | undefined;
+        for (const win of getBrowserWindows()) {
+          targetTab = win.gBrowser.tabs.find(
+            (tab: BrowserTab) =>
+              tab.linkedBrowser.browserId.toString() === instanceId,
+          );
+          if (targetTab) break;
+        }
         if (targetTab) {
           entry = { tab: targetTab, browser: targetTab.linkedBrowser };
           // Auto-register to allow subsequent calls to use this ID
@@ -120,8 +175,35 @@ class TabManager {
             targetTab.setAttribute("data-floorp-os-automated", "true");
           }
         }
-      } catch (e) {
+      } catch {
         // ignore errors from getBrowserWindow or tab search
+      }
+    }
+
+    // Last resort recovery: if there is exactly one automated tab, bind this instanceId to it.
+    // This helps when the service is reloaded and the map was lost, but the client still holds the ID.
+    if (!entry) {
+      try {
+        const automatedTabs: BrowserTab[] = [];
+        for (const win of getBrowserWindows()) {
+          for (const tab of win.gBrowser.tabs) {
+            const flag = tab.getAttribute?.("data-floorp-os-automated");
+            if (flag === "true") {
+              automatedTabs.push(tab);
+            }
+          }
+        }
+        if (automatedTabs.length === 1) {
+          const targetTab = automatedTabs[0];
+          entry = { tab: targetTab, browser: targetTab.linkedBrowser };
+          this._browserInstances.set(instanceId, entry);
+          TAB_MANAGER_ACTOR_SETS.add(entry.browser);
+          if (targetTab.setAttribute) {
+            targetTab.setAttribute("data-floorp-os-instance-id", instanceId);
+          }
+        }
+      } catch {
+        // ignore
       }
     }
 
@@ -168,12 +250,16 @@ class TabManager {
 
   private _focusInstance(instanceId: string): void {
     try {
-      const entry = this._getInstance(instanceId);
+      const entry = this._getEntry(instanceId);
       if (!entry) {
+        console.warn(`TabManager: Instance not found for ID: ${instanceId}`);
         return;
       }
 
-      const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
+      const win =
+        (entry.browser.ownerGlobal as
+          | (Window & { gBrowser: GBrowser })
+          | null) ?? (getBrowserWindow() as Window & { gBrowser: GBrowser });
       if (win.closed) {
         return;
       }
@@ -181,7 +267,7 @@ class TabManager {
       if (Services?.ww?.activeWindow !== win) {
         try {
           win.focus();
-        } catch (_) {
+        } catch {
           // ignore focus errors
         }
       }
@@ -189,14 +275,14 @@ class TabManager {
       if (win.gBrowser.selectedTab !== entry.tab) {
         try {
           win.gBrowser.selectedTab = entry.tab;
-        } catch (_) {
+        } catch {
           // ignore tab selection errors
         }
       }
 
       try {
         entry.browser?.focus();
-      } catch (_) {
+      } catch {
         // ignore browser focus failures
       }
     } catch (error) {
@@ -244,7 +330,7 @@ class TabManager {
               ok = (await tryWait("html", 8000).catch(() => false)) as boolean;
             if (!ok) await tryWait("main", 8000).catch(() => false);
           }
-        } catch (_) {
+        } catch {
           // ignore
         }
         resolve();
@@ -363,6 +449,7 @@ class TabManager {
     // Mark tab as automated
     if (tab.setAttribute) {
       tab.setAttribute("data-floorp-os-automated", "true");
+      tab.setAttribute("data-floorp-os-instance-id", instanceId);
     }
 
     return instanceId;
@@ -388,6 +475,7 @@ class TabManager {
     // Mark tab as automated
     if (targetTab.setAttribute) {
       targetTab.setAttribute("data-floorp-os-automated", "true");
+      targetTab.setAttribute("data-floorp-os-instance-id", instanceId);
     }
 
     await this._delayForUser();
@@ -461,6 +549,7 @@ class TabManager {
     // Remove automated attribute from tab
     if (tab && tab.removeAttribute) {
       tab.removeAttribute("data-floorp-os-automated");
+      tab.removeAttribute("data-floorp-os-instance-id");
     }
     this._browserInstances.delete(instanceId);
     TAB_MANAGER_ACTOR_SETS.delete(browser);
