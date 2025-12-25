@@ -83,6 +83,32 @@ function getBrowserWindow() {
 }
 
 /**
+ * Returns all currently open browser windows (best-effort).
+ */
+function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
+  const windows: Array<Window & { gBrowser: GBrowser }> = [];
+  try {
+    const enumerator = Services.wm.getEnumerator("navigator:browser") as any;
+    while (enumerator?.hasMoreElements?.()) {
+      const win = enumerator.getNext() as Window & { gBrowser: GBrowser };
+      if (win && !win.closed) {
+        windows.push(win);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  if (windows.length === 0) {
+    try {
+      windows.push(getBrowserWindow() as Window & { gBrowser: GBrowser });
+    } catch {
+      // ignore
+    }
+  }
+  return windows;
+}
+
+/**
  * TabManager class that manages browser tabs for automation and interaction.
  */
 class TabManager {
@@ -107,11 +133,14 @@ class TabManager {
     // Fallback: try to recover by scanning tabs with stored instanceId attribute.
     if (!entry) {
       try {
-        const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-        const targetTab = win.gBrowser.tabs.find((tab: BrowserTab) => {
-          const storedId = tab.getAttribute?.("data-floorp-os-instance-id");
-          return storedId === instanceId;
-        });
+        let targetTab: BrowserTab | undefined;
+        for (const win of getBrowserWindows()) {
+          targetTab = win.gBrowser.tabs.find((tab: BrowserTab) => {
+            const storedId = tab.getAttribute?.("data-floorp-os-instance-id");
+            return storedId === instanceId;
+          });
+          if (targetTab) break;
+        }
 
         if (targetTab) {
           entry = { tab: targetTab, browser: targetTab.linkedBrowser };
@@ -129,11 +158,14 @@ class TabManager {
     // Fallback: If not found in instances, check if it's a browserId of an existing tab
     if (!entry) {
       try {
-        const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-        const targetTab = win.gBrowser.tabs.find(
-          (tab: BrowserTab) =>
-            tab.linkedBrowser.browserId.toString() === instanceId,
-        );
+        let targetTab: BrowserTab | undefined;
+        for (const win of getBrowserWindows()) {
+          targetTab = win.gBrowser.tabs.find(
+            (tab: BrowserTab) =>
+              tab.linkedBrowser.browserId.toString() === instanceId,
+          );
+          if (targetTab) break;
+        }
         if (targetTab) {
           entry = { tab: targetTab, browser: targetTab.linkedBrowser };
           // Auto-register to allow subsequent calls to use this ID
@@ -152,11 +184,15 @@ class TabManager {
     // This helps when the service is reloaded and the map was lost, but the client still holds the ID.
     if (!entry) {
       try {
-        const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-        const automatedTabs = win.gBrowser.tabs.filter((tab: BrowserTab) => {
-          const flag = tab.getAttribute?.("data-floorp-os-automated");
-          return flag === "true";
-        });
+        const automatedTabs: BrowserTab[] = [];
+        for (const win of getBrowserWindows()) {
+          for (const tab of win.gBrowser.tabs) {
+            const flag = tab.getAttribute?.("data-floorp-os-automated");
+            if (flag === "true") {
+              automatedTabs.push(tab);
+            }
+          }
+        }
         if (automatedTabs.length === 1) {
           const targetTab = automatedTabs[0];
           entry = { tab: targetTab, browser: targetTab.linkedBrowser };
@@ -214,12 +250,16 @@ class TabManager {
 
   private _focusInstance(instanceId: string): void {
     try {
-      const entry = this._getInstance(instanceId);
+      const entry = this._getEntry(instanceId);
       if (!entry) {
+        console.warn(`TabManager: Instance not found for ID: ${instanceId}`);
         return;
       }
 
-      const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
+      const win =
+        (entry.browser.ownerGlobal as
+          | (Window & { gBrowser: GBrowser })
+          | null) ?? (getBrowserWindow() as Window & { gBrowser: GBrowser });
       if (win.closed) {
         return;
       }
