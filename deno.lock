@@ -5730,6 +5730,27 @@
           ]
         }
       },
+      "browser-features/pages-workflow-progress": {
+        "dependencies": [
+          "npm:vite@^7.3.0"
+        ],
+        "packageJson": {
+          "dependencies": [
+            "npm:@tailwindcss/vite@^4.1.18",
+            "npm:@types/react-dom@^19.2.3",
+            "npm:@types/react@^19.2.7",
+            "npm:@vitejs/plugin-react-swc@^4.2.2",
+            "npm:clsx@^2.1.1",
+            "npm:lucide-react@0.562",
+            "npm:react-dom@^19.2.3",
+            "npm:react@^19.2.3",
+            "npm:tailwind-merge@^3.4.0",
+            "npm:tailwindcss@^4.1.18",
+            "npm:vite-tsconfig-paths@^6.0.3",
+            "npm:vite@^7.3.0"
+          ]
+        }
+      },
       "libs/shared": {
         "dependencies": [
           "jsr:@types/gecko@*"
