@@ -364,5 +364,10 @@
       "chromeBadge": "[Chrome]",
       "compatibilityWarning": "Αυτή η επέκταση Chrome έχει μετατραπεί σε μορφή συμβατή με τον Firefox. Ορισμένες λειτουργίες ενδέχεται να μην λειτουργούν σωστά."
     }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
+    }
   }
 }

@@ -364,5 +364,10 @@
       "chromeBadge": "[Chrome]",
       "compatibilityWarning": "Detta Chrome-tillägg har konverterats till Firefox-kompatibelt format. Vissa funktioner kanske inte fungerar korrekt."
     }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
+    }
   }
 }
