@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@jsr/std__fs": "^1.0.17",
+    "@jsr/std__fs": "^1.0.20",
     "pathe": "^2.0.3"
   }
 }
