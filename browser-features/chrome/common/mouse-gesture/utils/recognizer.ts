@@ -293,6 +293,19 @@ export interface RecognitionResult {
 const MIN_MOVEMENT_DISTANCE = 15;
 
 /**
+ * Minimum distance (in pixels) to start calculating mean direction.
+ * Direction calculation begins once we've moved this far from the start.
+ */
+const DIRECTION_SAMPLE_START = 10;
+
+/**
+ * Maximum distance (in pixels) for calculating mean direction.
+ * We calculate the mean direction of points between DIRECTION_SAMPLE_START
+ * and DIRECTION_SAMPLE_END to get a more stable initial direction.
+ */
+const DIRECTION_SAMPLE_END = 50;
+
+/**
  * Calculate the distance between two points.
  */
 function distanceBetween(
@@ -305,20 +318,57 @@ function distanceBetween(
 }
 
 /**
- * Get the first significant movement direction from a mouse trail.
- * Finds the first point that is far enough from the start to determine direction.
- * Uses the shared angleToDirection() function for direction detection.
- * Returns one of 8 directions, or null if no significant movement is found.
+ * Calculate mean direction from trail points within the sampling range.
+ * Collects points between DIRECTION_SAMPLE_START and DIRECTION_SAMPLE_END
+ * and returns the mean displacement direction.
+ * 
+ * @param trail - Array of points representing the mouse trail
+ * @returns Direction based on mean displacement, or null if no valid direction found
  */
-function getTrailFirstDirection(trail: { x: number; y: number }[]): GestureDirection | null {
+function calculateMeanDirection(trail: { x: number; y: number }[]): GestureDirection | null {
   if (trail.length < 2) {
     return null;
   }
 
   const start = trail[0];
 
-  // Find the first point that is far enough to determine direction
+  // Find points in the sampling range (between DIRECTION_SAMPLE_START and DIRECTION_SAMPLE_END)
+  const sampledPoints: { x: number; y: number }[] = [];
+  
   for (let i = 1; i < trail.length; i++) {
+    const distance = distanceBetween(start, trail[i]);
+    
+    // Collect points within the sampling range
+    if (distance >= DIRECTION_SAMPLE_START && distance <= DIRECTION_SAMPLE_END) {
+      sampledPoints.push({ x: trail[i].x, y: trail[i].y });
+    }
+    
+    // Stop if we've gone past the sampling range
+    if (distance > DIRECTION_SAMPLE_END) {
+      break;
+    }
+  }
+
+  // If we have points in the sampling range, calculate mean direction
+  if (sampledPoints.length > 0) {
+    // Calculate mean displacement
+    let sumDx = 0;
+    let sumDy = 0;
+    
+    for (const point of sampledPoints) {
+      sumDx += point.x - start.x;
+      sumDy += point.y - start.y;
+    }
+    
+    const meanDx = sumDx / sampledPoints.length;
+    const meanDy = sumDy / sampledPoints.length;
+    
+    return deltaToDirection(meanDx, meanDy);
+  }
+
+  // Fallback: if trail is shorter than sampling range, use the farthest point
+  // that's at least MIN_MOVEMENT_DISTANCE away
+  for (let i = trail.length - 1; i >= 1; i--) {
     if (distanceBetween(start, trail[i]) >= MIN_MOVEMENT_DISTANCE) {
       const dx = trail[i].x - start.x;
       const dy = trail[i].y - start.y;
@@ -326,7 +376,7 @@ function getTrailFirstDirection(trail: { x: number; y: number }[]): GestureDirec
     }
   }
 
-  // If no point is far enough, use the last point
+  // Last resort: use the last point if there's any movement
   const last = trail[trail.length - 1];
   if (distanceBetween(start, last) > 0) {
     const dx = last.x - start.x;
@@ -335,6 +385,18 @@ function getTrailFirstDirection(trail: { x: number; y: number }[]): GestureDirec
   }
 
   return null;
+}
+
+/**
+ * Get the first significant movement direction from a mouse trail.
+ * Calculates the mean direction from points between DIRECTION_SAMPLE_START
+ * and DIRECTION_SAMPLE_END to filter out initial hand jitter and get
+ * a more stable, intuitive direction.
+ * Uses the shared angleToDirection() function for direction detection.
+ * Returns one of 8 directions, or null if no significant movement is found.
+ */
+function getTrailFirstDirection(trail: { x: number; y: number }[]): GestureDirection | null {
+  return calculateMeanDirection(trail);
 }
 
 /**
@@ -459,35 +521,15 @@ function isOscillatingLine(trail: { x: number; y: number }[]): OscillationResult
 
 /**
  * Get the first significant movement direction from the trail.
+ * Calculates the mean direction from points between DIRECTION_SAMPLE_START
+ * and DIRECTION_SAMPLE_END to filter out initial hand jitter and get
+ * a more stable, intuitive direction.
  * Returns one of 8 directions based on the initial movement.
  */
 function getFirstMovementDirection(
   trail: { x: number; y: number }[],
 ): GestureDirection | null {
-  if (trail.length < 2) {
-    return null;
-  }
-
-  const start = trail[0];
-
-  // Find the first point that is far enough to determine direction
-  for (let i = 1; i < trail.length; i++) {
-    if (distanceBetween(start, trail[i]) >= MIN_MOVEMENT_DISTANCE) {
-      const dx = trail[i].x - start.x;
-      const dy = trail[i].y - start.y;
-      return deltaToDirection(dx, dy);
-    }
-  }
-
-  // If no point is far enough, use the last point
-  const last = trail[trail.length - 1];
-  if (distanceBetween(start, last) > 0) {
-    const dx = last.x - start.x;
-    const dy = last.y - start.y;
-    return deltaToDirection(dx, dy);
-  }
-
-  return null;
+  return calculateMeanDirection(trail);
 }
 
 /**
@@ -577,7 +619,7 @@ export function deltaToDirection(dx: number, dy: number): GestureDirection {
  * If both dimensions are within this ratio of each other (neither dominates),
  * the movement is considered diagonal.
  */
-const DIAGONAL_RATIO_TOLERANCE = 2;
+const DIAGONAL_RATIO_TOLERANCE = 3;
 
 /**
  * Maximum ratio of path length to displacement for a gesture to be considered a straight line.
@@ -588,11 +630,107 @@ const DIAGONAL_RATIO_TOLERANCE = 2;
 const LINEARITY_RATIO_THRESHOLD = 1.5;
 
 /**
+ * Maximum angular deviation (in radians) allowed for a gesture to be considered a straight line.
+ * This is roughly 30 degrees - direction changes greater than this indicate a multi-segment gesture.
+ */
+const MAX_ANGULAR_DEVIATION = Math.PI / 6;
+
+/**
+ * Minimum segment length for angular deviation check.
+ * Segments shorter than this are ignored to filter out noise from small mouse movements.
+ */
+const MIN_SEGMENT_LENGTH_FOR_ANGLE_CHECK = 30;
+
+/**
+ * Calculate the angular difference between two angles, handling wraparound.
+ * Returns a value in the range [0, PI].
+ * 
+ * @param angle1 - First angle in radians
+ * @param angle2 - Second angle in radians
+ * @returns The absolute angular difference in radians, always in [0, PI]
+ */
+function angularDifference(angle1: number, angle2: number): number {
+  let diff = Math.abs(angle1 - angle2);
+  if (diff > Math.PI) {
+    diff = TWO_PI - diff;
+  }
+  return diff;
+}
+
+/**
+ * Check if the trail has significant direction changes that would indicate
+ * a multi-segment gesture rather than a straight line.
+ * 
+ * This function samples the trail at intervals and checks if the direction
+ * changes significantly between segments.
+ * 
+ * @param trail - Array of points representing the mouse trail
+ * @returns true if a significant direction change is detected
+ */
+function hasSignificantDirectionChange(trail: { x: number; y: number }[]): boolean {
+  if (trail.length < 3) {
+    return false;
+  }
+
+  // Find the first significant movement from the start
+  let firstSegmentEnd = -1;
+  for (let i = 1; i < trail.length; i++) {
+    if (distanceBetween(trail[0], trail[i]) >= MIN_SEGMENT_LENGTH_FOR_ANGLE_CHECK) {
+      firstSegmentEnd = i;
+      break;
+    }
+  }
+  
+  // Need at least one point after firstSegmentEnd to form a second segment
+  if (firstSegmentEnd === -1 || firstSegmentEnd >= trail.length - 1) {
+    return false;
+  }
+
+  // Calculate the initial direction angle
+  const initialDx = trail[firstSegmentEnd].x - trail[0].x;
+  const initialDy = trail[firstSegmentEnd].y - trail[0].y;
+  const initialAngle = Math.atan2(initialDy, initialDx);
+
+  // Check remaining segments for direction changes
+  let currentPos = firstSegmentEnd;
+  
+  while (currentPos < trail.length - 1) {
+    // Find the next significant movement
+    let nextSegmentEnd = -1;
+    for (let i = currentPos + 1; i < trail.length; i++) {
+      if (distanceBetween(trail[currentPos], trail[i]) >= MIN_SEGMENT_LENGTH_FOR_ANGLE_CHECK) {
+        nextSegmentEnd = i;
+        break;
+      }
+    }
+    
+    if (nextSegmentEnd === -1) {
+      break;
+    }
+
+    // Calculate the direction angle of this segment
+    const segmentDx = trail[nextSegmentEnd].x - trail[currentPos].x;
+    const segmentDy = trail[nextSegmentEnd].y - trail[currentPos].y;
+    const segmentAngle = Math.atan2(segmentDy, segmentDx);
+
+    // If the angle changed significantly, this is not a straight line
+    if (angularDifference(segmentAngle, initialAngle) > MAX_ANGULAR_DEVIATION) {
+      return true;
+    }
+
+    currentPos = nextSegmentEnd;
+  }
+
+  return false;
+}
+
+/**
  * Check if the trail is a straight line (movement in a consistent direction).
  * A line is considered straight if:
  * - One axis dominates the movement (cardinal direction), OR
  * - Both axes are similar in magnitude (diagonal direction)
  * - The path length is close to the displacement (no loops or major deviations)
+ * - There are no significant direction changes during the gesture
  *
  * The total displacement must also exceed the minimum movement distance.
  */
@@ -634,6 +772,13 @@ function isStraightLine(trail: { x: number; y: number }[]): boolean {
   // This catches cases like [down, circle, down] where displacement looks straight
   // but the actual path is much longer due to the circle
   if (pathLength > displacement * LINEARITY_RATIO_THRESHOLD) {
+    return false;
+  }
+
+  // Check for significant direction changes during the gesture
+  // This catches cases like [upRight, right] where the overall displacement looks diagonal
+  // but the gesture has a clear direction change
+  if (hasSignificantDirectionChange(trail)) {
     return false;
   }
 
