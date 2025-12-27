@@ -1,120 +1,112 @@
- // @ts-nocheck
+// @ts-nocheck
 // eslint-disable no-unsafe-optional-chaining
-// deno-lint-ignore-file no-window
 import type { GestureActionRegistration } from "./gestures.ts";
 
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
-    fn: () =>
-      (document?.getElementById("back-button") as XULElement).doCommand(),
+    fn: (win) =>
+      (win.document?.getElementById("back-button") as XULElement).doCommand(),
   },
   {
     name: "gecko-forward",
-    fn: () =>
-      (document?.getElementById("forward-button") as XULElement).doCommand(),
+    fn: (win) =>
+      (win.document?.getElementById("forward-button") as XULElement).doCommand(),
   },
   {
     name: "gecko-reload",
-    fn: () =>
-      (document?.getElementById("reload-button") as XULElement).doCommand(),
+    fn: (win) =>
+      (win.document?.getElementById("reload-button") as XULElement).doCommand(),
   },
   {
     name: "gecko-close-tab",
-    fn: () => window.gBrowser.removeTab(window.gBrowser.selectedTab),
+    fn: (win) => win.gBrowser.removeTab(win.gBrowser.selectedTab),
   },
   {
     name: "gecko-open-new-tab",
-    fn: () =>
+    fn: (win) =>
       (
-        document?.getElementById("tabs-newtab-button") as XULElement
+        win.document?.getElementById("tabs-newtab-button") as XULElement
       ).doCommand(),
   },
   {
     name: "gecko-duplicate-tab",
-    fn: () => window.gBrowser.duplicateTab(window.gBrowser.selectedTab),
+    fn: (win) => win.gBrowser.duplicateTab(win.gBrowser.selectedTab),
   },
   {
     name: "gecko-reload-all-tabs",
-    fn: () => window.gBrowser.reloadAllTabs(),
+    fn: (win) => win.gBrowser.reloadAllTabs(),
   },
   {
     name: "gecko-open-new-window",
-    fn: () => window.OpenBrowserWindow(),
+    fn: (win) => win.OpenBrowserWindow(),
   },
   {
     name: "gecko-open-new-private-window",
-    fn: () => window.OpenBrowserWindow({ private: true }),
+    fn: (win) => win.OpenBrowserWindow({ private: true }),
   },
   {
     name: "gecko-close-window",
-    fn: () => window.close(),
+    fn: (win) => win.close(),
   },
   {
     name: "gecko-restore-last-window",
-    fn: () => window.SessionWindowUI.undoCloseWindow(0),
+    fn: (win) => win.SessionWindowUI.undoCloseWindow(0),
   },
   {
     name: "gecko-show-next-tab",
-    fn: () => window.gBrowser.tabContainer.advanceSelectedTab(1, true),
+    fn: (win) => win.gBrowser.tabContainer.advanceSelectedTab(1, true),
   },
   {
     name: "gecko-show-previous-tab",
-    fn: () => window.gBrowser.tabContainer.advanceSelectedTab(-1, true),
+    fn: (win) => win.gBrowser.tabContainer.advanceSelectedTab(-1, true),
   },
   {
     name: "gecko-show-all-tabs-panel",
-    fn: () => window.gTabsPanel.showAllTabsPanel(),
+    fn: (win) => win.gTabsPanel.showAllTabsPanel(),
   },
   {
     name: "gecko-force-reload",
-    fn: () => window.BrowserReloadSkipCache(),
+    fn: (win) => win.BrowserReloadSkipCache(),
   },
   {
     name: "gecko-zoom-in",
-    fn: () => window.FullZoom.enlarge(),
+    fn: (win) => win.FullZoom.enlarge(),
   },
   {
     name: "gecko-zoom-out",
-    fn: () => window.FullZoom.reduce(),
+    fn: (win) => win.FullZoom.reduce(),
   },
   {
     name: "gecko-reset-zoom",
-    fn: () => window.FullZoom.reset(),
+    fn: (win) => win.FullZoom.reset(),
   },
   {
     name: "gecko-bookmark-this-page",
-    fn: () => window.PlacesCommandHook.bookmarkPage(),
+    fn: (win) => win.PlacesCommandHook.bookmarkPage(),
   },
   {
     name: "gecko-open-home-page",
-    fn: () =>
-      window.switchToTabHavingURI(
+    fn: (win) =>
+      win.switchToTabHavingURI(
         Services.prefs.getStringPref("browser.startup.homepage"),
         true,
       ),
   },
   {
     name: "gecko-open-addons-manager",
-    fn: () => window.BrowserOpenAddonsMgr(),
+    fn: (win) => win.BrowserOpenAddonsMgr(),
   },
   {
     name: "gecko-restore-last-tab",
-    fn: () => {
+    fn: (win) => {
       try {
-        const BROWSER_WINDOW_TYPE = "navigator:browser";
-        const browserWindow = Services.wm.getMostRecentWindow(
-          BROWSER_WINDOW_TYPE,
-        ) as Window | null;
-
-        if (browserWindow?.undoCloseTab) {
-          browserWindow.undoCloseTab();
+        if (win?.undoCloseTab) {
+          win.undoCloseTab();
           return;
         }
 
-        const fallbackDocument =
-          browserWindow?.document ?? globalThis.document ?? null;
-        const undoMenuItem = fallbackDocument?.getElementById(
+        const undoMenuItem = win.document?.getElementById(
           "toolbar-context-undoCloseTab",
         );
 
@@ -128,189 +120,189 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-send-with-mail",
-    fn: () =>
-      window.MailIntegration.sendLinkForBrowser(
-        window.gBrowser.selectedBrowser,
+    fn: (win) =>
+      win.MailIntegration.sendLinkForBrowser(
+        win.gBrowser.selectedBrowser,
       ),
   },
   {
     name: "gecko-save-page",
-    fn: () => window.saveBrowser(window.gBrowser.selectedBrowser),
+    fn: (win) => win.saveBrowser(win.gBrowser.selectedBrowser),
   },
   {
     name: "gecko-print-page",
-    fn: () =>
-      window.PrintUtils.startPrintWindow(
-        window.gBrowser.selectedBrowser.browsingContext,
+    fn: (win) =>
+      win.PrintUtils.startPrintWindow(
+        win.gBrowser.selectedBrowser.browsingContext,
       ),
   },
   {
     name: "gecko-mute-current-tab",
-    fn: () =>
-      window.gBrowser.toggleMuteAudioOnMultiSelectedTabs(
-        window.gBrowser.selectedTab,
+    fn: (win) =>
+      win.gBrowser.toggleMuteAudioOnMultiSelectedTabs(
+        win.gBrowser.selectedTab,
       ),
   },
   {
     name: "gecko-show-source-of-page",
-    fn: () => window.BrowserViewSource(window.gBrowser.selectedBrowser),
+    fn: (win) => win.BrowserViewSource(win.gBrowser.selectedBrowser),
   },
   {
     name: "gecko-show-page-info",
-    fn: () => window.BrowserPageInfo(),
+    fn: (win) => win.BrowserPageInfo(),
   },
   {
     name: "floorp-rest-mode",
-    fn: () => window.gFloorpCommands.enableRestMode(),
+    fn: (win) => win.gFloorpCommands.enableRestMode(),
   },
   {
     name: "floorp-hide-user-interface",
-    fn: () => window.gFloorpDesign.hideUserInterface(),
+    fn: (win) => win.gFloorpDesign.hideUserInterface(),
   },
   {
     name: "floorp-toggle-navigation-panel",
-    fn: () => window.gFloorpDesign.toggleNavigationPanel(),
+    fn: (win) => win.gFloorpDesign.toggleNavigationPanel(),
   },
   {
     name: "gecko-stop",
-    fn: () => window.gBrowser.selectedBrowser.stop(),
+    fn: (win) => win.gBrowser.selectedBrowser.stop(),
   },
   {
     name: "gecko-search-in-this-page",
-    fn: () => window.gLazyFindCommand("onFindCommand"),
+    fn: (win) => win.gLazyFindCommand("onFindCommand"),
   },
   {
     name: "gecko-show-next-search-result",
-    fn: () => window.gLazyFindCommand("onFindAgainCommand", false),
+    fn: (win) => win.gLazyFindCommand("onFindAgainCommand", false),
   },
   {
     name: "gecko-show-previous-search-result",
-    fn: () => window.gLazyFindCommand("onFindAgainCommand", true),
+    fn: (win) => win.gLazyFindCommand("onFindAgainCommand", true),
   },
   {
     name: "gecko-search-the-web",
-    fn: () => window.BrowserSearch.webSearch(),
+    fn: (win) => win.BrowserSearch.webSearch(),
   },
   {
     name: "gecko-open-migration-wizard",
-    fn: () =>
-      window.MigrationUtils.showMigrationWizard(window, {
-        entrypoint: window.MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU,
+    fn: (win) =>
+      win.MigrationUtils.showMigrationWizard(win, {
+        entrypoint: win.MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU,
       }),
   },
   {
     name: "gecko-quit-from-application",
-    fn: () => window.Services.startup.quit(window.Ci.nsIAppStartup.eForceQuit),
+    fn: (win) => win.Services.startup.quit(win.Ci.nsIAppStartup.eForceQuit),
   },
   {
     name: "gecko-enter-into-customize-mode",
-    fn: () => window.gCustomizeMode.enter(),
+    fn: (win) => win.gCustomizeMode.enter(),
   },
   {
     name: "gecko-enter-into-offline-mode",
-    fn: () => window.BrowserOffline.toggleOfflineStatus(),
+    fn: (win) => win.BrowserOffline.toggleOfflineStatus(),
   },
   {
     name: "gecko-open-screen-capture",
-    fn: () => window.ScreenshotsUtils.start(window.gBrowser.selectedBrowser),
+    fn: (win) => win.ScreenshotsUtils.start(win.gBrowser.selectedBrowser),
   },
   {
     name: "floorp-show-pip",
-    fn: () =>
+    fn: (win) =>
       (
-        document?.getElementById("picture-in-picture-button") as XULElement
+        win.document?.getElementById("picture-in-picture-button") as XULElement
       ).click(),
   },
   {
     name: "gecko-restore-last-tab",
-    fn: () => window.SessionStore.undoCloseTab(window, 0),
+    fn: (win) => win.SessionStore.undoCloseTab(win, 0),
   },
   {
     name: "gecko-open-sync-preferences",
-    fn: () => window.openPreferences("paneSync"),
+    fn: (win) => win.openPreferences("paneSync"),
   },
   {
     name: "gecko-open-task-manager",
-    fn: () => window.switchToTabHavingURI("about:processes", true),
+    fn: (win) => win.switchToTabHavingURI("about:processes", true),
   },
   {
     name: "gecko-forget-history",
-    fn: () => window.Sanitizer.showUI(window),
+    fn: (win) => win.Sanitizer.showUI(win),
   },
   {
     name: "gecko-quick-forget-history",
-    fn: () => window.PlacesUtils.history.clear(true),
+    fn: (win) => win.PlacesUtils.history.clear(true),
   },
   {
     name: "gecko-restore-last-session",
-    fn: () => window.SessionStore.restoreLastSession(),
+    fn: (win) => win.SessionStore.restoreLastSession(),
   },
   {
     name: "gecko-search-history",
-    fn: () => window.PlacesCommandHook.searchHistory(),
+    fn: (win) => win.PlacesCommandHook.searchHistory(),
   },
   {
     name: "gecko-manage-history",
-    fn: () => window.PlacesCommandHook.showPlacesOrganizer("History"),
+    fn: (win) => win.PlacesCommandHook.showPlacesOrganizer("History"),
   },
   {
     name: "gecko-open-downloads",
-    fn: () => window.DownloadsPanel.showDownloadsHistory(),
+    fn: (win) => win.DownloadsPanel.showDownloadsHistory(),
   },
   {
     name: "gecko-show-bookmark-sidebar",
-    fn: () => window.SidebarController.show("viewBookmarksSidebar"),
+    fn: (win) => win.SidebarController.show("viewBookmarksSidebar"),
   },
   {
     name: "gecko-show-history-sidebar",
-    fn: () => window.SidebarController.show("viewHistorySidebar"),
+    fn: (win) => win.SidebarController.show("viewHistorySidebar"),
   },
   {
     name: "gecko-show-synced-tabs-sidebar",
-    fn: () => window.SidebarController.show("viewTabsSidebar"),
+    fn: (win) => win.SidebarController.show("viewTabsSidebar"),
   },
   {
     name: "gecko-reverse-sidebar",
-    fn: () => window.SidebarController.reversePosition(),
+    fn: (win) => win.SidebarController.reversePosition(),
   },
   {
     name: "gecko-hide-sidebar",
-    fn: () => window.SidebarController.hide(),
+    fn: (win) => win.SidebarController.hide(),
   },
   {
     name: "gecko-toggle-sidebar",
-    fn: () => window.SidebarController.toggle(),
+    fn: (win) => win.SidebarController.toggle(),
   },
   {
     name: "gecko-scroll-up",
-    fn: () => window.goDoCommand("cmd_scrollPageUp"),
+    fn: (win) => win.goDoCommand("cmd_scrollPageUp"),
   },
   {
     name: "gecko-scroll-down",
-    fn: () => window.goDoCommand("cmd_scrollPageDown"),
+    fn: (win) => win.goDoCommand("cmd_scrollPageDown"),
   },
   {
     name: "gecko-scroll-right",
-    fn: () => window.goDoCommand("cmd_scrollRight"),
+    fn: (win) => win.goDoCommand("cmd_scrollRight"),
   },
   {
     name: "gecko-scroll-left",
-    fn: () => window.goDoCommand("cmd_scrollLeft"),
+    fn: (win) => win.goDoCommand("cmd_scrollLeft"),
   },
   {
     name: "gecko-scroll-to-top",
-    fn: () => window.goDoCommand("cmd_scrollTop"),
+    fn: (win) => win.goDoCommand("cmd_scrollTop"),
   },
   {
     name: "gecko-scroll-to-bottom",
-    fn: () => window.goDoCommand("cmd_scrollBottom"),
+    fn: (win) => win.goDoCommand("cmd_scrollBottom"),
   },
   {
     name: "gecko-workspace-next",
-    fn: () => window.workspacesFuncs.changeWorkspaceToNext(),
+    fn: (win) => win.workspacesFuncs.changeWorkspaceToNext(),
   },
   {
     name: "gecko-workspace-previous",
-    fn: () => window.workspacesFuncs.changeWorkspaceToPrevious(),
+    fn: (win) => win.workspacesFuncs.changeWorkspaceToPrevious(),
   },
 ];
