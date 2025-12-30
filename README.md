@@ -179,6 +179,8 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 🧰 How to Start Development
 
+To build and run Floorp, follow the [Building section of the documentation](https://docs.floorp.app/docs/building/).
+=======
 Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
 
 Prerequisites:
