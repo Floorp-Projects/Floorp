@@ -4,9 +4,8 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
-import deno from "@deno/vite-plugin";
 import swc from "unplugin-swc";
-import { genJarmnPlugin } from "@nora/vite-plugin-gen-jarmn";
+import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -46,7 +45,7 @@ export default defineConfig({
       output: {
         esModule: true,
         entryFileNames: "[name].js",
-        manualChunks(id, meta) {
+        manualChunks(id, _meta) {
           if (id.includes("node_modules")) {
             const arr_module_name = id
               .toString()
@@ -77,7 +76,7 @@ export default defineConfig({
           }
           return "assets/[name][extname]";
         },
-        chunkFileNames(chunkInfo) {
+        chunkFileNames(_chunkInfo) {
           return "assets/js/[name].js";
         },
       },
@@ -119,7 +118,7 @@ export default defineConfig({
       name: "noraneko_component_hmr_support",
       enforce: "pre",
       apply: "serve",
-      transform(code, id, options) {
+      transform(code, _id, _options) {
         if (
           code.includes("\n@noraComponent") &&
           !code.includes("//@nora-only-dispose")

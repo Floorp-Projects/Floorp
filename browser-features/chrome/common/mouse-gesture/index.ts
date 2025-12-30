@@ -5,6 +5,7 @@
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { mouseGestureService } from "./service.ts";
+
 export { mouseGestureService } from "./service.ts";
 export type {
   GestureAction,
@@ -29,5 +30,6 @@ export default class MouseGesture extends NoraComponentBase {
   init(): void {
     const ctx = mouseGestureService;
     MouseGesture.ctx = ctx;
+    ctx.attachToWindow(window);
   }
 }

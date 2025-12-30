@@ -1,9 +1,12 @@
-## Welcome to Floorp Browser GitHub Repository 👋
+# Floorp Browser
+
+A browser built for keeping the Open, Private and Sustainable Web alive. Based on Mozilla Firefox.
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
+[![License][license-shield]][license-url]
 [![Crowdin](https://badges.crowdin.net/floorp-browser/localized.svg)](https://crowdin.com/project/floorp-browser)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Floorp-Projects/Floorp)
 
@@ -17,9 +20,9 @@
 [stars-shield]: https://img.shields.io/github/stars/Floorp-Projects/Floorp.svg?style=for-the-badge
 [stars-url]: https://github.com/Floorp-Projects/Floorp/stargazers
 [issues-shield]: https://img.shields.io/github/issues/Floorp-Projects/Floorp.svg?style=for-the-badge
-[issues-url]: https://github.com/Floorp-Projects/Floorp-Projects/issues
+[issues-url]: https://github.com/Floorp-Projects/Floorp/issues
 [license-shield]: https://img.shields.io/github/license/Floorp-Projects/Floorp.svg?style=for-the-badge
-[license-url]: https://github.com/Floorp-Projects/Floorp/blob/master/LICENSE
+[license-url]: https://github.com/Floorp-Projects/Floorp/blob/main/LICENSE
 
 <!-- PROJECT LOGO -->
 <br />
@@ -31,12 +34,12 @@
   <h3 align="center">Floorp Browser </h3>
 
   <p align="center">
-       A Browser built for keeping the Open, Private and Sustainable Web alive. Based on Mozilla Firefox.
+    A browser built for keeping the Open, Private and Sustainable Web alive. Based on Mozilla Firefox.
     <br />
     <br />
     <a href="https://floorp.app">Official Site</a>
     ・
-    <a href="#-download---install">Download</a>
+    <a href="#-download--install">Download</a>
     ・
     <a href="https://blog.floorp.app">Blog & Release Notes</a>
     ・
@@ -58,6 +61,14 @@ Floorp Browser is a free and open-source project. If you like Floorp Browser, pl
     <img src="https://avatars.githubusercontent.com/u/346808?s=200&v=4" alt="CubeSoft, Inc." width="100" height="100">
     <h4 style="text-align: center;">CubeSoft, Inc.</h4>
   </a>
+  <a href="https://1password.com/" style="margin: 10px; overflow: hidden; padding: 0px 30px;">
+    <img src="https://avatars.githubusercontent.com/1Password?s=200&v=4" alt="1Password" width="100" height="100">
+    <h4 style="text-align: center;">1Password</h4>
+  </a>
+  <a href="https://signpath.io/" style="margin: 10px; overflow: hidden; padding: 0px 30px;">
+    <img src="https://avatars.githubusercontent.com/SignPath?s=200&v=4" alt="SignPath" width="100" height="100">
+    <h4 style="text-align: center;">SignPath</h4>
+  </a>
 </div>
 
 ## ⚡ Get Started
@@ -72,7 +83,7 @@ Floorp Browser is available for Windows, macOS, and Linux. You can install it by
 
 - x86_64 CPU architecture. AArch64 is not supported.
 
-- Floorp provides "exe" installer, "Winget" and "Scoop" install.
+- Floorp provides a `.exe` installer, `winget`, and `Scoop` installation options.
 
 Winget install command:
 
@@ -113,23 +124,16 @@ brew install --cask floorp
 
 - x86_64 & AArch64 CPU architecture.
 
-- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/firefox/138.0.1/system-requirements/#gnulinux)
+- Floorp Browser Requirements: [Firefox system requirements](https://www.mozilla.org/firefox/system-requirements/)
 
-- List of supported package managers:
+Supported package managers:
 
-```md
-1. PPA (Ubuntu, Linux Mint, etc.) "https://ppa.floorp.app"
-
-2. Flatpak (Most Linux Distributions) "https://flathub.org/apps/one.ablaze.floorp"
-
-3. tarball (Most Linux Distributions) "https://GitHub.com/Floorp-Projects/Floorp/releases/latest"
-
-4. AUR bin (Arch-based Distributions) "https://aur.archlinux.org/packages/floorp-bin/" **Unofficial**
-
-5. AUR (Arch-based Distributions) "https://aur.archlinux.org/packages/floorp/" **Unofficial**
-
-6. SBo bin (Slackware-based Distributions) "https://slackbuilds.org/repository/15.0/network/floorp-bin/" **Unofficial**
-```
+- PPA (Ubuntu, Linux Mint, etc.): https://ppa.floorp.app
+- Flatpak (most Linux distributions): https://flathub.org/apps/one.ablaze.floorp
+- Tarball (most Linux distributions): https://github.com/Floorp-Projects/Floorp/releases/latest
+- AUR bin (Arch-based distributions): https://aur.archlinux.org/packages/floorp-bin/ **Unofficial**
+- AUR (Arch-based distributions): https://aur.archlinux.org/packages/floorp/ **Unofficial**
+- SBo bin (Slackware-based distributions): https://slackbuilds.org/repository/15.0/network/floorp-bin/ **Unofficial**
 
 ### 📥 Download & 📦 Install
 
@@ -176,6 +180,48 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 ### 🧰 How to Start Development
 
 To build and run Floorp, follow the [Building section of the documentation](https://docs.floorp.app/docs/building/).
+=======
+Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
+
+Prerequisites:
+
+- Deno (2.x recommended)
+- Node.js + pnpm may be required for some sub-projects (e.g. installers)
+
+#### Windows
+
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Install PowerShell 7 (recommended: [Winget](https://winget.run/pkg/Microsoft/PowerShell))
+3. Clone this repository.
+4. Run `deno task feles-build dev` in the root directory.
+5. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
+   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
+
+Notes:
+
+- The first run may download runtime artifacts and take a while.
+
+#### GNU/Linux
+
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Clone this repository.
+3. Run `deno task feles-build dev` in the root directory.
+4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
+   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
+
+#### macOS
+
+1. Install `deno` from [https://deno.land/](https://deno.land/)
+2. Clone this repository.
+3. Run `deno task feles-build dev` in the root directory.
+4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
+   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
+
+#### Other useful commands
+
+- `deno task feles-build stage` (build production assets, run browser in dev mode)
+- `deno task feles-build build --phase before-mach` (production assets step)
+- `deno task feles-build build --phase after-mach` (post-build injection step)
 
 ### 🐛 Reporting Bugs
 
@@ -221,7 +267,7 @@ Notice: if you are a developer of "userChromeCSS Loader", please contact us so t
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
 
-Notice: If you are a developer of "showdown" and your name is not listed, please contact us so that we can add your name and website to the list.
+Notice: If you are a maintainer of any listed component and your name or license is missing or incorrect, please contact us.
 
 ### 📦 Fushra Pulse
 

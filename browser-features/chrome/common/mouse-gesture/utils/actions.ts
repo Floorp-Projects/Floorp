@@ -1,3 +1,4 @@
+ // @ts-nocheck
 // eslint-disable no-unsafe-optional-chaining
 // deno-lint-ignore-file no-window
 import type { GestureActionRegistration } from "./gestures.ts";
@@ -38,29 +39,6 @@ export const actions: GestureActionRegistration[] = [
     fn: () => window.gBrowser.reloadAllTabs(),
   },
   {
-    name: "gecko-restore-last-tab",
-    fn: () => {
-      try {
-        const BROWSER_WINDOW_TYPE = "navigator:browser";
-        const browserWindow = Services.wm.getMostRecentWindow(
-          BROWSER_WINDOW_TYPE,
-        ) as Window | null;
-
-        const fallbackDocument =
-          browserWindow?.document ?? globalThis.document ?? null;
-        const undoMenuItem = fallbackDocument?.getElementById(
-          "toolbar-context-undoCloseTab",
-        );
-
-        if (undoMenuItem instanceof XULElement) {
-          undoMenuItem.doCommand();
-        }
-      } catch (error) {
-        console.error("[mouse-gesture] Failed to trigger undoCloseTab:", error);
-      }
-    },
-  },
-  {
     name: "gecko-open-new-window",
     fn: () => window.OpenBrowserWindow(),
   },
@@ -70,7 +48,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-close-window",
-    fn: () => window.BrowserTryToCloseWindow(),
+    fn: () => window.close(),
   },
   {
     name: "gecko-restore-last-window",
@@ -106,16 +84,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-bookmark-this-page",
-    fn: () =>
-      window.BrowserPageActions.doCommandForAction(
-        window.PageActions.actionForID("bookmark"),
-        null,
-        window,
-      ),
+    fn: () => window.PlacesCommandHook.bookmarkPage(),
   },
   {
     name: "gecko-open-home-page",
-    fn: () => window.BrowserHome(),
+    fn: () =>
+      window.switchToTabHavingURI(
+        Services.prefs.getStringPref("browser.startup.homepage"),
+        true,
+      ),
   },
   {
     name: "gecko-open-addons-manager",
@@ -196,7 +173,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-stop",
-    fn: () => window.BrowserStop(),
+    fn: () => window.gBrowser.selectedBrowser.stop(),
   },
   {
     name: "gecko-search-in-this-page",
@@ -245,32 +222,8 @@ export const actions: GestureActionRegistration[] = [
       ).click(),
   },
   {
-    name: "gecko-open-bookmark-add-tool",
-    fn: () => window.PlacesCommandHook.bookmarkPage(),
-  },
-  {
-    name: "gecko-open-bookmarks-manager",
-    fn: () => window.SidebarController.toggle("viewBookmarksSidebar"),
-  },
-  {
-    name: "gecko-toggle-bookmark-toolbar",
-    fn: () => window.BookmarkingUI.toggleBookmarksToolbar("bookmark-tools"),
-  },
-  {
-    name: "gecko-open-general-preferences",
-    fn: () => window.openPreferences(),
-  },
-  {
-    name: "gecko-open-privacy-preferences",
-    fn: () => window.openPreferences("panePrivacy"),
-  },
-  {
-    name: "gecko-open-containers-preferences",
-    fn: () => window.openPreferences("paneContainers"),
-  },
-  {
-    name: "gecko-open-search-preferences",
-    fn: () => window.openPreferences("paneSearch"),
+    name: "gecko-restore-last-tab",
+    fn: () => window.SessionStore.undoCloseTab(window, 0),
   },
   {
     name: "gecko-open-sync-preferences",

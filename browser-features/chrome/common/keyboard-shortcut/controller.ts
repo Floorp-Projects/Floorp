@@ -17,24 +17,25 @@ export class KeyboardShortcutController {
     shift: false,
   };
 
-  constructor() {
+  private targetWindow: Window;
+
+  constructor(win: Window = globalThis as unknown as Window) {
+    this.targetWindow = win;
     this.init();
   }
 
   private init(): void {
     if (this.eventListenersAttached) return;
 
-    if (typeof globalThis !== "undefined") {
-      globalThis.addEventListener("keydown", this.handleKeyDown);
-      globalThis.addEventListener("keyup", this.handleKeyUp);
-      this.eventListenersAttached = true;
-    }
+    this.targetWindow.addEventListener("keydown", this.handleKeyDown);
+    this.targetWindow.addEventListener("keyup", this.handleKeyUp);
+    this.eventListenersAttached = true;
   }
 
   public destroy(): void {
-    if (typeof globalThis !== "undefined" && this.eventListenersAttached) {
-      globalThis.removeEventListener("keydown", this.handleKeyDown);
-      globalThis.removeEventListener("keyup", this.handleKeyUp);
+    if (this.eventListenersAttached) {
+      this.targetWindow.removeEventListener("keydown", this.handleKeyDown);
+      this.targetWindow.removeEventListener("keyup", this.handleKeyUp);
       this.eventListenersAttached = false;
     }
     this.resetState();

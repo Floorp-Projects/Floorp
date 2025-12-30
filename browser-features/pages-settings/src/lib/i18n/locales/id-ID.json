@@ -339,19 +339,19 @@
             "lastUpdated": "Terakhir diperbarui:"
         },
         "availableFlascos": {
-            "title": "Available Flascos",
-            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
-            "noExperiments": "No experiments available.",
-            "rollout": "Rollout: {{percentage}}%",
-            "forceEnroll": "Enroll",
-            "forceEnrolled": "Enrolled",
+            "title": "Flasco Tersedia",
+            "description": "Semua Flasco yang tersedia untuk versi {{productName}} Anda. Beberapa mungkin tidak tersedia karena batas peluncuran.",
+            "noExperiments": "Tidak ada eksperimen yang tersedia.",
+            "rollout": "Peuncuran: {{percentage}}%",
+            "forceEnroll": "Daftar",
+            "forceEnrolled": "Terdaftar",
             "removeForceEnrollment": "Remove Override",
             "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
             "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
             "status": {
-                "enrolled": "Enrolled",
+                "enrolled": "Terdaftar",
                 "not_in_rollout": "Not in rollout",
-                "force_enrolled": "Enrolled",
+                "force_enrolled": "Terdaftar",
                 "disabled": "Nonaktif",
                 "control": "Control"
             }
@@ -513,8 +513,6 @@
         "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
         "preventionTimeout": "Right-click suppression time",
         "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
-        "minDirectionChangeDistance": "Direction change detection distance",
-        "minDirectionChangeDistanceDescription": "Minimum distance to detect a direction change",
         "trailSettings": "Trail Settings",
         "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Lebak jejak",

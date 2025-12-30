@@ -1,7 +1,7 @@
 {
-  "name": "@nora/vite-plugin-gen-jarmn",
+  "name": "vite-plugin-gen-jarmn",
   "imports": {
-    "rolldown": "npm:rolldown@^1.0.0-beta.32"
+    "rolldown": "npm:rolldown@^1.0.0-beta.57"
   },
   "exports": "./plugin.ts"
 }

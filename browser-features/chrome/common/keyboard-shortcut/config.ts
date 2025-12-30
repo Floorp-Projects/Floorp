@@ -33,6 +33,38 @@ export const defaultConfig: KeyboardShortcutConfig = {
 
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
+const normalizeConfig = (
+  config: Record<string, unknown>,
+): KeyboardShortcutConfig => {
+  return {
+    ...defaultConfig,
+    ...config,
+    shortcuts:
+      (config?.shortcuts as Record<string, ShortcutConfig> | undefined) ??
+      defaultConfig.shortcuts,
+  } as KeyboardShortcutConfig;
+};
+
+const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
+  try {
+    const parsed = JSON.parse(jsonStr);
+    const result = zKeyboardShortcutConfig.decode(parsed);
+    if (isRight(result)) {
+      return normalizeConfig(result.right);
+    }
+    console.warn(
+      "Keyboard shortcut configuration validation failed, attempting to recover partial data",
+    );
+    return normalizeConfig(parsed);
+  } catch (e) {
+    console.error(
+      "Failed to parse keyboard shortcut configuration JSON, using default",
+      e,
+    );
+    return defaultConfig;
+  }
+};
+
 function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   const [enabled, setEnabled] = createSignal(
     Services.prefs.getBoolPref(
@@ -78,17 +110,13 @@ function createConfig(): [
     );
   }
 
-  const parsedConfig = zKeyboardShortcutConfig.decode(
-    JSON.parse(
+  const [config, setConfig] = createSignal<KeyboardShortcutConfig>(
+    parseConfig(
       Services.prefs.getStringPref(
         KEYBOARD_SHORTCUT_CONFIG_PREF,
         strDefaultConfig,
       ),
     ),
-  );
-
-  const [config, setConfig] = createSignal<KeyboardShortcutConfig>(
-    isRight(parsedConfig) ? parsedConfig.right : defaultConfig,
   );
 
   createEffect(() => {
@@ -99,26 +127,14 @@ function createConfig(): [
   });
 
   const configObserver = () => {
-    try {
-      const result = zKeyboardShortcutConfig.decode(
-        JSON.parse(
-          Services.prefs.getStringPref(
-            KEYBOARD_SHORTCUT_CONFIG_PREF,
-            strDefaultConfig,
-          ),
+    setConfig(
+      parseConfig(
+        Services.prefs.getStringPref(
+          KEYBOARD_SHORTCUT_CONFIG_PREF,
+          strDefaultConfig,
         ),
-      );
-      if (isRight(result)) {
-        setConfig(result.right);
-      }
-    } catch (e) {
-      console.error("Failed to parse keyboard shortcut configuration:", e);
-      setConfig(defaultConfig);
-      Services.prefs.setStringPref(
-        KEYBOARD_SHORTCUT_CONFIG_PREF,
-        strDefaultConfig,
-      );
-    }
+      ),
+    );
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_CONFIG_PREF, configObserver);

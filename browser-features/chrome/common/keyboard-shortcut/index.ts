@@ -29,5 +29,6 @@ export default class KeyboardShortcut extends NoraComponentBase {
   init(): void {
     const ctx = keyboardShortcutService;
     KeyboardShortcut.ctx = ctx;
+    ctx.attachToWindow(window);
   }
 }

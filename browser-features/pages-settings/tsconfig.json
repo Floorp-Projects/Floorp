@@ -8,7 +8,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      
+      "#libs/*": ["../../libs/*"]
     },
     "types": ["vite/client"],
     "jsx": "react-jsx"

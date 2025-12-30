@@ -364,5 +364,10 @@
       "chromeBadge": "[Chrome]",
       "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
     }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
+    }
   }
 }

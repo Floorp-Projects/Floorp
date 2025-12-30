@@ -364,5 +364,10 @@
       "chromeBadge": "[Chrome]",
       "compatibilityWarning": "この Chrome 拡張機能は Firefox 互換形式に変換されています。一部の機能は正しく動作しない可能性があります。"
     }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
+    }
   }
 }

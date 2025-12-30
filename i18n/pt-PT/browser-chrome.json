@@ -364,5 +364,10 @@
       "chromeBadge": "[Chrome]",
       "compatibilityWarning": "Esta extensão do Chrome foi convertida para um formato compatível com o Firefox. Algumas funcionalidades podem não funcionar corretamente."
     }
+  },
+  "hub": {
+    "menu": {
+      "title": "Hub Floorp"
+    }
   }
 }
