@@ -1,5 +1,5 @@
 import { forwardRef, type ChangeEvent } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 interface SeekbarProps {
     label?: string;
