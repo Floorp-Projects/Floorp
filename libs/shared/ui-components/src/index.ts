@@ -8,4 +8,19 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbPage, BreadcrumbSeparator } from "./components/breadcrumb";
 export { Switch } from "./components/switch";
 export { Seekbar } from "./components/seekbar";
+export { 
+  Sidebar, 
+  SidebarHeader, 
+  SidebarContent, 
+  SidebarFooter, 
+  SidebarGroup, 
+  SidebarGroupLabel, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton, 
+  SidebarMenuAction, 
+  SidebarTrigger, 
+  SidebarRail,
+  useSidebar 
+} from "./components/sidebar";
 export { cn } from "./lib/utils";
