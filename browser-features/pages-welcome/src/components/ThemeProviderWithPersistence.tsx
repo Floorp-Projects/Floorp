@@ -9,6 +9,11 @@ interface ThemeProviderWithPersistenceProps {
   defaultTheme?: Theme;
 }
 
+// Floorp preference values for theme
+const THEME_PREF_DARK = 0;
+const THEME_PREF_LIGHT = 1;
+const THEME_PREF_SYSTEM = 2;
+
 /**
  * Enhanced ThemeProvider with persistence using Floorp preferences.
  * Wraps the shared ThemeProvider to add theme persistence functionality.
@@ -25,9 +30,9 @@ export function ThemeProviderWithPersistence({
     const fetchTheme = async () => {
       try {
         const themeValue = await getThemeSetting();
-        if (themeValue === 1) {
+        if (themeValue === THEME_PREF_LIGHT) {
           setPersistedTheme("light");
-        } else if (themeValue === 0) {
+        } else if (themeValue === THEME_PREF_DARK) {
           setPersistedTheme("dark");
         } else {
           setPersistedTheme("system");
