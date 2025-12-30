@@ -37,15 +37,15 @@ export class NROSAutomotorParent extends JSWindowActorParent {
             );
 
         case "OSAutomotor:Disable":
-          try {
-            osAutomotorManager.disableFloorpOS();
-            return JSON.stringify({ success: true });
-          } catch (error) {
-            return JSON.stringify({
-              success: false,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          }
+          return osAutomotorManager
+            .disableFloorpOS()
+            .then(() => JSON.stringify({ success: true }))
+            .catch((error: Error) =>
+              JSON.stringify({
+                success: false,
+                error: error.message,
+              }),
+            );
 
         case "OSAutomotor:GetStatus":
           return JSON.stringify({

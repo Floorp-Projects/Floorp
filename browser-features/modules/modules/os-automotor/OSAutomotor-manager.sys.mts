@@ -75,44 +75,84 @@ interface RuntimeState {
 
 class OSAutomotorManager {
   private _initialized = false;
+  private _initPromise: Promise<void> | null = null;
   private _binaryProcess: SpawnedProcess | null = null;
   private _frontendProcess: SpawnedProcess | null = null;
   private _runtimeState: RuntimeState | null = null;
+  private _shutdownObserver: (() => void) | null = null;
 
   constructor() {
-    if (this._initialized) {
-      return;
-    }
-
-    this.initialize();
-    this._initialized = true;
+    // Start initialization and track the promise
+    this._initPromise = this.initialize();
   }
 
   /**
    * Initialize the OSAutomotor manager
    */
   private async initialize(): Promise<void> {
-    console.log("[Floorp OS] OSAutomotor initialize starting...");
-    await this.recoverFromUncleanShutdown();
-    // Check if Floorp OS is enabled
-    const isEnabled = Services.prefs.getBoolPref(FLOORP_OS_ENABLED_PREF, false);
-    console.log(`[Floorp OS] floorp.os.enabled = ${isEnabled}`);
+    try {
+      console.log("[Floorp OS] OSAutomotor initialize starting...");
+      await this.recoverFromUncleanShutdown();
+      this.setupShutdownObserver();
 
-    if (isEnabled) {
-      console.log("[Floorp OS] Starting Floorp OS...");
-      await this.ensureBinaryInstalled();
-      await this.startFloorpOS();
-      // Ensure and start frontend web server
-      try {
-        await this.ensureFrontendInstalled();
-        await this.startFrontend();
-      } catch (e) {
-        console.error("[Floorp OS] Failed to initialize frontend:", e);
+      // Check if Floorp OS is enabled
+      const isEnabled = Services.prefs.getBoolPref(
+        FLOORP_OS_ENABLED_PREF,
+        false,
+      );
+      console.log(`[Floorp OS] floorp.os.enabled = ${isEnabled}`);
+
+      if (isEnabled) {
+        console.log("[Floorp OS] Starting Floorp OS...");
+        await this.ensureBinaryInstalled();
+        await this.startFloorpOS();
+        // Ensure and start frontend web server
+        try {
+          await this.ensureFrontendInstalled();
+          await this.startFrontend();
+        } catch (e) {
+          console.error("[Floorp OS] Failed to initialize frontend:", e);
+        }
+        console.log("[Floorp OS] Floorp OS initialization complete.");
+      } else {
+        console.log("[Floorp OS] Floorp OS is disabled, skipping startup.");
       }
-      console.log("[Floorp OS] Floorp OS initialization complete.");
-    } else {
-      console.log("[Floorp OS] Floorp OS is disabled, skipping startup.");
+      this._initialized = true;
+    } catch (error) {
+      console.error("[Floorp OS] Initialization failed:", error);
+      // Mark as initialized even on failure to prevent repeated attempts
+      this._initialized = true;
+      throw error;
     }
+  }
+
+  /**
+   * Setup shutdown observer to stop processes on browser quit
+   */
+  private setupShutdownObserver(): void {
+    if (this._shutdownObserver) {
+      return;
+    }
+
+    this._shutdownObserver = () => {
+      console.log(
+        "[Floorp OS] Browser shutdown detected, stopping processes...",
+      );
+      // Use synchronous-style cleanup - stopFloorpOS is async but we fire-and-forget
+      // because quit-application-granted doesn't wait for async operations
+      this.stopFloorpOS().catch((error) => {
+        console.error(
+          "[Floorp OS] Error stopping processes on shutdown:",
+          error,
+        );
+      });
+    };
+
+    Services.obs.addObserver(
+      this._shutdownObserver,
+      "quit-application-granted",
+    );
+    console.log("[Floorp OS] Shutdown observer registered.");
   }
 
   /**
