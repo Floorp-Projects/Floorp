@@ -6,10 +6,14 @@ const { osAutomotorManager } = ChromeUtils.importESModule(
   "resource://noraneko/modules/os-automotor/OSAutomotor-manager.sys.mjs",
 );
 
+const { osFrontEndManager } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/os-automotor/OSFrontEndManager.sys.mjs",
+);
+
 export class NROSAutomotorParent extends JSWindowActorParent {
   receiveMessage(message: ReceiveMessageArgument) {
     try {
-      const { name } = message;
+      const { name, data } = message;
 
       switch (name) {
         case "OSAutomotor:IsPlatformSupported":
@@ -57,6 +61,43 @@ export class NROSAutomotorParent extends JSWindowActorParent {
         case "OSAutomotor:GetPlatformDebugInfo":
           return JSON.stringify(osAutomotorManager.getPlatformDebugInfo());
 
+        // Workflow Progress Window messages
+        case "OSAutomotor:WorkflowProgress":
+          try {
+            osFrontEndManager.handleProgressMessage(data);
+            return JSON.stringify({ success: true });
+          } catch (error) {
+            console.error("[OSAutomotor Actor] Progress error:", error);
+            return JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+
+        case "OSAutomotor:GetWorkflowProgress":
+          try {
+            const progress = osFrontEndManager.getCurrentProgress();
+            return JSON.stringify({ success: true, progress });
+          } catch (error) {
+            console.error("[OSAutomotor Actor] GetProgress error:", error);
+            return JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+
+        case "OSAutomotor:CloseProgressWindow":
+          try {
+            osFrontEndManager.closeProgressWindow();
+            return JSON.stringify({ success: true });
+          } catch (error) {
+            console.error("[OSAutomotor Actor] CloseWindow error:", error);
+            return JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+
         default:
           console.warn(`[OSAutomotor Actor] Unknown message: ${name}`);
           return null;
@@ -70,3 +111,4 @@ export class NROSAutomotorParent extends JSWindowActorParent {
     }
   }
 }
+

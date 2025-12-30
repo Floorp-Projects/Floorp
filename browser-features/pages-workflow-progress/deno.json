@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "types": [
+      "vite/client"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "jsxImportSourceTypes": "@types/react",
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
+  },
+  "imports": {
+    "@/": "./src/",
+    "vite": "npm:vite@^7.3.0"
+  },
+  "rules": {
+    "react/jsx-no-target-blank": "off"
+  }
+}

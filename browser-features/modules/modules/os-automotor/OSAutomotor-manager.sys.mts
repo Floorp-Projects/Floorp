@@ -29,6 +29,7 @@ interface SubprocessCallOptions {
   arguments?: string[];
   stdout?: SubprocessStdOption;
   stderr?: SubprocessStdOption;
+  environment?: Record<string, string>;
 }
 
 interface SubprocessProcess {
@@ -52,10 +53,11 @@ const GITHUB_FRONTEND_RELEASE_URL =
 const FLOORP_OS_ENABLED_PREF = "floorp.os.enabled";
 const FLOORP_OS_BINARY_PATH_PREF = "floorp.os.binaryPath";
 const FLOORP_OS_VERSION_PREF = "floorp.os.version";
-const CURRENT_VERSION = "v0.13.0";
-const CURRENT_FRONTEND_VERSION = "v0.13.0";
+const CURRENT_VERSION = "v0.13.3";
+const CURRENT_FRONTEND_VERSION = "v0.13.3";
 const FLOORP_FRONTEND_BINARY_PATH_PREF = "floorp.os.frontendBinaryPath";
 const FLOORP_FRONTEND_VERSION_PREF = "floorp.os.frontendVersion";
+const FLOORP_OS_INIAD_API_KEY_PREF = "floorp.os.iniad.apiKey";
 const FLOORP_OS_DIR_NAME = "floorp-os";
 const RUNTIME_STATE_FILE_NAME = "runtime-state.json";
 
@@ -418,10 +420,22 @@ class OSAutomotorManager {
       // Convert backslashes to forward slashes for SQLite URL format
       const dbPathNormalized = dbPath.replace(/\\/g, "/");
       const dbUrl = `sqlite://${dbPathNormalized}`;
+      const environment: Record<string, string> = {
+        HOME: Services.dirsvc.get("Home", Ci.nsIFile).path,
+      };
+      const iniadApiKey = Services.prefs.getStringPref(
+        FLOORP_OS_INIAD_API_KEY_PREF,
+        "",
+      );
+      if (iniadApiKey) {
+        environment.INIAD_API_KEY = iniadApiKey;
+      }
+
       const process = await this.spawnProcess(
         binaryPath,
         ["--db-url", dbUrl, "start"],
         "core",
+        environment,
       );
       this._binaryProcess = process;
       await this.updateRuntimeState({
@@ -450,10 +464,15 @@ class OSAutomotorManager {
     }
 
     try {
+      const environment: Record<string, string> = {
+        SAPPHILLON_GRPC_BASE_URL: "http://localhost:50051",
+        HOME: Services.dirsvc.get("Home", Ci.nsIFile).path,
+      };
       const process = await this.spawnProcess(
         frontendPath,
         ["start"],
         "frontend",
+        environment,
       );
       this._frontendProcess = process;
       await this.updateRuntimeState({
@@ -708,12 +727,14 @@ class OSAutomotorManager {
     executablePath: string,
     args: string[],
     kind: "core" | "frontend",
+    environment?: Record<string, string>,
   ): Promise<SpawnedProcess> {
     const process = await Subprocess.call({
       command: executablePath,
       arguments: args,
       stdout: "pipe",
       stderr: "pipe",
+      environment,
     });
 
     const label = kind === "core" ? "Controller" : "Frontend";
