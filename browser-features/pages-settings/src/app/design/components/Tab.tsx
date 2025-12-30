@@ -8,7 +8,7 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import { LayoutGrid } from "lucide-react";
-import { Input } from "@/components/common/input.tsx";
+import { Input } from "@nora/ui-components";
 
 export function Tab() {
   const { t } = useTranslation();

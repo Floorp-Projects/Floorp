@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/common/button.tsx";
+import { Button } from "@nora/ui-components";
 import {
   Card,
   CardContent,
