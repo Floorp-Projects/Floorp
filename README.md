@@ -179,45 +179,11 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ### 🧰 How to Start Development
 
-To build and run Floorp, follow the [Building section of the documentation](https://docs.floorp.app/docs/building/).
-=======
 Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
 
-Prerequisites:
+To build and run Floorp, follow the [Building section of the documentation](https://docs.floorp.app/docs/building/).
 
-- Deno (2.x recommended)
-- Node.js + pnpm may be required for some sub-projects (e.g. installers)
-
-#### Windows
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Install PowerShell 7 (recommended: [Winget](https://winget.run/pkg/Microsoft/PowerShell))
-3. Clone this repository.
-4. Run `deno task feles-build dev` in the root directory.
-5. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
-
-Notes:
-
-- The first run may download runtime artifacts and take a while.
-
-#### GNU/Linux
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Clone this repository.
-3. Run `deno task feles-build dev` in the root directory.
-4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
-
-#### macOS
-
-1. Install `deno` from [https://deno.land/](https://deno.land/)
-2. Clone this repository.
-3. Run `deno task feles-build dev` in the root directory.
-4. A browser will launch, and if you change some files, Floorp/Noraneko will hot reload.
-   If the source you changed supports HMR, it will reload the browser so you'll not need to rerun.
-
-#### Other useful commands
+#### Useful commands
 
 - `deno task feles-build stage` (build production assets, run browser in dev mode)
 - `deno task feles-build build --phase before-mach` (production assets step)
