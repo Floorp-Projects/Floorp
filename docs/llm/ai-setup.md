@@ -150,7 +150,9 @@
 - 参照: [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp)
 - 提供ツール（抜粋）:
   - UI 操作: `click` / `fill_form` / `hover` など
-  - ネットワーク・コンソール・スクリーンショット: `list_network_requests` / `list_console_messages` / `take_screenshot`
+  - ネットワーク: `list_network_requests` / `get_network_request`
+  - コンソール: `list_console_messages` / `get_console_message`
+  - スクリーンショット: `take_screenshot`
   - パフォーマンス: `performance_start_trace` / `performance_analyze_insight`
 - 設定例（各 MCP 対応クライアントで共通）:
   ```json
@@ -164,7 +166,7 @@
   }
   ```
 - サンドボックス環境や既存ブラウザに接続する場合:
-  - Chrome を `--remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable` などで起動する
+  - Chrome を `--remote-debugging-port=9222 --user-data-dir=~/chrome-devtools-profile` などユーザー固有のプロファイルで起動する（共有環境での衝突を避けるため）
   - MCP 設定の `args` に `--browser-url=http://127.0.0.1:9222` を追加して接続する
 - 注意: 接続中のブラウザ状態（タブ/ネットワーク/コンソール）が MCP クライアントから操作・閲覧可能になるため、機密ページを開いたままにしないこと
 
