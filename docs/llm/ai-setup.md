@@ -148,7 +148,10 @@
 ### MCP サーバー: Chrome DevTools MCP
 
 - 参照: [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp)
-- Chrome を経由して UI 操作（`click`/`fill_form` など）、ネットワーク取得、コンソール確認、スクリーンショット、パフォーマンス計測（`performance_start_trace`/`performance_analyze_insight`）を MCP として提供
+- 提供ツール（抜粋）:
+  - UI 操作: `click` / `fill_form` / `hover` など
+  - ネットワーク・コンソール・スクリーンショット: `list_network_requests` / `list_console_messages` / `take_screenshot`
+  - パフォーマンス: `performance_start_trace` / `performance_analyze_insight`
 - 設定例（各 MCP 対応クライアントで共通）:
   ```json
   {
@@ -160,7 +163,9 @@
     }
   }
   ```
-- サンドボックス環境や既存のブラウザに接続したい場合は、Chrome を `--remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable` などで起動し、`--browser-url=http://127.0.0.1:9222` を `args` に追加して接続する
+- サンドボックス環境や既存ブラウザに接続する場合:
+  - Chrome を `--remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable` などで起動する
+  - MCP 設定の `args` に `--browser-url=http://127.0.0.1:9222` を追加して接続する
 - 注意: 接続中のブラウザ状態（タブ/ネットワーク/コンソール）が MCP クライアントから操作・閲覧可能になるため、機密ページを開いたままにしないこと
 
 ## AI に提供されるコンテキスト
