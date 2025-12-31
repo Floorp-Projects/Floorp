@@ -30,6 +30,9 @@ interface NRWebScraperMessageData {
   checked?: boolean;
   optionValue?: string;
   targetSelector?: string;
+  innerHTML?: string;
+  eventType?: string;
+  eventOptions?: { bubbles?: boolean; cancelable?: boolean };
 }
 
 interface NormalizedHighlightOptions {
@@ -1322,6 +1325,25 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.dragAndDrop(
             message.data.selector,
             message.data.targetSelector,
+          );
+        }
+        break;
+      case "WebScraper:SetInnerHTML":
+        if (message.data?.selector && typeof message.data?.innerHTML === "string") {
+          return this.setInnerHTML(message.data.selector, message.data.innerHTML);
+        }
+        break;
+      case "WebScraper:SetTextContent":
+        if (message.data?.selector && typeof message.data?.textContent === "string") {
+          return this.setTextContent(message.data.selector, message.data.textContent);
+        }
+        break;
+      case "WebScraper:DispatchEvent":
+        if (message.data?.selector && message.data?.eventType) {
+          return this.dispatchEvent(
+            message.data.selector,
+            message.data.eventType,
+            message.data.eventOptions,
           );
         }
         break;
@@ -2734,6 +2756,130 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error in drag and drop:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the innerHTML of an element matching the given selector.
+   * Useful for contenteditable elements like rich text editors.
+   *
+   * @param selector - CSS selector for the target element
+   * @param html - HTML content to set
+   * @returns boolean - true if successful, false otherwise
+   */
+  setInnerHTML(selector: string, html: string): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for setInnerHTML: ${selector}`,
+        );
+        return false;
+      }
+
+      element.innerHTML = html;
+
+      // Dispatch input event to trigger any listeners
+      element.dispatchEvent(
+        new Event("input", { bubbles: true, cancelable: true }),
+      );
+
+      this.runAsyncInspection(element, "inputValueSet", {
+        value: this.truncate(html, 30),
+      });
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in setInnerHTML:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the textContent of an element matching the given selector.
+   *
+   * @param selector - CSS selector for the target element
+   * @param text - Text content to set
+   * @returns boolean - true if successful, false otherwise
+   */
+  setTextContent(selector: string, text: string): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for setTextContent: ${selector}`,
+        );
+        return false;
+      }
+
+      element.textContent = text;
+
+      // Dispatch input event to trigger any listeners
+      element.dispatchEvent(
+        new Event("input", { bubbles: true, cancelable: true }),
+      );
+
+      this.runAsyncInspection(element, "inputValueSet", {
+        value: this.truncate(text, 30),
+      });
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in setTextContent:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Dispatches a custom event on an element matching the given selector.
+   * Useful for triggering framework-specific event handlers.
+   *
+   * @param selector - CSS selector for the target element
+   * @param eventType - Type of event to dispatch (e.g., "input", "change", "click")
+   * @param options - Event options (bubbles, cancelable)
+   * @returns boolean - true if successful, false otherwise
+   */
+  dispatchEvent(
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for dispatchEvent: ${selector}`,
+        );
+        return false;
+      }
+
+      const eventOptions = {
+        bubbles: options?.bubbles ?? true,
+        cancelable: options?.cancelable ?? true,
+      };
+
+      const event = new Event(eventType, eventOptions);
+      element.dispatchEvent(event);
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in dispatchEvent:", e);
       return false;
     }
   }

@@ -131,4 +131,22 @@ export interface BrowserAutomationService {
     instanceId: string,
     timeout?: number,
   ): Promise<boolean | null>;
+
+  // DOM manipulation (for contenteditable elements)
+  setInnerHTML(
+    instanceId: string,
+    selector: string,
+    html: string,
+  ): Promise<boolean | null>;
+  setTextContent(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null>;
+  dispatchEvent(
+    instanceId: string,
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): Promise<boolean | null>;
 }

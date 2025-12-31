@@ -1287,6 +1287,61 @@ class TabManager {
       }, timeout);
     });
   }
+
+  /**
+   * Sets the innerHTML of an element (for contenteditable elements like rich text editors)
+   */
+  public async setInnerHTML(
+    instanceId: string,
+    selector: string,
+    html: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:SetInnerHTML",
+      { selector, innerHTML: html },
+    );
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Sets the textContent of an element (for contenteditable elements)
+   */
+  public async setTextContent(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:SetTextContent",
+      { selector, textContent: text },
+    );
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Dispatches a custom event on an element (for triggering framework-specific handlers)
+   */
+  public async dispatchEvent(
+    instanceId: string,
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:DispatchEvent",
+      { selector, eventType, eventOptions: options },
+    );
+    await this._delayForUser(1000);
+    return result;
+  }
 }
 
 // Export a singleton instance of the TabManager service

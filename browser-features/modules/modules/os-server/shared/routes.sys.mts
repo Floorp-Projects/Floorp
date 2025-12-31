@@ -385,4 +385,39 @@ export function registerCommonAutomationRoutes(
     const ok = await service.waitForNetworkIdle(ctx.params.id, timeout);
     return { status: 200, body: { ok } };
   });
+
+  // Set innerHTML (for contenteditable elements)
+  ns.post("/instances/:id/setInnerHTML", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string; html?: string } | null;
+    const sel = json?.selector ?? "";
+    const html = json?.html ?? "";
+    const service = getService();
+    const ok = await service.setInnerHTML(ctx.params.id, sel, html);
+    return { status: 200, body: { ok } };
+  });
+
+  // Set textContent (for contenteditable elements)
+  ns.post("/instances/:id/setTextContent", async (ctx: RouterContext) => {
+    const json = ctx.json() as { selector?: string; text?: string } | null;
+    const sel = json?.selector ?? "";
+    const text = json?.text ?? "";
+    const service = getService();
+    const ok = await service.setTextContent(ctx.params.id, sel, text);
+    return { status: 200, body: { ok } };
+  });
+
+  // Dispatch event on element
+  ns.post("/instances/:id/dispatchEvent", async (ctx: RouterContext) => {
+    const json = ctx.json() as {
+      selector?: string;
+      eventType?: string;
+      options?: { bubbles?: boolean; cancelable?: boolean };
+    } | null;
+    const sel = json?.selector ?? "";
+    const eventType = json?.eventType ?? "";
+    const options = json?.options;
+    const service = getService();
+    const ok = await service.dispatchEvent(ctx.params.id, sel, eventType, options);
+    return { status: 200, body: { ok } };
+  });
 }
