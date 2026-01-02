@@ -14,7 +14,7 @@ import {
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
 import { Settings } from "lucide-react";
-import { InfoTip } from "@/components/common/infotip.tsx";
+import { InfoTip } from "@nora/ui-components";
 
 interface GeneralSettingsProps {
     config: KeyboardShortcutConfig;

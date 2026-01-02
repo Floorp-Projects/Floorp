@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Input } from "@/components/common/input.tsx";
+import { Input } from "@nora/ui-components";
 import { Switch } from "@/components/common/switch.tsx";
 import {
   getTabSleepExclusionSettings,

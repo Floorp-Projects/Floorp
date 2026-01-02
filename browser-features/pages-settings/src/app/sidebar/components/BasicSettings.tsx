@@ -4,11 +4,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Input } from "@/components/common/input.tsx";
+import { Input } from "@nora/ui-components";
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
-import { InfoTip } from "@/components/common/infotip.tsx";
+import { InfoTip } from "@nora/ui-components";
 import { Sliders } from "lucide-react";
 import { useState } from "react";
 import { RestartModal } from "@/components/common/restart-modal.tsx";

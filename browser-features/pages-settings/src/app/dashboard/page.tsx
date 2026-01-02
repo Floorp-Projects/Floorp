@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage } from "@/components/common/avatar.tsx";
-import { Button } from "@/components/common/button.tsx";
+import { Button } from "@nora/ui-components";
 import {
   Card,
   CardContent,
