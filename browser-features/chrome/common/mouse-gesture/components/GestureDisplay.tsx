@@ -13,9 +13,6 @@ import { getConfig } from "../config.ts";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-let gestureDisplayInstance: GestureDisplay | null = null;
-let styleAdded = false;
-
 export class GestureDisplay {
   private mountContainer: HTMLDivElement | null = null;
   private trail: { x: number; y: number }[] = [];
@@ -34,24 +31,21 @@ export class GestureDisplay {
 
   constructor(win: Window) {
     this.targetWindow = win;
-    if (gestureDisplayInstance) {
-      gestureDisplayInstance.destroy();
-    }
-
-    // eslint-disable-next-line no-this-alias
-    gestureDisplayInstance = this;
     this.addGlobalStyles();
     this.createMountPoint();
     this.initializeComponent();
   }
 
   private addGlobalStyles(): void {
-    if (
-      styleAdded || !this.targetWindow.document ||
-      !this.targetWindow.document.head
-    ) return;
+    const doc = this.targetWindow.document;
+    if (!doc || !doc.head) return;
 
-    const styleElement = this.targetWindow.document.createElement("style");
+    // スタイルが未追加のウィンドウにだけ挿入する
+    if (doc.getElementById("mouse-gesture-global-styles")) {
+      return;
+    }
+
+    const styleElement = doc.createElement("style");
     styleElement.id = "mouse-gesture-global-styles";
     styleElement.textContent = `
             #mouse-gesture-display-container {
@@ -69,8 +63,7 @@ export class GestureDisplay {
                 pointer-events: none;
             }
         `;
-    this.targetWindow.document.head.appendChild(styleElement);
-    styleAdded = true;
+    doc.head.appendChild(styleElement);
   }
 
   private createMountPoint(): void {
@@ -83,22 +76,15 @@ export class GestureDisplay {
       existingContainer.parentNode.removeChild(existingContainer);
     }
 
-    const existingStyle = this.targetWindow.document.getElementById(
-      "mouse-gesture-global-styles",
-    );
-    if (existingStyle && existingStyle.parentNode) {
-      existingStyle.parentNode.removeChild(existingStyle);
-      styleAdded = false;
-      this.addGlobalStyles();
-    }
-
     this.mountContainer = this.targetWindow.document.createElement("div");
     this.mountContainer.id = "mouse-gesture-display-container";
     this.targetWindow.document.body.appendChild(this.mountContainer);
   }
 
   private initializeComponent(): void {
-    if (!this.mountContainer || !this.targetWindow || !this.targetWindow.document) return;
+    if (
+      !this.mountContainer || !this.targetWindow || !this.targetWindow.document
+    ) return;
 
     // Create canvas and label elements using createElementNS
     const doc = this.targetWindow.document;
@@ -198,7 +184,16 @@ export class GestureDisplay {
   }
 
   public updateTrail(points: { x: number; y: number }[]): void {
-    const newPoints = [...points];
+    let newPoints = [...points];
+
+    // Decimate when too many points to reduce draw cost
+    const MAX_POINTS = 400;
+    if (newPoints.length > MAX_POINTS) {
+      const stride = Math.ceil(newPoints.length / MAX_POINTS);
+      newPoints = newPoints.filter((_, idx) =>
+        idx % stride === 0 || idx === newPoints.length - 1
+      );
+    }
 
     //TODO: Performance optimization
     // if (newPoints.length > 100) {
@@ -230,7 +225,9 @@ export class GestureDisplay {
     this.actionName = name;
     if (this.labelEl) {
       this.labelEl.textContent = name || "";
-      this.labelEl.style.display = (name && getConfig().showLabel) ? "block" : "none";
+      this.labelEl.style.display = (name && getConfig().showLabel)
+        ? "block"
+        : "none";
     }
   }
 
@@ -268,9 +265,5 @@ export class GestureDisplay {
     }
 
     this.mountContainer = null;
-
-    if (gestureDisplayInstance === this) {
-      gestureDisplayInstance = null;
-    }
   }
 }

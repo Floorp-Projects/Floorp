@@ -1,23 +1,46 @@
- // @ts-nocheck
+// @ts-nocheck
 // eslint-disable no-unsafe-optional-chaining
 // deno-lint-ignore-file no-window
 import type { GestureActionRegistration } from "./gestures.ts";
 
+const getXulElement = (id: string): XULElement | null => {
+  try {
+    return (document?.getElementById(id) as XULElement | null) ?? null;
+  } catch (_e) {
+    return null;
+  }
+};
+
+const doCommandIfExists = (id: string) => {
+  const el = getXulElement(id);
+  try {
+    el?.doCommand?.();
+  } catch (e) {
+    console.error(`[mouse-gesture] Failed to run command for ${id}:`, e);
+  }
+};
+
+const clickIfExists = (id: string) => {
+  const el = getXulElement(id);
+  try {
+    el?.click?.();
+  } catch (e) {
+    console.error(`[mouse-gesture] Failed to click ${id}:`, e);
+  }
+};
+
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
-    fn: () =>
-      (document?.getElementById("back-button") as XULElement).doCommand(),
+    fn: () => doCommandIfExists("back-button"),
   },
   {
     name: "gecko-forward",
-    fn: () =>
-      (document?.getElementById("forward-button") as XULElement).doCommand(),
+    fn: () => doCommandIfExists("forward-button"),
   },
   {
     name: "gecko-reload",
-    fn: () =>
-      (document?.getElementById("reload-button") as XULElement).doCommand(),
+    fn: () => doCommandIfExists("reload-button"),
   },
   {
     name: "gecko-close-tab",
@@ -25,10 +48,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-new-tab",
-    fn: () =>
-      (
-        document?.getElementById("tabs-newtab-button") as XULElement
-      ).doCommand(),
+    fn: () => doCommandIfExists("tabs-newtab-button"),
   },
   {
     name: "gecko-duplicate-tab",
@@ -216,14 +236,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-show-pip",
-    fn: () =>
-      (
-        document?.getElementById("picture-in-picture-button") as XULElement
-      ).click(),
-  },
-  {
-    name: "gecko-restore-last-tab",
-    fn: () => window.SessionStore.undoCloseTab(window, 0),
+    fn: () => clickIfExists("picture-in-picture-button"),
   },
   {
     name: "gecko-open-sync-preferences",

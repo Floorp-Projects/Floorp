@@ -3,14 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  getConfig,
-  isEnabled,
-  patternToString,
-} from "./config.ts";
+import { getConfig, isEnabled, patternToString } from "./config.ts";
 import { GestureDisplay } from "./components/GestureDisplay.tsx";
-import { executeGestureAction, getActionDisplayName } from "./utils/gestures.ts";
-import { createRecognizer, recognize, type ShapeDatabase } from "./utils/recognizer.ts";
+import {
+  executeGestureAction,
+  getActionDisplayName,
+} from "./utils/gestures.ts";
+import {
+  createRecognizer,
+  recognize,
+  type ShapeDatabase,
+} from "./utils/recognizer.ts";
 import type { IDollarRecognizer } from "./utils/dollar.ts";
 
 /**
@@ -24,7 +27,8 @@ import type { IDollarRecognizer } from "./utils/dollar.ts";
 export class MouseGestureController {
   private isGestureActive = false;
   private isContextMenuPrevented = false;
-  private preventionTimeoutId: number | ReturnType<typeof setTimeout> | null = null;
+  private preventionTimeoutId: number | ReturnType<typeof setTimeout> | null =
+    null;
   private mouseTrail: { x: number; y: number }[] = [];
   private display: GestureDisplay;
   private eventListenersAttached = false;
@@ -33,7 +37,10 @@ export class MouseGestureController {
   private targetWindow: Window;
   private recognizer: IDollarRecognizer | null = null;
   private shapeDb: ShapeDatabase | null = null;
-  private patternActionMap: Map<string, { action: string; displayName: string }> = new Map();
+  private patternActionMap: Map<
+    string,
+    { action: string; displayName: string }
+  > = new Map();
   private lastConfigHash = "";
 
   constructor(win: Window = globalThis as unknown as Window) {
@@ -48,7 +55,11 @@ export class MouseGestureController {
     this.targetWindow.addEventListener("mousedown", this.handleMouseDown);
     this.targetWindow.addEventListener("mousemove", this.handleMouseMove);
     this.targetWindow.addEventListener("mouseup", this.handleMouseUp);
-    this.targetWindow.addEventListener("contextmenu", this.handleContextMenu, true);
+    this.targetWindow.addEventListener(
+      "contextmenu",
+      this.handleContextMenu,
+      true,
+    );
     this.eventListenersAttached = true;
   }
 
@@ -57,7 +68,11 @@ export class MouseGestureController {
       this.targetWindow.removeEventListener("mousedown", this.handleMouseDown);
       this.targetWindow.removeEventListener("mousemove", this.handleMouseMove);
       this.targetWindow.removeEventListener("mouseup", this.handleMouseUp);
-      this.targetWindow.removeEventListener("contextmenu", this.handleContextMenu, true);
+      this.targetWindow.removeEventListener(
+        "contextmenu",
+        this.handleContextMenu,
+        true,
+      );
       this.eventListenersAttached = false;
     }
 
@@ -74,11 +89,18 @@ export class MouseGestureController {
    * Get or create the $1 Recognizer, rebuilding if config changed.
    * Also builds the pattern-to-action lookup map for fast access.
    */
-  private getRecognizerAndShapeDb(): { recognizer: IDollarRecognizer; shapeDb: ShapeDatabase } {
+  private getRecognizerAndShapeDb(): {
+    recognizer: IDollarRecognizer;
+    shapeDb: ShapeDatabase;
+  } {
     const config = getConfig();
     const configHash = JSON.stringify(config.actions);
 
-    if (!this.recognizer || !this.shapeDb || this.lastConfigHash !== configHash) {
+    if (
+      !this.recognizer ||
+      !this.shapeDb ||
+      this.lastConfigHash !== configHash
+    ) {
       const result = createRecognizer(config.actions);
       this.recognizer = result.recognizer;
       this.shapeDb = result.shapeDb;
@@ -103,7 +125,9 @@ export class MouseGestureController {
    */
   private getMinScore(): number {
     const config = getConfig();
-    const sensitivity = Number.isFinite(config.sensitivity) ? config.sensitivity : 40;
+    const sensitivity = Number.isFinite(config.sensitivity)
+      ? config.sensitivity
+      : 40;
     const sensitivityFactor = Math.min(Math.max(sensitivity, 1), 100) / 100;
     // Higher sensitivity = lower required score (easier to match)
     return Math.max(0.5, 0.85 - sensitivityFactor * 0.3);
@@ -115,7 +139,9 @@ export class MouseGestureController {
   private getActivationDistance(): number {
     const config = getConfig();
     const baseDistance = config.contextMenu?.minDistance ?? 10;
-    const sensitivity = Number.isFinite(config.sensitivity) ? config.sensitivity : 40;
+    const sensitivity = Number.isFinite(config.sensitivity)
+      ? config.sensitivity
+      : 40;
     const sensitivityFactor = Math.min(Math.max(sensitivity, 1), 100) / 100;
     const dynamicDistance = 6 + (1 - sensitivityFactor) * 12;
     return Math.max(baseDistance, dynamicDistance, 10);
@@ -144,7 +170,10 @@ export class MouseGestureController {
     this.pressedButtons.clear();
   }
 
-  private getViewportPointFromEvent(event: MouseEvent): { x: number; y: number } {
+  private getViewportPointFromEvent(event: MouseEvent): {
+    x: number;
+    y: number;
+  } {
     // Prefer Firefox's content-area screen offsets when available so we can
     // convert absolute screen coordinates into viewport coordinates.
     // Fallback to client coordinates if not available.
@@ -152,7 +181,10 @@ export class MouseGestureController {
       mozInnerScreenX?: number;
       mozInnerScreenY?: number;
     };
-    if (typeof (win as any).mozInnerScreenX === "number" && typeof (win as any).mozInnerScreenY === "number") {
+    if (
+      typeof (win as any).mozInnerScreenX === "number" &&
+      typeof (win as any).mozInnerScreenY === "number"
+    ) {
       return {
         x: event.screenX - (win as any).mozInnerScreenX,
         y: event.screenY - (win as any).mozInnerScreenY,
@@ -212,7 +244,28 @@ export class MouseGestureController {
     if (!this.isGestureActive || !isEnabled()) return;
 
     // Collect trail point (use browser-global -> viewport mapping)
-    this.mouseTrail.push(this.getViewportPointFromEvent(event));
+    const point = this.getViewportPointFromEvent(event);
+
+    // Skip points with negligible movement to reduce noise
+    const last = this.mouseTrail[this.mouseTrail.length - 1];
+    if (last) {
+      const dx = point.x - last.x;
+      const dy = point.y - last.y;
+      if (Math.hypot(dx, dy) < 1.5) {
+        return;
+      }
+    }
+
+    this.mouseTrail.push(point);
+
+    // Keep the trail size bounded to avoid excessive redraw/recognition cost
+    const MAX_POINTS = 600;
+    if (this.mouseTrail.length > MAX_POINTS) {
+      const stride = Math.ceil(this.mouseTrail.length / 400);
+      this.mouseTrail = this.mouseTrail.filter(
+        (_, idx) => idx % stride === 0 || idx === this.mouseTrail.length - 1,
+      );
+    }
     this.display.updateTrail(this.mouseTrail);
 
     // Perform real-time recognition for instant feedback
@@ -246,7 +299,10 @@ export class MouseGestureController {
       if (this.pressedButtons.size === 0) {
         this.resetGestureState();
         this.isContextMenuPrevented = true;
-        if (this.preventionTimeoutId) clearTimeout(this.preventionTimeoutId);
+        if (this.preventionTimeoutId) {
+          clearTimeout(this.preventionTimeoutId);
+          this.preventionTimeoutId = null;
+        }
         this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
           this.isContextMenuPrevented = false;
           this.preventionTimeoutId = null;
@@ -289,6 +345,10 @@ export class MouseGestureController {
         this.targetWindow.setTimeout(() => {
           executeGestureAction(actionInfo.action);
           this.resetGestureState();
+          if (this.preventionTimeoutId) {
+            clearTimeout(this.preventionTimeoutId);
+            this.preventionTimeoutId = null;
+          }
           this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
             this.isContextMenuPrevented = false;
             this.preventionTimeoutId = null;
@@ -300,14 +360,16 @@ export class MouseGestureController {
     }
 
     // No gesture recognized - prevent context menu and reset
+    if (this.preventionTimeoutId) {
+      clearTimeout(this.preventionTimeoutId);
+      this.preventionTimeoutId = null;
+    }
     this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
       this.isContextMenuPrevented = false;
       this.preventionTimeoutId = null;
     }, preventionTimeout);
-
     this.resetGestureState();
   };
-
   private handleContextMenu = (event: MouseEvent): void => {
     if ((this.isGestureActive || this.isContextMenuPrevented) && isEnabled()) {
       event.preventDefault();

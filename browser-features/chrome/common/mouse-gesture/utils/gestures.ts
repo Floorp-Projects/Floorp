@@ -23,9 +23,11 @@ export function executeGestureAction(name: string): boolean {
       action();
       return true;
     } catch (e) {
+      console.error(`[mouse-gesture] Action failed: ${name}`, e);
       return false;
     }
   }
+  console.warn(`[mouse-gesture] Action not found: ${name}`);
   return false;
 }
 
