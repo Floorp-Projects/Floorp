@@ -88,7 +88,9 @@ function getBrowserWindow() {
 function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
   const windows: Array<Window & { gBrowser: GBrowser }> = [];
   try {
-    const enumerator = Services.wm.getEnumerator("navigator:browser") as any;
+    const enumerator = Services.wm.getEnumerator(
+      "navigator:browser",
+    ) as nsISimpleEnumerator;
     while (enumerator?.hasMoreElements?.()) {
       const win = enumerator.getNext() as Window & { gBrowser: GBrowser };
       if (win && !win.closed) {
@@ -345,7 +347,8 @@ class TabManager {
         ) {
           if (
             !progress.isTopLevel ||
-            flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ||
+            flags &
+              (Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ?? 0) ||
             (location.spec === "about:blank" && uri.spec !== "about:blank")
           ) {
             return;
@@ -364,7 +367,7 @@ class TabManager {
           _status: nsresult,
         ) {
           if (!progress.isTopLevel) return;
-          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP ?? 0;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
             browser.webProgress.removeProgressListener(
@@ -381,8 +384,8 @@ class TabManager {
       PROGRESS_LISTENERS.add(progressListener);
       browser.webProgress.addProgressListener(
         progressListener as nsIWebProgressListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION |
-          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
+        (Ci.nsIWebProgress.NOTIFY_LOCATION ?? 0) |
+          (Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT ?? 0),
       );
     });
   }
@@ -586,7 +589,7 @@ class TabManager {
 
   public getURI(instanceId: string): Promise<string> {
     const { browser } = this._getInstance(instanceId);
-    return Promise.resolve(browser.browsingContext.currentURI.spec);
+    return Promise.resolve(browser.browsingContext?.currentURI.spec ?? "");
   }
 
   public getHTML(instanceId: string): Promise<string | null> {
@@ -1130,7 +1133,7 @@ class TabManager {
         ? Ci.nsICookie.SCHEME_HTTPS
         : uri.schemeIs("http")
           ? Ci.nsICookie.SCHEME_HTTP
-          : Ci.nsICookie.SCHEME_UNKNOWN;
+          : 0; // SCHEME_UNKNOWN
 
       const attrsList = [originAttributes];
       if (Object.keys(originAttributes).length > 0) {
@@ -1191,7 +1194,9 @@ class TabManager {
             attrs,
             sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
             schemeMap,
-            Boolean((attrs as any).partitionKey),
+            Boolean(
+              (attrs as unknown as { partitionKey?: unknown }).partitionKey,
+            ),
           );
 
           if (validation?.result !== Ci.nsICookieValidation.eOK) {
@@ -1348,12 +1353,12 @@ class TabManager {
       // Configure print settings following Firefox WebDriver BiDi implementation
       printSettings.isInitializedFromPrinter = true;
       printSettings.isInitializedFromPrefs = true;
-      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF ?? 0;
       printSettings.printerName = "marionette";
       printSettings.printSilent = true;
 
       // Paper settings
-      printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
+      printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
       printSettings.paperWidth = 8.5; // US Letter width in inches
       printSettings.paperHeight = 11; // US Letter height in inches
       printSettings.usePageRuleSizeAsPaperSize = true;
@@ -1406,7 +1411,6 @@ class TabManager {
       const available = binaryStream.available();
       const bytes = binaryStream.readBytes(available);
 
-      storageStream.close();
       binaryStream.close();
 
       // Convert to base64
@@ -1475,17 +1479,19 @@ class TabManager {
           _status: number,
         ) {
           try {
-            if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+            if (stateFlags & (Ci.nsIWebProgressListener.STATE_START ?? 0)) {
               // Network activity started
               if (this._state.idleTimer) {
                 clearTimeout(this._state.idleTimer);
                 this._state.idleTimer = null;
               }
-            } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            } else if (
+              stateFlags & (Ci.nsIWebProgressListener.STATE_STOP ?? 0)
+            ) {
               // Network activity stopped, start idle timer
               this._resetIdleTimer();
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore errors in callback
           }
         },
@@ -1534,7 +1540,7 @@ class TabManager {
       try {
         browser.webProgress?.addProgressListener(
           progressListener,
-          Ci.nsIWebProgress.NOTIFY_STATE_ALL,
+          Ci.nsIWebProgress.NOTIFY_STATE_ALL ?? 0,
         );
       } catch (e) {
         console.error("TabManager: Error adding progress listener:", e);

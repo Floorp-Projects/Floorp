@@ -111,7 +111,9 @@ class webScraper {
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement?.appendChild(browser);
-    browser.browsingContext.allowJavascript = true;
+    if (browser.browsingContext) {
+      browser.browsingContext.allowJavascript = true;
+    }
 
     this._instanceId = await crypto.randomUUID();
     this._browserInstances.set(this._instanceId, browser);
@@ -237,7 +239,10 @@ class webScraper {
             return;
           }
           // Ignore events that don't change the document
-          if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+          if (
+            flags &
+            (Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ?? 0)
+          ) {
             return;
           }
           // Ignore the initial about:blank, unless about:blank is requested
@@ -258,7 +263,7 @@ class webScraper {
           _status: nsresult,
         ) {
           if (!progress.isTopLevel) return;
-          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP ?? 0;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
             webProgress.removeProgressListener(
@@ -275,8 +280,8 @@ class webScraper {
       PROGRESS_LISTENERS.add(progressListener);
       webProgress.addProgressListener(
         progressListener as nsIWebProgressListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION |
-          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
+        (Ci.nsIWebProgress.NOTIFY_LOCATION ?? 0) |
+          (Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT ?? 0),
       );
     });
   }
@@ -288,8 +293,8 @@ class webScraper {
     }
 
     return new Promise((resolve) => {
-      if (browser.browsingContext.currentURI.spec != "about:blank") {
-        resolve(browser.browsingContext.currentURI.spec);
+      if (browser.browsingContext?.currentURI.spec != "about:blank") {
+        resolve(browser.browsingContext?.currentURI.spec ?? "about:blank");
       } else {
         resolve(null);
       }
@@ -1201,7 +1206,7 @@ class webScraper {
         ? Ci.nsICookie.SCHEME_HTTPS
         : uri.schemeIs("http")
           ? Ci.nsICookie.SCHEME_HTTP
-          : Ci.nsICookie.SCHEME_UNKNOWN;
+          : 0; // SCHEME_UNKNOWN
 
       const attrsList = [originAttributes];
       if (Object.keys(originAttributes).length > 0) {
@@ -1225,7 +1230,9 @@ class webScraper {
             attrs,
             sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
             schemeMap,
-            Boolean((attrs as any).partitionKey),
+            Boolean(
+              (attrs as unknown as { partitionKey?: unknown }).partitionKey,
+            ),
           );
 
           if (validation?.result !== Ci.nsICookieValidation.eOK) {
@@ -1354,12 +1361,12 @@ class webScraper {
       // Configure print settings following Firefox WebDriver BiDi implementation
       printSettings.isInitializedFromPrinter = true;
       printSettings.isInitializedFromPrefs = true;
-      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF ?? 0;
       printSettings.printerName = "marionette";
       printSettings.printSilent = true;
 
       // Paper settings
-      printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
+      printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
       printSettings.paperWidth = 8.5; // US Letter width in inches
       printSettings.paperHeight = 11; // US Letter height in inches
       printSettings.usePageRuleSizeAsPaperSize = true;
@@ -1412,7 +1419,6 @@ class webScraper {
       const available = binaryStream.available();
       const bytes = binaryStream.readBytes(available);
 
-      storageStream.close();
       binaryStream.close();
 
       // Convert to base64
@@ -1482,17 +1488,19 @@ class webScraper {
           _status: number,
         ) {
           try {
-            if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+            if (stateFlags & (Ci.nsIWebProgressListener.STATE_START ?? 0)) {
               // Network activity started
               if (this._state.idleTimer) {
                 clearTimeout(this._state.idleTimer);
                 this._state.idleTimer = null;
               }
-            } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            } else if (
+              stateFlags & (Ci.nsIWebProgressListener.STATE_STOP ?? 0)
+            ) {
               // Network activity stopped, start idle timer
               this._resetIdleTimer();
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore errors in callback
           }
         },
@@ -1541,7 +1549,7 @@ class webScraper {
       try {
         browser.webProgress?.addProgressListener(
           progressListener,
-          Ci.nsIWebProgress.NOTIFY_STATE_ALL,
+          Ci.nsIWebProgress.NOTIFY_STATE_ALL ?? 0,
         );
         PROGRESS_LISTENERS.add(progressListener);
       } catch (e) {
