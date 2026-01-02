@@ -75,6 +75,17 @@ export const commands: Commands = {
     command: () => window.gBrowser.tabContainer.advanceSelectedTab(-1, true),
     type: "tab-action",
   },
+  "gecko-show-previously-selected-tab": {
+    command: () => {
+      let latest = null;
+      for (let tab of window.gBrowser.tabs) {
+        if (tab._lastAccessed === Infinity) continue;
+        if (!latest || tab._lastAccessed > latest._lastAccessed) latest = tab;
+      }
+      window.gBrowser.tabContainer._selectNewTab(latest);
+    },
+    type: "tab-action",
+  },
   "gecko-show-all-tabs-panel": {
     command: () => window.gTabsPanel.showAllTabsPanel(),
     type: "tab-action",
