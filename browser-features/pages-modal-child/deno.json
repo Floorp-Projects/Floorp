@@ -13,6 +13,7 @@
     ]
   },
   "imports": {
-    "@/": "./src/"
+    "@/": "./src/",
+    "@nora/ui-components": "../../libs/shared/ui-components/src/index.ts"
   }
 }

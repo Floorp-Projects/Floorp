@@ -14,6 +14,7 @@
   },
   "imports": {
     "@/": "./src/",
+    "@nora/ui-components": "../../libs/shared/ui-components/src/index.ts",
     "vite": "npm:vite@^7.3.0"
   },
   "rules": {
