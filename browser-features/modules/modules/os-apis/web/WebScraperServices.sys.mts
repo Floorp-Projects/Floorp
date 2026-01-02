@@ -102,6 +102,7 @@ class webScraper {
     browser.setAttribute("remote", "true");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("manualactiveness", "true");
 
     // Set default size for browser element
     browser.style.setProperty("width", "1366px");
@@ -111,6 +112,7 @@ class webScraper {
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement?.appendChild(browser);
+    browser.docShellIsActive = true;
     if (browser.browsingContext) {
       browser.browsingContext.allowJavascript = true;
     }
@@ -1348,22 +1350,59 @@ class webScraper {
     }
 
     try {
+      // Ensure browser is active for rendering
+      browser.docShellIsActive = true;
+
       const browsingContext = browser.browsingContext as BrowsingContext & {
         print(settings: nsIPrintSettings): Promise<void>;
       };
       if (!browsingContext) return null;
 
-      // Create print settings for PDF
-      const printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
-        .getService(Ci.nsIPrintSettingsService)
-        .createNewPrintSettings();
+      // Force layout flush
+      try {
+        browser.getBoundingClientRect();
+      } catch (e) {}
 
-      // Configure print settings following Firefox WebDriver BiDi implementation
-      printSettings.isInitializedFromPrinter = true;
-      printSettings.isInitializedFromPrefs = true;
+      // Wait a short moment for any pending layout to settle
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Create a storage stream for PDF output
+      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
+        Ci.nsIStorageStream,
+      );
+      storageStream.init(4096, 0xffffffff);
+
+      // Create print settings for PDF
+      const printSettingsService = Cc[
+        "@mozilla.org/gfx/printsettings-service;1"
+      ].getService(Ci.nsIPrintSettingsService);
+
+      const printSettings = printSettingsService.createNewPrintSettings();
+
+      // Configure print settings
       printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF ?? 0;
-      printSettings.printerName = "marionette";
       printSettings.printSilent = true;
+      printSettings.showPrintProgress = false;
+
+      // Output to stream
+      printSettings.outputDestination =
+        Ci.nsIPrintSettings.kOutputDestinationStream;
+      printSettings.outputStream = storageStream.getOutputStream(0);
+
+      // Initialize from printer if possible
+      try {
+        const defaultPrinter = printSettingsService.lastUsedPrinterName;
+        if (defaultPrinter) {
+          printSettings.printerName = defaultPrinter;
+        } else {
+          printSettings.printerName = "marionette";
+        }
+        printSettings.isInitializedFromPrinter = true;
+        printSettings.isInitializedFromPrefs = true;
+      } catch (_e) {
+        printSettings.isInitializedFromPrinter = false;
+        printSettings.isInitializedFromPrefs = false;
+      }
 
       // Paper settings
       printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
@@ -1396,16 +1435,6 @@ class webScraper {
       printSettings.footerStrLeft = "";
       printSettings.footerStrCenter = "";
       printSettings.footerStrRight = "";
-
-      // Create a storage stream for PDF output
-      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
-        Ci.nsIStorageStream,
-      );
-      storageStream.init(4096, 0xffffffff);
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationStream;
-      printSettings.outputStream = storageStream.getOutputStream(0);
 
       // Print to stream
       await browsingContext.print(printSettings);

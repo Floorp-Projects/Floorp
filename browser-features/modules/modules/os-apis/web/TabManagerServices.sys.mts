@@ -1345,17 +1345,43 @@ class TabManager {
       };
       if (!browsingContext) return null;
 
-      // Create print settings for PDF
-      const printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
-        .getService(Ci.nsIPrintSettingsService)
-        .createNewPrintSettings();
+      // Create a storage stream for PDF output
+      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
+        Ci.nsIStorageStream,
+      );
+      storageStream.init(4096, 0xffffffff);
 
-      // Configure print settings following Firefox WebDriver BiDi implementation
-      printSettings.isInitializedFromPrinter = true;
-      printSettings.isInitializedFromPrefs = true;
+      // Create print settings for PDF
+      const printSettingsService = Cc[
+        "@mozilla.org/gfx/printsettings-service;1"
+      ].getService(Ci.nsIPrintSettingsService);
+
+      const printSettings = printSettingsService.createNewPrintSettings();
+
+      // Configure print settings
       printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF ?? 0;
-      printSettings.printerName = "marionette";
       printSettings.printSilent = true;
+      printSettings.showPrintProgress = false;
+
+      // Output to stream
+      printSettings.outputDestination =
+        Ci.nsIPrintSettings.kOutputDestinationStream;
+      printSettings.outputStream = storageStream.getOutputStream(0);
+
+      // Initialize from printer if possible
+      try {
+        const defaultPrinter = printSettingsService.lastUsedPrinterName;
+        if (defaultPrinter) {
+          printSettings.printerName = defaultPrinter;
+        } else {
+          printSettings.printerName = "marionette";
+        }
+        printSettings.isInitializedFromPrinter = true;
+        printSettings.isInitializedFromPrefs = true;
+      } catch (_e) {
+        printSettings.isInitializedFromPrinter = false;
+        printSettings.isInitializedFromPrefs = false;
+      }
 
       // Paper settings
       printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
@@ -1388,16 +1414,6 @@ class TabManager {
       printSettings.footerStrLeft = "";
       printSettings.footerStrCenter = "";
       printSettings.footerStrRight = "";
-
-      // Create a storage stream for PDF output
-      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
-        Ci.nsIStorageStream,
-      );
-      storageStream.init(4096, 0xffffffff);
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationStream;
-      printSettings.outputStream = storageStream.getOutputStream(0);
 
       // Print to stream
       await browsingContext.print(printSettings);
