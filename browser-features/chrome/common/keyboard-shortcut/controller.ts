@@ -133,7 +133,7 @@ export class KeyboardShortcutController {
   private executeShortcut(shortcut: ShortcutConfig): void {
     const action = actions.find((a) => a.name === shortcut.action);
     if (action) {
-      action.fn();
+      action.fn(this.targetWindow);
     }
   }
 }
