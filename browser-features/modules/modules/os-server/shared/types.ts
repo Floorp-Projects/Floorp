@@ -29,6 +29,23 @@ export interface CookieData {
  * Both WebScraper and TabManager implement these methods.
  */
 export interface BrowserAutomationService {
+  // Keyboard
+  pressKey?(instanceId: string, key: string): Promise<boolean | null>;
+
+  // Single input
+  inputElement?(
+    instanceId: string,
+    selector: string,
+    value: string,
+    options?: { typingMode?: boolean; typingDelayMs?: number },
+  ): Promise<boolean | null>;
+
+  // File upload
+  uploadFile?(
+    instanceId: string,
+    selector: string,
+    filePath: string,
+  ): Promise<boolean | null>;
   // Navigation
   navigate(instanceId: string, url: string): Promise<void>;
   getURI(instanceId: string): Promise<string | null>;
@@ -71,6 +88,7 @@ export interface BrowserAutomationService {
   fillForm(
     instanceId: string,
     formData: { [selector: string]: string },
+    options?: { typingMode?: boolean; typingDelayMs?: number },
   ): Promise<boolean | null>;
   getValue(instanceId: string, selector: string): Promise<string | null>;
   submit(instanceId: string, selector: string): Promise<boolean | null>;

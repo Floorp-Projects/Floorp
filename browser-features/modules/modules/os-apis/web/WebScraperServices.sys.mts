@@ -18,7 +18,7 @@ const { E10SUtils } = ChromeUtils.importESModule(
 const { HiddenFrame } = ChromeUtils.importESModule(
   "resource://gre/modules/HiddenFrame.sys.mjs",
 );
-const { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
@@ -656,6 +656,7 @@ class webScraper {
   public async fillForm(
     instanceId: string,
     formData: { [selector: string]: string },
+    options: { typingMode?: boolean; typingDelayMs?: number } = {},
   ): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
@@ -666,6 +667,75 @@ class webScraper {
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:FillForm", {
       formData,
+      typingMode: options.typingMode,
+      typingDelayMs: options.typingDelayMs,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Types or sets a value into an element.
+   */
+  public async inputElement(
+    instanceId: string,
+    selector: string,
+    value: string,
+    options: { typingMode?: boolean; typingDelayMs?: number } = {},
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:InputElement", {
+      selector,
+      value,
+      typingMode: options.typingMode,
+      typingDelayMs: options.typingDelayMs,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Press a key or key combination.
+   */
+  public async pressKey(instanceId: string, key: string): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:PressKey", {
+      key,
+    })) as boolean;
+    await this._delayForUser(500);
+    return result;
+  }
+
+  /**
+   * Upload a file through input[type=file]
+   */
+  public async uploadFile(
+    instanceId: string,
+    selector: string,
+    filePath: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:UploadFile", {
+      selector,
+      filePath,
     })) as boolean;
     await this._delayForUser(3500);
     return result;
@@ -1034,6 +1104,9 @@ class webScraper {
       if (!uri) return Promise.resolve([]);
 
       const host = uri.host;
+      const principal =
+        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
+      const originAttributes = principal?.originAttributes ?? {};
       const cookies: Array<{
         name: string;
         value: string;
@@ -1046,19 +1119,32 @@ class webScraper {
       }> = [];
 
       const cookieManager = Services.cookies;
-      const enumerator = cookieManager.getCookiesFromHost(host, {});
+      const originAttrCandidates = [originAttributes];
+      if (Object.keys(originAttributes).length > 0) {
+        originAttrCandidates.push({});
+      }
 
-      for (const cookie of enumerator) {
-        cookies.push({
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.host,
-          path: cookie.path,
-          secure: cookie.isSecure,
-          httpOnly: cookie.isHttpOnly,
-          sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
-          expirationDate: cookie.expiry,
-        });
+      const seen = new Set<string>();
+
+      for (const attrs of originAttrCandidates) {
+        const enumerator = cookieManager.getCookiesFromHost(host, attrs);
+
+        for (const cookie of enumerator) {
+          const key = `${cookie.name}\u0001${cookie.host}\u0001${cookie.path}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          cookies.push({
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.host,
+            path: cookie.path,
+            secure: cookie.isSecure,
+            httpOnly: cookie.isHttpOnly,
+            sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
+            expirationDate: cookie.expiry,
+          });
+        }
       }
 
       return Promise.resolve(cookies);
@@ -1071,7 +1157,7 @@ class webScraper {
   /**
    * Sets a cookie for the current page
    */
-  public setCookie(
+  public async setCookie(
     instanceId: string,
     cookie: {
       name: string;
@@ -1101,21 +1187,118 @@ class webScraper {
         Strict: 2,
       };
 
-      Services.cookies.add(
-        cookie.domain ?? uri.host,
-        cookie.path ?? "/",
-        cookie.name,
-        cookie.value,
-        cookie.secure ?? false,
-        cookie.httpOnly ?? false,
-        false, // isSession
-        cookie.expirationDate ?? Math.floor(Date.now() / 1000) + 86400 * 365,
-        {}, // originAttributes
-        sameSiteMap[cookie.sameSite ?? "None"] ?? 0,
-        Ci.nsICookie.SCHEME_HTTPS,
-      );
+      const principal =
+        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
+      const originAttributes = principal?.originAttributes ?? {};
 
-      return Promise.resolve(true);
+      const isSecure = cookie.secure ?? uri.schemeIs("https");
+      let requestedSameSite = cookie.sameSite ?? "Lax";
+      if (requestedSameSite === "None" && !isSecure) {
+        // SameSite=None には Secure が必須。HTTP では Lax にフォールバックする。
+        requestedSameSite = "Lax";
+      }
+      const schemeMap = isSecure
+        ? Ci.nsICookie.SCHEME_HTTPS
+        : uri.schemeIs("http")
+          ? Ci.nsICookie.SCHEME_HTTP
+          : Ci.nsICookie.SCHEME_UNKNOWN;
+
+      const attrsList = [originAttributes];
+      if (Object.keys(originAttributes).length > 0) {
+        attrsList.push({});
+      }
+
+      const errors: Array<string | number> = [];
+
+      const addWithAttrs = (attrs: Record<string, unknown>) => {
+        try {
+          const validation = Services.cookies.add(
+            cookie.domain ?? uri.host,
+            cookie.path ?? "/",
+            cookie.name,
+            cookie.value,
+            isSecure,
+            cookie.httpOnly ?? false,
+            false, // isSession
+            cookie.expirationDate ??
+              Math.floor(Date.now() / 1000) + 86400 * 365,
+            attrs,
+            sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
+            schemeMap,
+            Boolean((attrs as any).partitionKey),
+          );
+
+          if (validation?.result !== Ci.nsICookieValidation.eOK) {
+            errors.push(validation?.result ?? "unknown");
+            errors.push(validation?.errorString ?? "");
+            console.error(
+              "WebScraper: Cookie rejected:",
+              validation?.result,
+              validation?.errorString,
+            );
+            return false;
+          }
+
+          // Cookie was successfully added (validation passed)
+          // Note: cookieExists() may return false immediately after add() due to timing
+          // or originAttributes mismatch, so we trust the validation result instead
+          return true;
+        } catch (err) {
+          errors.push(String(err));
+          return false;
+        }
+      };
+
+      for (const attrs of attrsList) {
+        if (addWithAttrs(attrs)) {
+          return Promise.resolve(true);
+        }
+      }
+
+      // Fallback: try document.cookie within the content process
+      try {
+        const actor = await this._getActorForBrowser(browser, 80, 100);
+        if (actor) {
+          const parts = [
+            `${cookie.name}=${cookie.value}`,
+            `Path=${cookie.path ?? "/"}`,
+            `SameSite=${requestedSameSite}`,
+          ];
+          if (cookie.domain ?? uri.host) {
+            parts.push(`Domain=${cookie.domain ?? uri.host}`);
+          }
+          if (cookie.expirationDate) {
+            parts.push(
+              `Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`,
+            );
+          }
+          if (isSecure) {
+            parts.push("Secure");
+          }
+
+          const fallback = await actor
+            .sendQuery("WebScraper:SetCookieString", {
+              cookieString: parts.filter(Boolean).join("; "),
+              cookieName: cookie.name,
+              cookieValue: cookie.value,
+            })
+            .catch((err) => {
+              console.error("WebScraper: Fallback cookie set failed", err);
+              return null;
+            });
+          if (fallback) {
+            return true;
+          }
+        }
+      } catch (err) {
+        errors.push(String(err));
+      }
+
+      console.error(
+        "WebScraper: Cookie could not be set (all attempts failed)",
+        errors,
+      );
+      return Promise.resolve(false);
     } catch (e) {
       console.error("WebScraper: Error setting cookie:", e);
       return Promise.resolve(false);
@@ -1159,34 +1342,77 @@ class webScraper {
 
     try {
       const browsingContext = browser.browsingContext as BrowsingContext & {
-        print(settings: nsIPrintSettings): Promise<nsIInputStream>;
+        print(settings: nsIPrintSettings): Promise<void>;
       };
       if (!browsingContext) return null;
 
       // Create print settings for PDF
       const printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
         .getService(Ci.nsIPrintSettingsService)
-        .createNewPrintSettings() as nsIPrintSettings & {
-        showPrintProgress: boolean;
-      };
+        .createNewPrintSettings();
 
+      // Configure print settings following Firefox WebDriver BiDi implementation
+      printSettings.isInitializedFromPrinter = true;
+      printSettings.isInitializedFromPrefs = true;
       printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-      printSettings.printerName = "";
+      printSettings.printerName = "marionette";
       printSettings.printSilent = true;
-      printSettings.showPrintProgress = false;
+
+      // Paper settings
+      printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
+      printSettings.paperWidth = 8.5; // US Letter width in inches
+      printSettings.paperHeight = 11; // US Letter height in inches
+      printSettings.usePageRuleSizeAsPaperSize = true;
+
+      // Margins (1cm = ~0.394 inches)
+      printSettings.marginTop = 0.4;
+      printSettings.marginBottom = 0.4;
+      printSettings.marginLeft = 0.4;
+      printSettings.marginRight = 0.4;
+
+      // Override unwriteable margins
+      printSettings.unwriteableMarginTop = 0;
+      printSettings.unwriteableMarginLeft = 0;
+      printSettings.unwriteableMarginBottom = 0;
+      printSettings.unwriteableMarginRight = 0;
+
+      // Background and scaling
       printSettings.printBGColors = true;
       printSettings.printBGImages = true;
+      printSettings.scaling = 1.0;
+      printSettings.shrinkToFit = true;
+
+      // Clear headers and footers
+      printSettings.headerStrLeft = "";
+      printSettings.headerStrCenter = "";
+      printSettings.headerStrRight = "";
+      printSettings.footerStrLeft = "";
+      printSettings.footerStrCenter = "";
+      printSettings.footerStrRight = "";
+
+      // Create a storage stream for PDF output
+      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
+        Ci.nsIStorageStream,
+      );
+      storageStream.init(4096, 0xffffffff);
+
+      printSettings.outputDestination =
+        Ci.nsIPrintSettings.kOutputDestinationStream;
+      printSettings.outputStream = storageStream.getOutputStream(0);
 
       // Print to stream
-      const pdfStream = await browsingContext.print(printSettings);
+      await browsingContext.print(printSettings);
 
-      // Read stream to array buffer
+      // Read from storage stream
       const binaryStream = Cc[
         "@mozilla.org/binaryinputstream;1"
       ].createInstance(Ci.nsIBinaryInputStream);
-      binaryStream.setInputStream(pdfStream);
+      binaryStream.setInputStream(storageStream.newInputStream(0));
 
-      const bytes = binaryStream.readBytes(binaryStream.available());
+      const available = binaryStream.available();
+      const bytes = binaryStream.readBytes(available);
+
+      storageStream.close();
       binaryStream.close();
 
       // Convert to base64
@@ -1211,17 +1437,19 @@ class webScraper {
     }
 
     return new Promise((resolve) => {
-      let idleTimer: ReturnType<typeof setTimeout> | null = null;
-      let resolved = false;
       const idleThreshold = 500; // Consider idle after 500ms of no activity
+      const state = {
+        idleTimer: null as ReturnType<typeof setTimeout> | null,
+        resolved: false,
+      };
 
       const resetIdleTimer = () => {
-        if (idleTimer) {
-          clearTimeout(idleTimer);
+        if (state.idleTimer) {
+          clearTimeout(state.idleTimer);
         }
-        idleTimer = setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
+        state.idleTimer = setTimeout(() => {
+          if (!state.resolved) {
+            state.resolved = true;
             cleanup();
             resolve(true);
           }
@@ -1229,8 +1457,8 @@ class webScraper {
       };
 
       const cleanup = () => {
-        if (idleTimer) {
-          clearTimeout(idleTimer);
+        if (state.idleTimer) {
+          clearTimeout(state.idleTimer);
         }
         try {
           browser.webProgress?.removeProgressListener(progressListener);
@@ -1240,29 +1468,74 @@ class webScraper {
         }
       };
 
-      const progressListener: nsIWebProgressListener = {
+      const progressListener = {
+        QueryInterface: ChromeUtils.generateQI([
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
+        ]),
+        _state: state,
+        _resetIdleTimer: resetIdleTimer,
         onStateChange(
           _webProgress: nsIWebProgress,
           _request: nsIRequest,
           stateFlags: number,
+          _status: number,
         ) {
-          if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-            // Network activity started
-            if (idleTimer) {
-              clearTimeout(idleTimer);
-              idleTimer = null;
+          try {
+            if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+              // Network activity started
+              if (this._state.idleTimer) {
+                clearTimeout(this._state.idleTimer);
+                this._state.idleTimer = null;
+              }
+            } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+              // Network activity stopped, start idle timer
+              this._resetIdleTimer();
             }
-          } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            // Network activity stopped, start idle timer
-            resetIdleTimer();
+          } catch (e) {
+            // Ignore errors in callback
           }
         },
-        onProgressChange() {},
-        onLocationChange() {},
-        onStatusChange() {},
-        onSecurityChange() {},
-        onContentBlockingEvent() {},
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+        onProgressChange(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          _curSelfProgress: number,
+          _maxSelfProgress: number,
+          _curTotalProgress: number,
+          _maxTotalProgress: number,
+        ) {
+          // No-op
+        },
+        onLocationChange(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          _location: nsIURI,
+          _flags: number,
+        ) {
+          // No-op
+        },
+        onStatusChange(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          _status: number,
+          _message: string,
+        ) {
+          // No-op
+        },
+        onSecurityChange(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          _state: number,
+        ) {
+          // No-op
+        },
+        onContentBlockingEvent(
+          _webProgress: nsIWebProgress,
+          _request: nsIRequest,
+          _event: number,
+        ) {
+          // No-op
+        },
       };
 
       try {
@@ -1282,13 +1555,84 @@ class webScraper {
 
       // Timeout handler
       setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
+        if (!state.resolved) {
+          state.resolved = true;
           cleanup();
           resolve(false);
         }
       }, timeout);
     });
+  }
+
+  /**
+   * Sets the innerHTML of an element (for contenteditable elements like rich text editors)
+   */
+  public async setInnerHTML(
+    instanceId: string,
+    selector: string,
+    html: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SetInnerHTML", {
+      selector,
+      innerHTML: html,
+    })) as boolean;
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Sets the textContent of an element (for contenteditable elements)
+   */
+  public async setTextContent(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SetTextContent", {
+      selector,
+      textContent: text,
+    })) as boolean;
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Dispatches a custom event on an element (for triggering framework-specific handlers)
+   */
+  public async dispatchEvent(
+    instanceId: string,
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DispatchEvent", {
+      selector,
+      eventType,
+      eventOptions: options,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
   }
 }
 

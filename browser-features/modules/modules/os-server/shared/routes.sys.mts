@@ -163,11 +163,14 @@ export function registerCommonAutomationRoutes(
   ns.post("/instances/:id/fillForm", async (ctx: RouterContext) => {
     const json = ctx.json() as {
       formData?: { [selector: string]: string };
+      typingMode?: boolean;
+      typingDelayMs?: number;
     } | null;
     const service = getService();
     const okFilled = await service.fillForm(
       ctx.params.id,
       json?.formData ?? {},
+      { typingMode: json?.typingMode, typingDelayMs: json?.typingDelayMs },
     );
     return { status: 200, body: { ok: okFilled } };
   });
@@ -353,7 +356,10 @@ export function registerCommonAutomationRoutes(
       sameSite: json.sameSite,
       expirationDate: json.expirationDate,
     });
-    return { status: 200, body: { ok } };
+    if (!ok) {
+      return { status: 500, body: { error: "failed to set cookie" } };
+    }
+    return { status: 200, body: { ok: true } };
   });
 
   // Accept alert
@@ -417,7 +423,91 @@ export function registerCommonAutomationRoutes(
     const eventType = json?.eventType ?? "";
     const options = json?.options;
     const service = getService();
-    const ok = await service.dispatchEvent(ctx.params.id, sel, eventType, options);
+    const ok = await service.dispatchEvent(
+      ctx.params.id,
+      sel,
+      eventType,
+      options,
+    );
     return { status: 200, body: { ok } };
   });
+
+  // Type into an element (optional typing mode)
+  ns.post<
+    {
+      selector?: string;
+      value?: string;
+      typingMode?: boolean;
+      typingDelayMs?: number;
+    },
+    OkResponse | ErrorResponse
+  >("/instances/:id/input", async (ctx: RouterContext) => {
+    const json = ctx.json() as {
+      selector?: string;
+      value?: string;
+      typingMode?: boolean;
+      typingDelayMs?: number;
+    } | null;
+    if (!json?.selector || json.value === undefined) {
+      return { status: 400, body: { error: "selector and value required" } };
+    }
+    const service = getService();
+    if (!service.inputElement) {
+      return { status: 501, body: { error: "inputElement not supported" } };
+    }
+    const ok = await service.inputElement(
+      ctx.params.id,
+      json.selector,
+      json.value,
+      {
+        typingMode: json.typingMode,
+        typingDelayMs: json.typingDelayMs,
+      },
+    );
+    return { status: 200, body: { ok: !!ok } };
+  });
+
+  // Press key or key combination
+  ns.post<{ key?: string }, OkResponse | ErrorResponse>(
+    "/instances/:id/pressKey",
+    async (ctx: RouterContext) => {
+      const json = ctx.json() as { key?: string } | null;
+      if (!json?.key) {
+        return { status: 400, body: { error: "key required" } };
+      }
+      const service = getService();
+      if (!service.pressKey) {
+        return { status: 501, body: { error: "pressKey not supported" } };
+      }
+      const ok = await service.pressKey(ctx.params.id, json.key);
+      return { status: 200, body: { ok: !!ok } };
+    },
+  );
+
+  // Upload file via input[type=file]
+  ns.post<{ selector?: string; filePath?: string }, OkResponse | ErrorResponse>(
+    "/instances/:id/uploadFile",
+    async (ctx: RouterContext) => {
+      const json = ctx.json() as {
+        selector?: string;
+        filePath?: string;
+      } | null;
+      if (!json?.selector || !json?.filePath) {
+        return {
+          status: 400,
+          body: { error: "selector and filePath required" },
+        };
+      }
+      const service = getService();
+      if (!service.uploadFile) {
+        return { status: 501, body: { error: "uploadFile not supported" } };
+      }
+      const ok = await service.uploadFile(
+        ctx.params.id,
+        json.selector,
+        json.filePath,
+      );
+      return { status: 200, body: { ok: !!ok } };
+    },
+  );
 }
