@@ -115,4 +115,7 @@ export class NRChromeModalChild extends JSWindowActorChild {
       win.removeForm();
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

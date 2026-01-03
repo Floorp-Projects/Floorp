@@ -37,6 +37,9 @@ interface NRWebScraperMessageData {
   typingDelayMs?: number;
   filePath?: string;
   key?: string;
+  cookieString?: string;
+  cookieName?: string;
+  cookieValue?: string;
 }
 
 interface NormalizedHighlightOptions {
@@ -119,6 +122,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private highlightStyleElement: HTMLStyleElement | null = null;
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
+  private pageHideHandler: (() => void) | null = null;
+  // 非同期操作の競合防止用 操作ID
+  private highlightOperationId = 0;
 
   /**
    * Ensures the target element is in view (centers in viewport when possible).
@@ -352,6 +358,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
     translationKey: string,
     translationVars: Record<string, string | number> = {},
   ): void {
+    // 開始時点の操作IDを記録
+    const startOperationId = this.highlightOperationId;
+
     void (async () => {
       try {
         // Check if target(s) are still alive before proceeding
@@ -376,6 +385,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
           translationKey,
           translationVars,
         );
+
+        // 翻訳完了後、新しい操作が開始されていたら中断
+        if (startOperationId !== this.highlightOperationId) {
+          return;
+        }
+
         await this.highlightInspection(target, elementInfo);
       } catch {
         // Silently ignore inspection errors
@@ -388,11 +403,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * Keeps duration short and avoids info panel/label noise.
    */
   private runAsyncValuePeek(target: Element): void {
+    // 開始時点の操作IDを記録
+    const startOperationId = this.highlightOperationId;
+
     void (async () => {
       try {
         if (!target.isConnected) {
           return;
         }
+
+        // 新しい操作が開始されていたら中断
+        if (startOperationId !== this.highlightOperationId) {
+          return;
+        }
+
         await this.applyHighlight(
           target,
           { action: "InspectPeek" },
@@ -770,21 +794,32 @@ export class NRWebScraperChild extends JSWindowActorChild {
   }
 
   private cleanupHighlight(): void {
+    // 操作IDを増加させて、進行中の非同期操作をキャンセル
+    ++this.highlightOperationId;
+
     // timerSetTimeoutで設定したタイマーはtimerClearTimeoutで解除する
     if (this.highlightCleanupTimer !== null) {
       timerClearTimeout(this.highlightCleanupTimer);
     }
     this.highlightCleanupTimer = null;
 
-    // 一時ハイライトをフェードアウト
-    const fadeOutAndCleanup = () => {
-      const overlaysToRemove = [
-        ...(this.highlightOverlay ? [this.highlightOverlay] : []),
-        ...this.highlightOverlays,
-      ];
+    // 先に参照を保存してからクリア（レース条件を防ぐ）
+    const overlaysToRemove = [
+      ...(this.highlightOverlay ? [this.highlightOverlay] : []),
+      ...this.highlightOverlays,
+    ];
+    const callbacksToRun = [...this.highlightCleanupCallbacks];
 
-      if (overlaysToRemove.length > 0) {
-        overlaysToRemove.forEach((overlay) => {
+    // 参照を即座にクリア
+    this.highlightOverlay = null;
+    this.highlightOverlays = [];
+    this.highlightCleanupCallbacks = [];
+
+    // 一時ハイライトをフェードアウト
+    if (overlaysToRemove.length > 0) {
+      overlaysToRemove.forEach((overlay) => {
+        // DeadObject対策: try-catchでisConnectedチェックを囲む
+        try {
           if (overlay?.isConnected) {
             overlay.style.setProperty(
               "transition",
@@ -793,29 +828,29 @@ export class NRWebScraperChild extends JSWindowActorChild {
             overlay.style.setProperty("opacity", "0");
             overlay.style.setProperty("transform", "scale(0.98)");
             timerSetTimeout(() => {
-              if (overlay?.isConnected) {
-                overlay.remove();
+              try {
+                if (overlay?.isConnected) {
+                  overlay.remove();
+                }
+              } catch {
+                // DeadObject - 既に削除済み、無視
               }
             }, 300);
           }
-        });
-      }
-
-      // クリーンアップコールバックを実行
-      for (const cleanup of this.highlightCleanupCallbacks) {
-        try {
-          cleanup();
         } catch {
-          // ignore cleanup errors
+          // DeadObject - 既にナビゲーション等で無効化されているため無視
         }
+      });
+    }
+
+    // クリーンアップコールバックを実行
+    for (const cleanup of callbacksToRun) {
+      try {
+        cleanup();
+      } catch {
+        // ignore cleanup errors
       }
-      this.highlightCleanupCallbacks = [];
-
-      this.highlightOverlay = null;
-      this.highlightOverlays = [];
-    };
-
-    fadeOutAndCleanup();
+    }
   }
 
   private getActionColorClass(action?: string): string {
@@ -1067,10 +1102,18 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
     this.infoPanelCleanupTimer = null;
 
-    if (this.infoPanel?.isConnected) {
-      this.infoPanel.remove();
-    }
+    // 先に参照を保存してクリア
+    const panel = this.infoPanel;
     this.infoPanel = null;
+
+    // DeadObject対策: try-catchでisConnectedチェックを囲む
+    try {
+      if (panel?.isConnected) {
+        panel.remove();
+      }
+    } catch {
+      // DeadObject - 既にナビゲーション等で無効化されているため無視
+    }
   }
 
   private async applyHighlightMultiple(
@@ -1098,6 +1141,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.ensureHighlightStyle();
     this.cleanupHighlight();
 
+    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    const currentOperationId = this.highlightOperationId;
+
     const colorClass = this.getActionColorClass(options.action);
 
     // Show info panel with progress
@@ -1109,6 +1155,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
       0,
       targets.length,
     );
+
+    // showInfoPanel await後に操作IDチェック - 新しい操作が開始されていたらオーバーレイ作成をスキップ
+    if (currentOperationId !== this.highlightOperationId) {
+      this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+      return true;
+    }
 
     for (const target of targets) {
       // Check if target is still alive (not a DeadObject from a previous page)
@@ -1128,6 +1180,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const padding = options.padding;
 
       (doc.body ?? doc.documentElement)?.append(overlay);
+      // オーバーレイをDOMに追加したら即座に配列にも追加（cleanupHighlightで確実に取得できるように）
+      this.highlightOverlays.push(overlay);
 
       const updatePosition = () => {
         const rect = target.getBoundingClientRect();
@@ -1163,8 +1217,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
         subtree: false,
       });
       this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
-
-      this.highlightOverlays.push(overlay);
     }
 
     // Scroll to first element (with DeadObject safety check)
@@ -1195,12 +1247,20 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     this.highlightCleanupTimer = Number(
-      timerSetTimeout(() => this.cleanupHighlight(), options.duration),
+      timerSetTimeout(() => {
+        this.cleanupHighlight();
+        this.hideInfoPanel(); // オーバーレイと一緒に情報パネルも非表示
+      }, options.duration),
     );
 
     await new Promise<void>((resolve) => {
       win.requestAnimationFrame(() => resolve());
     });
+
+    // 新しい操作が開始された場合はここで早期リターン
+    if (currentOperationId !== this.highlightOperationId) {
+      return true;
+    }
 
     if (options.delay > 0) {
       await new Promise<void>((resolve) => {
@@ -1229,6 +1289,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       this.cleanupHighlight();
       return false;
     }
+
     const mergedOptions = this.getHighlightOptions(
       optionsInput.action ?? "Highlight",
       optionsInput,
@@ -1244,17 +1305,27 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.ensureHighlightStyle();
     this.cleanupHighlight();
 
+    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    // 新しい操作が開始されたら、古い操作は自動的にキャンセルされる
+    const currentOperationId = this.highlightOperationId;
+
+    // Show info panel (await before creating overlay)
+    if (showPanel) {
+      await this.showInfoPanel(options.action, undefined, elementInfo, 1);
+
+      // showInfoPanel await後に操作IDチェック
+      if (currentOperationId !== this.highlightOperationId) {
+        this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+        return true;
+      }
+    }
+
     const overlay = doc.createElement("div");
     overlay.className = "nr-webscraper-highlight-overlay";
 
     const colorClass = this.getActionColorClass(options.action);
     if (colorClass) {
       overlay.classList.add(colorClass);
-    }
-
-    // Show info panel
-    if (showPanel) {
-      await this.showInfoPanel(options.action, undefined, elementInfo, 1);
     }
 
     const padding = options.padding;
@@ -1267,9 +1338,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
       label.className = "nr-webscraper-highlight-label";
       label.textContent = await this.getActionLabel(options.action);
       overlay.append(label);
+
+      // ラベル取得後に操作IDチェック
+      if (currentOperationId !== this.highlightOperationId) {
+        this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+        return true;
+      }
     }
 
     (doc.body ?? doc.documentElement)?.append(overlay);
+    // オーバーレイをDOMに追加したら即座に追跡（cleanupHighlightで確実に取得できるように）
+    this.highlightOverlay = overlay;
 
     const updatePosition = () => {
       const rect = target.getBoundingClientRect();
@@ -1317,8 +1396,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     });
     this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
 
-    this.highlightOverlay = overlay;
-
     if (options.scrollBehavior !== "none") {
       try {
         (target as HTMLElement).scrollIntoView({
@@ -1363,12 +1440,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     this.highlightCleanupTimer = Number(
-      timerSetTimeout(() => this.cleanupHighlight(), options.duration),
+      timerSetTimeout(() => {
+        this.cleanupHighlight();
+        this.hideInfoPanel(); // オーバーレイと一緒に情報パネルも非表示
+      }, options.duration),
     );
 
     await new Promise<void>((resolve) => {
       win.requestAnimationFrame(() => resolve());
     });
+
+    // 新しい操作が開始された場合はここで早期リターン
+    // オーバーレイは既にDOMに追加されているが、タイマーでクリーンアップされる
+    if (currentOperationId !== this.highlightOperationId) {
+      return true;
+    }
 
     if (options.delay > 0) {
       await new Promise<void>((resolve) => {
@@ -1378,6 +1464,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     return true;
   }
+
+  /**
+   * Handles DOM events derived from JSWindowActor registration.
+   * Required to prevent "Property 'handleEvent' is not callable" errors.
+   */
+  handleEvent(_event: Event): void {
+    // No-op: We only listen to trigger actor creation or specific side-effects
+  }
+
   /**
    * Called when the actor is created for a content window
    *
@@ -1389,6 +1484,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
       "NRWebScraperChild created for:",
       this.contentWindow?.location?.href,
     );
+
+    // SPAナビゲーション対応: pagehideイベントでクリーンアップ
+    const win = this.contentWindow;
+    if (win) {
+      this.pageHideHandler = () => {
+        this.cleanupHighlight();
+        this.hideInfoPanel();
+      };
+      win.addEventListener("pagehide", this.pageHideHandler);
+    }
   }
 
   /**
@@ -1398,13 +1503,28 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * to prevent memory leaks when the content window is closed.
    */
   willDestroy() {
+    // pagehideイベントリスナーを解除
+    const win = this.contentWindow;
+    if (win && this.pageHideHandler) {
+      try {
+        win.removeEventListener("pagehide", this.pageHideHandler);
+      } catch {
+        // DeadObject - 無視
+      }
+    }
+    this.pageHideHandler = null;
+
     // Clean up all highlight overlays and timers
     this.cleanupHighlight();
     this.hideInfoPanel();
 
     // Remove style element if still connected
-    if (this.highlightStyleElement?.isConnected) {
-      this.highlightStyleElement.remove();
+    try {
+      if (this.highlightStyleElement?.isConnected) {
+        this.highlightStyleElement.remove();
+      }
+    } catch {
+      // DeadObject - 無視
     }
     this.highlightStyleElement = null;
   }
@@ -1631,6 +1751,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
       case "WebScraper:UploadFile":
         if (message.data?.selector && message.data?.filePath) {
           return this.uploadFile(message.data.selector, message.data.filePath);
+        }
+        break;
+      case "WebScraper:SetCookieString":
+        if (message.data?.cookieString) {
+          return this.setCookieString(
+            message.data.cookieString,
+            message.data.cookieName,
+            message.data.cookieValue,
+          );
         }
         break;
     }
@@ -3054,21 +3183,22 @@ export class NRWebScraperChild extends JSWindowActorChild {
       await this.applyHighlight(element, options, elementInfo);
 
       type MozFileInput = HTMLInputElement & {
-        mozSetFileArray?: (files: unknown[]) => void;
-        mozSetFileNameArray?: (files: string[]) => void;
+        mozSetFileArray?: (files: File[]) => void;
       };
       const fileInput = element as MozFileInput;
 
-      // Use privileged path-based setter
-      if (typeof fileInput.mozSetFileNameArray === "function") {
-        try {
-          fileInput.mozSetFileNameArray([filePath]);
-        } catch (e) {
-          console.error("NRWebScraperChild: mozSetFileNameArray failed:", e);
+      // Create File object from path and set via mozSetFileArray
+      // (Following Mozilla's Marionette pattern - mozSetFileNameArray is not available in content scripts)
+      try {
+        const file = await File.createFromFileName(filePath);
+        if (typeof fileInput.mozSetFileArray === "function") {
+          fileInput.mozSetFileArray([file]);
+        } else {
+          console.error("NRWebScraperChild: mozSetFileArray not available");
           return false;
         }
-      } else {
-        console.error("NRWebScraperChild: mozSetFileNameArray not available");
+      } catch (e) {
+        console.error("NRWebScraperChild: Failed to create file from path:", e);
         return false;
       }
 
@@ -3077,6 +3207,42 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error uploading file:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets a cookie using document.cookie
+   *
+   * This method sets a cookie in the content process using the document.cookie API.
+   * It's used as a fallback when Services.cookies.add() fails to store cookies.
+   *
+   * @param cookieString - The full cookie string (e.g., "name=value; Path=/; Domain=example.com")
+   * @param cookieName - The cookie name for verification
+   * @param cookieValue - The cookie value for verification
+   * @returns boolean - True if the cookie was set successfully, false otherwise
+   */
+  setCookieString(
+    cookieString: string,
+    cookieName?: string,
+    cookieValue?: string,
+  ): boolean {
+    try {
+      if (!this.contentWindow?.document) {
+        return false;
+      }
+
+      // Set the cookie via document.cookie
+      this.contentWindow.document.cookie = cookieString;
+
+      // Verify if the cookie was set (if name and value were provided)
+      if (cookieName && cookieValue) {
+        const cookies = this.contentWindow.document.cookie;
+        return cookies.includes(`${cookieName}=${cookieValue}`);
+      }
+
+      return true;
+    } catch {
       return false;
     }
   }

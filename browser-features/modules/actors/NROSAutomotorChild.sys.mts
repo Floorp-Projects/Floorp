@@ -160,4 +160,7 @@ export class NROSAutomotorChild extends JSWindowActorChild {
       console.error("[OSAutomotor Child] Error in actorCreated:", error);
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }
