@@ -33,6 +33,59 @@ const PROGRESS_LISTENERS = new Set();
 const FRAME = new HiddenFrame();
 
 /**
+ * Global HTTP request tracker to accurately monitor network idle state.
+ * This tracker lives for the lifetime of the module and monitors all instances.
+ */
+const GlobalHTTPTracker = {
+  activeRequests: new Map<number, Set<nsIRequest>>(),
+  
+  init() {
+    try {
+      Services.obs.addObserver(this, "http-on-opening-request");
+      Services.obs.addObserver(this, "http-on-stop-request");
+    } catch (e) {
+      console.error("WebScraper: GlobalHTTPTracker init failed:", e);
+    }
+  },
+
+  observe(subject: nsISupports, topic: string, _data: string | null) {
+    try {
+      const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
+      const bcid = channel.loadInfo?.browsingContextID;
+      if (!bcid) return;
+
+      if (topic === "http-on-opening-request") {
+        const url = channel.URI.spec;
+        if (url.startsWith("http") || url.startsWith("https")) {
+          let requests = this.activeRequests.get(bcid);
+          if (!requests) {
+            requests = new Set();
+            this.activeRequests.set(bcid, requests);
+          }
+          requests.add(channel);
+        }
+      } else if (topic === "http-on-stop-request") {
+        const requests = this.activeRequests.get(bcid);
+        if (requests) {
+          requests.delete(channel);
+          if (requests.size === 0) {
+            this.activeRequests.delete(bcid);
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  },
+
+  getActiveCount(bcid: number): number {
+    return this.activeRequests.get(bcid)?.size || 0;
+  }
+};
+
+GlobalHTTPTracker.init();
+
+/**
  * WebScraper class that manages headless browser instances for web scraping
  *
  * This class provides a high-level interface for creating, managing, and
@@ -1371,8 +1424,13 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
+    const bcid = browser.browsingContext?.id;
+    if (!bcid) {
+      return Promise.resolve(null);
+    }
+
     return new Promise((resolve) => {
-      const idleThreshold = 500; // Consider idle after 500ms of no activity
+      const idleThreshold = 500;
       const state = {
         idleTimer: null as ReturnType<typeof setTimeout> | null,
         resolved: false,
@@ -1383,116 +1441,67 @@ class webScraper {
           clearTimeout(state.idleTimer);
         }
         state.idleTimer = setTimeout(() => {
-          if (!state.resolved) {
+          const activeCount = GlobalHTTPTracker.getActiveCount(bcid);
+          if (!state.resolved && activeCount === 0) {
+            console.log(`[WebScraper] Network reached idle for BCID ${bcid}.`);
             state.resolved = true;
             cleanup();
             resolve(true);
+          } else if (activeCount > 0) {
+            // Still active, check again later
+            resetIdleTimer();
           }
         }, idleThreshold);
       };
 
       const cleanup = () => {
+        console.log("[WebScraper] Cleaning up waitForNetworkIdle tracking...");
         if (state.idleTimer) {
           clearTimeout(state.idleTimer);
         }
         try {
-          browser.webProgress?.removeProgressListener(progressListener);
-          PROGRESS_LISTENERS.delete(progressListener);
+          Services.obs.removeObserver(observer, "http-on-opening-request");
+          Services.obs.removeObserver(observer, "http-on-stop-request");
         } catch {
-          // Ignore cleanup errors
+          // Ignore
         }
       };
 
-      const progressListener = {
-        QueryInterface: ChromeUtils.generateQI([
-          "nsIWebProgressListener",
-          "nsISupportsWeakReference",
-        ]),
-        _state: state,
-        _resetIdleTimer: resetIdleTimer,
-        onStateChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          stateFlags: number,
-          _status: number,
-        ) {
+      // We still use a local observer to "ping" the idle check as soon as a request stops
+      const observer = {
+        observe(subject: nsISupports, topic: string, _data: string | null) {
           try {
-            if (stateFlags & (Ci.nsIWebProgressListener.STATE_START ?? 0)) {
-              // Network activity started
-              if (this._state.idleTimer) {
-                clearTimeout(this._state.idleTimer);
-                this._state.idleTimer = null;
+            const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
+            if (channel.loadInfo?.browsingContextID === bcid) {
+              if (topic === "http-on-opening-request") {
+                if (state.idleTimer) {
+                  clearTimeout(state.idleTimer);
+                  state.idleTimer = null;
+                }
+              } else if (topic === "http-on-stop-request") {
+                resetIdleTimer();
               }
-            } else if (
-              stateFlags & (Ci.nsIWebProgressListener.STATE_STOP ?? 0)
-            ) {
-              // Network activity stopped, start idle timer
-              this._resetIdleTimer();
             }
-          } catch (_e) {
-            // Ignore errors in callback
+          } catch {
+            // Ignore
           }
-        },
-        onProgressChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          _curSelfProgress: number,
-          _maxSelfProgress: number,
-          _curTotalProgress: number,
-          _maxTotalProgress: number,
-        ) {
-          // No-op
-        },
-        onLocationChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          _location: nsIURI,
-          _flags: number,
-        ) {
-          // No-op
-        },
-        onStatusChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          _status: number,
-          _message: string,
-        ) {
-          // No-op
-        },
-        onSecurityChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          _state: number,
-        ) {
-          // No-op
-        },
-        onContentBlockingEvent(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          _event: number,
-        ) {
-          // No-op
-        },
+        }
       };
 
       try {
-        browser.webProgress?.addProgressListener(
-          progressListener,
-          Ci.nsIWebProgress.NOTIFY_STATE_ALL ?? 0,
-        );
-        PROGRESS_LISTENERS.add(progressListener);
+        Services.obs.addObserver(observer, "http-on-opening-request");
+        Services.obs.addObserver(observer, "http-on-stop-request");
       } catch (e) {
-        console.error("WebScraper: Error adding progress listener:", e);
-        resolve(false);
-        return;
+        console.error("WebScraper: Error adding local observer:", e);
       }
 
-      // Start initial idle timer
+      // Initial check
       resetIdleTimer();
 
-      // Timeout handler
+      // Overall timeout
       setTimeout(() => {
         if (!state.resolved) {
+          console.log("[WebScraper] waitForNetworkIdle timed out.");
           state.resolved = true;
           cleanup();
           resolve(false);
