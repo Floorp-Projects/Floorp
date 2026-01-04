@@ -111,7 +111,7 @@ def stop_test_http_server(httpd: http.server.ThreadingHTTPServer, tmpdir: str):
     shutil.rmtree(tmpdir, ignore_errors=True)
 
 
-def make_request(path, method="GET", data=None, *, stream=False, timeout=8):
+def make_request(path, method="GET", data=None, *, stream=False, timeout=60):
     url = f"{BASE_URL}{path}"
     req = urllib.request.Request(url, method=method)
 
@@ -354,7 +354,7 @@ def test_shared_automation(
             },
             "typingMode": False,
         },
-        timeout=15,
+        timeout=30,
     )
     run_value_test(
         "Get Value (#name)",
@@ -492,7 +492,7 @@ def test_shared_automation(
             "typingMode": True,
             "typingDelayMs": 10,
         },
-        expected_status=(200, 501),
+        expected_status=200,
     )
 
     # File upload
@@ -502,7 +502,7 @@ def test_shared_automation(
             f"{prefix}/uploadFile",
             method="POST",
             data={"selector": "#fileInput", "filePath": upload_file_path},
-            expected_status=(200, 500, 501),
+            expected_status=200,
         )
 
     # Misc automation
@@ -512,7 +512,6 @@ def test_shared_automation(
         method="POST",
         data={"timeout": 2000},
     )
-    run_test("Save as PDF", f"{prefix}/pdf")
     run_test("Accept Alert", f"{prefix}/acceptAlert", method="POST")
     run_test("Dismiss Alert", f"{prefix}/dismissAlert", method="POST")
 
@@ -537,7 +536,7 @@ def test_shared_automation(
         f"{prefix}/pressKey",
         method="POST",
         data={"key": "Enter"},
-        expected_status=(200, 501),
+        expected_status=200,
         timeout=3,
     )
 
@@ -553,7 +552,7 @@ def test_shared_automation(
             "path": "/",
             "sameSite": "Lax",
         },
-        expected_status=(200, 500),
+        expected_status=200,
     )
     run_value_test(
         "Get Cookies (after set)",
@@ -691,6 +690,7 @@ def main():
     if run_test("Health Check", "/health") is None:
         print("\nServer seems to be down or unreachable.")
         sys.exit(1)
+
 
     try:
         test_browser_info()

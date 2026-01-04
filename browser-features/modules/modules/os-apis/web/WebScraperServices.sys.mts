@@ -39,6 +39,8 @@ const FRAME = new HiddenFrame();
  * navigating browser instances without visible UI elements.
  */
 class webScraper {
+
+
   // Map to store browser instances with their unique IDs
   private _browserInstances: Map<string, XULBrowserElement> = new Map();
   private _instanceId!: string;
@@ -1355,130 +1357,7 @@ class webScraper {
     return Promise.resolve(true);
   }
 
-  /**
-   * Saves the current page as PDF and returns base64 encoded data
-   */
-  public async saveAsPDF(instanceId: string): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
 
-    try {
-      // Ensure browser is active for rendering
-      browser.docShellIsActive = true;
-
-      const browsingContext = browser.browsingContext as BrowsingContext & {
-        print(settings: nsIPrintSettings): Promise<void>;
-      };
-      if (!browsingContext) return null;
-
-      // Force layout flush
-      try {
-        browser.getBoundingClientRect();
-      } catch (e) {}
-
-      // Wait a short moment for any pending layout to settle
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Create a storage stream for PDF output
-      const storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(
-        Ci.nsIStorageStream,
-      );
-      storageStream.init(4096, 0xffffffff);
-
-      // Create print settings for PDF
-      const printSettingsService = Cc[
-        "@mozilla.org/gfx/printsettings-service;1"
-      ].getService(Ci.nsIPrintSettingsService);
-
-      const printSettings = printSettingsService.createNewPrintSettings();
-
-      // Configure print settings
-      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF ?? 0;
-      printSettings.printSilent = true;
-      printSettings.showPrintProgress = false;
-
-      // Output to stream
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationStream;
-      printSettings.outputStream = storageStream.getOutputStream(0);
-
-      // Initialize from printer if possible
-      try {
-        const defaultPrinter = printSettingsService.lastUsedPrinterName;
-        if (defaultPrinter) {
-          printSettings.printerName = defaultPrinter;
-        } else {
-          printSettings.printerName = "marionette";
-        }
-        printSettings.isInitializedFromPrinter = true;
-        printSettings.isInitializedFromPrefs = true;
-      } catch (_e) {
-        printSettings.isInitializedFromPrinter = false;
-        printSettings.isInitializedFromPrefs = false;
-      }
-
-      // Allow mostly read-only settings to fail silently (e.g. in headless mode)
-      try {
-        // Paper settings
-        printSettings.paperSizeUnit =
-          Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
-        printSettings.paperWidth = 8.5; // US Letter width in inches
-        printSettings.paperHeight = 11; // US Letter height in inches
-        printSettings.usePageRuleSizeAsPaperSize = true;
-
-        // Margins (1cm = ~0.394 inches)
-        printSettings.marginTop = 0.4;
-        printSettings.marginBottom = 0.4;
-        printSettings.marginLeft = 0.4;
-        printSettings.marginRight = 0.4;
-
-        // Override unwriteable margins
-        printSettings.unwriteableMarginTop = 0;
-        printSettings.unwriteableMarginLeft = 0;
-        printSettings.unwriteableMarginBottom = 0;
-        printSettings.unwriteableMarginRight = 0;
-
-        // Background and scaling
-        printSettings.printBGColors = true;
-        printSettings.printBGImages = true;
-        printSettings.scaling = 1.0;
-        printSettings.shrinkToFit = true;
-
-        // Clear headers and footers
-        printSettings.headerStrLeft = "";
-        printSettings.headerStrCenter = "";
-        printSettings.headerStrRight = "";
-        printSettings.footerStrLeft = "";
-        printSettings.footerStrCenter = "";
-        printSettings.footerStrRight = "";
-      } catch (e) {
-        console.warn("WebScraper: Some print settings could not be applied:", e);
-      }
-
-      // Print to stream
-      await browsingContext.print(printSettings);
-
-      // Read from storage stream
-      const binaryStream = Cc[
-        "@mozilla.org/binaryinputstream;1"
-      ].createInstance(Ci.nsIBinaryInputStream);
-      binaryStream.setInputStream(storageStream.newInputStream(0));
-
-      const available = binaryStream.available();
-      const bytes = binaryStream.readBytes(available);
-
-      binaryStream.close();
-
-      // Convert to base64
-      const base64 = btoa(bytes);
-      return base64;
-    } catch (e) {
-      console.warn("WebScraper: PDF generation partial failure (metadata/settings issue):", e);
-      return null;
-    }
-  }
 
   /**
    * Waits for network to become idle (no pending requests)

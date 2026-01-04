@@ -376,13 +376,6 @@ export function registerCommonAutomationRoutes(
     return { status: 200, body: { ok } };
   });
 
-  // Save as PDF
-  ns.get("/instances/:id/pdf", async (ctx: RouterContext) => {
-    const service = getService();
-    const pdf = await service.saveAsPDF(ctx.params.id);
-    return { status: 200, body: pdf != null ? { pdf } : {} };
-  });
-
   // Wait for network idle
   ns.post("/instances/:id/waitForNetworkIdle", async (ctx: RouterContext) => {
     const json = ctx.json() as { timeout?: number } | null;
