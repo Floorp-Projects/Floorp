@@ -215,7 +215,7 @@ export class MouseGestureController {
       }
 
       if (action) {
-        executeGestureAction(action);
+        executeGestureAction(action, this.targetWindow);
         event.preventDefault();
         event.stopPropagation();
         this.isRockerGestureFired = true;
@@ -343,7 +343,7 @@ export class MouseGestureController {
 
         // Execute the action after a brief display delay
         this.targetWindow.setTimeout(() => {
-          executeGestureAction(actionInfo.action);
+          executeGestureAction(actionInfo.action, this.targetWindow);
           this.resetGestureState();
           if (this.preventionTimeoutId) {
             clearTimeout(this.preventionTimeoutId);

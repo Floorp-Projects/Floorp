@@ -6,7 +6,7 @@
 import i18next from "i18next";
 import { actions } from "./actions.ts";
 
-export type GestureActionFn = () => void;
+export type GestureActionFn = (win: Window) => void;
 export interface GestureActionRegistration {
   name: string;
   fn: GestureActionFn;
@@ -16,11 +16,11 @@ export function getAllGestureActions(): GestureActionRegistration[] {
   return gestureActions.getActionsList();
 }
 
-export function executeGestureAction(name: string): boolean {
+export function executeGestureAction(name: string, targetWindow: Window): boolean {
   const action = gestureActions.getAction(name);
   if (action) {
     try {
-      action();
+      action(targetWindow);
       return true;
     } catch (e) {
       console.error(`[mouse-gesture] Action failed: ${name}`, e);

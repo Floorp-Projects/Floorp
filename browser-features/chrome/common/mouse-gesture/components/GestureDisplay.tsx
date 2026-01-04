@@ -13,6 +13,9 @@ import { getConfig } from "../config.ts";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+// Track GestureDisplay instances per window to avoid conflicts in multi-window environment
+const gestureDisplayInstances = new WeakMap<Window, GestureDisplay>();
+
 export class GestureDisplay {
   private mountContainer: HTMLDivElement | null = null;
   private trail: { x: number; y: number }[] = [];
@@ -31,21 +34,31 @@ export class GestureDisplay {
 
   constructor(win: Window) {
     this.targetWindow = win;
+
+    // Destroy previous instance for this specific window only (not other windows)
+    const existingInstance = gestureDisplayInstances.get(win);
+    if (existingInstance) {
+      existingInstance.destroy();
+    }
+
+    gestureDisplayInstances.set(win, this);
     this.addGlobalStyles();
     this.createMountPoint();
     this.initializeComponent();
   }
 
   private addGlobalStyles(): void {
-    const doc = this.targetWindow.document;
-    if (!doc || !doc.head) return;
+    if (
+      !this.targetWindow.document ||
+      !this.targetWindow.document.head
+    ) return;
 
-    // スタイルが未追加のウィンドウにだけ挿入する
-    if (doc.getElementById("mouse-gesture-global-styles")) {
+    // Check if styles already exist in this window's document
+    if (this.targetWindow.document.getElementById("mouse-gesture-global-styles")) {
       return;
     }
 
-    const styleElement = doc.createElement("style");
+    const styleElement = this.targetWindow.document.createElement("style");
     styleElement.id = "mouse-gesture-global-styles";
     styleElement.textContent = `
             #mouse-gesture-display-container {
@@ -63,7 +76,7 @@ export class GestureDisplay {
                 pointer-events: none;
             }
         `;
-    doc.head.appendChild(styleElement);
+    this.targetWindow.document.head.appendChild(styleElement);
   }
 
   private createMountPoint(): void {
@@ -75,6 +88,9 @@ export class GestureDisplay {
     if (existingContainer && existingContainer.parentNode) {
       existingContainer.parentNode.removeChild(existingContainer);
     }
+
+    // Ensure styles exist (addGlobalStyles already checks for duplicates)
+    this.addGlobalStyles();
 
     this.mountContainer = this.targetWindow.document.createElement("div");
     this.mountContainer.id = "mouse-gesture-display-container";
@@ -265,5 +281,9 @@ export class GestureDisplay {
     }
 
     this.mountContainer = null;
+    // Remove from instances map if this is the current instance for the window
+    if (gestureDisplayInstances.get(this.targetWindow) === this) {
+      gestureDisplayInstances.delete(this.targetWindow);
+    }
   }
 }
