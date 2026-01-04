@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ShortcutConfig } from "../../../types/pref.ts";
-import { Input } from "@/components/common/input.tsx";
+import { Input } from "@nora/ui-components";
 
 interface ShortcutEditorProps {
     isOpen: boolean;

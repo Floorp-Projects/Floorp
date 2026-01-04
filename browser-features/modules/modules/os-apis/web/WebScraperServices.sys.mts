@@ -18,7 +18,7 @@ const { E10SUtils } = ChromeUtils.importESModule(
 const { HiddenFrame } = ChromeUtils.importESModule(
   "resource://gre/modules/HiddenFrame.sys.mjs",
 );
-const { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
@@ -33,12 +33,67 @@ const PROGRESS_LISTENERS = new Set();
 const FRAME = new HiddenFrame();
 
 /**
+ * Global HTTP request tracker to accurately monitor network idle state.
+ * This tracker lives for the lifetime of the module and monitors all instances.
+ */
+const GlobalHTTPTracker = {
+  activeRequests: new Map<number, Set<nsIRequest>>(),
+  
+  init() {
+    try {
+      Services.obs.addObserver(this, "http-on-opening-request");
+      Services.obs.addObserver(this, "http-on-stop-request");
+    } catch (e) {
+      console.error("WebScraper: GlobalHTTPTracker init failed:", e);
+    }
+  },
+
+  observe(subject: nsISupports, topic: string, _data: string | null) {
+    try {
+      const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
+      const bcid = channel.loadInfo?.browsingContextID;
+      if (!bcid) return;
+
+      if (topic === "http-on-opening-request") {
+        const url = channel.URI.spec;
+        if (url.startsWith("http") || url.startsWith("https")) {
+          let requests = this.activeRequests.get(bcid);
+          if (!requests) {
+            requests = new Set();
+            this.activeRequests.set(bcid, requests);
+          }
+          requests.add(channel);
+        }
+      } else if (topic === "http-on-stop-request") {
+        const requests = this.activeRequests.get(bcid);
+        if (requests) {
+          requests.delete(channel);
+          if (requests.size === 0) {
+            this.activeRequests.delete(bcid);
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  },
+
+  getActiveCount(bcid: number): number {
+    return this.activeRequests.get(bcid)?.size || 0;
+  }
+};
+
+GlobalHTTPTracker.init();
+
+/**
  * WebScraper class that manages headless browser instances for web scraping
  *
  * This class provides a high-level interface for creating, managing, and
  * navigating browser instances without visible UI elements.
  */
 class webScraper {
+
+
   // Map to store browser instances with their unique IDs
   private _browserInstances: Map<string, XULBrowserElement> = new Map();
   private _instanceId!: string;
@@ -102,6 +157,7 @@ class webScraper {
     browser.setAttribute("remote", "true");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("manualactiveness", "true");
 
     // Set default size for browser element
     browser.style.setProperty("width", "1366px");
@@ -111,7 +167,10 @@ class webScraper {
 
     // Add browser element to document to properly initialize webNavigation
     doc.documentElement?.appendChild(browser);
-    browser.browsingContext.allowJavascript = true;
+    browser.docShellIsActive = true;
+    if (browser.browsingContext) {
+      browser.browsingContext.allowJavascript = true;
+    }
 
     this._instanceId = await crypto.randomUUID();
     this._browserInstances.set(this._instanceId, browser);
@@ -237,7 +296,10 @@ class webScraper {
             return;
           }
           // Ignore events that don't change the document
-          if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+          if (
+            flags &
+            (Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ?? 0)
+          ) {
             return;
           }
           // Ignore the initial about:blank, unless about:blank is requested
@@ -258,7 +320,7 @@ class webScraper {
           _status: nsresult,
         ) {
           if (!progress.isTopLevel) return;
-          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP ?? 0;
           if (flags & STATE_STOP) {
             PROGRESS_LISTENERS.delete(progressListener);
             webProgress.removeProgressListener(
@@ -275,8 +337,8 @@ class webScraper {
       PROGRESS_LISTENERS.add(progressListener);
       webProgress.addProgressListener(
         progressListener as nsIWebProgressListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION |
-          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
+        (Ci.nsIWebProgress.NOTIFY_LOCATION ?? 0) |
+          (Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT ?? 0),
       );
     });
   }
@@ -288,8 +350,8 @@ class webScraper {
     }
 
     return new Promise((resolve) => {
-      if (browser.browsingContext.currentURI.spec != "about:blank") {
-        resolve(browser.browsingContext.currentURI.spec);
+      if (browser.browsingContext?.currentURI.spec != "about:blank") {
+        resolve(browser.browsingContext?.currentURI.spec ?? "about:blank");
       } else {
         resolve(null);
       }
@@ -656,6 +718,7 @@ class webScraper {
   public async fillForm(
     instanceId: string,
     formData: { [selector: string]: string },
+    options: { typingMode?: boolean; typingDelayMs?: number } = {},
   ): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
@@ -666,6 +729,75 @@ class webScraper {
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:FillForm", {
       formData,
+      typingMode: options.typingMode,
+      typingDelayMs: options.typingDelayMs,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Types or sets a value into an element.
+   */
+  public async inputElement(
+    instanceId: string,
+    selector: string,
+    value: string,
+    options: { typingMode?: boolean; typingDelayMs?: number } = {},
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:InputElement", {
+      selector,
+      value,
+      typingMode: options.typingMode,
+      typingDelayMs: options.typingDelayMs,
+    })) as boolean;
+    await this._delayForUser(3500);
+    return result;
+  }
+
+  /**
+   * Press a key or key combination.
+   */
+  public async pressKey(instanceId: string, key: string): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:PressKey", {
+      key,
+    })) as boolean;
+    await this._delayForUser(500);
+    return result;
+  }
+
+  /**
+   * Upload a file through input[type=file]
+   */
+  public async uploadFile(
+    instanceId: string,
+    selector: string,
+    filePath: string,
+  ): Promise<boolean> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return false;
+    const result = (await actor.sendQuery("WebScraper:UploadFile", {
+      selector,
+      filePath,
     })) as boolean;
     await this._delayForUser(3500);
     return result;
@@ -1034,6 +1166,9 @@ class webScraper {
       if (!uri) return Promise.resolve([]);
 
       const host = uri.host;
+      const principal =
+        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
+      const originAttributes = principal?.originAttributes ?? {};
       const cookies: Array<{
         name: string;
         value: string;
@@ -1046,19 +1181,32 @@ class webScraper {
       }> = [];
 
       const cookieManager = Services.cookies;
-      const enumerator = cookieManager.getCookiesFromHost(host, {});
+      const originAttrCandidates = [originAttributes];
+      // Always try empty originAttributes as fallback to find cookies
+      // set without specific container/private browsing attributes
+      originAttrCandidates.push({});
 
-      for (const cookie of enumerator) {
-        cookies.push({
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.host,
-          path: cookie.path,
-          secure: cookie.isSecure,
-          httpOnly: cookie.isHttpOnly,
-          sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
-          expirationDate: cookie.expiry,
-        });
+      const seen = new Set<string>();
+
+      for (const attrs of originAttrCandidates) {
+        const enumerator = cookieManager.getCookiesFromHost(host, attrs);
+
+        for (const cookie of enumerator) {
+          const key = `${cookie.name}\u0001${cookie.host}\u0001${cookie.path}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          cookies.push({
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.host,
+            path: cookie.path,
+            secure: cookie.isSecure,
+            httpOnly: cookie.isHttpOnly,
+            sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
+            expirationDate: cookie.expiry,
+          });
+        }
       }
 
       return Promise.resolve(cookies);
@@ -1071,7 +1219,7 @@ class webScraper {
   /**
    * Sets a cookie for the current page
    */
-  public setCookie(
+  public async setCookie(
     instanceId: string,
     cookie: {
       name: string;
@@ -1101,21 +1249,135 @@ class webScraper {
         Strict: 2,
       };
 
-      Services.cookies.add(
-        cookie.domain ?? uri.host,
-        cookie.path ?? "/",
-        cookie.name,
-        cookie.value,
-        cookie.secure ?? false,
-        cookie.httpOnly ?? false,
-        false, // isSession
-        cookie.expirationDate ?? Math.floor(Date.now() / 1000) + 86400 * 365,
-        {}, // originAttributes
-        sameSiteMap[cookie.sameSite ?? "None"] ?? 0,
-        Ci.nsICookie.SCHEME_HTTPS,
-      );
+      const principal =
+        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
+      const originAttributes = principal?.originAttributes ?? {};
 
-      return Promise.resolve(true);
+      const isSecure = cookie.secure ?? uri.schemeIs("https");
+      let requestedSameSite = cookie.sameSite ?? "Lax";
+      if (requestedSameSite === "None" && !isSecure) {
+        // SameSite=None には Secure が必須。HTTP では Lax にフォールバックする。
+        requestedSameSite = "Lax";
+      }
+      const schemeMap = isSecure
+        ? Ci.nsICookie.SCHEME_HTTPS
+        : uri.schemeIs("http")
+          ? Ci.nsICookie.SCHEME_HTTP
+          : 0; // SCHEME_UNKNOWN
+
+      const attrsList = [originAttributes];
+      if (Object.keys(originAttributes).length > 0) {
+        attrsList.push({});
+      }
+
+      const errors: Array<string | number> = [];
+
+      const addWithAttrs = (attrs: Record<string, unknown>) => {
+        try {
+          const validation = Services.cookies.add(
+            cookie.domain ?? uri.host,
+            cookie.path ?? "/",
+            cookie.name,
+            cookie.value,
+            isSecure,
+            cookie.httpOnly ?? false,
+            false, // isSession
+            cookie.expirationDate ??
+              Math.floor(Date.now() / 1000) + 86400 * 365,
+            attrs,
+            sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
+            schemeMap,
+            Boolean(
+              (attrs as unknown as { partitionKey?: unknown }).partitionKey,
+            ),
+          );
+
+          if (validation?.result !== Ci.nsICookieValidation.eOK) {
+            errors.push(validation?.result ?? "unknown");
+            errors.push(validation?.errorString ?? "");
+            console.error(
+              "WebScraper: Cookie rejected:",
+              validation?.result,
+              validation?.errorString,
+            );
+            return false;
+          }
+
+          // Verify cookie was actually stored
+          const storedDomain = cookie.domain ?? uri.host;
+          
+          // Check if cookie actually exists after add
+          let cookieActuallyExists = false;
+          try {
+            cookieActuallyExists = Services.cookies.cookieExists(
+              storedDomain,
+              cookie.path ?? "/",
+              cookie.name,
+              attrs,
+            );
+          } catch {
+            // cookieExists check failed, assume cookie not stored
+          }
+          
+          if (cookieActuallyExists) {
+            return true;
+          } else {
+            // Cookie was not actually stored despite validation passing
+            // Try next attrs or fallback
+            errors.push("cookie not stored despite validation success");
+            return false;
+          }
+        } catch (err) {
+          errors.push(String(err));
+          return false;
+        }
+      };
+
+      for (const attrs of attrsList) {
+        if (addWithAttrs(attrs)) {
+          return Promise.resolve(true);
+        }
+      }
+
+      // Fallback: try document.cookie within the content process
+      try {
+        const actor = await this._getActorForBrowser(browser, 80, 100);
+        if (actor) {
+          const parts = [
+            `${cookie.name}=${cookie.value}`,
+            `Path=${cookie.path ?? "/"}`,
+            `SameSite=${requestedSameSite}`,
+          ];
+          if (cookie.domain ?? uri.host) {
+            parts.push(`Domain=${cookie.domain ?? uri.host}`);
+          }
+          if (cookie.expirationDate) {
+            parts.push(
+              `Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`,
+            );
+          }
+          if (isSecure) {
+            parts.push("Secure");
+          }
+
+          const cookieString = parts.filter(Boolean).join("; ");
+          
+          const fallback = await actor
+            .sendQuery("WebScraper:SetCookieString", {
+              cookieString: cookieString,
+              cookieName: cookie.name,
+              cookieValue: cookie.value,
+            })
+            .catch(() => null);
+          if (fallback) {
+            return true;
+          }
+        }
+      } catch (err) {
+        errors.push(String(err));
+      }
+
+      return Promise.resolve(false);
     } catch (e) {
       console.error("WebScraper: Error setting cookie:", e);
       return Promise.resolve(false);
@@ -1148,55 +1410,7 @@ class webScraper {
     return Promise.resolve(true);
   }
 
-  /**
-   * Saves the current page as PDF and returns base64 encoded data
-   */
-  public async saveAsPDF(instanceId: string): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
 
-    try {
-      const browsingContext = browser.browsingContext as BrowsingContext & {
-        print(settings: nsIPrintSettings): Promise<nsIInputStream>;
-      };
-      if (!browsingContext) return null;
-
-      // Create print settings for PDF
-      const printSettings = Cc["@mozilla.org/gfx/printsettings-service;1"]
-        .getService(Ci.nsIPrintSettingsService)
-        .createNewPrintSettings() as nsIPrintSettings & {
-        showPrintProgress: boolean;
-      };
-
-      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-      printSettings.printerName = "";
-      printSettings.printSilent = true;
-      printSettings.showPrintProgress = false;
-      printSettings.printBGColors = true;
-      printSettings.printBGImages = true;
-
-      // Print to stream
-      const pdfStream = await browsingContext.print(printSettings);
-
-      // Read stream to array buffer
-      const binaryStream = Cc[
-        "@mozilla.org/binaryinputstream;1"
-      ].createInstance(Ci.nsIBinaryInputStream);
-      binaryStream.setInputStream(pdfStream);
-
-      const bytes = binaryStream.readBytes(binaryStream.available());
-      binaryStream.close();
-
-      // Convert to base64
-      const base64 = btoa(bytes);
-      return base64;
-    } catch (e) {
-      console.error("WebScraper: Error saving as PDF:", e);
-      return null;
-    }
-  }
 
   /**
    * Waits for network to become idle (no pending requests)
@@ -1210,85 +1424,161 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
+    const bcid = browser.browsingContext?.id;
+    if (!bcid) {
+      return Promise.resolve(null);
+    }
+
     return new Promise((resolve) => {
-      let idleTimer: ReturnType<typeof setTimeout> | null = null;
-      let resolved = false;
-      const idleThreshold = 500; // Consider idle after 500ms of no activity
+      const idleThreshold = 500;
+      const state = {
+        idleTimer: null as ReturnType<typeof setTimeout> | null,
+        resolved: false,
+      };
 
       const resetIdleTimer = () => {
-        if (idleTimer) {
-          clearTimeout(idleTimer);
+        if (state.idleTimer) {
+          clearTimeout(state.idleTimer);
         }
-        idleTimer = setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
+        state.idleTimer = setTimeout(() => {
+          const activeCount = GlobalHTTPTracker.getActiveCount(bcid);
+          if (!state.resolved && activeCount === 0) {
+            console.log(`[WebScraper] Network reached idle for BCID ${bcid}.`);
+            state.resolved = true;
             cleanup();
             resolve(true);
+          } else if (activeCount > 0) {
+            // Still active, check again later
+            resetIdleTimer();
           }
         }, idleThreshold);
       };
 
       const cleanup = () => {
-        if (idleTimer) {
-          clearTimeout(idleTimer);
+        console.log("[WebScraper] Cleaning up waitForNetworkIdle tracking...");
+        if (state.idleTimer) {
+          clearTimeout(state.idleTimer);
         }
         try {
-          browser.webProgress?.removeProgressListener(progressListener);
-          PROGRESS_LISTENERS.delete(progressListener);
+          Services.obs.removeObserver(observer, "http-on-opening-request");
+          Services.obs.removeObserver(observer, "http-on-stop-request");
         } catch {
-          // Ignore cleanup errors
+          // Ignore
         }
       };
 
-      const progressListener: nsIWebProgressListener = {
-        onStateChange(
-          _webProgress: nsIWebProgress,
-          _request: nsIRequest,
-          stateFlags: number,
-        ) {
-          if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-            // Network activity started
-            if (idleTimer) {
-              clearTimeout(idleTimer);
-              idleTimer = null;
+      // We still use a local observer to "ping" the idle check as soon as a request stops
+      const observer = {
+        observe(subject: nsISupports, topic: string, _data: string | null) {
+          try {
+            const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
+            if (channel.loadInfo?.browsingContextID === bcid) {
+              if (topic === "http-on-opening-request") {
+                if (state.idleTimer) {
+                  clearTimeout(state.idleTimer);
+                  state.idleTimer = null;
+                }
+              } else if (topic === "http-on-stop-request") {
+                resetIdleTimer();
+              }
             }
-          } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            // Network activity stopped, start idle timer
-            resetIdleTimer();
+          } catch {
+            // Ignore
           }
-        },
-        onProgressChange() {},
-        onLocationChange() {},
-        onStatusChange() {},
-        onSecurityChange() {},
-        onContentBlockingEvent() {},
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+        }
       };
 
       try {
-        browser.webProgress?.addProgressListener(
-          progressListener,
-          Ci.nsIWebProgress.NOTIFY_STATE_ALL,
-        );
-        PROGRESS_LISTENERS.add(progressListener);
+        Services.obs.addObserver(observer, "http-on-opening-request");
+        Services.obs.addObserver(observer, "http-on-stop-request");
       } catch (e) {
-        console.error("WebScraper: Error adding progress listener:", e);
-        resolve(false);
-        return;
+        console.error("WebScraper: Error adding local observer:", e);
       }
 
-      // Start initial idle timer
+      // Initial check
       resetIdleTimer();
 
-      // Timeout handler
+      // Overall timeout
       setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
+        if (!state.resolved) {
+          console.log("[WebScraper] waitForNetworkIdle timed out.");
+          state.resolved = true;
           cleanup();
           resolve(false);
         }
       }, timeout);
     });
+  }
+
+  /**
+   * Sets the innerHTML of an element (for contenteditable elements like rich text editors)
+   */
+  public async setInnerHTML(
+    instanceId: string,
+    selector: string,
+    html: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SetInnerHTML", {
+      selector,
+      innerHTML: html,
+    })) as boolean;
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Sets the textContent of an element (for contenteditable elements)
+   */
+  public async setTextContent(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:SetTextContent", {
+      selector,
+      textContent: text,
+    })) as boolean;
+    await this._delayForUser(2000);
+    return result;
+  }
+
+  /**
+   * Dispatches a custom event on an element (for triggering framework-specific handlers)
+   */
+  public async dispatchEvent(
+    instanceId: string,
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DispatchEvent", {
+      selector,
+      eventType,
+      eventOptions: options,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
   }
 }
 

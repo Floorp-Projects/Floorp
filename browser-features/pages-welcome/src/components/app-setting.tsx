@@ -4,7 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/common/card.tsx";
+} from "@nora/ui-components";
 
 function Input(setting: TSetting) {
   switch (setting.settingsType) {

@@ -9,12 +9,13 @@ export class NROSAutomotorChild extends JSWindowActorChild {
       const window = this.contentWindow;
       if (!window) return;
 
-      // Allow dev server and chrome/about privileged pages
-      if (
-        window.location.port === "5183" ||
-        window.location.href.startsWith("chrome://") ||
-        window.location.href.startsWith("about:")
-      ) {
+      // Allow all localhost ports, chrome, and about pages
+      const isLocalhost = window.location.hostname === "localhost" ||
+                          window.location.hostname === "127.0.0.1";
+      const isPrivileged = window.location.href.startsWith("chrome://") ||
+                           window.location.href.startsWith("about:");
+
+      if (isLocalhost || isPrivileged) {
         // Create OSAutomotor API object on window
         const api = Cu.createObjectIn(window, { defineAs: "OSAutomotor" });
 
@@ -123,10 +124,43 @@ export class NROSAutomotorChild extends JSWindowActorChild {
           );
         });
 
+        // Export sendWorkflowProgress (async) - for workflow progress window
+        exportAsync("sendWorkflowProgress", (progressData: unknown) => {
+          return this.sendQuery("OSAutomotor:WorkflowProgress", progressData).then(
+            (result: string) => {
+              const parsed = JSON.parse(result);
+              return Cu.cloneInto(parsed, window);
+            },
+          );
+        });
+
+        // Export getWorkflowProgress (async) - for progress window to poll state
+        exportAsync("getWorkflowProgress", () => {
+          return this.sendQuery("OSAutomotor:GetWorkflowProgress").then(
+            (result: string) => {
+              const parsed = JSON.parse(result);
+              return Cu.cloneInto(parsed, window);
+            },
+          );
+        });
+
+        // Export closeProgressWindow (async)
+        exportAsync("closeProgressWindow", () => {
+          return this.sendQuery("OSAutomotor:CloseProgressWindow").then(
+            (result: string) => {
+              const parsed = JSON.parse(result);
+              return Cu.cloneInto(parsed, window);
+            },
+          );
+        });
+
         console.info("[OSAutomotor] API initialized on window.OSAutomotor");
       }
     } catch (error) {
       console.error("[OSAutomotor Child] Error in actorCreated:", error);
     }
+  }
+  handleEvent(_event: Event): void {
+    // No-op
   }
 }

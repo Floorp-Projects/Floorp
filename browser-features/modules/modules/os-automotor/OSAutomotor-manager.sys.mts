@@ -29,6 +29,7 @@ interface SubprocessCallOptions {
   arguments?: string[];
   stdout?: SubprocessStdOption;
   stderr?: SubprocessStdOption;
+  environment?: Record<string, string>;
 }
 
 interface SubprocessProcess {
@@ -52,10 +53,11 @@ const GITHUB_FRONTEND_RELEASE_URL =
 const FLOORP_OS_ENABLED_PREF = "floorp.os.enabled";
 const FLOORP_OS_BINARY_PATH_PREF = "floorp.os.binaryPath";
 const FLOORP_OS_VERSION_PREF = "floorp.os.version";
-const CURRENT_VERSION = "v0.13.0";
-const CURRENT_FRONTEND_VERSION = "v0.13.0";
+const CURRENT_VERSION = "v0.13.3";
+const CURRENT_FRONTEND_VERSION = "v0.13.3";
 const FLOORP_FRONTEND_BINARY_PATH_PREF = "floorp.os.frontendBinaryPath";
 const FLOORP_FRONTEND_VERSION_PREF = "floorp.os.frontendVersion";
+const FLOORP_OS_INIAD_API_KEY_PREF = "floorp.os.iniad.apiKey";
 const FLOORP_OS_DIR_NAME = "floorp-os";
 const RUNTIME_STATE_FILE_NAME = "runtime-state.json";
 
@@ -75,44 +77,84 @@ interface RuntimeState {
 
 class OSAutomotorManager {
   private _initialized = false;
+  private _initPromise: Promise<void> | null = null;
   private _binaryProcess: SpawnedProcess | null = null;
   private _frontendProcess: SpawnedProcess | null = null;
   private _runtimeState: RuntimeState | null = null;
+  private _shutdownObserver: (() => void) | null = null;
 
   constructor() {
-    if (this._initialized) {
-      return;
-    }
-
-    this.initialize();
-    this._initialized = true;
+    // Start initialization and track the promise
+    this._initPromise = this.initialize();
   }
 
   /**
    * Initialize the OSAutomotor manager
    */
   private async initialize(): Promise<void> {
-    console.log("[Floorp OS] OSAutomotor initialize starting...");
-    await this.recoverFromUncleanShutdown();
-    // Check if Floorp OS is enabled
-    const isEnabled = Services.prefs.getBoolPref(FLOORP_OS_ENABLED_PREF, false);
-    console.log(`[Floorp OS] floorp.os.enabled = ${isEnabled}`);
+    try {
+      console.log("[Floorp OS] OSAutomotor initialize starting...");
+      await this.recoverFromUncleanShutdown();
+      this.setupShutdownObserver();
 
-    if (isEnabled) {
-      console.log("[Floorp OS] Starting Floorp OS...");
-      await this.ensureBinaryInstalled();
-      await this.startFloorpOS();
-      // Ensure and start frontend web server
-      try {
-        await this.ensureFrontendInstalled();
-        await this.startFrontend();
-      } catch (e) {
-        console.error("[Floorp OS] Failed to initialize frontend:", e);
+      // Check if Floorp OS is enabled
+      const isEnabled = Services.prefs.getBoolPref(
+        FLOORP_OS_ENABLED_PREF,
+        false,
+      );
+      console.log(`[Floorp OS] floorp.os.enabled = ${isEnabled}`);
+
+      if (isEnabled) {
+        console.log("[Floorp OS] Starting Floorp OS...");
+        await this.ensureBinaryInstalled();
+        await this.startFloorpOS();
+        // Ensure and start frontend web server
+        try {
+          await this.ensureFrontendInstalled();
+          await this.startFrontend();
+        } catch (e) {
+          console.error("[Floorp OS] Failed to initialize frontend:", e);
+        }
+        console.log("[Floorp OS] Floorp OS initialization complete.");
+      } else {
+        console.log("[Floorp OS] Floorp OS is disabled, skipping startup.");
       }
-      console.log("[Floorp OS] Floorp OS initialization complete.");
-    } else {
-      console.log("[Floorp OS] Floorp OS is disabled, skipping startup.");
+      this._initialized = true;
+    } catch (error) {
+      console.error("[Floorp OS] Initialization failed:", error);
+      // Mark as initialized even on failure to prevent repeated attempts
+      this._initialized = true;
+      throw error;
     }
+  }
+
+  /**
+   * Setup shutdown observer to stop processes on browser quit
+   */
+  private setupShutdownObserver(): void {
+    if (this._shutdownObserver) {
+      return;
+    }
+
+    this._shutdownObserver = () => {
+      console.log(
+        "[Floorp OS] Browser shutdown detected, stopping processes...",
+      );
+      // Use synchronous-style cleanup - stopFloorpOS is async but we fire-and-forget
+      // because quit-application-granted doesn't wait for async operations
+      this.stopFloorpOS().catch((error) => {
+        console.error(
+          "[Floorp OS] Error stopping processes on shutdown:",
+          error,
+        );
+      });
+    };
+
+    Services.obs.addObserver(
+      this._shutdownObserver,
+      "quit-application-granted",
+    );
+    console.log("[Floorp OS] Shutdown observer registered.");
   }
 
   /**
@@ -378,10 +420,22 @@ class OSAutomotorManager {
       // Convert backslashes to forward slashes for SQLite URL format
       const dbPathNormalized = dbPath.replace(/\\/g, "/");
       const dbUrl = `sqlite://${dbPathNormalized}`;
+      const environment: Record<string, string> = {
+        HOME: Services.dirsvc.get("Home", Ci.nsIFile).path,
+      };
+      const iniadApiKey = Services.prefs.getStringPref(
+        FLOORP_OS_INIAD_API_KEY_PREF,
+        "",
+      );
+      if (iniadApiKey) {
+        environment.INIAD_API_KEY = iniadApiKey;
+      }
+
       const process = await this.spawnProcess(
         binaryPath,
         ["--db-url", dbUrl, "start"],
         "core",
+        environment,
       );
       this._binaryProcess = process;
       await this.updateRuntimeState({
@@ -410,10 +464,15 @@ class OSAutomotorManager {
     }
 
     try {
+      const environment: Record<string, string> = {
+        SAPPHILLON_GRPC_BASE_URL: "http://localhost:50051",
+        HOME: Services.dirsvc.get("Home", Ci.nsIFile).path,
+      };
       const process = await this.spawnProcess(
         frontendPath,
         ["start"],
         "frontend",
+        environment,
       );
       this._frontendProcess = process;
       await this.updateRuntimeState({
@@ -668,12 +727,14 @@ class OSAutomotorManager {
     executablePath: string,
     args: string[],
     kind: "core" | "frontend",
+    environment?: Record<string, string>,
   ): Promise<SpawnedProcess> {
     const process = await Subprocess.call({
       command: executablePath,
       arguments: args,
       stdout: "pipe",
       stderr: "pipe",
+      environment,
     });
 
     const label = kind === "core" ? "Controller" : "Frontend";

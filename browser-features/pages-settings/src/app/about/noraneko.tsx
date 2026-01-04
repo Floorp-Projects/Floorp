@@ -1,4 +1,4 @@
-import { Button } from "@/components/common/button.tsx";
+import { Button } from "@nora/ui-components";
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Separator } from "@/components/common/separator.tsx";
+import { Separator } from "@nora/ui-components";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { ExternalLink, Scale } from "lucide-react";
 import { useEffect, useState } from "react";

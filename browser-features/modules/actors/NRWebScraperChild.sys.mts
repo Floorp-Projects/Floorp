@@ -30,6 +30,16 @@ interface NRWebScraperMessageData {
   checked?: boolean;
   optionValue?: string;
   targetSelector?: string;
+  innerHTML?: string;
+  eventType?: string;
+  eventOptions?: { bubbles?: boolean; cancelable?: boolean };
+  typingMode?: boolean;
+  typingDelayMs?: number;
+  filePath?: string;
+  key?: string;
+  cookieString?: string;
+  cookieName?: string;
+  cookieValue?: string;
 }
 
 interface NormalizedHighlightOptions {
@@ -49,6 +59,9 @@ type HighlightFocusOptions = {
   preventScroll?: boolean;
 };
 
+const { setTimeout: timerSetTimeout, clearTimeout: timerClearTimeout } =
+  ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
+
 const HIGHLIGHT_PRESETS: Record<string, HighlightOptionsInput> = {
   Highlight: {
     duration: 1800,
@@ -63,6 +76,13 @@ const HIGHLIGHT_PRESETS: Record<string, HighlightOptionsInput> = {
     scrollBehavior: "smooth",
     padding: 16,
     delay: 400,
+  },
+  InspectPeek: {
+    duration: 1800,
+    focus: false,
+    scrollBehavior: "smooth",
+    padding: 14,
+    delay: 1200,
   },
   Input: {
     duration: 1800,
@@ -102,6 +122,142 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private highlightStyleElement: HTMLStyleElement | null = null;
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
+  private pageHideHandler: (() => void) | null = null;
+  // 非同期操作の競合防止用 操作ID
+  private highlightOperationId = 0;
+
+  /**
+   * Ensures the target element is in view (centers in viewport when possible).
+   */
+  private scrollIntoViewIfNeeded(element: Element): void {
+    try {
+      if (!element.isConnected) return;
+      element.scrollIntoView({
+        behavior: "auto",
+        block: "center",
+        inline: "center",
+      });
+    } catch {
+      // ignore scrolling errors
+    }
+  }
+
+  /**
+   * Focus helper that avoids scroll jumps.
+   */
+  private focusElementSoft(element: Element): void {
+    const win = this.contentWindow;
+    if (!win) return;
+    try {
+      const htmlEl = element as unknown as HTMLElement;
+      if (typeof htmlEl.focus === "function") {
+        htmlEl.focus({ preventScroll: true });
+      }
+    } catch {
+      // ignore focus errors
+    }
+  }
+
+  /**
+   * Dispatches a pointer + mouse click sequence to improve compatibility with UI frameworks.
+   */
+  private dispatchPointerClickSequence(
+    element: HTMLElement,
+    clientX: number,
+    clientY: number,
+    button: number,
+  ): boolean {
+    const win = (this.contentWindow ?? null) as
+      | (Window & typeof globalThis)
+      | null;
+    const PointerEv = (win?.PointerEvent ?? null) as typeof PointerEvent | null;
+    const MouseEv = (win?.MouseEvent ?? globalThis.MouseEvent ?? null) as
+      | typeof MouseEvent
+      | null;
+    const view = win ?? undefined;
+
+    const emit = <T extends Event>(ev: T | null) => {
+      if (!ev) return false;
+      try {
+        return element.dispatchEvent(ev);
+      } catch {
+        return false;
+      }
+    };
+
+    const buttons = button === 0 ? 1 : button === 1 ? 4 : 2;
+
+    emit(
+      PointerEv
+        ? new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            clientX,
+            clientY,
+            button,
+            buttons,
+            pointerType: "mouse",
+            view,
+          })
+        : null,
+    );
+    emit(
+      MouseEv
+        ? new MouseEvent("mousedown", {
+            bubbles: true,
+            cancelable: true,
+            clientX,
+            clientY,
+            button,
+            buttons,
+            view,
+          })
+        : null,
+    );
+    emit(
+      PointerEv
+        ? new PointerEvent("pointerup", {
+            bubbles: true,
+            cancelable: true,
+            clientX,
+            clientY,
+            button,
+            buttons,
+            pointerType: "mouse",
+            view,
+          })
+        : null,
+    );
+    emit(
+      MouseEv
+        ? new MouseEvent("mouseup", {
+            bubbles: true,
+            cancelable: true,
+            clientX,
+            clientY,
+            button,
+            buttons,
+            view,
+          })
+        : null,
+    );
+
+    const clickOk = emit(
+      MouseEv
+        ? new MouseEvent("click", {
+            bubbles: true,
+            cancelable: true,
+            clientX,
+            clientY,
+            button,
+            buttons,
+            view,
+          })
+        : null,
+    );
+
+    return clickOk ?? false;
+  }
 
   private async translate(
     key: string,
@@ -202,15 +358,73 @@ export class NRWebScraperChild extends JSWindowActorChild {
     translationKey: string,
     translationVars: Record<string, string | number> = {},
   ): void {
+    // 開始時点の操作IDを記録
+    const startOperationId = this.highlightOperationId;
+
     void (async () => {
       try {
+        // Check if target(s) are still alive before proceeding
+        if (Array.isArray(target)) {
+          const aliveTargets = target.filter((el) => {
+            try {
+              return el.isConnected;
+            } catch {
+              return false;
+            }
+          });
+          if (aliveTargets.length === 0) return;
+        } else {
+          try {
+            if (!target.isConnected) return;
+          } catch {
+            return; // DeadObject
+          }
+        }
+
         const elementInfo = await this.translate(
           translationKey,
           translationVars,
         );
+
+        // 翻訳完了後、新しい操作が開始されていたら中断
+        if (startOperationId !== this.highlightOperationId) {
+          return;
+        }
+
         await this.highlightInspection(target, elementInfo);
       } catch {
         // Silently ignore inspection errors
+      }
+    })();
+  }
+
+  /**
+   * Lightweight, non-blocking highlight used for value reads.
+   * Keeps duration short and avoids info panel/label noise.
+   */
+  private runAsyncValuePeek(target: Element): void {
+    // 開始時点の操作IDを記録
+    const startOperationId = this.highlightOperationId;
+
+    void (async () => {
+      try {
+        if (!target.isConnected) {
+          return;
+        }
+
+        // 新しい操作が開始されていたら中断
+        if (startOperationId !== this.highlightOperationId) {
+          return;
+        }
+
+        await this.applyHighlight(
+          target,
+          { action: "InspectPeek" },
+          undefined,
+          false,
+        );
+      } catch {
+        // Silently ignore highlight errors
       }
     })();
   }
@@ -417,6 +631,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
 }
 
 .nr-webscraper-info-panel {
+  /* CSS変数のデフォルト値を定義（overlayクラスがない場合のフォールバック） */
+  --nr-highlight-color-alpha-50: rgba(59, 130, 246, 0.50);
+  --nr-highlight-color: rgba(59, 130, 246, 0.95);
+  --nr-label-bg: rgba(37, 99, 235, 0.94);
   position: fixed;
   top: 16px;
   right: 16px;
@@ -516,6 +734,31 @@ export class NRWebScraperChild extends JSWindowActorChild {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* InfoPanel用のカラークラス（オーバーレイと同じカラーテーマを適用） */
+.nr-webscraper-info-panel.nr-webscraper-highlight-overlay--read {
+  --nr-highlight-color-alpha-50: rgba(34, 197, 94, 0.50);
+  --nr-highlight-color: rgba(34, 197, 94, 0.95);
+  --nr-label-bg: rgba(22, 163, 74, 0.94);
+}
+
+.nr-webscraper-info-panel.nr-webscraper-highlight-overlay--write {
+  --nr-highlight-color-alpha-50: rgba(168, 85, 247, 0.50);
+  --nr-highlight-color: rgba(168, 85, 247, 0.95);
+  --nr-label-bg: rgba(147, 51, 234, 0.94);
+}
+
+.nr-webscraper-info-panel.nr-webscraper-highlight-overlay--click {
+  --nr-highlight-color-alpha-50: rgba(249, 115, 22, 0.50);
+  --nr-highlight-color: rgba(249, 115, 22, 0.95);
+  --nr-label-bg: rgba(234, 88, 12, 0.94);
+}
+
+.nr-webscraper-info-panel.nr-webscraper-highlight-overlay--submit {
+  --nr-highlight-color-alpha-50: rgba(239, 68, 68, 0.50);
+  --nr-highlight-color: rgba(239, 68, 68, 0.95);
+  --nr-label-bg: rgba(220, 38, 38, 0.94);
 }`;
 
     (doc.head ?? doc.documentElement)?.append(style);
@@ -551,22 +794,32 @@ export class NRWebScraperChild extends JSWindowActorChild {
   }
 
   private cleanupHighlight(): void {
-    const win = this.contentWindow;
+    // 操作IDを増加させて、進行中の非同期操作をキャンセル
+    ++this.highlightOperationId;
 
-    if (this.highlightCleanupTimer !== null && win) {
-      win.clearTimeout(this.highlightCleanupTimer);
+    // timerSetTimeoutで設定したタイマーはtimerClearTimeoutで解除する
+    if (this.highlightCleanupTimer !== null) {
+      timerClearTimeout(this.highlightCleanupTimer);
     }
     this.highlightCleanupTimer = null;
 
-    // 一時ハイライトをフェードアウト
-    const fadeOutAndCleanup = () => {
-      const overlaysToRemove = [
-        ...(this.highlightOverlay ? [this.highlightOverlay] : []),
-        ...this.highlightOverlays,
-      ];
+    // 先に参照を保存してからクリア（レース条件を防ぐ）
+    const overlaysToRemove = [
+      ...(this.highlightOverlay ? [this.highlightOverlay] : []),
+      ...this.highlightOverlays,
+    ];
+    const callbacksToRun = [...this.highlightCleanupCallbacks];
 
-      if (overlaysToRemove.length > 0) {
-        overlaysToRemove.forEach((overlay) => {
+    // 参照を即座にクリア
+    this.highlightOverlay = null;
+    this.highlightOverlays = [];
+    this.highlightCleanupCallbacks = [];
+
+    // 一時ハイライトをフェードアウト
+    if (overlaysToRemove.length > 0) {
+      overlaysToRemove.forEach((overlay) => {
+        // DeadObject対策: try-catchでisConnectedチェックを囲む
+        try {
           if (overlay?.isConnected) {
             overlay.style.setProperty(
               "transition",
@@ -574,30 +827,30 @@ export class NRWebScraperChild extends JSWindowActorChild {
             );
             overlay.style.setProperty("opacity", "0");
             overlay.style.setProperty("transform", "scale(0.98)");
-            win?.setTimeout(() => {
-              if (overlay?.isConnected) {
-                overlay.remove();
+            timerSetTimeout(() => {
+              try {
+                if (overlay?.isConnected) {
+                  overlay.remove();
+                }
+              } catch {
+                // DeadObject - 既に削除済み、無視
               }
             }, 300);
           }
-        });
-      }
-
-      // クリーンアップコールバックを実行
-      for (const cleanup of this.highlightCleanupCallbacks) {
-        try {
-          cleanup();
         } catch {
-          // ignore cleanup errors
+          // DeadObject - 既にナビゲーション等で無効化されているため無視
         }
+      });
+    }
+
+    // クリーンアップコールバックを実行
+    for (const cleanup of callbacksToRun) {
+      try {
+        cleanup();
+      } catch {
+        // ignore cleanup errors
       }
-      this.highlightCleanupCallbacks = [];
-
-      this.highlightOverlay = null;
-      this.highlightOverlays = [];
-    };
-
-    fadeOutAndCleanup();
+    }
   }
 
   private getActionColorClass(action?: string): string {
@@ -835,7 +1088,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       // Auto-hide after action completes (長めに設定)
       this.infoPanelCleanupTimer = Number(
-        win.setTimeout(() => this.hideInfoPanel(), 4000),
+        timerSetTimeout(() => this.hideInfoPanel(), 4000),
       );
     } catch (error) {
       console.warn("NRWebScraperChild: Failed to show info panel", error);
@@ -843,16 +1096,24 @@ export class NRWebScraperChild extends JSWindowActorChild {
   }
 
   private hideInfoPanel(): void {
-    const win = this.contentWindow;
-    if (this.infoPanelCleanupTimer !== null && win) {
-      win.clearTimeout(this.infoPanelCleanupTimer);
+    // timerSetTimeoutで設定したタイマーはtimerClearTimeoutで解除する
+    if (this.infoPanelCleanupTimer !== null) {
+      timerClearTimeout(this.infoPanelCleanupTimer);
     }
     this.infoPanelCleanupTimer = null;
 
-    if (this.infoPanel?.isConnected) {
-      this.infoPanel.remove();
-    }
+    // 先に参照を保存してクリア
+    const panel = this.infoPanel;
     this.infoPanel = null;
+
+    // DeadObject対策: try-catchでisConnectedチェックを囲む
+    try {
+      if (panel?.isConnected) {
+        panel.remove();
+      }
+    } catch {
+      // DeadObject - 既にナビゲーション等で無効化されているため無視
+    }
   }
 
   private async applyHighlightMultiple(
@@ -880,6 +1141,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.ensureHighlightStyle();
     this.cleanupHighlight();
 
+    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    const currentOperationId = this.highlightOperationId;
+
     const colorClass = this.getActionColorClass(options.action);
 
     // Show info panel with progress
@@ -892,7 +1156,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
       targets.length,
     );
 
+    // showInfoPanel await後に操作IDチェック - 新しい操作が開始されていたらオーバーレイ作成をスキップ
+    if (currentOperationId !== this.highlightOperationId) {
+      this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+      return true;
+    }
+
     for (const target of targets) {
+      // Check if target is still alive (not a DeadObject from a previous page)
+      try {
+        void target.nodeType;
+      } catch {
+        // Skip dead objects
+        continue;
+      }
+
       const overlay = doc.createElement("div");
       overlay.className = "nr-webscraper-highlight-overlay";
       if (colorClass) {
@@ -902,6 +1180,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const padding = options.padding;
 
       (doc.body ?? doc.documentElement)?.append(overlay);
+      // オーバーレイをDOMに追加したら即座に配列にも追加（cleanupHighlightで確実に取得できるように）
+      this.highlightOverlays.push(overlay);
 
       const updatePosition = () => {
         const rect = target.getBoundingClientRect();
@@ -937,34 +1217,54 @@ export class NRWebScraperChild extends JSWindowActorChild {
         subtree: false,
       });
       this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
-
-      this.highlightOverlays.push(overlay);
     }
 
-    // Scroll to first element
-    if (options.scrollBehavior !== "none" && targets.length > 0) {
+    // Scroll to first element (with DeadObject safety check)
+    if (
+      options.scrollBehavior !== "none" &&
+      targets.length > 0 &&
+      this.highlightOverlays.length > 0
+    ) {
       try {
-        (targets[0] as HTMLElement).scrollIntoView({
-          behavior: options.scrollBehavior,
-          block: "center",
-          inline: "center",
+        // Find first alive target to scroll to
+        const firstAliveTarget = targets.find((t) => {
+          try {
+            return t.isConnected;
+          } catch {
+            return false;
+          }
         });
+        if (firstAliveTarget) {
+          (firstAliveTarget as HTMLElement).scrollIntoView({
+            behavior: options.scrollBehavior,
+            block: "center",
+            inline: "center",
+          });
+        }
       } catch {
         // ignore scroll errors
       }
     }
 
     this.highlightCleanupTimer = Number(
-      win.setTimeout(() => this.cleanupHighlight(), options.duration),
+      timerSetTimeout(() => {
+        this.cleanupHighlight();
+        this.hideInfoPanel(); // オーバーレイと一緒に情報パネルも非表示
+      }, options.duration),
     );
 
     await new Promise<void>((resolve) => {
       win.requestAnimationFrame(() => resolve());
     });
 
+    // 新しい操作が開始された場合はここで早期リターン
+    if (currentOperationId !== this.highlightOperationId) {
+      return true;
+    }
+
     if (options.delay > 0) {
       await new Promise<void>((resolve) => {
-        win.setTimeout(() => resolve(), options.delay);
+        timerSetTimeout(() => resolve(), options.delay);
       });
     }
 
@@ -989,6 +1289,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       this.cleanupHighlight();
       return false;
     }
+
     const mergedOptions = this.getHighlightOptions(
       optionsInput.action ?? "Highlight",
       optionsInput,
@@ -1004,6 +1305,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
     this.ensureHighlightStyle();
     this.cleanupHighlight();
 
+    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    // 新しい操作が開始されたら、古い操作は自動的にキャンセルされる
+    const currentOperationId = this.highlightOperationId;
+
+    // Show info panel (await before creating overlay)
+    if (showPanel) {
+      await this.showInfoPanel(options.action, undefined, elementInfo, 1);
+
+      // showInfoPanel await後に操作IDチェック
+      if (currentOperationId !== this.highlightOperationId) {
+        this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+        return true;
+      }
+    }
+
     const overlay = doc.createElement("div");
     overlay.className = "nr-webscraper-highlight-overlay";
 
@@ -1012,21 +1328,27 @@ export class NRWebScraperChild extends JSWindowActorChild {
       overlay.classList.add(colorClass);
     }
 
-    // Show info panel
-    if (showPanel) {
-      await this.showInfoPanel(options.action, undefined, elementInfo, 1);
-    }
-
     const padding = options.padding;
 
-    if (options.action) {
+    const showLabel =
+      options.action && options.action.toLowerCase() !== "inspectpeek";
+
+    if (showLabel) {
       const label = doc.createElement("div");
       label.className = "nr-webscraper-highlight-label";
       label.textContent = await this.getActionLabel(options.action);
       overlay.append(label);
+
+      // ラベル取得後に操作IDチェック
+      if (currentOperationId !== this.highlightOperationId) {
+        this.hideInfoPanel(); // キャンセル時は表示した情報パネルを隠す
+        return true;
+      }
     }
 
     (doc.body ?? doc.documentElement)?.append(overlay);
+    // オーバーレイをDOMに追加したら即座に追跡（cleanupHighlightで確実に取得できるように）
+    this.highlightOverlay = overlay;
 
     const updatePosition = () => {
       const rect = target.getBoundingClientRect();
@@ -1074,8 +1396,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
     });
     this.highlightCleanupCallbacks.push(() => mutationObserver.disconnect());
 
-    this.highlightOverlay = overlay;
-
     if (options.scrollBehavior !== "none") {
       try {
         (target as HTMLElement).scrollIntoView({
@@ -1120,21 +1440,39 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     this.highlightCleanupTimer = Number(
-      win.setTimeout(() => this.cleanupHighlight(), options.duration),
+      timerSetTimeout(() => {
+        this.cleanupHighlight();
+        this.hideInfoPanel(); // オーバーレイと一緒に情報パネルも非表示
+      }, options.duration),
     );
 
     await new Promise<void>((resolve) => {
       win.requestAnimationFrame(() => resolve());
     });
 
+    // 新しい操作が開始された場合はここで早期リターン
+    // オーバーレイは既にDOMに追加されているが、タイマーでクリーンアップされる
+    if (currentOperationId !== this.highlightOperationId) {
+      return true;
+    }
+
     if (options.delay > 0) {
       await new Promise<void>((resolve) => {
-        win.setTimeout(() => resolve(), options.delay);
+        timerSetTimeout(() => resolve(), options.delay);
       });
     }
 
     return true;
   }
+
+  /**
+   * Handles DOM events derived from JSWindowActor registration.
+   * Required to prevent "Property 'handleEvent' is not callable" errors.
+   */
+  handleEvent(_event: Event): void {
+    // No-op: We only listen to trigger actor creation or specific side-effects
+  }
+
   /**
    * Called when the actor is created for a content window
    *
@@ -1146,6 +1484,49 @@ export class NRWebScraperChild extends JSWindowActorChild {
       "NRWebScraperChild created for:",
       this.contentWindow?.location?.href,
     );
+
+    // SPAナビゲーション対応: pagehideイベントでクリーンアップ
+    const win = this.contentWindow;
+    if (win) {
+      this.pageHideHandler = () => {
+        this.cleanupHighlight();
+        this.hideInfoPanel();
+      };
+      win.addEventListener("pagehide", this.pageHideHandler);
+    }
+  }
+
+  /**
+   * Called when the actor is about to be destroyed
+   *
+   * This method ensures all resources are cleaned up properly
+   * to prevent memory leaks when the content window is closed.
+   */
+  willDestroy() {
+    // pagehideイベントリスナーを解除
+    const win = this.contentWindow;
+    if (win && this.pageHideHandler) {
+      try {
+        win.removeEventListener("pagehide", this.pageHideHandler);
+      } catch {
+        // DeadObject - 無視
+      }
+    }
+    this.pageHideHandler = null;
+
+    // Clean up all highlight overlays and timers
+    this.cleanupHighlight();
+    this.hideInfoPanel();
+
+    // Remove style element if still connected
+    try {
+      if (this.highlightStyleElement?.isConnected) {
+        this.highlightStyleElement.remove();
+      }
+    } catch {
+      // DeadObject - 無視
+    }
+    this.highlightStyleElement = null;
   }
 
   /**
@@ -1207,7 +1588,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:InputElement":
         if (message.data?.selector && typeof message.data.value === "string") {
-          return this.inputElement(message.data.selector, message.data.value);
+          return this.inputElement(message.data.selector, message.data.value, {
+            typingMode: message.data.typingMode,
+            typingDelayMs: message.data.typingDelayMs,
+          });
         }
         break;
       case "WebScraper:ClickElement":
@@ -1239,7 +1623,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:FillForm":
         if (message.data?.formData) {
-          return this.fillForm(message.data.formData);
+          return this.fillForm(message.data.formData, {
+            typingMode: message.data.typingMode,
+            typingDelayMs: message.data.typingDelayMs,
+          });
         }
         break;
       case "WebScraper:Submit":
@@ -1322,6 +1709,56 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this.dragAndDrop(
             message.data.selector,
             message.data.targetSelector,
+          );
+        }
+        break;
+      case "WebScraper:SetInnerHTML":
+        if (
+          message.data?.selector &&
+          typeof message.data?.innerHTML === "string"
+        ) {
+          return this.setInnerHTML(
+            message.data.selector,
+            message.data.innerHTML,
+          );
+        }
+        break;
+      case "WebScraper:SetTextContent":
+        if (
+          message.data?.selector &&
+          typeof message.data?.textContent === "string"
+        ) {
+          return this.setTextContent(
+            message.data.selector,
+            message.data.textContent,
+          );
+        }
+        break;
+      case "WebScraper:DispatchEvent":
+        if (message.data?.selector && message.data?.eventType) {
+          return this.dispatchEvent(
+            message.data.selector,
+            message.data.eventType,
+            message.data.eventOptions,
+          );
+        }
+        break;
+      case "WebScraper:PressKey":
+        if (message.data?.key) {
+          return this.pressKey(message.data.key);
+        }
+        break;
+      case "WebScraper:UploadFile":
+        if (message.data?.selector && message.data?.filePath) {
+          return this.uploadFile(message.data.selector, message.data.filePath);
+        }
+        break;
+      case "WebScraper:SetCookieString":
+        if (message.data?.cookieString) {
+          return this.setCookieString(
+            message.data.cookieString,
+            message.data.cookieName,
+            message.data.cookieValue,
           );
         }
         break;
@@ -1491,23 +1928,37 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param selector - CSS selector to find the target element
    * @param value - The value to set in the element
    */
-  async inputElement(selector: string, value: string): Promise<boolean> {
+  async inputElement(
+    selector: string,
+    value: string,
+    options: {
+      typingMode?: boolean;
+      typingDelayMs?: number;
+      skipHighlight?: boolean;
+    } = {},
+  ): Promise<boolean> {
     try {
       const element = this.document?.querySelector(selector) as
         | HTMLInputElement
         | HTMLTextAreaElement
+        | HTMLSelectElement
         | null;
       if (!element) {
         return false;
       }
 
-      const truncatedValue = this.truncate(value, 50);
-      const elementInfo = await this.translate("inputValueSet", {
-        value: truncatedValue,
-      });
-      const options = this.getHighlightOptions("Input");
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
 
-      await this.applyHighlight(element, options, elementInfo);
+      if (!options.skipHighlight) {
+        const truncatedValue = this.truncate(value, 50);
+        const elementInfo = await this.translate("inputValueSet", {
+          value: truncatedValue,
+        });
+        const highlightOptions = this.getHighlightOptions("Input");
+
+        await this.applyHighlight(element, highlightOptions, elementInfo);
+      }
 
       const win = this.contentWindow;
       if (!win) return false;
@@ -1517,6 +1968,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
         void element.nodeType;
       } catch {
         return false;
+      }
+
+      // Select elements are handled via selectOption for better semantics
+      if (element instanceof win.HTMLSelectElement) {
+        return this.selectOption(selector, value);
       }
 
       const nativeInputValueSetter = win.HTMLInputElement.prototype
@@ -1537,15 +1993,62 @@ export class NRWebScraperChild extends JSWindowActorChild {
           ? nativeInputValueSetter
           : nativeTextAreaValueSetter;
 
-      if (setter) {
-        setter.call(element, value);
+      const typingMode = options.typingMode === true;
+      const typingDelay =
+        typeof options.typingDelayMs === "number"
+          ? Math.max(0, options.typingDelayMs)
+          : 25;
+
+      const dispatchBeforeInput = (data: string) => {
+        try {
+          const InputEv = (win?.InputEvent ?? null) as typeof InputEvent | null;
+          if (InputEv) {
+            element.dispatchEvent(
+              new InputEv("beforeinput", {
+                bubbles: true,
+                cancelable: true,
+                inputType: "insertText",
+                data,
+              }),
+            );
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      const setValue = (v: string) => {
+        if (setter) {
+          setter.call(element, v);
+        } else {
+          element.value = v;
+        }
+      };
+
+      if (typingMode) {
+        setValue("");
+        for (const ch of value.split("")) {
+          dispatchBeforeInput(ch);
+          setValue(element.value + ch);
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+          element.dispatchEvent(
+            new KeyboardEvent("keydown", { key: ch, bubbles: true }),
+          );
+          element.dispatchEvent(
+            new KeyboardEvent("keyup", { key: ch, bubbles: true }),
+          );
+          if (typingDelay > 0) {
+            await new Promise((r) => timerSetTimeout(r, typingDelay));
+          }
+        }
+        element.dispatchEvent(new Event("change", { bubbles: true }));
       } else {
-        element.value = value;
+        dispatchBeforeInput(value);
+        setValue(value);
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
-      // Trigger input event to ensure the change is detected
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-      element.dispatchEvent(new Event("change", { bubbles: true }));
       element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
       return true;
     } catch (e) {
@@ -1588,6 +2091,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       } catch {
         return false;
       }
+
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
 
       const options = this.getHighlightOptions("Click");
 
@@ -1640,12 +2146,24 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
       }
 
-      let clickDispatched = false;
-      try {
-        element.click();
-        clickDispatched = true;
-      } catch (e) {
-        void e;
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      let clickDispatched = this.dispatchPointerClickSequence(
+        element,
+        centerX,
+        centerY,
+        0,
+      );
+
+      if (!clickDispatched) {
+        try {
+          element.click();
+          clickDispatched = true;
+        } catch (e) {
+          void e;
+        }
       }
 
       if (!clickDispatched && MouseEv) {
@@ -1676,10 +2194,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const success = stateChanged || clickDispatched;
 
-      // エフェクト表示の完了を待たずに結果を返す（非同期で継続）
-      void effectPromise;
+      // エフェクトが最低限表示されるまで短時間待機（完全な完了は待たない）
+      await Promise.race([
+        effectPromise,
+        new Promise((resolve) => timerSetTimeout(resolve, 300)),
+      ]);
 
-      return Promise.resolve(success);
+      return success;
     } catch (e) {
       console.error("NRWebScraperChild: Error clicking element:", e);
       return Promise.resolve(false);
@@ -1710,10 +2231,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return true;
         }
         // Wait 100ms before next check
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => timerSetTimeout(resolve, 100));
       } catch (e) {
         // If it's a DeadObject error, the page navigated
-        if (e.message?.includes("dead object")) {
+        if (
+          e &&
+          typeof e === "object" &&
+          "message" in e &&
+          typeof (e as { message?: unknown }).message === "string" &&
+          ((e as { message: string }).message?.includes("dead object") ?? false)
+        ) {
           return false;
         }
         console.error("NRWebScraperChild: Error waiting for element:", e);
@@ -1747,12 +2274,18 @@ export class NRWebScraperChild extends JSWindowActorChild {
         ) {
           return true;
         }
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => timerSetTimeout(r, 100));
       } catch (e) {
-        if (e.message?.includes("dead object")) {
+        if (
+          e &&
+          typeof e === "object" &&
+          "message" in e &&
+          typeof (e as { message?: unknown }).message === "string" &&
+          ((e as { message: string }).message?.includes("dead object") ?? false)
+        ) {
           return false;
         }
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => timerSetTimeout(r, 100));
       }
     }
     return false;
@@ -1941,7 +2474,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * and values are the corresponding values to set.
    * @returns boolean - True if all fields were filled successfully, false otherwise.
    */
-  async fillForm(formData: { [selector: string]: string }): Promise<boolean> {
+  async fillForm(
+    formData: { [selector: string]: string },
+    options: { typingMode?: boolean; typingDelayMs?: number } = {},
+  ): Promise<boolean> {
     try {
       let allFilled = true;
       const selectors = Object.keys(formData);
@@ -1950,6 +2486,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const doc = this.document;
       const action = "Fill";
       const highlightOptions = this.getHighlightOptions(action);
+
+      // Ensure document is minimally ready before filling
+      await this.waitForReady(5000);
 
       // 初期情報パネルを表示
       if (fieldCount > 1 && doc) {
@@ -1970,10 +2509,23 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
 
         const value = formData[selector];
-        const element = this.document?.querySelector(selector) as
+        let element = this.document?.querySelector(selector) as
           | HTMLInputElement
           | HTMLTextAreaElement
+          | HTMLSelectElement
           | null;
+
+        // If not found immediately, wait briefly for it to appear
+        if (!element) {
+          const waited = await this.waitForElement(selector, 3000);
+          if (waited) {
+            element = this.document?.querySelector(selector) as
+              | HTMLInputElement
+              | HTMLTextAreaElement
+              | HTMLSelectElement
+              | null;
+          }
+        }
 
         if (element) {
           const elementInfo = await this.translate("formFieldProgress", {
@@ -1982,7 +2534,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
             value: this.truncate(value, 30),
           });
           if (fieldCount > 1 && doc) {
-            this.showInfoPanel(
+            await this.showInfoPanel(
               action,
               undefined,
               elementInfo,
@@ -1999,39 +2551,27 @@ export class NRWebScraperChild extends JSWindowActorChild {
             false,
           );
 
-          // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
-          const nativeInputValueSetter = win?.HTMLInputElement.prototype
-            ? Object.getOwnPropertyDescriptor(
-                win.HTMLInputElement.prototype,
-                "value",
-              )?.set
-            : undefined;
-          const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
-            ? Object.getOwnPropertyDescriptor(
-                win.HTMLTextAreaElement.prototype,
-                "value",
-              )?.set
-            : undefined;
-
-          const setter =
-            element instanceof win!.HTMLInputElement
-              ? nativeInputValueSetter
-              : nativeTextAreaValueSetter;
-
-          if (setter) {
-            setter.call(element, value);
+          let success = false;
+          if (
+            element instanceof (win?.HTMLSelectElement ?? HTMLSelectElement)
+          ) {
+            success = await this.selectOption(selector, value, {
+              skipHighlight: true,
+            });
           } else {
-            element.value = value;
+            success = await this.inputElement(selector, value, {
+              ...options,
+              skipHighlight: true,
+            });
+          }
+          if (!success) {
+            allFilled = false;
           }
 
-          element.dispatchEvent(new Event("input", { bubbles: true }));
-          element.dispatchEvent(new Event("change", { bubbles: true }));
-          element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
-
           // 各フィールド入力後に1.2秒の遅延（ユーザーがエフェクトを確認できるように）
-          if (i < selectors.length - 1 && win) {
+          if (i < selectors.length - 1) {
             await new Promise<void>((resolve) => {
-              win.setTimeout(() => resolve(), 1200);
+              timerSetTimeout(() => resolve(), 1200);
             });
           }
         } else {
@@ -2041,32 +2581,133 @@ export class NRWebScraperChild extends JSWindowActorChild {
           allFilled = false;
         }
       }
-      return allFilled;
+
+      // 最終的な値を確認し、失敗したフィールドがあれば簡易的に再設定する
+      if (!win) {
+        return allFilled;
+      }
+
+      let finalOk = true;
+      for (const selector of selectors) {
+        const expectedValue = formData[selector];
+        const element = this.document?.querySelector(selector) as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | HTMLSelectElement
+          | null;
+
+        if (!element) {
+          finalOk = false;
+          continue;
+        }
+
+        const currentValue =
+          win && element instanceof win.HTMLSelectElement
+            ? element.value
+            : (element.value ?? "");
+
+        if (currentValue === expectedValue) {
+          continue;
+        }
+
+        try {
+          if (win && element instanceof win.HTMLSelectElement) {
+            const selectEl = element as HTMLSelectElement;
+            const options = Array.from(selectEl.options) as HTMLOptionElement[];
+            const targetOpt =
+              options.find((opt) => opt.value === expectedValue) ?? null;
+            if (targetOpt) {
+              selectEl.value = targetOpt.value;
+            } else {
+              selectEl.value = expectedValue;
+            }
+          } else {
+            const nativeInputValueSetter = win?.HTMLInputElement.prototype
+              ? Object.getOwnPropertyDescriptor(
+                  win.HTMLInputElement.prototype,
+                  "value",
+                )?.set
+              : undefined;
+            const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
+              ? Object.getOwnPropertyDescriptor(
+                  win.HTMLTextAreaElement.prototype,
+                  "value",
+                )?.set
+              : undefined;
+
+            const setter =
+              win && element instanceof win.HTMLInputElement
+                ? nativeInputValueSetter
+                : nativeTextAreaValueSetter;
+
+            if (setter) {
+              setter.call(element, expectedValue);
+            } else {
+              element.value = expectedValue;
+            }
+          }
+
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+          element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+        } catch (_err) {
+          try {
+            if (win && element instanceof win.HTMLSelectElement) {
+              const selectEl = element as HTMLSelectElement;
+              const options = Array.from(
+                selectEl.options,
+              ) as HTMLOptionElement[];
+              const targetOpt =
+                options.find((opt) => opt.value === expectedValue) ?? null;
+              if (targetOpt) {
+                selectEl.value = targetOpt.value;
+              } else {
+                selectEl.value = expectedValue;
+              }
+            } else {
+              const nativeInputValueSetter = win?.HTMLInputElement.prototype
+                ? Object.getOwnPropertyDescriptor(
+                    win.HTMLInputElement.prototype,
+                    "value",
+                  )?.set
+                : undefined;
+              const nativeTextAreaValueSetter = win?.HTMLTextAreaElement
+                .prototype
+                ? Object.getOwnPropertyDescriptor(
+                    win.HTMLTextAreaElement.prototype,
+                    "value",
+                  )?.set
+                : undefined;
+              if (
+                nativeInputValueSetter &&
+                win &&
+                element instanceof win.HTMLInputElement
+              ) {
+                nativeInputValueSetter.call(element, expectedValue);
+              } else if (
+                nativeTextAreaValueSetter &&
+                win &&
+                element instanceof win.HTMLTextAreaElement
+              ) {
+                nativeTextAreaValueSetter.call(element, expectedValue);
+              } else {
+                element.value = expectedValue;
+              }
+            }
+          } catch (e) {
+            console.error(
+              `NRWebScraperChild: Error setting value for selector ${selector}`,
+              e,
+            );
+            finalOk = false;
+          }
+        }
+      }
+
+      return allFilled && finalOk;
     } catch (e) {
       console.error("NRWebScraperChild: Error filling form:", e);
       return false;
-    }
-  }
-
-  /**
-   * Gets the value of an input or textarea element by CSS selector
-   * @param selector - CSS selector to find the target element
-   * @returns string | null - The current value, or null if not found/unsupported
-   */
-  getValue(selector: string): string | null {
-    try {
-      const element = this.document?.querySelector(selector) as
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | null;
-      if (element && typeof (element as HTMLInputElement).value === "string") {
-        this.runAsyncInspection(element, "inspectGetValue", { selector });
-        return (element as HTMLInputElement).value;
-      }
-      return null;
-    } catch (e) {
-      console.error("NRWebScraperChild: Error getting value:", e);
-      return null;
     }
   }
 
@@ -2118,6 +2759,54 @@ export class NRWebScraperChild extends JSWindowActorChild {
     } catch (e) {
       console.error("NRWebScraperChild: Error submitting form:", e);
       return false;
+    }
+  }
+
+  /**
+   * Gets the value of an input/textarea/select element.
+   */
+  async getValue(selector: string): Promise<string | null> {
+    try {
+      const element = this.document?.querySelector(selector) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+        | null;
+      if (!element) return null;
+
+      // Show highlight effect and wait for it to be visible
+      const elementInfo = await this.translate("inspectGetValue", { selector });
+      await this.applyHighlight(
+        element,
+        { action: "InspectPeek" },
+        elementInfo,
+        true,
+      );
+
+      const win = this.contentWindow;
+      if (win && element instanceof win.HTMLSelectElement) {
+        return element.value ?? "";
+      }
+
+      if (
+        win &&
+        (element instanceof win.HTMLInputElement ||
+          element instanceof win.HTMLTextAreaElement)
+      ) {
+        return element.value ?? "";
+      }
+
+      // Fallback: if the element exposes a value property, return it; otherwise textContent
+      // This helps in cases where the realm differs or element type is unusual.
+      const maybeVal = (element as { value?: unknown }).value;
+      if (maybeVal !== undefined) {
+        return typeof maybeVal === "string" ? maybeVal : String(maybeVal ?? "");
+      }
+
+      return element.textContent ?? "";
+    } catch (e) {
+      console.error("NRWebScraperChild: Error getting value:", e);
+      return null;
     }
   }
 
@@ -2242,8 +2931,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
       const nativeInputValueSetter = win.HTMLInputElement.prototype
-        ? Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")
-            ?.set
+        ? Object.getOwnPropertyDescriptor(
+            win.HTMLInputElement.prototype,
+            "value",
+          )?.set
         : undefined;
       const nativeTextAreaValueSetter = win.HTMLTextAreaElement.prototype
         ? Object.getOwnPropertyDescriptor(
@@ -2285,7 +2976,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param value - The value of the option to select
    * @returns Promise<boolean> - True if selected successfully, false otherwise
    */
-  async selectOption(selector: string, value: string): Promise<boolean> {
+  async selectOption(
+    selector: string,
+    value: string,
+    opts: { skipHighlight?: boolean } = {},
+  ): Promise<boolean> {
     try {
       const element = this.document?.querySelector(
         selector,
@@ -2295,18 +2990,36 @@ export class NRWebScraperChild extends JSWindowActorChild {
       // Check if it's a valid select element
       if (element.tagName !== "SELECT") return false;
 
-      // Check if the option exists
-      const optionExists = Array.from(element.options).some(
-        (opt: HTMLOptionElement) => opt.value === value,
-      );
-      if (!optionExists) return false;
+      // Resolve target option: value -> text -> label -> partial text
+      const options = Array.from(element.options) as HTMLOptionElement[];
+      let targetOpt = options.find((opt) => opt.value === value);
+      if (!targetOpt) {
+        targetOpt = options.find(
+          (opt) => (opt.textContent ?? "").trim() === value,
+        );
+      }
+      if (!targetOpt) {
+        targetOpt = options.find((opt) => (opt.label ?? "").trim() === value);
+      }
+      if (!targetOpt) {
+        const lower = value.toLowerCase();
+        targetOpt = options.find((opt) =>
+          (opt.textContent ?? "").toLowerCase().includes(lower),
+        );
+      }
+      if (!targetOpt) return false;
 
-      const elementInfo = await this.translate("selectOption", {
-        value,
-      });
-      const options = this.getHighlightOptions("Input");
+      if (!opts.skipHighlight) {
+        const elementInfo = await this.translate("selectOption", {
+          value: targetOpt.value,
+        });
+        const optionsHighlight = this.getHighlightOptions("Input");
 
-      await this.applyHighlight(element, options, elementInfo);
+        await this.applyHighlight(element, optionsHighlight, elementInfo);
+      }
+
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
 
       const win = this.contentWindow;
       if (!win) return false;
@@ -2320,9 +3033,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
         : undefined;
 
       if (nativeSelectValueSetter) {
-        nativeSelectValueSetter.call(element, value);
+        nativeSelectValueSetter.call(element, targetOpt.value);
       } else {
-        element.value = value;
+        element.value = targetOpt.value;
       }
 
       // Trigger events to notify frameworks
@@ -2364,6 +3077,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
       const win = this.contentWindow;
       if (!win) return false;
 
@@ -2393,6 +3109,140 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error setting checked state:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Press a key or key combination (e.g., "Control+Shift+R").
+   */
+  async pressKey(keyCombo: string): Promise<boolean> {
+    try {
+      const win = this.contentWindow;
+      const doc = this.document;
+      if (!win || !doc) return false;
+
+      const parts = keyCombo
+        .split("+")
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (parts.length === 0) return false;
+      const key = parts.pop() as string;
+      const modifiers = parts;
+
+      const active = (doc.activeElement as HTMLElement | null) ?? doc.body;
+      const dispatch = (type: string, opts: KeyboardEventInit) => {
+        try {
+          return (
+            active?.dispatchEvent(new win.KeyboardEvent(type, opts)) ?? false
+          );
+        } catch {
+          return false;
+        }
+      };
+
+      for (const mod of modifiers) {
+        dispatch("keydown", { key: mod, code: mod, bubbles: true });
+      }
+
+      dispatch("keydown", { key, code: key, bubbles: true });
+      dispatch("keypress", { key, code: key, bubbles: true });
+      dispatch("keyup", { key, code: key, bubbles: true });
+
+      for (const mod of modifiers.reverse()) {
+        dispatch("keyup", { key: mod, code: mod, bubbles: true });
+      }
+
+      await Promise.resolve();
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error pressing key:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Uploads a file through input[type=file].
+   */
+  async uploadFile(selector: string, filePath: string): Promise<boolean> {
+    try {
+      const element = this.document?.querySelector(
+        selector,
+      ) as HTMLInputElement | null;
+      if (!element || element.tagName !== "INPUT" || element.type !== "file") {
+        return false;
+      }
+
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
+      const elementInfo = await this.translate("uploadFile", {
+        value: this.truncate(filePath.split(/[\\/]/).pop() ?? filePath, 30),
+      });
+      const options = this.getHighlightOptions("Input");
+      await this.applyHighlight(element, options, elementInfo);
+
+      type MozFileInput = HTMLInputElement & {
+        mozSetFileArray?: (files: File[]) => void;
+      };
+      const fileInput = element as MozFileInput;
+
+      // Create File object from path and set via mozSetFileArray
+      // (Following Mozilla's Marionette pattern - mozSetFileNameArray is not available in content scripts)
+      try {
+        const file = await File.createFromFileName(filePath);
+        if (typeof fileInput.mozSetFileArray === "function") {
+          fileInput.mozSetFileArray([file]);
+        } else {
+          console.error("NRWebScraperChild: mozSetFileArray not available");
+          return false;
+        }
+      } catch (e) {
+        console.error("NRWebScraperChild: Failed to create file from path:", e);
+        return false;
+      }
+
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error uploading file:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets a cookie using document.cookie
+   *
+   * This method sets a cookie in the content process using the document.cookie API.
+   * It's used as a fallback when Services.cookies.add() fails to store cookies.
+   *
+   * @param cookieString - The full cookie string (e.g., "name=value; Path=/; Domain=example.com")
+   * @param cookieName - The cookie name for verification
+   * @param cookieValue - The cookie value for verification
+   * @returns boolean - True if the cookie was set successfully, false otherwise
+   */
+  setCookieString(
+    cookieString: string,
+    cookieName?: string,
+    cookieValue?: string,
+  ): boolean {
+    try {
+      if (!this.contentWindow?.document) {
+        return false;
+      }
+
+      // Set the cookie via document.cookie
+      this.contentWindow.document.cookie = cookieString;
+
+      // Verify if the cookie was set (if name and value were provided)
+      if (cookieName && cookieValue) {
+        const cookies = this.contentWindow.document.cookie;
+        return cookies.includes(`${cookieName}=${cookieValue}`);
+      }
+
+      return true;
+    } catch {
       return false;
     }
   }
@@ -2507,11 +3357,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
       const rect = element.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Dispatch double click event
+      // Two click sequences followed by dblclick for better compatibility
+      this.dispatchPointerClickSequence(element, centerX, centerY, 0);
+      this.dispatchPointerClickSequence(element, centerX, centerY, 0);
+
       element.dispatchEvent(
         new MouseEvent("dblclick", {
           bubbles: true,
@@ -2548,11 +3404,16 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
       const rect = element.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Dispatch contextmenu event (right click)
+      // Pointer + mouse sequence with button=2, then contextmenu
+      this.dispatchPointerClickSequence(element, centerX, centerY, 2);
+
       element.dispatchEvent(
         new MouseEvent("contextmenu", {
           bubbles: true,
@@ -2734,6 +3595,130 @@ export class NRWebScraperChild extends JSWindowActorChild {
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error in drag and drop:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the innerHTML of an element matching the given selector.
+   * Useful for contenteditable elements like rich text editors.
+   *
+   * @param selector - CSS selector for the target element
+   * @param html - HTML content to set
+   * @returns boolean - true if successful, false otherwise
+   */
+  setInnerHTML(selector: string, html: string): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for setInnerHTML: ${selector}`,
+        );
+        return false;
+      }
+
+      element.innerHTML = html;
+
+      // Dispatch input event to trigger any listeners
+      element.dispatchEvent(
+        new Event("input", { bubbles: true, cancelable: true }),
+      );
+
+      this.runAsyncInspection(element, "inputValueSet", {
+        value: this.truncate(html, 30),
+      });
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in setInnerHTML:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the textContent of an element matching the given selector.
+   *
+   * @param selector - CSS selector for the target element
+   * @param text - Text content to set
+   * @returns boolean - true if successful, false otherwise
+   */
+  setTextContent(selector: string, text: string): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for setTextContent: ${selector}`,
+        );
+        return false;
+      }
+
+      element.textContent = text;
+
+      // Dispatch input event to trigger any listeners
+      element.dispatchEvent(
+        new Event("input", { bubbles: true, cancelable: true }),
+      );
+
+      this.runAsyncInspection(element, "inputValueSet", {
+        value: this.truncate(text, 30),
+      });
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in setTextContent:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Dispatches a custom event on an element matching the given selector.
+   * Useful for triggering framework-specific event handlers.
+   *
+   * @param selector - CSS selector for the target element
+   * @param eventType - Type of event to dispatch (e.g., "input", "change", "click")
+   * @param options - Event options (bubbles, cancelable)
+   * @returns boolean - true if successful, false otherwise
+   */
+  dispatchEvent(
+    selector: string,
+    eventType: string,
+    options?: { bubbles?: boolean; cancelable?: boolean },
+  ): boolean {
+    try {
+      const doc = this.document;
+      if (!doc) {
+        return false;
+      }
+
+      const element = doc.querySelector(selector);
+      if (!element) {
+        console.warn(
+          `NRWebScraperChild: Element not found for dispatchEvent: ${selector}`,
+        );
+        return false;
+      }
+
+      const eventOptions = {
+        bubbles: options?.bubbles ?? true,
+        cancelable: options?.cancelable ?? true,
+      };
+
+      const event = new Event(eventType, eventOptions);
+      element.dispatchEvent(event);
+
+      return true;
+    } catch (e) {
+      console.error("NRWebScraperChild: Error in dispatchEvent:", e);
       return false;
     }
   }

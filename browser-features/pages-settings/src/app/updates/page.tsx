@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { DropDown } from "@/components/common/dropdown.tsx";
-import { Button, ButtonProps } from "@/components/common/button.tsx";
+import { Button, ButtonProps } from "@nora/ui-components";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { rpc } from "@/lib/rpc/rpc.ts";

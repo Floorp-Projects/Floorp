@@ -98,7 +98,9 @@ export class GestureDisplay {
   }
 
   private initializeComponent(): void {
-    if (!this.mountContainer || !this.targetWindow || !this.targetWindow.document) return;
+    if (
+      !this.mountContainer || !this.targetWindow || !this.targetWindow.document
+    ) return;
 
     // Create canvas and label elements using createElementNS
     const doc = this.targetWindow.document;
@@ -198,7 +200,16 @@ export class GestureDisplay {
   }
 
   public updateTrail(points: { x: number; y: number }[]): void {
-    const newPoints = [...points];
+    let newPoints = [...points];
+
+    // Decimate when too many points to reduce draw cost
+    const MAX_POINTS = 400;
+    if (newPoints.length > MAX_POINTS) {
+      const stride = Math.ceil(newPoints.length / MAX_POINTS);
+      newPoints = newPoints.filter((_, idx) =>
+        idx % stride === 0 || idx === newPoints.length - 1
+      );
+    }
 
     //TODO: Performance optimization
     // if (newPoints.length > 100) {
@@ -230,7 +241,9 @@ export class GestureDisplay {
     this.actionName = name;
     if (this.labelEl) {
       this.labelEl.textContent = name || "";
-      this.labelEl.style.display = (name && getConfig().showLabel) ? "block" : "none";
+      this.labelEl.style.display = (name && getConfig().showLabel)
+        ? "block"
+        : "none";
     }
   }
 
@@ -268,7 +281,6 @@ export class GestureDisplay {
     }
 
     this.mountContainer = null;
-
     // Remove from instances map if this is the current instance for the window
     if (gestureDisplayInstances.get(this.targetWindow) === this) {
       gestureDisplayInstances.delete(this.targetWindow);

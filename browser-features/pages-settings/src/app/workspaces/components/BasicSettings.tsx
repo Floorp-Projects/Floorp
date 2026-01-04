@@ -8,11 +8,11 @@ import {
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
-import { InfoTip } from "@/components/common/infotip.tsx";
+import { InfoTip } from "@nora/ui-components";
 import { ExternalLink, Settings } from "lucide-react";
 import { RestartModal } from "@/components/common/restart-modal.tsx";
 import { useState } from "react";
-import { Button } from "@/components/common/button.tsx";
+import { Button } from "@nora/ui-components";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import { initializeWorkspaces } from "../dataManager.ts";
 

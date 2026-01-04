@@ -16,7 +16,7 @@ import {
     CardTitle,
 } from "@/components/common/card.tsx";
 import { Keyboard } from "lucide-react";
-import { InfoTip } from "@/components/common/infotip.tsx";
+import { InfoTip } from "@nora/ui-components";
 
 interface ShortcutsSettingsProps {
     config: KeyboardShortcutConfig;

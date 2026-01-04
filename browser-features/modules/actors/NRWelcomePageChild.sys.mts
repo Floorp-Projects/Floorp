@@ -126,4 +126,7 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       }
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

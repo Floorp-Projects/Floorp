@@ -2,6 +2,32 @@
 // eslint-disable no-unsafe-optional-chaining
 import type { GestureActionRegistration } from "./gestures.ts";
 
+const getXulElement = (id: string): XULElement | null => {
+  try {
+    return (document?.getElementById(id) as XULElement | null) ?? null;
+  } catch (_e) {
+    return null;
+  }
+};
+
+const doCommandIfExists = (id: string) => {
+  const el = getXulElement(id);
+  try {
+    el?.doCommand?.();
+  } catch (e) {
+    console.error(`[mouse-gesture] Failed to run command for ${id}:`, e);
+  }
+};
+
+const clickIfExists = (id: string) => {
+  const el = getXulElement(id);
+  try {
+    el?.click?.();
+  } catch (e) {
+    console.error(`[mouse-gesture] Failed to click ${id}:`, e);
+  }
+};
+
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
