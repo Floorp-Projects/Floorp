@@ -809,6 +809,139 @@ function getMaxDisplacementDirection(
   return deltaToDirection(dx, dy);
 }
 
+// ============================================================================
+// Direction Sequence Recognition
+// ============================================================================
+
+/**
+ * Minimum segment length in pixels for direction sequence extraction.
+ * Segments shorter than this are considered noise and merged with adjacent segments.
+ */
+const MIN_SEGMENT_LENGTH_FOR_SEQUENCE = 25;
+
+/**
+ * Minimum number of points to confirm a direction change.
+ * This helps filter out noise from hand jitter.
+ */
+const MIN_POINTS_FOR_DIRECTION_CHANGE = 3;
+
+/**
+ * Extract a sequence of directions from a mouse trail.
+ *
+ * This function analyzes the trail to detect direction changes and builds
+ * a sequence of directions (e.g., ["right", "down", "left", "up", "right"]).
+ *
+ * Algorithm:
+ * 1. Traverse the trail, calculating direction at each significant segment
+ * 2. Detect when direction changes by a significant amount (new direction is different)
+ * 3. Merge consecutive segments with the same direction
+ * 4. Filter out very short segments (noise)
+ *
+ * @param trail - Array of {x, y} points from mouse movement
+ * @returns Array of GestureDirection representing the direction sequence
+ */
+export function extractDirectionSequence(
+  trail: { x: number; y: number }[],
+  minSegmentLength: number = MIN_SEGMENT_LENGTH_FOR_SEQUENCE,
+): GestureDirection[] {
+  if (trail.length < 2) {
+    return [];
+  }
+
+  const directions: GestureDirection[] = [];
+  let segmentStartIdx = 0;
+  let currentDirection: GestureDirection | null = null;
+  let pointsInCurrentDirection = 0;
+
+  for (let i = 1; i < trail.length; i++) {
+    const dx = trail[i].x - trail[segmentStartIdx].x;
+    const dy = trail[i].y - trail[segmentStartIdx].y;
+    const segmentLength = Math.sqrt(dx * dx + dy * dy);
+
+    // Only process if segment is long enough
+    if (segmentLength >= minSegmentLength) {
+      const direction = deltaToDirection(dx, dy);
+
+      if (currentDirection === null) {
+        // First direction detected
+        currentDirection = direction;
+        pointsInCurrentDirection = 1;
+      } else if (direction === currentDirection) {
+        // Same direction, continue
+        pointsInCurrentDirection++;
+      } else {
+        // Direction changed
+        // Only confirm direction change if we had enough points in previous direction
+        if (pointsInCurrentDirection >= MIN_POINTS_FOR_DIRECTION_CHANGE) {
+          // Add the previous direction if not already added
+          if (directions.length === 0 || directions[directions.length - 1] !== currentDirection) {
+            directions.push(currentDirection);
+          }
+        }
+        
+        // Start new direction
+        currentDirection = direction;
+        pointsInCurrentDirection = 1;
+        segmentStartIdx = i - 1; // Reset segment start
+      }
+    }
+  }
+
+  // Add the final direction if significant
+  if (currentDirection !== null && pointsInCurrentDirection >= MIN_POINTS_FOR_DIRECTION_CHANGE) {
+    if (directions.length === 0 || directions[directions.length - 1] !== currentDirection) {
+      directions.push(currentDirection);
+    }
+  }
+
+  // Handle case where we only have one direction and haven't added it yet
+  if (directions.length === 0 && currentDirection !== null) {
+    directions.push(currentDirection);
+  }
+
+  return directions;
+}
+
+/**
+ * Recognize a gesture by matching the extracted direction sequence against configured patterns.
+ *
+ * This provides exact matching for direction-based gestures, which is more reliable
+ * than $1 Recognizer for gestures defined by a sequence of directions.
+ *
+ * @param trail - Mouse trail points
+ * @param shapeDb - Database of configured gesture patterns
+ * @returns Recognition result with pattern name and score, or null if no match
+ */
+function recognizeByDirectionSequence(
+  trail: { x: number; y: number }[],
+  shapeDb?: ShapeDatabase,
+  minSegmentLength: number = MIN_SEGMENT_LENGTH_FOR_SEQUENCE,
+): RecognitionResult | null {
+  if (!shapeDb || trail.length < 2) {
+    return null;
+  }
+
+  const extractedSequence = extractDirectionSequence(trail, minSegmentLength);
+
+  // Need at least 2 directions for this to be a "sequence" gesture
+  // Single directions are handled by isStraightLine check
+  if (extractedSequence.length < 2) {
+    return null;
+  }
+
+  const extractedKey = extractedSequence.join("-");
+
+  // Check if this exact sequence is configured
+  if (isPatternConfigured(extractedKey, shapeDb)) {
+    return {
+      patternName: extractedKey,
+      score: GEOMETRIC_DETECTION_CONFIDENCE,
+    };
+  }
+
+  return null;
+}
+
 /**
  * Check if a pattern exists in the shape database.
  * Returns true if pattern is found or if no shapeDb is provided.
@@ -839,7 +972,8 @@ function isPatternConfigured(patternName: string, shapeDb?: ShapeDatabase): bool
  * This function uses a multi-step recognition strategy:
  * 1. Check for oscillating gestures (back-and-forth along one axis like up-down, left-right)
  * 2. Check for straight lines (single direction gestures like up, down, left, right)
- * 3. Fall back to $1 Recognizer for complex shapes
+ * 3. Check for multi-direction sequences (e.g., right-down-left-up-right)
+ * 4. Fall back to $1 Recognizer for complex shapes
  *
  * For oscillating and straight line gestures, we use simple geometric analysis
  * which is more reliable than $1 for these basic patterns. If a simple pattern
@@ -854,6 +988,7 @@ export function recognize(
   trail: { x: number; y: number }[],
   minScore = 0.7,
   shapeDb?: ShapeDatabase,
+  minSegmentLength: number = MIN_SEGMENT_LENGTH_FOR_SEQUENCE,
 ): RecognitionResult | null {
   // Need at least 2 points to recognize
   if (trail.length < 2) {
@@ -900,7 +1035,14 @@ export function recognize(
     }
   }
 
-  // Step 3: Complex shapes use $1 Recognizer
+  // Step 3: Check for multi-direction sequences (e.g., right-down-left-up-right)
+  // This handles gestures that are defined by a sequence of direction changes
+  const sequenceResult = recognizeByDirectionSequence(trail, shapeDb, minSegmentLength);
+  if (sequenceResult) {
+    return sequenceResult;
+  }
+
+  // Step 4: Complex shapes use $1 Recognizer
   // Convert mouse trail to $1 Recognizer format
   const points = convertTrailToPoints(trail);
 
