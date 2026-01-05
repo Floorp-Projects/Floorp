@@ -1,8 +1,15 @@
 import { type ButtonHTMLAttributes, forwardRef } from "react";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "primary" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | "light"
+    | "danger";
   size?: "default" | "sm" | "lg";
   asChild?: boolean;
 }
@@ -13,12 +20,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       variant = "primary",
       size = "default",
-      asChild = false,
       ...props
     },
     ref,
   ) => {
-    const Comp = asChild ? "span" : "button";
+    const Comp = "button";
     return (
       <Comp
         className={cn(
@@ -26,12 +32,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-base-content/20",
           "disabled:pointer-events-none disabled:opacity-50",
           {
-            "bg-primary text-primary-content hover:bg-primary/90 active:bg-primary/80":
+            "bg-primary/70 text-primary-content hover:bg-primary/80 active:bg-primary/70":
               variant === "primary",
-            "bg-secondary text-secondary-content hover:bg-secondary/90 active:bg-secondary/80":
+            "bg-secondary/90 text-secondary-content hover:bg-secondary/80 active:bg-secondary/70":
               variant === "secondary",
-            "hover:bg-base-300/50 active:bg-base-300": variant === "ghost",
+            "hover:bg-base-300/40 active:bg-base-300/60": variant === "ghost",
             "underline-offset-4 hover:underline": variant === "link",
+            "bg-base-200/40 text-base-content hover:bg-base-200/60 active:bg-base-200/70 dark:bg-base-300/25 dark:hover:bg-base-300/40 dark:active:bg-base-300/50":
+              variant === "light",
+            "bg-red-600/90 text-white hover:bg-red-700/90 active:bg-red-600/90":
+              variant === "danger",
             "h-8 px-4 text-sm": size === "sm",
             "h-10 px-6 text-base": size === "default",
             "h-12 px-8 text-lg": size === "lg",

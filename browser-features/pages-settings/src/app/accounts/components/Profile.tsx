@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card";
-import { Separator } from "@nora/ui-components";
+import { Separator } from "@/components/common/separator";
 import { useTranslation } from "react-i18next";
 import type { AccountsFormData } from "@/types/pref";
 import { ExternalLink, User } from "lucide-react";

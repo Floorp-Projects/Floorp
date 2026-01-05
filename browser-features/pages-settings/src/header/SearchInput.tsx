@@ -8,7 +8,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
-import { Input } from "@nora/ui-components";
+import { Input } from "@/components/common/input.tsx";
 import { cn } from "@/lib/utils.ts";
 
 function useSearchQuery() {

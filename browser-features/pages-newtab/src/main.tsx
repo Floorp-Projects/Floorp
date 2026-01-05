@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/globals.css";
 import App from "@/App.tsx";
-import { ThemeProvider } from "@nora/ui-components";
+import { ThemeProvider } from "@/components/theme-provider.tsx";
 // i18n initialization: ensure initialized before rendering
 import { I18nProvider } from "@/lib/i18n/I18nProvider.tsx";
 
