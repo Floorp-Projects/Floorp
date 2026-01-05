@@ -149,7 +149,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const win = this.contentWindow;
     if (!win) return;
     try {
-      const htmlEl = element as unknown as HTMLElement;
+      const rawElement = (element as any).wrappedJSObject ?? element;
+      const htmlEl = rawElement as unknown as HTMLElement;
       if (typeof htmlEl.focus === "function") {
         htmlEl.focus({ preventScroll: true });
       }
@@ -170,16 +171,21 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const win = (this.contentWindow ?? null) as
       | (Window & typeof globalThis)
       | null;
-    const PointerEv = (win?.PointerEvent ?? null) as typeof PointerEvent | null;
-    const MouseEv = (win?.MouseEvent ?? globalThis.MouseEvent ?? null) as
+
+    // Use wrappedJSObject to access page context if available
+    const rawWin = (win as any)?.wrappedJSObject ?? win;
+    const rawElement = (element as any)?.wrappedJSObject ?? element;
+
+    const PointerEv = (rawWin?.PointerEvent ?? null) as typeof PointerEvent | null;
+    const MouseEv = (rawWin?.MouseEvent ?? globalThis.MouseEvent ?? null) as
       | typeof MouseEvent
       | null;
-    const view = win ?? undefined;
+    const view = rawWin ?? undefined;
 
     const emit = <T extends Event>(ev: T | null) => {
       if (!ev) return false;
       try {
-        return element.dispatchEvent(ev);
+        return rawElement.dispatchEvent(ev);
       } catch {
         return false;
       }
@@ -189,7 +195,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     emit(
       PointerEv
-        ? new PointerEvent("pointerdown", {
+        ? new PointerEv("pointerdown", {
             bubbles: true,
             cancelable: true,
             clientX,
@@ -203,7 +209,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     );
     emit(
       MouseEv
-        ? new MouseEvent("mousedown", {
+        ? new MouseEv("mousedown", {
             bubbles: true,
             cancelable: true,
             clientX,
@@ -216,7 +222,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     );
     emit(
       PointerEv
-        ? new PointerEvent("pointerup", {
+        ? new PointerEv("pointerup", {
             bubbles: true,
             cancelable: true,
             clientX,
@@ -230,7 +236,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
     );
     emit(
       MouseEv
-        ? new MouseEvent("mouseup", {
+        ? new MouseEv("mouseup", {
             bubbles: true,
             cancelable: true,
             clientX,
@@ -244,7 +250,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
     const clickOk = emit(
       MouseEv
-        ? new MouseEvent("click", {
+        ? new MouseEv("click", {
             bubbles: true,
             cancelable: true,
             clientX,
@@ -1970,26 +1976,28 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      // Use wrappedJSObject for page context access
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+
       // Select elements are handled via selectOption for better semantics
       if (element instanceof win.HTMLSelectElement) {
         return this.selectOption(selector, value);
       }
 
-      const nativeInputValueSetter = win.HTMLInputElement.prototype
-        ? Object.getOwnPropertyDescriptor(
-            win.HTMLInputElement.prototype,
-            "value",
-          )?.set
+
+      const HTMLInputProto = rawWin.HTMLInputElement?.prototype;
+      const HTMLTextAreaProto = rawWin.HTMLTextAreaElement?.prototype;
+
+      const nativeInputValueSetter = HTMLInputProto
+        ? Object.getOwnPropertyDescriptor(HTMLInputProto, "value")?.set
         : undefined;
-      const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
-        ? Object.getOwnPropertyDescriptor(
-            win.HTMLTextAreaElement.prototype,
-            "value",
-          )?.set
+      const nativeTextAreaValueSetter = HTMLTextAreaProto
+        ? Object.getOwnPropertyDescriptor(HTMLTextAreaProto, "value")?.set
         : undefined;
 
       const setter =
-        element instanceof win!.HTMLInputElement
+        rawElement instanceof rawWin.HTMLInputElement
           ? nativeInputValueSetter
           : nativeTextAreaValueSetter;
 
@@ -1999,11 +2007,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
           ? Math.max(0, options.typingDelayMs)
           : 25;
 
+      const InputEv = (rawWin.InputEvent ?? null) as typeof InputEvent | null;
+      const EventCtor = (rawWin.Event ?? globalThis.Event) as typeof Event;
+      const KeyboardEv = (rawWin.KeyboardEvent ??
+        globalThis.KeyboardEvent) as typeof KeyboardEvent;
+      const FocusEv = (rawWin.FocusEvent ??
+        globalThis.FocusEvent) as typeof FocusEvent;
+
       const dispatchBeforeInput = (data: string) => {
         try {
-          const InputEv = (win?.InputEvent ?? null) as typeof InputEvent | null;
           if (InputEv) {
-            element.dispatchEvent(
+            rawElement.dispatchEvent(
               new InputEv("beforeinput", {
                 bubbles: true,
                 cancelable: true,
@@ -2019,9 +2033,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       const setValue = (v: string) => {
         if (setter) {
-          setter.call(element, v);
+          setter.call(rawElement, v);
         } else {
-          element.value = v;
+          rawElement.value = v;
         }
       };
 
@@ -2029,27 +2043,37 @@ export class NRWebScraperChild extends JSWindowActorChild {
         setValue("");
         for (const ch of value.split("")) {
           dispatchBeforeInput(ch);
-          setValue(element.value + ch);
-          element.dispatchEvent(new Event("input", { bubbles: true }));
-          element.dispatchEvent(
-            new KeyboardEvent("keydown", { key: ch, bubbles: true }),
+          setValue(rawElement.value + ch);
+          rawElement.dispatchEvent(
+            new EventCtor("input", { bubbles: true }),
           );
-          element.dispatchEvent(
-            new KeyboardEvent("keyup", { key: ch, bubbles: true }),
+          rawElement.dispatchEvent(
+            new KeyboardEv("keydown", { key: ch, bubbles: true }),
+          );
+          rawElement.dispatchEvent(
+            new KeyboardEv("keyup", { key: ch, bubbles: true }),
           );
           if (typingDelay > 0) {
             await new Promise((r) => timerSetTimeout(r, typingDelay));
           }
         }
-        element.dispatchEvent(new Event("change", { bubbles: true }));
+        rawElement.dispatchEvent(
+          new EventCtor("change", { bubbles: true }),
+        );
       } else {
         dispatchBeforeInput(value);
         setValue(value);
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        element.dispatchEvent(new Event("change", { bubbles: true }));
+        rawElement.dispatchEvent(
+          new EventCtor("input", { bubbles: true }),
+        );
+        rawElement.dispatchEvent(
+          new EventCtor("change", { bubbles: true }),
+        );
       }
 
-      element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+      rawElement.dispatchEvent(
+        new FocusEv("blur", { bubbles: true }),
+      );
       return true;
     } catch (e) {
       console.error("NRWebScraperChild: Error setting input value:", e);
@@ -2157,9 +2181,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
         0,
       );
 
+      // Force native click via wrappedJSObject to ensure compatibility with sites that rely on simple click events (like DevTools usage)
+      try {
+         const rawElement = (element as any).wrappedJSObject ?? element;
+         rawElement.click();
+         clickDispatched = true;
+      } catch (e) {
+         // ignore
+      }
+
       if (!clickDispatched) {
         try {
-          element.click();
+          const rawElement = (element as any).wrappedJSObject ?? element;
+          rawElement.click();
           clickDispatched = true;
         } catch (e) {
           void e;
@@ -2590,6 +2624,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
       let finalOk = true;
       for (const selector of selectors) {
         const expectedValue = formData[selector];
+
         const element = this.document?.querySelector(selector) as
           | HTMLInputElement
           | HTMLTextAreaElement
@@ -2600,6 +2635,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
           finalOk = false;
           continue;
         }
+
+        const rawWin = (win as any)?.wrappedJSObject ?? win;
+        const rawElement = (element as any)?.wrappedJSObject ?? element;
+        const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+        const FocusEv = (rawWin?.FocusEvent ?? globalThis.FocusEvent) as typeof FocusEvent;
 
         const currentValue =
           win && element instanceof win.HTMLSelectElement
@@ -2622,34 +2662,37 @@ export class NRWebScraperChild extends JSWindowActorChild {
               selectEl.value = expectedValue;
             }
           } else {
-            const nativeInputValueSetter = win?.HTMLInputElement.prototype
-              ? Object.getOwnPropertyDescriptor(
-                  win.HTMLInputElement.prototype,
-                  "value",
-                )?.set
+            const HTMLInputProto = rawWin.HTMLInputElement?.prototype;
+            const HTMLTextAreaProto = rawWin.HTMLTextAreaElement?.prototype;
+
+            const nativeInputValueSetter = HTMLInputProto
+              ? Object.getOwnPropertyDescriptor(HTMLInputProto, "value")?.set
               : undefined;
-            const nativeTextAreaValueSetter = win?.HTMLTextAreaElement.prototype
-              ? Object.getOwnPropertyDescriptor(
-                  win.HTMLTextAreaElement.prototype,
-                  "value",
-                )?.set
+            const nativeTextAreaValueSetter = HTMLTextAreaProto
+              ? Object.getOwnPropertyDescriptor(HTMLTextAreaProto, "value")?.set
               : undefined;
 
             const setter =
-              win && element instanceof win.HTMLInputElement
+              rawElement instanceof rawWin.HTMLInputElement
                 ? nativeInputValueSetter
                 : nativeTextAreaValueSetter;
 
             if (setter) {
-              setter.call(element, expectedValue);
+              setter.call(rawElement, expectedValue);
             } else {
-              element.value = expectedValue;
+              rawElement.value = expectedValue;
             }
           }
 
-          element.dispatchEvent(new Event("input", { bubbles: true }));
-          element.dispatchEvent(new Event("change", { bubbles: true }));
-          element.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+          rawElement.dispatchEvent(
+            new EventCtor("input", { bubbles: true }),
+          );
+          rawElement.dispatchEvent(
+            new EventCtor("change", { bubbles: true }),
+          );
+          rawElement.dispatchEvent(
+            new FocusEv("blur", { bubbles: true }),
+          );
         } catch (_err) {
           try {
             if (win && element instanceof win.HTMLSelectElement) {
@@ -3024,23 +3067,28 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const win = this.contentWindow;
       if (!win) return false;
 
-      // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
-      const nativeSelectValueSetter = win.HTMLSelectElement.prototype
-        ? Object.getOwnPropertyDescriptor(
-            win.HTMLSelectElement.prototype,
-            "value",
-          )?.set
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+
+      const HTMLSelectProto = rawWin.HTMLSelectElement?.prototype;
+      const nativeSelectValueSetter = HTMLSelectProto
+        ? Object.getOwnPropertyDescriptor(HTMLSelectProto, "value")?.set
         : undefined;
 
       if (nativeSelectValueSetter) {
-        nativeSelectValueSetter.call(element, targetOpt.value);
+        nativeSelectValueSetter.call(rawElement, targetOpt.value);
       } else {
-        element.value = targetOpt.value;
+        rawElement.value = targetOpt.value;
       }
 
       // Trigger events to notify frameworks
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-      element.dispatchEvent(new Event("change", { bubbles: true }));
+      rawElement.dispatchEvent(
+        new EventCtor("input", { bubbles: true }),
+      );
+      rawElement.dispatchEvent(
+        new EventCtor("change", { bubbles: true }),
+      );
 
       return true;
     } catch (e) {
@@ -3083,27 +3131,36 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const win = this.contentWindow;
       if (!win) return false;
 
-      // Reactなどのフレームワークのために、ネイティブのsetterを使用して値をセットする
-      const nativeCheckedSetter = win.HTMLInputElement.prototype
-        ? Object.getOwnPropertyDescriptor(
-            win.HTMLInputElement.prototype,
-            "checked",
-          )?.set
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+      const MouseEv = (rawWin?.MouseEvent ??
+        globalThis.MouseEvent) as typeof MouseEvent;
+
+      const HTMLInputProto = rawWin.HTMLInputElement?.prototype;
+      const nativeCheckedSetter = HTMLInputProto
+        ? Object.getOwnPropertyDescriptor(HTMLInputProto, "checked")?.set
         : undefined;
 
       if (nativeCheckedSetter) {
-        nativeCheckedSetter.call(element, checked);
+        nativeCheckedSetter.call(rawElement, checked);
       } else {
-        element.checked = checked;
+        rawElement.checked = checked;
       }
 
       // Trigger events to notify frameworks
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-      element.dispatchEvent(new Event("change", { bubbles: true }));
+      rawElement.dispatchEvent(
+        new EventCtor("input", { bubbles: true }),
+      );
+      rawElement.dispatchEvent(
+        new EventCtor("change", { bubbles: true }),
+      );
 
       // For radio buttons, we may need to trigger click event
       if (element.type === "radio" && checked) {
-        element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        rawElement.dispatchEvent(
+          new MouseEv("click", { bubbles: true }),
+        );
       }
 
       return true;
@@ -3131,10 +3188,17 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const modifiers = parts;
 
       const active = (doc.activeElement as HTMLElement | null) ?? doc.body;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const activeRaw = (active as any)?.wrappedJSObject ?? active;
+      const KeyboardEv = (rawWin?.KeyboardEvent ??
+        globalThis.KeyboardEvent) as typeof KeyboardEvent;
+
       const dispatch = (type: string, opts: KeyboardEventInit) => {
         try {
           return (
-            active?.dispatchEvent(new win.KeyboardEvent(type, opts)) ?? false
+            activeRaw?.dispatchEvent(
+              new KeyboardEv(type, { ...opts, view: rawWin }),
+            ) ?? false
           );
         } catch {
           return false;
@@ -3274,32 +3338,38 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Dispatch mouseenter and mouseover events
-      element.dispatchEvent(
-        new MouseEvent("mouseenter", {
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const MouseEv = (rawWin?.MouseEvent ??
+        globalThis.MouseEvent) as typeof MouseEvent;
+
+      // Dispatch mouseenter and mouseover events use raw element
+      rawElement.dispatchEvent(
+        new MouseEv("mouseenter", {
           bubbles: false,
           cancelable: false,
           clientX: centerX,
           clientY: centerY,
-          view: this.contentWindow as Window & typeof globalThis,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
-      element.dispatchEvent(
-        new MouseEvent("mouseover", {
+      rawElement.dispatchEvent(
+        new MouseEv("mouseover", {
           bubbles: true,
           cancelable: true,
           clientX: centerX,
           clientY: centerY,
-          view: this.contentWindow as Window & typeof globalThis,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
-      element.dispatchEvent(
-        new MouseEvent("mousemove", {
+      rawElement.dispatchEvent(
+        new MouseEv("mousemove", {
           bubbles: true,
           cancelable: true,
           clientX: centerX,
           clientY: centerY,
-          view: this.contentWindow as Window & typeof globalThis,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
@@ -3368,13 +3438,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
       this.dispatchPointerClickSequence(element, centerX, centerY, 0);
       this.dispatchPointerClickSequence(element, centerX, centerY, 0);
 
-      element.dispatchEvent(
-        new MouseEvent("dblclick", {
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const MouseEv = (rawWin?.MouseEvent ??
+        globalThis.MouseEvent) as typeof MouseEvent;
+
+      rawElement.dispatchEvent(
+        new MouseEv("dblclick", {
           bubbles: true,
           cancelable: true,
           clientX: centerX,
           clientY: centerY,
-          view: this.contentWindow as Window & typeof globalThis,
+          view: rawWin as Window & typeof globalThis,
           detail: 2,
         }),
       );
@@ -3414,13 +3490,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
       // Pointer + mouse sequence with button=2, then contextmenu
       this.dispatchPointerClickSequence(element, centerX, centerY, 2);
 
-      element.dispatchEvent(
-        new MouseEvent("contextmenu", {
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const MouseEv = (rawWin?.MouseEvent ??
+        globalThis.MouseEvent) as typeof MouseEvent;
+
+      rawElement.dispatchEvent(
+        new MouseEv("contextmenu", {
           bubbles: true,
           cancelable: true,
           clientX: centerX,
           clientY: centerY,
-          view: this.contentWindow as Window & typeof globalThis,
+          view: rawWin as Window & typeof globalThis,
           button: 2,
         }),
       );
@@ -3440,22 +3522,35 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   async focusElement(selector: string): Promise<boolean> {
     try {
-      const element = this.document?.querySelector(
-        selector,
-      ) as HTMLElement | null;
+      const element = this.document?.querySelector(selector) as HTMLElement;
       if (!element) return false;
+
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const FocusEv = (rawWin?.FocusEvent ??
+        globalThis.FocusEvent) as typeof FocusEvent;
+
+      this.scrollIntoViewIfNeeded(element);
 
       const elementInfo = await this.translate("focusElement", {});
       const options = this.getHighlightOptions("Input");
 
       await this.applyHighlight(element, options, elementInfo);
 
-      // Focus the element
-      element.focus();
+      // Force focus via wrappedJSObject
+      if (typeof rawElement.focus === "function") {
+        rawElement.focus();
+      } else {
+        element.focus();
+      }
 
-      // Dispatch focus event
-      element.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
-      element.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      rawElement.dispatchEvent(
+        new FocusEv("focus", { bubbles: false }),
+      );
+      rawElement.dispatchEvent(
+        new FocusEv("focusin", { bubbles: true }),
+      );
 
       return true;
     } catch (e) {
@@ -3490,20 +3585,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
     targetSelector: string,
   ): Promise<boolean> {
     try {
-      const source = this.document?.querySelector(
-        sourceSelector,
-      ) as HTMLElement | null;
-      const target = this.document?.querySelector(
-        targetSelector,
-      ) as HTMLElement | null;
+      const source = this.document?.querySelector(sourceSelector) as HTMLElement;
+      const target = this.document?.querySelector(targetSelector) as HTMLElement;
 
       if (!source || !target) return false;
 
-      const elementInfo = await this.translate("dragAndDrop", {});
-      const options = this.getHighlightOptions("Click");
+      this.scrollIntoViewIfNeeded(source);
+      this.scrollIntoViewIfNeeded(target);
 
-      // Highlight source element
+      const elementInfo = await this.translate("dragAndDrop", {});
+      const options = this.getHighlightOptions("Input");
+
       await this.applyHighlight(source, options, elementInfo);
+      await this.applyHighlight(target, options, elementInfo);
 
       const sourceRect = source.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
@@ -3512,85 +3606,83 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const targetX = targetRect.left + targetRect.width / 2;
       const targetY = targetRect.top + targetRect.height / 2;
 
-      const win = this.contentWindow as Window & typeof globalThis;
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawSource = (source as any)?.wrappedJSObject ?? source;
+      const rawTarget = (target as any)?.wrappedJSObject ?? target;
+      
+      const DragEv = (rawWin?.DragEvent ??
+        globalThis.DragEvent) as typeof DragEvent;
+      const DataTransferCtor = (rawWin?.DataTransfer ??
+        globalThis.DataTransfer) as typeof DataTransfer;
 
-      // Create DataTransfer object
-      const dataTransfer = new DataTransfer();
+      const dataTransfer = new DataTransferCtor();
 
-      // Dispatch dragstart on source
-      source.dispatchEvent(
-        new DragEvent("dragstart", {
+      rawSource.dispatchEvent(
+        new DragEv("dragstart", {
           bubbles: true,
           cancelable: true,
           clientX: sourceX,
           clientY: sourceY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
-      // Dispatch drag event
-      source.dispatchEvent(
-        new DragEvent("drag", {
+      rawSource.dispatchEvent(
+        new DragEv("drag", {
           bubbles: true,
           cancelable: true,
           clientX: sourceX,
           clientY: sourceY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
-      // Dispatch dragenter on target
-      target.dispatchEvent(
-        new DragEvent("dragenter", {
+      rawTarget.dispatchEvent(
+        new DragEv("dragenter", {
           bubbles: true,
           cancelable: true,
           clientX: targetX,
           clientY: targetY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
-      // Dispatch dragover on target
-      target.dispatchEvent(
-        new DragEvent("dragover", {
+      rawTarget.dispatchEvent(
+        new DragEv("dragover", {
           bubbles: true,
           cancelable: true,
           clientX: targetX,
           clientY: targetY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
-      // Dispatch drop on target
-      target.dispatchEvent(
-        new DragEvent("drop", {
+      rawTarget.dispatchEvent(
+        new DragEv("drop", {
           bubbles: true,
           cancelable: true,
           clientX: targetX,
           clientY: targetY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
 
-      // Dispatch dragend on source
-      source.dispatchEvent(
-        new DragEvent("dragend", {
+      rawSource.dispatchEvent(
+        new DragEv("dragend", {
           bubbles: true,
-          cancelable: true,
-          clientX: targetX,
+          cancelable: false,
+          clientX: targetX, // dragend usually happens at drop location
           clientY: targetY,
           dataTransfer,
-          view: win,
+          view: rawWin as Window & typeof globalThis,
         }),
       );
-
-      // Highlight target element
-      await this.applyHighlight(target, options, elementInfo);
 
       return true;
     } catch (e) {
@@ -3622,6 +3714,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
       const elementInfo = await this.translate("inputValueSet", {
         value: this.truncate(html, 30),
       });
@@ -3629,12 +3724,74 @@ export class NRWebScraperChild extends JSWindowActorChild {
 
       await this.applyHighlight(element, options, elementInfo);
 
-      element.innerHTML = html;
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawDoc = (this.document as any)?.wrappedJSObject ?? this.document;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+
+      // Attempt to use execCommand for better integration with rich text editors (like Slack/ProseMirror)
+      try {
+        if (rawWin && rawDoc.hasFocus()) {
+          const selection = rawWin.getSelection();
+          if (selection) {
+            const range = rawDoc.createRange();
+            range.selectNodeContents(rawElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            if (rawDoc.execCommand("insertHTML", false, html)) {
+              // Ensure events are still fired for safety using page context constructors
+              rawElement.dispatchEvent(
+                new EventCtor("input", { bubbles: true, cancelable: true }),
+              );
+              rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
+              return true;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("NRWebScraperChild: execCommand failed, falling back:", e);
+      }
+
+      const InputEv = (rawWin?.InputEvent ?? null) as typeof InputEvent | null;
+
+      if (InputEv) {
+        rawElement.dispatchEvent(
+          new InputEv("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            inputType: "insertHTML",
+            data: null,
+          }),
+        );
+      }
+
+      // Fallback: direct innerHTML setting
+      if (rawElement !== element) {
+         // If we have access to wrappedJSObject, set innerHTML on it directly?
+         // Note: Setting innerHTML on wrappedJSObject might bypass some Xray protections but is what we want for direct page modification.
+         rawElement.innerHTML = html;
+      } else {
+         element.innerHTML = html;
+      }
 
       // Dispatch input event to trigger any listeners
-      element.dispatchEvent(
-        new Event("input", { bubbles: true, cancelable: true }),
-      );
+      if (InputEv) {
+        rawElement.dispatchEvent(
+          new InputEv("input", {
+            bubbles: true,
+            cancelable: false,
+            inputType: "insertHTML",
+          }),
+        );
+      } else {
+        rawElement.dispatchEvent(
+          new EventCtor("input", { bubbles: true, cancelable: true }),
+        );
+      }
+      
+      rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
 
       return true;
     } catch (e) {
@@ -3665,19 +3822,81 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      this.scrollIntoViewIfNeeded(element);
+      this.focusElementSoft(element);
+
       const elementInfo = await this.translate("inputValueSet", {
         value: this.truncate(text, 30),
       });
       const options = this.getHighlightOptions("Input");
-
       await this.applyHighlight(element, options, elementInfo);
 
-      element.textContent = text;
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawDoc = (this.document as any)?.wrappedJSObject ?? this.document;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+
+      // Attempt to use execCommand for better integration with rich text editors
+      try {
+        if (rawWin && rawDoc.hasFocus()) {
+          const selection = rawWin.getSelection();
+          if (selection) {
+            const range = rawDoc.createRange();
+            range.selectNodeContents(rawElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            if (rawDoc.execCommand("insertText", false, text)) {
+               // Ensure events are still fired for safety
+              rawElement.dispatchEvent(
+                new EventCtor("input", { bubbles: true, cancelable: true }),
+              );
+              rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
+              return true;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("NRWebScraperChild: execCommand failed, falling back:", e);
+      }
+      
+      const InputEv = (rawWin?.InputEvent ?? null) as typeof InputEvent | null;
+
+      if (InputEv) {
+        rawElement.dispatchEvent(
+          new InputEv("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            inputType: "insertText",
+            data: text,
+          }),
+        );
+      }
+
+      if (rawElement !== element) {
+         rawElement.textContent = text;
+      } else {
+         element.textContent = text;
+      }
 
       // Dispatch input event to trigger any listeners
-      element.dispatchEvent(
-        new Event("input", { bubbles: true, cancelable: true }),
-      );
+      if (InputEv) {
+        rawElement.dispatchEvent(
+          new InputEv("input", {
+            bubbles: true,
+            cancelable: false,
+            inputType: "insertText",
+            data: text,
+          }),
+        );
+      } else {
+        rawElement.dispatchEvent(
+          new EventCtor("input", { bubbles: true, cancelable: true }),
+        );
+      }
+
+      rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
 
       return true;
     } catch (e) {

@@ -1434,7 +1434,10 @@ class webScraper {
       const state = {
         idleTimer: null as ReturnType<typeof setTimeout> | null,
         resolved: false,
+        startTime: Date.now(),
       };
+
+      console.log(`[WebScraper] Waiting for network idle on BCID: ${bcid}, Timeout: ${timeout}ms`);
 
       const resetIdleTimer = () => {
         if (state.idleTimer) {
@@ -1442,6 +1445,9 @@ class webScraper {
         }
         state.idleTimer = setTimeout(() => {
           const activeCount = GlobalHTTPTracker.getActiveCount(bcid);
+          const elapsed = Date.now() - state.startTime;
+          console.log(`[WebScraper] Idle Check - Active Count: ${activeCount}, Elapsed: ${elapsed}ms`);
+          
           if (!state.resolved && activeCount === 0) {
             console.log(`[WebScraper] Network reached idle for BCID ${bcid}.`);
             state.resolved = true;
@@ -1449,7 +1455,10 @@ class webScraper {
             resolve(true);
           } else if (activeCount > 0) {
             // Still active, check again later
-            resetIdleTimer();
+            // Exponential backoff or just plain reset? Keep it simple for now.
+             if (!state.resolved) {
+                 resetIdleTimer();
+             }
           }
         }, idleThreshold);
       };
@@ -1473,6 +1482,7 @@ class webScraper {
           try {
             const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
             if (channel.loadInfo?.browsingContextID === bcid) {
+               console.log(`[WebScraper] Observed ${topic} for BCID ${bcid} - URI: ${channel.URI?.spec}`);
               if (topic === "http-on-opening-request") {
                 if (state.idleTimer) {
                   clearTimeout(state.idleTimer);
@@ -1502,6 +1512,8 @@ class webScraper {
       setTimeout(() => {
         if (!state.resolved) {
           console.log("[WebScraper] waitForNetworkIdle timed out.");
+          const finalCount = GlobalHTTPTracker.getActiveCount(bcid);
+          console.log(`[WebScraper] Final Active Count at timeout: ${finalCount}`);
           state.resolved = true;
           cleanup();
           resolve(false);
