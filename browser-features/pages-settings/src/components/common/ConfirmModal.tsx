@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Button, ButtonProps } from "@nora/ui-components";
+import { Button, ButtonProps } from "./button";
 
 interface ConfirmModalProps {
   isOpen: boolean;

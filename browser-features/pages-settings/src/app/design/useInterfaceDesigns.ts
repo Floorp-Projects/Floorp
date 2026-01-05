@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useTheme } from "@nora/ui-components";
+import { useTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
 
 import ProtonLight from "@/app/design/images/designs/Floorp_UI_Proton_Light.svg";
