@@ -68,7 +68,7 @@ export const MouseGestureConfigCodec = t.intersection([
 ]);
 export type MouseGestureConfig = t.TypeOf<typeof MouseGestureConfigCodec>;
 
-const MIN_CONTEXT_MENU_DISTANCE = 12;
+const MIN_CONTEXT_MENU_DISTANCE = 5;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
