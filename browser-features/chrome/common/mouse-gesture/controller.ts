@@ -135,16 +135,11 @@ export class MouseGestureController {
 
   /**
    * Calculate the minimum movement distance to trigger recognition.
+   * Uses the user-configured minDistance directly.
    */
   private getActivationDistance(): number {
     const config = getConfig();
-    const baseDistance = config.contextMenu?.minDistance ?? 10;
-    const sensitivity = Number.isFinite(config.sensitivity)
-      ? config.sensitivity
-      : 40;
-    const sensitivityFactor = Math.min(Math.max(sensitivity, 1), 100) / 100;
-    const dynamicDistance = 6 + (1 - sensitivityFactor) * 12;
-    return Math.max(baseDistance, dynamicDistance, 10);
+    return config.contextMenu?.minDistance ?? 10;
   }
 
   /**
@@ -182,12 +177,12 @@ export class MouseGestureController {
       mozInnerScreenY?: number;
     };
     if (
-      typeof (win as any).mozInnerScreenX === "number" &&
-      typeof (win as any).mozInnerScreenY === "number"
+      typeof win.mozInnerScreenX === "number" &&
+      typeof win.mozInnerScreenY === "number"
     ) {
       return {
-        x: event.screenX - (win as any).mozInnerScreenX,
-        y: event.screenY - (win as any).mozInnerScreenY,
+        x: event.screenX - win.mozInnerScreenX,
+        y: event.screenY - win.mozInnerScreenY,
       };
     }
     return { x: event.clientX, y: event.clientY };
