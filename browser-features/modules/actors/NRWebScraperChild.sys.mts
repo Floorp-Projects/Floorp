@@ -3607,14 +3607,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param html - HTML content to set
    * @returns boolean - true if successful, false otherwise
    */
-  setInnerHTML(selector: string, html: string): boolean {
+  async setInnerHTML(selector: string, html: string): Promise<boolean> {
     try {
       const doc = this.document;
       if (!doc) {
         return false;
       }
 
-      const element = doc.querySelector(selector);
+      const element = doc.querySelector(selector) as HTMLElement | null;
       if (!element) {
         console.warn(
           `NRWebScraperChild: Element not found for setInnerHTML: ${selector}`,
@@ -3622,16 +3622,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      const elementInfo = await this.translate("inputValueSet", {
+        value: this.truncate(html, 30),
+      });
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
       element.innerHTML = html;
 
       // Dispatch input event to trigger any listeners
       element.dispatchEvent(
         new Event("input", { bubbles: true, cancelable: true }),
       );
-
-      this.runAsyncInspection(element, "inputValueSet", {
-        value: this.truncate(html, 30),
-      });
 
       return true;
     } catch (e) {
@@ -3647,14 +3650,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * @param text - Text content to set
    * @returns boolean - true if successful, false otherwise
    */
-  setTextContent(selector: string, text: string): boolean {
+  async setTextContent(selector: string, text: string): Promise<boolean> {
     try {
       const doc = this.document;
       if (!doc) {
         return false;
       }
 
-      const element = doc.querySelector(selector);
+      const element = doc.querySelector(selector) as HTMLElement | null;
       if (!element) {
         console.warn(
           `NRWebScraperChild: Element not found for setTextContent: ${selector}`,
@@ -3662,16 +3665,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      const elementInfo = await this.translate("inputValueSet", {
+        value: this.truncate(text, 30),
+      });
+      const options = this.getHighlightOptions("Input");
+
+      await this.applyHighlight(element, options, elementInfo);
+
       element.textContent = text;
 
       // Dispatch input event to trigger any listeners
       element.dispatchEvent(
         new Event("input", { bubbles: true, cancelable: true }),
       );
-
-      this.runAsyncInspection(element, "inputValueSet", {
-        value: this.truncate(text, 30),
-      });
 
       return true;
     } catch (e) {
