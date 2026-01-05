@@ -1,9 +1,9 @@
-export { ThemeProvider, useTheme } from "./components/theme-provider";
-export { Button, type ButtonProps } from "./components/button";
-export { Input } from "./components/input";
-export { Separator } from "./components/separator";
-export { InfoTip } from "./components/infotip";
-export { Avatar, AvatarImage } from "./components/avatar";
+export { ThemeProvider, useTheme } from "./components/theme-provider.tsx";
+export { Button, type ButtonProps } from "./components/button.tsx";
+export { Input } from "./components/input.tsx";
+export { Separator } from "./components/separator.tsx";
+export { InfoTip } from "./components/infotip.tsx";
+export { Avatar, AvatarImage } from "./components/avatar.tsx";
 export {
   Card,
   CardHeader,
@@ -11,16 +11,16 @@ export {
   CardDescription,
   CardContent,
   CardFooter,
-} from "./components/card";
+} from "./components/card.tsx";
 export {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "./components/breadcrumb";
-export { Switch } from "./components/switch";
-export { Seekbar } from "./components/seekbar";
+} from "./components/breadcrumb.tsx";
+export { Switch } from "./components/switch.tsx";
+export { Seekbar } from "./components/seekbar.tsx";
 export {
   Sidebar,
   SidebarHeader,
@@ -35,5 +35,5 @@ export {
   SidebarTrigger,
   SidebarRail,
   useSidebar,
-} from "./components/sidebar";
-export { cn } from "./lib/utils";
+} from "./components/sidebar.tsx";
+export { cn } from "./lib/utils.ts";
