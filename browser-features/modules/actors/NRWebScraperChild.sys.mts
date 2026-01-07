@@ -2392,10 +2392,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
       canvas.width = rect.width;
       canvas.height = rect.height;
 
+      // getBoundingClientRect returns viewport-relative coordinates
+      // drawWindow needs absolute page coordinates, so add scroll offset
+      const scrollX = this.contentWindow.scrollX || 0;
+      const scrollY = this.contentWindow.scrollY || 0;
+
       ctx.drawWindow(
         this.contentWindow,
-        rect.left,
-        rect.top,
+        rect.left + scrollX,
+        rect.top + scrollY,
         rect.width,
         rect.height,
         "rgb(255,255,255)",
