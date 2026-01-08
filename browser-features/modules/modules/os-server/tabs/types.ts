@@ -35,6 +35,7 @@ export interface TabManagerAPI extends BrowserAutomationService {
   listTabs(): Promise<TabInfo[]>;
   getInstanceInfo(instanceId: string): Promise<unknown | null>;
   destroyInstance(instanceId: string): Promise<void>;
+  closeTab(instanceId: string): Promise<void>;
 
   // TabManager also has getElement
   getElement(instanceId: string, selector: string): Promise<string | null>;

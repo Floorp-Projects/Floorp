@@ -90,6 +90,13 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
       return { status: 200, body: { ok: true } };
     });
 
+    // Close tab (destroys instance AND closes the actual browser tab)
+    t.post("/instances/:id/close", async (ctx: RouterContext) => {
+      const { TabManagerServices } = TabManagerModule();
+      await TabManagerServices.closeTab(ctx.params.id);
+      return { status: 200, body: { ok: true } };
+    });
+
     // -- Common automation routes --
     registerCommonAutomationRoutes(
       t,

@@ -94,6 +94,7 @@ interface GBrowser {
       inBackground?: boolean;
     },
   ): BrowserTab;
+  removeTab(tab: BrowserTab): void;
   getIcon(tab: BrowserTab): string | null;
 }
 
@@ -609,6 +610,50 @@ class TabManager {
     }
     this._browserInstances.delete(instanceId);
     TAB_MANAGER_ACTOR_SETS.delete(browser);
+  }
+
+  /**
+   * Closes a tab and destroys the instance.
+   * Unlike destroyInstance, this actually closes the browser tab.
+   *
+   * @param instanceId - The unique identifier of the tab instance to close
+   * @returns Promise<void>
+   */
+  public async closeTab(instanceId: string): Promise<void> {
+    const entry = this._getEntry(instanceId);
+    if (!entry) {
+      // Already closed or never existed
+      return;
+    }
+
+    const { tab, browser } = entry;
+
+    // First, clear any visual effects
+    try {
+      await this._queryActor(instanceId, "WebScraper:ClearEffects");
+    } catch {
+      // ignore
+    }
+
+    // Remove from tracking
+    this._browserInstances.delete(instanceId);
+    TAB_MANAGER_ACTOR_SETS.delete(browser);
+
+    // Remove automated attributes
+    if (tab && tab.removeAttribute) {
+      tab.removeAttribute("data-floorp-os-automated");
+      tab.removeAttribute("data-floorp-os-instance-id");
+    }
+
+    // Actually close the tab
+    try {
+      const win = browser.ownerGlobal as Window & { gBrowser: GBrowser };
+      if (win && !win.closed && win.gBrowser) {
+        win.gBrowser.removeTab(tab);
+      }
+    } catch (e) {
+      console.error("TabManager: Failed to close tab", e);
+    }
   }
 
   public async navigate(instanceId: string, url: string): Promise<void> {
