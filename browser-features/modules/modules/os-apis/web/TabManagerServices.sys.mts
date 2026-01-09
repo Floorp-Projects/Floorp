@@ -509,6 +509,9 @@ class TabManager {
       tab.setAttribute("data-floorp-os-instance-id", instanceId);
     }
 
+    // Show control overlay to block user interaction
+    await this._queryActor(instanceId, "WebScraper:ShowControlOverlay");
+
     return instanceId;
   }
 
@@ -534,6 +537,9 @@ class TabManager {
       targetTab.setAttribute("data-floorp-os-automated", "true");
       targetTab.setAttribute("data-floorp-os-instance-id", instanceId);
     }
+
+    // Show control overlay to block user interaction
+    await this._queryActor(instanceId, "WebScraper:ShowControlOverlay");
 
     await this._delayForUser();
 

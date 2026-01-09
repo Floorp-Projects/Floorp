@@ -125,6 +125,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
   private pageHideHandler: (() => void) | null = null;
   // 非同期操作の競合防止用 操作ID
   private highlightOperationId = 0;
+  // ハイライトの最小表示時間を保証するためのタイムスタンプ
+  private highlightStartTime = 0;
+  // 最小表示時間（ミリ秒）
+  private static readonly MINIMUM_HIGHLIGHT_DURATION = 500;
+  // AI制御中のタブをロックするオーバーレイ
+  private controlOverlay: HTMLDivElement | null = null;
 
   /**
    * Ensures the target element is in view (centers in viewport when possible).
@@ -654,7 +660,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
               0 0 0 1px rgba(255, 255, 255, 0.08),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
   pointer-events: none;
-  z-index: 2147483647;
+  z-index: 2147483647 !important;
   animation: nr-webscraper-info-slide-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
   color: #fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -765,6 +771,70 @@ export class NRWebScraperChild extends JSWindowActorChild {
   --nr-highlight-color-alpha-50: rgba(239, 68, 68, 0.50);
   --nr-highlight-color: rgba(239, 68, 68, 0.95);
   --nr-label-bg: rgba(220, 38, 38, 0.94);
+}
+
+/* AI Control Overlay - blocks user interaction during automation */
+@keyframes nr-webscraper-control-pulse {
+  0%, 100% {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: inset 0 0 60px rgba(59, 130, 246, 0.08),
+                0 0 0 4px rgba(59, 130, 246, 0.15);
+  }
+  50% {
+    border-color: rgba(59, 130, 246, 0.8);
+    box-shadow: inset 0 0 100px rgba(59, 130, 246, 0.15),
+                0 0 0 8px rgba(59, 130, 246, 0.25);
+  }
+}
+
+.nr-webscraper-control-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483640 !important;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    transparent 70%,
+    rgba(59, 130, 246, 0.4) 90%,
+    rgba(59, 130, 246, 0.6) 100%
+  ) !important;
+  pointer-events: all !important;
+  cursor: not-allowed !important;
+  overflow: hidden !important;
+}
+
+.nr-webscraper-control-overlay__label {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(17, 24, 39, 0.98);
+  backdrop-filter: blur(16px);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 2147483647 !important;
+  animation: nr-webscraper-info-slide-in 0.3s ease-out;
+}
+
+.nr-webscraper-control-overlay__icon {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: nr-webscraper-control-spin 1s linear infinite;
+}
+
+@keyframes nr-webscraper-control-spin {
+  to { transform: rotate(360deg); }
 }`;
 
     (doc.head ?? doc.documentElement)?.append(style);
@@ -856,6 +926,141 @@ export class NRWebScraperChild extends JSWindowActorChild {
       } catch {
         // ignore cleanup errors
       }
+    }
+  }
+
+  /**
+   * Gracefully cleanup highlight with minimum display time guarantee.
+   * If the highlight hasn't been visible for the minimum duration,
+   * schedules cleanup for later. Otherwise, cleans up immediately.
+   */
+  private gracefulCleanupHighlight(): void {
+    const elapsed = Date.now() - this.highlightStartTime;
+    const remaining =
+      NRWebScraperChild.MINIMUM_HIGHLIGHT_DURATION - elapsed;
+
+    if (remaining > 0 && this.highlightStartTime > 0) {
+      // ハイライトがまだ最小表示時間に達していない場合、遅延してクリーンアップ
+      // 既存のタイマーがあればクリア
+      if (this.highlightCleanupTimer !== null) {
+        timerClearTimeout(this.highlightCleanupTimer);
+      }
+
+      this.highlightCleanupTimer = timerSetTimeout(() => {
+        this.cleanupHighlight();
+      }, remaining);
+    } else {
+      // 最小表示時間を超えている場合は即座にクリーンアップ
+      this.cleanupHighlight();
+    }
+  }
+
+  /**
+   * Shows a full-screen control overlay that blocks user interaction
+   * and indicates that the tab is being controlled by AI.
+   */
+  private showControlOverlay(): void {
+    const doc = this.document;
+    if (!doc) return;
+
+    // Already showing
+    if (this.controlOverlay?.isConnected) return;
+
+    this.ensureHighlightStyle();
+
+    // Create overlay
+    const overlay = doc.createElement("div");
+    overlay.className = "nr-webscraper-control-overlay";
+    overlay.id = "nr-webscraper-control-overlay";
+    overlay.tabIndex = -1; // Make focusable to capture key events
+
+    // Create label
+    const label = doc.createElement("div");
+    label.className = "nr-webscraper-control-overlay__label";
+    label.textContent = "Floorpが操作中...";
+
+    (doc.body ?? doc.documentElement)?.appendChild(overlay);
+    (doc.body ?? doc.documentElement)?.appendChild(label);
+
+    (overlay as any).focus();
+
+    // Prevent scrolling on the document
+    const body = doc.body;
+    const html = doc.documentElement as HTMLElement | null;
+    if (body) body.style.setProperty("overflow", "hidden", "important");
+    if (html) html.style.setProperty("overflow", "hidden", "important");
+
+    // Prevent right-click context menu
+    overlay.addEventListener("contextmenu", (e) => e.preventDefault(), {
+      capture: true,
+    });
+
+    // Prevent scrolling via wheel or touch
+    const preventScroll = (e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    overlay.addEventListener("wheel", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+    overlay.addEventListener("touchmove", preventScroll, {
+      passive: false,
+      capture: true,
+    });
+
+    // Prevent scrolling via keyboard
+    const scrollKeys = [" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"];
+    overlay.addEventListener("keydown", (e: any) => {
+      if (scrollKeys.includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, { capture: true });
+
+    this.controlOverlay = overlay;
+  }
+
+  /**
+   * Hides the control overlay and restores user interaction.
+   */
+  private hideControlOverlay(): void {
+    const doc = this.document;
+    if (!doc) return;
+
+    // Remove overlay
+    if (this.controlOverlay?.isConnected) {
+      // Restore scrolling
+      const body = doc.body;
+      const html = doc.documentElement as HTMLElement | null;
+      if (body) body.style.removeProperty("overflow");
+      if (html) html.style.removeProperty("overflow");
+
+      this.controlOverlay.style.setProperty("transition", "opacity 300ms ease-out");
+      this.controlOverlay.style.setProperty("opacity", "0");
+      const overlayToRemove = this.controlOverlay;
+      timerSetTimeout(() => {
+        try {
+          overlayToRemove?.remove();
+        } catch {
+          // ignore
+        }
+      }, 300);
+      this.controlOverlay = null;
+    }
+
+    // Remove label
+    const label = doc.querySelector(".nr-webscraper-control-overlay__label");
+    if (label) {
+      (label as HTMLElement).style.setProperty("transition", "opacity 200ms ease-out");
+      (label as HTMLElement).style.setProperty("opacity", "0");
+      timerSetTimeout(() => {
+        try {
+          label?.remove();
+        } catch {
+          // ignore
+        }
+      }, 200);
     }
   }
 
@@ -1145,10 +1350,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     this.ensureHighlightStyle();
-    this.cleanupHighlight();
+    this.gracefulCleanupHighlight();
 
-    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    // gracefulCleanupHighlight()後に操作IDが増加する可能性があるので、その後で現在の操作IDを記録
     const currentOperationId = this.highlightOperationId;
+
+    // ハイライト開始時刻を記録
+    this.highlightStartTime = Date.now();
 
     const colorClass = this.getActionColorClass(options.action);
 
@@ -1309,11 +1517,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
     }
 
     this.ensureHighlightStyle();
-    this.cleanupHighlight();
+    this.gracefulCleanupHighlight();
 
-    // cleanupHighlight()で操作IDが増加するので、その後で現在の操作IDを記録
+    // gracefulCleanupHighlight()後に操作IDが増加する可能性があるので、その後で現在の操作IDを記録
     // 新しい操作が開始されたら、古い操作は自動的にキャンセルされる
     const currentOperationId = this.highlightOperationId;
+
+    // ハイライト開始時刻を記録
+    this.highlightStartTime = Date.now();
 
     // Show info panel (await before creating overlay)
     if (showPanel) {
@@ -1643,6 +1854,13 @@ export class NRWebScraperChild extends JSWindowActorChild {
       case "WebScraper:ClearEffects":
         this.cleanupHighlight();
         this.hideInfoPanel();
+        this.hideControlOverlay();
+        return true;
+      case "WebScraper:ShowControlOverlay":
+        this.showControlOverlay();
+        return true;
+      case "WebScraper:HideControlOverlay":
+        this.hideControlOverlay();
         return true;
       case "WebScraper:GetAttribute":
         if (message.data?.selector && message.data?.attributeName) {
