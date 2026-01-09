@@ -267,6 +267,25 @@ export class WorkspacesTabManager {
 
       if (otherWorkspaceTabs.length > 0) {
         // There are tabs in other workspaces.
+        // Check if exitOnLastTabClose is enabled - if not, just create a new tab
+        // and switch to another workspace instead of closing the window.
+        if (!configStore.exitOnLastTabClose) {
+          console.debug(
+            "WorkspacesTabManager: workspace empty, exitOnLastTabClose=false, switching to another workspace",
+            { workspaceId, otherWorkspaceTabCount: otherWorkspaceTabs.length },
+          );
+
+          // Find the first workspace with tabs and switch to it
+          const firstOtherTab = otherWorkspaceTabs[0];
+          const targetWorkspaceId = this.getWorkspaceIdFromAttribute(
+            firstOtherTab,
+          );
+          if (targetWorkspaceId) {
+            this.changeWorkspace(targetWorkspaceId);
+          }
+          return;
+        }
+
         console.debug(
           "WorkspacesTabManager: workspace empty, closing window with replacement check",
           { workspaceId, otherWorkspaceTabCount: otherWorkspaceTabs.length },
@@ -305,6 +324,27 @@ export class WorkspacesTabManager {
         }, 0);
       } else {
         // If no other workspace tabs exist, this is the last tab in the window.
+        // Check if exitOnLastTabClose is enabled - if not, create a new tab
+        // instead of closing the window.
+        if (!configStore.exitOnLastTabClose) {
+          console.debug(
+            "WorkspacesTabManager: last tab in window, exitOnLastTabClose=false, creating new tab",
+            { workspaceId },
+          );
+          // Firefox already created a replacement tab due to closeWindowWithLastTab=false,
+          // so we just need to assign it to the current workspace.
+          const remainingTabs = (globalThis.gBrowser.tabs as XULElement[])
+            .filter((t) => t !== tab);
+          if (remainingTabs.length > 0) {
+            const newTab = remainingTabs[0];
+            this.setWorkspaceIdToAttribute(newTab, workspaceId);
+            globalThis.gBrowser.selectedTab = newTab;
+          } else {
+            this.createTabForWorkspace(workspaceId, true);
+          }
+          return;
+        }
+
         // We should close the window manually because we force closeWindowWithLastTab=false.
         Services.prefs.setBoolPref(WORKSPACE_PENDING_EXIT_PREF_NAME, true);
         setTimeout(() => {
