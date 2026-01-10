@@ -155,10 +155,23 @@ export class NRWebScraperChild extends JSWindowActorChild {
     const win = this.contentWindow;
     if (!win) return;
     try {
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
       const rawElement = (element as any).wrappedJSObject ?? element;
       const htmlEl = rawElement as unknown as HTMLElement;
+
+      // Get FocusEvent from content context
+      const FocusEv = (rawWin?.FocusEvent ?? globalThis.FocusEvent) as typeof FocusEvent;
+
       if (typeof htmlEl.focus === "function") {
         htmlEl.focus({ preventScroll: true });
+      }
+
+      // Dispatch focus events for React/framework compatibility
+      try {
+        rawElement.dispatchEvent(new FocusEv("focus", { bubbles: false }));
+        rawElement.dispatchEvent(new FocusEv("focusin", { bubbles: true }));
+      } catch {
+        // ignore event dispatch errors
       }
     } catch {
       // ignore focus errors
@@ -2257,40 +2270,52 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
       };
 
+      // Clone event options into page context using Cu.cloneInto to bypass Xray
+      const cloneOpts = (opts: object) => {
+        try {
+          if (typeof Cu?.cloneInto === "function" && win) {
+            return Cu.cloneInto(opts, win);
+          }
+        } catch {
+          // Fallback if cloneInto not available
+        }
+        return opts;
+      };
+
       if (typingMode) {
         setValue("");
         for (const ch of value.split("")) {
           dispatchBeforeInput(ch);
           setValue(rawElement.value + ch);
           rawElement.dispatchEvent(
-            new EventCtor("input", { bubbles: true }),
+            new EventCtor("input", cloneOpts({ bubbles: true })),
           );
           rawElement.dispatchEvent(
-            new KeyboardEv("keydown", { key: ch, bubbles: true }),
+            new KeyboardEv("keydown", cloneOpts({ key: ch, bubbles: true })),
           );
           rawElement.dispatchEvent(
-            new KeyboardEv("keyup", { key: ch, bubbles: true }),
+            new KeyboardEv("keyup", cloneOpts({ key: ch, bubbles: true })),
           );
           if (typingDelay > 0) {
             await new Promise((r) => timerSetTimeout(r, typingDelay));
           }
         }
         rawElement.dispatchEvent(
-          new EventCtor("change", { bubbles: true }),
+          new EventCtor("change", cloneOpts({ bubbles: true })),
         );
       } else {
         dispatchBeforeInput(value);
         setValue(value);
         rawElement.dispatchEvent(
-          new EventCtor("input", { bubbles: true }),
+          new EventCtor("input", cloneOpts({ bubbles: true })),
         );
         rawElement.dispatchEvent(
-          new EventCtor("change", { bubbles: true }),
+          new EventCtor("change", cloneOpts({ bubbles: true })),
         );
       }
 
       rawElement.dispatchEvent(
-        new FocusEv("blur", { bubbles: true }),
+        new FocusEv("blur", cloneOpts({ bubbles: true })),
       );
       return true;
     } catch (e) {
@@ -3768,11 +3793,23 @@ export class NRWebScraperChild extends JSWindowActorChild {
         element.focus();
       }
 
+      // Clone event options into page context using Cu.cloneInto to bypass Xray
+      const cloneOpts = (opts: object) => {
+        try {
+          if (typeof Cu?.cloneInto === "function" && win) {
+            return Cu.cloneInto(opts, win);
+          }
+        } catch {
+          // Fallback if cloneInto not available
+        }
+        return opts;
+      };
+
       rawElement.dispatchEvent(
-        new FocusEv("focus", { bubbles: false }),
+        new FocusEv("focus", cloneOpts({ bubbles: false })),
       );
       rawElement.dispatchEvent(
-        new FocusEv("focusin", { bubbles: true }),
+        new FocusEv("focusin", cloneOpts({ bubbles: true })),
       );
 
       return true;
@@ -4156,13 +4193,19 @@ export class NRWebScraperChild extends JSWindowActorChild {
         return false;
       }
 
+      // Use content context to avoid Xray Wrapper security errors
+      const win = this.contentWindow;
+      const rawWin = (win as any)?.wrappedJSObject ?? win;
+      const rawElement = (element as any)?.wrappedJSObject ?? element;
+      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+
       const eventOptions = {
         bubbles: options?.bubbles ?? true,
         cancelable: options?.cancelable ?? true,
       };
 
-      const event = new Event(eventType, eventOptions);
-      element.dispatchEvent(event);
+      const event = new EventCtor(eventType, eventOptions);
+      rawElement.dispatchEvent(event);
 
       return true;
     } catch (e) {
