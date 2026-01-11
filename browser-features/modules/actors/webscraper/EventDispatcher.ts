@@ -7,7 +7,33 @@
  * EventDispatcher - Utilities for dispatching DOM events
  */
 
-import type { WebScraperContext } from "./types.ts";
+import type {
+  ContentWindow,
+  RawContentWindow,
+  WebScraperContext,
+  XrayElement,
+  XrayHTMLElement,
+  XrayInputElement,
+  XrayInputLikeElement,
+  XraySelectElement,
+} from "./types.ts";
+
+/**
+ * Helper to unwrap Xray-wrapped window
+ */
+function unwrapWindow(win: ContentWindow | null): RawContentWindow | null {
+  if (!win) return null;
+  return win.wrappedJSObject ?? (win as unknown as RawContentWindow);
+}
+
+/**
+ * Helper to unwrap Xray-wrapped element
+ */
+function unwrapElement<T extends Element>(
+  element: T & Partial<{ wrappedJSObject: T }>,
+): T {
+  return element.wrappedJSObject ?? element;
+}
 
 /**
  * Helper class for dispatching DOM events with proper context handling
@@ -15,30 +41,28 @@ import type { WebScraperContext } from "./types.ts";
 export class EventDispatcher {
   constructor(private context: WebScraperContext) {}
 
-  get contentWindow(): (Window & typeof globalThis) | null {
-    return this.context.contentWindow;
+  get contentWindow(): ContentWindow | null {
+    return this.context.contentWindow as ContentWindow | null;
   }
 
   /**
    * Dispatches a pointer + mouse click sequence for better framework compatibility
    */
   dispatchPointerClickSequence(
-    element: HTMLElement,
+    element: XrayHTMLElement,
     clientX: number,
     clientY: number,
     button: number,
   ): boolean {
     const win = this.contentWindow;
-    const rawWin = (win as any)?.wrappedJSObject ?? win;
-    const rawElement = (element as any)?.wrappedJSObject ?? element;
+    const rawWin = unwrapWindow(win);
+    const rawElement = unwrapElement(element);
 
-    const PointerEv = (rawWin?.PointerEvent ?? null) as
-      | typeof PointerEvent
-      | null;
-    const MouseEv = (rawWin?.MouseEvent ?? globalThis.MouseEvent ?? null) as
-      | typeof MouseEvent
-      | null;
-    const view = rawWin ?? undefined;
+    if (!rawWin) return false;
+
+    const PointerEv = rawWin.PointerEvent ?? null;
+    const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent ?? null;
+    const view = rawWin;
 
     const emit = <T extends Event>(ev: T | null) => {
       if (!ev) return false;
@@ -126,19 +150,19 @@ export class EventDispatcher {
   /**
    * Focus helper that avoids scroll jumps
    */
-  focusElementSoft(element: Element): void {
+  focusElementSoft(element: XrayElement): void {
     const win = this.contentWindow;
-    if (!win) return;
+    const rawWin = unwrapWindow(win);
+    if (!rawWin) return;
+
     try {
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any).wrappedJSObject ?? element;
-      const htmlEl = rawElement as unknown as HTMLElement;
+      const rawElement = unwrapElement(element) as HTMLElement;
+      const FocusEv = rawWin.FocusEvent ?? globalThis.FocusEvent;
 
-      const FocusEv = (rawWin?.FocusEvent ??
-        globalThis.FocusEvent) as typeof FocusEvent;
-
-      if (typeof htmlEl.focus === "function") {
-        htmlEl.focus({ preventScroll: true });
+      if (typeof rawElement.focus === "function") {
+        // Clone focus options into content context to avoid security wrapper issues
+        const focusOpts = Cu.cloneInto({ preventScroll: true }, rawWin);
+        rawElement.focus(focusOpts);
       }
 
       try {
@@ -187,15 +211,18 @@ export class EventDispatcher {
    * Dispatch a custom event on an element
    */
   dispatchCustomEvent(
-    element: Element,
+    element: XrayElement,
     eventType: string,
     options?: { bubbles?: boolean; cancelable?: boolean },
   ): boolean {
     try {
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+      const rawWin = unwrapWindow(win);
+      const rawElement = unwrapElement(element);
+
+      if (!rawWin) return false;
+
+      const EventCtor = rawWin.Event ?? globalThis.Event;
 
       const eventOptions = {
         bubbles: options?.bubbles ?? true,
@@ -215,15 +242,14 @@ export class EventDispatcher {
   /**
    * Dispatch input and change events for form elements
    */
-  dispatchInputEvents(element: Element): void {
+  dispatchInputEvents(element: XrayElement): void {
     const win = this.contentWindow;
-    if (!win) return;
+    const rawWin = unwrapWindow(win);
+    if (!rawWin) return;
 
-    const rawWin = (win as any)?.wrappedJSObject ?? win;
-    const rawElement = (element as any)?.wrappedJSObject ?? element;
-    const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
-    const FocusEv = (rawWin?.FocusEvent ??
-      globalThis.FocusEvent) as typeof FocusEvent;
+    const rawElement = unwrapElement(element);
+    const EventCtor = rawWin.Event ?? globalThis.Event;
+    const FocusEv = rawWin.FocusEvent ?? globalThis.FocusEvent;
 
     try {
       rawElement.dispatchEvent(
@@ -244,13 +270,15 @@ export class EventDispatcher {
    * Get native value setter for React compatibility
    */
   getNativeValueSetter(
-    element: HTMLInputElement | HTMLTextAreaElement,
+    element: XrayInputLikeElement,
   ): ((value: string) => void) | undefined {
     const win = this.contentWindow;
-    if (!win) return undefined;
+    const rawWin = unwrapWindow(win);
+    if (!rawWin) return undefined;
 
-    const rawWin = (win as any)?.wrappedJSObject ?? win;
-    const rawElement = (element as any)?.wrappedJSObject ?? element;
+    // Handle union type manually to avoid type inference issues
+    const rawElement: HTMLInputElement | HTMLTextAreaElement =
+      element.wrappedJSObject ?? element;
 
     const HTMLInputProto = rawWin.HTMLInputElement?.prototype;
     const HTMLTextAreaProto = rawWin.HTMLTextAreaElement?.prototype;
@@ -280,13 +308,13 @@ export class EventDispatcher {
    * Get native checked setter for React compatibility
    */
   getNativeCheckedSetter(
-    element: HTMLInputElement,
+    element: XrayInputElement,
   ): ((checked: boolean) => void) | undefined {
     const win = this.contentWindow;
-    if (!win) return undefined;
+    const rawWin = unwrapWindow(win);
+    if (!rawWin) return undefined;
 
-    const rawWin = (win as any)?.wrappedJSObject ?? win;
-    const rawElement = (element as any)?.wrappedJSObject ?? element;
+    const rawElement = unwrapElement(element);
 
     const HTMLInputProto = rawWin.HTMLInputElement?.prototype;
     const nativeCheckedSetter = HTMLInputProto
@@ -307,13 +335,13 @@ export class EventDispatcher {
    * Get native select value setter for React compatibility
    */
   getNativeSelectValueSetter(
-    element: HTMLSelectElement,
+    element: XraySelectElement,
   ): ((value: string) => void) | undefined {
     const win = this.contentWindow;
-    if (!win) return undefined;
+    const rawWin = unwrapWindow(win);
+    if (!rawWin) return undefined;
 
-    const rawWin = (win as any)?.wrappedJSObject ?? win;
-    const rawElement = (element as any)?.wrappedJSObject ?? element;
+    const rawElement = unwrapElement(element);
 
     const HTMLSelectProto = rawWin.HTMLSelectElement?.prototype;
     const nativeSelectValueSetter = HTMLSelectProto

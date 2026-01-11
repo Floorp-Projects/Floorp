@@ -87,3 +87,67 @@ export interface WebScraperContext {
   document: Document | null;
   sendQuery: (name: string, data?: unknown) => Promise<unknown>;
 }
+
+/**
+ * Mozilla Xray wrapper types
+ * wrappedJSObject provides access to the underlying page object
+ */
+export interface XrayWrapped<T> {
+  wrappedJSObject: T;
+}
+
+/**
+ * Content window with wrappedJSObject access
+ */
+export type ContentWindow = Window &
+  typeof globalThis &
+  Partial<XrayWrapped<RawContentWindow>>;
+
+/**
+ * Raw content window (unwrapped) with native constructors
+ */
+export interface RawContentWindow extends Window {
+  PointerEvent: typeof PointerEvent;
+  MouseEvent: typeof MouseEvent;
+  FocusEvent: typeof FocusEvent;
+  Event: typeof Event;
+  KeyboardEvent: typeof KeyboardEvent;
+  InputEvent: typeof InputEvent;
+  DragEvent: typeof DragEvent;
+  DataTransfer: typeof DataTransfer;
+  MutationObserver: typeof MutationObserver;
+  HTMLInputElement: typeof HTMLInputElement;
+  HTMLTextAreaElement: typeof HTMLTextAreaElement;
+  HTMLSelectElement: typeof HTMLSelectElement;
+}
+
+/**
+ * Element with optional wrappedJSObject
+ */
+export type XrayElement<T extends Element = Element> = T &
+  Partial<XrayWrapped<T>>;
+
+/**
+ * HTMLElement with optional wrappedJSObject
+ */
+export type XrayHTMLElement = XrayElement<HTMLElement>;
+
+/**
+ * HTMLInputElement with optional wrappedJSObject
+ */
+export type XrayInputElement = XrayElement<HTMLInputElement>;
+
+/**
+ * HTMLTextAreaElement with optional wrappedJSObject
+ */
+export type XrayTextAreaElement = XrayElement<HTMLTextAreaElement>;
+
+/**
+ * HTMLSelectElement with optional wrappedJSObject
+ */
+export type XraySelectElement = XrayElement<HTMLSelectElement>;
+
+/**
+ * Union type for input-like elements
+ */
+export type XrayInputLikeElement = XrayInputElement | XrayTextAreaElement;

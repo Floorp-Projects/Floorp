@@ -8,7 +8,9 @@
  */
 
 import type {
+  ContentWindow,
   InputElementOptions,
+  RawContentWindow,
   SelectOptionOptions,
   WebScraperContext,
 } from "./types.ts";
@@ -19,6 +21,32 @@ import { TranslationHelper } from "./TranslationHelper.ts";
 const { setTimeout: timerSetTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
+
+/**
+ * Helper to unwrap Xray-wrapped window
+ */
+function unwrapWindow(win: ContentWindow | null): RawContentWindow | null {
+  if (!win) return null;
+  return win.wrappedJSObject ?? (win as unknown as RawContentWindow);
+}
+
+/**
+ * Helper to unwrap Xray-wrapped element
+ */
+function unwrapElement<T extends Element>(
+  element: T & Partial<{ wrappedJSObject: T }>,
+): T {
+  return element.wrappedJSObject ?? element;
+}
+
+/**
+ * Helper to unwrap Xray-wrapped document
+ */
+function unwrapDocument(
+  doc: Document & Partial<{ wrappedJSObject: Document }>,
+): Document {
+  return doc.wrappedJSObject ?? doc;
+}
 
 /**
  * Helper class for DOM operations
@@ -395,14 +423,17 @@ export class DOMOperations {
           ? Math.max(0, options.typingDelayMs)
           : 25;
 
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const InputEv = (rawWin.InputEvent ?? null) as typeof InputEvent | null;
-      const EventCtor = (rawWin.Event ?? globalThis.Event) as typeof Event;
-      const KeyboardEv = (rawWin.KeyboardEvent ??
-        globalThis.KeyboardEvent) as typeof KeyboardEvent;
-      const FocusEv = (rawWin.FocusEvent ??
-        globalThis.FocusEvent) as typeof FocusEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawElement = unwrapElement(
+        element as HTMLInputElement &
+          Partial<{ wrappedJSObject: HTMLInputElement }>,
+      );
+      if (!rawWin) return false;
+
+      const InputEv = rawWin.InputEvent ?? null;
+      const EventCtor = rawWin.Event ?? globalThis.Event;
+      const KeyboardEv = rawWin.KeyboardEvent ?? globalThis.KeyboardEvent;
+      const FocusEv = rawWin.FocusEvent ?? globalThis.FocusEvent;
 
       const dispatchBeforeInput = (data: string) => {
         try {
@@ -562,7 +593,9 @@ export class DOMOperations {
       );
 
       try {
-        const rawElement = (element as any).wrappedJSObject ?? element;
+        const rawElement = unwrapElement(
+          element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+        );
         rawElement.click();
         clickDispatched = true;
       } catch {
@@ -825,11 +858,15 @@ export class DOMOperations {
 
       if (element.type === "radio" && checked) {
         const win = this.contentWindow;
-        const rawWin = (win as any)?.wrappedJSObject ?? win;
-        const rawElement = (element as any)?.wrappedJSObject ?? element;
-        const MouseEv = (rawWin?.MouseEvent ??
-          globalThis.MouseEvent) as typeof MouseEvent;
-        rawElement.dispatchEvent(new MouseEv("click", { bubbles: true }));
+        const rawWin = unwrapWindow(win as ContentWindow);
+        const rawElement = unwrapElement(
+          element as HTMLInputElement &
+            Partial<{ wrappedJSObject: HTMLInputElement }>,
+        );
+        if (rawWin) {
+          const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent;
+          rawElement.dispatchEvent(new MouseEv("click", { bubbles: true }));
+        }
       }
 
       return true;
@@ -862,10 +899,13 @@ export class DOMOperations {
       const centerY = rect.top + rect.height / 2;
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const MouseEv = (rawWin?.MouseEvent ??
-        globalThis.MouseEvent) as typeof MouseEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin) return false;
+
+      const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent;
 
       rawElement.dispatchEvent(
         new MouseEv("mouseenter", {
@@ -968,10 +1008,13 @@ export class DOMOperations {
       );
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const MouseEv = (rawWin?.MouseEvent ??
-        globalThis.MouseEvent) as typeof MouseEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin) return false;
+
+      const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent;
 
       rawElement.dispatchEvent(
         new MouseEv("dblclick", {
@@ -1024,10 +1067,13 @@ export class DOMOperations {
       );
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const MouseEv = (rawWin?.MouseEvent ??
-        globalThis.MouseEvent) as typeof MouseEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin) return false;
+
+      const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent;
 
       rawElement.dispatchEvent(
         new MouseEv("contextmenu", {
@@ -1066,10 +1112,13 @@ export class DOMOperations {
       await this.highlightManager.applyHighlight(element, options, elementInfo);
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const FocusEv = (rawWin?.FocusEvent ??
-        globalThis.FocusEvent) as typeof FocusEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin) return false;
+
+      const FocusEv = rawWin.FocusEvent ?? globalThis.FocusEvent;
 
       if (typeof rawElement.focus === "function") {
         rawElement.focus();
@@ -1124,10 +1173,15 @@ export class DOMOperations {
       const modifiers = parts;
 
       const active = (doc.activeElement as HTMLElement | null) ?? doc.body;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const activeRaw = (active as any)?.wrappedJSObject ?? active;
-      const KeyboardEv = (rawWin?.KeyboardEvent ??
-        globalThis.KeyboardEvent) as typeof KeyboardEvent;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const activeRaw = active
+        ? unwrapElement(
+            active as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+          )
+        : null;
+      if (!rawWin) return false;
+
+      const KeyboardEv = rawWin.KeyboardEvent ?? globalThis.KeyboardEvent;
 
       const dispatch = (type: string, opts: KeyboardEventInit) => {
         try {
@@ -1275,14 +1329,17 @@ export class DOMOperations {
       const targetY = targetRect.top + targetRect.height / 2;
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawSource = (source as any)?.wrappedJSObject ?? source;
-      const rawTarget = (target as any)?.wrappedJSObject ?? target;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawSource = unwrapElement(
+        source as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      const rawTarget = unwrapElement(
+        target as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin) return false;
 
-      const DragEv = (rawWin?.DragEvent ??
-        globalThis.DragEvent) as typeof DragEvent;
-      const DataTransferCtor = (rawWin?.DataTransfer ??
-        globalThis.DataTransfer) as typeof DataTransfer;
+      const DragEv = rawWin.DragEvent ?? globalThis.DragEvent;
+      const DataTransferCtor = rawWin.DataTransfer ?? globalThis.DataTransfer;
 
       const dataTransfer = new DataTransferCtor();
 
@@ -1391,13 +1448,21 @@ export class DOMOperations {
       await this.highlightManager.applyHighlight(element, options, elementInfo);
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawDoc = (this.document as any)?.wrappedJSObject ?? this.document;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawDoc = this.document
+        ? unwrapDocument(
+            this.document as Document & Partial<{ wrappedJSObject: Document }>,
+          )
+        : null;
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin || !rawDoc) return false;
+
+      const EventCtor = rawWin.Event ?? globalThis.Event;
 
       try {
-        if (rawWin && rawDoc.hasFocus()) {
+        if (rawDoc.hasFocus()) {
           const selection = rawWin.getSelection();
           if (selection) {
             const range = rawDoc.createRange();
@@ -1493,13 +1558,21 @@ export class DOMOperations {
       await this.highlightManager.applyHighlight(element, options, elementInfo);
 
       const win = this.contentWindow;
-      const rawWin = (win as any)?.wrappedJSObject ?? win;
-      const rawDoc = (this.document as any)?.wrappedJSObject ?? this.document;
-      const rawElement = (element as any)?.wrappedJSObject ?? element;
-      const EventCtor = (rawWin?.Event ?? globalThis.Event) as typeof Event;
+      const rawWin = unwrapWindow(win as ContentWindow);
+      const rawDoc = this.document
+        ? unwrapDocument(
+            this.document as Document & Partial<{ wrappedJSObject: Document }>,
+          )
+        : null;
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin || !rawDoc) return false;
+
+      const EventCtor = rawWin.Event ?? globalThis.Event;
 
       try {
-        if (rawWin && rawDoc.hasFocus()) {
+        if (rawDoc.hasFocus()) {
           const selection = rawWin.getSelection();
           if (selection) {
             const range = rawDoc.createRange();
@@ -1522,7 +1595,7 @@ export class DOMOperations {
         console.warn("DOMOperations: execCommand failed, falling back:", e);
       }
 
-      const InputEv = (rawWin?.InputEvent ?? null) as typeof InputEvent | null;
+      const InputEv = rawWin.InputEvent ?? null;
 
       if (InputEv) {
         rawElement.dispatchEvent(

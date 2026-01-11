@@ -35,12 +35,9 @@ export class NRWebScraperChild extends JSWindowActorChild {
    */
   private getContext(): WebScraperContext {
     return {
-      contentWindow: this.contentWindow as
-        | (Window & typeof globalThis)
-        | null,
+      contentWindow: this.contentWindow as (Window & typeof globalThis) | null,
       document: this.document,
-      sendQuery: (name: string, data?: unknown) =>
-        this.sendQuery(name, data),
+      sendQuery: (name: string, data?: unknown) => this.sendQuery(name, data),
     };
   }
 
@@ -184,10 +181,14 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:InputElement":
         if (message.data?.selector && typeof message.data.value === "string") {
-          return domOps.inputElement(message.data.selector, message.data.value, {
-            typingMode: message.data.typingMode,
-            typingDelayMs: message.data.typingDelayMs,
-          });
+          return domOps.inputElement(
+            message.data.selector,
+            message.data.value,
+            {
+              typingMode: message.data.typingMode,
+              typingDelayMs: message.data.typingDelayMs,
+            },
+          );
         }
         break;
       case "WebScraper:ClickElement":
@@ -353,7 +354,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
         break;
       case "WebScraper:UploadFile":
         if (message.data?.selector && message.data?.filePath) {
-          return domOps.uploadFile(message.data.selector, message.data.filePath);
+          return domOps.uploadFile(
+            message.data.selector,
+            message.data.filePath,
+          );
         }
         break;
       case "WebScraper:SetCookieString":

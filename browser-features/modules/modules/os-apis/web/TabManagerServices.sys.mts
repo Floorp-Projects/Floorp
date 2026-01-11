@@ -19,7 +19,7 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
  */
 const GlobalHTTPTracker = {
   activeRequests: new Map<number, Set<nsIRequest>>(),
-  
+
   init() {
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
@@ -31,6 +31,7 @@ const GlobalHTTPTracker = {
 
   observe(subject: nsISupports, topic: string, _data: string | null) {
     try {
+      // deno-lint-ignore no-explicit-any
       const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
       const bcid = channel.loadInfo?.browsingContextID;
       if (!bcid) return;
@@ -61,7 +62,7 @@ const GlobalHTTPTracker = {
 
   getActiveCount(bcid: number): number {
     return this.activeRequests.get(bcid)?.size || 0;
-  }
+  },
 };
 
 GlobalHTTPTracker.init();
@@ -69,7 +70,6 @@ GlobalHTTPTracker.init();
 interface WebScraperActor {
   sendQuery(name: string, data?: object): Promise<unknown>;
 }
-
 
 // Type for browser tab element
 interface BrowserTab {
@@ -689,6 +689,9 @@ class TabManager {
     }
     await this._waitForLoad(browser, url);
     await this._delayForUser();
+
+    // Re-show control overlay after navigation (new document, new actor)
+    await this._queryActor(instanceId, "WebScraper:ShowControlOverlay");
   }
 
   public getURI(instanceId: string): Promise<string> {
@@ -1389,7 +1392,10 @@ class TabManager {
       }
       return Promise.resolve(false);
     } catch (e) {
-      console.warn("TabManager: TabDialogBox unavailable for accepting alert (headless mode?):", e);
+      console.warn(
+        "TabManager: TabDialogBox unavailable for accepting alert (headless mode?):",
+        e,
+      );
       return Promise.resolve(false);
     }
   }
@@ -1442,7 +1448,10 @@ class TabManager {
       }
       return Promise.resolve(false);
     } catch (e) {
-      console.warn("TabManager: TabDialogBox unavailable for dismissing alert (headless mode?):", e);
+      console.warn(
+        "TabManager: TabDialogBox unavailable for dismissing alert (headless mode?):",
+        e,
+      );
       return Promise.resolve(false);
     }
   }
@@ -1502,8 +1511,7 @@ class TabManager {
       // Allow mostly read-only settings to fail silently (e.g. in headless mode)
       try {
         // Paper settings
-        printSettings.paperSizeUnit =
-          Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
+        printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches ?? 0;
         printSettings.paperWidth = 8.5; // US Letter width in inches
         printSettings.paperHeight = 11; // US Letter height in inches
         printSettings.usePageRuleSizeAsPaperSize = true;
@@ -1536,7 +1544,10 @@ class TabManager {
       } catch (e) {
         // These settings might be read-only in some environments (headless, etc.)
         // We log but proceed, as basic PDF generation might still work.
-        console.warn("TabManager: Some print settings could not be applied:", e);
+        console.warn(
+          "TabManager: Some print settings could not be applied:",
+          e,
+        );
       }
 
       // Print to stream
@@ -1557,7 +1568,10 @@ class TabManager {
       const base64 = btoa(bytes);
       return base64;
     } catch (e) {
-      console.warn("TabManager: PDF generation partial failure (metadata/settings issue):", e);
+      console.warn(
+        "TabManager: PDF generation partial failure (metadata/settings issue):",
+        e,
+      );
       return null;
     }
   }
@@ -1618,6 +1632,7 @@ class TabManager {
       const observer = {
         observe(subject: nsISupports, topic: string, _data: string | null) {
           try {
+            // deno-lint-ignore no-explicit-any
             const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
             if (channel.loadInfo?.browsingContextID === bcid) {
               if (topic === "http-on-opening-request") {

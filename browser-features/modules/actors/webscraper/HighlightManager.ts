@@ -35,6 +35,14 @@ export class HighlightManager {
   private infoPanel: HTMLDivElement | null = null;
   private infoPanelCleanupTimer: number | null = null;
   private controlOverlay: HTMLDivElement | null = null;
+  private controlOverlayLabel: HTMLDivElement | null = null;
+
+  // Control overlay event handlers for cleanup
+  private controlOverlayHandlers: {
+    blockEvent: (e: Event) => void;
+    blockKeydown: (e: KeyboardEvent) => void;
+    blockFocus: (e: FocusEvent) => void;
+  } | null = null;
 
   // 非同期操作の競合防止用 操作ID
   private highlightOperationId = 0;
@@ -384,6 +392,25 @@ export class HighlightManager {
     } catch {
       // DeadObject - ignore
     }
+
+    // Also cleanup any orphaned info panels in the DOM
+    const doc = this.document;
+    if (doc) {
+      try {
+        const orphanedPanels = doc.querySelectorAll(
+          ".nr-webscraper-info-panel",
+        );
+        orphanedPanels.forEach((el) => {
+          try {
+            el.remove();
+          } catch {
+            // DeadObject - ignore
+          }
+        });
+      } catch {
+        // ignore DOM query errors
+      }
+    }
   }
 
   /**
@@ -391,12 +418,30 @@ export class HighlightManager {
    */
   cleanupHighlight(): void {
     ++this.highlightOperationId;
+    this.cleanupHighlightWithoutIdIncrement();
+  }
 
+  /**
+   * Gracefully cleanup highlight - immediately removes old overlays
+   * The "graceful" aspect is handled by fade-out animation in cleanupHighlight
+   */
+  gracefulCleanupHighlight(): void {
+    // Always immediately cleanup to prevent orphaned overlays
+    // The fade-out animation provides the graceful visual transition
+    this.cleanupHighlight();
+  }
+
+  /**
+   * Internal cleanup without incrementing operation ID
+   * Used when the caller has already claimed an operation ID
+   */
+  private cleanupHighlightWithoutIdIncrement(): void {
     if (this.highlightCleanupTimer !== null) {
       timerClearTimeout(this.highlightCleanupTimer);
     }
     this.highlightCleanupTimer = null;
 
+    // Capture references and immediately clear instance variables
     const overlaysToRemove = [
       ...(this.highlightOverlay ? [this.highlightOverlay] : []),
       ...this.highlightOverlays,
@@ -407,32 +452,7 @@ export class HighlightManager {
     this.highlightOverlays = [];
     this.highlightCleanupCallbacks = [];
 
-    if (overlaysToRemove.length > 0) {
-      overlaysToRemove.forEach((overlay) => {
-        try {
-          if (overlay?.isConnected) {
-            overlay.style.setProperty(
-              "transition",
-              "opacity 300ms ease-out, transform 300ms ease-out",
-            );
-            overlay.style.setProperty("opacity", "0");
-            overlay.style.setProperty("transform", "scale(0.98)");
-            timerSetTimeout(() => {
-              try {
-                if (overlay?.isConnected) {
-                  overlay.remove();
-                }
-              } catch {
-                // DeadObject - ignore
-              }
-            }, 300);
-          }
-        } catch {
-          // DeadObject - ignore
-        }
-      });
-    }
-
+    // Run cleanup callbacks immediately
     for (const cleanup of callbacksToRun) {
       try {
         cleanup();
@@ -440,26 +460,76 @@ export class HighlightManager {
         // ignore cleanup errors
       }
     }
+
+    // Also search DOM for any orphaned overlays (exclude fading ones)
+    const doc = this.document;
+    if (doc) {
+      try {
+        const orphanedOverlays = doc.querySelectorAll(
+          ".nr-webscraper-highlight-overlay:not([data-removing='true'])",
+        );
+        orphanedOverlays.forEach((el) => {
+          if (!overlaysToRemove.includes(el as HTMLDivElement)) {
+            overlaysToRemove.push(el as HTMLDivElement);
+          }
+        });
+
+        // Also cleanup any orphaned info panels
+        const orphanedPanels = doc.querySelectorAll(
+          ".nr-webscraper-info-panel",
+        );
+        orphanedPanels.forEach((el) => {
+          try {
+            if (el !== this.infoPanel) {
+              el.remove();
+            }
+          } catch {
+            // DeadObject - ignore
+          }
+        });
+      } catch {
+        // ignore DOM query errors
+      }
+    }
+
+    // Remove overlays with fade-out animation
+    this.fadeOutAndRemoveOverlays(overlaysToRemove);
   }
 
   /**
-   * Gracefully cleanup highlight with minimum display time guarantee
+   * Fade out and remove overlays with animation
    */
-  gracefulCleanupHighlight(): void {
-    const elapsed = Date.now() - this.highlightStartTime;
-    const remaining = MINIMUM_HIGHLIGHT_DURATION - elapsed;
+  private fadeOutAndRemoveOverlays(overlays: HTMLDivElement[]): void {
+    if (overlays.length === 0) return;
 
-    if (remaining > 0 && this.highlightStartTime > 0) {
-      if (this.highlightCleanupTimer !== null) {
-        timerClearTimeout(this.highlightCleanupTimer);
+    overlays.forEach((overlay) => {
+      try {
+        if (overlay?.isConnected) {
+          // Mark overlay as being removed to prevent interference
+          overlay.setAttribute("data-removing", "true");
+          overlay.style.setProperty(
+            "transition",
+            "opacity 300ms ease-out, transform 300ms ease-out",
+          );
+          overlay.style.setProperty("opacity", "0");
+          overlay.style.setProperty("transform", "scale(0.98)");
+          timerSetTimeout(() => {
+            try {
+              if (
+                overlay?.isConnected &&
+                overlay.getAttribute("data-removing") === "true"
+              ) {
+                overlay.remove();
+              }
+            } catch {
+              // DeadObject - ignore
+            }
+          }, 300);
+        }
+      } catch {
+        // DeadObject - ignore
       }
-
-      this.highlightCleanupTimer = timerSetTimeout(() => {
-        this.cleanupHighlight();
-      }, remaining);
-    } else {
-      this.cleanupHighlight();
-    }
+    });
   }
 
   /**
@@ -496,10 +566,14 @@ export class HighlightManager {
     }
 
     this.ensureHighlightStyle();
-    this.gracefulCleanupHighlight();
 
-    const currentOperationId = this.highlightOperationId;
+    // Increment operation ID BEFORE cleanup to claim this operation
+    // This ensures the ID is stable throughout the async operation
+    const currentOperationId = ++this.highlightOperationId;
     this.highlightStartTime = Date.now();
+
+    // Clean up previous overlays (but don't increment ID again)
+    this.cleanupHighlightWithoutIdIncrement();
 
     if (showPanel) {
       await this.showInfoPanel(options.action, undefined, elementInfo, 1);
@@ -608,7 +682,12 @@ export class HighlightManager {
       }
 
       try {
-        element.focus({ preventScroll: true });
+        // Clone focus options into content context to avoid security wrapper issues
+        const win = element.ownerDocument?.defaultView;
+        const focusOpts = win
+          ? Cu.cloneInto({ preventScroll: true }, win)
+          : { preventScroll: true };
+        element.focus(focusOpts);
       } catch {
         try {
           element.focus();
@@ -678,10 +757,14 @@ export class HighlightManager {
     }
 
     this.ensureHighlightStyle();
-    this.gracefulCleanupHighlight();
 
-    const currentOperationId = this.highlightOperationId;
+    // Increment operation ID BEFORE cleanup to claim this operation
+    // This ensures the ID is stable throughout the async operation
+    const currentOperationId = ++this.highlightOperationId;
     this.highlightStartTime = Date.now();
+
+    // Clean up previous overlays (but don't increment ID again)
+    this.cleanupHighlightWithoutIdIncrement();
 
     const colorClass = this.getActionColorClass(options.action);
 
@@ -779,8 +862,11 @@ export class HighlightManager {
 
     this.highlightCleanupTimer = Number(
       timerSetTimeout(() => {
-        this.cleanupHighlight();
-        this.hideInfoPanel();
+        // Only cleanup if this operation is still active
+        if (currentOperationId === this.highlightOperationId) {
+          this.cleanupHighlight();
+          this.hideInfoPanel();
+        }
       }, options.duration),
     );
 
@@ -837,71 +923,107 @@ export class HighlightManager {
    */
   showControlOverlay(): void {
     const doc = this.document;
-    if (!doc) return;
+    const win = this.contentWindow;
+    if (!doc || !win) {
+      return;
+    }
 
-    if (this.controlOverlay?.isConnected) return;
+    if (this.controlOverlay?.isConnected) {
+      return;
+    }
 
     this.ensureHighlightStyle();
 
     const overlay = doc.createElement("div");
     overlay.className = "nr-webscraper-control-overlay";
     overlay.id = "nr-webscraper-control-overlay";
-    overlay.tabIndex = -1;
+    overlay.tabIndex = 0; // Make focusable
 
     const label = doc.createElement("div");
     label.className = "nr-webscraper-control-overlay__label";
-    label.textContent = "Floorpが操作中...";
+    label.textContent = "Floorp が操作中...";
 
     (doc.body ?? doc.documentElement)?.appendChild(overlay);
     (doc.body ?? doc.documentElement)?.appendChild(label);
 
-    (overlay as HTMLDivElement).focus();
+    // Focus the overlay to capture keyboard events
+    overlay.focus();
 
     const body = doc.body;
     const html = doc.documentElement as HTMLElement | null;
     if (body) body.style.setProperty("overflow", "hidden", "important");
     if (html) html.style.setProperty("overflow", "hidden", "important");
 
-    overlay.addEventListener("contextmenu", (e) => e.preventDefault(), {
-      capture: true,
-    });
-
-    const preventScroll = (e: Event) => {
+    // Create event handlers that will be added to document level
+    const blockEvent = (e: Event) => {
+      // Don't block events on the overlay itself
+      if (e.target === overlay || e.target === label) return;
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
     };
-    overlay.addEventListener("wheel", preventScroll, {
-      passive: false,
-      capture: true,
-    });
-    overlay.addEventListener("touchmove", preventScroll, {
-      passive: false,
-      capture: true,
-    });
 
-    const scrollKeys = [
-      " ",
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "PageUp",
-      "PageDown",
-      "Home",
-      "End",
-    ];
-    overlay.addEventListener(
-      "keydown",
-      (e: KeyboardEvent) => {
-        if (scrollKeys.includes(e.key)) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      },
-      { capture: true },
-    );
+    const blockKeydown = (e: KeyboardEvent) => {
+      // Block all keyboard input except for specific allowed keys
+      const allowedKeys = ["F12"]; // Allow dev tools
+      if (!allowedKeys.includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
+    };
+
+    const blockFocus = (e: FocusEvent) => {
+      // Redirect focus back to overlay
+      if (e.target !== overlay) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.focus();
+      }
+    };
+
+    // Store handlers for cleanup
+    this.controlOverlayHandlers = { blockEvent, blockKeydown, blockFocus };
+
+    // Add document-level event listeners with capture phase
+    const eventOptions = { capture: true, passive: false };
+
+    // Block mouse events
+    doc.addEventListener("mousedown", blockEvent, eventOptions);
+    doc.addEventListener("mouseup", blockEvent, eventOptions);
+    doc.addEventListener("click", blockEvent, eventOptions);
+    doc.addEventListener("dblclick", blockEvent, eventOptions);
+    doc.addEventListener("contextmenu", blockEvent, eventOptions);
+
+    // Block touch events
+    doc.addEventListener("touchstart", blockEvent, eventOptions);
+    doc.addEventListener("touchmove", blockEvent, eventOptions);
+    doc.addEventListener("touchend", blockEvent, eventOptions);
+
+    // Block keyboard events
+    doc.addEventListener("keydown", blockKeydown, eventOptions);
+    doc.addEventListener("keyup", blockEvent, eventOptions);
+    doc.addEventListener("keypress", blockEvent, eventOptions);
+
+    // Block scroll events
+    doc.addEventListener("wheel", blockEvent, eventOptions);
+    doc.addEventListener("scroll", blockEvent, eventOptions);
+
+    // Block focus events
+    doc.addEventListener("focus", blockFocus, eventOptions);
+    doc.addEventListener("focusin", blockFocus, eventOptions);
+
+    // Block input events
+    doc.addEventListener("input", blockEvent, eventOptions);
+    doc.addEventListener("change", blockEvent, eventOptions);
+
+    // Block drag events
+    doc.addEventListener("dragstart", blockEvent, eventOptions);
+    doc.addEventListener("drag", blockEvent, eventOptions);
+    doc.addEventListener("drop", blockEvent, eventOptions);
 
     this.controlOverlay = overlay;
+    this.controlOverlayLabel = label;
   }
 
   /**
@@ -910,6 +1032,49 @@ export class HighlightManager {
   hideControlOverlay(): void {
     const doc = this.document;
     if (!doc) return;
+
+    // Remove document-level event listeners
+    if (this.controlOverlayHandlers) {
+      const { blockEvent, blockKeydown, blockFocus } =
+        this.controlOverlayHandlers;
+      const eventOptions = { capture: true };
+
+      // Remove mouse events
+      doc.removeEventListener("mousedown", blockEvent, eventOptions);
+      doc.removeEventListener("mouseup", blockEvent, eventOptions);
+      doc.removeEventListener("click", blockEvent, eventOptions);
+      doc.removeEventListener("dblclick", blockEvent, eventOptions);
+      doc.removeEventListener("contextmenu", blockEvent, eventOptions);
+
+      // Remove touch events
+      doc.removeEventListener("touchstart", blockEvent, eventOptions);
+      doc.removeEventListener("touchmove", blockEvent, eventOptions);
+      doc.removeEventListener("touchend", blockEvent, eventOptions);
+
+      // Remove keyboard events
+      doc.removeEventListener("keydown", blockKeydown, eventOptions);
+      doc.removeEventListener("keyup", blockEvent, eventOptions);
+      doc.removeEventListener("keypress", blockEvent, eventOptions);
+
+      // Remove scroll events
+      doc.removeEventListener("wheel", blockEvent, eventOptions);
+      doc.removeEventListener("scroll", blockEvent, eventOptions);
+
+      // Remove focus events
+      doc.removeEventListener("focus", blockFocus, eventOptions);
+      doc.removeEventListener("focusin", blockFocus, eventOptions);
+
+      // Remove input events
+      doc.removeEventListener("input", blockEvent, eventOptions);
+      doc.removeEventListener("change", blockEvent, eventOptions);
+
+      // Remove drag events
+      doc.removeEventListener("dragstart", blockEvent, eventOptions);
+      doc.removeEventListener("drag", blockEvent, eventOptions);
+      doc.removeEventListener("drop", blockEvent, eventOptions);
+
+      this.controlOverlayHandlers = null;
+    }
 
     if (this.controlOverlay?.isConnected) {
       const body = doc.body;
@@ -933,20 +1098,21 @@ export class HighlightManager {
       this.controlOverlay = null;
     }
 
-    const label = doc.querySelector(".nr-webscraper-control-overlay__label");
-    if (label) {
-      (label as HTMLElement).style.setProperty(
+    if (this.controlOverlayLabel?.isConnected) {
+      this.controlOverlayLabel.style.setProperty(
         "transition",
         "opacity 200ms ease-out",
       );
-      (label as HTMLElement).style.setProperty("opacity", "0");
+      this.controlOverlayLabel.style.setProperty("opacity", "0");
+      const labelToRemove = this.controlOverlayLabel;
       timerSetTimeout(() => {
         try {
-          label?.remove();
+          labelToRemove?.remove();
         } catch {
           // ignore
         }
       }, 200);
+      this.controlOverlayLabel = null;
     }
   }
 
