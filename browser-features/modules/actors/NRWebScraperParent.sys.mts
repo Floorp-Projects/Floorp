@@ -8,33 +8,9 @@ export class NRWebScraperParent extends JSWindowActorParent {
   private contextMenuHandler: ((e: Event) => void) | null = null;
 
   receiveMessage(message: { name: string; data?: Record<string, unknown> }) {
-    // Handle translation requests in parent process
+    // Handle translation requests in parent process (async)
     if (message.name === "WebScraper:Translate") {
-      try {
-        const { I18nUtils } = ChromeUtils.importESModule(
-          "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
-        );
-        const provider = I18nUtils.getTranslationProvider();
-        if (provider && typeof provider.t === "function") {
-          const key = message.data?.key as string;
-          const vars =
-            (message.data?.vars as Record<string, string | number>) || {};
-          const result = provider.t(key, vars);
-          if (Array.isArray(result)) {
-            return result
-              .map((entry) =>
-                typeof entry === "string" ? entry : String(entry),
-              )
-              .join(" ");
-          }
-          if (typeof result === "string" && result.trim().length > 0) {
-            return result;
-          }
-        }
-      } catch {
-        // ignore translation errors
-      }
-      return null;
+      return this.handleTranslate(message.data);
     }
 
     // Handle control overlay context menu blocking
@@ -99,5 +75,40 @@ export class NRWebScraperParent extends JSWindowActorParent {
 
   didDestroy(): void {
     this.unblockContextMenu();
+  }
+
+  /**
+   * Handle translation requests asynchronously
+   * Waits for translation provider to be initialized before translating
+   */
+  private async handleTranslate(
+    data: Record<string, unknown> | undefined,
+  ): Promise<string | null> {
+    try {
+      const { I18nUtils } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+      );
+
+      // Wait for provider to be initialized (max 2 seconds)
+      await I18nUtils.waitForProviderInit(2000);
+
+      const provider = I18nUtils.getTranslationProvider();
+      if (provider && typeof provider.t === "function") {
+        const key = data?.key as string;
+        const vars = (data?.vars as Record<string, string | number>) || {};
+        const result = provider.t(key, vars);
+        if (Array.isArray(result)) {
+          return result
+            .map((entry) => (typeof entry === "string" ? entry : String(entry)))
+            .join(" ");
+        }
+        if (typeof result === "string" && result.trim().length > 0) {
+          return result;
+        }
+      }
+    } catch {
+      // ignore translation errors
+    }
+    return null;
   }
 }
