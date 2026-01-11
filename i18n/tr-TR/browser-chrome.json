@@ -92,7 +92,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı",
-      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "openLinkInWorkspace": "Bağlantıyı Başka Bir Çalışma Alanında Aç",
       "noOtherWorkspace": "No other workspaces available"
     },
     "error": {

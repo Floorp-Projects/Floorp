@@ -33,7 +33,7 @@
         "updates": "Ενημερώσεις & Πειράματα",
         "debug": "Debug",
         "mouseGesture": "Χειρονομίες ποντικιού",
-        "keyboardShortcut": "Συντομεύσεις πληκτρολογίου",
+        "keyboardShortcut": "Πλήκτρα συντόμευσης",
         "search": {
             "title": "Ρυθμίσεις αναζήτησης",
             "resultsFor": "Αποτελέσματα αναζήτησης για \"{{query}}\"",
