@@ -92,6 +92,44 @@ export class DOMOperations {
   }
 
   /**
+   * Helper method to try execCommand for inserting HTML or text
+   * Returns true if successful, false if it should fall back
+   */
+  private tryExecCommand(
+    rawWin: RawContentWindow,
+    rawDoc: Document,
+    rawElement: HTMLElement,
+    command: "insertHTML" | "insertText",
+    value: string,
+  ): boolean {
+    try {
+      if (!rawDoc.hasFocus()) {
+        return false;
+      }
+      const selection = rawWin.getSelection();
+      if (!selection) {
+        return false;
+      }
+      const range = rawDoc.createRange();
+      range.selectNodeContents(rawElement);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      if (rawDoc.execCommand(command, false, value)) {
+        const EventCtor = rawWin.Event ?? globalThis.Event;
+        rawElement.dispatchEvent(
+          new EventCtor("input", { bubbles: true, cancelable: true }),
+        );
+        rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
+        return true;
+      }
+    } catch (e) {
+      console.warn("DOMOperations: execCommand failed, falling back:", e);
+    }
+    return false;
+  }
+
+  /**
    * Extracts the HTML content from the current page
    */
   getHTML(): string | null {
@@ -202,28 +240,8 @@ export class DOMOperations {
   }
 
   /**
-   * Returns trimmed textContent of the first matching selector
-   */
-  getElementTextContent(selector: string): string | null {
-    try {
-      const element = this.document?.querySelector(selector) as Element | null;
-      if (element) {
-        this.highlightManager.runAsyncInspection(
-          element,
-          "inspectGetElementText",
-          { selector },
-        );
-        return element.textContent?.trim() || null;
-      }
-      return null;
-    } catch (e) {
-      console.error("DOMOperations: Error getting element text content:", e);
-      return null;
-    }
-  }
-
-  /**
    * Gets the text content of an element by CSS selector
+   * Also aliased as getElementTextContent for backward compatibility
    */
   getElementText(selector: string): string | null {
     try {
@@ -241,6 +259,13 @@ export class DOMOperations {
       console.error("DOMOperations: Error getting element text:", e);
       return null;
     }
+  }
+
+  /**
+   * Alias for getElementText for backward compatibility
+   */
+  getElementTextContent(selector: string): string | null {
+    return this.getElementText(selector);
   }
 
   /**
@@ -1459,32 +1484,13 @@ export class DOMOperations {
       );
       if (!rawWin || !rawDoc) return false;
 
-      const EventCtor = rawWin.Event ?? globalThis.Event;
-
-      try {
-        if (rawDoc.hasFocus()) {
-          const selection = rawWin.getSelection();
-          if (selection) {
-            const range = rawDoc.createRange();
-            range.selectNodeContents(rawElement);
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            if (rawDoc.execCommand("insertHTML", false, html)) {
-              rawElement.dispatchEvent(
-                new EventCtor("input", { bubbles: true, cancelable: true }),
-              );
-              rawElement.dispatchEvent(
-                new EventCtor("change", { bubbles: true }),
-              );
-              return true;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("DOMOperations: execCommand failed, falling back:", e);
+      // Try execCommand first (works better when document has focus)
+      if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertHTML", html)) {
+        return true;
       }
 
+      // Fall back to direct DOM manipulation
+      const EventCtor = rawWin.Event ?? globalThis.Event;
       const InputEv = (rawWin?.InputEvent ?? null) as typeof InputEvent | null;
 
       if (InputEv) {
@@ -1571,28 +1577,12 @@ export class DOMOperations {
 
       const EventCtor = rawWin.Event ?? globalThis.Event;
 
-      try {
-        if (rawDoc.hasFocus()) {
-          const selection = rawWin.getSelection();
-          if (selection) {
-            const range = rawDoc.createRange();
-            range.selectNodeContents(rawElement);
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            if (rawDoc.execCommand("insertText", false, text)) {
-              rawElement.dispatchEvent(
-                new EventCtor("input", { bubbles: true, cancelable: true }),
-              );
-              rawElement.dispatchEvent(
-                new EventCtor("change", { bubbles: true }),
-              );
-              return true;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("DOMOperations: execCommand failed, falling back:", e);
+      if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertText", text)) {
+        rawElement.dispatchEvent(
+          new EventCtor("input", { bubbles: true, cancelable: true }),
+        );
+        rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
+        return true;
       }
 
       const InputEv = rawWin.InputEvent ?? null;

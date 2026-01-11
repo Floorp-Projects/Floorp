@@ -117,7 +117,7 @@ export class HighlightManager {
     const action = options.action ?? "Highlight";
     return {
       action,
-      duration: Math.max(options.duration ?? 1800, 300),
+      duration: Math.max(options.duration ?? 1800, MINIMUM_HIGHLIGHT_DURATION),
       focus: options.focus ?? true,
       scrollBehavior: options.scrollBehavior ?? "smooth",
       padding: Math.max(options.padding ?? 14, 0),
@@ -400,7 +400,7 @@ export class HighlightManager {
         const orphanedPanels = doc.querySelectorAll(
           ".nr-webscraper-info-panel",
         );
-        orphanedPanels.forEach((el) => {
+        orphanedPanels.forEach((el: Element) => {
           try {
             el.remove();
           } catch {
@@ -468,7 +468,7 @@ export class HighlightManager {
         const orphanedOverlays = doc.querySelectorAll(
           ".nr-webscraper-highlight-overlay:not([data-removing='true'])",
         );
-        orphanedOverlays.forEach((el) => {
+        orphanedOverlays.forEach((el: Element) => {
           if (!overlaysToRemove.includes(el as HTMLDivElement)) {
             overlaysToRemove.push(el as HTMLDivElement);
           }
@@ -478,7 +478,7 @@ export class HighlightManager {
         const orphanedPanels = doc.querySelectorAll(
           ".nr-webscraper-info-panel",
         );
-        orphanedPanels.forEach((el) => {
+        orphanedPanels.forEach((el: Element) => {
           try {
             if (el !== this.infoPanel) {
               el.remove();

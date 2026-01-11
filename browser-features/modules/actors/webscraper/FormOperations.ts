@@ -213,31 +213,12 @@ export class FormOperations {
           }
 
           eventDispatcher.dispatchInputEvents(element);
-        } catch (_err) {
-          try {
-            if (win && element instanceof win.HTMLSelectElement) {
-              const selectEl = element as HTMLSelectElement;
-              const selectOptions = Array.from(
-                selectEl.options,
-              ) as HTMLOptionElement[];
-              const targetOpt =
-                selectOptions.find((opt) => opt.value === expectedValue) ??
-                null;
-              if (targetOpt) {
-                selectEl.value = targetOpt.value;
-              } else {
-                selectEl.value = expectedValue;
-              }
-            } else {
-              element.value = expectedValue;
-            }
-          } catch (e) {
-            console.error(
-              `FormOperations: Error setting value for selector ${selector}`,
-              e,
-            );
-            finalOk = false;
-          }
+        } catch (e) {
+          console.error(
+            `FormOperations: Error setting value for selector ${selector}`,
+            e,
+          );
+          finalOk = false;
         }
       }
 
