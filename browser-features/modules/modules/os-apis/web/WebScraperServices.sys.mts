@@ -50,6 +50,7 @@ const GlobalHTTPTracker = {
 
   observe(subject: nsISupports, topic: string, _data: string | null) {
     try {
+      // deno-lint-ignore no-explicit-any
       const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
       const bcid = channel.loadInfo?.browsingContextID;
       if (!bcid) return;
@@ -1480,6 +1481,7 @@ class webScraper {
       const observer = {
         observe(subject: nsISupports, topic: string, _data: string | null) {
           try {
+            // deno-lint-ignore no-explicit-any
             const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
             if (channel.loadInfo?.browsingContextID === bcid) {
                console.log(`[WebScraper] Observed ${topic} for BCID ${bcid} - URI: ${channel.URI?.spec}`);
