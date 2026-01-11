@@ -50,7 +50,9 @@ export class MouseGestureController {
   }
 
   private init(): void {
-    if (this.eventListenersAttached) return;
+    if (this.eventListenersAttached) {
+      return;
+    }
 
     this.targetWindow.addEventListener("mousedown", this.handleMouseDown);
     this.targetWindow.addEventListener("mousemove", this.handleMouseMove);
@@ -270,7 +272,13 @@ export class MouseGestureController {
     if (totalMovement >= activationDistance) {
       const { recognizer, shapeDb } = this.getRecognizerAndShapeDb();
       const minScore = this.getMinScore();
-      const result = recognize(recognizer, this.mouseTrail, minScore, shapeDb, activationDistance);
+      const result = recognize(
+        recognizer,
+        this.mouseTrail,
+        minScore,
+        shapeDb,
+        activationDistance,
+      );
 
       if (result) {
         // Use cached pattern-to-action map for fast lookup
@@ -327,7 +335,13 @@ export class MouseGestureController {
     // Use $1 Recognizer to identify the gesture
     const { recognizer, shapeDb } = this.getRecognizerAndShapeDb();
     const minScore = this.getMinScore();
-    const result = recognize(recognizer, this.mouseTrail, minScore, shapeDb, activationDistance);
+    const result = recognize(
+      recognizer,
+      this.mouseTrail,
+      minScore,
+      shapeDb,
+      activationDistance,
+    );
 
     if (result) {
       // Use cached pattern-to-action map for fast lookup

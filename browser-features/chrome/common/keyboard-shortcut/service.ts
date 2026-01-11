@@ -50,6 +50,12 @@ export class KeyboardShortcutService {
   }
 
   public attachToWindow(win: Window): void {
+    // Check if this window already has a controller registered from ANY context
+    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
+    if ((win as any).__keyboardShortcutControllerAttached === true) {
+      return;
+    }
+
     if (this.controllers.has(win)) {
       return;
     }
@@ -58,9 +64,18 @@ export class KeyboardShortcutService {
       const controller = new KeyboardShortcutController(win);
       this.controllers.set(win, controller);
 
+      // Mark the window as having a controller attached
+      (win as any).__keyboardShortcutControllerAttached = true;
+
       const onUnload = () => {
         controller.destroy();
         this.controllers.delete(win);
+        // Clean up the marker when the window is closed
+        try {
+          delete (win as any).__keyboardShortcutControllerAttached;
+        } catch (_e) {
+          // Window might be already gone
+        }
         try {
           win.removeEventListener("unload", onUnload);
         } catch (_e) {
@@ -73,8 +88,14 @@ export class KeyboardShortcutService {
   }
 
   private destroyAllControllers(): void {
-    for (const controller of this.controllers.values()) {
+    for (const [win, controller] of this.controllers.entries()) {
       controller.destroy();
+      // Clean up the marker
+      try {
+        delete (win as any).__keyboardShortcutControllerAttached;
+      } catch (_e) {
+        // Window might be already gone
+      }
     }
     this.controllers.clear();
   }

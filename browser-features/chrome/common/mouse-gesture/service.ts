@@ -71,15 +71,32 @@ export class MouseGestureService {
   }
 
   public attachToWindow(win: Window): void {
-    if (this.controllers.has(win)) return;
+    // Check if this window already has a controller registered from ANY context
+    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
+    if ((win as any).__mouseGestureControllerAttached === true) {
+      return;
+    }
+
+    if (this.controllers.has(win)) {
+      return;
+    }
 
     if (isEnabled()) {
       const controller = new MouseGestureController(win);
       this.controllers.set(win, controller);
 
+      // Mark the window as having a controller attached
+      (win as any).__mouseGestureControllerAttached = true;
+
       const onUnload = () => {
         controller.destroy();
         this.controllers.delete(win);
+        // Clean up the marker when the window is closed
+        try {
+          delete (win as any).__mouseGestureControllerAttached;
+        } catch (_e) {
+          // Window might be already gone
+        }
         try {
           win.removeEventListener("unload", onUnload);
         } catch (_e) {
@@ -92,8 +109,14 @@ export class MouseGestureService {
   }
 
   private destroyAllControllers(): void {
-    for (const controller of this.controllers.values()) {
+    for (const [win, controller] of this.controllers.entries()) {
       controller.destroy();
+      // Clean up the marker
+      try {
+        delete (win as any).__mouseGestureControllerAttached;
+      } catch (_e) {
+        // Window might be already gone
+      }
     }
     this.controllers.clear();
   }
@@ -101,7 +124,10 @@ export class MouseGestureService {
   private setupEnabledObserver(): void {
     if (this.configObserver) {
       try {
-        Services.prefs.removeObserver("floorp.mousegesture.enabled", this.configObserver);
+        Services.prefs.removeObserver(
+          "floorp.mousegesture.enabled",
+          this.configObserver,
+        );
       } catch (e) {
         console.error("[MouseGestureService] Error removing observer:", e);
       }
@@ -109,8 +135,14 @@ export class MouseGestureService {
 
     this.configObserver = {
       observe: (_subject: unknown, topic: string, data: string) => {
-        if (topic === "nsPref:changed" && data === "floorp.mousegesture.enabled") {
-          const enabled = Services.prefs.getBoolPref("floorp.mousegesture.enabled", false);
+        if (
+          topic === "nsPref:changed" &&
+          data === "floorp.mousegesture.enabled"
+        ) {
+          const enabled = Services.prefs.getBoolPref(
+            "floorp.mousegesture.enabled",
+            false,
+          );
 
           if (enabled) {
             this.attachToAllWindows();
@@ -123,7 +155,10 @@ export class MouseGestureService {
       },
     };
 
-    Services.prefs.addObserver("floorp.mousegesture.enabled", this.configObserver);
+    Services.prefs.addObserver(
+      "floorp.mousegesture.enabled",
+      this.configObserver,
+    );
   }
 
   private initialize(): void {
@@ -195,11 +230,17 @@ let lastEnabledState: boolean | null = null;
 
 // Initialize from pref if it exists
 try {
-  if (Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) === Services.prefs.PREF_BOOL) {
+  if (
+    Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) ===
+    Services.prefs.PREF_BOOL
+  ) {
     lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
   }
 } catch (e) {
-  console.log("[MouseGestureService] Could not read last enabled state pref:", e);
+  console.log(
+    "[MouseGestureService] Could not read last enabled state pref:",
+    e,
+  );
 }
 
 function handleContextMenuAfterMouseUp(enabled: boolean) {
@@ -213,8 +254,14 @@ function handleContextMenuAfterMouseUp(enabled: boolean) {
   try {
     Services.prefs.setBoolPref(PREF_LAST_ENABLED_STATE, enabled);
   } catch (e) {
-    console.error("[MouseGestureService] Failed to save last enabled state:", e);
+    console.error(
+      "[MouseGestureService] Failed to save last enabled state:",
+      e,
+    );
   }
 }
 
-export const mouseGestureService = createRootHMR(createMouseGestureService, import.meta.hot);
+export const mouseGestureService = createRootHMR(
+  createMouseGestureService,
+  import.meta.hot,
+);
