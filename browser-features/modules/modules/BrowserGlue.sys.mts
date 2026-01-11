@@ -354,6 +354,29 @@ const JS_WINDOW_ACTORS: {
       "https://chrome.google.com/webstore/*",
     ],
   },
+  NRPluginStore: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPluginStoreParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRPluginStoreChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    matches: [
+      // Floorp OS Plugin Store domains
+      "https://plugins.floorp.app/*",
+      "https://store.floorp.app/*",
+      // Development domains - port is not supported in matches, use wildcard
+      "*://localhost/*",
+      "*://127.0.0.1/*",
+    ],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
