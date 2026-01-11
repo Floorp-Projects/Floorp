@@ -22,11 +22,14 @@ export interface PluginMetadata {
   id: string;
   name: string;
   description: string;
-  version: string;
+  version?: string;
   author: string;
-  functions: PluginFunction[];
-  category: string;
-  isOfficial: boolean;
+  functions?: PluginFunction[];
+  category?: string;
+  isOfficial?: boolean;
+  icon?: string;
+  /** Plugin package URI for installation via Sapphillon backend */
+  uri?: string;
 }
 
 export interface PluginFunction {
@@ -39,14 +42,6 @@ export interface InstallResult {
   success: boolean;
   error?: string;
   pluginId?: string;
-}
-
-export interface PluginInfo {
-  id: string;
-  name: string;
-  version: string;
-  installed: boolean;
-  enabled: boolean;
 }
 
 // =============================================================================
@@ -164,51 +159,6 @@ export class NRPluginStoreChild extends JSWindowActorChild {
       });
   }
 
-  /**
-   * Get list of installed plugins (callback-based)
-   */
-  NRPluginStore_getInstalledPlugins(callback: (result: string) => void): void {
-    this.sendQuery("PluginStore:GetInstalled", {})
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ error: String(error), plugins: [] }));
-      });
-  }
-
-  /**
-   * Enable a plugin (callback-based)
-   */
-  NRPluginStore_enablePlugin(
-    pluginId: string,
-    callback: (result: string) => void,
-  ): void {
-    this.sendQuery("PluginStore:Enable", { pluginId })
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ success: false, error: String(error) }));
-      });
-  }
-
-  /**
-   * Disable a plugin (callback-based)
-   */
-  NRPluginStore_disablePlugin(
-    pluginId: string,
-    callback: (result: string) => void,
-  ): void {
-    this.sendQuery("PluginStore:Disable", { pluginId })
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ success: false, error: String(error) }));
-      });
-  }
-
   // ==========================================================================
   // API Injection
   // ==========================================================================
@@ -243,20 +193,6 @@ export class NRPluginStoreChild extends JSWindowActorChild {
 
       Cu.exportFunction(this.NRPluginStore_isPluginInstalled.bind(this), win, {
         defineAs: "NRPluginStore_isPluginInstalled",
-      });
-
-      Cu.exportFunction(
-        this.NRPluginStore_getInstalledPlugins.bind(this),
-        win,
-        { defineAs: "NRPluginStore_getInstalledPlugins" },
-      );
-
-      Cu.exportFunction(this.NRPluginStore_enablePlugin.bind(this), win, {
-        defineAs: "NRPluginStore_enablePlugin",
-      });
-
-      Cu.exportFunction(this.NRPluginStore_disablePlugin.bind(this), win, {
-        defineAs: "NRPluginStore_disablePlugin",
       });
 
       // Create floorpPluginStore wrapper object using Cu.cloneInto
@@ -313,24 +249,6 @@ export class NRPluginStoreChild extends JSWindowActorChild {
       this.NRPluginStore_isPluginInstalled.bind(this),
       pluginStoreObj,
       { defineAs: "isPluginInstalled" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_getInstalledPlugins.bind(this),
-      pluginStoreObj,
-      { defineAs: "getInstalledPlugins" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_enablePlugin.bind(this),
-      pluginStoreObj,
-      { defineAs: "enablePlugin" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_disablePlugin.bind(this),
-      pluginStoreObj,
-      { defineAs: "disablePlugin" },
     );
 
     // Assign to window.floorpPluginStore

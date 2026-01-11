@@ -7,9 +7,8 @@
  * NRPluginStoreParent - Parent process actor for Floorp OS Plugin Store integration
  *
  * This actor handles:
- * - Plugin installation from the web store
- * - Plugin management (enable, disable, uninstall)
- * - Communication with the OS server for plugin registration
+ * - Plugin installation from the web store (with rich doorhanger UI)
+ * - Plugin management (uninstall)
  *
  * @module NRPluginStoreParent
  */
@@ -17,7 +16,6 @@
 import type {
   PluginMetadata,
   InstallResult,
-  PluginInfo,
 } from "./NRPluginStoreChild.sys.mts";
 
 // =============================================================================
@@ -29,92 +27,120 @@ interface InstallRequest {
   metadata?: PluginMetadata;
 }
 
-interface PluginStorageData {
-  installedPlugins: Map<string, StoredPlugin>;
+interface BrowserWindow extends Window {
+  gBrowser?: {
+    selectedBrowser?: Element;
+  };
 }
 
-interface StoredPlugin {
-  id: string;
-  name: string;
-  version: string;
-  metadata: PluginMetadata;
-  installedAt: string;
-  enabled: boolean;
-}
-
-// =============================================================================
-// Storage
-// =============================================================================
-
-// Simple in-memory storage (in production, use persistent storage)
-const pluginStorage: PluginStorageData = {
-  installedPlugins: new Map(),
+// Firefox built-in icon URLs for categories
+const CATEGORY_ICONS: Record<string, string> = {
+  browser: "chrome://global/skin/icons/link.svg",
+  system: "chrome://global/skin/icons/settings.svg",
+  productivity: "chrome://global/skin/icons/lightbulb.svg",
+  developer: "chrome://global/skin/icons/developer.svg",
+  communication: "chrome://browser/skin/notification-icons/chat.svg",
+  media: "chrome://global/skin/media/play-fill.svg",
+  utilities: "chrome://global/skin/icons/settings.svg",
 };
 
-// Load from preferences on startup
-function loadPluginStorage(): void {
-  try {
-    const stored = Services.prefs.getStringPref(
-      "floorp.os.plugins.installed",
-      "{}",
+// Default plugin icon
+const DEFAULT_PLUGIN_ICON = "chrome://mozapps/skin/extensions/extension.svg";
+
+// Sapphillon gRPC-Web server configuration
+const SAPPHILLON_GRPC_BASE_URL = "http://localhost:50051";
+
+/**
+ * Call Sapphillon gRPC-Web API using Connect protocol (JSON)
+ *
+ * @param service - Full service name (e.g., "sapphillon.v1.PluginService")
+ * @param method - Method name (e.g., "InstallPlugin")
+ * @param request - Request body as JSON object
+ * @returns Promise with the response JSON
+ */
+async function callGrpcWeb<T>(
+  service: string,
+  method: string,
+  request: Record<string, unknown>,
+): Promise<T> {
+  const url = `${SAPPHILLON_GRPC_BASE_URL}/${service}/${method}`;
+
+  console.log(`[gRPC-Web] Calling ${service}/${method}`);
+  console.log(`[gRPC-Web] URL: ${url}`);
+  console.log(`[gRPC-Web] Request:`, JSON.stringify(request, null, 2));
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(
+      `[gRPC-Web] Error: ${response.status} ${response.statusText}`,
     );
-    const data = JSON.parse(stored);
-    if (data.installedPlugins) {
-      for (const [id, plugin] of Object.entries(data.installedPlugins)) {
-        pluginStorage.installedPlugins.set(id, plugin as StoredPlugin);
-      }
-    }
-  } catch {
-    // Ignore errors, start with empty storage
+    console.error(`[gRPC-Web] Error body:`, errorText);
+    throw new Error(
+      `gRPC-Web call failed: ${response.status} ${response.statusText}`,
+    );
   }
+
+  const result = (await response.json()) as T;
+  console.log(`[gRPC-Web] Response:`, JSON.stringify(result, null, 2));
+  return result;
 }
 
-function savePluginStorage(): void {
-  try {
-    const data = {
-      installedPlugins: Object.fromEntries(pluginStorage.installedPlugins),
-    };
-    Services.prefs.setStringPref(
-      "floorp.os.plugins.installed",
-      JSON.stringify(data),
-    );
-  } catch (e) {
-    console.error("[NRPluginStoreParent] Failed to save plugin storage:", e);
+/**
+ * Get Firefox icon URL for a plugin based on category
+ */
+function getPluginIconUrl(category?: string): string {
+  if (category && CATEGORY_ICONS[category]) {
+    return CATEGORY_ICONS[category];
   }
+  return DEFAULT_PLUGIN_ICON;
 }
-
-// Initialize storage
-loadPluginStorage();
 
 // =============================================================================
 // Main Class
 // =============================================================================
 
 export class NRPluginStoreParent extends JSWindowActorParent {
-  async receiveMessage(message: {
+  /**
+   * Get the browser window associated with this actor
+   */
+  private getBrowserWindow(): BrowserWindow | null {
+    const browser = this.browsingContext?.top?.embedderElement;
+    return (browser?.ownerGlobal as BrowserWindow) ?? null;
+  }
+
+  receiveMessage(message: {
     name: string;
     data?: InstallRequest | { pluginId: string } | Record<string, unknown>;
-  }): Promise<
+  }):
+    | Promise<
+        InstallResult | { installed: boolean } | { version: string } | null
+      >
     | InstallResult
-    | PluginInfo[]
     | { installed: boolean }
     | { version: string }
-    | boolean
-    | null
-  > {
+    | null {
     switch (message.name) {
       case "PluginStore:GetVersion":
         return this.getFloorpVersion();
 
       case "PluginStore:Install":
         if (message.data && "pluginId" in message.data) {
-          return await this.installPlugin(message.data as InstallRequest);
+          return this.installPlugin(message.data as InstallRequest);
         }
         return { success: false, error: "Invalid request data" };
 
       case "PluginStore:Uninstall":
         if (message.data && "pluginId" in message.data) {
-          return await this.uninstallPlugin(
+          return this.uninstallPlugin(
             (message.data as { pluginId: string }).pluginId,
           );
         }
@@ -128,308 +154,614 @@ export class NRPluginStoreParent extends JSWindowActorParent {
         }
         return { installed: false };
 
-      case "PluginStore:GetInstalled":
-        return this.getInstalledPlugins();
-
-      case "PluginStore:Enable":
-        if (message.data && "pluginId" in message.data) {
-          return await this.enablePlugin(
-            (message.data as { pluginId: string }).pluginId,
-          );
-        }
-        return { success: false, error: "Invalid request data" };
-
-      case "PluginStore:Disable":
-        if (message.data && "pluginId" in message.data) {
-          return await this.disablePlugin(
-            (message.data as { pluginId: string }).pluginId,
-          );
-        }
-        return { success: false, error: "Invalid request data" };
-
       default:
         return null;
     }
   }
 
   /**
-   * Get Floorp version
+   * Get Floorp version (returns random value for now)
    */
   private getFloorpVersion(): { version: string } {
-    try {
-      const version = Services.appinfo.version;
-      return { version };
-    } catch {
-      return { version: "unknown" };
-    }
+    const randomVersion = `${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 100)}`;
+    console.log("[NRPluginStoreParent] getFloorpVersion:", randomVersion);
+    return { version: randomVersion };
   }
 
   /**
-   * Install a plugin
+   * Create a centered modal dialog for plugin installation
    */
-  private async installPlugin(request: InstallRequest): Promise<InstallResult> {
+  private createModalDialog(
+    doc: Document,
+    metadata: PluginMetadata,
+    onInstall: () => void,
+    onCancel: () => void,
+  ): HTMLElement {
+    const HTML_NS = "http://www.w3.org/1999/xhtml";
+
+    // Create overlay background - shadcn/ui style
+    const overlay = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    overlay.id = "floorp-os-plugin-install-overlay";
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+    `;
+
+    // Create dialog box - shadcn/ui style
+    const dialog = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    dialog.style.cssText = `
+      background: hsl(240 10% 3.9%);
+      border: 1px solid hsl(240 3.7% 15.9%);
+      border-radius: 8px;
+      padding: 24px;
+      min-width: 550px;
+      max-width: 650px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      color: hsl(0 0% 98%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    `;
+
+    // Header with title - shadcn/ui style
+    const header = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    header.style.cssText = `
+      font-size: 18px;
+      font-weight: 600;
+      text-align: left;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    `;
+    header.textContent = "Floorp OS プラグインをインストール";
+    dialog.appendChild(header);
+
+    // Plugin info section
+    const infoSection = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    infoSection.style.cssText = `
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 12px 0;
+    `;
+
+    // Icon - shadcn/ui style
+    const iconContainer = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    iconContainer.style.cssText = `
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+      border-radius: 6px;
+      background: hsl(240 3.7% 15.9%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    `;
+
+    const isIconUrl =
+      metadata.icon?.startsWith("http://") ||
+      metadata.icon?.startsWith("https://");
+
+    if (isIconUrl && metadata.icon) {
+      const iconImg = doc.createElementNS(HTML_NS, "img") as HTMLImageElement;
+      iconImg.style.cssText = `width: 40px; height: 40px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.9;`;
+      iconImg.src = metadata.icon;
+      iconImg.alt = metadata.name || "Plugin";
+      iconImg.onerror = () => {
+        iconImg.src = getPluginIconUrl(metadata.category);
+      };
+      iconContainer.appendChild(iconImg);
+    } else {
+      const fallbackImg = doc.createElementNS(
+        HTML_NS,
+        "img",
+      ) as HTMLImageElement;
+      fallbackImg.style.cssText = `width: 40px; height: 40px; object-fit: contain; -moz-context-properties: fill; fill: currentColor; opacity: 0.8;`;
+      fallbackImg.src = getPluginIconUrl(metadata.category);
+      fallbackImg.alt = metadata.name || "Plugin";
+      iconContainer.appendChild(fallbackImg);
+    }
+    infoSection.appendChild(iconContainer);
+
+    // Plugin details - shadcn/ui style
+    const details = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    details.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    `;
+
+    const nameEl = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    nameEl.style.cssText = `font-size: 16px; font-weight: 500; color: hsl(0 0% 98%); letter-spacing: -0.01em;`;
+    nameEl.textContent = metadata.name || "不明なプラグイン";
+    details.appendChild(nameEl);
+
+    const authorRow = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    authorRow.style.cssText = `
+      font-size: 14px;
+      color: hsl(240 5% 64.9%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    `;
+    if (metadata.author) {
+      const authorEl = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+      authorEl.textContent = `作成者: ${metadata.author}`;
+      authorRow.appendChild(authorEl);
+    }
+    if (metadata.version) {
+      const versionBadge = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+      versionBadge.style.cssText = `
+        background: hsl(240 3.7% 15.9%);
+        color: hsl(240 5% 64.9%);
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+      `;
+      versionBadge.textContent = `v${metadata.version}`;
+      authorRow.appendChild(versionBadge);
+    }
+    if (metadata.isOfficial) {
+      const officialBadge = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+      officialBadge.style.cssText = `
+        background: hsl(0 0% 98%);
+        color: hsl(240 5.9% 10%);
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+      `;
+      officialBadge.textContent = "✓ 公式";
+      authorRow.appendChild(officialBadge);
+    }
+    if (metadata.category) {
+      const categoryBadge = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+      categoryBadge.style.cssText = `
+        background: transparent;
+        color: hsl(240 5% 64.9%);
+        padding: 2px 8px;
+        border: 1px solid hsl(240 3.7% 15.9%);
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+      `;
+      const categoryLabels: Record<string, string> = {
+        browser: "ブラウザ",
+        system: "システム",
+        productivity: "生産性",
+        developer: "開発ツール",
+        communication: "通信",
+        media: "メディア",
+        utilities: "ユーティリティ",
+      };
+      categoryBadge.textContent =
+        categoryLabels[metadata.category] || metadata.category;
+      authorRow.appendChild(categoryBadge);
+    }
+    details.appendChild(authorRow);
+
+    infoSection.appendChild(details);
+    dialog.appendChild(infoSection);
+
+    // Description - shadcn/ui style
+    if (metadata.description) {
+      const descBox = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+      descBox.style.cssText = `
+        font-size: 14px;
+        line-height: 1.6;
+        color: hsl(240 5% 64.9%);
+      `;
+      descBox.textContent = metadata.description;
+      dialog.appendChild(descBox);
+    }
+
+    // Functions / Permissions section - shadcn/ui style
+    if (metadata.functions && metadata.functions.length > 0) {
+      const permSection = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+      permSection.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      `;
+
+      // Section header
+      const permHeader = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+      permHeader.style.cssText = `
+        font-size: 14px;
+        font-weight: 500;
+        color: hsl(0 0% 98%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      `;
+      const permIcon = doc.createElementNS(HTML_NS, "img") as HTMLImageElement;
+      permIcon.style.cssText = `width: 16px; height: 16px; -moz-context-properties: fill; fill: currentColor; opacity: 0.8;`;
+      permIcon.src = "chrome://global/skin/icons/security.svg";
+      permIcon.alt = "";
+      permHeader.appendChild(permIcon);
+      const permTitle = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+      permTitle.textContent = `このプラグインが使用する機能 (${metadata.functions.length})`;
+      permHeader.appendChild(permTitle);
+      permSection.appendChild(permHeader);
+
+      // Functions list container - shadcn/ui style
+      const funcList = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+      funcList.style.cssText = `
+        background: hsl(240 10% 3.9%);
+        border: 1px solid hsl(240 3.7% 15.9%);
+        border-radius: 6px;
+        padding: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      `;
+
+      for (const func of metadata.functions) {
+        const funcItem = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+        funcItem.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          padding: 8px 12px;
+          border-radius: 4px;
+          background: transparent;
+        `;
+
+        const funcName = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+        funcName.style.cssText = `
+          font-size: 13px;
+          font-weight: 500;
+          color: hsl(0 0% 98%);
+          font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+        `;
+        funcName.textContent = func.name;
+        funcItem.appendChild(funcName);
+
+        if (func.description) {
+          const funcDesc = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+          funcDesc.style.cssText = `
+            font-size: 12px;
+            color: hsl(240 5% 64.9%);
+            line-height: 1.4;
+          `;
+          funcDesc.textContent = func.description;
+          funcItem.appendChild(funcDesc);
+        }
+
+        if (func.parameters && func.parameters.length > 0) {
+          const paramsRow = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+          paramsRow.style.cssText = `
+            font-size: 11px;
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+          `;
+          for (const param of func.parameters) {
+            const paramBadge = doc.createElementNS(
+              HTML_NS,
+              "span",
+            ) as HTMLElement;
+            paramBadge.style.cssText = `
+              background: hsl(240 3.7% 15.9%);
+              color: hsl(240 5% 64.9%);
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+            `;
+            paramBadge.textContent = param;
+            paramsRow.appendChild(paramBadge);
+          }
+          funcItem.appendChild(paramsRow);
+        }
+
+        funcList.appendChild(funcItem);
+      }
+
+      permSection.appendChild(funcList);
+      dialog.appendChild(permSection);
+    }
+
+    // Warning message - shadcn/ui style (destructive variant)
+    const warning = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    warning.style.cssText = `
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: hsl(0 62.8% 30.6% / 0.15);
+      border: 1px solid hsl(0 62.8% 30.6% / 0.3);
+      border-radius: 6px;
+    `;
+    const warningIcon = doc.createElementNS(HTML_NS, "img") as HTMLImageElement;
+    warningIcon.style.cssText = `width: 16px; height: 16px; min-width: 16px; -moz-context-properties: fill; fill: hsl(0 62.8% 60%);`;
+    warningIcon.src = "chrome://global/skin/icons/warning.svg";
+    warningIcon.alt = "";
+    warning.appendChild(warningIcon);
+    const warningText = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+    warningText.style.cssText = `font-size: 13px; line-height: 1.5; color: hsl(0 0% 98%);`;
+    warningText.textContent =
+      "このプラグインは Floorp OS の機能を拡張します。信頼できる提供元からのみインストールしてください。";
+    warning.appendChild(warningText);
+    dialog.appendChild(warning);
+
+    // Buttons - shadcn/ui style
+    const buttonRow = doc.createElementNS(HTML_NS, "div") as HTMLElement;
+    buttonRow.style.cssText = `
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid hsl(240 3.7% 15.9%);
+      margin-top: 8px;
+    `;
+
+    const cancelBtn = doc.createElementNS(HTML_NS, "button") as HTMLElement;
+    const cancelBtnDefaultStyle = `
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      border: 1px solid hsl(240 3.7% 15.9%);
+      background: transparent;
+      color: hsl(0 0% 98%);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    `;
+    cancelBtn.style.cssText = cancelBtnDefaultStyle;
+    cancelBtn.textContent = "キャンセル";
+    cancelBtn.addEventListener("click", onCancel);
+    cancelBtn.addEventListener("mouseenter", () => {
+      cancelBtn.style.cssText =
+        cancelBtnDefaultStyle +
+        "background: hsl(240 3.7% 15.9%); border-color: hsl(240 5% 26%);";
+    });
+    cancelBtn.addEventListener("mouseleave", () => {
+      cancelBtn.style.cssText = cancelBtnDefaultStyle;
+    });
+    buttonRow.appendChild(cancelBtn);
+
+    const installBtn = doc.createElementNS(HTML_NS, "button") as HTMLElement;
+    const installBtnDefaultStyle = `
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      border: none;
+      background: hsl(0 0% 98%);
+      color: hsl(240 5.9% 10%);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    `;
+    installBtn.style.cssText = installBtnDefaultStyle;
+    installBtn.textContent = "追加";
+    installBtn.addEventListener("click", onInstall);
+    installBtn.addEventListener("mouseenter", () => {
+      installBtn.style.cssText =
+        installBtnDefaultStyle + "background: hsl(0 0% 90%);";
+    });
+    installBtn.addEventListener("mouseleave", () => {
+      installBtn.style.cssText = installBtnDefaultStyle;
+    });
+    buttonRow.appendChild(installBtn);
+
+    dialog.appendChild(buttonRow);
+    overlay.appendChild(dialog);
+
+    // Close on overlay click (outside dialog)
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        onCancel();
+      }
+    });
+
+    return overlay;
+  }
+
+  /**
+   * Install a plugin (shows centered modal dialog)
+   */
+  private installPlugin(request: InstallRequest): Promise<InstallResult> {
     const { pluginId, metadata } = request;
 
-    try {
-      // Check if already installed
-      if (pluginStorage.installedPlugins.has(pluginId)) {
-        return {
-          success: false,
-          error: "Plugin is already installed",
-          pluginId,
-        };
-      }
+    console.log("[NRPluginStoreParent] installPlugin called");
+    console.log("[NRPluginStoreParent] pluginId:", pluginId);
+    console.log(
+      "[NRPluginStoreParent] metadata:",
+      JSON.stringify(metadata, null, 2),
+    );
 
-      // Notify child about progress
-      this.sendAsyncMessage("PluginStore:InstallProgress", {
-        pluginId,
-        status: "downloading",
-        progress: 0,
-      });
+    // Get browser window
+    const win = this.getBrowserWindow();
 
-      // TODO: Download plugin from store API
-      // For now, we just register the metadata
-
-      this.sendAsyncMessage("PluginStore:InstallProgress", {
-        pluginId,
-        status: "installing",
-        progress: 50,
-      });
-
-      // Register the plugin
-      const storedPlugin: StoredPlugin = {
-        id: pluginId,
-        name: metadata?.name || pluginId,
-        version: metadata?.version || "1.0.0",
-        metadata: metadata || {
-          id: pluginId,
-          name: pluginId,
-          description: "",
-          version: "1.0.0",
-          author: "Unknown",
-          functions: [],
-          category: "utilities",
-          isOfficial: false,
-        },
-        installedAt: new Date().toISOString(),
-        enabled: true,
-      };
-
-      pluginStorage.installedPlugins.set(pluginId, storedPlugin);
-      savePluginStorage();
-
-      // Notify OS server about new plugin
-      await this.notifyOSServer("install", pluginId, storedPlugin);
-
-      this.sendAsyncMessage("PluginStore:InstallProgress", {
-        pluginId,
-        status: "complete",
-        progress: 100,
-      });
-
-      // Notify child about completion
-      this.sendAsyncMessage("PluginStore:InstallComplete", {
-        success: true,
-        pluginId,
-      });
-
-      return {
-        success: true,
-        pluginId,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      this.sendAsyncMessage("PluginStore:InstallComplete", {
+    if (!win) {
+      console.error("[NRPluginStoreParent] Could not get browser window");
+      return Promise.resolve({
         success: false,
-        pluginId,
-        error: errorMessage,
+        error: "Could not get browser window",
       });
-
-      return {
-        success: false,
-        error: errorMessage,
-        pluginId,
-      };
     }
+
+    const pluginName = metadata?.name ?? pluginId;
+    const pluginAuthor = metadata?.author ?? "不明";
+    const pluginDescription = metadata?.description ?? "";
+
+    // Prepare full metadata with defaults
+    const fullMetadata: PluginMetadata = {
+      id: pluginId,
+      name: pluginName,
+      author: pluginAuthor,
+      description: pluginDescription,
+      version: metadata?.version,
+      icon: metadata?.icon,
+      category: metadata?.category,
+      functions: metadata?.functions,
+      isOfficial: metadata?.isOfficial,
+      uri: metadata?.uri,
+    };
+
+    return new Promise<InstallResult>((resolve) => {
+      let resolved = false;
+      let modalOverlay: HTMLElement | null = null;
+
+      const cleanup = () => {
+        if (modalOverlay && modalOverlay.parentNode) {
+          modalOverlay.parentNode.removeChild(modalOverlay);
+        }
+        modalOverlay = null;
+      };
+
+      const handleInstall = async () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        console.log("[NRPluginStoreParent] User confirmed installation");
+
+        // Call Sapphillon backend to install the plugin
+        if (fullMetadata.uri) {
+          try {
+            console.log(
+              "[NRPluginStoreParent] Calling Sapphillon InstallPlugin API",
+            );
+            const grpcResponse = await callGrpcWeb<{
+              plugin?: Record<string, unknown>;
+              status?: { code: number; message: string };
+            }>("sapphillon.v1.PluginService", "InstallPlugin", {
+              uri: fullMetadata.uri,
+            });
+
+            console.log(
+              "[NRPluginStoreParent] Sapphillon InstallPlugin response:",
+              grpcResponse,
+            );
+
+            // Check status from response
+            if (grpcResponse.status && grpcResponse.status.code !== 0) {
+              console.error(
+                "[NRPluginStoreParent] Sapphillon returned error:",
+                grpcResponse.status.message,
+              );
+              resolve({
+                success: false,
+                error: grpcResponse.status.message || "Installation failed",
+              });
+              return;
+            }
+          } catch (error) {
+            console.error(
+              "[NRPluginStoreParent] Failed to call Sapphillon API:",
+              error,
+            );
+            // Continue with success even if backend call fails (for now)
+            // In production, you might want to fail the installation
+          }
+        } else {
+          console.warn(
+            "[NRPluginStoreParent] No URI provided, skipping Sapphillon API call",
+          );
+        }
+
+        resolve({
+          success: true,
+          pluginId,
+        });
+      };
+
+      const handleCancel = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        console.log("[NRPluginStoreParent] User cancelled installation");
+        resolve({
+          success: false,
+          error: "Installation cancelled by user",
+        });
+      };
+
+      try {
+        const doc = win.document;
+        if (!doc) {
+          throw new Error("Document not available");
+        }
+
+        // Remove any existing modal
+        const existingModal = doc.getElementById(
+          "floorp-os-plugin-install-overlay",
+        );
+        if (existingModal) {
+          existingModal.remove();
+        }
+
+        // Create and show modal
+        modalOverlay = this.createModalDialog(
+          doc,
+          fullMetadata,
+          handleInstall,
+          handleCancel,
+        );
+
+        // Append to document body (or mainPopupSet for XUL)
+        const target = doc.getElementById("main-window") || doc.documentElement;
+        if (target) {
+          target.appendChild(modalOverlay);
+        } else {
+          throw new Error("Could not find target element to append modal");
+        }
+
+        console.log("[NRPluginStoreParent] Modal dialog shown");
+      } catch (error) {
+        console.error("[NRPluginStoreParent] Failed to show modal:", error);
+        if (!resolved) {
+          resolved = true;
+          resolve({
+            success: false,
+            error: "Failed to show installation dialog",
+          });
+        }
+      }
+    });
   }
 
   /**
-   * Uninstall a plugin
+   * Uninstall a plugin (console output only for now)
    */
-  private async uninstallPlugin(pluginId: string): Promise<InstallResult> {
-    try {
-      if (!pluginStorage.installedPlugins.has(pluginId)) {
-        return {
-          success: false,
-          error: "Plugin is not installed",
-          pluginId,
-        };
-      }
+  private uninstallPlugin(pluginId: string): InstallResult {
+    console.log("[NRPluginStoreParent] uninstallPlugin called");
+    console.log("[NRPluginStoreParent] pluginId:", pluginId);
 
-      const plugin = pluginStorage.installedPlugins.get(pluginId);
-      pluginStorage.installedPlugins.delete(pluginId);
-      savePluginStorage();
-
-      // Notify OS server about uninstall
-      await this.notifyOSServer("uninstall", pluginId, plugin);
-
-      return {
-        success: true,
-        pluginId,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      return {
-        success: false,
-        error: errorMessage,
-        pluginId,
-      };
-    }
-  }
-
-  /**
-   * Check if a plugin is installed
-   */
-  private isPluginInstalled(pluginId: string): { installed: boolean } {
     return {
-      installed: pluginStorage.installedPlugins.has(pluginId),
+      success: true,
+      pluginId,
     };
   }
 
   /**
-   * Get list of installed plugins
+   * Check if a plugin is installed (always returns false for now)
    */
-  private getInstalledPlugins(): PluginInfo[] {
-    const plugins: PluginInfo[] = [];
-    for (const [id, plugin] of pluginStorage.installedPlugins) {
-      plugins.push({
-        id,
-        name: plugin.name,
-        version: plugin.version,
-        installed: true,
-        enabled: plugin.enabled,
-      });
-    }
-    return plugins;
-  }
+  private isPluginInstalled(pluginId: string): { installed: boolean } {
+    console.log("[NRPluginStoreParent] isPluginInstalled called");
+    console.log("[NRPluginStoreParent] pluginId:", pluginId);
 
-  /**
-   * Enable a plugin
-   */
-  private async enablePlugin(pluginId: string): Promise<InstallResult> {
-    try {
-      const plugin = pluginStorage.installedPlugins.get(pluginId);
-      if (!plugin) {
-        return {
-          success: false,
-          error: "Plugin is not installed",
-          pluginId,
-        };
-      }
-
-      plugin.enabled = true;
-      pluginStorage.installedPlugins.set(pluginId, plugin);
-      savePluginStorage();
-
-      // Notify OS server
-      await this.notifyOSServer("enable", pluginId, plugin);
-
-      return {
-        success: true,
-        pluginId,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      return {
-        success: false,
-        error: errorMessage,
-        pluginId,
-      };
-    }
-  }
-
-  /**
-   * Disable a plugin
-   */
-  private async disablePlugin(pluginId: string): Promise<InstallResult> {
-    try {
-      const plugin = pluginStorage.installedPlugins.get(pluginId);
-      if (!plugin) {
-        return {
-          success: false,
-          error: "Plugin is not installed",
-          pluginId,
-        };
-      }
-
-      plugin.enabled = false;
-      pluginStorage.installedPlugins.set(pluginId, plugin);
-      savePluginStorage();
-
-      // Notify OS server
-      await this.notifyOSServer("disable", pluginId, plugin);
-
-      return {
-        success: true,
-        pluginId,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      return {
-        success: false,
-        error: errorMessage,
-        pluginId,
-      };
-    }
-  }
-
-  /**
-   * Notify the OS server about plugin changes
-   * This communicates with the Floorp OS backend
-   */
-  private async notifyOSServer(
-    action: "install" | "uninstall" | "enable" | "disable",
-    pluginId: string,
-    plugin?: StoredPlugin,
-  ): Promise<void> {
-    try {
-      // Get OS server port from preferences
-      const port = Services.prefs.getIntPref("floorp.os.server.port", 9222);
-      const baseUrl = `http://127.0.0.1:${port}`;
-
-      // Send request to OS server
-      const response = await fetch(`${baseUrl}/api/plugins/${action}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pluginId,
-          plugin: plugin
-            ? {
-                id: plugin.id,
-                name: plugin.name,
-                version: plugin.version,
-                functions: plugin.metadata.functions,
-                enabled: plugin.enabled,
-              }
-            : null,
-        }),
-      });
-
-      if (!response.ok) {
-        console.warn(
-          `[NRPluginStoreParent] OS server responded with ${response.status}`,
-        );
-      }
-    } catch (e) {
-      // OS server might not be running, which is okay
-      console.debug("[NRPluginStoreParent] Could not notify OS server:", e);
-    }
+    return {
+      installed: false,
+    };
   }
 }
