@@ -181,7 +181,7 @@ export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
   box-shadow: 0 0 0 6px var(--nr-highlight-color-alpha-25),
               0 0 30px var(--nr-highlight-color-alpha-30);
   pointer-events: none;
-  z-index: 2147483645;
+  z-index: 2147483640;
   opacity: 0;
   transform: scale(0.96);
   transition: opacity 150ms ease-out, transform 150ms ease-out;
@@ -292,7 +292,7 @@ export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
               0 0 0 1px rgba(255, 255, 255, 0.08),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
   pointer-events: none;
-  z-index: 2147483647 !important;
+  z-index: 2147483642 !important;
   animation: nr-webscraper-info-slide-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
   color: #fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -422,7 +422,7 @@ export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
 .nr-webscraper-control-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 2147483640 !important;
+  z-index: 2147483645 !important;
   background: radial-gradient(
     circle at center,
     transparent 0%,
@@ -433,12 +433,18 @@ export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
   pointer-events: all !important;
   cursor: not-allowed !important;
   overflow: hidden !important;
+  /* Additional blocking properties */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
 }
 
 .nr-webscraper-control-overlay__label {
   position: fixed;
   top: 16px;
-  right: 16px;
+  left: 16px;
   background: rgba(17, 24, 39, 0.98);
   backdrop-filter: blur(16px);
   color: #fff;

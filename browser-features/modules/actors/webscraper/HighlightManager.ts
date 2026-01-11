@@ -156,27 +156,34 @@ export class HighlightManager {
 
   /**
    * Creates an SVG icon element using Lucide icon paths
+   * Uses DOM APIs instead of innerHTML to avoid DOMSecurityMonitor errors in Chrome code
    */
   createLucideIcon(
     doc: Document,
     iconName: keyof typeof LUCIDE_ICON_PATHS,
     size = 20,
   ): Element {
-    const svgString = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="${LUCIDE_ICON_PATHS[iconName] || LUCIDE_ICON_PATHS.Zap}"/></svg>`;
-    const div = doc.createElement("div");
-    div.innerHTML = svgString;
-    const svg = div.firstElementChild;
-    if (!svg) {
-      // Fallback: create a simple SVG element
-      const fallbackSvg = doc.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg",
-      );
-      fallbackSvg.setAttribute("width", String(size));
-      fallbackSvg.setAttribute("height", String(size));
-      fallbackSvg.setAttribute("viewBox", "0 0 24 24");
-      return fallbackSvg;
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = doc.createElementNS(NS, "svg");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+
+    const pathData = LUCIDE_ICON_PATHS[iconName] || LUCIDE_ICON_PATHS.Zap;
+    // Some icons have multiple paths separated by " M" (space + M)
+    // Split and create separate path elements for each
+    const pathStrings = pathData.split(/(?= M)/);
+    for (const p of pathStrings) {
+      const path = doc.createElementNS(NS, "path");
+      path.setAttribute("d", p.trim());
+      svg.appendChild(path);
     }
+
     return svg;
   }
 
@@ -920,6 +927,8 @@ export class HighlightManager {
 
   /**
    * Show control overlay that blocks user interaction
+   * Uses pure CSS-based blocking to avoid XrayWrapper and WidgetEventImpl issues
+   * Also notifies Parent Actor to block context menu at chrome level
    */
   showControlOverlay(): void {
     const doc = this.document;
@@ -937,7 +946,6 @@ export class HighlightManager {
     const overlay = doc.createElement("div");
     overlay.className = "nr-webscraper-control-overlay";
     overlay.id = "nr-webscraper-control-overlay";
-    overlay.tabIndex = 0; // Make focusable
 
     const label = doc.createElement("div");
     label.className = "nr-webscraper-control-overlay__label";
@@ -946,84 +954,29 @@ export class HighlightManager {
     (doc.body ?? doc.documentElement)?.appendChild(overlay);
     (doc.body ?? doc.documentElement)?.appendChild(label);
 
-    // Focus the overlay to capture keyboard events
-    overlay.focus();
-
+    // Disable scrolling and pointer events on body/html via CSS
     const body = doc.body;
     const html = doc.documentElement as HTMLElement | null;
-    if (body) body.style.setProperty("overflow", "hidden", "important");
-    if (html) html.style.setProperty("overflow", "hidden", "important");
+    if (body) {
+      body.style.setProperty("overflow", "hidden", "important");
+      body.style.setProperty("pointer-events", "none", "important");
+    }
+    if (html) {
+      html.style.setProperty("overflow", "hidden", "important");
+    }
 
-    // Create event handlers that will be added to document level
-    const blockEvent = (e: Event) => {
-      // Don't block events on the overlay itself
-      if (e.target === overlay || e.target === label) return;
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-    };
-
-    const blockKeydown = (e: KeyboardEvent) => {
-      // Block all keyboard input except for specific allowed keys
-      const allowedKeys = ["F12"]; // Allow dev tools
-      if (!allowedKeys.includes(e.key)) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
-    };
-
-    const blockFocus = (e: FocusEvent) => {
-      // Redirect focus back to overlay
-      if (e.target !== overlay) {
-        e.preventDefault();
-        e.stopPropagation();
-        overlay.focus();
-      }
-    };
-
-    // Store handlers for cleanup
-    this.controlOverlayHandlers = { blockEvent, blockKeydown, blockFocus };
-
-    // Add document-level event listeners with capture phase
-    const eventOptions = { capture: true, passive: false };
-
-    // Block mouse events
-    doc.addEventListener("mousedown", blockEvent, eventOptions);
-    doc.addEventListener("mouseup", blockEvent, eventOptions);
-    doc.addEventListener("click", blockEvent, eventOptions);
-    doc.addEventListener("dblclick", blockEvent, eventOptions);
-    doc.addEventListener("contextmenu", blockEvent, eventOptions);
-
-    // Block touch events
-    doc.addEventListener("touchstart", blockEvent, eventOptions);
-    doc.addEventListener("touchmove", blockEvent, eventOptions);
-    doc.addEventListener("touchend", blockEvent, eventOptions);
-
-    // Block keyboard events
-    doc.addEventListener("keydown", blockKeydown, eventOptions);
-    doc.addEventListener("keyup", blockEvent, eventOptions);
-    doc.addEventListener("keypress", blockEvent, eventOptions);
-
-    // Block scroll events
-    doc.addEventListener("wheel", blockEvent, eventOptions);
-    doc.addEventListener("scroll", blockEvent, eventOptions);
-
-    // Block focus events
-    doc.addEventListener("focus", blockFocus, eventOptions);
-    doc.addEventListener("focusin", blockFocus, eventOptions);
-
-    // Block input events
-    doc.addEventListener("input", blockEvent, eventOptions);
-    doc.addEventListener("change", blockEvent, eventOptions);
-
-    // Block drag events
-    doc.addEventListener("dragstart", blockEvent, eventOptions);
-    doc.addEventListener("drag", blockEvent, eventOptions);
-    doc.addEventListener("drop", blockEvent, eventOptions);
+    // No JavaScript event listeners needed - CSS handles everything
+    this.controlOverlayHandlers = null;
 
     this.controlOverlay = overlay;
     this.controlOverlayLabel = label;
+
+    // Notify Parent Actor to block context menu at chrome level
+    try {
+      void this.context.sendQuery("WebScraper:BlockContextMenu", {});
+    } catch {
+      // ignore errors
+    }
   }
 
   /**
@@ -1033,53 +986,23 @@ export class HighlightManager {
     const doc = this.document;
     if (!doc) return;
 
-    // Remove document-level event listeners
-    if (this.controlOverlayHandlers) {
-      const { blockEvent, blockKeydown, blockFocus } =
-        this.controlOverlayHandlers;
-      const eventOptions = { capture: true };
+    // No event listeners to remove - using CSS only
+    this.controlOverlayHandlers = null;
 
-      // Remove mouse events
-      doc.removeEventListener("mousedown", blockEvent, eventOptions);
-      doc.removeEventListener("mouseup", blockEvent, eventOptions);
-      doc.removeEventListener("click", blockEvent, eventOptions);
-      doc.removeEventListener("dblclick", blockEvent, eventOptions);
-      doc.removeEventListener("contextmenu", blockEvent, eventOptions);
-
-      // Remove touch events
-      doc.removeEventListener("touchstart", blockEvent, eventOptions);
-      doc.removeEventListener("touchmove", blockEvent, eventOptions);
-      doc.removeEventListener("touchend", blockEvent, eventOptions);
-
-      // Remove keyboard events
-      doc.removeEventListener("keydown", blockKeydown, eventOptions);
-      doc.removeEventListener("keyup", blockEvent, eventOptions);
-      doc.removeEventListener("keypress", blockEvent, eventOptions);
-
-      // Remove scroll events
-      doc.removeEventListener("wheel", blockEvent, eventOptions);
-      doc.removeEventListener("scroll", blockEvent, eventOptions);
-
-      // Remove focus events
-      doc.removeEventListener("focus", blockFocus, eventOptions);
-      doc.removeEventListener("focusin", blockFocus, eventOptions);
-
-      // Remove input events
-      doc.removeEventListener("input", blockEvent, eventOptions);
-      doc.removeEventListener("change", blockEvent, eventOptions);
-
-      // Remove drag events
-      doc.removeEventListener("dragstart", blockEvent, eventOptions);
-      doc.removeEventListener("drag", blockEvent, eventOptions);
-      doc.removeEventListener("drop", blockEvent, eventOptions);
-
-      this.controlOverlayHandlers = null;
+    // Notify Parent Actor to unblock context menu
+    try {
+      void this.context.sendQuery("WebScraper:UnblockContextMenu", {});
+    } catch {
+      // ignore errors
     }
 
     if (this.controlOverlay?.isConnected) {
       const body = doc.body;
       const html = doc.documentElement as HTMLElement | null;
-      if (body) body.style.removeProperty("overflow");
+      if (body) {
+        body.style.removeProperty("overflow");
+        body.style.removeProperty("pointer-events");
+      }
       if (html) html.style.removeProperty("overflow");
 
       this.controlOverlay.style.setProperty(
