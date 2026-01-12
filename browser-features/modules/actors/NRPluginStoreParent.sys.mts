@@ -394,7 +394,7 @@ export class NRPluginStoreParent extends JSWindowActorParent {
       permIcon.alt = "";
       permHeader.appendChild(permIcon);
       const permTitle = doc.createElementNS(HTML_NS, "span") as HTMLElement;
-      permTitle.textContent = `このプラグインが使用する機能 (${metadata.functions.length})`;
+      permTitle.textContent = `このプラグインが提供・アクセスする機能 (${metadata.functions.length})`;
       permHeader.appendChild(permTitle);
       permSection.appendChild(permHeader);
 
@@ -511,6 +511,75 @@ export class NRPluginStoreParent extends JSWindowActorParent {
       border-top: 1px solid hsl(240 3.7% 15.9%);
       margin-top: 8px;
     `;
+
+    // Details button - shadcn/ui outline style
+    const detailsBtn = doc.createElementNS(HTML_NS, "button") as HTMLElement;
+    const detailsBtnDefaultStyle = `
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      border: 1px solid hsl(240 3.7% 15.9%);
+      background: transparent;
+      color: hsl(240 5% 64.9%);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    detailsBtn.style.cssText = detailsBtnDefaultStyle;
+
+    // Info icon for details button
+    const detailsIcon = doc.createElementNS(HTML_NS, "img") as HTMLImageElement;
+    detailsIcon.style.cssText = `width: 14px; height: 14px; -moz-context-properties: fill; fill: hsl(240 5% 64.9%);`;
+    detailsIcon.src = "chrome://global/skin/icons/info.svg";
+    detailsIcon.alt = "";
+    detailsBtn.appendChild(detailsIcon);
+
+    const detailsBtnText = doc.createElementNS(HTML_NS, "span") as HTMLElement;
+    detailsBtnText.textContent = "詳細情報";
+    detailsBtn.appendChild(detailsBtnText);
+
+    detailsBtn.addEventListener("click", () => {
+      // TODO: Open plugin details page in a new tab
+      const detailsUrl =
+        metadata.uri ||
+        `https://floorp.app/plugins/${metadata.id || "unknown"}`;
+      console.log("[NRPluginStoreParent] Opening plugin details:", detailsUrl);
+      // Open in new tab using openTrustedLinkIn if available
+      const win = this.getBrowserWindow();
+      if (
+        win &&
+        typeof (
+          win as unknown as {
+            openTrustedLinkIn?: (url: string, where: string) => void;
+          }
+        ).openTrustedLinkIn === "function"
+      ) {
+        (
+          win as unknown as {
+            openTrustedLinkIn: (url: string, where: string) => void;
+          }
+        ).openTrustedLinkIn(detailsUrl, "tab");
+      } else {
+        // Fallback: try to open using window.open
+        win?.open(detailsUrl, "_blank");
+      }
+    });
+    detailsBtn.addEventListener("mouseenter", () => {
+      detailsBtn.style.cssText =
+        detailsBtnDefaultStyle +
+        "background: hsl(240 3.7% 15.9%); border-color: hsl(240 5% 26%); color: hsl(0 0% 98%);";
+      detailsIcon.style.cssText = `width: 14px; height: 14px; -moz-context-properties: fill; fill: hsl(0 0% 98%);`;
+    });
+    detailsBtn.addEventListener("mouseleave", () => {
+      detailsBtn.style.cssText = detailsBtnDefaultStyle;
+      detailsIcon.style.cssText = `width: 14px; height: 14px; -moz-context-properties: fill; fill: hsl(240 5% 64.9%);`;
+    });
+    buttonRow.appendChild(detailsBtn);
 
     const cancelBtn = doc.createElementNS(HTML_NS, "button") as HTMLElement;
     const cancelBtnDefaultStyle = `
