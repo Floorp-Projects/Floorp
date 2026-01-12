@@ -811,8 +811,11 @@ export class NRPluginStoreParent extends JSWindowActorParent {
         if (target) {
           // Ensure the target has position: relative for absolute positioning to work
           const computedStyle = win.getComputedStyle(target);
-          if (computedStyle.position === "static") {
-            (target as HTMLElement).style.position = "relative";
+          if (
+            computedStyle &&
+            (computedStyle.getPropertyValue("position") as string) === "static"
+          ) {
+            (target as HTMLElement).style.cssText += "position: relative;";
           }
           target.appendChild(modalOverlay);
         } else {
@@ -826,10 +829,18 @@ export class NRPluginStoreParent extends JSWindowActorParent {
             const currentBrowser = win.gBrowser?.selectedBrowser;
             if (currentBrowser === originBrowser) {
               // Back to the original tab - show dialog
-              modalOverlay.style.display = "flex";
+              (modalOverlay as HTMLElement).style.cssText =
+                modalOverlay.style.cssText.replace(
+                  /display\s*:\s*none\s*;?/gi,
+                  "",
+                ) + "; display: flex;";
             } else {
               // Switched to another tab - hide dialog
-              modalOverlay.style.display = "none";
+              (modalOverlay as HTMLElement).style.cssText =
+                modalOverlay.style.cssText.replace(
+                  /display\s*:\s*flex\s*;?/gi,
+                  "",
+                ) + "; display: none;";
             }
           };
           win.gBrowser.tabContainer.addEventListener(
