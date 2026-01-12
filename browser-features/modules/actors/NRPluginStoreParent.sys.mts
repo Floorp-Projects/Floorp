@@ -30,6 +30,7 @@ interface InstallRequest {
 interface BrowserWindow extends Window {
   gBrowser?: {
     selectedBrowser?: Element;
+    tabContainer?: EventTarget;
   };
 }
 
@@ -180,10 +181,12 @@ export class NRPluginStoreParent extends JSWindowActorParent {
     const HTML_NS = "http://www.w3.org/1999/xhtml";
 
     // Create overlay background - shadcn/ui style
+    // Uses position: absolute instead of fixed to stay within content area
+    // This allows tab switching while the dialog is open
     const overlay = doc.createElementNS(HTML_NS, "div") as HTMLElement;
     overlay.id = "floorp-os-plugin-install-overlay";
     overlay.style.cssText = `
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
@@ -690,8 +693,19 @@ export class NRPluginStoreParent extends JSWindowActorParent {
     return new Promise<InstallResult>((resolve) => {
       let resolved = false;
       let modalOverlay: HTMLElement | null = null;
+      let tabSelectHandler: ((e: Event) => void) | null = null;
+      // Store reference to the browser that triggered the install
+      const originBrowser = this.browsingContext?.top?.embedderElement;
 
       const cleanup = () => {
+        // Remove tab select listener
+        if (tabSelectHandler && win.gBrowser?.tabContainer) {
+          win.gBrowser.tabContainer.removeEventListener(
+            "TabSelect",
+            tabSelectHandler,
+          );
+          tabSelectHandler = null;
+        }
         if (modalOverlay && modalOverlay.parentNode) {
           modalOverlay.parentNode.removeChild(modalOverlay);
         }
@@ -787,12 +801,41 @@ export class NRPluginStoreParent extends JSWindowActorParent {
           handleCancel,
         );
 
-        // Append to document body (or mainPopupSet for XUL)
-        const target = doc.getElementById("main-window") || doc.documentElement;
+        // Append to browser content area to allow tab switching
+        // Priority: #appcontent (Firefox content area) > #browser > #main-window
+        const target =
+          doc.getElementById("appcontent") ||
+          doc.getElementById("browser") ||
+          doc.getElementById("main-window") ||
+          doc.documentElement;
         if (target) {
+          // Ensure the target has position: relative for absolute positioning to work
+          const computedStyle = win.getComputedStyle(target);
+          if (computedStyle.position === "static") {
+            (target as HTMLElement).style.position = "relative";
+          }
           target.appendChild(modalOverlay);
         } else {
           throw new Error("Could not find target element to append modal");
+        }
+
+        // Add tab switch listener to show/hide dialog based on active tab
+        if (win.gBrowser?.tabContainer && originBrowser) {
+          tabSelectHandler = () => {
+            if (!modalOverlay) return;
+            const currentBrowser = win.gBrowser?.selectedBrowser;
+            if (currentBrowser === originBrowser) {
+              // Back to the original tab - show dialog
+              modalOverlay.style.display = "flex";
+            } else {
+              // Switched to another tab - hide dialog
+              modalOverlay.style.display = "none";
+            }
+          };
+          win.gBrowser.tabContainer.addEventListener(
+            "TabSelect",
+            tabSelectHandler,
+          );
         }
 
         console.log("[NRPluginStoreParent] Modal dialog shown");
