@@ -27,7 +27,7 @@ const parsed = parseArgs(Deno.args, {
     "skip-signing": true,
     "runtime-run-id": "",
     "act-path": "act",
-    "platform-image": "ubuntu-latest=ghcr.io/catthehacker/ubuntu:full-latest",
+    "platform-image": "ubuntu-22.04=ghcr.io/catthehacker/ubuntu:full-latest",
     job: "main",
     "dry-run": false,
     "continue-on-error": false,

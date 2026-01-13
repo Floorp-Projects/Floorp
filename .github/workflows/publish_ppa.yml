@@ -218,7 +218,15 @@ jobs:
           echo "[publish_ppa] Working directory ls (pre-ftp init):"
           ls -la .
           echo "[publish_ppa] Starting FTP init script (lftp debug)..."
-          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" -e "source ../init_lftp.txt; quit" || true
+          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<'LFTPEOF' || true
+            set ftp:passive-mode true
+            set ftp:prefer-epsv false
+            set net:timeout 30
+            set net:max-retries 3
+            cd amd64
+            mget floorp-*.deb
+            quit
+          LFTPEOF
 
           dpkg-scanpackages --multiversion . > Packages
           gzip -k -f Packages
@@ -235,7 +243,27 @@ jobs:
           ls -la Packages* Release* InRelease || true
 
           echo "[publish_ppa] Starting FTP finish script (lftp debug)..."
-          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" -e "source ../finish_lftp.txt; quit" || true
+          DEB_NAME="${DEB_FILE##*/}"
+          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<LFTPEOF || true
+            set ftp:passive-mode true
+            set ftp:prefer-epsv false
+            set net:timeout 30
+            set net:max-retries 3
+            set net:reconnect-interval-base 5
+            set net:reconnect-interval-multiplier 1
+            cd amd64
+            put $DEB_NAME -o tmp.$DEB_NAME
+            mv tmp.$DEB_NAME $DEB_NAME
+            put Packages.gz -o tmp.Packages.gz
+            mv tmp.Packages.gz Packages.gz
+            put Packages -o tmp.Packages
+            mv tmp.Packages Packages
+            put Release -o tmp.Release
+            mv tmp.Release Release
+            put Release.gpg
+            put InRelease
+            quit
+          LFTPEOF
 
           # If Cloudflare credentials are provided, request a URL purge for Packages.gz
           if [ -n "${CF_API_TOKEN:-}" ] && [ -n "${CF_ZONE_ID:-}" ]; then

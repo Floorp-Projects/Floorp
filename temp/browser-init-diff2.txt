@@ -1,6 +1,5 @@
-diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
---- ./browser/chrome/browser/content/browser/browser-init.js
-+++ ./browser/chrome/browser/content/browser/browser-init.js
+--- /tmp/original.js	2026-01-12 21:58:05.633109825 +0000
++++ /tmp/modified2.js	2026-01-12 22:01:01.417107537 +0000
 @@ -148,6 +148,20 @@
    },
  

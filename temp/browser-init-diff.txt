@@ -1,6 +1,5 @@
-diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
---- ./browser/chrome/browser/content/browser/browser-init.js
-+++ ./browser/chrome/browser/content/browser/browser-init.js
+--- /tmp/original.js	2026-01-12 21:58:05.633109825 +0000
++++ /tmp/modified.js	2026-01-12 21:58:52.962558976 +0000
 @@ -148,6 +148,20 @@
    },
  
@@ -22,8 +21,8 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -156,6 +170,17 @@
-       { categoryName: "browser-window-domcontentloaded-before-tabbrowser" },
+@@ -168,6 +182,17 @@
+       { categoryName: "browser-window-domcontentloaded" },
        window
      );
 +    /**
@@ -38,8 +37,8 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * END
 +     */
  
-     gBrowser = new window.Tabbrowser();
-     gBrowser.init();
+     FirefoxViewHandler.init();
+ 
 @@ -1162,6 +1187,20 @@
      // Final window teardown, do this last.
      gBrowser.destroy();
