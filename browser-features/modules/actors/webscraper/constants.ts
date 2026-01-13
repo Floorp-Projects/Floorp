@@ -108,6 +108,15 @@ export const FALLBACK_TRANSLATIONS: Record<string, string> = {
   actionLabelInput: "Input",
   actionLabelClick: "Click",
   actionLabelSubmit: "Submit",
+  selectOption: 'Selected option: "{{value}}"',
+  setChecked: "Toggled state: {{state}}",
+  hoverElement: "Hovering element",
+  scrollToElement: "Scrolling to element",
+  doubleClickElement: "Double-clicking element",
+  rightClickElement: "Opening context menu",
+  focusElement: "Focusing element",
+  dragAndDrop: "Dragging source to target",
+  uploadFile: 'Uploading file: "{{value}}"',
 };
 
 /**

@@ -9,7 +9,6 @@
 
 import type {
   ContentWindow,
-  RawContentWindow,
   WebScraperContext,
   XrayElement,
   XrayHTMLElement,
@@ -17,23 +16,7 @@ import type {
   XrayInputLikeElement,
   XraySelectElement,
 } from "./types.ts";
-
-/**
- * Helper to unwrap Xray-wrapped window
- */
-function unwrapWindow(win: ContentWindow | null): RawContentWindow | null {
-  if (!win) return null;
-  return win.wrappedJSObject ?? (win as unknown as RawContentWindow);
-}
-
-/**
- * Helper to unwrap Xray-wrapped element
- */
-function unwrapElement<T extends Element>(
-  element: T & Partial<{ wrappedJSObject: T }>,
-): T {
-  return element.wrappedJSObject ?? element;
-}
+import { unwrapElement, unwrapWindow } from "./utils.ts";
 
 /**
  * Helper class for dispatching DOM events with proper context handling

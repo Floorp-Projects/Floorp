@@ -37,6 +37,13 @@ export class ScreenshotOperations {
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
       const { innerWidth, innerHeight } = this.contentWindow;
 
+      if (!innerWidth || !innerHeight) {
+        console.warn(
+          "ScreenshotOperations: viewport size is zero; aborting screenshot",
+        );
+        return null;
+      }
+
       canvas.width = innerWidth;
       canvas.height = innerHeight;
 
@@ -75,6 +82,13 @@ export class ScreenshotOperations {
       )) as HTMLCanvasElement;
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
       const rect = element.getBoundingClientRect();
+
+      if (!rect.width || !rect.height) {
+        console.warn(
+          "ScreenshotOperations: target element has zero size; aborting element screenshot",
+        );
+        return null;
+      }
 
       canvas.width = rect.width;
       canvas.height = rect.height;
@@ -115,6 +129,13 @@ export class ScreenshotOperations {
 
       const width = doc?.documentElement?.scrollWidth ?? 0;
       const height = doc?.documentElement?.scrollHeight ?? 0;
+
+      if (!width || !height) {
+        console.warn(
+          "ScreenshotOperations: page dimensions are zero; aborting full page screenshot",
+        );
+        return null;
+      }
 
       canvas.width = width;
       canvas.height = height;
@@ -162,6 +183,13 @@ export class ScreenshotOperations {
       const captureY = Math.max(0, y);
       const captureWidth = Math.min(width, pageScrollWidth - captureX);
       const captureHeight = Math.min(height, pageScrollHeight - captureY);
+
+      if (captureWidth <= 0 || captureHeight <= 0) {
+        console.warn(
+          "ScreenshotOperations: requested region is empty; aborting region screenshot",
+        );
+        return null;
+      }
 
       canvas.width = captureWidth;
       canvas.height = captureHeight;

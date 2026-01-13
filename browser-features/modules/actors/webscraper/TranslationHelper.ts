@@ -14,6 +14,8 @@ import type { WebScraperContext } from "./types.ts";
  * Helper class for translation and localization
  */
 export class TranslationHelper {
+  private missingFallbackWarned = new Set<string>();
+
   constructor(private context: WebScraperContext) {}
 
   /**
@@ -37,7 +39,15 @@ export class TranslationHelper {
       // Silently fallback to English on translation errors
     }
     // Fallback to English
-    return this.formatTemplate(this.getFallbackString(key), vars);
+    const fallback = this.getFallbackString(key);
+    if (fallback === key && !FALLBACK_TRANSLATIONS[key]) {
+      // Warn once per missing fallback to aid coverage
+      if (!this.missingFallbackWarned.has(key)) {
+        this.missingFallbackWarned.add(key);
+        console.warn(`TranslationHelper: Missing fallback for key "${key}"`);
+      }
+    }
+    return this.formatTemplate(fallback, vars);
   }
 
   /**

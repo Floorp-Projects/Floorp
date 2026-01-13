@@ -23,6 +23,8 @@ import { TranslationHelper } from "./TranslationHelper.ts";
 const { setTimeout: timerSetTimeout, clearTimeout: timerClearTimeout } =
   ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 
+const MAX_MULTI_HIGHLIGHT_TARGETS = 50;
+
 /**
  * Manages highlight overlays, info panels, and control overlays
  */
@@ -751,6 +753,13 @@ export class HighlightManager {
       return false;
     }
 
+    const limitedTargets = targets.slice(0, MAX_MULTI_HIGHLIGHT_TARGETS);
+    if (targets.length > limitedTargets.length) {
+      console.warn(
+        `HighlightManager: Limiting highlights to ${MAX_MULTI_HIGHLIGHT_TARGETS} of ${targets.length} elements to reduce load`,
+      );
+    }
+
     const mergedOptions = this.getHighlightOptions(
       optionsInput.action ?? "Highlight",
       optionsInput,
@@ -779,9 +788,9 @@ export class HighlightManager {
       options.action,
       undefined,
       elementInfo,
-      targets.length,
+      limitedTargets.length,
       0,
-      targets.length,
+      limitedTargets.length,
     );
 
     if (currentOperationId !== this.highlightOperationId) {
@@ -789,7 +798,7 @@ export class HighlightManager {
       return true;
     }
 
-    for (const target of targets) {
+    for (const target of limitedTargets) {
       try {
         void target.nodeType;
       } catch {
@@ -844,11 +853,11 @@ export class HighlightManager {
 
     if (
       options.scrollBehavior !== "none" &&
-      targets.length > 0 &&
+      limitedTargets.length > 0 &&
       this.highlightOverlays.length > 0
     ) {
       try {
-        const firstAliveTarget = targets.find((t) => {
+        const firstAliveTarget = limitedTargets.find((t) => {
           try {
             return t.isConnected;
           } catch {
