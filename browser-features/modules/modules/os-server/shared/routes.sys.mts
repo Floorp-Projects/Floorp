@@ -113,7 +113,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const okClicked = await service.clickElement(ctx.params.id, sel);
-    return { status: 200, body: { ok: okClicked } };
+    return { status: 200, body: { ok: okClicked ?? false } };
   });
 
   // Wait for element to appear
@@ -126,7 +126,7 @@ export function registerCommonAutomationRoutes(
     const to = json?.timeout ?? 5000;
     const service = getService();
     const found = await service.waitForElement(ctx.params.id, sel, to);
-    return { status: 200, body: { found } };
+    return { status: 200, body: { ok: found ?? false } };
   });
 
   // Take viewport screenshot
@@ -233,7 +233,7 @@ export function registerCommonAutomationRoutes(
     const value = json?.value ?? "";
     const service = getService();
     const ok = await service.selectOption(ctx.params.id, sel, value);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Set checked state of checkbox/radio
@@ -243,7 +243,7 @@ export function registerCommonAutomationRoutes(
     const checked = json?.checked ?? false;
     const service = getService();
     const ok = await service.setChecked(ctx.params.id, sel, checked);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Hover over element
@@ -252,7 +252,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const ok = await service.hoverElement(ctx.params.id, sel);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Scroll to element
@@ -261,7 +261,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const ok = await service.scrollToElement(ctx.params.id, sel);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Get page title
@@ -277,7 +277,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const ok = await service.doubleClick(ctx.params.id, sel);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Right click element
@@ -286,7 +286,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const ok = await service.rightClick(ctx.params.id, sel);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Focus element
@@ -295,7 +295,7 @@ export function registerCommonAutomationRoutes(
     const sel = json?.selector ?? "";
     const service = getService();
     const ok = await service.focusElement(ctx.params.id, sel);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Drag and drop
@@ -308,7 +308,7 @@ export function registerCommonAutomationRoutes(
     const target = json?.targetSelector ?? "";
     const service = getService();
     const ok = await service.dragAndDrop(ctx.params.id, source, target);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Get cookies
@@ -366,14 +366,14 @@ export function registerCommonAutomationRoutes(
   ns.post("/instances/:id/acceptAlert", async (ctx: RouterContext) => {
     const service = getService();
     const ok = await service.acceptAlert(ctx.params.id);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Dismiss alert
   ns.post("/instances/:id/dismissAlert", async (ctx: RouterContext) => {
     const service = getService();
     const ok = await service.dismissAlert(ctx.params.id);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Wait for network idle
@@ -382,7 +382,7 @@ export function registerCommonAutomationRoutes(
     const timeout = json?.timeout ?? 5000;
     const service = getService();
     const ok = await service.waitForNetworkIdle(ctx.params.id, timeout);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Set innerHTML (for contenteditable elements)
@@ -392,7 +392,7 @@ export function registerCommonAutomationRoutes(
     const html = json?.html ?? "";
     const service = getService();
     const ok = await service.setInnerHTML(ctx.params.id, sel, html);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Set textContent (for contenteditable elements)
@@ -402,7 +402,7 @@ export function registerCommonAutomationRoutes(
     const text = json?.text ?? "";
     const service = getService();
     const ok = await service.setTextContent(ctx.params.id, sel, text);
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Dispatch event on element
@@ -422,7 +422,7 @@ export function registerCommonAutomationRoutes(
       eventType,
       options,
     );
-    return { status: 200, body: { ok } };
+    return { status: 200, body: { ok: ok ?? false } };
   });
 
   // Type into an element (optional typing mode)
