@@ -21,6 +21,7 @@ user_pref("security.allow_parent_unrestricted_js_loads", true);
 user_pref("security.sandbox.content.level", 1);
 user_pref("remote.active-protocols", 1);
 user_pref("browser.newtabpage.enabled", true);
+user_pref("floorp.os.enabled", true);
 `;
 
 export function savePrefs(profileDir: string): void {

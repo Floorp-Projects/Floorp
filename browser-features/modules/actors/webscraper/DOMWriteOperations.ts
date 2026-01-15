@@ -342,9 +342,40 @@ export class DOMWriteOperations {
 
       const setter = this.deps.eventDispatcher.getNativeCheckedSetter(element);
       if (setter) {
+        console.log("[NRWebScraper] setChecked using native setter", checked);
         setter(checked);
       } else {
+        console.log("[NRWebScraper] setChecked using direct property", checked);
         element.checked = checked;
+      }
+
+      // Reflect state for attribute-based checks/serializations on both wrappers
+      const rawElement = unwrapElement(
+        element as HTMLInputElement &
+          Partial<{ wrappedJSObject: HTMLInputElement }>,
+      );
+
+      const syncAttrs = (target: any) => {
+        try {
+          console.log("[NRWebScraper] Syncing attributes for target", !!target);
+          if (checked) {
+            target.setAttribute("checked", "true");
+            target.defaultChecked = true;
+            target.setAttribute("aria-checked", "true");
+          } else {
+            target.removeAttribute("checked");
+            target.defaultChecked = false;
+            target.setAttribute("aria-checked", "false");
+          }
+        } catch (e) {
+          console.error("[NRWebScraper] syncAttrs failed:", e);
+        }
+      };
+
+      syncAttrs(element);
+      if (rawElement !== element) {
+        console.log("[NRWebScraper] Syncing raw element too");
+        syncAttrs(rawElement);
       }
 
       this.deps.eventDispatcher.dispatchInputEvents(element);
@@ -403,11 +434,20 @@ export class DOMWriteOperations {
       const fileInput = element as MozFileInput;
 
       try {
+        console.log("[NRWebScraper] Creating file from path:", filePath);
         const file = await File.createFromFileName(filePath);
-        if (typeof fileInput.mozSetFileArray === "function") {
+        const rawElement = unwrapElement(
+          fileInput as Element & Partial<{ wrappedJSObject: Element }>,
+        ) as any;
+
+        if (typeof rawElement.mozSetFileArray === "function") {
+          console.log("[NRWebScraper] Setting file array on raw element");
+          rawElement.mozSetFileArray([file]);
+        } else if (typeof fileInput.mozSetFileArray === "function") {
+          console.log("[NRWebScraper] Setting file array on wrapped element");
           fileInput.mozSetFileArray([file]);
         } else {
-          console.error("DOMWriteOperations: mozSetFileArray not available");
+          console.error("DOMWriteOperations: mozSetFileArray not available on either wrapped or raw element");
           return false;
         }
       } catch (e) {

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DOMOpsDeps } from "./DOMDeps.ts";
+import { unwrapElement } from "./utils.ts";
 
 /**
  * Read-only DOM utilities (queries, getters)
@@ -201,7 +202,40 @@ export class DOMReadOperations {
             selector,
           },
         );
-        return element.getAttribute(attributeName);
+
+        const directAttr = element.getAttribute(attributeName);
+        if (directAttr !== null) return directAttr;
+
+        const rawElement = unwrapElement(
+          element as Element & Partial<{ wrappedJSObject: Element }>,
+        );
+
+        if (rawElement !== element) {
+          const rawAttr = rawElement.getAttribute(attributeName);
+          if (rawAttr !== null) return rawAttr;
+        }
+
+        const win = this.contentWindow;
+        if (attributeName === "aria-checked") {
+          console.log("[NRWebScraper] getAttribute aria-checked for", selector);
+          if (directAttr !== null) {
+            console.log("[NRWebScraper] Found direct attribute:", directAttr);
+            return directAttr;
+          }
+
+          // Fallback to .checked property if it's an input
+          try {
+            if ("checked" in rawElement) {
+              const val = (rawElement as any).checked ? "true" : "false";
+              console.log("[NRWebScraper] Falling back to .checked property:", val);
+              return val;
+            }
+          } catch (e) {
+            console.error("[NRWebScraper] Error accessing .checked property:", e);
+          }
+        }
+
+        return null;
       }
       return null;
     } catch (e) {
