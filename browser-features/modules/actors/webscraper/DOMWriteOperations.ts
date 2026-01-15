@@ -447,7 +447,9 @@ export class DOMWriteOperations {
           console.log("[NRWebScraper] Setting file array on wrapped element");
           fileInput.mozSetFileArray([file]);
         } else {
-          console.error("DOMWriteOperations: mozSetFileArray not available on either wrapped or raw element");
+          console.error(
+            "DOMWriteOperations: mozSetFileArray not available on either wrapped or raw element",
+          );
           return false;
         }
       } catch (e) {

@@ -227,11 +227,17 @@ export class DOMReadOperations {
           try {
             if ("checked" in rawElement) {
               const val = (rawElement as any).checked ? "true" : "false";
-              console.log("[NRWebScraper] Falling back to .checked property:", val);
+              console.log(
+                "[NRWebScraper] Falling back to .checked property:",
+                val,
+              );
               return val;
             }
           } catch (e) {
-            console.error("[NRWebScraper] Error accessing .checked property:", e);
+            console.error(
+              "[NRWebScraper] Error accessing .checked property:",
+              e,
+            );
           }
         }
 
