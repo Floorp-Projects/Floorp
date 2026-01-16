@@ -46,14 +46,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-close-tab",
-    fn: (win) => win.gBrowser.removeTab(win.gBrowser.selectedTab),
+    fn: (win) => win.gBrowser.removeCurrentTab({
+      animate: true,
+      ...gBrowser.TabMetrics.userTriggeredContext(),
+    }),
   },
   {
     name: "gecko-open-new-tab",
     fn: (win) =>
-      (
-        win.document?.getElementById("tabs-newtab-button") as XULElement
-      ).doCommand(),
+      win.BrowserCommands.openTab()
   },
   {
     name: "gecko-duplicate-tab",
