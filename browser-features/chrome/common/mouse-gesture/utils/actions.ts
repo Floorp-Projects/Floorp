@@ -48,7 +48,7 @@ export const actions: GestureActionRegistration[] = [
     name: "gecko-close-tab",
     fn: (win) => win.gBrowser.removeCurrentTab({
       animate: true,
-      ...gBrowser.TabMetrics.userTriggeredContext(),
+...win.gBrowser.TabMetrics.userTriggeredContext(),
     }),
   },
   {
