@@ -90,11 +90,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
    * Called when the actor is created for a content window
    */
   actorCreated() {
-    console.log(
-      "NRWebScraperChild created for:",
-      this.contentWindow?.location?.href,
-    );
-
     // SPAナビゲーション対応: pagehideイベントでクリーンアップ
     const win = this.contentWindow;
     if (win) {
