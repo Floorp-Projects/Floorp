@@ -105,10 +105,12 @@ export default function WhatsNewPage() {
     // Only auto-apply if there's no upgrade parameter (new installation)
     const params = new URLSearchParams(globalThis.location.search);
     const hasUpgradeParam = params.has("upgrade");
+    const isUserLocaleSet = localeData?.localeInfo.isUserLocaleSet;
 
     if (
       !hasUpgradeParam &&
       localeData &&
+      isUserLocaleSet === false &&
       localeData.localeInfo.systemLocale.language !==
         localeData.localeInfo.appLocaleRaw &&
       !installingLanguage

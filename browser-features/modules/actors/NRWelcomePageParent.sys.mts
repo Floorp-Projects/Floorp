@@ -12,6 +12,9 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         );
 
         const localeInfo = LangPackMatcher.getAppAndSystemLocaleInfo();
+        const isUserLocaleSet = Services.prefs.prefHasUserValue(
+          "intl.locale.requested",
+        );
         const availableLocales = await LangPackMatcher.mockable
           .getAvailableLangpacks();
         const installedLocales = await LangPackMatcher.getAvailableLocales();
@@ -23,7 +26,10 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         this.sendAsyncMessage(
           "WelcomePage:localeInfoResponse",
           JSON.stringify({
-            localeInfo,
+            localeInfo: {
+              ...localeInfo,
+              isUserLocaleSet,
+            },
             availableLocales,
             installedLocales,
             langPackInfo,

@@ -337,8 +337,11 @@ class CustomAboutPage {
   }
 
   newChannel(_uri: nsIURI, loadInfo: nsILoadInfo): nsIChannel {
+    const query = _uri.query ? `?${_uri.query}` : "";
+    const ref = _uri.ref ? `#${_uri.ref}` : "";
+    const targetUri = Services.io.newURI(`${this.uri.spec}${query}${ref}`);
     const new_ch = Services.io.newChannelFromURIWithLoadInfo(
-      this.uri,
+      targetUri,
       loadInfo,
     );
     new_ch.owner = Services.scriptSecurityManager.getSystemPrincipal();

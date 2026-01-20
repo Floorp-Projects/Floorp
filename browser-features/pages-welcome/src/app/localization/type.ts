@@ -15,6 +15,7 @@ export type LocaleInfo = {
   availableLocales: LangPack[];
   installedLocales: string[];
   langPackInfo: LangPack;
+  isUserLocaleSet?: boolean;
   appLocale: {
     baseName: string;
     language: string;
