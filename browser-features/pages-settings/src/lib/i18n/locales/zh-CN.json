@@ -526,6 +526,7 @@
         "actionDescription": "手势说明",
         "rockerGesturesEnabled": "启用摇杆手势",
         "rockerGesturesDescription": "右键单击并向左移动以返回，右键单击并向右移动以前进。(实验性)",
+        "wheelGesturesEnabled": "启用滚轮手势",
         "actions": {
             "gecko-back": "转到上一页",
             "gecko-forward": "转到下一页",

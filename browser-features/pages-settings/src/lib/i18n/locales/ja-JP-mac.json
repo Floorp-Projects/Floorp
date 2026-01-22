@@ -526,6 +526,7 @@
         "actionDescription": "ジェスチャーの説明",
         "rockerGesturesEnabled": "ロッカージェスチャーを有効にする",
         "rockerGesturesDescription": "右クリックしながら左に動かすとページを戻り、右クリックしながら右に動かすと進みます。 (実験的)",
+        "wheelGesturesEnabled": "ホイールジェスチャーを有効にする",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",
