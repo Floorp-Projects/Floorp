@@ -90,13 +90,18 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-show-previously-selected-tab",
-    fn: () => {
+    fn: (win) => {
+      const currentTab = win.gBrowser.selectedTab;
       let latest = null;
-      for (let tab of window.gBrowser.tabs) {
+      for (let tab of win.gBrowser.tabs) {
         if (tab._lastAccessed === Infinity) continue;
+        // Skip the currently selected tab
+        if (tab === currentTab) continue;
         if (!latest || tab._lastAccessed > latest._lastAccessed) latest = tab;
       }
-      window.gBrowser.tabContainer._selectNewTab(latest);
+      if (latest) {
+        win.gBrowser.tabContainer._selectNewTab(latest);
+      }
     },
   },
   {

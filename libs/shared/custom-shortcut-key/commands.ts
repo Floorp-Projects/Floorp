@@ -77,12 +77,17 @@ export const commands: Commands = {
   },
   "gecko-show-previously-selected-tab": {
     command: () => {
+      const currentTab = window.gBrowser.selectedTab;
       let latest = null;
       for (let tab of window.gBrowser.tabs) {
         if (tab._lastAccessed === Infinity) continue;
+        // Skip currently selected tab
+        if (tab === currentTab) continue;
         if (!latest || tab._lastAccessed > latest._lastAccessed) latest = tab;
       }
-      window.gBrowser.tabContainer._selectNewTab(latest);
+      if (latest) {
+        window.gBrowser.tabContainer._selectNewTab(latest);
+      }
     },
     type: "tab-action",
   },
