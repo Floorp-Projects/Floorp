@@ -23,7 +23,7 @@
 vbox#sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] {
   position: relative !important;
   clip-path: inset(0) !important;
-  z-index: 1 !important;
+  z-index: 1000 !important;
 }
 
 /*close*/
@@ -54,8 +54,4 @@ vbox#sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]
   margin-left: calc(
     (var(--max-treestyletab-size) - var(--min-treestyletab-size)) * -1
   ) !important;
-}
-
-#sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] {
-  z-index: 1000 !important;
 }
