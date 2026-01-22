@@ -127,40 +127,70 @@ export class HighlightManager {
     };
   }
 
-  /**
-   * Get action color class based on action type
-   */
-  getActionColorClass(action?: string): string {
-    if (!action) return "";
-    const lowerAction = action.toLowerCase();
-    if (
-      lowerAction.includes("read") ||
-      lowerAction.includes("inspect") ||
-      lowerAction.includes("get")
-    ) {
-      return "nr-webscraper-highlight-overlay--read";
-    }
-    if (
-      lowerAction.includes("input") ||
-      lowerAction.includes("fill") ||
-      lowerAction.includes("write")
-    ) {
-      return "nr-webscraper-highlight-overlay--write";
-    }
-    if (lowerAction.includes("click")) {
-      return "nr-webscraper-highlight-overlay--click";
-    }
-    if (lowerAction.includes("submit")) {
-      return "nr-webscraper-highlight-overlay--submit";
-    }
-    return "";
+/**
+ * Get action type category (read/write/click/submit)
+ */
+private getActionType(action?: string): "read" | "write" | "click" | "submit" | "default" {
+  if (!action) return "default";
+  const lowerAction = action.toLowerCase();
+  if (
+    lowerAction.includes("read") ||
+    lowerAction.includes("inspect") ||
+    lowerAction.includes("get")
+  ) {
+    return "read";
   }
+  if (
+    lowerAction.includes("input") ||
+    lowerAction.includes("fill") ||
+    lowerAction.includes("write")
+  ) {
+    return "write";
+  }
+  if (lowerAction.includes("click")) {
+    return "click";
+  }
+  if (lowerAction.includes("submit")) {
+    return "submit";
+  }
+  return "default";
+}
 
-  /**
-   * Creates an SVG icon element using Lucide icon paths
-   * Uses DOM APIs instead of innerHTML to avoid DOMSecurityMonitor errors in Chrome code
-   */
-  createLucideIcon(
+/**
+ * Get action color class based on action type
+ */
+getActionColorClass(action?: string): string {
+  const actionType = this.getActionType(action);
+  const classMap = {
+    read: "nr-webscraper-highlight-overlay--read",
+    write: "nr-webscraper-highlight-overlay--write",
+    click: "nr-webscraper-highlight-overlay--click",
+    submit: "nr-webscraper-highlight-overlay--submit",
+    default: ""
+  };
+  return classMap[actionType];
+}
+
+/**
+ * Get Lucide icon name based on action type
+ */
+private getLucideIconName(action: string): keyof typeof LUCIDE_ICON_PATHS {
+  const actionType = this.getActionType(action);
+  const iconMap: Record<typeof actionType, keyof typeof LUCIDE_ICON_PATHS> = {
+    read: "Eye",
+    write: "Pencil",
+    click: "MousePointerClick",
+    submit: "Send",
+    default: "Zap"
+  };
+  return iconMap[actionType];
+}
+
+/**
+ * Creates an SVG icon element using Lucide icon paths
+ * Uses DOM APIs instead of innerHTML to avoid DOMSecurityMonitor errors in Chrome code
+ */
+createLucideIcon(
     doc: Document,
     iconName: keyof typeof LUCIDE_ICON_PATHS,
     size = 20,
@@ -189,66 +219,33 @@ export class HighlightManager {
     return svg;
   }
 
-  /**
-   * Get action icon (SVG element or emoji fallback)
-   */
-  getActionIcon(action: string): Element | string {
-    const doc = this.document;
-    if (!doc) {
-      return this.getActionIconEmoji(action);
-    }
-
-    const lowerAction = action.toLowerCase();
-    if (
-      lowerAction.includes("read") ||
-      lowerAction.includes("inspect") ||
-      lowerAction.includes("get")
-    ) {
-      return this.createLucideIcon(doc, "Eye", 20);
-    }
-    if (
-      lowerAction.includes("input") ||
-      lowerAction.includes("fill") ||
-      lowerAction.includes("write")
-    ) {
-      return this.createLucideIcon(doc, "Pencil", 20);
-    }
-    if (lowerAction.includes("click")) {
-      return this.createLucideIcon(doc, "MousePointerClick", 20);
-    }
-    if (lowerAction.includes("submit")) {
-      return this.createLucideIcon(doc, "Send", 20);
-    }
-    return this.createLucideIcon(doc, "Zap", 20);
+/**
+ * Get action icon (SVG element or emoji fallback)
+ */
+getActionIcon(action: string): Element | string {
+  const doc = this.document;
+  if (!doc) {
+    return this.getActionIconEmoji(action);
   }
 
-  /**
-   * Get action icon as emoji
-   */
-  getActionIconEmoji(action: string): string {
-    const lowerAction = action.toLowerCase();
-    if (
-      lowerAction.includes("read") ||
-      lowerAction.includes("inspect") ||
-      lowerAction.includes("get")
-    ) {
-      return "👁️";
-    }
-    if (
-      lowerAction.includes("input") ||
-      lowerAction.includes("fill") ||
-      lowerAction.includes("write")
-    ) {
-      return "✏️";
-    }
-    if (lowerAction.includes("click")) {
-      return "👆";
-    }
-    if (lowerAction.includes("submit")) {
-      return "📤";
-    }
-    return "⚡";
-  }
+  const iconName = this.getLucideIconName(action);
+  return this.createLucideIcon(doc, iconName, 20);
+}
+
+/**
+ * Get action icon as emoji
+ */
+getActionIconEmoji(action: string): string {
+  const actionType = this.getActionType(action);
+  const emojiMap: Record<typeof actionType, string> = {
+    read: "👁️",
+    write: "✏️",
+    click: "👆",
+    submit: "📤",
+    default: "⚡"
+  };
+  return emojiMap[actionType];
+}
 
   /**
    * Show info panel with action details
