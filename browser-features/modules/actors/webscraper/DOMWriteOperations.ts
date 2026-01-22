@@ -347,6 +347,33 @@ export class DOMWriteOperations {
         element.checked = checked;
       }
 
+      // Reflect state for attribute-based checks/serializations on both wrappers
+      const rawElement = unwrapElement(
+        element as HTMLInputElement &
+          Partial<{ wrappedJSObject: HTMLInputElement }>,
+      );
+
+      const syncAttrs = (target: HTMLInputElement) => {
+        try {
+          if (checked) {
+            target.setAttribute("checked", "true");
+            target.defaultChecked = true;
+            target.setAttribute("aria-checked", "true");
+          } else {
+            target.removeAttribute("checked");
+            target.defaultChecked = false;
+            target.setAttribute("aria-checked", "false");
+          }
+        } catch (e) {
+          console.error("[NRWebScraper] syncAttrs failed:", e);
+        }
+      };
+
+      syncAttrs(element);
+      if (rawElement !== element) {
+        syncAttrs(rawElement);
+      }
+
       this.deps.eventDispatcher.dispatchInputEvents(element);
 
       if (element.type === "radio" && checked) {
@@ -371,9 +398,13 @@ export class DOMWriteOperations {
 
   async uploadFile(selector: string, filePath: string): Promise<boolean> {
     try {
+      // SECURITY WARNING: This method accepts file paths from external sources.
+      // The parent process validates paths, but callers should only use trusted paths.
+
       const element = this.document?.querySelector(
         selector,
       ) as HTMLInputElement | null;
+
       if (!element || element.tagName !== "INPUT" || element.type !== "file") {
         return false;
       }
@@ -403,13 +434,107 @@ export class DOMWriteOperations {
       const fileInput = element as MozFileInput;
 
       try {
-        const file = await File.createFromFileName(filePath);
-        if (typeof fileInput.mozSetFileArray === "function") {
-          fileInput.mozSetFileArray([file]);
-        } else {
-          console.error("DOMWriteOperations: mozSetFileArray not available");
+        // Get the raw (unwrapped) element first
+        const rawElement = unwrapElement(
+          fileInput as Element & Partial<{ wrappedJSObject: Element }>,
+        ) as MozFileInput;
+
+        // Read file via parent process (IOUtils can only be used in parent process)
+        const result = (await this.deps.context.sendQuery(
+          "WebScraper:ReadFile",
+          {
+            filePath,
+          },
+        )) as {
+          success: boolean;
+          data?: number[];
+          fileName?: string;
+          error?: string;
+        };
+
+        if (!result.success || !result.data || !result.fileName) {
+          console.error("[NRWebScraper] Failed to read file:", result.error);
           return false;
         }
+
+        // Convert array back to Uint8Array
+        const fileData = new Uint8Array(result.data);
+        const fileName = result.fileName;
+
+        // Detect MIME type from extension
+        const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+        const mimeTypes: Record<string, string> = {
+          txt: "text/plain",
+          pdf: "application/pdf",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          gif: "image/gif",
+          webp: "image/webp",
+          svg: "image/svg+xml",
+          json: "application/json",
+          xml: "application/xml",
+          html: "text/html",
+          css: "text/css",
+          js: "text/javascript",
+          zip: "application/zip",
+          doc: "application/msword",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          xls: "application/vnd.ms-excel",
+          xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        };
+        const mimeType = mimeTypes[ext] ?? "application/octet-stream";
+
+        // Get the content window for creating content-space objects
+        const win = this.contentWindow;
+        const rawWin = win ? unwrapWindow(win) : null;
+
+        if (!rawWin) {
+          console.error("[NRWebScraper] No content window available");
+          return false;
+        }
+
+        // Clone the file data array into content window's context using Cu.cloneInto
+        // This is necessary because both the Uint8Array and the array wrapper are privileged objects
+        const clonedBlobParts = Cu.cloneInto([fileData], rawWin);
+        const clonedBlobOptions = Cu.cloneInto({ type: mimeType }, rawWin);
+
+        // Use content window's constructors to avoid security wrapper issues
+        const ContentBlob = rawWin.Blob ?? Blob;
+        const ContentFile = rawWin.File ?? File;
+
+        // Create a Blob from the cloned file data using content window's Blob
+        const blob = new ContentBlob(clonedBlobParts, clonedBlobOptions);
+
+        // Clone the file parts array for the File constructor
+        const clonedFileParts = Cu.cloneInto([blob], rawWin);
+        const clonedFileOptions = Cu.cloneInto({ type: mimeType }, rawWin);
+
+        // Create a File object from the Blob using content window's File
+        const file = new ContentFile(
+          clonedFileParts,
+          fileName,
+          clonedFileOptions,
+        );
+
+        // mozSetFileArray should accept File objects
+        if (typeof rawElement.mozSetFileArray === "function") {
+          rawElement.mozSetFileArray([file]);
+        } else if (typeof fileInput.mozSetFileArray === "function") {
+          fileInput.mozSetFileArray([file]);
+        } else {
+          console.error(
+            "DOMWriteOperations: mozSetFileArray not available on either wrapped or raw element",
+          );
+          return false;
+        }
+
+        // Dispatch events using content window's Event constructor
+        // Clone the event options to avoid security wrapper issues
+        const ContentEvent = rawWin.Event ?? Event;
+        const eventOptions = Cu.cloneInto({ bubbles: true }, rawWin);
+        rawElement.dispatchEvent(new ContentEvent("input", eventOptions));
+        rawElement.dispatchEvent(new ContentEvent("change", eventOptions));
       } catch (e) {
         console.error(
           "DOMWriteOperations: Failed to create file from path:",
@@ -418,8 +543,6 @@ export class DOMWriteOperations {
         return false;
       }
 
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-      element.dispatchEvent(new Event("change", { bubbles: true }));
       return true;
     } catch (e) {
       console.error("DOMWriteOperations: Error uploading file:", e);
@@ -433,6 +556,8 @@ export class DOMWriteOperations {
     cookieValue?: string,
   ): boolean {
     try {
+      // SECURITY WARNING: This method directly sets cookies without validation.
+      // Ensure cookieString is from a trusted source to avoid cookie injection attacks.
       const win = this.contentWindow;
       if (!win?.document) {
         return false;
@@ -483,6 +608,8 @@ export class DOMWriteOperations {
         elementInfo,
       );
 
+      // SECURITY WARNING: This method directly sets innerHTML which can execute malicious scripts.
+      // Only use with trusted content. For user-provided content, consider using textContent instead.
       const win = this.contentWindow;
       const rawWin = unwrapWindow(win);
       const rawDoc = this.document

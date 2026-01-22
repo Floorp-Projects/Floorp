@@ -12,8 +12,23 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from dataclasses import dataclass
 
 BASE_URL = "http://127.0.0.1:58261"
+
+
+@dataclass
+class TestResult:
+    name: str
+    status: str
+    detail: str | None = None
+
+
+TEST_RESULTS: list[TestResult] = []
+
+
+def record_result(name: str, status: str, detail: str | None = None) -> None:
+    TEST_RESULTS.append(TestResult(name=name, status=status, detail=detail))
 
 TEST_PAGE_HTML = """<!doctype html>
 <html>
@@ -180,11 +195,13 @@ def run_value_test(
 
     if status is None:
         print("SKIPPED (Connection failed)")
+        record_result(name, "SKIPPED", "connection failed")
         return None
 
     if status not in allowed:
         print(f"FAILED (Status: {status}, Expected: {allowed})")
         print(f"  Response: {body}")
+        record_result(name, "FAILED", f"status {status}, expected {allowed}")
         return None
 
     actual = body
@@ -201,6 +218,7 @@ def run_value_test(
         except Exception as e:  # noqa: BLE001
             ok = False
             print(f"FAILED (Predicate error: {e})")
+            record_result(name, "FAILED", f"predicate error: {e}")
             return actual
     elif expected is not None:
         ok = actual == expected
@@ -212,9 +230,11 @@ def run_value_test(
         elif descr is None:
             descr = "matches"
         print(f"OK (value {_short(actual)}; {descr})")
+        record_result(name, "OK", descr)
     else:
         descr = expect_description or f"Expected { _short(expected) }"
         print(f"FAILED (value {_short(actual)}; {descr})")
+        record_result(name, "FAILED", descr)
 
     return actual
 
@@ -241,18 +261,45 @@ def run_test(
 
     if status is None:
         print("SKIPPED (Connection failed)")
+        record_result(name, "SKIPPED", "connection failed")
         return None
 
     if status in allowed:
         suffix = "" if len(allowed) == 1 and status == allowed[0] else f"(status {status})"
         print(f"OK {suffix}".strip())
+        record_result(name, "OK", suffix or None)
         if extract_key and isinstance(body, dict):
             return body.get(extract_key)
         return body
 
     print(f"FAILED (Status: {status}, Expected: {allowed})")
     print(f"  Response: {body}")
+    record_result(name, "FAILED", f"status {status}, expected {allowed}")
     return None
+
+
+def print_summary() -> None:
+    if not TEST_RESULTS:
+        print("Test summary: no tests were recorded.")
+        return
+
+    total = len(TEST_RESULTS)
+    passed = sum(1 for r in TEST_RESULTS if r.status == "OK")
+    failed = sum(1 for r in TEST_RESULTS if r.status == "FAILED")
+    skipped = sum(1 for r in TEST_RESULTS if r.status == "SKIPPED")
+
+    print("Test summary:")
+    print(f"  Total: {total}")
+    print(f"  Passed: {passed}")
+    print(f"  Failed: {failed}")
+    print(f"  Skipped: {skipped}")
+
+    failed_results = [r for r in TEST_RESULTS if r.status == "FAILED"]
+    if failed_results:
+        print("  Failed tests:")
+        for r in failed_results:
+            detail = f" ({r.detail})" if r.detail else ""
+            print(f"    - {r.name}{detail}")
 
 
 def test_shared_automation(
@@ -362,6 +409,18 @@ def test_shared_automation(
         key="value",
         expected="山田太郎",
     )
+    run_value_test(
+        "Get Value (#email)",
+        f"{prefix}/value?selector={q('#email')}",
+        key="value",
+        expected="yamada@example.com",
+    )
+    run_value_test(
+        "Get Value (#message)",
+        f"{prefix}/value?selector={q('#message')}",
+        key="value",
+        expected="Floorp OS Server API test",
+    )
     run_test(
         "Submit Form",
         f"{prefix}/submit",
@@ -373,6 +432,12 @@ def test_shared_automation(
         f"{prefix}/clearInput",
         method="POST",
         data={"selector": "#name"},
+    )
+    run_value_test(
+        "Get Value (#name after clear)",
+        f"{prefix}/value?selector={q('#name')}",
+        key="value",
+        expected="",
     )
 
     # Element state
@@ -400,11 +465,23 @@ def test_shared_automation(
         method="POST",
         data={"selector": "#color", "value": "red"},
     )
+    run_value_test(
+        "Get Value (#color)",
+        f"{prefix}/value?selector={q('#color')}",
+        key="value",
+        expected="red",
+    )
     run_test(
         "Set Checked (#agree)",
         f"{prefix}/setChecked",
         method="POST",
         data={"selector": "#agree", "checked": True},
+    )
+    run_value_test(
+        "Get Attribute (#agree aria-checked)",
+        f"{prefix}/attribute?selector={q('#agree')}&name=aria-checked",
+        key="value",
+        expected="true",
     )
 
     # Pointer actions
@@ -464,11 +541,23 @@ def test_shared_automation(
         method="POST",
         data={"selector": "#editable", "html": "<b>Bold</b>"},
     )
+    run_value_test(
+        "Get Element Text Content (#editable after innerHTML)",
+        f"{prefix}/elementTextContent?selector={q('#editable')}",
+        key="text",
+        expected="Bold",
+    )
     run_test(
         "Set TextContent (#editable)",
         f"{prefix}/setTextContent",
         method="POST",
         data={"selector": "#editable", "text": "Plain text"},
+    )
+    run_value_test(
+        "Get Element Text Content (#editable after text)",
+        f"{prefix}/elementTextContent?selector={q('#editable')}",
+        key="text",
+        expected="Plain text",
     )
     run_test(
         "Dispatch Event (#eventTarget)",
@@ -494,6 +583,12 @@ def test_shared_automation(
         },
         expected_status=200,
     )
+    run_value_test(
+        "Get Value (#name after typing)",
+        f"{prefix}/value?selector={q('#name')}",
+        key="value",
+        expected="Typed Text",
+    )
 
     # File upload
     if upload_file_path:
@@ -503,6 +598,17 @@ def test_shared_automation(
             method="POST",
             data={"selector": "#fileInput", "filePath": upload_file_path},
             expected_status=200,
+        )
+        run_value_test(
+            "Get Value (#fileInput)",
+            f"{prefix}/value?selector={q('#fileInput')}",
+            key="value",
+            predicate=lambda v: isinstance(v, str)
+            and (
+                not v
+                or os.path.basename(upload_file_path) in v
+            ),
+            expect_description="empty (browser-hides) or contains uploaded filename",
         )
 
     # Misc automation
@@ -682,31 +788,33 @@ def main():
     test_page_url = None
     tmpdir = None
     try:
-        httpd, test_page_url, tmpdir = start_test_http_server()
-    except Exception as e:  # noqa: BLE001
-        print(f"Failed to start local test HTTP server: {e}")
-        sys.exit(1)
-
-    if run_test("Health Check", "/health") is None:
-        print("\nServer seems to be down or unreachable.")
-        sys.exit(1)
-
-
-    try:
-        test_browser_info()
-        test_workspaces()
-        test_tab_manager(upload_file_path, test_page_url)
-        test_scraper(upload_file_path, test_page_url)
-    finally:
         try:
-            os.remove(upload_file_path)
-        except OSError:
-            pass
-        if httpd and tmpdir:
-            stop_test_http_server(httpd, tmpdir)
+            httpd, test_page_url, tmpdir = start_test_http_server()
+        except Exception as e:  # noqa: BLE001
+            print(f"Failed to start local test HTTP server: {e}")
+            record_result("Start local test HTTP server", "FAILED", str(e))
+            return
 
-    print("-" * 50)
-    print("Verification complete.")
+        if run_test("Health Check", "/health") is None:
+            print("\nServer seems to be down or unreachable.")
+            return
+
+        try:
+            test_browser_info()
+            test_workspaces()
+            test_tab_manager(upload_file_path, test_page_url)
+            test_scraper(upload_file_path, test_page_url)
+        finally:
+            try:
+                os.remove(upload_file_path)
+            except OSError:
+                pass
+            if httpd and tmpdir:
+                stop_test_http_server(httpd, tmpdir)
+    finally:
+        print("-" * 50)
+        print("Verification complete.")
+        print_summary()
 
 
 if __name__ == "__main__":

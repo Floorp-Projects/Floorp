@@ -13,6 +13,11 @@ export class NRWebScraperParent extends JSWindowActorParent {
       return this.handleTranslate(message.data);
     }
 
+    // Handle file reading in parent process (IOUtils is only available in parent)
+    if (message.name === "WebScraper:ReadFile") {
+      return this.handleReadFile(message.data);
+    }
+
     // Handle control overlay context menu blocking
     if (message.name === "WebScraper:BlockContextMenu") {
       this.blockContextMenu();
@@ -26,6 +31,49 @@ export class NRWebScraperParent extends JSWindowActorParent {
 
     // Forward all other messages to the child and return the result.
     return this.sendQuery(message.name, message.data);
+  }
+
+  /**
+   * Handle file reading in parent process
+   * IOUtils can only be used in the parent process
+   */
+  private async handleReadFile(
+    data: Record<string, unknown> | undefined,
+  ): Promise<{
+    success: boolean;
+    data?: number[];
+    fileName?: string;
+    error?: string;
+  }> {
+    try {
+      const filePath = data?.filePath as string;
+      if (!filePath) {
+        return { success: false, error: "No file path provided" };
+      }
+
+      // Check if file exists
+      const exists = await IOUtils.exists(filePath);
+      if (!exists) {
+        return { success: false, error: `File does not exist: ${filePath}` };
+      }
+
+      // Read file as Uint8Array
+      const fileData = await IOUtils.read(filePath);
+      const fileName = PathUtils.filename(filePath);
+
+      // Convert Uint8Array to regular array for message passing
+      return {
+        success: true,
+        data: Array.from(fileData),
+        fileName,
+      };
+    } catch (e) {
+      console.error("[NRWebScraperParent] Error reading file:", e);
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
   }
 
   private blockContextMenu(): void {

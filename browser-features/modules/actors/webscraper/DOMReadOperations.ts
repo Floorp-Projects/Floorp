@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DOMOpsDeps } from "./DOMDeps.ts";
+import { unwrapElement } from "./utils.ts";
 
 /**
  * Read-only DOM utilities (queries, getters)
@@ -73,23 +74,22 @@ export class DOMReadOperations {
         | NodeListOf<Element>
         | undefined;
       if (!nodeList) return [];
-      const results: string[] = [];
-      nodeList.forEach((el: Element) => {
-        const o = el.outerHTML;
-        if (o != null) results.push(String(o));
-      });
+
       const elements = Array.from(nodeList) as Element[];
-      if (elements.length > 0) {
-        this.deps.highlightManager.runAsyncInspection(
-          elements,
-          "inspectGetElements",
-          {
-            selector,
-            count: elements.length,
-          },
-        );
-      }
-      return results;
+      if (elements.length === 0) return [];
+
+      // Run async inspection with found elements
+      this.deps.highlightManager.runAsyncInspection(
+        elements,
+        "inspectGetElements",
+        {
+          selector,
+          count: elements.length,
+        },
+      );
+
+      // Extract outerHTML from each element
+      return elements.map((el: Element) => String(el.outerHTML));
     } catch (e) {
       console.error("DOMReadOperations: Error getting elements:", e);
       return [];
@@ -141,6 +141,7 @@ export class DOMReadOperations {
     }
   }
 
+  // Deprecated alias for getElementText - kept for backward compatibility
   getElementTextContent(selector: string): string | null {
     return this.getElementText(selector);
   }
@@ -201,7 +202,36 @@ export class DOMReadOperations {
             selector,
           },
         );
-        return element.getAttribute(attributeName);
+
+        const directAttr = element.getAttribute(attributeName);
+        if (directAttr !== null) return directAttr;
+
+        const rawElement = unwrapElement(
+          element as Element & Partial<{ wrappedJSObject: Element }>,
+        );
+
+        if (rawElement !== element) {
+          const rawAttr = rawElement.getAttribute(attributeName);
+          if (rawAttr !== null) return rawAttr;
+        }
+
+        if (attributeName === "aria-checked") {
+          // Fallback to .checked property if it's an input
+          try {
+            if ("checked" in rawElement) {
+              return (rawElement as HTMLInputElement).checked
+                ? "true"
+                : "false";
+            }
+          } catch (e) {
+            console.error(
+              "[NRWebScraper] Error accessing .checked property:",
+              e,
+            );
+          }
+        }
+
+        return null;
       }
       return null;
     } catch (e) {

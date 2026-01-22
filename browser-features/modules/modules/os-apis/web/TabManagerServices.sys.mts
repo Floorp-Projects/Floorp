@@ -1579,17 +1579,30 @@ class TabManager {
   /**
    * Waits for network to become idle (no pending requests)
    */
-  public waitForNetworkIdle(
+  public async waitForNetworkIdle(
     instanceId: string,
     timeout: number = 5000,
-  ): Promise<boolean | null> {
+  ): Promise<boolean> {
     const entry = this._getEntry(instanceId);
-    if (!entry) return Promise.resolve(null);
+    if (!entry) return false;
 
     const browser = entry.browser;
-    const bcid = browser.browsingContext?.id;
+
+    // Wait for browsingContext to be ready (may not be available immediately after navigation)
+    let bcid = browser.browsingContext?.id;
     if (!bcid) {
-      return Promise.resolve(null);
+      // Wait up to 500ms for browsingContext to become available
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+        bcid = browser.browsingContext?.id;
+        if (bcid) break;
+      }
+      if (!bcid) {
+        console.warn(
+          "[TabManager] waitForNetworkIdle: browsingContext not available after waiting",
+        );
+        return false;
+      }
     }
 
     return new Promise((resolve) => {
