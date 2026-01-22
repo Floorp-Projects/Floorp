@@ -30,7 +30,7 @@
         "webApps": "Webbappar",
         "profileAndAccount": "Profil och konto",
         "aboutBrowser": "Om {{productName}}",
-        "updates": "Updates & Experiments",
+        "updates": "Uppdateringar och experiment",
         "debug": "Felsökning",
         "mouseGesture": "Musgester",
         "keyboardShortcut": "Tangentbordsgenvägar",
@@ -95,7 +95,7 @@
         "style": "Stil",
         "horizontal": "Horisontell",
         "multirow": "Flera rader",
-        "vertical": "Vertical",
+        "vertical": "Vertikal",
         "verticalTabIsRemovedFromBrowser": "Vertikala flikar har tagits bort från {{productName}}. Använd Firefox inbyggda vertikala flikfält istället.",
         "learnMore": "Läs mer",
         "position": "Position",
@@ -187,6 +187,21 @@
                 "overlap": "Visa sidofält över webbplatsens innehåll"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Flik sömn uteslutning",
+            "description": "Uteslut specifika webbplatser från fliken sömn (lossning). Flikar som matchar dessa mönster kommer att förbli aktiva och kommer inte automatiskt att laddas av när minnet är lågt.",
+            "enable": "Aktivera uteslutning av sömn av flikar",
+            "patterns": "Uteslutningsmönster",
+            "patternsDescription": "Lägg till URL-mönster som ska uteslutas från flikens sömn. Flikar som matchar dessa mönster kommer inte att avlastas.",
+            "patternPlaceholder": "Ange URL-mönster (t.ex. example.com, *.google.com)",
+            "add": "Lägg till",
+            "remove": "Ta bort",
+            "noPatterns": "Inga uteslutningsmönster konfigurerade. Lägg till mönster för att hålla specifika flikar aktiva.",
+            "examples": "Exempel på mönster",
+            "exampleDomain": "Matchar alla URL: er som innehåller denna domän",
+            "exampleWildcard": "Matchar alla underdomäner till google.com",
+            "exampleFullUrl": "Matchar endast Gmail-URL: er"
+        },
         "uiCustomization": {
             "title": "Anpassning av användargränssnitt",
             "needRestartDescriptionForEnableAndDisable": "En omstart av {{productName}} krävs för att helt aktivera eller inaktivera denna funktion för anpassning av användargränssnittet.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Ny flik",
-                "disableFloorpStart": "Inaktivera Floorp Start"
+                "disableFloorpStart": "Inaktivera {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Flik med flera rader",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Bokmärkesfält",
+                "position": "Position (Experiment)",
+                "top": "Högst upp",
+                "bottom": "Nederst",
                 "focusExpand": "Expandera bokmärkesfältet vid fokus"
             }
         }
@@ -236,26 +254,26 @@
         "closePopupWhenSelectingWorkspace": "Stäng popup för arbetsytor när du väljer en arbetsyta",
         "closePopupWhenSelectingWorkspaceDescription": "Välj om popup-fönstret för arbetsytor ska stängas när du väljer en arbetsyta.",
         "showWorkspaceNameOnToolbar": "Visa arbetsytans namn bredvid ikonen",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Avsluta {{productName}} när den sista fliken i arbetsytan stängs",
         "manageOnBms": "Hantera arbetsytor i {{productName}} sidofältet",
         "manageOnBmsDescription": "När den här funktionen är aktiverad kan du bara hantera arbetsytor i sidofältet på {{productName}} Du kommer inte att kunna hantera arbetsytor med knappen i verktygsfältet.",
         "backup": "Säkerhetskopiering av arbetsytor",
         "backupComingSoon": "Kommer snart",
         "backupDescription": "Läs mer om säkerhetskopiering av arbetsytor",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "Farozon",
+        "initializeTitle": "Initiera arbetsytor",
+        "initializeDescription": "Återställer arbetsytans data till standardläget. Alla anpassade arbetsytor tas bort och alla flikar tilldelas på nytt till den nya arbetsytan.",
+        "initializeAction": "Initiera arbetsytor",
+        "initializeSuccess": "Arbetsytorna har återställts till sitt standardtillstånd.",
+        "initializeFailure": "Initialisering av arbetsytor misslyckades. Vänligen försök igen.",
+        "initializeConfirmTitle": "Initiera arbetsytor",
+        "initializeConfirmDescription": "Detta tar bort all arbetsytedata och återskapar en enda standardarbetsyta. Vill du fortsätta?",
+        "initializeConfirmAction": "Initialisera",
         "initializeConfirmCancel": "Avbryt"
     },
     "accounts": {
         "profileAndAccount": "Profil och konto",
-        "profileDescription": "Profiler innehåller webbläsarrelaterad information som historik, bokmärken, inställningar och tillägg. Floorp använder den här profilen för att spara data.",
+        "profileDescription": "Profiler innehåller webbläsarrelaterad information som historik, bokmärken, inställningar och tillägg. {{productName}} använder den här profilen för att spara data.",
         "profileManagement": "Profilhantering",
         "profileManagementDescription": "Profiler kan skapas och separeras från varandra, och deras data lagras i profilmappen.",
         "currentProfileName": "Nuvarande profilnamn: {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Öppna profil spara plats",
         "mozillaAccountSyncSettings": "Inställningar för Mozilla-konto synkronisering",
         "syncedTo": "Synkroniserad till {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Synkronisera Floorp anteckningar till Mozilla-konto (experimentellt)",
-        "floorpFeatureSyncSettings": "Inställningar för Floorp synkronisering",
+        "syncNotesToMozillaAccount": "Synkronisera {{productName}} anteckningar till Mozilla-konto (experimentellt)",
+        "featureSyncSettings": "{{productName}} Inställningar för funktionssynkronisering",
         "manageMozillaAccount": "Hantera Mozilla-konto",
         "manageFirefoxFeatureSync": "Hantera synkronisering av Firefox-funktioner",
         "aboutMozillaAccount": "Om Mozilla-konto",
@@ -286,43 +304,62 @@
         "license": "Licens"
     },
     "updates": {
-        "title": "Updates & Experiments",
-        "description": "Manage update settings and experimental features participation.",
+        "title": "Uppdateringar och experiment",
+        "description": "Hantera uppdateringsinställningar och deltagande i experimentella funktioner.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
-            "policyLabel": "Participation Policy",
+            "title": "{{productName}} Flasco Deltagande",
+            "description": "Kontrollera hur {{productName}} registrerar dig i experimentella funktioner och {{productName}} Flascos.",
+            "policyLabel": "Deltagandepolicy",
             "policy": {
-                "default": "Default (Recommended)",
-                "always": "Always Participate",
-                "never": "Never Participate"
+                "default": "Standard (Rekommenderas)",
+                "always": "Delta alltid",
+                "never": "Delta aldrig"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Följ den rekommenderade deltagarpolicyn. Du kan komma att registreras på {{productName}} Flasco baserat på utrullningsprocent.",
+                "always": "Delta alltid i alla tillgängliga {{productName}} Flascos. Det här alternativet är för användare som vill testa nya funktioner tidigt.",
+                "never": "Delta aldrig i {{productName}} Flascos. Du kommer bara att få stabila, testade funktioner."
             },
-            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
-            "troubleshooting": "Troubleshooting",
-            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
-            "clearCache": "Clear Experiment Cache"
+            "confirmClearCache": "Är du säker på att du vill rensa alla experimentdata? Detta kommer att återställa dina uppgifter och kan inte ångras.",
+            "troubleshooting": "Felsökning",
+            "clearCacheDescription": "Om du upplever problem med experiment kan du lösa dem genom att rensa cacheminnet och återställa all experimentrelaterad data till dess ursprungliga tillstånd.",
+            "clearCache": "Rensa experimentcache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
-            "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
-            "assignedAt": "Enrolled on {{date}}",
-            "disable": "Disable",
-            "enable": "Enable",
-            "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
-            "lastUpdated": "Last updated:"
+        "activeFlascos": {
+            "title": "Aktiva {{productName}} Flascos",
+            "description": "Visa och hantera dina aktuella aktiva Flasco-registreringar.",
+            "refresh": "Uppdatera",
+            "noFlascos": "Du är för närvarande inte inskriven i någon Flascos.",
+            "assignedAt": "Registrerad på {{date}}",
+            "disable": "Inaktivera",
+            "enable": "Aktivera",
+            "disabledLabel": "Inaktiverad",
+            "confirmDisable": "Är du säker på att du vill avaktivera denna Flasco? Du kan återaktivera den senare.",
+            "confirmEnable": "Är du säker på att du vill återaktivera denna Flasco?",
+            "lastUpdated": "Senast uppdaterad:"
+        },
+        "availableFlascos": {
+            "title": "Tillgängliga Flascos",
+            "description": "Alla tillgängliga Flascos för din {{productName}} version. Vissa kan vara otillgängliga på grund av begränsningar i utrullningen.",
+            "noExperiments": "Inga experiment tillgängliga.",
+            "rollout": "Utrullning: {{percentage}}%",
+            "forceEnroll": "Registrera",
+            "forceEnrolled": "Registrerad",
+            "removeForceEnrollment": "Ta bort åsidosättning",
+            "confirmForceEnroll": "Är du säker på att du vill registrera dig till denna Flasco? Detta kommer att åsidosätta utbyggnadsinställningarna.",
+            "confirmRemoveForceEnrollment": "Ta bort registreringen och återgå till normalt utrullningsbeteende?",
+            "status": {
+                "enrolled": "Registrerad",
+                "not_in_rollout": "Inte under utrullning",
+                "force_enrolled": "Registrerad",
+                "disabled": "Inaktiverad",
+                "control": "Kontrollera"
+            }
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Laddar...",
+        "cancel": "Avbryt"
     },
     "search": {
         "title": "Sökinställningar",
@@ -417,43 +454,43 @@
         "uninstall": "Avinstallera"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
-        "loading": "Loading...",
+        "title": "{{productName}} OS",
+        "description": "Hantera {{productName}} OS backend-moduler och tjänster",
+        "loading": "Laddar...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
-            "platformSupport": "Platform Support",
-            "platformSupported": "Your platform is supported",
-            "platformUnsupported": "Your platform is not supported",
-            "installedVersion": "Installed Version",
-            "notInstalled": "Not installed",
-            "serviceStatus": "Service Status",
-            "running": "Running",
-            "stopped": "Stopped",
-            "enabledBadge": "Enabled",
-            "disabledBadge": "Disabled"
+            "description": "Nuvarande status för {{productName}} OS",
+            "platformSupport": "Plattform stöd",
+            "platformSupported": "Din plattform stöds",
+            "platformUnsupported": "Din plattform stöds inte",
+            "installedVersion": "Installerad version",
+            "notInstalled": "Inte installerad",
+            "serviceStatus": "Tjänstestatus",
+            "running": "Körs",
+            "stopped": "Stoppad",
+            "enabledBadge": "Aktiverad",
+            "disabledBadge": "Inaktiverad"
         },
         "controlsCard": {
-            "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
-            "refresh": "Refresh Status"
+            "title": "Kontroller",
+            "description": "Aktivera eller inaktivera {{productName}} OS",
+            "enable": "Aktivera {{productName}} OS",
+            "disable": "Inaktivera {{productName}} OS",
+            "refresh": "Uppdatera status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Aktiverar {{productName}} OS...",
+            "disabling": "Inaktivera {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS aktiverat framgångsrikt!",
+            "disableSuccess": "{{productName}} OS inaktiverat framgångsrikt!"
         },
         "errors": {
-            "apiUnavailable": "OSAutomotor API is not available.",
-            "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "apiUnavailable": "OSAutomotor API är inte tillgängligt.",
+            "loadStatus": "Misslyckades med att ladda status: {{reason}}",
+            "enable": "Misslyckades med att aktivera {{productName}} OS.",
+            "disable": "Misslyckades med att inaktivera {{productName}} OS.",
+            "enableAction": "Fel vid aktivering av {{productName}} OS: {{reason}}",
+            "disableAction": "Fel vid inaktivering av {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Allmänna inställningar",
         "generalSettingsDescription": "Grundläggande inställningar för musgester",
         "enabled": "Aktivera musgester",
+        "enabledDescription": "Tillåter dig att styra din webbläsare med musrörelser",
         "showTrail": "Visa gestspår",
-        "showLabel": "Show gesture label",
+        "showTrailDescription": "Rita en linje som följer dina musrörelser",
+        "showLabel": "Visa gestetiketter",
+        "showLabelDescription": "Visa åtgärdens namn under gest",
+        "sensitivitySettings": "Inställningar för känslighet",
+        "sensitivitySettingsDescription": "Justera känsligheten för gestigenkänning.",
         "sensitivity": "Känslighet",
+        "sensitivityDescription": "Justera känsligheten för gestigenkänning",
         "low": "Låg",
         "high": "Hög",
+        "minDistance": "Minsta avstånd",
+        "minDistanceDescription": "Minsta avstånd för förflyttningar som ska identifieras som en gest",
+        "preventionTimeout": "Högerklick dämpningstid",
+        "preventionTimeoutDescription": "Tid för att undertrycka högerklicksmenyn efter gest",
+        "trailSettings": "Inställningar för spår",
+        "trailSettingsDescription": "Anpassa utseendet på gestspår.",
         "trailWidth": "Spårbredd",
+        "trailWidthDescription": "Bredd på gest spårlinje",
         "trailColor": "Spårfärg",
         "actionsSettings": "Geståtgärder",
         "actionsSettingsDescription": "Konfigurera åtgärder för musgester",
@@ -474,9 +524,8 @@
         "pattern": "Mönster",
         "action": "Åtgärd",
         "actionDescription": "Beskrivning av gest",
-        "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
-        "wheelGesturesEnabled": "Enable wheel gestures",
+        "rockerGesturesEnabled": "Aktivera rocker gester",
+        "rockerGesturesDescription": "Högerklicka och flytta till vänster för att gå tillbaka, högerklicka och flytta till höger för att gå framåt. (Experimentell)",
         "actions": {
             "gecko-back": "Gå tillbaka",
             "gecko-forward": "Gå framåt",
@@ -549,8 +598,8 @@
             "gecko-scroll-left": "Scrolla vänster",
             "gecko-scroll-to-top": "Scrolla till toppen",
             "gecko-scroll-to-bottom": "Scrolla till botten",
-            "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-next": "Växla till nästa arbetsyta",
+            "gecko-workspace-previous": "Växla till föregående arbetsyta"
         },
         "edit": "Redigera",
         "duplicate": "Duplicera",
