@@ -215,23 +215,15 @@ export class DOMReadOperations {
           if (rawAttr !== null) return rawAttr;
         }
 
-        const win = this.contentWindow;
         if (attributeName === "aria-checked") {
-          console.log("[NRWebScraper] getAttribute aria-checked for", selector);
           if (directAttr !== null) {
-            console.log("[NRWebScraper] Found direct attribute:", directAttr);
             return directAttr;
           }
 
           // Fallback to .checked property if it's an input
           try {
             if ("checked" in rawElement) {
-              const val = (rawElement as any).checked ? "true" : "false";
-              console.log(
-                "[NRWebScraper] Falling back to .checked property:",
-                val,
-              );
-              return val;
+              return (rawElement as HTMLInputElement).checked ? "true" : "false";
             }
           } catch (e) {
             console.error(

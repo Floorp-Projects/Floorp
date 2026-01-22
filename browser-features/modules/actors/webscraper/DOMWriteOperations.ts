@@ -342,10 +342,8 @@ export class DOMWriteOperations {
 
       const setter = this.deps.eventDispatcher.getNativeCheckedSetter(element);
       if (setter) {
-        console.log("[NRWebScraper] setChecked using native setter", checked);
         setter(checked);
       } else {
-        console.log("[NRWebScraper] setChecked using direct property", checked);
         element.checked = checked;
       }
 
@@ -357,7 +355,6 @@ export class DOMWriteOperations {
 
       const syncAttrs = (target: HTMLInputElement) => {
         try {
-          console.log("[NRWebScraper] Syncing attributes for target", !!target);
           if (checked) {
             target.setAttribute("checked", "true");
             target.defaultChecked = true;
@@ -374,7 +371,6 @@ export class DOMWriteOperations {
 
       syncAttrs(element);
       if (rawElement !== element) {
-        console.log("[NRWebScraper] Syncing raw element too");
         syncAttrs(rawElement);
       }
 
@@ -402,20 +398,14 @@ export class DOMWriteOperations {
 
   async uploadFile(selector: string, filePath: string): Promise<boolean> {
     try {
-      console.log("[NRWebScraper] uploadFile called:", selector, filePath);
+      // SECURITY WARNING: This method accepts file paths from external sources.
+      // The parent process validates paths, but callers should only use trusted paths.
 
       const element = this.document?.querySelector(
         selector,
       ) as HTMLInputElement | null;
 
-      console.log("[NRWebScraper] Element found:", !!element);
-      if (element) {
-        console.log("[NRWebScraper] Element tagName:", element.tagName);
-        console.log("[NRWebScraper] Element type:", element.type);
-      }
-
       if (!element || element.tagName !== "INPUT" || element.type !== "file") {
-        console.log("[NRWebScraper] Element validation failed");
         return false;
       }
 
@@ -444,8 +434,6 @@ export class DOMWriteOperations {
       const fileInput = element as MozFileInput;
 
       try {
-        console.log("[NRWebScraper] Creating file from path:", filePath);
-
         // Get the raw (unwrapped) element first
         const rawElement = unwrapElement(
           fileInput as Element & Partial<{ wrappedJSObject: Element }>,
@@ -528,19 +516,11 @@ export class DOMWriteOperations {
           fileName,
           clonedFileOptions,
         );
-        console.log(
-          "[NRWebScraper] File created:",
-          file.name,
-          file.size,
-          file.type,
-        );
 
         // mozSetFileArray should accept File objects
         if (typeof rawElement.mozSetFileArray === "function") {
-          console.log("[NRWebScraper] Setting file array on raw element");
           rawElement.mozSetFileArray([file]);
         } else if (typeof fileInput.mozSetFileArray === "function") {
-          console.log("[NRWebScraper] Setting file array on wrapped element");
           fileInput.mozSetFileArray([file]);
         } else {
           console.error(
@@ -576,6 +556,8 @@ export class DOMWriteOperations {
     cookieValue?: string,
   ): boolean {
     try {
+      // SECURITY WARNING: This method directly sets cookies without validation.
+      // Ensure cookieString is from a trusted source to avoid cookie injection attacks.
       const win = this.contentWindow;
       if (!win?.document) {
         return false;
@@ -626,6 +608,8 @@ export class DOMWriteOperations {
         elementInfo,
       );
 
+      // SECURITY WARNING: This method directly sets innerHTML which can execute malicious scripts.
+      // Only use with trusted content. For user-provided content, consider using textContent instead.
       const win = this.contentWindow;
       const rawWin = unwrapWindow(win);
       const rawDoc = this.document
