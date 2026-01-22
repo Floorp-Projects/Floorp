@@ -1,17 +1,17 @@
-// @ts-nocheck
 // eslint-disable no-unsafe-optional-chaining
 import type { GestureActionRegistration } from "./gestures.ts";
 
-const getXulElement = (id: string): XULElement | null => {
+const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
-    return (document?.getElementById(id) as XULElement | null) ?? null;
-  } catch (_e) {
+    const targetDoc = win?.document ?? document;
+    return (targetDoc?.getElementById(id) as XULElement | null) ?? null;
+  } catch {
     return null;
   }
 };
 
-const doCommandIfExists = (id: string) => {
-  const el = getXulElement(id);
+const doCommandIfExists = (id: string, win?: Window) => {
+  const el = getXulElement(id, win);
   try {
     el?.doCommand?.();
   } catch (e) {
@@ -19,8 +19,8 @@ const doCommandIfExists = (id: string) => {
   }
 };
 
-const clickIfExists = (id: string) => {
-  const el = getXulElement(id);
+const clickIfExists = (id: string, win?: Window) => {
+  const el = getXulElement(id, win);
   try {
     el?.click?.();
   } catch (e) {
@@ -31,30 +31,36 @@ const clickIfExists = (id: string) => {
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
-    fn: (win) =>
-      (win.document?.getElementById("back-button") as XULElement).doCommand(),
+    fn: (win) => {
+      const el = getXulElement("back-button", win);
+      if (el) doCommandIfExists("back-button", win);
+    },
   },
   {
     name: "gecko-forward",
-    fn: (win) =>
-      (win.document?.getElementById("forward-button") as XULElement).doCommand(),
+    fn: (win) => {
+      const el = getXulElement("forward-button", win);
+      if (el) doCommandIfExists("forward-button", win);
+    },
   },
   {
     name: "gecko-reload",
-    fn: (win) =>
-      (win.document?.getElementById("reload-button") as XULElement).doCommand(),
+    fn: (win) => {
+      const el = getXulElement("reload-button", win);
+      if (el) doCommandIfExists("reload-button", win);
+    },
   },
   {
     name: "gecko-close-tab",
-    fn: (win) => win.gBrowser.removeCurrentTab({
-      animate: true,
-...win.gBrowser.TabMetrics.userTriggeredContext(),
-    }),
+    fn: (win) =>
+      win.gBrowser.removeCurrentTab({
+        animate: true,
+        ...win.gBrowser.TabMetrics.userTriggeredContext(),
+      }),
   },
   {
     name: "gecko-open-new-tab",
-    fn: (win) =>
-      win.BrowserCommands.openTab()
+    fn: (win) => win.BrowserCommands.openTab(),
   },
   {
     name: "gecko-duplicate-tab",
@@ -93,7 +99,7 @@ export const actions: GestureActionRegistration[] = [
     fn: (win) => {
       const currentTab = win.gBrowser.selectedTab;
       let latest = null;
-      for (let tab of win.gBrowser.tabs) {
+      for (const tab of win.gBrowser.tabs) {
         if (tab._lastAccessed === Infinity) continue;
         // Skip the currently selected tab
         if (tab === currentTab) continue;
@@ -164,9 +170,7 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-send-with-mail",
     fn: (win) =>
-      win.MailIntegration.sendLinkForBrowser(
-        win.gBrowser.selectedBrowser,
-      ),
+      win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser),
   },
   {
     name: "gecko-save-page",
@@ -182,9 +186,7 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-mute-current-tab",
     fn: (win) =>
-      win.gBrowser.toggleMuteAudioOnMultiSelectedTabs(
-        win.gBrowser.selectedTab,
-      ),
+      win.gBrowser.toggleMuteAudioOnMultiSelectedTabs(win.gBrowser.selectedTab),
   },
   {
     name: "gecko-show-source-of-page",
@@ -251,10 +253,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-show-pip",
-    fn: (win) =>
-      (
-        win.document?.getElementById("picture-in-picture-button") as XULElement
-      ).click(),
+    fn: (win) => clickIfExists("picture-in-picture-button", win),
   },
   {
     name: "gecko-restore-last-tab",

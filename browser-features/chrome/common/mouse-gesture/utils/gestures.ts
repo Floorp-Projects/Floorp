@@ -17,6 +17,19 @@ export function getAllGestureActions(): GestureActionRegistration[] {
 }
 
 export function executeGestureAction(name: string, targetWindow: Window): boolean {
+  // Validate targetWindow
+  if (!targetWindow || typeof targetWindow !== "object") {
+    console.error(`[mouse-gesture] Invalid targetWindow for action: ${name}`);
+    return false;
+  }
+
+  // Basic validation: ensure targetWindow has required properties
+  if (!targetWindow.document && !targetWindow.gBrowser) {
+    console.warn(
+      `[mouse-gesture] targetWindow may not be a valid browser window for action: ${name}`,
+    );
+  }
+
   const action = gestureActions.getAction(name);
   if (action) {
     try {
